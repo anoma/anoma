@@ -1,8 +1,16 @@
-# Anoma ledger prototype
+# Anoma
 
-## Quick start
+This is an implementation of the [Anoma](https://anoma.network/papers/whitepaper.pdf) ledger in Rust.
+
+> Here lay dragons: this codebase is still experimental, try at your own risk!
+
+## Installing
+
+### Dependencies
 
 The ledger currently requires that [Tendermint version 0.34.x](https://github.com/tendermint/tendermint) is installed and available on path. [The pre-built binaries and the source for 0.34.8 are here](https://github.com/tendermint/tendermint/releases/tag/v0.34.8), also directly available in some package managers.
+
+### Notes
 
 The transaction code can currently be built from [tx_template](txs/tx_template) and validity predicates from [vp_template](vps/vp_template), which is Rust code compiled to wasm.
 
@@ -13,6 +21,8 @@ The validity predicate is currently hard-coded in the shell and used for every a
 The gossip node needs to toggle the intent flag `--intent` to activate the intent broadcaster, multiple nodes can be connected with the `--peers` option.
 
 The matchmaker template receives intents with the borsh encoding define in `data_template` and crafts data to be sent with `tx_intent_template` to the ledger. It matches only two intents that are the exact opposite.
+
+### Instructions
 
 ```shell
 # Install development dependencies
@@ -32,7 +42,11 @@ make install
 
 # generate default config in .anoma/
 cargo run --bin anoman -- --base-dir .anoma generate-config
+```
 
+## Running an Anoma node
+
+```shell
 # Run Anoma node (this will also initialize and run Tendermint node)
 make run-ledger
 
@@ -50,7 +64,11 @@ export ALONZO=a1qq5qqqqqxsuygd2x8pq5yw2ygdryxs6xgsmrsdzx8pryxv34gfrrssfjgccyg3zp
 export XAN=a1qq5qqqqqxuc5gvz9gycryv3sgye5v3j9gvurjv34g9prsd6x8qu5xs2ygdzrzsf38q6rss33xf42f3
 export BTC=a1qq5qqqqq8q6yy3p4xyurys3n8qerz3zxxeryyv6rg4pnxdf3x3pyv32rx3zrgwzpxu6ny32r3laduc
 export XTZ=a1qq5qqqqqx3z5xd3ngdqnzwzrgfpnxd3hgsuyx3phgfry2s3kxsc5xves8qe5x33sgdprzvjptzfry9
+```
 
+## Interacting with Anoma
+
+```shell
 # Submit a token transfer
 cargo run --bin anomac -- transfer --source $ALAN --target $ADA --token $XAN --amount 10.1 --code-path txs/tx_transfer/tx.wasm
 
@@ -98,3 +116,5 @@ To change the log level, set `ANOMA_LOG` environment variable to one of:
 The default is set to `info` for all the modules, expect for Tendermint ABCI, which has a lot of `debug` logging.
 
 For more fine-grained logging levels settings, please refer to the [tracing subscriber docs](https://docs.rs/tracing-subscriber/0.2.18/tracing_subscriber/struct.EnvFilter.html#directives) for more information.
+
+## How to contribute
