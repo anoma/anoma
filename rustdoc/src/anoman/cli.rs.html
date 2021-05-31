@@ -101,7 +101,7 @@
     <span class="kw">match</span> <span class="ident">matches</span>.<span class="ident">subcommand</span>() {
         <span class="prelude-val">Some</span>((<span class="ident">cli</span>::<span class="ident">RUN_GOSSIP_COMMAND</span>, <span class="ident">args</span>)) <span class="op">=</span><span class="op">&gt;</span> {
             <span class="kw">let</span> <span class="ident">config</span> <span class="op">=</span> <span class="ident">get_cfg</span>(<span class="ident">home</span>);
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">gossip_cfg</span> <span class="op">=</span> <span class="ident">config</span>.<span class="ident">intent_broadcaster</span>.<span class="ident">unwrap_or_default</span>();
+            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">gossip_cfg</span> <span class="op">=</span> <span class="ident">config</span>.<span class="ident">intent_gossiper</span>.<span class="ident">unwrap_or_default</span>();
             <span class="ident">cli</span>::<span class="ident">update_gossip_config</span>(<span class="ident">args</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">gossip_cfg</span>)
                 .<span class="ident">expect</span>(<span class="string">&quot;failed to update config with cli option&quot;</span>);
             <span class="ident">gossip</span>::<span class="ident">run</span>(<span class="ident">gossip_cfg</span>).<span class="ident">wrap_err</span>(<span class="string">&quot;Failed to run gossip service&quot;</span>)

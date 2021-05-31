@@ -207,8 +207,6 @@
 <span id="204">204</span>
 <span id="205">205</span>
 <span id="206">206</span>
-<span id="207">207</span>
-<span id="208">208</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="ident">libp2p</span>::<span class="ident">gossipsub</span>::<span class="ident">IdentTopic</span>;
 <span class="kw">use</span> <span class="ident">libp2p</span>::<span class="ident">identity</span>::<span class="ident">Keypair</span>;
@@ -220,9 +218,7 @@
 
 <span class="kw">use</span> <span class="kw">super</span>::<span class="ident">network_behaviour</span>::<span class="ident">Behaviour</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">proto</span>::<span class="ident">services</span>::{<span class="ident">rpc_message</span>, <span class="ident">RpcResponse</span>};
-<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">proto</span>::<span class="ident">types</span>::{
-    <span class="ident">intent_broadcaster_message</span>, <span class="ident">IntentBroadcasterMessage</span>,
-};
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">proto</span>::<span class="ident">types</span>::{<span class="ident">intent_gossip_message</span>, <span class="ident">IntentGossipMessage</span>};
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">types</span>::<span class="ident">MatchmakerMessage</span>;
 
 <span class="kw">pub</span> <span class="kw">type</span> <span class="ident">Swarm</span> <span class="op">=</span> <span class="ident">libp2p</span>::<span class="ident">Swarm</span><span class="op">&lt;</span><span class="ident">Behaviour</span><span class="op">&gt;</span>;
@@ -246,7 +242,7 @@
 
 <span class="kw">impl</span> <span class="ident">P2P</span> {
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(
-        <span class="ident">config</span>: <span class="kw-2">&amp;</span><span class="kw">crate</span>::<span class="ident">config</span>::<span class="ident">IntentBroadcaster</span>,
+        <span class="ident">config</span>: <span class="kw-2">&amp;</span><span class="kw">crate</span>::<span class="ident">config</span>::<span class="ident">IntentGossiper</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="self">Self</span>, <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Receiver</span><span class="op">&lt;</span><span class="ident">MatchmakerMessage</span><span class="op">&gt;</span><span class="op">&gt;</span>)<span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">local_key</span>: <span class="ident">Keypair</span> <span class="op">=</span> <span class="ident">Ed25519</span>(<span class="ident">config</span>.<span class="ident">gossiper</span>.<span class="ident">key</span>.<span class="ident">clone</span>());
         <span class="kw">let</span> <span class="ident">local_peer_id</span>: <span class="ident">PeerId</span> <span class="op">=</span> <span class="ident">PeerId</span>::<span class="ident">from</span>(<span class="ident">local_key</span>.<span class="ident">public</span>());
@@ -277,7 +273,7 @@
     <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">handle_mm_message</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">mm_message</span>: <span class="ident">MatchmakerMessage</span>) {
         <span class="self">self</span>.<span class="ident">swarm</span>
             .<span class="ident">behaviour_mut</span>()
-            .<span class="ident">intent_broadcaster_app</span>
+            .<span class="ident">intent_gossip_app</span>
             .<span class="ident">handle_mm_message</span>(<span class="ident">mm_message</span>)
             .<span class="kw">await</span>
     }
@@ -310,13 +306,13 @@
                 <span class="kw">match</span> <span class="self">self</span>
                     .<span class="ident">swarm</span>
                     .<span class="ident">behaviour_mut</span>()
-                    .<span class="ident">intent_broadcaster_app</span>
+                    .<span class="ident">intent_gossip_app</span>
                     .<span class="ident">apply_intent</span>(<span class="ident">intent</span>.<span class="ident">clone</span>())
                 {
                     <span class="prelude-val">Ok</span>(<span class="bool-val">true</span>) <span class="op">=</span><span class="op">&gt;</span> {
                         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">intent_bytes</span> <span class="op">=</span> <span class="macro">vec</span><span class="macro">!</span>[];
-                        <span class="kw">let</span> <span class="ident">intent</span> <span class="op">=</span> <span class="ident">IntentBroadcasterMessage</span> {
-                            <span class="ident">msg</span>: <span class="prelude-val">Some</span>(<span class="ident">intent_broadcaster_message</span>::<span class="ident">Msg</span>::<span class="ident">Intent</span>(
+                        <span class="kw">let</span> <span class="ident">intent</span> <span class="op">=</span> <span class="ident">IntentGossipMessage</span> {
+                            <span class="ident">msg</span>: <span class="prelude-val">Some</span>(<span class="ident">intent_gossip_message</span>::<span class="ident">Msg</span>::<span class="ident">Intent</span>(
                                 <span class="ident">intent</span>,
                             )),
                         };
@@ -324,7 +320,7 @@
                         <span class="kw">match</span> <span class="self">self</span>
                             .<span class="ident">swarm</span>
                             .<span class="ident">behaviour_mut</span>()
-                            .<span class="ident">intent_broadcaster_gossip</span>
+                            .<span class="ident">intent_gossip_behaviour</span>
                             .<span class="ident">publish</span>(<span class="ident">IdentTopic</span>::<span class="ident">new</span>(<span class="ident">topic</span>), <span class="ident">intent_bytes</span>)
                         {
                             <span class="prelude-val">Ok</span>(<span class="ident">message_id</span>) <span class="op">=</span><span class="op">&gt;</span> {
@@ -391,7 +387,7 @@
                 <span class="kw">match</span> <span class="self">self</span>
                     .<span class="ident">swarm</span>
                     .<span class="ident">behaviour_mut</span>()
-                    .<span class="ident">intent_broadcaster_gossip</span>
+                    .<span class="ident">intent_gossip_behaviour</span>
                     .<span class="ident">subscribe</span>(<span class="kw-2">&amp;</span><span class="ident">topic</span>)
                 {
                     <span class="prelude-val">Ok</span>(<span class="bool-val">true</span>) <span class="op">=</span><span class="op">&gt;</span> {

@@ -48,7 +48,6 @@
 <span id="45">45</span>
 <span id="46">46</span>
 <span id="47">47</span>
-<span id="48">48</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">PartialEq</span>, ::<span class="ident">prost</span>::<span class="ident">Message</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Tx</span> {
@@ -67,12 +66,12 @@
     <span class="kw">pub</span> <span class="ident">timestamp</span>: ::<span class="ident">core</span>::<span class="ident">option</span>::<span class="prelude-ty">Option</span><span class="op">&lt;</span>::<span class="ident">prost_types</span>::<span class="ident">Timestamp</span><span class="op">&gt;</span>,
 }
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">PartialEq</span>, ::<span class="ident">prost</span>::<span class="ident">Message</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">IntentBroadcasterMessage</span> {
-    <span class="attribute">#[<span class="ident">prost</span>(<span class="ident">oneof</span> <span class="op">=</span> <span class="string">&quot;intent_broadcaster_message::Msg&quot;</span>, <span class="ident">tags</span> <span class="op">=</span> <span class="string">&quot;1&quot;</span>)]</span>
-    <span class="kw">pub</span> <span class="ident">msg</span>: ::<span class="ident">core</span>::<span class="ident">option</span>::<span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">intent_broadcaster_message</span>::<span class="ident">Msg</span><span class="op">&gt;</span>,
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">IntentGossipMessage</span> {
+    <span class="attribute">#[<span class="ident">prost</span>(<span class="ident">oneof</span> <span class="op">=</span> <span class="string">&quot;intent_gossip_message::Msg&quot;</span>, <span class="ident">tags</span> <span class="op">=</span> <span class="string">&quot;1&quot;</span>)]</span>
+    <span class="kw">pub</span> <span class="ident">msg</span>: ::<span class="ident">core</span>::<span class="ident">option</span>::<span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">intent_gossip_message</span>::<span class="ident">Msg</span><span class="op">&gt;</span>,
 }
-<span class="doccomment">/// Nested message and enum types in `IntentBroadcasterMessage`.</span>
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">intent_broadcaster_message</span> {
+<span class="doccomment">/// Nested message and enum types in `IntentGossipMessage`.</span>
+<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">intent_gossip_message</span> {
     <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">PartialEq</span>, ::<span class="ident">prost</span>::<span class="ident">Oneof</span>)]</span>
     <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">Msg</span> {
         <span class="attribute">#[<span class="ident">prost</span>(<span class="ident">message</span>, <span class="ident">tag</span> <span class="op">=</span> <span class="string">&quot;1&quot;</span>)]</span>
@@ -85,13 +84,12 @@
     <span class="kw">pub</span> <span class="ident">data</span>: ::<span class="ident">prost</span>::<span class="ident">alloc</span>::<span class="ident">string</span>::<span class="ident">String</span>,
 }
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">PartialEq</span>, ::<span class="ident">prost</span>::<span class="ident">Message</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">DkgBroadcasterMessage</span> {
-    <span class="attribute">#[<span class="ident">prost</span>(<span class="ident">oneof</span> <span class="op">=</span> <span class="string">&quot;dkg_broadcaster_message::DkgMessage&quot;</span>, <span class="ident">tags</span> <span class="op">=</span> <span class="string">&quot;1&quot;</span>)]</span>
-    <span class="kw">pub</span> <span class="ident">dkg_message</span>:
-        ::<span class="ident">core</span>::<span class="ident">option</span>::<span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">dkg_broadcaster_message</span>::<span class="ident">DkgMessage</span><span class="op">&gt;</span>,
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">DkgGossipMessage</span> {
+    <span class="attribute">#[<span class="ident">prost</span>(<span class="ident">oneof</span> <span class="op">=</span> <span class="string">&quot;dkg_gossip_message::DkgMessage&quot;</span>, <span class="ident">tags</span> <span class="op">=</span> <span class="string">&quot;1&quot;</span>)]</span>
+    <span class="kw">pub</span> <span class="ident">dkg_message</span>: ::<span class="ident">core</span>::<span class="ident">option</span>::<span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">dkg_gossip_message</span>::<span class="ident">DkgMessage</span><span class="op">&gt;</span>,
 }
-<span class="doccomment">/// Nested message and enum types in `DkgBroadcasterMessage`.</span>
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">dkg_broadcaster_message</span> {
+<span class="doccomment">/// Nested message and enum types in `DkgGossipMessage`.</span>
+<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">dkg_gossip_message</span> {
     <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">PartialEq</span>, ::<span class="ident">prost</span>::<span class="ident">Oneof</span>)]</span>
     <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">DkgMessage</span> {
         <span class="attribute">#[<span class="ident">prost</span>(<span class="ident">message</span>, <span class="ident">tag</span> <span class="op">=</span> <span class="string">&quot;1&quot;</span>)]</span>

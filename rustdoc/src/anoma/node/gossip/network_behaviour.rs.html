@@ -314,9 +314,6 @@
 <span id="311">311</span>
 <span id="312">312</span>
 <span id="313">313</span>
-<span id="314">314</span>
-<span id="315">315</span>
-<span id="316">316</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">collections</span>::<span class="ident">hash_map</span>::<span class="ident">DefaultHasher</span>;
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">hash</span>::{<span class="ident">Hash</span>, <span class="ident">Hasher</span>};
@@ -338,18 +335,16 @@
 <span class="kw">use</span> <span class="ident">thiserror</span>::<span class="ident">Error</span>;
 <span class="kw">use</span> <span class="ident">tokio</span>::<span class="ident">sync</span>::<span class="ident">mpsc</span>::<span class="ident">Receiver</span>;
 
-<span class="kw">use</span> <span class="kw">super</span>::<span class="ident">intent_broadcaster</span>;
-<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">proto</span>::<span class="ident">types</span>::{
-    <span class="ident">intent_broadcaster_message</span>, <span class="ident">IntentBroadcasterMessage</span>,
-};
+<span class="kw">use</span> <span class="kw">super</span>::<span class="ident">intent_gossiper</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">proto</span>::<span class="ident">types</span>::{<span class="ident">intent_gossip_message</span>, <span class="ident">IntentGossipMessage</span>};
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">types</span>::<span class="ident">MatchmakerMessage</span>;
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Error</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">Error</span> {
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Failed to subscribe&quot;</span>)]</span>
     <span class="ident">FailedSubscription</span>(<span class="ident">libp2p</span>::<span class="ident">gossipsub</span>::<span class="ident">error</span>::<span class="ident">SubscriptionError</span>),
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Failed initializing the intent broadcaster app: {0}&quot;</span>)]</span>
-    <span class="ident">GossipIntentError</span>(<span class="ident">intent_broadcaster</span>::<span class="ident">Error</span>),
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Failed initializing the intent gossiper app: {0}&quot;</span>)]</span>
+    <span class="ident">GossipIntentError</span>(<span class="ident">intent_gossiper</span>::<span class="ident">Error</span>),
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Failed initializing the topic filter: {0}&quot;</span>)]</span>
     <span class="ident">Filter</span>(<span class="ident">String</span>),
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Failed initializing the gossip network: {0}&quot;</span>)]</span>
@@ -362,17 +357,17 @@
 
 <span class="kw">pub</span> <span class="kw">type</span> <span class="ident">Gossipsub</span> <span class="op">=</span> <span class="ident">libp2p</span>::<span class="ident">gossipsub</span>::<span class="ident">Gossipsub</span><span class="op">&lt;</span>
     <span class="ident">IdentityTransform</span>,
-    <span class="ident">IntentBroadcasterSubscriptionFilter</span>,
+    <span class="ident">IntentGossipSubscriptionFilter</span>,
 <span class="op">&gt;</span>;
 
 <span class="comment">// TODO merge type of config and this one ? Maybe not a good idea</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">IntentBroadcasterSubscriptionFilter</span> {
+<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">IntentGossipSubscriptionFilter</span> {
     <span class="ident">RegexFilter</span>(<span class="ident">RegexSubscriptionFilter</span>),
     <span class="ident">WhitelistFilter</span>(<span class="ident">WhitelistSubscriptionFilter</span>),
 }
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">IntentBroadcasterEvent</span> {
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">IntentGossipEvent</span> {
     <span class="kw">pub</span> <span class="ident">propagation_source</span>: <span class="ident">PeerId</span>,
     <span class="kw">pub</span> <span class="ident">message_id</span>: <span class="ident">MessageId</span>,
     <span class="kw">pub</span> <span class="ident">source</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">PeerId</span><span class="op">&gt;</span>,
@@ -380,7 +375,7 @@
     <span class="kw">pub</span> <span class="ident">topic</span>: <span class="ident">TopicHash</span>,
 }
 
-<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">GossipsubEvent</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">IntentBroadcasterEvent</span> {
+<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">GossipsubEvent</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">IntentGossipEvent</span> {
     <span class="comment">// To be used only with Message event</span>
     <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">event</span>: <span class="ident">GossipsubEvent</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="kw">if</span> <span class="kw">let</span> <span class="ident">GossipsubEvent</span>::<span class="ident">Message</span> {
@@ -407,13 +402,13 @@
         }
     }
 }
-<span class="kw">impl</span> <span class="ident">TopicSubscriptionFilter</span> <span class="kw">for</span> <span class="ident">IntentBroadcasterSubscriptionFilter</span> {
+<span class="kw">impl</span> <span class="ident">TopicSubscriptionFilter</span> <span class="kw">for</span> <span class="ident">IntentGossipSubscriptionFilter</span> {
     <span class="kw">fn</span> <span class="ident">can_subscribe</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">topic_hash</span>: <span class="kw-2">&amp;</span><span class="ident">TopicHash</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
         <span class="kw">match</span> <span class="self">self</span> {
-            <span class="ident">IntentBroadcasterSubscriptionFilter</span>::<span class="ident">RegexFilter</span>(<span class="ident">filter</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">IntentGossipSubscriptionFilter</span>::<span class="ident">RegexFilter</span>(<span class="ident">filter</span>) <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="ident">filter</span>.<span class="ident">can_subscribe</span>(<span class="ident">topic_hash</span>)
             }
-            <span class="ident">IntentBroadcasterSubscriptionFilter</span>::<span class="ident">WhitelistFilter</span>(<span class="ident">filter</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">IntentGossipSubscriptionFilter</span>::<span class="ident">WhitelistFilter</span>(<span class="ident">filter</span>) <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="ident">filter</span>.<span class="ident">can_subscribe</span>(<span class="ident">topic_hash</span>)
             }
         }
@@ -422,14 +417,14 @@
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">NetworkBehaviour</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Behaviour</span> {
-    <span class="kw">pub</span> <span class="ident">intent_broadcaster_gossip</span>: <span class="ident">libp2p</span>::<span class="ident">gossipsub</span>::<span class="ident">Gossipsub</span><span class="op">&lt;</span>
+    <span class="kw">pub</span> <span class="ident">intent_gossip_behaviour</span>: <span class="ident">libp2p</span>::<span class="ident">gossipsub</span>::<span class="ident">Gossipsub</span><span class="op">&lt;</span>
         <span class="ident">IdentityTransform</span>,
-        <span class="ident">IntentBroadcasterSubscriptionFilter</span>,
+        <span class="ident">IntentGossipSubscriptionFilter</span>,
     <span class="op">&gt;</span>,
     <span class="ident">local_discovery</span>: <span class="ident">Mdns</span>,
     <span class="comment">// TODO add another gossipsub (or floodsub ?) for dkg message propagation ?</span>
     <span class="attribute">#[<span class="ident">behaviour</span>(<span class="ident">ignore</span>)]</span>
-    <span class="kw">pub</span> <span class="ident">intent_broadcaster_app</span>: <span class="ident">intent_broadcaster</span>::<span class="ident">GossipIntent</span>,
+    <span class="kw">pub</span> <span class="ident">intent_gossip_app</span>: <span class="ident">intent_gossiper</span>::<span class="ident">GossipIntent</span>,
 }
 
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">message_id</span>(<span class="ident">message</span>: <span class="kw-2">&amp;</span><span class="ident">GossipsubMessage</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">MessageId</span> {
@@ -441,11 +436,11 @@
 <span class="kw">impl</span> <span class="ident">Behaviour</span> {
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(
         <span class="ident">key</span>: <span class="ident">Keypair</span>,
-        <span class="ident">config</span>: <span class="kw-2">&amp;</span><span class="kw">crate</span>::<span class="ident">config</span>::<span class="ident">IntentBroadcaster</span>,
+        <span class="ident">config</span>: <span class="kw-2">&amp;</span><span class="kw">crate</span>::<span class="ident">config</span>::<span class="ident">IntentGossiper</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="self">Self</span>, <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Receiver</span><span class="op">&lt;</span><span class="ident">MatchmakerMessage</span><span class="op">&gt;</span><span class="op">&gt;</span>)<span class="op">&gt;</span> {
         <span class="comment">// Set a custom gossipsub</span>
         <span class="kw">let</span> <span class="ident">gossipsub_config</span> <span class="op">=</span> <span class="ident">gossipsub</span>::<span class="ident">GossipsubConfigBuilder</span>::<span class="ident">default</span>()
-            .<span class="ident">protocol_id_prefix</span>(<span class="string">&quot;intent_broadcaster&quot;</span>)
+            .<span class="ident">protocol_id_prefix</span>(<span class="string">&quot;intent_gossip&quot;</span>)
             .<span class="ident">heartbeat_interval</span>(<span class="ident">Duration</span>::<span class="ident">from_secs</span>(<span class="number">1</span>))
             .<span class="ident">validation_mode</span>(<span class="ident">ValidationMode</span>::<span class="ident">Strict</span>)
             .<span class="ident">message_id_fn</span>(<span class="ident">message_id</span>)
@@ -459,12 +454,12 @@
 
         <span class="kw">let</span> <span class="ident">filter</span> <span class="op">=</span> <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="ident">config</span>.<span class="ident">subscription_filter</span> {
             <span class="kw">crate</span>::<span class="ident">config</span>::<span class="ident">SubscriptionFilter</span>::<span class="ident">RegexFilter</span>(<span class="ident">regex</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="ident">IntentBroadcasterSubscriptionFilter</span>::<span class="ident">RegexFilter</span>(
+                <span class="ident">IntentGossipSubscriptionFilter</span>::<span class="ident">RegexFilter</span>(
                     <span class="ident">RegexSubscriptionFilter</span>(<span class="ident">regex</span>.<span class="ident">clone</span>()),
                 )
             }
             <span class="kw">crate</span>::<span class="ident">config</span>::<span class="ident">SubscriptionFilter</span>::<span class="ident">WhitelistFilter</span>(<span class="ident">topics</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="ident">IntentBroadcasterSubscriptionFilter</span>::<span class="ident">WhitelistFilter</span>(
+                <span class="ident">IntentGossipSubscriptionFilter</span>::<span class="ident">WhitelistFilter</span>(
                     <span class="ident">WhitelistSubscriptionFilter</span>(
                         <span class="ident">topics</span>
                             .<span class="ident">iter</span>()
@@ -477,7 +472,7 @@
             }
         };
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">intent_broadcaster_gossip</span>: <span class="ident">Gossipsub</span> <span class="op">=</span>
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">intent_gossip_behaviour</span>: <span class="ident">Gossipsub</span> <span class="op">=</span>
             <span class="ident">Gossipsub</span>::<span class="ident">new_with_subscription_filter</span>(
                 <span class="ident">MessageAuthenticity</span>::<span class="ident">Signed</span>(<span class="ident">key</span>),
                 <span class="ident">gossipsub_config</span>,
@@ -485,15 +480,15 @@
             )
             .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">s</span><span class="op">|</span> <span class="ident">Error</span>::<span class="ident">Filter</span>(<span class="ident">s</span>.<span class="ident">to_string</span>()))<span class="question-mark">?</span>;
 
-        <span class="kw">let</span> (<span class="ident">intent_broadcaster_app</span>, <span class="ident">matchmaker_event_receiver</span>) <span class="op">=</span>
-            <span class="ident">intent_broadcaster</span>::<span class="ident">GossipIntent</span>::<span class="ident">new</span>(<span class="kw-2">&amp;</span><span class="ident">config</span>)
+        <span class="kw">let</span> (<span class="ident">intent_gossip_app</span>, <span class="ident">matchmaker_event_receiver</span>) <span class="op">=</span>
+            <span class="ident">intent_gossiper</span>::<span class="ident">GossipIntent</span>::<span class="ident">new</span>(<span class="kw-2">&amp;</span><span class="ident">config</span>)
                 .<span class="ident">map_err</span>(<span class="ident">Error</span>::<span class="ident">GossipIntentError</span>)<span class="question-mark">?</span>;
 
         <span class="ident">config</span>
             .<span class="ident">topics</span>
             .<span class="ident">iter</span>()
             .<span class="ident">try_for_each</span>(<span class="op">|</span><span class="ident">topic</span><span class="op">|</span> {
-                <span class="ident">intent_broadcaster_gossip</span>
+                <span class="ident">intent_gossip_behaviour</span>
                     .<span class="ident">subscribe</span>(<span class="kw-2">&amp;</span><span class="ident">IdentTopic</span>::<span class="ident">new</span>(<span class="ident">topic</span>))
                     .<span class="ident">map_err</span>(<span class="ident">Error</span>::<span class="ident">FailedSubscription</span>)
                     <span class="comment">// it returns bool signifying if it was already subscribed.</span>
@@ -510,9 +505,9 @@
         };
         <span class="prelude-val">Ok</span>((
             <span class="self">Self</span> {
-                <span class="ident">intent_broadcaster_gossip</span>,
+                <span class="ident">intent_gossip_behaviour</span>,
                 <span class="ident">local_discovery</span>,
-                <span class="ident">intent_broadcaster_app</span>,
+                <span class="ident">intent_gossip_app</span>,
             },
             <span class="ident">matchmaker_event_receiver</span>,
         ))
@@ -522,17 +517,17 @@
         <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
         <span class="ident">intent</span>: <span class="kw">crate</span>::<span class="ident">proto</span>::<span class="ident">types</span>::<span class="ident">Intent</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">MessageAcceptance</span> {
-        <span class="kw">match</span> <span class="self">self</span>.<span class="ident">intent_broadcaster_app</span>.<span class="ident">apply_intent</span>(<span class="ident">intent</span>) {
+        <span class="kw">match</span> <span class="self">self</span>.<span class="ident">intent_gossip_app</span>.<span class="ident">apply_intent</span>(<span class="ident">intent</span>) {
             <span class="prelude-val">Ok</span>(<span class="bool-val">true</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">MessageAcceptance</span>::<span class="ident">Accept</span>,
             <span class="prelude-val">Ok</span>(<span class="bool-val">false</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">MessageAcceptance</span>::<span class="ident">Reject</span>,
             <span class="prelude-val">Err</span>(<span class="ident">e</span>) <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="ident">tracing</span>::<span class="macro">error</span><span class="macro">!</span>(<span class="string">&quot;Error while trying to apply an intent: {}&quot;</span>, <span class="ident">e</span>);
                 <span class="kw">match</span> <span class="ident">e</span> {
-                    <span class="ident">intent_broadcaster</span>::<span class="ident">Error</span>::<span class="ident">DecodeError</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="ident">intent_gossiper</span>::<span class="ident">Error</span>::<span class="ident">DecodeError</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> {
                         <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;can&#39;t happens, because intent already decoded&quot;</span>)
                     }
-                    <span class="ident">intent_broadcaster</span>::<span class="ident">Error</span>::<span class="ident">MatchmakerInit</span>(<span class="ident">err</span>)
-                    <span class="op">|</span> <span class="ident">intent_broadcaster</span>::<span class="ident">Error</span>::<span class="ident">Matchmaker</span>(<span class="ident">err</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="ident">intent_gossiper</span>::<span class="ident">Error</span>::<span class="ident">MatchmakerInit</span>(<span class="ident">err</span>)
+                    <span class="op">|</span> <span class="ident">intent_gossiper</span>::<span class="ident">Error</span>::<span class="ident">Matchmaker</span>(<span class="ident">err</span>) <span class="op">=</span><span class="op">&gt;</span> {
                         <span class="ident">tracing</span>::<span class="macro">info</span><span class="macro">!</span>(
                             <span class="string">&quot;error while running the matchmaker: {:?}&quot;</span>,
                             <span class="ident">err</span>
@@ -548,24 +543,24 @@
         <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
         <span class="ident">data</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span>[<span class="ident">u8</span>]<span class="op">&gt;</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">MessageAcceptance</span> {
-        <span class="kw">match</span> <span class="self">self</span>.<span class="ident">intent_broadcaster_app</span>.<span class="ident">parse_raw_msg</span>(<span class="ident">data</span>) {
-            <span class="prelude-val">Ok</span>(<span class="ident">IntentBroadcasterMessage</span> {
-                <span class="ident">msg</span>: <span class="prelude-val">Some</span>(<span class="ident">intent_broadcaster_message</span>::<span class="ident">Msg</span>::<span class="ident">Intent</span>(<span class="ident">intent</span>)),
+        <span class="kw">match</span> <span class="self">self</span>.<span class="ident">intent_gossip_app</span>.<span class="ident">parse_raw_msg</span>(<span class="ident">data</span>) {
+            <span class="prelude-val">Ok</span>(<span class="ident">IntentGossipMessage</span> {
+                <span class="ident">msg</span>: <span class="prelude-val">Some</span>(<span class="ident">intent_gossip_message</span>::<span class="ident">Msg</span>::<span class="ident">Intent</span>(<span class="ident">intent</span>)),
             }) <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">handle_intent</span>(<span class="ident">intent</span>),
-            <span class="prelude-val">Ok</span>(<span class="ident">IntentBroadcasterMessage</span> { <span class="ident">msg</span>: <span class="prelude-val">None</span> }) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="prelude-val">Ok</span>(<span class="ident">IntentGossipMessage</span> { <span class="ident">msg</span>: <span class="prelude-val">None</span> }) <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="ident">tracing</span>::<span class="macro">info</span><span class="macro">!</span>(<span class="string">&quot;Empty message, rejecting it&quot;</span>);
                 <span class="ident">MessageAcceptance</span>::<span class="ident">Reject</span>
             }
             <span class="prelude-val">Err</span>(<span class="ident">err</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="ident">err</span> {
-                <span class="ident">intent_broadcaster</span>::<span class="ident">Error</span>::<span class="ident">DecodeError</span>(..) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">intent_gossiper</span>::<span class="ident">Error</span>::<span class="ident">DecodeError</span>(..) <span class="op">=</span><span class="op">&gt;</span> {
                     <span class="ident">tracing</span>::<span class="macro">info</span><span class="macro">!</span>(
                         <span class="string">&quot;error while decoding the intent: {:?}&quot;</span>,
                         <span class="ident">err</span>
                     );
                     <span class="ident">MessageAcceptance</span>::<span class="ident">Reject</span>
                 }
-                <span class="ident">intent_broadcaster</span>::<span class="ident">Error</span>::<span class="ident">MatchmakerInit</span>(..)
-                <span class="op">|</span> <span class="ident">intent_broadcaster</span>::<span class="ident">Error</span>::<span class="ident">Matchmaker</span>(..) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">intent_gossiper</span>::<span class="ident">Error</span>::<span class="ident">MatchmakerInit</span>(..)
+                <span class="op">|</span> <span class="ident">intent_gossiper</span>::<span class="ident">Error</span>::<span class="ident">Matchmaker</span>(..) <span class="op">=</span><span class="op">&gt;</span> {
                     <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;can&#39;t happens, because intent already decoded&quot;</span>)
                 }
             },
@@ -583,7 +578,7 @@
                 <span class="ident">message_id</span>,
             } <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">let</span> <span class="ident">validity</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">handle_raw_intent</span>(<span class="ident">message</span>.<span class="ident">data</span>);
-                <span class="self">self</span>.<span class="ident">intent_broadcaster_gossip</span>
+                <span class="self">self</span>.<span class="ident">intent_gossip_behaviour</span>
                     .<span class="ident">report_message_validation_result</span>(
                         <span class="kw-2">&amp;</span><span class="ident">message_id</span>,
                         <span class="kw-2">&amp;</span><span class="ident">propagation_source</span>,
@@ -592,7 +587,7 @@
                     .<span class="ident">expect</span>(<span class="string">&quot;Failed to validate the message &quot;</span>);
             }
             <span class="ident">GossipsubEvent</span>::<span class="ident">Subscribed</span> { <span class="ident">peer_id</span>: <span class="kw">_</span>, <span class="ident">topic</span> } <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="self">self</span>.<span class="ident">intent_broadcaster_gossip</span>
+                <span class="self">self</span>.<span class="ident">intent_gossip_behaviour</span>
                     .<span class="ident">subscribe</span>(<span class="kw-2">&amp;</span><span class="ident">IdentTopic</span>::<span class="ident">new</span>(<span class="ident">topic</span>.<span class="ident">into_string</span>()))
                     .<span class="ident">map_err</span>(<span class="ident">Error</span>::<span class="ident">FailedSubscription</span>)
                     .<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> {
@@ -615,7 +610,7 @@
             <span class="ident">MdnsEvent</span>::<span class="ident">Discovered</span>(<span class="ident">list</span>) <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">for</span> (<span class="ident">peer</span>, <span class="ident">addr</span>) <span class="kw">in</span> <span class="ident">list</span> {
                     <span class="ident">tracing</span>::<span class="macro">debug</span><span class="macro">!</span>(<span class="string">&quot;discovering peer {} : {} &quot;</span>, <span class="ident">peer</span>, <span class="ident">addr</span>);
-                    <span class="self">self</span>.<span class="ident">intent_broadcaster_gossip</span>.<span class="ident">inject_connected</span>(<span class="kw-2">&amp;</span><span class="ident">peer</span>);
+                    <span class="self">self</span>.<span class="ident">intent_gossip_behaviour</span>.<span class="ident">inject_connected</span>(<span class="kw-2">&amp;</span><span class="ident">peer</span>);
                 }
             }
             <span class="ident">MdnsEvent</span>::<span class="ident">Expired</span>(<span class="ident">list</span>) <span class="op">=</span><span class="op">&gt;</span> {
@@ -626,8 +621,7 @@
                             <span class="ident">peer</span>,
                             <span class="ident">addr</span>
                         );
-                        <span class="self">self</span>.<span class="ident">intent_broadcaster_gossip</span>
-                            .<span class="ident">inject_disconnected</span>(<span class="kw-2">&amp;</span><span class="ident">peer</span>);
+                        <span class="self">self</span>.<span class="ident">intent_gossip_behaviour</span>.<span class="ident">inject_disconnected</span>(<span class="kw-2">&amp;</span><span class="ident">peer</span>);
                     }
                 }
             }

@@ -333,7 +333,7 @@ And this is correct
 }
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Serialize</span>, <span class="ident">Deserialize</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">IntentBroadcaster</span> {
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">IntentGossiper</span> {
     <span class="kw">pub</span> <span class="ident">address</span>: <span class="ident">Multiaddr</span>,
     <span class="kw">pub</span> <span class="ident">peers</span>: <span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">Multiaddr</span><span class="op">&gt;</span>,
     <span class="kw">pub</span> <span class="ident">topics</span>: <span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>,
@@ -343,7 +343,7 @@ And this is correct
     <span class="kw">pub</span> <span class="ident">matchmaker</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Matchmaker</span><span class="op">&gt;</span>,
 }
 
-<span class="kw">impl</span> <span class="ident">Default</span> <span class="kw">for</span> <span class="ident">IntentBroadcaster</span> {
+<span class="kw">impl</span> <span class="ident">Default</span> <span class="kw">for</span> <span class="ident">IntentGossiper</span> {
     <span class="kw">fn</span> <span class="ident">default</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="self">Self</span> {
             <span class="comment">// TODO there must be a better option here</span>
@@ -363,7 +363,7 @@ And this is correct
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Serialize</span>, <span class="ident">Deserialize</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Config</span> {
     <span class="kw">pub</span> <span class="ident">ledger</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Ledger</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span> <span class="ident">intent_broadcaster</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">IntentBroadcaster</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span> <span class="ident">intent_gossiper</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">IntentGossiper</span><span class="op">&gt;</span>,
 }
 
 <span class="kw">impl</span> <span class="ident">Default</span> <span class="kw">for</span> <span class="ident">Config</span> {
@@ -371,7 +371,7 @@ And this is correct
         <span class="self">Self</span> {
             <span class="ident">ledger</span>: <span class="prelude-val">Some</span>(<span class="ident">Ledger</span>::<span class="ident">default</span>()),
             <span class="comment">// TODO Should it be None by default</span>
-            <span class="ident">intent_broadcaster</span>: <span class="prelude-val">Some</span>(<span class="ident">IntentBroadcaster</span>::<span class="ident">default</span>()),
+            <span class="ident">intent_gossiper</span>: <span class="prelude-val">Some</span>(<span class="ident">IntentGossiper</span>::<span class="ident">default</span>()),
         }
     }
 }

@@ -194,7 +194,7 @@
       "boundElementIds": [],
       "fontSize": 20,
       "fontFamily": 1,
-      "text": "Intent \nbroadcaster\nwith matchmaker",
+      "text": "Intent \gossiper\nwith matchmaker",
       "baseline": 70,
       "textAlign": "center",
       "verticalAlign": "top"
@@ -990,7 +990,7 @@
       "boundElementIds": [],
       "fontSize": 16,
       "fontFamily": 1,
-      "text": "Intent \nbroadcaster",
+      "text": "Intent \gossipersr",
       "baseline": 36,
       "textAlign": "center",
       "verticalAlign": "top"
@@ -1046,7 +1046,7 @@
       "boundElementIds": [],
       "fontSize": 16,
       "fontFamily": 1,
-      "text": "Intent \nbroadcaster",
+      "text": "Intent \gossiper",
       "baseline": 36,
       "textAlign": "center",
       "verticalAlign": "top"
@@ -1469,7 +1469,7 @@
       "boundElementIds": [],
       "fontSize": 16,
       "fontFamily": 1,
-      "text": "Intent \nbroadcaster",
+      "text": "Intent \gossiper",
       "baseline": 36,
       "textAlign": "center",
       "verticalAlign": "top"

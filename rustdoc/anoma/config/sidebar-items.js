@@ -1,1 +1,1 @@
-initSidebarItems({"constant":[["BASEDIR",""],["DB_DIR",""],["FILENAME",""],["TENDERMINT_DIR",""]],"enum":[["Error",""],["SubscriptionFilter",""]],"struct":[["Config",""],["IntentBroadcaster",""],["Ledger",""],["Matchmaker",""],["RpcServer",""]],"type":[["Result",""]]});
+initSidebarItems({"constant":[["BASEDIR",""],["DB_DIR",""],["FILENAME",""],["TENDERMINT_DIR",""]],"enum":[["Error",""],["SubscriptionFilter",""]],"struct":[["Config",""],["IntentGossiper",""],["Ledger",""],["Matchmaker",""],["RpcServer",""]],"type":[["Result",""]]});

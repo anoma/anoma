@@ -238,7 +238,7 @@
       "boundElementIds": [],
       "fontSize": 20,
       "fontFamily": 1,
-      "text": "Intent \nbroadcaster",
+      "text": "Intent \gossiper",
       "baseline": 44,
       "textAlign": "center",
       "verticalAlign": "top"
@@ -271,7 +271,7 @@
       ],
       "fontSize": 20,
       "fontFamily": 1,
-      "text": "intent\nbroadcaster \nnetwork",
+      "text": "intent\ngossip \nnetwork",
       "baseline": 70,
       "textAlign": "center",
       "verticalAlign": "top"
@@ -719,7 +719,7 @@
       "boundElementIds": [],
       "fontSize": 20,
       "fontFamily": 1,
-      "text": "DKG \nbroadcaster",
+      "text": "DKG \ngossip",
       "baseline": 44,
       "textAlign": "center",
       "verticalAlign": "top"
@@ -830,7 +830,7 @@
       ],
       "fontSize": 20,
       "fontFamily": 1,
-      "text": "DKG\nbroadcaster \nnetwork",
+      "text": "DKG\ngossip \nnetwork",
       "baseline": 70,
       "textAlign": "center",
       "verticalAlign": "top"

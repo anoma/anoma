@@ -1404,7 +1404,7 @@
       "boundElementIds": [],
       "fontSize": 36,
       "fontFamily": 1,
-      "text": "Intent broadcaster \nnetwork",
+      "text": "Intent gossip \nnetwork",
       "baseline": 78,
       "textAlign": "center",
       "verticalAlign": "top"

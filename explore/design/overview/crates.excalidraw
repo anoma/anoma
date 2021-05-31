@@ -180,7 +180,7 @@
       ],
       "fontSize": 16,
       "fontFamily": 3,
-      "text": "apps \n(node/client/broadcaster)",
+      "text": "apps \n(node/client/gossiper)",
       "baseline": 35,
       "textAlign": "left",
       "verticalAlign": "top"

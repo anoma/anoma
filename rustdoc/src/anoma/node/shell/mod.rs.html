@@ -395,7 +395,6 @@
 <span id="392">392</span>
 <span id="393">393</span>
 <span id="394">394</span>
-<span id="395">395</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">gas</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">storage</span>;
@@ -550,12 +549,11 @@
                 .<span class="ident">expect</span>(<span class="string">&quot;Unable to set genesis user public key&quot;</span>);
         }
 
-        <span class="comment">// Temporary for testing, we have a fixed matchmaker account.</span>
-        <span class="comment">// This account has a public key for signing matchmaker txs and</span>
-        <span class="comment">// verifying their signatures in its VP. The VP is the same as</span>
-        <span class="comment">// the user&#39;s VP, which simply checks the signature.</span>
-        <span class="comment">// We could consider using the same key as the intent broadcaster&#39;s p2p</span>
-        <span class="comment">// key.</span>
+        <span class="comment">// Temporary for testing, we have a fixed matchmaker account.  This</span>
+        <span class="comment">// account has a public key for signing matchmaker txs and verifying</span>
+        <span class="comment">// their signatures in its VP. The VP is the same as the user&#39;s VP,</span>
+        <span class="comment">// which simply checks the signature. We could consider using the same</span>
+        <span class="comment">// key as the intent gossip&#39;s p2p key.</span>
         <span class="kw">let</span> <span class="ident">matchmaker</span> <span class="op">=</span> <span class="ident">address</span>::<span class="ident">matchmaker</span>();
         <span class="kw">let</span> <span class="ident">matchmaker_pk</span> <span class="op">=</span> <span class="ident">key</span>::<span class="ident">ed25519</span>::<span class="ident">pk_key</span>(<span class="kw-2">&amp;</span><span class="ident">matchmaker</span>);
         <span class="ident">storage</span>
