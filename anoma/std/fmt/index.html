@@ -1,0 +1,453 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Utilities for formatting and printing `String`s."><meta name="keywords" content="rust, rustlang, rust-lang, fmt"><title>anoma::std::fmt - Rust</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script id="default-settings"></script><script src="../../../storage.js"></script><script src="../../../crates.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../../favicon.svg">
+<link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png">
+<link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc mod"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../anoma/index.html'><div class='logo-container rust-logo'><img src='../../../rust-logo.png' alt='logo'></div></a><p class="location">Module fmt</p><div class="sidebar-elems"><div class="block items"><ul><li><a href="#macros">Macros</a></li><li><a href="#structs">Structs</a></li><li><a href="#enums">Enums</a></li><li><a href="#traits">Traits</a></li><li><a href="#functions">Functions</a></li><li><a href="#types">Type Definitions</a></li></ul></div><p class="location"><a href="../../index.html">anoma</a>::<wbr><a href="../index.html">std</a></p><div id="sidebar-vars" data-name="fmt" data-ty="mod" data-relpath="../"></div><script defer src="../sidebar-items.js"></script></div></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../../../brush.svg" width="18" height="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><script src="../../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" class="help-button">?</button>
+                <a id="settings-menu" href="../../../settings.html"><img src="../../../wheel.svg" width="18" height="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><h1 class="fqn"><span class="in-band">Module <a href="../../index.html">anoma</a>::<wbr><a href="../index.html">std</a>::<wbr><a class="mod" href="">fmt</a></span><span class="out-of-band"><span class="since" title="Stable since Rust version 1.0.0">1.0.0</span><span id="render-detail"><a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">[<span class="inner">&#x2212;</span>]</a></span><a class="srclink" href="https://doc.rust-lang.org/nightly/src/alloc/lib.rs.html#179" title="goto source code">[src]</a></span></h1><div class="docblock"><p>Utilities for formatting and printing <code>String</code>s.</p>
+<p>This module contains the runtime support for the <a href="../../../anoma/std/macro.format.html"><code>format!</code></a> syntax extension.
+This macro is implemented in the compiler to emit calls to this module in
+order to format arguments at runtime into strings.</p>
+<h1 id="usage" class="section-header"><a href="#usage">Usage</a></h1>
+<p>The <a href="../../../anoma/std/macro.format.html"><code>format!</code></a> macro is intended to be familiar to those coming from C’s
+<code>printf</code>/<code>fprintf</code> functions or Python’s <code>str.format</code> function.</p>
+<p>Some examples of the <a href="../../../anoma/std/macro.format.html"><code>format!</code></a> extension are:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;Hello&quot;</span>);                 <span class="comment">// =&gt; &quot;Hello&quot;</span>
+<span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;Hello, {}!&quot;</span>, <span class="string">&quot;world&quot;</span>);   <span class="comment">// =&gt; &quot;Hello, world!&quot;</span>
+<span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;The number is {}&quot;</span>, <span class="number">1</span>);   <span class="comment">// =&gt; &quot;The number is 1&quot;</span>
+<span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;{:?}&quot;</span>, (<span class="number">3</span>, <span class="number">4</span>));          <span class="comment">// =&gt; &quot;(3, 4)&quot;</span>
+<span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;{value}&quot;</span>, <span class="ident">value</span><span class="op">=</span><span class="number">4</span>);      <span class="comment">// =&gt; &quot;4&quot;</span>
+<span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;{} {}&quot;</span>, <span class="number">1</span>, <span class="number">2</span>);           <span class="comment">// =&gt; &quot;1 2&quot;</span>
+<span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;{:04}&quot;</span>, <span class="number">42</span>);             <span class="comment">// =&gt; &quot;0042&quot; with leading zeros</span></pre></div>
+<p>From these, you can see that the first argument is a format string. It is
+required by the compiler for this to be a string literal; it cannot be a
+variable passed in (in order to perform validity checking). The compiler
+will then parse the format string and determine if the list of arguments
+provided is suitable to pass to this format string.</p>
+<p>To convert a single value to a string, use the <a href="../../../anoma/std/string/trait.ToString.html"><code>to_string</code></a> method. This
+will use the <a href="../../../anoma/std/fmt/trait.Display.html" title="Display"><code>Display</code></a> formatting trait.</p>
+<h2 id="positional-parameters" class="section-header"><a href="#positional-parameters">Positional parameters</a></h2>
+<p>Each formatting argument is allowed to specify which value argument it’s
+referencing, and if omitted it is assumed to be “the next argument”. For
+example, the format string <code>{} {} {}</code> would take three parameters, and they
+would be formatted in the same order as they’re given. The format string
+<code>{2} {1} {0}</code>, however, would format arguments in reverse order.</p>
+<p>Things can get a little tricky once you start intermingling the two types of
+positional specifiers. The “next argument” specifier can be thought of as an
+iterator over the argument. Each time a “next argument” specifier is seen,
+the iterator advances. This leads to behavior like this:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;{1} {} {0} {}&quot;</span>, <span class="number">1</span>, <span class="number">2</span>); <span class="comment">// =&gt; &quot;2 1 1 2&quot;</span></pre></div>
+<p>The internal iterator over the argument has not been advanced by the time
+the first <code>{}</code> is seen, so it prints the first argument. Then upon reaching
+the second <code>{}</code>, the iterator has advanced forward to the second argument.
+Essentially, parameters that explicitly name their argument do not affect
+parameters that do not name an argument in terms of positional specifiers.</p>
+<p>A format string is required to use all of its arguments, otherwise it is a
+compile-time error. You may refer to the same argument more than once in the
+format string.</p>
+<h2 id="named-parameters" class="section-header"><a href="#named-parameters">Named parameters</a></h2>
+<p>Rust itself does not have a Python-like equivalent of named parameters to a
+function, but the <a href="../../../anoma/std/macro.format.html"><code>format!</code></a> macro is a syntax extension that allows it to
+leverage named parameters. Named parameters are listed at the end of the
+argument list and have the syntax:</p>
+<pre><code class="language-text">identifier '=' expression
+</code></pre>
+<p>For example, the following <a href="../../../anoma/std/macro.format.html"><code>format!</code></a> expressions all use named argument:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;{argument}&quot;</span>, <span class="ident">argument</span> <span class="op">=</span> <span class="string">&quot;test&quot;</span>);   <span class="comment">// =&gt; &quot;test&quot;</span>
+<span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;{name} {}&quot;</span>, <span class="number">1</span>, <span class="ident">name</span> <span class="op">=</span> <span class="number">2</span>);          <span class="comment">// =&gt; &quot;2 1&quot;</span>
+<span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;{a} {c} {b}&quot;</span>, <span class="ident">a</span><span class="op">=</span><span class="string">&quot;a&quot;</span>, <span class="ident">b</span><span class="op">=</span><span class="string">&#39;b&#39;</span>, <span class="ident">c</span><span class="op">=</span><span class="number">3</span>);  <span class="comment">// =&gt; &quot;a 3 b&quot;</span></pre></div>
+<p>It is not valid to put positional parameters (those without names) after
+arguments that have names. Like with positional parameters, it is not
+valid to provide named parameters that are unused by the format string.</p>
+<h1 id="formatting-parameters" class="section-header"><a href="#formatting-parameters">Formatting Parameters</a></h1>
+<p>Each argument being formatted can be transformed by a number of formatting
+parameters (corresponding to <code>format_spec</code> in <a href="#syntax">the syntax</a>). These
+parameters affect the string representation of what’s being formatted.</p>
+<h2 id="width" class="section-header"><a href="#width">Width</a></h2>
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="comment">// All of these print &quot;Hello x    !&quot;</span>
+<span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot;Hello {:5}!&quot;</span>, <span class="string">&quot;x&quot;</span>);
+<span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot;Hello {:1$}!&quot;</span>, <span class="string">&quot;x&quot;</span>, <span class="number">5</span>);
+<span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot;Hello {1:0$}!&quot;</span>, <span class="number">5</span>, <span class="string">&quot;x&quot;</span>);
+<span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot;Hello {:width$}!&quot;</span>, <span class="string">&quot;x&quot;</span>, <span class="ident">width</span> <span class="op">=</span> <span class="number">5</span>);</pre></div>
+<p>This is a parameter for the “minimum width” that the format should take up.
+If the value’s string does not fill up this many characters, then the
+padding specified by fill/alignment will be used to take up the required
+space (see below).</p>
+<p>The value for the width can also be provided as a <a href="https://doc.rust-lang.org/nightly/std/primitive.usize.html" title="usize"><code>usize</code></a> in the list of
+parameters by adding a postfix <code>$</code>, indicating that the second argument is
+a <a href="https://doc.rust-lang.org/nightly/std/primitive.usize.html" title="usize"><code>usize</code></a> specifying the width.</p>
+<p>Referring to an argument with the dollar syntax does not affect the “next
+argument” counter, so it’s usually a good idea to refer to arguments by
+position, or use named arguments.</p>
+<h2 id="fillalignment" class="section-header"><a href="#fillalignment">Fill/Alignment</a></h2>
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="macro">assert_eq</span><span class="macro">!</span>(<span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;Hello {:&lt;5}!&quot;</span>, <span class="string">&quot;x&quot;</span>),  <span class="string">&quot;Hello x    !&quot;</span>);
+<span class="macro">assert_eq</span><span class="macro">!</span>(<span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;Hello {:-&lt;5}!&quot;</span>, <span class="string">&quot;x&quot;</span>), <span class="string">&quot;Hello x----!&quot;</span>);
+<span class="macro">assert_eq</span><span class="macro">!</span>(<span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;Hello {:^5}!&quot;</span>, <span class="string">&quot;x&quot;</span>),  <span class="string">&quot;Hello   x  !&quot;</span>);
+<span class="macro">assert_eq</span><span class="macro">!</span>(<span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;Hello {:&gt;5}!&quot;</span>, <span class="string">&quot;x&quot;</span>),  <span class="string">&quot;Hello     x!&quot;</span>);</pre></div>
+<p>The optional fill character and alignment is provided normally in conjunction with the
+<a href="#width"><code>width</code></a> parameter. It must be defined before <code>width</code>, right after the <code>:</code>.
+This indicates that if the value being formatted is smaller than
+<code>width</code> some extra characters will be printed around it.
+Filling comes in the following variants for different alignments:</p>
+<ul>
+<li><code>[fill]&lt;</code> - the argument is left-aligned in <code>width</code> columns</li>
+<li><code>[fill]^</code> - the argument is center-aligned in <code>width</code> columns</li>
+<li><code>[fill]&gt;</code> - the argument is right-aligned in <code>width</code> columns</li>
+</ul>
+<p>The default <a href="#fillalignment">fill/alignment</a> for non-numerics is a space and
+left-aligned. The
+default for numeric formatters is also a space character but with right-alignment. If
+the <code>0</code> flag (see below) is specified for numerics, then the implicit fill character is
+<code>0</code>.</p>
+<p>Note that alignment may not be implemented by some types. In particular, it
+is not generally implemented for the <code>Debug</code> trait.  A good way to ensure
+padding is applied is to format your input, then pad this resulting string
+to obtain your output:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot;Hello {:^15}!&quot;</span>, <span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="prelude-val">Some</span>(<span class="string">&quot;hi&quot;</span>))); <span class="comment">// =&gt; &quot;Hello   Some(&quot;hi&quot;)   !&quot;</span></pre></div>
+<h2 id="sign0" class="section-header"><a href="#sign0">Sign/<code>#</code>/<code>0</code></a></h2>
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="macro">assert_eq</span><span class="macro">!</span>(<span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;Hello {:+}!&quot;</span>, <span class="number">5</span>), <span class="string">&quot;Hello +5!&quot;</span>);
+<span class="macro">assert_eq</span><span class="macro">!</span>(<span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;{:#x}!&quot;</span>, <span class="number">27</span>), <span class="string">&quot;0x1b!&quot;</span>);
+<span class="macro">assert_eq</span><span class="macro">!</span>(<span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;Hello {:05}!&quot;</span>, <span class="number">5</span>),  <span class="string">&quot;Hello 00005!&quot;</span>);
+<span class="macro">assert_eq</span><span class="macro">!</span>(<span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;Hello {:05}!&quot;</span>, <span class="op">-</span><span class="number">5</span>), <span class="string">&quot;Hello -0005!&quot;</span>);
+<span class="macro">assert_eq</span><span class="macro">!</span>(<span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;{:#010x}!&quot;</span>, <span class="number">27</span>), <span class="string">&quot;0x0000001b!&quot;</span>);</pre></div>
+<p>These are all flags altering the behavior of the formatter.</p>
+<ul>
+<li><code>+</code> - This is intended for numeric types and indicates that the sign
+should always be printed. Positive signs are never printed by
+default, and the negative sign is only printed by default for the
+<code>Signed</code> trait. This flag indicates that the correct sign (<code>+</code> or <code>-</code>)
+should always be printed.</li>
+<li><code>-</code> - Currently not used</li>
+<li><code>#</code> - This flag indicates that the “alternate” form of printing should
+be used. The alternate forms are:
+<ul>
+<li><code>#?</code> - pretty-print the <a href="../../../anoma/std/fmt/trait.Debug.html" title="Debug"><code>Debug</code></a> formatting</li>
+<li><code>#x</code> - precedes the argument with a <code>0x</code></li>
+<li><code>#X</code> - precedes the argument with a <code>0x</code></li>
+<li><code>#b</code> - precedes the argument with a <code>0b</code></li>
+<li><code>#o</code> - precedes the argument with a <code>0o</code></li>
+</ul>
+</li>
+<li><code>0</code> - This is used to indicate for integer formats that the padding to <code>width</code> should
+both be done with a <code>0</code> character as well as be sign-aware. A format
+like <code>{:08}</code> would yield <code>00000001</code> for the integer <code>1</code>, while the
+same format would yield <code>-0000001</code> for the integer <code>-1</code>. Notice that
+the negative version has one fewer zero than the positive version.
+Note that padding zeros are always placed after the sign (if any)
+and before the digits. When used together with the <code>#</code> flag, a similar
+rule applies: padding zeros are inserted after the prefix but before
+the digits. The prefix is included in the total width.</li>
+</ul>
+<h2 id="precision" class="section-header"><a href="#precision">Precision</a></h2>
+<p>For non-numeric types, this can be considered a “maximum width”. If the resulting string is
+longer than this width, then it is truncated down to this many characters and that truncated
+value is emitted with proper <code>fill</code>, <code>alignment</code> and <code>width</code> if those parameters are set.</p>
+<p>For integral types, this is ignored.</p>
+<p>For floating-point types, this indicates how many digits after the decimal point should be
+printed.</p>
+<p>There are three possible ways to specify the desired <code>precision</code>:</p>
+<ol>
+<li>
+<p>An integer <code>.N</code>:</p>
+<p>the integer <code>N</code> itself is the precision.</p>
+</li>
+<li>
+<p>An integer or name followed by dollar sign <code>.N$</code>:</p>
+<p>use format <em>argument</em> <code>N</code> (which must be a <code>usize</code>) as the precision.</p>
+</li>
+<li>
+<p>An asterisk <code>.*</code>:</p>
+<p><code>.*</code> means that this <code>{...}</code> is associated with <em>two</em> format inputs rather than one: the
+first input holds the <code>usize</code> precision, and the second holds the value to print. Note that
+in this case, if one uses the format string <code>{&lt;arg&gt;:&lt;spec&gt;.*}</code>, then the <code>&lt;arg&gt;</code> part refers
+to the <em>value</em> to print, and the <code>precision</code> must come in the input preceding <code>&lt;arg&gt;</code>.</p>
+</li>
+</ol>
+<p>For example, the following calls all print the same thing <code>Hello x is 0.01000</code>:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="comment">// Hello {arg 0 (&quot;x&quot;)} is {arg 1 (0.01) with precision specified inline (5)}</span>
+<span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot;Hello {0} is {1:.5}&quot;</span>, <span class="string">&quot;x&quot;</span>, <span class="number">0.01</span>);
+
+<span class="comment">// Hello {arg 1 (&quot;x&quot;)} is {arg 2 (0.01) with precision specified in arg 0 (5)}</span>
+<span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot;Hello {1} is {2:.0$}&quot;</span>, <span class="number">5</span>, <span class="string">&quot;x&quot;</span>, <span class="number">0.01</span>);
+
+<span class="comment">// Hello {arg 0 (&quot;x&quot;)} is {arg 2 (0.01) with precision specified in arg 1 (5)}</span>
+<span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot;Hello {0} is {2:.1$}&quot;</span>, <span class="string">&quot;x&quot;</span>, <span class="number">5</span>, <span class="number">0.01</span>);
+
+<span class="comment">// Hello {next arg (&quot;x&quot;)} is {second of next two args (0.01) with precision</span>
+<span class="comment">//                          specified in first of next two args (5)}</span>
+<span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot;Hello {} is {:.*}&quot;</span>,    <span class="string">&quot;x&quot;</span>, <span class="number">5</span>, <span class="number">0.01</span>);
+
+<span class="comment">// Hello {next arg (&quot;x&quot;)} is {arg 2 (0.01) with precision</span>
+<span class="comment">//                          specified in its predecessor (5)}</span>
+<span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot;Hello {} is {2:.*}&quot;</span>,   <span class="string">&quot;x&quot;</span>, <span class="number">5</span>, <span class="number">0.01</span>);
+
+<span class="comment">// Hello {next arg (&quot;x&quot;)} is {arg &quot;number&quot; (0.01) with precision specified</span>
+<span class="comment">//                          in arg &quot;prec&quot; (5)}</span>
+<span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot;Hello {} is {number:.prec$}&quot;</span>, <span class="string">&quot;x&quot;</span>, <span class="ident">prec</span> <span class="op">=</span> <span class="number">5</span>, <span class="ident">number</span> <span class="op">=</span> <span class="number">0.01</span>);</pre></div>
+<p>While these:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot;{}, `{name:.*}` has 3 fractional digits&quot;</span>, <span class="string">&quot;Hello&quot;</span>, <span class="number">3</span>, <span class="ident">name</span><span class="op">=</span><span class="number">1234.56</span>);
+<span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot;{}, `{name:.*}` has 3 characters&quot;</span>, <span class="string">&quot;Hello&quot;</span>, <span class="number">3</span>, <span class="ident">name</span><span class="op">=</span><span class="string">&quot;1234.56&quot;</span>);
+<span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot;{}, `{name:&gt;8.*}` has 3 right-aligned characters&quot;</span>, <span class="string">&quot;Hello&quot;</span>, <span class="number">3</span>, <span class="ident">name</span><span class="op">=</span><span class="string">&quot;1234.56&quot;</span>);</pre></div>
+<p>print three significantly different things:</p>
+<pre><code class="language-text">Hello, `1234.560` has 3 fractional digits
+Hello, `123` has 3 characters
+Hello, `     123` has 3 right-aligned characters
+</code></pre>
+<h2 id="localization" class="section-header"><a href="#localization">Localization</a></h2>
+<p>In some programming languages, the behavior of string formatting functions
+depends on the operating system’s locale setting. The format functions
+provided by Rust’s standard library do not have any concept of locale and
+will produce the same results on all systems regardless of user
+configuration.</p>
+<p>For example, the following code will always print <code>1.5</code> even if the system
+locale uses a decimal separator other than a dot.</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot;The value is {}&quot;</span>, <span class="number">1.5</span>);</pre></div>
+<h1 id="escaping" class="section-header"><a href="#escaping">Escaping</a></h1>
+<p>The literal characters <code>{</code> and <code>}</code> may be included in a string by preceding
+them with the same character. For example, the <code>{</code> character is escaped with
+<code>{{</code> and the <code>}</code> character is escaped with <code>}}</code>.</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="macro">assert_eq</span><span class="macro">!</span>(<span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;Hello {{}}&quot;</span>), <span class="string">&quot;Hello {}&quot;</span>);
+<span class="macro">assert_eq</span><span class="macro">!</span>(<span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;{{ Hello&quot;</span>), <span class="string">&quot;{ Hello&quot;</span>);</pre></div>
+<h1 id="syntax" class="section-header"><a href="#syntax">Syntax</a></h1>
+<p>To summarize, here you can find the full grammar of format strings.
+The syntax for the formatting language used is drawn from other languages,
+so it should not be too alien. Arguments are formatted with Python-like
+syntax, meaning that arguments are surrounded by <code>{}</code> instead of the C-like
+<code>%</code>. The actual grammar for the formatting syntax is:</p>
+<pre><code class="language-text">format_string := text [ maybe_format text ] *
+maybe_format := '{' '{' | '}' '}' | format
+format := '{' [ argument ] [ ':' format_spec ] '}'
+argument := integer | identifier
+
+format_spec := [[fill]align][sign]['#']['0'][width]['.' precision]type
+fill := character
+align := '&lt;' | '^' | '&gt;'
+sign := '+' | '-'
+width := count
+precision := count | '*'
+type := '' | '?' | 'x?' | 'X?' | identifier
+count := parameter | integer
+parameter := argument '$'
+</code></pre>
+<p>In the above grammar, <code>text</code> may not contain any <code>'{'</code> or <code>'}'</code> characters.</p>
+<h1 id="formatting-traits" class="section-header"><a href="#formatting-traits">Formatting traits</a></h1>
+<p>When requesting that an argument be formatted with a particular type, you
+are actually requesting that an argument ascribes to a particular trait.
+This allows multiple actual types to be formatted via <code>{:x}</code> (like <a href="https://doc.rust-lang.org/nightly/std/primitive.i8.html" title="i8"><code>i8</code></a> as
+well as <a href="https://doc.rust-lang.org/nightly/std/primitive.isize.html" title="isize"><code>isize</code></a>). The current mapping of types to traits is:</p>
+<ul>
+<li><em>nothing</em> ⇒ <a href="../../../anoma/std/fmt/trait.Display.html" title="Display"><code>Display</code></a></li>
+<li><code>?</code> ⇒ <a href="../../../anoma/std/fmt/trait.Debug.html" title="Debug"><code>Debug</code></a></li>
+<li><code>x?</code> ⇒ <a href="../../../anoma/std/fmt/trait.Debug.html" title="Debug"><code>Debug</code></a> with lower-case hexadecimal integers</li>
+<li><code>X?</code> ⇒ <a href="../../../anoma/std/fmt/trait.Debug.html" title="Debug"><code>Debug</code></a> with upper-case hexadecimal integers</li>
+<li><code>o</code> ⇒ <a href="../../../anoma/std/fmt/trait.Octal.html" title="Octal"><code>Octal</code></a></li>
+<li><code>x</code> ⇒ <a href="../../../anoma/std/fmt/trait.LowerHex.html" title="LowerHex"><code>LowerHex</code></a></li>
+<li><code>X</code> ⇒ <a href="../../../anoma/std/fmt/trait.UpperHex.html" title="UpperHex"><code>UpperHex</code></a></li>
+<li><code>p</code> ⇒ <a href="../../../anoma/std/fmt/trait.Pointer.html" title="Pointer"><code>Pointer</code></a></li>
+<li><code>b</code> ⇒ <a href="../../../anoma/std/fmt/trait.Binary.html" title="Binary"><code>Binary</code></a></li>
+<li><code>e</code> ⇒ <a href="../../../anoma/std/fmt/trait.LowerExp.html" title="LowerExp"><code>LowerExp</code></a></li>
+<li><code>E</code> ⇒ <a href="../../../anoma/std/fmt/trait.UpperExp.html" title="UpperExp"><code>UpperExp</code></a></li>
+</ul>
+<p>What this means is that any type of argument which implements the
+<a href="../../../anoma/std/fmt/trait.Binary.html" title="Binary"><code>fmt::Binary</code></a> trait can then be formatted with <code>{:b}</code>. Implementations
+are provided for these traits for a number of primitive types by the
+standard library as well. If no format is specified (as in <code>{}</code> or <code>{:6}</code>),
+then the format trait used is the <a href="../../../anoma/std/fmt/trait.Display.html" title="Display"><code>Display</code></a> trait.</p>
+<p>When implementing a format trait for your own type, you will have to
+implement a method of the signature:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">fmt</span>::<span class="ident">Formatter</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">fmt</span>::<span class="prelude-ty">Result</span> {</pre></div>
+<p>Your type will be passed as <code>self</code> by-reference, and then the function
+should emit output into the <code>f.buf</code> stream. It is up to each format trait
+implementation to correctly adhere to the requested formatting parameters.
+The values of these parameters will be listed in the fields of the
+<a href="../../../anoma/std/fmt/struct.Formatter.html" title="Formatter"><code>Formatter</code></a> struct. In order to help with this, the <a href="../../../anoma/std/fmt/struct.Formatter.html" title="Formatter"><code>Formatter</code></a> struct also
+provides some helper methods.</p>
+<p>Additionally, the return value of this function is <a href="../../../anoma/std/fmt/type.Result.html"><code>fmt::Result</code></a> which is a
+type alias of <a href="../../../anoma/std/result/enum.Result.html"><code>Result</code></a><code>&lt;(), </code><a href="../../../anoma/std/fmt/struct.Error.html"><code>std::fmt::Error</code></a><code>&gt;</code>. Formatting implementations
+should ensure that they propagate errors from the <a href="../../../anoma/std/fmt/struct.Formatter.html" title="Formatter"><code>Formatter</code></a> (e.g., when
+calling <a href="../../../anoma/std/macro.write.html"><code>write!</code></a>). However, they should never return errors spuriously. That
+is, a formatting implementation must and may only return an error if the
+passed-in <a href="../../../anoma/std/fmt/struct.Formatter.html" title="Formatter"><code>Formatter</code></a> returns an error. This is because, contrary to what
+the function signature might suggest, string formatting is an infallible
+operation. This function only returns a result because writing to the
+underlying stream might fail and it must provide a way to propagate the fact
+that an error has occurred back up the stack.</p>
+<p>An example of implementing the formatting traits would look
+like:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">fmt</span>;
+
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
+<span class="kw">struct</span> <span class="ident">Vector2D</span> {
+    <span class="ident">x</span>: <span class="ident">isize</span>,
+    <span class="ident">y</span>: <span class="ident">isize</span>,
+}
+
+<span class="kw">impl</span> <span class="ident">fmt</span>::<span class="ident">Display</span> <span class="kw">for</span> <span class="ident">Vector2D</span> {
+    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">fmt</span>::<span class="ident">Formatter</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">fmt</span>::<span class="prelude-ty">Result</span> {
+        <span class="comment">// The `f` value implements the `Write` trait, which is what the</span>
+        <span class="comment">// write! macro is expecting. Note that this formatting ignores the</span>
+        <span class="comment">// various flags provided to format strings.</span>
+        <span class="macro">write</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot;({}, {})&quot;</span>, <span class="self">self</span>.<span class="ident">x</span>, <span class="self">self</span>.<span class="ident">y</span>)
+    }
+}
+
+<span class="comment">// Different traits allow different forms of output of a type. The meaning</span>
+<span class="comment">// of this format is to print the magnitude of a vector.</span>
+<span class="kw">impl</span> <span class="ident">fmt</span>::<span class="ident">Binary</span> <span class="kw">for</span> <span class="ident">Vector2D</span> {
+    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">fmt</span>::<span class="ident">Formatter</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">fmt</span>::<span class="prelude-ty">Result</span> {
+        <span class="kw">let</span> <span class="ident">magnitude</span> <span class="op">=</span> (<span class="self">self</span>.<span class="ident">x</span> <span class="op">*</span> <span class="self">self</span>.<span class="ident">x</span> <span class="op">+</span> <span class="self">self</span>.<span class="ident">y</span> <span class="op">*</span> <span class="self">self</span>.<span class="ident">y</span>) <span class="kw">as</span> <span class="ident">f64</span>;
+        <span class="kw">let</span> <span class="ident">magnitude</span> <span class="op">=</span> <span class="ident">magnitude</span>.<span class="ident">sqrt</span>();
+
+        <span class="comment">// Respect the formatting flags by using the helper method</span>
+        <span class="comment">// `pad_integral` on the Formatter object. See the method</span>
+        <span class="comment">// documentation for details, and the function `pad` can be used</span>
+        <span class="comment">// to pad strings.</span>
+        <span class="kw">let</span> <span class="ident">decimals</span> <span class="op">=</span> <span class="ident">f</span>.<span class="ident">precision</span>().<span class="ident">unwrap_or</span>(<span class="number">3</span>);
+        <span class="kw">let</span> <span class="ident">string</span> <span class="op">=</span> <span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;{:.*}&quot;</span>, <span class="ident">decimals</span>, <span class="ident">magnitude</span>);
+        <span class="ident">f</span>.<span class="ident">pad_integral</span>(<span class="bool-val">true</span>, <span class="string">&quot;&quot;</span>, <span class="kw-2">&amp;</span><span class="ident">string</span>)
+    }
+}
+
+<span class="kw">fn</span> <span class="ident">main</span>() {
+    <span class="kw">let</span> <span class="ident">myvector</span> <span class="op">=</span> <span class="ident">Vector2D</span> { <span class="ident">x</span>: <span class="number">3</span>, <span class="ident">y</span>: <span class="number">4</span> };
+
+    <span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">myvector</span>);       <span class="comment">// =&gt; &quot;(3, 4)&quot;</span>
+    <span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="ident">myvector</span>);     <span class="comment">// =&gt; &quot;Vector2D {x: 3, y:4}&quot;</span>
+    <span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot;{:10.3b}&quot;</span>, <span class="ident">myvector</span>); <span class="comment">// =&gt; &quot;     5.000&quot;</span>
+}</pre></div>
+<h3 id="fmtdisplay-vs-fmtdebug" class="section-header"><a href="#fmtdisplay-vs-fmtdebug"><code>fmt::Display</code> vs <code>fmt::Debug</code></a></h3>
+<p>These two formatting traits have distinct purposes:</p>
+<ul>
+<li><a href="../../../anoma/std/fmt/trait.Display.html" title="Display"><code>fmt::Display</code></a> implementations assert that the type can be faithfully
+represented as a UTF-8 string at all times. It is <strong>not</strong> expected that
+all types implement the <a href="../../../anoma/std/fmt/trait.Display.html" title="Display"><code>Display</code></a> trait.</li>
+<li><a href="../../../anoma/std/fmt/trait.Debug.html" title="Debug"><code>fmt::Debug</code></a> implementations should be implemented for <strong>all</strong> public types.
+Output will typically represent the internal state as faithfully as possible.
+The purpose of the <a href="../../../anoma/std/fmt/trait.Debug.html" title="Debug"><code>Debug</code></a> trait is to facilitate debugging Rust code. In
+most cases, using <code>#[derive(Debug)]</code> is sufficient and recommended.</li>
+</ul>
+<p>Some examples of the output from both traits:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="macro">assert_eq</span><span class="macro">!</span>(<span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;{} {:?}&quot;</span>, <span class="number">3</span>, <span class="number">4</span>), <span class="string">&quot;3 4&quot;</span>);
+<span class="macro">assert_eq</span><span class="macro">!</span>(<span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;{} {:?}&quot;</span>, <span class="string">&#39;a&#39;</span>, <span class="string">&#39;b&#39;</span>), <span class="string">&quot;a &#39;b&#39;&quot;</span>);
+<span class="macro">assert_eq</span><span class="macro">!</span>(<span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;{} {:?}&quot;</span>, <span class="string">&quot;foo\n&quot;</span>, <span class="string">&quot;bar\n&quot;</span>), <span class="string">&quot;foo\n \&quot;bar\\n\&quot;&quot;</span>);</pre></div>
+<h1 id="related-macros" class="section-header"><a href="#related-macros">Related macros</a></h1>
+<p>There are a number of related macros in the <a href="../../../anoma/std/macro.format.html"><code>format!</code></a> family. The ones that
+are currently implemented are:</p>
+
+<div class='information'><div class='tooltip ignore'>ⓘ</div></div><div class="example-wrap"><pre class="rust rust-example-rendered ignore">
+<span class="macro">format</span><span class="macro">!</span>      <span class="comment">// described above</span>
+<span class="macro">write</span><span class="macro">!</span>       <span class="comment">// first argument is a &amp;mut io::Write, the destination</span>
+<span class="macro">writeln</span><span class="macro">!</span>     <span class="comment">// same as write but appends a newline</span>
+<span class="macro">print</span><span class="macro">!</span>       <span class="comment">// the format string is printed to the standard output</span>
+<span class="macro">println</span><span class="macro">!</span>     <span class="comment">// same as print but appends a newline</span>
+<span class="macro">eprint</span><span class="macro">!</span>      <span class="comment">// the format string is printed to the standard error</span>
+<span class="macro">eprintln</span><span class="macro">!</span>    <span class="comment">// same as eprint but appends a newline</span>
+<span class="macro">format_args</span><span class="macro">!</span> <span class="comment">// described below.</span></pre></div>
+<h3 id="write" class="section-header"><a href="#write"><code>write!</code></a></h3>
+<p>This and <a href="../../../anoma/std/macro.writeln.html"><code>writeln!</code></a> are two macros which are used to emit the format string
+to a specified stream. This is used to prevent intermediate allocations of
+format strings and instead directly write the output. Under the hood, this
+function is actually invoking the <a href="../../std/io/trait.Write.html#method.write_fmt"><code>write_fmt</code></a> function defined on the
+<a href="../../std/io/trait.Write.html"><code>std::io::Write</code></a> trait. Example usage is:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">io</span>::<span class="ident">Write</span>;
+<span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">w</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="ident">new</span>();
+<span class="macro">write</span><span class="macro">!</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">w</span>, <span class="string">&quot;Hello {}!&quot;</span>, <span class="string">&quot;world&quot;</span>);</pre></div>
+<h3 id="print" class="section-header"><a href="#print"><code>print!</code></a></h3>
+<p>This and <a href="../../std/macro.println.html"><code>println!</code></a> emit their output to stdout. Similarly to the <a href="../../../anoma/std/macro.write.html"><code>write!</code></a>
+macro, the goal of these macros is to avoid intermediate allocations when
+printing output. Example usage is:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="macro">print</span><span class="macro">!</span>(<span class="string">&quot;Hello {}!&quot;</span>, <span class="string">&quot;world&quot;</span>);
+<span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot;I have a newline {}&quot;</span>, <span class="string">&quot;character at the end&quot;</span>);</pre></div>
+<h3 id="eprint" class="section-header"><a href="#eprint"><code>eprint!</code></a></h3>
+<p>The <a href="../../std/macro.eprint.html"><code>eprint!</code></a> and <a href="../../std/macro.eprintln.html"><code>eprintln!</code></a> macros are identical to
+<a href="../../std/macro.print.html"><code>print!</code></a> and <a href="../../std/macro.println.html"><code>println!</code></a>, respectively, except they emit their
+output to stderr.</p>
+<h3 id="format_args" class="section-header"><a href="#format_args"><code>format_args!</code></a></h3>
+<p>This is a curious macro used to safely pass around
+an opaque object describing the format string. This object
+does not require any heap allocations to create, and it only
+references information on the stack. Under the hood, all of
+the related macros are implemented in terms of this. First
+off, some example usage is:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">fmt</span>;
+<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">io</span>::{<span class="self">self</span>, <span class="ident">Write</span>};
+
+<span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">some_writer</span> <span class="op">=</span> <span class="ident">io</span>::<span class="ident">stdout</span>();
+<span class="macro">write</span><span class="macro">!</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">some_writer</span>, <span class="string">&quot;{}&quot;</span>, <span class="macro">format_args</span><span class="macro">!</span>(<span class="string">&quot;print with a {}&quot;</span>, <span class="string">&quot;macro&quot;</span>));
+
+<span class="kw">fn</span> <span class="ident">my_fmt_fn</span>(<span class="ident">args</span>: <span class="ident">fmt</span>::<span class="ident">Arguments</span>) {
+    <span class="macro">write</span><span class="macro">!</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">io</span>::<span class="ident">stdout</span>(), <span class="string">&quot;{}&quot;</span>, <span class="ident">args</span>);
+}
+<span class="ident">my_fmt_fn</span>(<span class="macro">format_args</span><span class="macro">!</span>(<span class="string">&quot;, or a {} too&quot;</span>, <span class="string">&quot;function&quot;</span>));</pre></div>
+<p>The result of the <a href="../../../anoma/std/macro.format_args.html"><code>format_args!</code></a> macro is a value of type <a href="../../../anoma/std/fmt/struct.Arguments.html"><code>fmt::Arguments</code></a>.
+This structure can then be passed to the <a href="../../../anoma/std/macro.write.html"><code>write</code></a> and <a href="../../../anoma/std/macro.format.html"><code>format</code></a> functions
+inside this module in order to process the format string.
+The goal of this macro is to even further prevent intermediate allocations
+when dealing with formatting strings.</p>
+<p>For example, a logging library could use the standard formatting syntax, but
+it would internally pass around this structure until it has been determined
+where output should go to.</p>
+</div><h2 id="macros" class="section-header"><a href="#macros">Macros</a></h2>
+<table><tr class="module-item"><td><a class="macro" href="macro.Debug.html" title="anoma::std::fmt::Debug macro">Debug</a></td><td class="docblock-short"><p>Derive macro generating an impl of the trait <code>Debug</code>.</p>
+</td></tr></table><h2 id="structs" class="section-header"><a href="#structs">Structs</a></h2>
+<table><tr class="module-item"><td><a class="struct" href="struct.Arguments.html" title="anoma::std::fmt::Arguments struct">Arguments</a></td><td class="docblock-short"><p>This structure represents a safely precompiled version of a format string
+and its arguments. This cannot be generated at runtime because it cannot
+safely be done, so no constructors are given and the fields are private
+to prevent modification.</p>
+</td></tr><tr class="module-item"><td><a class="struct" href="struct.DebugList.html" title="anoma::std::fmt::DebugList struct">DebugList</a></td><td class="docblock-short"><p>A struct to help with <a href="../../../anoma/std/fmt/trait.Debug.html"><code>fmt::Debug</code></a> implementations.</p>
+</td></tr><tr class="module-item"><td><a class="struct" href="struct.DebugMap.html" title="anoma::std::fmt::DebugMap struct">DebugMap</a></td><td class="docblock-short"><p>A struct to help with <a href="../../../anoma/std/fmt/trait.Debug.html"><code>fmt::Debug</code></a> implementations.</p>
+</td></tr><tr class="module-item"><td><a class="struct" href="struct.DebugSet.html" title="anoma::std::fmt::DebugSet struct">DebugSet</a></td><td class="docblock-short"><p>A struct to help with <a href="../../../anoma/std/fmt/trait.Debug.html"><code>fmt::Debug</code></a> implementations.</p>
+</td></tr><tr class="module-item"><td><a class="struct" href="struct.DebugStruct.html" title="anoma::std::fmt::DebugStruct struct">DebugStruct</a></td><td class="docblock-short"><p>A struct to help with <a href="../../../anoma/std/fmt/trait.Debug.html"><code>fmt::Debug</code></a> implementations.</p>
+</td></tr><tr class="module-item"><td><a class="struct" href="struct.DebugTuple.html" title="anoma::std::fmt::DebugTuple struct">DebugTuple</a></td><td class="docblock-short"><p>A struct to help with <a href="../../../anoma/std/fmt/trait.Debug.html"><code>fmt::Debug</code></a> implementations.</p>
+</td></tr><tr class="module-item"><td><a class="struct" href="struct.Error.html" title="anoma::std::fmt::Error struct">Error</a></td><td class="docblock-short"><p>The error type which is returned from formatting a message into a stream.</p>
+</td></tr><tr class="module-item"><td><a class="struct" href="struct.Formatter.html" title="anoma::std::fmt::Formatter struct">Formatter</a></td><td class="docblock-short"><p>Configuration for formatting.</p>
+</td></tr></table><h2 id="enums" class="section-header"><a href="#enums">Enums</a></h2>
+<table><tr class="module-item"><td><a class="enum" href="enum.Alignment.html" title="anoma::std::fmt::Alignment enum">Alignment</a></td><td class="docblock-short"><p>Possible alignments returned by <code>Formatter::align</code></p>
+</td></tr></table><h2 id="traits" class="section-header"><a href="#traits">Traits</a></h2>
+<table><tr class="module-item"><td><a class="trait" href="trait.Binary.html" title="anoma::std::fmt::Binary trait">Binary</a></td><td class="docblock-short"><p><code>b</code> formatting.</p>
+</td></tr><tr class="module-item"><td><a class="trait" href="trait.Debug.html" title="anoma::std::fmt::Debug trait">Debug</a></td><td class="docblock-short"><p><code>?</code> formatting.</p>
+</td></tr><tr class="module-item"><td><a class="trait" href="trait.Display.html" title="anoma::std::fmt::Display trait">Display</a></td><td class="docblock-short"><p>Format trait for an empty format, <code>{}</code>.</p>
+</td></tr><tr class="module-item"><td><a class="trait" href="trait.LowerExp.html" title="anoma::std::fmt::LowerExp trait">LowerExp</a></td><td class="docblock-short"><p><code>e</code> formatting.</p>
+</td></tr><tr class="module-item"><td><a class="trait" href="trait.LowerHex.html" title="anoma::std::fmt::LowerHex trait">LowerHex</a></td><td class="docblock-short"><p><code>x</code> formatting.</p>
+</td></tr><tr class="module-item"><td><a class="trait" href="trait.Octal.html" title="anoma::std::fmt::Octal trait">Octal</a></td><td class="docblock-short"><p><code>o</code> formatting.</p>
+</td></tr><tr class="module-item"><td><a class="trait" href="trait.Pointer.html" title="anoma::std::fmt::Pointer trait">Pointer</a></td><td class="docblock-short"><p><code>p</code> formatting.</p>
+</td></tr><tr class="module-item"><td><a class="trait" href="trait.UpperExp.html" title="anoma::std::fmt::UpperExp trait">UpperExp</a></td><td class="docblock-short"><p><code>E</code> formatting.</p>
+</td></tr><tr class="module-item"><td><a class="trait" href="trait.UpperHex.html" title="anoma::std::fmt::UpperHex trait">UpperHex</a></td><td class="docblock-short"><p><code>X</code> formatting.</p>
+</td></tr><tr class="module-item"><td><a class="trait" href="trait.Write.html" title="anoma::std::fmt::Write trait">Write</a></td><td class="docblock-short"><p>A trait for writing or formatting into Unicode-accepting buffers or streams.</p>
+</td></tr></table><h2 id="functions" class="section-header"><a href="#functions">Functions</a></h2>
+<table><tr class="module-item"><td><a class="fn" href="fn.format.html" title="anoma::std::fmt::format fn">format</a></td><td class="docblock-short"><p>The <code>format</code> function takes an <a href="../../../anoma/std/fmt/struct.Arguments.html" title="Arguments"><code>Arguments</code></a> struct and returns the resulting
+formatted string.</p>
+</td></tr><tr class="module-item"><td><a class="fn" href="fn.write.html" title="anoma::std::fmt::write fn">write</a></td><td class="docblock-short"><p>The <code>write</code> function takes an output stream, and an <code>Arguments</code> struct
+that can be precompiled with the <code>format_args!</code> macro.</p>
+</td></tr></table><h2 id="types" class="section-header"><a href="#types">Type Definitions</a></h2>
+<table><tr class="module-item"><td><a class="type" href="type.Result.html" title="anoma::std::fmt::Result type">Result</a></td><td class="docblock-short"><p>The type returned by formatter methods.</p>
+</td></tr></table></section><section id="search" class="content hidden"></section><section class="footer"></section><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="anoma" data-search-js="../../../search-index.js"></div>
+    <script src="../../../main.js"></script></body></html>

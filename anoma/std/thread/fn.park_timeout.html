@@ -1,0 +1,36 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Blocks unless or until the current thread’s token is made available or the specified duration has been reached (may wake spuriously)."><meta name="keywords" content="rust, rustlang, rust-lang, park_timeout"><title>anoma::std::thread::park_timeout - Rust</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script id="default-settings"></script><script src="../../../storage.js"></script><script src="../../../crates.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../../favicon.svg">
+<link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png">
+<link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc fn"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../anoma/index.html'><div class='logo-container rust-logo'><img src='../../../rust-logo.png' alt='logo'></div></a><div class="sidebar-elems"><p class="location"><a href="../../index.html">anoma</a>::<wbr><a href="../index.html">std</a>::<wbr><a href="index.html">thread</a></p><div id="sidebar-vars" data-name="park_timeout" data-ty="fn" data-relpath=""></div><script defer src="sidebar-items.js"></script></div></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../../../brush.svg" width="18" height="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><script src="../../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" class="help-button">?</button>
+                <a id="settings-menu" href="../../../settings.html"><img src="../../../wheel.svg" width="18" height="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><h1 class="fqn"><span class="in-band">Function <a href="../../index.html">anoma</a>::<wbr><a href="../index.html">std</a>::<wbr><a href="index.html">thread</a>::<wbr><a class="fn" href="">park_timeout</a></span><span class="out-of-band"><span class="since" title="Stable since Rust version 1.4.0">1.4.0</span><span id="render-detail"><a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">[<span class="inner">&#x2212;</span>]</a></span><a class="srclink" href="https://doc.rust-lang.org/nightly/src/std/thread/mod.rs.html#955" title="goto source code">[src]</a></span></h1><pre class="rust fn">pub fn park_timeout(dur: <a class="struct" href="../../../anoma/std/time/struct.Duration.html" title="struct anoma::std::time::Duration">Duration</a>)</pre><div class="docblock"><p>Blocks unless or until the current thread’s token is made available or
+the specified duration has been reached (may wake spuriously).</p>
+<p>The semantics of this function are equivalent to <a href="../../../anoma/std/thread/fn.park.html" title="park"><code>park</code></a> except
+that the thread will be blocked for roughly no longer than <code>dur</code>. This
+method should not be used for precise timing due to anomalies such as
+preemption or platform differences that may not cause the maximum
+amount of time waited to be precisely <code>dur</code> long.</p>
+<p>See the <a href="../../../anoma/std/thread/fn.park.html" title="park">park documentation</a> for more details.</p>
+<h1 id="platform-specific-behavior" class="section-header"><a href="#platform-specific-behavior">Platform-specific behavior</a></h1>
+<p>Platforms which do not support nanosecond precision for sleeping will have
+<code>dur</code> rounded up to the nearest granularity of time they can sleep for.</p>
+<h1 id="examples" class="section-header"><a href="#examples">Examples</a></h1>
+<p>Waiting for the complete expiration of the timeout:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">thread</span>::<span class="ident">park_timeout</span>;
+<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">time</span>::{<span class="ident">Instant</span>, <span class="ident">Duration</span>};
+
+<span class="kw">let</span> <span class="ident">timeout</span> <span class="op">=</span> <span class="ident">Duration</span>::<span class="ident">from_secs</span>(<span class="number">2</span>);
+<span class="kw">let</span> <span class="ident">beginning_park</span> <span class="op">=</span> <span class="ident">Instant</span>::<span class="ident">now</span>();
+
+<span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">timeout_remaining</span> <span class="op">=</span> <span class="ident">timeout</span>;
+<span class="kw">loop</span> {
+    <span class="ident">park_timeout</span>(<span class="ident">timeout_remaining</span>);
+    <span class="kw">let</span> <span class="ident">elapsed</span> <span class="op">=</span> <span class="ident">beginning_park</span>.<span class="ident">elapsed</span>();
+    <span class="kw">if</span> <span class="ident">elapsed</span> <span class="op">&gt;</span><span class="op">=</span> <span class="ident">timeout</span> {
+        <span class="kw">break</span>;
+    }
+    <span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot;restarting park_timeout after {:?}&quot;</span>, <span class="ident">elapsed</span>);
+    <span class="ident">timeout_remaining</span> <span class="op">=</span> <span class="ident">timeout</span> <span class="op">-</span> <span class="ident">elapsed</span>;
+}</pre></div>
+</div></section><section id="search" class="content hidden"></section><section class="footer"></section><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="anoma" data-search-js="../../../search-index.js"></div>
+    <script src="../../../main.js"></script></body></html>

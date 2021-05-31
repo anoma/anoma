@@ -1,0 +1,133 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Compares packed strings with implicit lengths in `a` and `b` using the control in `imm8` and return the generated index. Similar to [`_mm_cmpestri`] with the exception that [`_mm_cmpestri`] requires the lengths of `a` and `b` to be explicitly specified."><meta name="keywords" content="rust, rustlang, rust-lang, _mm_cmpistri"><title>anoma::std::arch::x86_64::_mm_cmpistri - Rust</title><link rel="stylesheet" type="text/css" href="../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../../ayu.css" disabled ><script id="default-settings"></script><script src="../../../../storage.js"></script><script src="../../../../crates.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg">
+<link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png">
+<link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../../../down-arrow.svg");}</style></head><body class="rustdoc fn"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../../anoma/index.html'><div class='logo-container rust-logo'><img src='../../../../rust-logo.png' alt='logo'></div></a><div class="sidebar-elems"><p class="location"><a href="../../../index.html">anoma</a>::<wbr><a href="../../index.html">std</a>::<wbr><a href="../index.html">arch</a>::<wbr><a href="index.html">x86_64</a></p><div id="sidebar-vars" data-name="_mm_cmpistri" data-ty="fn" data-relpath=""></div><script defer src="sidebar-items.js"></script></div></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../../../../brush.svg" width="18" height="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><script src="../../../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" class="help-button">?</button>
+                <a id="settings-menu" href="../../../../settings.html"><img src="../../../../wheel.svg" width="18" height="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><h1 class="fqn"><span class="in-band">Function <a href="../../../index.html">anoma</a>::<wbr><a href="../../index.html">std</a>::<wbr><a href="../index.html">arch</a>::<wbr><a href="index.html">x86_64</a>::<wbr><a class="fn" href="">_mm_cmpistri</a></span><span class="out-of-band"><span class="since" title="Stable since Rust version 1.27.0">1.27.0</span><span id="render-detail"><a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">[<span class="inner">&#x2212;</span>]</a></span><a class="srclink" href="https://doc.rust-lang.org/nightly/src/core/up/up/stdarch/crates/core_arch/src/x86/sse42.rs.html#270" title="goto source code">[src]</a></span></h1><pre class="rust fn">pub unsafe fn _mm_cmpistri(a: <a class="struct" href="../../../../anoma/std/arch/x86_64/struct.__m128i.html" title="struct anoma::std::arch::x86_64::__m128i">__m128i</a>, b: <a class="struct" href="../../../../anoma/std/arch/x86_64/struct.__m128i.html" title="struct anoma::std::arch::x86_64::__m128i">__m128i</a>, imm8: <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.i32.html">i32</a>) -&gt; <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.i32.html">i32</a></pre><div class="item-info"><div class="stab portability">This is supported on <strong>x86-64 and target feature <code>sse4.2</code></strong> only.</div></div><div class="docblock"><p>Compares packed strings with implicit lengths in <code>a</code> and <code>b</code> using the
+control in <code>imm8</code> and return the generated index. Similar to
+<a href="../../../../anoma/std/arch/x86_64/fn._mm_cmpestri.html" title="_mm_cmpestri"><code>_mm_cmpestri</code></a> with the exception that <a href="../../../../anoma/std/arch/x86_64/fn._mm_cmpestri.html" title="_mm_cmpestri"><code>_mm_cmpestri</code></a> requires the
+lengths of <code>a</code> and <code>b</code> to be explicitly specified.</p>
+<h1 id="control-modes" class="section-header"><a href="#control-modes">Control modes</a></h1>
+<p>The control specified by <code>imm8</code> may be one or more of the following.</p>
+<h2 id="data-size-and-signedness" class="section-header"><a href="#data-size-and-signedness">Data size and signedness</a></h2>
+<ul>
+<li><a href="../../../../anoma/std/arch/x86_64/constant._SIDD_UBYTE_OPS.html" title="_SIDD_UBYTE_OPS"><code>_SIDD_UBYTE_OPS</code></a> - Default</li>
+<li><a href="../../../../anoma/std/arch/x86_64/constant._SIDD_UWORD_OPS.html" title="_SIDD_UWORD_OPS"><code>_SIDD_UWORD_OPS</code></a></li>
+<li><a href="../../../../anoma/std/arch/x86_64/constant._SIDD_SBYTE_OPS.html" title="_SIDD_SBYTE_OPS"><code>_SIDD_SBYTE_OPS</code></a></li>
+<li><a href="../../../../anoma/std/arch/x86_64/constant._SIDD_SWORD_OPS.html" title="_SIDD_SWORD_OPS"><code>_SIDD_SWORD_OPS</code></a></li>
+</ul>
+<h2 id="comparison-options" class="section-header"><a href="#comparison-options">Comparison options</a></h2>
+<ul>
+<li><a href="../../../../anoma/std/arch/x86_64/constant._SIDD_CMP_EQUAL_ANY.html" title="_SIDD_CMP_EQUAL_ANY"><code>_SIDD_CMP_EQUAL_ANY</code></a> - Default</li>
+<li><a href="../../../../anoma/std/arch/x86_64/constant._SIDD_CMP_RANGES.html" title="_SIDD_CMP_RANGES"><code>_SIDD_CMP_RANGES</code></a></li>
+<li><a href="../../../../anoma/std/arch/x86_64/constant._SIDD_CMP_EQUAL_EACH.html" title="_SIDD_CMP_EQUAL_EACH"><code>_SIDD_CMP_EQUAL_EACH</code></a></li>
+<li><a href="../../../../anoma/std/arch/x86_64/constant._SIDD_CMP_EQUAL_ORDERED.html" title="_SIDD_CMP_EQUAL_ORDERED"><code>_SIDD_CMP_EQUAL_ORDERED</code></a></li>
+</ul>
+<h2 id="result-polarity" class="section-header"><a href="#result-polarity">Result polarity</a></h2>
+<ul>
+<li><a href="../../../../anoma/std/arch/x86_64/constant._SIDD_POSITIVE_POLARITY.html" title="_SIDD_POSITIVE_POLARITY"><code>_SIDD_POSITIVE_POLARITY</code></a> - Default</li>
+<li><a href="../../../../anoma/std/arch/x86_64/constant._SIDD_NEGATIVE_POLARITY.html" title="_SIDD_NEGATIVE_POLARITY"><code>_SIDD_NEGATIVE_POLARITY</code></a></li>
+</ul>
+<h2 id="bit-returned" class="section-header"><a href="#bit-returned">Bit returned</a></h2>
+<ul>
+<li><a href="../../../../anoma/std/arch/x86_64/constant._SIDD_LEAST_SIGNIFICANT.html" title="_SIDD_LEAST_SIGNIFICANT"><code>_SIDD_LEAST_SIGNIFICANT</code></a> - Default</li>
+<li><a href="../../../../anoma/std/arch/x86_64/constant._SIDD_MOST_SIGNIFICANT.html" title="_SIDD_MOST_SIGNIFICANT"><code>_SIDD_MOST_SIGNIFICANT</code></a></li>
+</ul>
+<h1 id="examples" class="section-header"><a href="#examples">Examples</a></h1>
+<p>Finds a substring using <a href="../../../../anoma/std/arch/x86_64/constant._SIDD_CMP_EQUAL_ORDERED.html" title="_SIDD_CMP_EQUAL_ORDERED"><code>_SIDD_CMP_EQUAL_ORDERED</code></a></p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;x86&quot;</span>)]</span>
+<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">arch</span>::<span class="ident">x86</span>::<span class="kw-2">*</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;x86_64&quot;</span>)]</span>
+<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">arch</span>::<span class="ident">x86_64</span>::<span class="kw-2">*</span>;
+
+<span class="kw">let</span> <span class="ident">haystack</span> <span class="op">=</span> <span class="string">b&quot;This is a long string of text data\r\n\tthat extends
+multiple lines&quot;</span>;
+<span class="kw">let</span> <span class="ident">needle</span> <span class="op">=</span> <span class="string">b&quot;\r\n\t\0\0\0\0\0\0\0\0\0\0\0\0\0&quot;</span>;
+
+<span class="kw">let</span> <span class="ident">a</span> <span class="op">=</span> <span class="ident">_mm_loadu_si128</span>(<span class="ident">needle</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="kw-2">*</span><span class="kw">const</span> <span class="kw">_</span>);
+<span class="kw">let</span> <span class="ident">hop</span> <span class="op">=</span> <span class="number">16</span>;
+<span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">indexes</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="ident">new</span>();
+
+<span class="comment">// Chunk the haystack into 16 byte chunks and find</span>
+<span class="comment">// the first &quot;\r\n\t&quot; in the chunk.</span>
+<span class="kw">for</span> (<span class="ident">i</span>, <span class="ident">chunk</span>) <span class="kw">in</span> <span class="ident">haystack</span>.<span class="ident">chunks</span>(<span class="ident">hop</span>).<span class="ident">enumerate</span>() {
+    <span class="kw">let</span> <span class="ident">b</span> <span class="op">=</span> <span class="ident">_mm_loadu_si128</span>(<span class="ident">chunk</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="kw-2">*</span><span class="kw">const</span> <span class="kw">_</span>);
+    <span class="kw">let</span> <span class="ident">idx</span> <span class="op">=</span> <span class="ident">_mm_cmpistri</span>(<span class="ident">a</span>, <span class="ident">b</span>, <span class="ident">_SIDD_CMP_EQUAL_ORDERED</span>);
+    <span class="kw">if</span> <span class="ident">idx</span> <span class="op">!</span><span class="op">=</span> <span class="number">16</span> {
+        <span class="ident">indexes</span>.<span class="ident">push</span>((<span class="ident">idx</span> <span class="kw">as</span> <span class="ident">usize</span>) <span class="op">+</span> (<span class="ident">i</span> <span class="op">*</span> <span class="ident">hop</span>));
+    }
+}
+<span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">indexes</span>, <span class="macro">vec</span><span class="macro">!</span>[<span class="number">34</span>]);</pre></div>
+<p>The <code>_mm_cmpistri</code> intrinsic may also be used to find the existance of
+one or more of a given set of characters in the haystack.</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;x86&quot;</span>)]</span>
+<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">arch</span>::<span class="ident">x86</span>::<span class="kw-2">*</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;x86_64&quot;</span>)]</span>
+<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">arch</span>::<span class="ident">x86_64</span>::<span class="kw-2">*</span>;
+
+<span class="comment">// Ensure your input is 16 byte aligned</span>
+<span class="kw">let</span> <span class="ident">password</span> <span class="op">=</span> <span class="string">b&quot;hunter2\0\0\0\0\0\0\0\0\0&quot;</span>;
+<span class="kw">let</span> <span class="ident">special_chars</span> <span class="op">=</span> <span class="string">b&quot;!@#$%^&amp;*()[]:;&lt;&gt;&quot;</span>;
+
+<span class="comment">// Load the input</span>
+<span class="kw">let</span> <span class="ident">a</span> <span class="op">=</span> <span class="ident">_mm_loadu_si128</span>(<span class="ident">special_chars</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="kw-2">*</span><span class="kw">const</span> <span class="kw">_</span>);
+<span class="kw">let</span> <span class="ident">b</span> <span class="op">=</span> <span class="ident">_mm_loadu_si128</span>(<span class="ident">password</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="kw-2">*</span><span class="kw">const</span> <span class="kw">_</span>);
+
+<span class="comment">// Use _SIDD_CMP_EQUAL_ANY to find the index of any bytes in b</span>
+<span class="kw">let</span> <span class="ident">idx</span> <span class="op">=</span> <span class="ident">_mm_cmpistri</span>(<span class="ident">a</span>.<span class="ident">into</span>(), <span class="ident">b</span>.<span class="ident">into</span>(), <span class="ident">_SIDD_CMP_EQUAL_ANY</span>);
+
+<span class="kw">if</span> <span class="ident">idx</span> <span class="op">&lt;</span> <span class="number">16</span> {
+    <span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot;Congrats! Your password contains a special character&quot;</span>);
+} <span class="kw">else</span> {
+    <span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot;Your password should contain a special character&quot;</span>);
+}</pre></div>
+<p>Finds the index of the first character in the haystack that is within a
+range of characters.</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;x86&quot;</span>)]</span>
+<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">arch</span>::<span class="ident">x86</span>::<span class="kw-2">*</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;x86_64&quot;</span>)]</span>
+<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">arch</span>::<span class="ident">x86_64</span>::<span class="kw-2">*</span>;
+
+
+<span class="comment">// Specify the ranges of values to be searched for [A-Za-z0-9].</span>
+<span class="kw">let</span> <span class="ident">a</span> <span class="op">=</span> <span class="string">b&quot;AZaz09\0\0\0\0\0\0\0\0\0\0&quot;</span>;
+<span class="kw">let</span> <span class="ident">a</span> <span class="op">=</span> <span class="ident">_mm_loadu_si128</span>(<span class="ident">a</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="kw-2">*</span><span class="kw">const</span> <span class="kw">_</span>);
+
+<span class="comment">// Use _SIDD_CMP_RANGES to find the index of first byte in ranges.</span>
+<span class="comment">// Which in this case will be the first alpha numeric byte found</span>
+<span class="comment">// in the string.</span>
+<span class="kw">let</span> <span class="ident">idx</span> <span class="op">=</span> <span class="ident">_mm_cmpistri</span>(<span class="ident">a</span>, <span class="ident">b</span>, <span class="ident">_SIDD_CMP_RANGES</span>);
+
+<span class="kw">if</span> <span class="ident">idx</span> <span class="op">&lt;</span> <span class="number">16</span> {
+    <span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot;Found an alpha numeric character&quot;</span>);
+} <span class="kw">else</span> {
+    <span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot;Did not find an alpha numeric character&quot;</span>);
+}</pre></div>
+<p>Working with 16-bit characters.</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;x86&quot;</span>)]</span>
+<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">arch</span>::<span class="ident">x86</span>::<span class="kw-2">*</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;x86_64&quot;</span>)]</span>
+<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">arch</span>::<span class="ident">x86_64</span>::<span class="kw-2">*</span>;
+
+<span class="comment">// Load the input</span>
+<span class="kw">let</span> <span class="ident">a</span> <span class="op">=</span> <span class="ident">_mm_loadu_si128</span>(<span class="ident">some_utf16_words</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="kw-2">*</span><span class="kw">const</span> <span class="kw">_</span>);
+<span class="kw">let</span> <span class="ident">b</span> <span class="op">=</span> <span class="ident">_mm_loadu_si128</span>(<span class="ident">more_utf16_words</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="kw-2">*</span><span class="kw">const</span> <span class="kw">_</span>);
+
+<span class="comment">// Specify _SIDD_UWORD_OPS to compare words instead of bytes, and</span>
+<span class="comment">// use _SIDD_CMP_EQUAL_EACH to compare the two strings.</span>
+<span class="kw">let</span> <span class="ident">idx</span> <span class="op">=</span> <span class="ident">_mm_cmpistri</span>(<span class="ident">a</span>, <span class="ident">b</span>, <span class="ident">_SIDD_UWORD_OPS</span> <span class="op">|</span> <span class="ident">_SIDD_CMP_EQUAL_EACH</span>);
+
+<span class="kw">if</span> <span class="ident">idx</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span> {
+    <span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot;16-bit unicode strings were equal!&quot;</span>);
+} <span class="kw">else</span> {
+    <span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot;16-bit unicode strings were not equal!&quot;</span>);
+}</pre></div>
+<p><a href="https://software.intel.com/sites/landingpage/IntrinsicsGuide/#text=_mm_cmpistri">Intel’s documentation</a></p>
+</div></section><section id="search" class="content hidden"></section><section class="footer"></section><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="anoma" data-search-js="../../../../search-index.js"></div>
+    <script src="../../../../main.js"></script></body></html>

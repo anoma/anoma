@@ -1,0 +1,1091 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `apps/src/lib/cli.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>cli.rs - source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script id="default-settings"></script><script src="../../storage.js"></script><script src="../../crates.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../favicon.svg">
+<link rel="alternate icon" type="image/png" href="../../favicon-16x16.png">
+<link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../anoma/index.html'><div class='logo-container rust-logo'><img src='../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../../brush.svg" width="18" height="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><script src="../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" class="help-button">?</button>
+                <a id="settings-menu" href="../../settings.html"><img src="../../wheel.svg" width="18" height="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">  1</span>
+<span id="2">  2</span>
+<span id="3">  3</span>
+<span id="4">  4</span>
+<span id="5">  5</span>
+<span id="6">  6</span>
+<span id="7">  7</span>
+<span id="8">  8</span>
+<span id="9">  9</span>
+<span id="10"> 10</span>
+<span id="11"> 11</span>
+<span id="12"> 12</span>
+<span id="13"> 13</span>
+<span id="14"> 14</span>
+<span id="15"> 15</span>
+<span id="16"> 16</span>
+<span id="17"> 17</span>
+<span id="18"> 18</span>
+<span id="19"> 19</span>
+<span id="20"> 20</span>
+<span id="21"> 21</span>
+<span id="22"> 22</span>
+<span id="23"> 23</span>
+<span id="24"> 24</span>
+<span id="25"> 25</span>
+<span id="26"> 26</span>
+<span id="27"> 27</span>
+<span id="28"> 28</span>
+<span id="29"> 29</span>
+<span id="30"> 30</span>
+<span id="31"> 31</span>
+<span id="32"> 32</span>
+<span id="33"> 33</span>
+<span id="34"> 34</span>
+<span id="35"> 35</span>
+<span id="36"> 36</span>
+<span id="37"> 37</span>
+<span id="38"> 38</span>
+<span id="39"> 39</span>
+<span id="40"> 40</span>
+<span id="41"> 41</span>
+<span id="42"> 42</span>
+<span id="43"> 43</span>
+<span id="44"> 44</span>
+<span id="45"> 45</span>
+<span id="46"> 46</span>
+<span id="47"> 47</span>
+<span id="48"> 48</span>
+<span id="49"> 49</span>
+<span id="50"> 50</span>
+<span id="51"> 51</span>
+<span id="52"> 52</span>
+<span id="53"> 53</span>
+<span id="54"> 54</span>
+<span id="55"> 55</span>
+<span id="56"> 56</span>
+<span id="57"> 57</span>
+<span id="58"> 58</span>
+<span id="59"> 59</span>
+<span id="60"> 60</span>
+<span id="61"> 61</span>
+<span id="62"> 62</span>
+<span id="63"> 63</span>
+<span id="64"> 64</span>
+<span id="65"> 65</span>
+<span id="66"> 66</span>
+<span id="67"> 67</span>
+<span id="68"> 68</span>
+<span id="69"> 69</span>
+<span id="70"> 70</span>
+<span id="71"> 71</span>
+<span id="72"> 72</span>
+<span id="73"> 73</span>
+<span id="74"> 74</span>
+<span id="75"> 75</span>
+<span id="76"> 76</span>
+<span id="77"> 77</span>
+<span id="78"> 78</span>
+<span id="79"> 79</span>
+<span id="80"> 80</span>
+<span id="81"> 81</span>
+<span id="82"> 82</span>
+<span id="83"> 83</span>
+<span id="84"> 84</span>
+<span id="85"> 85</span>
+<span id="86"> 86</span>
+<span id="87"> 87</span>
+<span id="88"> 88</span>
+<span id="89"> 89</span>
+<span id="90"> 90</span>
+<span id="91"> 91</span>
+<span id="92"> 92</span>
+<span id="93"> 93</span>
+<span id="94"> 94</span>
+<span id="95"> 95</span>
+<span id="96"> 96</span>
+<span id="97"> 97</span>
+<span id="98"> 98</span>
+<span id="99"> 99</span>
+<span id="100">100</span>
+<span id="101">101</span>
+<span id="102">102</span>
+<span id="103">103</span>
+<span id="104">104</span>
+<span id="105">105</span>
+<span id="106">106</span>
+<span id="107">107</span>
+<span id="108">108</span>
+<span id="109">109</span>
+<span id="110">110</span>
+<span id="111">111</span>
+<span id="112">112</span>
+<span id="113">113</span>
+<span id="114">114</span>
+<span id="115">115</span>
+<span id="116">116</span>
+<span id="117">117</span>
+<span id="118">118</span>
+<span id="119">119</span>
+<span id="120">120</span>
+<span id="121">121</span>
+<span id="122">122</span>
+<span id="123">123</span>
+<span id="124">124</span>
+<span id="125">125</span>
+<span id="126">126</span>
+<span id="127">127</span>
+<span id="128">128</span>
+<span id="129">129</span>
+<span id="130">130</span>
+<span id="131">131</span>
+<span id="132">132</span>
+<span id="133">133</span>
+<span id="134">134</span>
+<span id="135">135</span>
+<span id="136">136</span>
+<span id="137">137</span>
+<span id="138">138</span>
+<span id="139">139</span>
+<span id="140">140</span>
+<span id="141">141</span>
+<span id="142">142</span>
+<span id="143">143</span>
+<span id="144">144</span>
+<span id="145">145</span>
+<span id="146">146</span>
+<span id="147">147</span>
+<span id="148">148</span>
+<span id="149">149</span>
+<span id="150">150</span>
+<span id="151">151</span>
+<span id="152">152</span>
+<span id="153">153</span>
+<span id="154">154</span>
+<span id="155">155</span>
+<span id="156">156</span>
+<span id="157">157</span>
+<span id="158">158</span>
+<span id="159">159</span>
+<span id="160">160</span>
+<span id="161">161</span>
+<span id="162">162</span>
+<span id="163">163</span>
+<span id="164">164</span>
+<span id="165">165</span>
+<span id="166">166</span>
+<span id="167">167</span>
+<span id="168">168</span>
+<span id="169">169</span>
+<span id="170">170</span>
+<span id="171">171</span>
+<span id="172">172</span>
+<span id="173">173</span>
+<span id="174">174</span>
+<span id="175">175</span>
+<span id="176">176</span>
+<span id="177">177</span>
+<span id="178">178</span>
+<span id="179">179</span>
+<span id="180">180</span>
+<span id="181">181</span>
+<span id="182">182</span>
+<span id="183">183</span>
+<span id="184">184</span>
+<span id="185">185</span>
+<span id="186">186</span>
+<span id="187">187</span>
+<span id="188">188</span>
+<span id="189">189</span>
+<span id="190">190</span>
+<span id="191">191</span>
+<span id="192">192</span>
+<span id="193">193</span>
+<span id="194">194</span>
+<span id="195">195</span>
+<span id="196">196</span>
+<span id="197">197</span>
+<span id="198">198</span>
+<span id="199">199</span>
+<span id="200">200</span>
+<span id="201">201</span>
+<span id="202">202</span>
+<span id="203">203</span>
+<span id="204">204</span>
+<span id="205">205</span>
+<span id="206">206</span>
+<span id="207">207</span>
+<span id="208">208</span>
+<span id="209">209</span>
+<span id="210">210</span>
+<span id="211">211</span>
+<span id="212">212</span>
+<span id="213">213</span>
+<span id="214">214</span>
+<span id="215">215</span>
+<span id="216">216</span>
+<span id="217">217</span>
+<span id="218">218</span>
+<span id="219">219</span>
+<span id="220">220</span>
+<span id="221">221</span>
+<span id="222">222</span>
+<span id="223">223</span>
+<span id="224">224</span>
+<span id="225">225</span>
+<span id="226">226</span>
+<span id="227">227</span>
+<span id="228">228</span>
+<span id="229">229</span>
+<span id="230">230</span>
+<span id="231">231</span>
+<span id="232">232</span>
+<span id="233">233</span>
+<span id="234">234</span>
+<span id="235">235</span>
+<span id="236">236</span>
+<span id="237">237</span>
+<span id="238">238</span>
+<span id="239">239</span>
+<span id="240">240</span>
+<span id="241">241</span>
+<span id="242">242</span>
+<span id="243">243</span>
+<span id="244">244</span>
+<span id="245">245</span>
+<span id="246">246</span>
+<span id="247">247</span>
+<span id="248">248</span>
+<span id="249">249</span>
+<span id="250">250</span>
+<span id="251">251</span>
+<span id="252">252</span>
+<span id="253">253</span>
+<span id="254">254</span>
+<span id="255">255</span>
+<span id="256">256</span>
+<span id="257">257</span>
+<span id="258">258</span>
+<span id="259">259</span>
+<span id="260">260</span>
+<span id="261">261</span>
+<span id="262">262</span>
+<span id="263">263</span>
+<span id="264">264</span>
+<span id="265">265</span>
+<span id="266">266</span>
+<span id="267">267</span>
+<span id="268">268</span>
+<span id="269">269</span>
+<span id="270">270</span>
+<span id="271">271</span>
+<span id="272">272</span>
+<span id="273">273</span>
+<span id="274">274</span>
+<span id="275">275</span>
+<span id="276">276</span>
+<span id="277">277</span>
+<span id="278">278</span>
+<span id="279">279</span>
+<span id="280">280</span>
+<span id="281">281</span>
+<span id="282">282</span>
+<span id="283">283</span>
+<span id="284">284</span>
+<span id="285">285</span>
+<span id="286">286</span>
+<span id="287">287</span>
+<span id="288">288</span>
+<span id="289">289</span>
+<span id="290">290</span>
+<span id="291">291</span>
+<span id="292">292</span>
+<span id="293">293</span>
+<span id="294">294</span>
+<span id="295">295</span>
+<span id="296">296</span>
+<span id="297">297</span>
+<span id="298">298</span>
+<span id="299">299</span>
+<span id="300">300</span>
+<span id="301">301</span>
+<span id="302">302</span>
+<span id="303">303</span>
+<span id="304">304</span>
+<span id="305">305</span>
+<span id="306">306</span>
+<span id="307">307</span>
+<span id="308">308</span>
+<span id="309">309</span>
+<span id="310">310</span>
+<span id="311">311</span>
+<span id="312">312</span>
+<span id="313">313</span>
+<span id="314">314</span>
+<span id="315">315</span>
+<span id="316">316</span>
+<span id="317">317</span>
+<span id="318">318</span>
+<span id="319">319</span>
+<span id="320">320</span>
+<span id="321">321</span>
+<span id="322">322</span>
+<span id="323">323</span>
+<span id="324">324</span>
+<span id="325">325</span>
+<span id="326">326</span>
+<span id="327">327</span>
+<span id="328">328</span>
+<span id="329">329</span>
+<span id="330">330</span>
+<span id="331">331</span>
+<span id="332">332</span>
+<span id="333">333</span>
+<span id="334">334</span>
+<span id="335">335</span>
+<span id="336">336</span>
+<span id="337">337</span>
+<span id="338">338</span>
+<span id="339">339</span>
+<span id="340">340</span>
+<span id="341">341</span>
+<span id="342">342</span>
+<span id="343">343</span>
+<span id="344">344</span>
+<span id="345">345</span>
+<span id="346">346</span>
+<span id="347">347</span>
+<span id="348">348</span>
+<span id="349">349</span>
+<span id="350">350</span>
+<span id="351">351</span>
+<span id="352">352</span>
+<span id="353">353</span>
+<span id="354">354</span>
+<span id="355">355</span>
+<span id="356">356</span>
+<span id="357">357</span>
+<span id="358">358</span>
+<span id="359">359</span>
+<span id="360">360</span>
+<span id="361">361</span>
+<span id="362">362</span>
+<span id="363">363</span>
+<span id="364">364</span>
+<span id="365">365</span>
+<span id="366">366</span>
+<span id="367">367</span>
+<span id="368">368</span>
+<span id="369">369</span>
+<span id="370">370</span>
+<span id="371">371</span>
+<span id="372">372</span>
+<span id="373">373</span>
+<span id="374">374</span>
+<span id="375">375</span>
+<span id="376">376</span>
+<span id="377">377</span>
+<span id="378">378</span>
+<span id="379">379</span>
+<span id="380">380</span>
+<span id="381">381</span>
+<span id="382">382</span>
+<span id="383">383</span>
+<span id="384">384</span>
+<span id="385">385</span>
+<span id="386">386</span>
+<span id="387">387</span>
+<span id="388">388</span>
+<span id="389">389</span>
+<span id="390">390</span>
+<span id="391">391</span>
+<span id="392">392</span>
+<span id="393">393</span>
+<span id="394">394</span>
+<span id="395">395</span>
+<span id="396">396</span>
+<span id="397">397</span>
+<span id="398">398</span>
+<span id="399">399</span>
+<span id="400">400</span>
+<span id="401">401</span>
+<span id="402">402</span>
+<span id="403">403</span>
+<span id="404">404</span>
+<span id="405">405</span>
+<span id="406">406</span>
+<span id="407">407</span>
+<span id="408">408</span>
+<span id="409">409</span>
+<span id="410">410</span>
+<span id="411">411</span>
+<span id="412">412</span>
+<span id="413">413</span>
+<span id="414">414</span>
+<span id="415">415</span>
+<span id="416">416</span>
+<span id="417">417</span>
+<span id="418">418</span>
+<span id="419">419</span>
+<span id="420">420</span>
+<span id="421">421</span>
+<span id="422">422</span>
+<span id="423">423</span>
+<span id="424">424</span>
+<span id="425">425</span>
+<span id="426">426</span>
+<span id="427">427</span>
+<span id="428">428</span>
+<span id="429">429</span>
+<span id="430">430</span>
+<span id="431">431</span>
+<span id="432">432</span>
+<span id="433">433</span>
+<span id="434">434</span>
+<span id="435">435</span>
+<span id="436">436</span>
+<span id="437">437</span>
+<span id="438">438</span>
+<span id="439">439</span>
+<span id="440">440</span>
+<span id="441">441</span>
+<span id="442">442</span>
+<span id="443">443</span>
+<span id="444">444</span>
+<span id="445">445</span>
+<span id="446">446</span>
+<span id="447">447</span>
+<span id="448">448</span>
+<span id="449">449</span>
+<span id="450">450</span>
+<span id="451">451</span>
+<span id="452">452</span>
+<span id="453">453</span>
+<span id="454">454</span>
+<span id="455">455</span>
+<span id="456">456</span>
+<span id="457">457</span>
+<span id="458">458</span>
+<span id="459">459</span>
+<span id="460">460</span>
+<span id="461">461</span>
+<span id="462">462</span>
+<span id="463">463</span>
+<span id="464">464</span>
+<span id="465">465</span>
+<span id="466">466</span>
+<span id="467">467</span>
+<span id="468">468</span>
+<span id="469">469</span>
+<span id="470">470</span>
+<span id="471">471</span>
+<span id="472">472</span>
+<span id="473">473</span>
+<span id="474">474</span>
+<span id="475">475</span>
+<span id="476">476</span>
+<span id="477">477</span>
+<span id="478">478</span>
+<span id="479">479</span>
+<span id="480">480</span>
+<span id="481">481</span>
+<span id="482">482</span>
+<span id="483">483</span>
+<span id="484">484</span>
+<span id="485">485</span>
+<span id="486">486</span>
+<span id="487">487</span>
+<span id="488">488</span>
+<span id="489">489</span>
+<span id="490">490</span>
+<span id="491">491</span>
+<span id="492">492</span>
+<span id="493">493</span>
+<span id="494">494</span>
+<span id="495">495</span>
+<span id="496">496</span>
+<span id="497">497</span>
+<span id="498">498</span>
+<span id="499">499</span>
+<span id="500">500</span>
+<span id="501">501</span>
+<span id="502">502</span>
+<span id="503">503</span>
+<span id="504">504</span>
+<span id="505">505</span>
+<span id="506">506</span>
+<span id="507">507</span>
+<span id="508">508</span>
+<span id="509">509</span>
+<span id="510">510</span>
+<span id="511">511</span>
+<span id="512">512</span>
+<span id="513">513</span>
+<span id="514">514</span>
+<span id="515">515</span>
+<span id="516">516</span>
+<span id="517">517</span>
+<span id="518">518</span>
+<span id="519">519</span>
+<span id="520">520</span>
+<span id="521">521</span>
+<span id="522">522</span>
+<span id="523">523</span>
+<span id="524">524</span>
+<span id="525">525</span>
+<span id="526">526</span>
+<span id="527">527</span>
+<span id="528">528</span>
+<span id="529">529</span>
+<span id="530">530</span>
+<span id="531">531</span>
+<span id="532">532</span>
+<span id="533">533</span>
+<span id="534">534</span>
+<span id="535">535</span>
+<span id="536">536</span>
+<span id="537">537</span>
+<span id="538">538</span>
+<span id="539">539</span>
+<span id="540">540</span>
+<span id="541">541</span>
+<span id="542">542</span>
+</pre><div class="example-wrap"><pre class="rust ">
+<span class="doccomment">//! The CLI commands that are re-used between the executables `anoma`,</span>
+<span class="doccomment">//! `anoma-node` and `anoma-client`.</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! The `anoma` executable groups together the most commonly used commands</span>
+<span class="doccomment">//! inlined from the node and the client. The other commands for the node or the</span>
+<span class="doccomment">//! client can be dispatched via `anoma node ...` or `anoma client ...`,</span>
+<span class="doccomment">//! respectively.</span>
+
+<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">collections</span>::<span class="ident">HashSet</span>;
+<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">fmt</span>::<span class="ident">Debug</span>;
+<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">str</span>::<span class="ident">FromStr</span>;
+
+<span class="kw">use</span> <span class="ident">clap</span>::{<span class="ident">Arg</span>, <span class="ident">ArgMatches</span>};
+<span class="kw">use</span> <span class="ident">libp2p</span>::<span class="ident">Multiaddr</span>;
+
+<span class="kw">use</span> <span class="kw">super</span>::<span class="ident">config</span>;
+
+<span class="kw">const</span> <span class="ident">AUTHOR</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;Heliax AG &lt;hello@heliax.dev&gt;&quot;</span>;
+<span class="kw">const</span> <span class="ident">APP_NAME</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;Anoma&quot;</span>;
+<span class="kw">const</span> <span class="ident">CLI_VERSION</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;0.1.0&quot;</span>;
+<span class="kw">const</span> <span class="ident">NODE_VERSION</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;0.1.0&quot;</span>;
+<span class="kw">const</span> <span class="ident">CLIENT_VERSION</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;0.1.0&quot;</span>;
+
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">NODE_COMMAND</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;node&quot;</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">CLIENT_COMMAND</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;client&quot;</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">RUN_GOSSIP_COMMAND</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;run-gossip&quot;</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">RUN_LEDGER_COMMAND</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;run-ledger&quot;</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">RESET_LEDGER_COMMAND</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;reset-ledger&quot;</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">GENERATE_CONFIG_COMMAND</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;generate-config&quot;</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">INTENT_COMMAND</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;intent&quot;</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">SUBSCRIBE_TOPIC_COMMAND</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;subscribe-topic&quot;</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">CRAFT_INTENT_COMMAND</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;craft-intent&quot;</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">TX_COMMAND</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;tx&quot;</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">TX_TRANSFER_COMMAND</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;transfer&quot;</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">TX_UPDATE_COMMAND</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;update&quot;</span>;
+
+<span class="comment">// gossip args</span>
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">BASE_ARG</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;base-dir&quot;</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">PEERS_ARG</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;peers&quot;</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">ADDRESS_ARG</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;address&quot;</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">TOPIC_ARG</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;topic&quot;</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">RPC_ARG</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;rpc&quot;</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">MATCHMAKER_ARG</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;matchmaker-path&quot;</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">TX_CODE_ARG</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;tx-code-path&quot;</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">LEDGER_ADDRESS_ARG</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;ledger-address&quot;</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">FILTER_ARG</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;filter&quot;</span>;
+
+<span class="comment">// client args</span>
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DATA_ARG</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;data-path&quot;</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">CODE_ARG</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;code-path&quot;</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DATA_INTENT_ARG</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;data-path&quot;</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">NODE_INTENT_ARG</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;node&quot;</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DRY_RUN_TX_ARG</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;dry-run&quot;</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">TOKEN_SELL_ARG</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;token-sell&quot;</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">TOKEN_BUY_ARG</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;token-buy&quot;</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">AMOUNT_SELL_ARG</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;amount-sell&quot;</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">AMOUNT_BUY_ARG</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;amount-buy&quot;</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">FILE_ARG</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;file-path&quot;</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">SOURCE_ARG</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;source&quot;</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">TARGET_ARG</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;target&quot;</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">TOKEN_ARG</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;token&quot;</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">AMOUNT_ARG</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;amount&quot;</span>;
+
+<span class="kw">type</span> <span class="ident">App</span> <span class="op">=</span> <span class="ident">clap</span>::<span class="ident">App</span><span class="op">&lt;</span><span class="lifetime">&#39;static</span><span class="op">&gt;</span>;
+
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">anoma_inline_cli</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">App</span> {
+    <span class="ident">App</span>::<span class="ident">new</span>(<span class="ident">APP_NAME</span>)
+        .<span class="ident">version</span>(<span class="ident">CLI_VERSION</span>)
+        .<span class="ident">author</span>(<span class="ident">AUTHOR</span>)
+        .<span class="ident">about</span>(<span class="string">&quot;Anoma command line interface.&quot;</span>)
+        <span class="comment">// Inlined commands from the node and the client.</span>
+        <span class="comment">// NOTE: If these are changed, please also update the</span>
+        <span class="comment">// `handle_command` function in `src/bin/anoma/cli.rs`.</span>
+        .<span class="ident">subcommand</span>(<span class="ident">run_gossip_subcommand</span>())
+        .<span class="ident">subcommand</span>(<span class="ident">run_ledger_subcommand</span>())
+        .<span class="ident">subcommand</span>(<span class="ident">reset_ledger_subcommand</span>())
+        .<span class="ident">subcommand</span>(<span class="ident">client_tx_subcommand</span>())
+        .<span class="ident">subcommand</span>(<span class="ident">client_intent_subcommand</span>())
+        <span class="comment">// Node sub-commands</span>
+        .<span class="ident">subcommand</span>(<span class="ident">add_node_commands</span>(
+            <span class="ident">App</span>::<span class="ident">new</span>(<span class="ident">NODE_COMMAND</span>).<span class="ident">about</span>(<span class="string">&quot;Node sub-commands&quot;</span>),
+        ))
+        <span class="comment">// Client sub-commands</span>
+        .<span class="ident">subcommand</span>(<span class="ident">add_client_commands</span>(
+            <span class="ident">App</span>::<span class="ident">new</span>(<span class="ident">CLIENT_COMMAND</span>).<span class="ident">about</span>(<span class="string">&quot;Client sub-commands&quot;</span>),
+        ))
+}
+
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">anoma_client_cli</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">App</span> {
+    <span class="ident">add_client_commands</span>(
+        <span class="ident">App</span>::<span class="ident">new</span>(<span class="ident">APP_NAME</span>)
+            .<span class="ident">version</span>(<span class="ident">CLIENT_VERSION</span>)
+            .<span class="ident">author</span>(<span class="ident">AUTHOR</span>)
+            .<span class="ident">about</span>(<span class="string">&quot;Anoma client command line interface.&quot;</span>),
+    )
+}
+
+<span class="kw">fn</span> <span class="ident">add_client_commands</span>(<span class="ident">app</span>: <span class="ident">App</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">App</span> {
+    <span class="ident">app</span>.<span class="ident">subcommand</span>(<span class="ident">client_tx_subcommand</span>())
+        .<span class="ident">subcommand</span>(<span class="ident">client_tx_transfer_subcommand</span>())
+        .<span class="ident">subcommand</span>(<span class="ident">client_tx_update_subcommand</span>())
+        .<span class="ident">subcommand</span>(<span class="ident">client_intent_subcommand</span>())
+        .<span class="ident">subcommand</span>(<span class="ident">client_craft_intent_subcommand</span>())
+        .<span class="ident">subcommand</span>(<span class="ident">client_subscribe_topic_subcommand</span>())
+}
+
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">anoma_node_cli</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">App</span> {
+    <span class="ident">add_node_commands</span>(
+        <span class="ident">App</span>::<span class="ident">new</span>(<span class="ident">APP_NAME</span>)
+            .<span class="ident">version</span>(<span class="ident">NODE_VERSION</span>)
+            .<span class="ident">author</span>(<span class="ident">AUTHOR</span>)
+            .<span class="ident">about</span>(<span class="string">&quot;Anoma node command line interface.&quot;</span>)
+            .<span class="ident">arg</span>(
+                <span class="ident">Arg</span>::<span class="ident">new</span>(<span class="ident">BASE_ARG</span>)
+                    .<span class="ident">short</span>(<span class="string">&#39;b&#39;</span>)
+                    .<span class="ident">long</span>(<span class="ident">BASE_ARG</span>)
+                    .<span class="ident">takes_value</span>(<span class="bool-val">true</span>)
+                    .<span class="ident">required</span>(<span class="bool-val">false</span>)
+                    .<span class="ident">default_value</span>(<span class="string">&quot;.anoma&quot;</span>)
+                    .<span class="ident">about</span>(<span class="string">&quot;Set the base directiory.&quot;</span>),
+            ),
+    )
+}
+
+<span class="kw">fn</span> <span class="ident">add_node_commands</span>(<span class="ident">app</span>: <span class="ident">App</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">App</span> {
+    <span class="ident">app</span>.<span class="ident">subcommand</span>(<span class="ident">run_gossip_subcommand</span>())
+        .<span class="ident">subcommand</span>(<span class="ident">run_ledger_subcommand</span>())
+        .<span class="ident">subcommand</span>(<span class="ident">reset_ledger_subcommand</span>())
+        .<span class="ident">subcommand</span>(<span class="ident">generate_config</span>())
+}
+
+<span class="kw">fn</span> <span class="ident">client_tx_subcommand</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">App</span> {
+    <span class="ident">App</span>::<span class="ident">new</span>(<span class="ident">TX_COMMAND</span>)
+        .<span class="ident">about</span>(<span class="string">&quot;Send a transaction with arbitrary data and wasm code&quot;</span>)
+        .<span class="ident">arg</span>(
+            <span class="ident">Arg</span>::<span class="ident">new</span>(<span class="ident">DATA_ARG</span>)
+                .<span class="ident">long</span>(<span class="ident">DATA_ARG</span>)
+                .<span class="ident">takes_value</span>(<span class="bool-val">true</span>)
+                .<span class="ident">required</span>(<span class="bool-val">false</span>)
+                .<span class="ident">about</span>(
+                    <span class="string">&quot;The data is an arbitrary hex string that will be passed \
+                     to the code when it&#39;s executed.&quot;</span>,
+                ),
+        )
+        .<span class="ident">arg</span>(
+            <span class="ident">Arg</span>::<span class="ident">new</span>(<span class="ident">CODE_ARG</span>)
+                .<span class="ident">long</span>(<span class="ident">CODE_ARG</span>)
+                .<span class="ident">takes_value</span>(<span class="bool-val">true</span>)
+                .<span class="ident">required</span>(<span class="bool-val">true</span>)
+                .<span class="ident">about</span>(<span class="string">&quot;The path to the wasm code to be executed.&quot;</span>),
+        )
+        .<span class="ident">arg</span>(
+            <span class="ident">Arg</span>::<span class="ident">new</span>(<span class="ident">DRY_RUN_TX_ARG</span>)
+                .<span class="ident">long</span>(<span class="ident">DRY_RUN_TX_ARG</span>)
+                .<span class="ident">takes_value</span>(<span class="bool-val">false</span>)
+                .<span class="ident">required</span>(<span class="bool-val">false</span>)
+                .<span class="ident">about</span>(<span class="string">&quot;Dry run the transaction.&quot;</span>),
+        )
+        .<span class="ident">arg</span>(
+            <span class="ident">Arg</span>::<span class="ident">new</span>(<span class="ident">LEDGER_ADDRESS_ARG</span>)
+                .<span class="ident">long</span>(<span class="ident">LEDGER_ADDRESS_ARG</span>)
+                .<span class="ident">multiple</span>(<span class="bool-val">false</span>)
+                .<span class="ident">takes_value</span>(<span class="bool-val">true</span>)
+                .<span class="ident">required</span>(<span class="bool-val">false</span>)
+                .<span class="ident">default_value</span>(<span class="string">&quot;127.0.0.1:26657&quot;</span>)
+                .<span class="ident">about</span>(<span class="string">&quot;Address of a ledger node as host:port&quot;</span>),
+        )
+}
+
+<span class="kw">fn</span> <span class="ident">client_intent_subcommand</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">App</span> {
+    <span class="ident">App</span>::<span class="ident">new</span>(<span class="ident">INTENT_COMMAND</span>)
+        .<span class="ident">about</span>(<span class="string">&quot;Send an intent.&quot;</span>)
+        .<span class="ident">arg</span>(
+            <span class="ident">Arg</span>::<span class="ident">new</span>(<span class="ident">NODE_INTENT_ARG</span>)
+                .<span class="ident">long</span>(<span class="ident">NODE_INTENT_ARG</span>)
+                .<span class="ident">takes_value</span>(<span class="bool-val">true</span>)
+                .<span class="ident">required</span>(<span class="bool-val">true</span>)
+                .<span class="ident">about</span>(<span class="string">&quot;The gossip node address.&quot;</span>),
+        )
+        .<span class="ident">arg</span>(
+            <span class="ident">Arg</span>::<span class="ident">new</span>(<span class="ident">DATA_INTENT_ARG</span>)
+                .<span class="ident">long</span>(<span class="ident">DATA_INTENT_ARG</span>)
+                .<span class="ident">takes_value</span>(<span class="bool-val">true</span>)
+                .<span class="ident">required</span>(<span class="bool-val">true</span>)
+                .<span class="ident">about</span>(
+                    <span class="string">&quot;The data of the intent, that contains all value \
+                     necessary for the matchmaker.&quot;</span>,
+                ),
+        )
+        .<span class="ident">arg</span>(
+            <span class="ident">Arg</span>::<span class="ident">new</span>(<span class="ident">TOPIC_ARG</span>)
+                .<span class="ident">long</span>(<span class="ident">TOPIC_ARG</span>)
+                .<span class="ident">takes_value</span>(<span class="bool-val">true</span>)
+                .<span class="ident">required</span>(<span class="bool-val">true</span>)
+                .<span class="ident">about</span>(<span class="string">&quot;The subnetwork where the intent should be sent to&quot;</span>),
+        )
+}
+
+<span class="kw">fn</span> <span class="ident">client_subscribe_topic_subcommand</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">App</span> {
+    <span class="ident">App</span>::<span class="ident">new</span>(<span class="ident">SUBSCRIBE_TOPIC_COMMAND</span>)
+        .<span class="ident">about</span>(<span class="string">&quot;subscribe to a topic.&quot;</span>)
+        .<span class="ident">arg</span>(
+            <span class="ident">Arg</span>::<span class="ident">new</span>(<span class="ident">NODE_INTENT_ARG</span>)
+                .<span class="ident">long</span>(<span class="ident">NODE_INTENT_ARG</span>)
+                .<span class="ident">takes_value</span>(<span class="bool-val">true</span>)
+                .<span class="ident">required</span>(<span class="bool-val">true</span>)
+                .<span class="ident">about</span>(<span class="string">&quot;The gossip node address.&quot;</span>),
+        )
+        .<span class="ident">arg</span>(
+            <span class="ident">Arg</span>::<span class="ident">new</span>(<span class="ident">TOPIC_ARG</span>)
+                .<span class="ident">long</span>(<span class="ident">TOPIC_ARG</span>)
+                .<span class="ident">takes_value</span>(<span class="bool-val">true</span>)
+                .<span class="ident">required</span>(<span class="bool-val">true</span>)
+                .<span class="ident">about</span>(<span class="string">&quot;The new topic of interest for that node.&quot;</span>),
+        )
+}
+
+<span class="kw">fn</span> <span class="ident">client_craft_intent_subcommand</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">App</span> {
+    <span class="ident">App</span>::<span class="ident">new</span>(<span class="ident">CRAFT_INTENT_COMMAND</span>)
+        .<span class="ident">about</span>(<span class="string">&quot;Craft an intent.&quot;</span>)
+        .<span class="ident">arg</span>(
+            <span class="ident">Arg</span>::<span class="ident">new</span>(<span class="ident">ADDRESS_ARG</span>)
+                .<span class="ident">long</span>(<span class="ident">ADDRESS_ARG</span>)
+                .<span class="ident">takes_value</span>(<span class="bool-val">true</span>)
+                .<span class="ident">required</span>(<span class="bool-val">true</span>)
+                .<span class="ident">about</span>(<span class="string">&quot;The account address.&quot;</span>),
+        )
+        .<span class="ident">arg</span>(
+            <span class="ident">Arg</span>::<span class="ident">new</span>(<span class="ident">TOKEN_SELL_ARG</span>)
+                .<span class="ident">long</span>(<span class="ident">TOKEN_SELL_ARG</span>)
+                .<span class="ident">takes_value</span>(<span class="bool-val">true</span>)
+                .<span class="ident">required</span>(<span class="bool-val">true</span>)
+                .<span class="ident">about</span>(<span class="string">&quot;The selling token.&quot;</span>),
+        )
+        .<span class="ident">arg</span>(
+            <span class="ident">Arg</span>::<span class="ident">new</span>(<span class="ident">AMOUNT_SELL_ARG</span>)
+                .<span class="ident">long</span>(<span class="ident">AMOUNT_SELL_ARG</span>)
+                .<span class="ident">takes_value</span>(<span class="bool-val">true</span>)
+                .<span class="ident">required</span>(<span class="bool-val">true</span>)
+                .<span class="ident">about</span>(<span class="string">&quot;The amount selling.&quot;</span>),
+        )
+        .<span class="ident">arg</span>(
+            <span class="ident">Arg</span>::<span class="ident">new</span>(<span class="ident">TOKEN_BUY_ARG</span>)
+                .<span class="ident">long</span>(<span class="ident">TOKEN_BUY_ARG</span>)
+                .<span class="ident">takes_value</span>(<span class="bool-val">true</span>)
+                .<span class="ident">required</span>(<span class="bool-val">true</span>)
+                .<span class="ident">about</span>(<span class="string">&quot;The buying token.&quot;</span>),
+        )
+        .<span class="ident">arg</span>(
+            <span class="ident">Arg</span>::<span class="ident">new</span>(<span class="ident">AMOUNT_BUY_ARG</span>)
+                .<span class="ident">long</span>(<span class="ident">AMOUNT_BUY_ARG</span>)
+                .<span class="ident">takes_value</span>(<span class="bool-val">true</span>)
+                .<span class="ident">required</span>(<span class="bool-val">true</span>)
+                .<span class="ident">about</span>(<span class="string">&quot;The amount buying.&quot;</span>),
+        )
+        .<span class="ident">arg</span>(
+            <span class="ident">Arg</span>::<span class="ident">new</span>(<span class="ident">FILE_ARG</span>)
+                .<span class="ident">long</span>(<span class="ident">FILE_ARG</span>)
+                .<span class="ident">takes_value</span>(<span class="bool-val">true</span>)
+                .<span class="ident">required</span>(<span class="bool-val">false</span>)
+                .<span class="ident">default_value</span>(<span class="string">&quot;intent.data&quot;</span>)
+                .<span class="ident">about</span>(<span class="string">&quot;The output file&quot;</span>),
+        )
+}
+
+<span class="kw">fn</span> <span class="ident">client_tx_transfer_subcommand</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">App</span> {
+    <span class="ident">App</span>::<span class="ident">new</span>(<span class="ident">TX_TRANSFER_COMMAND</span>)
+        .<span class="ident">about</span>(<span class="string">&quot;Send a transfer transaction with a signature&quot;</span>)
+        .<span class="ident">arg</span>(
+            <span class="ident">Arg</span>::<span class="ident">new</span>(<span class="ident">CODE_ARG</span>)
+                .<span class="ident">long</span>(<span class="ident">CODE_ARG</span>)
+                .<span class="ident">takes_value</span>(<span class="bool-val">true</span>)
+                .<span class="ident">required</span>(<span class="bool-val">true</span>)
+                .<span class="ident">about</span>(
+                    <span class="string">&quot;The path to the transaction wasm code. It will be signed \
+                     together with the transaction data.&quot;</span>,
+                ),
+        )
+        .<span class="ident">arg</span>(
+            <span class="ident">Arg</span>::<span class="ident">new</span>(<span class="ident">SOURCE_ARG</span>)
+                .<span class="ident">long</span>(<span class="ident">SOURCE_ARG</span>)
+                .<span class="ident">takes_value</span>(<span class="bool-val">true</span>)
+                .<span class="ident">required</span>(<span class="bool-val">true</span>)
+                .<span class="ident">about</span>(
+                    <span class="string">&quot;The source account address. The source&#39;s key is used to \
+                     produce the signature.&quot;</span>,
+                ),
+        )
+        .<span class="ident">arg</span>(
+            <span class="ident">Arg</span>::<span class="ident">new</span>(<span class="ident">TARGET_ARG</span>)
+                .<span class="ident">long</span>(<span class="ident">TARGET_ARG</span>)
+                .<span class="ident">takes_value</span>(<span class="bool-val">true</span>)
+                .<span class="ident">required</span>(<span class="bool-val">true</span>)
+                .<span class="ident">about</span>(<span class="string">&quot;The target account address.&quot;</span>),
+        )
+        .<span class="ident">arg</span>(
+            <span class="ident">Arg</span>::<span class="ident">new</span>(<span class="ident">TOKEN_ARG</span>)
+                .<span class="ident">long</span>(<span class="ident">TOKEN_ARG</span>)
+                .<span class="ident">takes_value</span>(<span class="bool-val">true</span>)
+                .<span class="ident">required</span>(<span class="bool-val">true</span>)
+                .<span class="ident">about</span>(<span class="string">&quot;The transfer token.&quot;</span>),
+        )
+        .<span class="ident">arg</span>(
+            <span class="ident">Arg</span>::<span class="ident">new</span>(<span class="ident">AMOUNT_ARG</span>)
+                .<span class="ident">long</span>(<span class="ident">AMOUNT_ARG</span>)
+                .<span class="ident">takes_value</span>(<span class="bool-val">true</span>)
+                .<span class="ident">required</span>(<span class="bool-val">true</span>)
+                .<span class="ident">about</span>(<span class="string">&quot;The amount to transfer in decimal.&quot;</span>),
+        )
+        .<span class="ident">arg</span>(
+            <span class="ident">Arg</span>::<span class="ident">new</span>(<span class="ident">DRY_RUN_TX_ARG</span>)
+                .<span class="ident">long</span>(<span class="ident">DRY_RUN_TX_ARG</span>)
+                .<span class="ident">takes_value</span>(<span class="bool-val">false</span>)
+                .<span class="ident">required</span>(<span class="bool-val">false</span>)
+                .<span class="ident">about</span>(<span class="string">&quot;Dry run the transaction.&quot;</span>),
+        )
+        .<span class="ident">arg</span>(
+            <span class="ident">Arg</span>::<span class="ident">new</span>(<span class="ident">LEDGER_ADDRESS_ARG</span>)
+                .<span class="ident">long</span>(<span class="ident">LEDGER_ADDRESS_ARG</span>)
+                .<span class="ident">multiple</span>(<span class="bool-val">false</span>)
+                .<span class="ident">takes_value</span>(<span class="bool-val">true</span>)
+                .<span class="ident">required</span>(<span class="bool-val">false</span>)
+                .<span class="ident">default_value</span>(<span class="string">&quot;127.0.0.1:26657&quot;</span>)
+                .<span class="ident">about</span>(<span class="string">&quot;Address of a ledger node as host:port&quot;</span>),
+        )
+}
+
+<span class="kw">fn</span> <span class="ident">client_tx_update_subcommand</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">App</span> {
+    <span class="ident">App</span>::<span class="ident">new</span>(<span class="ident">TX_UPDATE_COMMAND</span>)
+        .<span class="ident">about</span>(<span class="string">&quot;Send a transaction to update account&#39;s validity predicate&quot;</span>)
+        .<span class="ident">arg</span>(
+            <span class="ident">Arg</span>::<span class="ident">new</span>(<span class="ident">ADDRESS_ARG</span>)
+                .<span class="ident">long</span>(<span class="ident">ADDRESS_ARG</span>)
+                .<span class="ident">takes_value</span>(<span class="bool-val">true</span>)
+                .<span class="ident">required</span>(<span class="bool-val">true</span>)
+                .<span class="ident">about</span>(
+                    <span class="string">&quot;The account&#39;s address. It&#39;s key is used to produce the \
+                     signature.&quot;</span>,
+                ),
+        )
+        .<span class="ident">arg</span>(
+            <span class="ident">Arg</span>::<span class="ident">new</span>(<span class="ident">CODE_ARG</span>)
+                .<span class="ident">long</span>(<span class="ident">CODE_ARG</span>)
+                .<span class="ident">takes_value</span>(<span class="bool-val">true</span>)
+                .<span class="ident">required</span>(<span class="bool-val">true</span>)
+                .<span class="ident">about</span>(<span class="string">&quot;The path to the validity predicate wasm code.&quot;</span>),
+        )
+        .<span class="ident">arg</span>(
+            <span class="ident">Arg</span>::<span class="ident">new</span>(<span class="ident">DRY_RUN_TX_ARG</span>)
+                .<span class="ident">long</span>(<span class="ident">DRY_RUN_TX_ARG</span>)
+                .<span class="ident">takes_value</span>(<span class="bool-val">false</span>)
+                .<span class="ident">required</span>(<span class="bool-val">false</span>)
+                .<span class="ident">about</span>(<span class="string">&quot;Dry run the transaction.&quot;</span>),
+        )
+        .<span class="ident">arg</span>(
+            <span class="ident">Arg</span>::<span class="ident">new</span>(<span class="ident">LEDGER_ADDRESS_ARG</span>)
+                .<span class="ident">long</span>(<span class="ident">LEDGER_ADDRESS_ARG</span>)
+                .<span class="ident">multiple</span>(<span class="bool-val">false</span>)
+                .<span class="ident">takes_value</span>(<span class="bool-val">true</span>)
+                .<span class="ident">required</span>(<span class="bool-val">false</span>)
+                .<span class="ident">default_value</span>(<span class="string">&quot;127.0.0.1:26657&quot;</span>)
+                .<span class="ident">about</span>(<span class="string">&quot;Address of a ledger node as host:port&quot;</span>),
+        )
+}
+
+<span class="kw">fn</span> <span class="ident">run_gossip_subcommand</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">App</span> {
+    <span class="ident">App</span>::<span class="ident">new</span>(<span class="ident">RUN_GOSSIP_COMMAND</span>)
+        .<span class="ident">about</span>(<span class="string">&quot;Run Anoma gossip service.&quot;</span>)
+        .<span class="ident">arg</span>(
+            <span class="ident">Arg</span>::<span class="ident">new</span>(<span class="ident">ADDRESS_ARG</span>)
+                .<span class="ident">short</span>(<span class="string">&#39;a&#39;</span>)
+                .<span class="ident">long</span>(<span class="string">&quot;address&quot;</span>)
+                .<span class="ident">takes_value</span>(<span class="bool-val">true</span>)
+                .<span class="ident">about</span>(<span class="string">&quot;Gossip service address as host:port.&quot;</span>),
+        )
+        .<span class="ident">arg</span>(
+            <span class="ident">Arg</span>::<span class="ident">new</span>(<span class="ident">PEERS_ARG</span>)
+                .<span class="ident">short</span>(<span class="string">&#39;p&#39;</span>)
+                .<span class="ident">long</span>(<span class="string">&quot;peers&quot;</span>)
+                .<span class="ident">multiple</span>(<span class="bool-val">true</span>)
+                .<span class="ident">takes_value</span>(<span class="bool-val">true</span>)
+                .<span class="ident">about</span>(<span class="string">&quot;List of peers to connect to.&quot;</span>),
+        )
+        .<span class="ident">arg</span>(
+            <span class="ident">Arg</span>::<span class="ident">new</span>(<span class="ident">TOPIC_ARG</span>)
+                .<span class="ident">long</span>(<span class="ident">TOPIC_ARG</span>)
+                .<span class="ident">multiple</span>(<span class="bool-val">true</span>)
+                .<span class="ident">takes_value</span>(<span class="bool-val">true</span>)
+                .<span class="ident">about</span>(<span class="string">&quot;Enable a new gossip topic.&quot;</span>),
+        )
+        .<span class="ident">arg</span>(
+            <span class="ident">Arg</span>::<span class="ident">new</span>(<span class="ident">RPC_ARG</span>)
+                .<span class="ident">long</span>(<span class="ident">RPC_ARG</span>)
+                .<span class="ident">multiple</span>(<span class="bool-val">false</span>)
+                .<span class="ident">takes_value</span>(<span class="bool-val">true</span>)
+                .<span class="ident">about</span>(<span class="string">&quot;Enable RPC service.&quot;</span>),
+        )
+        .<span class="ident">arg</span>(
+            <span class="ident">Arg</span>::<span class="ident">new</span>(<span class="ident">MATCHMAKER_ARG</span>)
+                .<span class="ident">long</span>(<span class="ident">MATCHMAKER_ARG</span>)
+                .<span class="ident">multiple</span>(<span class="bool-val">false</span>)
+                .<span class="ident">takes_value</span>(<span class="bool-val">true</span>)
+                .<span class="ident">about</span>(<span class="string">&quot;The matchmaker.&quot;</span>),
+        )
+        .<span class="ident">arg</span>(
+            <span class="ident">Arg</span>::<span class="ident">new</span>(<span class="ident">TX_CODE_ARG</span>)
+                .<span class="ident">long</span>(<span class="ident">TX_CODE_ARG</span>)
+                .<span class="ident">multiple</span>(<span class="bool-val">false</span>)
+                .<span class="ident">takes_value</span>(<span class="bool-val">true</span>)
+                .<span class="ident">about</span>(<span class="string">&quot;The transaction code to use with the matchmaker&quot;</span>),
+        )
+        .<span class="ident">arg</span>(
+            <span class="ident">Arg</span>::<span class="ident">new</span>(<span class="ident">LEDGER_ADDRESS_ARG</span>)
+                .<span class="ident">long</span>(<span class="ident">LEDGER_ADDRESS_ARG</span>)
+                .<span class="ident">multiple</span>(<span class="bool-val">false</span>)
+                .<span class="ident">takes_value</span>(<span class="bool-val">true</span>)
+                .<span class="ident">about</span>(
+                    <span class="string">&quot;The address of the ledger as host:port that the \
+                     matchmaker must send transactions to.&quot;</span>,
+                ),
+        )
+        .<span class="ident">arg</span>(
+            <span class="ident">Arg</span>::<span class="ident">new</span>(<span class="ident">FILTER_ARG</span>)
+                .<span class="ident">long</span>(<span class="ident">FILTER_ARG</span>)
+                .<span class="ident">multiple</span>(<span class="bool-val">false</span>)
+                .<span class="ident">takes_value</span>(<span class="bool-val">true</span>)
+                .<span class="ident">about</span>(<span class="string">&quot;The private filter for the matchmaker&quot;</span>),
+        )
+}
+
+<span class="kw">fn</span> <span class="ident">run_ledger_subcommand</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">App</span> {
+    <span class="ident">App</span>::<span class="ident">new</span>(<span class="ident">RUN_LEDGER_COMMAND</span>).<span class="ident">about</span>(<span class="string">&quot;Run Anoma node service.&quot;</span>)
+}
+
+<span class="kw">fn</span> <span class="ident">reset_ledger_subcommand</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">App</span> {
+    <span class="ident">App</span>::<span class="ident">new</span>(<span class="ident">RESET_LEDGER_COMMAND</span>).<span class="ident">about</span>(<span class="string">&quot;Reset Anoma node state.&quot;</span>)
+}
+
+<span class="kw">fn</span> <span class="ident">generate_config</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">App</span> {
+    <span class="ident">App</span>::<span class="ident">new</span>(<span class="ident">GENERATE_CONFIG_COMMAND</span>).<span class="ident">about</span>(<span class="string">&quot;Generate default node config.&quot;</span>)
+}
+
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">parse_hashset_opt</span>(
+    <span class="ident">args</span>: <span class="kw-2">&amp;</span><span class="ident">ArgMatches</span>,
+    <span class="ident">field</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>,
+) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+    <span class="ident">args</span>.<span class="ident">values_of</span>(<span class="ident">field</span>).<span class="ident">map</span>(<span class="op">|</span><span class="ident">peers</span><span class="op">|</span> {
+        <span class="ident">peers</span>
+            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">peer</span><span class="op">|</span> <span class="ident">peer</span>.<span class="ident">to_string</span>())
+            .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span><span class="op">&gt;</span>()
+    })
+}
+
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">parse_opt</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>(<span class="ident">args</span>: <span class="kw-2">&amp;</span><span class="ident">ArgMatches</span>, <span class="ident">field</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>
+<span class="kw">where</span>
+    <span class="ident">F</span>: <span class="ident">FromStr</span>,
+    <span class="ident">F</span>::<span class="prelude-val">Err</span>: <span class="ident">Debug</span>,
+{
+    <span class="ident">args</span>.<span class="ident">value_of</span>(<span class="ident">field</span>).<span class="ident">map</span>(<span class="op">|</span><span class="ident">arg</span><span class="op">|</span> {
+        <span class="ident">arg</span>.<span class="ident">parse</span>().<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> {
+            <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;failed to parse the argument {}, error: {:?}&quot;</span>, <span class="ident">arg</span>, <span class="ident">e</span>)
+        })
+    })
+}
+
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">parse_req</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>(<span class="ident">args</span>: <span class="kw-2">&amp;</span><span class="ident">ArgMatches</span>, <span class="ident">field</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">F</span>
+<span class="kw">where</span>
+    <span class="ident">F</span>: <span class="ident">FromStr</span>,
+    <span class="ident">F</span>::<span class="prelude-val">Err</span>: <span class="ident">Debug</span>,
+{
+    <span class="ident">parse_opt</span>(<span class="ident">args</span>, <span class="ident">field</span>).<span class="ident">expect</span>(<span class="string">&quot;field is mandatory&quot;</span>)
+}
+
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">parse_string_opt</span>(<span class="ident">args</span>: <span class="kw-2">&amp;</span><span class="ident">ArgMatches</span>, <span class="ident">field</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> {
+    <span class="ident">args</span>.<span class="ident">value_of</span>(<span class="ident">field</span>).<span class="ident">map</span>(<span class="op">|</span><span class="ident">s</span><span class="op">|</span> <span class="ident">s</span>.<span class="ident">to_string</span>())
+}
+
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">parse_string_req</span>(<span class="ident">args</span>: <span class="kw-2">&amp;</span><span class="ident">ArgMatches</span>, <span class="ident">field</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">String</span> {
+    <span class="ident">parse_string_opt</span>(<span class="ident">args</span>, <span class="ident">field</span>).<span class="ident">expect</span>(<span class="string">&quot;field is mandatory&quot;</span>)
+}
+
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">update_gossip_config</span>(
+    <span class="ident">args</span>: <span class="kw-2">&amp;</span><span class="ident">ArgMatches</span>,
+    <span class="ident">config</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">config</span>::<span class="ident">IntentBroadcaster</span>,
+) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">std</span>::<span class="ident">error</span>::<span class="ident">Error</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+    <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">peers</span>) <span class="op">=</span> <span class="ident">parse_hashset_opt</span>(<span class="ident">args</span>, <span class="ident">PEERS_ARG</span>) {
+        <span class="ident">config</span>.<span class="ident">peers</span> <span class="op">=</span> <span class="ident">peers</span>
+            .<span class="ident">iter</span>()
+            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">p</span><span class="op">|</span> <span class="ident">Multiaddr</span>::<span class="ident">from_str</span>(<span class="ident">p</span>).<span class="ident">expect</span>(<span class="string">&quot;error while parsing peer&quot;</span>))
+            .<span class="ident">collect</span>()
+    }
+
+    <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">addr</span>) <span class="op">=</span> <span class="ident">parse_opt</span>(<span class="ident">args</span>, <span class="ident">ADDRESS_ARG</span>) {
+        <span class="ident">config</span>.<span class="ident">address</span> <span class="op">=</span> <span class="ident">addr</span>
+    }
+
+    <span class="kw">let</span> <span class="ident">matchmaker_arg</span> <span class="op">=</span> <span class="ident">parse_opt</span>(<span class="ident">args</span>, <span class="ident">MATCHMAKER_ARG</span>);
+    <span class="kw">let</span> <span class="ident">tx_code_arg</span> <span class="op">=</span> <span class="ident">parse_opt</span>(<span class="ident">args</span>, <span class="ident">TX_CODE_ARG</span>);
+    <span class="kw">let</span> <span class="ident">ledger_address_arg</span> <span class="op">=</span> <span class="ident">parse_opt</span>(<span class="ident">args</span>, <span class="ident">LEDGER_ADDRESS_ARG</span>);
+    <span class="kw">let</span> <span class="ident">filter_arg</span> <span class="op">=</span> <span class="ident">parse_opt</span>(<span class="ident">args</span>, <span class="ident">FILTER_ARG</span>);
+    <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="kw-2">mut</span> <span class="ident">matchmaker_cfg</span>) <span class="op">=</span> <span class="ident">config</span>.<span class="ident">matchmaker</span>.<span class="ident">as_mut</span>() {
+        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">matchmaker</span>) <span class="op">=</span> <span class="ident">matchmaker_arg</span> {
+            <span class="ident">matchmaker_cfg</span>.<span class="ident">matchmaker</span> <span class="op">=</span> <span class="ident">matchmaker</span>
+        }
+        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">tx_code</span>) <span class="op">=</span> <span class="ident">tx_code_arg</span> {
+            <span class="ident">matchmaker_cfg</span>.<span class="ident">tx_code</span> <span class="op">=</span> <span class="ident">tx_code</span>
+        }
+        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">ledger_address</span>) <span class="op">=</span> <span class="ident">ledger_address_arg</span> {
+            <span class="ident">matchmaker_cfg</span>.<span class="ident">ledger_address</span> <span class="op">=</span> <span class="ident">ledger_address</span>
+        }
+        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">filter</span>) <span class="op">=</span> <span class="ident">filter_arg</span> {
+            <span class="ident">matchmaker_cfg</span>.<span class="ident">filter</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">filter</span>)
+        }
+    } <span class="kw">else</span> <span class="kw">if</span> <span class="kw">let</span> (<span class="prelude-val">Some</span>(<span class="ident">matchmaker</span>), <span class="prelude-val">Some</span>(<span class="ident">tx_code</span>), <span class="prelude-val">Some</span>(<span class="ident">ledger_address</span>)) <span class="op">=</span> (
+        <span class="ident">matchmaker_arg</span>.<span class="ident">as_ref</span>(),
+        <span class="ident">tx_code_arg</span>.<span class="ident">as_ref</span>(),
+        <span class="kw-2">&amp;</span><span class="ident">ledger_address_arg</span>,
+    ) {
+        <span class="kw">let</span> <span class="ident">matchmaker_cfg</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">config</span>::<span class="ident">Matchmaker</span> {
+            <span class="ident">matchmaker</span>: <span class="ident">matchmaker</span>.<span class="ident">clone</span>(),
+            <span class="ident">tx_code</span>: <span class="ident">tx_code</span>.<span class="ident">clone</span>(),
+            <span class="ident">ledger_address</span>: <span class="ident">ledger_address</span>.<span class="ident">clone</span>(),
+            <span class="ident">filter</span>: <span class="ident">filter_arg</span>.<span class="ident">clone</span>(),
+        });
+        <span class="ident">config</span>.<span class="ident">matchmaker</span> <span class="op">=</span> <span class="ident">matchmaker_cfg</span>
+    } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">matchmaker_arg</span>.<span class="ident">is_some</span>()
+        <span class="op">|</span><span class="op">|</span> <span class="ident">tx_code_arg</span>.<span class="ident">is_some</span>()
+        <span class="op">|</span><span class="op">|</span> <span class="ident">ledger_address_arg</span>.<span class="ident">is_some</span>()
+    <span class="comment">// if at least one argument is not none then fail</span>
+    {
+        <span class="macro">panic</span><span class="macro">!</span>(
+            <span class="string">&quot;No complete matchmaker configuration found (matchmaker code \
+             path, tx code path, and ledger address). Please update the \
+             configuration with default value or use all cli argument to use \
+             the matchmaker&quot;</span>
+        );
+    }
+    <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">address</span>) <span class="op">=</span> <span class="ident">parse_opt</span>(<span class="ident">args</span>, <span class="ident">RPC_ARG</span>) {
+        <span class="ident">config</span>.<span class="ident">rpc</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">config</span>::<span class="ident">RpcServer</span> { <span class="ident">address</span> });
+    }
+    <span class="prelude-val">Ok</span>(())
+}
+</pre></div>
+</section><section id="search" class="content hidden"></section><section class="footer"></section><div id="rustdoc-vars" data-root-path="../../" data-current-crate="anoma" data-search-js="../../search-index.js"></div>
+    <script src="../../main.js"></script><script src="../../source-script.js"></script><script src="../../source-files.js"></script></body></html>

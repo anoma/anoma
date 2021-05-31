@@ -1,0 +1,1 @@
+initSidebarItems({"fn":[["invalid_intent_key","Obtain a storage key for user’s invalid intent set."],["is_invalid_intent_key","Check if the given storage key is a key for a set of intent sig. If it is, returns the owner."],["vp",""]],"struct":[["Intent",""],["IntentTransfers","These are transfers crafted from matched [`Intent`]s."]]});

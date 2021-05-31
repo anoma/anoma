@@ -1,0 +1,102 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Prints and returns the value of a given expression for quick and dirty debugging."><meta name="keywords" content="rust, rustlang, rust-lang, dbg"><title>anoma::std::dbg - Rust</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script id="default-settings"></script><script src="../../storage.js"></script><script src="../../crates.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../favicon.svg">
+<link rel="alternate icon" type="image/png" href="../../favicon-16x16.png">
+<link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc macro"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../anoma/index.html'><div class='logo-container rust-logo'><img src='../../rust-logo.png' alt='logo'></div></a><div class="sidebar-elems"><p class="location"><a href="../index.html">anoma</a>::<wbr><a href="index.html">std</a></p><div id="sidebar-vars" data-name="dbg" data-ty="macro" data-relpath=""></div><script defer src="sidebar-items.js"></script></div></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../../brush.svg" width="18" height="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><script src="../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" class="help-button">?</button>
+                <a id="settings-menu" href="../../settings.html"><img src="../../wheel.svg" width="18" height="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><h1 class="fqn"><span class="in-band">Macro <a href="../index.html">anoma</a>::<wbr><a href="index.html">std</a>::<wbr><a class="macro" href="">dbg</a></span><span class="out-of-band"><span class="since" title="Stable since Rust version 1.32.0">1.32.0</span><span id="render-detail"><a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">[<span class="inner">&#x2212;</span>]</a></span><a class="srclink" href="https://doc.rust-lang.org/nightly/src/std/macros.rs.html#285-307" title="goto source code">[src]</a></span></h1><div class="docblock type-decl hidden-by-usual-hider"><div class="example-wrap"><pre class="rust macro">
+<span class="macro">macro_rules</span><span class="macro">!</span> <span class="ident">dbg</span> {
+    () <span class="op">=</span><span class="op">&gt;</span> { ... };
+    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">val</span>:<span class="ident">expr</span> $(,)<span class="question-mark">?</span>) <span class="op">=</span><span class="op">&gt;</span> { ... };
+    ($(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">val</span>:<span class="ident">expr</span>),<span class="op">+</span> $(,)<span class="question-mark">?</span>) <span class="op">=</span><span class="op">&gt;</span> { ... };
+}</pre></div>
+</div><div class="docblock"><p>Prints and returns the value of a given expression for quick and dirty
+debugging.</p>
+<p>An example:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="kw">let</span> <span class="ident">a</span> <span class="op">=</span> <span class="number">2</span>;
+<span class="kw">let</span> <span class="ident">b</span> <span class="op">=</span> <span class="macro">dbg</span><span class="macro">!</span>(<span class="ident">a</span> <span class="op">*</span> <span class="number">2</span>) <span class="op">+</span> <span class="number">1</span>;
+<span class="comment">//      ^-- prints: [src/main.rs:2] a * 2 = 4</span>
+<span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">b</span>, <span class="number">5</span>);</pre></div>
+<p>The macro works by using the <code>Debug</code> implementation of the type of
+the given expression to print the value to <a href="https://en.wikipedia.org/wiki/Standard_streams#Standard_error_(stderr)">stderr</a> along with the
+source location of the macro invocation as well as the source code
+of the expression.</p>
+<p>Invoking the macro on an expression moves and takes ownership of it
+before returning the evaluated expression unchanged. If the type
+of the expression does not implement <code>Copy</code> and you don’t want
+to give up ownership, you can instead borrow with <code>dbg!(&amp;expr)</code>
+for some expression <code>expr</code>.</p>
+<p>The <code>dbg!</code> macro works exactly the same in release builds.
+This is useful when debugging issues that only occur in release
+builds or when debugging in release mode is significantly faster.</p>
+<p>Note that the macro is intended as a debugging tool and therefore you
+should avoid having uses of it in version control for long periods.
+Use cases involving debug output that should be added to version control
+are better served by macros such as <a href="https://docs.rs/log/*/log/macro.debug.html"><code>debug!</code></a> from the <a href="https://crates.io/crates/log"><code>log</code></a> crate.</p>
+<h1 id="stability" class="section-header"><a href="#stability">Stability</a></h1>
+<p>The exact output printed by this macro should not be relied upon
+and is subject to future changes.</p>
+<h1 id="panics" class="section-header"><a href="#panics">Panics</a></h1>
+<p>Panics if writing to <code>io::stderr</code> fails.</p>
+<h1 id="further-examples" class="section-header"><a href="#further-examples">Further examples</a></h1>
+<p>With a method call:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="kw">fn</span> <span class="ident">foo</span>(<span class="ident">n</span>: <span class="ident">usize</span>) {
+    <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="kw">_</span>) <span class="op">=</span> <span class="macro">dbg</span><span class="macro">!</span>(<span class="ident">n</span>.<span class="ident">checked_sub</span>(<span class="number">4</span>)) {
+        <span class="comment">// ...</span>
+    }
+}
+
+<span class="ident">foo</span>(<span class="number">3</span>)</pre></div>
+<p>This prints to <a href="https://en.wikipedia.org/wiki/Standard_streams#Standard_error_(stderr)">stderr</a>:</p>
+<pre><code class="language-text,ignore">[src/main.rs:4] n.checked_sub(4) = None
+</code></pre>
+<p>Naive factorial implementation:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="kw">fn</span> <span class="ident">factorial</span>(<span class="ident">n</span>: <span class="ident">u32</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u32</span> {
+    <span class="kw">if</span> <span class="macro">dbg</span><span class="macro">!</span>(<span class="ident">n</span> <span class="op">&lt;</span><span class="op">=</span> <span class="number">1</span>) {
+        <span class="macro">dbg</span><span class="macro">!</span>(<span class="number">1</span>)
+    } <span class="kw">else</span> {
+        <span class="macro">dbg</span><span class="macro">!</span>(<span class="ident">n</span> <span class="op">*</span> <span class="ident">factorial</span>(<span class="ident">n</span> <span class="op">-</span> <span class="number">1</span>))
+    }
+}
+
+<span class="macro">dbg</span><span class="macro">!</span>(<span class="ident">factorial</span>(<span class="number">4</span>));</pre></div>
+<p>This prints to <a href="https://en.wikipedia.org/wiki/Standard_streams#Standard_error_(stderr)">stderr</a>:</p>
+<pre><code class="language-text,ignore">[src/main.rs:3] n &lt;= 1 = false
+[src/main.rs:3] n &lt;= 1 = false
+[src/main.rs:3] n &lt;= 1 = false
+[src/main.rs:3] n &lt;= 1 = true
+[src/main.rs:4] 1 = 1
+[src/main.rs:5] n * factorial(n - 1) = 2
+[src/main.rs:5] n * factorial(n - 1) = 6
+[src/main.rs:5] n * factorial(n - 1) = 24
+[src/main.rs:11] factorial(4) = 24
+</code></pre>
+<p>The <code>dbg!(..)</code> macro moves the input:</p>
+
+<div class='information'><div class='tooltip compile_fail'>ⓘ</div></div><div class="example-wrap"><pre class="rust rust-example-rendered compile_fail">
+<span class="doccomment">/// A wrapper around `usize` which importantly is not Copyable.</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
+<span class="kw">struct</span> <span class="ident">NoCopy</span>(<span class="ident">usize</span>);
+
+<span class="kw">let</span> <span class="ident">a</span> <span class="op">=</span> <span class="ident">NoCopy</span>(<span class="number">42</span>);
+<span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="macro">dbg</span><span class="macro">!</span>(<span class="ident">a</span>); <span class="comment">// &lt;-- `a` is moved here.</span>
+<span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="macro">dbg</span><span class="macro">!</span>(<span class="ident">a</span>); <span class="comment">// &lt;-- `a` is moved again; error!</span></pre></div>
+<p>You can also use <code>dbg!()</code> without a value to just print the
+file and line whenever it’s reached.</p>
+<p>Finally, if you want to <code>dbg!(..)</code> multiple values, it will treat them as
+a tuple (and return it, too):</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="macro">assert_eq</span><span class="macro">!</span>(<span class="macro">dbg</span><span class="macro">!</span>(<span class="number">1usize</span>, <span class="number">2u32</span>), (<span class="number">1</span>, <span class="number">2</span>));</pre></div>
+<p>However, a single argument with a trailing comma will still not be treated
+as a tuple, following the convention of ignoring trailing commas in macro
+invocations. You can use a 1-tuple directly if you need one:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="macro">assert_eq</span><span class="macro">!</span>(<span class="number">1</span>, <span class="macro">dbg</span><span class="macro">!</span>(<span class="number">1u32</span>,)); <span class="comment">// trailing comma ignored</span>
+<span class="macro">assert_eq</span><span class="macro">!</span>((<span class="number">1</span>,), <span class="macro">dbg</span><span class="macro">!</span>((<span class="number">1u32</span>,))); <span class="comment">// 1-tuple</span></pre></div>
+</div></section><section id="search" class="content hidden"></section><section class="footer"></section><div id="rustdoc-vars" data-root-path="../../" data-current-crate="anoma" data-search-js="../../search-index.js"></div>
+    <script src="../../main.js"></script></body></html>

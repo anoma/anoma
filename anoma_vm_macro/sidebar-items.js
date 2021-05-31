@@ -1,0 +1,1 @@
+initSidebarItems({"attr":[["filter","This macro expects a function with signature:"],["matchmaker","This macro expects a function with signature:"],["transaction","This macro expects a function with signature:"],["validity_predicate","This macro expects a function with signature:"]]});

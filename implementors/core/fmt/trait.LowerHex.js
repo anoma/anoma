@@ -1,0 +1,3 @@
+(function() {var implementors = {};
+implementors["anoma_shared"] = [{"text":"impl&lt;'a&gt; <a class=\"trait\" href=\"https://doc.rust-lang.org/nightly/core/fmt/trait.LowerHex.html\" title=\"trait core::fmt::LowerHex\">LowerHex</a> for <a class=\"struct\" href=\"anoma_shared/bytes/struct.ByteBuf.html\" title=\"struct anoma_shared::bytes::ByteBuf\">ByteBuf</a>&lt;'a&gt;","synthetic":false,"types":["anoma_shared::bytes::ByteBuf"]}];
+if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()

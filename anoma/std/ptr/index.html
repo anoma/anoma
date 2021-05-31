@@ -1,0 +1,98 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Manually manage memory through raw pointers."><meta name="keywords" content="rust, rustlang, rust-lang, ptr"><title>anoma::std::ptr - Rust</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script id="default-settings"></script><script src="../../../storage.js"></script><script src="../../../crates.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../../favicon.svg">
+<link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png">
+<link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc mod"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../anoma/index.html'><div class='logo-container rust-logo'><img src='../../../rust-logo.png' alt='logo'></div></a><p class="location">Module ptr</p><div class="sidebar-elems"><div class="block items"><ul><li><a href="#macros">Macros</a></li><li><a href="#structs">Structs</a></li><li><a href="#traits">Traits</a></li><li><a href="#functions">Functions</a></li></ul></div><p class="location"><a href="../../index.html">anoma</a>::<wbr><a href="../index.html">std</a></p><div id="sidebar-vars" data-name="ptr" data-ty="mod" data-relpath="../"></div><script defer src="../sidebar-items.js"></script></div></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../../../brush.svg" width="18" height="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><script src="../../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" class="help-button">?</button>
+                <a id="settings-menu" href="../../../settings.html"><img src="../../../wheel.svg" width="18" height="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><h1 class="fqn"><span class="in-band">Module <a href="../../index.html">anoma</a>::<wbr><a href="../index.html">std</a>::<wbr><a class="mod" href="">ptr</a></span><span class="out-of-band"><span class="since" title="Stable since Rust version 1.0.0">1.0.0</span><span id="render-detail"><a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">[<span class="inner">&#x2212;</span>]</a></span><a class="srclink" href="https://doc.rust-lang.org/nightly/src/core/lib.rs.html#230" title="goto source code">[src]</a></span></h1><div class="docblock"><p>Manually manage memory through raw pointers.</p>
+<p><em><a href="https://doc.rust-lang.org/nightly/std/primitive.pointer.html">See also the pointer primitive types</a>.</em></p>
+<h1 id="safety" class="section-header"><a href="#safety">Safety</a></h1>
+<p>Many functions in this module take raw pointers as arguments and read from
+or write to them. For this to be safe, these pointers must be <em>valid</em>.
+Whether a pointer is valid depends on the operation it is used for
+(read or write), and the extent of the memory that is accessed (i.e.,
+how many bytes are read/written). Most functions use <code>*mut T</code> and <code>*const T</code>
+to access only a single value, in which case the documentation omits the size
+and implicitly assumes it to be <code>size_of::&lt;T&gt;()</code> bytes.</p>
+<p>The precise rules for validity are not determined yet. The guarantees that are
+provided at this point are very minimal:</p>
+<ul>
+<li>A <a href="../../../anoma/std/ptr/fn.null.html" title="null">null</a> pointer is <em>never</em> valid, not even for accesses of <a href="../../nomicon/exotic-sizes.html#zero-sized-types-zsts">size zero</a>.</li>
+<li>For a pointer to be valid, it is necessary, but not always sufficient, that the pointer
+be <em>dereferenceable</em>: the memory range of the given size starting at the pointer must all be
+within the bounds of a single allocated object. Note that in Rust,
+every (stack-allocated) variable is considered a separate allocated object.</li>
+<li>Even for operations of <a href="../../nomicon/exotic-sizes.html#zero-sized-types-zsts">size zero</a>, the pointer must not be pointing to deallocated
+memory, i.e., deallocation makes pointers invalid even for zero-sized operations. However,
+casting any non-zero integer <em>literal</em> to a pointer is valid for zero-sized accesses, even if
+some memory happens to exist at that address and gets deallocated. This corresponds to writing
+your own allocator: allocating zero-sized objects is not very hard. The canonical way to
+obtain a pointer that is valid for zero-sized accesses is <a href="../../../anoma/std/ptr/struct.NonNull.html#method.dangling" title="NonNull::dangling"><code>NonNull::dangling</code></a>.</li>
+<li>All accesses performed by functions in this module are <em>non-atomic</em> in the sense
+of <a href="../../../anoma/std/sync/atomic/index.html">atomic operations</a> used to synchronize between threads. This means it is
+undefined behavior to perform two concurrent accesses to the same location from different
+threads unless both accesses only read from memory. Notice that this explicitly
+includes <a href="../../../anoma/std/ptr/fn.read_volatile.html" title="read_volatile"><code>read_volatile</code></a> and <a href="../../../anoma/std/ptr/fn.write_volatile.html" title="write_volatile"><code>write_volatile</code></a>: Volatile accesses cannot
+be used for inter-thread synchronization.</li>
+<li>The result of casting a reference to a pointer is valid for as long as the
+underlying object is live and no reference (just raw pointers) is used to
+access the same memory.</li>
+</ul>
+<p>These axioms, along with careful use of <a href="https://doc.rust-lang.org/nightly/std/primitive.pointer.html#method.offset"><code>offset</code></a> for pointer arithmetic,
+are enough to correctly implement many useful things in unsafe code. Stronger guarantees
+will be provided eventually, as the <a href="../../nomicon/aliasing.html">aliasing</a> rules are being determined. For more
+information, see the <a href="../../book/ch19-01-unsafe-rust.html#dereferencing-a-raw-pointer">book</a> as well as the section in the reference devoted
+to <a href="../../reference/behavior-considered-undefined.html">undefined behavior</a>.</p>
+<h2 id="alignment" class="section-header"><a href="#alignment">Alignment</a></h2>
+<p>Valid raw pointers as defined above are not necessarily properly aligned (where
+“proper” alignment is defined by the pointee type, i.e., <code>*const T</code> must be
+aligned to <code>mem::align_of::&lt;T&gt;()</code>). However, most functions require their
+arguments to be properly aligned, and will explicitly state
+this requirement in their documentation. Notable exceptions to this are
+<a href="../../../anoma/std/ptr/fn.read_unaligned.html" title="read_unaligned"><code>read_unaligned</code></a> and <a href="../../../anoma/std/ptr/fn.write_unaligned.html" title="write_unaligned"><code>write_unaligned</code></a>.</p>
+<p>When a function requires proper alignment, it does so even if the access
+has size 0, i.e., even if memory is not actually touched. Consider using
+<a href="../../../anoma/std/ptr/struct.NonNull.html#method.dangling" title="NonNull::dangling"><code>NonNull::dangling</code></a> in such cases.</p>
+</div><h2 id="macros" class="section-header"><a href="#macros">Macros</a></h2>
+<table><tr class="module-item"><td><a class="macro" href="macro.addr_of.html" title="anoma::std::ptr::addr_of macro">addr_of</a></td><td class="docblock-short"><p>Create a <code>const</code> raw pointer to a place, without creating an intermediate reference.</p>
+</td></tr><tr class="module-item"><td><a class="macro" href="macro.addr_of_mut.html" title="anoma::std::ptr::addr_of_mut macro">addr_of_mut</a></td><td class="docblock-short"><p>Create a <code>mut</code> raw pointer to a place, without creating an intermediate reference.</p>
+</td></tr></table><h2 id="structs" class="section-header"><a href="#structs">Structs</a></h2>
+<table><tr class="unstable module-item"><td><a class="struct" href="struct.DynMetadata.html" title="anoma::std::ptr::DynMetadata struct">DynMetadata</a></td><td class="docblock-short"><span class="stab unstable" title="">Experimental</span><p>The metadata for a <code>Dyn = dyn SomeTrait</code> trait object type.</p>
+</td></tr><tr class="module-item"><td><a class="struct" href="struct.NonNull.html" title="anoma::std::ptr::NonNull struct">NonNull</a></td><td class="docblock-short"><p><code>*mut T</code> but non-zero and covariant.</p>
+</td></tr></table><h2 id="traits" class="section-header"><a href="#traits">Traits</a></h2>
+<table><tr class="unstable module-item"><td><a class="trait" href="trait.Pointee.html" title="anoma::std::ptr::Pointee trait">Pointee</a></td><td class="docblock-short"><span class="stab unstable" title="">Experimental</span><p>Provides the pointer metadata type of any pointed-to type.</p>
+</td></tr></table><h2 id="functions" class="section-header"><a href="#functions">Functions</a></h2>
+<table><tr class="unstable module-item"><td><a class="fn" href="fn.from_raw_parts.html" title="anoma::std::ptr::from_raw_parts fn">from_raw_parts</a></td><td class="docblock-short"><span class="stab unstable" title="">Experimental</span><p>Forms a (possibly-wide) raw pointer from a data address and metadata.</p>
+</td></tr><tr class="unstable module-item"><td><a class="fn" href="fn.from_raw_parts_mut.html" title="anoma::std::ptr::from_raw_parts_mut fn">from_raw_parts_mut</a></td><td class="docblock-short"><span class="stab unstable" title="">Experimental</span><p>Performs the same functionality as <a href="../../../anoma/std/ptr/fn.from_raw_parts.html" title="from_raw_parts"><code>from_raw_parts</code></a>, except that a
+raw <code>*mut</code> pointer is returned, as opposed to a raw <code>*const</code> pointer.</p>
+</td></tr><tr class="unstable module-item"><td><a class="fn" href="fn.metadata.html" title="anoma::std::ptr::metadata fn">metadata</a></td><td class="docblock-short"><span class="stab unstable" title="">Experimental</span><p>Extract the metadata component of a pointer.</p>
+</td></tr><tr class="module-item"><td><a class="fn" href="fn.copy.html" title="anoma::std::ptr::copy fn">copy</a><a title="unsafe function" href="#"><sup>⚠</sup></a></td><td class="docblock-short"><p>Copies <code>count * size_of::&lt;T&gt;()</code> bytes from <code>src</code> to <code>dst</code>. The source
+and destination may overlap.</p>
+</td></tr><tr class="module-item"><td><a class="fn" href="fn.copy_nonoverlapping.html" title="anoma::std::ptr::copy_nonoverlapping fn">copy_nonoverlapping</a><a title="unsafe function" href="#"><sup>⚠</sup></a></td><td class="docblock-short"><p>Copies <code>count * size_of::&lt;T&gt;()</code> bytes from <code>src</code> to <code>dst</code>. The source
+and destination must <em>not</em> overlap.</p>
+</td></tr><tr class="module-item"><td><a class="fn" href="fn.drop_in_place.html" title="anoma::std::ptr::drop_in_place fn">drop_in_place</a><a title="unsafe function" href="#"><sup>⚠</sup></a></td><td class="docblock-short"><p>Executes the destructor (if any) of the pointed-to value.</p>
+</td></tr><tr class="module-item"><td><a class="fn" href="fn.eq.html" title="anoma::std::ptr::eq fn">eq</a></td><td class="docblock-short"><p>Compares raw pointers for equality.</p>
+</td></tr><tr class="module-item"><td><a class="fn" href="fn.hash.html" title="anoma::std::ptr::hash fn">hash</a></td><td class="docblock-short"><p>Hash a raw pointer.</p>
+</td></tr><tr class="module-item"><td><a class="fn" href="fn.null.html" title="anoma::std::ptr::null fn">null</a></td><td class="docblock-short"><p>Creates a null raw pointer.</p>
+</td></tr><tr class="module-item"><td><a class="fn" href="fn.null_mut.html" title="anoma::std::ptr::null_mut fn">null_mut</a></td><td class="docblock-short"><p>Creates a null mutable raw pointer.</p>
+</td></tr><tr class="module-item"><td><a class="fn" href="fn.read.html" title="anoma::std::ptr::read fn">read</a><a title="unsafe function" href="#"><sup>⚠</sup></a></td><td class="docblock-short"><p>Reads the value from <code>src</code> without moving it. This leaves the
+memory in <code>src</code> unchanged.</p>
+</td></tr><tr class="module-item"><td><a class="fn" href="fn.read_unaligned.html" title="anoma::std::ptr::read_unaligned fn">read_unaligned</a><a title="unsafe function" href="#"><sup>⚠</sup></a></td><td class="docblock-short"><p>Reads the value from <code>src</code> without moving it. This leaves the
+memory in <code>src</code> unchanged.</p>
+</td></tr><tr class="module-item"><td><a class="fn" href="fn.read_volatile.html" title="anoma::std::ptr::read_volatile fn">read_volatile</a><a title="unsafe function" href="#"><sup>⚠</sup></a></td><td class="docblock-short"><p>Performs a volatile read of the value from <code>src</code> without moving it. This
+leaves the memory in <code>src</code> unchanged.</p>
+</td></tr><tr class="module-item"><td><a class="fn" href="fn.replace.html" title="anoma::std::ptr::replace fn">replace</a><a title="unsafe function" href="#"><sup>⚠</sup></a></td><td class="docblock-short"><p>Moves <code>src</code> into the pointed <code>dst</code>, returning the previous <code>dst</code> value.</p>
+</td></tr><tr class="module-item"><td><a class="fn" href="fn.slice_from_raw_parts.html" title="anoma::std::ptr::slice_from_raw_parts fn">slice_from_raw_parts</a></td><td class="docblock-short"><p>Forms a raw slice from a pointer and a length.</p>
+</td></tr><tr class="module-item"><td><a class="fn" href="fn.slice_from_raw_parts_mut.html" title="anoma::std::ptr::slice_from_raw_parts_mut fn">slice_from_raw_parts_mut</a></td><td class="docblock-short"><p>Performs the same functionality as <a href="../../../anoma/std/ptr/fn.slice_from_raw_parts.html" title="slice_from_raw_parts"><code>slice_from_raw_parts</code></a>, except that a
+raw mutable slice is returned, as opposed to a raw immutable slice.</p>
+</td></tr><tr class="module-item"><td><a class="fn" href="fn.swap.html" title="anoma::std::ptr::swap fn">swap</a><a title="unsafe function" href="#"><sup>⚠</sup></a></td><td class="docblock-short"><p>Swaps the values at two mutable locations of the same type, without
+deinitializing either.</p>
+</td></tr><tr class="module-item"><td><a class="fn" href="fn.swap_nonoverlapping.html" title="anoma::std::ptr::swap_nonoverlapping fn">swap_nonoverlapping</a><a title="unsafe function" href="#"><sup>⚠</sup></a></td><td class="docblock-short"><p>Swaps <code>count * size_of::&lt;T&gt;()</code> bytes between the two regions of memory
+beginning at <code>x</code> and <code>y</code>. The two regions must <em>not</em> overlap.</p>
+</td></tr><tr class="module-item"><td><a class="fn" href="fn.write.html" title="anoma::std::ptr::write fn">write</a><a title="unsafe function" href="#"><sup>⚠</sup></a></td><td class="docblock-short"><p>Overwrites a memory location with the given value without reading or
+dropping the old value.</p>
+</td></tr><tr class="module-item"><td><a class="fn" href="fn.write_bytes.html" title="anoma::std::ptr::write_bytes fn">write_bytes</a><a title="unsafe function" href="#"><sup>⚠</sup></a></td><td class="docblock-short"><p>Sets <code>count * size_of::&lt;T&gt;()</code> bytes of memory starting at <code>dst</code> to
+<code>val</code>.</p>
+</td></tr><tr class="module-item"><td><a class="fn" href="fn.write_unaligned.html" title="anoma::std::ptr::write_unaligned fn">write_unaligned</a><a title="unsafe function" href="#"><sup>⚠</sup></a></td><td class="docblock-short"><p>Overwrites a memory location with the given value without reading or
+dropping the old value.</p>
+</td></tr><tr class="module-item"><td><a class="fn" href="fn.write_volatile.html" title="anoma::std::ptr::write_volatile fn">write_volatile</a><a title="unsafe function" href="#"><sup>⚠</sup></a></td><td class="docblock-short"><p>Performs a volatile write of a memory location with the given value without
+reading or dropping the old value.</p>
+</td></tr></table></section><section id="search" class="content hidden"></section><section class="footer"></section><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="anoma" data-search-js="../../../search-index.js"></div>
+    <script src="../../../main.js"></script></body></html>

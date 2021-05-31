@@ -1,0 +1,105 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="A module for working with processes."><meta name="keywords" content="rust, rustlang, rust-lang, process"><title>anoma::std::process - Rust</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script id="default-settings"></script><script src="../../../storage.js"></script><script src="../../../crates.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../../favicon.svg">
+<link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png">
+<link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc mod"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../anoma/index.html'><div class='logo-container rust-logo'><img src='../../../rust-logo.png' alt='logo'></div></a><p class="location">Module process</p><div class="sidebar-elems"><div class="block items"><ul><li><a href="#structs">Structs</a></li><li><a href="#traits">Traits</a></li><li><a href="#functions">Functions</a></li></ul></div><p class="location"><a href="../../index.html">anoma</a>::<wbr><a href="../index.html">std</a></p><div id="sidebar-vars" data-name="process" data-ty="mod" data-relpath="../"></div><script defer src="../sidebar-items.js"></script></div></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../../../brush.svg" width="18" height="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><script src="../../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" class="help-button">?</button>
+                <a id="settings-menu" href="../../../settings.html"><img src="../../../wheel.svg" width="18" height="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><h1 class="fqn"><span class="in-band">Module <a href="../../index.html">anoma</a>::<wbr><a href="../index.html">std</a>::<wbr><a class="mod" href="">process</a></span><span class="out-of-band"><span class="since" title="Stable since Rust version 1.0.0">1.0.0</span><span id="render-detail"><a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">[<span class="inner">&#x2212;</span>]</a></span><a class="srclink" href="https://doc.rust-lang.org/nightly/src/std/lib.rs.html#501" title="goto source code">[src]</a></span></h1><div class="docblock"><p>A module for working with processes.</p>
+<p>This module is mostly concerned with spawning and interacting with child
+processes, but it also provides <a href="../../../anoma/std/process/fn.abort.html" title="abort"><code>abort</code></a> and <a href="../../../anoma/std/process/fn.exit.html" title="exit"><code>exit</code></a> for terminating the
+current process.</p>
+<h1 id="spawning-a-process" class="section-header"><a href="#spawning-a-process">Spawning a process</a></h1>
+<p>The <a href="../../../anoma/std/process/struct.Command.html" title="Command"><code>Command</code></a> struct is used to configure and spawn processes:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">process</span>::<span class="ident">Command</span>;
+
+<span class="kw">let</span> <span class="ident">output</span> <span class="op">=</span> <span class="ident">Command</span>::<span class="ident">new</span>(<span class="string">&quot;echo&quot;</span>)
+                     .<span class="ident">arg</span>(<span class="string">&quot;Hello world&quot;</span>)
+                     .<span class="ident">output</span>()
+                     .<span class="ident">expect</span>(<span class="string">&quot;Failed to execute command&quot;</span>);
+
+<span class="macro">assert_eq</span><span class="macro">!</span>(<span class="string">b&quot;Hello world\n&quot;</span>, <span class="ident">output</span>.<span class="ident">stdout</span>.<span class="ident">as_slice</span>());</pre></div>
+<p>Several methods on <a href="../../../anoma/std/process/struct.Command.html" title="Command"><code>Command</code></a>, such as <a href="../../../anoma/std/process/struct.Command.html#method.spawn"><code>spawn</code></a> or <a href="../../../anoma/std/process/struct.Command.html#method.output"><code>output</code></a>, can be used
+to spawn a process. In particular, <a href="../../../anoma/std/process/struct.Command.html#method.output"><code>output</code></a> spawns the child process and
+waits until the process terminates, while <a href="../../../anoma/std/process/struct.Command.html#method.spawn"><code>spawn</code></a> will return a <a href="../../../anoma/std/process/struct.Child.html" title="Child"><code>Child</code></a>
+that represents the spawned child process.</p>
+<h1 id="handling-io" class="section-header"><a href="#handling-io">Handling I/O</a></h1>
+<p>The <a href="../../../anoma/std/process/struct.Command.html#method.stdout"><code>stdout</code></a>, <a href="../../../anoma/std/process/struct.Command.html#method.stdin"><code>stdin</code></a>, and <a href="../../../anoma/std/process/struct.Command.html#method.stderr"><code>stderr</code></a> of a child process can be
+configured by passing an <a href="../../../anoma/std/process/struct.Stdio.html" title="Stdio"><code>Stdio</code></a> to the corresponding method on
+<a href="../../../anoma/std/process/struct.Command.html" title="Command"><code>Command</code></a>. Once spawned, they can be accessed from the <a href="../../../anoma/std/process/struct.Child.html" title="Child"><code>Child</code></a>. For
+example, piping output from one command into another command can be done
+like so:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">process</span>::{<span class="ident">Command</span>, <span class="ident">Stdio</span>};
+
+<span class="comment">// stdout must be configured with `Stdio::piped` in order to use</span>
+<span class="comment">// `echo_child.stdout`</span>
+<span class="kw">let</span> <span class="ident">echo_child</span> <span class="op">=</span> <span class="ident">Command</span>::<span class="ident">new</span>(<span class="string">&quot;echo&quot;</span>)
+    .<span class="ident">arg</span>(<span class="string">&quot;Oh no, a tpyo!&quot;</span>)
+    .<span class="ident">stdout</span>(<span class="ident">Stdio</span>::<span class="ident">piped</span>())
+    .<span class="ident">spawn</span>()
+    .<span class="ident">expect</span>(<span class="string">&quot;Failed to start echo process&quot;</span>);
+
+<span class="comment">// Note that `echo_child` is moved here, but we won&#39;t be needing</span>
+<span class="comment">// `echo_child` anymore</span>
+<span class="kw">let</span> <span class="ident">echo_out</span> <span class="op">=</span> <span class="ident">echo_child</span>.<span class="ident">stdout</span>.<span class="ident">expect</span>(<span class="string">&quot;Failed to open echo stdout&quot;</span>);
+
+<span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">sed_child</span> <span class="op">=</span> <span class="ident">Command</span>::<span class="ident">new</span>(<span class="string">&quot;sed&quot;</span>)
+    .<span class="ident">arg</span>(<span class="string">&quot;s/tpyo/typo/&quot;</span>)
+    .<span class="ident">stdin</span>(<span class="ident">Stdio</span>::<span class="ident">from</span>(<span class="ident">echo_out</span>))
+    .<span class="ident">stdout</span>(<span class="ident">Stdio</span>::<span class="ident">piped</span>())
+    .<span class="ident">spawn</span>()
+    .<span class="ident">expect</span>(<span class="string">&quot;Failed to start sed process&quot;</span>);
+
+<span class="kw">let</span> <span class="ident">output</span> <span class="op">=</span> <span class="ident">sed_child</span>.<span class="ident">wait_with_output</span>().<span class="ident">expect</span>(<span class="string">&quot;Failed to wait on sed&quot;</span>);
+<span class="macro">assert_eq</span><span class="macro">!</span>(<span class="string">b&quot;Oh no, a typo!\n&quot;</span>, <span class="ident">output</span>.<span class="ident">stdout</span>.<span class="ident">as_slice</span>());</pre></div>
+<p>Note that <a href="../../../anoma/std/process/struct.ChildStderr.html" title="ChildStderr"><code>ChildStderr</code></a> and <a href="../../../anoma/std/process/struct.ChildStdout.html" title="ChildStdout"><code>ChildStdout</code></a> implement <a href="../../../anoma/std/io/trait.Read.html"><code>Read</code></a> and
+<a href="../../../anoma/std/process/struct.ChildStdin.html" title="ChildStdin"><code>ChildStdin</code></a> implements <a href="../../../anoma/std/io/trait.Write.html"><code>Write</code></a>:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">process</span>::{<span class="ident">Command</span>, <span class="ident">Stdio</span>};
+<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">io</span>::<span class="ident">Write</span>;
+
+<span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">child</span> <span class="op">=</span> <span class="ident">Command</span>::<span class="ident">new</span>(<span class="string">&quot;/bin/cat&quot;</span>)
+    .<span class="ident">stdin</span>(<span class="ident">Stdio</span>::<span class="ident">piped</span>())
+    .<span class="ident">stdout</span>(<span class="ident">Stdio</span>::<span class="ident">piped</span>())
+    .<span class="ident">spawn</span>()
+    .<span class="ident">expect</span>(<span class="string">&quot;failed to execute child&quot;</span>);
+
+<span class="comment">// If the child process fills its stdout buffer, it may end up</span>
+<span class="comment">// waiting until the parent reads the stdout, and not be able to</span>
+<span class="comment">// read stdin in the meantime, causing a deadlock.</span>
+<span class="comment">// Writing from another thread ensures that stdout is being read</span>
+<span class="comment">// at the same time, avoiding the problem.</span>
+<span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">stdin</span> <span class="op">=</span> <span class="ident">child</span>.<span class="ident">stdin</span>.<span class="ident">take</span>().<span class="ident">expect</span>(<span class="string">&quot;failed to get stdin&quot;</span>);
+<span class="ident">std</span>::<span class="ident">thread</span>::<span class="ident">spawn</span>(<span class="kw">move</span> <span class="op">|</span><span class="op">|</span> {
+    <span class="ident">stdin</span>.<span class="ident">write_all</span>(<span class="string">b&quot;test&quot;</span>).<span class="ident">expect</span>(<span class="string">&quot;failed to write to stdin&quot;</span>);
+});
+
+<span class="kw">let</span> <span class="ident">output</span> <span class="op">=</span> <span class="ident">child</span>
+    .<span class="ident">wait_with_output</span>()
+    .<span class="ident">expect</span>(<span class="string">&quot;failed to wait on child&quot;</span>);
+
+<span class="macro">assert_eq</span><span class="macro">!</span>(<span class="string">b&quot;test&quot;</span>, <span class="ident">output</span>.<span class="ident">stdout</span>.<span class="ident">as_slice</span>());</pre></div>
+</div><h2 id="structs" class="section-header"><a href="#structs">Structs</a></h2>
+<table><tr class="unstable module-item"><td><a class="struct" href="struct.CommandArgs.html" title="anoma::std::process::CommandArgs struct">CommandArgs</a></td><td class="docblock-short"><span class="stab unstable" title="">Experimental</span><p>An iterator over the command arguments.</p>
+</td></tr><tr class="unstable module-item"><td><a class="struct" href="struct.CommandEnvs.html" title="anoma::std::process::CommandEnvs struct">CommandEnvs</a></td><td class="docblock-short"><span class="stab unstable" title="">Experimental</span><p>An iterator over the command environment variables.</p>
+</td></tr><tr class="unstable module-item"><td><a class="struct" href="struct.ExitCode.html" title="anoma::std::process::ExitCode struct">ExitCode</a></td><td class="docblock-short"><span class="stab unstable" title="">Experimental</span><p>This type represents the status code a process can return to its
+parent under normal termination.</p>
+</td></tr><tr class="module-item"><td><a class="struct" href="struct.Child.html" title="anoma::std::process::Child struct">Child</a></td><td class="docblock-short"><p>Representation of a running or exited child process.</p>
+</td></tr><tr class="module-item"><td><a class="struct" href="struct.ChildStderr.html" title="anoma::std::process::ChildStderr struct">ChildStderr</a></td><td class="docblock-short"><p>A handle to a child process’s stderr.</p>
+</td></tr><tr class="module-item"><td><a class="struct" href="struct.ChildStdin.html" title="anoma::std::process::ChildStdin struct">ChildStdin</a></td><td class="docblock-short"><p>A handle to a child process’s standard input (stdin).</p>
+</td></tr><tr class="module-item"><td><a class="struct" href="struct.ChildStdout.html" title="anoma::std::process::ChildStdout struct">ChildStdout</a></td><td class="docblock-short"><p>A handle to a child process’s standard output (stdout).</p>
+</td></tr><tr class="module-item"><td><a class="struct" href="struct.Command.html" title="anoma::std::process::Command struct">Command</a></td><td class="docblock-short"><p>A process builder, providing fine-grained control
+over how a new process should be spawned.</p>
+</td></tr><tr class="module-item"><td><a class="struct" href="struct.ExitStatus.html" title="anoma::std::process::ExitStatus struct">ExitStatus</a></td><td class="docblock-short"><p>Describes the result of a process after it has terminated.</p>
+</td></tr><tr class="module-item"><td><a class="struct" href="struct.Output.html" title="anoma::std::process::Output struct">Output</a></td><td class="docblock-short"><p>The output of a finished process.</p>
+</td></tr><tr class="module-item"><td><a class="struct" href="struct.Stdio.html" title="anoma::std::process::Stdio struct">Stdio</a></td><td class="docblock-short"><p>Describes what to do with a standard I/O stream for a child process when
+passed to the <a href="../../../anoma/std/process/struct.Command.html#method.stdin"><code>stdin</code></a>, <a href="../../../anoma/std/process/struct.Command.html#method.stdout"><code>stdout</code></a>, and <a href="../../../anoma/std/process/struct.Command.html#method.stderr"><code>stderr</code></a> methods of <a href="../../../anoma/std/process/struct.Command.html" title="Command"><code>Command</code></a>.</p>
+</td></tr></table><h2 id="traits" class="section-header"><a href="#traits">Traits</a></h2>
+<table><tr class="unstable module-item"><td><a class="trait" href="trait.Termination.html" title="anoma::std::process::Termination trait">Termination</a></td><td class="docblock-short"><span class="stab unstable" title="">Experimental</span><p>A trait for implementing arbitrary return types in the <code>main</code> function.</p>
+</td></tr></table><h2 id="functions" class="section-header"><a href="#functions">Functions</a></h2>
+<table><tr class="module-item"><td><a class="fn" href="fn.abort.html" title="anoma::std::process::abort fn">abort</a></td><td class="docblock-short"><p>Terminates the process in an abnormal fashion.</p>
+</td></tr><tr class="module-item"><td><a class="fn" href="fn.exit.html" title="anoma::std::process::exit fn">exit</a></td><td class="docblock-short"><p>Terminates the current process with the specified exit code.</p>
+</td></tr><tr class="module-item"><td><a class="fn" href="fn.id.html" title="anoma::std::process::id fn">id</a></td><td class="docblock-short"><p>Returns the OS-assigned process identifier associated with this process.</p>
+</td></tr></table></section><section id="search" class="content hidden"></section><section class="footer"></section><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="anoma" data-search-js="../../../search-index.js"></div>
+    <script src="../../../main.js"></script></body></html>
