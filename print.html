@@ -170,7 +170,7 @@
                 <div id="content" class="content">
                     <main>
                         <h1 id="introduction"><a class="header" href="#introduction">Introduction</a></h1>
-<p>This book is written using <a href="https://rust-lang.github.io/mdBook/">mdBook</a> with <a href="https://github.com/badboy/mdbook-mermaid">mdbook-mermaid</a> for diagrams, it currently lives in the <a href="https://github.com/heliaxdev/anoma-prototype">anoma-prototype repo</a>.</p>
+<p>This book is written using <a href="https://rust-lang.github.io/mdBook/">mdBook</a> with <a href="https://github.com/badboy/mdbook-mermaid">mdbook-mermaid</a> for diagrams, it currently lives in the <a href="https://github.com/anomanetwork/anoma">Anoma repo</a>.</p>
 <p>To get started quickly, one can:</p>
 <pre><code class="language-shell"># Install dependencies
 make dev-deps
@@ -898,7 +898,7 @@ fn transaction(...) {
 </ul>
 <div id="chapter_begin" style="break-before: page; page-break-before: always;"></div><h1 id="base-ledger-prototype"><a class="header" href="#base-ledger-prototype">Base ledger prototype</a></h1>
 <h2 id="version-2"><a class="header" href="#version-2">Version 2</a></h2>
-<p>tracking issue <a href="https://github.com/heliaxdev/anoma-prototype/issues/62">https://github.com/heliaxdev/anoma-prototype/issues/62</a></p>
+<p>tracking issue <a href="https://github.com/anomanetwork/anoma/issues/62">https://github.com/anomanetwork/anoma/issues/62</a></p>
 <h3 id="goals"><a class="header" href="#goals">Goals</a></h3>
 <ul>
 <li>storage
@@ -973,7 +973,7 @@ fn transaction(...) {
 <h5 id="rpc-types"><a class="header" href="#rpc-types">RPC types</a></h5>
 <p>The types for data that can be submitted to the node via the client's RPC commands.</p>
 <div id="chapter_begin" style="break-before: page; page-break-before: always;"></div><h1 id="intent-gossip-system-prototype"><a class="header" href="#intent-gossip-system-prototype">Intent Gossip system prototype</a></h1>
-<p>tracking issue <a href="https://github.com/heliaxdev/anoma-prototype/issues/35">https://github.com/heliaxdev/anoma-prototype/issues/35</a></p>
+<p>tracking issue <a href="https://github.com/anomanetwork/anoma/issues/35">https://github.com/anomanetwork/anoma/issues/35</a></p>
 <h2 id="goals-2"><a class="header" href="#goals-2">Goals</a></h2>
 <ul>
 <li>learning rust</li>
@@ -1448,7 +1448,7 @@ forked with more option and better integration/default value</li>
 <p>You can either use the pre-built binaries we've released on Github or build from source. If you'll want to customize any of the wasm code (transactions, validity predicates and/or matchmaker), we recommend that you build from source to have the source available.</p>
 <h3 id="pre-built-binaries"><a class="header" href="#pre-built-binaries">Pre-built binaries</a></h3>
 <p>We have built for Mac (darwin_amd64) and Linux (linux_amd64). If you're not on one of these, you'll have to build from the source.</p>
-<p>Download the release for your platform from <a href="https://github.com/heliaxdev/anoma-prototype/releases">https://github.com/heliaxdev/anoma-prototype/releases</a>. They are packaged with Tendermint, which will be used by the Anoma node.</p>
+<p>Download the release for your platform from <a href="https://github.com/anomanetwork/anoma/releases">https://github.com/anomanetwork/anoma/releases</a>. They are packaged with Tendermint, which will be used by the Anoma node.</p>
 <pre><code class="language-shell"># Extract the archive
 tar -xf anoma_0.1_darwin_amd64.tar.gz
 
@@ -1460,11 +1460,11 @@ export PATH=&quot;$(pwd):$PATH&quot;
 <p>And you're ready to go!</p>
 <h3 id="build-from-the-source"><a class="header" href="#build-from-the-source">Build from the source</a></h3>
 <pre><code class="language-shell"># Clone the repo
-git clone https://github.com/heliaxdev/anoma-prototype.git
+git clone https://github.com/anomanetwork/anoma.git
 # or
-git clone git@github.com:heliaxdev/anoma-prototype.git
+git clone git@github.com:anomanetwork/anoma.git
 
-cd anoma-prototype
+cd anoma
 
 # Checkout the release branch
 git checkout v0.1-playnet
