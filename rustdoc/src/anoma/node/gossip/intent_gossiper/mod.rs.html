@@ -72,25 +72,16 @@
 <span id="69">69</span>
 <span id="70">70</span>
 <span id="71">71</span>
-<span id="72">72</span>
-<span id="73">73</span>
-<span id="74">74</span>
-<span id="75">75</span>
-<span id="76">76</span>
-<span id="77">77</span>
-<span id="78">78</span>
-<span id="79">79</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">mod</span> <span class="ident">filter</span>;
 <span class="kw">mod</span> <span class="ident">matchmaker</span>;
 <span class="kw">mod</span> <span class="ident">mempool</span>;
 
 <span class="kw">use</span> <span class="ident">matchmaker</span>::<span class="ident">Matchmaker</span>;
-<span class="kw">use</span> <span class="ident">prost</span>::<span class="ident">Message</span>;
 <span class="kw">use</span> <span class="ident">thiserror</span>::<span class="ident">Error</span>;
 <span class="kw">use</span> <span class="ident">tokio</span>::<span class="ident">sync</span>::<span class="ident">mpsc</span>::<span class="ident">Receiver</span>;
 
-<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">proto</span>::<span class="ident">types</span>::{<span class="ident">Intent</span>, <span class="ident">IntentGossipMessage</span>};
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">proto</span>::<span class="ident">Intent</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">types</span>::<span class="ident">MatchmakerMessage</span>;
 
 <span class="comment">// TODO split Error and Result type in two, one for Result/Error that can only</span>
@@ -139,13 +130,6 @@
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">apply_intent</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">intent</span>: <span class="ident">Intent</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">apply_matchmaker</span>(<span class="ident">intent</span>);
         <span class="prelude-val">Ok</span>(<span class="bool-val">true</span>)
-    }
-
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">parse_raw_msg</span>(
-        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
-        <span class="ident">data</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span>[<span class="ident">u8</span>]<span class="op">&gt;</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">IntentGossipMessage</span><span class="op">&gt;</span> {
-        <span class="ident">IntentGossipMessage</span>::<span class="ident">decode</span>(<span class="ident">data</span>.<span class="ident">as_ref</span>()).<span class="ident">map_err</span>(<span class="ident">Error</span>::<span class="ident">DecodeError</span>)
     }
 
     <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">handle_mm_message</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">mm_message</span>: <span class="ident">MatchmakerMessage</span>) {

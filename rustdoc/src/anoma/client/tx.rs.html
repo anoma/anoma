@@ -121,22 +121,15 @@
 <span id="118">118</span>
 <span id="119">119</span>
 <span id="120">120</span>
-<span id="121">121</span>
-<span id="122">122</span>
-<span id="123">123</span>
-<span id="124">124</span>
-<span id="125">125</span>
-<span id="126">126</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">str</span>::<span class="ident">FromStr</span>;
 
 <span class="kw">use</span> <span class="ident">anoma_shared</span>::<span class="ident">types</span>::<span class="ident">key</span>::<span class="ident">ed25519</span>::<span class="ident">Keypair</span>;
 <span class="kw">use</span> <span class="ident">anoma_shared</span>::<span class="ident">types</span>::{<span class="ident">token</span>, <span class="ident">Address</span>, <span class="ident">UpdateVp</span>};
 <span class="kw">use</span> <span class="ident">borsh</span>::<span class="ident">BorshSerialize</span>;
-<span class="kw">use</span> <span class="ident">prost</span>::<span class="ident">Message</span>;
 <span class="kw">use</span> <span class="ident">tendermint_rpc</span>::{<span class="ident">Client</span>, <span class="ident">HttpClient</span>};
 
-<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">proto</span>::<span class="ident">types</span>::<span class="ident">Tx</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">proto</span>::<span class="ident">Tx</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">wallet</span>;
 
 <span class="kw">const</span> <span class="ident">TX_UPDATE_VP</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;txs/tx_update_vp/tx.wasm&quot;</span>;
@@ -218,13 +211,8 @@
     <span class="ident">dry_run</span>: <span class="ident">bool</span>,
     <span class="ident">ledger_address</span>: <span class="ident">String</span>,
 ) {
-    <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx</span> {
-        <span class="ident">code</span>,
-        <span class="ident">data</span>,
-        <span class="ident">timestamp</span>: <span class="prelude-val">Some</span>(<span class="ident">std</span>::<span class="ident">time</span>::<span class="ident">SystemTime</span>::<span class="ident">now</span>().<span class="ident">into</span>()),
-    };
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tx_bytes</span> <span class="op">=</span> <span class="macro">vec</span><span class="macro">!</span>[];
-    <span class="ident">tx</span>.<span class="ident">encode</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">tx_bytes</span>).<span class="ident">unwrap</span>();
+    <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx</span>::<span class="ident">new</span>(<span class="ident">code</span>, <span class="ident">data</span>);
+    <span class="kw">let</span> <span class="ident">tx_bytes</span> <span class="op">=</span> <span class="ident">tx</span>.<span class="ident">to_bytes</span>();
 
     <span class="comment">// NOTE: use this to print the request JSON body:</span>
 

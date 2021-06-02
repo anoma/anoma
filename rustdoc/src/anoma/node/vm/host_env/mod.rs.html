@@ -1458,10 +1458,6 @@
 <span id="1455">1455</span>
 <span id="1456">1456</span>
 <span id="1457">1457</span>
-<span id="1458">1458</span>
-<span id="1459">1459</span>
-<span id="1460">1460</span>
-<span id="1461">1461</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">prefix_iter</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">write_log</span>;
@@ -1488,7 +1484,7 @@
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">node</span>::<span class="ident">shell</span>::<span class="ident">gas</span>::{<span class="ident">BlockGasMeter</span>, <span class="ident">VpGasMeter</span>};
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">node</span>::<span class="ident">shell</span>::<span class="ident">storage</span>::{<span class="self">self</span>, <span class="ident">Storage</span>};
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">node</span>::<span class="ident">vm</span>::<span class="ident">VpRunner</span>;
-<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">proto</span>::<span class="ident">types</span>::<span class="ident">Tx</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">proto</span>::<span class="ident">Tx</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">types</span>::<span class="ident">MatchmakerMessage</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">wallet</span>;
 
@@ -2904,11 +2900,7 @@
     <span class="kw">let</span> <span class="ident">signed_bytes</span> <span class="op">=</span> <span class="ident">signed</span>
         .<span class="ident">try_to_vec</span>()
         .<span class="ident">expect</span>(<span class="string">&quot;Couldn&#39;t encoded signed matchmaker tx data&quot;</span>);
-    <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx</span> {
-        <span class="ident">code</span>: <span class="ident">tx_code</span>,
-        <span class="ident">data</span>: <span class="prelude-val">Some</span>(<span class="ident">signed_bytes</span>),
-        <span class="ident">timestamp</span>: <span class="prelude-val">Some</span>(<span class="ident">std</span>::<span class="ident">time</span>::<span class="ident">SystemTime</span>::<span class="ident">now</span>().<span class="ident">into</span>()),
-    };
+    <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx</span>::<span class="ident">new</span>(<span class="ident">tx_code</span>, <span class="prelude-val">Some</span>(<span class="ident">signed_bytes</span>));
     <span class="ident">env</span>.<span class="ident">inject_mm_message</span>
         .<span class="ident">try_send</span>(<span class="ident">MatchmakerMessage</span>::<span class="ident">InjectTx</span>(<span class="ident">tx</span>))
         .<span class="ident">expect</span>(<span class="string">&quot;failed to send tx&quot;</span>)

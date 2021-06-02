@@ -126,11 +126,7 @@
 <span id="123">123</span>
 <span id="124">124</span>
 <span id="125">125</span>
-<span id="126">126</span>
-<span id="127">127</span>
-<span id="128">128</span>
 </pre><div class="example-wrap"><pre class="rust ">
-<span class="kw">use</span> <span class="ident">prost</span>::<span class="ident">Message</span>;
 <span class="kw">use</span> <span class="ident">tendermint</span>::<span class="ident">net</span>;
 <span class="kw">use</span> <span class="ident">tendermint_rpc</span>::{<span class="ident">Client</span>, <span class="ident">HttpClient</span>};
 <span class="kw">use</span> <span class="ident">thiserror</span>::<span class="ident">Error</span>;
@@ -140,8 +136,7 @@
 <span class="kw">use</span> <span class="kw">super</span>::<span class="ident">mempool</span>::{<span class="self">self</span>, <span class="ident">IntentMempool</span>};
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">config</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">node</span>::<span class="ident">vm</span>;
-<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">proto</span>::<span class="ident">types</span>::<span class="ident">Intent</span>;
-<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">proto</span>::<span class="ident">IntentId</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">proto</span>::{<span class="ident">Intent</span>, <span class="ident">IntentId</span>};
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">types</span>::<span class="ident">MatchmakerMessage</span>;
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
@@ -224,7 +219,7 @@
                 .<span class="ident">run</span>(
                     <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">matchmaker_code</span>.<span class="ident">clone</span>(),
                     <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">data</span>,
-                    <span class="kw-2">&amp;</span><span class="ident">IntentId</span>::<span class="ident">new</span>(<span class="kw-2">&amp;</span><span class="ident">intent</span>).<span class="number">0</span>,
+                    <span class="kw-2">&amp;</span><span class="ident">intent</span>.<span class="ident">id</span>().<span class="number">0</span>,
                     <span class="kw-2">&amp;</span><span class="ident">intent</span>.<span class="ident">data</span>,
                     <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">tx_code</span>,
                     <span class="self">self</span>.<span class="ident">inject_mm_message</span>.<span class="ident">clone</span>(),
@@ -239,8 +234,7 @@
     <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">handle_mm_message</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">mm_message</span>: <span class="ident">MatchmakerMessage</span>) {
         <span class="kw">match</span> <span class="ident">mm_message</span> {
             <span class="ident">MatchmakerMessage</span>::<span class="ident">InjectTx</span>(<span class="ident">tx</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tx_bytes</span> <span class="op">=</span> <span class="macro">vec</span><span class="macro">!</span>[];
-                <span class="ident">tx</span>.<span class="ident">encode</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">tx_bytes</span>).<span class="ident">unwrap</span>();
+                <span class="kw">let</span> <span class="ident">tx_bytes</span> <span class="op">=</span> <span class="ident">tx</span>.<span class="ident">to_bytes</span>();
                 <span class="kw">let</span> <span class="ident">client</span> <span class="op">=</span>
                     <span class="ident">HttpClient</span>::<span class="ident">new</span>(<span class="self">self</span>.<span class="ident">ledger_address</span>.<span class="ident">clone</span>()).<span class="ident">unwrap</span>();
                 <span class="kw">let</span> <span class="ident">response</span> <span class="op">=</span>

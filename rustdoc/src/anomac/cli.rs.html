@@ -150,26 +150,13 @@
 <span id="147">147</span>
 <span id="148">148</span>
 <span id="149">149</span>
-<span id="150">150</span>
-<span id="151">151</span>
-<span id="152">152</span>
-<span id="153">153</span>
-<span id="154">154</span>
-<span id="155">155</span>
-<span id="156">156</span>
-<span id="157">157</span>
-<span id="158">158</span>
-<span id="159">159</span>
-<span id="160">160</span>
-<span id="161">161</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">fs</span>::<span class="ident">File</span>;
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">io</span>::<span class="ident">Write</span>;
 
 <span class="kw">use</span> <span class="ident">anoma</span>::<span class="ident">client</span>::<span class="ident">tx</span>;
 <span class="kw">use</span> <span class="ident">anoma</span>::<span class="ident">proto</span>::<span class="ident">services</span>::<span class="ident">rpc_service_client</span>::<span class="ident">RpcServiceClient</span>;
-<span class="kw">use</span> <span class="ident">anoma</span>::<span class="ident">proto</span>::<span class="ident">services</span>::{<span class="ident">rpc_message</span>, <span class="ident">RpcMessage</span>};
-<span class="kw">use</span> <span class="ident">anoma</span>::<span class="ident">proto</span>::{<span class="ident">services</span>, <span class="ident">types</span>};
+<span class="kw">use</span> <span class="ident">anoma</span>::<span class="ident">proto</span>::{<span class="self">self</span>, <span class="ident">services</span>, <span class="ident">RpcMessage</span>};
 <span class="kw">use</span> <span class="ident">anoma</span>::{<span class="ident">cli</span>, <span class="ident">wallet</span>};
 <span class="kw">use</span> <span class="ident">anoma_shared</span>::<span class="ident">types</span>::<span class="ident">intent</span>::<span class="ident">Intent</span>;
 <span class="kw">use</span> <span class="ident">anoma_shared</span>::<span class="ident">types</span>::<span class="ident">key</span>::<span class="ident">ed25519</span>::<span class="ident">Signed</span>;
@@ -263,16 +250,9 @@
 <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">gossip_intent</span>(<span class="ident">node_addr</span>: <span class="ident">String</span>, <span class="ident">data_path</span>: <span class="ident">String</span>, <span class="ident">topic</span>: <span class="ident">String</span>) {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">client</span> <span class="op">=</span> <span class="ident">RpcServiceClient</span>::<span class="ident">connect</span>(<span class="ident">node_addr</span>).<span class="kw">await</span>.<span class="ident">unwrap</span>();
     <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="ident">std</span>::<span class="ident">fs</span>::<span class="ident">read</span>(<span class="ident">data_path</span>).<span class="ident">expect</span>(<span class="string">&quot;data file IO error&quot;</span>);
-    <span class="kw">let</span> <span class="ident">intent</span> <span class="op">=</span> <span class="ident">types</span>::<span class="ident">Intent</span> {
-        <span class="ident">data</span>,
-        <span class="ident">timestamp</span>: <span class="prelude-val">Some</span>(<span class="ident">std</span>::<span class="ident">time</span>::<span class="ident">SystemTime</span>::<span class="ident">now</span>().<span class="ident">into</span>()),
-    };
-    <span class="kw">let</span> <span class="ident">message</span> <span class="op">=</span> <span class="ident">RpcMessage</span> {
-        <span class="ident">message</span>: <span class="prelude-val">Some</span>(<span class="ident">rpc_message</span>::<span class="ident">Message</span>::<span class="ident">Intent</span>(<span class="ident">services</span>::<span class="ident">IntentMesage</span> {
-            <span class="ident">intent</span>: <span class="prelude-val">Some</span>(<span class="ident">intent</span>),
-            <span class="ident">topic</span>,
-        })),
-    };
+    <span class="kw">let</span> <span class="ident">intent</span> <span class="op">=</span> <span class="ident">proto</span>::<span class="ident">Intent</span>::<span class="ident">new</span>(<span class="ident">data</span>);
+    <span class="kw">let</span> <span class="ident">message</span>: <span class="ident">services</span>::<span class="ident">RpcMessage</span> <span class="op">=</span>
+        <span class="ident">RpcMessage</span>::<span class="ident">new_intent</span>(<span class="ident">intent</span>, <span class="ident">topic</span>).<span class="ident">into</span>();
     <span class="kw">let</span> <span class="ident">response</span> <span class="op">=</span> <span class="ident">client</span>
         .<span class="ident">send_message</span>(<span class="ident">message</span>)
         .<span class="kw">await</span>
@@ -282,11 +262,7 @@
 
 <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">subscribe_topic</span>(<span class="ident">node_addr</span>: <span class="ident">String</span>, <span class="ident">topic</span>: <span class="ident">String</span>) {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">client</span> <span class="op">=</span> <span class="ident">RpcServiceClient</span>::<span class="ident">connect</span>(<span class="ident">node_addr</span>).<span class="kw">await</span>.<span class="ident">unwrap</span>();
-    <span class="kw">let</span> <span class="ident">message</span> <span class="op">=</span> <span class="ident">RpcMessage</span> {
-        <span class="ident">message</span>: <span class="prelude-val">Some</span>(<span class="ident">rpc_message</span>::<span class="ident">Message</span>::<span class="ident">Topic</span>(
-            <span class="ident">services</span>::<span class="ident">SubscribeTopicMessage</span> { <span class="ident">topic</span> },
-        )),
-    };
+    <span class="kw">let</span> <span class="ident">message</span>: <span class="ident">services</span>::<span class="ident">RpcMessage</span> <span class="op">=</span> <span class="ident">RpcMessage</span>::<span class="ident">new_topic</span>(<span class="ident">topic</span>).<span class="ident">into</span>();
     <span class="kw">let</span> <span class="ident">response</span> <span class="op">=</span> <span class="ident">client</span>
         .<span class="ident">send_message</span>(<span class="ident">message</span>)
         .<span class="kw">await</span>

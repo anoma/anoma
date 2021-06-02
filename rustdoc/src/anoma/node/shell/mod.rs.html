@@ -400,6 +400,7 @@
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">storage</span>;
 <span class="kw">mod</span> <span class="ident">tendermint</span>;
 
+<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">convert</span>::<span class="ident">TryFrom</span>;
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">path</span>::<span class="ident">Path</span>;
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">sync</span>::<span class="ident">mpsc</span>;
 
@@ -410,7 +411,6 @@
     <span class="ident">address</span>, <span class="ident">key</span>, <span class="ident">token</span>, <span class="ident">Address</span>, <span class="ident">BlockHash</span>, <span class="ident">BlockHeight</span>, <span class="ident">Key</span>,
 };
 <span class="kw">use</span> <span class="ident">borsh</span>::<span class="ident">BorshSerialize</span>;
-<span class="kw">use</span> <span class="ident">prost</span>::<span class="ident">Message</span>;
 <span class="kw">use</span> <span class="ident">thiserror</span>::<span class="ident">Error</span>;
 
 <span class="kw">use</span> <span class="self">self</span>::<span class="ident">gas</span>::<span class="ident">BlockGasMeter</span>;
@@ -418,7 +418,7 @@
 <span class="kw">use</span> <span class="self">self</span>::<span class="ident">tendermint</span>::{<span class="ident">AbciMsg</span>, <span class="ident">AbciReceiver</span>};
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">node</span>::<span class="ident">protocol</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">node</span>::<span class="ident">vm</span>::<span class="ident">host_env</span>::<span class="ident">write_log</span>::<span class="ident">WriteLog</span>;
-<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">proto</span>::<span class="ident">types</span>::<span class="ident">Tx</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">proto</span>::{<span class="self">self</span>, <span class="ident">Tx</span>};
 <span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">config</span>, <span class="ident">wallet</span>};
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Error</span>, <span class="ident">Debug</span>)]</span>
@@ -432,7 +432,7 @@
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Shell ABCI channel sender error: {0}&quot;</span>)]</span>
     <span class="ident">AbciChannelSendError</span>(<span class="ident">String</span>),
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Error decoding a transaction from bytes: {0}&quot;</span>)]</span>
-    <span class="ident">TxDecodingError</span>(<span class="ident">prost</span>::<span class="ident">DecodeError</span>),
+    <span class="ident">TxDecodingError</span>(<span class="ident">proto</span>::<span class="ident">Error</span>),
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Error trying to apply a transaction: {0}&quot;</span>)]</span>
     <span class="ident">TxError</span>(<span class="ident">protocol</span>::<span class="ident">Error</span>),
 }
@@ -678,7 +678,7 @@
         <span class="ident">tx_bytes</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>],
         <span class="ident">r#_type</span>: <span class="ident">MempoolTxType</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">_tx</span> <span class="op">=</span> <span class="ident">Tx</span>::<span class="ident">decode</span>(<span class="ident">tx_bytes</span>).<span class="ident">map_err</span>(<span class="ident">Error</span>::<span class="ident">TxDecodingError</span>)<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">_tx</span> <span class="op">=</span> <span class="ident">Tx</span>::<span class="ident">try_from</span>(<span class="ident">tx_bytes</span>).<span class="ident">map_err</span>(<span class="ident">Error</span>::<span class="ident">TxDecodingError</span>)<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(())
     }
 

@@ -302,20 +302,9 @@
 <span id="299">299</span>
 <span id="300">300</span>
 <span id="301">301</span>
-<span id="302">302</span>
-<span id="303">303</span>
-<span id="304">304</span>
-<span id="305">305</span>
-<span id="306">306</span>
-<span id="307">307</span>
-<span id="308">308</span>
-<span id="309">309</span>
-<span id="310">310</span>
-<span id="311">311</span>
-<span id="312">312</span>
-<span id="313">313</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">collections</span>::<span class="ident">hash_map</span>::<span class="ident">DefaultHasher</span>;
+<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">convert</span>::<span class="ident">TryFrom</span>;
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">hash</span>::{<span class="ident">Hash</span>, <span class="ident">Hasher</span>};
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">time</span>::<span class="ident">Duration</span>;
 
@@ -336,7 +325,7 @@
 <span class="kw">use</span> <span class="ident">tokio</span>::<span class="ident">sync</span>::<span class="ident">mpsc</span>::<span class="ident">Receiver</span>;
 
 <span class="kw">use</span> <span class="kw">super</span>::<span class="ident">intent_gossiper</span>;
-<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">proto</span>::<span class="ident">types</span>::{<span class="ident">intent_gossip_message</span>, <span class="ident">IntentGossipMessage</span>};
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">proto</span>::{<span class="self">self</span>, <span class="ident">Intent</span>, <span class="ident">IntentGossipMessage</span>};
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">types</span>::<span class="ident">MatchmakerMessage</span>;
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Error</span>, <span class="ident">Debug</span>)]</span>
@@ -513,10 +502,7 @@
         ))
     }
 
-    <span class="kw">fn</span> <span class="ident">handle_intent</span>(
-        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
-        <span class="ident">intent</span>: <span class="kw">crate</span>::<span class="ident">proto</span>::<span class="ident">types</span>::<span class="ident">Intent</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">MessageAcceptance</span> {
+    <span class="kw">fn</span> <span class="ident">handle_intent</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">intent</span>: <span class="ident">Intent</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">MessageAcceptance</span> {
         <span class="kw">match</span> <span class="self">self</span>.<span class="ident">intent_gossip_app</span>.<span class="ident">apply_intent</span>(<span class="ident">intent</span>) {
             <span class="prelude-val">Ok</span>(<span class="bool-val">true</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">MessageAcceptance</span>::<span class="ident">Accept</span>,
             <span class="prelude-val">Ok</span>(<span class="bool-val">false</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">MessageAcceptance</span>::<span class="ident">Reject</span>,
@@ -543,27 +529,17 @@
         <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
         <span class="ident">data</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span>[<span class="ident">u8</span>]<span class="op">&gt;</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">MessageAcceptance</span> {
-        <span class="kw">match</span> <span class="self">self</span>.<span class="ident">intent_gossip_app</span>.<span class="ident">parse_raw_msg</span>(<span class="ident">data</span>) {
-            <span class="prelude-val">Ok</span>(<span class="ident">IntentGossipMessage</span> {
-                <span class="ident">msg</span>: <span class="prelude-val">Some</span>(<span class="ident">intent_gossip_message</span>::<span class="ident">Msg</span>::<span class="ident">Intent</span>(<span class="ident">intent</span>)),
-            }) <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">handle_intent</span>(<span class="ident">intent</span>),
-            <span class="prelude-val">Ok</span>(<span class="ident">IntentGossipMessage</span> { <span class="ident">msg</span>: <span class="prelude-val">None</span> }) <span class="op">=</span><span class="op">&gt;</span> {
+        <span class="kw">match</span> <span class="ident">IntentGossipMessage</span>::<span class="ident">try_from</span>(<span class="ident">data</span>.<span class="ident">as_ref</span>()) {
+            <span class="prelude-val">Ok</span>(<span class="ident">message</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">handle_intent</span>(<span class="ident">message</span>.<span class="ident">intent</span>),
+            <span class="prelude-val">Err</span>(<span class="ident">proto</span>::<span class="ident">Error</span>::<span class="ident">NoIntentError</span>) <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="ident">tracing</span>::<span class="macro">info</span><span class="macro">!</span>(<span class="string">&quot;Empty message, rejecting it&quot;</span>);
                 <span class="ident">MessageAcceptance</span>::<span class="ident">Reject</span>
             }
-            <span class="prelude-val">Err</span>(<span class="ident">err</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="ident">err</span> {
-                <span class="ident">intent_gossiper</span>::<span class="ident">Error</span>::<span class="ident">DecodeError</span>(..) <span class="op">=</span><span class="op">&gt;</span> {
-                    <span class="ident">tracing</span>::<span class="macro">info</span><span class="macro">!</span>(
-                        <span class="string">&quot;error while decoding the intent: {:?}&quot;</span>,
-                        <span class="ident">err</span>
-                    );
-                    <span class="ident">MessageAcceptance</span>::<span class="ident">Reject</span>
-                }
-                <span class="ident">intent_gossiper</span>::<span class="ident">Error</span>::<span class="ident">MatchmakerInit</span>(..)
-                <span class="op">|</span> <span class="ident">intent_gossiper</span>::<span class="ident">Error</span>::<span class="ident">Matchmaker</span>(..) <span class="op">=</span><span class="op">&gt;</span> {
-                    <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;can&#39;t happens, because intent already decoded&quot;</span>)
-                }
-            },
+            <span class="prelude-val">Err</span>(<span class="ident">proto</span>::<span class="ident">Error</span>::<span class="ident">IntentDecodingError</span>(<span class="ident">err</span>)) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">tracing</span>::<span class="macro">info</span><span class="macro">!</span>(<span class="string">&quot;error while decoding the intent: {:?}&quot;</span>, <span class="ident">err</span>);
+                <span class="ident">MessageAcceptance</span>::<span class="ident">Reject</span>
+            }
+            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unreachable</span><span class="macro">!</span>(),
         }
     }
 }

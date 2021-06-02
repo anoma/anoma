@@ -1,1 +1,1 @@
-initSidebarItems({"mod":[["services",""],["types",""]],"struct":[["IntentId",""]]});
+initSidebarItems({"enum":[["Error",""],["RpcMessage",""]],"mod":[["services",""]],"struct":[["Intent",""],["IntentGossipMessage",""],["IntentId",""],["IntentMessage",""],["SubscribeTopicMessage",""],["Tx",""]]});
