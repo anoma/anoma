@@ -29,25 +29,35 @@
 <span id="26">26</span>
 <span id="27">27</span>
 <span id="28">28</span>
+<span id="29">29</span>
+<span id="30">30</span>
+<span id="31">31</span>
+<span id="32">32</span>
+<span id="33">33</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Shared internal types between the host env and guest (wasm).</span>
 
 <span class="doccomment">/// A result of a wasm call to host functions that may fail.</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Copy</span>, <span class="ident">Debug</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">HostEnvResult</span> {
+    <span class="doccomment">/// A success</span>
     <span class="ident">Success</span> <span class="op">=</span> <span class="number">1</span>,
+    <span class="doccomment">/// A failure</span>
     <span class="ident">Fail</span> <span class="op">=</span> <span class="op">-</span><span class="number">1</span>,
 }
 
 <span class="kw">impl</span> <span class="ident">HostEnvResult</span> {
+    <span class="doccomment">/// Convert result to `i64`, which can be passed to wasm</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">to_i64</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">i64</span> {
         <span class="self">self</span> <span class="kw">as</span> <span class="kw">_</span>
     }
 
+    <span class="doccomment">/// Check if the given result as `i64` is a success</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_success</span>(<span class="ident">int</span>: <span class="ident">i64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
         <span class="ident">int</span> <span class="op">=</span><span class="op">=</span> <span class="self">Self</span>::<span class="ident">Success</span>.<span class="ident">to_i64</span>()
     }
 
+    <span class="doccomment">/// Check if the given result as `i64` is a failure</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_fail</span>(<span class="ident">int</span>: <span class="ident">i64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
         <span class="ident">int</span> <span class="op">=</span><span class="op">=</span> <span class="self">Self</span>::<span class="ident">Fail</span>.<span class="ident">to_i64</span>()
     }

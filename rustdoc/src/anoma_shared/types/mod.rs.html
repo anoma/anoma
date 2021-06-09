@@ -466,6 +466,26 @@
 <span id="463">463</span>
 <span id="464">464</span>
 <span id="465">465</span>
+<span id="466">466</span>
+<span id="467">467</span>
+<span id="468">468</span>
+<span id="469">469</span>
+<span id="470">470</span>
+<span id="471">471</span>
+<span id="472">472</span>
+<span id="473">473</span>
+<span id="474">474</span>
+<span id="475">475</span>
+<span id="476">476</span>
+<span id="477">477</span>
+<span id="478">478</span>
+<span id="479">479</span>
+<span id="480">480</span>
+<span id="481">481</span>
+<span id="482">482</span>
+<span id="483">483</span>
+<span id="484">484</span>
+<span id="485">485</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! The key and values that may be persisted in a DB.</span>
 
@@ -486,6 +506,7 @@
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">key</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">token</span>;
 
+<span class="attribute">#[<span class="ident">allow</span>(<span class="ident">missing_docs</span>)]</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Error</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">Error</span> {
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;TEMPORARY error: {error}&quot;</span>)]</span>
@@ -498,18 +519,26 @@
     <span class="ident">InvalidKeySeg</span>(<span class="ident">String</span>),
 }
 
+<span class="doccomment">/// Result for functions that may fail</span>
 <span class="kw">pub</span> <span class="kw">type</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">std</span>::<span class="ident">result</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">Error</span><span class="op">&gt;</span>;
 
+<span class="doccomment">/// The length of chain ID string</span>
 <span class="comment">// TODO adjust once chain ID scheme is chosen, add `Default` impl that allocates</span>
 <span class="comment">// this</span>
 <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">CHAIN_ID_LENGTH</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">20</span>;
+<span class="doccomment">/// The length of the block&#39;s hash string</span>
 <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">BLOCK_HASH_LENGTH</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">32</span>;
 
+<span class="doccomment">/// The separator of storage key segments</span>
 <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">KEY_SEGMENT_SEPARATOR</span>: <span class="ident">char</span> <span class="op">=</span> <span class="string">&#39;/&#39;</span>;
+<span class="doccomment">/// The reserved storage key prefix for addresses</span>
 <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">RESERVED_ADDRESS_PREFIX</span>: <span class="ident">char</span> <span class="op">=</span> <span class="string">&#39;#&#39;</span>;
+<span class="doccomment">/// The reserved storage key prefix for validity predicates</span>
 <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">VP_KEY_PREFIX</span>: <span class="ident">char</span> <span class="op">=</span> <span class="string">&#39;?&#39;</span>;
+<span class="doccomment">/// The reserved storage key for validity predicates</span>
 <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">RESERVED_VP_KEY</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;?&quot;</span>;
 
+<span class="doccomment">/// Height of a block, i.e. the level.</span>
 <span class="attribute">#[<span class="ident">derive</span>(
     <span class="ident">Clone</span>,
     <span class="ident">Copy</span>,
@@ -525,6 +554,7 @@
 )]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">BlockHeight</span>(<span class="kw">pub</span> <span class="ident">u64</span>);
 
+<span class="doccomment">/// Hash of a block as fixed-size byte array</span>
 <span class="attribute">#[<span class="ident">derive</span>(
     <span class="ident">Clone</span>,
     <span class="ident">BorshSerialize</span>,
@@ -538,6 +568,8 @@
 )]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">BlockHash</span>(<span class="kw">pub</span> [<span class="ident">u8</span>; <span class="ident">BLOCK_HASH_LENGTH</span>]);
 
+<span class="doccomment">/// A storage key is made of storage key segments [`DbKeySeg`], separated by</span>
+<span class="doccomment">/// [`KEY_SEGMENT_SEPARATOR`].</span>
 <span class="attribute">#[<span class="ident">derive</span>(
     <span class="ident">Clone</span>,
     <span class="ident">BorshSerialize</span>,
@@ -552,6 +584,7 @@
     <span class="ident">Deserialize</span>,
 )]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Key</span> {
+    <span class="doccomment">/// The segments of the key in the original (left-to-right) order.</span>
     <span class="kw">pub</span> <span class="ident">segments</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">DbKeySeg</span><span class="op">&gt;</span>,
 }
 
@@ -605,6 +638,7 @@
         <span class="self">self</span>.<span class="ident">to_string</span>().<span class="ident">len</span>()
     }
 
+    <span class="doccomment">/// Returns `true` if the key is empty</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_empty</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
         <span class="self">self</span>.<span class="ident">len</span>() <span class="op">=</span><span class="op">=</span> <span class="number">0</span>
     }
@@ -646,6 +680,7 @@
     <span class="kw">fn</span> <span class="ident">to_db_key</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">DbKeySeg</span>;
 }
 
+<span class="doccomment">/// A storage key segment</span>
 <span class="attribute">#[<span class="ident">derive</span>(
     <span class="ident">Clone</span>,
     <span class="ident">BorshSerialize</span>,
@@ -660,7 +695,9 @@
     <span class="ident">Deserialize</span>,
 )]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">DbKeySeg</span> {
+    <span class="doccomment">/// A segment made of an address</span>
     <span class="ident">AddressSeg</span>(<span class="ident">Address</span>),
+    <span class="doccomment">/// Any other key segment</span>
     <span class="ident">StringSeg</span>(<span class="ident">String</span>),
 }
 
@@ -741,6 +778,7 @@
     }
 }
 <span class="kw">impl</span> <span class="ident">BlockHeight</span> {
+    <span class="doccomment">/// Get the height of the next block</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">next_height</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">BlockHeight</span> {
         <span class="ident">BlockHeight</span>(<span class="self">self</span>.<span class="number">0</span> <span class="op">+</span> <span class="number">1</span>)
     }
@@ -825,7 +863,9 @@
     <span class="ident">Deserialize</span>,
 )]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">UpdateVp</span> {
+    <span class="doccomment">/// An address of the account</span>
     <span class="kw">pub</span> <span class="ident">addr</span>: <span class="ident">Address</span>,
+    <span class="doccomment">/// The new VP code</span>
     <span class="kw">pub</span> <span class="ident">vp_code</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>,
 }
 
@@ -866,7 +906,7 @@
         <span class="doccomment">/// `Address` or validity predicate.</span>
         <span class="attribute">#[<span class="ident">test</span>]</span>
         <span class="kw">fn</span> <span class="ident">test_key_push</span>(<span class="ident">s</span> <span class="kw">in</span> <span class="string">&quot;[^#?/][^/]*&quot;</span>) {
-            <span class="kw">let</span> <span class="ident">addr</span> <span class="op">=</span> <span class="ident">address</span>::<span class="ident">tests</span>::<span class="ident">established_address_1</span>();
+            <span class="kw">let</span> <span class="ident">addr</span> <span class="op">=</span> <span class="ident">address</span>::<span class="ident">testing</span>::<span class="ident">established_address_1</span>();
             <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Key</span>::<span class="ident">from</span>(<span class="ident">addr</span>.<span class="ident">to_db_key</span>()).<span class="ident">push</span>(<span class="kw-2">&amp;</span><span class="ident">s</span>).<span class="ident">expect</span>(<span class="string">&quot;cannnot push the segment&quot;</span>);
             <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">key</span>.<span class="ident">segments</span>[<span class="number">1</span>].<span class="ident">to_string</span>(), <span class="ident">s</span>);
         }
@@ -874,7 +914,7 @@
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="kw">fn</span> <span class="ident">test_key_parse_valid</span>() {
-        <span class="kw">let</span> <span class="ident">addr</span> <span class="op">=</span> <span class="ident">address</span>::<span class="ident">tests</span>::<span class="ident">established_address_1</span>();
+        <span class="kw">let</span> <span class="ident">addr</span> <span class="op">=</span> <span class="ident">address</span>::<span class="ident">testing</span>::<span class="ident">established_address_1</span>();
         <span class="kw">let</span> <span class="ident">target</span> <span class="op">=</span> <span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;{}/test&quot;</span>, <span class="ident">KeySeg</span>::<span class="ident">to_string</span>(<span class="kw-2">&amp;</span><span class="ident">addr</span>));
         <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Key</span>::<span class="ident">parse</span>(<span class="ident">target</span>.<span class="ident">clone</span>()).<span class="ident">expect</span>(<span class="string">&quot;cannot parse the string&quot;</span>);
         <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">key</span>.<span class="ident">to_string</span>(), <span class="ident">target</span>);
@@ -895,8 +935,8 @@
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="kw">fn</span> <span class="ident">test_key_push_valid</span>() {
-        <span class="kw">let</span> <span class="ident">addr</span> <span class="op">=</span> <span class="ident">address</span>::<span class="ident">tests</span>::<span class="ident">established_address_1</span>();
-        <span class="kw">let</span> <span class="ident">other</span> <span class="op">=</span> <span class="ident">address</span>::<span class="ident">tests</span>::<span class="ident">established_address_2</span>();
+        <span class="kw">let</span> <span class="ident">addr</span> <span class="op">=</span> <span class="ident">address</span>::<span class="ident">testing</span>::<span class="ident">established_address_1</span>();
+        <span class="kw">let</span> <span class="ident">other</span> <span class="op">=</span> <span class="ident">address</span>::<span class="ident">testing</span>::<span class="ident">established_address_2</span>();
         <span class="kw">let</span> <span class="ident">target</span> <span class="op">=</span> <span class="ident">KeySeg</span>::<span class="ident">to_string</span>(<span class="kw-2">&amp;</span><span class="ident">other</span>);
         <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Key</span>::<span class="ident">from</span>(<span class="ident">addr</span>.<span class="ident">to_db_key</span>())
             .<span class="ident">push</span>(<span class="kw-2">&amp;</span><span class="ident">target</span>)
@@ -912,7 +952,7 @@
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="kw">fn</span> <span class="ident">test_key_push_invalid</span>() {
-        <span class="kw">let</span> <span class="ident">addr</span> <span class="op">=</span> <span class="ident">address</span>::<span class="ident">tests</span>::<span class="ident">established_address_1</span>();
+        <span class="kw">let</span> <span class="ident">addr</span> <span class="op">=</span> <span class="ident">address</span>::<span class="ident">testing</span>::<span class="ident">established_address_1</span>();
         <span class="kw">let</span> <span class="ident">target</span> <span class="op">=</span> <span class="string">&quot;/&quot;</span>.<span class="ident">to_owned</span>();
         <span class="kw">match</span> <span class="ident">Key</span>::<span class="ident">from</span>(<span class="ident">addr</span>.<span class="ident">to_db_key</span>())
             .<span class="ident">push</span>(<span class="kw-2">&amp;</span><span class="ident">target</span>)

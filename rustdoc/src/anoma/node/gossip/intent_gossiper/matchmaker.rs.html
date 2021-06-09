@@ -126,7 +126,55 @@
 <span id="123">123</span>
 <span id="124">124</span>
 <span id="125">125</span>
+<span id="126">126</span>
+<span id="127">127</span>
+<span id="128">128</span>
+<span id="129">129</span>
+<span id="130">130</span>
+<span id="131">131</span>
+<span id="132">132</span>
+<span id="133">133</span>
+<span id="134">134</span>
+<span id="135">135</span>
+<span id="136">136</span>
+<span id="137">137</span>
+<span id="138">138</span>
+<span id="139">139</span>
+<span id="140">140</span>
+<span id="141">141</span>
+<span id="142">142</span>
+<span id="143">143</span>
+<span id="144">144</span>
+<span id="145">145</span>
+<span id="146">146</span>
+<span id="147">147</span>
+<span id="148">148</span>
+<span id="149">149</span>
+<span id="150">150</span>
+<span id="151">151</span>
+<span id="152">152</span>
+<span id="153">153</span>
+<span id="154">154</span>
+<span id="155">155</span>
+<span id="156">156</span>
+<span id="157">157</span>
+<span id="158">158</span>
+<span id="159">159</span>
+<span id="160">160</span>
+<span id="161">161</span>
+<span id="162">162</span>
+<span id="163">163</span>
+<span id="164">164</span>
+<span id="165">165</span>
+<span id="166">166</span>
+<span id="167">167</span>
 </pre><div class="example-wrap"><pre class="rust ">
+<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">sync</span>::{<span class="ident">Arc</span>, <span class="ident">Mutex</span>};
+
+<span class="kw">use</span> <span class="ident">anoma_shared</span>::<span class="ident">gossip</span>::<span class="ident">mm</span>::<span class="ident">MmHost</span>;
+<span class="kw">use</span> <span class="ident">anoma_shared</span>::<span class="ident">types</span>::<span class="ident">key</span>::<span class="ident">ed25519</span>::<span class="ident">SignedTxData</span>;
+<span class="kw">use</span> <span class="ident">anoma_shared</span>::<span class="ident">vm</span>::<span class="ident">wasm</span>::<span class="ident">runner</span>::{<span class="self">self</span>, <span class="ident">MmRunner</span>};
+<span class="kw">use</span> <span class="ident">borsh</span>::<span class="ident">BorshSerialize</span>;
 <span class="kw">use</span> <span class="ident">tendermint</span>::<span class="ident">net</span>;
 <span class="kw">use</span> <span class="ident">tendermint_rpc</span>::{<span class="ident">Client</span>, <span class="ident">HttpClient</span>};
 <span class="kw">use</span> <span class="ident">thiserror</span>::<span class="ident">Error</span>;
@@ -134,29 +182,33 @@
 
 <span class="kw">use</span> <span class="kw">super</span>::<span class="ident">filter</span>::<span class="ident">Filter</span>;
 <span class="kw">use</span> <span class="kw">super</span>::<span class="ident">mempool</span>::{<span class="self">self</span>, <span class="ident">IntentMempool</span>};
-<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">config</span>;
-<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">node</span>::<span class="ident">vm</span>;
-<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">proto</span>::{<span class="ident">Intent</span>, <span class="ident">IntentId</span>};
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">proto</span>::{<span class="ident">Intent</span>, <span class="ident">IntentId</span>, <span class="ident">Tx</span>};
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">types</span>::<span class="ident">MatchmakerMessage</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">config</span>, <span class="ident">wallet</span>};
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Matchmaker</span> {
     <span class="ident">mempool</span>: <span class="ident">IntentMempool</span>,
     <span class="ident">filter</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Filter</span><span class="op">&gt;</span>,
-    <span class="ident">inject_mm_message</span>: <span class="ident">Sender</span><span class="op">&lt;</span><span class="ident">MatchmakerMessage</span><span class="op">&gt;</span>,
     <span class="ident">matchmaker_code</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>,
     <span class="ident">tx_code</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>,
     <span class="comment">// the matchmaker&#39;s state as arbitrary bytes</span>
     <span class="ident">data</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>,
     <span class="ident">ledger_address</span>: <span class="ident">net</span>::<span class="ident">Address</span>,
+    <span class="comment">// TODO this doesn&#39;t have to be a mutex as it&#39;s just a Sender which is</span>
+    <span class="comment">// thread-safe</span>
+    <span class="ident">wasm_host</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">Mutex</span><span class="op">&lt;</span><span class="ident">WasmHost</span><span class="op">&gt;</span><span class="op">&gt;</span>,
 }
+
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
+<span class="kw">struct</span> <span class="ident">WasmHost</span>(<span class="ident">Sender</span><span class="op">&lt;</span><span class="ident">MatchmakerMessage</span><span class="op">&gt;</span>);
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Error</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">Error</span> {
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Failed to add intent to mempool: {0}&quot;</span>)]</span>
     <span class="ident">MempoolFailed</span>(<span class="ident">mempool</span>::<span class="ident">Error</span>),
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Failed to run matchmaker prog: {0}&quot;</span>)]</span>
-    <span class="ident">RunnerFailed</span>(<span class="ident">vm</span>::<span class="ident">Error</span>),
+    <span class="ident">RunnerFailed</span>(<span class="ident">runner</span>::<span class="ident">Error</span>),
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Failed to read file: {0}&quot;</span>)]</span>
     <span class="ident">FileFailed</span>(<span class="ident">std</span>::<span class="ident">io</span>::<span class="ident">Error</span>),
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Failed to create filter: {0}&quot;</span>)]</span>
@@ -166,6 +218,26 @@
 }
 
 <span class="kw">type</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">std</span>::<span class="ident">result</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">Error</span><span class="op">&gt;</span>;
+
+<span class="kw">impl</span> <span class="ident">MmHost</span> <span class="kw">for</span> <span class="ident">WasmHost</span> {
+    <span class="kw">fn</span> <span class="ident">remove_intents</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">intents_id</span>: <span class="ident">std</span>::<span class="ident">collections</span>::<span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span>) {
+        <span class="self">self</span>.<span class="number">0</span>
+            .<span class="ident">try_send</span>(<span class="ident">MatchmakerMessage</span>::<span class="ident">RemoveIntents</span>(<span class="ident">intents_id</span>))
+            .<span class="ident">expect</span>(<span class="string">&quot;Sending matchmaker message&quot;</span>)
+    }
+
+    <span class="kw">fn</span> <span class="ident">inject_tx</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">tx_data</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>) {
+        <span class="self">self</span>.<span class="number">0</span>
+            .<span class="ident">try_send</span>(<span class="ident">MatchmakerMessage</span>::<span class="ident">InjectTx</span>(<span class="ident">tx_data</span>))
+            .<span class="ident">expect</span>(<span class="string">&quot;Sending matchmaker message&quot;</span>)
+    }
+
+    <span class="kw">fn</span> <span class="ident">update_data</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">data</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>) {
+        <span class="self">self</span>.<span class="number">0</span>
+            .<span class="ident">try_send</span>(<span class="ident">MatchmakerMessage</span>::<span class="ident">UpdateData</span>(<span class="ident">data</span>))
+            .<span class="ident">expect</span>(<span class="string">&quot;Sending matchmaker message&quot;</span>)
+    }
+}
 
 <span class="kw">impl</span> <span class="ident">Matchmaker</span> {
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(
@@ -187,11 +259,11 @@
             <span class="self">Self</span> {
                 <span class="ident">mempool</span>: <span class="ident">IntentMempool</span>::<span class="ident">new</span>(),
                 <span class="ident">filter</span>,
-                <span class="ident">inject_mm_message</span>,
                 <span class="ident">matchmaker_code</span>,
                 <span class="ident">tx_code</span>,
                 <span class="ident">data</span>: <span class="ident">Vec</span>::<span class="ident">new</span>(),
                 <span class="ident">ledger_address</span>: <span class="ident">config</span>.<span class="ident">ledger_address</span>.<span class="ident">clone</span>(),
+                <span class="ident">wasm_host</span>: <span class="ident">Arc</span>::<span class="ident">new</span>(<span class="ident">Mutex</span>::<span class="ident">new</span>(<span class="ident">WasmHost</span>(<span class="ident">inject_mm_message</span>))),
             },
             <span class="ident">receiver_mm_message</span>,
         ))
@@ -214,15 +286,14 @@
             <span class="self">self</span>.<span class="ident">mempool</span>
                 .<span class="ident">put</span>(<span class="ident">intent</span>.<span class="ident">clone</span>())
                 .<span class="ident">map_err</span>(<span class="ident">Error</span>::<span class="ident">MempoolFailed</span>)<span class="question-mark">?</span>;
-            <span class="kw">let</span> <span class="ident">matchmaker_runner</span> <span class="op">=</span> <span class="ident">vm</span>::<span class="ident">MatchmakerRunner</span>::<span class="ident">new</span>();
+            <span class="kw">let</span> <span class="ident">matchmaker_runner</span> <span class="op">=</span> <span class="ident">MmRunner</span>::<span class="ident">new</span>();
             <span class="prelude-val">Ok</span>(<span class="ident">matchmaker_runner</span>
                 .<span class="ident">run</span>(
                     <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">matchmaker_code</span>.<span class="ident">clone</span>(),
                     <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">data</span>,
                     <span class="kw-2">&amp;</span><span class="ident">intent</span>.<span class="ident">id</span>().<span class="number">0</span>,
                     <span class="kw-2">&amp;</span><span class="ident">intent</span>.<span class="ident">data</span>,
-                    <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">tx_code</span>,
-                    <span class="self">self</span>.<span class="ident">inject_mm_message</span>.<span class="ident">clone</span>(),
+                    <span class="self">self</span>.<span class="ident">wasm_host</span>.<span class="ident">clone</span>(),
                 )
                 .<span class="ident">map_err</span>(<span class="ident">Error</span>::<span class="ident">RunnerFailed</span>)
                 .<span class="ident">unwrap</span>())
@@ -233,8 +304,21 @@
 
     <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">handle_mm_message</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">mm_message</span>: <span class="ident">MatchmakerMessage</span>) {
         <span class="kw">match</span> <span class="ident">mm_message</span> {
-            <span class="ident">MatchmakerMessage</span>::<span class="ident">InjectTx</span>(<span class="ident">tx</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">MatchmakerMessage</span>::<span class="ident">InjectTx</span>(<span class="ident">tx_data</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="kw">let</span> <span class="ident">tx_code</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">tx_code</span>.<span class="ident">clone</span>();
+                <span class="kw">let</span> <span class="ident">keypair</span> <span class="op">=</span> <span class="ident">wallet</span>::<span class="ident">matchmaker_keypair</span>();
+                <span class="kw">let</span> <span class="ident">signed</span> <span class="op">=</span> <span class="ident">SignedTxData</span>::<span class="ident">new</span>(<span class="kw-2">&amp;</span><span class="ident">keypair</span>, <span class="ident">tx_data</span>, <span class="kw-2">&amp;</span><span class="ident">tx_code</span>);
+                <span class="kw">let</span> <span class="ident">signed_bytes</span> <span class="op">=</span> <span class="ident">signed</span>
+                    .<span class="ident">try_to_vec</span>()
+                    .<span class="ident">expect</span>(<span class="string">&quot;Couldn&#39;t encode signed matchmaker tx data&quot;</span>);
+                <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx</span> {
+                    <span class="ident">code</span>: <span class="ident">tx_code</span>,
+                    <span class="ident">data</span>: <span class="prelude-val">Some</span>(<span class="ident">signed_bytes</span>),
+                    <span class="ident">timestamp</span>: <span class="ident">std</span>::<span class="ident">time</span>::<span class="ident">SystemTime</span>::<span class="ident">now</span>().<span class="ident">into</span>(),
+                };
+
                 <span class="kw">let</span> <span class="ident">tx_bytes</span> <span class="op">=</span> <span class="ident">tx</span>.<span class="ident">to_bytes</span>();
+
                 <span class="kw">let</span> <span class="ident">client</span> <span class="op">=</span>
                     <span class="ident">HttpClient</span>::<span class="ident">new</span>(<span class="self">self</span>.<span class="ident">ledger_address</span>.<span class="ident">clone</span>()).<span class="ident">unwrap</span>();
                 <span class="kw">let</span> <span class="ident">response</span> <span class="op">=</span>

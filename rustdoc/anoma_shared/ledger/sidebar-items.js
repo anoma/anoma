@@ -1,0 +1,1 @@
+initSidebarItems({"mod":[["gas","Gas accounting module to track the gas usage in a block for transactions and validity predicates triggered by transactions."],["storage","Ledger’s state storage with key-value backed store and a merkle tree"]]});

@@ -1,1 +1,1 @@
-initSidebarItems({"mod":[["bytes",""],["types","The key and values that may be persisted in a DB."],["vm_memory","Memory types can be passed between the host and guest via wasm linear memory."]]});
+initSidebarItems({"mod":[["bytes","A helper module for dealing with bytes"],["gossip","Gossip for intents and DKG messages"],["ledger","The ledger modules"],["types","The key and values that may be persisted in a DB."],["vm","Virtual machine modules for running transactions, validity predicates, matchmaker and matchmaker’s filter."]]});

@@ -68,22 +68,17 @@
 <span id="65">65</span>
 <span id="66">66</span>
 <span id="67">67</span>
-<span id="68">68</span>
-<span id="69">69</span>
-<span id="70">70</span>
-<span id="71">71</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! This crate contains library code for wasm. Some of the code is re-exported</span>
 <span class="doccomment">//! from the `shared` crate.</span>
 
-<span class="kw">mod</span> <span class="ident">imports</span>;
+<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">imports</span>;
 <span class="kw">mod</span> <span class="ident">intent</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">key</span>;
 <span class="kw">mod</span> <span class="ident">token</span>;
 
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">tx_prelude</span> {
     <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">anoma_shared</span>::<span class="ident">types</span>::<span class="kw-2">*</span>;
-    <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">anoma_shared</span>::<span class="ident">vm_memory</span>;
     <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">anoma_vm_macro</span>::<span class="ident">transaction</span>;
 
     <span class="kw">pub</span> <span class="kw">use</span> <span class="kw">super</span>::<span class="ident">imports</span>::<span class="ident">tx</span>::<span class="kw-2">*</span>;
@@ -103,7 +98,6 @@
 
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">vp_prelude</span> {
     <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">anoma_shared</span>::<span class="ident">types</span>::<span class="kw-2">*</span>;
-    <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">anoma_shared</span>::<span class="ident">vm_memory</span>;
     <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">anoma_vm_macro</span>::<span class="ident">validity_predicate</span>;
 
     <span class="kw">pub</span> <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">imports</span>::<span class="ident">vp</span>::<span class="kw-2">*</span>;
@@ -131,7 +125,6 @@
 
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">matchmaker_prelude</span> {
     <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">anoma_shared</span>::<span class="ident">types</span>::<span class="kw-2">*</span>;
-    <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">anoma_shared</span>::<span class="ident">vm_memory</span>;
     <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">anoma_vm_macro</span>::<span class="ident">matchmaker</span>;
 
     <span class="kw">pub</span> <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">imports</span>::<span class="ident">matchmaker</span>::<span class="kw-2">*</span>;
@@ -139,7 +132,6 @@
 
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">filter_prelude</span> {
     <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">anoma_shared</span>::<span class="ident">types</span>::<span class="kw-2">*</span>;
-    <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">anoma_shared</span>::<span class="ident">vm_memory</span>;
     <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">anoma_vm_macro</span>::<span class="ident">filter</span>;
 
     <span class="kw">pub</span> <span class="kw">use</span> <span class="kw">super</span>::<span class="ident">imports</span>::<span class="ident">filter</span>::<span class="kw-2">*</span>;

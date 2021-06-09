@@ -66,7 +66,21 @@
 <span id="63">63</span>
 <span id="64">64</span>
 <span id="65">65</span>
+<span id="66">66</span>
+<span id="67">67</span>
+<span id="68">68</span>
+<span id="69">69</span>
+<span id="70">70</span>
+<span id="71">71</span>
+<span id="72">72</span>
+<span id="73">73</span>
+<span id="74">74</span>
+<span id="75">75</span>
+<span id="76">76</span>
+<span id="77">77</span>
 </pre><div class="example-wrap"><pre class="rust ">
+<span class="doccomment">//! Intent data definitions and transaction and validity-predicate helpers.</span>
+
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">collections</span>::{<span class="ident">HashMap</span>, <span class="ident">HashSet</span>};
 
 <span class="kw">use</span> <span class="ident">borsh</span>::{<span class="ident">BorshDeserialize</span>, <span class="ident">BorshSerialize</span>};
@@ -84,11 +98,18 @@
     <span class="ident">Serialize</span>,
     <span class="ident">Deserialize</span>,
 )]</span>
+
+<span class="doccomment">/// A simple intent for fungible token trade</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Intent</span> {
+    <span class="doccomment">/// The source address</span>
     <span class="kw">pub</span> <span class="ident">addr</span>: <span class="ident">Address</span>,
+    <span class="doccomment">/// The token to be sold</span>
     <span class="kw">pub</span> <span class="ident">token_sell</span>: <span class="ident">Address</span>,
+    <span class="doccomment">/// The amount of token to be sold</span>
     <span class="kw">pub</span> <span class="ident">amount_sell</span>: <span class="ident">token</span>::<span class="ident">Amount</span>,
+    <span class="doccomment">/// The token to be bought</span>
     <span class="kw">pub</span> <span class="ident">token_buy</span>: <span class="ident">Address</span>,
+    <span class="doccomment">/// The amount of token to be bought</span>
     <span class="kw">pub</span> <span class="ident">amount_buy</span>: <span class="ident">token</span>::<span class="ident">Amount</span>,
 }
 
@@ -97,12 +118,15 @@
     <span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">BorshSerialize</span>, <span class="ident">BorshDeserialize</span>, <span class="ident">Serialize</span>, <span class="ident">Deserialize</span>,
 )]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">IntentTransfers</span> {
+    <span class="doccomment">/// Transfers crafted from the matched intents</span>
     <span class="kw">pub</span> <span class="ident">transfers</span>: <span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">token</span>::<span class="ident">Transfer</span><span class="op">&gt;</span>,
     <span class="comment">// TODO benchmark between an map or a set, see which is less costly</span>
+    <span class="doccomment">/// The intents that were matched</span>
     <span class="kw">pub</span> <span class="ident">intents</span>: <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">Address</span>, <span class="ident">Signed</span><span class="op">&lt;</span><span class="ident">Intent</span><span class="op">&gt;</span><span class="op">&gt;</span>,
 }
 
 <span class="kw">impl</span> <span class="ident">IntentTransfers</span> {
+    <span class="doccomment">/// Create an empty [`IntentTransfers`].</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">empty</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="self">Self</span> {
             <span class="ident">transfers</span>: <span class="ident">HashSet</span>::<span class="ident">new</span>(),

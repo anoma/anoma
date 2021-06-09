@@ -590,6 +590,28 @@
 <span id="587">587</span>
 <span id="588">588</span>
 <span id="589">589</span>
+<span id="590">590</span>
+<span id="591">591</span>
+<span id="592">592</span>
+<span id="593">593</span>
+<span id="594">594</span>
+<span id="595">595</span>
+<span id="596">596</span>
+<span id="597">597</span>
+<span id="598">598</span>
+<span id="599">599</span>
+<span id="600">600</span>
+<span id="601">601</span>
+<span id="602">602</span>
+<span id="603">603</span>
+<span id="604">604</span>
+<span id="605">605</span>
+<span id="606">606</span>
+<span id="607">607</span>
+<span id="608">608</span>
+<span id="609">609</span>
+<span id="610">610</span>
+<span id="611">611</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">/// Transaction environment imports</span>
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">tx</span> {
@@ -602,7 +624,7 @@
     <span class="kw">use</span> <span class="ident">anoma_shared</span>::<span class="ident">types</span>::{
         <span class="ident">Address</span>, <span class="ident">BlockHash</span>, <span class="ident">BlockHeight</span>, <span class="ident">BLOCK_HASH_LENGTH</span>, <span class="ident">CHAIN_ID_LENGTH</span>,
     };
-    <span class="kw">use</span> <span class="ident">anoma_shared</span>::<span class="ident">vm_memory</span>::<span class="ident">KeyVal</span>;
+    <span class="kw">use</span> <span class="ident">anoma_shared</span>::<span class="ident">vm</span>::<span class="ident">types</span>::<span class="ident">KeyVal</span>;
     <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">borsh</span>::{<span class="ident">BorshDeserialize</span>, <span class="ident">BorshSerialize</span>};
 
     <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">KeyValIterator</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="kw">pub</span> <span class="ident">u64</span>, <span class="kw">pub</span> <span class="ident">PhantomData</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>);
@@ -612,7 +634,8 @@
 
         <span class="kw">fn</span> <span class="ident">next</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span>(<span class="ident">String</span>, <span class="ident">T</span>)<span class="op">&gt;</span> {
             <span class="kw">let</span> <span class="ident">result</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="ident">with_capacity</span>(<span class="number">0</span>);
-            <span class="kw">let</span> <span class="ident">size</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">anoma_iter_next</span>(<span class="self">self</span>.<span class="number">0</span>, <span class="ident">result</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="kw">_</span>) };
+            <span class="kw">let</span> <span class="ident">size</span> <span class="op">=</span>
+                <span class="kw">unsafe</span> { <span class="ident">anoma_tx_iter_next</span>(<span class="self">self</span>.<span class="number">0</span>, <span class="ident">result</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="kw">_</span>) };
             <span class="kw">if</span> <span class="ident">HostEnvResult</span>::<span class="ident">is_fail</span>(<span class="ident">size</span>) {
                 <span class="prelude-val">None</span>
             } <span class="kw">else</span> {
@@ -636,7 +659,11 @@
         <span class="kw">let</span> <span class="ident">size</span> <span class="op">=</span> <span class="ident">size_of</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>();
         <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="ident">with_capacity</span>(<span class="ident">size</span>);
         <span class="kw">let</span> <span class="ident">size</span> <span class="op">=</span> <span class="kw">unsafe</span> {
-            <span class="ident">anoma_read</span>(<span class="ident">key</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="kw">_</span>, <span class="ident">key</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="kw">_</span>, <span class="ident">result</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="kw">_</span>)
+            <span class="ident">anoma_tx_read</span>(
+                <span class="ident">key</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="kw">_</span>,
+                <span class="ident">key</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="kw">_</span>,
+                <span class="ident">result</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="kw">_</span>,
+            )
         };
         <span class="kw">if</span> <span class="ident">HostEnvResult</span>::<span class="ident">is_fail</span>(<span class="ident">size</span>) {
             <span class="prelude-val">None</span>
@@ -650,7 +677,8 @@
     <span class="doccomment">/// Check if the given key is present in storage.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">has_key</span>(<span class="ident">key</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span><span class="ident">str</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
         <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">key</span>.<span class="ident">as_ref</span>();
-        <span class="kw">let</span> <span class="ident">found</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">anoma_has_key</span>(<span class="ident">key</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="kw">_</span>, <span class="ident">key</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="kw">_</span>) };
+        <span class="kw">let</span> <span class="ident">found</span> <span class="op">=</span>
+            <span class="kw">unsafe</span> { <span class="ident">anoma_tx_has_key</span>(<span class="ident">key</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="kw">_</span>, <span class="ident">key</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="kw">_</span>) };
         <span class="ident">HostEnvResult</span>::<span class="ident">is_success</span>(<span class="ident">found</span>)
     }
 
@@ -660,7 +688,7 @@
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">buf</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="ident">with_capacity</span>(<span class="ident">size_of</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>());
         <span class="ident">val</span>.<span class="ident">serialize</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">buf</span>).<span class="ident">unwrap</span>();
         <span class="kw">unsafe</span> {
-            <span class="ident">anoma_write</span>(
+            <span class="ident">anoma_tx_write</span>(
                 <span class="ident">key</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="kw">_</span>,
                 <span class="ident">key</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="kw">_</span>,
                 <span class="ident">buf</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="kw">_</span>,
@@ -672,7 +700,7 @@
     <span class="doccomment">/// Delete a value at the given key from storage.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">delete</span><span class="op">&lt;</span><span class="ident">K</span>: <span class="ident">AsRef</span><span class="op">&lt;</span><span class="ident">str</span><span class="op">&gt;</span>, <span class="ident">T</span>: <span class="ident">BorshSerialize</span><span class="op">&gt;</span>(<span class="ident">key</span>: <span class="ident">K</span>) {
         <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">key</span>.<span class="ident">as_ref</span>();
-        <span class="kw">unsafe</span> { <span class="ident">anoma_delete</span>(<span class="ident">key</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="kw">_</span>, <span class="ident">key</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="kw">_</span>) };
+        <span class="kw">unsafe</span> { <span class="ident">anoma_tx_delete</span>(<span class="ident">key</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="kw">_</span>, <span class="ident">key</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="kw">_</span>) };
     }
 
     <span class="doccomment">/// Get an iterator with the given prefix</span>
@@ -681,7 +709,7 @@
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">KeyValIterator</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">prefix</span> <span class="op">=</span> <span class="ident">prefix</span>.<span class="ident">as_ref</span>();
         <span class="kw">let</span> <span class="ident">iter_id</span> <span class="op">=</span> <span class="kw">unsafe</span> {
-            <span class="ident">anoma_iter_prefix</span>(<span class="ident">prefix</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="kw">_</span>, <span class="ident">prefix</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="kw">_</span>)
+            <span class="ident">anoma_tx_iter_prefix</span>(<span class="ident">prefix</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="kw">_</span>, <span class="ident">prefix</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="kw">_</span>)
         };
         <span class="ident">KeyValIterator</span>(<span class="ident">iter_id</span>, <span class="ident">PhantomData</span>)
     }
@@ -689,7 +717,7 @@
     <span class="doccomment">/// Insert a verifier</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">insert_verifier</span>(<span class="ident">addr</span>: <span class="ident">Address</span>) {
         <span class="kw">let</span> <span class="ident">addr</span> <span class="op">=</span> <span class="ident">addr</span>.<span class="ident">encode</span>();
-        <span class="kw">unsafe</span> { <span class="ident">anoma_insert_verifier</span>(<span class="ident">addr</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="kw">_</span>, <span class="ident">addr</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="kw">_</span>) }
+        <span class="kw">unsafe</span> { <span class="ident">anoma_tx_insert_verifier</span>(<span class="ident">addr</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="kw">_</span>, <span class="ident">addr</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="kw">_</span>) }
     }
 
     <span class="doccomment">/// Update a validity predicate</span>
@@ -697,7 +725,7 @@
         <span class="kw">let</span> <span class="ident">addr</span> <span class="op">=</span> <span class="ident">addr</span>.<span class="ident">encode</span>();
         <span class="kw">let</span> <span class="ident">code</span> <span class="op">=</span> <span class="ident">code</span>.<span class="ident">as_ref</span>();
         <span class="kw">unsafe</span> {
-            <span class="ident">anoma_update_validity_predicate</span>(
+            <span class="ident">anoma_tx_update_validity_predicate</span>(
                 <span class="ident">addr</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="kw">_</span>,
                 <span class="ident">addr</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="kw">_</span>,
                 <span class="ident">code</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="kw">_</span>,
@@ -711,7 +739,7 @@
         <span class="kw">let</span> <span class="ident">code</span> <span class="op">=</span> <span class="ident">code</span>.<span class="ident">as_ref</span>();
         <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="ident">with_capacity</span>(<span class="number">0</span>);
         <span class="kw">let</span> <span class="ident">result_len</span> <span class="op">=</span> <span class="kw">unsafe</span> {
-            <span class="ident">anoma_init_account</span>(
+            <span class="ident">anoma_tx_init_account</span>(
                 <span class="ident">code</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="kw">_</span>,
                 <span class="ident">code</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="kw">_</span>,
                 <span class="ident">result</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="kw">_</span>,
@@ -727,7 +755,7 @@
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_chain_id</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">String</span> {
         <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="ident">with_capacity</span>(<span class="ident">CHAIN_ID_LENGTH</span>);
         <span class="kw">unsafe</span> {
-            <span class="ident">anoma_get_chain_id</span>(<span class="ident">result</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="kw">_</span>);
+            <span class="ident">anoma_tx_get_chain_id</span>(<span class="ident">result</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="kw">_</span>);
         }
         <span class="kw">let</span> <span class="ident">slice</span> <span class="op">=</span> <span class="kw">unsafe</span> {
             <span class="ident">slice</span>::<span class="ident">from_raw_parts</span>(<span class="ident">result</span>.<span class="ident">as_ptr</span>(), <span class="ident">CHAIN_ID_LENGTH</span> <span class="kw">as</span> <span class="kw">_</span>)
@@ -737,14 +765,14 @@
 
     <span class="doccomment">/// Get the committed block height</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_block_height</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">BlockHeight</span> {
-        <span class="ident">BlockHeight</span>(<span class="kw">unsafe</span> { <span class="ident">anoma_get_block_height</span>() })
+        <span class="ident">BlockHeight</span>(<span class="kw">unsafe</span> { <span class="ident">anoma_tx_get_block_height</span>() })
     }
 
     <span class="doccomment">/// Get a block hash</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_block_hash</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">BlockHash</span> {
         <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="ident">with_capacity</span>(<span class="ident">BLOCK_HASH_LENGTH</span>);
         <span class="kw">unsafe</span> {
-            <span class="ident">anoma_get_block_hash</span>(<span class="ident">result</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="kw">_</span>);
+            <span class="ident">anoma_tx_get_block_hash</span>(<span class="ident">result</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="kw">_</span>);
         }
         <span class="kw">let</span> <span class="ident">slice</span> <span class="op">=</span> <span class="kw">unsafe</span> {
             <span class="ident">slice</span>::<span class="ident">from_raw_parts</span>(<span class="ident">result</span>.<span class="ident">as_ptr</span>(), <span class="ident">BLOCK_HASH_LENGTH</span> <span class="kw">as</span> <span class="kw">_</span>)
@@ -756,7 +784,7 @@
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">log_string</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">AsRef</span><span class="op">&lt;</span><span class="ident">str</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="ident">msg</span>: <span class="ident">T</span>) {
         <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="ident">msg</span>.<span class="ident">as_ref</span>();
         <span class="kw">unsafe</span> {
-            <span class="ident">anoma_log_string</span>(<span class="ident">msg</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="kw">_</span>, <span class="ident">msg</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="kw">_</span>);
+            <span class="ident">anoma_tx_log_string</span>(<span class="ident">msg</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="kw">_</span>, <span class="ident">msg</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="kw">_</span>);
         }
     }
 
@@ -766,30 +794,35 @@
         <span class="comment">// Read variable-length data when we don&#39;t know the size up-front,</span>
         <span class="comment">// returns the size of the value (can be 0), or -1 if the key is</span>
         <span class="comment">// not present.</span>
-        <span class="kw">fn</span> <span class="ident">anoma_read</span>(<span class="ident">key_ptr</span>: <span class="ident">u64</span>, <span class="ident">key_len</span>: <span class="ident">u64</span>, <span class="ident">result_ptr</span>: <span class="ident">u64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">i64</span>;
+        <span class="kw">fn</span> <span class="ident">anoma_tx_read</span>(<span class="ident">key_ptr</span>: <span class="ident">u64</span>, <span class="ident">key_len</span>: <span class="ident">u64</span>, <span class="ident">result_ptr</span>: <span class="ident">u64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">i64</span>;
 
         <span class="comment">// Returns 1 if the key is present, -1 otherwise.</span>
-        <span class="kw">fn</span> <span class="ident">anoma_has_key</span>(<span class="ident">key_ptr</span>: <span class="ident">u64</span>, <span class="ident">key_len</span>: <span class="ident">u64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">i64</span>;
+        <span class="kw">fn</span> <span class="ident">anoma_tx_has_key</span>(<span class="ident">key_ptr</span>: <span class="ident">u64</span>, <span class="ident">key_len</span>: <span class="ident">u64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">i64</span>;
 
         <span class="comment">// Write key/value</span>
-        <span class="kw">fn</span> <span class="ident">anoma_write</span>(<span class="ident">key_ptr</span>: <span class="ident">u64</span>, <span class="ident">key_len</span>: <span class="ident">u64</span>, <span class="ident">val_ptr</span>: <span class="ident">u64</span>, <span class="ident">val_len</span>: <span class="ident">u64</span>);
+        <span class="kw">fn</span> <span class="ident">anoma_tx_write</span>(
+            <span class="ident">key_ptr</span>: <span class="ident">u64</span>,
+            <span class="ident">key_len</span>: <span class="ident">u64</span>,
+            <span class="ident">val_ptr</span>: <span class="ident">u64</span>,
+            <span class="ident">val_len</span>: <span class="ident">u64</span>,
+        );
 
         <span class="comment">// Delete the given key and its value</span>
-        <span class="kw">fn</span> <span class="ident">anoma_delete</span>(<span class="ident">key_ptr</span>: <span class="ident">u64</span>, <span class="ident">key_len</span>: <span class="ident">u64</span>);
+        <span class="kw">fn</span> <span class="ident">anoma_tx_delete</span>(<span class="ident">key_ptr</span>: <span class="ident">u64</span>, <span class="ident">key_len</span>: <span class="ident">u64</span>);
 
         <span class="comment">// Get an ID of a data iterator with key prefix</span>
-        <span class="kw">fn</span> <span class="ident">anoma_iter_prefix</span>(<span class="ident">prefix_ptr</span>: <span class="ident">u64</span>, <span class="ident">prefix_len</span>: <span class="ident">u64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u64</span>;
+        <span class="kw">fn</span> <span class="ident">anoma_tx_iter_prefix</span>(<span class="ident">prefix_ptr</span>: <span class="ident">u64</span>, <span class="ident">prefix_len</span>: <span class="ident">u64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u64</span>;
 
         <span class="comment">// Read variable-length data when we don&#39;t know the size up-front,</span>
         <span class="comment">// returns the size of the value (can be 0), or -1 if the key is not</span>
         <span class="comment">// present.</span>
-        <span class="kw">fn</span> <span class="ident">anoma_iter_next</span>(<span class="ident">iter_id</span>: <span class="ident">u64</span>, <span class="ident">result_ptr</span>: <span class="ident">u64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">i64</span>;
+        <span class="kw">fn</span> <span class="ident">anoma_tx_iter_next</span>(<span class="ident">iter_id</span>: <span class="ident">u64</span>, <span class="ident">result_ptr</span>: <span class="ident">u64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">i64</span>;
 
         <span class="comment">// Insert a verifier</span>
-        <span class="kw">fn</span> <span class="ident">anoma_insert_verifier</span>(<span class="ident">addr_ptr</span>: <span class="ident">u64</span>, <span class="ident">addr_len</span>: <span class="ident">u64</span>);
+        <span class="kw">fn</span> <span class="ident">anoma_tx_insert_verifier</span>(<span class="ident">addr_ptr</span>: <span class="ident">u64</span>, <span class="ident">addr_len</span>: <span class="ident">u64</span>);
 
         <span class="comment">// Update a validity predicate</span>
-        <span class="kw">fn</span> <span class="ident">anoma_update_validity_predicate</span>(
+        <span class="kw">fn</span> <span class="ident">anoma_tx_update_validity_predicate</span>(
             <span class="ident">addr_ptr</span>: <span class="ident">u64</span>,
             <span class="ident">addr_len</span>: <span class="ident">u64</span>,
             <span class="ident">code_ptr</span>: <span class="ident">u64</span>,
@@ -797,23 +830,23 @@
         );
 
         <span class="comment">// Initialize a new account</span>
-        <span class="kw">fn</span> <span class="ident">anoma_init_account</span>(
+        <span class="kw">fn</span> <span class="ident">anoma_tx_init_account</span>(
             <span class="ident">code_ptr</span>: <span class="ident">u64</span>,
             <span class="ident">code_len</span>: <span class="ident">u64</span>,
             <span class="ident">result_ptr</span>: <span class="ident">u64</span>,
         ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u64</span>;
 
         <span class="comment">// Get the chain ID</span>
-        <span class="kw">fn</span> <span class="ident">anoma_get_chain_id</span>(<span class="ident">result_ptr</span>: <span class="ident">u64</span>);
+        <span class="kw">fn</span> <span class="ident">anoma_tx_get_chain_id</span>(<span class="ident">result_ptr</span>: <span class="ident">u64</span>);
 
         <span class="comment">// Get the current block height</span>
-        <span class="kw">fn</span> <span class="ident">anoma_get_block_height</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u64</span>;
+        <span class="kw">fn</span> <span class="ident">anoma_tx_get_block_height</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u64</span>;
 
         <span class="comment">// Get the current block hash</span>
-        <span class="kw">fn</span> <span class="ident">anoma_get_block_hash</span>(<span class="ident">result_ptr</span>: <span class="ident">u64</span>);
+        <span class="kw">fn</span> <span class="ident">anoma_tx_get_block_hash</span>(<span class="ident">result_ptr</span>: <span class="ident">u64</span>);
 
         <span class="comment">// Requires a node running with &quot;Info&quot; log level</span>
-        <span class="kw">fn</span> <span class="ident">anoma_log_string</span>(<span class="ident">str_ptr</span>: <span class="ident">u64</span>, <span class="ident">str_len</span>: <span class="ident">u64</span>);
+        <span class="kw">fn</span> <span class="ident">anoma_tx_log_string</span>(<span class="ident">str_ptr</span>: <span class="ident">u64</span>, <span class="ident">str_len</span>: <span class="ident">u64</span>);
     }
 }
 
@@ -829,7 +862,7 @@
     <span class="kw">use</span> <span class="ident">anoma_shared</span>::<span class="ident">types</span>::{
         <span class="ident">BlockHash</span>, <span class="ident">BlockHeight</span>, <span class="ident">BLOCK_HASH_LENGTH</span>, <span class="ident">CHAIN_ID_LENGTH</span>,
     };
-    <span class="kw">use</span> <span class="ident">anoma_shared</span>::<span class="ident">vm_memory</span>::<span class="ident">KeyVal</span>;
+    <span class="kw">use</span> <span class="ident">anoma_shared</span>::<span class="ident">vm</span>::<span class="ident">types</span>::<span class="ident">KeyVal</span>;
     <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">borsh</span>::{<span class="ident">BorshDeserialize</span>, <span class="ident">BorshSerialize</span>};
 
     <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">PreKeyValIterator</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="kw">pub</span> <span class="ident">u64</span>, <span class="kw">pub</span> <span class="ident">PhantomData</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>);
@@ -842,7 +875,7 @@
         <span class="kw">let</span> <span class="ident">size</span> <span class="op">=</span> <span class="ident">size_of</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>();
         <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="ident">with_capacity</span>(<span class="ident">size</span>);
         <span class="kw">let</span> <span class="ident">size</span> <span class="op">=</span> <span class="kw">unsafe</span> {
-            <span class="ident">anoma_read_pre</span>(
+            <span class="ident">anoma_vp_read_pre</span>(
                 <span class="ident">key</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="kw">_</span>,
                 <span class="ident">key</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="kw">_</span>,
                 <span class="ident">result</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="kw">_</span>,
@@ -864,7 +897,7 @@
         <span class="kw">let</span> <span class="ident">size</span> <span class="op">=</span> <span class="ident">size_of</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>();
         <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="ident">with_capacity</span>(<span class="ident">size</span>);
         <span class="kw">let</span> <span class="ident">size</span> <span class="op">=</span> <span class="kw">unsafe</span> {
-            <span class="ident">anoma_read_post</span>(
+            <span class="ident">anoma_vp_read_post</span>(
                 <span class="ident">key</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="kw">_</span>,
                 <span class="ident">key</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="kw">_</span>,
                 <span class="ident">result</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="kw">_</span>,
@@ -884,7 +917,7 @@
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">has_key_pre</span>(<span class="ident">key</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span><span class="ident">str</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
         <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">key</span>.<span class="ident">as_ref</span>();
         <span class="kw">let</span> <span class="ident">found</span> <span class="op">=</span>
-            <span class="kw">unsafe</span> { <span class="ident">anoma_has_key_pre</span>(<span class="ident">key</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="kw">_</span>, <span class="ident">key</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="kw">_</span>) };
+            <span class="kw">unsafe</span> { <span class="ident">anoma_vp_has_key_pre</span>(<span class="ident">key</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="kw">_</span>, <span class="ident">key</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="kw">_</span>) };
         <span class="ident">HostEnvResult</span>::<span class="ident">is_success</span>(<span class="ident">found</span>)
     }
 
@@ -893,7 +926,7 @@
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">has_key_post</span>(<span class="ident">key</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span><span class="ident">str</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
         <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">key</span>.<span class="ident">as_ref</span>();
         <span class="kw">let</span> <span class="ident">found</span> <span class="op">=</span>
-            <span class="kw">unsafe</span> { <span class="ident">anoma_has_key_post</span>(<span class="ident">key</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="kw">_</span>, <span class="ident">key</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="kw">_</span>) };
+            <span class="kw">unsafe</span> { <span class="ident">anoma_vp_has_key_post</span>(<span class="ident">key</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="kw">_</span>, <span class="ident">key</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="kw">_</span>) };
         <span class="ident">HostEnvResult</span>::<span class="ident">is_success</span>(<span class="ident">found</span>)
     }
 
@@ -903,7 +936,7 @@
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">PreKeyValIterator</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">prefix</span> <span class="op">=</span> <span class="ident">prefix</span>.<span class="ident">as_ref</span>();
         <span class="kw">let</span> <span class="ident">iter_id</span> <span class="op">=</span> <span class="kw">unsafe</span> {
-            <span class="ident">anoma_iter_prefix</span>(<span class="ident">prefix</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="kw">_</span>, <span class="ident">prefix</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="kw">_</span>)
+            <span class="ident">anoma_vp_iter_prefix</span>(<span class="ident">prefix</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="kw">_</span>, <span class="ident">prefix</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="kw">_</span>)
         };
         <span class="ident">PreKeyValIterator</span>(<span class="ident">iter_id</span>, <span class="ident">PhantomData</span>)
     }
@@ -914,7 +947,7 @@
         <span class="kw">fn</span> <span class="ident">next</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span>(<span class="ident">String</span>, <span class="ident">T</span>)<span class="op">&gt;</span> {
             <span class="kw">let</span> <span class="ident">result</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="ident">with_capacity</span>(<span class="number">0</span>);
             <span class="kw">let</span> <span class="ident">size</span> <span class="op">=</span>
-                <span class="kw">unsafe</span> { <span class="ident">anoma_iter_pre_next</span>(<span class="self">self</span>.<span class="number">0</span>, <span class="ident">result</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="kw">_</span>) };
+                <span class="kw">unsafe</span> { <span class="ident">anoma_vp_iter_pre_next</span>(<span class="self">self</span>.<span class="number">0</span>, <span class="ident">result</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="kw">_</span>) };
             <span class="kw">if</span> <span class="ident">HostEnvResult</span>::<span class="ident">is_fail</span>(<span class="ident">size</span>) {
                 <span class="prelude-val">None</span>
             } <span class="kw">else</span> {
@@ -938,7 +971,7 @@
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">PostKeyValIterator</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">prefix</span> <span class="op">=</span> <span class="ident">prefix</span>.<span class="ident">as_ref</span>();
         <span class="kw">let</span> <span class="ident">iter_id</span> <span class="op">=</span> <span class="kw">unsafe</span> {
-            <span class="ident">anoma_iter_prefix</span>(<span class="ident">prefix</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="kw">_</span>, <span class="ident">prefix</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="kw">_</span>)
+            <span class="ident">anoma_vp_iter_prefix</span>(<span class="ident">prefix</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="kw">_</span>, <span class="ident">prefix</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="kw">_</span>)
         };
         <span class="ident">PostKeyValIterator</span>(<span class="ident">iter_id</span>, <span class="ident">PhantomData</span>)
     }
@@ -948,8 +981,9 @@
 
         <span class="kw">fn</span> <span class="ident">next</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span>(<span class="ident">String</span>, <span class="ident">T</span>)<span class="op">&gt;</span> {
             <span class="kw">let</span> <span class="ident">result</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="ident">with_capacity</span>(<span class="number">0</span>);
-            <span class="kw">let</span> <span class="ident">size</span> <span class="op">=</span>
-                <span class="kw">unsafe</span> { <span class="ident">anoma_iter_post_next</span>(<span class="self">self</span>.<span class="number">0</span>, <span class="ident">result</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="kw">_</span>) };
+            <span class="kw">let</span> <span class="ident">size</span> <span class="op">=</span> <span class="kw">unsafe</span> {
+                <span class="ident">anoma_vp_iter_post_next</span>(<span class="self">self</span>.<span class="number">0</span>, <span class="ident">result</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="kw">_</span>)
+            };
             <span class="kw">if</span> <span class="ident">HostEnvResult</span>::<span class="ident">is_fail</span>(<span class="ident">size</span>) {
                 <span class="prelude-val">None</span>
             } <span class="kw">else</span> {
@@ -971,7 +1005,7 @@
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_chain_id</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">String</span> {
         <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="ident">with_capacity</span>(<span class="ident">CHAIN_ID_LENGTH</span>);
         <span class="kw">unsafe</span> {
-            <span class="ident">anoma_get_chain_id</span>(<span class="ident">result</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="kw">_</span>);
+            <span class="ident">anoma_vp_get_chain_id</span>(<span class="ident">result</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="kw">_</span>);
         }
         <span class="kw">let</span> <span class="ident">slice</span> <span class="op">=</span> <span class="kw">unsafe</span> {
             <span class="ident">slice</span>::<span class="ident">from_raw_parts</span>(<span class="ident">result</span>.<span class="ident">as_ptr</span>(), <span class="ident">CHAIN_ID_LENGTH</span> <span class="kw">as</span> <span class="kw">_</span>)
@@ -981,14 +1015,14 @@
 
     <span class="doccomment">/// Get the committed block height</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_block_height</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">BlockHeight</span> {
-        <span class="ident">BlockHeight</span>(<span class="kw">unsafe</span> { <span class="ident">anoma_get_block_height</span>() })
+        <span class="ident">BlockHeight</span>(<span class="kw">unsafe</span> { <span class="ident">anoma_vp_get_block_height</span>() })
     }
 
     <span class="doccomment">/// Get a block hash</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_block_hash</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">BlockHash</span> {
         <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="ident">with_capacity</span>(<span class="ident">BLOCK_HASH_LENGTH</span>);
         <span class="kw">unsafe</span> {
-            <span class="ident">anoma_get_block_hash</span>(<span class="ident">result</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="kw">_</span>);
+            <span class="ident">anoma_vp_get_block_hash</span>(<span class="ident">result</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="kw">_</span>);
         }
         <span class="kw">let</span> <span class="ident">slice</span> <span class="op">=</span> <span class="kw">unsafe</span> {
             <span class="ident">slice</span>::<span class="ident">from_raw_parts</span>(<span class="ident">result</span>.<span class="ident">as_ptr</span>(), <span class="ident">BLOCK_HASH_LENGTH</span> <span class="kw">as</span> <span class="kw">_</span>)
@@ -1006,7 +1040,7 @@
         <span class="kw">let</span> <span class="ident">pk</span> <span class="op">=</span> <span class="ident">BorshSerialize</span>::<span class="ident">try_to_vec</span>(<span class="ident">pk</span>).<span class="ident">unwrap</span>();
         <span class="kw">let</span> <span class="ident">sig</span> <span class="op">=</span> <span class="ident">BorshSerialize</span>::<span class="ident">try_to_vec</span>(<span class="ident">sig</span>).<span class="ident">unwrap</span>();
         <span class="kw">let</span> <span class="ident">valid</span> <span class="op">=</span> <span class="kw">unsafe</span> {
-            <span class="ident">anoma_verify_tx_signature</span>(
+            <span class="ident">anoma_vp_verify_tx_signature</span>(
                 <span class="ident">pk</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="kw">_</span>,
                 <span class="ident">pk</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="kw">_</span>,
                 <span class="ident">data</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="kw">_</span>,
@@ -1022,7 +1056,7 @@
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">log_string</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">AsRef</span><span class="op">&lt;</span><span class="ident">str</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="ident">msg</span>: <span class="ident">T</span>) {
         <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="ident">msg</span>.<span class="ident">as_ref</span>();
         <span class="kw">unsafe</span> {
-            <span class="ident">anoma_log_string</span>(<span class="ident">msg</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="kw">_</span>, <span class="ident">msg</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="kw">_</span>);
+            <span class="ident">anoma_vp_log_string</span>(<span class="ident">msg</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="kw">_</span>, <span class="ident">msg</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="kw">_</span>);
         }
     }
 
@@ -1031,7 +1065,7 @@
     <span class="doccomment">/// caller&#39;s validity predicate.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">eval</span>(<span class="ident">vp_code</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>, <span class="ident">input_data</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
         <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="kw">unsafe</span> {
-            <span class="ident">anoma_eval</span>(
+            <span class="ident">anoma_vp_eval</span>(
                 <span class="ident">vp_code</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="kw">_</span>,
                 <span class="ident">vp_code</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="kw">_</span>,
                 <span class="ident">input_data</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="kw">_</span>,
@@ -1047,43 +1081,51 @@
         <span class="comment">// Read variable-length prior state when we don&#39;t know the size</span>
         <span class="comment">// up-front, returns the size of the value (can be 0), or -1 if</span>
         <span class="comment">// the key is not present.</span>
-        <span class="kw">fn</span> <span class="ident">anoma_read_pre</span>(<span class="ident">key_ptr</span>: <span class="ident">u64</span>, <span class="ident">key_len</span>: <span class="ident">u64</span>, <span class="ident">result_ptr</span>: <span class="ident">u64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">i64</span>;
+        <span class="kw">fn</span> <span class="ident">anoma_vp_read_pre</span>(
+            <span class="ident">key_ptr</span>: <span class="ident">u64</span>,
+            <span class="ident">key_len</span>: <span class="ident">u64</span>,
+            <span class="ident">result_ptr</span>: <span class="ident">u64</span>,
+        ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">i64</span>;
 
         <span class="comment">// Read variable-length posterior state when we don&#39;t know the size</span>
         <span class="comment">// up-front, returns the size of the value (can be 0), or -1 if</span>
         <span class="comment">// the key is not present.</span>
-        <span class="kw">fn</span> <span class="ident">anoma_read_post</span>(<span class="ident">key_ptr</span>: <span class="ident">u64</span>, <span class="ident">key_len</span>: <span class="ident">u64</span>, <span class="ident">result_ptr</span>: <span class="ident">u64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">i64</span>;
+        <span class="kw">fn</span> <span class="ident">anoma_vp_read_post</span>(
+            <span class="ident">key_ptr</span>: <span class="ident">u64</span>,
+            <span class="ident">key_len</span>: <span class="ident">u64</span>,
+            <span class="ident">result_ptr</span>: <span class="ident">u64</span>,
+        ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">i64</span>;
 
         <span class="comment">// Returns 1 if the key is present in prior state, -1 otherwise.</span>
-        <span class="kw">fn</span> <span class="ident">anoma_has_key_pre</span>(<span class="ident">key_ptr</span>: <span class="ident">u64</span>, <span class="ident">key_len</span>: <span class="ident">u64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">i64</span>;
+        <span class="kw">fn</span> <span class="ident">anoma_vp_has_key_pre</span>(<span class="ident">key_ptr</span>: <span class="ident">u64</span>, <span class="ident">key_len</span>: <span class="ident">u64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">i64</span>;
 
         <span class="comment">// Returns 1 if the key is present in posterior state, -1 otherwise.</span>
-        <span class="kw">fn</span> <span class="ident">anoma_has_key_post</span>(<span class="ident">key_ptr</span>: <span class="ident">u64</span>, <span class="ident">key_len</span>: <span class="ident">u64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">i64</span>;
+        <span class="kw">fn</span> <span class="ident">anoma_vp_has_key_post</span>(<span class="ident">key_ptr</span>: <span class="ident">u64</span>, <span class="ident">key_len</span>: <span class="ident">u64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">i64</span>;
 
         <span class="comment">// Get an ID of a data iterator with key prefix</span>
-        <span class="kw">fn</span> <span class="ident">anoma_iter_prefix</span>(<span class="ident">prefix_ptr</span>: <span class="ident">u64</span>, <span class="ident">prefix_len</span>: <span class="ident">u64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u64</span>;
+        <span class="kw">fn</span> <span class="ident">anoma_vp_iter_prefix</span>(<span class="ident">prefix_ptr</span>: <span class="ident">u64</span>, <span class="ident">prefix_len</span>: <span class="ident">u64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u64</span>;
 
         <span class="comment">// Read variable-length prior state when we don&#39;t know the size</span>
         <span class="comment">// up-front, returns the size of the value (can be 0), or -1 if</span>
         <span class="comment">// the key is not present.</span>
-        <span class="kw">fn</span> <span class="ident">anoma_iter_pre_next</span>(<span class="ident">iter_id</span>: <span class="ident">u64</span>, <span class="ident">result_ptr</span>: <span class="ident">u64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">i64</span>;
+        <span class="kw">fn</span> <span class="ident">anoma_vp_iter_pre_next</span>(<span class="ident">iter_id</span>: <span class="ident">u64</span>, <span class="ident">result_ptr</span>: <span class="ident">u64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">i64</span>;
 
         <span class="comment">// Read variable-length posterior state when we don&#39;t know the size</span>
         <span class="comment">// up-front, returns the size of the value (can be 0), or -1 if the</span>
         <span class="comment">// key is not present.</span>
-        <span class="kw">fn</span> <span class="ident">anoma_iter_post_next</span>(<span class="ident">iter_id</span>: <span class="ident">u64</span>, <span class="ident">result_ptr</span>: <span class="ident">u64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">i64</span>;
+        <span class="kw">fn</span> <span class="ident">anoma_vp_iter_post_next</span>(<span class="ident">iter_id</span>: <span class="ident">u64</span>, <span class="ident">result_ptr</span>: <span class="ident">u64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">i64</span>;
 
         <span class="comment">// Get the chain ID</span>
-        <span class="kw">fn</span> <span class="ident">anoma_get_chain_id</span>(<span class="ident">result_ptr</span>: <span class="ident">u64</span>);
+        <span class="kw">fn</span> <span class="ident">anoma_vp_get_chain_id</span>(<span class="ident">result_ptr</span>: <span class="ident">u64</span>);
 
         <span class="comment">// Get the current block height</span>
-        <span class="kw">fn</span> <span class="ident">anoma_get_block_height</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u64</span>;
+        <span class="kw">fn</span> <span class="ident">anoma_vp_get_block_height</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u64</span>;
 
         <span class="comment">// Get the current block hash</span>
-        <span class="kw">fn</span> <span class="ident">anoma_get_block_hash</span>(<span class="ident">result_ptr</span>: <span class="ident">u64</span>);
+        <span class="kw">fn</span> <span class="ident">anoma_vp_get_block_hash</span>(<span class="ident">result_ptr</span>: <span class="ident">u64</span>);
 
         <span class="comment">// Verify a transaction signature</span>
-        <span class="kw">fn</span> <span class="ident">anoma_verify_tx_signature</span>(
+        <span class="kw">fn</span> <span class="ident">anoma_vp_verify_tx_signature</span>(
             <span class="ident">pk_ptr</span>: <span class="ident">u64</span>,
             <span class="ident">pk_len</span>: <span class="ident">u64</span>,
             <span class="ident">data_ptr</span>: <span class="ident">u64</span>,
@@ -1093,9 +1135,9 @@
         ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">i64</span>;
 
         <span class="comment">// Requires a node running with &quot;Info&quot; log level</span>
-        <span class="kw">fn</span> <span class="ident">anoma_log_string</span>(<span class="ident">str_ptr</span>: <span class="ident">u64</span>, <span class="ident">str_len</span>: <span class="ident">u64</span>);
+        <span class="kw">fn</span> <span class="ident">anoma_vp_log_string</span>(<span class="ident">str_ptr</span>: <span class="ident">u64</span>, <span class="ident">str_len</span>: <span class="ident">u64</span>);
 
-        <span class="kw">fn</span> <span class="ident">anoma_eval</span>(
+        <span class="kw">fn</span> <span class="ident">anoma_vp_eval</span>(
             <span class="ident">vp_code_ptr</span>: <span class="ident">u64</span>,
             <span class="ident">vp_code_len</span>: <span class="ident">u64</span>,
             <span class="ident">input_data_ptr</span>: <span class="ident">u64</span>,
@@ -1115,13 +1157,15 @@
     <span class="doccomment">/// given in matchmaker parameters (`--tx-code-path` and</span>
     <span class="doccomment">/// `--ledger-address`).</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">send_match</span>(<span class="ident">tx_data</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>) {
-        <span class="kw">unsafe</span> { <span class="ident">anoma_send_match</span>(<span class="ident">tx_data</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="kw">_</span>, <span class="ident">tx_data</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="kw">_</span>) };
+        <span class="kw">unsafe</span> {
+            <span class="ident">anoma_mm_send_match</span>(<span class="ident">tx_data</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="kw">_</span>, <span class="ident">tx_data</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="kw">_</span>)
+        };
     }
 
     <span class="doccomment">/// Update the matchmaker state. This state will be pass on the next run of</span>
     <span class="doccomment">/// the matchmaker.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">update_data</span>(<span class="ident">data</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>) {
-        <span class="kw">unsafe</span> { <span class="ident">anoma_update_data</span>(<span class="ident">data</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="kw">_</span>, <span class="ident">data</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="kw">_</span>) };
+        <span class="kw">unsafe</span> { <span class="ident">anoma_mm_update_data</span>(<span class="ident">data</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="kw">_</span>, <span class="ident">data</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="kw">_</span>) };
     }
 
     <span class="doccomment">/// Remove the intents from the matchmaker intent mempool, to call when they</span>
@@ -1129,7 +1173,7 @@
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">remove_intents</span>(<span class="ident">intents_id</span>: <span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span>) {
         <span class="kw">let</span> <span class="ident">intents_id_bytes</span> <span class="op">=</span> <span class="ident">intents_id</span>.<span class="ident">try_to_vec</span>().<span class="ident">unwrap</span>();
         <span class="kw">unsafe</span> {
-            <span class="ident">anoma_remove_intents</span>(
+            <span class="ident">anoma_mm_remove_intents</span>(
                 <span class="ident">intents_id_bytes</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="kw">_</span>,
                 <span class="ident">intents_id_bytes</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="kw">_</span>,
             )
@@ -1140,7 +1184,7 @@
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">log_string</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">AsRef</span><span class="op">&lt;</span><span class="ident">str</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="ident">msg</span>: <span class="ident">T</span>) {
         <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="ident">msg</span>.<span class="ident">as_ref</span>();
         <span class="kw">unsafe</span> {
-            <span class="ident">anoma_log_string</span>(<span class="ident">msg</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="kw">_</span>, <span class="ident">msg</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="kw">_</span>);
+            <span class="ident">anoma_mm_log_string</span>(<span class="ident">msg</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="kw">_</span>, <span class="ident">msg</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="kw">_</span>);
         }
     }
 
@@ -1148,14 +1192,14 @@
     <span class="doccomment">/// module. The environment provides calls to them via this C interface.</span>
     <span class="kw">extern</span> <span class="string">&quot;C&quot;</span> {
         <span class="comment">// Inject a transaction from matchmaker&#39;s matched intents to the ledger</span>
-        <span class="kw">fn</span> <span class="ident">anoma_send_match</span>(<span class="ident">data_ptr</span>: <span class="ident">u64</span>, <span class="ident">data_len</span>: <span class="ident">u64</span>);
+        <span class="kw">fn</span> <span class="ident">anoma_mm_send_match</span>(<span class="ident">data_ptr</span>: <span class="ident">u64</span>, <span class="ident">data_len</span>: <span class="ident">u64</span>);
 
-        <span class="kw">fn</span> <span class="ident">anoma_update_data</span>(<span class="ident">data_ptr</span>: <span class="ident">u64</span>, <span class="ident">data_len</span>: <span class="ident">u64</span>);
+        <span class="kw">fn</span> <span class="ident">anoma_mm_update_data</span>(<span class="ident">data_ptr</span>: <span class="ident">u64</span>, <span class="ident">data_len</span>: <span class="ident">u64</span>);
 
-        <span class="kw">fn</span> <span class="ident">anoma_remove_intents</span>(<span class="ident">intents_id_ptr</span>: <span class="ident">u64</span>, <span class="ident">intents_id_len</span>: <span class="ident">u64</span>);
+        <span class="kw">fn</span> <span class="ident">anoma_mm_remove_intents</span>(<span class="ident">intents_id_ptr</span>: <span class="ident">u64</span>, <span class="ident">intents_id_len</span>: <span class="ident">u64</span>);
 
         <span class="comment">// Requires a node running with &quot;Info&quot; log level</span>
-        <span class="kw">fn</span> <span class="ident">anoma_log_string</span>(<span class="ident">str_ptr</span>: <span class="ident">u64</span>, <span class="ident">str_len</span>: <span class="ident">u64</span>);
+        <span class="kw">fn</span> <span class="ident">anoma_mm_log_string</span>(<span class="ident">str_ptr</span>: <span class="ident">u64</span>, <span class="ident">str_len</span>: <span class="ident">u64</span>);
     }
 }
 
@@ -1169,7 +1213,7 @@
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">log_string</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">AsRef</span><span class="op">&lt;</span><span class="ident">str</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="ident">msg</span>: <span class="ident">T</span>) {
         <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="ident">msg</span>.<span class="ident">as_ref</span>();
         <span class="kw">unsafe</span> {
-            <span class="ident">anoma_log_string</span>(<span class="ident">msg</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="kw">_</span>, <span class="ident">msg</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="kw">_</span>);
+            <span class="ident">anoma_filter_log_string</span>(<span class="ident">msg</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="kw">_</span>, <span class="ident">msg</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="kw">_</span>);
         }
     }
 
@@ -1177,7 +1221,7 @@
     <span class="doccomment">/// module. The environment provides calls to them via this C interface.</span>
     <span class="kw">extern</span> <span class="string">&quot;C&quot;</span> {
         <span class="comment">// Requires a node running with &quot;Info&quot; log level</span>
-        <span class="kw">fn</span> <span class="ident">anoma_log_string</span>(<span class="ident">str_ptr</span>: <span class="ident">u64</span>, <span class="ident">str_len</span>: <span class="ident">u64</span>);
+        <span class="kw">fn</span> <span class="ident">anoma_filter_log_string</span>(<span class="ident">str_ptr</span>: <span class="ident">u64</span>, <span class="ident">str_len</span>: <span class="ident">u64</span>);
     }
 }
 </pre></div>

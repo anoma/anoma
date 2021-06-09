@@ -85,7 +85,7 @@
 <span class="doccomment">//! The docstrings on types and their fields with `derive(Clap)` are displayed</span>
 <span class="doccomment">//! in the CLI `--help`.</span>
 <span class="kw">use</span> <span class="ident">anoma</span>::<span class="ident">config</span>::<span class="ident">Config</span>;
-<span class="kw">use</span> <span class="ident">anoma</span>::<span class="ident">node</span>::{<span class="ident">gossip</span>, <span class="ident">shell</span>};
+<span class="kw">use</span> <span class="ident">anoma</span>::<span class="ident">node</span>::{<span class="ident">gossip</span>, <span class="ident">ledger</span>};
 <span class="kw">use</span> <span class="ident">anoma</span>::{<span class="ident">cli</span>, <span class="ident">config</span>};
 <span class="kw">use</span> <span class="ident">eyre</span>::{<span class="ident">Context</span>, <span class="prelude-ty">Result</span>};
 
@@ -109,12 +109,12 @@
         <span class="prelude-val">Some</span>((<span class="ident">cli</span>::<span class="ident">RUN_LEDGER_COMMAND</span>, <span class="kw">_</span>)) <span class="op">=</span><span class="op">&gt;</span> {
             <span class="kw">let</span> <span class="ident">config</span> <span class="op">=</span> <span class="ident">get_cfg</span>(<span class="ident">home</span>);
             <span class="kw">let</span> <span class="ident">ledger_cfg</span> <span class="op">=</span> <span class="ident">config</span>.<span class="ident">ledger</span>.<span class="ident">unwrap_or_default</span>();
-            <span class="ident">shell</span>::<span class="ident">run</span>(<span class="ident">ledger_cfg</span>).<span class="ident">wrap_err</span>(<span class="string">&quot;Failed to run Anoma node&quot;</span>)
+            <span class="ident">ledger</span>::<span class="ident">run</span>(<span class="ident">ledger_cfg</span>).<span class="ident">wrap_err</span>(<span class="string">&quot;Failed to run Anoma node&quot;</span>)
         }
         <span class="prelude-val">Some</span>((<span class="ident">cli</span>::<span class="ident">RESET_LEDGER_COMMAND</span>, <span class="kw">_</span>)) <span class="op">=</span><span class="op">&gt;</span> {
             <span class="kw">let</span> <span class="ident">config</span> <span class="op">=</span> <span class="ident">get_cfg</span>(<span class="ident">home</span>);
             <span class="kw">let</span> <span class="ident">ledger_cfg</span> <span class="op">=</span> <span class="ident">config</span>.<span class="ident">ledger</span>.<span class="ident">unwrap_or_default</span>();
-            <span class="ident">shell</span>::<span class="ident">reset</span>(<span class="ident">ledger_cfg</span>).<span class="ident">wrap_err</span>(<span class="string">&quot;Failed to reset Anoma node&quot;</span>)
+            <span class="ident">ledger</span>::<span class="ident">reset</span>(<span class="ident">ledger_cfg</span>).<span class="ident">wrap_err</span>(<span class="string">&quot;Failed to reset Anoma node&quot;</span>)
         }
         <span class="prelude-val">Some</span>((<span class="ident">cli</span>::<span class="ident">GENERATE_CONFIG_COMMAND</span>, <span class="ident">_args</span>)) <span class="op">=</span><span class="op">&gt;</span> {
             <span class="kw">let</span> <span class="ident">gen_config</span> <span class="op">=</span> <span class="ident">config</span>::<span class="ident">Config</span>::<span class="ident">generate</span>(<span class="kw-2">&amp;</span><span class="ident">home</span>, <span class="bool-val">false</span>)
