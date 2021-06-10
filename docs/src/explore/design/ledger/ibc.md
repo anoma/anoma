@@ -3,7 +3,7 @@
 IBC allows the ledgers to interact with each other. IBC is a protocol to agree the consensus state and to send/receive packets between ledgers.
 
 ## Update to another ledger
-When a ledger executes a transaction including an update to another ledger, it sends a packet and executes the associated validation code like validity predicates to check if the packet has been received. The transaction writes the update to an internal storage subspace called IBC storage. IBC storage as an IBC module makes a packet and send it. After the transaction execution, not only validity predicates but also the IBC validation code associated with the update are executed. If the validation fails, e.g. the destination ledger fails to do the update, the transaction is aborted.
+When a ledger executes a transaction including an update to another ledger, it sends a packet and executes the associated validation code like validity predicates to check if the packet has been received. The transaction writes the update to an internal storage subspace called IBC storage. IBC storage as an IBC module makes a packet and send it. After the transaction execution, not only validity predicates but also the IBC validation code associated with the update are executed. If the validation fails, e.g. the destination ledger fails to receive the update due to time out, the transaction is aborted.
 
 TODO The behaviour of the destination ledger
 
