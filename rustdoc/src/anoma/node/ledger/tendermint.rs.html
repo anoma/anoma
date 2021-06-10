@@ -452,6 +452,62 @@
 <span id="449">449</span>
 <span id="450">450</span>
 <span id="451">451</span>
+<span id="452">452</span>
+<span id="453">453</span>
+<span id="454">454</span>
+<span id="455">455</span>
+<span id="456">456</span>
+<span id="457">457</span>
+<span id="458">458</span>
+<span id="459">459</span>
+<span id="460">460</span>
+<span id="461">461</span>
+<span id="462">462</span>
+<span id="463">463</span>
+<span id="464">464</span>
+<span id="465">465</span>
+<span id="466">466</span>
+<span id="467">467</span>
+<span id="468">468</span>
+<span id="469">469</span>
+<span id="470">470</span>
+<span id="471">471</span>
+<span id="472">472</span>
+<span id="473">473</span>
+<span id="474">474</span>
+<span id="475">475</span>
+<span id="476">476</span>
+<span id="477">477</span>
+<span id="478">478</span>
+<span id="479">479</span>
+<span id="480">480</span>
+<span id="481">481</span>
+<span id="482">482</span>
+<span id="483">483</span>
+<span id="484">484</span>
+<span id="485">485</span>
+<span id="486">486</span>
+<span id="487">487</span>
+<span id="488">488</span>
+<span id="489">489</span>
+<span id="490">490</span>
+<span id="491">491</span>
+<span id="492">492</span>
+<span id="493">493</span>
+<span id="494">494</span>
+<span id="495">495</span>
+<span id="496">496</span>
+<span id="497">497</span>
+<span id="498">498</span>
+<span id="499">499</span>
+<span id="500">500</span>
+<span id="501">501</span>
+<span id="502">502</span>
+<span id="503">503</span>
+<span id="504">504</span>
+<span id="505">505</span>
+<span id="506">506</span>
+<span id="507">507</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! A Tendermint wrapper module that relays Tendermint requests to the Shell.</span>
 <span class="doccomment">//!</span>
@@ -459,10 +515,9 @@
 <span class="doccomment">//! of this module.</span>
 
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">convert</span>::{<span class="ident">TryFrom</span>, <span class="ident">TryInto</span>};
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">fs</span>;
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">fs</span>::<span class="ident">File</span>;
+<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">fs</span>::{<span class="self">self</span>, <span class="ident">File</span>, <span class="ident">OpenOptions</span>};
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">io</span>::{<span class="self">self</span>, <span class="ident">Write</span>};
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">path</span>::<span class="ident">PathBuf</span>;
+<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">path</span>::<span class="ident">Path</span>;
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">process</span>::<span class="ident">Command</span>;
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">sync</span>::<span class="ident">mpsc</span>::{<span class="self">self</span>, <span class="ident">channel</span>, <span class="ident">Sender</span>};
 
@@ -471,6 +526,7 @@
 <span class="kw">use</span> <span class="ident">serde_json</span>::<span class="ident">json</span>;
 <span class="kw">use</span> <span class="ident">signal_hook</span>::<span class="ident">consts</span>::<span class="ident">TERM_SIGNALS</span>;
 <span class="kw">use</span> <span class="ident">signal_hook</span>::<span class="ident">iterator</span>::<span class="ident">Signals</span>;
+<span class="kw">use</span> <span class="ident">tendermint</span>::<span class="ident">config</span>::<span class="ident">TendermintConfig</span>;
 <span class="kw">use</span> <span class="ident">tendermint_abci</span>::{<span class="self">self</span>, <span class="ident">ServerBuilder</span>};
 <span class="kw">use</span> <span class="ident">tendermint_proto</span>::<span class="ident">abci</span>::{
     <span class="ident">CheckTxType</span>, <span class="ident">RequestApplySnapshotChunk</span>, <span class="ident">RequestBeginBlock</span>, <span class="ident">RequestCheckTx</span>,
@@ -482,11 +538,36 @@
     <span class="ident">ResponseInitChain</span>, <span class="ident">ResponseListSnapshots</span>, <span class="ident">ResponseLoadSnapshotChunk</span>,
     <span class="ident">ResponseOfferSnapshot</span>, <span class="ident">ResponseQuery</span>, <span class="ident">ResponseSetOption</span>,
 };
+<span class="kw">use</span> <span class="ident">thiserror</span>::<span class="ident">Error</span>;
 
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">config</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">genesis</span>::{<span class="self">self</span>, <span class="ident">Validator</span>};
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">node</span>::<span class="ident">ledger</span>::<span class="ident">protocol</span>::<span class="ident">TxResult</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">node</span>::<span class="ident">ledger</span>::<span class="ident">MempoolTxType</span>;
+
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Error</span>, <span class="ident">Debug</span>)]</span>
+<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">Error</span> {
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Failed to initialize Tendermint: {0}&quot;</span>)]</span>
+    <span class="ident">TendermintInit</span>(<span class="ident">std</span>::<span class="ident">io</span>::<span class="ident">Error</span>),
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Failed to write Tendermint validator key: {0}&quot;</span>)]</span>
+    <span class="ident">TendermintValidatorKey</span>(<span class="ident">std</span>::<span class="ident">io</span>::<span class="ident">Error</span>),
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Failed to load Tendermint config file: {0}&quot;</span>)]</span>
+    <span class="ident">TendermintLoadConfig</span>(<span class="ident">tendermint</span>::<span class="ident">error</span>::<span class="ident">Error</span>),
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Failed to open Tendermint config for writing: {0}&quot;</span>)]</span>
+    <span class="ident">TendermintOpenWriteConfig</span>(<span class="ident">std</span>::<span class="ident">io</span>::<span class="ident">Error</span>),
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Failed to serialize Tendermint config TOML to string: {0}&quot;</span>)]</span>
+    <span class="ident">TendermintConfigSerializeToml</span>(<span class="ident">toml</span>::<span class="ident">ser</span>::<span class="ident">Error</span>),
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Failed to write Tendermint config: {0}&quot;</span>)]</span>
+    <span class="ident">TendermintWriteConfig</span>(<span class="ident">std</span>::<span class="ident">io</span>::<span class="ident">Error</span>),
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Failed to start up Tendermint node: {0}&quot;</span>)]</span>
+    <span class="ident">TendermintStartUp</span>(<span class="ident">std</span>::<span class="ident">io</span>::<span class="ident">Error</span>),
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Failed to bind ABCI server: {0}&quot;</span>)]</span>
+    <span class="ident">AbciServerBind</span>(<span class="ident">eyre</span>::<span class="ident">Report</span>),
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Failed to create OS signal handlers: {0}&quot;</span>)]</span>
+    <span class="ident">SignalsHandlers</span>(<span class="ident">std</span>::<span class="ident">io</span>::<span class="ident">Error</span>),
+}
+
+<span class="kw">pub</span> <span class="kw">type</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">std</span>::<span class="ident">result</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">Error</span><span class="op">&gt;</span>;
 
 <span class="kw">pub</span> <span class="kw">type</span> <span class="ident">AbciReceiver</span> <span class="op">=</span> <span class="ident">mpsc</span>::<span class="ident">Receiver</span><span class="op">&lt;</span><span class="ident">AbciMsg</span><span class="op">&gt;</span>;
 <span class="kw">pub</span> <span class="kw">type</span> <span class="ident">AbciSender</span> <span class="op">=</span> <span class="ident">mpsc</span>::<span class="ident">Sender</span><span class="op">&lt;</span><span class="ident">AbciMsg</span><span class="op">&gt;</span>;
@@ -505,7 +586,7 @@
     },
     <span class="doccomment">/// Validate a given transaction for inclusion in the mempool</span>
     <span class="ident">MempoolValidate</span> {
-        <span class="ident">reply</span>: <span class="ident">Sender</span><span class="op">&lt;</span><span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">String</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+        <span class="ident">reply</span>: <span class="ident">Sender</span><span class="op">&lt;</span><span class="ident">std</span>::<span class="ident">result</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">String</span><span class="op">&gt;</span><span class="op">&gt;</span>,
         <span class="ident">tx</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>,
         <span class="ident">r#type</span>: <span class="ident">MempoolTxType</span>,
     },
@@ -517,7 +598,7 @@
     },
     <span class="doccomment">/// Apply a transaction in a block</span>
     <span class="ident">ApplyTx</span> {
-        <span class="ident">reply</span>: <span class="ident">Sender</span><span class="op">&lt;</span>(<span class="ident">i64</span>, <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">TxResult</span>, <span class="ident">String</span><span class="op">&gt;</span>)<span class="op">&gt;</span>,
+        <span class="ident">reply</span>: <span class="ident">Sender</span><span class="op">&lt;</span>(<span class="ident">i64</span>, <span class="ident">std</span>::<span class="ident">result</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">TxResult</span>, <span class="ident">String</span><span class="op">&gt;</span>)<span class="op">&gt;</span>,
         <span class="ident">tx</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>,
     },
     <span class="doccomment">/// End a block</span>
@@ -526,7 +607,7 @@
         <span class="ident">height</span>: <span class="ident">BlockHeight</span>,
     },
     <span class="ident">AbciQuery</span> {
-        <span class="ident">reply</span>: <span class="ident">Sender</span><span class="op">&lt;</span><span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">String</span>, <span class="ident">String</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+        <span class="ident">reply</span>: <span class="ident">Sender</span><span class="op">&lt;</span><span class="ident">std</span>::<span class="ident">result</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">String</span>, <span class="ident">String</span><span class="op">&gt;</span><span class="op">&gt;</span>,
         <span class="ident">path</span>: <span class="ident">String</span>,
         <span class="ident">data</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>,
         <span class="ident">height</span>: <span class="ident">BlockHeight</span>,
@@ -542,52 +623,58 @@
 }
 
 <span class="doccomment">/// Run the ABCI server in the current thread (blocking).</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">run</span>(<span class="ident">sender</span>: <span class="ident">AbciSender</span>, <span class="ident">config</span>: <span class="ident">config</span>::<span class="ident">Ledger</span>) {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">run</span>(<span class="ident">sender</span>: <span class="ident">AbciSender</span>, <span class="ident">config</span>: <span class="ident">config</span>::<span class="ident">Ledger</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="ident">home_dir</span> <span class="op">=</span> <span class="ident">config</span>.<span class="ident">tendermint</span>;
     <span class="kw">let</span> <span class="ident">home_dir_string</span> <span class="op">=</span> <span class="ident">home_dir</span>.<span class="ident">to_string_lossy</span>().<span class="ident">to_string</span>();
     <span class="comment">// init and run a Tendermint node child process</span>
     <span class="ident">Command</span>::<span class="ident">new</span>(<span class="string">&quot;tendermint&quot;</span>)
         .<span class="ident">args</span>(<span class="kw-2">&amp;</span>[<span class="string">&quot;init&quot;</span>, <span class="string">&quot;--home&quot;</span>, <span class="kw-2">&amp;</span><span class="ident">home_dir_string</span>])
         .<span class="ident">output</span>()
-        .<span class="ident">expect</span>(<span class="string">&quot;TEMPORARY: Failed to initialize tendermint node&quot;</span>);
+        .<span class="ident">map_err</span>(<span class="ident">Error</span>::<span class="ident">TendermintInit</span>)<span class="question-mark">?</span>;
+
     <span class="kw">if</span> <span class="macro">cfg</span><span class="macro">!</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;dev&quot;</span>) {
         <span class="comment">// override the validator key file</span>
-        <span class="ident">write_validator_key</span>(<span class="ident">home_dir</span>, <span class="kw-2">&amp;</span><span class="ident">genesis</span>::<span class="ident">genesis</span>().<span class="ident">validator</span>)
-            .<span class="ident">expect</span>(<span class="string">&quot;TEMPORARY: failed to write tendermint validator key&quot;</span>);
+        <span class="ident">write_validator_key</span>(<span class="kw-2">&amp;</span><span class="ident">home_dir</span>, <span class="kw-2">&amp;</span><span class="ident">genesis</span>::<span class="ident">genesis</span>().<span class="ident">validator</span>)
+            .<span class="ident">map_err</span>(<span class="ident">Error</span>::<span class="ident">TendermintValidatorKey</span>)<span class="question-mark">?</span>;
     }
+
+    <span class="ident">update_tendermint_config</span>(<span class="kw-2">&amp;</span><span class="ident">home_dir</span>)<span class="question-mark">?</span>;
+
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tendermint_node</span> <span class="op">=</span> <span class="ident">Command</span>::<span class="ident">new</span>(<span class="string">&quot;tendermint&quot;</span>)
-        .<span class="ident">args</span>(<span class="kw-2">&amp;</span>[
-            <span class="string">&quot;node&quot;</span>,
-            <span class="string">&quot;--home&quot;</span>,
-            <span class="kw-2">&amp;</span><span class="ident">home_dir_string</span>,
-            <span class="comment">// ! Only produce blocks when there are txs or when the AppHash</span>
-            <span class="comment">// changes for now</span>
-            <span class="string">&quot;--consensus.create_empty_blocks=false&quot;</span>,
-        ])
+        .<span class="ident">args</span>(<span class="kw-2">&amp;</span>[<span class="string">&quot;node&quot;</span>, <span class="string">&quot;--home&quot;</span>, <span class="kw-2">&amp;</span><span class="ident">home_dir_string</span>])
         .<span class="ident">spawn</span>()
-        .<span class="ident">expect</span>(<span class="string">&quot;TEMPORARY: failed to start up tendermint node&quot;</span>);
+        .<span class="ident">map_err</span>(<span class="ident">Error</span>::<span class="ident">TendermintStartUp</span>)<span class="question-mark">?</span>;
 
     <span class="comment">// bind and run the ABCI server</span>
     <span class="kw">let</span> <span class="ident">server</span> <span class="op">=</span> <span class="ident">ServerBuilder</span>::<span class="ident">default</span>()
-        .<span class="ident">bind</span>(<span class="ident">config</span>.<span class="ident">address</span>, <span class="ident">AbciWrapper</span> { <span class="ident">sender</span> })
-        .<span class="ident">expect</span>(<span class="string">&quot;TEMPORARY: failed to bind ABCI server address&quot;</span>);
+        .<span class="ident">bind</span>(
+            <span class="ident">config</span>.<span class="ident">address</span>,
+            <span class="ident">AbciWrapper</span> {
+                <span class="ident">sender</span>: <span class="ident">sender</span>.<span class="ident">clone</span>(),
+            },
+        )
+        .<span class="ident">map_err</span>(<span class="ident">Error</span>::<span class="ident">AbciServerBind</span>)<span class="question-mark">?</span>;
     <span class="ident">std</span>::<span class="ident">thread</span>::<span class="ident">spawn</span>(<span class="kw">move</span> <span class="op">|</span><span class="op">|</span> {
-        <span class="ident">server</span>
-            .<span class="ident">listen</span>()
-            .<span class="ident">expect</span>(<span class="string">&quot;TEMPORARY: failed to start up ABCI server&quot;</span>)
+        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Err</span>(<span class="ident">err</span>) <span class="op">=</span> <span class="ident">server</span>.<span class="ident">listen</span>() {
+            <span class="ident">tracing</span>::<span class="macro">error</span><span class="macro">!</span>(<span class="string">&quot;Failed to start up ABCI server: {}&quot;</span>, <span class="ident">err</span>);
+            <span class="ident">sender</span>.<span class="ident">send</span>(<span class="ident">AbciMsg</span>::<span class="ident">Terminate</span>).<span class="ident">unwrap</span>()
+        }
     });
 
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">signals</span> <span class="op">=</span>
-        <span class="ident">Signals</span>::<span class="ident">new</span>(<span class="ident">TERM_SIGNALS</span>).<span class="ident">expect</span>(<span class="string">&quot;cannot create Signals&quot;</span>);
+        <span class="ident">Signals</span>::<span class="ident">new</span>(<span class="ident">TERM_SIGNALS</span>).<span class="ident">map_err</span>(<span class="ident">Error</span>::<span class="ident">SignalsHandlers</span>)<span class="question-mark">?</span>;
     <span class="kw">for</span> <span class="ident">sig</span> <span class="kw">in</span> <span class="ident">signals</span>.<span class="ident">forever</span>() {
         <span class="kw">if</span> <span class="ident">TERM_SIGNALS</span>.<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">sig</span>) {
             <span class="ident">tracing</span>::<span class="macro">info</span><span class="macro">!</span>(
                 <span class="string">&quot;Received termination signal, shutting down Tendermint node&quot;</span>
             );
-            <span class="ident">tendermint_node</span>.<span class="ident">kill</span>().<span class="ident">expect</span>(<span class="string">&quot;termination failed&quot;</span>);
+            <span class="ident">tendermint_node</span>
+                .<span class="ident">kill</span>()
+                .<span class="ident">expect</span>(<span class="string">&quot;Tendermint node termination failed&quot;</span>);
             <span class="kw">break</span>;
         }
     }
+    <span class="prelude-val">Ok</span>(())
 }
 
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">reset</span>(<span class="ident">config</span>: <span class="ident">config</span>::<span class="ident">Ledger</span>) {
@@ -601,12 +688,12 @@
             <span class="kw-2">&amp;</span><span class="ident">config</span>.<span class="ident">tendermint</span>.<span class="ident">to_string_lossy</span>(),
         ])
         .<span class="ident">output</span>()
-        .<span class="ident">expect</span>(<span class="string">&quot;TEMPORARY: Failed to reset tendermint node&#39;s data&quot;</span>);
+        .<span class="ident">expect</span>(<span class="string">&quot;Failed to reset tendermint node&#39;s data&quot;</span>);
     <span class="ident">fs</span>::<span class="ident">remove_dir_all</span>(<span class="macro">format</span><span class="macro">!</span>(
         <span class="string">&quot;{}/config&quot;</span>,
         <span class="kw-2">&amp;</span><span class="ident">config</span>.<span class="ident">tendermint</span>.<span class="ident">to_string_lossy</span>()
     ))
-    .<span class="ident">expect</span>(<span class="string">&quot;TEMPORARY: Failed to reset tendermint node&#39;s config&quot;</span>);
+    .<span class="ident">expect</span>(<span class="string">&quot;Failed to reset tendermint node&#39;s config&quot;</span>);
 }
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
@@ -634,14 +721,14 @@
         <span class="kw">let</span> (<span class="ident">reply</span>, <span class="ident">reply_receiver</span>) <span class="op">=</span> <span class="ident">channel</span>();
         <span class="self">self</span>.<span class="ident">sender</span>
             .<span class="ident">send</span>(<span class="ident">AbciMsg</span>::<span class="ident">GetInfo</span> { <span class="ident">reply</span> })
-            .<span class="ident">expect</span>(<span class="string">&quot;TEMPORARY: failed to send GetInfo request&quot;</span>);
+            .<span class="ident">expect</span>(<span class="string">&quot;failed to send GetInfo request&quot;</span>);
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>((<span class="ident">last_block_app_hash</span>, <span class="ident">last_block_height</span>)) <span class="op">=</span> <span class="ident">reply_receiver</span>
             .<span class="ident">recv</span>()
-            .<span class="ident">expect</span>(<span class="string">&quot;TEMPORARY: failed to recv GetInfo response&quot;</span>)
+            .<span class="ident">expect</span>(<span class="string">&quot;failed to receive GetInfo response&quot;</span>)
         {
             <span class="ident">resp</span>.<span class="ident">last_block_height</span> <span class="op">=</span> <span class="ident">last_block_height</span>
                 .<span class="ident">try_into</span>()
-                .<span class="ident">expect</span>(<span class="string">&quot;TEMPORARY: unexpected height value&quot;</span>);
+                .<span class="ident">expect</span>(<span class="string">&quot;unexpected height value&quot;</span>);
             <span class="ident">resp</span>.<span class="ident">last_block_app_hash</span> <span class="op">=</span> <span class="ident">last_block_app_hash</span>.<span class="number">0</span>;
         }
 
@@ -656,10 +743,10 @@
         <span class="kw">let</span> (<span class="ident">reply</span>, <span class="ident">reply_receiver</span>) <span class="op">=</span> <span class="ident">channel</span>();
         <span class="self">self</span>.<span class="ident">sender</span>
             .<span class="ident">send</span>(<span class="ident">AbciMsg</span>::<span class="ident">InitChain</span> { <span class="ident">reply</span>, <span class="ident">chain_id</span> })
-            .<span class="ident">expect</span>(<span class="string">&quot;TEMPORARY: failed to send InitChain request&quot;</span>);
+            .<span class="ident">expect</span>(<span class="string">&quot;failed to send InitChain request&quot;</span>);
         <span class="ident">reply_receiver</span>
             .<span class="ident">recv</span>()
-            .<span class="ident">expect</span>(<span class="string">&quot;TEMPORARY: failed to recv InitChain response&quot;</span>);
+            .<span class="ident">expect</span>(<span class="string">&quot;failed to receive InitChain response&quot;</span>);
 
         <span class="comment">// Set the initial validator set</span>
         <span class="kw">let</span> <span class="ident">genesis</span> <span class="op">=</span> <span class="ident">genesis</span>::<span class="ident">genesis</span>();
@@ -675,7 +762,7 @@
             .<span class="ident">validator</span>
             .<span class="ident">voting_power</span>
             .<span class="ident">try_into</span>()
-            .<span class="ident">expect</span>(<span class="string">&quot;TEMPORARY: unexpected validator&#39;s voting power&quot;</span>);
+            .<span class="ident">expect</span>(<span class="string">&quot;unexpected validator&#39;s voting power&quot;</span>);
         <span class="ident">resp</span>.<span class="ident">validators</span>.<span class="ident">push</span>(<span class="ident">abci_validator</span>);
         <span class="ident">resp</span>
     }
@@ -697,11 +784,11 @@
                 <span class="ident">height</span>: <span class="ident">BlockHeight</span>(<span class="ident">height</span>),
                 <span class="ident">prove</span>,
             })
-            .<span class="ident">expect</span>(<span class="string">&quot;TEMPORARY: failed to send AbciQuery request&quot;</span>);
+            .<span class="ident">expect</span>(<span class="string">&quot;failed to send AbciQuery request&quot;</span>);
 
         <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">reply_receiver</span>
             .<span class="ident">recv</span>()
-            .<span class="ident">expect</span>(<span class="string">&quot;TEMPORARY: failed to recv AbciQuery response&quot;</span>);
+            .<span class="ident">expect</span>(<span class="string">&quot;failed to receive AbciQuery response&quot;</span>);
 
         <span class="kw">match</span> <span class="ident">result</span> {
             <span class="prelude-val">Ok</span>(<span class="ident">res</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">resp</span>.<span class="ident">info</span> <span class="op">=</span> <span class="ident">res</span>,
@@ -717,7 +804,7 @@
     <span class="kw">fn</span> <span class="ident">check_tx</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">req</span>: <span class="ident">RequestCheckTx</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">ResponseCheckTx</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">resp</span> <span class="op">=</span> <span class="ident">ResponseCheckTx</span>::<span class="ident">default</span>();
         <span class="kw">let</span> <span class="ident">r#type</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">CheckTxType</span>::<span class="ident">from_i32</span>(<span class="ident">req</span>.<span class="ident">r#type</span>)
-            .<span class="ident">expect</span>(<span class="string">&quot;TEMPORARY: received unexpected CheckTxType from ABCI&quot;</span>)
+            .<span class="ident">expect</span>(<span class="string">&quot;received unexpected CheckTxType from ABCI&quot;</span>)
         {
             <span class="ident">CheckTxType</span>::<span class="ident">New</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">MempoolTxType</span>::<span class="ident">NewTransaction</span>,
             <span class="ident">CheckTxType</span>::<span class="ident">Recheck</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">MempoolTxType</span>::<span class="ident">RecheckTransaction</span>,
@@ -730,10 +817,10 @@
                 <span class="ident">tx</span>: <span class="ident">req</span>.<span class="ident">tx</span>,
                 <span class="ident">r#type</span>,
             })
-            .<span class="ident">expect</span>(<span class="string">&quot;TEMPORARY: failed to send MempoolValidate request&quot;</span>);
+            .<span class="ident">expect</span>(<span class="string">&quot;failed to send MempoolValidate request&quot;</span>);
         <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">reply_receiver</span>
             .<span class="ident">recv</span>()
-            .<span class="ident">expect</span>(<span class="string">&quot;TEMPORARY: failed to recv MempoolValidate response&quot;</span>);
+            .<span class="ident">expect</span>(<span class="string">&quot;failed to receive MempoolValidate response&quot;</span>);
 
         <span class="kw">match</span> <span class="ident">result</span> {
             <span class="prelude-val">Ok</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">resp</span>.<span class="ident">info</span> <span class="op">=</span> <span class="string">&quot;Mempool validation passed&quot;</span>.<span class="ident">to_string</span>(),
@@ -753,10 +840,8 @@
                 <span class="ident">tracing</span>::<span class="macro">error</span><span class="macro">!</span>(<span class="string">&quot;{:#?}&quot;</span>, <span class="ident">err</span>);
             }
             <span class="prelude-val">Ok</span>(<span class="ident">hash</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="kw">let</span> <span class="ident">raw_height</span> <span class="op">=</span> <span class="ident">req</span>
-                    .<span class="ident">header</span>
-                    .<span class="ident">expect</span>(<span class="string">&quot;TEMPORARY: missing block&#39;s header&quot;</span>)
-                    .<span class="ident">height</span>;
+                <span class="kw">let</span> <span class="ident">raw_height</span> <span class="op">=</span>
+                    <span class="ident">req</span>.<span class="ident">header</span>.<span class="ident">expect</span>(<span class="string">&quot;missing block&#39;s header&quot;</span>).<span class="ident">height</span>;
                 <span class="kw">match</span> <span class="ident">raw_height</span>.<span class="ident">try_into</span>() {
                     <span class="prelude-val">Err</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> {
                         <span class="ident">tracing</span>::<span class="macro">error</span><span class="macro">!</span>(
@@ -772,12 +857,10 @@
                                 <span class="ident">hash</span>,
                                 <span class="ident">height</span>,
                             })
-                            .<span class="ident">expect</span>(
-                                <span class="string">&quot;TEMPORARY: failed to send BeginBlock request&quot;</span>,
-                            );
-                        <span class="ident">reply_receiver</span>.<span class="ident">recv</span>().<span class="ident">expect</span>(
-                            <span class="string">&quot;TEMPORARY: failed to recv BeginBlock response&quot;</span>,
-                        );
+                            .<span class="ident">expect</span>(<span class="string">&quot;failed to send BeginBlock request&quot;</span>);
+                        <span class="ident">reply_receiver</span>
+                            .<span class="ident">recv</span>()
+                            .<span class="ident">expect</span>(<span class="string">&quot;failed to receive BeginBlock response&quot;</span>);
                     }
                 }
             }
@@ -791,10 +874,10 @@
         <span class="kw">let</span> (<span class="ident">reply</span>, <span class="ident">reply_receiver</span>) <span class="op">=</span> <span class="ident">channel</span>();
         <span class="self">self</span>.<span class="ident">sender</span>
             .<span class="ident">send</span>(<span class="ident">AbciMsg</span>::<span class="ident">ApplyTx</span> { <span class="ident">reply</span>, <span class="ident">tx</span>: <span class="ident">req</span>.<span class="ident">tx</span> })
-            .<span class="ident">expect</span>(<span class="string">&quot;TEMPORARY: failed to send ApplyTx request&quot;</span>);
+            .<span class="ident">expect</span>(<span class="string">&quot;failed to send ApplyTx request&quot;</span>);
         <span class="kw">let</span> (<span class="ident">gas</span>, <span class="ident">result</span>) <span class="op">=</span> <span class="ident">reply_receiver</span>
             .<span class="ident">recv</span>()
-            .<span class="ident">expect</span>(<span class="string">&quot;TEMPORARY: failed to recv ApplyTx response&quot;</span>);
+            .<span class="ident">expect</span>(<span class="string">&quot;failed to receive ApplyTx response&quot;</span>);
 
         <span class="ident">resp</span>.<span class="ident">gas_used</span> <span class="op">=</span> <span class="ident">gas</span>;
 
@@ -825,10 +908,10 @@
                 <span class="kw">let</span> (<span class="ident">reply</span>, <span class="ident">reply_receiver</span>) <span class="op">=</span> <span class="ident">channel</span>();
                 <span class="self">self</span>.<span class="ident">sender</span>
                     .<span class="ident">send</span>(<span class="ident">AbciMsg</span>::<span class="ident">EndBlock</span> { <span class="ident">reply</span>, <span class="ident">height</span> })
-                    .<span class="ident">expect</span>(<span class="string">&quot;TEMPORARY: failed to send EndBlock request&quot;</span>);
+                    .<span class="ident">expect</span>(<span class="string">&quot;failed to send EndBlock request&quot;</span>);
                 <span class="ident">reply_receiver</span>
                     .<span class="ident">recv</span>()
-                    .<span class="ident">expect</span>(<span class="string">&quot;TEMPORARY: failed to recv EndBlock response&quot;</span>);
+                    .<span class="ident">expect</span>(<span class="string">&quot;failed to receive EndBlock response&quot;</span>);
             }
         }
         <span class="ident">resp</span>
@@ -844,10 +927,10 @@
         <span class="kw">let</span> (<span class="ident">reply</span>, <span class="ident">reply_receiver</span>) <span class="op">=</span> <span class="ident">channel</span>();
         <span class="self">self</span>.<span class="ident">sender</span>
             .<span class="ident">send</span>(<span class="ident">AbciMsg</span>::<span class="ident">CommitBlock</span> { <span class="ident">reply</span> })
-            .<span class="ident">expect</span>(<span class="string">&quot;TEMPORARY: failed to send CommitBlock request&quot;</span>);
+            .<span class="ident">expect</span>(<span class="string">&quot;failed to send CommitBlock request&quot;</span>);
         <span class="kw">let</span> <span class="ident">MerkleRoot</span>(<span class="ident">result</span>) <span class="op">=</span> <span class="ident">reply_receiver</span>
             .<span class="ident">recv</span>()
-            .<span class="ident">expect</span>(<span class="string">&quot;TEMPORARY: failed to recv CommitBlock response&quot;</span>);
+            .<span class="ident">expect</span>(<span class="string">&quot;failed to receive CommitBlock response&quot;</span>);
 
         <span class="ident">resp</span>.<span class="ident">data</span> <span class="op">=</span> <span class="ident">result</span>;
         <span class="ident">resp</span>
@@ -883,10 +966,39 @@
     }
 }
 
+<span class="kw">fn</span> <span class="ident">update_tendermint_config</span>(<span class="ident">home_dir</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span><span class="ident">Path</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+    <span class="kw">let</span> <span class="ident">home_dir</span> <span class="op">=</span> <span class="ident">home_dir</span>.<span class="ident">as_ref</span>();
+    <span class="kw">let</span> <span class="ident">path</span> <span class="op">=</span> <span class="ident">home_dir</span>.<span class="ident">join</span>(<span class="string">&quot;config&quot;</span>).<span class="ident">join</span>(<span class="string">&quot;config.toml&quot;</span>);
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">config</span> <span class="op">=</span> <span class="ident">TendermintConfig</span>::<span class="ident">load_toml_file</span>(<span class="kw-2">&amp;</span><span class="ident">path</span>)
+        .<span class="ident">map_err</span>(<span class="ident">Error</span>::<span class="ident">TendermintLoadConfig</span>)<span class="question-mark">?</span>;
+
+    <span class="comment">// In &quot;dev&quot;, only produce blocks when there are txs or when the AppHash</span>
+    <span class="comment">// changes</span>
+    <span class="ident">config</span>.<span class="ident">consensus</span>.<span class="ident">create_empty_blocks</span> <span class="op">=</span> <span class="op">!</span><span class="macro">cfg</span><span class="macro">!</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;dev&quot;</span>);
+
+    <span class="comment">// We set this to true as we don&#39;t want any invalid tx be re-applied. This</span>
+    <span class="comment">// also implies that it&#39;s not possible for an invalid tx to become valid</span>
+    <span class="comment">// again in the future.</span>
+    <span class="ident">config</span>.<span class="ident">mempool</span>.<span class="ident">keep_invalid_txs_in_cache</span> <span class="op">=</span> <span class="bool-val">false</span>;
+
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">file</span> <span class="op">=</span> <span class="ident">OpenOptions</span>::<span class="ident">new</span>()
+        .<span class="ident">write</span>(<span class="bool-val">true</span>)
+        .<span class="ident">truncate</span>(<span class="bool-val">true</span>)
+        .<span class="ident">open</span>(<span class="ident">path</span>)
+        .<span class="ident">map_err</span>(<span class="ident">Error</span>::<span class="ident">TendermintOpenWriteConfig</span>)<span class="question-mark">?</span>;
+    <span class="kw">let</span> <span class="ident">config_str</span> <span class="op">=</span> <span class="ident">toml</span>::<span class="ident">to_string</span>(<span class="kw-2">&amp;</span><span class="ident">config</span>)
+        .<span class="ident">map_err</span>(<span class="ident">Error</span>::<span class="ident">TendermintConfigSerializeToml</span>)<span class="question-mark">?</span>;
+    <span class="ident">file</span>.<span class="ident">write</span>(<span class="ident">config_str</span>.<span class="ident">as_bytes</span>())
+        .<span class="ident">map</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> ())
+        .<span class="ident">map_err</span>(<span class="ident">Error</span>::<span class="ident">TendermintWriteConfig</span>)
+}
+
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;dev&quot;</span>)]</span>
 <span class="kw">fn</span> <span class="ident">write_validator_key</span>(
-    <span class="ident">home_dir</span>: <span class="ident">PathBuf</span>,
+    <span class="ident">home_dir</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span><span class="ident">Path</span><span class="op">&gt;</span>,
     <span class="ident">account</span>: <span class="kw-2">&amp;</span><span class="ident">Validator</span>,
 ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">io</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+    <span class="kw">let</span> <span class="ident">home_dir</span> <span class="op">=</span> <span class="ident">home_dir</span>.<span class="ident">as_ref</span>();
     <span class="kw">let</span> <span class="ident">path</span> <span class="op">=</span> <span class="ident">home_dir</span>.<span class="ident">join</span>(<span class="string">&quot;config&quot;</span>).<span class="ident">join</span>(<span class="string">&quot;priv_validator_key.json&quot;</span>);
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">file</span> <span class="op">=</span> <span class="ident">File</span>::<span class="ident">create</span>(<span class="ident">path</span>)<span class="question-mark">?</span>;
     <span class="kw">let</span> <span class="ident">pk</span> <span class="op">=</span> <span class="ident">base64</span>::<span class="ident">encode</span>(<span class="ident">account</span>.<span class="ident">keypair</span>.<span class="ident">public</span>.<span class="ident">as_bytes</span>());
