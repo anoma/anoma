@@ -200,9 +200,11 @@
 <span id="197">197</span>
 <span id="198">198</span>
 <span id="199">199</span>
+<span id="200">200</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">convert</span>::<span class="ident">TryFrom</span>;
 
+<span class="kw">use</span> <span class="ident">anoma_shared</span>::<span class="ident">proto</span>::<span class="ident">IntentGossipMessage</span>;
 <span class="kw">use</span> <span class="ident">libp2p</span>::<span class="ident">gossipsub</span>::<span class="ident">IdentTopic</span>;
 <span class="kw">use</span> <span class="ident">libp2p</span>::<span class="ident">identity</span>::<span class="ident">Keypair</span>;
 <span class="kw">use</span> <span class="ident">libp2p</span>::<span class="ident">identity</span>::<span class="ident">Keypair</span>::<span class="ident">Ed25519</span>;
@@ -212,7 +214,7 @@
 
 <span class="kw">use</span> <span class="kw">super</span>::<span class="ident">network_behaviour</span>::<span class="ident">Behaviour</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">proto</span>::<span class="ident">services</span>::{<span class="ident">rpc_message</span>, <span class="ident">RpcResponse</span>};
-<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">proto</span>::{<span class="ident">IntentGossipMessage</span>, <span class="ident">IntentMessage</span>, <span class="ident">SubscribeTopicMessage</span>};
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">proto</span>::{<span class="ident">IntentMessage</span>, <span class="ident">SubscribeTopicMessage</span>};
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">types</span>::<span class="ident">MatchmakerMessage</span>;
 
 <span class="kw">pub</span> <span class="kw">type</span> <span class="ident">Swarm</span> <span class="op">=</span> <span class="ident">libp2p</span>::<span class="ident">Swarm</span><span class="op">&lt;</span><span class="ident">Behaviour</span><span class="op">&gt;</span>;

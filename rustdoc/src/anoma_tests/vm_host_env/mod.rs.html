@@ -431,6 +431,8 @@
 <span id="428">428</span>
 <span id="429">429</span>
 <span id="430">430</span>
+<span id="431">431</span>
+<span id="432">432</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! VM host environment integration tests.</span>
 <span class="doccomment">//!</span>
@@ -450,9 +452,12 @@
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
 <span class="kw">mod</span> <span class="ident">tests</span> {
 
+    <span class="kw">use</span> <span class="ident">anoma_shared</span>::<span class="ident">proto</span>::<span class="ident">Tx</span>;
     <span class="kw">use</span> <span class="ident">anoma_shared</span>::<span class="ident">types</span>::<span class="ident">key</span>::<span class="ident">ed25519</span>::<span class="ident">SignedTxData</span>;
     <span class="kw">use</span> <span class="ident">anoma_shared</span>::<span class="ident">types</span>::{<span class="ident">address</span>, <span class="ident">key</span>, <span class="ident">Key</span>, <span class="ident">KeySeg</span>};
-    <span class="kw">use</span> <span class="ident">anoma_vm_env</span>::<span class="ident">tx_prelude</span>::{<span class="ident">BorshSerialize</span>, <span class="ident">KeyValIterator</span>};
+    <span class="kw">use</span> <span class="ident">anoma_vm_env</span>::<span class="ident">tx_prelude</span>::{
+        <span class="ident">BorshDeserialize</span>, <span class="ident">BorshSerialize</span>, <span class="ident">KeyValIterator</span>,
+    };
     <span class="kw">use</span> <span class="ident">anoma_vm_env</span>::<span class="ident">vp_prelude</span>::{<span class="ident">PostKeyValIterator</span>, <span class="ident">PreKeyValIterator</span>};
     <span class="kw">use</span> <span class="ident">itertools</span>::<span class="ident">Itertools</span>;
     <span class="kw">use</span> <span class="ident">test_env_log</span>::<span class="ident">test</span>;
@@ -800,27 +805,26 @@
             .<span class="ident">unwrap</span>();
 
         <span class="comment">// Use some arbitrary bytes for tx code</span>
-        <span class="ident">env</span>.<span class="ident">tx_code</span> <span class="op">=</span> <span class="macro">vec</span><span class="macro">!</span>[<span class="number">4</span>, <span class="number">3</span>, <span class="number">2</span>, <span class="number">1</span>, <span class="number">0</span>];
+        <span class="kw">let</span> <span class="ident">code</span> <span class="op">=</span> <span class="macro">vec</span><span class="macro">!</span>[<span class="number">4</span>, <span class="number">3</span>, <span class="number">2</span>, <span class="number">1</span>, <span class="number">0</span>];
+        <span class="comment">// Use some arbitrary data</span>
+        <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="macro">vec</span><span class="macro">!</span>[<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>].<span class="ident">repeat</span>(<span class="number">10</span>);
+
+        <span class="ident">env</span>.<span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx</span>::<span class="ident">new</span>(<span class="ident">code</span>, <span class="prelude-val">Some</span>(<span class="ident">data</span>.<span class="ident">clone</span>())).<span class="ident">sign</span>(<span class="kw-2">&amp;</span><span class="ident">keypair</span>);
         <span class="comment">// Initialize the environment</span>
         <span class="ident">init_vp_env</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">env</span>);
 
-        <span class="comment">// Use some arbitrary data</span>
-        <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="macro">vec</span><span class="macro">!</span>[<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>].<span class="ident">repeat</span>(<span class="number">10</span>);
-        <span class="kw">let</span> <span class="ident">signed_tx_data</span> <span class="op">=</span>
-            <span class="ident">SignedTxData</span>::<span class="ident">new</span>(<span class="kw-2">&amp;</span><span class="ident">keypair</span>, <span class="ident">data</span>.<span class="ident">clone</span>(), <span class="kw-2">&amp;</span><span class="ident">env</span>.<span class="ident">tx_code</span>);
-
-        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">signed_tx_data</span>.<span class="ident">data</span>, <span class="ident">data</span>);
-        <span class="macro">assert</span><span class="macro">!</span>(<span class="ident">vp_host_env</span>::<span class="ident">verify_tx_signature</span>(
-            <span class="kw-2">&amp;</span><span class="ident">pk</span>,
-            <span class="kw-2">&amp;</span><span class="ident">data</span>[..],
-            <span class="kw-2">&amp;</span><span class="ident">signed_tx_data</span>.<span class="ident">sig</span>
-        ));
+        <span class="kw">let</span> <span class="ident">tx_data</span> <span class="op">=</span> <span class="ident">env</span>.<span class="ident">tx</span>.<span class="ident">data</span>.<span class="ident">expect</span>(<span class="string">&quot;data should exist&quot;</span>);
+        <span class="kw">let</span> <span class="ident">signed_tx_data</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">SignedTxData</span>::<span class="ident">try_from_slice</span>(<span class="kw-2">&amp;</span><span class="ident">tx_data</span>[..]) {
+            <span class="prelude-val">Ok</span>(<span class="ident">data</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">data</span>,
+            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;decoding failed&quot;</span>),
+        };
+        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">signed_tx_data</span>.<span class="ident">data</span>, <span class="prelude-val">Some</span>(<span class="ident">data</span>));
+        <span class="macro">assert</span><span class="macro">!</span>(<span class="ident">vp_host_env</span>::<span class="ident">verify_tx_signature</span>(<span class="kw-2">&amp;</span><span class="ident">pk</span>, <span class="kw-2">&amp;</span><span class="ident">signed_tx_data</span>.<span class="ident">sig</span>));
 
         <span class="kw">let</span> <span class="ident">other_keypair</span> <span class="op">=</span> <span class="ident">key</span>::<span class="ident">ed25519</span>::<span class="ident">testing</span>::<span class="ident">keypair_2</span>();
         <span class="kw">let</span> <span class="ident">other_pk</span> <span class="op">=</span> <span class="ident">key</span>::<span class="ident">ed25519</span>::<span class="ident">PublicKey</span>::<span class="ident">from</span>(<span class="ident">other_keypair</span>.<span class="ident">public</span>);
         <span class="macro">assert</span><span class="macro">!</span>(<span class="op">!</span><span class="ident">vp_host_env</span>::<span class="ident">verify_tx_signature</span>(
             <span class="kw-2">&amp;</span><span class="ident">other_pk</span>,
-            <span class="kw-2">&amp;</span><span class="ident">data</span>[..],
             <span class="kw-2">&amp;</span><span class="ident">signed_tx_data</span>.<span class="ident">sig</span>
         ));
     }

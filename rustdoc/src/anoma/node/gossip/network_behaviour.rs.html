@@ -308,6 +308,7 @@
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">hash</span>::{<span class="ident">Hash</span>, <span class="ident">Hasher</span>};
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">time</span>::<span class="ident">Duration</span>;
 
+<span class="kw">use</span> <span class="ident">anoma_shared</span>::<span class="ident">proto</span>::{<span class="self">self</span>, <span class="ident">Intent</span>, <span class="ident">IntentGossipMessage</span>};
 <span class="kw">use</span> <span class="ident">libp2p</span>::<span class="ident">gossipsub</span>::<span class="ident">subscription_filter</span>::<span class="ident">regex</span>::<span class="ident">RegexSubscriptionFilter</span>;
 <span class="kw">use</span> <span class="ident">libp2p</span>::<span class="ident">gossipsub</span>::<span class="ident">subscription_filter</span>::{
     <span class="ident">TopicSubscriptionFilter</span>, <span class="ident">WhitelistSubscriptionFilter</span>,
@@ -325,7 +326,6 @@
 <span class="kw">use</span> <span class="ident">tokio</span>::<span class="ident">sync</span>::<span class="ident">mpsc</span>::<span class="ident">Receiver</span>;
 
 <span class="kw">use</span> <span class="kw">super</span>::<span class="ident">intent_gossiper</span>;
-<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">proto</span>::{<span class="self">self</span>, <span class="ident">Intent</span>, <span class="ident">IntentGossipMessage</span>};
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">types</span>::<span class="ident">MatchmakerMessage</span>;
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Error</span>, <span class="ident">Debug</span>)]</span>

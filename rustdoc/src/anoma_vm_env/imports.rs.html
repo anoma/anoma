@@ -579,13 +579,6 @@
 <span id="576">576</span>
 <span id="577">577</span>
 <span id="578">578</span>
-<span id="579">579</span>
-<span id="580">580</span>
-<span id="581">581</span>
-<span id="582">582</span>
-<span id="583">583</span>
-<span id="584">584</span>
-<span id="585">585</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">mem</span>::<span class="ident">ManuallyDrop</span>;
 
@@ -976,20 +969,15 @@
     }
 
     <span class="doccomment">/// Verify a transaction signature. The signature is expected to have been</span>
-    <span class="doccomment">/// produced on the data concatenated with the transaction code.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">verify_tx_signature</span>(
-        <span class="ident">pk</span>: <span class="kw-2">&amp;</span><span class="ident">PublicKey</span>,
-        <span class="ident">data</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>],
-        <span class="ident">sig</span>: <span class="kw-2">&amp;</span><span class="ident">Signature</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
+    <span class="doccomment">/// produced on the encoded transaction [`anoma_shared::proto::types::Tx`]</span>
+    <span class="doccomment">/// using [`anoma_shared::types::key::ed25519::sign_tx`].</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">verify_tx_signature</span>(<span class="ident">pk</span>: <span class="kw-2">&amp;</span><span class="ident">PublicKey</span>, <span class="ident">sig</span>: <span class="kw-2">&amp;</span><span class="ident">Signature</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
         <span class="kw">let</span> <span class="ident">pk</span> <span class="op">=</span> <span class="ident">BorshSerialize</span>::<span class="ident">try_to_vec</span>(<span class="ident">pk</span>).<span class="ident">unwrap</span>();
         <span class="kw">let</span> <span class="ident">sig</span> <span class="op">=</span> <span class="ident">BorshSerialize</span>::<span class="ident">try_to_vec</span>(<span class="ident">sig</span>).<span class="ident">unwrap</span>();
         <span class="kw">let</span> <span class="ident">valid</span> <span class="op">=</span> <span class="kw">unsafe</span> {
             <span class="ident">anoma_vp_verify_tx_signature</span>(
                 <span class="ident">pk</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="kw">_</span>,
                 <span class="ident">pk</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="kw">_</span>,
-                <span class="ident">data</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="kw">_</span>,
-                <span class="ident">data</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="kw">_</span>,
                 <span class="ident">sig</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="kw">_</span>,
                 <span class="ident">sig</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="kw">_</span>,
             )
@@ -1076,8 +1064,6 @@
         <span class="kw">fn</span> <span class="ident">anoma_vp_verify_tx_signature</span>(
             <span class="ident">pk_ptr</span>: <span class="ident">u64</span>,
             <span class="ident">pk_len</span>: <span class="ident">u64</span>,
-            <span class="ident">data_ptr</span>: <span class="ident">u64</span>,
-            <span class="ident">data_len</span>: <span class="ident">u64</span>,
             <span class="ident">sig_ptr</span>: <span class="ident">u64</span>,
             <span class="ident">sig_len</span>: <span class="ident">u64</span>,
         ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">i64</span>;

@@ -236,7 +236,6 @@
 <span id="233">233</span>
 <span id="234">234</span>
 <span id="235">235</span>
-<span id="236">236</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! The wasm host environment.</span>
 <span class="doccomment">//!</span>
@@ -255,15 +254,14 @@
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">ledger</span>::<span class="ident">gas</span>::{<span class="ident">BlockGasMeter</span>, <span class="ident">VpGasMeter</span>};
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">ledger</span>::<span class="ident">storage</span>::<span class="ident">write_log</span>::<span class="ident">WriteLog</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">ledger</span>::<span class="ident">storage</span>::{<span class="self">self</span>, <span class="ident">Storage</span>, <span class="ident">StorageHasher</span>};
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">proto</span>::<span class="ident">Tx</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">types</span>::<span class="ident">Address</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">vm</span>::<span class="ident">host_env</span>::{
     <span class="ident">FilterEnv</span>, <span class="ident">MatchmakerEnv</span>, <span class="ident">TxEnv</span>, <span class="ident">VpEnv</span>, <span class="ident">VpEvalRunner</span>,
 };
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">vm</span>::<span class="ident">prefix_iter</span>::<span class="ident">PrefixIterators</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">vm</span>::<span class="ident">wasm</span>::<span class="ident">memory</span>::<span class="ident">WasmMemory</span>;
-<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">vm</span>::{
-    <span class="ident">host_env</span>, <span class="ident">EnvHostSliceWrapper</span>, <span class="ident">EnvHostWrapper</span>, <span class="ident">MutEnvHostWrapper</span>,
-};
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">vm</span>::{<span class="ident">host_env</span>, <span class="ident">EnvHostWrapper</span>, <span class="ident">MutEnvHostWrapper</span>};
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">DB</span>, <span class="ident">H</span><span class="op">&gt;</span> <span class="ident">WasmerEnv</span> <span class="kw">for</span> <span class="ident">TxEnv</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span>, <span class="ident">WasmMemory</span>, <span class="ident">DB</span>, <span class="ident">H</span><span class="op">&gt;</span>
 <span class="kw">where</span>
@@ -372,7 +370,7 @@
     <span class="ident">write_log</span>: <span class="ident">EnvHostWrapper</span><span class="op">&lt;</span><span class="lifetime">&#39;static</span>, <span class="kw-2">&amp;</span><span class="ident">WriteLog</span><span class="op">&gt;</span>,
     <span class="ident">iterators</span>: <span class="ident">MutEnvHostWrapper</span><span class="op">&lt;</span><span class="lifetime">&#39;static</span>, <span class="kw-2">&amp;</span><span class="ident">PrefixIterators</span><span class="op">&lt;</span><span class="lifetime">&#39;static</span>, <span class="ident">DB</span><span class="op">&gt;</span><span class="op">&gt;</span>,
     <span class="ident">gas_meter</span>: <span class="ident">MutEnvHostWrapper</span><span class="op">&lt;</span><span class="lifetime">&#39;static</span>, <span class="kw-2">&amp;</span><span class="ident">VpGasMeter</span><span class="op">&gt;</span>,
-    <span class="ident">tx_code</span>: <span class="ident">EnvHostSliceWrapper</span><span class="op">&lt;</span><span class="lifetime">&#39;static</span>, <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]<span class="op">&gt;</span>,
+    <span class="ident">tx</span>: <span class="ident">EnvHostWrapper</span><span class="op">&lt;</span><span class="lifetime">&#39;static</span>, <span class="kw-2">&amp;</span><span class="ident">Tx</span><span class="op">&gt;</span>,
     <span class="ident">eval_runner</span>: <span class="ident">EnvHostWrapper</span><span class="op">&lt;</span><span class="lifetime">&#39;static</span>, <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">EVAL</span><span class="op">&gt;</span>,
     <span class="ident">result_buffer</span>: <span class="ident">MutEnvHostWrapper</span><span class="op">&lt;</span><span class="lifetime">&#39;static</span>, <span class="kw-2">&amp;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>,
     <span class="ident">initial_memory</span>: <span class="ident">Memory</span>,
@@ -389,7 +387,7 @@
         <span class="ident">write_log</span>,
         <span class="ident">iterators</span>,
         <span class="ident">gas_meter</span>,
-        <span class="ident">tx_code</span>,
+        <span class="ident">tx</span>,
         <span class="ident">eval_runner</span>,
         <span class="ident">result_buffer</span>,
     };

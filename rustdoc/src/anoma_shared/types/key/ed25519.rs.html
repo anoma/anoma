@@ -345,6 +345,15 @@
 <span id="342">342</span>
 <span id="343">343</span>
 <span id="344">344</span>
+<span id="345">345</span>
+<span id="346">346</span>
+<span id="347">347</span>
+<span id="348">348</span>
+<span id="349">349</span>
+<span id="350">350</span>
+<span id="351">351</span>
+<span id="352">352</span>
+<span id="353">353</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Ed25519 keys and related functionality</span>
 
@@ -360,6 +369,7 @@
 <span class="kw">use</span> <span class="ident">sha2</span>::{<span class="ident">Digest</span>, <span class="ident">Sha256</span>};
 <span class="kw">use</span> <span class="ident">thiserror</span>::<span class="ident">Error</span>;
 
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">proto</span>::<span class="ident">Tx</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">types</span>::{<span class="ident">address</span>, <span class="ident">Address</span>, <span class="ident">DbKeySeg</span>, <span class="ident">Key</span>, <span class="ident">KeySeg</span>};
 
 <span class="kw">const</span> <span class="ident">SIGNATURE_LEN</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="ident">ed25519_dalek</span>::<span class="ident">SIGNATURE_LENGTH</span>;
@@ -453,34 +463,42 @@
 <span class="doccomment">/// which is can then be checked by a validity predicate wasm.</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">BorshSerialize</span>, <span class="ident">BorshDeserialize</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">SignedTxData</span> {
-    <span class="doccomment">/// The tx data bytes</span>
-    <span class="kw">pub</span> <span class="ident">data</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>,
-    <span class="doccomment">/// The signature is produced on the tx data concatenated with the tx code.</span>
+    <span class="doccomment">/// The original tx data bytes, if any</span>
+    <span class="kw">pub</span> <span class="ident">data</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="doccomment">/// The signature is produced on the tx data concatenated with the tx code</span>
+    <span class="doccomment">/// and the timestamp.</span>
     <span class="kw">pub</span> <span class="ident">sig</span>: <span class="ident">Signature</span>,
 }
 
-<span class="kw">impl</span> <span class="ident">SignedTxData</span> {
-    <span class="doccomment">/// Initialize a new signed transaction data.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(
-        <span class="ident">keypair</span>: <span class="kw-2">&amp;</span><span class="ident">Keypair</span>,
-        <span class="ident">data</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>,
-        <span class="ident">tx_code</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span>[<span class="ident">u8</span>]<span class="op">&gt;</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
-        <span class="kw">let</span> <span class="ident">to_sign</span> <span class="op">=</span> [<span class="kw-2">&amp;</span><span class="ident">data</span>[..], <span class="ident">tx_code</span>.<span class="ident">as_ref</span>()].<span class="ident">concat</span>();
-        <span class="kw">let</span> <span class="ident">sig</span> <span class="op">=</span> <span class="ident">sign</span>(<span class="ident">keypair</span>, <span class="kw-2">&amp;</span><span class="ident">to_sign</span>);
-        <span class="self">Self</span> { <span class="ident">data</span>, <span class="ident">sig</span> }
+<span class="doccomment">/// Sign a transaction using [`SignedTxData`].</span>
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">sign_tx</span>(<span class="ident">keypair</span>: <span class="kw-2">&amp;</span><span class="ident">Keypair</span>, <span class="ident">tx</span>: <span class="ident">Tx</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Tx</span> {
+    <span class="kw">let</span> <span class="ident">to_sign</span> <span class="op">=</span> <span class="ident">tx</span>.<span class="ident">to_bytes</span>();
+    <span class="kw">let</span> <span class="ident">sig</span> <span class="op">=</span> <span class="ident">sign</span>(<span class="ident">keypair</span>, <span class="kw-2">&amp;</span><span class="ident">to_sign</span>);
+    <span class="kw">let</span> <span class="ident">signed</span> <span class="op">=</span> <span class="ident">SignedTxData</span> { <span class="ident">data</span>: <span class="ident">tx</span>.<span class="ident">data</span>, <span class="ident">sig</span> }
+        .<span class="ident">try_to_vec</span>()
+        .<span class="ident">expect</span>(<span class="string">&quot;Encoding transaction data shouldn&#39;t fail&quot;</span>);
+    <span class="ident">Tx</span> {
+        <span class="ident">code</span>: <span class="ident">tx</span>.<span class="ident">code</span>,
+        <span class="ident">data</span>: <span class="prelude-val">Some</span>(<span class="ident">signed</span>),
+        <span class="ident">timestamp</span>: <span class="ident">tx</span>.<span class="ident">timestamp</span>,
     }
+}
 
-    <span class="doccomment">/// Verify that the transaction has been signed by the secret key</span>
-    <span class="doccomment">/// counterpart of the given public key.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">verify</span>(
-        <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">pk</span>: <span class="kw-2">&amp;</span><span class="ident">PublicKey</span>,
-        <span class="ident">tx_code</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span>[<span class="ident">u8</span>]<span class="op">&gt;</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">VerifySigError</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> [<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">data</span>, <span class="ident">tx_code</span>.<span class="ident">as_ref</span>()].<span class="ident">concat</span>();
-        <span class="ident">verify_signature_raw</span>(<span class="ident">pk</span>, <span class="kw-2">&amp;</span><span class="ident">data</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">sig</span>)
-    }
+<span class="doccomment">/// Verify that the transaction has been signed by the secret key</span>
+<span class="doccomment">/// counterpart of the given public key.</span>
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">verify_tx_sig</span>(
+    <span class="ident">pk</span>: <span class="kw-2">&amp;</span><span class="ident">PublicKey</span>,
+    <span class="ident">tx</span>: <span class="kw-2">&amp;</span><span class="ident">Tx</span>,
+    <span class="ident">sig</span>: <span class="kw-2">&amp;</span><span class="ident">Signature</span>,
+) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">VerifySigError</span><span class="op">&gt;</span> {
+    <span class="comment">// revert the transaction data</span>
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">tx</span>.<span class="ident">clone</span>();
+    <span class="kw">let</span> <span class="ident">tx_data</span> <span class="op">=</span> <span class="ident">tx</span>.<span class="ident">data</span>.<span class="ident">expect</span>(<span class="string">&quot;signed data should exist&quot;</span>);
+    <span class="kw">let</span> <span class="ident">signed_tx_data</span> <span class="op">=</span> <span class="ident">SignedTxData</span>::<span class="ident">try_from_slice</span>(<span class="kw-2">&amp;</span><span class="ident">tx_data</span>[..])
+        .<span class="ident">expect</span>(<span class="string">&quot;Decoding transaction data shouldn&#39;t fail&quot;</span>);
+    <span class="ident">tx</span>.<span class="ident">data</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">signed_tx_data</span>.<span class="ident">data</span>.<span class="ident">expect</span>(<span class="string">&quot;data should exist&quot;</span>));
+    <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="ident">tx</span>.<span class="ident">to_bytes</span>();
+    <span class="ident">verify_signature_raw</span>(<span class="ident">pk</span>, <span class="kw-2">&amp;</span><span class="ident">data</span>, <span class="ident">sig</span>)
 }
 
 <span class="doccomment">/// A generic signed data wrapper for Borsh encode-able data.</span>

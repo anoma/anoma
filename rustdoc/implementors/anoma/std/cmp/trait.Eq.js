@@ -1,3 +1,3 @@
 (function() {var implementors = {};
-implementors["anoma"] = [{"text":"impl <a class=\"trait\" href=\"anoma/std/cmp/trait.Eq.html\" title=\"trait anoma::std::cmp::Eq\">Eq</a> for <a class=\"struct\" href=\"anoma/proto/struct.IntentId.html\" title=\"struct anoma::proto::IntentId\">IntentId</a>","synthetic":false,"types":["anoma::proto::types::IntentId"]}];
+implementors["anoma"] = [];
 if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()

@@ -321,19 +321,6 @@
 <span id="318">318</span>
 <span id="319">319</span>
 <span id="320">320</span>
-<span id="321">321</span>
-<span id="322">322</span>
-<span id="323">323</span>
-<span id="324">324</span>
-<span id="325">325</span>
-<span id="326">326</span>
-<span id="327">327</span>
-<span id="328">328</span>
-<span id="329">329</span>
-<span id="330">330</span>
-<span id="331">331</span>
-<span id="332">332</span>
-<span id="333">333</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! The ledger&#39;s protocol</span>
 
@@ -343,6 +330,7 @@
 
 <span class="kw">use</span> <span class="ident">anoma_shared</span>::<span class="ident">ledger</span>::<span class="ident">gas</span>::{<span class="self">self</span>, <span class="ident">BlockGasMeter</span>, <span class="ident">VpGasMeter</span>, <span class="ident">VpsGas</span>};
 <span class="kw">use</span> <span class="ident">anoma_shared</span>::<span class="ident">ledger</span>::<span class="ident">storage</span>::<span class="ident">write_log</span>::<span class="ident">WriteLog</span>;
+<span class="kw">use</span> <span class="ident">anoma_shared</span>::<span class="ident">proto</span>::{<span class="self">self</span>, <span class="ident">Tx</span>};
 <span class="kw">use</span> <span class="ident">anoma_shared</span>::<span class="ident">types</span>::{<span class="ident">Address</span>, <span class="ident">Key</span>};
 <span class="kw">use</span> <span class="ident">anoma_shared</span>::<span class="ident">vm</span>;
 <span class="kw">use</span> <span class="ident">anoma_shared</span>::<span class="ident">vm</span>::<span class="ident">wasm</span>::<span class="ident">runner</span>::{<span class="ident">TxRunner</span>, <span class="ident">VpRunner</span>};
@@ -350,7 +338,6 @@
 <span class="kw">use</span> <span class="ident">thiserror</span>::<span class="ident">Error</span>;
 
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">node</span>::<span class="ident">ledger</span>::<span class="ident">storage</span>::<span class="ident">PersistentStorage</span>;
-<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">proto</span>::{<span class="self">self</span>, <span class="ident">Tx</span>};
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Error</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">Error</span> {
@@ -463,9 +450,6 @@
 ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">VpsResult</span><span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="ident">verifiers</span> <span class="op">=</span> <span class="ident">write_log</span>.<span class="ident">verifiers_changed_keys</span>(<span class="ident">verifiers_from_tx</span>);
 
-    <span class="kw">let</span> <span class="ident">tx_data</span> <span class="op">=</span> <span class="ident">tx</span>.<span class="ident">data</span>.<span class="ident">clone</span>().<span class="ident">unwrap_or_default</span>();
-    <span class="kw">let</span> <span class="ident">tx_code</span> <span class="op">=</span> <span class="ident">tx</span>.<span class="ident">code</span>.<span class="ident">clone</span>();
-
     <span class="comment">// collect the changed storage keys and VPs for the verifiers</span>
     <span class="kw">let</span> <span class="ident">verifiers</span>: <span class="ident">Vec</span><span class="op">&lt;</span>(<span class="ident">Address</span>, <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Key</span><span class="op">&gt;</span>, <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>)<span class="op">&gt;</span> <span class="op">=</span> <span class="ident">verifiers</span>
         .<span class="ident">iter</span>()
@@ -486,14 +470,8 @@
 
     <span class="kw">let</span> <span class="ident">initial_gas</span> <span class="op">=</span> <span class="ident">gas_meter</span>.<span class="ident">get_current_transaction_gas</span>();
 
-    <span class="kw">let</span> <span class="ident">vps_result</span> <span class="op">=</span> <span class="ident">execute_vps</span>(
-        <span class="ident">verifiers</span>,
-        <span class="ident">tx_data</span>,
-        <span class="ident">tx_code</span>,
-        <span class="ident">storage</span>,
-        <span class="ident">write_log</span>,
-        <span class="ident">initial_gas</span>,
-    )<span class="question-mark">?</span>;
+    <span class="kw">let</span> <span class="ident">vps_result</span> <span class="op">=</span>
+        <span class="ident">execute_vps</span>(<span class="ident">verifiers</span>, <span class="ident">tx</span>, <span class="ident">storage</span>, <span class="ident">write_log</span>, <span class="ident">initial_gas</span>)<span class="question-mark">?</span>;
     <span class="ident">tracing</span>::<span class="macro">debug</span><span class="macro">!</span>(<span class="string">&quot;Total VPs gas cost {:?}&quot;</span>, <span class="ident">vps_result</span>.<span class="ident">gas_used</span>);
 
     <span class="ident">gas_meter</span>
@@ -506,8 +484,7 @@
 <span class="doccomment">/// Execute verifiers&#39; validity predicates</span>
 <span class="kw">fn</span> <span class="ident">execute_vps</span>(
     <span class="ident">verifiers</span>: <span class="ident">Vec</span><span class="op">&lt;</span>(<span class="ident">Address</span>, <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Key</span><span class="op">&gt;</span>, <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>)<span class="op">&gt;</span>,
-    <span class="ident">tx_data</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>,
-    <span class="ident">tx_code</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>,
+    <span class="ident">tx</span>: <span class="kw-2">&amp;</span><span class="ident">Tx</span>,
     <span class="ident">storage</span>: <span class="kw-2">&amp;</span><span class="ident">PersistentStorage</span>,
     <span class="ident">write_log</span>: <span class="kw-2">&amp;</span><span class="ident">WriteLog</span>,
     <span class="ident">initial_gas</span>: <span class="ident">u64</span>,
@@ -522,8 +499,7 @@
         .<span class="ident">try_fold</span>(<span class="ident">VpsResult</span>::<span class="ident">default</span>, <span class="op">|</span><span class="ident">result</span>, (<span class="ident">addr</span>, <span class="ident">keys</span>, <span class="ident">vp</span>)<span class="op">|</span> {
             <span class="ident">execute_vp</span>(
                 <span class="ident">result</span>,
-                <span class="ident">tx_data</span>.<span class="ident">clone</span>(),
-                <span class="ident">tx_code</span>.<span class="ident">clone</span>(),
+                <span class="ident">tx</span>,
                 <span class="ident">storage</span>,
                 <span class="ident">write_log</span>,
                 <span class="ident">addresses</span>.<span class="ident">clone</span>(),
@@ -568,8 +544,7 @@
 <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy</span>::<span class="ident">too_many_arguments</span>)]</span>
 <span class="kw">fn</span> <span class="ident">execute_vp</span>(
     <span class="kw-2">mut</span> <span class="ident">result</span>: <span class="ident">VpsResult</span>,
-    <span class="ident">tx_data</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>,
-    <span class="ident">tx_code</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>,
+    <span class="ident">tx</span>: <span class="kw-2">&amp;</span><span class="ident">Tx</span>,
     <span class="ident">storage</span>: <span class="kw-2">&amp;</span><span class="ident">PersistentStorage</span>,
     <span class="ident">write_log</span>: <span class="kw-2">&amp;</span><span class="ident">WriteLog</span>,
     <span class="ident">addresses</span>: <span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span>,
@@ -581,8 +556,7 @@
     <span class="kw">let</span> <span class="ident">accept</span> <span class="op">=</span> <span class="ident">vp_runner</span>
         .<span class="ident">run</span>(
             <span class="ident">vp</span>,
-            <span class="ident">tx_data</span>,
-            <span class="kw-2">&amp;</span><span class="ident">tx_code</span>,
+            <span class="ident">tx</span>,
             <span class="ident">addr</span>,
             <span class="ident">storage</span>,
             <span class="ident">write_log</span>,

@@ -112,24 +112,15 @@
 <span id="109">109</span>
 <span id="110">110</span>
 <span id="111">111</span>
-<span id="112">112</span>
-<span id="113">113</span>
-<span id="114">114</span>
-<span id="115">115</span>
-<span id="116">116</span>
-<span id="117">117</span>
-<span id="118">118</span>
-<span id="119">119</span>
-<span id="120">120</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">str</span>::<span class="ident">FromStr</span>;
 
+<span class="kw">use</span> <span class="ident">anoma_shared</span>::<span class="ident">proto</span>::<span class="ident">Tx</span>;
 <span class="kw">use</span> <span class="ident">anoma_shared</span>::<span class="ident">types</span>::<span class="ident">key</span>::<span class="ident">ed25519</span>::<span class="ident">Keypair</span>;
 <span class="kw">use</span> <span class="ident">anoma_shared</span>::<span class="ident">types</span>::{<span class="ident">token</span>, <span class="ident">Address</span>, <span class="ident">UpdateVp</span>};
 <span class="kw">use</span> <span class="ident">borsh</span>::<span class="ident">BorshSerialize</span>;
 <span class="kw">use</span> <span class="ident">tendermint_rpc</span>::{<span class="ident">Client</span>, <span class="ident">HttpClient</span>};
 
-<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">proto</span>::<span class="ident">Tx</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">wallet</span>;
 
 <span class="kw">const</span> <span class="ident">TX_UPDATE_VP</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;wasm/txs/tx_update_vp/tx.wasm&quot;</span>;
@@ -145,8 +136,9 @@
     <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="ident">data_path</span>.<span class="ident">map</span>(<span class="op">|</span><span class="ident">data_path</span><span class="op">|</span> {
         <span class="ident">std</span>::<span class="ident">fs</span>::<span class="ident">read</span>(<span class="ident">data_path</span>).<span class="ident">expect</span>(<span class="string">&quot;Expected a file at given data path&quot;</span>)
     });
+    <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx</span>::<span class="ident">new</span>(<span class="ident">tx_code</span>, <span class="ident">data</span>);
 
-    <span class="ident">submit_tx</span>(<span class="ident">tx_code</span>, <span class="ident">data</span>, <span class="ident">dry_run</span>, <span class="ident">ledger_address</span>).<span class="kw">await</span>
+    <span class="ident">submit_tx</span>(<span class="ident">tx</span>, <span class="ident">dry_run</span>, <span class="ident">ledger_address</span>).<span class="kw">await</span>
 }
 
 <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">submit_update_vp</span>(
@@ -163,14 +155,12 @@
         .<span class="ident">expect</span>(<span class="string">&quot;Expected a file at given code path&quot;</span>);
 
     <span class="kw">let</span> <span class="ident">update_vp</span> <span class="op">=</span> <span class="ident">UpdateVp</span> { <span class="ident">addr</span>, <span class="ident">vp_code</span> };
-    <span class="kw">let</span> <span class="ident">signed</span> <span class="op">=</span> <span class="ident">update_vp</span>.<span class="ident">sign</span>(<span class="kw-2">&amp;</span><span class="ident">tx_code</span>, <span class="kw-2">&amp;</span><span class="ident">source_key</span>);
-    <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="prelude-val">Some</span>(
-        <span class="ident">signed</span>
-            .<span class="ident">try_to_vec</span>()
-            .<span class="ident">expect</span>(<span class="string">&quot;Encoding transaction data shouldn&#39;t fail&quot;</span>),
+    <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="ident">update_vp</span>.<span class="ident">try_to_vec</span>().<span class="ident">expect</span>(
+        <span class="string">&quot;Encoding transfer data to update a validity predicate shouldn&#39;t  fail&quot;</span>,
     );
+    <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx</span>::<span class="ident">new</span>(<span class="ident">tx_code</span>, <span class="prelude-val">Some</span>(<span class="ident">data</span>)).<span class="ident">sign</span>(<span class="kw-2">&amp;</span><span class="ident">source_key</span>);
 
-    <span class="ident">submit_tx</span>(<span class="ident">tx_code</span>, <span class="ident">data</span>, <span class="ident">dry_run</span>, <span class="ident">ledger_address</span>).<span class="kw">await</span>
+    <span class="ident">submit_tx</span>(<span class="ident">tx</span>, <span class="ident">dry_run</span>, <span class="ident">ledger_address</span>).<span class="kw">await</span>
 }
 
 <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">submit_transfer</span>(
@@ -195,23 +185,15 @@
         <span class="ident">token</span>,
         <span class="ident">amount</span>,
     };
-    <span class="kw">let</span> <span class="ident">signed</span> <span class="op">=</span> <span class="ident">transfer</span>.<span class="ident">sign</span>(<span class="kw-2">&amp;</span><span class="ident">tx_code</span>, <span class="kw-2">&amp;</span><span class="ident">source_key</span>);
-    <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="prelude-val">Some</span>(
-        <span class="ident">signed</span>
-            .<span class="ident">try_to_vec</span>()
-            .<span class="ident">expect</span>(<span class="string">&quot;Encoding transaction data shouldn&#39;t fail&quot;</span>),
-    );
+    <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="ident">transfer</span>
+        .<span class="ident">try_to_vec</span>()
+        .<span class="ident">expect</span>(<span class="string">&quot;Encoding unsigned transfer shouldn&#39;t fail&quot;</span>);
+    <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx</span>::<span class="ident">new</span>(<span class="ident">tx_code</span>, <span class="prelude-val">Some</span>(<span class="ident">data</span>)).<span class="ident">sign</span>(<span class="kw-2">&amp;</span><span class="ident">source_key</span>);
 
-    <span class="ident">submit_tx</span>(<span class="ident">tx_code</span>, <span class="ident">data</span>, <span class="ident">dry_run</span>, <span class="ident">ledger_address</span>).<span class="kw">await</span>
+    <span class="ident">submit_tx</span>(<span class="ident">tx</span>, <span class="ident">dry_run</span>, <span class="ident">ledger_address</span>).<span class="kw">await</span>
 }
 
-<span class="kw">async</span> <span class="kw">fn</span> <span class="ident">submit_tx</span>(
-    <span class="ident">code</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>,
-    <span class="ident">data</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    <span class="ident">dry_run</span>: <span class="ident">bool</span>,
-    <span class="ident">ledger_address</span>: <span class="ident">String</span>,
-) {
-    <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx</span>::<span class="ident">new</span>(<span class="ident">code</span>, <span class="ident">data</span>);
+<span class="kw">async</span> <span class="kw">fn</span> <span class="ident">submit_tx</span>(<span class="ident">tx</span>: <span class="ident">Tx</span>, <span class="ident">dry_run</span>: <span class="ident">bool</span>, <span class="ident">ledger_address</span>: <span class="ident">String</span>) {
     <span class="kw">let</span> <span class="ident">tx_bytes</span> <span class="op">=</span> <span class="ident">tx</span>.<span class="ident">to_bytes</span>();
 
     <span class="comment">// NOTE: use this to print the request JSON body:</span>

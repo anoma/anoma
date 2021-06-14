@@ -77,11 +77,11 @@
 <span class="kw">mod</span> <span class="ident">matchmaker</span>;
 <span class="kw">mod</span> <span class="ident">mempool</span>;
 
+<span class="kw">use</span> <span class="ident">anoma_shared</span>::<span class="ident">proto</span>::<span class="ident">Intent</span>;
 <span class="kw">use</span> <span class="ident">matchmaker</span>::<span class="ident">Matchmaker</span>;
 <span class="kw">use</span> <span class="ident">thiserror</span>::<span class="ident">Error</span>;
 <span class="kw">use</span> <span class="ident">tokio</span>::<span class="ident">sync</span>::<span class="ident">mpsc</span>::<span class="ident">Receiver</span>;
 
-<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">proto</span>::<span class="ident">Intent</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">types</span>::<span class="ident">MatchmakerMessage</span>;
 
 <span class="comment">// TODO split Error and Result type in two, one for Result/Error that can only</span>

@@ -277,8 +277,6 @@
 <span id="274">274</span>
 <span id="275">275</span>
 <span id="276">276</span>
-<span id="277">277</span>
-<span id="278">278</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">collections</span>::<span class="ident">HashSet</span>;
 
@@ -286,6 +284,7 @@
 <span class="kw">use</span> <span class="ident">anoma_shared</span>::<span class="ident">ledger</span>::<span class="ident">storage</span>::<span class="ident">mockdb</span>::<span class="ident">MockDB</span>;
 <span class="kw">use</span> <span class="ident">anoma_shared</span>::<span class="ident">ledger</span>::<span class="ident">storage</span>::<span class="ident">testing</span>::<span class="ident">TestStorage</span>;
 <span class="kw">use</span> <span class="ident">anoma_shared</span>::<span class="ident">ledger</span>::<span class="ident">storage</span>::<span class="ident">write_log</span>::<span class="ident">WriteLog</span>;
+<span class="kw">use</span> <span class="ident">anoma_shared</span>::<span class="ident">proto</span>::<span class="ident">Tx</span>;
 <span class="kw">use</span> <span class="ident">anoma_shared</span>::<span class="ident">types</span>::<span class="ident">address</span>::{<span class="self">self</span>, <span class="ident">Address</span>};
 <span class="kw">use</span> <span class="ident">anoma_shared</span>::<span class="ident">types</span>::<span class="ident">Key</span>;
 <span class="kw">use</span> <span class="ident">anoma_shared</span>::<span class="ident">vm</span>;
@@ -313,7 +312,7 @@
     <span class="kw">pub</span> <span class="ident">write_log</span>: <span class="ident">WriteLog</span>,
     <span class="kw">pub</span> <span class="ident">iterators</span>: <span class="ident">PrefixIterators</span><span class="op">&lt;</span><span class="lifetime">&#39;static</span>, <span class="ident">MockDB</span><span class="op">&gt;</span>,
     <span class="kw">pub</span> <span class="ident">gas_meter</span>: <span class="ident">VpGasMeter</span>,
-    <span class="kw">pub</span> <span class="ident">tx_code</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span> <span class="ident">tx</span>: <span class="ident">Tx</span>,
     <span class="kw">pub</span> <span class="ident">keys_changed</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Key</span><span class="op">&gt;</span>,
     <span class="kw">pub</span> <span class="ident">verifiers</span>: <span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span>,
     <span class="kw">pub</span> <span class="ident">eval_runner</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">native_vp_host_env</span>::<span class="ident">VpEval</span><span class="op">&gt;</span>,
@@ -331,7 +330,7 @@
             <span class="ident">write_log</span>: <span class="ident">WriteLog</span>::<span class="ident">default</span>(),
             <span class="ident">iterators</span>: <span class="ident">PrefixIterators</span>::<span class="ident">default</span>(),
             <span class="ident">gas_meter</span>: <span class="ident">VpGasMeter</span>::<span class="ident">new</span>(<span class="number">0</span>),
-            <span class="ident">tx_code</span>: <span class="macro">vec</span><span class="macro">!</span>[],
+            <span class="ident">tx</span>: <span class="ident">Tx</span>::<span class="ident">new</span>(<span class="macro">vec</span><span class="macro">!</span>[], <span class="prelude-val">None</span>),
             <span class="ident">keys_changed</span>: <span class="macro">vec</span><span class="macro">!</span>[],
             <span class="ident">verifiers</span>: <span class="ident">HashSet</span>::<span class="ident">default</span>(),
             <span class="ident">eval_runner</span>: <span class="prelude-val">None</span>,
@@ -346,8 +345,7 @@
                 <span class="kw">unsafe</span> { <span class="ident">MutEnvHostWrapper</span>::<span class="ident">new</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">env</span>.<span class="ident">iterators</span>) };
             <span class="kw">let</span> <span class="ident">env_gas_meter</span> <span class="op">=</span>
                 <span class="kw">unsafe</span> { <span class="ident">MutEnvHostWrapper</span>::<span class="ident">new</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">env</span>.<span class="ident">gas_meter</span>) };
-            <span class="kw">let</span> <span class="ident">env_tx_code</span> <span class="op">=</span>
-                <span class="kw">unsafe</span> { <span class="ident">EnvHostSliceWrapper</span>::<span class="ident">new</span>(<span class="kw-2">&amp;</span><span class="ident">env</span>.<span class="ident">tx_code</span>[..]) };
+            <span class="kw">let</span> <span class="ident">env_tx</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">EnvHostWrapper</span>::<span class="ident">new</span>(<span class="kw-2">&amp;</span><span class="ident">env</span>.<span class="ident">tx</span>) };
             <span class="kw">let</span> <span class="ident">env_keys_changed</span> <span class="op">=</span>
                 <span class="kw">unsafe</span> { <span class="ident">EnvHostSliceWrapper</span>::<span class="ident">new</span>(<span class="kw-2">&amp;</span><span class="ident">env</span>.<span class="ident">keys_changed</span>[..]) };
             <span class="kw">let</span> <span class="ident">env_verifiers</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">EnvHostWrapper</span>::<span class="ident">new</span>(<span class="kw-2">&amp;</span><span class="ident">env</span>.<span class="ident">verifiers</span>) };
@@ -360,7 +358,7 @@
                 <span class="ident">write_log</span>: <span class="ident">env_write_log</span>,
                 <span class="ident">iterators</span>: <span class="ident">env_iterators</span>,
                 <span class="ident">gas_meter</span>: <span class="ident">env_gas_meter</span>,
-                <span class="ident">tx_code</span>: <span class="ident">env_tx_code</span>,
+                <span class="ident">tx</span>: <span class="ident">env_tx</span>,
                 <span class="ident">keys_changed</span>: <span class="ident">env_keys_changed</span>,
                 <span class="ident">verifiers</span>: <span class="ident">env_verifiers</span>,
                 <span class="ident">result_buffer</span>: <span class="ident">env_result_buffer</span>,
@@ -427,7 +425,7 @@
         <span class="ident">write_log</span>,
         <span class="ident">iterators</span>,
         <span class="ident">gas_meter</span>,
-        <span class="ident">tx_code</span>,
+        <span class="ident">tx</span>,
         <span class="ident">keys_changed</span>: <span class="kw">_</span>,
         <span class="ident">verifiers</span>: <span class="kw">_</span>,
         <span class="ident">eval_runner</span>,
@@ -442,7 +440,7 @@
                 <span class="ident">write_log</span>,
                 <span class="ident">iterators</span>,
                 <span class="ident">gas_meter</span>,
-                <span class="ident">tx_code</span>,
+                <span class="ident">tx</span>,
                 <span class="ident">eval_runner</span>
                     .<span class="ident">as_ref</span>()
                     .<span class="ident">expect</span>(<span class="string">&quot;the eval_runner should be initialized&quot;</span>),
@@ -545,8 +543,6 @@
     <span class="macro">native_host_fn</span><span class="macro">!</span>(<span class="ident">vp_verify_tx_signature</span>(
             <span class="ident">pk_ptr</span>: <span class="ident">u64</span>,
             <span class="ident">pk_len</span>: <span class="ident">u64</span>,
-            <span class="ident">data_ptr</span>: <span class="ident">u64</span>,
-            <span class="ident">data_len</span>: <span class="ident">u64</span>,
             <span class="ident">sig_ptr</span>: <span class="ident">u64</span>,
             <span class="ident">sig_len</span>: <span class="ident">u64</span>,
         ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">i64</span>);
