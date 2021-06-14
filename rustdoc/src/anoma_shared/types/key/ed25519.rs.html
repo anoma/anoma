@@ -301,6 +301,50 @@
 <span id="298">298</span>
 <span id="299">299</span>
 <span id="300">300</span>
+<span id="301">301</span>
+<span id="302">302</span>
+<span id="303">303</span>
+<span id="304">304</span>
+<span id="305">305</span>
+<span id="306">306</span>
+<span id="307">307</span>
+<span id="308">308</span>
+<span id="309">309</span>
+<span id="310">310</span>
+<span id="311">311</span>
+<span id="312">312</span>
+<span id="313">313</span>
+<span id="314">314</span>
+<span id="315">315</span>
+<span id="316">316</span>
+<span id="317">317</span>
+<span id="318">318</span>
+<span id="319">319</span>
+<span id="320">320</span>
+<span id="321">321</span>
+<span id="322">322</span>
+<span id="323">323</span>
+<span id="324">324</span>
+<span id="325">325</span>
+<span id="326">326</span>
+<span id="327">327</span>
+<span id="328">328</span>
+<span id="329">329</span>
+<span id="330">330</span>
+<span id="331">331</span>
+<span id="332">332</span>
+<span id="333">333</span>
+<span id="334">334</span>
+<span id="335">335</span>
+<span id="336">336</span>
+<span id="337">337</span>
+<span id="338">338</span>
+<span id="339">339</span>
+<span id="340">340</span>
+<span id="341">341</span>
+<span id="342">342</span>
+<span id="343">343</span>
+<span id="344">344</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Ed25519 keys and related functionality</span>
 
@@ -600,6 +644,50 @@
             <span class="ident">hasher</span>.<span class="ident">finalize</span>(),
             <span class="ident">width</span> <span class="op">=</span> <span class="ident">address</span>::<span class="ident">HASH_LEN</span>
         ))
+    }
+}
+
+<span class="doccomment">/// Run `cargo test gen_keypair -- --nocapture` to generate a keypair.</span>
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
+<span class="attribute">#[<span class="ident">test</span>]</span>
+<span class="kw">fn</span> <span class="ident">gen_keypair</span>() {
+    <span class="kw">use</span> <span class="ident">rand</span>::<span class="ident">prelude</span>::<span class="ident">ThreadRng</span>;
+    <span class="kw">use</span> <span class="ident">rand</span>::<span class="ident">thread_rng</span>;
+
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">rng</span>: <span class="ident">ThreadRng</span> <span class="op">=</span> <span class="ident">thread_rng</span>();
+    <span class="kw">let</span> <span class="ident">keypair</span> <span class="op">=</span> <span class="ident">Keypair</span>::<span class="ident">generate</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">rng</span>);
+    <span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot;keypair {:?}&quot;</span>, <span class="ident">keypair</span>.<span class="ident">to_bytes</span>());
+}
+
+<span class="doccomment">/// Helpers for testing with keys.</span>
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">test</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;testing&quot;</span>))]</span>
+<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">testing</span> {
+    <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
+
+    <span class="doccomment">/// A keypair for tests</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">keypair_1</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Keypair</span> {
+        <span class="comment">// generated from `cargo test gen_keypair -- --nocapture`</span>
+        <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> [
+            <span class="number">33</span>, <span class="number">82</span>, <span class="number">91</span>, <span class="number">186</span>, <span class="number">100</span>, <span class="number">168</span>, <span class="number">220</span>, <span class="number">158</span>, <span class="number">185</span>, <span class="number">140</span>, <span class="number">63</span>, <span class="number">172</span>, <span class="number">3</span>, <span class="number">88</span>, <span class="number">52</span>,
+            <span class="number">113</span>, <span class="number">94</span>, <span class="number">30</span>, <span class="number">213</span>, <span class="number">84</span>, <span class="number">175</span>, <span class="number">184</span>, <span class="number">235</span>, <span class="number">169</span>, <span class="number">70</span>, <span class="number">175</span>, <span class="number">36</span>, <span class="number">252</span>, <span class="number">45</span>,
+            <span class="number">190</span>, <span class="number">138</span>, <span class="number">79</span>, <span class="number">210</span>, <span class="number">187</span>, <span class="number">198</span>, <span class="number">90</span>, <span class="number">69</span>, <span class="number">83</span>, <span class="number">156</span>, <span class="number">77</span>, <span class="number">199</span>, <span class="number">63</span>, <span class="number">208</span>, <span class="number">63</span>,
+            <span class="number">137</span>, <span class="number">102</span>, <span class="number">22</span>, <span class="number">229</span>, <span class="number">110</span>, <span class="number">195</span>, <span class="number">38</span>, <span class="number">174</span>, <span class="number">142</span>, <span class="number">127</span>, <span class="number">157</span>, <span class="number">224</span>, <span class="number">139</span>, <span class="number">212</span>,
+            <span class="number">239</span>, <span class="number">204</span>, <span class="number">58</span>, <span class="number">80</span>, <span class="number">108</span>, <span class="number">184</span>,
+        ];
+        <span class="ident">Keypair</span>::<span class="ident">from_bytes</span>(<span class="kw-2">&amp;</span><span class="ident">bytes</span>).<span class="ident">unwrap</span>()
+    }
+
+    <span class="doccomment">/// A keypair for tests</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">keypair_2</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Keypair</span> {
+        <span class="comment">// generated from `cargo test gen_keypair -- --nocapture`</span>
+        <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> [
+            <span class="number">27</span>, <span class="number">238</span>, <span class="number">157</span>, <span class="number">32</span>, <span class="number">131</span>, <span class="number">242</span>, <span class="number">184</span>, <span class="number">142</span>, <span class="number">146</span>, <span class="number">189</span>, <span class="number">24</span>, <span class="number">249</span>, <span class="number">68</span>, <span class="number">165</span>,
+            <span class="number">205</span>, <span class="number">71</span>, <span class="number">213</span>, <span class="number">158</span>, <span class="number">25</span>, <span class="number">253</span>, <span class="number">52</span>, <span class="number">217</span>, <span class="number">87</span>, <span class="number">52</span>, <span class="number">171</span>, <span class="number">225</span>, <span class="number">110</span>, <span class="number">131</span>,
+            <span class="number">238</span>, <span class="number">58</span>, <span class="number">94</span>, <span class="number">56</span>, <span class="number">218</span>, <span class="number">133</span>, <span class="number">189</span>, <span class="number">80</span>, <span class="number">14</span>, <span class="number">157</span>, <span class="number">68</span>, <span class="number">124</span>, <span class="number">151</span>, <span class="number">37</span>, <span class="number">127</span>,
+            <span class="number">173</span>, <span class="number">117</span>, <span class="number">91</span>, <span class="number">248</span>, <span class="number">234</span>, <span class="number">34</span>, <span class="number">13</span>, <span class="number">77</span>, <span class="number">148</span>, <span class="number">10</span>, <span class="number">75</span>, <span class="number">30</span>, <span class="number">191</span>, <span class="number">172</span>, <span class="number">85</span>,
+            <span class="number">175</span>, <span class="number">8</span>, <span class="number">36</span>, <span class="number">233</span>, <span class="number">18</span>, <span class="number">203</span>,
+        ];
+        <span class="ident">Keypair</span>::<span class="ident">from_bytes</span>(<span class="kw-2">&amp;</span><span class="ident">bytes</span>).<span class="ident">unwrap</span>()
     }
 }
 </pre></div>

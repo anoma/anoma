@@ -410,7 +410,6 @@
 <span id="407">407</span>
 <span id="408">408</span>
 <span id="409">409</span>
-<span id="410">410</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! The persistent storage in RocksDB.</span>
 <span class="doccomment">//!</span>
@@ -645,11 +644,10 @@
             <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>),
         }
         <span class="comment">// Load data at the height</span>
-        <span class="kw">let</span> <span class="ident">prefix</span> <span class="op">=</span> <span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;{}/&quot;</span>, <span class="ident">height</span>.<span class="ident">to_string</span>());
+        <span class="kw">let</span> <span class="ident">prefix</span> <span class="op">=</span> <span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;{}/&quot;</span>, <span class="ident">height</span>.<span class="ident">raw</span>());
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">read_opts</span> <span class="op">=</span> <span class="ident">ReadOptions</span>::<span class="ident">default</span>();
         <span class="ident">read_opts</span>.<span class="ident">set_total_order_seek</span>(<span class="bool-val">false</span>);
-        <span class="kw">let</span> <span class="ident">next_height_prefix</span> <span class="op">=</span>
-            <span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;{}/&quot;</span>, <span class="ident">height</span>.<span class="ident">next_height</span>().<span class="ident">to_string</span>());
+        <span class="kw">let</span> <span class="ident">next_height_prefix</span> <span class="op">=</span> <span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;{}/&quot;</span>, <span class="ident">height</span>.<span class="ident">next_height</span>().<span class="ident">raw</span>());
         <span class="ident">read_opts</span>.<span class="ident">set_iterate_upper_bound</span>(<span class="ident">next_height_prefix</span>);
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">root</span> <span class="op">=</span> <span class="prelude-val">None</span>;
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">store</span> <span class="op">=</span> <span class="prelude-val">None</span>;
@@ -771,7 +769,7 @@
         <span class="ident">height</span>: <span class="ident">BlockHeight</span>,
         <span class="ident">prefix</span>: <span class="kw-2">&amp;</span><span class="ident">Key</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">PersistentPrefixIterator</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">db_prefix</span> <span class="op">=</span> <span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;{}/subspace/&quot;</span>, <span class="ident">height</span>.<span class="ident">to_string</span>());
+        <span class="kw">let</span> <span class="ident">db_prefix</span> <span class="op">=</span> <span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;{}/subspace/&quot;</span>, <span class="ident">height</span>.<span class="ident">raw</span>());
         <span class="kw">let</span> <span class="ident">prefix</span> <span class="op">=</span> <span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;{}{}&quot;</span>, <span class="ident">db_prefix</span>, <span class="ident">prefix</span>.<span class="ident">to_string</span>());
 
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">read_opts</span> <span class="op">=</span> <span class="ident">ReadOptions</span>::<span class="ident">default</span>();

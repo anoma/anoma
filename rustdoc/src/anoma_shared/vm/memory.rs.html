@@ -63,11 +63,6 @@
 <span id="60">60</span>
 <span id="61">61</span>
 <span id="62">62</span>
-<span id="63">63</span>
-<span id="64">64</span>
-<span id="65">65</span>
-<span id="66">66</span>
-<span id="67">67</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Virtual machine&#39;s memory.</span>
 
@@ -77,9 +72,7 @@
     <span class="kw">fn</span> <span class="ident">read_bytes</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">offset</span>: <span class="ident">u64</span>, <span class="ident">len</span>: <span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> (<span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>, <span class="ident">u64</span>);
 
     <span class="doccomment">/// Write bytes to memory. Returns the gas cost.</span>
-    <span class="kw">fn</span> <span class="ident">write_bytes</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">offset</span>: <span class="ident">u64</span>, <span class="ident">bytes</span>: <span class="ident">T</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u64</span>
-    <span class="kw">where</span>
-        <span class="ident">T</span>: <span class="ident">AsRef</span><span class="op">&lt;</span>[<span class="ident">u8</span>]<span class="op">&gt;</span>;
+    <span class="kw">fn</span> <span class="ident">write_bytes</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">offset</span>: <span class="ident">u64</span>, <span class="ident">bytes</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span>[<span class="ident">u8</span>]<span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u64</span>;
 
     <span class="doccomment">/// Returns string read from memory together with the associated gas cost.</span>
     <span class="kw">fn</span> <span class="ident">read_string</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">offset</span>: <span class="ident">u64</span>, <span class="ident">len</span>: <span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> (<span class="ident">String</span>, <span class="ident">u64</span>);
@@ -106,10 +99,7 @@
             (<span class="ident">slice</span>.<span class="ident">to_vec</span>(), <span class="number">0</span>)
         }
 
-        <span class="kw">fn</span> <span class="ident">write_bytes</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">offset</span>: <span class="ident">u64</span>, <span class="ident">bytes</span>: <span class="ident">T</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u64</span>
-        <span class="kw">where</span>
-            <span class="ident">T</span>: <span class="ident">AsRef</span><span class="op">&lt;</span>[<span class="ident">u8</span>]<span class="op">&gt;</span>,
-        {
+        <span class="kw">fn</span> <span class="ident">write_bytes</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">offset</span>: <span class="ident">u64</span>, <span class="ident">bytes</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span>[<span class="ident">u8</span>]<span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u64</span> {
             <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="ident">bytes</span>.<span class="ident">as_ref</span>();
             <span class="kw">let</span> <span class="ident">len</span> <span class="op">=</span> <span class="ident">bytes</span>.<span class="ident">len</span>();
             <span class="kw">let</span> <span class="ident">target</span> <span class="op">=</span>

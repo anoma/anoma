@@ -230,6 +230,13 @@
 <span id="227">227</span>
 <span id="228">228</span>
 <span id="229">229</span>
+<span id="230">230</span>
+<span id="231">231</span>
+<span id="232">232</span>
+<span id="233">233</span>
+<span id="234">234</span>
+<span id="235">235</span>
+<span id="236">236</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! The wasm host environment.</span>
 <span class="doccomment">//!</span>
@@ -308,6 +315,7 @@
 
 <span class="doccomment">/// Prepare imports (memory and host functions) exposed to the vm guest running</span>
 <span class="doccomment">/// transaction code</span>
+<span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy</span>::<span class="ident">too_many_arguments</span>)]</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">prepare_tx_imports</span><span class="op">&lt;</span><span class="ident">DB</span>, <span class="ident">H</span><span class="op">&gt;</span>(
     <span class="ident">wasm_store</span>: <span class="kw-2">&amp;</span><span class="ident">Store</span>,
     <span class="ident">storage</span>: <span class="ident">EnvHostWrapper</span><span class="op">&lt;</span><span class="lifetime">&#39;static</span>, <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">Storage</span><span class="op">&lt;</span><span class="ident">DB</span>, <span class="ident">H</span><span class="op">&gt;</span><span class="op">&gt;</span>,
@@ -315,6 +323,7 @@
     <span class="ident">iterators</span>: <span class="ident">MutEnvHostWrapper</span><span class="op">&lt;</span><span class="lifetime">&#39;static</span>, <span class="kw-2">&amp;</span><span class="ident">PrefixIterators</span><span class="op">&lt;</span><span class="lifetime">&#39;static</span>, <span class="ident">DB</span><span class="op">&gt;</span><span class="op">&gt;</span>,
     <span class="ident">verifiers</span>: <span class="ident">MutEnvHostWrapper</span><span class="op">&lt;</span><span class="lifetime">&#39;static</span>, <span class="kw-2">&amp;</span><span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span><span class="op">&gt;</span>,
     <span class="ident">gas_meter</span>: <span class="ident">MutEnvHostWrapper</span><span class="op">&lt;</span><span class="lifetime">&#39;static</span>, <span class="kw-2">&amp;</span><span class="ident">BlockGasMeter</span><span class="op">&gt;</span>,
+    <span class="ident">result_buffer</span>: <span class="ident">MutEnvHostWrapper</span><span class="op">&lt;</span><span class="lifetime">&#39;static</span>, <span class="kw-2">&amp;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>,
     <span class="ident">initial_memory</span>: <span class="ident">Memory</span>,
 ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">ImportObject</span>
 <span class="kw">where</span>
@@ -328,6 +337,7 @@
         <span class="ident">iterators</span>,
         <span class="ident">verifiers</span>,
         <span class="ident">gas_meter</span>,
+        <span class="ident">result_buffer</span>,
     };
     <span class="ident">wasmer</span>::<span class="macro">imports</span><span class="macro">!</span> {
         <span class="comment">// default namespace</span>
@@ -335,6 +345,7 @@
             <span class="string">&quot;memory&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">initial_memory</span>,
             <span class="string">&quot;gas&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Function</span>::<span class="ident">new_native_with_env</span>(<span class="ident">wasm_store</span>, <span class="ident">env</span>.<span class="ident">clone</span>(), <span class="ident">host_env</span>::<span class="ident">tx_charge_gas</span>),
             <span class="string">&quot;anoma_tx_read&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Function</span>::<span class="ident">new_native_with_env</span>(<span class="ident">wasm_store</span>, <span class="ident">env</span>.<span class="ident">clone</span>(), <span class="ident">host_env</span>::<span class="ident">tx_read</span>),
+            <span class="string">&quot;anoma_tx_result_buffer&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Function</span>::<span class="ident">new_native_with_env</span>(<span class="ident">wasm_store</span>, <span class="ident">env</span>.<span class="ident">clone</span>(), <span class="ident">host_env</span>::<span class="ident">tx_result_buffer</span>),
             <span class="string">&quot;anoma_tx_has_key&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Function</span>::<span class="ident">new_native_with_env</span>(<span class="ident">wasm_store</span>, <span class="ident">env</span>.<span class="ident">clone</span>(), <span class="ident">host_env</span>::<span class="ident">tx_has_key</span>),
             <span class="string">&quot;anoma_tx_write&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Function</span>::<span class="ident">new_native_with_env</span>(<span class="ident">wasm_store</span>, <span class="ident">env</span>.<span class="ident">clone</span>(), <span class="ident">host_env</span>::<span class="ident">tx_write</span>),
             <span class="string">&quot;anoma_tx_delete&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Function</span>::<span class="ident">new_native_with_env</span>(<span class="ident">wasm_store</span>, <span class="ident">env</span>.<span class="ident">clone</span>(), <span class="ident">host_env</span>::<span class="ident">tx_delete</span>),
@@ -362,8 +373,9 @@
     <span class="ident">iterators</span>: <span class="ident">MutEnvHostWrapper</span><span class="op">&lt;</span><span class="lifetime">&#39;static</span>, <span class="kw-2">&amp;</span><span class="ident">PrefixIterators</span><span class="op">&lt;</span><span class="lifetime">&#39;static</span>, <span class="ident">DB</span><span class="op">&gt;</span><span class="op">&gt;</span>,
     <span class="ident">gas_meter</span>: <span class="ident">MutEnvHostWrapper</span><span class="op">&lt;</span><span class="lifetime">&#39;static</span>, <span class="kw-2">&amp;</span><span class="ident">VpGasMeter</span><span class="op">&gt;</span>,
     <span class="ident">tx_code</span>: <span class="ident">EnvHostSliceWrapper</span><span class="op">&lt;</span><span class="lifetime">&#39;static</span>, <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]<span class="op">&gt;</span>,
-    <span class="ident">initial_memory</span>: <span class="ident">Memory</span>,
     <span class="ident">eval_runner</span>: <span class="ident">EnvHostWrapper</span><span class="op">&lt;</span><span class="lifetime">&#39;static</span>, <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">EVAL</span><span class="op">&gt;</span>,
+    <span class="ident">result_buffer</span>: <span class="ident">MutEnvHostWrapper</span><span class="op">&lt;</span><span class="lifetime">&#39;static</span>, <span class="kw-2">&amp;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="ident">initial_memory</span>: <span class="ident">Memory</span>,
 ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">ImportObject</span>
 <span class="kw">where</span>
     <span class="ident">DB</span>: <span class="ident">storage</span>::<span class="ident">DB</span> <span class="op">+</span> <span class="kw">for</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span> <span class="ident">storage</span>::<span class="ident">DBIter</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span>,
@@ -379,6 +391,7 @@
         <span class="ident">gas_meter</span>,
         <span class="ident">tx_code</span>,
         <span class="ident">eval_runner</span>,
+        <span class="ident">result_buffer</span>,
     };
     <span class="ident">prepare_vp_imports</span>(<span class="ident">wasm_store</span>, <span class="ident">initial_memory</span>, <span class="kw-2">&amp;</span><span class="ident">env</span>)
 }
@@ -402,6 +415,7 @@
             <span class="string">&quot;gas&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Function</span>::<span class="ident">new_native_with_env</span>(<span class="ident">wasm_store</span>, <span class="ident">env</span>.<span class="ident">clone</span>(), <span class="ident">host_env</span>::<span class="ident">vp_charge_gas</span>),
             <span class="string">&quot;anoma_vp_read_pre&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Function</span>::<span class="ident">new_native_with_env</span>(<span class="ident">wasm_store</span>, <span class="ident">env</span>.<span class="ident">clone</span>(), <span class="ident">host_env</span>::<span class="ident">vp_read_pre</span>),
             <span class="string">&quot;anoma_vp_read_post&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Function</span>::<span class="ident">new_native_with_env</span>(<span class="ident">wasm_store</span>, <span class="ident">env</span>.<span class="ident">clone</span>(), <span class="ident">host_env</span>::<span class="ident">vp_read_post</span>),
+            <span class="string">&quot;anoma_vp_result_buffer&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Function</span>::<span class="ident">new_native_with_env</span>(<span class="ident">wasm_store</span>, <span class="ident">env</span>.<span class="ident">clone</span>(), <span class="ident">host_env</span>::<span class="ident">vp_result_buffer</span>),
             <span class="string">&quot;anoma_vp_has_key_pre&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Function</span>::<span class="ident">new_native_with_env</span>(<span class="ident">wasm_store</span>, <span class="ident">env</span>.<span class="ident">clone</span>(), <span class="ident">host_env</span>::<span class="ident">vp_has_key_pre</span>),
             <span class="string">&quot;anoma_vp_has_key_post&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Function</span>::<span class="ident">new_native_with_env</span>(<span class="ident">wasm_store</span>, <span class="ident">env</span>.<span class="ident">clone</span>(), <span class="ident">host_env</span>::<span class="ident">vp_has_key_post</span>),
             <span class="string">&quot;anoma_vp_iter_prefix&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Function</span>::<span class="ident">new_native_with_env</span>(<span class="ident">wasm_store</span>, <span class="ident">env</span>.<span class="ident">clone</span>(), <span class="ident">host_env</span>::<span class="ident">vp_iter_prefix</span>),

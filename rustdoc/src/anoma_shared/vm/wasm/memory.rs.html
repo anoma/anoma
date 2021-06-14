@@ -364,9 +364,6 @@
 <span id="361">361</span>
 <span id="362">362</span>
 <span id="363">363</span>
-<span id="364">364</span>
-<span id="365">365</span>
-<span id="366">366</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Wasm memory is used for bi-directionally passing data between the host and a</span>
 <span class="doccomment">//! wasm instance.</span>
@@ -698,10 +695,7 @@
     }
 
     <span class="doccomment">/// Write bytes into memory at the given offset and return the gas cost</span>
-    <span class="kw">fn</span> <span class="ident">write_bytes</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">offset</span>: <span class="ident">u64</span>, <span class="ident">bytes</span>: <span class="ident">T</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u64</span>
-    <span class="kw">where</span>
-        <span class="ident">T</span>: <span class="ident">AsRef</span><span class="op">&lt;</span>[<span class="ident">u8</span>]<span class="op">&gt;</span>,
-    {
+    <span class="kw">fn</span> <span class="ident">write_bytes</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">offset</span>: <span class="ident">u64</span>, <span class="ident">bytes</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span>[<span class="ident">u8</span>]<span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u64</span> {
         <span class="kw">let</span> <span class="ident">gas</span> <span class="op">=</span> <span class="ident">bytes</span>.<span class="ident">as_ref</span>().<span class="ident">len</span>();
         <span class="kw">let</span> <span class="ident">memory</span> <span class="op">=</span>
             <span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">get_ref</span>().<span class="ident">expect</span>(<span class="string">&quot;Memory should be initialized&quot;</span>);

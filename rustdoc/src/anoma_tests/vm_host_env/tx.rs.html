@@ -149,6 +149,19 @@
 <span id="146">146</span>
 <span id="147">147</span>
 <span id="148">148</span>
+<span id="149">149</span>
+<span id="150">150</span>
+<span id="151">151</span>
+<span id="152">152</span>
+<span id="153">153</span>
+<span id="154">154</span>
+<span id="155">155</span>
+<span id="156">156</span>
+<span id="157">157</span>
+<span id="158">158</span>
+<span id="159">159</span>
+<span id="160">160</span>
+<span id="161">161</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">collections</span>::<span class="ident">HashSet</span>;
 
@@ -177,6 +190,7 @@
     <span class="kw">pub</span> <span class="ident">iterators</span>: <span class="ident">PrefixIterators</span><span class="op">&lt;</span><span class="lifetime">&#39;static</span>, <span class="ident">MockDB</span><span class="op">&gt;</span>,
     <span class="kw">pub</span> <span class="ident">verifiers</span>: <span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span>,
     <span class="kw">pub</span> <span class="ident">gas_meter</span>: <span class="ident">BlockGasMeter</span>,
+    <span class="kw">pub</span> <span class="ident">result_buffer</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span>,
 }
 
 <span class="kw">impl</span> <span class="ident">Default</span> <span class="kw">for</span> <span class="ident">TestTxEnv</span> {
@@ -187,6 +201,7 @@
             <span class="ident">iterators</span>: <span class="ident">PrefixIterators</span>::<span class="ident">default</span>(),
             <span class="ident">verifiers</span>: <span class="ident">HashSet</span>::<span class="ident">default</span>(),
             <span class="ident">gas_meter</span>: <span class="ident">BlockGasMeter</span>::<span class="ident">default</span>(),
+            <span class="ident">result_buffer</span>: <span class="prelude-val">None</span>,
         }
     }
 }
@@ -206,12 +221,18 @@
         <span class="ident">iterators</span>,
         <span class="ident">verifiers</span>,
         <span class="ident">gas_meter</span>,
+        <span class="ident">result_buffer</span>,
     }: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">TestTxEnv</span>,
 ) {
     <span class="ident">tx_host_env</span>::<span class="ident">ENV</span>.<span class="ident">with</span>(<span class="op">|</span><span class="ident">env</span><span class="op">|</span> {
         <span class="kw-2">*</span><span class="ident">env</span>.<span class="ident">borrow_mut</span>() <span class="op">=</span> <span class="prelude-val">Some</span>({
             <span class="ident">vm</span>::<span class="ident">host_env</span>::<span class="ident">testing</span>::<span class="ident">tx_env</span>(
-                <span class="ident">storage</span>, <span class="ident">write_log</span>, <span class="ident">iterators</span>, <span class="ident">verifiers</span>, <span class="ident">gas_meter</span>,
+                <span class="ident">storage</span>,
+                <span class="ident">write_log</span>,
+                <span class="ident">iterators</span>,
+                <span class="ident">verifiers</span>,
+                <span class="ident">gas_meter</span>,
+                <span class="ident">result_buffer</span>,
             )
         })
     });
@@ -274,7 +295,8 @@
 
     <span class="comment">// Implement all the exported functions from</span>
     <span class="comment">// [`anoma_vm_env::imports::tx`] `extern &quot;C&quot;` section.</span>
-    <span class="macro">native_host_fn</span><span class="macro">!</span>(<span class="ident">tx_read</span>(<span class="ident">key_ptr</span>: <span class="ident">u64</span>, <span class="ident">key_len</span>: <span class="ident">u64</span>, <span class="ident">result_ptr</span>: <span class="ident">u64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">i64</span>);
+    <span class="macro">native_host_fn</span><span class="macro">!</span>(<span class="ident">tx_read</span>(<span class="ident">key_ptr</span>: <span class="ident">u64</span>, <span class="ident">key_len</span>: <span class="ident">u64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">i64</span>);
+    <span class="macro">native_host_fn</span><span class="macro">!</span>(<span class="ident">tx_result_buffer</span>(<span class="ident">result_ptr</span>: <span class="ident">u64</span>));
     <span class="macro">native_host_fn</span><span class="macro">!</span>(<span class="ident">tx_has_key</span>(<span class="ident">key_ptr</span>: <span class="ident">u64</span>, <span class="ident">key_len</span>: <span class="ident">u64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">i64</span>);
     <span class="macro">native_host_fn</span><span class="macro">!</span>(<span class="ident">tx_write</span>(
         <span class="ident">key_ptr</span>: <span class="ident">u64</span>,
@@ -284,7 +306,7 @@
     ));
     <span class="macro">native_host_fn</span><span class="macro">!</span>(<span class="ident">tx_delete</span>(<span class="ident">key_ptr</span>: <span class="ident">u64</span>, <span class="ident">key_len</span>: <span class="ident">u64</span>));
     <span class="macro">native_host_fn</span><span class="macro">!</span>(<span class="ident">tx_iter_prefix</span>(<span class="ident">prefix_ptr</span>: <span class="ident">u64</span>, <span class="ident">prefix_len</span>: <span class="ident">u64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u64</span>);
-    <span class="macro">native_host_fn</span><span class="macro">!</span>(<span class="ident">tx_iter_next</span>(<span class="ident">iter_id</span>: <span class="ident">u64</span>, <span class="ident">result_ptr</span>: <span class="ident">u64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">i64</span>);
+    <span class="macro">native_host_fn</span><span class="macro">!</span>(<span class="ident">tx_iter_next</span>(<span class="ident">iter_id</span>: <span class="ident">u64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">i64</span>);
     <span class="macro">native_host_fn</span><span class="macro">!</span>(<span class="ident">tx_insert_verifier</span>(<span class="ident">addr_ptr</span>: <span class="ident">u64</span>, <span class="ident">addr_len</span>: <span class="ident">u64</span>));
     <span class="macro">native_host_fn</span><span class="macro">!</span>(<span class="ident">tx_update_validity_predicate</span>(
         <span class="ident">addr_ptr</span>: <span class="ident">u64</span>,
@@ -292,7 +314,11 @@
         <span class="ident">code_ptr</span>: <span class="ident">u64</span>,
         <span class="ident">code_len</span>: <span class="ident">u64</span>,
     ));
-    <span class="macro">native_host_fn</span><span class="macro">!</span>(<span class="ident">tx_init_account</span>(<span class="ident">code_ptr</span>: <span class="ident">u64</span>, <span class="ident">code_len</span>: <span class="ident">u64</span>, <span class="ident">result_ptr</span>: <span class="ident">u64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u64</span>);
+    <span class="macro">native_host_fn</span><span class="macro">!</span>(<span class="ident">tx_init_account</span>(
+        <span class="ident">code_ptr</span>: <span class="ident">u64</span>,
+        <span class="ident">code_len</span>: <span class="ident">u64</span>,
+        <span class="ident">result_ptr</span>: <span class="ident">u64</span>
+    ));
     <span class="macro">native_host_fn</span><span class="macro">!</span>(<span class="ident">tx_get_chain_id</span>(<span class="ident">result_ptr</span>: <span class="ident">u64</span>));
     <span class="macro">native_host_fn</span><span class="macro">!</span>(<span class="ident">tx_get_block_height</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u64</span>);
     <span class="macro">native_host_fn</span><span class="macro">!</span>(<span class="ident">tx_get_block_hash</span>(<span class="ident">result_ptr</span>: <span class="ident">u64</span>));

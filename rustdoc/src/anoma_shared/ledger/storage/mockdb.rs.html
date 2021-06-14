@@ -302,12 +302,10 @@
 <span id="299">299</span>
 <span id="300">300</span>
 <span id="301">301</span>
-<span id="302">302</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! DB mock for testing</span>
 
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">collections</span>::<span class="ident">btree_map</span>::<span class="ident">Range</span>;
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">collections</span>::{<span class="ident">BTreeMap</span>, <span class="ident">HashMap</span>};
+<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">collections</span>::{<span class="ident">btree_map</span>, <span class="ident">BTreeMap</span>, <span class="ident">HashMap</span>};
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">ops</span>::<span class="ident">Bound</span>::{<span class="ident">Excluded</span>, <span class="ident">Included</span>};
 
 <span class="kw">use</span> <span class="ident">sparse_merkle_tree</span>::<span class="ident">SparseMerkleTree</span>;
@@ -435,8 +433,8 @@
             <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>),
         }
         <span class="comment">// Load data at the height</span>
-        <span class="kw">let</span> <span class="ident">prefix</span> <span class="op">=</span> <span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;{}/&quot;</span>, <span class="ident">height</span>.<span class="ident">to_string</span>());
-        <span class="kw">let</span> <span class="ident">upper_prefix</span> <span class="op">=</span> <span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;{}/&quot;</span>, <span class="ident">height</span>.<span class="ident">next_height</span>().<span class="ident">to_string</span>());
+        <span class="kw">let</span> <span class="ident">prefix</span> <span class="op">=</span> <span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;{}/&quot;</span>, <span class="ident">height</span>.<span class="ident">raw</span>());
+        <span class="kw">let</span> <span class="ident">upper_prefix</span> <span class="op">=</span> <span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;{}/&quot;</span>, <span class="ident">height</span>.<span class="ident">next_height</span>().<span class="ident">raw</span>());
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">root</span> <span class="op">=</span> <span class="prelude-val">None</span>;
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">store</span> <span class="op">=</span> <span class="prelude-val">None</span>;
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">hash</span> <span class="op">=</span> <span class="prelude-val">None</span>;
@@ -546,24 +544,18 @@
         <span class="ident">height</span>: <span class="ident">BlockHeight</span>,
         <span class="ident">prefix</span>: <span class="kw-2">&amp;</span><span class="ident">Key</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">MockPrefixIterator</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">db_prefix</span> <span class="op">=</span> <span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;{}/subspace/&quot;</span>, <span class="ident">height</span>.<span class="ident">to_string</span>());
+        <span class="kw">let</span> <span class="ident">db_prefix</span> <span class="op">=</span> <span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;{}/subspace/&quot;</span>, <span class="ident">height</span>.<span class="ident">raw</span>());
         <span class="kw">let</span> <span class="ident">prefix</span> <span class="op">=</span> <span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;{}{}&quot;</span>, <span class="ident">db_prefix</span>, <span class="ident">prefix</span>.<span class="ident">to_string</span>());
-
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">upper_prefix</span> <span class="op">=</span> <span class="ident">prefix</span>.<span class="ident">clone</span>().<span class="ident">into_bytes</span>();
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">last</span>) <span class="op">=</span> <span class="ident">upper_prefix</span>.<span class="ident">pop</span>() {
-            <span class="ident">upper_prefix</span>.<span class="ident">push</span>(<span class="ident">last</span> <span class="op">+</span> <span class="number">1</span>);
-        }
-        <span class="kw">let</span> <span class="ident">upper</span> <span class="op">=</span>
-            <span class="ident">String</span>::<span class="ident">from_utf8</span>(<span class="ident">upper_prefix</span>).<span class="ident">expect</span>(<span class="string">&quot;failed convert to string&quot;</span>);
-        <span class="kw">let</span> <span class="ident">iter</span> <span class="op">=</span> <span class="self">self</span>.<span class="number">0</span>.<span class="ident">range</span>((<span class="ident">Included</span>(<span class="ident">prefix</span>), <span class="ident">Excluded</span>(<span class="ident">upper</span>)));
-        <span class="ident">MockPrefixIterator</span>::<span class="ident">new</span>(<span class="ident">MockIterator</span> { <span class="ident">iter</span> }, <span class="ident">db_prefix</span>)
+        <span class="kw">let</span> <span class="ident">iter</span> <span class="op">=</span> <span class="self">self</span>.<span class="number">0</span>.<span class="ident">iter</span>();
+        <span class="ident">MockPrefixIterator</span>::<span class="ident">new</span>(<span class="ident">MockIterator</span> { <span class="ident">prefix</span>, <span class="ident">iter</span> }, <span class="ident">db_prefix</span>)
     }
 }
 
 <span class="doccomment">/// A prefix iterator base for the [`MockPrefixIterator`].</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">MockIterator</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-    <span class="doccomment">/// A sub-range iterator</span>
-    <span class="kw">pub</span> <span class="ident">iter</span>: <span class="ident">Range</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">String</span>, <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="ident">prefix</span>: <span class="ident">String</span>,
+    <span class="doccomment">/// The concrete iterator</span>
+    <span class="kw">pub</span> <span class="ident">iter</span>: <span class="ident">btree_map</span>::<span class="ident">Iter</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">String</span>, <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span>,
 }
 
 <span class="doccomment">/// A prefix iterator for the [`MockDB`].</span>
@@ -573,9 +565,15 @@
     <span class="kw">type</span> <span class="ident">Item</span> <span class="op">=</span> <span class="ident">KVBytes</span>;
 
     <span class="kw">fn</span> <span class="ident">next</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="self">Self</span>::<span class="ident">Item</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">iter</span>.<span class="ident">next</span>().<span class="ident">map</span>(<span class="op">|</span>(<span class="ident">key</span>, <span class="ident">val</span>)<span class="op">|</span> {
-            (<span class="ident">Box</span>::<span class="ident">from</span>(<span class="ident">key</span>.<span class="ident">as_bytes</span>()), <span class="ident">Box</span>::<span class="ident">from</span>(<span class="ident">val</span>.<span class="ident">as_slice</span>()))
-        })
+        <span class="kw">while</span> <span class="kw">let</span> <span class="prelude-val">Some</span>((<span class="ident">key</span>, <span class="ident">val</span>)) <span class="op">=</span> <span class="self">self</span>.<span class="ident">iter</span>.<span class="ident">next</span>() {
+            <span class="kw">if</span> <span class="ident">key</span>.<span class="ident">starts_with</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">prefix</span>) {
+                <span class="kw">return</span> <span class="prelude-val">Some</span>((
+                    <span class="ident">Box</span>::<span class="ident">from</span>(<span class="ident">key</span>.<span class="ident">as_bytes</span>()),
+                    <span class="ident">Box</span>::<span class="ident">from</span>(<span class="ident">val</span>.<span class="ident">as_slice</span>()),
+                ));
+            }
+        }
+        <span class="prelude-val">None</span>
     }
 }
 

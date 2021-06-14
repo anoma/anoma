@@ -598,9 +598,9 @@
 
 <span class="kw">impl</span> <span class="ident">Key</span> {
     <span class="doccomment">/// Parses string and returns a key</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">parse</span>(<span class="ident">string</span>: <span class="ident">String</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">parse</span>(<span class="ident">string</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span><span class="ident">str</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">segments</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="ident">new</span>();
-        <span class="kw">for</span> <span class="ident">s</span> <span class="kw">in</span> <span class="ident">string</span>.<span class="ident">split</span>(<span class="ident">KEY_SEGMENT_SEPARATOR</span>) {
+        <span class="kw">for</span> <span class="ident">s</span> <span class="kw">in</span> <span class="ident">string</span>.<span class="ident">as_ref</span>().<span class="ident">split</span>(<span class="ident">KEY_SEGMENT_SEPARATOR</span>) {
             <span class="ident">segments</span>.<span class="ident">push</span>(<span class="ident">DbKeySeg</span>::<span class="ident">parse</span>(<span class="ident">s</span>.<span class="ident">to_owned</span>())<span class="question-mark">?</span>);
         }
         <span class="prelude-val">Ok</span>(<span class="ident">Key</span> { <span class="ident">segments</span> })
@@ -609,7 +609,7 @@
     <span class="doccomment">/// Returns a new key with segments of `Self` and the given segment</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">push</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">KeySeg</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">other</span>: <span class="kw-2">&amp;</span><span class="ident">T</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">segments</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">segments</span>.<span class="ident">clone</span>();
-        <span class="ident">segments</span>.<span class="ident">push</span>(<span class="ident">DbKeySeg</span>::<span class="ident">parse</span>(<span class="ident">other</span>.<span class="ident">to_string</span>())<span class="question-mark">?</span>);
+        <span class="ident">segments</span>.<span class="ident">push</span>(<span class="ident">DbKeySeg</span>::<span class="ident">parse</span>(<span class="ident">other</span>.<span class="ident">raw</span>())<span class="question-mark">?</span>);
         <span class="prelude-val">Ok</span>(<span class="ident">Key</span> { <span class="ident">segments</span> })
     }
 
@@ -657,7 +657,7 @@
         <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="self">self</span>
             .<span class="ident">segments</span>
             .<span class="ident">iter</span>()
-            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">s</span><span class="op">|</span> <span class="ident">DbKeySeg</span>::<span class="ident">to_string</span>(<span class="ident">s</span>))
+            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">s</span><span class="op">|</span> <span class="ident">DbKeySeg</span>::<span class="ident">raw</span>(<span class="ident">s</span>))
             .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span><span class="op">&gt;</span>()
             .<span class="ident">join</span>(<span class="kw-2">&amp;</span><span class="ident">KEY_SEGMENT_SEPARATOR</span>.<span class="ident">to_string</span>());
         <span class="ident">f</span>.<span class="ident">write_str</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>)
@@ -673,7 +673,7 @@
         <span class="self">Self</span>: <span class="ident">Sized</span>;
 
     <span class="doccomment">/// Convert `Self` to a string.</span>
-    <span class="kw">fn</span> <span class="ident">to_string</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">String</span>;
+    <span class="kw">fn</span> <span class="ident">raw</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">String</span>;
 
     <span class="doccomment">/// Convert `Self` to a key segment. This mapping should preserve the</span>
     <span class="doccomment">/// ordering of `Self`</span>
@@ -723,7 +723,7 @@
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">to_string</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">String</span> {
+    <span class="kw">fn</span> <span class="ident">raw</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">String</span> {
         <span class="kw">match</span> <span class="self">self</span> {
             <span class="ident">DbKeySeg</span>::<span class="ident">AddressSeg</span>(<span class="ident">addr</span>) <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;{}{}&quot;</span>, <span class="ident">RESERVED_ADDRESS_PREFIX</span>, <span class="ident">addr</span>.<span class="ident">encode</span>())
@@ -738,7 +738,7 @@
 }
 
 <span class="kw">impl</span> <span class="ident">KeySeg</span> <span class="kw">for</span> <span class="ident">String</span> {
-    <span class="kw">fn</span> <span class="ident">to_string</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">String</span> {
+    <span class="kw">fn</span> <span class="ident">raw</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">String</span> {
         <span class="self">self</span>.<span class="ident">to_owned</span>()
     }
 
@@ -759,12 +759,12 @@
         <span class="prelude-val">Ok</span>(<span class="ident">BlockHeight</span>(<span class="ident">h</span>))
     }
 
-    <span class="kw">fn</span> <span class="ident">to_string</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">String</span> {
+    <span class="kw">fn</span> <span class="ident">raw</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">String</span> {
         <span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;{}&quot;</span>, <span class="self">self</span>.<span class="number">0</span>)
     }
 
     <span class="kw">fn</span> <span class="ident">to_db_key</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">DbKeySeg</span> {
-        <span class="ident">DbKeySeg</span>::<span class="ident">StringSeg</span>(<span class="self">self</span>.<span class="ident">to_string</span>())
+        <span class="ident">DbKeySeg</span>::<span class="ident">StringSeg</span>(<span class="self">self</span>.<span class="ident">raw</span>())
     }
 }
 <span class="kw">impl</span> <span class="ident">TryFrom</span><span class="op">&lt;</span><span class="ident">i64</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">BlockHeight</span> {
@@ -833,7 +833,7 @@
 }
 
 <span class="kw">impl</span> <span class="ident">KeySeg</span> <span class="kw">for</span> <span class="ident">Address</span> {
-    <span class="kw">fn</span> <span class="ident">to_string</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">String</span> {
+    <span class="kw">fn</span> <span class="ident">raw</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">String</span> {
         <span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;{}{}&quot;</span>, <span class="ident">RESERVED_ADDRESS_PREFIX</span>, <span class="self">self</span>.<span class="ident">encode</span>())
     }
 
@@ -908,14 +908,14 @@
         <span class="kw">fn</span> <span class="ident">test_key_push</span>(<span class="ident">s</span> <span class="kw">in</span> <span class="string">&quot;[^#?/][^/]*&quot;</span>) {
             <span class="kw">let</span> <span class="ident">addr</span> <span class="op">=</span> <span class="ident">address</span>::<span class="ident">testing</span>::<span class="ident">established_address_1</span>();
             <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Key</span>::<span class="ident">from</span>(<span class="ident">addr</span>.<span class="ident">to_db_key</span>()).<span class="ident">push</span>(<span class="kw-2">&amp;</span><span class="ident">s</span>).<span class="ident">expect</span>(<span class="string">&quot;cannnot push the segment&quot;</span>);
-            <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">key</span>.<span class="ident">segments</span>[<span class="number">1</span>].<span class="ident">to_string</span>(), <span class="ident">s</span>);
+            <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">key</span>.<span class="ident">segments</span>[<span class="number">1</span>].<span class="ident">raw</span>(), <span class="ident">s</span>);
         }
     }
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="kw">fn</span> <span class="ident">test_key_parse_valid</span>() {
         <span class="kw">let</span> <span class="ident">addr</span> <span class="op">=</span> <span class="ident">address</span>::<span class="ident">testing</span>::<span class="ident">established_address_1</span>();
-        <span class="kw">let</span> <span class="ident">target</span> <span class="op">=</span> <span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;{}/test&quot;</span>, <span class="ident">KeySeg</span>::<span class="ident">to_string</span>(<span class="kw-2">&amp;</span><span class="ident">addr</span>));
+        <span class="kw">let</span> <span class="ident">target</span> <span class="op">=</span> <span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;{}/test&quot;</span>, <span class="ident">KeySeg</span>::<span class="ident">raw</span>(<span class="kw-2">&amp;</span><span class="ident">addr</span>));
         <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Key</span>::<span class="ident">parse</span>(<span class="ident">target</span>.<span class="ident">clone</span>()).<span class="ident">expect</span>(<span class="string">&quot;cannot parse the string&quot;</span>);
         <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">key</span>.<span class="ident">to_string</span>(), <span class="ident">target</span>);
 
@@ -937,17 +937,17 @@
     <span class="kw">fn</span> <span class="ident">test_key_push_valid</span>() {
         <span class="kw">let</span> <span class="ident">addr</span> <span class="op">=</span> <span class="ident">address</span>::<span class="ident">testing</span>::<span class="ident">established_address_1</span>();
         <span class="kw">let</span> <span class="ident">other</span> <span class="op">=</span> <span class="ident">address</span>::<span class="ident">testing</span>::<span class="ident">established_address_2</span>();
-        <span class="kw">let</span> <span class="ident">target</span> <span class="op">=</span> <span class="ident">KeySeg</span>::<span class="ident">to_string</span>(<span class="kw-2">&amp;</span><span class="ident">other</span>);
+        <span class="kw">let</span> <span class="ident">target</span> <span class="op">=</span> <span class="ident">KeySeg</span>::<span class="ident">raw</span>(<span class="kw-2">&amp;</span><span class="ident">other</span>);
         <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Key</span>::<span class="ident">from</span>(<span class="ident">addr</span>.<span class="ident">to_db_key</span>())
             .<span class="ident">push</span>(<span class="kw-2">&amp;</span><span class="ident">target</span>)
             .<span class="ident">expect</span>(<span class="string">&quot;cannnot push the segment&quot;</span>);
-        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">key</span>.<span class="ident">segments</span>[<span class="number">1</span>].<span class="ident">to_string</span>(), <span class="ident">target</span>);
+        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">key</span>.<span class="ident">segments</span>[<span class="number">1</span>].<span class="ident">raw</span>(), <span class="ident">target</span>);
 
         <span class="kw">let</span> <span class="ident">target</span> <span class="op">=</span> <span class="string">&quot;?test&quot;</span>.<span class="ident">to_owned</span>();
         <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Key</span>::<span class="ident">from</span>(<span class="ident">addr</span>.<span class="ident">to_db_key</span>())
             .<span class="ident">push</span>(<span class="kw-2">&amp;</span><span class="ident">target</span>)
             .<span class="ident">expect</span>(<span class="string">&quot;cannnot push the segment&quot;</span>);
-        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">key</span>.<span class="ident">segments</span>[<span class="number">1</span>].<span class="ident">to_string</span>(), <span class="ident">target</span>);
+        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">key</span>.<span class="ident">segments</span>[<span class="number">1</span>].<span class="ident">raw</span>(), <span class="ident">target</span>);
     }
 
     <span class="attribute">#[<span class="ident">test</span>]</span>

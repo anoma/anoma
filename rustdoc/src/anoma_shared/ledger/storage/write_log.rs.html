@@ -413,11 +413,49 @@
 <span id="410">410</span>
 <span id="411">411</span>
 <span id="412">412</span>
+<span id="413">413</span>
+<span id="414">414</span>
+<span id="415">415</span>
+<span id="416">416</span>
+<span id="417">417</span>
+<span id="418">418</span>
+<span id="419">419</span>
+<span id="420">420</span>
+<span id="421">421</span>
+<span id="422">422</span>
+<span id="423">423</span>
+<span id="424">424</span>
+<span id="425">425</span>
+<span id="426">426</span>
+<span id="427">427</span>
+<span id="428">428</span>
+<span id="429">429</span>
+<span id="430">430</span>
+<span id="431">431</span>
+<span id="432">432</span>
+<span id="433">433</span>
+<span id="434">434</span>
+<span id="435">435</span>
+<span id="436">436</span>
+<span id="437">437</span>
+<span id="438">438</span>
+<span id="439">439</span>
+<span id="440">440</span>
+<span id="441">441</span>
+<span id="442">442</span>
+<span id="443">443</span>
+<span id="444">444</span>
+<span id="445">445</span>
+<span id="446">446</span>
+<span id="447">447</span>
+<span id="448">448</span>
+<span id="449">449</span>
+<span id="450">450</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Write log is temporary storage for modifications performed by a transaction.</span>
 <span class="doccomment">//! before they are committed to the ledger&#39;s storage.</span>
 
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">collections</span>::<span class="ident">HashMap</span>;
+<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">collections</span>::{<span class="ident">HashMap</span>, <span class="ident">HashSet</span>};
 
 <span class="kw">use</span> <span class="ident">thiserror</span>::<span class="ident">Error</span>;
 
@@ -646,6 +684,44 @@
         }
         <span class="self">self</span>.<span class="ident">block_write_log</span>.<span class="ident">clear</span>();
         <span class="prelude-val">Ok</span>(())
+    }
+
+    <span class="doccomment">/// Get the storage keys that have been changed in the write log, grouped by</span>
+    <span class="doccomment">/// their verifiers, whose VPs will be triggered by the changes.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// Note that some storage keys may comprise of multiple addresses, in which</span>
+    <span class="doccomment">/// case every address will be the verifier of the key.</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">verifiers_changed_keys</span>(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        <span class="ident">verifiers_from_tx</span>: <span class="kw-2">&amp;</span><span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span>,
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">Address</span>, <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Key</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">verifiers</span> <span class="op">=</span>
+            <span class="ident">verifiers_from_tx</span>
+                .<span class="ident">iter</span>()
+                .<span class="ident">fold</span>(<span class="ident">HashMap</span>::<span class="ident">new</span>(), <span class="op">|</span><span class="kw-2">mut</span> <span class="ident">acc</span>, <span class="ident">addr</span><span class="op">|</span> {
+                    <span class="ident">acc</span>.<span class="ident">insert</span>(<span class="ident">addr</span>.<span class="ident">clone</span>(), <span class="macro">vec</span><span class="macro">!</span>[]);
+                    <span class="ident">acc</span>
+                });
+
+        <span class="kw">let</span> (<span class="ident">changed_keys</span>, <span class="ident">initialized_accounts</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">get_partitioned_keys</span>();
+        <span class="comment">// get changed keys grouped by the address</span>
+        <span class="kw">for</span> <span class="ident">key</span> <span class="kw">in</span> <span class="ident">changed_keys</span> {
+            <span class="kw">for</span> <span class="ident">addr</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="ident">key</span>.<span class="ident">find_addresses</span>() {
+                <span class="kw">match</span> <span class="ident">verifiers</span>.<span class="ident">get_mut</span>(<span class="kw-2">&amp;</span><span class="ident">addr</span>) {
+                    <span class="prelude-val">Some</span>(<span class="ident">keys</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">keys</span>.<span class="ident">push</span>(<span class="ident">key</span>.<span class="ident">clone</span>()),
+                    <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> {
+                        <span class="ident">verifiers</span>.<span class="ident">insert</span>(<span class="ident">addr</span>.<span class="ident">clone</span>(), <span class="macro">vec</span><span class="macro">!</span>[<span class="ident">key</span>.<span class="ident">clone</span>()]);
+                    }
+                }
+            }
+        }
+        <span class="comment">// The new accounts should be validated by every verifier&#39;s VP</span>
+        <span class="kw">for</span> <span class="ident">key</span> <span class="kw">in</span> <span class="ident">initialized_accounts</span> {
+            <span class="kw">for</span> (<span class="ident">_verifier</span>, <span class="ident">keys</span>) <span class="kw">in</span> <span class="ident">verifiers</span>.<span class="ident">iter_mut</span>() {
+                <span class="ident">keys</span>.<span class="ident">push</span>(<span class="ident">key</span>.<span class="ident">clone</span>());
+            }
+        }
+        <span class="ident">verifiers</span>
     }
 }
 

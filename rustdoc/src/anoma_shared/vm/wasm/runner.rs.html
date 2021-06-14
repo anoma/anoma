@@ -761,6 +761,19 @@
 <span id="758">758</span>
 <span id="759">759</span>
 <span id="760">760</span>
+<span id="761">761</span>
+<span id="762">762</span>
+<span id="763">763</span>
+<span id="764">764</span>
+<span id="765">765</span>
+<span id="766">766</span>
+<span id="767">767</span>
+<span id="768">768</span>
+<span id="769">769</span>
+<span id="770">770</span>
+<span id="771">771</span>
+<span id="772">772</span>
+<span id="773">773</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Wasm runners</span>
 
@@ -888,6 +901,11 @@
         <span class="comment">// This is also not thread-safe, we&#39;re assuming single-threaded Tx</span>
         <span class="comment">// runner.</span>
         <span class="kw">let</span> <span class="ident">gas_meter</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">MutEnvHostWrapper</span>::<span class="ident">new</span>(<span class="ident">gas_meter</span>) };
+        <span class="comment">// This is also not thread-safe, we&#39;re assuming single-threaded Tx</span>
+        <span class="comment">// runner.</span>
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">result_buffer</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">=</span> <span class="prelude-val">None</span>;
+        <span class="kw">let</span> <span class="ident">env_result_buffer</span> <span class="op">=</span>
+            <span class="kw">unsafe</span> { <span class="ident">MutEnvHostWrapper</span>::<span class="ident">new</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">result_buffer</span>) };
 
         <span class="kw">let</span> <span class="ident">tx_code</span> <span class="op">=</span> <span class="ident">prepare_wasm_code</span>(<span class="kw-2">&amp;</span><span class="ident">tx_code</span>)<span class="question-mark">?</span>;
 
@@ -902,6 +920,7 @@
             <span class="ident">iterators</span>,
             <span class="ident">env_verifiers</span>,
             <span class="ident">gas_meter</span>,
+            <span class="ident">env_result_buffer</span>,
             <span class="ident">initial_memory</span>,
         );
 
@@ -1001,6 +1020,11 @@
             <span class="kw">unsafe</span> { <span class="ident">EnvHostSliceWrapper</span>::<span class="ident">new</span>(<span class="ident">keys_changed</span>) };
         <span class="comment">// Read-only access from parallel Vp runners</span>
         <span class="kw">let</span> <span class="ident">env_verifiers</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">EnvHostWrapper</span>::<span class="ident">new</span>(<span class="ident">verifiers</span>) };
+        <span class="comment">// This is not thread-safe, but because each VP has its own instance</span>
+        <span class="comment">// there is no shared access</span>
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">result_buffer</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">=</span> <span class="prelude-val">None</span>;
+        <span class="kw">let</span> <span class="ident">env_result_buffer</span> <span class="op">=</span>
+            <span class="kw">unsafe</span> { <span class="ident">MutEnvHostWrapper</span>::<span class="ident">new</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">result_buffer</span>) };
 
         <span class="kw">let</span> <span class="ident">eval_runner</span> <span class="op">=</span> <span class="ident">VpEval</span> {
             <span class="ident">address</span>: <span class="ident">address</span>.<span class="ident">clone</span>(),
@@ -1011,6 +1035,7 @@
             <span class="ident">tx_code</span>: <span class="ident">tx_code</span>.<span class="ident">clone</span>(),
             <span class="ident">keys_changed</span>: <span class="ident">env_keys_changed</span>.<span class="ident">clone</span>(),
             <span class="ident">verifiers</span>: <span class="ident">env_verifiers</span>.<span class="ident">clone</span>(),
+            <span class="ident">result_buffer</span>: <span class="ident">env_result_buffer</span>.<span class="ident">clone</span>(),
         };
         <span class="comment">// Assuming single-threaded VP wasm runner</span>
         <span class="kw">let</span> <span class="ident">eval_runner</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">EnvHostWrapper</span>::<span class="ident">new</span>(<span class="kw-2">&amp;</span><span class="ident">eval_runner</span>) };
@@ -1035,8 +1060,9 @@
             <span class="ident">iterators</span>,
             <span class="ident">gas_meter</span>,
             <span class="ident">tx_code</span>,
-            <span class="ident">initial_memory</span>,
             <span class="ident">eval_runner</span>,
+            <span class="ident">env_result_buffer</span>,
+            <span class="ident">initial_memory</span>,
         );
 
         <span class="comment">// compile and run the transaction wasm code</span>
@@ -1113,6 +1139,8 @@
     <span class="kw">pub</span> <span class="ident">keys_changed</span>: <span class="ident">EnvHostSliceWrapper</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> [<span class="ident">Key</span>]<span class="op">&gt;</span>,
     <span class="doccomment">/// The verifiers whose validity predicates should be triggered.</span>
     <span class="kw">pub</span> <span class="ident">verifiers</span>: <span class="ident">EnvHostWrapper</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="doccomment">/// Cache for 2-step reads from host environment.</span>
+    <span class="kw">pub</span> <span class="ident">result_buffer</span>: <span class="ident">MutEnvHostWrapper</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>,
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">DB</span>, <span class="ident">H</span><span class="op">&gt;</span> <span class="ident">VpEvalRunner</span> <span class="kw">for</span> <span class="ident">VpEval</span><span class="op">&lt;</span><span class="lifetime">&#39;static</span>, <span class="ident">DB</span>, <span class="ident">H</span><span class="op">&gt;</span>
@@ -1120,11 +1148,25 @@
     <span class="ident">DB</span>: <span class="lifetime">&#39;static</span> <span class="op">+</span> <span class="ident">storage</span>::<span class="ident">DB</span> <span class="op">+</span> <span class="kw">for</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span> <span class="ident">storage</span>::<span class="ident">DBIter</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span>,
     <span class="ident">H</span>: <span class="lifetime">&#39;static</span> <span class="op">+</span> <span class="ident">StorageHasher</span>,
 {
-    <span class="comment">// TODO more code re-use with VpRunner</span>
     <span class="kw">fn</span> <span class="ident">eval</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">vp_code</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>, <span class="ident">input_data</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">HostEnvResult</span> {
-        <span class="kw">if</span> <span class="ident">validate_untrusted_wasm</span>(<span class="kw-2">&amp;</span><span class="ident">vp_code</span>).<span class="ident">is_err</span>() {
-            <span class="kw">return</span> <span class="ident">HostEnvResult</span>::<span class="ident">Fail</span>;
+        <span class="kw">match</span> <span class="self">self</span>.<span class="ident">run_eval</span>(<span class="ident">vp_code</span>, <span class="ident">input_data</span>) {
+            <span class="prelude-val">Ok</span>(<span class="ident">ok</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">HostEnvResult</span>::<span class="ident">from</span>(<span class="ident">ok</span>),
+            <span class="prelude-val">Err</span>(<span class="ident">err</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">tracing</span>::<span class="macro">error</span><span class="macro">!</span>(<span class="string">&quot;VP eval error {}&quot;</span>, <span class="ident">err</span>);
+                <span class="ident">HostEnvResult</span>::<span class="ident">Fail</span>
+            }
         }
+    }
+}
+
+<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">DB</span>, <span class="ident">H</span><span class="op">&gt;</span> <span class="ident">VpEval</span><span class="op">&lt;</span><span class="lifetime">&#39;static</span>, <span class="ident">DB</span>, <span class="ident">H</span><span class="op">&gt;</span>
+<span class="kw">where</span>
+    <span class="ident">DB</span>: <span class="lifetime">&#39;static</span> <span class="op">+</span> <span class="ident">storage</span>::<span class="ident">DB</span> <span class="op">+</span> <span class="kw">for</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span> <span class="ident">storage</span>::<span class="ident">DBIter</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span>,
+    <span class="ident">H</span>: <span class="lifetime">&#39;static</span> <span class="op">+</span> <span class="ident">StorageHasher</span>,
+{
+    <span class="kw">fn</span> <span class="ident">run_eval</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">vp_code</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>, <span class="ident">input_data</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span> {
+        <span class="comment">// TODO more code re-use with VpRunner</span>
+        <span class="ident">validate_untrusted_wasm</span>(<span class="kw-2">&amp;</span><span class="ident">vp_code</span>).<span class="ident">map_err</span>(<span class="ident">Error</span>::<span class="ident">ValidationError</span>)<span class="question-mark">?</span>;
 
         <span class="comment">// Use Singlepass compiler with the default settings</span>
         <span class="kw">let</span> <span class="ident">compiler</span> <span class="op">=</span> <span class="ident">wasmer_compiler_singlepass</span>::<span class="ident">Singlepass</span>::<span class="ident">default</span>();
@@ -1140,27 +1182,17 @@
             <span class="ident">tx_code</span>: <span class="self">self</span>.<span class="ident">tx_code</span>.<span class="ident">clone</span>(),
             <span class="ident">keys_changed</span>: <span class="self">self</span>.<span class="ident">keys_changed</span>.<span class="ident">clone</span>(),
             <span class="ident">verifiers</span>: <span class="self">self</span>.<span class="ident">verifiers</span>.<span class="ident">clone</span>(),
+            <span class="ident">result_buffer</span>: <span class="self">self</span>.<span class="ident">result_buffer</span>.<span class="ident">clone</span>(),
         };
         <span class="comment">// Assuming single-threaded VP wasm runner</span>
         <span class="kw">let</span> <span class="ident">eval_runner</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">EnvHostWrapper</span>::<span class="ident">new</span>(<span class="kw-2">&amp;</span><span class="ident">eval_runner</span>) };
 
-        <span class="kw">let</span> <span class="ident">vp_code</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">prepare_wasm_code</span>(<span class="ident">vp_code</span>) {
-            <span class="prelude-val">Ok</span>(<span class="ident">ok</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ok</span>,
-            <span class="prelude-val">Err</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="ident">HostEnvResult</span>::<span class="ident">Fail</span>,
-        };
+        <span class="kw">let</span> <span class="ident">vp_code</span> <span class="op">=</span> <span class="ident">prepare_wasm_code</span>(<span class="ident">vp_code</span>)<span class="question-mark">?</span>;
 
-        <span class="kw">let</span> <span class="ident">vp_module</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">wasmer</span>::<span class="ident">Module</span>::<span class="ident">new</span>(<span class="kw-2">&amp;</span><span class="ident">wasm_store</span>, <span class="kw-2">&amp;</span><span class="ident">vp_code</span>)
-            .<span class="ident">map_err</span>(<span class="ident">Error</span>::<span class="ident">CompileError</span>)
-        {
-            <span class="prelude-val">Ok</span>(<span class="ident">ok</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ok</span>,
-            <span class="prelude-val">Err</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="ident">HostEnvResult</span>::<span class="ident">Fail</span>,
-        };
-        <span class="kw">let</span> <span class="ident">initial_memory</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">memory</span>::<span class="ident">prepare_vp_memory</span>(<span class="kw-2">&amp;</span><span class="ident">wasm_store</span>)
-            .<span class="ident">map_err</span>(<span class="ident">Error</span>::<span class="ident">MemoryError</span>)
-        {
-            <span class="prelude-val">Ok</span>(<span class="ident">ok</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ok</span>,
-            <span class="prelude-val">Err</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="ident">HostEnvResult</span>::<span class="ident">Fail</span>,
-        };
+        <span class="kw">let</span> <span class="ident">vp_module</span> <span class="op">=</span> <span class="ident">wasmer</span>::<span class="ident">Module</span>::<span class="ident">new</span>(<span class="kw-2">&amp;</span><span class="ident">wasm_store</span>, <span class="kw-2">&amp;</span><span class="ident">vp_code</span>)
+            .<span class="ident">map_err</span>(<span class="ident">Error</span>::<span class="ident">CompileError</span>)<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">initial_memory</span> <span class="op">=</span> <span class="ident">memory</span>::<span class="ident">prepare_vp_memory</span>(<span class="kw-2">&amp;</span><span class="ident">wasm_store</span>)
+            .<span class="ident">map_err</span>(<span class="ident">Error</span>::<span class="ident">MemoryError</span>)<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">addr</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">address</span>;
         <span class="kw">let</span> <span class="ident">keys_changed</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="self">self</span>.<span class="ident">keys_changed</span>.<span class="ident">get</span>() };
         <span class="kw">let</span> <span class="ident">verifiers</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="self">self</span>.<span class="ident">verifiers</span>.<span class="ident">get</span>() };
@@ -1178,21 +1210,15 @@
             <span class="self">self</span>.<span class="ident">iterators</span>.<span class="ident">clone</span>(),
             <span class="self">self</span>.<span class="ident">gas_meter</span>.<span class="ident">clone</span>(),
             <span class="self">self</span>.<span class="ident">tx_code</span>.<span class="ident">clone</span>(),
-            <span class="ident">initial_memory</span>,
             <span class="ident">eval_runner</span>,
+            <span class="self">self</span>.<span class="ident">result_buffer</span>.<span class="ident">clone</span>(),
+            <span class="ident">initial_memory</span>,
         );
 
         <span class="comment">// compile and run the transaction wasm code</span>
-        <span class="kw">let</span> <span class="ident">vp_instance</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">wasmer</span>::<span class="ident">Instance</span>::<span class="ident">new</span>(<span class="kw-2">&amp;</span><span class="ident">vp_module</span>, <span class="kw-2">&amp;</span><span class="ident">vp_imports</span>)
-            .<span class="ident">map_err</span>(<span class="ident">Error</span>::<span class="ident">InstantiationError</span>)
-        {
-            <span class="prelude-val">Ok</span>(<span class="ident">ok</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ok</span>,
-            <span class="prelude-val">Err</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="ident">HostEnvResult</span>::<span class="ident">Fail</span>,
-        };
-        <span class="kw">match</span> <span class="ident">VpRunner</span>::<span class="ident">run_with_input</span>(<span class="ident">vp_instance</span>, <span class="ident">input</span>) {
-            <span class="prelude-val">Ok</span>(<span class="ident">ok</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">HostEnvResult</span>::<span class="ident">from</span>(<span class="ident">ok</span>),
-            <span class="prelude-val">Err</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">HostEnvResult</span>::<span class="ident">Fail</span>,
-        }
+        <span class="kw">let</span> <span class="ident">vp_instance</span> <span class="op">=</span> <span class="ident">wasmer</span>::<span class="ident">Instance</span>::<span class="ident">new</span>(<span class="kw-2">&amp;</span><span class="ident">vp_module</span>, <span class="kw-2">&amp;</span><span class="ident">vp_imports</span>)
+            .<span class="ident">map_err</span>(<span class="ident">Error</span>::<span class="ident">InstantiationError</span>)<span class="question-mark">?</span>;
+        <span class="ident">VpRunner</span>::<span class="ident">run_with_input</span>(<span class="ident">vp_instance</span>, <span class="ident">input</span>)
     }
 }
 
