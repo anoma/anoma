@@ -138,13 +138,15 @@
 <span id="135">135</span>
 <span id="136">136</span>
 <span id="137">137</span>
+<span id="138">138</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! A basic fungible token</span>
 
 <span class="kw">use</span> <span class="ident">borsh</span>::{<span class="ident">BorshDeserialize</span>, <span class="ident">BorshSerialize</span>};
 <span class="kw">use</span> <span class="ident">serde</span>::{<span class="ident">Deserialize</span>, <span class="ident">Serialize</span>};
 
-<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">types</span>::{<span class="ident">Address</span>, <span class="ident">DbKeySeg</span>, <span class="ident">Key</span>, <span class="ident">KeySeg</span>};
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">types</span>::<span class="ident">address</span>::<span class="ident">Address</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">types</span>::<span class="ident">storage</span>::{<span class="ident">DbKeySeg</span>, <span class="ident">Key</span>, <span class="ident">KeySeg</span>};
 
 <span class="doccomment">/// Amount in micro units. For different granularity another representation</span>
 <span class="doccomment">/// might be more appropriate.</span>

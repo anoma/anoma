@@ -237,7 +237,7 @@
 <span class="doccomment">/// This macro expects a function with signature:</span>
 <span class="doccomment">///</span>
 <span class="doccomment">/// ```compiler_fail</span>
-<span class="doccomment">/// fn validate_tx(tx_data: Vec&lt;u8&gt;, addr: Address, keys_changed: Vec&lt;Key&gt;, verifiers: HashSet&lt;Address&gt;) -&gt; bool</span>
+<span class="doccomment">/// fn validate_tx(tx_data: Vec&lt;u8&gt;, addr: Address, keys_changed: Vec&lt;storage::Key&gt;, verifiers: HashSet&lt;Address&gt;) -&gt; bool</span>
 <span class="doccomment">/// ```</span>
 <span class="attribute">#[<span class="ident">proc_macro_attribute</span>]</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">validity_predicate</span>(
@@ -286,7 +286,7 @@
                     <span class="ident">keys_changed_len</span> <span class="kw">as</span> <span class="kw">_</span>,
                 )
             };
-            <span class="kw">let</span> <span class="ident">keys_changed</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Key</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="ident">try_from_slice</span>(<span class="ident">slice</span>).<span class="ident">unwrap</span>();
+            <span class="kw">let</span> <span class="ident">keys_changed</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">storage</span>::<span class="ident">Key</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="ident">try_from_slice</span>(<span class="ident">slice</span>).<span class="ident">unwrap</span>();
 
             <span class="kw">let</span> <span class="ident">slice</span> <span class="op">=</span> <span class="kw">unsafe</span> {
                 <span class="ident">slice</span>::<span class="ident">from_raw_parts</span>(

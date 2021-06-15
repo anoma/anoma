@@ -286,7 +286,7 @@
 <span class="kw">use</span> <span class="ident">anoma_shared</span>::<span class="ident">ledger</span>::<span class="ident">storage</span>::<span class="ident">write_log</span>::<span class="ident">WriteLog</span>;
 <span class="kw">use</span> <span class="ident">anoma_shared</span>::<span class="ident">proto</span>::<span class="ident">Tx</span>;
 <span class="kw">use</span> <span class="ident">anoma_shared</span>::<span class="ident">types</span>::<span class="ident">address</span>::{<span class="self">self</span>, <span class="ident">Address</span>};
-<span class="kw">use</span> <span class="ident">anoma_shared</span>::<span class="ident">types</span>::<span class="ident">Key</span>;
+<span class="kw">use</span> <span class="ident">anoma_shared</span>::<span class="ident">types</span>::<span class="ident">storage</span>::<span class="ident">Key</span>;
 <span class="kw">use</span> <span class="ident">anoma_shared</span>::<span class="ident">vm</span>;
 <span class="kw">use</span> <span class="ident">anoma_shared</span>::<span class="ident">vm</span>::<span class="ident">prefix_iter</span>::<span class="ident">PrefixIterators</span>;
 <span class="kw">use</span> <span class="ident">anoma_shared</span>::<span class="ident">vm</span>::{
@@ -395,7 +395,7 @@
     <span class="kw">let</span> <span class="ident">verifiers_from_tx</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">tx_env</span>.<span class="ident">verifiers</span>;
     <span class="kw">let</span> <span class="ident">verifiers_changed_keys</span> <span class="op">=</span>
         <span class="ident">tx_env</span>.<span class="ident">write_log</span>.<span class="ident">verifiers_changed_keys</span>(<span class="ident">verifiers_from_tx</span>);
-    <span class="kw">let</span> <span class="ident">verifiers</span> <span class="op">=</span> <span class="ident">verifiers_changed_keys</span>.<span class="ident">keys</span>().<span class="ident">collect</span>();
+    <span class="kw">let</span> <span class="ident">verifiers</span> <span class="op">=</span> <span class="ident">verifiers_changed_keys</span>.<span class="ident">keys</span>().<span class="ident">cloned</span>().<span class="ident">collect</span>();
     <span class="kw">let</span> <span class="ident">keys_changed</span> <span class="op">=</span> <span class="ident">verifiers_changed_keys</span>
         .<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">addr</span>)
         .<span class="ident">expect</span>(

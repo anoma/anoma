@@ -579,6 +579,7 @@
 <span id="576">576</span>
 <span id="577">577</span>
 <span id="578">578</span>
+<span id="579">579</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">mem</span>::<span class="ident">ManuallyDrop</span>;
 
@@ -636,10 +637,11 @@
     <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">marker</span>::<span class="ident">PhantomData</span>;
     <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">mem</span>::<span class="ident">size_of</span>;
 
+    <span class="kw">use</span> <span class="ident">anoma_shared</span>::<span class="ident">types</span>::<span class="ident">address</span>;
+    <span class="kw">use</span> <span class="ident">anoma_shared</span>::<span class="ident">types</span>::<span class="ident">address</span>::<span class="ident">Address</span>;
     <span class="kw">use</span> <span class="ident">anoma_shared</span>::<span class="ident">types</span>::<span class="ident">internal</span>::<span class="ident">HostEnvResult</span>;
-    <span class="kw">use</span> <span class="ident">anoma_shared</span>::<span class="ident">types</span>::{
-        <span class="ident">address</span>, <span class="ident">Address</span>, <span class="ident">BlockHash</span>, <span class="ident">BlockHeight</span>, <span class="ident">BLOCK_HASH_LENGTH</span>,
-        <span class="ident">CHAIN_ID_LENGTH</span>,
+    <span class="kw">use</span> <span class="ident">anoma_shared</span>::<span class="ident">types</span>::<span class="ident">storage</span>::{
+        <span class="ident">BlockHash</span>, <span class="ident">BlockHeight</span>, <span class="ident">BLOCK_HASH_LENGTH</span>, <span class="ident">CHAIN_ID_LENGTH</span>,
     };
     <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">borsh</span>::{<span class="ident">BorshDeserialize</span>, <span class="ident">BorshSerialize</span>};
 
@@ -855,7 +857,7 @@
 
     <span class="kw">use</span> <span class="ident">anoma_shared</span>::<span class="ident">types</span>::<span class="ident">internal</span>::<span class="ident">HostEnvResult</span>;
     <span class="kw">use</span> <span class="ident">anoma_shared</span>::<span class="ident">types</span>::<span class="ident">key</span>::<span class="ident">ed25519</span>::{<span class="ident">PublicKey</span>, <span class="ident">Signature</span>};
-    <span class="kw">use</span> <span class="ident">anoma_shared</span>::<span class="ident">types</span>::{
+    <span class="kw">use</span> <span class="ident">anoma_shared</span>::<span class="ident">types</span>::<span class="ident">storage</span>::{
         <span class="ident">BlockHash</span>, <span class="ident">BlockHeight</span>, <span class="ident">BLOCK_HASH_LENGTH</span>, <span class="ident">CHAIN_ID_LENGTH</span>,
     };
     <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">borsh</span>::{<span class="ident">BorshDeserialize</span>, <span class="ident">BorshSerialize</span>};

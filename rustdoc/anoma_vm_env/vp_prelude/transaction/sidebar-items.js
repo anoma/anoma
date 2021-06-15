@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["UpdateVp","A tx data type to update an account’s validity predicate"]]});

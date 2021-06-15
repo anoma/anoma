@@ -354,6 +354,7 @@
 <span id="351">351</span>
 <span id="352">352</span>
 <span id="353">353</span>
+<span id="354">354</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Ed25519 keys and related functionality</span>
 
@@ -370,7 +371,8 @@
 <span class="kw">use</span> <span class="ident">thiserror</span>::<span class="ident">Error</span>;
 
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">proto</span>::<span class="ident">Tx</span>;
-<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">types</span>::{<span class="ident">address</span>, <span class="ident">Address</span>, <span class="ident">DbKeySeg</span>, <span class="ident">Key</span>, <span class="ident">KeySeg</span>};
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">types</span>::<span class="ident">address</span>::{<span class="self">self</span>, <span class="ident">Address</span>};
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">types</span>::<span class="ident">storage</span>::{<span class="ident">DbKeySeg</span>, <span class="ident">Key</span>, <span class="ident">KeySeg</span>};
 
 <span class="kw">const</span> <span class="ident">SIGNATURE_LEN</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="ident">ed25519_dalek</span>::<span class="ident">SIGNATURE_LENGTH</span>;
 

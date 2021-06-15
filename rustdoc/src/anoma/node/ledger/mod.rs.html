@@ -417,11 +417,11 @@
 <span class="kw">use</span> <span class="ident">anoma_shared</span>::<span class="ident">ledger</span>::<span class="ident">storage</span>::<span class="ident">write_log</span>::<span class="ident">WriteLog</span>;
 <span class="kw">use</span> <span class="ident">anoma_shared</span>::<span class="ident">ledger</span>::<span class="ident">storage</span>::<span class="ident">MerkleRoot</span>;
 <span class="kw">use</span> <span class="ident">anoma_shared</span>::<span class="ident">proto</span>::{<span class="self">self</span>, <span class="ident">Tx</span>};
+<span class="kw">use</span> <span class="ident">anoma_shared</span>::<span class="ident">types</span>::<span class="ident">address</span>::<span class="ident">Address</span>;
 <span class="kw">use</span> <span class="ident">anoma_shared</span>::<span class="ident">types</span>::<span class="ident">key</span>::<span class="ident">ed25519</span>::<span class="ident">PublicKey</span>;
+<span class="kw">use</span> <span class="ident">anoma_shared</span>::<span class="ident">types</span>::<span class="ident">storage</span>::{<span class="ident">BlockHash</span>, <span class="ident">BlockHeight</span>, <span class="ident">Key</span>};
 <span class="kw">use</span> <span class="ident">anoma_shared</span>::<span class="ident">types</span>::<span class="ident">token</span>::<span class="ident">Amount</span>;
-<span class="kw">use</span> <span class="ident">anoma_shared</span>::<span class="ident">types</span>::{
-    <span class="ident">address</span>, <span class="ident">key</span>, <span class="ident">token</span>, <span class="ident">Address</span>, <span class="ident">BlockHash</span>, <span class="ident">BlockHeight</span>, <span class="ident">Key</span>,
-};
+<span class="kw">use</span> <span class="ident">anoma_shared</span>::<span class="ident">types</span>::{<span class="ident">address</span>, <span class="ident">key</span>, <span class="ident">token</span>};
 <span class="kw">use</span> <span class="ident">borsh</span>::<span class="ident">BorshSerialize</span>;
 <span class="kw">use</span> <span class="ident">thiserror</span>::<span class="ident">Error</span>;
 

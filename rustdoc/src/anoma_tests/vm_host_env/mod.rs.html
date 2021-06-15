@@ -451,10 +451,10 @@
 
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
 <span class="kw">mod</span> <span class="ident">tests</span> {
-
     <span class="kw">use</span> <span class="ident">anoma_shared</span>::<span class="ident">proto</span>::<span class="ident">Tx</span>;
     <span class="kw">use</span> <span class="ident">anoma_shared</span>::<span class="ident">types</span>::<span class="ident">key</span>::<span class="ident">ed25519</span>::<span class="ident">SignedTxData</span>;
-    <span class="kw">use</span> <span class="ident">anoma_shared</span>::<span class="ident">types</span>::{<span class="ident">address</span>, <span class="ident">key</span>, <span class="ident">Key</span>, <span class="ident">KeySeg</span>};
+    <span class="kw">use</span> <span class="ident">anoma_shared</span>::<span class="ident">types</span>::<span class="ident">storage</span>::{<span class="ident">Key</span>, <span class="ident">KeySeg</span>};
+    <span class="kw">use</span> <span class="ident">anoma_shared</span>::<span class="ident">types</span>::{<span class="ident">address</span>, <span class="ident">key</span>};
     <span class="kw">use</span> <span class="ident">anoma_vm_env</span>::<span class="ident">tx_prelude</span>::{
         <span class="ident">BorshDeserialize</span>, <span class="ident">BorshSerialize</span>, <span class="ident">KeyValIterator</span>,
     };

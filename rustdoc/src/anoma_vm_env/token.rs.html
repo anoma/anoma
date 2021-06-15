@@ -66,11 +66,13 @@
 <span id="63">63</span>
 <span id="64">64</span>
 <span id="65">65</span>
+<span id="66">66</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">collections</span>::<span class="ident">HashSet</span>;
 
+<span class="kw">use</span> <span class="ident">anoma_shared</span>::<span class="ident">types</span>::<span class="ident">address</span>::<span class="ident">Address</span>;
+<span class="kw">use</span> <span class="ident">anoma_shared</span>::<span class="ident">types</span>::<span class="ident">storage</span>::<span class="ident">Key</span>;
 <span class="kw">use</span> <span class="ident">anoma_shared</span>::<span class="ident">types</span>::<span class="ident">token</span>::{<span class="self">self</span>, <span class="ident">Amount</span>, <span class="ident">Change</span>};
-<span class="kw">use</span> <span class="ident">anoma_shared</span>::<span class="ident">types</span>::{<span class="ident">Address</span>, <span class="ident">Key</span>};
 
 <span class="doccomment">/// A token validity predicate.</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">vp</span>(

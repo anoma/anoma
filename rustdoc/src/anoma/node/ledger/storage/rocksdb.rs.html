@@ -409,7 +409,6 @@
 <span id="406">406</span>
 <span id="407">407</span>
 <span id="408">408</span>
-<span id="409">409</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! The persistent storage in RocksDB.</span>
 <span class="doccomment">//!</span>
@@ -432,10 +431,9 @@
 <span class="kw">use</span> <span class="ident">anoma_shared</span>::<span class="ident">ledger</span>::<span class="ident">storage</span>::{
     <span class="ident">types</span>, <span class="ident">BlockState</span>, <span class="ident">DBIter</span>, <span class="ident">Error</span>, <span class="prelude-ty">Result</span>, <span class="ident">StorageHasher</span>, <span class="ident">DB</span>,
 };
-<span class="kw">use</span> <span class="ident">anoma_shared</span>::<span class="ident">types</span>::<span class="ident">address</span>::<span class="ident">EstablishedAddressGen</span>;
-<span class="kw">use</span> <span class="ident">anoma_shared</span>::<span class="ident">types</span>::{
-    <span class="ident">Address</span>, <span class="ident">BlockHash</span>, <span class="ident">BlockHeight</span>, <span class="ident">Key</span>, <span class="ident">KeySeg</span>, <span class="ident">KEY_SEGMENT_SEPARATOR</span>,
-    <span class="ident">RESERVED_VP_KEY</span>,
+<span class="kw">use</span> <span class="ident">anoma_shared</span>::<span class="ident">types</span>::<span class="ident">address</span>::{<span class="ident">Address</span>, <span class="ident">EstablishedAddressGen</span>};
+<span class="kw">use</span> <span class="ident">anoma_shared</span>::<span class="ident">types</span>::<span class="ident">storage</span>::{
+    <span class="ident">BlockHash</span>, <span class="ident">BlockHeight</span>, <span class="ident">Key</span>, <span class="ident">KeySeg</span>, <span class="ident">KEY_SEGMENT_SEPARATOR</span>, <span class="ident">RESERVED_VP_KEY</span>,
 };
 <span class="kw">use</span> <span class="ident">rocksdb</span>::{
     <span class="ident">BlockBasedOptions</span>, <span class="ident">Direction</span>, <span class="ident">FlushOptions</span>, <span class="ident">IteratorMode</span>, <span class="ident">Options</span>,

@@ -257,6 +257,8 @@
 <span id="254">254</span>
 <span id="255">255</span>
 <span id="256">256</span>
+<span id="257">257</span>
+<span id="258">258</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! The storage module handles both the current state in-memory and the stored</span>
 <span class="doccomment">//! state in DB.</span>
@@ -272,7 +274,9 @@
     <span class="ident">types</span>, <span class="ident">BlockStorage</span>, <span class="ident">Storage</span>, <span class="ident">StorageHasher</span>,
 };
 <span class="kw">use</span> <span class="ident">anoma_shared</span>::<span class="ident">types</span>::<span class="ident">address</span>::<span class="ident">EstablishedAddressGen</span>;
-<span class="kw">use</span> <span class="ident">anoma_shared</span>::<span class="ident">types</span>::{<span class="ident">BlockHash</span>, <span class="ident">BlockHeight</span>, <span class="ident">Key</span>, <span class="ident">CHAIN_ID_LENGTH</span>};
+<span class="kw">use</span> <span class="ident">anoma_shared</span>::<span class="ident">types</span>::<span class="ident">storage</span>::{
+    <span class="ident">BlockHash</span>, <span class="ident">BlockHeight</span>, <span class="ident">Key</span>, <span class="ident">CHAIN_ID_LENGTH</span>,
+};
 <span class="kw">use</span> <span class="ident">blake2b_rs</span>::{<span class="ident">Blake2b</span>, <span class="ident">Blake2bBuilder</span>};
 <span class="kw">use</span> <span class="ident">sparse_merkle_tree</span>::<span class="ident">blake2b</span>::<span class="ident">Blake2bHasher</span>;
 <span class="kw">use</span> <span class="ident">sparse_merkle_tree</span>::<span class="ident">traits</span>::<span class="ident">Hasher</span>;

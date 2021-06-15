@@ -150,6 +150,7 @@
 <span id="147">147</span>
 <span id="148">148</span>
 <span id="149">149</span>
+<span id="150">150</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">fs</span>::<span class="ident">File</span>;
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">io</span>::<span class="ident">Write</span>;
@@ -158,9 +159,10 @@
 <span class="kw">use</span> <span class="ident">anoma</span>::<span class="ident">proto</span>::<span class="ident">services</span>::<span class="ident">rpc_service_client</span>::<span class="ident">RpcServiceClient</span>;
 <span class="kw">use</span> <span class="ident">anoma</span>::<span class="ident">proto</span>::{<span class="ident">services</span>, <span class="ident">RpcMessage</span>};
 <span class="kw">use</span> <span class="ident">anoma</span>::{<span class="ident">cli</span>, <span class="ident">wallet</span>};
+<span class="kw">use</span> <span class="ident">anoma_shared</span>::<span class="ident">types</span>::<span class="ident">address</span>::<span class="ident">Address</span>;
 <span class="kw">use</span> <span class="ident">anoma_shared</span>::<span class="ident">types</span>::<span class="ident">intent</span>::<span class="ident">Intent</span>;
 <span class="kw">use</span> <span class="ident">anoma_shared</span>::<span class="ident">types</span>::<span class="ident">key</span>::<span class="ident">ed25519</span>::<span class="ident">Signed</span>;
-<span class="kw">use</span> <span class="ident">anoma_shared</span>::<span class="ident">types</span>::{<span class="ident">token</span>, <span class="ident">Address</span>};
+<span class="kw">use</span> <span class="ident">anoma_shared</span>::<span class="ident">types</span>::<span class="ident">token</span>;
 <span class="kw">use</span> <span class="ident">borsh</span>::<span class="ident">BorshSerialize</span>;
 <span class="kw">use</span> <span class="ident">color_eyre</span>::<span class="ident">eyre</span>::<span class="prelude-ty">Result</span>;
 <span class="kw">use</span> <span class="ident">eyre</span>::<span class="ident">Context</span>;

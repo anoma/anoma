@@ -301,7 +301,6 @@
 <span id="298">298</span>
 <span id="299">299</span>
 <span id="300">300</span>
-<span id="301">301</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! DB mock for testing</span>
 
@@ -314,10 +313,9 @@
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">ledger</span>::<span class="ident">storage</span>::<span class="ident">types</span>::{
     <span class="self">self</span>, <span class="ident">KVBytes</span>, <span class="ident">MerkleTree</span>, <span class="ident">PrefixIterator</span>,
 };
-<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">types</span>::<span class="ident">address</span>::<span class="ident">EstablishedAddressGen</span>;
-<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">types</span>::{
-    <span class="ident">Address</span>, <span class="ident">BlockHash</span>, <span class="ident">BlockHeight</span>, <span class="ident">Key</span>, <span class="ident">KeySeg</span>, <span class="ident">KEY_SEGMENT_SEPARATOR</span>,
-    <span class="ident">RESERVED_VP_KEY</span>,
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">types</span>::<span class="ident">address</span>::{<span class="ident">Address</span>, <span class="ident">EstablishedAddressGen</span>};
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">types</span>::<span class="ident">storage</span>::{
+    <span class="ident">BlockHash</span>, <span class="ident">BlockHeight</span>, <span class="ident">Key</span>, <span class="ident">KeySeg</span>, <span class="ident">KEY_SEGMENT_SEPARATOR</span>, <span class="ident">RESERVED_VP_KEY</span>,
 };
 
 <span class="doccomment">/// An in-memory DB for testing.</span>

@@ -446,9 +446,9 @@
 <span class="kw">use</span> <span class="ident">types</span>::<span class="ident">MerkleTree</span>;
 
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">ledger</span>::<span class="ident">gas</span>::<span class="ident">MIN_STORAGE_GAS</span>;
-<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">types</span>::<span class="ident">address</span>::<span class="ident">EstablishedAddressGen</span>;
-<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">types</span>::{
-    <span class="ident">Address</span>, <span class="ident">BlockHash</span>, <span class="ident">BlockHeight</span>, <span class="ident">Key</span>, <span class="ident">BLOCK_HASH_LENGTH</span>, <span class="ident">CHAIN_ID_LENGTH</span>,
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">types</span>::<span class="ident">address</span>::{<span class="ident">Address</span>, <span class="ident">EstablishedAddressGen</span>};
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">types</span>::<span class="ident">storage</span>::{
+    <span class="ident">BlockHash</span>, <span class="ident">BlockHeight</span>, <span class="ident">Key</span>, <span class="ident">BLOCK_HASH_LENGTH</span>, <span class="ident">CHAIN_ID_LENGTH</span>,
 };
 
 <span class="doccomment">/// A result of a function that may fail</span>
@@ -493,8 +493,8 @@
     <span class="ident">Temporary</span> { <span class="ident">error</span>: <span class="ident">String</span> },
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Found an unknown key: {key}&quot;</span>)]</span>
     <span class="ident">UnknownKey</span> { <span class="ident">key</span>: <span class="ident">String</span> },
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Key error {0}&quot;</span>)]</span>
-    <span class="ident">KeyError</span>(<span class="kw">crate</span>::<span class="ident">types</span>::<span class="ident">Error</span>),
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Storage key error {0}&quot;</span>)]</span>
+    <span class="ident">KeyError</span>(<span class="kw">crate</span>::<span class="ident">types</span>::<span class="ident">storage</span>::<span class="ident">Error</span>),
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Coding error: {0}&quot;</span>)]</span>
     <span class="ident">CodingError</span>(<span class="ident">types</span>::<span class="ident">Error</span>),
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Merkle tree error: {0}&quot;</span>)]</span>

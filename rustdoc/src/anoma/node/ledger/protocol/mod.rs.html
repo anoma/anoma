@@ -321,6 +321,8 @@
 <span id="318">318</span>
 <span id="319">319</span>
 <span id="320">320</span>
+<span id="321">321</span>
+<span id="322">322</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! The ledger&#39;s protocol</span>
 
@@ -331,7 +333,8 @@
 <span class="kw">use</span> <span class="ident">anoma_shared</span>::<span class="ident">ledger</span>::<span class="ident">gas</span>::{<span class="self">self</span>, <span class="ident">BlockGasMeter</span>, <span class="ident">VpGasMeter</span>, <span class="ident">VpsGas</span>};
 <span class="kw">use</span> <span class="ident">anoma_shared</span>::<span class="ident">ledger</span>::<span class="ident">storage</span>::<span class="ident">write_log</span>::<span class="ident">WriteLog</span>;
 <span class="kw">use</span> <span class="ident">anoma_shared</span>::<span class="ident">proto</span>::{<span class="self">self</span>, <span class="ident">Tx</span>};
-<span class="kw">use</span> <span class="ident">anoma_shared</span>::<span class="ident">types</span>::{<span class="ident">Address</span>, <span class="ident">Key</span>};
+<span class="kw">use</span> <span class="ident">anoma_shared</span>::<span class="ident">types</span>::<span class="ident">address</span>::<span class="ident">Address</span>;
+<span class="kw">use</span> <span class="ident">anoma_shared</span>::<span class="ident">types</span>::<span class="ident">storage</span>::<span class="ident">Key</span>;
 <span class="kw">use</span> <span class="ident">anoma_shared</span>::<span class="ident">vm</span>;
 <span class="kw">use</span> <span class="ident">anoma_shared</span>::<span class="ident">vm</span>::<span class="ident">wasm</span>::<span class="ident">runner</span>::{<span class="ident">TxRunner</span>, <span class="ident">VpRunner</span>};
 <span class="kw">use</span> <span class="ident">rayon</span>::<span class="ident">iter</span>::{<span class="ident">IntoParallelRefIterator</span>, <span class="ident">ParallelIterator</span>};
@@ -492,6 +495,7 @@
     <span class="kw">let</span> <span class="ident">addresses</span> <span class="op">=</span> <span class="ident">verifiers</span>
         .<span class="ident">iter</span>()
         .<span class="ident">map</span>(<span class="op">|</span>(<span class="ident">addr</span>, <span class="kw">_</span>, <span class="kw">_</span>)<span class="op">|</span> <span class="ident">addr</span>)
+        .<span class="ident">cloned</span>()
         .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">HashSet</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span>();
 
     <span class="ident">verifiers</span>
@@ -518,8 +522,8 @@
     <span class="kw-2">mut</span> <span class="ident">b</span>: <span class="ident">VpsResult</span>,
     <span class="ident">initial_gas</span>: <span class="ident">u64</span>,
 ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">VpsResult</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">accepted_vps</span> <span class="op">=</span> <span class="ident">a</span>.<span class="ident">accepted_vps</span>.<span class="ident">union</span>(<span class="kw-2">&amp;</span><span class="ident">b</span>.<span class="ident">accepted_vps</span>).<span class="ident">collect</span>();
-    <span class="kw">let</span> <span class="ident">rejected_vps</span> <span class="op">=</span> <span class="ident">a</span>.<span class="ident">rejected_vps</span>.<span class="ident">union</span>(<span class="kw-2">&amp;</span><span class="ident">b</span>.<span class="ident">rejected_vps</span>).<span class="ident">collect</span>();
+    <span class="kw">let</span> <span class="ident">accepted_vps</span> <span class="op">=</span> <span class="ident">a</span>.<span class="ident">accepted_vps</span>.<span class="ident">union</span>(<span class="kw-2">&amp;</span><span class="ident">b</span>.<span class="ident">accepted_vps</span>).<span class="ident">cloned</span>().<span class="ident">collect</span>();
+    <span class="kw">let</span> <span class="ident">rejected_vps</span> <span class="op">=</span> <span class="ident">a</span>.<span class="ident">rejected_vps</span>.<span class="ident">union</span>(<span class="kw-2">&amp;</span><span class="ident">b</span>.<span class="ident">rejected_vps</span>).<span class="ident">cloned</span>().<span class="ident">collect</span>();
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">errors</span> <span class="op">=</span> <span class="ident">a</span>.<span class="ident">errors</span>;
     <span class="ident">errors</span>.<span class="ident">append</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">b</span>.<span class="ident">errors</span>);
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">gas_used</span> <span class="op">=</span> <span class="ident">a</span>.<span class="ident">gas_used</span>;
