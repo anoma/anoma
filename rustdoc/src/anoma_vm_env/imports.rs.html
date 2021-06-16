@@ -580,6 +580,9 @@
 <span id="577">577</span>
 <span id="578">578</span>
 <span id="579">579</span>
+<span id="580">580</span>
+<span id="581">581</span>
+<span id="582">582</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">mem</span>::<span class="ident">ManuallyDrop</span>;
 
@@ -998,6 +1001,9 @@
     <span class="doccomment">/// Evaluate a validity predicate with given data. The address, changed</span>
     <span class="doccomment">/// storage keys and verifiers will have the same values as the input to</span>
     <span class="doccomment">/// caller&#39;s validity predicate.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// If the execution fails for whatever reason, this will return `false`.</span>
+    <span class="doccomment">/// Otherwise returns the result of evaluation.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">eval</span>(<span class="ident">vp_code</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>, <span class="ident">input_data</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
         <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="kw">unsafe</span> {
             <span class="ident">anoma_vp_eval</span>(

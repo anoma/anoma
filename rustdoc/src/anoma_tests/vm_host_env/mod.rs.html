@@ -433,6 +433,18 @@
 <span id="430">430</span>
 <span id="431">431</span>
 <span id="432">432</span>
+<span id="433">433</span>
+<span id="434">434</span>
+<span id="435">435</span>
+<span id="436">436</span>
+<span id="437">437</span>
+<span id="438">438</span>
+<span id="439">439</span>
+<span id="440">440</span>
+<span id="441">441</span>
+<span id="442">442</span>
+<span id="443">443</span>
+<span id="444">444</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! VM host environment integration tests.</span>
 <span class="doccomment">//!</span>
@@ -464,6 +476,10 @@
 
     <span class="kw">use</span> <span class="kw">super</span>::<span class="ident">tx</span>::<span class="kw-2">*</span>;
     <span class="kw">use</span> <span class="kw">super</span>::<span class="ident">vp</span>::<span class="kw-2">*</span>;
+
+    <span class="comment">// paths to the WASMs used for tests</span>
+    <span class="kw">const</span> <span class="ident">VP_ALWAYS_TRUE_WASM</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;../wasm_for_tests/vp_always_true.wasm&quot;</span>;
+    <span class="kw">const</span> <span class="ident">VP_ALWAYS_FALSE_WASM</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;../wasm_for_tests/vp_always_false.wasm&quot;</span>;
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="kw">fn</span> <span class="ident">test_tx_read_write</span>() {
@@ -615,8 +631,8 @@
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">env</span> <span class="op">=</span> <span class="ident">TestTxEnv</span>::<span class="ident">default</span>();
         <span class="ident">init_tx_env</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">env</span>);
 
-        <span class="kw">let</span> <span class="ident">code</span> <span class="op">=</span> <span class="ident">std</span>::<span class="ident">fs</span>::<span class="ident">read</span>(<span class="string">&quot;res/wasm/vp_template.wasm&quot;</span>)
-            .<span class="ident">expect</span>(<span class="string">&quot;cannot load user VP&quot;</span>);
+        <span class="kw">let</span> <span class="ident">code</span> <span class="op">=</span>
+            <span class="ident">std</span>::<span class="ident">fs</span>::<span class="ident">read</span>(<span class="ident">VP_ALWAYS_TRUE_WASM</span>).<span class="ident">expect</span>(<span class="string">&quot;cannot load wasm&quot;</span>);
         <span class="ident">tx_host_env</span>::<span class="ident">init_account</span>(<span class="ident">code</span>);
     }
 
@@ -859,11 +875,19 @@
         <span class="macro">assert</span><span class="macro">!</span>(<span class="op">!</span><span class="ident">result</span>);
 
         <span class="comment">// evaluating the VP template which always returns `true` should pass</span>
-        <span class="kw">let</span> <span class="ident">vp_template</span> <span class="op">=</span> <span class="ident">std</span>::<span class="ident">fs</span>::<span class="ident">read</span>(<span class="string">&quot;res/wasm/vp_template.wasm&quot;</span>)
-            .<span class="ident">expect</span>(<span class="string">&quot;cannot load user VP&quot;</span>);
+        <span class="kw">let</span> <span class="ident">code</span> <span class="op">=</span>
+            <span class="ident">std</span>::<span class="ident">fs</span>::<span class="ident">read</span>(<span class="ident">VP_ALWAYS_TRUE_WASM</span>).<span class="ident">expect</span>(<span class="string">&quot;cannot load wasm&quot;</span>);
         <span class="kw">let</span> <span class="ident">input_data</span> <span class="op">=</span> <span class="macro">vec</span><span class="macro">!</span>[];
-        <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">vp_host_env</span>::<span class="ident">eval</span>(<span class="ident">vp_template</span>, <span class="ident">input_data</span>);
+        <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">vp_host_env</span>::<span class="ident">eval</span>(<span class="ident">code</span>, <span class="ident">input_data</span>);
         <span class="macro">assert</span><span class="macro">!</span>(<span class="ident">result</span>);
+
+        <span class="comment">// evaluating the VP template which always returns `false` shouldn&#39;t</span>
+        <span class="comment">// pass</span>
+        <span class="kw">let</span> <span class="ident">code</span> <span class="op">=</span>
+            <span class="ident">std</span>::<span class="ident">fs</span>::<span class="ident">read</span>(<span class="ident">VP_ALWAYS_FALSE_WASM</span>).<span class="ident">expect</span>(<span class="string">&quot;cannot load wasm&quot;</span>);
+        <span class="kw">let</span> <span class="ident">input_data</span> <span class="op">=</span> <span class="macro">vec</span><span class="macro">!</span>[];
+        <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">vp_host_env</span>::<span class="ident">eval</span>(<span class="ident">code</span>, <span class="ident">input_data</span>);
+        <span class="macro">assert</span><span class="macro">!</span>(<span class="op">!</span><span class="ident">result</span>);
     }
 }
 </pre></div>
