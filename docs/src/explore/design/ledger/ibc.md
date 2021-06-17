@@ -1,18 +1,30 @@
 # IBC integration
 
-IBC allows the ledgers to interact with each other. IBC is a protocol to agree the consensus state and to send/receive packets between ledgers.
+[IBC](https://arxiv.org/pdf/2006.15918.pdf) allows the ledgers to interact with each other. IBC is a protocol to agree the consensus state and to send/receive packets between ledgers.
 
-## Update to another ledger
-When a ledger executes a transaction including an update to another ledger, it sends a packet and executes the associated validation code like validity predicates to check if the packet has been received. The transaction writes the update to an internal storage subspace called IBC storage. IBC storage as an IBC module makes a packet and send it. After the transaction execution, not only validity predicates but also the IBC validation code associated with the update are executed. If the validation fails, e.g. the destination ledger fails to receive the update due to time out, the transaction is aborted.
+## IBC validity predicate
+The validity predicate interacts with the IBC handler to verify the ledger state and the IBC modules, and update values according to IBC message or packet. For the performance, the code should be Rust native code unlike usual validity predicates are WASM. It is executed after all transaction executions.
 
-TODO The behaviour of the destination ledger
+There are two types of transactions invoking IBC validity predicate. One is a transaction submitted by a relayer. The transaction has an IBC message like `MsgCreateAnyClient`. IBC validity predicate has to call functions with IBC handler. The other is a transaction calling a function e.g. `ibc_write()` to update a value on another ledger.
 
-## IBC storage
-IBC storage is an IBC module to make a packet and send it to the destination. A transaction stores an update for another ledger to the IBC storage instead of the storage into which other updates are written. The IBC storage doesn't persist the update into the DB, it makes a packet and send it to the destination ledger.
+IBC validity preficate executes functions with IBC handler. It would make a packet and emit an IBC event to be scanned by a relayer, and store proofs which can be proven later. These proofs are stored according to ICS 24.
 
-We have the write log to store updates or deletes before commit. A transaction should be able to store an update for another ledger into the write log. The log of the update should be a different modification type from other updates to the same ledger, e.g. `StorageModification::IbcWrite`. At the end of the transaction execution, when the write log has an update for another ledger, IBC storage can check and send it as a packet.
+### IBC request
+IBC request notifies the ledger to call IBC validity predicate. A transaction stores the request for IBC to an IBC request list instead of the storage into which other updates are written. These requests are not persisted into the DB on the ledger. After the all transactions are executed, the ledger calls IBC validity predicate.
 
-## IBC validation
-A validation code validates an update to another ledger has been received on the destination ledger. For the performance, the code should be Rust native code. The validation is executed after all transaction executions. We can execute the validation and validity predicates concurrently.
+We have the write log to store updates or deletes before commit. A transaction should be able to store an update for another ledger into the write log. The log of the update should be a different modification type from other updates to the same ledger, e.g. `StorageModification::IbcRequest`. At the end of the transaction execution, when the write log has these requests, the ledger calls IBC validity predicates.
 
-We can know which update is for another ledger by checking the write log. After all transaction exectuions, we can call validation codes associated with the updates.
+### Emit IBC event
+Relayer can subscribe the ledger with Tendermint RPC. Anoma ledger needs to set an IBC event to `events` in the response.
+
+### Client (ICS 2)
+
+### Connection (ICS 3)
+
+### Channel (ICS 4)
+
+### Transfer (ICS 20)
+![transfer](./ibc/transfer.svg  "transfer")
+
+## Relayer (ICS 18)
+Relayer monitors the ledger and reuqests transactions to the ledger according to IBC protocol. For relayers, the ledger has to make a packet, emits an IBC event and stores proofs if needed. And, a relayer has to support Anoma ledger to query and validate the ledger state.
