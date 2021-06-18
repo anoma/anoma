@@ -57,6 +57,9 @@ These proofs can be stored to the storage on the ledger. It should be prefixed (
 ### Emit IBC event
 Relayer can subscribe the ledger with Tendermint RPC. The ledger should set IBC events to `events` in the response to allow for relayers to get the events.
 
+### IBC context
+IBC context provides functions to handle IBC modules. IBC validity predicate handles IBC modules through IBC context. `ibc-rs` defines functions required by these operations. IBC context should implement these functions. For example, `ClientReader` is defined for the read-only part of the client (ICS 2). It has functions for the client module; `client_type()`, `client_state()`, `consensus_state()`, and `client_counter()`.
+
 ## Transaction for IBC
 A requester (relayers or users) who wants to execute IBC operations sets IBC messages like `MsgCreateAnyClient` as transaction data and submit the following transaction. A function e.g. `ibc_message()` to add the messages should be provided.
 
