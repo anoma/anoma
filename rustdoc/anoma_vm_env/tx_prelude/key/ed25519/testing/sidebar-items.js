@@ -1,1 +1,1 @@
-initSidebarItems({"fn":[["keypair_1","A keypair for tests"],["keypair_2","A keypair for tests"]]});
+initSidebarItems({"fn":[["arb_keypair","Generate an arbitrary [`Keypair`]."],["keypair_1","A keypair for tests"],["keypair_2","A keypair for tests"]]});

@@ -451,6 +451,104 @@
 <span id="448">448</span>
 <span id="449">449</span>
 <span id="450">450</span>
+<span id="451">451</span>
+<span id="452">452</span>
+<span id="453">453</span>
+<span id="454">454</span>
+<span id="455">455</span>
+<span id="456">456</span>
+<span id="457">457</span>
+<span id="458">458</span>
+<span id="459">459</span>
+<span id="460">460</span>
+<span id="461">461</span>
+<span id="462">462</span>
+<span id="463">463</span>
+<span id="464">464</span>
+<span id="465">465</span>
+<span id="466">466</span>
+<span id="467">467</span>
+<span id="468">468</span>
+<span id="469">469</span>
+<span id="470">470</span>
+<span id="471">471</span>
+<span id="472">472</span>
+<span id="473">473</span>
+<span id="474">474</span>
+<span id="475">475</span>
+<span id="476">476</span>
+<span id="477">477</span>
+<span id="478">478</span>
+<span id="479">479</span>
+<span id="480">480</span>
+<span id="481">481</span>
+<span id="482">482</span>
+<span id="483">483</span>
+<span id="484">484</span>
+<span id="485">485</span>
+<span id="486">486</span>
+<span id="487">487</span>
+<span id="488">488</span>
+<span id="489">489</span>
+<span id="490">490</span>
+<span id="491">491</span>
+<span id="492">492</span>
+<span id="493">493</span>
+<span id="494">494</span>
+<span id="495">495</span>
+<span id="496">496</span>
+<span id="497">497</span>
+<span id="498">498</span>
+<span id="499">499</span>
+<span id="500">500</span>
+<span id="501">501</span>
+<span id="502">502</span>
+<span id="503">503</span>
+<span id="504">504</span>
+<span id="505">505</span>
+<span id="506">506</span>
+<span id="507">507</span>
+<span id="508">508</span>
+<span id="509">509</span>
+<span id="510">510</span>
+<span id="511">511</span>
+<span id="512">512</span>
+<span id="513">513</span>
+<span id="514">514</span>
+<span id="515">515</span>
+<span id="516">516</span>
+<span id="517">517</span>
+<span id="518">518</span>
+<span id="519">519</span>
+<span id="520">520</span>
+<span id="521">521</span>
+<span id="522">522</span>
+<span id="523">523</span>
+<span id="524">524</span>
+<span id="525">525</span>
+<span id="526">526</span>
+<span id="527">527</span>
+<span id="528">528</span>
+<span id="529">529</span>
+<span id="530">530</span>
+<span id="531">531</span>
+<span id="532">532</span>
+<span id="533">533</span>
+<span id="534">534</span>
+<span id="535">535</span>
+<span id="536">536</span>
+<span id="537">537</span>
+<span id="538">538</span>
+<span id="539">539</span>
+<span id="540">540</span>
+<span id="541">541</span>
+<span id="542">542</span>
+<span id="543">543</span>
+<span id="544">544</span>
+<span id="545">545</span>
+<span id="546">546</span>
+<span id="547">547</span>
+<span id="548">548</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Write log is temporary storage for modifications performed by a transaction.</span>
 <span class="doccomment">//! before they are committed to the ledger&#39;s storage.</span>
@@ -615,7 +713,7 @@
     <span class="doccomment">/// Get the storage keys changed and accounts keys initialized in the</span>
     <span class="doccomment">/// current transaction. The account keys point to the validity predicates</span>
     <span class="doccomment">/// of the newly created accounts.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_keys</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Key</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_keys</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">Key</span><span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">tx_write_log</span>.<span class="ident">keys</span>().<span class="ident">cloned</span>().<span class="ident">collect</span>()
     }
 
@@ -625,7 +723,7 @@
     <span class="doccomment">/// initialized accounts, but may include keys of other data written</span>
     <span class="doccomment">/// into newly initialized accounts. The accounts keys point to the validity</span>
     <span class="doccomment">/// predicates of the newly created accounts.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_partitioned_keys</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> (<span class="ident">Vec</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">Key</span><span class="op">&gt;</span>, <span class="ident">Vec</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">Key</span><span class="op">&gt;</span>) {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_partitioned_keys</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> (<span class="ident">HashSet</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">Key</span><span class="op">&gt;</span>, <span class="ident">HashSet</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">Key</span><span class="op">&gt;</span>) {
         <span class="kw">use</span> <span class="ident">itertools</span>::{<span class="ident">Either</span>, <span class="ident">Itertools</span>};
         <span class="self">self</span>.<span class="ident">tx_write_log</span>
             .<span class="ident">iter</span>()
@@ -694,23 +792,36 @@
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">verifiers_changed_keys</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">verifiers_from_tx</span>: <span class="kw-2">&amp;</span><span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">Address</span>, <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Key</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">Address</span>, <span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">Key</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+        <span class="kw">let</span> (<span class="ident">changed_keys</span>, <span class="ident">initialized_accounts</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">get_partitioned_keys</span>();
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">verifiers</span> <span class="op">=</span>
             <span class="ident">verifiers_from_tx</span>
                 .<span class="ident">iter</span>()
                 .<span class="ident">fold</span>(<span class="ident">HashMap</span>::<span class="ident">new</span>(), <span class="op">|</span><span class="kw-2">mut</span> <span class="ident">acc</span>, <span class="ident">addr</span><span class="op">|</span> {
-                    <span class="ident">acc</span>.<span class="ident">insert</span>(<span class="ident">addr</span>.<span class="ident">clone</span>(), <span class="macro">vec</span><span class="macro">!</span>[]);
+                    <span class="kw">let</span> <span class="ident">changed_keys</span>: <span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">Key</span><span class="op">&gt;</span> <span class="op">=</span>
+                        <span class="ident">changed_keys</span>.<span class="ident">iter</span>().<span class="ident">map</span>(<span class="op">|</span><span class="kw-2">&amp;</span><span class="ident">key</span><span class="op">|</span> <span class="ident">key</span>.<span class="ident">clone</span>()).<span class="ident">collect</span>();
+                    <span class="ident">acc</span>.<span class="ident">insert</span>(<span class="ident">addr</span>.<span class="ident">clone</span>(), <span class="ident">changed_keys</span>);
                     <span class="ident">acc</span>
                 });
 
-        <span class="kw">let</span> (<span class="ident">changed_keys</span>, <span class="ident">initialized_accounts</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">get_partitioned_keys</span>();
         <span class="comment">// get changed keys grouped by the address</span>
         <span class="kw">for</span> <span class="ident">key</span> <span class="kw">in</span> <span class="ident">changed_keys</span> {
             <span class="kw">for</span> <span class="ident">addr</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="ident">key</span>.<span class="ident">find_addresses</span>() {
+                <span class="kw">if</span> <span class="ident">verifiers_from_tx</span>.<span class="ident">contains</span>(<span class="ident">addr</span>) {
+                    <span class="comment">// We can skip this, because it&#39;s been added from the Tx</span>
+                    <span class="comment">// above, which associates with this address all the</span>
+                    <span class="comment">// changed storage keys, even if their address is not</span>
+                    <span class="comment">// included in the key.</span>
+                    <span class="kw">continue</span>;
+                }
                 <span class="kw">match</span> <span class="ident">verifiers</span>.<span class="ident">get_mut</span>(<span class="kw-2">&amp;</span><span class="ident">addr</span>) {
-                    <span class="prelude-val">Some</span>(<span class="ident">keys</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">keys</span>.<span class="ident">push</span>(<span class="ident">key</span>.<span class="ident">clone</span>()),
+                    <span class="prelude-val">Some</span>(<span class="ident">keys</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                        <span class="ident">keys</span>.<span class="ident">insert</span>(<span class="ident">key</span>.<span class="ident">clone</span>());
+                    }
                     <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> {
-                        <span class="ident">verifiers</span>.<span class="ident">insert</span>(<span class="ident">addr</span>.<span class="ident">clone</span>(), <span class="macro">vec</span><span class="macro">!</span>[<span class="ident">key</span>.<span class="ident">clone</span>()]);
+                        <span class="kw">let</span> <span class="ident">keys</span>: <span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">Key</span><span class="op">&gt;</span> <span class="op">=</span>
+                            [<span class="ident">key</span>].<span class="ident">iter</span>().<span class="ident">map</span>(<span class="op">|</span><span class="kw-2">&amp;</span><span class="ident">key</span><span class="op">|</span> <span class="ident">key</span>.<span class="ident">clone</span>()).<span class="ident">collect</span>();
+                        <span class="ident">verifiers</span>.<span class="ident">insert</span>(<span class="ident">addr</span>.<span class="ident">clone</span>(), <span class="ident">keys</span>);
                     }
                 }
             }
@@ -718,7 +829,7 @@
         <span class="comment">// The new accounts should be validated by every verifier&#39;s VP</span>
         <span class="kw">for</span> <span class="ident">key</span> <span class="kw">in</span> <span class="ident">initialized_accounts</span> {
             <span class="kw">for</span> (<span class="ident">_verifier</span>, <span class="ident">keys</span>) <span class="kw">in</span> <span class="ident">verifiers</span>.<span class="ident">iter_mut</span>() {
-                <span class="ident">keys</span>.<span class="ident">push</span>(<span class="ident">key</span>.<span class="ident">clone</span>());
+                <span class="ident">keys</span>.<span class="ident">insert</span>(<span class="ident">key</span>.<span class="ident">clone</span>());
             }
         }
         <span class="ident">verifiers</span>
@@ -727,6 +838,9 @@
 
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
 <span class="kw">mod</span> <span class="ident">tests</span> {
+    <span class="kw">use</span> <span class="ident">pretty_assertions</span>::<span class="ident">assert_eq</span>;
+    <span class="kw">use</span> <span class="ident">proptest</span>::<span class="ident">prelude</span>::<span class="kw-2">*</span>;
+
     <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
@@ -900,6 +1014,88 @@
         <span class="macro">assert</span><span class="macro">!</span>(<span class="ident">value</span>.<span class="ident">is_none</span>());
         <span class="kw">let</span> (<span class="ident">value</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">storage</span>.<span class="ident">read</span>(<span class="kw-2">&amp;</span><span class="ident">key3</span>).<span class="ident">expect</span>(<span class="string">&quot;read failed&quot;</span>);
         <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">value</span>.<span class="ident">expect</span>(<span class="string">&quot;no read value&quot;</span>), <span class="ident">val3</span>);
+    }
+
+    <span class="macro">proptest</span><span class="macro">!</span> {
+        <span class="doccomment">/// Test [`WriteLog::verifiers_changed_keys`] that:</span>
+        <span class="doccomment">/// 1. Every address from `verifiers_from_tx` is associated with all the</span>
+        <span class="doccomment">///    changed storage keys.</span>
+        <span class="doccomment">/// 2. Every changed storage key except for keys to initialized accounts</span>
+        <span class="doccomment">///    is associated with all the addresses included in the key.</span>
+        <span class="doccomment">/// 3. Every address is associated with all the newly initialized</span>
+        <span class="doccomment">///    accounts.</span>
+        <span class="attribute">#[<span class="ident">test</span>]</span>
+        <span class="kw">fn</span> <span class="ident">verifiers_changed_key_tx_all_key</span>(
+            <span class="ident">verifiers_from_tx</span> <span class="kw">in</span> <span class="ident">testing</span>::<span class="ident">arb_verifiers_from_tx</span>(),
+            <span class="ident">tx_write_log</span> <span class="kw">in</span> <span class="ident">testing</span>::<span class="ident">arb_tx_write_log</span>(),
+        ) {
+            <span class="kw">let</span> <span class="ident">write_log</span> <span class="op">=</span> <span class="ident">WriteLog</span> { <span class="ident">tx_write_log</span>, ..<span class="ident">WriteLog</span>::<span class="ident">default</span>() };
+            <span class="kw">let</span> <span class="ident">all_keys</span> <span class="op">=</span> <span class="ident">write_log</span>.<span class="ident">get_keys</span>();
+
+            <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">write_log</span>.<span class="ident">verifiers_changed_keys</span>(<span class="kw-2">&amp;</span><span class="ident">verifiers_from_tx</span>);
+
+            <span class="kw">for</span> <span class="ident">verifier_from_tx</span> <span class="kw">in</span> <span class="ident">verifiers_from_tx</span> {
+                <span class="macro">assert</span><span class="macro">!</span>(<span class="ident">result</span>.<span class="ident">contains_key</span>(<span class="kw-2">&amp;</span><span class="ident">verifier_from_tx</span>));
+                <span class="kw">let</span> <span class="ident">keys</span> <span class="op">=</span> <span class="ident">result</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">verifier_from_tx</span>).<span class="ident">unwrap</span>().<span class="ident">clone</span>();
+                <span class="comment">// Test for 1.</span>
+                <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="kw-2">&amp;</span><span class="ident">keys</span>, <span class="kw-2">&amp;</span><span class="ident">all_keys</span>);
+            }
+
+            <span class="kw">let</span> (<span class="ident">_changed_keys</span>, <span class="ident">initialized_accounts</span>) <span class="op">=</span> <span class="ident">write_log</span>.<span class="ident">get_partitioned_keys</span>();
+            <span class="kw">for</span> (<span class="ident">_addr</span>, <span class="ident">keys</span>) <span class="kw">in</span> <span class="ident">result</span>.<span class="ident">iter</span>() {
+                <span class="kw">for</span> <span class="ident">key</span> <span class="kw">in</span> <span class="ident">keys</span> {
+                    <span class="kw">if</span> <span class="op">!</span><span class="ident">initialized_accounts</span>.<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>) {
+                        <span class="kw">for</span> <span class="ident">addr</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="ident">key</span>.<span class="ident">find_addresses</span>() {
+                            <span class="kw">let</span> <span class="ident">keys</span> <span class="op">=</span> <span class="ident">result</span>.<span class="ident">get</span>(<span class="ident">addr</span>).<span class="ident">unwrap</span>();
+                            <span class="comment">// Test for 2.</span>
+                            <span class="macro">assert</span><span class="macro">!</span>(<span class="ident">keys</span>.<span class="ident">contains</span>(<span class="ident">key</span>));
+                        }
+                    }
+                }
+            }
+
+            <span class="kw">for</span> <span class="ident">initialized_account</span> <span class="kw">in</span> <span class="ident">initialized_accounts</span> {
+                <span class="kw">for</span> (<span class="ident">_addr</span>, <span class="ident">keys</span>) <span class="kw">in</span> <span class="ident">result</span>.<span class="ident">iter</span>() {
+                    <span class="comment">// Test for 3.</span>
+                    <span class="macro">assert</span><span class="macro">!</span>(<span class="ident">keys</span>.<span class="ident">contains</span>(<span class="ident">initialized_account</span>));
+                }
+            }
+        }
+    }
+}
+
+<span class="doccomment">/// Helpers for testing with write log.</span>
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">test</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;testing&quot;</span>))]</span>
+<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">testing</span> {
+    <span class="kw">use</span> <span class="ident">proptest</span>::<span class="ident">collection</span>;
+    <span class="kw">use</span> <span class="ident">proptest</span>::<span class="ident">prelude</span>::<span class="kw-2">*</span>;
+
+    <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
+    <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">types</span>::<span class="ident">address</span>::<span class="ident">testing</span>::<span class="ident">arb_address</span>;
+    <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">types</span>::<span class="ident">storage</span>::<span class="ident">testing</span>::<span class="ident">arb_key</span>;
+
+    <span class="doccomment">/// Generate an arbitrary tx write log of [`HashMap&lt;Key,</span>
+    <span class="doccomment">/// StorageModification&gt;`].</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">arb_tx_write_log</span>()
+    <span class="op">-</span><span class="op">&gt;</span> <span class="kw">impl</span> <span class="ident">Strategy</span><span class="op">&lt;</span><span class="ident">Value</span> <span class="op">=</span> <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">Key</span>, <span class="ident">StorageModification</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+        <span class="ident">collection</span>::<span class="ident">hash_map</span>(<span class="ident">arb_key</span>(), <span class="ident">arb_storage_modification</span>(), <span class="number">0</span>..<span class="number">100</span>)
+    }
+
+    <span class="doccomment">/// Generate arbitrary verifiers from tx of [`HashSet&lt;Address&gt;&gt;`].</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">arb_verifiers_from_tx</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="kw">impl</span> <span class="ident">Strategy</span><span class="op">&lt;</span><span class="ident">Value</span> <span class="op">=</span> <span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+        <span class="ident">collection</span>::<span class="ident">hash_set</span>(<span class="ident">arb_address</span>(), <span class="number">0</span>..<span class="number">10</span>)
+    }
+
+    <span class="doccomment">/// Generate an arbitrary [`StorageModification`].</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">arb_storage_modification</span>()
+    <span class="op">-</span><span class="op">&gt;</span> <span class="kw">impl</span> <span class="ident">Strategy</span><span class="op">&lt;</span><span class="ident">Value</span> <span class="op">=</span> <span class="ident">StorageModification</span><span class="op">&gt;</span> {
+        <span class="macro">prop_oneof</span><span class="macro">!</span>[
+            <span class="ident">any</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span>()
+                .<span class="ident">prop_map</span>(<span class="op">|</span><span class="ident">value</span><span class="op">|</span> <span class="ident">StorageModification</span>::<span class="ident">Write</span> { <span class="ident">value</span> }),
+            <span class="ident">Just</span>(<span class="ident">StorageModification</span>::<span class="ident">Delete</span>),
+            <span class="ident">any</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span>()
+                .<span class="ident">prop_map</span>(<span class="op">|</span><span class="ident">vp</span><span class="op">|</span> <span class="ident">StorageModification</span>::<span class="ident">InitAccount</span> { <span class="ident">vp</span> }),
+        ]
     }
 }
 </pre></div>

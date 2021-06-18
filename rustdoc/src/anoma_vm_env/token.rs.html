@@ -77,7 +77,7 @@
 <span class="doccomment">/// A token validity predicate.</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">vp</span>(
     <span class="ident">token</span>: <span class="kw-2">&amp;</span><span class="ident">Address</span>,
-    <span class="ident">keys_changed</span>: <span class="kw-2">&amp;</span>[<span class="ident">Key</span>],
+    <span class="ident">keys_changed</span>: <span class="kw-2">&amp;</span><span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">Key</span><span class="op">&gt;</span>,
     <span class="ident">verifiers</span>: <span class="kw-2">&amp;</span><span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span>,
 ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
     <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">imports</span>::<span class="ident">vp</span>;

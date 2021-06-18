@@ -1204,10 +1204,6 @@
 <span id="1201">1201</span>
 <span id="1202">1202</span>
 <span id="1203">1203</span>
-<span id="1204">1204</span>
-<span id="1205">1205</span>
-<span id="1206">1206</span>
-<span id="1207">1207</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Wasm runners</span>
 
@@ -1235,10 +1231,7 @@
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">vm</span>::<span class="ident">prefix_iter</span>::<span class="ident">PrefixIterators</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">vm</span>::<span class="ident">types</span>::{<span class="ident">TxInput</span>, <span class="ident">VpInput</span>};
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">vm</span>::<span class="ident">wasm</span>::<span class="ident">memory</span>;
-<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">vm</span>::{
-    <span class="ident">validate_untrusted_wasm</span>, <span class="ident">EnvHostSliceWrapper</span>, <span class="ident">EnvHostWrapper</span>,
-    <span class="ident">MutEnvHostWrapper</span>,
-};
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">vm</span>::{<span class="ident">validate_untrusted_wasm</span>, <span class="ident">EnvHostWrapper</span>, <span class="ident">MutEnvHostWrapper</span>};
 
 <span class="kw">const</span> <span class="ident">TX_ENTRYPOINT</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;_apply_tx&quot;</span>;
 <span class="kw">const</span> <span class="ident">VP_ENTRYPOINT</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;_validate_tx&quot;</span>;
@@ -1433,7 +1426,7 @@
         <span class="ident">storage</span>: <span class="kw-2">&amp;</span><span class="ident">Storage</span><span class="op">&lt;</span><span class="ident">DB</span>, <span class="ident">H</span><span class="op">&gt;</span>,
         <span class="ident">write_log</span>: <span class="kw-2">&amp;</span><span class="ident">WriteLog</span>,
         <span class="ident">vp_gas_meter</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">VpGasMeter</span>,
-        <span class="ident">keys_changed</span>: <span class="kw-2">&amp;</span>[<span class="ident">Key</span>],
+        <span class="ident">keys_changed</span>: <span class="kw-2">&amp;</span><span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">Key</span><span class="op">&gt;</span>,
         <span class="ident">verifiers</span>: <span class="kw-2">&amp;</span><span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span>
     <span class="kw">where</span>
@@ -1458,8 +1451,7 @@
         <span class="comment">// there is no shared access</span>
         <span class="kw">let</span> <span class="ident">gas_meter</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">MutEnvHostWrapper</span>::<span class="ident">new</span>(<span class="ident">vp_gas_meter</span>) };
         <span class="comment">// Read-only access from parallel Vp runners</span>
-        <span class="kw">let</span> <span class="ident">env_keys_changed</span> <span class="op">=</span>
-            <span class="kw">unsafe</span> { <span class="ident">EnvHostSliceWrapper</span>::<span class="ident">new</span>(<span class="ident">keys_changed</span>) };
+        <span class="kw">let</span> <span class="ident">env_keys_changed</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">EnvHostWrapper</span>::<span class="ident">new</span>(<span class="ident">keys_changed</span>) };
         <span class="comment">// Read-only access from parallel Vp runners</span>
         <span class="kw">let</span> <span class="ident">env_verifiers</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">EnvHostWrapper</span>::<span class="ident">new</span>(<span class="ident">verifiers</span>) };
         <span class="comment">// This is not thread-safe, but because each VP has its own instance</span>
@@ -1578,7 +1570,7 @@
     <span class="doccomment">/// The transaction code.</span>
     <span class="kw">pub</span> <span class="ident">tx</span>: <span class="ident">EnvHostWrapper</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">Tx</span><span class="op">&gt;</span>,
     <span class="doccomment">/// The storage keys that have been changed.</span>
-    <span class="kw">pub</span> <span class="ident">keys_changed</span>: <span class="ident">EnvHostSliceWrapper</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> [<span class="ident">Key</span>]<span class="op">&gt;</span>,
+    <span class="kw">pub</span> <span class="ident">keys_changed</span>: <span class="ident">EnvHostWrapper</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">Key</span><span class="op">&gt;</span><span class="op">&gt;</span>,
     <span class="doccomment">/// The verifiers whose validity predicates should be triggered.</span>
     <span class="kw">pub</span> <span class="ident">verifiers</span>: <span class="ident">EnvHostWrapper</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span><span class="op">&gt;</span>,
     <span class="doccomment">/// Cache for 2-step reads from host environment.</span>
@@ -1971,7 +1963,7 @@
         <span class="kw">let</span> <span class="ident">addr</span> <span class="op">=</span> <span class="ident">storage</span>.<span class="ident">address_gen</span>.<span class="ident">generate_address</span>(<span class="string">&quot;rng seed&quot;</span>);
         <span class="kw">let</span> <span class="ident">write_log</span> <span class="op">=</span> <span class="ident">WriteLog</span>::<span class="ident">default</span>();
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">gas_meter</span> <span class="op">=</span> <span class="ident">VpGasMeter</span>::<span class="ident">new</span>(<span class="number">0</span>);
-        <span class="kw">let</span> <span class="ident">keys_changed</span> <span class="op">=</span> <span class="macro">vec</span><span class="macro">!</span>[];
+        <span class="kw">let</span> <span class="ident">keys_changed</span> <span class="op">=</span> <span class="ident">HashSet</span>::<span class="ident">new</span>();
         <span class="kw">let</span> <span class="ident">verifiers</span> <span class="op">=</span> <span class="ident">HashSet</span>::<span class="ident">new</span>();
 
         <span class="comment">// This code will call `eval` with the other VP below</span>
@@ -2002,7 +1994,7 @@
                 <span class="kw-2">&amp;</span><span class="ident">storage</span>,
                 <span class="kw-2">&amp;</span><span class="ident">write_log</span>,
                 <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">gas_meter</span>,
-                <span class="kw-2">&amp;</span><span class="ident">keys_changed</span>[..],
+                <span class="kw-2">&amp;</span><span class="ident">keys_changed</span>,
                 <span class="kw-2">&amp;</span><span class="ident">verifiers</span>,
             )
             .<span class="ident">unwrap</span>();
@@ -2028,7 +2020,7 @@
                 <span class="kw-2">&amp;</span><span class="ident">storage</span>,
                 <span class="kw-2">&amp;</span><span class="ident">write_log</span>,
                 <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">gas_meter</span>,
-                <span class="kw-2">&amp;</span><span class="ident">keys_changed</span>[..],
+                <span class="kw-2">&amp;</span><span class="ident">keys_changed</span>,
                 <span class="kw-2">&amp;</span><span class="ident">verifiers</span>,
             )
             .<span class="ident">unwrap</span>();
@@ -2045,7 +2037,7 @@
         <span class="kw">let</span> <span class="ident">addr</span> <span class="op">=</span> <span class="ident">storage</span>.<span class="ident">address_gen</span>.<span class="ident">generate_address</span>(<span class="string">&quot;rng seed&quot;</span>);
         <span class="kw">let</span> <span class="ident">write_log</span> <span class="op">=</span> <span class="ident">WriteLog</span>::<span class="ident">default</span>();
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">gas_meter</span> <span class="op">=</span> <span class="ident">VpGasMeter</span>::<span class="ident">new</span>(<span class="number">0</span>);
-        <span class="kw">let</span> <span class="ident">keys_changed</span> <span class="op">=</span> <span class="macro">vec</span><span class="macro">!</span>[];
+        <span class="kw">let</span> <span class="ident">keys_changed</span> <span class="op">=</span> <span class="ident">HashSet</span>::<span class="ident">new</span>();
         <span class="kw">let</span> <span class="ident">verifiers</span> <span class="op">=</span> <span class="ident">HashSet</span>::<span class="ident">new</span>();
 
         <span class="comment">// This code will allocate memory of the given size</span>
@@ -2066,7 +2058,7 @@
             <span class="kw-2">&amp;</span><span class="ident">storage</span>,
             <span class="kw-2">&amp;</span><span class="ident">write_log</span>,
             <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">gas_meter</span>,
-            <span class="kw-2">&amp;</span><span class="ident">keys_changed</span>[..],
+            <span class="kw-2">&amp;</span><span class="ident">keys_changed</span>,
             <span class="kw-2">&amp;</span><span class="ident">verifiers</span>,
         );
         <span class="macro">assert</span><span class="macro">!</span>(<span class="ident">result</span>.<span class="ident">is_ok</span>(), <span class="string">&quot;Expected success, got {:?}&quot;</span>, <span class="ident">result</span>);
@@ -2083,7 +2075,7 @@
                 <span class="kw-2">&amp;</span><span class="ident">storage</span>,
                 <span class="kw-2">&amp;</span><span class="ident">write_log</span>,
                 <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">gas_meter</span>,
-                <span class="kw-2">&amp;</span><span class="ident">keys_changed</span>[..],
+                <span class="kw-2">&amp;</span><span class="ident">keys_changed</span>,
                 <span class="kw-2">&amp;</span><span class="ident">verifiers</span>,
             )
             .<span class="ident">expect_err</span>(<span class="string">&quot;Expected to run out of memory&quot;</span>);
@@ -2138,7 +2130,7 @@
         <span class="kw">let</span> <span class="ident">addr</span> <span class="op">=</span> <span class="ident">storage</span>.<span class="ident">address_gen</span>.<span class="ident">generate_address</span>(<span class="string">&quot;rng seed&quot;</span>);
         <span class="kw">let</span> <span class="ident">write_log</span> <span class="op">=</span> <span class="ident">WriteLog</span>::<span class="ident">default</span>();
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">gas_meter</span> <span class="op">=</span> <span class="ident">VpGasMeter</span>::<span class="ident">new</span>(<span class="number">0</span>);
-        <span class="kw">let</span> <span class="ident">keys_changed</span> <span class="op">=</span> <span class="macro">vec</span><span class="macro">!</span>[];
+        <span class="kw">let</span> <span class="ident">keys_changed</span> <span class="op">=</span> <span class="ident">HashSet</span>::<span class="ident">new</span>();
         <span class="kw">let</span> <span class="ident">verifiers</span> <span class="op">=</span> <span class="ident">HashSet</span>::<span class="ident">new</span>();
 
         <span class="kw">let</span> <span class="ident">vp_code</span> <span class="op">=</span>
@@ -2159,7 +2151,7 @@
             <span class="kw-2">&amp;</span><span class="ident">storage</span>,
             <span class="kw-2">&amp;</span><span class="ident">write_log</span>,
             <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">gas_meter</span>,
-            <span class="kw-2">&amp;</span><span class="ident">keys_changed</span>[..],
+            <span class="kw-2">&amp;</span><span class="ident">keys_changed</span>,
             <span class="kw-2">&amp;</span><span class="ident">verifiers</span>,
         );
         <span class="kw">match</span> <span class="ident">result</span> {
@@ -2222,7 +2214,7 @@
         <span class="kw">let</span> <span class="ident">addr</span> <span class="op">=</span> <span class="ident">storage</span>.<span class="ident">address_gen</span>.<span class="ident">generate_address</span>(<span class="string">&quot;rng seed&quot;</span>);
         <span class="kw">let</span> <span class="ident">write_log</span> <span class="op">=</span> <span class="ident">WriteLog</span>::<span class="ident">default</span>();
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">gas_meter</span> <span class="op">=</span> <span class="ident">VpGasMeter</span>::<span class="ident">new</span>(<span class="number">0</span>);
-        <span class="kw">let</span> <span class="ident">keys_changed</span> <span class="op">=</span> <span class="macro">vec</span><span class="macro">!</span>[];
+        <span class="kw">let</span> <span class="ident">keys_changed</span> <span class="op">=</span> <span class="ident">HashSet</span>::<span class="ident">new</span>();
         <span class="kw">let</span> <span class="ident">verifiers</span> <span class="op">=</span> <span class="ident">HashSet</span>::<span class="ident">new</span>();
 
         <span class="kw">let</span> <span class="ident">vp_read_key</span> <span class="op">=</span>
@@ -2249,7 +2241,7 @@
                 <span class="kw-2">&amp;</span><span class="ident">storage</span>,
                 <span class="kw-2">&amp;</span><span class="ident">write_log</span>,
                 <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">gas_meter</span>,
-                <span class="kw-2">&amp;</span><span class="ident">keys_changed</span>[..],
+                <span class="kw-2">&amp;</span><span class="ident">keys_changed</span>,
                 <span class="kw-2">&amp;</span><span class="ident">verifiers</span>,
             )
             .<span class="ident">expect_err</span>(<span class="string">&quot;Expected to run out of memory&quot;</span>);
@@ -2270,7 +2262,7 @@
         <span class="kw">let</span> <span class="ident">addr</span> <span class="op">=</span> <span class="ident">storage</span>.<span class="ident">address_gen</span>.<span class="ident">generate_address</span>(<span class="string">&quot;rng seed&quot;</span>);
         <span class="kw">let</span> <span class="ident">write_log</span> <span class="op">=</span> <span class="ident">WriteLog</span>::<span class="ident">default</span>();
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">gas_meter</span> <span class="op">=</span> <span class="ident">VpGasMeter</span>::<span class="ident">new</span>(<span class="number">0</span>);
-        <span class="kw">let</span> <span class="ident">keys_changed</span> <span class="op">=</span> <span class="macro">vec</span><span class="macro">!</span>[];
+        <span class="kw">let</span> <span class="ident">keys_changed</span> <span class="op">=</span> <span class="ident">HashSet</span>::<span class="ident">new</span>();
         <span class="kw">let</span> <span class="ident">verifiers</span> <span class="op">=</span> <span class="ident">HashSet</span>::<span class="ident">new</span>();
 
         <span class="comment">// This code will call `eval` with the other VP below</span>
@@ -2305,7 +2297,7 @@
                 <span class="kw-2">&amp;</span><span class="ident">storage</span>,
                 <span class="kw-2">&amp;</span><span class="ident">write_log</span>,
                 <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">gas_meter</span>,
-                <span class="kw-2">&amp;</span><span class="ident">keys_changed</span>[..],
+                <span class="kw-2">&amp;</span><span class="ident">keys_changed</span>,
                 <span class="kw-2">&amp;</span><span class="ident">verifiers</span>,
             )
             .<span class="ident">unwrap</span>();
@@ -2390,7 +2382,7 @@
         <span class="kw">let</span> <span class="ident">addr</span> <span class="op">=</span> <span class="ident">storage</span>.<span class="ident">address_gen</span>.<span class="ident">generate_address</span>(<span class="string">&quot;rng seed&quot;</span>);
         <span class="kw">let</span> <span class="ident">write_log</span> <span class="op">=</span> <span class="ident">WriteLog</span>::<span class="ident">default</span>();
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">gas_meter</span> <span class="op">=</span> <span class="ident">VpGasMeter</span>::<span class="ident">new</span>(<span class="number">0</span>);
-        <span class="kw">let</span> <span class="ident">keys_changed</span> <span class="op">=</span> <span class="macro">vec</span><span class="macro">!</span>[];
+        <span class="kw">let</span> <span class="ident">keys_changed</span> <span class="op">=</span> <span class="ident">HashSet</span>::<span class="ident">new</span>();
         <span class="kw">let</span> <span class="ident">verifiers</span> <span class="op">=</span> <span class="ident">HashSet</span>::<span class="ident">new</span>();
         <span class="ident">runner</span>.<span class="ident">run</span>(
             <span class="ident">vp_code</span>,
@@ -2399,7 +2391,7 @@
             <span class="kw-2">&amp;</span><span class="ident">storage</span>,
             <span class="kw-2">&amp;</span><span class="ident">write_log</span>,
             <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">gas_meter</span>,
-            <span class="kw-2">&amp;</span><span class="ident">keys_changed</span>[..],
+            <span class="kw-2">&amp;</span><span class="ident">keys_changed</span>,
             <span class="kw-2">&amp;</span><span class="ident">verifiers</span>,
         )
     }

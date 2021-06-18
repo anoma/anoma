@@ -447,6 +447,37 @@
 <span id="444">444</span>
 <span id="445">445</span>
 <span id="446">446</span>
+<span id="447">447</span>
+<span id="448">448</span>
+<span id="449">449</span>
+<span id="450">450</span>
+<span id="451">451</span>
+<span id="452">452</span>
+<span id="453">453</span>
+<span id="454">454</span>
+<span id="455">455</span>
+<span id="456">456</span>
+<span id="457">457</span>
+<span id="458">458</span>
+<span id="459">459</span>
+<span id="460">460</span>
+<span id="461">461</span>
+<span id="462">462</span>
+<span id="463">463</span>
+<span id="464">464</span>
+<span id="465">465</span>
+<span id="466">466</span>
+<span id="467">467</span>
+<span id="468">468</span>
+<span id="469">469</span>
+<span id="470">470</span>
+<span id="471">471</span>
+<span id="472">472</span>
+<span id="473">473</span>
+<span id="474">474</span>
+<span id="475">475</span>
+<span id="476">476</span>
+<span id="477">477</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Storage types</span>
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">convert</span>::{<span class="ident">TryFrom</span>, <span class="ident">TryInto</span>};
@@ -892,6 +923,37 @@
             <span class="ident">Error</span>::<span class="ident">InvalidKeySeg</span>(<span class="ident">s</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">s</span>, <span class="string">&quot;?&quot;</span>),
             <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;unexpected error happens&quot;</span>),
         }
+    }
+}
+
+<span class="doccomment">/// Helpers for testing with storage types.</span>
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">test</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;testing&quot;</span>))]</span>
+<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">testing</span> {
+    <span class="kw">use</span> <span class="ident">proptest</span>::<span class="ident">collection</span>;
+    <span class="kw">use</span> <span class="ident">proptest</span>::<span class="ident">prelude</span>::<span class="kw-2">*</span>;
+
+    <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
+    <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">types</span>::<span class="ident">address</span>::<span class="ident">testing</span>::<span class="ident">arb_address</span>;
+
+    <span class="doccomment">/// Generate an arbitrary [`Key`].</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">arb_key</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="kw">impl</span> <span class="ident">Strategy</span><span class="op">&lt;</span><span class="ident">Value</span> <span class="op">=</span> <span class="ident">Key</span><span class="op">&gt;</span> {
+        <span class="macro">prop_oneof</span><span class="macro">!</span>[
+            <span class="comment">// a key for a validity predicate</span>
+            <span class="ident">arb_address</span>()
+                .<span class="ident">prop_map</span>(<span class="op">|</span><span class="ident">addr</span><span class="op">|</span> <span class="ident">Key</span>::<span class="ident">validity_predicate</span>(<span class="kw-2">&amp;</span><span class="ident">addr</span>).<span class="ident">unwrap</span>()),
+            <span class="comment">// a key from key segments</span>
+            <span class="ident">collection</span>::<span class="ident">vec</span>(<span class="ident">arb_key_seg</span>(), <span class="number">1</span>..<span class="number">5</span>)
+                .<span class="ident">prop_map</span>(<span class="op">|</span><span class="ident">segments</span><span class="op">|</span> { <span class="ident">Key</span> { <span class="ident">segments</span> } }),
+        ]
+    }
+
+    <span class="doccomment">/// Generate an arbitrary [`DbKeyKey`].</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">arb_key_seg</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="kw">impl</span> <span class="ident">Strategy</span><span class="op">&lt;</span><span class="ident">Value</span> <span class="op">=</span> <span class="ident">DbKeySeg</span><span class="op">&gt;</span> {
+        <span class="macro">prop_oneof</span><span class="macro">!</span>[
+            <span class="comment">// the string segment is 5 time more likely to be generated</span>
+            <span class="number">5</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;[a-zA-Z0-9_]{1,100}&quot;</span>.<span class="ident">prop_map</span>(<span class="ident">DbKeySeg</span>::<span class="ident">StringSeg</span>),
+            <span class="number">1</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">arb_address</span>().<span class="ident">prop_map</span>(<span class="ident">DbKeySeg</span>::<span class="ident">AddressSeg</span>),
+        ]
     }
 }
 </pre></div>

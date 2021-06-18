@@ -583,6 +583,11 @@
 <span id="580">580</span>
 <span id="581">581</span>
 <span id="582">582</span>
+<span id="583">583</span>
+<span id="584">584</span>
+<span id="585">585</span>
+<span id="586">586</span>
+<span id="587">587</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">mem</span>::<span class="ident">ManuallyDrop</span>;
 
@@ -713,7 +718,12 @@
         }
     }
 
-    <span class="doccomment">/// Insert a verifier</span>
+    <span class="doccomment">/// Insert a verifier address. This address must exist on chain, otherwise</span>
+    <span class="doccomment">/// the transaction will be rejected.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// Validity predicates of each verifier addresses inserted in the</span>
+    <span class="doccomment">/// transaction will validate the transaction and will receive all the</span>
+    <span class="doccomment">/// changed storage keys and initialized accounts in their inputs.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">insert_verifier</span>(<span class="ident">addr</span>: <span class="ident">Address</span>) {
         <span class="kw">let</span> <span class="ident">addr</span> <span class="op">=</span> <span class="ident">addr</span>.<span class="ident">encode</span>();
         <span class="kw">unsafe</span> { <span class="ident">anoma_tx_insert_verifier</span>(<span class="ident">addr</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="kw">_</span>, <span class="ident">addr</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="kw">_</span>) }

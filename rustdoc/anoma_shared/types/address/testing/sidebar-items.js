@@ -1,1 +1,1 @@
-initSidebarItems({"fn":[["established_address_1","A sampled established address for tests"],["established_address_2","A sampled established address for tests"]]});
+initSidebarItems({"fn":[["arb_address","Generate an arbitrary [`Address`]."],["arb_established_address","Generate an arbitrary [`EstablishedAddress`]."],["arb_implicit_address","Generate an arbitrary [`ImplicitAddress`]."],["established_address_1","A sampled established address for tests"],["established_address_2","A sampled established address for tests"]]});

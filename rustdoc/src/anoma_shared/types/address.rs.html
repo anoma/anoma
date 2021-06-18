@@ -309,6 +309,43 @@
 <span id="306">306</span>
 <span id="307">307</span>
 <span id="308">308</span>
+<span id="309">309</span>
+<span id="310">310</span>
+<span id="311">311</span>
+<span id="312">312</span>
+<span id="313">313</span>
+<span id="314">314</span>
+<span id="315">315</span>
+<span id="316">316</span>
+<span id="317">317</span>
+<span id="318">318</span>
+<span id="319">319</span>
+<span id="320">320</span>
+<span id="321">321</span>
+<span id="322">322</span>
+<span id="323">323</span>
+<span id="324">324</span>
+<span id="325">325</span>
+<span id="326">326</span>
+<span id="327">327</span>
+<span id="328">328</span>
+<span id="329">329</span>
+<span id="330">330</span>
+<span id="331">331</span>
+<span id="332">332</span>
+<span id="333">333</span>
+<span id="334">334</span>
+<span id="335">335</span>
+<span id="336">336</span>
+<span id="337">337</span>
+<span id="338">338</span>
+<span id="339">339</span>
+<span id="340">340</span>
+<span id="341">341</span>
+<span id="342">342</span>
+<span id="343">343</span>
+<span id="344">344</span>
+<span id="345">345</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Implements transparent addresses as described in [Accounts</span>
 <span class="doccomment">//! Addresses](tech-specs/src/explore/design/ledger/accounts.md#addresses).</span>
@@ -606,7 +643,10 @@
 <span class="doccomment">/// Helpers for testing with addresses.</span>
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">test</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;testing&quot;</span>))]</span>
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">testing</span> {
+    <span class="kw">use</span> <span class="ident">proptest</span>::<span class="ident">prelude</span>::<span class="kw-2">*</span>;
+
     <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
+    <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">types</span>::<span class="ident">key</span>::<span class="ident">ed25519</span>;
 
     <span class="doccomment">/// A sampled established address for tests</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">established_address_1</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Address</span> {
@@ -616,6 +656,40 @@
     <span class="doccomment">/// A sampled established address for tests</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">established_address_2</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Address</span> {
         <span class="ident">Address</span>::<span class="ident">decode</span>(<span class="string">&quot;a1qq5qqqqqgcuyxv2pxgcrzdecx4prq3pexccr2vj9xse5gvf3gvmnv3f3xqcyyvjyxv6yvv34e393x7&quot;</span>).<span class="ident">expect</span>(<span class="string">&quot;The token address decoding shouldn&#39;t fail&quot;</span>)
+    }
+
+    <span class="doccomment">/// Generate an arbitrary [`Address`].</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">arb_address</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="kw">impl</span> <span class="ident">Strategy</span><span class="op">&lt;</span><span class="ident">Value</span> <span class="op">=</span> <span class="ident">Address</span><span class="op">&gt;</span> {
+        <span class="macro">prop_oneof</span><span class="macro">!</span>[
+            <span class="ident">arb_established_address</span>().<span class="ident">prop_map</span>(<span class="ident">Address</span>::<span class="ident">Established</span>),
+            <span class="ident">arb_implicit_address</span>().<span class="ident">prop_map</span>(<span class="ident">Address</span>::<span class="ident">Implicit</span>),
+        ]
+    }
+
+    <span class="doccomment">/// Generate an arbitrary [`EstablishedAddress`].</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">arb_established_address</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="kw">impl</span> <span class="ident">Strategy</span><span class="op">&lt;</span><span class="ident">Value</span> <span class="op">=</span> <span class="ident">EstablishedAddress</span><span class="op">&gt;</span>
+    {
+        <span class="ident">any</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span>().<span class="ident">prop_map</span>(<span class="op">|</span><span class="ident">rng_source</span><span class="op">|</span> {
+            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">key_gen</span> <span class="op">=</span> <span class="ident">EstablishedAddressGen</span>::<span class="ident">new</span>(<span class="string">&quot;seed&quot;</span>);
+            <span class="kw">match</span> <span class="ident">key_gen</span>.<span class="ident">generate_address</span>(<span class="ident">rng_source</span>) {
+                <span class="ident">Address</span>::<span class="ident">Established</span>(<span class="ident">addr</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">addr</span>,
+                <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="macro">panic</span><span class="macro">!</span>(
+                        <span class="string">&quot;Assuming key gen to only generated established \
+                         addresses&quot;</span>
+                    )
+                }
+            }
+        })
+    }
+
+    <span class="doccomment">/// Generate an arbitrary [`ImplicitAddress`].</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">arb_implicit_address</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="kw">impl</span> <span class="ident">Strategy</span><span class="op">&lt;</span><span class="ident">Value</span> <span class="op">=</span> <span class="ident">ImplicitAddress</span><span class="op">&gt;</span> {
+        <span class="ident">ed25519</span>::<span class="ident">testing</span>::<span class="ident">arb_keypair</span>().<span class="ident">prop_map</span>(<span class="op">|</span><span class="ident">keypair</span><span class="op">|</span> {
+            <span class="kw">let</span> <span class="ident">pk</span> <span class="op">=</span> <span class="ident">ed25519</span>::<span class="ident">PublicKey</span>::<span class="ident">from</span>(<span class="ident">keypair</span>.<span class="ident">public</span>);
+            <span class="kw">let</span> <span class="ident">pkh</span> <span class="op">=</span> <span class="ident">ed25519</span>::<span class="ident">PublicKeyHash</span>::<span class="ident">from</span>(<span class="ident">pk</span>);
+            <span class="ident">ImplicitAddress</span>::<span class="ident">Ed25519</span>(<span class="ident">pkh</span>)
+        })
     }
 }
 </pre></div>

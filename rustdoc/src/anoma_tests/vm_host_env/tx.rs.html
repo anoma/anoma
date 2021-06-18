@@ -209,7 +209,7 @@
 }
 
 <span class="kw">impl</span> <span class="ident">TestTxEnv</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">all_touched_storage_keys</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Key</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">all_touched_storage_keys</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">Key</span><span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">write_log</span>.<span class="ident">get_keys</span>()
     }
 }
