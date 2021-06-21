@@ -34,6 +34,8 @@
         <!-- Custom theme stylesheets -->
                 <link rel="stylesheet" href="assets/custom.css">
         
+                <!-- MathJax -->
+        <script async type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
             </head>
     <body>
         <!-- Provide site root to javascript -->
@@ -84,7 +86,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded "><a href="index.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="explore/index.html"><strong aria-hidden="true">2.</strong> Exploration</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="explore/design/index.html"><strong aria-hidden="true">2.1.</strong> Design</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="explore/design/overview.html"><strong aria-hidden="true">2.1.1.</strong> Overview</a></li><li class="chapter-item expanded "><a href="explore/design/ledger.html"><strong aria-hidden="true">2.1.2.</strong> The ledger</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="explore/design/ledger/accounts.html"><strong aria-hidden="true">2.1.2.1.</strong> Accounts</a></li><li class="chapter-item expanded "><a href="explore/design/ledger/wasm-vm.html"><strong aria-hidden="true">2.1.2.2.</strong> WASM VM</a></li><li class="chapter-item expanded "><a href="explore/design/ledger/vp.html"><strong aria-hidden="true">2.1.2.3.</strong> Validity predicates</a></li><li class="chapter-item expanded "><a href="explore/design/ledger/tx-execution.html"><strong aria-hidden="true">2.1.2.4.</strong> Transaction execution</a></li><li class="chapter-item expanded "><a href="explore/design/ledger/front-running.html"><strong aria-hidden="true">2.1.2.5.</strong> Front-running prevention</a></li></ol></li><li class="chapter-item expanded "><a href="explore/design/gossip.html"><strong aria-hidden="true">2.1.3.</strong> Gossip network</a></li><li class="chapter-item expanded "><a href="explore/design/intent_gossip.html"><strong aria-hidden="true">2.1.4.</strong> Intent gossip</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="explore/design/intent_gossip/intent.html"><strong aria-hidden="true">2.1.4.1.</strong> intent</a></li><li class="chapter-item expanded "><a href="explore/design/intent_gossip/incentive.html"><strong aria-hidden="true">2.1.4.2.</strong> incentive</a></li><li class="chapter-item expanded "><a href="explore/design/intent_gossip/matchmaker.html"><strong aria-hidden="true">2.1.4.3.</strong> matchmaker</a></li></ol></li><li class="chapter-item expanded "><a href="explore/design/dkg.html"><strong aria-hidden="true">2.1.5.</strong> Distributed key generation gossip</a></li><li class="chapter-item expanded "><a href="explore/design/fractal-scaling.html"><strong aria-hidden="true">2.1.6.</strong> Fractal scaling</a></li><li class="chapter-item expanded "><a href="explore/design/upgrade-system.html"><strong aria-hidden="true">2.1.7.</strong> Upgrade system</a></li><li class="chapter-item expanded "><a href="explore/design/crypto-primitives.html"><strong aria-hidden="true">2.1.8.</strong> Crypto primitives</a></li><li class="chapter-item expanded "><a href="explore/design/storage.html"><strong aria-hidden="true">2.1.9.</strong> Storage</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="explore/design/data-schema.html"><strong aria-hidden="true">2.1.9.1.</strong> Data schema</a></li></ol></li><li class="chapter-item expanded "><a href="explore/design/actors.html"><strong aria-hidden="true">2.1.10.</strong> Actors</a></li></ol></li><li class="chapter-item expanded "><a href="explore/prototypes/index.html"><strong aria-hidden="true">2.2.</strong> Prototypes</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="explore/prototypes/base-ledger.html"><strong aria-hidden="true">2.2.1.</strong> Base ledger</a></li><li class="chapter-item expanded "><a href="explore/prototypes/gossip-layer.html"><strong aria-hidden="true">2.2.2.</strong> Gossip layer</a></li></ol></li><li class="chapter-item expanded "><a href="explore/libraries/index.html"><strong aria-hidden="true">2.3.</strong> Libraries &amp; Tools</a></li><li><ol class="section"><li class="chapter-item expanded "><div><strong aria-hidden="true">2.3.1.</strong> Cryptography</div></li><li class="chapter-item expanded "><a href="explore/libraries/network.html"><strong aria-hidden="true">2.3.2.</strong> network</a></li><li class="chapter-item expanded "><a href="explore/libraries/cli.html"><strong aria-hidden="true">2.3.3.</strong> Command-line interface</a></li><li class="chapter-item expanded "><a href="explore/libraries/db.html"><strong aria-hidden="true">2.3.4.</strong> Database</a></li><li class="chapter-item expanded "><a href="explore/libraries/logging.html"><strong aria-hidden="true">2.3.5.</strong> Logging</a></li><li class="chapter-item expanded "><div><strong aria-hidden="true">2.3.6.</strong> Networking</div></li><li class="chapter-item expanded "><a href="explore/libraries/packaging.html"><strong aria-hidden="true">2.3.7.</strong> Packaging</a></li><li class="chapter-item expanded "><a href="explore/libraries/serialization.html"><strong aria-hidden="true">2.3.8.</strong> Serialization</a></li><li class="chapter-item expanded "><a href="explore/libraries/wasm.html"><strong aria-hidden="true">2.3.9.</strong> WASM runtime</a></li><li class="chapter-item expanded "><a href="explore/libraries/errors.html"><strong aria-hidden="true">2.3.10.</strong> Error handling</a></li></ol></li><li class="chapter-item expanded "><a href="explore/design/glossary.html"><strong aria-hidden="true">2.4.</strong> Glossary</a></li><li class="chapter-item expanded "><a href="explore/resources/index.html"><strong aria-hidden="true">2.5.</strong> Resources</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="explore/resources/ide.html"><strong aria-hidden="true">2.5.1.</strong> IDE</a></li></ol></li></ol></li><li class="chapter-item expanded "><a href="specs/index.html"><strong aria-hidden="true">3.</strong> Specifications</a></li><li><ol class="section"><li class="chapter-item expanded "><div><strong aria-hidden="true">3.1.</strong> Overall architecture</div></li><li class="chapter-item expanded "><div><strong aria-hidden="true">3.2.</strong> Trade system</div></li><li class="chapter-item expanded "><div><strong aria-hidden="true">3.3.</strong> Intent gossip system</div></li><li class="chapter-item expanded "><div><strong aria-hidden="true">3.4.</strong> Fractal scaling</div></li><li class="chapter-item expanded "><div><strong aria-hidden="true">3.5.</strong> Upgrade system</div></li></ol></li><li class="chapter-item expanded "><a href="playnet/index.html"><strong aria-hidden="true">4.</strong> Playnet</a></li><li class="chapter-item expanded "><a href="archive/index.html"><strong aria-hidden="true">5.</strong> Archive</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="archive/domain-name-addresses.html"><strong aria-hidden="true">5.1.</strong> Domain name addresses</a></li></ol></li></ol>            </div>
+                <ol class="chapter"><li class="chapter-item expanded "><a href="index.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="explore/index.html"><strong aria-hidden="true">2.</strong> Exploration</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="explore/design/index.html"><strong aria-hidden="true">2.1.</strong> Design</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="explore/design/overview.html"><strong aria-hidden="true">2.1.1.</strong> Overview</a></li><li class="chapter-item expanded "><a href="explore/design/ledger.html"><strong aria-hidden="true">2.1.2.</strong> The ledger</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="explore/design/ledger/accounts.html"><strong aria-hidden="true">2.1.2.1.</strong> Accounts</a></li><li class="chapter-item expanded "><a href="explore/design/ledger/vp.html"><strong aria-hidden="true">2.1.2.2.</strong> Validity predicates</a></li><li class="chapter-item expanded "><a href="explore/design/ledger/tx.html"><strong aria-hidden="true">2.1.2.3.</strong> Transactions</a></li><li class="chapter-item expanded "><a href="explore/design/ledger/wasm-vm.html"><strong aria-hidden="true">2.1.2.4.</strong> WASM VM</a></li><li class="chapter-item expanded "><a href="explore/design/ledger/front-running.html"><strong aria-hidden="true">2.1.2.5.</strong> Front-running prevention</a></li></ol></li><li class="chapter-item expanded "><a href="explore/design/gossip.html"><strong aria-hidden="true">2.1.3.</strong> Gossip network</a></li><li class="chapter-item expanded "><a href="explore/design/intent_gossip.html"><strong aria-hidden="true">2.1.4.</strong> Intent gossip</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="explore/design/intent_gossip/intent.html"><strong aria-hidden="true">2.1.4.1.</strong> intent</a></li><li class="chapter-item expanded "><a href="explore/design/intent_gossip/incentive.html"><strong aria-hidden="true">2.1.4.2.</strong> incentive</a></li><li class="chapter-item expanded "><a href="explore/design/intent_gossip/matchmaker.html"><strong aria-hidden="true">2.1.4.3.</strong> matchmaker</a></li></ol></li><li class="chapter-item expanded "><a href="explore/design/dkg.html"><strong aria-hidden="true">2.1.5.</strong> Distributed key generation gossip</a></li><li class="chapter-item expanded "><a href="explore/design/fractal-scaling.html"><strong aria-hidden="true">2.1.6.</strong> Fractal scaling</a></li><li class="chapter-item expanded "><a href="explore/design/upgrade-system.html"><strong aria-hidden="true">2.1.7.</strong> Upgrade system</a></li><li class="chapter-item expanded "><a href="explore/design/crypto-primitives.html"><strong aria-hidden="true">2.1.8.</strong> Crypto primitives</a></li><li class="chapter-item expanded "><a href="explore/design/storage.html"><strong aria-hidden="true">2.1.9.</strong> Storage</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="explore/design/data-schema.html"><strong aria-hidden="true">2.1.9.1.</strong> Data schema</a></li></ol></li><li class="chapter-item expanded "><a href="explore/design/actors.html"><strong aria-hidden="true">2.1.10.</strong> Actors</a></li></ol></li><li class="chapter-item expanded "><a href="explore/prototypes/index.html"><strong aria-hidden="true">2.2.</strong> Prototypes</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="explore/prototypes/base-ledger.html"><strong aria-hidden="true">2.2.1.</strong> Base ledger</a></li><li class="chapter-item expanded "><a href="explore/prototypes/gossip-layer.html"><strong aria-hidden="true">2.2.2.</strong> Gossip layer</a></li></ol></li><li class="chapter-item expanded "><a href="explore/libraries/index.html"><strong aria-hidden="true">2.3.</strong> Libraries &amp; Tools</a></li><li><ol class="section"><li class="chapter-item expanded "><div><strong aria-hidden="true">2.3.1.</strong> Cryptography</div></li><li class="chapter-item expanded "><a href="explore/libraries/network.html"><strong aria-hidden="true">2.3.2.</strong> network</a></li><li class="chapter-item expanded "><a href="explore/libraries/cli.html"><strong aria-hidden="true">2.3.3.</strong> Command-line interface</a></li><li class="chapter-item expanded "><a href="explore/libraries/db.html"><strong aria-hidden="true">2.3.4.</strong> Database</a></li><li class="chapter-item expanded "><a href="explore/libraries/logging.html"><strong aria-hidden="true">2.3.5.</strong> Logging</a></li><li class="chapter-item expanded "><div><strong aria-hidden="true">2.3.6.</strong> Networking</div></li><li class="chapter-item expanded "><a href="explore/libraries/packaging.html"><strong aria-hidden="true">2.3.7.</strong> Packaging</a></li><li class="chapter-item expanded "><a href="explore/libraries/serialization.html"><strong aria-hidden="true">2.3.8.</strong> Serialization</a></li><li class="chapter-item expanded "><a href="explore/libraries/wasm.html"><strong aria-hidden="true">2.3.9.</strong> WASM runtime</a></li><li class="chapter-item expanded "><a href="explore/libraries/errors.html"><strong aria-hidden="true">2.3.10.</strong> Error handling</a></li></ol></li><li class="chapter-item expanded "><a href="explore/design/glossary.html"><strong aria-hidden="true">2.4.</strong> Glossary</a></li><li class="chapter-item expanded "><a href="explore/resources/index.html"><strong aria-hidden="true">2.5.</strong> Resources</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="explore/resources/ide.html"><strong aria-hidden="true">2.5.1.</strong> IDE</a></li></ol></li></ol></li><li class="chapter-item expanded "><a href="specs/index.html"><strong aria-hidden="true">3.</strong> Specifications</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="specs/overview.html"><strong aria-hidden="true">3.1.</strong> Overview</a></li><li class="chapter-item expanded "><a href="specs/ledger.html"><strong aria-hidden="true">3.2.</strong> The ledger</a></li><li class="chapter-item expanded "><div><strong aria-hidden="true">3.3.</strong> Trade system</div></li><li class="chapter-item expanded "><div><strong aria-hidden="true">3.4.</strong> Intent gossip system</div></li><li class="chapter-item expanded "><div><strong aria-hidden="true">3.5.</strong> Fractal scaling</div></li><li class="chapter-item expanded "><div><strong aria-hidden="true">3.6.</strong> Upgrade system</div></li><li class="chapter-item expanded "><a href="specs/encoding.html"><strong aria-hidden="true">3.7.</strong> Encoding</a></li></ol></li><li class="chapter-item expanded "><a href="playnet/index.html"><strong aria-hidden="true">4.</strong> Playnet</a></li><li class="chapter-item expanded "><a href="archive/index.html"><strong aria-hidden="true">5.</strong> Archive</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="archive/domain-name-addresses.html"><strong aria-hidden="true">5.1.</strong> Domain name addresses</a></li></ol></li></ol>            </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
 
@@ -239,7 +241,7 @@ re-checked when it has been validated at some previous level.</p>
 </ul>
 <p>The <em>snapshot</em> connection is used to serve state sync snapshots for other nodes and/or restore state sync snapshots to a local node being bootstrapped.</p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="accounts"><a class="header" href="#accounts">Accounts</a></h1>
-<p><a href="https://github.com/heliaxdev/rd-pm/issues/25">Tracking Issue</a></p>
+<p><a href="https://github.com/anomanetwork/anoma/issues/45">Tracking Issue</a></p>
 <hr />
 <p>There's only a single account type. Each account is associated with:</p>
 <ul>
@@ -311,6 +313,87 @@ predicate (and other state changes included in the transaction) is valid</li>
 <li>at minimum, accounts need to be enumerated on chain, this could be done with an address or a counter</li>
 </ul>
 <p>A newly created account should be validated by all the VPs triggered by the transaction, i.e. it should be included in the set of changed keys passed to each VP. If the VPs are not interested in the newly created account, they can choose to ignore it.</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="validity-predicates"><a class="header" href="#validity-predicates">Validity predicates</a></h1>
+<p><a href="https://github.com/anomanetwork/anoma/issues/44">Tracking Issue</a></p>
+<hr />
+<p>Each <a href="explore/design/ledger/accounts.html">account</a> is associated with exactly one validity predicate (VP).</p>
+<p>Conceptually, a VP is a function from the transaction's data and the storage state prior and posterior to a transaction execution returning a boolean value. A transaction may modify any data in the <a href="explore/design/ledger/accounts.html#dynamic-storage-sub-space">accounts' dynamic storage sub-space</a>. Upon <a href="explore/design/ledger/tx-execution.html">execution</a>, the VPs associated with the accounts whose storage has been modified are invoked to verify the transaction. If any of them reject the transaction, all of its storage modifications are discarded.</p>
+<p>VPs are implemented as <a href="explore/design/ledger/wasm-vm.html">WASM programs</a>. One can build a custom VP using the <a href="https://github.com/anomanetwork/anoma/tree/master/vps/vp_template">VP template</a> or use one of the pre-defined VPs.</p>
+<h2 id="fungible-token-vp"><a class="header" href="#fungible-token-vp">Fungible token VP</a></h2>
+<p>The <a href="https://github.com/anomanetwork/anoma/tree/master/vps/vp_token">fungible token VP</a> allows to associate accounts balances of a specific token under its account. </p>
+<p>For illustration, users <code>Albert</code> and <code>Bertha</code> might hold some amount of token with the address <code>XAN</code>. Their balances would be stored in the <code>XAN</code>'s storage sub-space under the storage keys <code>@XAN/balance/@Albert</code> and <code>@XAN/balance/@Bertha</code>, respectively. When <code>Albert</code> or <code>Bertha</code> attempt to transact with their <code>XAN</code> tokens, its validity predicate would be triggered to check:</p>
+<ul>
+<li>the total supply of <code>XAN</code> token is preserved (i.e. inputs = outputs)</li>
+<li>the senders (users whose balance has been deducted) are checked that their validity predicate has also been triggered</li>
+</ul>
+<p>Note that the fungible token VP doesn't need to know whether any of involved users accepted or rejected the transaction, because if any of the involved users rejects it, the whole transaction will be rejected.</p>
+<h2 id="user-vp"><a class="header" href="#user-vp">User VP</a></h2>
+<p>The <a href="https://github.com/anomanetwork/anoma/tree/master/vps/vp_user">user VP</a> currently provides a signature verification against a public key for sending tokens as prescribed by the fungible token VP. In this VP, a transfer of tokens doesn't have to be authorized by the receiving party. </p>
+<p>It also allows arbitrary storage modifications to the user's sub-space to be performed by a transaction that has been signed by the secret key corresponding to the user's public key stored on-chain. This functionality also allows one to update their own validity predicate.</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="transactions"><a class="header" href="#transactions">Transactions</a></h1>
+<p><a href="https://github.com/anomanetwork/anoma/issues/43">Tracking Issue</a></p>
+<hr />
+<p>There is only a single general transaction (tx) type:</p>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>struct Transaction {
+    // A wasm module with a required entrypoint
+    code: Vec&lt;u8&gt;
+    // Optional arbitrary data
+    data: Option&lt;Vec&lt;u8&gt;&gt;,
+    // A timestamp of when the transaction was created
+    timestamp: Timestamp,
+    gas_limit: TODO,
+}
+<span class="boring">}
+</span></code></pre></pre>
+<p>The tx allows to include arbitrary <code>data</code>, e.g zero-knowledge proofs and/or arbitrary nonce bytes to obfuscate the tx's minimum encoded size that may be used to derive some information about the tx.</p>
+<p>TODO once we have DKG, we will probably want to have some kind of a wrapper transaction with submission fees, payer and signature</p>
+<h2 id="tx-life-cycle"><a class="header" href="#tx-life-cycle">Tx life cycle</a></h2>
+<pre class="mermaid">flowchart TD
+    subgraph Node
+    I[Initialize chain] --&gt; Begin
+    Begin[Begin block] --&gt; Poll
+    Poll[Poll mempool queue] --&gt; Apply
+    Apply[Apply txs] --&gt; End
+    End[End block] --&gt; Commit[Commit block]
+    Commit --&gt; Begin
+    Commit --&gt; Flush
+      subgraph Mempool
+      Validate --&gt; V{is valid?}
+      V --&gt;|Yes| Add[Add to local queue]
+      V --&gt;|No| Fail[Drop tx]
+      Flush --&gt;|Re-validate txs not included in this block| V
+      end
+    end
+    subgraph Client
+    Submit[Submit tx] --&gt; Validate
+    end
+</pre>
+<p>New txs are injected by the client via mempool. Before including a tx in a local mempool queue, some cheap validation may be performed. Once a tx is included in a mempool queue, it will be gossiped with the peers and may be included in a block by the block proposer. Any txs that are left in the queue after flush will be subject to re-validation before being included again.</p>
+<p>The order of applying transactions within a block is fixed by the block proposer in <a href="explore/design/ledger//explore/design/ledger/front-running.html">the front-running prevention protocol</a>.</p>
+<p>TODO we might want to randomize the tx order after DKG protocol is completed</p>
+<h3 id="block-application"><a class="header" href="#block-application">Block application</a></h3>
+<p>Within a block, each tx is applied sequentially in three steps:</p>
+<pre class="mermaid">flowchart TD
+    B[Begin block] --&gt; N{Has next tx and within block gas limit?}
+    N --&gt; |Yes|E
+    N -----&gt; |No|EB[End block]
+    E[Exec tx code] --&gt;|&quot;∀ accounts with modified storage&quot;| VP[Run validity predicates in parallel]
+    VP --&gt; A{all accept}
+    A --&gt; |No|R[Reject tx]
+    A --&gt; |Yes|C[Commit tx and state changes]
+    R --&gt; N
+    C --&gt; N
+
+</pre>
+<h2 id="tx-code"><a class="header" href="#tx-code">Tx code</a></h2>
+<p>The code is allowed to read and write anything from <a href="explore/design/ledger/./accounts.html#dynamic-storage-sub-space">accounts' sub-spaces</a> and to <a href="explore/design/ledger/./accounts.html#initializing-a-new-account">initialize new accounts</a>. Other data that is not in an account's subspace is read-only, e.g. chain and block metadata, account addresses and potentially keys.</p>
+<p>In addition to the verifiers specified in a transaction, each account whose sub-space has been modified by the tx triggers its VP. The VPs are then given the prior and posterior state from the account's sub-space together with the tx to decide if it accepts the tx's state modifications.</p>
+<p>Within a single tx the execution of the validity predicates will be parallelized and thus the fee for VPs execution would their maximum value (plus some portion of the fees for each of the other parallelized VPs - nothing should be &quot;free&quot;). Once any of the VPs rejects the modifications, execution is aborted, the transaction is rejected and state changes discarded. If all the VPs accept the modifications, the transaction is successful and modifications are committed to storage as the input of the next tx.</p>
+<p>The transaction's API should make it possible to transfer tokens to a hash of a public key that is not revealed. This could be done by having a &quot;deposit&quot; account from which the key's owner can claim the deposited funds.</p>
+<p>Should some type of token prefer not to allow to receive tokens without recipient's approval, a token account can implement logic to decline the received tokens.</p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="wasm-vm"><a class="header" href="#wasm-vm">WASM VM</a></h1>
 <p>A wasm virtual machine will be used for <a href="explore/design/ledger/./vp.html">validity predicates</a> and <a href="explore/design/ledger/./tx-execution.html">transactions code</a>. </p>
 <p>The VM should provide:</p>
@@ -331,11 +414,6 @@ predicate (and other state changes included in the transaction) is valid</li>
 <li>wasm development helpers</li>
 <li>helpers to estimate gas usage</li>
 <li>VM and environment versioning</li>
-</ul>
-<p>Needs more info:</p>
-<ul>
-<li>TODO: review <a href="https://github.com/wasmerio/wasmer/blob/1ee7b4a07ff1acaec93078e618d64c810e7691f0/examples/metering.rs">wasmer gas metering</a>, are there any loop-holes that could potentially escape metering?</li>
-<li>TODO: can VPs be pre-compiled/cached?</li>
 </ul>
 <h2 id="resources"><a class="header" href="#resources">Resources</a></h2>
 <ul>
@@ -429,96 +507,9 @@ predicate (and other state changes included in the transaction) is valid</li>
 <h2 id="stack-height-metering"><a class="header" href="#stack-height-metering">Stack height metering</a></h2>
 <p>For safety, we need to limit the stack height in wasm code. Similarly to gas metering, we can also use <code>wasmer</code> middleware or <code>pwasm-utils</code>.</p>
 <p>We have to use <code>pwasm-utils</code>, because <code>wasmer</code>'s stack limiter is currently non-deterministic (platform specific). This is to be fixed in this PR: <a href="https://github.com/wasmerio/wasmer/pull/1037">https://github.com/wasmerio/wasmer/pull/1037</a>.</p>
-<div style="break-before: page; page-break-before: always;"></div><h1 id="validity-predicates"><a class="header" href="#validity-predicates">Validity predicates</a></h1>
-<p>tracking issue <a href="https://github.com/heliaxdev/rd-pm/issues/26">https://github.com/heliaxdev/rd-pm/issues/26</a></p>
-<div style="break-before: page; page-break-before: always;"></div><h1 id="transaction-execution"><a class="header" href="#transaction-execution">Transaction execution</a></h1>
-<p>tracking issue <a href="https://github.com/heliaxdev/rd-pm/issues/27">https://github.com/heliaxdev/rd-pm/issues/27</a></p>
-<h2 id="implementation-overview-verbatim-from-the-paper-section-11"><a class="header" href="#implementation-overview-verbatim-from-the-paper-section-11">Implementation overview (verbatim from the paper section 1.1)</a></h2>
-<p>The aforementioned abstract trade system is instantiated using a validity predicate (VP) account model. Like a distributed virtual machine such as the EVM, the ledger contains many independent accounts with their own state subspace and code. Unlike a distributed virtual machine, execution does not proceed in a step-by-step flow where contracts initiate message calls to other contracts. Instead, transactions execute arbitrary code, read and write state as they please, and then all accounts whose state was al- tered in the course of the transaction decide whether to accept or reject it. The code associated with an account is referred to as a validity predicate, and the validity predicate can also be changed in a transaction (the change being validated by the old validity predicate before being enacted).</p>
-<p>In order, a transaction is executed as follows:</p>
-<ol>
-<li>Arbitrary code is executed in a virtual machine (LLVM/WASM) which can read/write all public state.
-<ol>
-<li>The ledger tracks which accounts state was read or written.</li>
-<li>The ledger keeps writes in a temporary cache and does not yet commit them.</li>
-<li>Separate transactions are parallelized based on the read/write graph with a multi-version concurrency control approach similar to that used in PostgreSQL.</li>
-</ol>
-</li>
-<li>All accounts whose state was written during the code execution have the opportunity to accept or reject the transaction.
-<ol>
-<li>The accounts validity predicate is called with access to all state changes which occurred and any extra data in the transaction (e.g. proofs).</li>
-<li>This validity predicate check is stateless and thus can happen in parallel for any number of involved accounts.</li>
-</ol>
-</li>
-<li>The state changes are committed if and only if all involved accounts accept the transaction.</li>
-</ol>
-<p>For our purpose of multi-party exchange, this model has several advantages over step-based execution and contract-originating message calls:</p>
-<ul>
-<li>No coordinating contract is required to handle multi-party exchange, and accounts involved in multi-party exchange do not necessarily need to know about each other’s existence. Generally speaking, ac- counts accept transactions as long as certain invariants (e.g. ownership and preservation of supply for a token) are preserved.</li>
-<li>Transaction execution can be much more efficient, since state changes can be directly specified (instead of computed) and only validated by the involved accounts, which can be done in parallel. The possibility of code execution during the first phase allows for limited computation in the case of possibly contentious shared resources (e.g. a counter being incremented).</li>
-</ul>
-<h2 id="transaction-tx-data"><a class="header" href="#transaction-tx-data">Transaction (tx) data</a></h2>
-<p>There is only a single transaction type:</p>
-<pre><pre class="playground"><code class="language-rust">
-<span class="boring">#![allow(unused)]
-</span><span class="boring">fn main() {
-</span>struct Transaction {
-    // A wasm module with a required entrypoint
-    code: Vec&lt;u8&gt;
-    // Arbitrary data
-    data: Vec&lt;u8&gt;,
-    gas_limit: TODO,
-}
-<span class="boring">}
-</span></code></pre></pre>
-<p>The tx allows to include arbitrary <code>data</code>, e.g zero-knowledge proofs and/or arbitrary nonce bytes to obfuscate the tx's minimum encoded size that may be used to derive some information about the tx.</p>
-<p>TODO once we have DKG, we will probably want to have some kind of a wrapper transaction with submission fees, payer and signature</p>
-<h2 id="tx-life-cycle"><a class="header" href="#tx-life-cycle">Tx life cycle</a></h2>
-<pre class="mermaid">flowchart TD
-    subgraph Node
-    I[Initialize chain] --&gt; Begin
-    Begin[Begin block] --&gt; Poll
-    Poll[Poll mempool queue] --&gt; Apply
-    Apply[Apply txs] --&gt; End
-    End[End block] --&gt; Commit[Commit block]
-    Commit --&gt; Begin
-    Commit --&gt; Flush
-      subgraph Mempool
-      Validate --&gt; V{is valid?}
-      V --&gt;|Yes| Add[Add to local queue]
-      V --&gt;|No| Fail[Drop tx]
-      Flush --&gt;|Re-validate txs not included in this block| V
-      end
-    end
-    subgraph Client
-    Submit[Submit tx] --&gt; Validate
-    end
-</pre>
-<p>New txs are injected by the client via mempool. Before including a tx in a local mempool queue, some cheap validation may be performed. Once a tx is included in a mempool queue, it will be gossiped with the peers and may be included in a block by the block proposer. Any txs that are left in the queue after flush will be subject to re-validation before being included again.</p>
-<p>The order of applying transactions within a block is fixed by the block proposer in <a href="explore/design/ledger//explore/design/ledger/front-running.html">the front-running prevention protocol</a>.</p>
-<p>TODO we might want to randomize the tx order after DKG protocol is completed</p>
-<h3 id="block-application"><a class="header" href="#block-application">Block application</a></h3>
-<p>Within a block, each tx is applied sequentially in three steps:</p>
-<pre class="mermaid">flowchart TD
-    B[Begin block] --&gt; N{Has next tx and within block gas limit?}
-    N --&gt; |Yes|E
-    N -----&gt; |No|EB[End block]
-    E[Exec tx code] --&gt;|&quot;∀ accounts with modified storage&quot;| VP[Run validity predicates in parallel]
-    VP --&gt; A{all accept}
-    A --&gt; |No|R[Reject tx]
-    A --&gt; |Yes|C[Commit tx and state changes]
-    R --&gt; N
-    C --&gt; N
-
-</pre>
-<h2 id="tx-code"><a class="header" href="#tx-code">Tx code</a></h2>
-<p>The code is allowed to read and write anything from <a href="explore/design/ledger/./accounts.html#dynamic-storage-sub-space">accounts' sub-spaces</a> and to <a href="explore/design/ledger/./accounts.html#initializing-a-new-account">initialize new accounts</a>. Other data that is not in an account's subspace is read-only, e.g. chain and block metadata, account addresses and potentially keys.</p>
-<p>In addition to the verifiers specified in a transaction, each account whose sub-space has been modified by the tx triggers its VP. The VPs are then given the prior and posterior state from the account's sub-space together with the tx to decide if it accepts the tx's state modifications.</p>
-<p>Within a single tx the execution of the validity predicates will be parallelized and thus the fee for VPs execution would their maximum value (plus some portion of the fees for each of the other parallelized VPs - nothing should be &quot;free&quot;). Once any of the VPs rejects the modifications, execution is aborted, the transaction is rejected and state changes discarded. If all the VPs accept the modifications, the transaction is successful and modifications are committed to storage as the input of the next tx.</p>
-<p>The transaction's API should make it possible to transfer tokens to a hash of a public key that is not revealed. This could be done by having a &quot;deposit&quot; account from which the key's owner can claim the deposited funds.</p>
-<p>Should some type of token prefer not to allow to receive tokens without recipient's approval, a token account can implement logic to decline the received tokens.</p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="front-running-prevention"><a class="header" href="#front-running-prevention">Front-running prevention</a></h1>
-<p>tracking issue <a href="https://github.com/heliaxdev/rd-pm/issues/28">https://github.com/heliaxdev/rd-pm/issues/28</a></p>
+<p><a href="https://github.com/anomanetwork/anoma/issues/42">Tracking Issue</a></p>
+<hr />
 <p>This page should describe how DKG can be integrated for front-running prevention.</p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="the-gossip-network"><a class="header" href="#the-gossip-network">The gossip network</a></h1>
 <p>The gossip network runs in parallel to the ledger network and is used to
@@ -567,7 +558,8 @@ more information on the network topology.</p>
 cycle" /> <a href="https://excalidraw.com/#room=7ac107b3757c64049003,cdMInfvdLtjaGWSZWEKrhw">exilidraw
 link</a></p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="intents"><a class="header" href="#intents">Intents</a></h1>
-<p>tracking issue <a href="https://github.com/heliaxdev/rd-pm/issues/36">#36</a></p>
+<p><a href="https://github.com/anomanetwork/anoma/issues/36">Tracking Issue</a></p>
+<hr />
 <p>There is only a single intent type that is composed of arbitrary data and a
 possible schema definition.</p>
 <pre><pre class="playground"><code class="language-rust">
@@ -583,7 +575,8 @@ possible schema definition.</p>
 <p>The arbitrary data will be broadcasted to any interested matchmaker to craft
 valid transactions. For an intent to find a match with a public matchmaker, it must use a known data schema or else no matchmaker will be able to decode its data (see <a href="explore/design/intent_gossip/../data-schema.html">data schema</a>).</p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="incentive"><a class="header" href="#incentive">Incentive</a></h1>
-<p>tracking issue <a href="https://github.com/heliaxdev/rd-pm/issues/35">#35</a></p>
+<p><a href="https://github.com/anomanetwork/anoma/issues/37">Tracking Issue</a></p>
+<hr />
 <p>TODO</p>
 <ul>
 <li>describe incentive function</li>
@@ -598,11 +591,14 @@ matchmaker program and a transaction template.</p>
 <p><a href="https://excalidraw.com/#room=92b291c13cfab8fb22a4,OvHfWIrL0jeDzPI-EFZMaw">excalidraw link</a></p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="distributed-key-generation-gossip"><a class="header" href="#distributed-key-generation-gossip">Distributed key generation gossip</a></h1>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="fractal-scaling"><a class="header" href="#fractal-scaling">Fractal scaling</a></h1>
-<p>tracking issue <a href="https://github.com/heliaxdev/rd-pm/issues/29">https://github.com/heliaxdev/rd-pm/issues/29</a></p>
+<p><a href="https://github.com/anomanetwork/anoma/issues/41">Tracking Issue</a></p>
+<hr />
 <div style="break-before: page; page-break-before: always;"></div><h1 id="upgrade-system"><a class="header" href="#upgrade-system">Upgrade system</a></h1>
-<p>tracking issue <a href="https://github.com/heliaxdev/rd-pm/issues/30">https://github.com/heliaxdev/rd-pm/issues/30</a></p>
+<p><a href="https://github.com/anomanetwork/anoma/issues/40">Tracking Issue</a></p>
+<hr />
 <div style="break-before: page; page-break-before: always;"></div><h1 id="crypto-primitives"><a class="header" href="#crypto-primitives">Crypto primitives</a></h1>
-<p>tracking issue <a href="https://github.com/heliaxdev/rd-pm/issues/31">https://github.com/heliaxdev/rd-pm/issues/31</a></p>
+<p><a href="https://github.com/anomanetwork/anoma/issues/39">Tracking Issue</a></p>
+<hr />
 <p>This page should describe cryptography primitives that we might want to use, such as types of keys, hashing functions, etc.</p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="storage"><a class="header" href="#storage">Storage</a></h1>
 <p>We can make use of the Tendermint's finality property to split the storage into immutable and mutable parts, where only the data at the current level is mutable. It should be possible to have the mutable state in-memory only and write to DB only once a block is finalized, which combined with batch writes would most likely be quite efficient (this can also be done asynchronously).</p>
@@ -1337,6 +1333,26 @@ VSpaceCode.whichkey
 vscode-org-mode.org-mode
 publicus.org-checkbox
 </code></pre>
+<p>Add these to your settings.json to get rustfmt and clippy with the nightly version that we use:</p>
+<pre><code class="language-json">&quot;rust-analyzer.checkOnSave.overrideCommand&quot;: [
+    &quot;cargo&quot;,
+    &quot;+nightly-2021-03-09&quot;,
+    &quot;clippy&quot;,
+    &quot;--workspace&quot;,
+    &quot;--message-format=json&quot;,
+    &quot;--all-targets&quot;
+],
+&quot;rust-analyzer.rustfmt.overrideCommand&quot;: [
+    &quot;rustup&quot;,
+    &quot;run&quot;,
+    &quot;nightly-2021-03-09&quot;,
+    &quot;--&quot;,
+    &quot;rustfmt&quot;,
+    &quot;--edition&quot;,
+    &quot;2018&quot;,
+    &quot;--&quot;
+],
+</code></pre>
 <h1 id="emacs"><a class="header" href="#emacs">Emacs</a></h1>
 <p>two main mode:</p>
 <ul>
@@ -1415,7 +1431,237 @@ forked with more option and better integration/default value</li>
   )
 </code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="specifications"><a class="header" href="#specifications">Specifications</a></h1>
-<p>TODO</p>
+<p><a href="https://anoma.network/papers/whitepaper.pdf">Anoma</a> is a sovereign, proof-of-stake blockchain protocol that enables private, asset-agnostic cash and private bartering among any number of parties.</p>
+<p>This specification defines the Anoma ledger's protocol and its components and the intent gossip and matchmaking system.</p>
+<p>The key words &quot;MUST&quot;, &quot;MUST NOT&quot;, &quot;REQUIRED&quot;, &quot;SHALL&quot;, &quot;SHALL NOT&quot;, &quot;SHOULD&quot;, &quot;SHOULD NOT&quot;, &quot;RECOMMENDED&quot;,  &quot;MAY&quot;, and &quot;OPTIONAL&quot; in this document are to be interpreted as described in <a href="https://www.rfc-editor.org/rfc/rfc2119">RFC-2119</a>.</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="overview-1"><a class="header" href="#overview-1">Overview</a></h1>
+<p>At a high level, Anoma is composed of two main components: the distributed ledger and the intent gossip / matchmaking system. While they are designed to complement each other, they can be operated separately.</p>
+<h2 id="the-ledger-1"><a class="header" href="#the-ledger-1">The ledger</a></h2>
+<p>The ledger is a distributed state machine, relying on functionality provided by <a href="https://docs.tendermint.com/master/spec/">Tendermint</a> such as its BFT consensus algorithm with instant finality, P2P networking capabilities, transaction mempool and more. The ledger state machine is built on top the <a href="https://docs.tendermint.com/master/spec/abci/">ABCI</a>.</p>
+<p>For block validator voting power assignment, the ledger employs a proof-of-stake system.</p>
+<p>The ledger's key-value storage is organized into blocks and user specific state is organized into accounts. The state machine executes transactions, which can apply arbitrary changes to the state that are validated by validity predicates associated with the accounts involved in the transaction.</p>
+<p>To prevent transaction front-running, the ledger employs a DKG scheme as implemented in <a href="https://github.com/anomanetwork/ferveo">Ferveo</a>. Using this scheme, transactions are encrypted before being submitted to the ledger. The encrypted transactions are committed by a block proposer to a specific order in which they must be executed once decrypted.</p>
+<ul>
+<li>TODO add fractal scaling &amp; protocol upgrade system overview</li>
+</ul>
+<h2 id="the-intent-gossip-with-matchmaking-system"><a class="header" href="#the-intent-gossip-with-matchmaking-system">The intent gossip with matchmaking system</a></h2>
+<ul>
+<li>TODO add an overview</li>
+</ul>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="the-ledger-2"><a class="header" href="#the-ledger-2">The ledger</a></h1>
+<h2 id="the-protocol"><a class="header" href="#the-protocol">The protocol</a></h2>
+<ul>
+<li>TODO describe DKG transactions</li>
+<li>TODO DKG transactions will include replay protection (this is because we can simply check a counter against the source (i.e. gas payer) of the transaction before the transactions order is committed to by the DKG protocol, which could affect the expected counter order for sources with multiple queued transactions)</li>
+</ul>
+<h3 id="transactions-1"><a class="header" href="#transactions-1">Transactions</a></h3>
+<p>A transaction <a href="specs/./encoding.html#transactions">encoded with proto3</a> received from ABCI <code>DeliverTx</code> method is executed in two main steps:</p>
+<ol>
+<li><a href="specs/ledger.html#transaction-execution">Transaction execution</a></li>
+<li><a href="specs/ledger.html#validity-predicates-check">Validity predicates check</a></li>
+</ol>
+<h4 id="transaction-execution"><a class="header" href="#transaction-execution">Transaction execution</a></h4>
+<p>For any error encountered in any of the following steps of transaction execution, the protocol MUST charge the gas used by the transaction and discard any storage changes that the transaction attempted to perform.</p>
+<ol>
+<li>Charge a base transaction <a href="specs/ledger.html#gas">gas</a>:
+\[ \verb|BASE_TRANSACTION_FEE| \]</li>
+<li>Decode the transaction bytes and validate the data. The field <code>timestamp</code> is required.</li>
+<li>Charge WASM compilation gas, proportional to the bytes <code>length</code> of the <code>code</code> field of the transaction (this is because the WASM code is compiled with a single-pass compiler):
+\[ \verb|length| * \verb|COMPILE_GAS_PER_BYTE| \]</li>
+<li><a href="specs/ledger.html#wasm-validation">Validate the WASM code</a> from the <code>code</code> field of the transaction.</li>
+<li>Inject a <a href="specs/ledger.html#gas">gas counter</a> into the <code>code</code>.</li>
+<li>Inject a <a href="specs/ledger.html#stack-height-limiter">stack height</a> limiter into the <code>code</code>.</li>
+<li>Compile the transaction <code>code</code> with a single-pass compiler (for example, <a href="https://medium.com/wasmer/a-webassembly-compiler-tale-9ef37aa3b537">the Wasmer runtime single-pass compiler</a>). The compilation computational complexity MUST be linear in proportion to the <code>code</code> size.</li>
+<li>Initialize the WASM linear memory with descriptor having the initial memory size equal to <a href="specs/ledger.html#wasm-constants"><code>TX_MEMORY_INIT_PAGES</code></a> and maximum memory size to <a href="specs/ledger.html#wasm-constants"><code>TX_MEMORY_MAX_PAGES</code></a>.</li>
+<li>Instantiate the WASM module with imported <a href="specs/ledger.html#transaction-host-environment-functions">transaction host environment functions</a> and the instantiated WASM memory.</li>
+<li>Write the transaction's <code>data</code> into the memory exported from the WASM module instance.</li>
+<li>Attempt to call the module's entrypoint function. The entrypoint MUST have signature:
+<pre><code class="language-wat">func (param i64 i64)
+</code></pre>
+The first argument is the offset to the <code>data</code> input written into the memory and the second argument is its bytes length.</li>
+</ol>
+<p>If the transaction executed successfully, it is followed <a href="specs/ledger.html#validity-predicates-check">Validity predicates check</a>.</p>
+<h4 id="validity-predicates-check"><a class="header" href="#validity-predicates-check">Validity predicates check</a></h4>
+<p>For the transaction to be valid, all the triggered validity predicates must accept it.</p>
+<p>First, the addresses whose validity predicates should be triggered by the transaction are determined. In this process, the addresses get associated with a set of modified storage keys that are relevant to the address:</p>
+<ol>
+<li>
+<p>The addresses set by the transaction (see <code>insert_verifier</code> in <a href="specs/ledger.html#transaction-host-environment-functions">transaction host environment functions</a>) are associated with <em>all</em> the modified storage keys.</p>
+<p>TODO - <a href="https://github.com/anomanetwork/anoma/issues/292">https://github.com/anomanetwork/anoma/issues/292</a></p>
+</li>
+<li>
+<p>The storage keys that were modified by the transaction are associated with the addresses included in the storage keys. Note that a storage key may contain more than one address, in which case all its addresses are associated with this key. </p>
+</li>
+<li>
+<p>All these addresses are additionally associated with the storage key to the validity predicates of any newly initialized accounts' by the transaction (see <code>init_account</code> in <a href="specs/ledger.html#transaction-host-environment-functions">transaction host environment functions</a>).</p>
+</li>
+</ol>
+<p>For all these addresses, attempt to read their validity predicate WASM code from the storage. For each validity predicate look-up, charge storage read gas and WASM compilation gas, proportional to the bytes length of the validity predicate. If any of the validity predicates look-ups fails, or any validity rejects the transaction or fails anywhere in the execution, the whole transaction is rejected. If the transaction is rejected, the protocol MUST charge the gas used by the transaction and discard any storage changes that the transaction attempted to perform.</p>
+<p>Execute all validity predicates in parallel as follows:</p>
+<ol>
+<li>Charge WASM compilation gas, proportional to the bytes length of the validity predicate (same as for the transaction, WASM code is compiled with a single-pass compiler).</li>
+<li>Charge WASM compilation gas, proportional to the bytes <code>length</code> of the validity predicate (same as for the transaction, WASM code is compiled with a single-pass compiler): \[ \verb|length| * \verb|COMPILE_GAS_PER_BYTE| \].</li>
+<li><a href="specs/ledger.html#wasm-validation">Validate the WASM code</a> of the validity predicate.</li>
+<li>Inject a <a href="specs/ledger.html#gas">gas counter</a> into the <code>code</code>.</li>
+<li>Inject a <a href="specs/ledger.html#stack-height-limiter">stack height</a> limiter into the <code>code</code>.</li>
+<li>Compile the validity predicate with single-pass compiler. The compilation computational complexity MUST be linear in proportion to its bytes size.</li>
+<li>Initialize the WASM linear memory with descriptor having the initial memory size equal to <a href="specs/ledger.html#wasm-constants"><code>VP_MEMORY_INIT_PAGES</code></a> and maximum memory size to <a href="specs/ledger.html#wasm-constants"><code>VP_MEMORY_MAX_PAGES</code></a>.</li>
+<li>Instantiate the WASM module with imported <a href="specs/ledger.html#validity-predicate-host-environment-functions">validity predicate host environment functions</a> and the instantiated WASM memory.</li>
+<li>Write the address of the validity predicate’s owner, the transaction <code>data</code>, the modified storage keys encoded with Borsh, and all the triggered validity predicates owners' addresses encoded with Borsh into the memory exported from the WASM module instance.</li>
+<li>Attempt to call the module's entrypoint function. The entrypoint MUST have signature:
+<pre><code class="language-wat">func (param i64 i64 i64 i64 i64 i64 i64 i64) (result i64))
+</code></pre>
+<ul>
+<li>The first argument is the offset to the owner’s address written into the memory, the second argument is its bytes length</li>
+<li>The third is the offset of the transaction’s <code>data</code> and fourth is it’s bytes length</li>
+<li>The fifth is the offset of the modified storage keys and sixth is its bytes length</li>
+<li>The seventh is the offset of the triggered validity predicates owners' addresses and eighth is its bytes length</li>
+</ul>
+</li>
+</ol>
+<h4 id="gas"><a class="header" href="#gas">Gas</a></h4>
+<h5 id="gas-constants"><a class="header" href="#gas-constants">Gas constants</a></h5>
+<p>The gas constants are currently chosen arbitrarily and are subject to change following gas accounting estimations.</p>
+<table><thead><tr><th>Name</th><th>Value</th></tr></thead><tbody>
+<tr><td><code>COMPILE_GAS_PER_BYTE</code></td><td>1</td></tr>
+<tr><td><code>BASE_TRANSACTION_FEE</code></td><td>2</td></tr>
+<tr><td><code>PARALLEL_GAS_DIVIDER</code></td><td>10</td></tr>
+<tr><td><code>MIN_STORAGE_GAS</code></td><td>1</td></tr>
+</tbody></table>
+<ul>
+<li>TODO describe gas accounting, wasm gas counter, limits, what happens if we go over limits and how gas relates to fees</li>
+</ul>
+<h4 id="webassembly-wasm"><a class="header" href="#webassembly-wasm">WebAssembly (WASM)</a></h4>
+<h5 id="wasm-constants"><a class="header" href="#wasm-constants">WASM constants</a></h5>
+<table><thead><tr><th>Name</th><th>Unit</th><th>Value</th></tr></thead><tbody>
+<tr><td><code>PAGE</code> (as defined in the WASM spec)</td><td>kiB</td><td>64</td></tr>
+<tr><td><code>TX_MEMORY_INIT_PAGES</code></td><td>number of <code>PAGE</code>s</td><td>100</td></tr>
+<tr><td><code>TX_MEMORY_MAX_PAGES</code></td><td>number of <code>PAGE</code>s</td><td>200</td></tr>
+<tr><td><code>VP_MEMORY_INIT_PAGES</code></td><td>number of <code>PAGE</code>s</td><td>100</td></tr>
+<tr><td><code>VP_MEMORY_MAX_PAGES</code></td><td>number of <code>PAGE</code>s</td><td>200</td></tr>
+<tr><td><code>WASM_STACK_LIMIT</code></td><td>stack depth</td><td>65535</td></tr>
+</tbody></table>
+<p>The WASM instantiation, the types, instructions, validation and execution of WASM modules MUST conform to the <a href="https://webassembly.github.io/spec/core/intro/index.html">WebAssembly specification</a>.</p>
+<h5 id="wasm-validation"><a class="header" href="#wasm-validation">WASM validation</a></h5>
+<p>The WebAssembly code is REQUIRED to only use deterministic instructions. Furthermore, it MUST NOT use features from any of the following WebAssembly proposals:</p>
+<ul>
+<li>The reference types proposal</li>
+<li>The multi-value proposal</li>
+<li>The bulk memory operations proposal</li>
+<li>The module linking proposal</li>
+<li>The SIMD proposal</li>
+<li>The threads proposal</li>
+<li>The tail-call proposal</li>
+<li>The multi memory proposal</li>
+<li>The exception handling proposal</li>
+<li>The memory64 proposal</li>
+</ul>
+<h5 id="stack-height-limiter"><a class="header" href="#stack-height-limiter">Stack height limiter</a></h5>
+<p>To make stack overflows deterministic, set the upper bound of the stack size to <a href="specs/ledger.html#wasm-constants"><code>WASM_STACK_LIMIT</code></a>. If the stack height exceeds the limit then execution MUST abort.</p>
+<!--
+cargo test test_tx_stack_limiter
+cargo test test_vp_stack_limiter
+-->
+<h5 id="wasm-memory-1"><a class="header" href="#wasm-memory-1">WASM memory</a></h5>
+<ul>
+<li>TODO memory read/write gas costs</li>
+</ul>
+<h5 id="transaction-host-environment-functions"><a class="header" href="#transaction-host-environment-functions">Transaction host environment functions</a></h5>
+<p>The following functions from the host ledger are made available in transaction's WASM code. They MAY be imported in the WASM module as shown bellow and MUST be provided by the ledger's WASM runtime:</p>
+<pre><code class="language-wat">(import &quot;env&quot; &quot;gas&quot; (func (param i32)))
+(import &quot;env&quot; &quot;anoma_tx_read&quot; (func (param i64 i64) (result i64)))
+(import &quot;env&quot; &quot;anoma_tx_result_buffer&quot; (func (param i64)))
+(import &quot;env&quot; &quot;anoma_tx_has_key&quot; (func (param i64 i64) (result i64)))
+(import &quot;env&quot; &quot;anoma_tx_write&quot; (func (param i64 i64 i64 i64)))
+(import &quot;env&quot; &quot;anoma_tx_delete&quot; (func (param i64 i64)))
+(import &quot;env&quot; &quot;anoma_tx_iter_prefix&quot; (func (param i64 i64) (result i64)))
+(import &quot;env&quot; &quot;anoma_tx_iter_next&quot; (func (param i64) (result i64)))
+(import &quot;env&quot; &quot;anoma_tx_insert_verifier&quot; (func (param i64 i64)))
+(import &quot;env&quot; &quot;anoma_tx_update_validity_predicate&quot; (func (param i64 i64 i64 i64)))
+(import &quot;env&quot; &quot;anoma_tx_init_account&quot; (func (param i64 i64 i64)))
+(import &quot;env&quot; &quot;anoma_tx_get_chain_id&quot; (func (param i64)))
+(import &quot;env&quot; &quot;anoma_tx_get_block_height&quot; (func (param ) (result i64)))
+(import &quot;env&quot; &quot;anoma_tx_get_block_hash&quot; (func (param i64)))
+(import &quot;env&quot; &quot;anoma_tx_log_string&quot; (func (param i64 i64)))
+</code></pre>
+<p>Additionally, the WASM module MUST export its memory as shown:</p>
+<pre><code class="language-wat">(export &quot;memory&quot; (memory 0))
+</code></pre>
+<ul>
+<li><code>anoma_tx_init_account</code> TODO newly created accounts' validity predicates aren't used until the block is committed (i.e. only the transaction that created the account may write into its storage in the block in which its being applied).</li>
+<li>TODO describe functions in detail</li>
+</ul>
+<h5 id="validity-predicate-host-environment-functions"><a class="header" href="#validity-predicate-host-environment-functions">Validity predicate host environment functions</a></h5>
+<p>The following functions from the host ledger are made available in validity predicate's WASM code. They MAY be imported in the WASM module as shown bellow and MUST be provided by the ledger's WASM runtime.</p>
+<pre><code class="language-wat">(import &quot;env&quot; &quot;gas&quot; (func (param i32)))
+(import &quot;env&quot; &quot;anoma_vp_read_pre&quot; (func (param i64 i64) (result i64)))
+(import &quot;env&quot; &quot;anoma_vp_read_post&quot; (func (param i64 i64) (result i64)))
+(import &quot;env&quot; &quot;anoma_vp_result_buffer&quot; (func (param i64)))
+(import &quot;env&quot; &quot;anoma_vp_has_key_pre&quot; (func (param i64 i64) (result i64)))
+(import &quot;env&quot; &quot;anoma_vp_has_key_post&quot; (func (param i64 i64) (result i64)))
+(import &quot;env&quot; &quot;anoma_vp_iter_prefix&quot; (func (param i64 i64) (result i64)))
+(import &quot;env&quot; &quot;anoma_vp_iter_pre_next&quot; (func (param i64) (result i64)))
+(import &quot;env&quot; &quot;anoma_vp_iter_post_next&quot; (func (param i64) (result i64)))
+(import &quot;env&quot; &quot;anoma_vp_get_chain_id&quot; (func (param i64)))
+(import &quot;env&quot; &quot;anoma_vp_get_block_height&quot; (func (param ) (result i64)))
+(import &quot;env&quot; &quot;anoma_vp_get_block_hash&quot; (func (param i64)))
+(import &quot;env&quot; &quot;anoma_vp_verify_tx_signature&quot; (func (param i64 i64 i64 i64) (result i64)))
+(import &quot;env&quot; &quot;anoma_vp_eval&quot; (func (param i64 i64 i64 i64) (result i64)))
+</code></pre>
+<ul>
+<li>TODO describe functions in detail</li>
+</ul>
+<p>Additionally, the WASM module MUST export its memory as shown:</p>
+<pre><code class="language-wat">(export &quot;memory&quot; (memory 0))
+</code></pre>
+<h3 id="storage-3"><a class="header" href="#storage-3">Storage</a></h3>
+<ul>
+<li>TODO</li>
+</ul>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="encoding"><a class="header" href="#encoding">Encoding</a></h1>
+<p>All the data fields are REQUIRED, unless specified otherwise.</p>
+<h2 id="the-ledger-3"><a class="header" href="#the-ledger-3">The ledger</a></h2>
+<h3 id="transactions-2"><a class="header" href="#transactions-2">Transactions</a></h3>
+<p>Transactions MUST be encoded using <a href="https://developers.google.com/protocol-buffers/docs/reference/proto3-spec">proto3</a> in the format as defined for <a href="specs/encoding.html#proto-definitions"><code>message Tx</code></a>.</p>
+<table><thead><tr><th>Name</th><th>Type</th><th>Description</th><th>Field Number</th></tr></thead><tbody>
+<tr><td>code</td><td>bytes</td><td>Transaction WASM code.</td><td>1</td></tr>
+<tr><td>data</td><td>optional bytes</td><td>Transaction data (OPTIONAL).</td><td>2</td></tr>
+<tr><td>timestamp</td><td>google.protobuf.Timestamp</td><td>Timestamp of when the transaction was created.</td><td>3</td></tr>
+</tbody></table>
+<h2 id="proto-definitions"><a class="header" href="#proto-definitions">Proto definitions</a></h2>
+<pre><code>syntax = &quot;proto3&quot;;
+
+import &quot;google/protobuf/timestamp.proto&quot;;
+
+package types;
+
+message Tx {
+  bytes code = 1;
+  optional bytes data = 2;
+  google.protobuf.Timestamp timestamp = 3;
+}
+
+message Intent {
+  bytes data = 1;
+  google.protobuf.Timestamp timestamp = 2;
+}
+
+message IntentGossipMessage{
+  oneof msg {
+    Intent intent = 1;
+  }
+}
+
+message Dkg {
+  string data = 1;
+}
+
+message DkgGossipMessage{
+  oneof dkg_message {
+    Dkg dkg = 1;
+  }
+}
+</code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="playnet"><a class="header" href="#playnet">Playnet</a></h1>
 <p>🕹🎮👾 Welcome to the very first Anoma testnet and thank you for joining us! 🕹🎮👾</p>
 <p>The main goals of this testnet is to try out some of the functionality of the ledger, intent gossip and the matchmaker and to get some early feedback on its current state. To give feedback, ask questions and report issues, please use the #playnet Slack channel. Many issues and limitations are well known and our test coverage is currently very low, so please excuse Anoma while it is rough around the edges.</p>
@@ -1658,7 +1904,9 @@ make -C txs/tx_from_intent
         
                         <script type="text/javascript">
         window.addEventListener('load', function() {
-            window.setTimeout(window.print, 100);
+            MathJax.Hub.Register.StartupHook('End', function() {
+                window.setTimeout(window.print, 100);
+            });
         });
         </script>
                 
