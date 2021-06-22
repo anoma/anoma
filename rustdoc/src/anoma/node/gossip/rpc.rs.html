@@ -73,6 +73,7 @@
 <span id="70">70</span>
 <span id="71">71</span>
 <span id="72">72</span>
+<span id="73">73</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">net</span>::<span class="ident">SocketAddr</span>;
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">thread</span>;
@@ -82,6 +83,7 @@
 <span class="kw">use</span> <span class="ident">tonic</span>::<span class="ident">transport</span>::<span class="ident">Server</span>;
 <span class="kw">use</span> <span class="ident">tonic</span>::{<span class="ident">Request</span> <span class="kw">as</span> <span class="ident">TonicRequest</span>, <span class="ident">Response</span> <span class="kw">as</span> <span class="ident">TonicResponse</span>, <span class="ident">Status</span>};
 
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">config</span>::<span class="ident">RpcServer</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">proto</span>::<span class="ident">services</span>::<span class="ident">rpc_service_server</span>::{
     <span class="ident">RpcService</span>, <span class="ident">RpcServiceServer</span>,
 };
@@ -136,7 +138,7 @@
 }
 
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">start_rpc_server</span>(
-    <span class="ident">config</span>: <span class="kw-2">&amp;</span><span class="kw">crate</span>::<span class="ident">config</span>::<span class="ident">RpcServer</span>,
+    <span class="ident">config</span>: <span class="kw-2">&amp;</span><span class="ident">RpcServer</span>,
 ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">mpsc</span>::<span class="ident">Receiver</span><span class="op">&lt;</span>(
     <span class="ident">rpc_message</span>::<span class="ident">Message</span>,
     <span class="ident">tokio</span>::<span class="ident">sync</span>::<span class="ident">oneshot</span>::<span class="ident">Sender</span><span class="op">&lt;</span><span class="ident">RpcResponse</span><span class="op">&gt;</span>,

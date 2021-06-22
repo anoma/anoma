@@ -210,18 +210,107 @@
 <span id="207">207</span>
 <span id="208">208</span>
 <span id="209">209</span>
+<span id="210">210</span>
+<span id="211">211</span>
+<span id="212">212</span>
+<span id="213">213</span>
+<span id="214">214</span>
+<span id="215">215</span>
+<span id="216">216</span>
+<span id="217">217</span>
+<span id="218">218</span>
+<span id="219">219</span>
+<span id="220">220</span>
+<span id="221">221</span>
+<span id="222">222</span>
+<span id="223">223</span>
+<span id="224">224</span>
+<span id="225">225</span>
+<span id="226">226</span>
+<span id="227">227</span>
+<span id="228">228</span>
+<span id="229">229</span>
+<span id="230">230</span>
+<span id="231">231</span>
+<span id="232">232</span>
+<span id="233">233</span>
+<span id="234">234</span>
+<span id="235">235</span>
+<span id="236">236</span>
+<span id="237">237</span>
+<span id="238">238</span>
+<span id="239">239</span>
+<span id="240">240</span>
+<span id="241">241</span>
+<span id="242">242</span>
+<span id="243">243</span>
+<span id="244">244</span>
+<span id="245">245</span>
+<span id="246">246</span>
+<span id="247">247</span>
+<span id="248">248</span>
+<span id="249">249</span>
+<span id="250">250</span>
+<span id="251">251</span>
+<span id="252">252</span>
+<span id="253">253</span>
+<span id="254">254</span>
+<span id="255">255</span>
+<span id="256">256</span>
+<span id="257">257</span>
+<span id="258">258</span>
+<span id="259">259</span>
+<span id="260">260</span>
+<span id="261">261</span>
+<span id="262">262</span>
+<span id="263">263</span>
+<span id="264">264</span>
+<span id="265">265</span>
+<span id="266">266</span>
+<span id="267">267</span>
+<span id="268">268</span>
+<span id="269">269</span>
+<span id="270">270</span>
+<span id="271">271</span>
+<span id="272">272</span>
+<span id="273">273</span>
+<span id="274">274</span>
+<span id="275">275</span>
+<span id="276">276</span>
+<span id="277">277</span>
+<span id="278">278</span>
+<span id="279">279</span>
+<span id="280">280</span>
+<span id="281">281</span>
+<span id="282">282</span>
+<span id="283">283</span>
+<span id="284">284</span>
+<span id="285">285</span>
+<span id="286">286</span>
+<span id="287">287</span>
+<span id="288">288</span>
+<span id="289">289</span>
+<span id="290">290</span>
+<span id="291">291</span>
+<span id="292">292</span>
+<span id="293">293</span>
+<span id="294">294</span>
+<span id="295">295</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Node and client configuration</span>
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">collections</span>::<span class="ident">HashSet</span>;
+<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">fmt</span>::<span class="ident">Display</span>;
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">fs</span>::{<span class="ident">create_dir_all</span>, <span class="ident">File</span>};
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">io</span>::<span class="ident">Write</span>;
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">net</span>::{<span class="ident">IpAddr</span>, <span class="ident">Ipv4Addr</span>, <span class="ident">SocketAddr</span>};
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">path</span>::<span class="ident">PathBuf</span>;
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">str</span>::<span class="ident">FromStr</span>;
 
-<span class="kw">use</span> <span class="ident">libp2p</span>::<span class="ident">multiaddr</span>::<span class="ident">Multiaddr</span>;
+<span class="kw">use</span> <span class="ident">libp2p</span>::<span class="ident">multiaddr</span>::{<span class="ident">Multiaddr</span>, <span class="ident">Protocol</span>};
+<span class="kw">use</span> <span class="ident">libp2p</span>::<span class="ident">multihash</span>::<span class="ident">Multihash</span>;
+<span class="kw">use</span> <span class="ident">libp2p</span>::<span class="ident">PeerId</span>;
 <span class="kw">use</span> <span class="ident">regex</span>::<span class="ident">Regex</span>;
-<span class="kw">use</span> <span class="ident">serde</span>::{<span class="ident">Deserialize</span>, <span class="ident">Serialize</span>};
+<span class="kw">use</span> <span class="ident">serde</span>::{<span class="ident">de</span>, <span class="ident">Deserialize</span>, <span class="ident">Serialize</span>};
 <span class="kw">use</span> <span class="ident">tendermint</span>::<span class="ident">net</span>;
 <span class="kw">use</span> <span class="ident">thiserror</span>::<span class="ident">Error</span>;
 
@@ -241,6 +330,23 @@
     <span class="ident">FileError</span>(<span class="ident">std</span>::<span class="ident">io</span>::<span class="ident">Error</span>),
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;A config file already exists in {0}&quot;</span>)]</span>
     <span class="ident">AlreadyExistingConfig</span>(<span class="ident">PathBuf</span>),
+    <span class="attribute">#[<span class="ident">error</span>(
+        <span class="string">&quot;Bootstrap peer {0} is not valid. Format needs to be \
+         {{protocol}}/{{ip}}/tcp/{{port}}/p2p/{{peerid}}&quot;</span>
+    )]</span>
+    <span class="ident">BadBootstrapPeerFormat</span>(<span class="ident">String</span>),
+}
+
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Error</span>, <span class="ident">Debug</span>)]</span>
+<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">SerdeError</span> {
+    <span class="comment">// This is needed for serde https://serde.rs/error-handling.html</span>
+    <span class="attribute">#[<span class="ident">error</span>(
+        <span class="string">&quot;Bootstrap peer {0} is not valid. Format needs to be \
+         {{protocol}}/{{ip}}/tcp/{{port}}/p2p/{{peerid}}&quot;</span>
+    )]</span>
+    <span class="ident">BadBootstrapPeerFormat</span>(<span class="ident">String</span>),
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;{0}&quot;</span>)]</span>
+    <span class="ident">Message</span>(<span class="ident">String</span>),
 }
 
 <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">BASEDIR</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;.anoma&quot;</span>;
@@ -331,15 +437,80 @@ And this is correct
     <span class="ident">RegexFilter</span>(<span class="attribute">#[<span class="ident">serde</span>(<span class="ident">with</span> <span class="op">=</span> <span class="string">&quot;serde_regex&quot;</span>)]</span> <span class="ident">Regex</span>),
     <span class="ident">WhitelistFilter</span>(<span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>),
 }
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">PartialOrd</span>, <span class="ident">Ord</span>, <span class="ident">Hash</span>, <span class="ident">Clone</span>)]</span>
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">PeerAddress</span> {
+    <span class="kw">pub</span> <span class="ident">address</span>: <span class="ident">Multiaddr</span>,
+    <span class="kw">pub</span> <span class="ident">peer_id</span>: <span class="ident">PeerId</span>,
+}
+
+<span class="kw">impl</span> <span class="ident">Serialize</span> <span class="kw">for</span> <span class="ident">PeerAddress</span> {
+    <span class="kw">fn</span> <span class="ident">serialize</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        <span class="ident">serializer</span>: <span class="ident">S</span>,
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">std</span>::<span class="ident">result</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">S</span>::<span class="prelude-val">Ok</span>, <span class="ident">S</span>::<span class="ident">Error</span><span class="op">&gt;</span>
+    <span class="kw">where</span>
+        <span class="ident">S</span>: <span class="ident">serde</span>::<span class="ident">Serializer</span>,
+    {
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">address</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">address</span>.<span class="ident">clone</span>();
+        <span class="ident">address</span>.<span class="ident">push</span>(<span class="ident">Protocol</span>::<span class="ident">P2p</span>(<span class="ident">Multihash</span>::<span class="ident">from</span>(<span class="self">self</span>.<span class="ident">peer_id</span>)));
+        <span class="ident">address</span>.<span class="ident">serialize</span>(<span class="ident">serializer</span>)
+    }
+}
+
+<span class="kw">impl</span> <span class="ident">de</span>::<span class="ident">Error</span> <span class="kw">for</span> <span class="ident">SerdeError</span> {
+    <span class="kw">fn</span> <span class="ident">custom</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Display</span><span class="op">&gt;</span>(<span class="ident">msg</span>: <span class="ident">T</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="ident">SerdeError</span>::<span class="ident">Message</span>(<span class="ident">msg</span>.<span class="ident">to_string</span>())
+    }
+}
+
+<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span> <span class="ident">Deserialize</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">PeerAddress</span> {
+    <span class="kw">fn</span> <span class="ident">deserialize</span><span class="op">&lt;</span><span class="ident">D</span><span class="op">&gt;</span>(<span class="ident">deserializer</span>: <span class="ident">D</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">std</span>::<span class="ident">result</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident">D</span>::<span class="ident">Error</span><span class="op">&gt;</span>
+    <span class="kw">where</span>
+        <span class="ident">D</span>: <span class="ident">serde</span>::<span class="ident">Deserializer</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span>,
+    {
+        <span class="kw">use</span> <span class="ident">serde</span>::<span class="ident">de</span>::<span class="ident">Error</span>;
+
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">address</span> <span class="op">=</span> <span class="ident">Multiaddr</span>::<span class="ident">deserialize</span>(<span class="ident">deserializer</span>)
+            .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">err</span><span class="op">|</span> <span class="ident">SerdeError</span>::<span class="ident">BadBootstrapPeerFormat</span>(<span class="ident">err</span>.<span class="ident">to_string</span>()))
+            .<span class="ident">map_err</span>(<span class="ident">D</span>::<span class="ident">Error</span>::<span class="ident">custom</span>)<span class="question-mark">?</span>;
+        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">Protocol</span>::<span class="ident">P2p</span>(<span class="ident">mh</span>)) <span class="op">=</span> <span class="ident">address</span>.<span class="ident">pop</span>() {
+            <span class="kw">let</span> <span class="ident">peer_id</span> <span class="op">=</span> <span class="ident">PeerId</span>::<span class="ident">from_multihash</span>(<span class="ident">mh</span>).<span class="ident">unwrap</span>();
+            <span class="prelude-val">Ok</span>(<span class="self">Self</span> { <span class="ident">address</span>, <span class="ident">peer_id</span> })
+        } <span class="kw">else</span> {
+            <span class="prelude-val">Err</span>(<span class="ident">SerdeError</span>::<span class="ident">BadBootstrapPeerFormat</span>(<span class="ident">address</span>.<span class="ident">to_string</span>()))
+                .<span class="ident">map_err</span>(<span class="ident">D</span>::<span class="ident">Error</span>::<span class="ident">custom</span>)
+        }
+    }
+}
+
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Serialize</span>, <span class="ident">Deserialize</span>)]</span>
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">DiscoverPeer</span> {
+    <span class="kw">pub</span> <span class="ident">max_discovery_peers</span>: <span class="ident">u64</span>,
+    <span class="kw">pub</span> <span class="ident">kademlia</span>: <span class="ident">bool</span>,
+    <span class="kw">pub</span> <span class="ident">mdns</span>: <span class="ident">bool</span>,
+    <span class="kw">pub</span> <span class="ident">bootstrap_peers</span>: <span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">PeerAddress</span><span class="op">&gt;</span>, <span class="comment">/* TODO add reserved_peers(explicit peers for gossipsub network, to not
+                                                * be added to kademlia) */</span>
+}
+
+<span class="kw">impl</span> <span class="ident">Default</span> <span class="kw">for</span> <span class="ident">DiscoverPeer</span> {
+    <span class="kw">fn</span> <span class="ident">default</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="self">Self</span> {
+            <span class="ident">max_discovery_peers</span>: <span class="number">16</span>,
+            <span class="ident">kademlia</span>: <span class="bool-val">true</span>,
+            <span class="ident">mdns</span>: <span class="bool-val">true</span>,
+            <span class="ident">bootstrap_peers</span>: <span class="ident">HashSet</span>::<span class="ident">new</span>(),
+        }
+    }
+}
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Serialize</span>, <span class="ident">Deserialize</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">IntentGossiper</span> {
     <span class="kw">pub</span> <span class="ident">address</span>: <span class="ident">Multiaddr</span>,
-    <span class="kw">pub</span> <span class="ident">peers</span>: <span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">Multiaddr</span><span class="op">&gt;</span>,
     <span class="kw">pub</span> <span class="ident">topics</span>: <span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>,
     <span class="kw">pub</span> <span class="ident">subscription_filter</span>: <span class="ident">SubscriptionFilter</span>,
     <span class="kw">pub</span> <span class="ident">rpc</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">RpcServer</span><span class="op">&gt;</span>,
     <span class="kw">pub</span> <span class="ident">gossiper</span>: <span class="ident">Gossiper</span>,
+    <span class="kw">pub</span> <span class="ident">discover_peer</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">DiscoverPeer</span><span class="op">&gt;</span>,
     <span class="kw">pub</span> <span class="ident">matchmaker</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Matchmaker</span><span class="op">&gt;</span>,
 }
 
@@ -352,10 +523,11 @@ And this is correct
             <span class="ident">subscription_filter</span>: <span class="ident">SubscriptionFilter</span>::<span class="ident">RegexFilter</span>(
                 <span class="ident">Regex</span>::<span class="ident">new</span>(<span class="string">&quot;asset_v\\d{1,2}&quot;</span>).<span class="ident">unwrap</span>(),
             ),
-            <span class="ident">peers</span>: <span class="ident">HashSet</span>::<span class="ident">new</span>(),
+
             <span class="ident">topics</span>: <span class="macro">vec</span><span class="macro">!</span>[<span class="string">&quot;asset_v0&quot;</span>].<span class="ident">into_iter</span>().<span class="ident">map</span>(<span class="ident">String</span>::<span class="ident">from</span>).<span class="ident">collect</span>(),
             <span class="ident">gossiper</span>: <span class="ident">Gossiper</span>::<span class="ident">new</span>(),
             <span class="ident">matchmaker</span>: <span class="prelude-val">None</span>,
+            <span class="ident">discover_peer</span>: <span class="prelude-val">Some</span>(<span class="ident">DiscoverPeer</span>::<span class="ident">default</span>()),
         }
     }
 }
