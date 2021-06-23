@@ -160,7 +160,12 @@
 <p>The transparent addresses are the addresses of accounts associated with dynamic storage sub-spaces, where the address of the account is the prefix key segment of its sub-space.</p>
 <p>The shielded addresses are used for private transactions and they are not directly associated with storage sub-spaces.</p>
 <h3 id="transparent-addresses"><a class="header" href="#transparent-addresses">Transparent addresses</a></h3>
-<p>Furthermore, there are two types of transparent addresses, &quot;implicit&quot; addresses, which are derived from public keys and &quot;established&quot; addresses which are generated from the current address nonce and hence must be created via a request in the ledger.</p>
+<p>Furthermore, there are three types of transparent addresses:</p>
+<ul>
+<li>&quot;implicit&quot; addresses which are derived from public keys</li>
+<li>&quot;established&quot; addresses which are generated from the current address nonce and hence must be created via a request in the ledger</li>
+<li>&quot;internal&quot; addresses are used for special modules integrated into the ledger such as PoS and IBC.</li>
+</ul>
 <p>The addresses are stored on-chain encoded with <a href="https://github.com/bitcoin/bips/blob/master/bip-0350.mediawiki">bech32m</a> (<a href="https://github.com/zcash/zips/issues/484">not yet adopted in Zcash</a>), which is an improved version of <a href="https://github.com/bitcoin/bips/blob/master/bip-0173.mediawiki">bech32</a>.</p>
 <p>The human-readable prefix (as specified for <a href="https://github.com/bitcoin/bips/blob/master/bip-0173.mediawiki#specification">bech32</a>) in the address encoding is:</p>
 <ul>
@@ -171,6 +176,8 @@
 <p>As implied by their name, accounts for implicit addresses exist as a possibility and not as a matter of fact. These addresses allow users to interact with public keys which may or may not have a registered on-chain account, e.g. allowing to send some fungible token to an address derived from a public key. An implicit address is derived from a hash of a public key, which also helps to protect keys for which the public key has not been revealed publicly.</p>
 <h4 id="established-transparent-addresses"><a class="header" href="#established-transparent-addresses">Established transparent addresses</a></h4>
 <p>Established addresses are created by a ledger transaction, which can create any number of new account addresses. The users are not in control of choosing the address as it's derived from the current address nonce, which is changed after every newly established address.</p>
+<h4 id="internal-transparent-addresses"><a class="header" href="#internal-transparent-addresses">Internal transparent addresses</a></h4>
+<p>There will be a static set of internal addresses that integrate certain functionality into the ledger via a dedicated module, such as the proof-of-stake module and the IBC module. The internal accounts use <a href="vp.html#native-vps">native validity predicates</a> to validate transactions that interact with their module. A native module will use the <a href="#dynamic-storage-sub-space">dynamic storage sub-space</a> to store all the data relevant to their functionality (e.g. PoS parameters, bond pool, IBC state and proofs).</p>
 <h3 id="shielded-addresses"><a class="header" href="#shielded-addresses">Shielded addresses</a></h3>
 <p>Similar to <a href="https://raw.githubusercontent.com/zcash/zips/master/protocol/protocol.pdf">Zcash Sapling protocol payment addresses and keys (section 3.1)</a>, users can generate spending keys for private payments. A shielded payment address, incoming viewing key and full viewing key are derived from a spending key. In a private payment, a shielded payment address is hashed with a diversifier into a diversified transmission key. When a different diversifier function is chosen for different transactions, it prevents the transmission key from being matched across the transactions.</p>
 <p>The encoding of the shielded addresses, spending and viewing keys is not yet decided, but for consistency we'll probably use a the same schema with different prefixes for anything that can use an identifier.</p>

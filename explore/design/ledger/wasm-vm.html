@@ -203,7 +203,7 @@
 <ul>
 <li>storage write access for all public state via the <a href="#storage-write-log">storage write log</a></li>
 </ul>
-<p>Some exceptions as to what can be written are given under <a href="./tx-execution.html#tx-code">transaction code</a>.</p>
+<p>Some exceptions as to what can be written are given under <a href="./tx.html#tx-execution">transaction execution</a>.</p>
 <h2 id="wasm-memory"><a class="header" href="#wasm-memory">Wasm memory</a></h2>
 <p>The wasm memory allows to share data bi-directionally between the host (Rust shell) and the guest (wasm) through a <a href="https://webassembly.github.io/spec/core/exec/runtime.html#syntax-meminst">wasm linear memory instance</a>.</p>
 <p>Because <a href="https://webassembly.github.io/spec/core/syntax/types.html">wasm currently only supports basic types</a>, we need to choose how to represent more sophisticated data in memory.</p>

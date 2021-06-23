@@ -204,9 +204,11 @@
     C --&gt; N
 
 </pre>
-<h2 id="tx-code"><a class="header" href="#tx-code">Tx code</a></h2>
+<h2 id="tx-execution"><a class="header" href="#tx-execution">Tx execution</a></h2>
 <p>The code is allowed to read and write anything from <a href="./accounts.html#dynamic-storage-sub-space">accounts' sub-spaces</a> and to <a href="./accounts.html#initializing-a-new-account">initialize new accounts</a>. Other data that is not in an account's subspace is read-only, e.g. chain and block metadata, account addresses and potentially keys.</p>
-<p>In addition to the verifiers specified in a transaction, each account whose sub-space has been modified by the tx triggers its VP. The VPs are then given the prior and posterior state from the account's sub-space together with the tx to decide if it accepts the tx's state modifications.</p>
+<p>In addition to the verifiers specified in a transaction, each account whose sub-space has been modified by the tx triggers its VP.</p>
+<p>For <a href="accounts.html#internal-transparent-addresses">internal addresses</a>, we invoke their module's native VP interface directly. For other addresses, we look-up validity predicates WASM to be executed from storage.</p>
+<p>The VPs are then given the prior and posterior state from the account's sub-space together with the tx to decide if it accepts the tx's state modifications.</p>
 <p>Within a single tx the execution of the validity predicates will be parallelized and thus the fee for VPs execution would their maximum value (plus some portion of the fees for each of the other parallelized VPs - nothing should be &quot;free&quot;). Once any of the VPs rejects the modifications, execution is aborted, the transaction is rejected and state changes discarded. If all the VPs accept the modifications, the transaction is successful and modifications are committed to storage as the input of the next tx.</p>
 <p>The transaction's API should make it possible to transfer tokens to a hash of a public key that is not revealed. This could be done by having a &quot;deposit&quot; account from which the key's owner can claim the deposited funds.</p>
 <p>Should some type of token prefer not to allow to receive tokens without recipient's approval, a token account can implement logic to decline the received tokens.</p>
