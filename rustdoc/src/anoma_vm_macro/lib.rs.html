@@ -227,7 +227,7 @@
         <span class="attribute">#[<span class="ident">no_mangle</span>]</span>
         <span class="kw">extern</span> <span class="string">&quot;C&quot;</span> <span class="kw">fn</span> <span class="ident">_apply_tx</span>(<span class="ident">tx_data_ptr</span>: <span class="ident">u64</span>, <span class="ident">tx_data_len</span>: <span class="ident">u64</span>) {
             <span class="kw">let</span> <span class="ident">slice</span> <span class="op">=</span> <span class="kw">unsafe</span> {
-                <span class="ident">slice</span>::<span class="ident">from_raw_parts</span>(
+                <span class="ident">core</span>::<span class="ident">slice</span>::<span class="ident">from_raw_parts</span>(
                     <span class="ident">tx_data_ptr</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">u8</span>,
                     <span class="ident">tx_data_len</span> <span class="kw">as</span> <span class="kw">_</span>,
                 )
@@ -278,12 +278,12 @@
             <span class="ident">verifiers_len</span>: <span class="ident">u64</span>,
         ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u64</span> {
             <span class="kw">let</span> <span class="ident">slice</span> <span class="op">=</span> <span class="kw">unsafe</span> {
-                <span class="ident">slice</span>::<span class="ident">from_raw_parts</span>(<span class="ident">addr_ptr</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">u8</span>, <span class="ident">addr_len</span> <span class="kw">as</span> <span class="kw">_</span>)
+                <span class="ident">core</span>::<span class="ident">slice</span>::<span class="ident">from_raw_parts</span>(<span class="ident">addr_ptr</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">u8</span>, <span class="ident">addr_len</span> <span class="kw">as</span> <span class="kw">_</span>)
             };
             <span class="kw">let</span> <span class="ident">addr</span> <span class="op">=</span> <span class="ident">Address</span>::<span class="ident">try_from_slice</span>(<span class="ident">slice</span>).<span class="ident">unwrap</span>();
 
             <span class="kw">let</span> <span class="ident">slice</span> <span class="op">=</span> <span class="kw">unsafe</span> {
-                <span class="ident">slice</span>::<span class="ident">from_raw_parts</span>(
+                <span class="ident">core</span>::<span class="ident">slice</span>::<span class="ident">from_raw_parts</span>(
                     <span class="ident">tx_data_ptr</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">u8</span>,
                     <span class="ident">tx_data_len</span> <span class="kw">as</span> <span class="kw">_</span>,
                 )
@@ -291,7 +291,7 @@
             <span class="kw">let</span> <span class="ident">tx_data</span> <span class="op">=</span> <span class="ident">slice</span>.<span class="ident">to_vec</span>();
 
             <span class="kw">let</span> <span class="ident">slice</span> <span class="op">=</span> <span class="kw">unsafe</span> {
-                <span class="ident">slice</span>::<span class="ident">from_raw_parts</span>(
+                <span class="ident">core</span>::<span class="ident">slice</span>::<span class="ident">from_raw_parts</span>(
                     <span class="ident">keys_changed_ptr</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">u8</span>,
                     <span class="ident">keys_changed_len</span> <span class="kw">as</span> <span class="kw">_</span>,
                 )
@@ -299,7 +299,7 @@
             <span class="kw">let</span> <span class="ident">keys_changed</span>: <span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">storage</span>::<span class="ident">Key</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">HashSet</span>::<span class="ident">try_from_slice</span>(<span class="ident">slice</span>).<span class="ident">unwrap</span>();
 
             <span class="kw">let</span> <span class="ident">slice</span> <span class="op">=</span> <span class="kw">unsafe</span> {
-                <span class="ident">slice</span>::<span class="ident">from_raw_parts</span>(
+                <span class="ident">core</span>::<span class="ident">slice</span>::<span class="ident">from_raw_parts</span>(
                     <span class="ident">verifiers_ptr</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">u8</span>,
                     <span class="ident">verifiers_len</span> <span class="kw">as</span> <span class="kw">_</span>,
                 )
@@ -345,7 +345,7 @@
         ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u64</span> {
             <span class="kw">let</span> <span class="ident">get_data</span> <span class="op">=</span> <span class="op">|</span><span class="ident">ptr</span>, <span class="ident">len</span><span class="op">|</span> {
                 <span class="kw">let</span> <span class="ident">slice</span> <span class="op">=</span> <span class="kw">unsafe</span> {
-                    <span class="ident">slice</span>::<span class="ident">from_raw_parts</span>(<span class="ident">ptr</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">u8</span>, <span class="ident">len</span> <span class="kw">as</span> <span class="kw">_</span>)
+                    <span class="ident">core</span>::<span class="ident">slice</span>::<span class="ident">from_raw_parts</span>(<span class="ident">ptr</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">u8</span>, <span class="ident">len</span> <span class="kw">as</span> <span class="kw">_</span>)
                 };
                 <span class="ident">slice</span>.<span class="ident">to_vec</span>()
             };
@@ -388,7 +388,7 @@
         ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u64</span> {
             <span class="kw">let</span> <span class="ident">get_data</span> <span class="op">=</span> <span class="op">|</span><span class="ident">ptr</span>, <span class="ident">len</span><span class="op">|</span> {
                 <span class="kw">let</span> <span class="ident">slice</span> <span class="op">=</span> <span class="kw">unsafe</span> {
-                    <span class="ident">slice</span>::<span class="ident">from_raw_parts</span>(<span class="ident">ptr</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">u8</span>, <span class="ident">len</span> <span class="kw">as</span> <span class="kw">_</span>)
+                    <span class="ident">core</span>::<span class="ident">slice</span>::<span class="ident">from_raw_parts</span>(<span class="ident">ptr</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">u8</span>, <span class="ident">len</span> <span class="kw">as</span> <span class="kw">_</span>)
                 };
                 <span class="ident">slice</span>.<span class="ident">to_vec</span>()
             };

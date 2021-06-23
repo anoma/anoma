@@ -182,67 +182,12 @@
 <span id="179">179</span>
 <span id="180">180</span>
 <span id="181">181</span>
-<span id="182">182</span>
-<span id="183">183</span>
-<span id="184">184</span>
-<span id="185">185</span>
-<span id="186">186</span>
-<span id="187">187</span>
-<span id="188">188</span>
-<span id="189">189</span>
-<span id="190">190</span>
-<span id="191">191</span>
-<span id="192">192</span>
-<span id="193">193</span>
-<span id="194">194</span>
-<span id="195">195</span>
-<span id="196">196</span>
-<span id="197">197</span>
-<span id="198">198</span>
-<span id="199">199</span>
-<span id="200">200</span>
-<span id="201">201</span>
-<span id="202">202</span>
-<span id="203">203</span>
-<span id="204">204</span>
-<span id="205">205</span>
-<span id="206">206</span>
-<span id="207">207</span>
-<span id="208">208</span>
-<span id="209">209</span>
-<span id="210">210</span>
-<span id="211">211</span>
-<span id="212">212</span>
-<span id="213">213</span>
-<span id="214">214</span>
-<span id="215">215</span>
-<span id="216">216</span>
-<span id="217">217</span>
-<span id="218">218</span>
-<span id="219">219</span>
-<span id="220">220</span>
-<span id="221">221</span>
-<span id="222">222</span>
-<span id="223">223</span>
-<span id="224">224</span>
-<span id="225">225</span>
-<span id="226">226</span>
-<span id="227">227</span>
-<span id="228">228</span>
-<span id="229">229</span>
-<span id="230">230</span>
-<span id="231">231</span>
-<span id="232">232</span>
-<span id="233">233</span>
-<span id="234">234</span>
-<span id="235">235</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! The wasm host environment.</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//! Here, we expose the host functions into wasm&#39;s</span>
 <span class="doccomment">//! imports, so they can be called from inside the wasm.</span>
 
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">collections</span>::<span class="ident">HashSet</span>;
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">sync</span>::{<span class="ident">Arc</span>, <span class="ident">Mutex</span>};
 
 <span class="kw">use</span> <span class="ident">wasmer</span>::{
@@ -251,17 +196,12 @@
 };
 
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">gossip</span>::<span class="ident">mm</span>::<span class="ident">MmHost</span>;
-<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">ledger</span>::<span class="ident">gas</span>::{<span class="ident">BlockGasMeter</span>, <span class="ident">VpGasMeter</span>};
-<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">ledger</span>::<span class="ident">storage</span>::<span class="ident">write_log</span>::<span class="ident">WriteLog</span>;
-<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">ledger</span>::<span class="ident">storage</span>::{<span class="self">self</span>, <span class="ident">Storage</span>, <span class="ident">StorageHasher</span>};
-<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">proto</span>::<span class="ident">Tx</span>;
-<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">types</span>::<span class="ident">address</span>::<span class="ident">Address</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">ledger</span>::<span class="ident">storage</span>::{<span class="self">self</span>, <span class="ident">StorageHasher</span>};
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">vm</span>::<span class="ident">host_env</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">vm</span>::<span class="ident">host_env</span>::{
-    <span class="ident">FilterEnv</span>, <span class="ident">MatchmakerEnv</span>, <span class="ident">TxEnv</span>, <span class="ident">VpEnv</span>, <span class="ident">VpEvalRunner</span>,
+    <span class="ident">FilterEnv</span>, <span class="ident">MatchmakerEnv</span>, <span class="ident">TxEnv</span>, <span class="ident">VpEnv</span>, <span class="ident">VpEvaluator</span>,
 };
-<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">vm</span>::<span class="ident">prefix_iter</span>::<span class="ident">PrefixIterators</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">vm</span>::<span class="ident">wasm</span>::<span class="ident">memory</span>::<span class="ident">WasmMemory</span>;
-<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">vm</span>::{<span class="ident">host_env</span>, <span class="ident">EnvHostWrapper</span>, <span class="ident">MutEnvHostWrapper</span>};
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">DB</span>, <span class="ident">H</span><span class="op">&gt;</span> <span class="ident">WasmerEnv</span> <span class="kw">for</span> <span class="ident">TxEnv</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span>, <span class="ident">WasmMemory</span>, <span class="ident">DB</span>, <span class="ident">H</span><span class="op">&gt;</span>
 <span class="kw">where</span>
@@ -280,7 +220,7 @@
 <span class="kw">where</span>
     <span class="ident">DB</span>: <span class="ident">storage</span>::<span class="ident">DB</span> <span class="op">+</span> <span class="kw">for</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span> <span class="ident">storage</span>::<span class="ident">DBIter</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span>,
     <span class="ident">H</span>: <span class="ident">StorageHasher</span>,
-    <span class="ident">EVAL</span>: <span class="ident">VpEvalRunner</span>,
+    <span class="ident">EVAL</span>: <span class="ident">VpEvaluator</span>,
 {
     <span class="kw">fn</span> <span class="ident">init_with_instance</span>(
         <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
@@ -314,29 +254,15 @@
 <span class="doccomment">/// Prepare imports (memory and host functions) exposed to the vm guest running</span>
 <span class="doccomment">/// transaction code</span>
 <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy</span>::<span class="ident">too_many_arguments</span>)]</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">prepare_tx_imports</span><span class="op">&lt;</span><span class="ident">DB</span>, <span class="ident">H</span><span class="op">&gt;</span>(
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">tx_imports</span><span class="op">&lt;</span><span class="ident">DB</span>, <span class="ident">H</span><span class="op">&gt;</span>(
     <span class="ident">wasm_store</span>: <span class="kw-2">&amp;</span><span class="ident">Store</span>,
-    <span class="ident">storage</span>: <span class="ident">EnvHostWrapper</span><span class="op">&lt;</span><span class="lifetime">&#39;static</span>, <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">Storage</span><span class="op">&lt;</span><span class="ident">DB</span>, <span class="ident">H</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    <span class="ident">write_log</span>: <span class="ident">MutEnvHostWrapper</span><span class="op">&lt;</span><span class="lifetime">&#39;static</span>, <span class="kw-2">&amp;</span><span class="ident">WriteLog</span><span class="op">&gt;</span>,
-    <span class="ident">iterators</span>: <span class="ident">MutEnvHostWrapper</span><span class="op">&lt;</span><span class="lifetime">&#39;static</span>, <span class="kw-2">&amp;</span><span class="ident">PrefixIterators</span><span class="op">&lt;</span><span class="lifetime">&#39;static</span>, <span class="ident">DB</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    <span class="ident">verifiers</span>: <span class="ident">MutEnvHostWrapper</span><span class="op">&lt;</span><span class="lifetime">&#39;static</span>, <span class="kw-2">&amp;</span><span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    <span class="ident">gas_meter</span>: <span class="ident">MutEnvHostWrapper</span><span class="op">&lt;</span><span class="lifetime">&#39;static</span>, <span class="kw-2">&amp;</span><span class="ident">BlockGasMeter</span><span class="op">&gt;</span>,
-    <span class="ident">result_buffer</span>: <span class="ident">MutEnvHostWrapper</span><span class="op">&lt;</span><span class="lifetime">&#39;static</span>, <span class="kw-2">&amp;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>,
     <span class="ident">initial_memory</span>: <span class="ident">Memory</span>,
+    <span class="ident">env</span>: <span class="ident">TxEnv</span><span class="op">&lt;</span><span class="lifetime">&#39;static</span>, <span class="ident">WasmMemory</span>, <span class="ident">DB</span>, <span class="ident">H</span><span class="op">&gt;</span>,
 ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">ImportObject</span>
 <span class="kw">where</span>
     <span class="ident">DB</span>: <span class="ident">storage</span>::<span class="ident">DB</span> <span class="op">+</span> <span class="kw">for</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span> <span class="ident">storage</span>::<span class="ident">DBIter</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span>,
     <span class="ident">H</span>: <span class="ident">StorageHasher</span>,
 {
-    <span class="kw">let</span> <span class="ident">env</span> <span class="op">=</span> <span class="ident">TxEnv</span> {
-        <span class="ident">memory</span>: <span class="ident">WasmMemory</span>::<span class="ident">default</span>(),
-        <span class="ident">storage</span>,
-        <span class="ident">write_log</span>,
-        <span class="ident">iterators</span>,
-        <span class="ident">verifiers</span>,
-        <span class="ident">gas_meter</span>,
-        <span class="ident">result_buffer</span>,
-    };
     <span class="ident">wasmer</span>::<span class="macro">imports</span><span class="macro">!</span> {
         <span class="comment">// default namespace</span>
         <span class="string">&quot;env&quot;</span> <span class="op">=</span><span class="op">&gt;</span> {
@@ -362,49 +288,15 @@
 
 <span class="doccomment">/// Prepare imports (memory and host functions) exposed to the vm guest running</span>
 <span class="doccomment">/// validity predicate code</span>
-<span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy</span>::<span class="ident">too_many_arguments</span>)]</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">prepare_vp_env</span><span class="op">&lt;</span><span class="ident">DB</span>, <span class="ident">H</span>, <span class="ident">EVAL</span><span class="op">&gt;</span>(
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">vp_imports</span><span class="op">&lt;</span><span class="ident">DB</span>, <span class="ident">H</span>, <span class="ident">EVAL</span><span class="op">&gt;</span>(
     <span class="ident">wasm_store</span>: <span class="kw-2">&amp;</span><span class="ident">Store</span>,
-    <span class="ident">addr</span>: <span class="ident">Address</span>,
-    <span class="ident">storage</span>: <span class="ident">EnvHostWrapper</span><span class="op">&lt;</span><span class="lifetime">&#39;static</span>, <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">Storage</span><span class="op">&lt;</span><span class="ident">DB</span>, <span class="ident">H</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    <span class="ident">write_log</span>: <span class="ident">EnvHostWrapper</span><span class="op">&lt;</span><span class="lifetime">&#39;static</span>, <span class="kw-2">&amp;</span><span class="ident">WriteLog</span><span class="op">&gt;</span>,
-    <span class="ident">iterators</span>: <span class="ident">MutEnvHostWrapper</span><span class="op">&lt;</span><span class="lifetime">&#39;static</span>, <span class="kw-2">&amp;</span><span class="ident">PrefixIterators</span><span class="op">&lt;</span><span class="lifetime">&#39;static</span>, <span class="ident">DB</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    <span class="ident">gas_meter</span>: <span class="ident">MutEnvHostWrapper</span><span class="op">&lt;</span><span class="lifetime">&#39;static</span>, <span class="kw-2">&amp;</span><span class="ident">VpGasMeter</span><span class="op">&gt;</span>,
-    <span class="ident">tx</span>: <span class="ident">EnvHostWrapper</span><span class="op">&lt;</span><span class="lifetime">&#39;static</span>, <span class="kw-2">&amp;</span><span class="ident">Tx</span><span class="op">&gt;</span>,
-    <span class="ident">eval_runner</span>: <span class="ident">EnvHostWrapper</span><span class="op">&lt;</span><span class="lifetime">&#39;static</span>, <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">EVAL</span><span class="op">&gt;</span>,
-    <span class="ident">result_buffer</span>: <span class="ident">MutEnvHostWrapper</span><span class="op">&lt;</span><span class="lifetime">&#39;static</span>, <span class="kw-2">&amp;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>,
     <span class="ident">initial_memory</span>: <span class="ident">Memory</span>,
+    <span class="ident">env</span>: <span class="ident">VpEnv</span><span class="op">&lt;</span><span class="lifetime">&#39;static</span>, <span class="ident">WasmMemory</span>, <span class="ident">DB</span>, <span class="ident">H</span>, <span class="ident">EVAL</span><span class="op">&gt;</span>,
 ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">ImportObject</span>
 <span class="kw">where</span>
     <span class="ident">DB</span>: <span class="ident">storage</span>::<span class="ident">DB</span> <span class="op">+</span> <span class="kw">for</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span> <span class="ident">storage</span>::<span class="ident">DBIter</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span>,
     <span class="ident">H</span>: <span class="ident">StorageHasher</span>,
-    <span class="ident">EVAL</span>: <span class="ident">VpEvalRunner</span>,
-{
-    <span class="kw">let</span> <span class="ident">env</span> <span class="op">=</span> <span class="ident">VpEnv</span> {
-        <span class="ident">memory</span>: <span class="ident">WasmMemory</span>::<span class="ident">default</span>(),
-        <span class="ident">address</span>: <span class="ident">addr</span>,
-        <span class="ident">storage</span>,
-        <span class="ident">write_log</span>,
-        <span class="ident">iterators</span>,
-        <span class="ident">gas_meter</span>,
-        <span class="ident">tx</span>,
-        <span class="ident">eval_runner</span>,
-        <span class="ident">result_buffer</span>,
-    };
-    <span class="ident">prepare_vp_imports</span>(<span class="ident">wasm_store</span>, <span class="ident">initial_memory</span>, <span class="kw-2">&amp;</span><span class="ident">env</span>)
-}
-
-<span class="doccomment">/// Prepare imports (memory and host functions) exposed to the vm guest running</span>
-<span class="doccomment">/// validity predicate code</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">prepare_vp_imports</span><span class="op">&lt;</span><span class="ident">DB</span>, <span class="ident">H</span>, <span class="ident">EVAL</span><span class="op">&gt;</span>(
-    <span class="ident">wasm_store</span>: <span class="kw-2">&amp;</span><span class="ident">Store</span>,
-    <span class="ident">initial_memory</span>: <span class="ident">Memory</span>,
-    <span class="ident">env</span>: <span class="kw-2">&amp;</span><span class="ident">VpEnv</span><span class="op">&lt;</span><span class="lifetime">&#39;static</span>, <span class="ident">WasmMemory</span>, <span class="ident">DB</span>, <span class="ident">H</span>, <span class="ident">EVAL</span><span class="op">&gt;</span>,
-) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">ImportObject</span>
-<span class="kw">where</span>
-    <span class="ident">DB</span>: <span class="ident">storage</span>::<span class="ident">DB</span> <span class="op">+</span> <span class="kw">for</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span> <span class="ident">storage</span>::<span class="ident">DBIter</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span>,
-    <span class="ident">H</span>: <span class="ident">StorageHasher</span>,
-    <span class="ident">EVAL</span>: <span class="ident">VpEvalRunner</span>,
+    <span class="ident">EVAL</span>: <span class="ident">VpEvaluator</span><span class="op">&lt;</span><span class="ident">Db</span> <span class="op">=</span> <span class="ident">DB</span>, <span class="ident">H</span> <span class="op">=</span> <span class="ident">H</span>, <span class="ident">Eval</span> <span class="op">=</span> <span class="ident">EVAL</span><span class="op">&gt;</span>,
 {
     <span class="ident">wasmer</span>::<span class="macro">imports</span><span class="macro">!</span> {
         <span class="comment">// default namespace</span>
@@ -431,7 +323,7 @@
 
 <span class="doccomment">/// Prepare imports (memory and host functions) exposed to the vm guest running</span>
 <span class="doccomment">/// matchmaker code</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">prepare_mm_imports</span><span class="op">&lt;</span><span class="ident">MM</span><span class="op">&gt;</span>(
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">mm_imports</span><span class="op">&lt;</span><span class="ident">MM</span><span class="op">&gt;</span>(
     <span class="ident">wasm_store</span>: <span class="kw-2">&amp;</span><span class="ident">Store</span>,
     <span class="ident">initial_memory</span>: <span class="ident">Memory</span>,
     <span class="ident">mm</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">Mutex</span><span class="op">&lt;</span><span class="ident">MM</span><span class="op">&gt;</span><span class="op">&gt;</span>,
@@ -457,7 +349,7 @@
 
 <span class="doccomment">/// Prepare imports (memory and host functions) exposed to the vm guest running</span>
 <span class="doccomment">/// filter code</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">prepare_mm_filter_imports</span>(
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">mm_filter_imports</span>(
     <span class="ident">wasm_store</span>: <span class="kw-2">&amp;</span><span class="ident">Store</span>,
     <span class="ident">initial_memory</span>: <span class="ident">Memory</span>,
 ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">ImportObject</span> {

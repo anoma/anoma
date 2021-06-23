@@ -90,7 +90,7 @@
 
     <span class="doccomment">/// Native memory implementation may be used for testing VM host environment</span>
     <span class="doccomment">/// natively, without compiling to wasm.</span>
-    <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>)]</span>
+    <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Default</span>)]</span>
     <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">NativeMemory</span>;
 
     <span class="kw">impl</span> <span class="ident">VmMemory</span> <span class="kw">for</span> <span class="ident">NativeMemory</span> {

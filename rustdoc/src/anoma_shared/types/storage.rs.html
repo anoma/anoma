@@ -947,7 +947,7 @@
         ]
     }
 
-    <span class="doccomment">/// Generate an arbitrary [`DbKeyKey`].</span>
+    <span class="doccomment">/// Generate an arbitrary [`DbKeySeg`].</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">arb_key_seg</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="kw">impl</span> <span class="ident">Strategy</span><span class="op">&lt;</span><span class="ident">Value</span> <span class="op">=</span> <span class="ident">DbKeySeg</span><span class="op">&gt;</span> {
         <span class="macro">prop_oneof</span><span class="macro">!</span>[
             <span class="comment">// the string segment is 5 time more likely to be generated</span>

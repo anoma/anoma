@@ -1,1 +1,1 @@
-initSidebarItems({"mod":[["host_env","The wasm host environment."],["memory","Wasm memory is used for bi-directionally passing data between the host and a wasm instance."],["runner","Wasm runners"]]});
+initSidebarItems({"mod":[["host_env","The wasm host environment."],["memory","Wasm memory is used for bi-directionally passing data between the host and a wasm instance."],["run","Wasm runners"]]});

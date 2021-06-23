@@ -43,9 +43,6 @@
 <span id="40">40</span>
 <span id="41">41</span>
 <span id="42">42</span>
-<span id="43">43</span>
-<span id="44">44</span>
-<span id="45">45</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! VM types can be passed between the host and guest via wasm linear</span>
 <span class="doccomment">//! memory.</span>
@@ -64,9 +61,6 @@
 
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">types</span>::<span class="ident">address</span>::<span class="ident">Address</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">types</span>::<span class="ident">storage</span>::<span class="ident">Key</span>;
-
-<span class="doccomment">/// Input for transaction wasm module call</span>
-<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">TxInput</span> <span class="op">=</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>;
 
 <span class="doccomment">/// Input for validity predicate wasm module call</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">VpInput</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {

@@ -248,33 +248,6 @@
 <span id="245">245</span>
 <span id="246">246</span>
 <span id="247">247</span>
-<span id="248">248</span>
-<span id="249">249</span>
-<span id="250">250</span>
-<span id="251">251</span>
-<span id="252">252</span>
-<span id="253">253</span>
-<span id="254">254</span>
-<span id="255">255</span>
-<span id="256">256</span>
-<span id="257">257</span>
-<span id="258">258</span>
-<span id="259">259</span>
-<span id="260">260</span>
-<span id="261">261</span>
-<span id="262">262</span>
-<span id="263">263</span>
-<span id="264">264</span>
-<span id="265">265</span>
-<span id="266">266</span>
-<span id="267">267</span>
-<span id="268">268</span>
-<span id="269">269</span>
-<span id="270">270</span>
-<span id="271">271</span>
-<span id="272">272</span>
-<span id="273">273</span>
-<span id="274">274</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">collections</span>::<span class="ident">HashSet</span>;
 
@@ -287,7 +260,6 @@
 <span class="kw">use</span> <span class="ident">anoma_shared</span>::<span class="ident">types</span>::<span class="ident">storage</span>::{<span class="self">self</span>, <span class="ident">Key</span>};
 <span class="kw">use</span> <span class="ident">anoma_shared</span>::<span class="ident">vm</span>;
 <span class="kw">use</span> <span class="ident">anoma_shared</span>::<span class="ident">vm</span>::<span class="ident">prefix_iter</span>::<span class="ident">PrefixIterators</span>;
-<span class="kw">use</span> <span class="ident">anoma_shared</span>::<span class="ident">vm</span>::{<span class="ident">EnvHostWrapper</span>, <span class="ident">MutEnvHostWrapper</span>};
 
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">tx</span>::{<span class="ident">init_tx_env</span>, <span class="ident">TestTxEnv</span>};
 
@@ -311,16 +283,18 @@
     <span class="kw">pub</span> <span class="ident">tx</span>: <span class="ident">Tx</span>,
     <span class="kw">pub</span> <span class="ident">keys_changed</span>: <span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">storage</span>::<span class="ident">Key</span><span class="op">&gt;</span>,
     <span class="kw">pub</span> <span class="ident">verifiers</span>: <span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span> <span class="ident">eval_runner</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">native_vp_host_env</span>::<span class="ident">VpEval</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span> <span class="ident">eval_runner</span>: <span class="ident">native_vp_host_env</span>::<span class="ident">VpEval</span>,
     <span class="kw">pub</span> <span class="ident">result_buffer</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span>,
 }
 
 <span class="kw">impl</span> <span class="ident">Default</span> <span class="kw">for</span> <span class="ident">TestVpEnv</span> {
     <span class="kw">fn</span> <span class="ident">default</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
-        <span class="comment">// Because the `eval_runner`&#39;s references must point to the data inside</span>
-        <span class="comment">// the `env`, we have to initialize `env` with the other fields first,</span>
-        <span class="comment">// and then add `eval_runner` in.</span>
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">env</span> <span class="op">=</span> <span class="self">Self</span> {
+        <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;wasm-runtime&quot;</span>)]</span>
+        <span class="kw">let</span> <span class="ident">eval_runner</span> <span class="op">=</span> <span class="ident">anoma_shared</span>::<span class="ident">vm</span>::<span class="ident">wasm</span>::<span class="ident">run</span>::<span class="ident">VpEvalWasm</span>::<span class="ident">default</span>();
+        <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;wasm-runtime&quot;</span>))]</span>
+        <span class="kw">let</span> <span class="ident">eval_runner</span> <span class="op">=</span> <span class="ident">native_vp_host_env</span>::<span class="ident">VpEval</span>;
+
+        <span class="self">Self</span> {
             <span class="ident">addr</span>: <span class="ident">address</span>::<span class="ident">testing</span>::<span class="ident">established_address_1</span>(),
             <span class="ident">storage</span>: <span class="ident">TestStorage</span>::<span class="ident">default</span>(),
             <span class="ident">write_log</span>: <span class="ident">WriteLog</span>::<span class="ident">default</span>(),
@@ -329,49 +303,16 @@
             <span class="ident">tx</span>: <span class="ident">Tx</span>::<span class="ident">new</span>(<span class="macro">vec</span><span class="macro">!</span>[], <span class="prelude-val">None</span>),
             <span class="ident">keys_changed</span>: <span class="ident">HashSet</span>::<span class="ident">default</span>(),
             <span class="ident">verifiers</span>: <span class="ident">HashSet</span>::<span class="ident">default</span>(),
-            <span class="ident">eval_runner</span>: <span class="prelude-val">None</span>,
+            <span class="ident">eval_runner</span>,
             <span class="ident">result_buffer</span>: <span class="prelude-val">None</span>,
-        };
-
-        <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;wasm-runtime&quot;</span>)]</span>
-        <span class="kw">let</span> <span class="ident">eval_runner</span> <span class="op">=</span> {
-            <span class="kw">let</span> <span class="ident">env_storage</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">EnvHostWrapper</span>::<span class="ident">new</span>(<span class="kw-2">&amp;</span><span class="ident">env</span>.<span class="ident">storage</span>) };
-            <span class="kw">let</span> <span class="ident">env_write_log</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">EnvHostWrapper</span>::<span class="ident">new</span>(<span class="kw-2">&amp;</span><span class="ident">env</span>.<span class="ident">write_log</span>) };
-            <span class="kw">let</span> <span class="ident">env_iterators</span> <span class="op">=</span>
-                <span class="kw">unsafe</span> { <span class="ident">MutEnvHostWrapper</span>::<span class="ident">new</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">env</span>.<span class="ident">iterators</span>) };
-            <span class="kw">let</span> <span class="ident">env_gas_meter</span> <span class="op">=</span>
-                <span class="kw">unsafe</span> { <span class="ident">MutEnvHostWrapper</span>::<span class="ident">new</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">env</span>.<span class="ident">gas_meter</span>) };
-            <span class="kw">let</span> <span class="ident">env_tx</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">EnvHostWrapper</span>::<span class="ident">new</span>(<span class="kw-2">&amp;</span><span class="ident">env</span>.<span class="ident">tx</span>) };
-            <span class="kw">let</span> <span class="ident">env_keys_changed</span> <span class="op">=</span>
-                <span class="kw">unsafe</span> { <span class="ident">EnvHostWrapper</span>::<span class="ident">new</span>(<span class="kw-2">&amp;</span><span class="ident">env</span>.<span class="ident">keys_changed</span>) };
-            <span class="kw">let</span> <span class="ident">env_verifiers</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">EnvHostWrapper</span>::<span class="ident">new</span>(<span class="kw-2">&amp;</span><span class="ident">env</span>.<span class="ident">verifiers</span>) };
-            <span class="kw">let</span> <span class="ident">env_result_buffer</span> <span class="op">=</span>
-                <span class="kw">unsafe</span> { <span class="ident">MutEnvHostWrapper</span>::<span class="ident">new</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">env</span>.<span class="ident">result_buffer</span>) };
-
-            <span class="ident">anoma_shared</span>::<span class="ident">vm</span>::<span class="ident">wasm</span>::<span class="ident">runner</span>::<span class="ident">VpEval</span> {
-                <span class="ident">address</span>: <span class="ident">env</span>.<span class="ident">addr</span>.<span class="ident">clone</span>(),
-                <span class="ident">storage</span>: <span class="ident">env_storage</span>,
-                <span class="ident">write_log</span>: <span class="ident">env_write_log</span>,
-                <span class="ident">iterators</span>: <span class="ident">env_iterators</span>,
-                <span class="ident">gas_meter</span>: <span class="ident">env_gas_meter</span>,
-                <span class="ident">tx</span>: <span class="ident">env_tx</span>,
-                <span class="ident">keys_changed</span>: <span class="ident">env_keys_changed</span>,
-                <span class="ident">verifiers</span>: <span class="ident">env_verifiers</span>,
-                <span class="ident">result_buffer</span>: <span class="ident">env_result_buffer</span>,
-            }
-        };
-        <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;wasm-runtime&quot;</span>))]</span>
-        <span class="kw">let</span> <span class="ident">eval_runner</span> <span class="op">=</span> <span class="ident">native_vp_host_env</span>::<span class="ident">VpEval</span>;
-        <span class="ident">env</span>.<span class="ident">eval_runner</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">eval_runner</span>);
-
-        <span class="ident">env</span>
+        }
     }
 }
 
 <span class="doccomment">/// Initialize the host environment inside the [`vp_host_env`] module by running</span>
 <span class="doccomment">/// a transaction. The transaction is expected to modify the given address</span>
 <span class="doccomment">/// `addr` or to add it to the set of verifiers using</span>
-<span class="doccomment">/// [`tx_host_env::insert_verifier`].</span>
+<span class="doccomment">/// [`super::tx::tx_host_env::insert_verifier`].</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">init_vp_env_from_tx</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>(
     <span class="ident">addr</span>: <span class="ident">Address</span>,
     <span class="kw-2">mut</span> <span class="ident">tx_env</span>: <span class="ident">TestTxEnv</span>,
@@ -422,8 +363,8 @@
         <span class="ident">iterators</span>,
         <span class="ident">gas_meter</span>,
         <span class="ident">tx</span>,
-        <span class="ident">keys_changed</span>: <span class="kw">_</span>,
-        <span class="ident">verifiers</span>: <span class="kw">_</span>,
+        <span class="ident">keys_changed</span>,
+        <span class="ident">verifiers</span>,
         <span class="ident">eval_runner</span>,
         <span class="ident">result_buffer</span>,
     }: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">TestVpEnv</span>,
@@ -431,16 +372,16 @@
     <span class="ident">vp_host_env</span>::<span class="ident">ENV</span>.<span class="ident">with</span>(<span class="op">|</span><span class="ident">env</span><span class="op">|</span> {
         <span class="kw-2">*</span><span class="ident">env</span>.<span class="ident">borrow_mut</span>() <span class="op">=</span> <span class="prelude-val">Some</span>({
             <span class="ident">vm</span>::<span class="ident">host_env</span>::<span class="ident">testing</span>::<span class="ident">vp_env</span>(
-                <span class="ident">addr</span>.<span class="ident">clone</span>(),
+                <span class="ident">addr</span>,
                 <span class="ident">storage</span>,
                 <span class="ident">write_log</span>,
                 <span class="ident">iterators</span>,
                 <span class="ident">gas_meter</span>,
                 <span class="ident">tx</span>,
-                <span class="ident">eval_runner</span>
-                    .<span class="ident">as_ref</span>()
-                    .<span class="ident">expect</span>(<span class="string">&quot;the eval_runner should be initialized&quot;</span>),
+                <span class="ident">verifiers</span>,
                 <span class="ident">result_buffer</span>,
+                <span class="ident">keys_changed</span>,
+                <span class="ident">eval_runner</span>,
             )
         })
     });
@@ -464,7 +405,7 @@
 
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;wasm-runtime&quot;</span>)]</span>
     <span class="kw">pub</span> <span class="kw">type</span> <span class="ident">VpEval</span> <span class="op">=</span>
-        <span class="ident">anoma_shared</span>::<span class="ident">vm</span>::<span class="ident">wasm</span>::<span class="ident">runner</span>::<span class="ident">VpEval</span><span class="op">&lt;</span><span class="lifetime">&#39;static</span>, <span class="ident">MockDB</span>, <span class="ident">Sha256Hasher</span><span class="op">&gt;</span>;
+        <span class="ident">anoma_shared</span>::<span class="ident">vm</span>::<span class="ident">wasm</span>::<span class="ident">run</span>::<span class="ident">VpEvalWasm</span><span class="op">&lt;</span><span class="ident">MockDB</span>, <span class="ident">Sha256Hasher</span><span class="op">&gt;</span>;
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;wasm-runtime&quot;</span>))]</span>
     <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">VpEval</span>;
 
@@ -473,11 +414,16 @@
     }
 
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;wasm-runtime&quot;</span>))]</span>
-    <span class="kw">impl</span> <span class="ident">VpEvalRunner</span> <span class="kw">for</span> <span class="ident">VpEval</span> {
+    <span class="kw">impl</span> <span class="ident">VpEvaluator</span> <span class="kw">for</span> <span class="ident">VpEval</span> {
+        <span class="kw">type</span> <span class="ident">Db</span> <span class="op">=</span> <span class="ident">MockDB</span>;
+        <span class="kw">type</span> <span class="ident">Eval</span> <span class="op">=</span> <span class="ident">VpEval</span>;
+        <span class="kw">type</span> <span class="ident">H</span> <span class="op">=</span> <span class="ident">Sha256Hasher</span>;
+
         <span class="kw">fn</span> <span class="ident">eval</span>(
             <span class="kw-2">&amp;</span><span class="self">self</span>,
-            <span class="ident">vp_code</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>,
-            <span class="ident">input_data</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>,
+            <span class="ident">_ctx</span>: <span class="ident">VpCtx</span><span class="op">&lt;</span><span class="lifetime">&#39;static</span>, <span class="self">Self</span>::<span class="ident">Db</span>, <span class="self">Self</span>::<span class="ident">H</span>, <span class="self">Self</span>::<span class="ident">Eval</span><span class="op">&gt;</span>,
+            <span class="ident">_vp_code</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>,
+            <span class="ident">_input_data</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>,
         ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">anoma_shared</span>::<span class="ident">types</span>::<span class="ident">internal</span>::<span class="ident">HostEnvResult</span> {
             <span class="macro">unimplemented</span><span class="macro">!</span>(
                 <span class="string">&quot;The \&quot;wasm-runtime\&quot; feature must be enabled to test with \

@@ -316,13 +316,6 @@
 <span id="313">313</span>
 <span id="314">314</span>
 <span id="315">315</span>
-<span id="316">316</span>
-<span id="317">317</span>
-<span id="318">318</span>
-<span id="319">319</span>
-<span id="320">320</span>
-<span id="321">321</span>
-<span id="322">322</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! The ledger&#39;s protocol</span>
 
@@ -335,8 +328,7 @@
 <span class="kw">use</span> <span class="ident">anoma_shared</span>::<span class="ident">proto</span>::{<span class="self">self</span>, <span class="ident">Tx</span>};
 <span class="kw">use</span> <span class="ident">anoma_shared</span>::<span class="ident">types</span>::<span class="ident">address</span>::<span class="ident">Address</span>;
 <span class="kw">use</span> <span class="ident">anoma_shared</span>::<span class="ident">types</span>::<span class="ident">storage</span>::<span class="ident">Key</span>;
-<span class="kw">use</span> <span class="ident">anoma_shared</span>::<span class="ident">vm</span>;
-<span class="kw">use</span> <span class="ident">anoma_shared</span>::<span class="ident">vm</span>::<span class="ident">wasm</span>::<span class="ident">runner</span>::{<span class="ident">TxRunner</span>, <span class="ident">VpRunner</span>};
+<span class="kw">use</span> <span class="ident">anoma_shared</span>::<span class="ident">vm</span>::{<span class="self">self</span>, <span class="ident">wasm</span>};
 <span class="kw">use</span> <span class="ident">rayon</span>::<span class="ident">iter</span>::{<span class="ident">IntoParallelRefIterator</span>, <span class="ident">ParallelIterator</span>};
 <span class="kw">use</span> <span class="ident">thiserror</span>::<span class="ident">Error</span>;
 
@@ -349,11 +341,11 @@
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Error decoding a transaction from bytes: {0}&quot;</span>)]</span>
     <span class="ident">TxDecodingError</span>(<span class="ident">proto</span>::<span class="ident">Error</span>),
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Transaction runner error: {0}&quot;</span>)]</span>
-    <span class="ident">TxRunnerError</span>(<span class="ident">vm</span>::<span class="ident">wasm</span>::<span class="ident">runner</span>::<span class="ident">Error</span>),
+    <span class="ident">TxRunnerError</span>(<span class="ident">vm</span>::<span class="ident">wasm</span>::<span class="ident">run</span>::<span class="ident">Error</span>),
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Gas error: {0}&quot;</span>)]</span>
     <span class="ident">GasError</span>(<span class="ident">gas</span>::<span class="ident">Error</span>),
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Error executing VP for addresses: {0:?}&quot;</span>)]</span>
-    <span class="ident">VpRunnerError</span>(<span class="ident">vm</span>::<span class="ident">wasm</span>::<span class="ident">runner</span>::<span class="ident">Error</span>),
+    <span class="ident">VpRunnerError</span>(<span class="ident">vm</span>::<span class="ident">wasm</span>::<span class="ident">run</span>::<span class="ident">Error</span>),
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;The address {0} doesn&#39;t exist&quot;</span>)]</span>
     <span class="ident">MissingAddress</span>(<span class="ident">Address</span>),
 }
@@ -436,10 +428,7 @@
         .<span class="ident">add_compiling_fee</span>(<span class="ident">tx_code</span>.<span class="ident">len</span>())
         .<span class="ident">map_err</span>(<span class="ident">Error</span>::<span class="ident">GasError</span>)<span class="question-mark">?</span>;
     <span class="kw">let</span> <span class="ident">tx_data</span> <span class="op">=</span> <span class="ident">tx</span>.<span class="ident">data</span>.<span class="ident">clone</span>().<span class="ident">unwrap_or_default</span>();
-    <span class="kw">let</span> <span class="ident">tx_runner</span> <span class="op">=</span> <span class="ident">TxRunner</span>::<span class="ident">new</span>();
-
-    <span class="ident">tx_runner</span>
-        .<span class="ident">run</span>(<span class="ident">storage</span>, <span class="ident">write_log</span>, <span class="ident">gas_meter</span>, <span class="ident">tx_code</span>, <span class="ident">tx_data</span>)
+    <span class="ident">wasm</span>::<span class="ident">run</span>::<span class="ident">tx</span>(<span class="ident">storage</span>, <span class="ident">write_log</span>, <span class="ident">gas_meter</span>, <span class="ident">tx_code</span>, <span class="ident">tx_data</span>)
         .<span class="ident">map_err</span>(<span class="ident">Error</span>::<span class="ident">TxRunnerError</span>)
 }
 
@@ -555,20 +544,17 @@
     <span class="ident">vp_gas_meter</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">VpGasMeter</span>,
     (<span class="ident">addr</span>, <span class="ident">keys</span>, <span class="ident">vp</span>): (<span class="kw-2">&amp;</span><span class="ident">Address</span>, <span class="kw-2">&amp;</span><span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">Key</span><span class="op">&gt;</span>, <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]),
 ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">VpsResult</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">vp_runner</span> <span class="op">=</span> <span class="ident">VpRunner</span>::<span class="ident">new</span>();
-
-    <span class="kw">let</span> <span class="ident">accept</span> <span class="op">=</span> <span class="ident">vp_runner</span>
-        .<span class="ident">run</span>(
-            <span class="ident">vp</span>,
-            <span class="ident">tx</span>,
-            <span class="ident">addr</span>,
-            <span class="ident">storage</span>,
-            <span class="ident">write_log</span>,
-            <span class="ident">vp_gas_meter</span>,
-            <span class="ident">keys</span>,
-            <span class="ident">verifiers</span>,
-        )
-        .<span class="ident">map_err</span>(<span class="ident">Error</span>::<span class="ident">VpRunnerError</span>);
+    <span class="kw">let</span> <span class="ident">accept</span> <span class="op">=</span> <span class="ident">wasm</span>::<span class="ident">run</span>::<span class="ident">vp</span>(
+        <span class="ident">vp</span>,
+        <span class="ident">tx</span>,
+        <span class="ident">addr</span>,
+        <span class="ident">storage</span>,
+        <span class="ident">write_log</span>,
+        <span class="ident">vp_gas_meter</span>,
+        <span class="ident">keys</span>,
+        <span class="ident">verifiers</span>,
+    )
+    .<span class="ident">map_err</span>(<span class="ident">Error</span>::<span class="ident">VpRunnerError</span>);
 
     <span class="kw">match</span> <span class="ident">accept</span> {
         <span class="prelude-val">Ok</span>(<span class="ident">accepted</span>) <span class="op">=</span><span class="op">&gt;</span> {

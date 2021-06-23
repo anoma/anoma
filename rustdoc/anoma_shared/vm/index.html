@@ -13,25 +13,25 @@ storage keys.</p>
 memory.</p>
 </td></tr><tr class="module-item"><td><a class="mod" href="wasm/index.html" title="anoma_shared::vm::wasm mod">wasm</a></td><td class="docblock-short"><p>Modules related to wasm</p>
 </td></tr></table><h2 id="structs" class="section-header"><a href="#structs">Structs</a></h2>
-<table><tr class="module-item"><td><a class="struct" href="struct.EnvHostSliceWrapper.html" title="anoma_shared::vm::EnvHostSliceWrapper struct">EnvHostSliceWrapper</a></td><td class="docblock-short"><p>This is used to attach the Ledger’s host structures to wasm environment,
-which is used for implementing some host calls. It wraps an immutable
-slice, so the access is thread-safe, but because of the unsafe slice
-conversion, care must be taken that while this slice is borrowed, no other
-process can modify it.</p>
-</td></tr><tr class="module-item"><td><a class="struct" href="struct.EnvHostWrapper.html" title="anoma_shared::vm::EnvHostWrapper struct">EnvHostWrapper</a></td><td class="docblock-short"><p>This is used to attach the Ledger’s host structures to wasm environment,
+<table><tr class="module-item"><td><a class="struct" href="struct.HostRef.html" title="anoma_shared::vm::HostRef struct">HostRef</a></td><td class="docblock-short"><p>This is used to attach the Ledger’s host structures to wasm environment,
 which is used for implementing some host calls. It wraps an immutable
 reference, so the access is thread-safe, but because of the unsafe
 reference conversion, care must be taken that while this reference is
 borrowed, no other process can modify it.</p>
-</td></tr><tr class="module-item"><td><a class="struct" href="struct.MutEnvHostSliceWrapper.html" title="anoma_shared::vm::MutEnvHostSliceWrapper struct">MutEnvHostSliceWrapper</a></td><td class="docblock-short"><p>This is used to attach the Ledger’s host structures to wasm environment,
+</td></tr><tr class="module-item"><td><a class="struct" href="struct.HostSlice.html" title="anoma_shared::vm::HostSlice struct">HostSlice</a></td><td class="docblock-short"><p>This is used to attach the Ledger’s host structures to wasm environment,
+which is used for implementing some host calls. It wraps an immutable
+slice, so the access is thread-safe, but because of the unsafe slice
+conversion, care must be taken that while this slice is borrowed, no other
+process can modify it.</p>
+</td></tr><tr class="module-item"><td><a class="struct" href="struct.MutHostRef.html" title="anoma_shared::vm::MutHostRef struct">MutHostRef</a></td><td class="docblock-short"><p>This is used to attach the Ledger’s host structures to wasm environment,
+which is used for implementing some host calls. Because it’s mutable, it’s
+not thread-safe. Also, care must be taken that while this reference is
+borrowed, no other process can read or modify it.</p>
+</td></tr><tr class="module-item"><td><a class="struct" href="struct.MutHostSlice.html" title="anoma_shared::vm::MutHostSlice struct">MutHostSlice</a></td><td class="docblock-short"><p>This is used to attach the Ledger’s host structures to wasm environment,
 which is used for implementing some host calls. It wraps an mutable
 slice, so the access is thread-safe, but because of the unsafe slice
 conversion, care must be taken that while this slice is borrowed, no other
 process can modify it.</p>
-</td></tr><tr class="module-item"><td><a class="struct" href="struct.MutEnvHostWrapper.html" title="anoma_shared::vm::MutEnvHostWrapper struct">MutEnvHostWrapper</a></td><td class="docblock-short"><p>This is used to attach the Ledger’s host structures to wasm environment,
-which is used for implementing some host calls. Because it’s mutable, it’s
-not thread-safe. Also, care must be taken that while this reference is
-borrowed, no other process can read or modify it.</p>
 </td></tr></table><h2 id="functions" class="section-header"><a href="#functions">Functions</a></h2>
 <table><tr class="module-item"><td><a class="fn" href="fn.validate_untrusted_wasm.html" title="anoma_shared::vm::validate_untrusted_wasm fn">validate_untrusted_wasm</a></td><td class="docblock-short"><p>Validate an untrusted wasm code with restrictions that we place such code
 (e.g. transaction and validity predicates)</p>

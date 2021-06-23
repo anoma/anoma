@@ -1081,7 +1081,7 @@
         <span class="ident">collection</span>::<span class="ident">hash_map</span>(<span class="ident">arb_key</span>(), <span class="ident">arb_storage_modification</span>(), <span class="number">0</span>..<span class="number">100</span>)
     }
 
-    <span class="doccomment">/// Generate arbitrary verifiers from tx of [`HashSet&lt;Address&gt;&gt;`].</span>
+    <span class="doccomment">/// Generate arbitrary verifiers from tx of [`HashSet&lt;Address&gt;`].</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">arb_verifiers_from_tx</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="kw">impl</span> <span class="ident">Strategy</span><span class="op">&lt;</span><span class="ident">Value</span> <span class="op">=</span> <span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span><span class="op">&gt;</span> {
         <span class="ident">collection</span>::<span class="ident">hash_set</span>(<span class="ident">arb_address</span>(), <span class="number">0</span>..<span class="number">10</span>)
     }

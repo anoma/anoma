@@ -564,12 +564,6 @@
 <span id="561">561</span>
 <span id="562">562</span>
 <span id="563">563</span>
-<span id="564">564</span>
-<span id="565">565</span>
-<span id="566">566</span>
-<span id="567">567</span>
-<span id="568">568</span>
-<span id="569">569</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Wasm memory is used for bi-directionally passing data between the host and a</span>
 <span class="doccomment">//! wasm instance.</span>
@@ -578,6 +572,7 @@
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">sync</span>::<span class="ident">Arc</span>;
 
 <span class="kw">use</span> <span class="ident">borsh</span>::<span class="ident">BorshSerialize</span>;
+<span class="kw">use</span> <span class="ident">loupe</span>::<span class="ident">MemoryUsage</span>;
 <span class="kw">use</span> <span class="ident">thiserror</span>::<span class="ident">Error</span>;
 <span class="kw">use</span> <span class="ident">wasmer</span>::{
     <span class="ident">vm</span>, <span class="ident">BaseTunables</span>, <span class="ident">HostEnvInitError</span>, <span class="ident">LazyInit</span>, <span class="ident">Memory</span>, <span class="ident">MemoryError</span>,
@@ -882,7 +877,7 @@
 }
 
 <span class="doccomment">/// The wasm memory</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>)]</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">Default</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">WasmMemory</span> {
     <span class="ident">inner</span>: <span class="ident">LazyInit</span><span class="op">&lt;</span><span class="ident">wasmer</span>::<span class="ident">Memory</span><span class="op">&gt;</span>,
 }
@@ -941,17 +936,10 @@
     }
 }
 
-<span class="kw">impl</span> <span class="ident">Default</span> <span class="kw">for</span> <span class="ident">WasmMemory</span> {
-    <span class="kw">fn</span> <span class="ident">default</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
-        <span class="self">Self</span> {
-            <span class="ident">inner</span>: <span class="ident">LazyInit</span>::<span class="ident">default</span>(),
-        }
-    }
-}
-
 <span class="doccomment">/// A custom [`Tunables`] to set a WASM memory limits.</span>
 <span class="doccomment">///</span>
-<span class="doccomment">/// Adapted from &lt;https://github.com/wasmerio/wasmer/blob/0a9a5f4dd1b517b992c2a4d07b2cb292087a8709/examples/tunables_limit_memory.rs&gt;.</span>
+<span class="doccomment">/// Adapted from &lt;https://github.com/wasmerio/wasmer/blob/29d7b4a5f1c401d9a1e95086ed85878c8407ec16/examples/tunables_limit_memory.rs&gt;.</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">MemoryUsage</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Limit</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Tunables</span><span class="op">&gt;</span> {
     <span class="doccomment">/// The maximum a linear memory is allowed to be (in Wasm pages, 64 KiB</span>
     <span class="doccomment">/// each). Since Wasmer ensures there is only none or one memory, this</span>
@@ -1108,7 +1096,7 @@
 
         <span class="comment">// Any compiler and any engine do the job here</span>
         <span class="kw">let</span> <span class="ident">compiler</span> <span class="op">=</span> <span class="ident">Cranelift</span>::<span class="ident">default</span>();
-        <span class="kw">let</span> <span class="ident">engine</span> <span class="op">=</span> <span class="ident">wasmer_engine_jit</span>::<span class="ident">JIT</span>::<span class="ident">new</span>(<span class="ident">compiler</span>).<span class="ident">engine</span>();
+        <span class="kw">let</span> <span class="ident">engine</span> <span class="op">=</span> <span class="ident">wasmer_engine_universal</span>::<span class="ident">Universal</span>::<span class="ident">new</span>(<span class="ident">compiler</span>).<span class="ident">engine</span>();
 
         <span class="kw">let</span> <span class="ident">base</span> <span class="op">=</span> <span class="ident">BaseTunables</span>::<span class="ident">for_target</span>(<span class="kw-2">&amp;</span><span class="ident">Target</span>::<span class="ident">default</span>());
         <span class="kw">let</span> <span class="ident">limit</span> <span class="op">=</span> <span class="ident">Pages</span>(<span class="number">24</span>);
