@@ -508,6 +508,34 @@
 <span id="505">505</span>
 <span id="506">506</span>
 <span id="507">507</span>
+<span id="508">508</span>
+<span id="509">509</span>
+<span id="510">510</span>
+<span id="511">511</span>
+<span id="512">512</span>
+<span id="513">513</span>
+<span id="514">514</span>
+<span id="515">515</span>
+<span id="516">516</span>
+<span id="517">517</span>
+<span id="518">518</span>
+<span id="519">519</span>
+<span id="520">520</span>
+<span id="521">521</span>
+<span id="522">522</span>
+<span id="523">523</span>
+<span id="524">524</span>
+<span id="525">525</span>
+<span id="526">526</span>
+<span id="527">527</span>
+<span id="528">528</span>
+<span id="529">529</span>
+<span id="530">530</span>
+<span id="531">531</span>
+<span id="532">532</span>
+<span id="533">533</span>
+<span id="534">534</span>
+<span id="535">535</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! A Tendermint wrapper module that relays Tendermint requests to the Shell.</span>
 <span class="doccomment">//!</span>
@@ -516,9 +544,10 @@
 
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">convert</span>::{<span class="ident">TryFrom</span>, <span class="ident">TryInto</span>};
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">fs</span>::{<span class="self">self</span>, <span class="ident">File</span>, <span class="ident">OpenOptions</span>};
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">io</span>::{<span class="self">self</span>, <span class="ident">Write</span>};
+<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">io</span>::{<span class="ident">BufReader</span>, <span class="ident">Write</span>};
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">path</span>::<span class="ident">Path</span>;
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">process</span>::<span class="ident">Command</span>;
+<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">str</span>::<span class="ident">FromStr</span>;
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">sync</span>::<span class="ident">mpsc</span>::{<span class="self">self</span>, <span class="ident">channel</span>, <span class="ident">Sender</span>};
 
 <span class="kw">use</span> <span class="ident">anoma_shared</span>::<span class="ident">ledger</span>::<span class="ident">storage</span>::<span class="ident">MerkleRoot</span>;
@@ -549,8 +578,6 @@
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">Error</span> {
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Failed to initialize Tendermint: {0}&quot;</span>)]</span>
     <span class="ident">TendermintInit</span>(<span class="ident">std</span>::<span class="ident">io</span>::<span class="ident">Error</span>),
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Failed to write Tendermint validator key: {0}&quot;</span>)]</span>
-    <span class="ident">TendermintValidatorKey</span>(<span class="ident">std</span>::<span class="ident">io</span>::<span class="ident">Error</span>),
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Failed to load Tendermint config file: {0}&quot;</span>)]</span>
     <span class="ident">TendermintLoadConfig</span>(<span class="ident">tendermint</span>::<span class="ident">error</span>::<span class="ident">Error</span>),
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Failed to open Tendermint config for writing: {0}&quot;</span>)]</span>
@@ -634,8 +661,8 @@
 
     <span class="kw">if</span> <span class="macro">cfg</span><span class="macro">!</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;dev&quot;</span>) {
         <span class="comment">// override the validator key file</span>
-        <span class="ident">write_validator_key</span>(<span class="kw-2">&amp;</span><span class="ident">home_dir</span>, <span class="kw-2">&amp;</span><span class="ident">genesis</span>::<span class="ident">genesis</span>().<span class="ident">validator</span>)
-            .<span class="ident">map_err</span>(<span class="ident">Error</span>::<span class="ident">TendermintValidatorKey</span>)<span class="question-mark">?</span>;
+        <span class="ident">write_validator_key</span>(<span class="kw-2">&amp;</span><span class="ident">home_dir</span>, <span class="kw-2">&amp;</span><span class="ident">genesis</span>::<span class="ident">genesis</span>().<span class="ident">validator</span>);
+        <span class="ident">write_chain_id</span>(<span class="kw-2">&amp;</span><span class="ident">home_dir</span>, <span class="ident">config</span>::<span class="ident">DEFAULT_CHAIN_ID</span>);
     }
 
     <span class="ident">update_tendermint_config</span>(<span class="kw-2">&amp;</span><span class="ident">home_dir</span>)<span class="question-mark">?</span>;
@@ -994,13 +1021,11 @@
 }
 
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;dev&quot;</span>)]</span>
-<span class="kw">fn</span> <span class="ident">write_validator_key</span>(
-    <span class="ident">home_dir</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span><span class="ident">Path</span><span class="op">&gt;</span>,
-    <span class="ident">account</span>: <span class="kw-2">&amp;</span><span class="ident">Validator</span>,
-) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">io</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+<span class="kw">fn</span> <span class="ident">write_validator_key</span>(<span class="ident">home_dir</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span><span class="ident">Path</span><span class="op">&gt;</span>, <span class="ident">account</span>: <span class="kw-2">&amp;</span><span class="ident">Validator</span>) {
     <span class="kw">let</span> <span class="ident">home_dir</span> <span class="op">=</span> <span class="ident">home_dir</span>.<span class="ident">as_ref</span>();
     <span class="kw">let</span> <span class="ident">path</span> <span class="op">=</span> <span class="ident">home_dir</span>.<span class="ident">join</span>(<span class="string">&quot;config&quot;</span>).<span class="ident">join</span>(<span class="string">&quot;priv_validator_key.json&quot;</span>);
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">file</span> <span class="op">=</span> <span class="ident">File</span>::<span class="ident">create</span>(<span class="ident">path</span>)<span class="question-mark">?</span>;
+    <span class="kw">let</span> <span class="ident">file</span> <span class="op">=</span>
+        <span class="ident">File</span>::<span class="ident">create</span>(<span class="ident">path</span>).<span class="ident">expect</span>(<span class="string">&quot;Couldn&#39;t create private validator key file&quot;</span>);
     <span class="kw">let</span> <span class="ident">pk</span> <span class="op">=</span> <span class="ident">base64</span>::<span class="ident">encode</span>(<span class="ident">account</span>.<span class="ident">keypair</span>.<span class="ident">public</span>.<span class="ident">as_bytes</span>());
     <span class="kw">let</span> <span class="ident">sk</span> <span class="op">=</span> <span class="ident">base64</span>::<span class="ident">encode</span>(<span class="ident">account</span>.<span class="ident">keypair</span>.<span class="ident">to_bytes</span>());
     <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="macro">json</span><span class="macro">!</span>({
@@ -1014,7 +1039,38 @@
          <span class="string">&quot;value&quot;</span>: <span class="ident">sk</span>,
       }
     });
-    <span class="ident">file</span>.<span class="ident">write</span>(<span class="ident">key</span>.<span class="ident">to_string</span>().<span class="ident">as_bytes</span>()).<span class="ident">map</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> ())
+    <span class="ident">serde_json</span>::<span class="ident">to_writer_pretty</span>(<span class="ident">file</span>, <span class="kw-2">&amp;</span><span class="ident">key</span>)
+        .<span class="ident">expect</span>(<span class="string">&quot;Couldn&#39;t write private validator key file&quot;</span>);
+}
+
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;dev&quot;</span>)]</span>
+<span class="kw">fn</span> <span class="ident">write_chain_id</span>(<span class="ident">home_dir</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span><span class="ident">Path</span><span class="op">&gt;</span>, <span class="ident">chain_id</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span><span class="ident">str</span><span class="op">&gt;</span>) {
+    <span class="kw">let</span> <span class="ident">home_dir</span> <span class="op">=</span> <span class="ident">home_dir</span>.<span class="ident">as_ref</span>();
+    <span class="kw">let</span> <span class="ident">path</span> <span class="op">=</span> <span class="ident">home_dir</span>.<span class="ident">join</span>(<span class="string">&quot;config&quot;</span>).<span class="ident">join</span>(<span class="string">&quot;genesis.json&quot;</span>);
+    <span class="kw">let</span> <span class="ident">file</span> <span class="op">=</span> <span class="ident">File</span>::<span class="ident">open</span>(<span class="kw-2">&amp;</span><span class="ident">path</span>).<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="ident">err</span><span class="op">|</span> {
+        <span class="macro">panic</span><span class="macro">!</span>(
+            <span class="string">&quot;Couldn&#39;t open the genesis file at {:?}, error: {}&quot;</span>,
+            <span class="ident">path</span>, <span class="ident">err</span>
+        )
+    });
+    <span class="kw">let</span> <span class="ident">reader</span> <span class="op">=</span> <span class="ident">BufReader</span>::<span class="ident">new</span>(<span class="ident">file</span>);
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">genesis</span>: <span class="ident">tendermint</span>::<span class="ident">Genesis</span> <span class="op">=</span> <span class="ident">serde_json</span>::<span class="ident">from_reader</span>(<span class="ident">reader</span>)
+        .<span class="ident">expect</span>(<span class="string">&quot;Couldn&#39;t deserialize the genesis file&quot;</span>);
+    <span class="ident">genesis</span>.<span class="ident">chain_id</span> <span class="op">=</span>
+        <span class="ident">FromStr</span>::<span class="ident">from_str</span>(<span class="ident">chain_id</span>.<span class="ident">as_ref</span>()).<span class="ident">expect</span>(<span class="string">&quot;Invalid chain ID&quot;</span>);
+
+    <span class="kw">let</span> <span class="ident">file</span> <span class="op">=</span> <span class="ident">OpenOptions</span>::<span class="ident">new</span>()
+        .<span class="ident">write</span>(<span class="bool-val">true</span>)
+        .<span class="ident">truncate</span>(<span class="bool-val">true</span>)
+        .<span class="ident">open</span>(<span class="kw-2">&amp;</span><span class="ident">path</span>)
+        .<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="ident">err</span><span class="op">|</span> {
+            <span class="macro">panic</span><span class="macro">!</span>(
+                <span class="string">&quot;Couldn&#39;t open the genesis file at {:?} for writing, error: {}&quot;</span>,
+                <span class="ident">path</span>, <span class="ident">err</span>
+            )
+        });
+    <span class="ident">serde_json</span>::<span class="ident">to_writer_pretty</span>(<span class="ident">file</span>, <span class="kw-2">&amp;</span><span class="ident">genesis</span>)
+        .<span class="ident">expect</span>(<span class="string">&quot;Couldn&#39;t write the genesis file&quot;</span>);
 }
 </pre></div>
 </section><section id="search" class="content hidden"></section><section class="footer"></section><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="anoma" data-search-js="../../../../search-index.js"></div>

@@ -403,6 +403,20 @@
 <span id="400">400</span>
 <span id="401">401</span>
 <span id="402">402</span>
+<span id="403">403</span>
+<span id="404">404</span>
+<span id="405">405</span>
+<span id="406">406</span>
+<span id="407">407</span>
+<span id="408">408</span>
+<span id="409">409</span>
+<span id="410">410</span>
+<span id="411">411</span>
+<span id="412">412</span>
+<span id="413">413</span>
+<span id="414">414</span>
+<span id="415">415</span>
+<span id="416">416</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">protocol</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">storage</span>;
@@ -432,8 +446,8 @@
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">Error</span> {
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Error removing the DB data: {0}&quot;</span>)]</span>
     <span class="ident">RemoveDB</span>(<span class="ident">std</span>::<span class="ident">io</span>::<span class="ident">Error</span>),
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Storage error: {0}&quot;</span>)]</span>
-    <span class="ident">StorageError</span>(<span class="ident">anoma_shared</span>::<span class="ident">ledger</span>::<span class="ident">storage</span>::<span class="ident">Error</span>),
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;chain ID mismatch: {0}&quot;</span>)]</span>
+    <span class="ident">ChainIdError</span>(<span class="ident">String</span>),
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Shell ABCI channel receiver error: {0}&quot;</span>)]</span>
     <span class="ident">AbciChannelRecvError</span>(<span class="ident">mpsc</span>::<span class="ident">RecvError</span>),
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Shell ABCI channel sender error: {0}&quot;</span>)]</span>
@@ -449,7 +463,8 @@
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">run</span>(<span class="ident">config</span>: <span class="ident">config</span>::<span class="ident">Ledger</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
     <span class="comment">// open a channel between ABCI (the sender) and the shell (the receiver)</span>
     <span class="kw">let</span> (<span class="ident">sender</span>, <span class="ident">receiver</span>) <span class="op">=</span> <span class="ident">mpsc</span>::<span class="ident">channel</span>();
-    <span class="kw">let</span> <span class="ident">shell</span> <span class="op">=</span> <span class="ident">Shell</span>::<span class="ident">new</span>(<span class="ident">receiver</span>, <span class="kw-2">&amp;</span><span class="ident">config</span>.<span class="ident">db</span>);
+    <span class="kw">let</span> <span class="ident">shell</span> <span class="op">=</span>
+        <span class="ident">Shell</span>::<span class="ident">new</span>(<span class="ident">receiver</span>, <span class="kw-2">&amp;</span><span class="ident">config</span>.<span class="ident">db</span>, <span class="ident">config</span>::<span class="ident">DEFAULT_CHAIN_ID</span>.<span class="ident">to_owned</span>());
     <span class="comment">// Run Tendermint ABCI server in another thread</span>
     <span class="kw">let</span> <span class="ident">_tendermint_handle</span> <span class="op">=</span> <span class="ident">std</span>::<span class="ident">thread</span>::<span class="ident">spawn</span>(<span class="kw">move</span> <span class="op">|</span><span class="op">|</span> {
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Err</span>(<span class="ident">err</span>) <span class="op">=</span> <span class="ident">tendermint</span>::<span class="ident">run</span>(<span class="ident">sender</span>.<span class="ident">clone</span>(), <span class="ident">config</span>) {
@@ -493,93 +508,108 @@
 }
 
 <span class="kw">impl</span> <span class="ident">Shell</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">abci</span>: <span class="ident">AbciReceiver</span>, <span class="ident">db_path</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span><span class="ident">Path</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">storage</span> <span class="op">=</span> <span class="ident">storage</span>::<span class="ident">open</span>(<span class="ident">db_path</span>);
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(
+        <span class="ident">abci</span>: <span class="ident">AbciReceiver</span>,
+        <span class="ident">db_path</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span><span class="ident">Path</span><span class="op">&gt;</span>,
+        <span class="ident">chain_id</span>: <span class="ident">String</span>,
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">storage</span> <span class="op">=</span> <span class="ident">storage</span>::<span class="ident">open</span>(<span class="ident">db_path</span>, <span class="ident">chain_id</span>);
+        <span class="ident">storage</span>
+            .<span class="ident">load_last_state</span>()
+            .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> {
+                <span class="ident">tracing</span>::<span class="macro">error</span><span class="macro">!</span>(<span class="string">&quot;Cannot load the last state from the DB {}&quot;</span>, <span class="ident">e</span>);
+            })
+            .<span class="ident">expect</span>(<span class="string">&quot;PersistentStorage cannot be initialized&quot;</span>);
 
-        <span class="kw">let</span> <span class="ident">token_vp</span> <span class="op">=</span> <span class="ident">std</span>::<span class="ident">fs</span>::<span class="ident">read</span>(<span class="string">&quot;wasm/vps/vp_token/vp.wasm&quot;</span>)
-            .<span class="ident">expect</span>(<span class="string">&quot;cannot load token VP&quot;</span>);
-        <span class="kw">let</span> <span class="ident">user_vp</span> <span class="op">=</span> <span class="ident">std</span>::<span class="ident">fs</span>::<span class="ident">read</span>(<span class="string">&quot;wasm/vps/vp_user/vp.wasm&quot;</span>)
-            .<span class="ident">expect</span>(<span class="string">&quot;cannot load user VP&quot;</span>);
+        <span class="kw">if</span> <span class="ident">storage</span>.<span class="ident">get_state</span>().<span class="ident">is_none</span>() {
+            <span class="comment">// Initialize because there is no block</span>
 
-        <span class="comment">// TODO load initial accounts from genesis</span>
+            <span class="kw">let</span> <span class="ident">token_vp</span> <span class="op">=</span> <span class="ident">std</span>::<span class="ident">fs</span>::<span class="ident">read</span>(<span class="string">&quot;wasm/vps/vp_token/vp.wasm&quot;</span>)
+                .<span class="ident">expect</span>(<span class="string">&quot;cannot load token VP&quot;</span>);
+            <span class="kw">let</span> <span class="ident">user_vp</span> <span class="op">=</span> <span class="ident">std</span>::<span class="ident">fs</span>::<span class="ident">read</span>(<span class="string">&quot;wasm/vps/vp_user/vp.wasm&quot;</span>)
+                .<span class="ident">expect</span>(<span class="string">&quot;cannot load user VP&quot;</span>);
 
-        <span class="comment">// temporary account addresses for testing, generated by the address.rs</span>
-        <span class="comment">// module</span>
-        <span class="kw">let</span> <span class="ident">alberto</span> <span class="op">=</span> <span class="ident">Address</span>::<span class="ident">decode</span>(<span class="string">&quot;a1qq5qqqqqg4znssfsgcurjsfhgfpy2vjyxy6yg3z98pp5zvp5xgersvfjxvcnx3f4xycrzdfkak0xhx&quot;</span>)
+            <span class="comment">// TODO load initial accounts from genesis</span>
+
+            <span class="comment">// temporary account addresses for testing, generated by the</span>
+            <span class="comment">// address.rs module</span>
+            <span class="kw">let</span> <span class="ident">alberto</span> <span class="op">=</span> <span class="ident">Address</span>::<span class="ident">decode</span>(<span class="string">&quot;a1qq5qqqqqg4znssfsgcurjsfhgfpy2vjyxy6yg3z98pp5zvp5xgersvfjxvcnx3f4xycrzdfkak0xhx&quot;</span>)
+                .<span class="ident">expect</span>(<span class="string">&quot;The genesis address shouldn&#39;t fail decoding&quot;</span>);
+            <span class="kw">let</span> <span class="ident">bertha</span> <span class="op">=</span> <span class="ident">Address</span>::<span class="ident">decode</span>(<span class="string">&quot;a1qq5qqqqqxv6yydz9xc6ry33589q5x33eggcnjs2xx9znydj9xuens3phxppnwvzpg4rrqdpswve4n9&quot;</span>)
             .<span class="ident">expect</span>(<span class="string">&quot;The genesis address shouldn&#39;t fail decoding&quot;</span>);
-        <span class="kw">let</span> <span class="ident">bertha</span> <span class="op">=</span> <span class="ident">Address</span>::<span class="ident">decode</span>(<span class="string">&quot;a1qq5qqqqqxv6yydz9xc6ry33589q5x33eggcnjs2xx9znydj9xuens3phxppnwvzpg4rrqdpswve4n9&quot;</span>)
-        .<span class="ident">expect</span>(<span class="string">&quot;The genesis address shouldn&#39;t fail decoding&quot;</span>);
-        <span class="kw">let</span> <span class="ident">christel</span> <span class="op">=</span> <span class="ident">Address</span>::<span class="ident">decode</span>(<span class="string">&quot;a1qq5qqqqqxsuygd2x8pq5yw2ygdryxs6xgsmrsdzx8pryxv34gfrrssfjgccyg3zpxezrqd2y2s3g5s&quot;</span>)
-            .<span class="ident">expect</span>(<span class="string">&quot;The genesis address shouldn&#39;t fail decoding&quot;</span>);
-        <span class="kw">let</span> <span class="ident">users</span> <span class="op">=</span> <span class="macro">vec</span><span class="macro">!</span>[<span class="ident">alberto</span>, <span class="ident">bertha</span>, <span class="ident">christel</span>];
+            <span class="kw">let</span> <span class="ident">christel</span> <span class="op">=</span> <span class="ident">Address</span>::<span class="ident">decode</span>(<span class="string">&quot;a1qq5qqqqqxsuygd2x8pq5yw2ygdryxs6xgsmrsdzx8pryxv34gfrrssfjgccyg3zpxezrqd2y2s3g5s&quot;</span>)
+                .<span class="ident">expect</span>(<span class="string">&quot;The genesis address shouldn&#39;t fail decoding&quot;</span>);
+            <span class="kw">let</span> <span class="ident">users</span> <span class="op">=</span> <span class="macro">vec</span><span class="macro">!</span>[<span class="ident">alberto</span>, <span class="ident">bertha</span>, <span class="ident">christel</span>];
 
-        <span class="kw">let</span> <span class="ident">tokens</span> <span class="op">=</span> <span class="macro">vec</span><span class="macro">!</span>[
-            <span class="ident">address</span>::<span class="ident">xan</span>(),
-            <span class="ident">address</span>::<span class="ident">btc</span>(),
-            <span class="ident">address</span>::<span class="ident">eth</span>(),
-            <span class="ident">address</span>::<span class="ident">dot</span>(),
-            <span class="ident">address</span>::<span class="ident">schnitzel</span>(),
-            <span class="ident">address</span>::<span class="ident">apfel</span>(),
-            <span class="ident">address</span>::<span class="ident">kartoffel</span>(),
-        ];
+            <span class="kw">let</span> <span class="ident">tokens</span> <span class="op">=</span> <span class="macro">vec</span><span class="macro">!</span>[
+                <span class="ident">address</span>::<span class="ident">xan</span>(),
+                <span class="ident">address</span>::<span class="ident">btc</span>(),
+                <span class="ident">address</span>::<span class="ident">eth</span>(),
+                <span class="ident">address</span>::<span class="ident">dot</span>(),
+                <span class="ident">address</span>::<span class="ident">schnitzel</span>(),
+                <span class="ident">address</span>::<span class="ident">apfel</span>(),
+                <span class="ident">address</span>::<span class="ident">kartoffel</span>(),
+            ];
 
-        <span class="kw">for</span> <span class="ident">token</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="ident">tokens</span> {
-            <span class="comment">// default tokens VPs for testing</span>
-            <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Key</span>::<span class="ident">validity_predicate</span>(<span class="kw-2">&amp;</span><span class="ident">token</span>).<span class="ident">expect</span>(<span class="string">&quot;expected VP key&quot;</span>);
-            <span class="ident">storage</span>
-                .<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>, <span class="ident">token_vp</span>.<span class="ident">to_vec</span>())
-                .<span class="ident">expect</span>(<span class="string">&quot;Unable to write token VP&quot;</span>);
-        }
-
-        <span class="kw">for</span> <span class="ident">user</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="ident">users</span> {
-            <span class="comment">// default user VPs for testing</span>
-            <span class="kw">let</span> <span class="ident">vp_key</span> <span class="op">=</span>
-                <span class="ident">Key</span>::<span class="ident">validity_predicate</span>(<span class="kw-2">&amp;</span><span class="ident">user</span>).<span class="ident">expect</span>(<span class="string">&quot;expected VP key&quot;</span>);
-            <span class="ident">storage</span>
-                .<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="ident">vp_key</span>, <span class="ident">user_vp</span>.<span class="ident">to_vec</span>())
-                .<span class="ident">expect</span>(<span class="string">&quot;Unable to write user VP&quot;</span>);
-
-            <span class="comment">// default user&#39;s tokens for testing</span>
             <span class="kw">for</span> <span class="ident">token</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="ident">tokens</span> {
-                <span class="kw">let</span> <span class="ident">token_key</span> <span class="op">=</span> <span class="ident">token</span>::<span class="ident">balance_key</span>(<span class="kw-2">&amp;</span><span class="ident">token</span>, <span class="kw-2">&amp;</span><span class="ident">user</span>);
+                <span class="comment">// default tokens VPs for testing</span>
+                <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span>
+                    <span class="ident">Key</span>::<span class="ident">validity_predicate</span>(<span class="kw-2">&amp;</span><span class="ident">token</span>).<span class="ident">expect</span>(<span class="string">&quot;expected VP key&quot;</span>);
                 <span class="ident">storage</span>
-                    .<span class="ident">write</span>(
-                        <span class="kw-2">&amp;</span><span class="ident">token_key</span>,
-                        <span class="ident">Amount</span>::<span class="ident">whole</span>(<span class="number">1_000_000</span>)
-                            .<span class="ident">try_to_vec</span>()
-                            .<span class="ident">expect</span>(<span class="string">&quot;encode token amount&quot;</span>),
-                    )
-                    .<span class="ident">expect</span>(<span class="string">&quot;Unable to set genesis balance&quot;</span>);
+                    .<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>, <span class="ident">token_vp</span>.<span class="ident">to_vec</span>())
+                    .<span class="ident">expect</span>(<span class="string">&quot;Unable to write token VP&quot;</span>);
             }
 
-            <span class="comment">// default user&#39;s public keys for testing</span>
-            <span class="kw">let</span> <span class="ident">pk_key</span> <span class="op">=</span> <span class="ident">key</span>::<span class="ident">ed25519</span>::<span class="ident">pk_key</span>(<span class="kw-2">&amp;</span><span class="ident">user</span>);
-            <span class="kw">let</span> <span class="ident">pk</span> <span class="op">=</span> <span class="ident">PublicKey</span>::<span class="ident">from</span>(<span class="ident">wallet</span>::<span class="ident">key_of</span>(<span class="ident">user</span>.<span class="ident">encode</span>()).<span class="ident">public</span>);
-            <span class="ident">storage</span>
-                .<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="ident">pk_key</span>, <span class="ident">pk</span>.<span class="ident">try_to_vec</span>().<span class="ident">expect</span>(<span class="string">&quot;encode public key&quot;</span>))
-                .<span class="ident">expect</span>(<span class="string">&quot;Unable to set genesis user public key&quot;</span>);
-        }
+            <span class="kw">for</span> <span class="ident">user</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="ident">users</span> {
+                <span class="comment">// default user VPs for testing</span>
+                <span class="kw">let</span> <span class="ident">vp_key</span> <span class="op">=</span>
+                    <span class="ident">Key</span>::<span class="ident">validity_predicate</span>(<span class="kw-2">&amp;</span><span class="ident">user</span>).<span class="ident">expect</span>(<span class="string">&quot;expected VP key&quot;</span>);
+                <span class="ident">storage</span>
+                    .<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="ident">vp_key</span>, <span class="ident">user_vp</span>.<span class="ident">to_vec</span>())
+                    .<span class="ident">expect</span>(<span class="string">&quot;Unable to write user VP&quot;</span>);
 
-        <span class="comment">// Temporary for testing, we have a fixed matchmaker account.  This</span>
-        <span class="comment">// account has a public key for signing matchmaker txs and verifying</span>
-        <span class="comment">// their signatures in its VP. The VP is the same as the user&#39;s VP,</span>
-        <span class="comment">// which simply checks the signature. We could consider using the same</span>
-        <span class="comment">// key as the intent gossip&#39;s p2p key.</span>
-        <span class="kw">let</span> <span class="ident">matchmaker</span> <span class="op">=</span> <span class="ident">address</span>::<span class="ident">matchmaker</span>();
-        <span class="kw">let</span> <span class="ident">matchmaker_pk</span> <span class="op">=</span> <span class="ident">key</span>::<span class="ident">ed25519</span>::<span class="ident">pk_key</span>(<span class="kw-2">&amp;</span><span class="ident">matchmaker</span>);
-        <span class="ident">storage</span>
-            .<span class="ident">write</span>(
-                <span class="kw-2">&amp;</span><span class="ident">matchmaker_pk</span>,
-                <span class="ident">wallet</span>::<span class="ident">matchmaker_pk</span>()
-                    .<span class="ident">try_to_vec</span>()
-                    .<span class="ident">expect</span>(<span class="string">&quot;encode public key&quot;</span>),
-            )
-            .<span class="ident">expect</span>(<span class="string">&quot;Unable to set genesis user public key&quot;</span>);
-        <span class="kw">let</span> <span class="ident">matchmaker_vp</span> <span class="op">=</span>
-            <span class="ident">Key</span>::<span class="ident">validity_predicate</span>(<span class="kw-2">&amp;</span><span class="ident">matchmaker</span>).<span class="ident">expect</span>(<span class="string">&quot;expected VP key&quot;</span>);
-        <span class="ident">storage</span>
-            .<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="ident">matchmaker_vp</span>, <span class="ident">user_vp</span>.<span class="ident">to_vec</span>())
-            .<span class="ident">expect</span>(<span class="string">&quot;Unable to write matchmaker VP&quot;</span>);
+                <span class="comment">// default user&#39;s tokens for testing</span>
+                <span class="kw">for</span> <span class="ident">token</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="ident">tokens</span> {
+                    <span class="kw">let</span> <span class="ident">token_key</span> <span class="op">=</span> <span class="ident">token</span>::<span class="ident">balance_key</span>(<span class="kw-2">&amp;</span><span class="ident">token</span>, <span class="kw-2">&amp;</span><span class="ident">user</span>);
+                    <span class="ident">storage</span>
+                        .<span class="ident">write</span>(
+                            <span class="kw-2">&amp;</span><span class="ident">token_key</span>,
+                            <span class="ident">Amount</span>::<span class="ident">whole</span>(<span class="number">1_000_000</span>)
+                                .<span class="ident">try_to_vec</span>()
+                                .<span class="ident">expect</span>(<span class="string">&quot;encode token amount&quot;</span>),
+                        )
+                        .<span class="ident">expect</span>(<span class="string">&quot;Unable to set genesis balance&quot;</span>);
+                }
+
+                <span class="comment">// default user&#39;s public keys for testing</span>
+                <span class="kw">let</span> <span class="ident">pk_key</span> <span class="op">=</span> <span class="ident">key</span>::<span class="ident">ed25519</span>::<span class="ident">pk_key</span>(<span class="kw-2">&amp;</span><span class="ident">user</span>);
+                <span class="kw">let</span> <span class="ident">pk</span> <span class="op">=</span> <span class="ident">PublicKey</span>::<span class="ident">from</span>(<span class="ident">wallet</span>::<span class="ident">key_of</span>(<span class="ident">user</span>.<span class="ident">encode</span>()).<span class="ident">public</span>);
+                <span class="ident">storage</span>
+                    .<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="ident">pk_key</span>, <span class="ident">pk</span>.<span class="ident">try_to_vec</span>().<span class="ident">expect</span>(<span class="string">&quot;encode public key&quot;</span>))
+                    .<span class="ident">expect</span>(<span class="string">&quot;Unable to set genesis user public key&quot;</span>);
+            }
+
+            <span class="comment">// Temporary for testing, we have a fixed matchmaker account.  This</span>
+            <span class="comment">// account has a public key for signing matchmaker txs and verifying</span>
+            <span class="comment">// their signatures in its VP. The VP is the same as the user&#39;s VP,</span>
+            <span class="comment">// which simply checks the signature. We could consider using the</span>
+            <span class="comment">// same key as the intent gossip&#39;s p2p key.</span>
+            <span class="kw">let</span> <span class="ident">matchmaker</span> <span class="op">=</span> <span class="ident">address</span>::<span class="ident">matchmaker</span>();
+            <span class="kw">let</span> <span class="ident">matchmaker_pk</span> <span class="op">=</span> <span class="ident">key</span>::<span class="ident">ed25519</span>::<span class="ident">pk_key</span>(<span class="kw-2">&amp;</span><span class="ident">matchmaker</span>);
+            <span class="ident">storage</span>
+                .<span class="ident">write</span>(
+                    <span class="kw-2">&amp;</span><span class="ident">matchmaker_pk</span>,
+                    <span class="ident">wallet</span>::<span class="ident">matchmaker_pk</span>()
+                        .<span class="ident">try_to_vec</span>()
+                        .<span class="ident">expect</span>(<span class="string">&quot;encode public key&quot;</span>),
+                )
+                .<span class="ident">expect</span>(<span class="string">&quot;Unable to set genesis user public key&quot;</span>);
+            <span class="kw">let</span> <span class="ident">matchmaker_vp</span> <span class="op">=</span>
+                <span class="ident">Key</span>::<span class="ident">validity_predicate</span>(<span class="kw-2">&amp;</span><span class="ident">matchmaker</span>).<span class="ident">expect</span>(<span class="string">&quot;expected VP key&quot;</span>);
+            <span class="ident">storage</span>
+                .<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="ident">matchmaker_vp</span>, <span class="ident">user_vp</span>.<span class="ident">to_vec</span>())
+                .<span class="ident">expect</span>(<span class="string">&quot;Unable to write matchmaker VP&quot;</span>);
+        }
 
         <span class="self">Self</span> {
             <span class="ident">abci</span>,
@@ -681,9 +711,14 @@
 
 <span class="kw">impl</span> <span class="ident">Shell</span> {
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">init_chain</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">chain_id</span>: <span class="ident">String</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">storage</span>
-            .<span class="ident">set_chain_id</span>(<span class="kw-2">&amp;</span><span class="ident">chain_id</span>)
-            .<span class="ident">map_err</span>(<span class="ident">Error</span>::<span class="ident">StorageError</span>)
+        <span class="kw">let</span> (<span class="ident">current_chain_id</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">storage</span>.<span class="ident">get_chain_id</span>();
+        <span class="kw">if</span> <span class="ident">current_chain_id</span> <span class="op">!</span><span class="op">=</span> <span class="ident">chain_id</span> {
+            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error</span>::<span class="ident">ChainIdError</span>(<span class="macro">format</span><span class="macro">!</span>(
+                <span class="string">&quot;Current chain ID: {}, Tendermint chain ID: {}&quot;</span>,
+                <span class="ident">current_chain_id</span>, <span class="ident">chain_id</span>
+            )));
+        }
+        <span class="prelude-val">Ok</span>(())
     }
 
     <span class="doccomment">/// Validate a transaction request. On success, the transaction will</span>
@@ -783,14 +818,7 @@
     <span class="doccomment">/// Load the Merkle root hash and the height of the last committed block, if</span>
     <span class="doccomment">/// any.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">last_state</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span>(<span class="ident">MerkleRoot</span>, <span class="ident">u64</span>)<span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">storage</span>.<span class="ident">load_last_state</span>().<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> {
-            <span class="ident">tracing</span>::<span class="macro">error</span><span class="macro">!</span>(
-                <span class="string">&quot;Encountered an error while reading last state from
-        storage {}&quot;</span>,
-                <span class="ident">e</span>
-            );
-            <span class="prelude-val">None</span>
-        });
+        <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">storage</span>.<span class="ident">get_state</span>();
         <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="ident">result</span> {
             <span class="prelude-val">Some</span>((<span class="ident">root</span>, <span class="ident">height</span>)) <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="ident">tracing</span>::<span class="macro">info</span><span class="macro">!</span>(

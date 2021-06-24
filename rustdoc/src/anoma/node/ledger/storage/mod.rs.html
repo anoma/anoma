@@ -252,13 +252,6 @@
 <span id="249">249</span>
 <span id="250">250</span>
 <span id="251">251</span>
-<span id="252">252</span>
-<span id="253">253</span>
-<span id="254">254</span>
-<span id="255">255</span>
-<span id="256">256</span>
-<span id="257">257</span>
-<span id="258">258</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! The storage module handles both the current state in-memory and the stored</span>
 <span class="doccomment">//! state in DB.</span>
@@ -274,9 +267,7 @@
     <span class="ident">types</span>, <span class="ident">BlockStorage</span>, <span class="ident">Storage</span>, <span class="ident">StorageHasher</span>,
 };
 <span class="kw">use</span> <span class="ident">anoma_shared</span>::<span class="ident">types</span>::<span class="ident">address</span>::<span class="ident">EstablishedAddressGen</span>;
-<span class="kw">use</span> <span class="ident">anoma_shared</span>::<span class="ident">types</span>::<span class="ident">storage</span>::{
-    <span class="ident">BlockHash</span>, <span class="ident">BlockHeight</span>, <span class="ident">Key</span>, <span class="ident">CHAIN_ID_LENGTH</span>,
-};
+<span class="kw">use</span> <span class="ident">anoma_shared</span>::<span class="ident">types</span>::<span class="ident">storage</span>::{<span class="ident">BlockHash</span>, <span class="ident">BlockHeight</span>, <span class="ident">Key</span>};
 <span class="kw">use</span> <span class="ident">blake2b_rs</span>::{<span class="ident">Blake2b</span>, <span class="ident">Blake2bBuilder</span>};
 <span class="kw">use</span> <span class="ident">sparse_merkle_tree</span>::<span class="ident">blake2b</span>::<span class="ident">Blake2bHasher</span>;
 <span class="kw">use</span> <span class="ident">sparse_merkle_tree</span>::<span class="ident">traits</span>::<span class="ident">Hasher</span>;
@@ -288,18 +279,16 @@
 
 <span class="kw">pub</span> <span class="kw">type</span> <span class="ident">PersistentStorage</span> <span class="op">=</span> <span class="ident">Storage</span><span class="op">&lt;</span><span class="ident">PersistentDB</span>, <span class="ident">PersistentStorageHasher</span><span class="op">&gt;</span>;
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">open</span>(<span class="ident">db_path</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span><span class="ident">Path</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">PersistentStorage</span> {
-    <span class="kw">let</span> <span class="ident">tree</span> <span class="op">=</span> <span class="ident">MerkleTree</span>::<span class="ident">default</span>();
-    <span class="kw">let</span> <span class="ident">subspaces</span> <span class="op">=</span> <span class="ident">HashMap</span>::<span class="ident">new</span>();
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">open</span>(<span class="ident">db_path</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span><span class="ident">Path</span><span class="op">&gt;</span>, <span class="ident">chain_id</span>: <span class="ident">String</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">PersistentStorage</span> {
     <span class="kw">let</span> <span class="ident">block</span> <span class="op">=</span> <span class="ident">BlockStorage</span> {
-        <span class="ident">tree</span>,
+        <span class="ident">tree</span>: <span class="ident">MerkleTree</span>::<span class="ident">default</span>(),
         <span class="ident">hash</span>: <span class="ident">BlockHash</span>::<span class="ident">default</span>(),
         <span class="ident">height</span>: <span class="ident">BlockHeight</span>(<span class="number">0</span>),
-        <span class="ident">subspaces</span>,
+        <span class="ident">subspaces</span>: <span class="ident">HashMap</span>::<span class="ident">new</span>(),
     };
     <span class="ident">PersistentStorage</span> {
         <span class="ident">db</span>: <span class="ident">rocksdb</span>::<span class="ident">open</span>(<span class="ident">db_path</span>).<span class="ident">expect</span>(<span class="string">&quot;cannot open the DB&quot;</span>),
-        <span class="ident">chain_id</span>: <span class="ident">String</span>::<span class="ident">with_capacity</span>(<span class="ident">CHAIN_ID_LENGTH</span>),
+        <span class="ident">chain_id</span>,
         <span class="ident">block</span>,
         <span class="ident">current_height</span>: <span class="ident">BlockHeight</span>(<span class="number">0</span>),
         <span class="ident">address_gen</span>: <span class="ident">EstablishedAddressGen</span>::<span class="ident">new</span>(
@@ -360,12 +349,13 @@
     <span class="kw">use</span> <span class="ident">tempfile</span>::<span class="ident">TempDir</span>;
 
     <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
+    <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">config</span>::<span class="ident">DEFAULT_CHAIN_ID</span>;
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="kw">fn</span> <span class="ident">test_crud_value</span>() {
         <span class="kw">let</span> <span class="ident">db_path</span> <span class="op">=</span>
             <span class="ident">TempDir</span>::<span class="ident">new</span>().<span class="ident">expect</span>(<span class="string">&quot;Unable to create a temporary DB directory&quot;</span>);
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">storage</span> <span class="op">=</span> <span class="ident">open</span>(<span class="ident">db_path</span>.<span class="ident">path</span>());
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">storage</span> <span class="op">=</span> <span class="ident">open</span>(<span class="ident">db_path</span>.<span class="ident">path</span>(), <span class="ident">DEFAULT_CHAIN_ID</span>.<span class="ident">to_owned</span>());
         <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span>
             <span class="ident">Key</span>::<span class="ident">parse</span>(<span class="string">&quot;key&quot;</span>.<span class="ident">to_owned</span>()).<span class="ident">expect</span>(<span class="string">&quot;cannot parse the key string&quot;</span>);
         <span class="kw">let</span> <span class="ident">value</span>: <span class="ident">u64</span> <span class="op">=</span> <span class="number">1</span>;
@@ -408,11 +398,7 @@
     <span class="kw">fn</span> <span class="ident">test_commit_block</span>() {
         <span class="kw">let</span> <span class="ident">db_path</span> <span class="op">=</span>
             <span class="ident">TempDir</span>::<span class="ident">new</span>().<span class="ident">expect</span>(<span class="string">&quot;Unable to create a temporary DB directory&quot;</span>);
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">storage</span> <span class="op">=</span> <span class="ident">open</span>(<span class="ident">db_path</span>.<span class="ident">path</span>());
-        <span class="kw">let</span> <span class="ident">chain_id</span> <span class="op">=</span> <span class="string">&quot;test_chain_id_000000&quot;</span>;
-        <span class="ident">storage</span>
-            .<span class="ident">set_chain_id</span>(<span class="ident">chain_id</span>)
-            .<span class="ident">expect</span>(<span class="string">&quot;setting a chain ID failed&quot;</span>);
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">storage</span> <span class="op">=</span> <span class="ident">open</span>(<span class="ident">db_path</span>.<span class="ident">path</span>(), <span class="ident">DEFAULT_CHAIN_ID</span>.<span class="ident">to_owned</span>());
         <span class="ident">storage</span>
             .<span class="ident">begin_block</span>(<span class="ident">BlockHash</span>::<span class="ident">default</span>(), <span class="ident">BlockHeight</span>(<span class="number">100</span>))
             .<span class="ident">expect</span>(<span class="string">&quot;begin_block failed&quot;</span>);
@@ -434,14 +420,14 @@
         <span class="ident">drop</span>(<span class="ident">storage</span>);
 
         <span class="comment">// load the last state</span>
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">storage</span> <span class="op">=</span> <span class="ident">open</span>(<span class="ident">db_path</span>.<span class="ident">path</span>());
-        <span class="kw">let</span> (<span class="ident">loaded_root</span>, <span class="ident">height</span>) <span class="op">=</span> <span class="ident">storage</span>
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">storage</span> <span class="op">=</span> <span class="ident">open</span>(<span class="ident">db_path</span>.<span class="ident">path</span>(), <span class="ident">DEFAULT_CHAIN_ID</span>.<span class="ident">to_owned</span>());
+        <span class="ident">storage</span>
             .<span class="ident">load_last_state</span>()
-            .<span class="ident">expect</span>(<span class="string">&quot;loading the last state failed&quot;</span>)
-            .<span class="ident">expect</span>(<span class="string">&quot;no block exists&quot;</span>);
+            .<span class="ident">expect</span>(<span class="string">&quot;loading the last state failed&quot;</span>);
+        <span class="kw">let</span> (<span class="ident">loaded_root</span>, <span class="ident">height</span>) <span class="op">=</span>
+            <span class="ident">storage</span>.<span class="ident">get_state</span>().<span class="ident">expect</span>(<span class="string">&quot;no block exists&quot;</span>);
         <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">loaded_root</span>.<span class="number">0</span>, <span class="ident">root</span>);
         <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">height</span>, <span class="number">100</span>);
-        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">storage</span>.<span class="ident">get_chain_id</span>().<span class="number">0</span>, <span class="ident">chain_id</span>);
         <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">storage</span>.<span class="ident">get_block_hash</span>().<span class="number">0</span>, <span class="ident">hash</span>);
         <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">storage</span>.<span class="ident">address_gen</span>, <span class="ident">address_gen</span>);
         <span class="kw">let</span> (<span class="ident">val</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">storage</span>.<span class="ident">read</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>).<span class="ident">expect</span>(<span class="string">&quot;read failed&quot;</span>);
@@ -452,7 +438,7 @@
     <span class="kw">fn</span> <span class="ident">test_iter</span>() {
         <span class="kw">let</span> <span class="ident">db_path</span> <span class="op">=</span>
             <span class="ident">TempDir</span>::<span class="ident">new</span>().<span class="ident">expect</span>(<span class="string">&quot;Unable to create a temporary DB directory&quot;</span>);
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">storage</span> <span class="op">=</span> <span class="ident">open</span>(<span class="ident">db_path</span>.<span class="ident">path</span>());
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">storage</span> <span class="op">=</span> <span class="ident">open</span>(<span class="ident">db_path</span>.<span class="ident">path</span>(), <span class="ident">DEFAULT_CHAIN_ID</span>.<span class="ident">to_owned</span>());
         <span class="ident">storage</span>
             .<span class="ident">begin_block</span>(<span class="ident">BlockHash</span>::<span class="ident">default</span>(), <span class="ident">BlockHeight</span>(<span class="number">100</span>))
             .<span class="ident">expect</span>(<span class="string">&quot;begin_block failed&quot;</span>);
@@ -492,7 +478,7 @@
     <span class="kw">fn</span> <span class="ident">test_validity_predicate</span>() {
         <span class="kw">let</span> <span class="ident">db_path</span> <span class="op">=</span>
             <span class="ident">TempDir</span>::<span class="ident">new</span>().<span class="ident">expect</span>(<span class="string">&quot;Unable to create a temporary DB directory&quot;</span>);
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">storage</span> <span class="op">=</span> <span class="ident">open</span>(<span class="ident">db_path</span>.<span class="ident">path</span>());
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">storage</span> <span class="op">=</span> <span class="ident">open</span>(<span class="ident">db_path</span>.<span class="ident">path</span>(), <span class="ident">DEFAULT_CHAIN_ID</span>.<span class="ident">to_owned</span>());
         <span class="ident">storage</span>
             .<span class="ident">begin_block</span>(<span class="ident">BlockHash</span>::<span class="ident">default</span>(), <span class="ident">BlockHeight</span>(<span class="number">100</span>))
             .<span class="ident">expect</span>(<span class="string">&quot;begin_block failed&quot;</span>);
