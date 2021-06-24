@@ -374,6 +374,7 @@
 <span id="371">371</span>
 <span id="372">372</span>
 <span id="373">373</span>
+<span id="374">374</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! The persistent storage in RocksDB.</span>
 <span class="doccomment">//!</span>
@@ -717,6 +718,7 @@
     }
 }
 
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">PersistentPrefixIterator</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>(
     <span class="ident">PrefixIterator</span><span class="op">&lt;</span><span class="ident">rocksdb</span>::<span class="ident">DBIterator</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span><span class="op">&gt;</span>,
 );

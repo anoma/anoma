@@ -417,6 +417,9 @@
 <span id="414">414</span>
 <span id="415">415</span>
 <span id="416">416</span>
+<span id="417">417</span>
+<span id="418">418</span>
+<span id="419">419</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">protocol</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">storage</span>;
@@ -428,6 +431,7 @@
 
 <span class="kw">use</span> <span class="ident">anoma_shared</span>::<span class="ident">bytes</span>::<span class="ident">ByteBuf</span>;
 <span class="kw">use</span> <span class="ident">anoma_shared</span>::<span class="ident">ledger</span>::<span class="ident">gas</span>::{<span class="self">self</span>, <span class="ident">BlockGasMeter</span>};
+<span class="kw">use</span> <span class="ident">anoma_shared</span>::<span class="ident">ledger</span>::<span class="ident">native_vp</span>;
 <span class="kw">use</span> <span class="ident">anoma_shared</span>::<span class="ident">ledger</span>::<span class="ident">storage</span>::<span class="ident">write_log</span>::<span class="ident">WriteLog</span>;
 <span class="kw">use</span> <span class="ident">anoma_shared</span>::<span class="ident">ledger</span>::<span class="ident">storage</span>::<span class="ident">MerkleRoot</span>;
 <span class="kw">use</span> <span class="ident">anoma_shared</span>::<span class="ident">proto</span>::{<span class="self">self</span>, <span class="ident">Tx</span>};
@@ -718,6 +722,8 @@
                 <span class="ident">current_chain_id</span>, <span class="ident">chain_id</span>
             )));
         }
+        <span class="comment">// TODO pass in the genesis object</span>
+        <span class="ident">native_vp</span>::<span class="ident">init_genesis_storage</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">storage</span>);
         <span class="prelude-val">Ok</span>(())
     }
 

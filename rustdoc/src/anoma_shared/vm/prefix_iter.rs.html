@@ -74,6 +74,15 @@
 <span id="71">71</span>
 <span id="72">72</span>
 <span id="73">73</span>
+<span id="74">74</span>
+<span id="75">75</span>
+<span id="76">76</span>
+<span id="77">77</span>
+<span id="78">78</span>
+<span id="79">79</span>
+<span id="80">80</span>
+<span id="81">81</span>
+<span id="82">82</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! The storage prefix iterators can be used to iterate over a common prefix of</span>
 <span class="doccomment">//! storage keys.</span>
@@ -84,6 +93,7 @@
 
 <span class="doccomment">/// A temporary iterators storage, used during a wasm run after which it&#39;s</span>
 <span class="doccomment">/// dropped. Each iterator is assigned a [`PrefixIteratorId`].</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">PrefixIterators</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span>, <span class="ident">DB</span><span class="op">&gt;</span>
 <span class="kw">where</span>
     <span class="ident">DB</span>: <span class="ident">storage</span>::<span class="ident">DBIter</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span>,
@@ -113,6 +123,14 @@
             <span class="prelude-val">Some</span>(<span class="ident">iter</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">iter</span>.<span class="ident">next</span>(),
             <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">None</span>,
         }
+    }
+
+    <span class="doccomment">/// Get prefix iterator with the given ID.</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_mut</span>(
+        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
+        <span class="ident">id</span>: <span class="ident">PrefixIteratorId</span>,
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">DB</span>::<span class="ident">PrefixIter</span><span class="op">&gt;</span> {
+        <span class="self">self</span>.<span class="ident">iterators</span>.<span class="ident">get_mut</span>(<span class="kw-2">&amp;</span><span class="ident">id</span>)
     }
 }
 

@@ -425,6 +425,7 @@
 <span id="422">422</span>
 <span id="423">423</span>
 <span id="424">424</span>
+<span id="425">425</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Ledger&#39;s state storage with key-value backed store and a merkle tree</span>
 
@@ -433,6 +434,7 @@
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">types</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">write_log</span>;
 
+<span class="kw">use</span> <span class="ident">core</span>::<span class="ident">fmt</span>::<span class="ident">Debug</span>;
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">collections</span>::<span class="ident">HashMap</span>;
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">ops</span>::<span class="ident">Deref</span>;
 
@@ -533,7 +535,7 @@
 <span class="doccomment">/// A database prefix iterator.</span>
 <span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">DBIter</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span> {
     <span class="doccomment">/// The concrete type of the iterator</span>
-    <span class="kw">type</span> <span class="ident">PrefixIter</span>: <span class="ident">Iterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> (<span class="ident">String</span>, <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>, <span class="ident">u64</span>)<span class="op">&gt;</span>;
+    <span class="kw">type</span> <span class="ident">PrefixIter</span>: <span class="ident">Debug</span> <span class="op">+</span> <span class="ident">Iterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> (<span class="ident">String</span>, <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>, <span class="ident">u64</span>)<span class="op">&gt;</span>;
 
     <span class="doccomment">/// Read key value pairs with the given prefix from the DB</span>
     <span class="kw">fn</span> <span class="ident">iter_prefix</span>(

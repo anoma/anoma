@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["PoS","Proof-of-Stake VP"]]});

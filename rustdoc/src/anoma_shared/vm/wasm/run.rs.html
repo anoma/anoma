@@ -1045,6 +1045,9 @@
 <span id="1042">1042</span>
 <span id="1043">1043</span>
 <span id="1044">1044</span>
+<span id="1045">1045</span>
+<span id="1046">1046</span>
+<span id="1047">1047</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Wasm runners</span>
 
@@ -1332,8 +1335,10 @@
     <span class="ident">DB</span>: <span class="ident">storage</span>::<span class="ident">DB</span> <span class="op">+</span> <span class="kw">for</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span> <span class="ident">storage</span>::<span class="ident">DBIter</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span>,
     <span class="ident">H</span>: <span class="ident">StorageHasher</span>,
 {
-    <span class="ident">db</span>: <span class="ident">PhantomData</span><span class="op">&lt;</span><span class="kw-2">*</span><span class="kw">const</span> <span class="ident">DB</span><span class="op">&gt;</span>,
-    <span class="ident">hasher</span>: <span class="ident">PhantomData</span><span class="op">&lt;</span><span class="kw-2">*</span><span class="kw">const</span> <span class="ident">H</span><span class="op">&gt;</span>,
+    <span class="doccomment">/// Phantom type for DB</span>
+    <span class="kw">pub</span> <span class="ident">db</span>: <span class="ident">PhantomData</span><span class="op">&lt;</span><span class="kw-2">*</span><span class="kw">const</span> <span class="ident">DB</span><span class="op">&gt;</span>,
+    <span class="doccomment">/// Phantom type for DB Hasher</span>
+    <span class="kw">pub</span> <span class="ident">hasher</span>: <span class="ident">PhantomData</span><span class="op">&lt;</span><span class="kw-2">*</span><span class="kw">const</span> <span class="ident">H</span><span class="op">&gt;</span>,
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">DB</span>, <span class="ident">H</span><span class="op">&gt;</span> <span class="ident">VpEvaluator</span> <span class="kw">for</span> <span class="ident">VpEvalWasm</span><span class="op">&lt;</span><span class="ident">DB</span>, <span class="ident">H</span><span class="op">&gt;</span>
@@ -1366,7 +1371,8 @@
     <span class="ident">DB</span>: <span class="lifetime">&#39;static</span> <span class="op">+</span> <span class="ident">storage</span>::<span class="ident">DB</span> <span class="op">+</span> <span class="kw">for</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span> <span class="ident">storage</span>::<span class="ident">DBIter</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span>,
     <span class="ident">H</span>: <span class="lifetime">&#39;static</span> <span class="op">+</span> <span class="ident">StorageHasher</span>,
 {
-    <span class="kw">fn</span> <span class="ident">eval_native_result</span>(
+    <span class="doccomment">/// Evaluate the given VP.</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">eval_native_result</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">ctx</span>: <span class="ident">VpCtx</span><span class="op">&lt;</span><span class="lifetime">&#39;static</span>, <span class="ident">DB</span>, <span class="ident">H</span>, <span class="self">Self</span><span class="op">&gt;</span>,
         <span class="ident">vp_code</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>,

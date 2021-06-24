@@ -274,6 +274,7 @@
 <span id="271">271</span>
 <span id="272">272</span>
 <span id="273">273</span>
+<span id="274">274</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! DB mock for testing</span>
 
@@ -496,6 +497,7 @@
 }
 
 <span class="doccomment">/// A prefix iterator base for the [`MockPrefixIterator`].</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">MockIterator</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
     <span class="ident">prefix</span>: <span class="ident">String</span>,
     <span class="doccomment">/// The concrete iterator</span>

@@ -346,6 +346,41 @@
 <span id="343">343</span>
 <span id="344">344</span>
 <span id="345">345</span>
+<span id="346">346</span>
+<span id="347">347</span>
+<span id="348">348</span>
+<span id="349">349</span>
+<span id="350">350</span>
+<span id="351">351</span>
+<span id="352">352</span>
+<span id="353">353</span>
+<span id="354">354</span>
+<span id="355">355</span>
+<span id="356">356</span>
+<span id="357">357</span>
+<span id="358">358</span>
+<span id="359">359</span>
+<span id="360">360</span>
+<span id="361">361</span>
+<span id="362">362</span>
+<span id="363">363</span>
+<span id="364">364</span>
+<span id="365">365</span>
+<span id="366">366</span>
+<span id="367">367</span>
+<span id="368">368</span>
+<span id="369">369</span>
+<span id="370">370</span>
+<span id="371">371</span>
+<span id="372">372</span>
+<span id="373">373</span>
+<span id="374">374</span>
+<span id="375">375</span>
+<span id="376">376</span>
+<span id="377">377</span>
+<span id="378">378</span>
+<span id="379">379</span>
+<span id="380">380</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Implements transparent addresses as described in [Accounts</span>
 <span class="doccomment">//! Addresses](tech-specs/src/explore/design/ledger/accounts.md#addresses).</span>
@@ -416,6 +451,8 @@
     <span class="ident">Established</span>(<span class="ident">EstablishedAddress</span>),
     <span class="doccomment">/// An implicit address is derived from a cryptographic key</span>
     <span class="ident">Implicit</span>(<span class="ident">ImplicitAddress</span>),
+    <span class="doccomment">/// An internal address represents a module with a native VP</span>
+    <span class="ident">Internal</span>(<span class="ident">InternalAddress</span>),
 }
 
 <span class="kw">impl</span> <span class="ident">Address</span> {
@@ -461,24 +498,23 @@
                     <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error</span>::<span class="ident">UnexpectedHashLength</span>(<span class="ident">pkh</span>.<span class="number">0</span>.<span class="ident">len</span>()));
                 }
             }
+            <span class="ident">Address</span>::<span class="ident">Internal</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> {}
         }
         <span class="prelude-val">Ok</span>(<span class="ident">address</span>)
     }
 
     <span class="kw">fn</span> <span class="ident">pretty_fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">std</span>::<span class="ident">fmt</span>::<span class="ident">Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">std</span>::<span class="ident">fmt</span>::<span class="prelude-ty">Result</span> {
-        <span class="macro">write</span><span class="macro">!</span>(
-            <span class="ident">f</span>,
-            <span class="string">&quot;{}: {}&quot;</span>,
-            <span class="kw">match</span> <span class="self">self</span> {
-                <span class="ident">Address</span>::<span class="ident">Established</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                    <span class="string">&quot;Established&quot;</span>
-                }
-                <span class="ident">Address</span>::<span class="ident">Implicit</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                    <span class="string">&quot;Implicit&quot;</span>
-                }
-            },
-            <span class="self">self</span>.<span class="ident">encode</span>(),
-        )
+        <span class="kw">match</span> <span class="self">self</span> {
+            <span class="ident">Address</span>::<span class="ident">Established</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="macro">write</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot;Established: {}&quot;</span>, <span class="self">self</span>.<span class="ident">encode</span>(),)
+            }
+            <span class="ident">Address</span>::<span class="ident">Implicit</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="macro">write</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot;Implicit: {}&quot;</span>, <span class="self">self</span>.<span class="ident">encode</span>(),)
+            }
+            <span class="ident">Address</span>::<span class="ident">Internal</span>(<span class="ident">kind</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="macro">write</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot;Internal {}: {}&quot;</span>, <span class="ident">kind</span>, <span class="self">self</span>.<span class="ident">encode</span>())
+            }
+        }
     }
 }
 
@@ -563,6 +599,40 @@
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">ImplicitAddress</span> {
     <span class="doccomment">/// Address derived from [`key::ed25519::PublicKeyHash`]</span>
     <span class="ident">Ed25519</span>(<span class="ident">key</span>::<span class="ident">ed25519</span>::<span class="ident">PublicKeyHash</span>),
+}
+
+<span class="doccomment">/// An internal address represents a module with a native VP</span>
+<span class="attribute">#[<span class="ident">derive</span>(
+    <span class="ident">Debug</span>,
+    <span class="ident">Clone</span>,
+    <span class="ident">BorshSerialize</span>,
+    <span class="ident">BorshDeserialize</span>,
+    <span class="ident">PartialEq</span>,
+    <span class="ident">Eq</span>,
+    <span class="ident">PartialOrd</span>,
+    <span class="ident">Ord</span>,
+    <span class="ident">Hash</span>,
+    <span class="ident">Serialize</span>,
+    <span class="ident">Deserialize</span>,
+)]</span>
+<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">InternalAddress</span> {
+    <span class="doccomment">/// Proof-of-stake</span>
+    <span class="ident">PoS</span>,
+    <span class="doccomment">/// Inter-blockchain communication</span>
+    <span class="ident">Ibc</span>,
+}
+
+<span class="kw">impl</span> <span class="ident">Display</span> <span class="kw">for</span> <span class="ident">InternalAddress</span> {
+    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">std</span>::<span class="ident">fmt</span>::<span class="ident">Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">std</span>::<span class="ident">fmt</span>::<span class="prelude-ty">Result</span> {
+        <span class="macro">write</span><span class="macro">!</span>(
+            <span class="ident">f</span>,
+            <span class="string">&quot;{}&quot;</span>,
+            <span class="kw">match</span> <span class="self">self</span> {
+                <span class="self">Self</span>::<span class="ident">PoS</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;PoS&quot;</span>,
+                <span class="self">Self</span>::<span class="ident">Ibc</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;IBC&quot;</span>,
+            }
+        )
+    }
 }
 
 <span class="doccomment">/// Temporary helper for testing</span>
