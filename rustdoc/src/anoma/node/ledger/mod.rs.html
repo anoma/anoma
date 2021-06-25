@@ -420,6 +420,11 @@
 <span id="417">417</span>
 <span id="418">418</span>
 <span id="419">419</span>
+<span id="420">420</span>
+<span id="421">421</span>
+<span id="422">422</span>
+<span id="423">423</span>
+<span id="424">424</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">protocol</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">storage</span>;
@@ -429,7 +434,6 @@
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">path</span>::<span class="ident">Path</span>;
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">sync</span>::<span class="ident">mpsc</span>;
 
-<span class="kw">use</span> <span class="ident">anoma_shared</span>::<span class="ident">bytes</span>::<span class="ident">ByteBuf</span>;
 <span class="kw">use</span> <span class="ident">anoma_shared</span>::<span class="ident">ledger</span>::<span class="ident">gas</span>::{<span class="self">self</span>, <span class="ident">BlockGasMeter</span>};
 <span class="kw">use</span> <span class="ident">anoma_shared</span>::<span class="ident">ledger</span>::<span class="ident">native_vp</span>;
 <span class="kw">use</span> <span class="ident">anoma_shared</span>::<span class="ident">ledger</span>::<span class="ident">storage</span>::<span class="ident">write_log</span>::<span class="ident">WriteLog</span>;
@@ -479,6 +483,7 @@
             <span class="ident">sender</span>.<span class="ident">send</span>(<span class="ident">AbciMsg</span>::<span class="ident">Terminate</span>).<span class="ident">unwrap</span>();
         }
     });
+    <span class="ident">tracing</span>::<span class="macro">info</span><span class="macro">!</span>(<span class="string">&quot;Anoma ledger node started.&quot;</span>);
     <span class="ident">shell</span>.<span class="ident">run</span>()
 }
 
@@ -818,7 +823,12 @@
             )
         });
         <span class="kw">let</span> <span class="ident">root</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">storage</span>.<span class="ident">merkle_root</span>();
-        <span class="ident">MerkleRoot</span>(<span class="ident">root</span>.<span class="ident">as_slice</span>().<span class="ident">to_vec</span>())
+        <span class="ident">tracing</span>::<span class="macro">info</span><span class="macro">!</span>(
+            <span class="string">&quot;Committed block hash: {}, height: {}&quot;</span>,
+            <span class="ident">root</span>,
+            <span class="self">self</span>.<span class="ident">storage</span>.<span class="ident">current_height</span>,
+        );
+        <span class="ident">root</span>
     }
 
     <span class="doccomment">/// Load the Merkle root hash and the height of the last committed block, if</span>
@@ -829,7 +839,7 @@
             <span class="prelude-val">Some</span>((<span class="ident">root</span>, <span class="ident">height</span>)) <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="ident">tracing</span>::<span class="macro">info</span><span class="macro">!</span>(
                     <span class="string">&quot;Last state root hash: {}, height: {}&quot;</span>,
-                    <span class="ident">ByteBuf</span>(<span class="kw-2">&amp;</span><span class="ident">root</span>.<span class="number">0</span>),
+                    <span class="ident">root</span>,
                     <span class="ident">height</span>
                 )
             }

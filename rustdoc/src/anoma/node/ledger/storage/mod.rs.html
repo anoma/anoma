@@ -250,8 +250,6 @@
 <span id="247">247</span>
 <span id="248">248</span>
 <span id="249">249</span>
-<span id="250">250</span>
-<span id="251">251</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! The storage module handles both the current state in-memory and the stored</span>
 <span class="doccomment">//! state in DB.</span>
@@ -343,8 +341,6 @@
 
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
 <span class="kw">mod</span> <span class="ident">tests</span> {
-    <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">ops</span>::<span class="ident">Deref</span>;
-
     <span class="kw">use</span> <span class="ident">anoma_shared</span>::<span class="ident">ledger</span>::<span class="ident">storage</span>::<span class="ident">types</span>;
     <span class="kw">use</span> <span class="ident">tempfile</span>::<span class="ident">TempDir</span>;
 
@@ -414,7 +410,7 @@
         <span class="ident">storage</span>.<span class="ident">commit</span>().<span class="ident">expect</span>(<span class="string">&quot;commit failed&quot;</span>);
 
         <span class="comment">// save the last state and drop the storage</span>
-        <span class="kw">let</span> <span class="ident">root</span> <span class="op">=</span> <span class="ident">storage</span>.<span class="ident">merkle_root</span>().<span class="ident">as_slice</span>().<span class="ident">deref</span>().<span class="ident">to_vec</span>();
+        <span class="kw">let</span> <span class="ident">root</span> <span class="op">=</span> <span class="ident">storage</span>.<span class="ident">merkle_root</span>().<span class="number">0</span>;
         <span class="kw">let</span> <span class="ident">hash</span> <span class="op">=</span> <span class="ident">storage</span>.<span class="ident">get_block_hash</span>().<span class="number">0</span>;
         <span class="kw">let</span> <span class="ident">address_gen</span> <span class="op">=</span> <span class="ident">storage</span>.<span class="ident">address_gen</span>.<span class="ident">clone</span>();
         <span class="ident">drop</span>(<span class="ident">storage</span>);

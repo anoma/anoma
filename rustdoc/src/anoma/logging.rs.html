@@ -33,6 +33,18 @@
 <span id="30">30</span>
 <span id="31">31</span>
 <span id="32">32</span>
+<span id="33">33</span>
+<span id="34">34</span>
+<span id="35">35</span>
+<span id="36">36</span>
+<span id="37">37</span>
+<span id="38">38</span>
+<span id="39">39</span>
+<span id="40">40</span>
+<span id="41">41</span>
+<span id="42">42</span>
+<span id="43">43</span>
+<span id="44">44</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! A module for anything related to logging</span>
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">env</span>;
@@ -44,6 +56,9 @@
 <span class="kw">use</span> <span class="ident">tracing_subscriber</span>::<span class="ident">fmt</span>::<span class="ident">Subscriber</span>;
 
 <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">ENV_KEY</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;ANOMA_LOG&quot;</span>;
+
+<span class="comment">// Env var to enable/disable color log</span>
+<span class="kw">const</span> <span class="ident">COLOR_ENV_KEY</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;ANOMA_LOG_COLOR&quot;</span>;
 
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">init_from_env_or</span>(<span class="ident">default</span>: <span class="kw">impl</span> <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">Directive</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="ident">filter</span> <span class="op">=</span> <span class="ident">filter_from_env_or</span>(<span class="ident">default</span>);
@@ -58,7 +73,16 @@
 }
 
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set_subscriber</span>(<span class="ident">filter</span>: <span class="ident">EnvFilter</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">my_collector</span> <span class="op">=</span> <span class="ident">Subscriber</span>::<span class="ident">builder</span>().<span class="ident">with_env_filter</span>(<span class="ident">filter</span>).<span class="ident">finish</span>();
+    <span class="kw">let</span> <span class="ident">with_color</span> <span class="op">=</span> <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Ok</span>(<span class="ident">val</span>) <span class="op">=</span> <span class="ident">env</span>::<span class="ident">var</span>(<span class="ident">COLOR_ENV_KEY</span>) {
+        <span class="ident">val</span>.<span class="ident">to_ascii_lowercase</span>() <span class="op">!</span><span class="op">=</span> <span class="string">&quot;false&quot;</span>
+    } <span class="kw">else</span> {
+        <span class="bool-val">true</span>
+    };
+
+    <span class="kw">let</span> <span class="ident">my_collector</span> <span class="op">=</span> <span class="ident">Subscriber</span>::<span class="ident">builder</span>()
+        .<span class="ident">with_ansi</span>(<span class="ident">with_color</span>)
+        .<span class="ident">with_env_filter</span>(<span class="ident">filter</span>)
+        .<span class="ident">finish</span>();
     <span class="ident">tracing</span>::<span class="ident">subscriber</span>::<span class="ident">set_global_default</span>(<span class="ident">my_collector</span>)
         .<span class="ident">wrap_err</span>(<span class="string">&quot;Failed to set log subscriber&quot;</span>)
 }
