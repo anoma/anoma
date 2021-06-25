@@ -3,9 +3,9 @@
 [IBC](https://arxiv.org/pdf/2006.15918.pdf) allows a ledger to track another ledger's consensus state using a light client. IBC is a protocol to agree the consensus state and to send/receive packets between ledgers.
 
 ## Transaction for IBC
-A requester (IBC relayer or user) who wants to execute IBC operations on a ledger sets IBC packet or message like `MsgCreateAnyClient` as transaction data and submit the following transaction. IBC validity predicate is invoked after this transaction execution to check the IBC operation is validated. The trigger to invoke IBC validity predicate is `insert_verifier()` in IBC-related operation to add an address for IBC `InternalAddress::Ibc`.
+A requester (IBC relayer or user) who wants to execute IBC operations on a ledger sets IBC packet or message like `MsgCreateAnyClient` as transaction data and submit the following transaction. IBC validity predicate is invoked after this transaction execution to check the IBC operation is validated. The trigger to invoke IBC validity predicate is changing IBC-related keys (e.g. prefixed with `ibc/`).
 
-The transaction is given an IBC packet or message which specifies what to do. Because the packet or message has been encoded and stored in transaction data and there are some types of messages, it has to check what packet or message is given first and then decodes the message or packet. After the process according to the packet or message, it emits an IBC event.
+The transaction is given an IBC packet or message which specifies what to do. Because the packet or message has been encoded and stored in transaction data and there are some types of messages, it has to check what packet or message is given first and then decodes the message or packet. Then, it can modify the ledger state by writing not only data specified in the transaction but also IBC-related data on the storage sub-space. After the process according to the packet or message, it emits an IBC event.
 
 - Transaction given a message
   ```rust
@@ -56,8 +56,8 @@ The transaction is given an IBC packet or message which specifies what to do. Be
 ### Make a packet
 IBC-related transaction for some messages or packets makes a packet. For example, when a transaction wants to transfer a token between ledgers, it should make a packet including `FungibleTokenPacketData` to specify the sender, receiver, token, and amount.
 
-### Store a proof and state
-A proof can be stored to the storage on the ledger. Its storage key should be prefixed (e.g. `ibc/`) to protect them from other storage operations. The paths(keys) for Tendermint client are defined by [ICS 24](https://github.com/cosmos/ibc/blob/master/spec/core/ics-024-host-requirements/README.md#path-space).
+### Store IBC-related data
+The IBC-related transaction can write IBC-related data to check the state or to be proved by other ledgers according to IBC protocol. Its storage key should be prefixed (e.g. `ibc/`) to protect them from other storage operations. The paths(keys) for Tendermint client are defined by [ICS 24](https://github.com/cosmos/ibc/blob/master/spec/core/ics-024-host-requirements/README.md#path-space).
 
 ### Emit IBC event
 The ledger should set an IBC event to `events` in the ABCI response to allow relayers to get the events. The transaction execution should return `TxResult` including an event. IBC relayer can subscribe the ledger with Tendermint RPC and get the event.
@@ -82,7 +82,7 @@ impl PortReader for IbcContext {...}
 ```
 
 ## IBC validity predicate
-IBC validity predicate validates that the IBC-related transactions are correct by checking the ledger state. It is executed after a transaction has written IBC-related state. For the performance, IBC validity predicate is a [native validity predicate](ledger/vp.md#native-vps) that are built into the ledger.
+IBC validity predicate validates that the IBC-related transactions are correct by checking the ledger state including prior and posterior. It is executed after a transaction has written IBC-related state. For the performance, IBC validity predicate is a [native validity predicate](ledger/vp.md#native-vps) that are built into the ledger.
 
 ```rust
 impl NativeVp for IbcVp {
@@ -106,13 +106,94 @@ impl NativeVp for IbcVp {
         DB: storage::DB + for<'iter> storage::DBIter<'iter>,
         H: StorageHasher
     {
-        // check the signature for sending token (same as vp_user)
-
-        // validate the escrowed/unescrowed amount
-        // for all tokens that were updated by IBC-related transactions
+      ...
     }
 }
 ```
+
+IBC validity predicate has to execute the following validations for state changes of IBC modules.
+
+### Client
+- CreateClient (`clients/{identifier}` is inserted)
+  - Check the consistency about the client type by reading them from `clients/{identifier}/clientType`, `clients/{identifier}/clientState` and `clients/{identifier}/consensusStates/{height}`.
+
+- UpdateClient (`clients/{identifier}/consensusStates/{height}` is inserted)
+  - Verify the new header with the stored client state’s validity predicate and consensus state
+
+- UpgradeClient
+  - TODO
+
+### Connection
+- ConnectionOpenInit (`connections/{identifier}` is inserted and the state is `INIT`)
+  - Check that the client identifier is valid
+    - Check that `clients/{client-id}/clientState` exists on this ledger
+
+- ConnectionOpenTry (`connections/{identifier}` is inserted and the state is `TRYOPEN`)
+  - Check that the client identifier is valid
+    - Check that `clients/{identifier}/clientState` exists on this ledger
+  - Check that the version is compatible
+  - Check that the client of the counterpart ledger exists
+  - Verify the proof that the counterpart ledger has stored the identifier
+    - Check that `clients/{identifier}/clientState` exists on the counterpart ledger with the proof
+  - Verify the proof that the counterpart ledger's client is using to validate this ledger has the correct consensus state
+    - Check that `clients/{identifier}/consensusStates/{height}` exists on the counterpart ledger with the proof
+
+- ConnectionOpenAck (the state of `connections/{identifier}` is updated from `INIT` to `OPEN`)
+  - Same as ConnectionOpenTry
+
+- ConnectionOpenConfirm (the state of `connections/{identifier}` is updated from `TRYOPEN` to `OPEN`)
+  - Verify that the counterparty ledger has marked `OPEN` with the proof
+    - Check that the state of `connections/{identifier}` on the counterpart ledger is `OPEN` with the proof
+
+### Channel
+- ChanOpenInit (`channelEnds/ports/{port-id}/channels/{channel-id}` is inserted and the state is `INIT`)
+  - Nothing to do
+
+- ChanOpenTry (`channelEnds/ports/{port-id}/channels/{channel-id}` is inserted and the state is `TRYOPEN`)
+  - Verify the proof that the counterpart ledger has stored the port identifier and the channel identifier
+    - Check that `channelEnds/ports/{port-id}/channels/{channel-id}` exists on the counterpart ledger with the proof
+  - Check that the port is owned
+  - Check that the version is compatible
+
+- ChanOpenAck (the state of `channelEnds/ports/{port-id}/channels/{channel-id}` is updated from `INIT` to `OPEN`)
+  - Verify the proof that the counterpart ledger has stored the port identifier and the channel identifier
+    - Check that `channelEnds/ports/{port-id}/channels/{channel-id}` exists on the counterpart ledger with the proof
+
+- ChanOpenConfirm (the state of `channelEnds/ports/{port-id}/channels/{channel-id}` is updated from `TRYOPEN` to `OPEN`)
+  - Verify that the counterparty ledger has marked `OPEN` with the proof
+    - Check that the state of `channelEnds/ports/{port-id}/channels/{channel-id}` on the counterpart ledger is `OPEN` with the proof
+
+- SendPacket (`nextSequenceSend/ports/{port-id}/channels/{channel-id}` is updated)
+  - Check that the connection and the channel are open
+  - Check that the port is owned
+  - Check that the packet metadata matches the channel and connection information
+  - Checks that the timeout height specified has not already passed on the destination ledger
+    - Check that `clients/{identifier}/clientState` and `clients/{identifier}/consensusStates/{height}`
+
+- RecvPacket (`nextSequenceRecv/ports/{port-id}/channels/{channel-id}` is updated)
+  - Check that the connection and the channel are open
+  - Check that the port is owned
+  - Check that the packet metadata matches the channel and connection information
+  - Check that the packet sequence is the next sequence the channel end expects to receive
+  - Checks that the timeout height has not yet passed
+    - Check that `clients/{identifier}/clientState` and `clients/{identifier}/consensusStates/{height}`
+  - Verify the proof that the counterpart ledger has stored the commitment
+    - Check that `commitments/ports/{identifier}/channels/{identifier}/packets/{sequence}` exists on the counterpart ledger with the proof
+
+- AcknowledgePacket (`nextSequenceAck/ports/{identifier}/channels/{identifier}` is updated and `commitments/ports/{identifier}/channels/{identifier}/packets/{sequence}` is deleted)
+  - Check that the connection and the channel are open
+  - Check that the port is owned
+  - Check that the packet metadata matches the channel and connection information
+  - Check that the packet was actually sent on this channel
+  - Check that the packet sequence is the next sequence the channel end expects to acknowledge
+  - Verify the proof that the counterpart ledger has stored the acknowledgement data
+    - Check that `acks/ports/{identifier}/channels/{identifier}/acknowledgements/{sequence}` exists on the counterpart ledger with the proof
+
+- TimeoutPacket (`commitments/ports/{identifier}/channels/{identifier}/packets/{sequence}` is deleted)
+  - TODO
+
+- TimeoutOnClose
+  - TODO
 
 ## Relayer (ICS 18)
 IBC relayer monitors the ledger, gets the status, state and proofs on the ledger, and requests transactions to the ledger via Tendermint RPC according to IBC protocol. For relayers, the ledger has to make a packet, emits an IBC event and stores proofs if needed. And, a relayer has to support Anoma ledger to query and validate the ledger state. It means that `Chain` in IBC Relayer of [ibc-rs](https://github.com/informalsystems/ibc-rs) should be implemented for Anoma like [that of CosmosSDK](https://github.com/informalsystems/ibc-rs/blob/master/relayer/src/chain/cosmos.rs).
