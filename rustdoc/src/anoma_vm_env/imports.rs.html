@@ -598,7 +598,7 @@
 <span class="doccomment">/// first step reads the value into a result buffer and returns the size (if</span>
 <span class="doccomment">/// any) back to the guest, the second step reads the value from cache into a</span>
 <span class="doccomment">/// pre-allocated buffer with the obtained size.</span>
-<span class="kw">fn</span> <span class="ident">read_from_cache</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">BorshDeserialize</span><span class="op">&gt;</span>(
+<span class="kw">fn</span> <span class="ident">read_from_buffer</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">BorshDeserialize</span><span class="op">&gt;</span>(
     <span class="ident">read_result</span>: <span class="ident">i64</span>,
     <span class="ident">result_buffer</span>: <span class="kw">unsafe</span> <span class="kw">extern</span> <span class="string">&quot;C&quot;</span> <span class="kw">fn</span>(<span class="ident">u64</span>),
 ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
@@ -620,11 +620,11 @@
 
 <span class="doccomment">/// This function is a helper to handle the second step of reading var-len</span>
 <span class="doccomment">/// values in a key-value pair from the host.</span>
-<span class="kw">fn</span> <span class="ident">read_key_val_from_cache</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">BorshDeserialize</span><span class="op">&gt;</span>(
+<span class="kw">fn</span> <span class="ident">read_key_val_from_buffer</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">BorshDeserialize</span><span class="op">&gt;</span>(
     <span class="ident">read_result</span>: <span class="ident">i64</span>,
     <span class="ident">result_buffer</span>: <span class="kw">unsafe</span> <span class="kw">extern</span> <span class="string">&quot;C&quot;</span> <span class="kw">fn</span>(<span class="ident">u64</span>),
 ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span>(<span class="ident">String</span>, <span class="ident">T</span>)<span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">key_val</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">KeyVal</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">read_from_cache</span>(<span class="ident">read_result</span>, <span class="ident">result_buffer</span>);
+    <span class="kw">let</span> <span class="ident">key_val</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">KeyVal</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">read_from_buffer</span>(<span class="ident">read_result</span>, <span class="ident">result_buffer</span>);
     <span class="ident">key_val</span>.<span class="ident">and_then</span>(<span class="op">|</span><span class="ident">key_val</span><span class="op">|</span> {
         <span class="comment">// decode the value</span>
         <span class="ident">T</span>::<span class="ident">try_from_slice</span>(<span class="kw-2">&amp;</span><span class="ident">key_val</span>.<span class="ident">val</span>)
@@ -655,7 +655,7 @@
         <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">key</span>.<span class="ident">as_ref</span>();
         <span class="kw">let</span> <span class="ident">read_result</span> <span class="op">=</span>
             <span class="kw">unsafe</span> { <span class="ident">anoma_tx_read</span>(<span class="ident">key</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="kw">_</span>, <span class="ident">key</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="kw">_</span>) };
-        <span class="kw">super</span>::<span class="ident">read_from_cache</span>(<span class="ident">read_result</span>, <span class="ident">anoma_tx_result_buffer</span>)
+        <span class="kw">super</span>::<span class="ident">read_from_buffer</span>(<span class="ident">read_result</span>, <span class="ident">anoma_tx_result_buffer</span>)
     }
 
     <span class="doccomment">/// Check if the given key is present in storage.</span>
@@ -708,7 +708,7 @@
 
         <span class="kw">fn</span> <span class="ident">next</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span>(<span class="ident">String</span>, <span class="ident">T</span>)<span class="op">&gt;</span> {
             <span class="kw">let</span> <span class="ident">read_result</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">anoma_tx_iter_next</span>(<span class="self">self</span>.<span class="number">0</span>) };
-            <span class="kw">super</span>::<span class="ident">read_key_val_from_cache</span>(<span class="ident">read_result</span>, <span class="ident">anoma_tx_result_buffer</span>)
+            <span class="kw">super</span>::<span class="ident">read_key_val_from_buffer</span>(<span class="ident">read_result</span>, <span class="ident">anoma_tx_result_buffer</span>)
         }
     }
 
@@ -878,7 +878,7 @@
         <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">key</span>.<span class="ident">as_ref</span>();
         <span class="kw">let</span> <span class="ident">read_result</span> <span class="op">=</span>
             <span class="kw">unsafe</span> { <span class="ident">anoma_vp_read_pre</span>(<span class="ident">key</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="kw">_</span>, <span class="ident">key</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="kw">_</span>) };
-        <span class="kw">super</span>::<span class="ident">read_from_cache</span>(<span class="ident">read_result</span>, <span class="ident">anoma_vp_result_buffer</span>)
+        <span class="kw">super</span>::<span class="ident">read_from_buffer</span>(<span class="ident">read_result</span>, <span class="ident">anoma_vp_result_buffer</span>)
     }
 
     <span class="doccomment">/// Try to read a variable-length value at the given key from storage after</span>
@@ -887,7 +887,7 @@
         <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">key</span>.<span class="ident">as_ref</span>();
         <span class="kw">let</span> <span class="ident">read_result</span> <span class="op">=</span>
             <span class="kw">unsafe</span> { <span class="ident">anoma_vp_read_post</span>(<span class="ident">key</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="kw">_</span>, <span class="ident">key</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="kw">_</span>) };
-        <span class="kw">super</span>::<span class="ident">read_from_cache</span>(<span class="ident">read_result</span>, <span class="ident">anoma_vp_result_buffer</span>)
+        <span class="kw">super</span>::<span class="ident">read_from_buffer</span>(<span class="ident">read_result</span>, <span class="ident">anoma_vp_result_buffer</span>)
     }
 
     <span class="doccomment">/// Check if the given key was present in storage before transaction</span>
@@ -924,7 +924,7 @@
 
         <span class="kw">fn</span> <span class="ident">next</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span>(<span class="ident">String</span>, <span class="ident">T</span>)<span class="op">&gt;</span> {
             <span class="kw">let</span> <span class="ident">read_result</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">anoma_vp_iter_pre_next</span>(<span class="self">self</span>.<span class="number">0</span>) };
-            <span class="kw">super</span>::<span class="ident">read_key_val_from_cache</span>(<span class="ident">read_result</span>, <span class="ident">anoma_vp_result_buffer</span>)
+            <span class="kw">super</span>::<span class="ident">read_key_val_from_buffer</span>(<span class="ident">read_result</span>, <span class="ident">anoma_vp_result_buffer</span>)
         }
     }
 
@@ -944,7 +944,7 @@
 
         <span class="kw">fn</span> <span class="ident">next</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span>(<span class="ident">String</span>, <span class="ident">T</span>)<span class="op">&gt;</span> {
             <span class="kw">let</span> <span class="ident">read_result</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">anoma_vp_iter_post_next</span>(<span class="self">self</span>.<span class="number">0</span>) };
-            <span class="kw">super</span>::<span class="ident">read_key_val_from_cache</span>(<span class="ident">read_result</span>, <span class="ident">anoma_vp_result_buffer</span>)
+            <span class="kw">super</span>::<span class="ident">read_key_val_from_buffer</span>(<span class="ident">read_result</span>, <span class="ident">anoma_vp_result_buffer</span>)
         }
     }
 
