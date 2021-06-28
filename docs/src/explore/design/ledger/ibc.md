@@ -115,7 +115,8 @@ IBC validity predicate has to execute the following validations for state change
 
 ### Client
 - CreateClient (`clients/{identifier}` is inserted)
-  - Check the consistency about the client type by reading them from `clients/{identifier}/clientType`, `clients/{identifier}/clientState` and `clients/{identifier}/consensusStates/{height}`.
+  - Check the consistency about the client type
+    - Check `clients/{identifier}/clientType`, `clients/{identifier}/clientState`, and `clients/{identifier}/consensusStates/{height}`
 
 - UpdateClient (`clients/{identifier}/consensusStates/{height}` is inserted)
   - Verify the new header with the stored client state’s validity predicate and consensus state
@@ -125,6 +126,7 @@ IBC validity predicate has to execute the following validations for state change
 
 ### Connection
 - ConnectionOpenInit (`connections/{identifier}` is inserted and the state is `INIT`)
+  - Check that the connection does not exist in the prior state
   - Check that the client identifier is valid
     - Check that `clients/{client-id}/clientState` exists on this ledger
 
@@ -147,21 +149,40 @@ IBC validity predicate has to execute the following validations for state change
 
 ### Channel
 - ChanOpenInit (`channelEnds/ports/{port-id}/channels/{channel-id}` is inserted and the state is `INIT`)
-  - Nothing to do
+  - Check that the channel does not exist in the prior state
+  - Check that the port is owned
+  - Check that the connection is open
 
 - ChanOpenTry (`channelEnds/ports/{port-id}/channels/{channel-id}` is inserted and the state is `TRYOPEN`)
   - Verify the proof that the counterpart ledger has stored the port identifier and the channel identifier
     - Check that `channelEnds/ports/{port-id}/channels/{channel-id}` exists on the counterpart ledger with the proof
+  - Check that the connection is open
   - Check that the port is owned
   - Check that the version is compatible
 
 - ChanOpenAck (the state of `channelEnds/ports/{port-id}/channels/{channel-id}` is updated from `INIT` to `OPEN`)
+  - Check that the connection is open
+  - Check that the port is owned
   - Verify the proof that the counterpart ledger has stored the port identifier and the channel identifier
     - Check that `channelEnds/ports/{port-id}/channels/{channel-id}` exists on the counterpart ledger with the proof
 
 - ChanOpenConfirm (the state of `channelEnds/ports/{port-id}/channels/{channel-id}` is updated from `TRYOPEN` to `OPEN`)
+  - Check that the connection is open
+  - Check that the port is owned
   - Verify that the counterparty ledger has marked `OPEN` with the proof
     - Check that the state of `channelEnds/ports/{port-id}/channels/{channel-id}` on the counterpart ledger is `OPEN` with the proof
+
+- ChanCloseInit (the state of `channelEnds/ports/{port-id}/channels/{channel-id}` is updated from `OPEN` to `CLOSED`)
+  - Check that the connection and the channel are open
+  - Check that the port is owned
+  - Check that the packet metadata matches the channel and connection information
+
+- ChanCloseConfirm (the state of `channelEnds/ports/{port-id}/channels/{channel-id}` is updated from `OPEN` to `CLOSED`)
+  - Check that the connection and the channel are open
+  - Check that the port is owned
+  - Check that the packet metadata matches the channel and connection information
+  - Verify that the counterparty ledger has marked `CLOSED` with the proof
+    - Check that the state of `channelEnds/ports/{port-id}/channels/{channel-id}` on the counterpart ledger is `CLOSED` with the proof
 
 - SendPacket (`nextSequenceSend/ports/{port-id}/channels/{channel-id}` is updated)
   - Check that the connection and the channel are open
@@ -190,10 +211,21 @@ IBC validity predicate has to execute the following validations for state change
     - Check that `acks/ports/{identifier}/channels/{identifier}/acknowledgements/{sequence}` exists on the counterpart ledger with the proof
 
 - TimeoutPacket (`commitments/ports/{identifier}/channels/{identifier}/packets/{sequence}` is deleted)
-  - TODO
+  - Check that the connection and the channel are open
+  - Check that the port is owned
+  - Check that the packet metadata matches the channel and connection information
+  - Check that the packet was actually sent on this channel
+  - Verify the proof that the packet has not been confirmed on the counterpart ledger
+    - Check that `nextSequenceRecv/ports/{port-id}/channels/{channel-id}` is equal to the given sequence number on the counterpart ledger
+  - Verify the proof that the counterpart ledger has exceeded the timeout height or timestamp
 
-- TimeoutOnClose
-  - TODO
+- TimeoutOnClose (`commitments/ports/{identifier}/channels/{identifier}/packets/{sequence}` is deleted)
+  - Check that the port is owned
+  - Check that the packet metadata matches the channel and connection information
+  - Verify the proof that the counterpart ledger has closed the channel
+    - Check that the state of `channelEnds/ports/{port-id}/channels/{channel-id}` on the counterpart ledger is `CLOSED` with the proof
+  - Verify the proof that the packet has not been confirmed on the counterpart ledger
+    - Check that `nextSequenceRecv/ports/{port-id}/channels/{channel-id}` is equal to the given sequence number on the counterpart ledger
 
 ## Relayer (ICS 18)
 IBC relayer monitors the ledger, gets the status, state and proofs on the ledger, and requests transactions to the ledger via Tendermint RPC according to IBC protocol. For relayers, the ledger has to make a packet, emits an IBC event and stores proofs if needed. And, a relayer has to support Anoma ledger to query and validate the ledger state. It means that `Chain` in IBC Relayer of [ibc-rs](https://github.com/informalsystems/ibc-rs) should be implemented for Anoma like [that of CosmosSDK](https://github.com/informalsystems/ibc-rs/blob/master/relayer/src/chain/cosmos.rs).
