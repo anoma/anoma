@@ -1,1 +1,1 @@
-initSidebarItems({"constant":[["ABCI_MOD",""]],"fn":[["main",""]],"mod":[["cli","The docstrings on types and their fields with `derive(Clap)` are displayed in the CLI `--help`."]]});
+initSidebarItems({"fn":[["main",""],["reduce_log_level","Reduce the logging from given crate unless it’s explicitly set."]],"mod":[["cli","Anoma node CLI."]]});

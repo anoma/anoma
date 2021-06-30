@@ -333,7 +333,6 @@
 <span id="330">330</span>
 <span id="331">331</span>
 <span id="332">332</span>
-<span id="333">333</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Node and client configuration</span>
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">collections</span>::<span class="ident">HashSet</span>;
@@ -341,7 +340,7 @@
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">fs</span>::{<span class="ident">create_dir_all</span>, <span class="ident">File</span>};
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">io</span>::<span class="ident">Write</span>;
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">net</span>::{<span class="ident">IpAddr</span>, <span class="ident">Ipv4Addr</span>, <span class="ident">SocketAddr</span>};
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">path</span>::<span class="ident">PathBuf</span>;
+<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">path</span>::{<span class="ident">Path</span>, <span class="ident">PathBuf</span>};
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">str</span>::<span class="ident">FromStr</span>;
 
 <span class="kw">use</span> <span class="ident">libp2p</span>::<span class="ident">multiaddr</span>::{<span class="ident">Multiaddr</span>, <span class="ident">Protocol</span>};
@@ -589,8 +588,8 @@ And this is correct
 
 <span class="kw">impl</span> <span class="ident">Config</span> {
     <span class="comment">// TODO try to check from any &quot;config.*&quot; file instead of only .toml</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">read</span>(<span class="ident">base_dir_path</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">file_path</span> <span class="op">=</span> <span class="ident">PathBuf</span>::<span class="ident">from</span>(<span class="ident">base_dir_path</span>).<span class="ident">join</span>(<span class="ident">FILENAME</span>);
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">read</span>(<span class="ident">base_dir_path</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="ident">file_path</span> <span class="op">=</span> <span class="ident">base_dir_path</span>.<span class="ident">join</span>(<span class="ident">FILENAME</span>);
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">config</span> <span class="op">=</span> <span class="ident">config</span>::<span class="ident">Config</span>::<span class="ident">new</span>();
         <span class="ident">config</span>
             .<span class="ident">merge</span>(<span class="ident">config</span>::<span class="ident">File</span>::<span class="ident">with_name</span>(
@@ -600,8 +599,7 @@ And this is correct
         <span class="ident">config</span>.<span class="ident">try_into</span>().<span class="ident">map_err</span>(<span class="ident">Error</span>::<span class="ident">DeserializationError</span>)
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">generate</span>(<span class="ident">base_dir_path</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">replace</span>: <span class="ident">bool</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">base_dir</span> <span class="op">=</span> <span class="ident">PathBuf</span>::<span class="ident">from</span>(<span class="ident">base_dir_path</span>);
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">generate</span>(<span class="ident">base_dir</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>, <span class="ident">replace</span>: <span class="ident">bool</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">config</span> <span class="op">=</span> <span class="ident">Config</span>::<span class="ident">default</span>();
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">ledger_cfg</span> <span class="op">=</span> <span class="ident">config</span>
             .<span class="ident">ledger</span>
@@ -614,7 +612,7 @@ And this is correct
     }
 
     <span class="comment">// TODO add format in config instead and serialize it to that format</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">base_dir</span>: <span class="ident">PathBuf</span>, <span class="ident">replace</span>: <span class="ident">bool</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">base_dir</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>, <span class="ident">replace</span>: <span class="ident">bool</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="ident">create_dir_all</span>(<span class="kw-2">&amp;</span><span class="ident">base_dir</span>).<span class="ident">map_err</span>(<span class="ident">Error</span>::<span class="ident">FileError</span>)<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">file_path</span> <span class="op">=</span> <span class="ident">base_dir</span>.<span class="ident">join</span>(<span class="ident">FILENAME</span>);
         <span class="kw">if</span> <span class="ident">file_path</span>.<span class="ident">exists</span>() <span class="op">&amp;&amp;</span> <span class="op">!</span><span class="ident">replace</span> {

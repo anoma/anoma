@@ -81,74 +81,92 @@
 <span id="78">78</span>
 <span id="79">79</span>
 <span id="80">80</span>
+<span id="81">81</span>
+<span id="82">82</span>
+<span id="83">83</span>
+<span id="84">84</span>
+<span id="85">85</span>
+<span id="86">86</span>
+<span id="87">87</span>
+<span id="88">88</span>
+<span id="89">89</span>
 </pre><div class="example-wrap"><pre class="rust ">
-<span class="doccomment">//! The docstrings on types and their fields with `derive(Clap)` are displayed</span>
-<span class="doccomment">//! in the CLI `--help`.</span>
+<span class="doccomment">//! Anoma node CLI.</span>
+
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;dev&quot;</span>)]</span>
+<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">path</span>::<span class="ident">Path</span>;
+
 <span class="kw">use</span> <span class="ident">anoma</span>::<span class="ident">config</span>::<span class="ident">Config</span>;
 <span class="kw">use</span> <span class="ident">anoma</span>::<span class="ident">node</span>::{<span class="ident">gossip</span>, <span class="ident">ledger</span>};
 <span class="kw">use</span> <span class="ident">anoma</span>::{<span class="ident">cli</span>, <span class="ident">config</span>};
 <span class="kw">use</span> <span class="ident">eyre</span>::{<span class="ident">Context</span>, <span class="prelude-ty">Result</span>};
 
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">main</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">app</span> <span class="op">=</span> <span class="ident">cli</span>::<span class="ident">anoma_node_cli</span>();
-
-    <span class="kw">let</span> <span class="ident">matches</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">app</span>.<span class="ident">get_matches_mut</span>();
-
-    <span class="comment">// here unwrap is safe to use req as the argument even it&#39;s not mandatory</span>
-    <span class="comment">// because it has a default</span>
-    <span class="kw">let</span> <span class="ident">home</span> <span class="op">=</span> <span class="ident">cli</span>::<span class="ident">parse_string_req</span>(<span class="kw-2">&amp;</span><span class="ident">matches</span>, <span class="ident">cli</span>::<span class="ident">BASE_ARG</span>);
-
-    <span class="kw">match</span> <span class="ident">matches</span>.<span class="ident">subcommand</span>() {
-        <span class="prelude-val">Some</span>((<span class="ident">cli</span>::<span class="ident">RUN_GOSSIP_COMMAND</span>, <span class="ident">args</span>)) <span class="op">=</span><span class="op">&gt;</span> {
-            <span class="kw">let</span> <span class="ident">config</span> <span class="op">=</span> <span class="ident">get_cfg</span>(<span class="ident">home</span>);
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">gossip_cfg</span> <span class="op">=</span> <span class="ident">config</span>.<span class="ident">intent_gossiper</span>.<span class="ident">unwrap_or_default</span>();
-            <span class="ident">cli</span>::<span class="ident">update_gossip_config</span>(<span class="ident">args</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">gossip_cfg</span>)
-                .<span class="ident">expect</span>(<span class="string">&quot;failed to update config with cli option&quot;</span>);
-            <span class="ident">gossip</span>::<span class="ident">run</span>(<span class="ident">gossip_cfg</span>).<span class="ident">wrap_err</span>(<span class="string">&quot;Failed to run gossip service&quot;</span>)
-        }
-        <span class="prelude-val">Some</span>((<span class="ident">cli</span>::<span class="ident">RUN_LEDGER_COMMAND</span>, <span class="kw">_</span>)) <span class="op">=</span><span class="op">&gt;</span> {
-            <span class="kw">let</span> <span class="ident">config</span> <span class="op">=</span> <span class="ident">get_cfg</span>(<span class="ident">home</span>);
-            <span class="kw">let</span> <span class="ident">ledger_cfg</span> <span class="op">=</span> <span class="ident">config</span>.<span class="ident">ledger</span>.<span class="ident">unwrap_or_default</span>();
-            <span class="ident">ledger</span>::<span class="ident">run</span>(<span class="ident">ledger_cfg</span>).<span class="ident">wrap_err</span>(<span class="string">&quot;Failed to run Anoma node&quot;</span>)
-        }
-        <span class="prelude-val">Some</span>((<span class="ident">cli</span>::<span class="ident">RESET_LEDGER_COMMAND</span>, <span class="kw">_</span>)) <span class="op">=</span><span class="op">&gt;</span> {
-            <span class="kw">let</span> <span class="ident">config</span> <span class="op">=</span> <span class="ident">get_cfg</span>(<span class="ident">home</span>);
-            <span class="kw">let</span> <span class="ident">ledger_cfg</span> <span class="op">=</span> <span class="ident">config</span>.<span class="ident">ledger</span>.<span class="ident">unwrap_or_default</span>();
-            <span class="ident">ledger</span>::<span class="ident">reset</span>(<span class="ident">ledger_cfg</span>).<span class="ident">wrap_err</span>(<span class="string">&quot;Failed to reset Anoma node&quot;</span>)
-        }
-        <span class="prelude-val">Some</span>((<span class="ident">cli</span>::<span class="ident">GENERATE_CONFIG_COMMAND</span>, <span class="ident">_args</span>)) <span class="op">=</span><span class="op">&gt;</span> {
-            <span class="kw">let</span> <span class="ident">gen_config</span> <span class="op">=</span> <span class="ident">config</span>::<span class="ident">Config</span>::<span class="ident">generate</span>(<span class="kw-2">&amp;</span><span class="ident">home</span>, <span class="bool-val">false</span>)
-                .<span class="ident">wrap_err</span>(<span class="string">&quot;failed to generate default config&quot;</span>)<span class="question-mark">?</span>;
-            <span class="ident">tracing</span>::<span class="macro">debug</span><span class="macro">!</span>(<span class="string">&quot;generated config {:?}&quot;</span>, <span class="ident">gen_config</span>);
-            <span class="prelude-val">Ok</span>(())
-        }
-        <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">app</span>.<span class="ident">print_help</span>().<span class="ident">wrap_err</span>(<span class="string">&quot;Can&#39;t display help.&quot;</span>),
+    <span class="kw">let</span> (<span class="ident">cmd</span>, <span class="ident">global_args</span>) <span class="op">=</span> <span class="ident">cli</span>::<span class="ident">anoma_node_cli</span>();
+    <span class="kw">let</span> <span class="ident">base_dir</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">global_args</span>.<span class="ident">base_dir</span>;
+    <span class="kw">match</span> <span class="ident">cmd</span> {
+        <span class="ident">cli</span>::<span class="ident">cmds</span>::<span class="ident">AnomaNode</span>::<span class="ident">Ledger</span>(<span class="ident">sub</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="ident">sub</span> {
+            <span class="ident">cli</span>::<span class="ident">cmds</span>::<span class="ident">Ledger</span>::<span class="ident">Run</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="kw">let</span> <span class="ident">config</span> <span class="op">=</span> <span class="ident">get_cfg</span>(<span class="ident">base_dir</span>);
+                <span class="kw">let</span> <span class="ident">ledger_cfg</span> <span class="op">=</span> <span class="ident">config</span>.<span class="ident">ledger</span>.<span class="ident">unwrap_or_default</span>();
+                <span class="ident">ledger</span>::<span class="ident">run</span>(<span class="ident">ledger_cfg</span>).<span class="ident">wrap_err</span>(<span class="string">&quot;Failed to run Anoma node&quot;</span>)<span class="question-mark">?</span>;
+            }
+            <span class="ident">cli</span>::<span class="ident">cmds</span>::<span class="ident">Ledger</span>::<span class="ident">Reset</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="kw">let</span> <span class="ident">config</span> <span class="op">=</span> <span class="ident">get_cfg</span>(<span class="ident">base_dir</span>);
+                <span class="kw">let</span> <span class="ident">ledger_cfg</span> <span class="op">=</span> <span class="ident">config</span>.<span class="ident">ledger</span>.<span class="ident">unwrap_or_default</span>();
+                <span class="ident">ledger</span>::<span class="ident">reset</span>(<span class="ident">ledger_cfg</span>)
+                    .<span class="ident">wrap_err</span>(<span class="string">&quot;Failed to reset Anoma node&quot;</span>)<span class="question-mark">?</span>;
+            }
+        },
+        <span class="ident">cli</span>::<span class="ident">cmds</span>::<span class="ident">AnomaNode</span>::<span class="ident">Gossip</span>(<span class="ident">sub</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="kw-2">*</span><span class="ident">sub</span> {
+            <span class="ident">cli</span>::<span class="ident">cmds</span>::<span class="ident">Gossip</span>::<span class="ident">Run</span>(<span class="ident">cli</span>::<span class="ident">cmds</span>::<span class="ident">GossipRun</span>(<span class="ident">args</span>)) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="kw">let</span> <span class="ident">config</span> <span class="op">=</span> <span class="ident">get_cfg</span>(<span class="ident">base_dir</span>);
+                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">gossip_cfg</span> <span class="op">=</span> <span class="ident">config</span>.<span class="ident">intent_gossiper</span>.<span class="ident">unwrap_or_default</span>();
+                <span class="ident">cli</span>::<span class="ident">update_gossip_config</span>(<span class="ident">args</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">gossip_cfg</span>)
+                    .<span class="ident">expect</span>(<span class="string">&quot;failed to update config with cli option&quot;</span>);
+                <span class="ident">gossip</span>::<span class="ident">run</span>(<span class="ident">gossip_cfg</span>).<span class="ident">wrap_err</span>(
+                    <span class="string">&quot;Failed to run gossip
+            service&quot;</span>,
+                )<span class="question-mark">?</span>;
+            }
+        },
+        <span class="ident">cli</span>::<span class="ident">cmds</span>::<span class="ident">AnomaNode</span>::<span class="ident">Config</span>(<span class="ident">sub</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="ident">sub</span> {
+            <span class="ident">cli</span>::<span class="ident">cmds</span>::<span class="ident">Config</span>::<span class="ident">Gen</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="kw">let</span> <span class="ident">gen_config</span> <span class="op">=</span> <span class="ident">config</span>::<span class="ident">Config</span>::<span class="ident">generate</span>(<span class="ident">base_dir</span>, <span class="bool-val">false</span>)
+                    .<span class="ident">wrap_err</span>(<span class="string">&quot;Failed to generate the default config&quot;</span>)<span class="question-mark">?</span>;
+                <span class="ident">tracing</span>::<span class="macro">debug</span><span class="macro">!</span>(<span class="string">&quot;Generated config {:?}&quot;</span>, <span class="ident">gen_config</span>);
+            }
+        },
     }
+    <span class="prelude-val">Ok</span>(())
 }
 
 <span class="comment">// for dev purpose this is useful so if the config change it automatically</span>
 <span class="comment">// generate the default one</span>
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;dev&quot;</span>)]</span>
-<span class="kw">fn</span> <span class="ident">get_cfg</span>(<span class="ident">home</span>: <span class="ident">String</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Config</span> {
-    <span class="kw">match</span> <span class="ident">Config</span>::<span class="ident">read</span>(<span class="kw-2">&amp;</span><span class="ident">home</span>) {
+<span class="kw">fn</span> <span class="ident">get_cfg</span>(<span class="ident">base_dir</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Config</span> {
+    <span class="kw">match</span> <span class="ident">Config</span>::<span class="ident">read</span>(<span class="ident">base_dir</span>) {
         <span class="prelude-val">Ok</span>(<span class="ident">config</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">config</span>,
         <span class="prelude-val">Err</span>(<span class="ident">err</span>) <span class="op">=</span><span class="op">&gt;</span> {
             <span class="ident">tracing</span>::<span class="macro">error</span><span class="macro">!</span>(
                 <span class="string">&quot;Tried to read config in {} but failed with: {}&quot;</span>,
-                <span class="ident">home</span>,
+                <span class="ident">base_dir</span>.<span class="ident">display</span>(),
                 <span class="ident">err</span>
             );
             <span class="comment">// generate(home,true) replace current config if it exists</span>
-            <span class="kw">match</span> <span class="ident">config</span>::<span class="ident">Config</span>::<span class="ident">generate</span>(<span class="kw-2">&amp;</span><span class="ident">home</span>, <span class="bool-val">true</span>) {
+            <span class="kw">match</span> <span class="ident">config</span>::<span class="ident">Config</span>::<span class="ident">generate</span>(<span class="ident">base_dir</span>, <span class="bool-val">true</span>) {
                 <span class="prelude-val">Ok</span>(<span class="ident">config</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                    <span class="ident">tracing</span>::<span class="macro">warn</span><span class="macro">!</span>(<span class="string">&quot;Generated default config in {}&quot;</span>, <span class="ident">home</span>,);
+                    <span class="ident">tracing</span>::<span class="macro">warn</span><span class="macro">!</span>(
+                        <span class="string">&quot;Generated default config in {}&quot;</span>,
+                        <span class="ident">base_dir</span>.<span class="ident">display</span>()
+                    );
                     <span class="ident">config</span>
                 }
                 <span class="prelude-val">Err</span>(<span class="ident">err</span>) <span class="op">=</span><span class="op">&gt;</span> {
                     <span class="ident">tracing</span>::<span class="macro">error</span><span class="macro">!</span>(
-                        <span class="string">&quot;Tried to generate config in {} but failed with: \
-                         {}.Using default config (with new generated key)&quot;</span>,
-                        <span class="ident">home</span>,
+                        <span class="string">&quot;Tried to generate config in {} but failed with: {}. \
+                         Using default config (with new generated key)&quot;</span>,
+                        <span class="ident">base_dir</span>.<span class="ident">display</span>(),
                         <span class="ident">err</span>
                     );
                     <span class="ident">config</span>::<span class="ident">Config</span>::<span class="ident">default</span>()
