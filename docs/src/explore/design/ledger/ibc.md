@@ -19,7 +19,7 @@ The transaction is given an IBC packet or message which specifies what to do. Be
           create_client::TYPE_URL => {
               let domain_msg = create_client::MsgCreateAnyClient::decode_vec(&any_msg.value)
                   .map_err(|e| Kind::MalformedMessageBytes.context(e))?;
-              ibc_create_client(domain_msg)
+              create_client(domain_msg.client_state, &domain_msg.consensus_state)
           }
           // other messages
           ...
@@ -57,34 +57,66 @@ The transaction is given an IBC packet or message which specifies what to do. Be
 IBC-related transaction for some messages or packets makes a packet. For example, when a transaction wants to transfer a token between ledgers, it should make a packet including `FungibleTokenPacketData` to specify the sender, receiver, token, and amount.
 
 ### Store IBC-related data
-The IBC-related transaction can write IBC-related data to check the state or to be proved by other ledgers according to IBC protocol. Its storage key should be prefixed (e.g. `ibc/`) to protect them from other storage operations. The paths(keys) for Tendermint client are defined by [ICS 24](https://github.com/cosmos/ibc/blob/master/spec/core/ics-024-host-requirements/README.md#path-space).
+The IBC-related transaction can write IBC-related data to check the state or to be proved by other ledgers according to IBC protocol. Its storage key should be prefixed (e.g. `ibc/` or a specific character) to protect them from other storage operations. The paths(keys) for Tendermint client are defined by [ICS 24](https://github.com/cosmos/ibc/blob/master/spec/core/ics-024-host-requirements/README.md#path-space).
 
 ### Emit IBC event
 The ledger should set an IBC event to `events` in the ABCI response to allow relayers to get the events. The transaction execution should return `TxResult` including an event. IBC relayer can subscribe the ledger with Tendermint RPC and get the event.
 
-### IBC context
-IBC context provides functions to handle IBC modules. IBC-related transaction handles IBC modules through IBC context. [ibc-rs](https://github.com/informalsystems/ibc-rs) defines functions required by these operations. IBC context should implement these functions. For example, `ClientReader` is defined for the read-only part of the client (ICS 2). It has functions for the client module; `client_type()`, `client_state()`, `consensus_state()`, and `client_counter()`.
+### Handle IBC modules
+IBC-related transactions should call functions to handle IBC modules. These functions are defined in [ibc-rs](https://github.com/informalsystems/ibc-rs) in traits (e.g. [`ClientReader`](https://github.com/informalsystems/ibc-rs/blob/d41e7253b997024e9f5852735450e1049176ed3a/modules/src/ics02_client/context.rs#L14)). But we can implement IBC-related operations (e.g. `create_client()`) without these traits because Anoma WASM transaction accesses the storage through the host environment functions.
 
 ```rust
-pub struct IbcContext {...}
+/* shared/src/types/storage.rs */
 
-// ICS 2
-impl ClientReader for IbcContext {...}
-impl ClientKeeper for IbcContext {...}
-// ICS 3
-impl ConnectionReader for IbcContext {...}
-impl ConnectionKeeper for IbcContext {...}
-// ICS 4
-impl ChannelReader for IbcContext {...}
-impl ChannelKeeper for IbcContext {...}
-// ICS 5
-impl PortReader for IbcContext {...}
+impl Key {
+    ...
+
+    // for IBC-related data
+    pub fn ibc_client_counter() -> Self {
+        // make a Key for client counter with the reserved prefix
+    }
+
+    pub fn ibc_client_type(client_id: &ClientId) -> Result<Self> {
+        // make a Key for client type with the reserved prefix
+    }
+
+    ...
+}
+```
+
+```rust
+/* vm_env/src/ibc.rs */
+
+pub fn create_client(client_state: &ClientState, consensus_state: &AnyConsensusState) -> HandlerResult<ClientResult> {
+    use crate::imports::tx;
+
+    let key = Key::ibc_client_counter();
+    let id_counter = tx::read(key).unwrap_or_default();
+    let client_id = ClientId::new(client_state.client_type(), id_counter).map_err(|e| {
+        Kind::ClientIdentifierConstructor(client_state.client_type(), id_counter).context(e)
+    })?;
+    tx::write(key, id_counter + 1);
+
+    let key = Key::ibc_client_type(client_id);
+    tx::write(key, client_state.client_type());
+    let key = Key::ibc_client_state(client_id);
+    tx::write(key, client_state);
+    let key = Key::ibc_consensus_state(client_id);
+    tx::write(key, consensus_state);
+
+    // make a result
+    ...
+}
 ```
 
 ## IBC validity predicate
-IBC validity predicate validates that the IBC-related transactions are correct by checking the ledger state including prior and posterior. It is executed after a transaction has written IBC-related state. For the performance, IBC validity predicate is a [native validity predicate](ledger/vp.md#native-vps) that are built into the ledger.
+IBC validity predicate validates that the IBC-related transactions are correct by checking the ledger state including prior and posterior. It is executed after a transaction has written IBC-related state. If the result is true, the IBC-related mutations are committed and the events are returned. If the result is false, the IBC-related mustations are dropped and the events aren't emitted. For the performance, IBC validity predicate is a [native validity predicate](ledger/vp.md#native-vps) that are built into the ledger.
+
+IBC validity predicate has to execute the following validations for state changes of IBC modules.
 
 ```rust
+/* shared/src/ledger/ibc.rs */
+
 impl NativeVp for IbcVp {
     const ADDR: InternalAddress = InternalAddress::Ibc;
 
@@ -100,132 +132,260 @@ impl NativeVp for IbcVp {
         ctx: &mut Ctx<DB, H>,
         tx_data: &[u8],
         keys_changed: &HashSet<Key>,
-        verifiers: &HashSet<Address>,
-    ) -> bool
+        _verifiers: &HashSet<Address>,
+    ) -> Result<bool>
     where
         DB: storage::DB + for<'iter> storage::DBIter<'iter>,
         H: StorageHasher
     {
-      ...
+        for key in &keys_changed {
+            if !is_ibc_key(key) {
+                continue;
+            }
+
+            // client
+            if key.segments.contains(&StringSeg("clientState".to_owned())) {
+                // Check the client state change
+                //   - created or updated
+                let state_change = check_client_state(client_id);
+                if state_change.is_created() {
+                    // "CreateClient"
+                    // Assert that the corresponding consensus state exists
+                } else {
+                    match get_header(tx_data) {
+                        Some(header) => {
+                            // "UpdateClient"
+                            // Verify the header with the stored client state’s validity predicate and consensus state
+                            //   - Refer to `ibc-rs::ics02_client::client_def::check_header_and_update_state()`
+                        }
+                        None => {
+                            // "UpgradeClient"
+                            // Verify the proofs to check the client state and consensus state
+                            //   - Refer to `ibc-rs::ics02_client::client_def::verify_upgrade_and_update_state()`
+                        }
+                    }
+                }
+            }
+
+            // connection
+            if key.segments.contains(&StringSeg("connections".to_owned())) {
+                // Check the connection state change
+                //   - none => INIT, none => TRYOPEN, INIT => OPEN, or TRYOPEN => OPEN
+                let state_change = check_connection_state(connection_id);
+                if state_change.is_initiated() {
+                    // "ConnectionOpenInit"
+                    // Assert that the corresponding client exists
+                } else {
+                    // Assert that the version is compatible
+
+                    // Verify the proofs to check the counterpart ledger's state is expected
+                    //   - The state can be inferred from the own connection state change
+                    //   - Use `ibc-rs::ics03_connection::handler::verify::verify_proofs()`
+                }
+            }
+
+            // channel handshake or closing
+            if key.segments.contains(&StringSeg("channelEnds".to_owned())) {
+                // Assert that the port is owend
+                // Check the channel state change
+                //   - none => INIT, none => TRYOPEN, INIT => OPEN, TRYOPEN => OPEN, or OPEN => CLOSED
+                let state_change = check_channel_state(channel_id);
+                if state_change.is_created() {
+                    // none => INIT
+                    // Nothing to do
+                    continue;
+                } else if state_change.is_closed() {
+                    // OPEN => CLOSED
+                    // Assert that the version is compatible
+
+                    match get_proofs(tx_data) {
+                        Some(proofs) => {
+                            // "ChanCloseConfirm"
+                            // Verify the proofs to check the counterpart ledger's state is expected
+                            //   - To check that the channel has been closed
+                            //   - Use `ibc-rs::ics04_connection::handler::verify::verify_channel_proofs()`
+                        }
+                        None => {
+                            // "ChanCloseInit"
+                            // Assert that the channel state is changed from `OPEN` to `CLOSED`
+                        }
+                    }
+                } else {
+                    // Verify the proof to check the counterpart ledger's state is expected
+                    //   - The state can be inferred from the own channel state change
+                    //   - Use `ibc-rs::ics04_connection::handler::verify::verify_channel_proofs()`
+                }
+            }
+
+            // send a packet
+            if key.segments.contains(&StringSeg("nextSequenceSend".to_owned())) {
+                match get_packet(tx_data) {
+                    Some(packet) => {
+                        // Assert that the packet metadata matches the channel and connection information
+                        //   - the port is owend
+                        //   - the channel exists and is open
+                        //   - the counterparty information is valid
+                        //   - the connection exists and is open
+
+                        // Assert that the packet sequence is the next sequence that the channel expects
+
+                        // Assert that the timeout height and timestamp have not passed on the destination ledger
+
+                        // Assert that the commitment has stored
+                    }
+                    // the packet should exist
+                    None => return Err(...),
+                }
+            }
+
+            // receive a packet
+            if key.segments.contains(&StringSeg("nextSequenceRecv".to_owned())) {
+                match get_packet(tx_data) {
+                    Some(packet) => {
+                        // Assert that the packet metadata matches the channel and connection information
+                        //   - the port is owend
+                        //   - the channel exists and is open
+                        //   - the counterparty information is valid
+                        //   - the connection exists and is open
+
+                        // Assert that the packet sequence is the next sequence that the channel expects (Ordered channel)
+
+                        // Assert that the timeout height and timestamp have not passed on the destination ledger
+
+                        // Assert that the receipt and acknowledgement have been stored
+
+                        // Verify the proofs that the counterpart ledger has stored the commitment
+                        //   - Use `ibc-rs::ics04_connection::handler::verify::verify_packet_recv_proofs()`
+                    }
+                    // the packet should exist
+                    None => return Err(...),
+                }
+            }
+
+            // receive an ack
+            if key.segments.contains(&StringSeg("nextSequenceAck".to_owned())) {
+                match get_packet(tx_data) {
+                    Some(packet) => {
+                        // Assert that the packet metadata matches the channel and connection information
+                        //   - the port is owend
+                        //   - the channel exists and is open
+                        //   - the counterparty information is valid
+                        //   - the connection exists and is open
+
+                        // Assert that the packet sequence is the next sequence that the channel expects (Ordered channel)
+
+                        // Assert that the commitment has been deleted
+
+                        // Verify that the packet was actually sent on this channel
+                        //   - Get the stored commitment and compare it with a commitment made from the packet
+
+                        // Verify the proofs to check the acknowledgement has been written on the counterpart ledger
+                        //   - Use `ibc-rs::ics04_connection::handler::verify::verify_packet_acknowledgement_proofs()`
+                    }
+                    // the packet should exist
+                    None => return Err(...),
+                }
+            }
+
+            // timeout
+            if key.segments.contains(&StringSeg("commitments".to_owned()))
+                && !ctx.has_key_post(key) {
+                match get_packet(tx_data) {
+                    Some(packet) => {
+                        // Assert that the packet metadata matches the channel and connection information
+                        //   - the port is owend
+                        //   - the channel exists
+                        //   - the counterparty information is valid
+                        //   - the connection exists
+
+                        // Assert that the packet was actually sent on this channel
+                        //   - Get the stored commitment and compare it with a commitment made from the packet
+
+                        // Check the channel state change
+                        let state_change = check_channel_state(channel_id);
+                        if state_change.is_closed() {
+                            // "Timeout"
+                            // Assert that the counterpart ledger has exceeded the timeout height or timestamp
+
+                            // Assert that the packet sequence is the next sequence that the channel expects (Ordered channel)
+                        } else {
+                            // "TimeoutOnClose"
+                            // Assert that the packet sequence is the next sequence that the channel expects (Ordered channel)
+
+                            // Verify the proofs to check the counterpart ledger's state is expected
+                            //   - The channel state on the counterpart ledger should be CLOSED
+                            //   - Use `ibc-rs::ics04_connection::handler::verify::verify_channel_proofs()`
+                        }
+
+                        // Verify the proofs to check the packet has not been confirmed on the counterpart ledger
+                        //   - For ordering channels, use `ibc-rs::ics04_connection::handler::verify::verify_next_sequence_recv()`
+                        //   - For not-ordering channels, use `ibc-rs::ics04_connection::handler::verify::verify_packet_receipt_absence()`
+                    }
+                    // the packet should exist
+                    None => return Err(...),
+                }
+            }
+        }
     }
 }
 ```
 
-IBC validity predicate has to execute the following validations for state changes of IBC modules.
+### Handle IBC modules
+Like IBC-related transactions, the validity predicate should handle IBC modules. It only reads the prior or the posterior state to validate them. `Keeper` to write IBC-related data aren't required, but we needs to implement `Reader` for both the prior and the posterior state. To use verification functions in `ibc-rs`, implementations for traits for IBC modules (e.g. `ClientReader`) should be for the prior state. For example, we can call [`verify_proofs()`](https://github.com/informalsystems/ibc-rs/blob/d41e7253b997024e9f5852735450e1049176ed3a/modules/src/ics03_connection/handler/verify.rs#L14) with the native validity predicate's context in a step of the connection handshake: `verify_proofs(ctx, client_state, &conn_end, &expected_conn, proofs)`.
 
-### Client
-- CreateClient (`clients/{identifier}` is inserted)
-  - Check the consistency about the client type
-    - Check `clients/{identifier}/clientType`, `clients/{identifier}/clientState`, and `clients/{identifier}/consensusStates/{height}`
+```rust
+/* shared/src/ledger/native_vp.rs */
 
-- UpdateClient (`clients/{identifier}/consensusStates/{height}` is inserted)
-  - Verify the new header with the stored client state’s validity predicate and consensus state
+pub struct Ctx<'a, DB, H>
+where
+    DB: storage::DB + for<'iter> storage::DBIter<'iter>,
+    H: StorageHasher,
+{
+    /// Storage prefix iterators.
+    pub iterators: PrefixIterators<'a, DB>,
+    /// VP gas meter.
+    pub gas_meter: VpGasMeter,
+    /// Read-only access to the storage.
+    pub storage: &'a Storage<DB, H>,
+    /// Read-only access to the write log.
+    pub write_log: &'a WriteLog,
+    /// The transaction code is used for signature verification
+    pub tx: &'a Tx,
+}
 
-- UpgradeClient
-  - TODO
+// Add implementations to get the prior state for validations in `ibc-rs`
+// ICS 2
+impl ClientReader for Ctx {...}
+// ICS 3
+impl ConnectionReader for Ctx {...}
+// ICS 4
+impl ChannelReader for Ctx {...}
+// ICS 5
+impl PortReader for Ctx {...}
 
-### Connection
-- ConnectionOpenInit (`connections/{identifier}` is inserted and the state is `INIT`)
-  - Check that the connection does not exist in the prior state
-  - Check that the client identifier is valid
-    - Check that `clients/{client-id}/clientState` exists on this ledger
+impl<'a, DB, H> Ctx<'a, DB, H>
+where
+    DB: 'static + storage::DB + for<'iter> storage::DBIter<'iter>,
+    H: 'static + StorageHasher,
+{
+    ...
 
-- ConnectionOpenTry (`connections/{identifier}` is inserted and the state is `TRYOPEN`)
-  - Check that the client identifier is valid
-    - Check that `clients/{identifier}/clientState` exists on this ledger
-  - Check that the version is compatible
-  - Check that the client of the counterpart ledger exists
-  - Verify the proof that the counterpart ledger has stored the identifier
-    - Check that `clients/{identifier}/clientState` exists on the counterpart ledger with the proof
-  - Verify the proof that the counterpart ledger's client is using to validate this ledger has the correct consensus state
-    - Check that `clients/{identifier}/consensusStates/{height}` exists on the counterpart ledger with the proof
-
-- ConnectionOpenAck (the state of `connections/{identifier}` is updated from `INIT` to `OPEN`)
-  - Same as ConnectionOpenTry
-
-- ConnectionOpenConfirm (the state of `connections/{identifier}` is updated from `TRYOPEN` to `OPEN`)
-  - Verify that the counterparty ledger has marked `OPEN` with the proof
-    - Check that the state of `connections/{identifier}` on the counterpart ledger is `OPEN` with the proof
-
-### Channel
-- ChanOpenInit (`channelEnds/ports/{port-id}/channels/{channel-id}` is inserted and the state is `INIT`)
-  - Check that the channel does not exist in the prior state
-  - Check that the port is owned
-  - Check that the connection is open
-
-- ChanOpenTry (`channelEnds/ports/{port-id}/channels/{channel-id}` is inserted and the state is `TRYOPEN`)
-  - Verify the proof that the counterpart ledger has stored the port identifier and the channel identifier
-    - Check that `channelEnds/ports/{port-id}/channels/{channel-id}` exists on the counterpart ledger with the proof
-  - Check that the connection is open
-  - Check that the port is owned
-  - Check that the version is compatible
-
-- ChanOpenAck (the state of `channelEnds/ports/{port-id}/channels/{channel-id}` is updated from `INIT` to `OPEN`)
-  - Check that the connection is open
-  - Check that the port is owned
-  - Verify the proof that the counterpart ledger has stored the port identifier and the channel identifier
-    - Check that `channelEnds/ports/{port-id}/channels/{channel-id}` exists on the counterpart ledger with the proof
-
-- ChanOpenConfirm (the state of `channelEnds/ports/{port-id}/channels/{channel-id}` is updated from `TRYOPEN` to `OPEN`)
-  - Check that the connection is open
-  - Check that the port is owned
-  - Verify that the counterparty ledger has marked `OPEN` with the proof
-    - Check that the state of `channelEnds/ports/{port-id}/channels/{channel-id}` on the counterpart ledger is `OPEN` with the proof
-
-- ChanCloseInit (the state of `channelEnds/ports/{port-id}/channels/{channel-id}` is updated from `OPEN` to `CLOSED`)
-  - Check that the connection and the channel are open
-  - Check that the port is owned
-  - Check that the packet metadata matches the channel and connection information
-
-- ChanCloseConfirm (the state of `channelEnds/ports/{port-id}/channels/{channel-id}` is updated from `OPEN` to `CLOSED`)
-  - Check that the connection and the channel are open
-  - Check that the port is owned
-  - Check that the packet metadata matches the channel and connection information
-  - Verify that the counterparty ledger has marked `CLOSED` with the proof
-    - Check that the state of `channelEnds/ports/{port-id}/channels/{channel-id}` on the counterpart ledger is `CLOSED` with the proof
-
-- SendPacket (`nextSequenceSend/ports/{port-id}/channels/{channel-id}` is updated)
-  - Check that the connection and the channel are open
-  - Check that the port is owned
-  - Check that the packet metadata matches the channel and connection information
-  - Checks that the timeout height specified has not already passed on the destination ledger
-    - Check that `clients/{identifier}/clientState` and `clients/{identifier}/consensusStates/{height}`
-
-- RecvPacket (`nextSequenceRecv/ports/{port-id}/channels/{channel-id}` is updated)
-  - Check that the connection and the channel are open
-  - Check that the port is owned
-  - Check that the packet metadata matches the channel and connection information
-  - Check that the packet sequence is the next sequence the channel end expects to receive
-  - Checks that the timeout height has not yet passed
-    - Check that `clients/{identifier}/clientState` and `clients/{identifier}/consensusStates/{height}`
-  - Verify the proof that the counterpart ledger has stored the commitment
-    - Check that `commitments/ports/{identifier}/channels/{identifier}/packets/{sequence}` exists on the counterpart ledger with the proof
-
-- AcknowledgePacket (`nextSequenceAck/ports/{identifier}/channels/{identifier}` is updated and `commitments/ports/{identifier}/channels/{identifier}/packets/{sequence}` is deleted)
-  - Check that the connection and the channel are open
-  - Check that the port is owned
-  - Check that the packet metadata matches the channel and connection information
-  - Check that the packet was actually sent on this channel
-  - Check that the packet sequence is the next sequence the channel end expects to acknowledge
-  - Verify the proof that the counterpart ledger has stored the acknowledgement data
-    - Check that `acks/ports/{identifier}/channels/{identifier}/acknowledgements/{sequence}` exists on the counterpart ledger with the proof
-
-- TimeoutPacket (`commitments/ports/{identifier}/channels/{identifier}/packets/{sequence}` is deleted)
-  - Check that the connection and the channel are open
-  - Check that the port is owned
-  - Check that the packet metadata matches the channel and connection information
-  - Check that the packet was actually sent on this channel
-  - Verify the proof that the packet has not been confirmed on the counterpart ledger
-    - Check that `nextSequenceRecv/ports/{port-id}/channels/{channel-id}` is equal to the given sequence number on the counterpart ledger
-  - Verify the proof that the counterpart ledger has exceeded the timeout height or timestamp
-
-- TimeoutOnClose (`commitments/ports/{identifier}/channels/{identifier}/packets/{sequence}` is deleted)
-  - Check that the port is owned
-  - Check that the packet metadata matches the channel and connection information
-  - Verify the proof that the counterpart ledger has closed the channel
-    - Check that the state of `channelEnds/ports/{port-id}/channels/{channel-id}` on the counterpart ledger is `CLOSED` with the proof
-  - Verify the proof that the packet has not been confirmed on the counterpart ledger
-    - Check that `nextSequenceRecv/ports/{port-id}/channels/{channel-id}` is equal to the given sequence number on the counterpart ledger
+    // Add functions to get the posterior state if needed
+    pub fn client_type_post(&self, client_id: &ClientId) -> Result<Option<ClientType>> {
+        ...
+    }
+    pub fn client_state_post(&self, client_id: &ClientId) -> Result<Option<AnyClientState>> {
+        ...
+    }
+    pub fn consensus_state_post(&self, client_id: &ClientId, height: Height) -> Result<Option<AnyConsensusState>> {
+        ...
+    }
+    pub fn client_counter_post(&self) -> Result<u64> {
+        ...
+    }
+    ...
+}
+```
 
 ## Relayer (ICS 18)
 IBC relayer monitors the ledger, gets the status, state and proofs on the ledger, and requests transactions to the ledger via Tendermint RPC according to IBC protocol. For relayers, the ledger has to make a packet, emits an IBC event and stores proofs if needed. And, a relayer has to support Anoma ledger to query and validate the ledger state. It means that `Chain` in IBC Relayer of [ibc-rs](https://github.com/informalsystems/ibc-rs) should be implemented for Anoma like [that of CosmosSDK](https://github.com/informalsystems/ibc-rs/blob/master/relayer/src/chain/cosmos.rs).
