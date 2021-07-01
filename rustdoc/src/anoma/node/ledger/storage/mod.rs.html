@@ -249,7 +249,6 @@
 <span id="246">246</span>
 <span id="247">247</span>
 <span id="248">248</span>
-<span id="249">249</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! The storage module handles both the current state in-memory and the stored</span>
 <span class="doccomment">//! state in DB.</span>
@@ -480,8 +479,7 @@
             .<span class="ident">expect</span>(<span class="string">&quot;begin_block failed&quot;</span>);
 
         <span class="kw">let</span> <span class="ident">addr</span> <span class="op">=</span> <span class="ident">storage</span>.<span class="ident">address_gen</span>.<span class="ident">generate_address</span>(<span class="string">&quot;test&quot;</span>.<span class="ident">as_bytes</span>());
-        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span>
-            <span class="ident">Key</span>::<span class="ident">validity_predicate</span>(<span class="kw-2">&amp;</span><span class="ident">addr</span>).<span class="ident">expect</span>(<span class="string">&quot;cannot create a VP key&quot;</span>);
+        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Key</span>::<span class="ident">validity_predicate</span>(<span class="kw-2">&amp;</span><span class="ident">addr</span>);
 
         <span class="comment">// not exist</span>
         <span class="kw">let</span> (<span class="ident">vp</span>, <span class="ident">gas</span>) <span class="op">=</span>

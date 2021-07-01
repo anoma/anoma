@@ -407,7 +407,7 @@
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;The address {0} doesn&#39;t exist&quot;</span>)]</span>
     <span class="ident">MissingAddress</span>(<span class="ident">Address</span>),
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Error executing native VP: {0}&quot;</span>)]</span>
-    <span class="ident">NativeVpError</span>(<span class="ident">vp_env</span>::<span class="ident">Error</span>),
+    <span class="ident">NativeVpError</span>(<span class="ident">vp_env</span>::<span class="ident">RuntimeError</span>),
 }
 
 <span class="kw">pub</span> <span class="kw">type</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">std</span>::<span class="ident">result</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">Error</span><span class="op">&gt;</span>;

@@ -374,7 +374,6 @@
 <span id="371">371</span>
 <span id="372">372</span>
 <span id="373">373</span>
-<span id="374">374</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! The persistent storage in RocksDB.</span>
 <span class="doccomment">//!</span>
@@ -643,7 +642,6 @@
                                     <span class="kw">let</span> <span class="ident">addr</span> <span class="op">=</span> <span class="ident">Address</span>::<span class="ident">decode</span>(<span class="kw-2">&amp;</span><span class="ident">addr_str</span>)
                                         .<span class="ident">expect</span>(<span class="string">&quot;cannot decode the address&quot;</span>);
                                     <span class="ident">Key</span>::<span class="ident">validity_predicate</span>(<span class="kw-2">&amp;</span><span class="ident">addr</span>)
-                                        .<span class="ident">expect</span>(<span class="string">&quot;failed to make the VP key&quot;</span>)
                                 }
                                 <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> {
                                     <span class="ident">Key</span>::<span class="ident">parse</span>(<span class="ident">segments</span>.<span class="ident">split_off</span>(<span class="number">2</span>).<span class="ident">join</span>(

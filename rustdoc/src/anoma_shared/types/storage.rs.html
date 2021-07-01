@@ -484,6 +484,17 @@
 <span id="481">481</span>
 <span id="482">482</span>
 <span id="483">483</span>
+<span id="484">484</span>
+<span id="485">485</span>
+<span id="486">486</span>
+<span id="487">487</span>
+<span id="488">488</span>
+<span id="489">489</span>
+<span id="490">490</span>
+<span id="491">491</span>
+<span id="492">492</span>
+<span id="493">493</span>
+<span id="494">494</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Storage types</span>
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">convert</span>::{<span class="ident">TryFrom</span>, <span class="ident">TryInto</span>};
@@ -706,10 +717,22 @@
 
     <span class="doccomment">/// Returns a key of the validity predicate of the given address</span>
     <span class="doccomment">/// Only this function can push &quot;?&quot; segment for validity predicate</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">validity_predicate</span>(<span class="ident">addr</span>: <span class="kw-2">&amp;</span><span class="ident">Address</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">validity_predicate</span>(<span class="ident">addr</span>: <span class="kw-2">&amp;</span><span class="ident">Address</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">segments</span> <span class="op">=</span> <span class="self">Self</span>::<span class="ident">from</span>(<span class="ident">addr</span>.<span class="ident">to_db_key</span>()).<span class="ident">segments</span>;
         <span class="ident">segments</span>.<span class="ident">push</span>(<span class="ident">DbKeySeg</span>::<span class="ident">StringSeg</span>(<span class="ident">RESERVED_VP_KEY</span>.<span class="ident">to_owned</span>()));
-        <span class="prelude-val">Ok</span>(<span class="ident">Key</span> { <span class="ident">segments</span> })
+        <span class="ident">Key</span> { <span class="ident">segments</span> }
+    }
+
+    <span class="doccomment">/// Check if the given key is a key to a validity predicate.</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_validity_predicate</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
+        <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">segments</span>[..] {
+            [<span class="ident">DbKeySeg</span>::<span class="ident">AddressSeg</span>(<span class="kw">_</span>), <span class="ident">DbKeySeg</span>::<span class="ident">StringSeg</span>(<span class="ident">sub_key</span>)]
+                <span class="kw">if</span> <span class="ident">sub_key</span> <span class="op">=</span><span class="op">=</span> <span class="ident">RESERVED_VP_KEY</span> <span class="op">=</span><span class="op">&gt;</span>
+            {
+                <span class="bool-val">true</span>
+            }
+            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">false</span>,
+        }
     }
 }
 
@@ -951,8 +974,7 @@
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">arb_key</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="kw">impl</span> <span class="ident">Strategy</span><span class="op">&lt;</span><span class="ident">Value</span> <span class="op">=</span> <span class="ident">Key</span><span class="op">&gt;</span> {
         <span class="macro">prop_oneof</span><span class="macro">!</span>[
             <span class="comment">// a key for a validity predicate</span>
-            <span class="ident">arb_address</span>()
-                .<span class="ident">prop_map</span>(<span class="op">|</span><span class="ident">addr</span><span class="op">|</span> <span class="ident">Key</span>::<span class="ident">validity_predicate</span>(<span class="kw-2">&amp;</span><span class="ident">addr</span>).<span class="ident">unwrap</span>()),
+            <span class="ident">arb_address</span>().<span class="ident">prop_map</span>(<span class="op">|</span><span class="ident">addr</span><span class="op">|</span> <span class="ident">Key</span>::<span class="ident">validity_predicate</span>(<span class="kw-2">&amp;</span><span class="ident">addr</span>)),
             <span class="comment">// a key from key segments</span>
             <span class="ident">collection</span>::<span class="ident">vec</span>(<span class="ident">arb_key_seg</span>(), <span class="number">1</span>..<span class="number">5</span>)
                 .<span class="ident">prop_map</span>(<span class="op">|</span><span class="ident">segments</span><span class="op">|</span> { <span class="ident">Key</span> { <span class="ident">segments</span> } }),

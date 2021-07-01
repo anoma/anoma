@@ -163,6 +163,10 @@
 <span id="160">160</span>
 <span id="161">161</span>
 <span id="162">162</span>
+<span id="163">163</span>
+<span id="164">164</span>
+<span id="165">165</span>
+<span id="166">166</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">collections</span>::<span class="ident">HashSet</span>;
 
@@ -273,7 +277,9 @@
                             <span class="kw">let</span> <span class="ident">env</span> <span class="op">=</span> <span class="ident">env</span>.<span class="ident">borrow_mut</span>();
                             <span class="kw">let</span> <span class="ident">env</span> <span class="op">=</span> <span class="ident">env</span>.<span class="ident">as_ref</span>().<span class="ident">expect</span>(<span class="string">&quot;Did you forget to initialize the ENV?&quot;</span>);
 
-                            <span class="macro-nonterminal">$</span><span class="kw">fn</span>( <span class="kw-2">&amp;</span><span class="macro-nonterminal">env</span>, $(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">arg</span>),<span class="op">*</span> )
+                            <span class="comment">// Call the `host_env` function and unwrap any</span>
+                            <span class="comment">// runtime errors</span>
+                            <span class="macro-nonterminal">$</span><span class="kw">fn</span>( <span class="kw-2">&amp;</span><span class="macro-nonterminal">env</span>, $(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">arg</span>),<span class="op">*</span> ).<span class="ident">unwrap</span>()
                         })
                     }
                 });
@@ -288,7 +294,9 @@
                             <span class="kw">let</span> <span class="ident">env</span> <span class="op">=</span> <span class="ident">env</span>.<span class="ident">borrow_mut</span>();
                             <span class="kw">let</span> <span class="ident">env</span> <span class="op">=</span> <span class="ident">env</span>.<span class="ident">as_ref</span>().<span class="ident">expect</span>(<span class="string">&quot;Did you forget to initialize the ENV?&quot;</span>);
 
-                            <span class="macro-nonterminal">$</span><span class="kw">fn</span>( <span class="kw-2">&amp;</span><span class="macro-nonterminal">env</span>, $(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">arg</span>),<span class="op">*</span> )
+                            <span class="comment">// Call the `host_env` function and unwrap any</span>
+                            <span class="comment">// runtime errors</span>
+                            <span class="macro-nonterminal">$</span><span class="kw">fn</span>( <span class="kw-2">&amp;</span><span class="macro-nonterminal">env</span>, $(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">arg</span>),<span class="op">*</span> ).<span class="ident">unwrap</span>()
                         })
                     }
                 });

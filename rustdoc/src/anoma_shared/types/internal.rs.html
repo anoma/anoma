@@ -42,7 +42,7 @@
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">HostEnvResult</span> {
     <span class="doccomment">/// A success</span>
     <span class="ident">Success</span> <span class="op">=</span> <span class="number">1</span>,
-    <span class="doccomment">/// A failure</span>
+    <span class="doccomment">/// A non-fatal failure does **not** interrupt WASM execution</span>
     <span class="ident">Fail</span> <span class="op">=</span> <span class="op">-</span><span class="number">1</span>,
 }
 
@@ -57,7 +57,7 @@
         <span class="ident">int</span> <span class="op">=</span><span class="op">=</span> <span class="self">Self</span>::<span class="ident">Success</span>.<span class="ident">to_i64</span>()
     }
 
-    <span class="doccomment">/// Check if the given result as `i64` is a failure</span>
+    <span class="doccomment">/// Check if the given result as `i64` is a non-fatal failure</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_fail</span>(<span class="ident">int</span>: <span class="ident">i64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
         <span class="ident">int</span> <span class="op">=</span><span class="op">=</span> <span class="self">Self</span>::<span class="ident">Fail</span>.<span class="ident">to_i64</span>()
     }

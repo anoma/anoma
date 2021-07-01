@@ -1426,32 +1426,147 @@
 <span id="1423">1423</span>
 <span id="1424">1424</span>
 <span id="1425">1425</span>
+<span id="1426">1426</span>
+<span id="1427">1427</span>
+<span id="1428">1428</span>
+<span id="1429">1429</span>
+<span id="1430">1430</span>
+<span id="1431">1431</span>
+<span id="1432">1432</span>
+<span id="1433">1433</span>
+<span id="1434">1434</span>
+<span id="1435">1435</span>
+<span id="1436">1436</span>
+<span id="1437">1437</span>
+<span id="1438">1438</span>
+<span id="1439">1439</span>
+<span id="1440">1440</span>
+<span id="1441">1441</span>
+<span id="1442">1442</span>
+<span id="1443">1443</span>
+<span id="1444">1444</span>
+<span id="1445">1445</span>
+<span id="1446">1446</span>
+<span id="1447">1447</span>
+<span id="1448">1448</span>
+<span id="1449">1449</span>
+<span id="1450">1450</span>
+<span id="1451">1451</span>
+<span id="1452">1452</span>
+<span id="1453">1453</span>
+<span id="1454">1454</span>
+<span id="1455">1455</span>
+<span id="1456">1456</span>
+<span id="1457">1457</span>
+<span id="1458">1458</span>
+<span id="1459">1459</span>
+<span id="1460">1460</span>
+<span id="1461">1461</span>
+<span id="1462">1462</span>
+<span id="1463">1463</span>
+<span id="1464">1464</span>
+<span id="1465">1465</span>
+<span id="1466">1466</span>
+<span id="1467">1467</span>
+<span id="1468">1468</span>
+<span id="1469">1469</span>
+<span id="1470">1470</span>
+<span id="1471">1471</span>
+<span id="1472">1472</span>
+<span id="1473">1473</span>
+<span id="1474">1474</span>
+<span id="1475">1475</span>
+<span id="1476">1476</span>
+<span id="1477">1477</span>
+<span id="1478">1478</span>
+<span id="1479">1479</span>
+<span id="1480">1480</span>
+<span id="1481">1481</span>
+<span id="1482">1482</span>
+<span id="1483">1483</span>
+<span id="1484">1484</span>
+<span id="1485">1485</span>
+<span id="1486">1486</span>
+<span id="1487">1487</span>
+<span id="1488">1488</span>
+<span id="1489">1489</span>
+<span id="1490">1490</span>
+<span id="1491">1491</span>
+<span id="1492">1492</span>
+<span id="1493">1493</span>
+<span id="1494">1494</span>
+<span id="1495">1495</span>
+<span id="1496">1496</span>
+<span id="1497">1497</span>
+<span id="1498">1498</span>
+<span id="1499">1499</span>
+<span id="1500">1500</span>
+<span id="1501">1501</span>
+<span id="1502">1502</span>
+<span id="1503">1503</span>
+<span id="1504">1504</span>
+<span id="1505">1505</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Virtual machine&#39;s host environment exposes functions that may be called from</span>
 <span class="doccomment">//! within a virtual machine.</span>
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">collections</span>::<span class="ident">HashSet</span>;
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">convert</span>::<span class="ident">TryInto</span>;
+<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">num</span>::<span class="ident">TryFromIntError</span>;
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">sync</span>::{<span class="ident">Arc</span>, <span class="ident">Mutex</span>};
 
 <span class="kw">use</span> <span class="ident">borsh</span>::{<span class="ident">BorshDeserialize</span>, <span class="ident">BorshSerialize</span>};
+<span class="kw">use</span> <span class="ident">thiserror</span>::<span class="ident">Error</span>;
 
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">gossip</span>::<span class="ident">mm</span>::<span class="ident">MmHost</span>;
-<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">ledger</span>::<span class="ident">gas</span>::{<span class="ident">BlockGasMeter</span>, <span class="ident">VpGasMeter</span>};
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">ledger</span>::<span class="ident">gas</span>::{<span class="self">self</span>, <span class="ident">BlockGasMeter</span>, <span class="ident">VpGasMeter</span>};
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">ledger</span>::<span class="ident">storage</span>::<span class="ident">write_log</span>::{<span class="self">self</span>, <span class="ident">WriteLog</span>};
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">ledger</span>::<span class="ident">storage</span>::{<span class="self">self</span>, <span class="ident">Storage</span>, <span class="ident">StorageHasher</span>};
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">ledger</span>::<span class="ident">vp_env</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">proto</span>::<span class="ident">Tx</span>;
-<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">types</span>::<span class="ident">address</span>::<span class="ident">Address</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">types</span>::<span class="ident">address</span>::{<span class="self">self</span>, <span class="ident">Address</span>};
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">types</span>::<span class="ident">internal</span>::<span class="ident">HostEnvResult</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">types</span>::<span class="ident">key</span>::<span class="ident">ed25519</span>::{<span class="ident">verify_tx_sig</span>, <span class="ident">PublicKey</span>, <span class="ident">Signature</span>};
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">types</span>::<span class="ident">storage</span>::<span class="ident">Key</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">vm</span>::<span class="ident">memory</span>::<span class="ident">VmMemory</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">vm</span>::<span class="ident">prefix_iter</span>::{<span class="ident">PrefixIteratorId</span>, <span class="ident">PrefixIterators</span>};
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">vm</span>::<span class="ident">types</span>::<span class="ident">KeyVal</span>;
-<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">vm</span>::{<span class="ident">HostRef</span>, <span class="ident">MutHostRef</span>};
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">vm</span>::{
+    <span class="ident">validate_untrusted_wasm</span>, <span class="ident">HostRef</span>, <span class="ident">MutHostRef</span>, <span class="ident">WasmValidationError</span>,
+};
 
 <span class="kw">const</span> <span class="ident">VERIFY_TX_SIG_GAS_COST</span>: <span class="ident">u64</span> <span class="op">=</span> <span class="number">1000</span>;
 <span class="kw">const</span> <span class="ident">WASM_VALIDATION_GAS_PER_BYTE</span>: <span class="ident">u64</span> <span class="op">=</span> <span class="number">1</span>;
+
+<span class="doccomment">/// These runtime errors will abort tx WASM execution immediately</span>
+<span class="attribute">#[<span class="ident">allow</span>(<span class="ident">missing_docs</span>)]</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Error</span>, <span class="ident">Debug</span>)]</span>
+<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">TxRuntimeError</span> {
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Out of gas: {0}&quot;</span>)]</span>
+    <span class="ident">OutOfGas</span>(<span class="ident">gas</span>::<span class="ident">Error</span>),
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Trying to modify storage for an address that doesn&#39;t exit {0}&quot;</span>)]</span>
+    <span class="ident">UnknownAddressStorageModification</span>(<span class="ident">Address</span>),
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Trying to update a validity predicate with an invalid WASM {0}&quot;</span>)]</span>
+    <span class="ident">UpdateVpInvalid</span>(<span class="ident">WasmValidationError</span>),
+    <span class="attribute">#[<span class="ident">error</span>(
+        <span class="string">&quot;Trying to initialize an account with an invalid validity predicate \
+         WASM {0}&quot;</span>
+    )]</span>
+    <span class="ident">InitAccountInvalidVpWasm</span>(<span class="ident">WasmValidationError</span>),
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Storage modification error: {0}&quot;</span>)]</span>
+    <span class="ident">StorageModificationError</span>(<span class="ident">write_log</span>::<span class="ident">Error</span>),
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Storage error: {0}&quot;</span>)]</span>
+    <span class="ident">StorageError</span>(<span class="ident">storage</span>::<span class="ident">Error</span>),
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Storage data error: {0}&quot;</span>)]</span>
+    <span class="ident">StorageDataError</span>(<span class="kw">crate</span>::<span class="ident">types</span>::<span class="ident">storage</span>::<span class="ident">Error</span>),
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Encoding error: {0}&quot;</span>)]</span>
+    <span class="ident">EncodingError</span>(<span class="ident">std</span>::<span class="ident">io</span>::<span class="ident">Error</span>),
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Address error: {0}&quot;</span>)]</span>
+    <span class="ident">AddressError</span>(<span class="ident">address</span>::<span class="ident">Error</span>),
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Numeric conversion error: {0}&quot;</span>)]</span>
+    <span class="ident">NumConversionError</span>(<span class="ident">TryFromIntError</span>),
+}
+
+<span class="kw">type</span> <span class="ident">TxResult</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">std</span>::<span class="ident">result</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">TxRuntimeError</span><span class="op">&gt;</span>;
 
 <span class="doccomment">/// A transaction&#39;s host environment</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">TxEnv</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">MEM</span>, <span class="ident">DB</span>, <span class="ident">H</span><span class="op">&gt;</span>
@@ -1807,17 +1922,28 @@
 }
 
 <span class="doccomment">/// Called from tx wasm to request to use the given gas amount</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">tx_charge_gas</span><span class="op">&lt;</span><span class="ident">MEM</span>, <span class="ident">DB</span>, <span class="ident">H</span><span class="op">&gt;</span>(<span class="ident">env</span>: <span class="kw-2">&amp;</span><span class="ident">TxEnv</span><span class="op">&lt;</span><span class="ident">MEM</span>, <span class="ident">DB</span>, <span class="ident">H</span><span class="op">&gt;</span>, <span class="ident">used_gas</span>: <span class="ident">i32</span>)
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">tx_charge_gas</span><span class="op">&lt;</span><span class="ident">MEM</span>, <span class="ident">DB</span>, <span class="ident">H</span><span class="op">&gt;</span>(
+    <span class="ident">env</span>: <span class="kw-2">&amp;</span><span class="ident">TxEnv</span><span class="op">&lt;</span><span class="ident">MEM</span>, <span class="ident">DB</span>, <span class="ident">H</span><span class="op">&gt;</span>,
+    <span class="ident">used_gas</span>: <span class="ident">i32</span>,
+) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">TxResult</span><span class="op">&lt;</span>()<span class="op">&gt;</span>
 <span class="kw">where</span>
     <span class="ident">MEM</span>: <span class="ident">VmMemory</span>,
     <span class="ident">DB</span>: <span class="ident">storage</span>::<span class="ident">DB</span> <span class="op">+</span> <span class="kw">for</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span> <span class="ident">storage</span>::<span class="ident">DBIter</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span>,
     <span class="ident">H</span>: <span class="ident">StorageHasher</span>,
 {
-    <span class="ident">tx_add_gas</span>(<span class="ident">env</span>, <span class="ident">used_gas</span> <span class="kw">as</span> <span class="kw">_</span>)
+    <span class="ident">tx_add_gas</span>(
+        <span class="ident">env</span>,
+        <span class="ident">used_gas</span>
+            .<span class="ident">try_into</span>()
+            .<span class="ident">map_err</span>(<span class="ident">TxRuntimeError</span>::<span class="ident">NumConversionError</span>)<span class="question-mark">?</span>,
+    )
 }
 
 <span class="doccomment">/// Add a gas cost incured in a transaction</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">tx_add_gas</span><span class="op">&lt;</span><span class="ident">MEM</span>, <span class="ident">DB</span>, <span class="ident">H</span><span class="op">&gt;</span>(<span class="ident">env</span>: <span class="kw-2">&amp;</span><span class="ident">TxEnv</span><span class="op">&lt;</span><span class="ident">MEM</span>, <span class="ident">DB</span>, <span class="ident">H</span><span class="op">&gt;</span>, <span class="ident">used_gas</span>: <span class="ident">u64</span>)
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">tx_add_gas</span><span class="op">&lt;</span><span class="ident">MEM</span>, <span class="ident">DB</span>, <span class="ident">H</span><span class="op">&gt;</span>(
+    <span class="ident">env</span>: <span class="kw-2">&amp;</span><span class="ident">TxEnv</span><span class="op">&lt;</span><span class="ident">MEM</span>, <span class="ident">DB</span>, <span class="ident">H</span><span class="op">&gt;</span>,
+    <span class="ident">used_gas</span>: <span class="ident">u64</span>,
+) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">TxResult</span><span class="op">&lt;</span>()<span class="op">&gt;</span>
 <span class="kw">where</span>
     <span class="ident">MEM</span>: <span class="ident">VmMemory</span>,
     <span class="ident">DB</span>: <span class="ident">storage</span>::<span class="ident">DB</span> <span class="op">+</span> <span class="kw">for</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span> <span class="ident">storage</span>::<span class="ident">DBIter</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span>,
@@ -1825,40 +1951,34 @@
 {
     <span class="kw">let</span> <span class="ident">gas_meter</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">env</span>.<span class="ident">ctx</span>.<span class="ident">gas_meter</span>.<span class="ident">get</span>() };
     <span class="comment">// if we run out of gas, we need to stop the execution</span>
-    <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Err</span>(<span class="ident">err</span>) <span class="op">=</span> <span class="ident">gas_meter</span>.<span class="ident">add</span>(<span class="ident">used_gas</span>) {
-        <span class="ident">tracing</span>::<span class="macro">warn</span><span class="macro">!</span>(
+    <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">gas_meter</span>.<span class="ident">add</span>(<span class="ident">used_gas</span>).<span class="ident">map_err</span>(<span class="ident">TxRuntimeError</span>::<span class="ident">OutOfGas</span>);
+    <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Err</span>(<span class="ident">err</span>) <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">result</span> {
+        <span class="ident">tracing</span>::<span class="macro">info</span><span class="macro">!</span>(
             <span class="string">&quot;Stopping transaction execution because of gas error: {}&quot;</span>,
             <span class="ident">err</span>
         );
-        <span class="macro">unreachable</span><span class="macro">!</span>()
     }
+    <span class="ident">result</span>
 }
 
 <span class="doccomment">/// Called from VP wasm to request to use the given gas amount</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">vp_charge_gas</span><span class="op">&lt;</span><span class="ident">MEM</span>, <span class="ident">DB</span>, <span class="ident">H</span>, <span class="ident">EVAL</span><span class="op">&gt;</span>(
     <span class="ident">env</span>: <span class="kw-2">&amp;</span><span class="ident">VpEnv</span><span class="op">&lt;</span><span class="ident">MEM</span>, <span class="ident">DB</span>, <span class="ident">H</span>, <span class="ident">EVAL</span><span class="op">&gt;</span>,
     <span class="ident">used_gas</span>: <span class="ident">i32</span>,
-) <span class="kw">where</span>
+) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">vp_env</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span>
+<span class="kw">where</span>
     <span class="ident">MEM</span>: <span class="ident">VmMemory</span>,
     <span class="ident">DB</span>: <span class="ident">storage</span>::<span class="ident">DB</span> <span class="op">+</span> <span class="kw">for</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span> <span class="ident">storage</span>::<span class="ident">DBIter</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span>,
     <span class="ident">H</span>: <span class="ident">StorageHasher</span>,
     <span class="ident">EVAL</span>: <span class="ident">VpEvaluator</span>,
 {
     <span class="kw">let</span> <span class="ident">gas_meter</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">env</span>.<span class="ident">ctx</span>.<span class="ident">gas_meter</span>.<span class="ident">get</span>() };
-    <span class="ident">vp_gas_check</span>(<span class="ident">vp_env</span>::<span class="ident">add_gas</span>(<span class="ident">gas_meter</span>, <span class="ident">used_gas</span> <span class="kw">as</span> <span class="kw">_</span>))
-}
-
-<span class="kw">fn</span> <span class="ident">vp_gas_check</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="ident">result</span>: <span class="ident">vp_env</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">T</span> {
-    <span class="kw">match</span> <span class="ident">result</span> {
-        <span class="prelude-val">Ok</span>(<span class="ident">ok</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ok</span>,
-        <span class="prelude-val">Err</span>(<span class="ident">err</span>) <span class="op">=</span><span class="op">&gt;</span> {
-            <span class="ident">tracing</span>::<span class="macro">warn</span><span class="macro">!</span>(
-                <span class="string">&quot;Stopping transaction execution because of gas error: {}&quot;</span>,
-                <span class="ident">err</span>
-            );
-            <span class="macro">unreachable</span><span class="macro">!</span>()
-        }
-    }
+    <span class="ident">vp_env</span>::<span class="ident">add_gas</span>(
+        <span class="ident">gas_meter</span>,
+        <span class="ident">used_gas</span>
+            .<span class="ident">try_into</span>()
+            .<span class="ident">map_err</span>(<span class="ident">vp_env</span>::<span class="ident">RuntimeError</span>::<span class="ident">NumConversionError</span>)<span class="question-mark">?</span>,
+    )
 }
 
 <span class="doccomment">/// Storage `has_key` function exposed to the wasm VM Tx environment. It will</span>
@@ -1867,24 +1987,24 @@
     <span class="ident">env</span>: <span class="kw-2">&amp;</span><span class="ident">TxEnv</span><span class="op">&lt;</span><span class="ident">MEM</span>, <span class="ident">DB</span>, <span class="ident">H</span><span class="op">&gt;</span>,
     <span class="ident">key_ptr</span>: <span class="ident">u64</span>,
     <span class="ident">key_len</span>: <span class="ident">u64</span>,
-) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">i64</span>
+) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">TxResult</span><span class="op">&lt;</span><span class="ident">i64</span><span class="op">&gt;</span>
 <span class="kw">where</span>
     <span class="ident">MEM</span>: <span class="ident">VmMemory</span>,
     <span class="ident">DB</span>: <span class="ident">storage</span>::<span class="ident">DB</span> <span class="op">+</span> <span class="kw">for</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span> <span class="ident">storage</span>::<span class="ident">DBIter</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span>,
     <span class="ident">H</span>: <span class="ident">StorageHasher</span>,
 {
     <span class="kw">let</span> (<span class="ident">key</span>, <span class="ident">gas</span>) <span class="op">=</span> <span class="ident">env</span>.<span class="ident">memory</span>.<span class="ident">read_string</span>(<span class="ident">key_ptr</span>, <span class="ident">key_len</span> <span class="kw">as</span> <span class="kw">_</span>);
-    <span class="ident">tx_add_gas</span>(<span class="ident">env</span>, <span class="ident">gas</span>);
+    <span class="ident">tx_add_gas</span>(<span class="ident">env</span>, <span class="ident">gas</span>)<span class="question-mark">?</span>;
 
     <span class="ident">tracing</span>::<span class="macro">debug</span><span class="macro">!</span>(<span class="string">&quot;tx_has_key {}, key {}&quot;</span>, <span class="ident">key</span>, <span class="ident">key_ptr</span>,);
 
-    <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Key</span>::<span class="ident">parse</span>(<span class="ident">key</span>).<span class="ident">expect</span>(<span class="string">&quot;Cannot parse the key string&quot;</span>);
+    <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Key</span>::<span class="ident">parse</span>(<span class="ident">key</span>).<span class="ident">map_err</span>(<span class="ident">TxRuntimeError</span>::<span class="ident">StorageDataError</span>)<span class="question-mark">?</span>;
 
     <span class="comment">// try to read from the write log first</span>
     <span class="kw">let</span> <span class="ident">write_log</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">env</span>.<span class="ident">ctx</span>.<span class="ident">write_log</span>.<span class="ident">get</span>() };
     <span class="kw">let</span> (<span class="ident">log_val</span>, <span class="ident">gas</span>) <span class="op">=</span> <span class="ident">write_log</span>.<span class="ident">read</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>);
-    <span class="ident">tx_add_gas</span>(<span class="ident">env</span>, <span class="ident">gas</span>);
-    <span class="kw">match</span> <span class="ident">log_val</span> {
+    <span class="ident">tx_add_gas</span>(<span class="ident">env</span>, <span class="ident">gas</span>)<span class="question-mark">?</span>;
+    <span class="prelude-val">Ok</span>(<span class="kw">match</span> <span class="ident">log_val</span> {
         <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="ident">write_log</span>::<span class="ident">StorageModification</span>::<span class="ident">Write</span> { .. }) <span class="op">=</span><span class="op">&gt;</span> {
             <span class="ident">HostEnvResult</span>::<span class="ident">Success</span>.<span class="ident">to_i64</span>()
         }
@@ -1898,12 +2018,13 @@
         <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> {
             <span class="comment">// when not found in write log, try to check the storage</span>
             <span class="kw">let</span> <span class="ident">storage</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">env</span>.<span class="ident">ctx</span>.<span class="ident">storage</span>.<span class="ident">get</span>() };
-            <span class="kw">let</span> (<span class="ident">present</span>, <span class="ident">gas</span>) <span class="op">=</span>
-                <span class="ident">storage</span>.<span class="ident">has_key</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>).<span class="ident">expect</span>(<span class="string">&quot;storage has_key failed&quot;</span>);
-            <span class="ident">tx_add_gas</span>(<span class="ident">env</span>, <span class="ident">gas</span>);
+            <span class="kw">let</span> (<span class="ident">present</span>, <span class="ident">gas</span>) <span class="op">=</span> <span class="ident">storage</span>
+                .<span class="ident">has_key</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>)
+                .<span class="ident">map_err</span>(<span class="ident">TxRuntimeError</span>::<span class="ident">StorageError</span>)<span class="question-mark">?</span>;
+            <span class="ident">tx_add_gas</span>(<span class="ident">env</span>, <span class="ident">gas</span>)<span class="question-mark">?</span>;
             <span class="ident">HostEnvResult</span>::<span class="ident">from</span>(<span class="ident">present</span>).<span class="ident">to_i64</span>()
         }
-    }
+    })
 }
 
 <span class="doccomment">/// Storage read function exposed to the wasm VM Tx environment. It will try to</span>
@@ -1915,27 +2036,29 @@
     <span class="ident">env</span>: <span class="kw-2">&amp;</span><span class="ident">TxEnv</span><span class="op">&lt;</span><span class="ident">MEM</span>, <span class="ident">DB</span>, <span class="ident">H</span><span class="op">&gt;</span>,
     <span class="ident">key_ptr</span>: <span class="ident">u64</span>,
     <span class="ident">key_len</span>: <span class="ident">u64</span>,
-) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">i64</span>
+) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">TxResult</span><span class="op">&lt;</span><span class="ident">i64</span><span class="op">&gt;</span>
 <span class="kw">where</span>
     <span class="ident">MEM</span>: <span class="ident">VmMemory</span>,
     <span class="ident">DB</span>: <span class="ident">storage</span>::<span class="ident">DB</span> <span class="op">+</span> <span class="kw">for</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span> <span class="ident">storage</span>::<span class="ident">DBIter</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span>,
     <span class="ident">H</span>: <span class="ident">StorageHasher</span>,
 {
     <span class="kw">let</span> (<span class="ident">key</span>, <span class="ident">gas</span>) <span class="op">=</span> <span class="ident">env</span>.<span class="ident">memory</span>.<span class="ident">read_string</span>(<span class="ident">key_ptr</span>, <span class="ident">key_len</span> <span class="kw">as</span> <span class="kw">_</span>);
-    <span class="ident">tx_add_gas</span>(<span class="ident">env</span>, <span class="ident">gas</span>);
+    <span class="ident">tx_add_gas</span>(<span class="ident">env</span>, <span class="ident">gas</span>)<span class="question-mark">?</span>;
 
     <span class="ident">tracing</span>::<span class="macro">debug</span><span class="macro">!</span>(<span class="string">&quot;tx_read {}, key {}&quot;</span>, <span class="ident">key</span>, <span class="ident">key_ptr</span>,);
 
-    <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Key</span>::<span class="ident">parse</span>(<span class="ident">key</span>).<span class="ident">expect</span>(<span class="string">&quot;Cannot parse the key string&quot;</span>);
+    <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Key</span>::<span class="ident">parse</span>(<span class="ident">key</span>).<span class="ident">map_err</span>(<span class="ident">TxRuntimeError</span>::<span class="ident">StorageDataError</span>)<span class="question-mark">?</span>;
 
     <span class="comment">// try to read from the write log first</span>
     <span class="kw">let</span> <span class="ident">write_log</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">env</span>.<span class="ident">ctx</span>.<span class="ident">write_log</span>.<span class="ident">get</span>() };
     <span class="kw">let</span> (<span class="ident">log_val</span>, <span class="ident">gas</span>) <span class="op">=</span> <span class="ident">write_log</span>.<span class="ident">read</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>);
-    <span class="ident">tx_add_gas</span>(<span class="ident">env</span>, <span class="ident">gas</span>);
-    <span class="kw">match</span> <span class="ident">log_val</span> {
+    <span class="ident">tx_add_gas</span>(<span class="ident">env</span>, <span class="ident">gas</span>)<span class="question-mark">?</span>;
+    <span class="prelude-val">Ok</span>(<span class="kw">match</span> <span class="ident">log_val</span> {
         <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="ident">write_log</span>::<span class="ident">StorageModification</span>::<span class="ident">Write</span> { <span class="kw-2">ref</span> <span class="ident">value</span> }) <span class="op">=</span><span class="op">&gt;</span> {
-            <span class="kw">let</span> <span class="ident">len</span>: <span class="ident">i64</span> <span class="op">=</span>
-                <span class="ident">value</span>.<span class="ident">len</span>().<span class="ident">try_into</span>().<span class="ident">expect</span>(<span class="string">&quot;data length overflow&quot;</span>);
+            <span class="kw">let</span> <span class="ident">len</span>: <span class="ident">i64</span> <span class="op">=</span> <span class="ident">value</span>
+                .<span class="ident">len</span>()
+                .<span class="ident">try_into</span>()
+                .<span class="ident">map_err</span>(<span class="ident">TxRuntimeError</span>::<span class="ident">NumConversionError</span>)<span class="question-mark">?</span>;
             <span class="kw">let</span> <span class="ident">result_buffer</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">env</span>.<span class="ident">ctx</span>.<span class="ident">result_buffer</span>.<span class="ident">get</span>() };
             <span class="ident">result_buffer</span>.<span class="ident">replace</span>(<span class="ident">value</span>.<span class="ident">clone</span>());
             <span class="ident">len</span>
@@ -1948,7 +2071,10 @@
             <span class="kw-2">ref</span> <span class="ident">vp</span>, ..
         }) <span class="op">=</span><span class="op">&gt;</span> {
             <span class="comment">// read the VP of a new account</span>
-            <span class="kw">let</span> <span class="ident">len</span>: <span class="ident">i64</span> <span class="op">=</span> <span class="ident">vp</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="kw">_</span>;
+            <span class="kw">let</span> <span class="ident">len</span>: <span class="ident">i64</span> <span class="op">=</span> <span class="ident">vp</span>
+                .<span class="ident">len</span>()
+                .<span class="ident">try_into</span>()
+                .<span class="ident">map_err</span>(<span class="ident">TxRuntimeError</span>::<span class="ident">NumConversionError</span>)<span class="question-mark">?</span>;
             <span class="kw">let</span> <span class="ident">result_buffer</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">env</span>.<span class="ident">ctx</span>.<span class="ident">result_buffer</span>.<span class="ident">get</span>() };
             <span class="ident">result_buffer</span>.<span class="ident">replace</span>(<span class="ident">vp</span>.<span class="ident">clone</span>());
             <span class="ident">len</span>
@@ -1956,12 +2082,15 @@
         <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> {
             <span class="comment">// when not found in write log, try to read from the storage</span>
             <span class="kw">let</span> <span class="ident">storage</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">env</span>.<span class="ident">ctx</span>.<span class="ident">storage</span>.<span class="ident">get</span>() };
-            <span class="kw">let</span> (<span class="ident">value</span>, <span class="ident">gas</span>) <span class="op">=</span> <span class="ident">storage</span>.<span class="ident">read</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>).<span class="ident">expect</span>(<span class="string">&quot;storage read failed&quot;</span>);
-            <span class="ident">tx_add_gas</span>(<span class="ident">env</span>, <span class="ident">gas</span>);
+            <span class="kw">let</span> (<span class="ident">value</span>, <span class="ident">gas</span>) <span class="op">=</span>
+                <span class="ident">storage</span>.<span class="ident">read</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>).<span class="ident">map_err</span>(<span class="ident">TxRuntimeError</span>::<span class="ident">StorageError</span>)<span class="question-mark">?</span>;
+            <span class="ident">tx_add_gas</span>(<span class="ident">env</span>, <span class="ident">gas</span>)<span class="question-mark">?</span>;
             <span class="kw">match</span> <span class="ident">value</span> {
                 <span class="prelude-val">Some</span>(<span class="ident">value</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                    <span class="kw">let</span> <span class="ident">len</span>: <span class="ident">i64</span> <span class="op">=</span>
-                        <span class="ident">value</span>.<span class="ident">len</span>().<span class="ident">try_into</span>().<span class="ident">expect</span>(<span class="string">&quot;data length overflow&quot;</span>);
+                    <span class="kw">let</span> <span class="ident">len</span>: <span class="ident">i64</span> <span class="op">=</span> <span class="ident">value</span>
+                        .<span class="ident">len</span>()
+                        .<span class="ident">try_into</span>()
+                        .<span class="ident">map_err</span>(<span class="ident">TxRuntimeError</span>::<span class="ident">NumConversionError</span>)<span class="question-mark">?</span>;
                     <span class="kw">let</span> <span class="ident">result_buffer</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">env</span>.<span class="ident">ctx</span>.<span class="ident">result_buffer</span>.<span class="ident">get</span>() };
                     <span class="ident">result_buffer</span>.<span class="ident">replace</span>(<span class="ident">value</span>);
                     <span class="ident">len</span>
@@ -1969,7 +2098,7 @@
                 <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">HostEnvResult</span>::<span class="ident">Fail</span>.<span class="ident">to_i64</span>(),
             }
         }
-    }
+    })
 }
 
 <span class="doccomment">/// This function is a helper to handle the first step of reading var-len</span>
@@ -1980,7 +2109,10 @@
 <span class="doccomment">/// first step reads the value into a result buffer and returns the size (if</span>
 <span class="doccomment">/// any) back to the guest, the second step reads the value from cache into a</span>
 <span class="doccomment">/// pre-allocated buffer with the obtained size.</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">tx_result_buffer</span><span class="op">&lt;</span><span class="ident">MEM</span>, <span class="ident">DB</span>, <span class="ident">H</span><span class="op">&gt;</span>(<span class="ident">env</span>: <span class="kw-2">&amp;</span><span class="ident">TxEnv</span><span class="op">&lt;</span><span class="ident">MEM</span>, <span class="ident">DB</span>, <span class="ident">H</span><span class="op">&gt;</span>, <span class="ident">result_ptr</span>: <span class="ident">u64</span>)
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">tx_result_buffer</span><span class="op">&lt;</span><span class="ident">MEM</span>, <span class="ident">DB</span>, <span class="ident">H</span><span class="op">&gt;</span>(
+    <span class="ident">env</span>: <span class="kw-2">&amp;</span><span class="ident">TxEnv</span><span class="op">&lt;</span><span class="ident">MEM</span>, <span class="ident">DB</span>, <span class="ident">H</span><span class="op">&gt;</span>,
+    <span class="ident">result_ptr</span>: <span class="ident">u64</span>,
+) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">TxResult</span><span class="op">&lt;</span>()<span class="op">&gt;</span>
 <span class="kw">where</span>
     <span class="ident">MEM</span>: <span class="ident">VmMemory</span>,
     <span class="ident">DB</span>: <span class="ident">storage</span>::<span class="ident">DB</span> <span class="op">+</span> <span class="kw">for</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span> <span class="ident">storage</span>::<span class="ident">DBIter</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span>,
@@ -1989,7 +2121,7 @@
     <span class="kw">let</span> <span class="ident">result_buffer</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">env</span>.<span class="ident">ctx</span>.<span class="ident">result_buffer</span>.<span class="ident">get</span>() };
     <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">result_buffer</span>.<span class="ident">take</span>().<span class="ident">unwrap</span>();
     <span class="kw">let</span> <span class="ident">gas</span> <span class="op">=</span> <span class="ident">env</span>.<span class="ident">memory</span>.<span class="ident">write_bytes</span>(<span class="ident">result_ptr</span>, <span class="ident">value</span>);
-    <span class="ident">tx_add_gas</span>(<span class="ident">env</span>, <span class="ident">gas</span>);
+    <span class="ident">tx_add_gas</span>(<span class="ident">env</span>, <span class="ident">gas</span>)
 }
 
 <span class="doccomment">/// Storage prefix iterator function exposed to the wasm VM Tx environment.</span>
@@ -1999,24 +2131,25 @@
     <span class="ident">env</span>: <span class="kw-2">&amp;</span><span class="ident">TxEnv</span><span class="op">&lt;</span><span class="ident">MEM</span>, <span class="ident">DB</span>, <span class="ident">H</span><span class="op">&gt;</span>,
     <span class="ident">prefix_ptr</span>: <span class="ident">u64</span>,
     <span class="ident">prefix_len</span>: <span class="ident">u64</span>,
-) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u64</span>
+) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">TxResult</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span>
 <span class="kw">where</span>
     <span class="ident">MEM</span>: <span class="ident">VmMemory</span>,
     <span class="ident">DB</span>: <span class="ident">storage</span>::<span class="ident">DB</span> <span class="op">+</span> <span class="kw">for</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span> <span class="ident">storage</span>::<span class="ident">DBIter</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span>,
     <span class="ident">H</span>: <span class="ident">StorageHasher</span>,
 {
     <span class="kw">let</span> (<span class="ident">prefix</span>, <span class="ident">gas</span>) <span class="op">=</span> <span class="ident">env</span>.<span class="ident">memory</span>.<span class="ident">read_string</span>(<span class="ident">prefix_ptr</span>, <span class="ident">prefix_len</span> <span class="kw">as</span> <span class="kw">_</span>);
-    <span class="ident">tx_add_gas</span>(<span class="ident">env</span>, <span class="ident">gas</span>);
+    <span class="ident">tx_add_gas</span>(<span class="ident">env</span>, <span class="ident">gas</span>)<span class="question-mark">?</span>;
 
     <span class="ident">tracing</span>::<span class="macro">debug</span><span class="macro">!</span>(<span class="string">&quot;tx_iter_prefix {}, prefix {}&quot;</span>, <span class="ident">prefix</span>, <span class="ident">prefix_ptr</span>);
 
-    <span class="kw">let</span> <span class="ident">prefix</span> <span class="op">=</span> <span class="ident">Key</span>::<span class="ident">parse</span>(<span class="ident">prefix</span>).<span class="ident">expect</span>(<span class="string">&quot;Cannot parse the prefix string&quot;</span>);
+    <span class="kw">let</span> <span class="ident">prefix</span> <span class="op">=</span>
+        <span class="ident">Key</span>::<span class="ident">parse</span>(<span class="ident">prefix</span>).<span class="ident">map_err</span>(<span class="ident">TxRuntimeError</span>::<span class="ident">StorageDataError</span>)<span class="question-mark">?</span>;
 
     <span class="kw">let</span> <span class="ident">storage</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">env</span>.<span class="ident">ctx</span>.<span class="ident">storage</span>.<span class="ident">get</span>() };
     <span class="kw">let</span> <span class="ident">iterators</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">env</span>.<span class="ident">ctx</span>.<span class="ident">iterators</span>.<span class="ident">get</span>() };
     <span class="kw">let</span> (<span class="ident">iter</span>, <span class="ident">gas</span>) <span class="op">=</span> <span class="ident">storage</span>.<span class="ident">iter_prefix</span>(<span class="kw-2">&amp;</span><span class="ident">prefix</span>);
-    <span class="ident">tx_add_gas</span>(<span class="ident">env</span>, <span class="ident">gas</span>);
-    <span class="ident">iterators</span>.<span class="ident">insert</span>(<span class="ident">iter</span>).<span class="ident">id</span>()
+    <span class="ident">tx_add_gas</span>(<span class="ident">env</span>, <span class="ident">gas</span>)<span class="question-mark">?</span>;
+    <span class="prelude-val">Ok</span>(<span class="ident">iterators</span>.<span class="ident">insert</span>(<span class="ident">iter</span>).<span class="ident">id</span>())
 }
 
 <span class="doccomment">/// Storage prefix iterator next function exposed to the wasm VM Tx environment.</span>
@@ -2025,7 +2158,10 @@
 <span class="doccomment">///</span>
 <span class="doccomment">/// Returns `-1` when the key is not present, or the length of the data when</span>
 <span class="doccomment">/// the key is present (the length may be `0`).</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">tx_iter_next</span><span class="op">&lt;</span><span class="ident">MEM</span>, <span class="ident">DB</span>, <span class="ident">H</span><span class="op">&gt;</span>(<span class="ident">env</span>: <span class="kw-2">&amp;</span><span class="ident">TxEnv</span><span class="op">&lt;</span><span class="ident">MEM</span>, <span class="ident">DB</span>, <span class="ident">H</span><span class="op">&gt;</span>, <span class="ident">iter_id</span>: <span class="ident">u64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">i64</span>
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">tx_iter_next</span><span class="op">&lt;</span><span class="ident">MEM</span>, <span class="ident">DB</span>, <span class="ident">H</span><span class="op">&gt;</span>(
+    <span class="ident">env</span>: <span class="kw-2">&amp;</span><span class="ident">TxEnv</span><span class="op">&lt;</span><span class="ident">MEM</span>, <span class="ident">DB</span>, <span class="ident">H</span><span class="op">&gt;</span>,
+    <span class="ident">iter_id</span>: <span class="ident">u64</span>,
+) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">TxResult</span><span class="op">&lt;</span><span class="ident">i64</span><span class="op">&gt;</span>
 <span class="kw">where</span>
     <span class="ident">MEM</span>: <span class="ident">VmMemory</span>,
     <span class="ident">DB</span>: <span class="ident">storage</span>::<span class="ident">DB</span> <span class="op">+</span> <span class="kw">for</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span> <span class="ident">storage</span>::<span class="ident">DBIter</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span>,
@@ -2038,9 +2174,10 @@
     <span class="kw">let</span> <span class="ident">iter_id</span> <span class="op">=</span> <span class="ident">PrefixIteratorId</span>::<span class="ident">new</span>(<span class="ident">iter_id</span>);
     <span class="kw">while</span> <span class="kw">let</span> <span class="prelude-val">Some</span>((<span class="ident">key</span>, <span class="ident">val</span>, <span class="ident">iter_gas</span>)) <span class="op">=</span> <span class="ident">iterators</span>.<span class="ident">next</span>(<span class="ident">iter_id</span>) {
         <span class="kw">let</span> (<span class="ident">log_val</span>, <span class="ident">log_gas</span>) <span class="op">=</span> <span class="ident">write_log</span>.<span class="ident">read</span>(
-            <span class="kw-2">&amp;</span><span class="ident">Key</span>::<span class="ident">parse</span>(<span class="ident">key</span>.<span class="ident">clone</span>()).<span class="ident">expect</span>(<span class="string">&quot;Cannot parse the key string&quot;</span>),
+            <span class="kw-2">&amp;</span><span class="ident">Key</span>::<span class="ident">parse</span>(<span class="ident">key</span>.<span class="ident">clone</span>())
+                .<span class="ident">map_err</span>(<span class="ident">TxRuntimeError</span>::<span class="ident">StorageDataError</span>)<span class="question-mark">?</span>,
         );
-        <span class="ident">tx_add_gas</span>(<span class="ident">env</span>, <span class="ident">iter_gas</span> <span class="op">+</span> <span class="ident">log_gas</span>);
+        <span class="ident">tx_add_gas</span>(<span class="ident">env</span>, <span class="ident">iter_gas</span> <span class="op">+</span> <span class="ident">log_gas</span>)<span class="question-mark">?</span>;
         <span class="kw">match</span> <span class="ident">log_val</span> {
             <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="ident">write_log</span>::<span class="ident">StorageModification</span>::<span class="ident">Write</span> { <span class="kw-2">ref</span> <span class="ident">value</span> }) <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">let</span> <span class="ident">key_val</span> <span class="op">=</span> <span class="ident">KeyVal</span> {
@@ -2048,12 +2185,14 @@
                     <span class="ident">val</span>: <span class="ident">value</span>.<span class="ident">clone</span>(),
                 }
                 .<span class="ident">try_to_vec</span>()
-                .<span class="ident">expect</span>(<span class="string">&quot;cannot serialize the key value pair&quot;</span>);
-                <span class="kw">let</span> <span class="ident">len</span>: <span class="ident">i64</span> <span class="op">=</span>
-                    <span class="ident">key_val</span>.<span class="ident">len</span>().<span class="ident">try_into</span>().<span class="ident">expect</span>(<span class="string">&quot;data length overflow&quot;</span>);
+                .<span class="ident">map_err</span>(<span class="ident">TxRuntimeError</span>::<span class="ident">EncodingError</span>)<span class="question-mark">?</span>;
+                <span class="kw">let</span> <span class="ident">len</span>: <span class="ident">i64</span> <span class="op">=</span> <span class="ident">key_val</span>
+                    .<span class="ident">len</span>()
+                    .<span class="ident">try_into</span>()
+                    .<span class="ident">map_err</span>(<span class="ident">TxRuntimeError</span>::<span class="ident">NumConversionError</span>)<span class="question-mark">?</span>;
                 <span class="kw">let</span> <span class="ident">result_buffer</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">env</span>.<span class="ident">ctx</span>.<span class="ident">result_buffer</span>.<span class="ident">get</span>() };
                 <span class="ident">result_buffer</span>.<span class="ident">replace</span>(<span class="ident">key_val</span>);
-                <span class="kw">return</span> <span class="ident">len</span>;
+                <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="ident">len</span>);
             }
             <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="ident">write_log</span>::<span class="ident">StorageModification</span>::<span class="ident">Delete</span>) <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="comment">// check the next because the key has already deleted</span>
@@ -2066,16 +2205,18 @@
             <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">let</span> <span class="ident">key_val</span> <span class="op">=</span> <span class="ident">KeyVal</span> { <span class="ident">key</span>, <span class="ident">val</span> }
                     .<span class="ident">try_to_vec</span>()
-                    .<span class="ident">expect</span>(<span class="string">&quot;cannot serialize the key value pair&quot;</span>);
-                <span class="kw">let</span> <span class="ident">len</span>: <span class="ident">i64</span> <span class="op">=</span>
-                    <span class="ident">key_val</span>.<span class="ident">len</span>().<span class="ident">try_into</span>().<span class="ident">expect</span>(<span class="string">&quot;data length overflow&quot;</span>);
+                    .<span class="ident">map_err</span>(<span class="ident">TxRuntimeError</span>::<span class="ident">EncodingError</span>)<span class="question-mark">?</span>;
+                <span class="kw">let</span> <span class="ident">len</span>: <span class="ident">i64</span> <span class="op">=</span> <span class="ident">key_val</span>
+                    .<span class="ident">len</span>()
+                    .<span class="ident">try_into</span>()
+                    .<span class="ident">map_err</span>(<span class="ident">TxRuntimeError</span>::<span class="ident">NumConversionError</span>)<span class="question-mark">?</span>;
                 <span class="kw">let</span> <span class="ident">result_buffer</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">env</span>.<span class="ident">ctx</span>.<span class="ident">result_buffer</span>.<span class="ident">get</span>() };
                 <span class="ident">result_buffer</span>.<span class="ident">replace</span>(<span class="ident">key_val</span>);
-                <span class="kw">return</span> <span class="ident">len</span>;
+                <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="ident">len</span>);
             }
         }
     }
-    <span class="ident">HostEnvResult</span>::<span class="ident">Fail</span>.<span class="ident">to_i64</span>()
+    <span class="prelude-val">Ok</span>(<span class="ident">HostEnvResult</span>::<span class="ident">Fail</span>.<span class="ident">to_i64</span>())
 }
 
 <span class="doccomment">/// Storage write function exposed to the wasm VM Tx environment. The given</span>
@@ -2086,19 +2227,20 @@
     <span class="ident">key_len</span>: <span class="ident">u64</span>,
     <span class="ident">val_ptr</span>: <span class="ident">u64</span>,
     <span class="ident">val_len</span>: <span class="ident">u64</span>,
-) <span class="kw">where</span>
+) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">TxResult</span><span class="op">&lt;</span>()<span class="op">&gt;</span>
+<span class="kw">where</span>
     <span class="ident">MEM</span>: <span class="ident">VmMemory</span>,
     <span class="ident">DB</span>: <span class="ident">storage</span>::<span class="ident">DB</span> <span class="op">+</span> <span class="kw">for</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span> <span class="ident">storage</span>::<span class="ident">DBIter</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span>,
     <span class="ident">H</span>: <span class="ident">StorageHasher</span>,
 {
     <span class="kw">let</span> (<span class="ident">key</span>, <span class="ident">gas</span>) <span class="op">=</span> <span class="ident">env</span>.<span class="ident">memory</span>.<span class="ident">read_string</span>(<span class="ident">key_ptr</span>, <span class="ident">key_len</span> <span class="kw">as</span> <span class="kw">_</span>);
-    <span class="ident">tx_add_gas</span>(<span class="ident">env</span>, <span class="ident">gas</span>);
+    <span class="ident">tx_add_gas</span>(<span class="ident">env</span>, <span class="ident">gas</span>)<span class="question-mark">?</span>;
     <span class="kw">let</span> (<span class="ident">value</span>, <span class="ident">gas</span>) <span class="op">=</span> <span class="ident">env</span>.<span class="ident">memory</span>.<span class="ident">read_bytes</span>(<span class="ident">val_ptr</span>, <span class="ident">val_len</span> <span class="kw">as</span> <span class="kw">_</span>);
-    <span class="ident">tx_add_gas</span>(<span class="ident">env</span>, <span class="ident">gas</span>);
+    <span class="ident">tx_add_gas</span>(<span class="ident">env</span>, <span class="ident">gas</span>)<span class="question-mark">?</span>;
 
     <span class="ident">tracing</span>::<span class="macro">debug</span><span class="macro">!</span>(<span class="string">&quot;tx_update {}, {:?}&quot;</span>, <span class="ident">key</span>, <span class="ident">value</span>);
 
-    <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Key</span>::<span class="ident">parse</span>(<span class="ident">key</span>).<span class="ident">expect</span>(<span class="string">&quot;Cannot parse the key string&quot;</span>);
+    <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Key</span>::<span class="ident">parse</span>(<span class="ident">key</span>).<span class="ident">map_err</span>(<span class="ident">TxRuntimeError</span>::<span class="ident">StorageDataError</span>)<span class="question-mark">?</span>;
 
     <span class="comment">// check address existence</span>
     <span class="kw">let</span> <span class="ident">write_log</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">env</span>.<span class="ident">ctx</span>.<span class="ident">write_log</span>.<span class="ident">get</span>() };
@@ -2108,29 +2250,33 @@
         <span class="kw">if</span> <span class="kw">let</span> <span class="ident">Address</span>::<span class="ident">Implicit</span>(<span class="kw">_</span>) <span class="op">|</span> <span class="ident">Address</span>::<span class="ident">Internal</span>(<span class="kw">_</span>) <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">addr</span> {
             <span class="kw">continue</span>;
         }
-        <span class="kw">let</span> <span class="ident">vp_key</span> <span class="op">=</span> <span class="ident">Key</span>::<span class="ident">validity_predicate</span>(<span class="kw-2">&amp;</span><span class="ident">addr</span>)
-            .<span class="ident">expect</span>(<span class="string">&quot;Unable to create a validity predicate key&quot;</span>);
+        <span class="kw">let</span> <span class="ident">vp_key</span> <span class="op">=</span> <span class="ident">Key</span>::<span class="ident">validity_predicate</span>(<span class="kw-2">&amp;</span><span class="ident">addr</span>);
         <span class="kw">let</span> (<span class="ident">vp</span>, <span class="ident">gas</span>) <span class="op">=</span> <span class="ident">write_log</span>.<span class="ident">read</span>(<span class="kw-2">&amp;</span><span class="ident">vp_key</span>);
-        <span class="ident">tx_add_gas</span>(<span class="ident">env</span>, <span class="ident">gas</span>);
+        <span class="ident">tx_add_gas</span>(<span class="ident">env</span>, <span class="ident">gas</span>)<span class="question-mark">?</span>;
         <span class="comment">// just check the existence because the write log should not have the</span>
         <span class="comment">// delete log of the VP</span>
         <span class="kw">if</span> <span class="ident">vp</span>.<span class="ident">is_none</span>() {
-            <span class="kw">let</span> (<span class="ident">is_present</span>, <span class="ident">gas</span>) <span class="op">=</span>
-                <span class="ident">storage</span>.<span class="ident">has_key</span>(<span class="kw-2">&amp;</span><span class="ident">vp_key</span>).<span class="ident">expect</span>(<span class="string">&quot;checking existence failed&quot;</span>);
-            <span class="ident">tx_add_gas</span>(<span class="ident">env</span>, <span class="ident">gas</span>);
+            <span class="kw">let</span> (<span class="ident">is_present</span>, <span class="ident">gas</span>) <span class="op">=</span> <span class="ident">storage</span>
+                .<span class="ident">has_key</span>(<span class="kw-2">&amp;</span><span class="ident">vp_key</span>)
+                .<span class="ident">map_err</span>(<span class="ident">TxRuntimeError</span>::<span class="ident">StorageError</span>)<span class="question-mark">?</span>;
+            <span class="ident">tx_add_gas</span>(<span class="ident">env</span>, <span class="ident">gas</span>)<span class="question-mark">?</span>;
             <span class="kw">if</span> <span class="op">!</span><span class="ident">is_present</span> {
                 <span class="ident">tracing</span>::<span class="macro">info</span><span class="macro">!</span>(
                     <span class="string">&quot;Trying to write into storage with a key containing an \
                      address that doesn&#39;t exist: {}&quot;</span>,
                     <span class="ident">addr</span>
                 );
-                <span class="macro">unreachable</span><span class="macro">!</span>();
+                <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">TxRuntimeError</span>::<span class="ident">UnknownAddressStorageModification</span>(
+                    <span class="ident">addr</span>,
+                ));
             }
         }
     }
 
-    <span class="kw">let</span> (<span class="ident">gas</span>, <span class="ident">_size_diff</span>) <span class="op">=</span> <span class="ident">write_log</span>.<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>, <span class="ident">value</span>);
-    <span class="ident">tx_add_gas</span>(<span class="ident">env</span>, <span class="ident">gas</span>);
+    <span class="kw">let</span> (<span class="ident">gas</span>, <span class="ident">_size_diff</span>) <span class="op">=</span> <span class="ident">write_log</span>
+        .<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>, <span class="ident">value</span>)
+        .<span class="ident">map_err</span>(<span class="ident">TxRuntimeError</span>::<span class="ident">StorageModificationError</span>)<span class="question-mark">?</span>;
+    <span class="ident">tx_add_gas</span>(<span class="ident">env</span>, <span class="ident">gas</span>)
     <span class="comment">// TODO: charge the size diff</span>
 }
 
@@ -2140,21 +2286,24 @@
     <span class="ident">env</span>: <span class="kw-2">&amp;</span><span class="ident">TxEnv</span><span class="op">&lt;</span><span class="ident">MEM</span>, <span class="ident">DB</span>, <span class="ident">H</span><span class="op">&gt;</span>,
     <span class="ident">key_ptr</span>: <span class="ident">u64</span>,
     <span class="ident">key_len</span>: <span class="ident">u64</span>,
-) <span class="kw">where</span>
+) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">TxResult</span><span class="op">&lt;</span>()<span class="op">&gt;</span>
+<span class="kw">where</span>
     <span class="ident">MEM</span>: <span class="ident">VmMemory</span>,
     <span class="ident">DB</span>: <span class="ident">storage</span>::<span class="ident">DB</span> <span class="op">+</span> <span class="kw">for</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span> <span class="ident">storage</span>::<span class="ident">DBIter</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span>,
     <span class="ident">H</span>: <span class="ident">StorageHasher</span>,
 {
     <span class="kw">let</span> (<span class="ident">key</span>, <span class="ident">gas</span>) <span class="op">=</span> <span class="ident">env</span>.<span class="ident">memory</span>.<span class="ident">read_string</span>(<span class="ident">key_ptr</span>, <span class="ident">key_len</span> <span class="kw">as</span> <span class="kw">_</span>);
-    <span class="ident">tx_add_gas</span>(<span class="ident">env</span>, <span class="ident">gas</span>);
+    <span class="ident">tx_add_gas</span>(<span class="ident">env</span>, <span class="ident">gas</span>)<span class="question-mark">?</span>;
 
     <span class="ident">tracing</span>::<span class="macro">debug</span><span class="macro">!</span>(<span class="string">&quot;tx_delete {}&quot;</span>, <span class="ident">key</span>);
 
-    <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Key</span>::<span class="ident">parse</span>(<span class="ident">key</span>).<span class="ident">expect</span>(<span class="string">&quot;Cannot parse the key string&quot;</span>);
+    <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Key</span>::<span class="ident">parse</span>(<span class="ident">key</span>).<span class="ident">map_err</span>(<span class="ident">TxRuntimeError</span>::<span class="ident">StorageDataError</span>)<span class="question-mark">?</span>;
 
     <span class="kw">let</span> <span class="ident">write_log</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">env</span>.<span class="ident">ctx</span>.<span class="ident">write_log</span>.<span class="ident">get</span>() };
-    <span class="kw">let</span> (<span class="ident">gas</span>, <span class="ident">_size_diff</span>) <span class="op">=</span> <span class="ident">write_log</span>.<span class="ident">delete</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>);
-    <span class="ident">tx_add_gas</span>(<span class="ident">env</span>, <span class="ident">gas</span>);
+    <span class="kw">let</span> (<span class="ident">gas</span>, <span class="ident">_size_diff</span>) <span class="op">=</span> <span class="ident">write_log</span>
+        .<span class="ident">delete</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>)
+        .<span class="ident">map_err</span>(<span class="ident">TxRuntimeError</span>::<span class="ident">StorageModificationError</span>)<span class="question-mark">?</span>;
+    <span class="ident">tx_add_gas</span>(<span class="ident">env</span>, <span class="ident">gas</span>)
     <span class="comment">// TODO: charge the size diff</span>
 }
 
@@ -2167,7 +2316,7 @@
     <span class="ident">env</span>: <span class="kw-2">&amp;</span><span class="ident">VpEnv</span><span class="op">&lt;</span><span class="ident">MEM</span>, <span class="ident">DB</span>, <span class="ident">H</span>, <span class="ident">EVAL</span><span class="op">&gt;</span>,
     <span class="ident">key_ptr</span>: <span class="ident">u64</span>,
     <span class="ident">key_len</span>: <span class="ident">u64</span>,
-) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">i64</span>
+) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">vp_env</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">i64</span><span class="op">&gt;</span>
 <span class="kw">where</span>
     <span class="ident">MEM</span>: <span class="ident">VmMemory</span>,
     <span class="ident">DB</span>: <span class="ident">storage</span>::<span class="ident">DB</span> <span class="op">+</span> <span class="kw">for</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span> <span class="ident">storage</span>::<span class="ident">DBIter</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span>,
@@ -2176,28 +2325,31 @@
 {
     <span class="kw">let</span> (<span class="ident">key</span>, <span class="ident">gas</span>) <span class="op">=</span> <span class="ident">env</span>.<span class="ident">memory</span>.<span class="ident">read_string</span>(<span class="ident">key_ptr</span>, <span class="ident">key_len</span> <span class="kw">as</span> <span class="kw">_</span>);
     <span class="kw">let</span> <span class="ident">gas_meter</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">env</span>.<span class="ident">ctx</span>.<span class="ident">gas_meter</span>.<span class="ident">get</span>() };
-    <span class="ident">vp_gas_check</span>(<span class="ident">vp_env</span>::<span class="ident">add_gas</span>(<span class="ident">gas_meter</span>, <span class="ident">gas</span>));
+    <span class="ident">vp_env</span>::<span class="ident">add_gas</span>(<span class="ident">gas_meter</span>, <span class="ident">gas</span>)<span class="question-mark">?</span>;
 
     <span class="comment">// try to read from the storage</span>
-    <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Key</span>::<span class="ident">parse</span>(<span class="ident">key</span>).<span class="ident">expect</span>(<span class="string">&quot;Cannot parse the key string&quot;</span>);
+    <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span>
+        <span class="ident">Key</span>::<span class="ident">parse</span>(<span class="ident">key</span>).<span class="ident">map_err</span>(<span class="ident">vp_env</span>::<span class="ident">RuntimeError</span>::<span class="ident">StorageDataError</span>)<span class="question-mark">?</span>;
     <span class="kw">let</span> <span class="ident">storage</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">env</span>.<span class="ident">ctx</span>.<span class="ident">storage</span>.<span class="ident">get</span>() };
-    <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">vp_gas_check</span>(<span class="ident">vp_env</span>::<span class="ident">read_pre</span>(<span class="ident">gas_meter</span>, <span class="ident">storage</span>, <span class="kw-2">&amp;</span><span class="ident">key</span>));
+    <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">vp_env</span>::<span class="ident">read_pre</span>(<span class="ident">gas_meter</span>, <span class="ident">storage</span>, <span class="kw-2">&amp;</span><span class="ident">key</span>)<span class="question-mark">?</span>;
     <span class="ident">tracing</span>::<span class="macro">debug</span><span class="macro">!</span>(
         <span class="string">&quot;vp_read_pre addr {}, key {}, value {:?}&quot;</span>,
         <span class="kw">unsafe</span> { <span class="ident">env</span>.<span class="ident">ctx</span>.<span class="ident">address</span>.<span class="ident">get</span>() },
         <span class="ident">key</span>,
         <span class="ident">value</span>,
     );
-    <span class="kw">match</span> <span class="ident">value</span> {
+    <span class="prelude-val">Ok</span>(<span class="kw">match</span> <span class="ident">value</span> {
         <span class="prelude-val">Some</span>(<span class="ident">value</span>) <span class="op">=</span><span class="op">&gt;</span> {
-            <span class="kw">let</span> <span class="ident">len</span>: <span class="ident">i64</span> <span class="op">=</span>
-                <span class="ident">value</span>.<span class="ident">len</span>().<span class="ident">try_into</span>().<span class="ident">expect</span>(<span class="string">&quot;data length overflow&quot;</span>);
+            <span class="kw">let</span> <span class="ident">len</span>: <span class="ident">i64</span> <span class="op">=</span> <span class="ident">value</span>
+                .<span class="ident">len</span>()
+                .<span class="ident">try_into</span>()
+                .<span class="ident">map_err</span>(<span class="ident">vp_env</span>::<span class="ident">RuntimeError</span>::<span class="ident">NumConversionError</span>)<span class="question-mark">?</span>;
             <span class="kw">let</span> <span class="ident">result_buffer</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">env</span>.<span class="ident">ctx</span>.<span class="ident">result_buffer</span>.<span class="ident">get</span>() };
             <span class="ident">result_buffer</span>.<span class="ident">replace</span>(<span class="ident">value</span>);
             <span class="ident">len</span>
         }
         <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">HostEnvResult</span>::<span class="ident">Fail</span>.<span class="ident">to_i64</span>(),
-    }
+    })
 }
 
 <span class="doccomment">/// Storage read posterior state (after tx execution) function exposed to the</span>
@@ -2210,7 +2362,7 @@
     <span class="ident">env</span>: <span class="kw-2">&amp;</span><span class="ident">VpEnv</span><span class="op">&lt;</span><span class="ident">MEM</span>, <span class="ident">DB</span>, <span class="ident">H</span>, <span class="ident">EVAL</span><span class="op">&gt;</span>,
     <span class="ident">key_ptr</span>: <span class="ident">u64</span>,
     <span class="ident">key_len</span>: <span class="ident">u64</span>,
-) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">i64</span>
+) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">vp_env</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">i64</span><span class="op">&gt;</span>
 <span class="kw">where</span>
     <span class="ident">MEM</span>: <span class="ident">VmMemory</span>,
     <span class="ident">DB</span>: <span class="ident">storage</span>::<span class="ident">DB</span> <span class="op">+</span> <span class="kw">for</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span> <span class="ident">storage</span>::<span class="ident">DBIter</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span>,
@@ -2219,26 +2371,28 @@
 {
     <span class="kw">let</span> (<span class="ident">key</span>, <span class="ident">gas</span>) <span class="op">=</span> <span class="ident">env</span>.<span class="ident">memory</span>.<span class="ident">read_string</span>(<span class="ident">key_ptr</span>, <span class="ident">key_len</span> <span class="kw">as</span> <span class="kw">_</span>);
     <span class="kw">let</span> <span class="ident">gas_meter</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">env</span>.<span class="ident">ctx</span>.<span class="ident">gas_meter</span>.<span class="ident">get</span>() };
-    <span class="ident">vp_gas_check</span>(<span class="ident">vp_env</span>::<span class="ident">add_gas</span>(<span class="ident">gas_meter</span>, <span class="ident">gas</span>));
+    <span class="ident">vp_env</span>::<span class="ident">add_gas</span>(<span class="ident">gas_meter</span>, <span class="ident">gas</span>)<span class="question-mark">?</span>;
 
     <span class="ident">tracing</span>::<span class="macro">debug</span><span class="macro">!</span>(<span class="string">&quot;vp_read_post {}, key {}&quot;</span>, <span class="ident">key</span>, <span class="ident">key_ptr</span>,);
 
     <span class="comment">// try to read from the write log first</span>
-    <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Key</span>::<span class="ident">parse</span>(<span class="ident">key</span>).<span class="ident">expect</span>(<span class="string">&quot;Cannot parse the key string&quot;</span>);
+    <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span>
+        <span class="ident">Key</span>::<span class="ident">parse</span>(<span class="ident">key</span>).<span class="ident">map_err</span>(<span class="ident">vp_env</span>::<span class="ident">RuntimeError</span>::<span class="ident">StorageDataError</span>)<span class="question-mark">?</span>;
     <span class="kw">let</span> <span class="ident">storage</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">env</span>.<span class="ident">ctx</span>.<span class="ident">storage</span>.<span class="ident">get</span>() };
     <span class="kw">let</span> <span class="ident">write_log</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">env</span>.<span class="ident">ctx</span>.<span class="ident">write_log</span>.<span class="ident">get</span>() };
-    <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span>
-        <span class="ident">vp_gas_check</span>(<span class="ident">vp_env</span>::<span class="ident">read_post</span>(<span class="ident">gas_meter</span>, <span class="ident">storage</span>, <span class="ident">write_log</span>, <span class="kw-2">&amp;</span><span class="ident">key</span>));
-    <span class="kw">match</span> <span class="ident">value</span> {
+    <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">vp_env</span>::<span class="ident">read_post</span>(<span class="ident">gas_meter</span>, <span class="ident">storage</span>, <span class="ident">write_log</span>, <span class="kw-2">&amp;</span><span class="ident">key</span>)<span class="question-mark">?</span>;
+    <span class="prelude-val">Ok</span>(<span class="kw">match</span> <span class="ident">value</span> {
         <span class="prelude-val">Some</span>(<span class="ident">value</span>) <span class="op">=</span><span class="op">&gt;</span> {
-            <span class="kw">let</span> <span class="ident">len</span>: <span class="ident">i64</span> <span class="op">=</span>
-                <span class="ident">value</span>.<span class="ident">len</span>().<span class="ident">try_into</span>().<span class="ident">expect</span>(<span class="string">&quot;data length overflow&quot;</span>);
+            <span class="kw">let</span> <span class="ident">len</span>: <span class="ident">i64</span> <span class="op">=</span> <span class="ident">value</span>
+                .<span class="ident">len</span>()
+                .<span class="ident">try_into</span>()
+                .<span class="ident">map_err</span>(<span class="ident">vp_env</span>::<span class="ident">RuntimeError</span>::<span class="ident">NumConversionError</span>)<span class="question-mark">?</span>;
             <span class="kw">let</span> <span class="ident">result_buffer</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">env</span>.<span class="ident">ctx</span>.<span class="ident">result_buffer</span>.<span class="ident">get</span>() };
             <span class="ident">result_buffer</span>.<span class="ident">replace</span>(<span class="ident">value</span>);
             <span class="ident">len</span>
         }
         <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">HostEnvResult</span>::<span class="ident">Fail</span>.<span class="ident">to_i64</span>(),
-    }
+    })
 }
 
 <span class="doccomment">/// This function is a helper to handle the first step of reading var-len</span>
@@ -2252,7 +2406,8 @@
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">vp_result_buffer</span><span class="op">&lt;</span><span class="ident">MEM</span>, <span class="ident">DB</span>, <span class="ident">H</span>, <span class="ident">EVAL</span><span class="op">&gt;</span>(
     <span class="ident">env</span>: <span class="kw-2">&amp;</span><span class="ident">VpEnv</span><span class="op">&lt;</span><span class="ident">MEM</span>, <span class="ident">DB</span>, <span class="ident">H</span>, <span class="ident">EVAL</span><span class="op">&gt;</span>,
     <span class="ident">result_ptr</span>: <span class="ident">u64</span>,
-) <span class="kw">where</span>
+) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">vp_env</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span>
+<span class="kw">where</span>
     <span class="ident">MEM</span>: <span class="ident">VmMemory</span>,
     <span class="ident">DB</span>: <span class="ident">storage</span>::<span class="ident">DB</span> <span class="op">+</span> <span class="kw">for</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span> <span class="ident">storage</span>::<span class="ident">DBIter</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span>,
     <span class="ident">H</span>: <span class="ident">StorageHasher</span>,
@@ -2262,7 +2417,7 @@
     <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">result_buffer</span>.<span class="ident">take</span>().<span class="ident">unwrap</span>();
     <span class="kw">let</span> <span class="ident">gas</span> <span class="op">=</span> <span class="ident">env</span>.<span class="ident">memory</span>.<span class="ident">write_bytes</span>(<span class="ident">result_ptr</span>, <span class="ident">value</span>);
     <span class="kw">let</span> <span class="ident">gas_meter</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">env</span>.<span class="ident">ctx</span>.<span class="ident">gas_meter</span>.<span class="ident">get</span>() };
-    <span class="ident">vp_gas_check</span>(<span class="ident">vp_env</span>::<span class="ident">add_gas</span>(<span class="ident">gas_meter</span>, <span class="ident">gas</span>));
+    <span class="ident">vp_env</span>::<span class="ident">add_gas</span>(<span class="ident">gas_meter</span>, <span class="ident">gas</span>)
 }
 
 <span class="doccomment">/// Storage `has_key` in prior state (before tx execution) function exposed to</span>
@@ -2271,7 +2426,7 @@
     <span class="ident">env</span>: <span class="kw-2">&amp;</span><span class="ident">VpEnv</span><span class="op">&lt;</span><span class="ident">MEM</span>, <span class="ident">DB</span>, <span class="ident">H</span>, <span class="ident">EVAL</span><span class="op">&gt;</span>,
     <span class="ident">key_ptr</span>: <span class="ident">u64</span>,
     <span class="ident">key_len</span>: <span class="ident">u64</span>,
-) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">i64</span>
+) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">vp_env</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">i64</span><span class="op">&gt;</span>
 <span class="kw">where</span>
     <span class="ident">MEM</span>: <span class="ident">VmMemory</span>,
     <span class="ident">DB</span>: <span class="ident">storage</span>::<span class="ident">DB</span> <span class="op">+</span> <span class="kw">for</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span> <span class="ident">storage</span>::<span class="ident">DBIter</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span>,
@@ -2280,14 +2435,15 @@
 {
     <span class="kw">let</span> (<span class="ident">key</span>, <span class="ident">gas</span>) <span class="op">=</span> <span class="ident">env</span>.<span class="ident">memory</span>.<span class="ident">read_string</span>(<span class="ident">key_ptr</span>, <span class="ident">key_len</span> <span class="kw">as</span> <span class="kw">_</span>);
     <span class="kw">let</span> <span class="ident">gas_meter</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">env</span>.<span class="ident">ctx</span>.<span class="ident">gas_meter</span>.<span class="ident">get</span>() };
-    <span class="ident">vp_gas_check</span>(<span class="ident">vp_env</span>::<span class="ident">add_gas</span>(<span class="ident">gas_meter</span>, <span class="ident">gas</span>));
+    <span class="ident">vp_env</span>::<span class="ident">add_gas</span>(<span class="ident">gas_meter</span>, <span class="ident">gas</span>)<span class="question-mark">?</span>;
 
     <span class="ident">tracing</span>::<span class="macro">debug</span><span class="macro">!</span>(<span class="string">&quot;vp_has_key_pre {}, key {}&quot;</span>, <span class="ident">key</span>, <span class="ident">key_ptr</span>,);
 
-    <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Key</span>::<span class="ident">parse</span>(<span class="ident">key</span>).<span class="ident">expect</span>(<span class="string">&quot;Cannot parse the key string&quot;</span>);
+    <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span>
+        <span class="ident">Key</span>::<span class="ident">parse</span>(<span class="ident">key</span>).<span class="ident">map_err</span>(<span class="ident">vp_env</span>::<span class="ident">RuntimeError</span>::<span class="ident">StorageDataError</span>)<span class="question-mark">?</span>;
     <span class="kw">let</span> <span class="ident">storage</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">env</span>.<span class="ident">ctx</span>.<span class="ident">storage</span>.<span class="ident">get</span>() };
-    <span class="kw">let</span> <span class="ident">present</span> <span class="op">=</span> <span class="ident">vp_gas_check</span>(<span class="ident">vp_env</span>::<span class="ident">has_key_pre</span>(<span class="ident">gas_meter</span>, <span class="ident">storage</span>, <span class="kw-2">&amp;</span><span class="ident">key</span>));
-    <span class="ident">HostEnvResult</span>::<span class="ident">from</span>(<span class="ident">present</span>).<span class="ident">to_i64</span>()
+    <span class="kw">let</span> <span class="ident">present</span> <span class="op">=</span> <span class="ident">vp_env</span>::<span class="ident">has_key_pre</span>(<span class="ident">gas_meter</span>, <span class="ident">storage</span>, <span class="kw-2">&amp;</span><span class="ident">key</span>)<span class="question-mark">?</span>;
+    <span class="prelude-val">Ok</span>(<span class="ident">HostEnvResult</span>::<span class="ident">from</span>(<span class="ident">present</span>).<span class="ident">to_i64</span>())
 }
 
 <span class="doccomment">/// Storage `has_key` in posterior state (after tx execution) function exposed</span>
@@ -2297,7 +2453,7 @@
     <span class="ident">env</span>: <span class="kw-2">&amp;</span><span class="ident">VpEnv</span><span class="op">&lt;</span><span class="ident">MEM</span>, <span class="ident">DB</span>, <span class="ident">H</span>, <span class="ident">EVAL</span><span class="op">&gt;</span>,
     <span class="ident">key_ptr</span>: <span class="ident">u64</span>,
     <span class="ident">key_len</span>: <span class="ident">u64</span>,
-) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">i64</span>
+) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">vp_env</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">i64</span><span class="op">&gt;</span>
 <span class="kw">where</span>
     <span class="ident">MEM</span>: <span class="ident">VmMemory</span>,
     <span class="ident">DB</span>: <span class="ident">storage</span>::<span class="ident">DB</span> <span class="op">+</span> <span class="kw">for</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span> <span class="ident">storage</span>::<span class="ident">DBIter</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span>,
@@ -2306,16 +2462,16 @@
 {
     <span class="kw">let</span> (<span class="ident">key</span>, <span class="ident">gas</span>) <span class="op">=</span> <span class="ident">env</span>.<span class="ident">memory</span>.<span class="ident">read_string</span>(<span class="ident">key_ptr</span>, <span class="ident">key_len</span> <span class="kw">as</span> <span class="kw">_</span>);
     <span class="kw">let</span> <span class="ident">gas_meter</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">env</span>.<span class="ident">ctx</span>.<span class="ident">gas_meter</span>.<span class="ident">get</span>() };
-    <span class="ident">vp_gas_check</span>(<span class="ident">vp_env</span>::<span class="ident">add_gas</span>(<span class="ident">gas_meter</span>, <span class="ident">gas</span>));
+    <span class="ident">vp_env</span>::<span class="ident">add_gas</span>(<span class="ident">gas_meter</span>, <span class="ident">gas</span>)<span class="question-mark">?</span>;
 
     <span class="ident">tracing</span>::<span class="macro">debug</span><span class="macro">!</span>(<span class="string">&quot;vp_has_key_post {}, key {}&quot;</span>, <span class="ident">key</span>, <span class="ident">key_ptr</span>,);
 
-    <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Key</span>::<span class="ident">parse</span>(<span class="ident">key</span>).<span class="ident">expect</span>(<span class="string">&quot;Cannot parse the key string&quot;</span>);
+    <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span>
+        <span class="ident">Key</span>::<span class="ident">parse</span>(<span class="ident">key</span>).<span class="ident">map_err</span>(<span class="ident">vp_env</span>::<span class="ident">RuntimeError</span>::<span class="ident">StorageDataError</span>)<span class="question-mark">?</span>;
     <span class="kw">let</span> <span class="ident">storage</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">env</span>.<span class="ident">ctx</span>.<span class="ident">storage</span>.<span class="ident">get</span>() };
     <span class="kw">let</span> <span class="ident">write_log</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">env</span>.<span class="ident">ctx</span>.<span class="ident">write_log</span>.<span class="ident">get</span>() };
-    <span class="kw">let</span> <span class="ident">present</span> <span class="op">=</span>
-        <span class="ident">vp_gas_check</span>(<span class="ident">vp_env</span>::<span class="ident">has_key_post</span>(<span class="ident">gas_meter</span>, <span class="ident">storage</span>, <span class="ident">write_log</span>, <span class="kw-2">&amp;</span><span class="ident">key</span>));
-    <span class="ident">HostEnvResult</span>::<span class="ident">from</span>(<span class="ident">present</span>).<span class="ident">to_i64</span>()
+    <span class="kw">let</span> <span class="ident">present</span> <span class="op">=</span> <span class="ident">vp_env</span>::<span class="ident">has_key_post</span>(<span class="ident">gas_meter</span>, <span class="ident">storage</span>, <span class="ident">write_log</span>, <span class="kw-2">&amp;</span><span class="ident">key</span>)<span class="question-mark">?</span>;
+    <span class="prelude-val">Ok</span>(<span class="ident">HostEnvResult</span>::<span class="ident">from</span>(<span class="ident">present</span>).<span class="ident">to_i64</span>())
 }
 
 <span class="doccomment">/// Storage prefix iterator function exposed to the wasm VM VP environment.</span>
@@ -2325,7 +2481,7 @@
     <span class="ident">env</span>: <span class="kw-2">&amp;</span><span class="ident">VpEnv</span><span class="op">&lt;</span><span class="ident">MEM</span>, <span class="ident">DB</span>, <span class="ident">H</span>, <span class="ident">EVAL</span><span class="op">&gt;</span>,
     <span class="ident">prefix_ptr</span>: <span class="ident">u64</span>,
     <span class="ident">prefix_len</span>: <span class="ident">u64</span>,
-) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u64</span>
+) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">vp_env</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span>
 <span class="kw">where</span>
     <span class="ident">MEM</span>: <span class="ident">VmMemory</span>,
     <span class="ident">DB</span>: <span class="ident">storage</span>::<span class="ident">DB</span> <span class="op">+</span> <span class="kw">for</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span> <span class="ident">storage</span>::<span class="ident">DBIter</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span>,
@@ -2334,15 +2490,16 @@
 {
     <span class="kw">let</span> (<span class="ident">prefix</span>, <span class="ident">gas</span>) <span class="op">=</span> <span class="ident">env</span>.<span class="ident">memory</span>.<span class="ident">read_string</span>(<span class="ident">prefix_ptr</span>, <span class="ident">prefix_len</span> <span class="kw">as</span> <span class="kw">_</span>);
     <span class="kw">let</span> <span class="ident">gas_meter</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">env</span>.<span class="ident">ctx</span>.<span class="ident">gas_meter</span>.<span class="ident">get</span>() };
-    <span class="ident">vp_gas_check</span>(<span class="ident">vp_env</span>::<span class="ident">add_gas</span>(<span class="ident">gas_meter</span>, <span class="ident">gas</span>));
+    <span class="ident">vp_env</span>::<span class="ident">add_gas</span>(<span class="ident">gas_meter</span>, <span class="ident">gas</span>)<span class="question-mark">?</span>;
 
-    <span class="kw">let</span> <span class="ident">prefix</span> <span class="op">=</span> <span class="ident">Key</span>::<span class="ident">parse</span>(<span class="ident">prefix</span>).<span class="ident">expect</span>(<span class="string">&quot;Cannot parse the prefix string&quot;</span>);
+    <span class="kw">let</span> <span class="ident">prefix</span> <span class="op">=</span>
+        <span class="ident">Key</span>::<span class="ident">parse</span>(<span class="ident">prefix</span>).<span class="ident">map_err</span>(<span class="ident">vp_env</span>::<span class="ident">RuntimeError</span>::<span class="ident">StorageDataError</span>)<span class="question-mark">?</span>;
     <span class="ident">tracing</span>::<span class="macro">debug</span><span class="macro">!</span>(<span class="string">&quot;vp_iter_prefix {}&quot;</span>, <span class="ident">prefix</span>);
 
     <span class="kw">let</span> <span class="ident">storage</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">env</span>.<span class="ident">ctx</span>.<span class="ident">storage</span>.<span class="ident">get</span>() };
-    <span class="kw">let</span> <span class="ident">iter</span> <span class="op">=</span> <span class="ident">vp_gas_check</span>(<span class="ident">vp_env</span>::<span class="ident">iter_prefix</span>(<span class="ident">gas_meter</span>, <span class="ident">storage</span>, <span class="kw-2">&amp;</span><span class="ident">prefix</span>));
+    <span class="kw">let</span> <span class="ident">iter</span> <span class="op">=</span> <span class="ident">vp_env</span>::<span class="ident">iter_prefix</span>(<span class="ident">gas_meter</span>, <span class="ident">storage</span>, <span class="kw-2">&amp;</span><span class="ident">prefix</span>)<span class="question-mark">?</span>;
     <span class="kw">let</span> <span class="ident">iterators</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">env</span>.<span class="ident">ctx</span>.<span class="ident">iterators</span>.<span class="ident">get</span>() };
-    <span class="ident">iterators</span>.<span class="ident">insert</span>(<span class="ident">iter</span>).<span class="ident">id</span>()
+    <span class="prelude-val">Ok</span>(<span class="ident">iterators</span>.<span class="ident">insert</span>(<span class="ident">iter</span>).<span class="ident">id</span>())
 }
 
 <span class="doccomment">/// Storage prefix iterator for prior state (before tx execution) function</span>
@@ -2353,7 +2510,7 @@
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">vp_iter_pre_next</span><span class="op">&lt;</span><span class="ident">MEM</span>, <span class="ident">DB</span>, <span class="ident">H</span>, <span class="ident">EVAL</span><span class="op">&gt;</span>(
     <span class="ident">env</span>: <span class="kw-2">&amp;</span><span class="ident">VpEnv</span><span class="op">&lt;</span><span class="ident">MEM</span>, <span class="ident">DB</span>, <span class="ident">H</span>, <span class="ident">EVAL</span><span class="op">&gt;</span>,
     <span class="ident">iter_id</span>: <span class="ident">u64</span>,
-) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">i64</span>
+) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">vp_env</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">i64</span><span class="op">&gt;</span>
 <span class="kw">where</span>
     <span class="ident">MEM</span>: <span class="ident">VmMemory</span>,
     <span class="ident">DB</span>: <span class="ident">storage</span>::<span class="ident">DB</span> <span class="op">+</span> <span class="kw">for</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span> <span class="ident">storage</span>::<span class="ident">DBIter</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span>,
@@ -2366,21 +2523,21 @@
     <span class="kw">let</span> <span class="ident">iter_id</span> <span class="op">=</span> <span class="ident">PrefixIteratorId</span>::<span class="ident">new</span>(<span class="ident">iter_id</span>);
     <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">iter</span>) <span class="op">=</span> <span class="ident">iterators</span>.<span class="ident">get_mut</span>(<span class="ident">iter_id</span>) {
         <span class="kw">let</span> <span class="ident">gas_meter</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">env</span>.<span class="ident">ctx</span>.<span class="ident">gas_meter</span>.<span class="ident">get</span>() };
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>((<span class="ident">key</span>, <span class="ident">val</span>)) <span class="op">=</span>
-            <span class="ident">vp_gas_check</span>(<span class="ident">vp_env</span>::<span class="ident">iter_pre_next</span>::<span class="op">&lt;</span><span class="ident">DB</span><span class="op">&gt;</span>(<span class="ident">gas_meter</span>, <span class="ident">iter</span>))
+        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>((<span class="ident">key</span>, <span class="ident">val</span>)) <span class="op">=</span> <span class="ident">vp_env</span>::<span class="ident">iter_pre_next</span>::<span class="op">&lt;</span><span class="ident">DB</span><span class="op">&gt;</span>(<span class="ident">gas_meter</span>, <span class="ident">iter</span>)<span class="question-mark">?</span>
         {
             <span class="kw">let</span> <span class="ident">key_val</span> <span class="op">=</span> <span class="ident">KeyVal</span> { <span class="ident">key</span>, <span class="ident">val</span> }
                 .<span class="ident">try_to_vec</span>()
-                .<span class="ident">expect</span>(<span class="string">&quot;cannot serialize the key value pair&quot;</span>);
-            <span class="kw">let</span> <span class="ident">len</span>: <span class="ident">i64</span> <span class="op">=</span>
-                <span class="ident">key_val</span>.<span class="ident">len</span>().<span class="ident">try_into</span>().<span class="ident">expect</span>(<span class="string">&quot;data length overflow&quot;</span>);
+                .<span class="ident">map_err</span>(<span class="ident">vp_env</span>::<span class="ident">RuntimeError</span>::<span class="ident">EncodingError</span>)<span class="question-mark">?</span>;
+            <span class="kw">let</span> <span class="ident">len</span>: <span class="ident">i64</span> <span class="op">=</span> <span class="ident">key_val</span>
+                .<span class="ident">len</span>()
+                .<span class="ident">try_into</span>()
+                .<span class="ident">map_err</span>(<span class="ident">vp_env</span>::<span class="ident">RuntimeError</span>::<span class="ident">NumConversionError</span>)<span class="question-mark">?</span>;
             <span class="kw">let</span> <span class="ident">result_buffer</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">env</span>.<span class="ident">ctx</span>.<span class="ident">result_buffer</span>.<span class="ident">get</span>() };
             <span class="ident">result_buffer</span>.<span class="ident">replace</span>(<span class="ident">key_val</span>);
-            <span class="kw">return</span> <span class="ident">len</span>;
+            <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="ident">len</span>);
         }
     }
-
-    <span class="ident">HostEnvResult</span>::<span class="ident">Fail</span>.<span class="ident">to_i64</span>()
+    <span class="prelude-val">Ok</span>(<span class="ident">HostEnvResult</span>::<span class="ident">Fail</span>.<span class="ident">to_i64</span>())
 }
 
 <span class="doccomment">/// Storage prefix iterator next for posterior state (after tx execution)</span>
@@ -2392,7 +2549,7 @@
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">vp_iter_post_next</span><span class="op">&lt;</span><span class="ident">MEM</span>, <span class="ident">DB</span>, <span class="ident">H</span>, <span class="ident">EVAL</span><span class="op">&gt;</span>(
     <span class="ident">env</span>: <span class="kw-2">&amp;</span><span class="ident">VpEnv</span><span class="op">&lt;</span><span class="ident">MEM</span>, <span class="ident">DB</span>, <span class="ident">H</span>, <span class="ident">EVAL</span><span class="op">&gt;</span>,
     <span class="ident">iter_id</span>: <span class="ident">u64</span>,
-) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">i64</span>
+) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">vp_env</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">i64</span><span class="op">&gt;</span>
 <span class="kw">where</span>
     <span class="ident">MEM</span>: <span class="ident">VmMemory</span>,
     <span class="ident">DB</span>: <span class="ident">storage</span>::<span class="ident">DB</span> <span class="op">+</span> <span class="kw">for</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span> <span class="ident">storage</span>::<span class="ident">DBIter</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span>,
@@ -2406,20 +2563,22 @@
     <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">iter</span>) <span class="op">=</span> <span class="ident">iterators</span>.<span class="ident">get_mut</span>(<span class="ident">iter_id</span>) {
         <span class="kw">let</span> <span class="ident">gas_meter</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">env</span>.<span class="ident">ctx</span>.<span class="ident">gas_meter</span>.<span class="ident">get</span>() };
         <span class="kw">let</span> <span class="ident">write_log</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">env</span>.<span class="ident">ctx</span>.<span class="ident">write_log</span>.<span class="ident">get</span>() };
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>((<span class="ident">key</span>, <span class="ident">val</span>)) <span class="op">=</span> <span class="ident">vp_gas_check</span>(<span class="ident">vp_env</span>::<span class="ident">iter_post_next</span>::<span class="op">&lt;</span><span class="ident">DB</span><span class="op">&gt;</span>(
-            <span class="ident">gas_meter</span>, <span class="ident">write_log</span>, <span class="ident">iter</span>,
-        )) {
+        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>((<span class="ident">key</span>, <span class="ident">val</span>)) <span class="op">=</span>
+            <span class="ident">vp_env</span>::<span class="ident">iter_post_next</span>::<span class="op">&lt;</span><span class="ident">DB</span><span class="op">&gt;</span>(<span class="ident">gas_meter</span>, <span class="ident">write_log</span>, <span class="ident">iter</span>)<span class="question-mark">?</span>
+        {
             <span class="kw">let</span> <span class="ident">key_val</span> <span class="op">=</span> <span class="ident">KeyVal</span> { <span class="ident">key</span>, <span class="ident">val</span> }
                 .<span class="ident">try_to_vec</span>()
-                .<span class="ident">expect</span>(<span class="string">&quot;cannot serialize the key value pair&quot;</span>);
-            <span class="kw">let</span> <span class="ident">len</span>: <span class="ident">i64</span> <span class="op">=</span>
-                <span class="ident">key_val</span>.<span class="ident">len</span>().<span class="ident">try_into</span>().<span class="ident">expect</span>(<span class="string">&quot;data length overflow&quot;</span>);
+                .<span class="ident">map_err</span>(<span class="ident">vp_env</span>::<span class="ident">RuntimeError</span>::<span class="ident">EncodingError</span>)<span class="question-mark">?</span>;
+            <span class="kw">let</span> <span class="ident">len</span>: <span class="ident">i64</span> <span class="op">=</span> <span class="ident">key_val</span>
+                .<span class="ident">len</span>()
+                .<span class="ident">try_into</span>()
+                .<span class="ident">map_err</span>(<span class="ident">vp_env</span>::<span class="ident">RuntimeError</span>::<span class="ident">NumConversionError</span>)<span class="question-mark">?</span>;
             <span class="kw">let</span> <span class="ident">result_buffer</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">env</span>.<span class="ident">ctx</span>.<span class="ident">result_buffer</span>.<span class="ident">get</span>() };
             <span class="ident">result_buffer</span>.<span class="ident">replace</span>(<span class="ident">key_val</span>);
-            <span class="kw">return</span> <span class="ident">len</span>;
+            <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="ident">len</span>);
         }
     }
-    <span class="ident">HostEnvResult</span>::<span class="ident">Fail</span>.<span class="ident">to_i64</span>()
+    <span class="prelude-val">Ok</span>(<span class="ident">HostEnvResult</span>::<span class="ident">Fail</span>.<span class="ident">to_i64</span>())
 }
 
 <span class="doccomment">/// Verifier insertion function exposed to the wasm VM Tx environment.</span>
@@ -2427,21 +2586,22 @@
     <span class="ident">env</span>: <span class="kw-2">&amp;</span><span class="ident">TxEnv</span><span class="op">&lt;</span><span class="ident">MEM</span>, <span class="ident">DB</span>, <span class="ident">H</span><span class="op">&gt;</span>,
     <span class="ident">addr_ptr</span>: <span class="ident">u64</span>,
     <span class="ident">addr_len</span>: <span class="ident">u64</span>,
-) <span class="kw">where</span>
+) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">TxResult</span><span class="op">&lt;</span>()<span class="op">&gt;</span>
+<span class="kw">where</span>
     <span class="ident">MEM</span>: <span class="ident">VmMemory</span>,
     <span class="ident">DB</span>: <span class="ident">storage</span>::<span class="ident">DB</span> <span class="op">+</span> <span class="kw">for</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span> <span class="ident">storage</span>::<span class="ident">DBIter</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span>,
     <span class="ident">H</span>: <span class="ident">StorageHasher</span>,
 {
     <span class="kw">let</span> (<span class="ident">addr</span>, <span class="ident">gas</span>) <span class="op">=</span> <span class="ident">env</span>.<span class="ident">memory</span>.<span class="ident">read_string</span>(<span class="ident">addr_ptr</span>, <span class="ident">addr_len</span> <span class="kw">as</span> <span class="kw">_</span>);
-    <span class="ident">tx_add_gas</span>(<span class="ident">env</span>, <span class="ident">gas</span>);
+    <span class="ident">tx_add_gas</span>(<span class="ident">env</span>, <span class="ident">gas</span>)<span class="question-mark">?</span>;
 
     <span class="ident">tracing</span>::<span class="macro">debug</span><span class="macro">!</span>(<span class="string">&quot;tx_insert_verifier {}, addr_ptr {}&quot;</span>, <span class="ident">addr</span>, <span class="ident">addr_ptr</span>,);
 
-    <span class="kw">let</span> <span class="ident">addr</span> <span class="op">=</span> <span class="ident">Address</span>::<span class="ident">decode</span>(<span class="kw-2">&amp;</span><span class="ident">addr</span>).<span class="ident">expect</span>(<span class="string">&quot;Cannot parse the address string&quot;</span>);
+    <span class="kw">let</span> <span class="ident">addr</span> <span class="op">=</span> <span class="ident">Address</span>::<span class="ident">decode</span>(<span class="kw-2">&amp;</span><span class="ident">addr</span>).<span class="ident">map_err</span>(<span class="ident">TxRuntimeError</span>::<span class="ident">AddressError</span>)<span class="question-mark">?</span>;
 
     <span class="kw">let</span> <span class="ident">verifiers</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">env</span>.<span class="ident">ctx</span>.<span class="ident">verifiers</span>.<span class="ident">get</span>() };
     <span class="ident">verifiers</span>.<span class="ident">insert</span>(<span class="ident">addr</span>);
-    <span class="ident">tx_add_gas</span>(<span class="ident">env</span>, <span class="ident">addr_len</span>);
+    <span class="ident">tx_add_gas</span>(<span class="ident">env</span>, <span class="ident">addr_len</span>)
 }
 
 <span class="doccomment">/// Update a validity predicate function exposed to the wasm VM Tx environment</span>
@@ -2451,35 +2611,30 @@
     <span class="ident">addr_len</span>: <span class="ident">u64</span>,
     <span class="ident">code_ptr</span>: <span class="ident">u64</span>,
     <span class="ident">code_len</span>: <span class="ident">u64</span>,
-) <span class="kw">where</span>
+) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">TxResult</span><span class="op">&lt;</span>()<span class="op">&gt;</span>
+<span class="kw">where</span>
     <span class="ident">MEM</span>: <span class="ident">VmMemory</span>,
     <span class="ident">DB</span>: <span class="ident">storage</span>::<span class="ident">DB</span> <span class="op">+</span> <span class="kw">for</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span> <span class="ident">storage</span>::<span class="ident">DBIter</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span>,
     <span class="ident">H</span>: <span class="ident">StorageHasher</span>,
 {
     <span class="kw">let</span> (<span class="ident">addr</span>, <span class="ident">gas</span>) <span class="op">=</span> <span class="ident">env</span>.<span class="ident">memory</span>.<span class="ident">read_string</span>(<span class="ident">addr_ptr</span>, <span class="ident">addr_len</span> <span class="kw">as</span> <span class="kw">_</span>);
-    <span class="ident">tx_add_gas</span>(<span class="ident">env</span>, <span class="ident">gas</span>);
+    <span class="ident">tx_add_gas</span>(<span class="ident">env</span>, <span class="ident">gas</span>)<span class="question-mark">?</span>;
 
-    <span class="kw">let</span> <span class="ident">addr</span> <span class="op">=</span> <span class="ident">Address</span>::<span class="ident">decode</span>(<span class="ident">addr</span>).<span class="ident">expect</span>(<span class="string">&quot;Failed to decode the address&quot;</span>);
+    <span class="kw">let</span> <span class="ident">addr</span> <span class="op">=</span> <span class="ident">Address</span>::<span class="ident">decode</span>(<span class="ident">addr</span>).<span class="ident">map_err</span>(<span class="ident">TxRuntimeError</span>::<span class="ident">AddressError</span>)<span class="question-mark">?</span>;
     <span class="ident">tracing</span>::<span class="macro">debug</span><span class="macro">!</span>(<span class="string">&quot;tx_update_validity_predicate for addr {}&quot;</span>, <span class="ident">addr</span>);
 
-    <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span>
-        <span class="ident">Key</span>::<span class="ident">validity_predicate</span>(<span class="kw-2">&amp;</span><span class="ident">addr</span>).<span class="ident">expect</span>(<span class="string">&quot;Cannot make the key for the VP&quot;</span>);
+    <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Key</span>::<span class="ident">validity_predicate</span>(<span class="kw-2">&amp;</span><span class="ident">addr</span>);
     <span class="kw">let</span> (<span class="ident">code</span>, <span class="ident">gas</span>) <span class="op">=</span> <span class="ident">env</span>.<span class="ident">memory</span>.<span class="ident">read_bytes</span>(<span class="ident">code_ptr</span>, <span class="ident">code_len</span> <span class="kw">as</span> <span class="kw">_</span>);
-    <span class="ident">tx_add_gas</span>(<span class="ident">env</span>, <span class="ident">gas</span>);
+    <span class="ident">tx_add_gas</span>(<span class="ident">env</span>, <span class="ident">gas</span>)<span class="question-mark">?</span>;
 
-    <span class="ident">tx_add_gas</span>(<span class="ident">env</span>, <span class="ident">code</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="ident">u64</span> <span class="op">*</span> <span class="ident">WASM_VALIDATION_GAS_PER_BYTE</span>);
-    <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Err</span>(<span class="ident">err</span>) <span class="op">=</span> <span class="kw">super</span>::<span class="ident">validate_untrusted_wasm</span>(<span class="kw-2">&amp;</span><span class="ident">code</span>) {
-        <span class="ident">tracing</span>::<span class="macro">info</span><span class="macro">!</span>(
-            <span class="string">&quot;Trying to update an account with an invalid validity predicate \
-             code, error: {:#?}&quot;</span>,
-            <span class="ident">err</span>
-        );
-        <span class="macro">unreachable</span><span class="macro">!</span>()
-    }
+    <span class="ident">tx_add_gas</span>(<span class="ident">env</span>, <span class="ident">code</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="ident">u64</span> <span class="op">*</span> <span class="ident">WASM_VALIDATION_GAS_PER_BYTE</span>)<span class="question-mark">?</span>;
+    <span class="ident">validate_untrusted_wasm</span>(<span class="kw-2">&amp;</span><span class="ident">code</span>).<span class="ident">map_err</span>(<span class="ident">TxRuntimeError</span>::<span class="ident">UpdateVpInvalid</span>)<span class="question-mark">?</span>;
 
     <span class="kw">let</span> <span class="ident">write_log</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">env</span>.<span class="ident">ctx</span>.<span class="ident">write_log</span>.<span class="ident">get</span>() };
-    <span class="kw">let</span> (<span class="ident">gas</span>, <span class="ident">_size_diff</span>) <span class="op">=</span> <span class="ident">write_log</span>.<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>, <span class="ident">code</span>);
-    <span class="ident">tx_add_gas</span>(<span class="ident">env</span>, <span class="ident">gas</span>);
+    <span class="kw">let</span> (<span class="ident">gas</span>, <span class="ident">_size_diff</span>) <span class="op">=</span> <span class="ident">write_log</span>
+        .<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>, <span class="ident">code</span>)
+        .<span class="ident">map_err</span>(<span class="ident">TxRuntimeError</span>::<span class="ident">StorageModificationError</span>)<span class="question-mark">?</span>;
+    <span class="ident">tx_add_gas</span>(<span class="ident">env</span>, <span class="ident">gas</span>)
     <span class="comment">// TODO: charge the size diff</span>
 }
 
@@ -2489,23 +2644,18 @@
     <span class="ident">code_ptr</span>: <span class="ident">u64</span>,
     <span class="ident">code_len</span>: <span class="ident">u64</span>,
     <span class="ident">result_ptr</span>: <span class="ident">u64</span>,
-) <span class="kw">where</span>
+) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">TxResult</span><span class="op">&lt;</span>()<span class="op">&gt;</span>
+<span class="kw">where</span>
     <span class="ident">MEM</span>: <span class="ident">VmMemory</span>,
     <span class="ident">DB</span>: <span class="ident">storage</span>::<span class="ident">DB</span> <span class="op">+</span> <span class="kw">for</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span> <span class="ident">storage</span>::<span class="ident">DBIter</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span>,
     <span class="ident">H</span>: <span class="ident">StorageHasher</span>,
 {
     <span class="kw">let</span> (<span class="ident">code</span>, <span class="ident">gas</span>) <span class="op">=</span> <span class="ident">env</span>.<span class="ident">memory</span>.<span class="ident">read_bytes</span>(<span class="ident">code_ptr</span>, <span class="ident">code_len</span> <span class="kw">as</span> <span class="kw">_</span>);
-    <span class="ident">tx_add_gas</span>(<span class="ident">env</span>, <span class="ident">gas</span>);
+    <span class="ident">tx_add_gas</span>(<span class="ident">env</span>, <span class="ident">gas</span>)<span class="question-mark">?</span>;
 
-    <span class="ident">tx_add_gas</span>(<span class="ident">env</span>, <span class="ident">code</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="ident">u64</span> <span class="op">*</span> <span class="ident">WASM_VALIDATION_GAS_PER_BYTE</span>);
-    <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Err</span>(<span class="ident">err</span>) <span class="op">=</span> <span class="kw">super</span>::<span class="ident">validate_untrusted_wasm</span>(<span class="kw-2">&amp;</span><span class="ident">code</span>) {
-        <span class="ident">tracing</span>::<span class="macro">info</span><span class="macro">!</span>(
-            <span class="string">&quot;Trying to initialize an account with an invalid validity \
-             predicate code, error: {:#?}&quot;</span>,
-            <span class="ident">err</span>
-        );
-        <span class="macro">unreachable</span><span class="macro">!</span>()
-    }
+    <span class="ident">tx_add_gas</span>(<span class="ident">env</span>, <span class="ident">code</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="ident">u64</span> <span class="op">*</span> <span class="ident">WASM_VALIDATION_GAS_PER_BYTE</span>)<span class="question-mark">?</span>;
+    <span class="ident">validate_untrusted_wasm</span>(<span class="kw-2">&amp;</span><span class="ident">code</span>)
+        .<span class="ident">map_err</span>(<span class="ident">TxRuntimeError</span>::<span class="ident">InitAccountInvalidVpWasm</span>)<span class="question-mark">?</span>;
 
     <span class="ident">tracing</span>::<span class="macro">debug</span><span class="macro">!</span>(<span class="string">&quot;tx_init_account&quot;</span>);
 
@@ -2513,14 +2663,17 @@
     <span class="kw">let</span> <span class="ident">write_log</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">env</span>.<span class="ident">ctx</span>.<span class="ident">write_log</span>.<span class="ident">get</span>() };
     <span class="kw">let</span> (<span class="ident">addr</span>, <span class="ident">gas</span>) <span class="op">=</span> <span class="ident">write_log</span>.<span class="ident">init_account</span>(<span class="kw-2">&amp;</span><span class="ident">storage</span>.<span class="ident">address_gen</span>, <span class="ident">code</span>);
     <span class="kw">let</span> <span class="ident">addr_bytes</span> <span class="op">=</span>
-        <span class="ident">addr</span>.<span class="ident">try_to_vec</span>().<span class="ident">expect</span>(<span class="string">&quot;Encoding address shouldn&#39;t fail&quot;</span>);
-    <span class="ident">tx_add_gas</span>(<span class="ident">env</span>, <span class="ident">gas</span>);
+        <span class="ident">addr</span>.<span class="ident">try_to_vec</span>().<span class="ident">map_err</span>(<span class="ident">TxRuntimeError</span>::<span class="ident">EncodingError</span>)<span class="question-mark">?</span>;
+    <span class="ident">tx_add_gas</span>(<span class="ident">env</span>, <span class="ident">gas</span>)<span class="question-mark">?</span>;
     <span class="kw">let</span> <span class="ident">gas</span> <span class="op">=</span> <span class="ident">env</span>.<span class="ident">memory</span>.<span class="ident">write_bytes</span>(<span class="ident">result_ptr</span>, <span class="ident">addr_bytes</span>);
-    <span class="ident">tx_add_gas</span>(<span class="ident">env</span>, <span class="ident">gas</span>);
+    <span class="ident">tx_add_gas</span>(<span class="ident">env</span>, <span class="ident">gas</span>)
 }
 
 <span class="doccomment">/// Getting the chain ID function exposed to the wasm VM Tx environment.</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">tx_get_chain_id</span><span class="op">&lt;</span><span class="ident">MEM</span>, <span class="ident">DB</span>, <span class="ident">H</span><span class="op">&gt;</span>(<span class="ident">env</span>: <span class="kw-2">&amp;</span><span class="ident">TxEnv</span><span class="op">&lt;</span><span class="ident">MEM</span>, <span class="ident">DB</span>, <span class="ident">H</span><span class="op">&gt;</span>, <span class="ident">result_ptr</span>: <span class="ident">u64</span>)
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">tx_get_chain_id</span><span class="op">&lt;</span><span class="ident">MEM</span>, <span class="ident">DB</span>, <span class="ident">H</span><span class="op">&gt;</span>(
+    <span class="ident">env</span>: <span class="kw-2">&amp;</span><span class="ident">TxEnv</span><span class="op">&lt;</span><span class="ident">MEM</span>, <span class="ident">DB</span>, <span class="ident">H</span><span class="op">&gt;</span>,
+    <span class="ident">result_ptr</span>: <span class="ident">u64</span>,
+) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">TxResult</span><span class="op">&lt;</span>()<span class="op">&gt;</span>
 <span class="kw">where</span>
     <span class="ident">MEM</span>: <span class="ident">VmMemory</span>,
     <span class="ident">DB</span>: <span class="ident">storage</span>::<span class="ident">DB</span> <span class="op">+</span> <span class="kw">for</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span> <span class="ident">storage</span>::<span class="ident">DBIter</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span>,
@@ -2528,15 +2681,15 @@
 {
     <span class="kw">let</span> <span class="ident">storage</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">env</span>.<span class="ident">ctx</span>.<span class="ident">storage</span>.<span class="ident">get</span>() };
     <span class="kw">let</span> (<span class="ident">chain_id</span>, <span class="ident">gas</span>) <span class="op">=</span> <span class="ident">storage</span>.<span class="ident">get_chain_id</span>();
-    <span class="ident">tx_add_gas</span>(<span class="ident">env</span>, <span class="ident">gas</span>);
+    <span class="ident">tx_add_gas</span>(<span class="ident">env</span>, <span class="ident">gas</span>)<span class="question-mark">?</span>;
     <span class="kw">let</span> <span class="ident">gas</span> <span class="op">=</span> <span class="ident">env</span>.<span class="ident">memory</span>.<span class="ident">write_string</span>(<span class="ident">result_ptr</span>, <span class="ident">chain_id</span>);
-    <span class="ident">tx_add_gas</span>(<span class="ident">env</span>, <span class="ident">gas</span>);
+    <span class="ident">tx_add_gas</span>(<span class="ident">env</span>, <span class="ident">gas</span>)
 }
 
 <span class="doccomment">/// Getting the block height function exposed to the wasm VM Tx</span>
 <span class="doccomment">/// environment. The height is that of the block to which the current</span>
 <span class="doccomment">/// transaction is being applied.</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">tx_get_block_height</span><span class="op">&lt;</span><span class="ident">MEM</span>, <span class="ident">DB</span>, <span class="ident">H</span><span class="op">&gt;</span>(<span class="ident">env</span>: <span class="kw-2">&amp;</span><span class="ident">TxEnv</span><span class="op">&lt;</span><span class="ident">MEM</span>, <span class="ident">DB</span>, <span class="ident">H</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u64</span>
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">tx_get_block_height</span><span class="op">&lt;</span><span class="ident">MEM</span>, <span class="ident">DB</span>, <span class="ident">H</span><span class="op">&gt;</span>(<span class="ident">env</span>: <span class="kw-2">&amp;</span><span class="ident">TxEnv</span><span class="op">&lt;</span><span class="ident">MEM</span>, <span class="ident">DB</span>, <span class="ident">H</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">TxResult</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span>
 <span class="kw">where</span>
     <span class="ident">MEM</span>: <span class="ident">VmMemory</span>,
     <span class="ident">DB</span>: <span class="ident">storage</span>::<span class="ident">DB</span> <span class="op">+</span> <span class="kw">for</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span> <span class="ident">storage</span>::<span class="ident">DBIter</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span>,
@@ -2544,13 +2697,16 @@
 {
     <span class="kw">let</span> <span class="ident">storage</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">env</span>.<span class="ident">ctx</span>.<span class="ident">storage</span>.<span class="ident">get</span>() };
     <span class="kw">let</span> (<span class="ident">height</span>, <span class="ident">gas</span>) <span class="op">=</span> <span class="ident">storage</span>.<span class="ident">get_block_height</span>();
-    <span class="ident">tx_add_gas</span>(<span class="ident">env</span>, <span class="ident">gas</span>);
-    <span class="ident">height</span>.<span class="number">0</span>
+    <span class="ident">tx_add_gas</span>(<span class="ident">env</span>, <span class="ident">gas</span>)<span class="question-mark">?</span>;
+    <span class="prelude-val">Ok</span>(<span class="ident">height</span>.<span class="number">0</span>)
 }
 
 <span class="doccomment">/// Getting the block hash function exposed to the wasm VM Tx environment. The</span>
 <span class="doccomment">/// hash is that of the block to which the current transaction is being applied.</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">tx_get_block_hash</span><span class="op">&lt;</span><span class="ident">MEM</span>, <span class="ident">DB</span>, <span class="ident">H</span><span class="op">&gt;</span>(<span class="ident">env</span>: <span class="kw-2">&amp;</span><span class="ident">TxEnv</span><span class="op">&lt;</span><span class="ident">MEM</span>, <span class="ident">DB</span>, <span class="ident">H</span><span class="op">&gt;</span>, <span class="ident">result_ptr</span>: <span class="ident">u64</span>)
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">tx_get_block_hash</span><span class="op">&lt;</span><span class="ident">MEM</span>, <span class="ident">DB</span>, <span class="ident">H</span><span class="op">&gt;</span>(
+    <span class="ident">env</span>: <span class="kw-2">&amp;</span><span class="ident">TxEnv</span><span class="op">&lt;</span><span class="ident">MEM</span>, <span class="ident">DB</span>, <span class="ident">H</span><span class="op">&gt;</span>,
+    <span class="ident">result_ptr</span>: <span class="ident">u64</span>,
+) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">TxResult</span><span class="op">&lt;</span>()<span class="op">&gt;</span>
 <span class="kw">where</span>
     <span class="ident">MEM</span>: <span class="ident">VmMemory</span>,
     <span class="ident">DB</span>: <span class="ident">storage</span>::<span class="ident">DB</span> <span class="op">+</span> <span class="kw">for</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span> <span class="ident">storage</span>::<span class="ident">DBIter</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span>,
@@ -2558,34 +2714,16 @@
 {
     <span class="kw">let</span> <span class="ident">storage</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">env</span>.<span class="ident">ctx</span>.<span class="ident">storage</span>.<span class="ident">get</span>() };
     <span class="kw">let</span> (<span class="ident">hash</span>, <span class="ident">gas</span>) <span class="op">=</span> <span class="ident">storage</span>.<span class="ident">get_block_hash</span>();
-    <span class="ident">tx_add_gas</span>(<span class="ident">env</span>, <span class="ident">gas</span>);
+    <span class="ident">tx_add_gas</span>(<span class="ident">env</span>, <span class="ident">gas</span>)<span class="question-mark">?</span>;
     <span class="kw">let</span> <span class="ident">gas</span> <span class="op">=</span> <span class="ident">env</span>.<span class="ident">memory</span>.<span class="ident">write_bytes</span>(<span class="ident">result_ptr</span>, <span class="ident">hash</span>.<span class="number">0</span>);
-    <span class="ident">tx_add_gas</span>(<span class="ident">env</span>, <span class="ident">gas</span>);
+    <span class="ident">tx_add_gas</span>(<span class="ident">env</span>, <span class="ident">gas</span>)
 }
 
 <span class="doccomment">/// Getting the chain ID function exposed to the wasm VM VP environment.</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">vp_get_chain_id</span><span class="op">&lt;</span><span class="ident">MEM</span>, <span class="ident">DB</span>, <span class="ident">H</span>, <span class="ident">EVAL</span><span class="op">&gt;</span>(
     <span class="ident">env</span>: <span class="kw-2">&amp;</span><span class="ident">VpEnv</span><span class="op">&lt;</span><span class="ident">MEM</span>, <span class="ident">DB</span>, <span class="ident">H</span>, <span class="ident">EVAL</span><span class="op">&gt;</span>,
     <span class="ident">result_ptr</span>: <span class="ident">u64</span>,
-) <span class="kw">where</span>
-    <span class="ident">MEM</span>: <span class="ident">VmMemory</span>,
-    <span class="ident">DB</span>: <span class="ident">storage</span>::<span class="ident">DB</span> <span class="op">+</span> <span class="kw">for</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span> <span class="ident">storage</span>::<span class="ident">DBIter</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span>,
-    <span class="ident">H</span>: <span class="ident">StorageHasher</span>,
-    <span class="ident">EVAL</span>: <span class="ident">VpEvaluator</span>,
-{
-    <span class="kw">let</span> <span class="ident">gas_meter</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">env</span>.<span class="ident">ctx</span>.<span class="ident">gas_meter</span>.<span class="ident">get</span>() };
-    <span class="kw">let</span> <span class="ident">storage</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">env</span>.<span class="ident">ctx</span>.<span class="ident">storage</span>.<span class="ident">get</span>() };
-    <span class="kw">let</span> <span class="ident">chain_id</span> <span class="op">=</span> <span class="ident">vp_gas_check</span>(<span class="ident">vp_env</span>::<span class="ident">get_chain_id</span>(<span class="ident">gas_meter</span>, <span class="ident">storage</span>));
-    <span class="kw">let</span> <span class="ident">gas</span> <span class="op">=</span> <span class="ident">env</span>.<span class="ident">memory</span>.<span class="ident">write_string</span>(<span class="ident">result_ptr</span>, <span class="ident">chain_id</span>);
-    <span class="ident">vp_gas_check</span>(<span class="ident">vp_env</span>::<span class="ident">add_gas</span>(<span class="ident">gas_meter</span>, <span class="ident">gas</span>));
-}
-
-<span class="doccomment">/// Getting the block height function exposed to the wasm VM VP</span>
-<span class="doccomment">/// environment. The height is that of the block to which the current</span>
-<span class="doccomment">/// transaction is being applied.</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">vp_get_block_height</span><span class="op">&lt;</span><span class="ident">MEM</span>, <span class="ident">DB</span>, <span class="ident">H</span>, <span class="ident">EVAL</span><span class="op">&gt;</span>(
-    <span class="ident">env</span>: <span class="kw-2">&amp;</span><span class="ident">VpEnv</span><span class="op">&lt;</span><span class="ident">MEM</span>, <span class="ident">DB</span>, <span class="ident">H</span>, <span class="ident">EVAL</span><span class="op">&gt;</span>,
-) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u64</span>
+) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">vp_env</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span>
 <span class="kw">where</span>
     <span class="ident">MEM</span>: <span class="ident">VmMemory</span>,
     <span class="ident">DB</span>: <span class="ident">storage</span>::<span class="ident">DB</span> <span class="op">+</span> <span class="kw">for</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span> <span class="ident">storage</span>::<span class="ident">DBIter</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span>,
@@ -2594,16 +2732,18 @@
 {
     <span class="kw">let</span> <span class="ident">gas_meter</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">env</span>.<span class="ident">ctx</span>.<span class="ident">gas_meter</span>.<span class="ident">get</span>() };
     <span class="kw">let</span> <span class="ident">storage</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">env</span>.<span class="ident">ctx</span>.<span class="ident">storage</span>.<span class="ident">get</span>() };
-    <span class="kw">let</span> <span class="ident">height</span> <span class="op">=</span> <span class="ident">vp_gas_check</span>(<span class="ident">vp_env</span>::<span class="ident">get_block_height</span>(<span class="ident">gas_meter</span>, <span class="ident">storage</span>));
-    <span class="ident">height</span>.<span class="number">0</span>
+    <span class="kw">let</span> <span class="ident">chain_id</span> <span class="op">=</span> <span class="ident">vp_env</span>::<span class="ident">get_chain_id</span>(<span class="ident">gas_meter</span>, <span class="ident">storage</span>)<span class="question-mark">?</span>;
+    <span class="kw">let</span> <span class="ident">gas</span> <span class="op">=</span> <span class="ident">env</span>.<span class="ident">memory</span>.<span class="ident">write_string</span>(<span class="ident">result_ptr</span>, <span class="ident">chain_id</span>);
+    <span class="ident">vp_env</span>::<span class="ident">add_gas</span>(<span class="ident">gas_meter</span>, <span class="ident">gas</span>)
 }
 
-<span class="doccomment">/// Getting the block hash function exposed to the wasm VM VP environment. The</span>
-<span class="doccomment">/// hash is that of the block to which the current transaction is being applied.</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">vp_get_block_hash</span><span class="op">&lt;</span><span class="ident">MEM</span>, <span class="ident">DB</span>, <span class="ident">H</span>, <span class="ident">EVAL</span><span class="op">&gt;</span>(
+<span class="doccomment">/// Getting the block height function exposed to the wasm VM VP</span>
+<span class="doccomment">/// environment. The height is that of the block to which the current</span>
+<span class="doccomment">/// transaction is being applied.</span>
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">vp_get_block_height</span><span class="op">&lt;</span><span class="ident">MEM</span>, <span class="ident">DB</span>, <span class="ident">H</span>, <span class="ident">EVAL</span><span class="op">&gt;</span>(
     <span class="ident">env</span>: <span class="kw-2">&amp;</span><span class="ident">VpEnv</span><span class="op">&lt;</span><span class="ident">MEM</span>, <span class="ident">DB</span>, <span class="ident">H</span>, <span class="ident">EVAL</span><span class="op">&gt;</span>,
-    <span class="ident">result_ptr</span>: <span class="ident">u64</span>,
-) <span class="kw">where</span>
+) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">vp_env</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span>
+<span class="kw">where</span>
     <span class="ident">MEM</span>: <span class="ident">VmMemory</span>,
     <span class="ident">DB</span>: <span class="ident">storage</span>::<span class="ident">DB</span> <span class="op">+</span> <span class="kw">for</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span> <span class="ident">storage</span>::<span class="ident">DBIter</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span>,
     <span class="ident">H</span>: <span class="ident">StorageHasher</span>,
@@ -2611,9 +2751,27 @@
 {
     <span class="kw">let</span> <span class="ident">gas_meter</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">env</span>.<span class="ident">ctx</span>.<span class="ident">gas_meter</span>.<span class="ident">get</span>() };
     <span class="kw">let</span> <span class="ident">storage</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">env</span>.<span class="ident">ctx</span>.<span class="ident">storage</span>.<span class="ident">get</span>() };
-    <span class="kw">let</span> <span class="ident">hash</span> <span class="op">=</span> <span class="ident">vp_gas_check</span>(<span class="ident">vp_env</span>::<span class="ident">get_block_hash</span>(<span class="ident">gas_meter</span>, <span class="ident">storage</span>));
+    <span class="kw">let</span> <span class="ident">height</span> <span class="op">=</span> <span class="ident">vp_env</span>::<span class="ident">get_block_height</span>(<span class="ident">gas_meter</span>, <span class="ident">storage</span>)<span class="question-mark">?</span>;
+    <span class="prelude-val">Ok</span>(<span class="ident">height</span>.<span class="number">0</span>)
+}
+
+<span class="doccomment">/// Getting the block hash function exposed to the wasm VM VP environment. The</span>
+<span class="doccomment">/// hash is that of the block to which the current transaction is being applied.</span>
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">vp_get_block_hash</span><span class="op">&lt;</span><span class="ident">MEM</span>, <span class="ident">DB</span>, <span class="ident">H</span>, <span class="ident">EVAL</span><span class="op">&gt;</span>(
+    <span class="ident">env</span>: <span class="kw-2">&amp;</span><span class="ident">VpEnv</span><span class="op">&lt;</span><span class="ident">MEM</span>, <span class="ident">DB</span>, <span class="ident">H</span>, <span class="ident">EVAL</span><span class="op">&gt;</span>,
+    <span class="ident">result_ptr</span>: <span class="ident">u64</span>,
+) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">vp_env</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span>
+<span class="kw">where</span>
+    <span class="ident">MEM</span>: <span class="ident">VmMemory</span>,
+    <span class="ident">DB</span>: <span class="ident">storage</span>::<span class="ident">DB</span> <span class="op">+</span> <span class="kw">for</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span> <span class="ident">storage</span>::<span class="ident">DBIter</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span>,
+    <span class="ident">H</span>: <span class="ident">StorageHasher</span>,
+    <span class="ident">EVAL</span>: <span class="ident">VpEvaluator</span>,
+{
+    <span class="kw">let</span> <span class="ident">gas_meter</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">env</span>.<span class="ident">ctx</span>.<span class="ident">gas_meter</span>.<span class="ident">get</span>() };
+    <span class="kw">let</span> <span class="ident">storage</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">env</span>.<span class="ident">ctx</span>.<span class="ident">storage</span>.<span class="ident">get</span>() };
+    <span class="kw">let</span> <span class="ident">hash</span> <span class="op">=</span> <span class="ident">vp_env</span>::<span class="ident">get_block_hash</span>(<span class="ident">gas_meter</span>, <span class="ident">storage</span>)<span class="question-mark">?</span>;
     <span class="kw">let</span> <span class="ident">gas</span> <span class="op">=</span> <span class="ident">env</span>.<span class="ident">memory</span>.<span class="ident">write_bytes</span>(<span class="ident">result_ptr</span>, <span class="ident">hash</span>.<span class="number">0</span>);
-    <span class="ident">vp_gas_check</span>(<span class="ident">vp_env</span>::<span class="ident">add_gas</span>(<span class="ident">gas_meter</span>, <span class="ident">gas</span>));
+    <span class="ident">vp_env</span>::<span class="ident">add_gas</span>(<span class="ident">gas_meter</span>, <span class="ident">gas</span>)
 }
 
 <span class="doccomment">/// Verify a transaction signature.</span>
@@ -2623,7 +2781,7 @@
     <span class="ident">pk_len</span>: <span class="ident">u64</span>,
     <span class="ident">sig_ptr</span>: <span class="ident">u64</span>,
     <span class="ident">sig_len</span>: <span class="ident">u64</span>,
-) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">i64</span>
+) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">vp_env</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">i64</span><span class="op">&gt;</span>
 <span class="kw">where</span>
     <span class="ident">MEM</span>: <span class="ident">VmMemory</span>,
     <span class="ident">DB</span>: <span class="ident">storage</span>::<span class="ident">DB</span> <span class="op">+</span> <span class="kw">for</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span> <span class="ident">storage</span>::<span class="ident">DBIter</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span>,
@@ -2632,18 +2790,18 @@
 {
     <span class="kw">let</span> (<span class="ident">pk</span>, <span class="ident">gas</span>) <span class="op">=</span> <span class="ident">env</span>.<span class="ident">memory</span>.<span class="ident">read_bytes</span>(<span class="ident">pk_ptr</span>, <span class="ident">pk_len</span> <span class="kw">as</span> <span class="kw">_</span>);
     <span class="kw">let</span> <span class="ident">gas_meter</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">env</span>.<span class="ident">ctx</span>.<span class="ident">gas_meter</span>.<span class="ident">get</span>() };
-    <span class="ident">vp_gas_check</span>(<span class="ident">vp_env</span>::<span class="ident">add_gas</span>(<span class="ident">gas_meter</span>, <span class="ident">gas</span>));
-    <span class="kw">let</span> <span class="ident">pk</span>: <span class="ident">PublicKey</span> <span class="op">=</span>
-        <span class="ident">BorshDeserialize</span>::<span class="ident">try_from_slice</span>(<span class="kw-2">&amp;</span><span class="ident">pk</span>).<span class="ident">expect</span>(<span class="string">&quot;Canot decode public key&quot;</span>);
+    <span class="ident">vp_env</span>::<span class="ident">add_gas</span>(<span class="ident">gas_meter</span>, <span class="ident">gas</span>)<span class="question-mark">?</span>;
+    <span class="kw">let</span> <span class="ident">pk</span>: <span class="ident">PublicKey</span> <span class="op">=</span> <span class="ident">BorshDeserialize</span>::<span class="ident">try_from_slice</span>(<span class="kw-2">&amp;</span><span class="ident">pk</span>)
+        .<span class="ident">map_err</span>(<span class="ident">vp_env</span>::<span class="ident">RuntimeError</span>::<span class="ident">EncodingError</span>)<span class="question-mark">?</span>;
 
     <span class="kw">let</span> (<span class="ident">sig</span>, <span class="ident">gas</span>) <span class="op">=</span> <span class="ident">env</span>.<span class="ident">memory</span>.<span class="ident">read_bytes</span>(<span class="ident">sig_ptr</span>, <span class="ident">sig_len</span> <span class="kw">as</span> <span class="kw">_</span>);
-    <span class="ident">vp_gas_check</span>(<span class="ident">vp_env</span>::<span class="ident">add_gas</span>(<span class="ident">gas_meter</span>, <span class="ident">gas</span>));
-    <span class="kw">let</span> <span class="ident">sig</span>: <span class="ident">Signature</span> <span class="op">=</span>
-        <span class="ident">BorshDeserialize</span>::<span class="ident">try_from_slice</span>(<span class="kw-2">&amp;</span><span class="ident">sig</span>).<span class="ident">expect</span>(<span class="string">&quot;Canot decode signature&quot;</span>);
+    <span class="ident">vp_env</span>::<span class="ident">add_gas</span>(<span class="ident">gas_meter</span>, <span class="ident">gas</span>)<span class="question-mark">?</span>;
+    <span class="kw">let</span> <span class="ident">sig</span>: <span class="ident">Signature</span> <span class="op">=</span> <span class="ident">BorshDeserialize</span>::<span class="ident">try_from_slice</span>(<span class="kw-2">&amp;</span><span class="ident">sig</span>)
+        .<span class="ident">map_err</span>(<span class="ident">vp_env</span>::<span class="ident">RuntimeError</span>::<span class="ident">EncodingError</span>)<span class="question-mark">?</span>;
 
-    <span class="ident">vp_gas_check</span>(<span class="ident">vp_env</span>::<span class="ident">add_gas</span>(<span class="ident">gas_meter</span>, <span class="ident">VERIFY_TX_SIG_GAS_COST</span>));
+    <span class="ident">vp_env</span>::<span class="ident">add_gas</span>(<span class="ident">gas_meter</span>, <span class="ident">VERIFY_TX_SIG_GAS_COST</span>)<span class="question-mark">?</span>;
     <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">env</span>.<span class="ident">ctx</span>.<span class="ident">tx</span>.<span class="ident">get</span>() };
-    <span class="ident">HostEnvResult</span>::<span class="ident">from</span>(<span class="ident">verify_tx_sig</span>(<span class="kw-2">&amp;</span><span class="ident">pk</span>, <span class="ident">tx</span>, <span class="kw-2">&amp;</span><span class="ident">sig</span>).<span class="ident">is_ok</span>()).<span class="ident">to_i64</span>()
+    <span class="prelude-val">Ok</span>(<span class="ident">HostEnvResult</span>::<span class="ident">from</span>(<span class="ident">verify_tx_sig</span>(<span class="kw-2">&amp;</span><span class="ident">pk</span>, <span class="ident">tx</span>, <span class="kw-2">&amp;</span><span class="ident">sig</span>).<span class="ident">is_ok</span>()).<span class="ident">to_i64</span>())
 }
 
 <span class="doccomment">/// Log a string from exposed to the wasm VM Tx environment. The message will be</span>
@@ -2653,14 +2811,15 @@
     <span class="ident">env</span>: <span class="kw-2">&amp;</span><span class="ident">TxEnv</span><span class="op">&lt;</span><span class="ident">MEM</span>, <span class="ident">DB</span>, <span class="ident">H</span><span class="op">&gt;</span>,
     <span class="ident">str_ptr</span>: <span class="ident">u64</span>,
     <span class="ident">str_len</span>: <span class="ident">u64</span>,
-) <span class="kw">where</span>
+) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">TxResult</span><span class="op">&lt;</span>()<span class="op">&gt;</span>
+<span class="kw">where</span>
     <span class="ident">MEM</span>: <span class="ident">VmMemory</span>,
     <span class="ident">DB</span>: <span class="ident">storage</span>::<span class="ident">DB</span> <span class="op">+</span> <span class="kw">for</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span> <span class="ident">storage</span>::<span class="ident">DBIter</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span>,
     <span class="ident">H</span>: <span class="ident">StorageHasher</span>,
 {
     <span class="kw">let</span> (<span class="ident">str</span>, <span class="ident">_gas</span>) <span class="op">=</span> <span class="ident">env</span>.<span class="ident">memory</span>.<span class="ident">read_string</span>(<span class="ident">str_ptr</span>, <span class="ident">str_len</span> <span class="kw">as</span> <span class="kw">_</span>);
-
     <span class="ident">tracing</span>::<span class="macro">info</span><span class="macro">!</span>(<span class="string">&quot;WASM Transaction log: {}&quot;</span>, <span class="ident">str</span>);
+    <span class="prelude-val">Ok</span>(())
 }
 
 <span class="doccomment">/// Evaluate a validity predicate with the given input data.</span>
@@ -2670,7 +2829,7 @@
     <span class="ident">vp_code_len</span>: <span class="ident">u64</span>,
     <span class="ident">input_data_ptr</span>: <span class="ident">u64</span>,
     <span class="ident">input_data_len</span>: <span class="ident">u64</span>,
-) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">i64</span>
+) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">vp_env</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">i64</span><span class="op">&gt;</span>
 <span class="kw">where</span>
     <span class="ident">MEM</span>: <span class="ident">VmMemory</span>,
     <span class="ident">DB</span>: <span class="ident">storage</span>::<span class="ident">DB</span> <span class="op">+</span> <span class="kw">for</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span> <span class="ident">storage</span>::<span class="ident">DBIter</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span>,
@@ -2679,16 +2838,16 @@
 {
     <span class="kw">let</span> (<span class="ident">vp_code</span>, <span class="ident">gas</span>) <span class="op">=</span> <span class="ident">env</span>.<span class="ident">memory</span>.<span class="ident">read_bytes</span>(<span class="ident">vp_code_ptr</span>, <span class="ident">vp_code_len</span> <span class="kw">as</span> <span class="kw">_</span>);
     <span class="kw">let</span> <span class="ident">gas_meter</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">env</span>.<span class="ident">ctx</span>.<span class="ident">gas_meter</span>.<span class="ident">get</span>() };
-    <span class="ident">vp_gas_check</span>(<span class="ident">vp_env</span>::<span class="ident">add_gas</span>(<span class="ident">gas_meter</span>, <span class="ident">gas</span>));
+    <span class="ident">vp_env</span>::<span class="ident">add_gas</span>(<span class="ident">gas_meter</span>, <span class="ident">gas</span>)<span class="question-mark">?</span>;
 
     <span class="kw">let</span> (<span class="ident">input_data</span>, <span class="ident">gas</span>) <span class="op">=</span>
         <span class="ident">env</span>.<span class="ident">memory</span>.<span class="ident">read_bytes</span>(<span class="ident">input_data_ptr</span>, <span class="ident">input_data_len</span> <span class="kw">as</span> <span class="kw">_</span>);
-    <span class="ident">vp_gas_check</span>(<span class="ident">vp_env</span>::<span class="ident">add_gas</span>(<span class="ident">gas_meter</span>, <span class="ident">gas</span>));
+    <span class="ident">vp_env</span>::<span class="ident">add_gas</span>(<span class="ident">gas_meter</span>, <span class="ident">gas</span>)<span class="question-mark">?</span>;
 
     <span class="kw">let</span> <span class="ident">eval_runner</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">env</span>.<span class="ident">ctx</span>.<span class="ident">eval_runner</span>.<span class="ident">get</span>() };
-    <span class="ident">eval_runner</span>
+    <span class="prelude-val">Ok</span>(<span class="ident">eval_runner</span>
         .<span class="ident">eval</span>(<span class="ident">env</span>.<span class="ident">ctx</span>.<span class="ident">clone</span>(), <span class="ident">vp_code</span>, <span class="ident">input_data</span>)
-        .<span class="ident">to_i64</span>()
+        .<span class="ident">to_i64</span>())
 }
 
 <span class="doccomment">/// Log a string from exposed to the wasm VM VP environment. The message will be</span>
@@ -2698,15 +2857,16 @@
     <span class="ident">env</span>: <span class="kw-2">&amp;</span><span class="ident">VpEnv</span><span class="op">&lt;</span><span class="ident">MEM</span>, <span class="ident">DB</span>, <span class="ident">H</span>, <span class="ident">EVAL</span><span class="op">&gt;</span>,
     <span class="ident">str_ptr</span>: <span class="ident">u64</span>,
     <span class="ident">str_len</span>: <span class="ident">u64</span>,
-) <span class="kw">where</span>
+) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">vp_env</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span>
+<span class="kw">where</span>
     <span class="ident">MEM</span>: <span class="ident">VmMemory</span>,
     <span class="ident">DB</span>: <span class="ident">storage</span>::<span class="ident">DB</span> <span class="op">+</span> <span class="kw">for</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span> <span class="ident">storage</span>::<span class="ident">DBIter</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span>,
     <span class="ident">H</span>: <span class="ident">StorageHasher</span>,
     <span class="ident">EVAL</span>: <span class="ident">VpEvaluator</span>,
 {
     <span class="kw">let</span> (<span class="ident">str</span>, <span class="ident">_gas</span>) <span class="op">=</span> <span class="ident">env</span>.<span class="ident">memory</span>.<span class="ident">read_string</span>(<span class="ident">str_ptr</span>, <span class="ident">str_len</span> <span class="kw">as</span> <span class="kw">_</span>);
-
     <span class="ident">tracing</span>::<span class="macro">info</span><span class="macro">!</span>(<span class="string">&quot;WASM Validity predicate log: {}&quot;</span>, <span class="ident">str</span>);
+    <span class="prelude-val">Ok</span>(())
 }
 
 <span class="doccomment">/// Remove given intents from the matchmaker&#39;s mempool</span>

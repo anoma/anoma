@@ -199,6 +199,18 @@
 <span id="196">196</span>
 <span id="197">197</span>
 <span id="198">198</span>
+<span id="199">199</span>
+<span id="200">200</span>
+<span id="201">201</span>
+<span id="202">202</span>
+<span id="203">203</span>
+<span id="204">204</span>
+<span id="205">205</span>
+<span id="206">206</span>
+<span id="207">207</span>
+<span id="208">208</span>
+<span id="209">209</span>
+<span id="210">210</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Virtual machine modules for running transactions, validity predicates,</span>
 <span class="doccomment">//! matchmaker and matchmaker&#39;s filter.</span>
@@ -215,6 +227,31 @@
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">types</span>;
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;wasm-runtime&quot;</span>)]</span>
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">wasm</span>;
+<span class="kw">use</span> <span class="ident">thiserror</span>::<span class="ident">Error</span>;
+
+<span class="kw">const</span> <span class="ident">UNTRUSTED_WASM_FEATURES</span>: <span class="ident">WasmFeatures</span> <span class="op">=</span> <span class="ident">WasmFeatures</span> {
+    <span class="ident">reference_types</span>: <span class="bool-val">false</span>,
+    <span class="ident">multi_value</span>: <span class="bool-val">false</span>,
+    <span class="ident">bulk_memory</span>: <span class="bool-val">false</span>,
+    <span class="ident">module_linking</span>: <span class="bool-val">false</span>,
+    <span class="ident">simd</span>: <span class="bool-val">false</span>,
+    <span class="ident">threads</span>: <span class="bool-val">false</span>,
+    <span class="ident">tail_call</span>: <span class="bool-val">false</span>,
+    <span class="ident">deterministic_only</span>: <span class="bool-val">true</span>,
+    <span class="ident">multi_memory</span>: <span class="bool-val">false</span>,
+    <span class="ident">exceptions</span>: <span class="bool-val">false</span>,
+    <span class="ident">memory64</span>: <span class="bool-val">false</span>,
+};
+
+<span class="attribute">#[<span class="ident">allow</span>(<span class="ident">missing_docs</span>)]</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Error</span>, <span class="ident">Debug</span>)]</span>
+<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">WasmValidationError</span> {
+    <span class="attribute">#[<span class="ident">error</span>(
+        <span class="string">&quot;Invalid WASM using forbidden features: {0}. Expected: \
+         {UNTRUSTED_WASM_FEATURES:?}&quot;</span>
+    )]</span>
+    <span class="ident">ForbiddenWasmFeatures</span>(<span class="ident">wasmparser</span>::<span class="ident">BinaryReaderError</span>),
+}
 
 <span class="doccomment">/// This is used to attach the Ledger&#39;s host structures to wasm environment,</span>
 <span class="doccomment">/// which is used for implementing some host calls. It wraps an immutable</span>
@@ -378,25 +415,12 @@
 <span class="doccomment">/// (e.g. transaction and validity predicates)</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">validate_untrusted_wasm</span>(
     <span class="ident">wasm_code</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span>[<span class="ident">u8</span>]<span class="op">&gt;</span>,
-) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">wasmparser</span>::<span class="ident">BinaryReaderError</span><span class="op">&gt;</span> {
+) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">WasmValidationError</span><span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">validator</span> <span class="op">=</span> <span class="ident">Validator</span>::<span class="ident">new</span>();
-
-    <span class="kw">let</span> <span class="ident">features</span> <span class="op">=</span> <span class="ident">WasmFeatures</span> {
-        <span class="ident">reference_types</span>: <span class="bool-val">false</span>,
-        <span class="ident">multi_value</span>: <span class="bool-val">false</span>,
-        <span class="ident">bulk_memory</span>: <span class="bool-val">false</span>,
-        <span class="ident">module_linking</span>: <span class="bool-val">false</span>,
-        <span class="ident">simd</span>: <span class="bool-val">false</span>,
-        <span class="ident">threads</span>: <span class="bool-val">false</span>,
-        <span class="ident">tail_call</span>: <span class="bool-val">false</span>,
-        <span class="ident">deterministic_only</span>: <span class="bool-val">true</span>,
-        <span class="ident">multi_memory</span>: <span class="bool-val">false</span>,
-        <span class="ident">exceptions</span>: <span class="bool-val">false</span>,
-        <span class="ident">memory64</span>: <span class="bool-val">false</span>,
-    };
-    <span class="ident">validator</span>.<span class="ident">wasm_features</span>(<span class="ident">features</span>);
-
-    <span class="ident">validator</span>.<span class="ident">validate_all</span>(<span class="ident">wasm_code</span>.<span class="ident">as_ref</span>())
+    <span class="ident">validator</span>.<span class="ident">wasm_features</span>(<span class="ident">UNTRUSTED_WASM_FEATURES</span>);
+    <span class="ident">validator</span>
+        .<span class="ident">validate_all</span>(<span class="ident">wasm_code</span>.<span class="ident">as_ref</span>())
+        .<span class="ident">map_err</span>(<span class="ident">WasmValidationError</span>::<span class="ident">ForbiddenWasmFeatures</span>)
 }
 </pre></div>
 </section><section id="search" class="content hidden"></section><section class="footer"></section><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="anoma_shared" data-search-js="../../../search-index.js"></div>

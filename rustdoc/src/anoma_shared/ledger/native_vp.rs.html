@@ -243,16 +243,18 @@
 <span id="240">240</span>
 <span id="241">241</span>
 <span id="242">242</span>
+<span id="243">243</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Native validity predicate interface associated with internal accounts such</span>
 <span class="doccomment">//! as the PoS and IBC modules.</span>
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">collections</span>::<span class="ident">HashSet</span>;
 
-<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">ledger</span>::<span class="ident">gas</span>::{<span class="prelude-ty">Result</span>, <span class="ident">VpGasMeter</span>};
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">ledger</span>::<span class="ident">gas</span>::<span class="ident">VpGasMeter</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">ledger</span>::<span class="ident">ibc</span>::<span class="ident">Ibc</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">ledger</span>::<span class="ident">pos</span>::<span class="ident">PoS</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">ledger</span>::<span class="ident">storage</span>::<span class="ident">write_log</span>::<span class="ident">WriteLog</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">ledger</span>::<span class="ident">storage</span>::{<span class="ident">Storage</span>, <span class="ident">StorageHasher</span>};
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">ledger</span>::<span class="ident">vp_env</span>::<span class="prelude-ty">Result</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">ledger</span>::{<span class="ident">storage</span>, <span class="ident">vp_env</span>};
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">proto</span>::<span class="ident">Tx</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">types</span>::<span class="ident">address</span>::{<span class="ident">Address</span>, <span class="ident">InternalAddress</span>};
