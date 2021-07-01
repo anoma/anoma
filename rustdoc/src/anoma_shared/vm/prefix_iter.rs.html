@@ -80,9 +80,6 @@
 <span id="77">77</span>
 <span id="78">78</span>
 <span id="79">79</span>
-<span id="80">80</span>
-<span id="81">81</span>
-<span id="82">82</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! The storage prefix iterators can be used to iterate over a common prefix of</span>
 <span class="doccomment">//! storage keys.</span>
@@ -119,10 +116,7 @@
         <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
         <span class="ident">id</span>: <span class="ident">PrefixIteratorId</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="op">&lt;</span><span class="ident">DB</span>::<span class="ident">PrefixIter</span> <span class="kw">as</span> <span class="ident">Iterator</span><span class="op">&gt;</span>::<span class="ident">Item</span><span class="op">&gt;</span> {
-        <span class="kw">match</span> <span class="self">self</span>.<span class="ident">iterators</span>.<span class="ident">get_mut</span>(<span class="kw-2">&amp;</span><span class="ident">id</span>) {
-            <span class="prelude-val">Some</span>(<span class="ident">iter</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">iter</span>.<span class="ident">next</span>(),
-            <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">None</span>,
-        }
+        <span class="self">self</span>.<span class="ident">iterators</span>.<span class="ident">get_mut</span>(<span class="kw-2">&amp;</span><span class="ident">id</span>).<span class="ident">and_then</span>(<span class="op">|</span><span class="ident">i</span><span class="op">|</span> <span class="ident">i</span>.<span class="ident">next</span>())
     }
 
     <span class="doccomment">/// Get prefix iterator with the given ID.</span>
@@ -140,14 +134,14 @@
 {
     <span class="kw">fn</span> <span class="ident">default</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="self">Self</span> {
-            <span class="ident">index</span>: <span class="ident">PrefixIteratorId</span>::<span class="ident">new</span>(<span class="number">0</span>),
-            <span class="ident">iterators</span>: <span class="ident">HashMap</span>::<span class="ident">new</span>(),
+            <span class="ident">index</span>: <span class="ident">PrefixIteratorId</span>::<span class="ident">default</span>(),
+            <span class="ident">iterators</span>: <span class="ident">HashMap</span>::<span class="ident">default</span>(),
         }
     }
 }
 
 <span class="doccomment">/// A prefix iterator identifier for the temporary storage [`PrefixIterators`].</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Copy</span>, <span class="ident">Debug</span>, <span class="ident">Eq</span>, <span class="ident">PartialEq</span>, <span class="ident">Ord</span>, <span class="ident">PartialOrd</span>, <span class="ident">Hash</span>)]</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Copy</span>, <span class="ident">Debug</span>, <span class="ident">Eq</span>, <span class="ident">PartialEq</span>, <span class="ident">Ord</span>, <span class="ident">PartialOrd</span>, <span class="ident">Hash</span>, <span class="ident">Default</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">PrefixIteratorId</span>(<span class="ident">u64</span>);
 
 <span class="kw">impl</span> <span class="ident">PrefixIteratorId</span> {

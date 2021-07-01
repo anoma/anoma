@@ -560,10 +560,6 @@
 <span id="557">557</span>
 <span id="558">558</span>
 <span id="559">559</span>
-<span id="560">560</span>
-<span id="561">561</span>
-<span id="562">562</span>
-<span id="563">563</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Wasm memory is used for bi-directionally passing data between the host and a</span>
 <span class="doccomment">//! wasm instance.</span>
@@ -836,13 +832,9 @@
         <span class="kw">let</span> <span class="ident">req_pages</span> <span class="op">=</span> ((<span class="ident">missing</span> <span class="op">+</span> <span class="ident">wasmer</span>::<span class="ident">WASM_PAGE_SIZE</span> <span class="op">-</span> <span class="number">1</span>)
             <span class="op">/</span> <span class="ident">wasmer</span>::<span class="ident">WASM_PAGE_SIZE</span>) <span class="kw">as</span> <span class="ident">u32</span>;
         <span class="ident">tracing</span>::<span class="macro">info</span><span class="macro">!</span>(<span class="string">&quot;trying to grow memory by {} pages&quot;</span>, <span class="ident">req_pages</span>);
-        <span class="ident">memory</span>
-            .<span class="ident">grow</span>(<span class="ident">req_pages</span>)
-            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">_pages</span><span class="op">|</span> ())
-            .<span class="ident">map_err</span>(<span class="ident">Error</span>::<span class="ident">MemoryOutOfBounds</span>)
-    } <span class="kw">else</span> {
-        <span class="prelude-val">Ok</span>(())
+        <span class="ident">memory</span>.<span class="ident">grow</span>(<span class="ident">req_pages</span>).<span class="ident">map_err</span>(<span class="ident">Error</span>::<span class="ident">MemoryOutOfBounds</span>)<span class="question-mark">?</span>;
     }
+    <span class="prelude-val">Ok</span>(())
 }
 
 <span class="doccomment">/// Read bytes from memory at the given offset and length</span>

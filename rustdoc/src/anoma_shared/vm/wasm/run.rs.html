@@ -1047,7 +1047,6 @@
 <span id="1044">1044</span>
 <span id="1045">1045</span>
 <span id="1046">1046</span>
-<span id="1047">1047</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Wasm runners</span>
 
@@ -1087,7 +1086,6 @@
 <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">missing_docs</span>)]</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Error</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">Error</span> {
-    <span class="comment">// 1. Common error types</span>
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Memory error: {0}&quot;</span>)]</span>
     <span class="ident">MemoryError</span>(<span class="ident">memory</span>::<span class="ident">Error</span>),
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Unable to inject gas meter&quot;</span>)]</span>
