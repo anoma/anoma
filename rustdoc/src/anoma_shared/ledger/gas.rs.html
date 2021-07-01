@@ -338,21 +338,6 @@
 <span id="335">335</span>
 <span id="336">336</span>
 <span id="337">337</span>
-<span id="338">338</span>
-<span id="339">339</span>
-<span id="340">340</span>
-<span id="341">341</span>
-<span id="342">342</span>
-<span id="343">343</span>
-<span id="344">344</span>
-<span id="345">345</span>
-<span id="346">346</span>
-<span id="347">347</span>
-<span id="348">348</span>
-<span id="349">349</span>
-<span id="350">350</span>
-<span id="351">351</span>
-<span id="352">352</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Gas accounting module to track the gas usage in a block for transactions and</span>
 <span class="doccomment">//! validity predicates triggered by transactions.</span>
@@ -402,12 +387,6 @@
     <span class="ident">initial_gas</span>: <span class="ident">u64</span>,
     <span class="doccomment">/// The current gas usage in the VP</span>
     <span class="kw">pub</span> <span class="ident">current_gas</span>: <span class="ident">u64</span>,
-    <span class="doccomment">/// We store the `error` inside here, because when we run out of gas in VP</span>
-    <span class="doccomment">/// wasm, the execution is immediately shut down with `unreachable!()`</span>
-    <span class="doccomment">/// as we cannot simply return `Result` from wasm. So instead, we store</span>
-    <span class="doccomment">/// the error in this meter, which is accessible from the wasm host</span>
-    <span class="doccomment">/// environment.</span>
-    <span class="kw">pub</span> <span class="ident">error</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Error</span><span class="op">&gt;</span>,
 }
 
 <span class="doccomment">/// Gas meter for VPs parallel runs</span>
@@ -487,7 +466,6 @@
         <span class="self">Self</span> {
             <span class="ident">initial_gas</span>,
             <span class="ident">current_gas</span>: <span class="number">0</span>,
-            <span class="ident">error</span>: <span class="prelude-val">None</span>,
         }
     }
 
@@ -500,7 +478,6 @@
                 <span class="self">self</span>.<span class="ident">current_gas</span> <span class="op">=</span> <span class="ident">gas</span>;
             }
             <span class="prelude-val">Err</span>(<span class="ident">err</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="self">self</span>.<span class="ident">error</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">err</span>.<span class="ident">clone</span>());
                 <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">err</span>);
             }
         }
@@ -512,12 +489,10 @@
         {
             <span class="prelude-val">Ok</span>(<span class="ident">gas</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">gas</span>,
             <span class="prelude-val">Err</span>(<span class="ident">err</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="self">self</span>.<span class="ident">error</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">err</span>.<span class="ident">clone</span>());
                 <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">err</span>);
             }
         };
         <span class="kw">if</span> <span class="ident">current_total</span> <span class="op">&gt;</span> <span class="ident">TRANSACTION_GAS_LIMIT</span> {
-            <span class="self">self</span>.<span class="ident">error</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">Error</span>::<span class="ident">TransactionGasExceedededError</span>);
             <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error</span>::<span class="ident">TransactionGasExceedededError</span>);
         }
         <span class="prelude-val">Ok</span>(())
@@ -614,7 +589,6 @@
         <span class="kw">fn</span> <span class="ident">test_vp_gas_meter_add</span>(<span class="ident">gas</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">TRANSACTION_GAS_LIMIT</span>) {
             <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">meter</span> <span class="op">=</span> <span class="ident">VpGasMeter</span>::<span class="ident">new</span>(<span class="number">0</span>);
             <span class="ident">meter</span>.<span class="ident">add</span>(<span class="ident">gas</span>).<span class="ident">expect</span>(<span class="string">&quot;cannot add the gas&quot;</span>);
-            <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">meter</span>.<span class="ident">error</span>, <span class="prelude-val">None</span>);
         }
 
         <span class="attribute">#[<span class="ident">test</span>]</span>
@@ -629,46 +603,42 @@
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="kw">fn</span> <span class="ident">test_vp_gas_overflow</span>() {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">meter</span> <span class="op">=</span> <span class="ident">VpGasMeter</span>::<span class="ident">new</span>(<span class="number">1</span>);
-        <span class="kw">match</span> <span class="ident">meter</span>.<span class="ident">add</span>(<span class="ident">u64</span>::<span class="ident">MAX</span>).<span class="ident">expect_err</span>(<span class="string">&quot;unexpectedly succeeded&quot;</span>) {
-            <span class="ident">err</span> @ <span class="ident">Error</span>::<span class="ident">GasOverflow</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">meter</span>.<span class="ident">error</span>, <span class="prelude-val">Some</span>(<span class="ident">err</span>)),
-            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;unexpected error happened&quot;</span>),
-        }
+        <span class="macro">assert_matches</span><span class="macro">!</span>(
+            <span class="ident">meter</span>.<span class="ident">add</span>(<span class="ident">u64</span>::<span class="ident">MAX</span>).<span class="ident">expect_err</span>(<span class="string">&quot;unexpectedly succeeded&quot;</span>),
+            <span class="ident">Error</span>::<span class="ident">GasOverflow</span>
+        );
     }
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="kw">fn</span> <span class="ident">test_vp_gas_limit</span>() {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">meter</span> <span class="op">=</span> <span class="ident">VpGasMeter</span>::<span class="ident">new</span>(<span class="number">1</span>);
-        <span class="kw">match</span> <span class="ident">meter</span>
-            .<span class="ident">add</span>(<span class="ident">TRANSACTION_GAS_LIMIT</span>)
-            .<span class="ident">expect_err</span>(<span class="string">&quot;unexpectedly succeeded&quot;</span>)
-        {
-            <span class="ident">err</span> @ <span class="ident">Error</span>::<span class="ident">TransactionGasExceedededError</span> <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">meter</span>.<span class="ident">error</span>, <span class="prelude-val">Some</span>(<span class="ident">err</span>))
-            }
-            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;unexpected error happened&quot;</span>),
-        }
+        <span class="macro">assert_matches</span><span class="macro">!</span>(
+            <span class="ident">meter</span>
+                .<span class="ident">add</span>(<span class="ident">TRANSACTION_GAS_LIMIT</span>)
+                .<span class="ident">expect_err</span>(<span class="string">&quot;unexpectedly succeeded&quot;</span>),
+            <span class="ident">Error</span>::<span class="ident">TransactionGasExceedededError</span>
+        );
     }
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="kw">fn</span> <span class="ident">test_tx_gas_overflow</span>() {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">meter</span> <span class="op">=</span> <span class="ident">BlockGasMeter</span>::<span class="ident">default</span>();
         <span class="ident">meter</span>.<span class="ident">add</span>(<span class="number">1</span>).<span class="ident">expect</span>(<span class="string">&quot;cannot add the gas&quot;</span>);
-        <span class="kw">match</span> <span class="ident">meter</span>.<span class="ident">add</span>(<span class="ident">u64</span>::<span class="ident">MAX</span>).<span class="ident">expect_err</span>(<span class="string">&quot;unexpectedly succeeded&quot;</span>) {
-            <span class="ident">Error</span>::<span class="ident">GasOverflow</span> <span class="op">=</span><span class="op">&gt;</span> {}
-            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;unexpected error happened&quot;</span>),
-        }
+        <span class="macro">assert_matches</span><span class="macro">!</span>(
+            <span class="ident">meter</span>.<span class="ident">add</span>(<span class="ident">u64</span>::<span class="ident">MAX</span>).<span class="ident">expect_err</span>(<span class="string">&quot;unexpectedly succeeded&quot;</span>),
+            <span class="ident">Error</span>::<span class="ident">GasOverflow</span>
+        );
     }
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="kw">fn</span> <span class="ident">test_tx_gas_limit</span>() {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">meter</span> <span class="op">=</span> <span class="ident">BlockGasMeter</span>::<span class="ident">default</span>();
-        <span class="kw">match</span> <span class="ident">meter</span>
-            .<span class="ident">add</span>(<span class="ident">TRANSACTION_GAS_LIMIT</span> <span class="op">+</span> <span class="number">1</span>)
-            .<span class="ident">expect_err</span>(<span class="string">&quot;unexpectedly succeeded&quot;</span>)
-        {
-            <span class="ident">Error</span>::<span class="ident">TransactionGasExceedededError</span> <span class="op">=</span><span class="op">&gt;</span> {}
-            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;unexpected error happened&quot;</span>),
-        }
+        <span class="macro">assert_matches</span><span class="macro">!</span>(
+            <span class="ident">meter</span>
+                .<span class="ident">add</span>(<span class="ident">TRANSACTION_GAS_LIMIT</span> <span class="op">+</span> <span class="number">1</span>)
+                .<span class="ident">expect_err</span>(<span class="string">&quot;unexpectedly succeeded&quot;</span>),
+            <span class="ident">Error</span>::<span class="ident">TransactionGasExceedededError</span>
+        );
     }
 
     <span class="attribute">#[<span class="ident">test</span>]</span>

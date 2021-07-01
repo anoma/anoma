@@ -538,6 +538,10 @@
 <span id="535">535</span>
 <span id="536">536</span>
 <span id="537">537</span>
+<span id="538">538</span>
+<span id="539">539</span>
+<span id="540">540</span>
+<span id="541">541</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! A Tendermint wrapper module that relays Tendermint requests to the Shell.</span>
 <span class="doccomment">//!</span>
@@ -551,6 +555,7 @@
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">process</span>::<span class="ident">Command</span>;
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">str</span>::<span class="ident">FromStr</span>;
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">sync</span>::<span class="ident">mpsc</span>::{<span class="self">self</span>, <span class="ident">channel</span>, <span class="ident">Sender</span>};
+<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">time</span>::<span class="ident">Duration</span>;
 
 <span class="kw">use</span> <span class="ident">anoma_shared</span>::<span class="ident">ledger</span>::<span class="ident">storage</span>::<span class="ident">MerkleRoot</span>;
 <span class="kw">use</span> <span class="ident">anoma_shared</span>::<span class="ident">types</span>::<span class="ident">storage</span>::{<span class="ident">BlockHash</span>, <span class="ident">BlockHeight</span>};
@@ -1011,6 +1016,9 @@
     <span class="comment">// Bumped from the default `1_000_000`, because some WASMs can be</span>
     <span class="comment">// quite large</span>
     <span class="ident">config</span>.<span class="ident">rpc</span>.<span class="ident">max_body_bytes</span> <span class="op">=</span> <span class="number">2_000_000</span>;
+
+    <span class="comment">// TODO broadcast_tx_commit shouldn&#39;t be used live;</span>
+    <span class="ident">config</span>.<span class="ident">rpc</span>.<span class="ident">timeout_broadcast_tx_commit</span> <span class="op">=</span> <span class="ident">Duration</span>::<span class="ident">from_secs</span>(<span class="number">20</span>).<span class="ident">into</span>();
 
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">file</span> <span class="op">=</span> <span class="ident">OpenOptions</span>::<span class="ident">new</span>()
         .<span class="ident">write</span>(<span class="bool-val">true</span>)
