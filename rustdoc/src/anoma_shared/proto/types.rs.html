@@ -670,7 +670,7 @@
     <span class="kw">fn</span> <span class="ident">test_intent_gossip_message</span>() {
         <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="string">&quot;arbitrary data&quot;</span>.<span class="ident">as_bytes</span>().<span class="ident">to_owned</span>();
         <span class="kw">let</span> <span class="ident">intent</span> <span class="op">=</span> <span class="ident">Intent</span>::<span class="ident">new</span>(<span class="ident">data</span>);
-        <span class="kw">let</span> <span class="ident">message</span> <span class="op">=</span> <span class="ident">IntentGossipMessage</span>::<span class="ident">new</span>(<span class="ident">intent</span>.<span class="ident">clone</span>());
+        <span class="kw">let</span> <span class="ident">message</span> <span class="op">=</span> <span class="ident">IntentGossipMessage</span>::<span class="ident">new</span>(<span class="ident">intent</span>);
 
         <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="ident">message</span>.<span class="ident">to_bytes</span>();
         <span class="kw">let</span> <span class="ident">message_from_bytes</span> <span class="op">=</span> <span class="ident">IntentGossipMessage</span>::<span class="ident">try_from</span>(<span class="ident">bytes</span>.<span class="ident">as_ref</span>())
@@ -682,7 +682,7 @@
     <span class="kw">fn</span> <span class="ident">test_dkg_gossip_message</span>() {
         <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="string">&quot;arbitrary string&quot;</span>.<span class="ident">to_owned</span>();
         <span class="kw">let</span> <span class="ident">dkg</span> <span class="op">=</span> <span class="ident">Dkg</span>::<span class="ident">new</span>(<span class="ident">data</span>);
-        <span class="kw">let</span> <span class="ident">message</span> <span class="op">=</span> <span class="ident">DkgGossipMessage</span>::<span class="ident">new</span>(<span class="ident">dkg</span>.<span class="ident">clone</span>());
+        <span class="kw">let</span> <span class="ident">message</span> <span class="op">=</span> <span class="ident">DkgGossipMessage</span>::<span class="ident">new</span>(<span class="ident">dkg</span>);
 
         <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="ident">message</span>.<span class="ident">to_bytes</span>();
         <span class="kw">let</span> <span class="ident">message_from_bytes</span> <span class="op">=</span> <span class="ident">DkgGossipMessage</span>::<span class="ident">try_from</span>(<span class="ident">bytes</span>.<span class="ident">as_ref</span>())
@@ -713,7 +713,7 @@
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="kw">fn</span> <span class="ident">test_dkg</span>() {
         <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="string">&quot;arbitrary string&quot;</span>.<span class="ident">to_owned</span>();
-        <span class="kw">let</span> <span class="ident">dkg</span> <span class="op">=</span> <span class="ident">Dkg</span>::<span class="ident">new</span>(<span class="ident">data</span>.<span class="ident">clone</span>());
+        <span class="kw">let</span> <span class="ident">dkg</span> <span class="op">=</span> <span class="ident">Dkg</span>::<span class="ident">new</span>(<span class="ident">data</span>);
 
         <span class="kw">let</span> <span class="ident">types_dkg</span>: <span class="ident">types</span>::<span class="ident">Dkg</span> <span class="op">=</span> <span class="ident">dkg</span>.<span class="ident">clone</span>().<span class="ident">into</span>();
         <span class="kw">let</span> <span class="ident">dkg_from_types</span> <span class="op">=</span> <span class="ident">Dkg</span>::<span class="ident">from</span>(<span class="ident">types_dkg</span>);

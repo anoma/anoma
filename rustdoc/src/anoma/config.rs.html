@@ -332,7 +332,6 @@
 <span id="329">329</span>
 <span id="330">330</span>
 <span id="331">331</span>
-<span id="332">332</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Node and client configuration</span>
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">collections</span>::<span class="ident">HashSet</span>;
@@ -642,16 +641,15 @@ And this is correct
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">gossiper_config</span> <span class="op">=</span> <span class="ident">IntentGossiper</span>::<span class="ident">default</span>();
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">discover_config</span> <span class="op">=</span> <span class="ident">DiscoverPeer</span>::<span class="ident">default</span>();
 
-        <span class="ident">gossiper_config</span>.<span class="ident">address</span> <span class="op">=</span> <span class="ident">Multiaddr</span>::<span class="ident">from_str</span>(
-            <span class="kw-2">&amp;</span><span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;/ip4/{}/tcp/{}&quot;</span>, <span class="ident">ip</span>, <span class="ident">port</span>).<span class="ident">to_string</span>(),
-        )
-        .<span class="ident">unwrap</span>();
+        <span class="ident">gossiper_config</span>.<span class="ident">address</span> <span class="op">=</span>
+            <span class="ident">Multiaddr</span>::<span class="ident">from_str</span>(<span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;/ip4/{}/tcp/{}&quot;</span>, <span class="ident">ip</span>, <span class="ident">port</span>).<span class="ident">as_str</span>())
+                .<span class="ident">unwrap</span>();
 
         <span class="kw">let</span> <span class="ident">bootstrap_peers</span>: <span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">PeerAddress</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">peers_info</span>
             .<span class="ident">iter</span>()
             .<span class="ident">map</span>(<span class="op">|</span><span class="ident">info</span><span class="op">|</span> <span class="ident">PeerAddress</span> {
                 <span class="ident">address</span>: <span class="ident">Multiaddr</span>::<span class="ident">from_str</span>(
-                    <span class="kw-2">&amp;</span><span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;/ip4/{}/tcp/{}&quot;</span>, <span class="ident">info</span>.<span class="number">0</span>, <span class="ident">info</span>.<span class="number">1</span>).<span class="ident">to_string</span>(),
+                    <span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;/ip4/{}/tcp/{}&quot;</span>, <span class="ident">info</span>.<span class="number">0</span>, <span class="ident">info</span>.<span class="number">1</span>).<span class="ident">as_str</span>(),
                 )
                 .<span class="ident">unwrap</span>(),
                 <span class="ident">peer_id</span>: <span class="ident">info</span>.<span class="number">2</span>,

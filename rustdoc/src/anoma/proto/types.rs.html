@@ -286,7 +286,7 @@
         <span class="kw">let</span> <span class="ident">topic</span> <span class="op">=</span> <span class="string">&quot;arbitrary string&quot;</span>.<span class="ident">to_owned</span>();
         <span class="kw">let</span> <span class="ident">topic_message</span> <span class="op">=</span> <span class="ident">SubscribeTopicMessage</span>::<span class="ident">new</span>(<span class="ident">topic</span>.<span class="ident">clone</span>());
 
-        <span class="kw">let</span> <span class="ident">topic_rpc_message</span> <span class="op">=</span> <span class="ident">RpcMessage</span>::<span class="ident">new_topic</span>(<span class="ident">topic</span>.<span class="ident">clone</span>());
+        <span class="kw">let</span> <span class="ident">topic_rpc_message</span> <span class="op">=</span> <span class="ident">RpcMessage</span>::<span class="ident">new_topic</span>(<span class="ident">topic</span>);
         <span class="kw">let</span> <span class="ident">services_rpc_message</span>: <span class="ident">services</span>::<span class="ident">RpcMessage</span> <span class="op">=</span>
             <span class="ident">topic_rpc_message</span>.<span class="ident">into</span>();
         <span class="kw">match</span> <span class="ident">services_rpc_message</span>.<span class="ident">message</span> {
