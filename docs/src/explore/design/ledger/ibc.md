@@ -92,9 +92,7 @@ pub fn create_client(client_state: &ClientState, consensus_state: &AnyConsensusS
 
     let key = Key::ibc_client_counter();
     let id_counter = tx::read(key).unwrap_or_default();
-    let client_id = ClientId::new(client_state.client_type(), id_counter).map_err(|e| {
-        Kind::ClientIdentifierConstructor(client_state.client_type(), id_counter).context(e)
-    })?;
+    let client_id = ClientId::new(client_state.client_type(), id_counter).expect("cannot get an IBC client ID");
     tx::write(key, id_counter + 1);
 
     let key = Key::ibc_client_type(client_id);
@@ -138,194 +136,174 @@ impl NativeVp for IbcVp {
         DB: storage::DB + for<'iter> storage::DBIter<'iter>,
         H: StorageHasher
     {
-        for key in &keys_changed {
-            if !is_ibc_key(key) {
+        for key in keys_changed {
+            if !key.is_ibc_key() {
                 continue;
             }
 
-            // client
-            if key.segments.contains(&StringSeg("clientState".to_owned())) {
-                // Check the client state change
-                //   - created or updated
-                let state_change = check_client_state(client_id);
-                if state_change.is_created() {
-                    // "CreateClient"
-                    // Assert that the corresponding consensus state exists
-                } else {
-                    match get_header(tx_data) {
-                        Some(header) => {
-                            // "UpdateClient"
-                            // Verify the header with the stored client state’s validity predicate and consensus state
-                            //   - Refer to `ibc-rs::ics02_client::client_def::check_header_and_update_state()`
-                        }
-                        None => {
-                            // "UpgradeClient"
-                            // Verify the proofs to check the client state and consensus state
-                            //   - Refer to `ibc-rs::ics02_client::client_def::verify_upgrade_and_update_state()`
+            match get_ibc_prefix(key) {
+                // client
+                "clients" => {
+                    let client_id = get_client_id(key);
+                    // Check the client state change
+                    //   - created or updated
+                    let state_change = check_client_state(client_id);
+                    if state_change.is_created() {
+                        // "CreateClient"
+                        // Assert that the corresponding consensus state exists
+                    } else {
+                        match get_header(tx_data) {
+                            Some(header) => {
+                                // "UpdateClient"
+                                // Verify the header with the stored client state’s validity predicate and consensus state
+                                //   - Refer to `ibc-rs::ics02_client::client_def::check_header_and_update_state()`
+                            }
+                            None => {
+                                // "UpgradeClient"
+                                // Verify the proofs to check the client state and consensus state
+                                //   - Refer to `ibc-rs::ics02_client::client_def::verify_upgrade_and_update_state()`
+                            }
                         }
                     }
                 }
-            }
 
-            // connection
-            if key.segments.contains(&StringSeg("connections".to_owned())) {
-                // Check the connection state change
-                //   - none => INIT, none => TRYOPEN, INIT => OPEN, or TRYOPEN => OPEN
-                let state_change = check_connection_state(connection_id);
-                if state_change.is_initiated() {
-                    // "ConnectionOpenInit"
-                    // Assert that the corresponding client exists
-                } else {
+                // connection handshake
+                "connections" => {
+                    let connection_id = get_connection_id(key);
+                    // Check the connection state change
+                    //   - none => INIT, none => TRYOPEN, INIT => OPEN, or TRYOPEN => OPEN
+                    let state_change = check_connection_state(connection_id);
+                    if state_change.is_created() {
+                        // "ConnectionOpenInit"
+                        // Assert that the corresponding client exists
+                    } else {
+                        // Assert that the version is compatible
+
+                        // Verify the proofs to check the counterpart ledger's state is expected
+                        //   - The state can be inferred from the own connection state change
+                        //   - Use `ibc-rs::ics03_connection::handler::verify::verify_proofs()`
+                    }
+                }
+
+                // channel handshake or closing
+                "channelEnds" => {
+                    // Assert that the port is owend
+
+                    // Assert that the corresponding connection exists
+
                     // Assert that the version is compatible
 
-                    // Verify the proofs to check the counterpart ledger's state is expected
-                    //   - The state can be inferred from the own connection state change
-                    //   - Use `ibc-rs::ics03_connection::handler::verify::verify_proofs()`
-                }
-            }
-
-            // channel handshake or closing
-            if key.segments.contains(&StringSeg("channelEnds".to_owned())) {
-                // Assert that the port is owend
-                // Check the channel state change
-                //   - none => INIT, none => TRYOPEN, INIT => OPEN, TRYOPEN => OPEN, or OPEN => CLOSED
-                let state_change = check_channel_state(channel_id);
-                if state_change.is_created() {
-                    // none => INIT
-                    // Nothing to do
-                    continue;
-                } else if state_change.is_closed() {
-                    // OPEN => CLOSED
-                    // Assert that the version is compatible
-
-                    match get_proofs(tx_data) {
-                        Some(proofs) => {
-                            // "ChanCloseConfirm"
-                            // Verify the proofs to check the counterpart ledger's state is expected
-                            //   - To check that the channel has been closed
-                            //   - Use `ibc-rs::ics04_connection::handler::verify::verify_channel_proofs()`
+                    // Check the channel state change
+                    //   - none => INIT, none => TRYOPEN, INIT => OPEN, TRYOPEN => OPEN, or OPEN => CLOSED
+                    let state_change = check_channel_state(channel_id);
+                    if state_change.is_created() {
+                        // "ChanOpenInit"
+                        continue;
+                    } else if state_change.is_closed() {
+                        // OPEN => CLOSED
+                        match get_proofs(tx_data) {
+                            Some(proofs) => {
+                                // "ChanCloseConfirm"
+                                // Verify the proofs to check the counterpart ledger's channel has been closed
+                                //   - Use `ibc-rs::ics04_connection::handler::verify::verify_channel_proofs()`
+                            }
+                            None => {
+                                // "ChanCloseInit"
+                                continue;
+                            }
                         }
-                        None => {
-                            // "ChanCloseInit"
-                            // Assert that the channel state is changed from `OPEN` to `CLOSED`
+                    } else {
+                        // Verify the proof to check the counterpart ledger's state is expected
+                        //   - The state can be inferred from the own channel state change
+                        //   - Use `ibc-rs::ics04_connection::handler::verify::verify_channel_proofs()`
+                    }
+                }
+
+                // packet
+                "packets" => {
+                    let packet = get_packet(key);
+
+                    // Assert that the packet metadata matches the channel and connection information
+                    //   - the port is owend
+                    //   - the channel exists
+                    //   - the counterparty information is valid
+                    //   - the connection exists
+
+                    match get_packet_type(key) {
+                        "send" => {
+                            // Assert that the connection and channel are open
+
+                            // Assert that the packet sequence is the next sequence that the channel expects
+
+                            // Assert that the timeout height and timestamp have not passed on the destination ledger
+
+                            // Assert that the commitment has been stored
                         }
-                    }
-                } else {
-                    // Verify the proof to check the counterpart ledger's state is expected
-                    //   - The state can be inferred from the own channel state change
-                    //   - Use `ibc-rs::ics04_connection::handler::verify::verify_channel_proofs()`
-                }
-            }
-
-            // send a packet
-            if key.segments.contains(&StringSeg("nextSequenceSend".to_owned())) {
-                match get_packet(tx_data) {
-                    Some(packet) => {
-                        // Assert that the packet metadata matches the channel and connection information
-                        //   - the port is owend
-                        //   - the channel exists and is open
-                        //   - the counterparty information is valid
-                        //   - the connection exists and is open
-
-                        // Assert that the packet sequence is the next sequence that the channel expects
-
-                        // Assert that the timeout height and timestamp have not passed on the destination ledger
-
-                        // Assert that the commitment has stored
-                    }
-                    // the packet should exist
-                    None => return Err(...),
-                }
-            }
-
-            // receive a packet
-            if key.segments.contains(&StringSeg("nextSequenceRecv".to_owned())) {
-                match get_packet(tx_data) {
-                    Some(packet) => {
-                        // Assert that the packet metadata matches the channel and connection information
-                        //   - the port is owend
-                        //   - the channel exists and is open
-                        //   - the counterparty information is valid
-                        //   - the connection exists and is open
-
-                        // Assert that the packet sequence is the next sequence that the channel expects (Ordered channel)
-
-                        // Assert that the timeout height and timestamp have not passed on the destination ledger
-
-                        // Assert that the receipt and acknowledgement have been stored
-
-                        // Verify the proofs that the counterpart ledger has stored the commitment
-                        //   - Use `ibc-rs::ics04_connection::handler::verify::verify_packet_recv_proofs()`
-                    }
-                    // the packet should exist
-                    None => return Err(...),
-                }
-            }
-
-            // receive an ack
-            if key.segments.contains(&StringSeg("nextSequenceAck".to_owned())) {
-                match get_packet(tx_data) {
-                    Some(packet) => {
-                        // Assert that the packet metadata matches the channel and connection information
-                        //   - the port is owend
-                        //   - the channel exists and is open
-                        //   - the counterparty information is valid
-                        //   - the connection exists and is open
-
-                        // Assert that the packet sequence is the next sequence that the channel expects (Ordered channel)
-
-                        // Assert that the commitment has been deleted
-
-                        // Verify that the packet was actually sent on this channel
-                        //   - Get the stored commitment and compare it with a commitment made from the packet
-
-                        // Verify the proofs to check the acknowledgement has been written on the counterpart ledger
-                        //   - Use `ibc-rs::ics04_connection::handler::verify::verify_packet_acknowledgement_proofs()`
-                    }
-                    // the packet should exist
-                    None => return Err(...),
-                }
-            }
-
-            // timeout
-            if key.segments.contains(&StringSeg("commitments".to_owned()))
-                && !ctx.has_key_post(key) {
-                match get_packet(tx_data) {
-                    Some(packet) => {
-                        // Assert that the packet metadata matches the channel and connection information
-                        //   - the port is owend
-                        //   - the channel exists
-                        //   - the counterparty information is valid
-                        //   - the connection exists
-
-                        // Assert that the packet was actually sent on this channel
-                        //   - Get the stored commitment and compare it with a commitment made from the packet
-
-                        // Check the channel state change
-                        let state_change = check_channel_state(channel_id);
-                        if state_change.is_closed() {
-                            // "Timeout"
-                            // Assert that the counterpart ledger has exceeded the timeout height or timestamp
+                        "recv" => {
+                            // Assert that the connection and channel are open
 
                             // Assert that the packet sequence is the next sequence that the channel expects (Ordered channel)
-                        } else {
-                            // "TimeoutOnClose"
+
+                            // Assert that the timeout height and timestamp have not passed on the destination ledger
+
+                            // Assert that the receipt and acknowledgement have been stored
+
+                            // Verify the proofs that the counterpart ledger has stored the commitment
+                            //   - Use `ibc-rs::ics04_connection::handler::verify::verify_packet_recv_proofs()`
+                        }
+                        "ack" => {
+                            // Assert that the connection and channel are open
+
                             // Assert that the packet sequence is the next sequence that the channel expects (Ordered channel)
 
-                            // Verify the proofs to check the counterpart ledger's state is expected
-                            //   - The channel state on the counterpart ledger should be CLOSED
-                            //   - Use `ibc-rs::ics04_connection::handler::verify::verify_channel_proofs()`
-                        }
+                            // Assert that the commitment has been deleted
 
-                        // Verify the proofs to check the packet has not been confirmed on the counterpart ledger
-                        //   - For ordering channels, use `ibc-rs::ics04_connection::handler::verify::verify_next_sequence_recv()`
-                        //   - For not-ordering channels, use `ibc-rs::ics04_connection::handler::verify::verify_packet_receipt_absence()`
+                            // Verify that the packet was actually sent on this channel
+                            //   - Get the stored commitment and compare it with a commitment made from the packet
+
+                            // Verify the proofs to check the acknowledgement has been written on the counterpart ledger
+                            //   - Use `ibc-rs::ics04_connection::handler::verify::verify_packet_acknowledgement_proofs()`
+                        }
+                        "timeout" => {
+                            // Assert that the packet was actually sent on this channel
+                            //   - Get the stored commitment and compare it with a commitment made from the packet
+
+                            // Check the channel state change
+                            let state_change = check_channel_state(channel_id);
+                            if state_change.is_closed() {
+                                // "Timeout"
+                                // Assert that the connection and channel are open
+
+                                // Assert that the counterpart ledger has exceeded the timeout height or timestamp
+
+                                // Assert that the packet sequence is the next sequence that the channel expects (Ordered channel)
+                            } else {
+                                // "TimeoutOnClose"
+                                // Assert that the packet sequence is the next sequence that the channel expects (Ordered channel)
+
+                                // Verify the proofs to check the counterpart ledger's state is expected
+                                //   - The channel state on the counterpart ledger should be CLOSED
+                                //   - Use `ibc-rs::ics04_connection::handler::verify::verify_channel_proofs()`
+                            }
+
+                            // Verify the proofs to check the packet has not been confirmed on the counterpart ledger
+                            //   - For ordering channels, use `ibc-rs::ics04_connection::handler::verify::verify_next_sequence_recv()`
+                            //   - For not-ordering channels, use `ibc-rs::ics04_connection::handler::verify::verify_packet_receipt_absence()`
+                        }
+                        _ => {
+                            // unknown packet
+                            return Ok(false);
+                        }
                     }
-                    // the packet should exist
-                    None => return Err(...),
+                }
+
+                _ => {
+                    // unknown prefix
+                    return Ok(false);
                 }
             }
         }
+        Ok(true)
     }
 }
 ```
