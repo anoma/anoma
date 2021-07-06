@@ -309,7 +309,7 @@ impl NativeVp for IbcVp {
 ```
 
 ### Handle IBC modules
-Like IBC-related transactions, the validity predicate should handle IBC modules. It only reads the prior or the posterior state to validate them. `Keeper` to write IBC-related data aren't required, but we needs to implement `Reader` for both the prior and the posterior state. To use verification functions in `ibc-rs`, implementations for traits for IBC modules (e.g. `ClientReader`) should be for the prior state. For example, we can call [`verify_proofs()`](https://github.com/informalsystems/ibc-rs/blob/d41e7253b997024e9f5852735450e1049176ed3a/modules/src/ics03_connection/handler/verify.rs#L14) with the native validity predicate's context in a step of the connection handshake: `verify_proofs(ctx, client_state, &conn_end, &expected_conn, proofs)`.
+Like IBC-related transactions, the validity predicate should handle IBC modules. It only reads the prior or the posterior state to validate them. `Keeper` to write IBC-related data aren't required, but we needs to implement `Reader` for both the prior and the posterior state. To use verification functions in `ibc-rs`, implementations for traits for IBC modules (e.g. `ClientReader`) should be for the posterior state. For example, we can call [`verify_proofs()`](https://github.com/informalsystems/ibc-rs/blob/d41e7253b997024e9f5852735450e1049176ed3a/modules/src/ics03_connection/handler/verify.rs#L14) with the native validity predicate's context in a step of the connection handshake: `verify_proofs(ctx, client_state, &conn_end, &expected_conn, proofs)`.
 
 ```rust
 /* shared/src/ledger/native_vp.rs */
@@ -331,7 +331,7 @@ where
     pub tx: &'a Tx,
 }
 
-// Add implementations to get the prior state for validations in `ibc-rs`
+// Add implementations to get the posterior state for validations in `ibc-rs`
 // ICS 2
 impl ClientReader for Ctx {...}
 // ICS 3
@@ -348,17 +348,17 @@ where
 {
     ...
 
-    // Add functions to get the posterior state if needed
-    pub fn client_type_post(&self, client_id: &ClientId) -> Result<Option<ClientType>> {
+    // Add functions to get the prior state if needed
+    pub fn client_type_pre(&self, client_id: &ClientId) -> Result<Option<ClientType>> {
         ...
     }
-    pub fn client_state_post(&self, client_id: &ClientId) -> Result<Option<AnyClientState>> {
+    pub fn client_state_pre(&self, client_id: &ClientId) -> Result<Option<AnyClientState>> {
         ...
     }
-    pub fn consensus_state_post(&self, client_id: &ClientId, height: Height) -> Result<Option<AnyConsensusState>> {
+    pub fn consensus_state_pre(&self, client_id: &ClientId, height: Height) -> Result<Option<AnyConsensusState>> {
         ...
     }
-    pub fn client_counter_post(&self) -> Result<u64> {
+    pub fn client_counter_pre(&self) -> Result<u64> {
         ...
     }
     ...
