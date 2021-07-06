@@ -1506,6 +1506,105 @@
 <span id="1503">1503</span>
 <span id="1504">1504</span>
 <span id="1505">1505</span>
+<span id="1506">1506</span>
+<span id="1507">1507</span>
+<span id="1508">1508</span>
+<span id="1509">1509</span>
+<span id="1510">1510</span>
+<span id="1511">1511</span>
+<span id="1512">1512</span>
+<span id="1513">1513</span>
+<span id="1514">1514</span>
+<span id="1515">1515</span>
+<span id="1516">1516</span>
+<span id="1517">1517</span>
+<span id="1518">1518</span>
+<span id="1519">1519</span>
+<span id="1520">1520</span>
+<span id="1521">1521</span>
+<span id="1522">1522</span>
+<span id="1523">1523</span>
+<span id="1524">1524</span>
+<span id="1525">1525</span>
+<span id="1526">1526</span>
+<span id="1527">1527</span>
+<span id="1528">1528</span>
+<span id="1529">1529</span>
+<span id="1530">1530</span>
+<span id="1531">1531</span>
+<span id="1532">1532</span>
+<span id="1533">1533</span>
+<span id="1534">1534</span>
+<span id="1535">1535</span>
+<span id="1536">1536</span>
+<span id="1537">1537</span>
+<span id="1538">1538</span>
+<span id="1539">1539</span>
+<span id="1540">1540</span>
+<span id="1541">1541</span>
+<span id="1542">1542</span>
+<span id="1543">1543</span>
+<span id="1544">1544</span>
+<span id="1545">1545</span>
+<span id="1546">1546</span>
+<span id="1547">1547</span>
+<span id="1548">1548</span>
+<span id="1549">1549</span>
+<span id="1550">1550</span>
+<span id="1551">1551</span>
+<span id="1552">1552</span>
+<span id="1553">1553</span>
+<span id="1554">1554</span>
+<span id="1555">1555</span>
+<span id="1556">1556</span>
+<span id="1557">1557</span>
+<span id="1558">1558</span>
+<span id="1559">1559</span>
+<span id="1560">1560</span>
+<span id="1561">1561</span>
+<span id="1562">1562</span>
+<span id="1563">1563</span>
+<span id="1564">1564</span>
+<span id="1565">1565</span>
+<span id="1566">1566</span>
+<span id="1567">1567</span>
+<span id="1568">1568</span>
+<span id="1569">1569</span>
+<span id="1570">1570</span>
+<span id="1571">1571</span>
+<span id="1572">1572</span>
+<span id="1573">1573</span>
+<span id="1574">1574</span>
+<span id="1575">1575</span>
+<span id="1576">1576</span>
+<span id="1577">1577</span>
+<span id="1578">1578</span>
+<span id="1579">1579</span>
+<span id="1580">1580</span>
+<span id="1581">1581</span>
+<span id="1582">1582</span>
+<span id="1583">1583</span>
+<span id="1584">1584</span>
+<span id="1585">1585</span>
+<span id="1586">1586</span>
+<span id="1587">1587</span>
+<span id="1588">1588</span>
+<span id="1589">1589</span>
+<span id="1590">1590</span>
+<span id="1591">1591</span>
+<span id="1592">1592</span>
+<span id="1593">1593</span>
+<span id="1594">1594</span>
+<span id="1595">1595</span>
+<span id="1596">1596</span>
+<span id="1597">1597</span>
+<span id="1598">1598</span>
+<span id="1599">1599</span>
+<span id="1600">1600</span>
+<span id="1601">1601</span>
+<span id="1602">1602</span>
+<span id="1603">1603</span>
+<span id="1604">1604</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Virtual machine&#39;s host environment exposes functions that may be called from</span>
 <span class="doccomment">//! within a virtual machine.</span>
@@ -1564,6 +1663,8 @@
     <span class="ident">AddressError</span>(<span class="ident">address</span>::<span class="ident">Error</span>),
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Numeric conversion error: {0}&quot;</span>)]</span>
     <span class="ident">NumConversionError</span>(<span class="ident">TryFromIntError</span>),
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Memory error: {0}&quot;</span>)]</span>
+    <span class="ident">MemoryError</span>(<span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">std</span>::<span class="ident">error</span>::<span class="ident">Error</span> <span class="op">+</span> <span class="ident">Sync</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="lifetime">&#39;static</span><span class="op">&gt;</span>),
 }
 
 <span class="kw">type</span> <span class="ident">TxResult</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">std</span>::<span class="ident">result</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">TxRuntimeError</span><span class="op">&gt;</span>;
@@ -1993,7 +2094,10 @@
     <span class="ident">DB</span>: <span class="ident">storage</span>::<span class="ident">DB</span> <span class="op">+</span> <span class="kw">for</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span> <span class="ident">storage</span>::<span class="ident">DBIter</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span>,
     <span class="ident">H</span>: <span class="ident">StorageHasher</span>,
 {
-    <span class="kw">let</span> (<span class="ident">key</span>, <span class="ident">gas</span>) <span class="op">=</span> <span class="ident">env</span>.<span class="ident">memory</span>.<span class="ident">read_string</span>(<span class="ident">key_ptr</span>, <span class="ident">key_len</span> <span class="kw">as</span> <span class="kw">_</span>);
+    <span class="kw">let</span> (<span class="ident">key</span>, <span class="ident">gas</span>) <span class="op">=</span> <span class="ident">env</span>
+        .<span class="ident">memory</span>
+        .<span class="ident">read_string</span>(<span class="ident">key_ptr</span>, <span class="ident">key_len</span> <span class="kw">as</span> <span class="kw">_</span>)
+        .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">TxRuntimeError</span>::<span class="ident">MemoryError</span>(<span class="ident">Box</span>::<span class="ident">new</span>(<span class="ident">e</span>)))<span class="question-mark">?</span>;
     <span class="ident">tx_add_gas</span>(<span class="ident">env</span>, <span class="ident">gas</span>)<span class="question-mark">?</span>;
 
     <span class="ident">tracing</span>::<span class="macro">debug</span><span class="macro">!</span>(<span class="string">&quot;tx_has_key {}, key {}&quot;</span>, <span class="ident">key</span>, <span class="ident">key_ptr</span>,);
@@ -2042,7 +2146,10 @@
     <span class="ident">DB</span>: <span class="ident">storage</span>::<span class="ident">DB</span> <span class="op">+</span> <span class="kw">for</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span> <span class="ident">storage</span>::<span class="ident">DBIter</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span>,
     <span class="ident">H</span>: <span class="ident">StorageHasher</span>,
 {
-    <span class="kw">let</span> (<span class="ident">key</span>, <span class="ident">gas</span>) <span class="op">=</span> <span class="ident">env</span>.<span class="ident">memory</span>.<span class="ident">read_string</span>(<span class="ident">key_ptr</span>, <span class="ident">key_len</span> <span class="kw">as</span> <span class="kw">_</span>);
+    <span class="kw">let</span> (<span class="ident">key</span>, <span class="ident">gas</span>) <span class="op">=</span> <span class="ident">env</span>
+        .<span class="ident">memory</span>
+        .<span class="ident">read_string</span>(<span class="ident">key_ptr</span>, <span class="ident">key_len</span> <span class="kw">as</span> <span class="kw">_</span>)
+        .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">TxRuntimeError</span>::<span class="ident">MemoryError</span>(<span class="ident">Box</span>::<span class="ident">new</span>(<span class="ident">e</span>)))<span class="question-mark">?</span>;
     <span class="ident">tx_add_gas</span>(<span class="ident">env</span>, <span class="ident">gas</span>)<span class="question-mark">?</span>;
 
     <span class="ident">tracing</span>::<span class="macro">debug</span><span class="macro">!</span>(<span class="string">&quot;tx_read {}, key {}&quot;</span>, <span class="ident">key</span>, <span class="ident">key_ptr</span>,);
@@ -2120,7 +2227,10 @@
 {
     <span class="kw">let</span> <span class="ident">result_buffer</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">env</span>.<span class="ident">ctx</span>.<span class="ident">result_buffer</span>.<span class="ident">get</span>() };
     <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">result_buffer</span>.<span class="ident">take</span>().<span class="ident">unwrap</span>();
-    <span class="kw">let</span> <span class="ident">gas</span> <span class="op">=</span> <span class="ident">env</span>.<span class="ident">memory</span>.<span class="ident">write_bytes</span>(<span class="ident">result_ptr</span>, <span class="ident">value</span>);
+    <span class="kw">let</span> <span class="ident">gas</span> <span class="op">=</span> <span class="ident">env</span>
+        .<span class="ident">memory</span>
+        .<span class="ident">write_bytes</span>(<span class="ident">result_ptr</span>, <span class="ident">value</span>)
+        .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">TxRuntimeError</span>::<span class="ident">MemoryError</span>(<span class="ident">Box</span>::<span class="ident">new</span>(<span class="ident">e</span>)))<span class="question-mark">?</span>;
     <span class="ident">tx_add_gas</span>(<span class="ident">env</span>, <span class="ident">gas</span>)
 }
 
@@ -2137,7 +2247,10 @@
     <span class="ident">DB</span>: <span class="ident">storage</span>::<span class="ident">DB</span> <span class="op">+</span> <span class="kw">for</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span> <span class="ident">storage</span>::<span class="ident">DBIter</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span>,
     <span class="ident">H</span>: <span class="ident">StorageHasher</span>,
 {
-    <span class="kw">let</span> (<span class="ident">prefix</span>, <span class="ident">gas</span>) <span class="op">=</span> <span class="ident">env</span>.<span class="ident">memory</span>.<span class="ident">read_string</span>(<span class="ident">prefix_ptr</span>, <span class="ident">prefix_len</span> <span class="kw">as</span> <span class="kw">_</span>);
+    <span class="kw">let</span> (<span class="ident">prefix</span>, <span class="ident">gas</span>) <span class="op">=</span> <span class="ident">env</span>
+        .<span class="ident">memory</span>
+        .<span class="ident">read_string</span>(<span class="ident">prefix_ptr</span>, <span class="ident">prefix_len</span> <span class="kw">as</span> <span class="kw">_</span>)
+        .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">TxRuntimeError</span>::<span class="ident">MemoryError</span>(<span class="ident">Box</span>::<span class="ident">new</span>(<span class="ident">e</span>)))<span class="question-mark">?</span>;
     <span class="ident">tx_add_gas</span>(<span class="ident">env</span>, <span class="ident">gas</span>)<span class="question-mark">?</span>;
 
     <span class="ident">tracing</span>::<span class="macro">debug</span><span class="macro">!</span>(<span class="string">&quot;tx_iter_prefix {}, prefix {}&quot;</span>, <span class="ident">prefix</span>, <span class="ident">prefix_ptr</span>);
@@ -2233,9 +2346,15 @@
     <span class="ident">DB</span>: <span class="ident">storage</span>::<span class="ident">DB</span> <span class="op">+</span> <span class="kw">for</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span> <span class="ident">storage</span>::<span class="ident">DBIter</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span>,
     <span class="ident">H</span>: <span class="ident">StorageHasher</span>,
 {
-    <span class="kw">let</span> (<span class="ident">key</span>, <span class="ident">gas</span>) <span class="op">=</span> <span class="ident">env</span>.<span class="ident">memory</span>.<span class="ident">read_string</span>(<span class="ident">key_ptr</span>, <span class="ident">key_len</span> <span class="kw">as</span> <span class="kw">_</span>);
+    <span class="kw">let</span> (<span class="ident">key</span>, <span class="ident">gas</span>) <span class="op">=</span> <span class="ident">env</span>
+        .<span class="ident">memory</span>
+        .<span class="ident">read_string</span>(<span class="ident">key_ptr</span>, <span class="ident">key_len</span> <span class="kw">as</span> <span class="kw">_</span>)
+        .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">TxRuntimeError</span>::<span class="ident">MemoryError</span>(<span class="ident">Box</span>::<span class="ident">new</span>(<span class="ident">e</span>)))<span class="question-mark">?</span>;
     <span class="ident">tx_add_gas</span>(<span class="ident">env</span>, <span class="ident">gas</span>)<span class="question-mark">?</span>;
-    <span class="kw">let</span> (<span class="ident">value</span>, <span class="ident">gas</span>) <span class="op">=</span> <span class="ident">env</span>.<span class="ident">memory</span>.<span class="ident">read_bytes</span>(<span class="ident">val_ptr</span>, <span class="ident">val_len</span> <span class="kw">as</span> <span class="kw">_</span>);
+    <span class="kw">let</span> (<span class="ident">value</span>, <span class="ident">gas</span>) <span class="op">=</span> <span class="ident">env</span>
+        .<span class="ident">memory</span>
+        .<span class="ident">read_bytes</span>(<span class="ident">val_ptr</span>, <span class="ident">val_len</span> <span class="kw">as</span> <span class="kw">_</span>)
+        .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">TxRuntimeError</span>::<span class="ident">MemoryError</span>(<span class="ident">Box</span>::<span class="ident">new</span>(<span class="ident">e</span>)))<span class="question-mark">?</span>;
     <span class="ident">tx_add_gas</span>(<span class="ident">env</span>, <span class="ident">gas</span>)<span class="question-mark">?</span>;
 
     <span class="ident">tracing</span>::<span class="macro">debug</span><span class="macro">!</span>(<span class="string">&quot;tx_update {}, {:?}&quot;</span>, <span class="ident">key</span>, <span class="ident">value</span>);
@@ -2292,7 +2411,10 @@
     <span class="ident">DB</span>: <span class="ident">storage</span>::<span class="ident">DB</span> <span class="op">+</span> <span class="kw">for</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span> <span class="ident">storage</span>::<span class="ident">DBIter</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span>,
     <span class="ident">H</span>: <span class="ident">StorageHasher</span>,
 {
-    <span class="kw">let</span> (<span class="ident">key</span>, <span class="ident">gas</span>) <span class="op">=</span> <span class="ident">env</span>.<span class="ident">memory</span>.<span class="ident">read_string</span>(<span class="ident">key_ptr</span>, <span class="ident">key_len</span> <span class="kw">as</span> <span class="kw">_</span>);
+    <span class="kw">let</span> (<span class="ident">key</span>, <span class="ident">gas</span>) <span class="op">=</span> <span class="ident">env</span>
+        .<span class="ident">memory</span>
+        .<span class="ident">read_string</span>(<span class="ident">key_ptr</span>, <span class="ident">key_len</span> <span class="kw">as</span> <span class="kw">_</span>)
+        .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">TxRuntimeError</span>::<span class="ident">MemoryError</span>(<span class="ident">Box</span>::<span class="ident">new</span>(<span class="ident">e</span>)))<span class="question-mark">?</span>;
     <span class="ident">tx_add_gas</span>(<span class="ident">env</span>, <span class="ident">gas</span>)<span class="question-mark">?</span>;
 
     <span class="ident">tracing</span>::<span class="macro">debug</span><span class="macro">!</span>(<span class="string">&quot;tx_delete {}&quot;</span>, <span class="ident">key</span>);
@@ -2323,7 +2445,10 @@
     <span class="ident">H</span>: <span class="ident">StorageHasher</span>,
     <span class="ident">EVAL</span>: <span class="ident">VpEvaluator</span>,
 {
-    <span class="kw">let</span> (<span class="ident">key</span>, <span class="ident">gas</span>) <span class="op">=</span> <span class="ident">env</span>.<span class="ident">memory</span>.<span class="ident">read_string</span>(<span class="ident">key_ptr</span>, <span class="ident">key_len</span> <span class="kw">as</span> <span class="kw">_</span>);
+    <span class="kw">let</span> (<span class="ident">key</span>, <span class="ident">gas</span>) <span class="op">=</span> <span class="ident">env</span>
+        .<span class="ident">memory</span>
+        .<span class="ident">read_string</span>(<span class="ident">key_ptr</span>, <span class="ident">key_len</span> <span class="kw">as</span> <span class="kw">_</span>)
+        .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">vp_env</span>::<span class="ident">RuntimeError</span>::<span class="ident">MemoryError</span>(<span class="ident">Box</span>::<span class="ident">new</span>(<span class="ident">e</span>)))<span class="question-mark">?</span>;
     <span class="kw">let</span> <span class="ident">gas_meter</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">env</span>.<span class="ident">ctx</span>.<span class="ident">gas_meter</span>.<span class="ident">get</span>() };
     <span class="ident">vp_env</span>::<span class="ident">add_gas</span>(<span class="ident">gas_meter</span>, <span class="ident">gas</span>)<span class="question-mark">?</span>;
 
@@ -2369,7 +2494,10 @@
     <span class="ident">H</span>: <span class="ident">StorageHasher</span>,
     <span class="ident">EVAL</span>: <span class="ident">VpEvaluator</span>,
 {
-    <span class="kw">let</span> (<span class="ident">key</span>, <span class="ident">gas</span>) <span class="op">=</span> <span class="ident">env</span>.<span class="ident">memory</span>.<span class="ident">read_string</span>(<span class="ident">key_ptr</span>, <span class="ident">key_len</span> <span class="kw">as</span> <span class="kw">_</span>);
+    <span class="kw">let</span> (<span class="ident">key</span>, <span class="ident">gas</span>) <span class="op">=</span> <span class="ident">env</span>
+        .<span class="ident">memory</span>
+        .<span class="ident">read_string</span>(<span class="ident">key_ptr</span>, <span class="ident">key_len</span> <span class="kw">as</span> <span class="kw">_</span>)
+        .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">vp_env</span>::<span class="ident">RuntimeError</span>::<span class="ident">MemoryError</span>(<span class="ident">Box</span>::<span class="ident">new</span>(<span class="ident">e</span>)))<span class="question-mark">?</span>;
     <span class="kw">let</span> <span class="ident">gas_meter</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">env</span>.<span class="ident">ctx</span>.<span class="ident">gas_meter</span>.<span class="ident">get</span>() };
     <span class="ident">vp_env</span>::<span class="ident">add_gas</span>(<span class="ident">gas_meter</span>, <span class="ident">gas</span>)<span class="question-mark">?</span>;
 
@@ -2415,7 +2543,10 @@
 {
     <span class="kw">let</span> <span class="ident">result_buffer</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">env</span>.<span class="ident">ctx</span>.<span class="ident">result_buffer</span>.<span class="ident">get</span>() };
     <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">result_buffer</span>.<span class="ident">take</span>().<span class="ident">unwrap</span>();
-    <span class="kw">let</span> <span class="ident">gas</span> <span class="op">=</span> <span class="ident">env</span>.<span class="ident">memory</span>.<span class="ident">write_bytes</span>(<span class="ident">result_ptr</span>, <span class="ident">value</span>);
+    <span class="kw">let</span> <span class="ident">gas</span> <span class="op">=</span> <span class="ident">env</span>
+        .<span class="ident">memory</span>
+        .<span class="ident">write_bytes</span>(<span class="ident">result_ptr</span>, <span class="ident">value</span>)
+        .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">vp_env</span>::<span class="ident">RuntimeError</span>::<span class="ident">MemoryError</span>(<span class="ident">Box</span>::<span class="ident">new</span>(<span class="ident">e</span>)))<span class="question-mark">?</span>;
     <span class="kw">let</span> <span class="ident">gas_meter</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">env</span>.<span class="ident">ctx</span>.<span class="ident">gas_meter</span>.<span class="ident">get</span>() };
     <span class="ident">vp_env</span>::<span class="ident">add_gas</span>(<span class="ident">gas_meter</span>, <span class="ident">gas</span>)
 }
@@ -2433,7 +2564,10 @@
     <span class="ident">H</span>: <span class="ident">StorageHasher</span>,
     <span class="ident">EVAL</span>: <span class="ident">VpEvaluator</span>,
 {
-    <span class="kw">let</span> (<span class="ident">key</span>, <span class="ident">gas</span>) <span class="op">=</span> <span class="ident">env</span>.<span class="ident">memory</span>.<span class="ident">read_string</span>(<span class="ident">key_ptr</span>, <span class="ident">key_len</span> <span class="kw">as</span> <span class="kw">_</span>);
+    <span class="kw">let</span> (<span class="ident">key</span>, <span class="ident">gas</span>) <span class="op">=</span> <span class="ident">env</span>
+        .<span class="ident">memory</span>
+        .<span class="ident">read_string</span>(<span class="ident">key_ptr</span>, <span class="ident">key_len</span> <span class="kw">as</span> <span class="kw">_</span>)
+        .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">vp_env</span>::<span class="ident">RuntimeError</span>::<span class="ident">MemoryError</span>(<span class="ident">Box</span>::<span class="ident">new</span>(<span class="ident">e</span>)))<span class="question-mark">?</span>;
     <span class="kw">let</span> <span class="ident">gas_meter</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">env</span>.<span class="ident">ctx</span>.<span class="ident">gas_meter</span>.<span class="ident">get</span>() };
     <span class="ident">vp_env</span>::<span class="ident">add_gas</span>(<span class="ident">gas_meter</span>, <span class="ident">gas</span>)<span class="question-mark">?</span>;
 
@@ -2460,7 +2594,10 @@
     <span class="ident">H</span>: <span class="ident">StorageHasher</span>,
     <span class="ident">EVAL</span>: <span class="ident">VpEvaluator</span>,
 {
-    <span class="kw">let</span> (<span class="ident">key</span>, <span class="ident">gas</span>) <span class="op">=</span> <span class="ident">env</span>.<span class="ident">memory</span>.<span class="ident">read_string</span>(<span class="ident">key_ptr</span>, <span class="ident">key_len</span> <span class="kw">as</span> <span class="kw">_</span>);
+    <span class="kw">let</span> (<span class="ident">key</span>, <span class="ident">gas</span>) <span class="op">=</span> <span class="ident">env</span>
+        .<span class="ident">memory</span>
+        .<span class="ident">read_string</span>(<span class="ident">key_ptr</span>, <span class="ident">key_len</span> <span class="kw">as</span> <span class="kw">_</span>)
+        .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">vp_env</span>::<span class="ident">RuntimeError</span>::<span class="ident">MemoryError</span>(<span class="ident">Box</span>::<span class="ident">new</span>(<span class="ident">e</span>)))<span class="question-mark">?</span>;
     <span class="kw">let</span> <span class="ident">gas_meter</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">env</span>.<span class="ident">ctx</span>.<span class="ident">gas_meter</span>.<span class="ident">get</span>() };
     <span class="ident">vp_env</span>::<span class="ident">add_gas</span>(<span class="ident">gas_meter</span>, <span class="ident">gas</span>)<span class="question-mark">?</span>;
 
@@ -2488,7 +2625,10 @@
     <span class="ident">H</span>: <span class="ident">StorageHasher</span>,
     <span class="ident">EVAL</span>: <span class="ident">VpEvaluator</span>,
 {
-    <span class="kw">let</span> (<span class="ident">prefix</span>, <span class="ident">gas</span>) <span class="op">=</span> <span class="ident">env</span>.<span class="ident">memory</span>.<span class="ident">read_string</span>(<span class="ident">prefix_ptr</span>, <span class="ident">prefix_len</span> <span class="kw">as</span> <span class="kw">_</span>);
+    <span class="kw">let</span> (<span class="ident">prefix</span>, <span class="ident">gas</span>) <span class="op">=</span> <span class="ident">env</span>
+        .<span class="ident">memory</span>
+        .<span class="ident">read_string</span>(<span class="ident">prefix_ptr</span>, <span class="ident">prefix_len</span> <span class="kw">as</span> <span class="kw">_</span>)
+        .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">vp_env</span>::<span class="ident">RuntimeError</span>::<span class="ident">MemoryError</span>(<span class="ident">Box</span>::<span class="ident">new</span>(<span class="ident">e</span>)))<span class="question-mark">?</span>;
     <span class="kw">let</span> <span class="ident">gas_meter</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">env</span>.<span class="ident">ctx</span>.<span class="ident">gas_meter</span>.<span class="ident">get</span>() };
     <span class="ident">vp_env</span>::<span class="ident">add_gas</span>(<span class="ident">gas_meter</span>, <span class="ident">gas</span>)<span class="question-mark">?</span>;
 
@@ -2592,7 +2732,10 @@
     <span class="ident">DB</span>: <span class="ident">storage</span>::<span class="ident">DB</span> <span class="op">+</span> <span class="kw">for</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span> <span class="ident">storage</span>::<span class="ident">DBIter</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span>,
     <span class="ident">H</span>: <span class="ident">StorageHasher</span>,
 {
-    <span class="kw">let</span> (<span class="ident">addr</span>, <span class="ident">gas</span>) <span class="op">=</span> <span class="ident">env</span>.<span class="ident">memory</span>.<span class="ident">read_string</span>(<span class="ident">addr_ptr</span>, <span class="ident">addr_len</span> <span class="kw">as</span> <span class="kw">_</span>);
+    <span class="kw">let</span> (<span class="ident">addr</span>, <span class="ident">gas</span>) <span class="op">=</span> <span class="ident">env</span>
+        .<span class="ident">memory</span>
+        .<span class="ident">read_string</span>(<span class="ident">addr_ptr</span>, <span class="ident">addr_len</span> <span class="kw">as</span> <span class="kw">_</span>)
+        .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">TxRuntimeError</span>::<span class="ident">MemoryError</span>(<span class="ident">Box</span>::<span class="ident">new</span>(<span class="ident">e</span>)))<span class="question-mark">?</span>;
     <span class="ident">tx_add_gas</span>(<span class="ident">env</span>, <span class="ident">gas</span>)<span class="question-mark">?</span>;
 
     <span class="ident">tracing</span>::<span class="macro">debug</span><span class="macro">!</span>(<span class="string">&quot;tx_insert_verifier {}, addr_ptr {}&quot;</span>, <span class="ident">addr</span>, <span class="ident">addr_ptr</span>,);
@@ -2617,14 +2760,20 @@
     <span class="ident">DB</span>: <span class="ident">storage</span>::<span class="ident">DB</span> <span class="op">+</span> <span class="kw">for</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span> <span class="ident">storage</span>::<span class="ident">DBIter</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span>,
     <span class="ident">H</span>: <span class="ident">StorageHasher</span>,
 {
-    <span class="kw">let</span> (<span class="ident">addr</span>, <span class="ident">gas</span>) <span class="op">=</span> <span class="ident">env</span>.<span class="ident">memory</span>.<span class="ident">read_string</span>(<span class="ident">addr_ptr</span>, <span class="ident">addr_len</span> <span class="kw">as</span> <span class="kw">_</span>);
+    <span class="kw">let</span> (<span class="ident">addr</span>, <span class="ident">gas</span>) <span class="op">=</span> <span class="ident">env</span>
+        .<span class="ident">memory</span>
+        .<span class="ident">read_string</span>(<span class="ident">addr_ptr</span>, <span class="ident">addr_len</span> <span class="kw">as</span> <span class="kw">_</span>)
+        .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">TxRuntimeError</span>::<span class="ident">MemoryError</span>(<span class="ident">Box</span>::<span class="ident">new</span>(<span class="ident">e</span>)))<span class="question-mark">?</span>;
     <span class="ident">tx_add_gas</span>(<span class="ident">env</span>, <span class="ident">gas</span>)<span class="question-mark">?</span>;
 
     <span class="kw">let</span> <span class="ident">addr</span> <span class="op">=</span> <span class="ident">Address</span>::<span class="ident">decode</span>(<span class="ident">addr</span>).<span class="ident">map_err</span>(<span class="ident">TxRuntimeError</span>::<span class="ident">AddressError</span>)<span class="question-mark">?</span>;
     <span class="ident">tracing</span>::<span class="macro">debug</span><span class="macro">!</span>(<span class="string">&quot;tx_update_validity_predicate for addr {}&quot;</span>, <span class="ident">addr</span>);
 
     <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Key</span>::<span class="ident">validity_predicate</span>(<span class="kw-2">&amp;</span><span class="ident">addr</span>);
-    <span class="kw">let</span> (<span class="ident">code</span>, <span class="ident">gas</span>) <span class="op">=</span> <span class="ident">env</span>.<span class="ident">memory</span>.<span class="ident">read_bytes</span>(<span class="ident">code_ptr</span>, <span class="ident">code_len</span> <span class="kw">as</span> <span class="kw">_</span>);
+    <span class="kw">let</span> (<span class="ident">code</span>, <span class="ident">gas</span>) <span class="op">=</span> <span class="ident">env</span>
+        .<span class="ident">memory</span>
+        .<span class="ident">read_bytes</span>(<span class="ident">code_ptr</span>, <span class="ident">code_len</span> <span class="kw">as</span> <span class="kw">_</span>)
+        .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">TxRuntimeError</span>::<span class="ident">MemoryError</span>(<span class="ident">Box</span>::<span class="ident">new</span>(<span class="ident">e</span>)))<span class="question-mark">?</span>;
     <span class="ident">tx_add_gas</span>(<span class="ident">env</span>, <span class="ident">gas</span>)<span class="question-mark">?</span>;
 
     <span class="ident">tx_add_gas</span>(<span class="ident">env</span>, <span class="ident">code</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="ident">u64</span> <span class="op">*</span> <span class="ident">WASM_VALIDATION_GAS_PER_BYTE</span>)<span class="question-mark">?</span>;
@@ -2650,7 +2799,10 @@
     <span class="ident">DB</span>: <span class="ident">storage</span>::<span class="ident">DB</span> <span class="op">+</span> <span class="kw">for</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span> <span class="ident">storage</span>::<span class="ident">DBIter</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span>,
     <span class="ident">H</span>: <span class="ident">StorageHasher</span>,
 {
-    <span class="kw">let</span> (<span class="ident">code</span>, <span class="ident">gas</span>) <span class="op">=</span> <span class="ident">env</span>.<span class="ident">memory</span>.<span class="ident">read_bytes</span>(<span class="ident">code_ptr</span>, <span class="ident">code_len</span> <span class="kw">as</span> <span class="kw">_</span>);
+    <span class="kw">let</span> (<span class="ident">code</span>, <span class="ident">gas</span>) <span class="op">=</span> <span class="ident">env</span>
+        .<span class="ident">memory</span>
+        .<span class="ident">read_bytes</span>(<span class="ident">code_ptr</span>, <span class="ident">code_len</span> <span class="kw">as</span> <span class="kw">_</span>)
+        .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">TxRuntimeError</span>::<span class="ident">MemoryError</span>(<span class="ident">Box</span>::<span class="ident">new</span>(<span class="ident">e</span>)))<span class="question-mark">?</span>;
     <span class="ident">tx_add_gas</span>(<span class="ident">env</span>, <span class="ident">gas</span>)<span class="question-mark">?</span>;
 
     <span class="ident">tx_add_gas</span>(<span class="ident">env</span>, <span class="ident">code</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="ident">u64</span> <span class="op">*</span> <span class="ident">WASM_VALIDATION_GAS_PER_BYTE</span>)<span class="question-mark">?</span>;
@@ -2665,7 +2817,10 @@
     <span class="kw">let</span> <span class="ident">addr_bytes</span> <span class="op">=</span>
         <span class="ident">addr</span>.<span class="ident">try_to_vec</span>().<span class="ident">map_err</span>(<span class="ident">TxRuntimeError</span>::<span class="ident">EncodingError</span>)<span class="question-mark">?</span>;
     <span class="ident">tx_add_gas</span>(<span class="ident">env</span>, <span class="ident">gas</span>)<span class="question-mark">?</span>;
-    <span class="kw">let</span> <span class="ident">gas</span> <span class="op">=</span> <span class="ident">env</span>.<span class="ident">memory</span>.<span class="ident">write_bytes</span>(<span class="ident">result_ptr</span>, <span class="ident">addr_bytes</span>);
+    <span class="kw">let</span> <span class="ident">gas</span> <span class="op">=</span> <span class="ident">env</span>
+        .<span class="ident">memory</span>
+        .<span class="ident">write_bytes</span>(<span class="ident">result_ptr</span>, <span class="ident">addr_bytes</span>)
+        .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">TxRuntimeError</span>::<span class="ident">MemoryError</span>(<span class="ident">Box</span>::<span class="ident">new</span>(<span class="ident">e</span>)))<span class="question-mark">?</span>;
     <span class="ident">tx_add_gas</span>(<span class="ident">env</span>, <span class="ident">gas</span>)
 }
 
@@ -2682,7 +2837,10 @@
     <span class="kw">let</span> <span class="ident">storage</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">env</span>.<span class="ident">ctx</span>.<span class="ident">storage</span>.<span class="ident">get</span>() };
     <span class="kw">let</span> (<span class="ident">chain_id</span>, <span class="ident">gas</span>) <span class="op">=</span> <span class="ident">storage</span>.<span class="ident">get_chain_id</span>();
     <span class="ident">tx_add_gas</span>(<span class="ident">env</span>, <span class="ident">gas</span>)<span class="question-mark">?</span>;
-    <span class="kw">let</span> <span class="ident">gas</span> <span class="op">=</span> <span class="ident">env</span>.<span class="ident">memory</span>.<span class="ident">write_string</span>(<span class="ident">result_ptr</span>, <span class="ident">chain_id</span>);
+    <span class="kw">let</span> <span class="ident">gas</span> <span class="op">=</span> <span class="ident">env</span>
+        .<span class="ident">memory</span>
+        .<span class="ident">write_string</span>(<span class="ident">result_ptr</span>, <span class="ident">chain_id</span>)
+        .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">TxRuntimeError</span>::<span class="ident">MemoryError</span>(<span class="ident">Box</span>::<span class="ident">new</span>(<span class="ident">e</span>)))<span class="question-mark">?</span>;
     <span class="ident">tx_add_gas</span>(<span class="ident">env</span>, <span class="ident">gas</span>)
 }
 
@@ -2715,7 +2873,10 @@
     <span class="kw">let</span> <span class="ident">storage</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">env</span>.<span class="ident">ctx</span>.<span class="ident">storage</span>.<span class="ident">get</span>() };
     <span class="kw">let</span> (<span class="ident">hash</span>, <span class="ident">gas</span>) <span class="op">=</span> <span class="ident">storage</span>.<span class="ident">get_block_hash</span>();
     <span class="ident">tx_add_gas</span>(<span class="ident">env</span>, <span class="ident">gas</span>)<span class="question-mark">?</span>;
-    <span class="kw">let</span> <span class="ident">gas</span> <span class="op">=</span> <span class="ident">env</span>.<span class="ident">memory</span>.<span class="ident">write_bytes</span>(<span class="ident">result_ptr</span>, <span class="ident">hash</span>.<span class="number">0</span>);
+    <span class="kw">let</span> <span class="ident">gas</span> <span class="op">=</span> <span class="ident">env</span>
+        .<span class="ident">memory</span>
+        .<span class="ident">write_bytes</span>(<span class="ident">result_ptr</span>, <span class="ident">hash</span>.<span class="number">0</span>)
+        .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">TxRuntimeError</span>::<span class="ident">MemoryError</span>(<span class="ident">Box</span>::<span class="ident">new</span>(<span class="ident">e</span>)))<span class="question-mark">?</span>;
     <span class="ident">tx_add_gas</span>(<span class="ident">env</span>, <span class="ident">gas</span>)
 }
 
@@ -2733,7 +2894,10 @@
     <span class="kw">let</span> <span class="ident">gas_meter</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">env</span>.<span class="ident">ctx</span>.<span class="ident">gas_meter</span>.<span class="ident">get</span>() };
     <span class="kw">let</span> <span class="ident">storage</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">env</span>.<span class="ident">ctx</span>.<span class="ident">storage</span>.<span class="ident">get</span>() };
     <span class="kw">let</span> <span class="ident">chain_id</span> <span class="op">=</span> <span class="ident">vp_env</span>::<span class="ident">get_chain_id</span>(<span class="ident">gas_meter</span>, <span class="ident">storage</span>)<span class="question-mark">?</span>;
-    <span class="kw">let</span> <span class="ident">gas</span> <span class="op">=</span> <span class="ident">env</span>.<span class="ident">memory</span>.<span class="ident">write_string</span>(<span class="ident">result_ptr</span>, <span class="ident">chain_id</span>);
+    <span class="kw">let</span> <span class="ident">gas</span> <span class="op">=</span> <span class="ident">env</span>
+        .<span class="ident">memory</span>
+        .<span class="ident">write_string</span>(<span class="ident">result_ptr</span>, <span class="ident">chain_id</span>)
+        .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">vp_env</span>::<span class="ident">RuntimeError</span>::<span class="ident">MemoryError</span>(<span class="ident">Box</span>::<span class="ident">new</span>(<span class="ident">e</span>)))<span class="question-mark">?</span>;
     <span class="ident">vp_env</span>::<span class="ident">add_gas</span>(<span class="ident">gas_meter</span>, <span class="ident">gas</span>)
 }
 
@@ -2770,7 +2934,10 @@
     <span class="kw">let</span> <span class="ident">gas_meter</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">env</span>.<span class="ident">ctx</span>.<span class="ident">gas_meter</span>.<span class="ident">get</span>() };
     <span class="kw">let</span> <span class="ident">storage</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">env</span>.<span class="ident">ctx</span>.<span class="ident">storage</span>.<span class="ident">get</span>() };
     <span class="kw">let</span> <span class="ident">hash</span> <span class="op">=</span> <span class="ident">vp_env</span>::<span class="ident">get_block_hash</span>(<span class="ident">gas_meter</span>, <span class="ident">storage</span>)<span class="question-mark">?</span>;
-    <span class="kw">let</span> <span class="ident">gas</span> <span class="op">=</span> <span class="ident">env</span>.<span class="ident">memory</span>.<span class="ident">write_bytes</span>(<span class="ident">result_ptr</span>, <span class="ident">hash</span>.<span class="number">0</span>);
+    <span class="kw">let</span> <span class="ident">gas</span> <span class="op">=</span> <span class="ident">env</span>
+        .<span class="ident">memory</span>
+        .<span class="ident">write_bytes</span>(<span class="ident">result_ptr</span>, <span class="ident">hash</span>.<span class="number">0</span>)
+        .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">vp_env</span>::<span class="ident">RuntimeError</span>::<span class="ident">MemoryError</span>(<span class="ident">Box</span>::<span class="ident">new</span>(<span class="ident">e</span>)))<span class="question-mark">?</span>;
     <span class="ident">vp_env</span>::<span class="ident">add_gas</span>(<span class="ident">gas_meter</span>, <span class="ident">gas</span>)
 }
 
@@ -2788,13 +2955,19 @@
     <span class="ident">H</span>: <span class="ident">StorageHasher</span>,
     <span class="ident">EVAL</span>: <span class="ident">VpEvaluator</span>,
 {
-    <span class="kw">let</span> (<span class="ident">pk</span>, <span class="ident">gas</span>) <span class="op">=</span> <span class="ident">env</span>.<span class="ident">memory</span>.<span class="ident">read_bytes</span>(<span class="ident">pk_ptr</span>, <span class="ident">pk_len</span> <span class="kw">as</span> <span class="kw">_</span>);
+    <span class="kw">let</span> (<span class="ident">pk</span>, <span class="ident">gas</span>) <span class="op">=</span> <span class="ident">env</span>
+        .<span class="ident">memory</span>
+        .<span class="ident">read_bytes</span>(<span class="ident">pk_ptr</span>, <span class="ident">pk_len</span> <span class="kw">as</span> <span class="kw">_</span>)
+        .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">vp_env</span>::<span class="ident">RuntimeError</span>::<span class="ident">MemoryError</span>(<span class="ident">Box</span>::<span class="ident">new</span>(<span class="ident">e</span>)))<span class="question-mark">?</span>;
     <span class="kw">let</span> <span class="ident">gas_meter</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">env</span>.<span class="ident">ctx</span>.<span class="ident">gas_meter</span>.<span class="ident">get</span>() };
     <span class="ident">vp_env</span>::<span class="ident">add_gas</span>(<span class="ident">gas_meter</span>, <span class="ident">gas</span>)<span class="question-mark">?</span>;
     <span class="kw">let</span> <span class="ident">pk</span>: <span class="ident">PublicKey</span> <span class="op">=</span> <span class="ident">BorshDeserialize</span>::<span class="ident">try_from_slice</span>(<span class="kw-2">&amp;</span><span class="ident">pk</span>)
         .<span class="ident">map_err</span>(<span class="ident">vp_env</span>::<span class="ident">RuntimeError</span>::<span class="ident">EncodingError</span>)<span class="question-mark">?</span>;
 
-    <span class="kw">let</span> (<span class="ident">sig</span>, <span class="ident">gas</span>) <span class="op">=</span> <span class="ident">env</span>.<span class="ident">memory</span>.<span class="ident">read_bytes</span>(<span class="ident">sig_ptr</span>, <span class="ident">sig_len</span> <span class="kw">as</span> <span class="kw">_</span>);
+    <span class="kw">let</span> (<span class="ident">sig</span>, <span class="ident">gas</span>) <span class="op">=</span> <span class="ident">env</span>
+        .<span class="ident">memory</span>
+        .<span class="ident">read_bytes</span>(<span class="ident">sig_ptr</span>, <span class="ident">sig_len</span> <span class="kw">as</span> <span class="kw">_</span>)
+        .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">vp_env</span>::<span class="ident">RuntimeError</span>::<span class="ident">MemoryError</span>(<span class="ident">Box</span>::<span class="ident">new</span>(<span class="ident">e</span>)))<span class="question-mark">?</span>;
     <span class="ident">vp_env</span>::<span class="ident">add_gas</span>(<span class="ident">gas_meter</span>, <span class="ident">gas</span>)<span class="question-mark">?</span>;
     <span class="kw">let</span> <span class="ident">sig</span>: <span class="ident">Signature</span> <span class="op">=</span> <span class="ident">BorshDeserialize</span>::<span class="ident">try_from_slice</span>(<span class="kw-2">&amp;</span><span class="ident">sig</span>)
         .<span class="ident">map_err</span>(<span class="ident">vp_env</span>::<span class="ident">RuntimeError</span>::<span class="ident">EncodingError</span>)<span class="question-mark">?</span>;
@@ -2817,7 +2990,10 @@
     <span class="ident">DB</span>: <span class="ident">storage</span>::<span class="ident">DB</span> <span class="op">+</span> <span class="kw">for</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span> <span class="ident">storage</span>::<span class="ident">DBIter</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span>,
     <span class="ident">H</span>: <span class="ident">StorageHasher</span>,
 {
-    <span class="kw">let</span> (<span class="ident">str</span>, <span class="ident">_gas</span>) <span class="op">=</span> <span class="ident">env</span>.<span class="ident">memory</span>.<span class="ident">read_string</span>(<span class="ident">str_ptr</span>, <span class="ident">str_len</span> <span class="kw">as</span> <span class="kw">_</span>);
+    <span class="kw">let</span> (<span class="ident">str</span>, <span class="ident">_gas</span>) <span class="op">=</span> <span class="ident">env</span>
+        .<span class="ident">memory</span>
+        .<span class="ident">read_string</span>(<span class="ident">str_ptr</span>, <span class="ident">str_len</span> <span class="kw">as</span> <span class="kw">_</span>)
+        .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">TxRuntimeError</span>::<span class="ident">MemoryError</span>(<span class="ident">Box</span>::<span class="ident">new</span>(<span class="ident">e</span>)))<span class="question-mark">?</span>;
     <span class="ident">tracing</span>::<span class="macro">info</span><span class="macro">!</span>(<span class="string">&quot;WASM Transaction log: {}&quot;</span>, <span class="ident">str</span>);
     <span class="prelude-val">Ok</span>(())
 }
@@ -2836,12 +3012,17 @@
     <span class="ident">H</span>: <span class="ident">StorageHasher</span>,
     <span class="ident">EVAL</span>: <span class="ident">VpEvaluator</span><span class="op">&lt;</span><span class="ident">Db</span> <span class="op">=</span> <span class="ident">DB</span>, <span class="ident">H</span> <span class="op">=</span> <span class="ident">H</span>, <span class="ident">Eval</span> <span class="op">=</span> <span class="ident">EVAL</span><span class="op">&gt;</span>,
 {
-    <span class="kw">let</span> (<span class="ident">vp_code</span>, <span class="ident">gas</span>) <span class="op">=</span> <span class="ident">env</span>.<span class="ident">memory</span>.<span class="ident">read_bytes</span>(<span class="ident">vp_code_ptr</span>, <span class="ident">vp_code_len</span> <span class="kw">as</span> <span class="kw">_</span>);
+    <span class="kw">let</span> (<span class="ident">vp_code</span>, <span class="ident">gas</span>) <span class="op">=</span>
+        <span class="ident">env</span>.<span class="ident">memory</span>
+            .<span class="ident">read_bytes</span>(<span class="ident">vp_code_ptr</span>, <span class="ident">vp_code_len</span> <span class="kw">as</span> <span class="kw">_</span>)
+            .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">vp_env</span>::<span class="ident">RuntimeError</span>::<span class="ident">MemoryError</span>(<span class="ident">Box</span>::<span class="ident">new</span>(<span class="ident">e</span>)))<span class="question-mark">?</span>;
     <span class="kw">let</span> <span class="ident">gas_meter</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">env</span>.<span class="ident">ctx</span>.<span class="ident">gas_meter</span>.<span class="ident">get</span>() };
     <span class="ident">vp_env</span>::<span class="ident">add_gas</span>(<span class="ident">gas_meter</span>, <span class="ident">gas</span>)<span class="question-mark">?</span>;
 
-    <span class="kw">let</span> (<span class="ident">input_data</span>, <span class="ident">gas</span>) <span class="op">=</span>
-        <span class="ident">env</span>.<span class="ident">memory</span>.<span class="ident">read_bytes</span>(<span class="ident">input_data_ptr</span>, <span class="ident">input_data_len</span> <span class="kw">as</span> <span class="kw">_</span>);
+    <span class="kw">let</span> (<span class="ident">input_data</span>, <span class="ident">gas</span>) <span class="op">=</span> <span class="ident">env</span>
+        .<span class="ident">memory</span>
+        .<span class="ident">read_bytes</span>(<span class="ident">input_data_ptr</span>, <span class="ident">input_data_len</span> <span class="kw">as</span> <span class="kw">_</span>)
+        .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">vp_env</span>::<span class="ident">RuntimeError</span>::<span class="ident">MemoryError</span>(<span class="ident">Box</span>::<span class="ident">new</span>(<span class="ident">e</span>)))<span class="question-mark">?</span>;
     <span class="ident">vp_env</span>::<span class="ident">add_gas</span>(<span class="ident">gas_meter</span>, <span class="ident">gas</span>)<span class="question-mark">?</span>;
 
     <span class="kw">let</span> <span class="ident">eval_runner</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">env</span>.<span class="ident">ctx</span>.<span class="ident">eval_runner</span>.<span class="ident">get</span>() };
@@ -2864,7 +3045,10 @@
     <span class="ident">H</span>: <span class="ident">StorageHasher</span>,
     <span class="ident">EVAL</span>: <span class="ident">VpEvaluator</span>,
 {
-    <span class="kw">let</span> (<span class="ident">str</span>, <span class="ident">_gas</span>) <span class="op">=</span> <span class="ident">env</span>.<span class="ident">memory</span>.<span class="ident">read_string</span>(<span class="ident">str_ptr</span>, <span class="ident">str_len</span> <span class="kw">as</span> <span class="kw">_</span>);
+    <span class="kw">let</span> (<span class="ident">str</span>, <span class="ident">_gas</span>) <span class="op">=</span> <span class="ident">env</span>
+        .<span class="ident">memory</span>
+        .<span class="ident">read_string</span>(<span class="ident">str_ptr</span>, <span class="ident">str_len</span> <span class="kw">as</span> <span class="kw">_</span>)
+        .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">vp_env</span>::<span class="ident">RuntimeError</span>::<span class="ident">MemoryError</span>(<span class="ident">Box</span>::<span class="ident">new</span>(<span class="ident">e</span>)))<span class="question-mark">?</span>;
     <span class="ident">tracing</span>::<span class="macro">info</span><span class="macro">!</span>(<span class="string">&quot;WASM Validity predicate log: {}&quot;</span>, <span class="ident">str</span>);
     <span class="prelude-val">Ok</span>(())
 }
@@ -2878,8 +3062,10 @@
     <span class="ident">MEM</span>: <span class="ident">VmMemory</span>,
     <span class="ident">MM</span>: <span class="ident">MmHost</span>,
 {
-    <span class="kw">let</span> (<span class="ident">intents_id_bytes</span>, <span class="ident">_gas</span>) <span class="op">=</span>
-        <span class="ident">env</span>.<span class="ident">memory</span>.<span class="ident">read_bytes</span>(<span class="ident">intents_id_ptr</span>, <span class="ident">intents_id_len</span> <span class="kw">as</span> <span class="kw">_</span>);
+    <span class="kw">let</span> (<span class="ident">intents_id_bytes</span>, <span class="ident">_gas</span>) <span class="op">=</span> <span class="ident">env</span>
+        .<span class="ident">memory</span>
+        .<span class="ident">read_bytes</span>(<span class="ident">intents_id_ptr</span>, <span class="ident">intents_id_len</span> <span class="kw">as</span> <span class="kw">_</span>)
+        .<span class="ident">expect</span>(<span class="string">&quot;TODO: handle runtime errors&quot;</span>);
 
     <span class="kw">let</span> <span class="ident">intents_id</span> <span class="op">=</span>
         <span class="ident">HashSet</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span>::<span class="ident">try_from_slice</span>(<span class="kw-2">&amp;</span><span class="ident">intents_id_bytes</span>).<span class="ident">unwrap</span>();
@@ -2897,7 +3083,10 @@
     <span class="ident">MEM</span>: <span class="ident">VmMemory</span>,
     <span class="ident">MM</span>: <span class="ident">MmHost</span>,
 {
-    <span class="kw">let</span> (<span class="ident">tx_data</span>, <span class="ident">_gas</span>) <span class="op">=</span> <span class="ident">env</span>.<span class="ident">memory</span>.<span class="ident">read_bytes</span>(<span class="ident">data_ptr</span>, <span class="ident">data_len</span> <span class="kw">as</span> <span class="kw">_</span>);
+    <span class="kw">let</span> (<span class="ident">tx_data</span>, <span class="ident">_gas</span>) <span class="op">=</span> <span class="ident">env</span>
+        .<span class="ident">memory</span>
+        .<span class="ident">read_bytes</span>(<span class="ident">data_ptr</span>, <span class="ident">data_len</span> <span class="kw">as</span> <span class="kw">_</span>)
+        .<span class="ident">expect</span>(<span class="string">&quot;TODO: handle runtime errors&quot;</span>);
 
     <span class="kw">let</span> <span class="ident">mm</span> <span class="op">=</span> <span class="ident">env</span>.<span class="ident">mm</span>.<span class="ident">lock</span>().<span class="ident">unwrap</span>();
     <span class="ident">mm</span>.<span class="ident">inject_tx</span>(<span class="ident">tx_data</span>);
@@ -2912,7 +3101,10 @@
     <span class="ident">MEM</span>: <span class="ident">VmMemory</span>,
     <span class="ident">MM</span>: <span class="ident">MmHost</span>,
 {
-    <span class="kw">let</span> (<span class="ident">data</span>, <span class="ident">_gas</span>) <span class="op">=</span> <span class="ident">env</span>.<span class="ident">memory</span>.<span class="ident">read_bytes</span>(<span class="ident">data_ptr</span>, <span class="ident">data_len</span> <span class="kw">as</span> <span class="kw">_</span>);
+    <span class="kw">let</span> (<span class="ident">data</span>, <span class="ident">_gas</span>) <span class="op">=</span> <span class="ident">env</span>
+        .<span class="ident">memory</span>
+        .<span class="ident">read_bytes</span>(<span class="ident">data_ptr</span>, <span class="ident">data_len</span> <span class="kw">as</span> <span class="kw">_</span>)
+        .<span class="ident">expect</span>(<span class="string">&quot;TODO: handle runtime errors&quot;</span>);
 
     <span class="kw">let</span> <span class="ident">mm</span> <span class="op">=</span> <span class="ident">env</span>.<span class="ident">mm</span>.<span class="ident">lock</span>().<span class="ident">unwrap</span>();
     <span class="ident">mm</span>.<span class="ident">update_data</span>(<span class="ident">data</span>);
@@ -2929,7 +3121,10 @@
     <span class="ident">MEM</span>: <span class="ident">VmMemory</span>,
     <span class="ident">MM</span>: <span class="ident">MmHost</span>,
 {
-    <span class="kw">let</span> (<span class="ident">str</span>, <span class="ident">_gas</span>) <span class="op">=</span> <span class="ident">env</span>.<span class="ident">memory</span>.<span class="ident">read_string</span>(<span class="ident">str_ptr</span>, <span class="ident">str_len</span> <span class="kw">as</span> <span class="kw">_</span>);
+    <span class="kw">let</span> (<span class="ident">str</span>, <span class="ident">_gas</span>) <span class="op">=</span> <span class="ident">env</span>
+        .<span class="ident">memory</span>
+        .<span class="ident">read_string</span>(<span class="ident">str_ptr</span>, <span class="ident">str_len</span> <span class="kw">as</span> <span class="kw">_</span>)
+        .<span class="ident">expect</span>(<span class="string">&quot;TODO: handle runtime errors&quot;</span>);
 
     <span class="ident">tracing</span>::<span class="macro">info</span><span class="macro">!</span>(<span class="string">&quot;WASM Matchmaker log: {}&quot;</span>, <span class="ident">str</span>);
 }
@@ -2943,7 +3138,10 @@
 ) <span class="kw">where</span>
     <span class="ident">MEM</span>: <span class="ident">VmMemory</span>,
 {
-    <span class="kw">let</span> (<span class="ident">str</span>, <span class="ident">_gas</span>) <span class="op">=</span> <span class="ident">env</span>.<span class="ident">memory</span>.<span class="ident">read_string</span>(<span class="ident">str_ptr</span>, <span class="ident">str_len</span> <span class="kw">as</span> <span class="kw">_</span>);
+    <span class="kw">let</span> (<span class="ident">str</span>, <span class="ident">_gas</span>) <span class="op">=</span> <span class="ident">env</span>
+        .<span class="ident">memory</span>
+        .<span class="ident">read_string</span>(<span class="ident">str_ptr</span>, <span class="ident">str_len</span> <span class="kw">as</span> <span class="kw">_</span>)
+        .<span class="ident">expect</span>(<span class="string">&quot;TODO: handle runtime errors&quot;</span>);
     <span class="ident">tracing</span>::<span class="macro">info</span><span class="macro">!</span>(<span class="string">&quot;WASM Filter log: {}&quot;</span>, <span class="ident">str</span>);
 }
 

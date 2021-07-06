@@ -255,6 +255,8 @@
 <span id="252">252</span>
 <span id="253">253</span>
 <span id="254">254</span>
+<span id="255">255</span>
+<span id="256">256</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Validity predicate environment contains functions that can be called from</span>
 <span class="doccomment">//! inside validity predicates.</span>
@@ -283,6 +285,8 @@
     <span class="ident">EncodingError</span>(<span class="ident">std</span>::<span class="ident">io</span>::<span class="ident">Error</span>),
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Numeric conversion error: {0}&quot;</span>)]</span>
     <span class="ident">NumConversionError</span>(<span class="ident">TryFromIntError</span>),
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Memory error: {0}&quot;</span>)]</span>
+    <span class="ident">MemoryError</span>(<span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">std</span>::<span class="ident">error</span>::<span class="ident">Error</span> <span class="op">+</span> <span class="ident">Sync</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="lifetime">&#39;static</span><span class="op">&gt;</span>),
 }
 
 <span class="doccomment">/// VP environment function result</span>

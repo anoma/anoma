@@ -560,11 +560,13 @@
 <span id="557">557</span>
 <span id="558">558</span>
 <span id="559">559</span>
+<span id="560">560</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Wasm memory is used for bi-directionally passing data between the host and a</span>
 <span class="doccomment">//! wasm instance.</span>
 
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">ptr</span>::<span class="ident">NonNull</span>;
+<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">str</span>::<span class="ident">Utf8Error</span>;
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">sync</span>::<span class="ident">Arc</span>;
 
 <span class="kw">use</span> <span class="ident">borsh</span>::<span class="ident">BorshSerialize</span>;
@@ -588,6 +590,12 @@
     <span class="ident">InitMemoryError</span>(<span class="ident">wasmer</span>::<span class="ident">MemoryError</span>),
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Memory ouf of bounds: {0}&quot;</span>)]</span>
     <span class="ident">MemoryOutOfBounds</span>(<span class="ident">wasmer</span>::<span class="ident">MemoryError</span>),
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Encoding error: {0}&quot;</span>)]</span>
+    <span class="ident">EncodingError</span>(<span class="ident">std</span>::<span class="ident">io</span>::<span class="ident">Error</span>),
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Memory is not initialized&quot;</span>)]</span>
+    <span class="ident">UninitializedMemory</span>,
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Invalid utf8 string read from memory&quot;</span>)]</span>
+    <span class="ident">InvalidUtf8String</span>(<span class="ident">Utf8Error</span>),
 }
 
 <span class="doccomment">/// Result of a function that may fail</span>
@@ -703,23 +711,19 @@
     }: <span class="ident">VpInput</span>,
 ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">VpCallInput</span><span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="ident">addr_ptr</span> <span class="op">=</span> <span class="number">0</span>;
-    <span class="kw">let</span> <span class="ident">addr_bytes</span> <span class="op">=</span> <span class="ident">addr</span>.<span class="ident">try_to_vec</span>().<span class="ident">expect</span>(
-        <span class="string">&quot;TEMPORARY: failed to serialize address for validity predicate&quot;</span>,
-    );
+    <span class="kw">let</span> <span class="ident">addr_bytes</span> <span class="op">=</span> <span class="ident">addr</span>.<span class="ident">try_to_vec</span>().<span class="ident">map_err</span>(<span class="ident">Error</span>::<span class="ident">EncodingError</span>)<span class="question-mark">?</span>;
     <span class="kw">let</span> <span class="ident">addr_len</span> <span class="op">=</span> <span class="ident">addr_bytes</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="kw">_</span>;
 
     <span class="kw">let</span> <span class="ident">data_ptr</span> <span class="op">=</span> <span class="ident">addr_ptr</span> <span class="op">+</span> <span class="ident">addr_len</span>;
     <span class="kw">let</span> <span class="ident">data_len</span> <span class="op">=</span> <span class="ident">data</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="kw">_</span>;
 
-    <span class="kw">let</span> <span class="ident">keys_changed_bytes</span> <span class="op">=</span> <span class="ident">keys_changed</span>.<span class="ident">try_to_vec</span>().<span class="ident">expect</span>(
-        <span class="string">&quot;TEMPORARY: failed to serialize keys_changed for validity predicate&quot;</span>,
-    );
+    <span class="kw">let</span> <span class="ident">keys_changed_bytes</span> <span class="op">=</span>
+        <span class="ident">keys_changed</span>.<span class="ident">try_to_vec</span>().<span class="ident">map_err</span>(<span class="ident">Error</span>::<span class="ident">EncodingError</span>)<span class="question-mark">?</span>;
     <span class="kw">let</span> <span class="ident">keys_changed_ptr</span> <span class="op">=</span> <span class="ident">data_ptr</span> <span class="op">+</span> <span class="ident">data_len</span>;
     <span class="kw">let</span> <span class="ident">keys_changed_len</span> <span class="op">=</span> <span class="ident">keys_changed_bytes</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="kw">_</span>;
 
-    <span class="kw">let</span> <span class="ident">verifiers_bytes</span> <span class="op">=</span> <span class="ident">verifiers</span>.<span class="ident">try_to_vec</span>().<span class="ident">expect</span>(
-        <span class="string">&quot;TEMPORARY: failed to serialize verifiers for validity predicate&quot;</span>,
-    );
+    <span class="kw">let</span> <span class="ident">verifiers_bytes</span> <span class="op">=</span>
+        <span class="ident">verifiers</span>.<span class="ident">try_to_vec</span>().<span class="ident">map_err</span>(<span class="ident">Error</span>::<span class="ident">EncodingError</span>)<span class="question-mark">?</span>;
     <span class="kw">let</span> <span class="ident">verifiers_ptr</span> <span class="op">=</span> <span class="ident">keys_changed_ptr</span> <span class="op">+</span> <span class="ident">keys_changed_len</span>;
     <span class="kw">let</span> <span class="ident">verifiers_len</span> <span class="op">=</span> <span class="ident">verifiers_bytes</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="kw">_</span>;
 
@@ -890,40 +894,38 @@
 }
 
 <span class="kw">impl</span> <span class="ident">VmMemory</span> <span class="kw">for</span> <span class="ident">WasmMemory</span> {
+    <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">Error</span>;
+
     <span class="doccomment">/// Read bytes from memory at the given offset and length, return the bytes</span>
     <span class="doccomment">/// and the gas cost</span>
-    <span class="kw">fn</span> <span class="ident">read_bytes</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">offset</span>: <span class="ident">u64</span>, <span class="ident">len</span>: <span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> (<span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>, <span class="ident">u64</span>) {
-        <span class="kw">let</span> <span class="ident">memory</span> <span class="op">=</span>
-            <span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">get_ref</span>().<span class="ident">expect</span>(<span class="string">&quot;Memory should be initialized&quot;</span>);
-        <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="ident">read_memory_bytes</span>(<span class="ident">memory</span>, <span class="ident">offset</span>, <span class="ident">len</span>)
-            .<span class="ident">expect</span>(<span class="string">&quot;Reading memory shouldn&#39;t fail&quot;</span>);
+    <span class="kw">fn</span> <span class="ident">read_bytes</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">offset</span>: <span class="ident">u64</span>, <span class="ident">len</span>: <span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>, <span class="ident">u64</span>)<span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="ident">memory</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">get_ref</span>().<span class="ident">ok_or</span>(<span class="ident">Error</span>::<span class="ident">UninitializedMemory</span>)<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="ident">read_memory_bytes</span>(<span class="ident">memory</span>, <span class="ident">offset</span>, <span class="ident">len</span>)<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">gas</span> <span class="op">=</span> <span class="ident">bytes</span>.<span class="ident">len</span>();
-        (<span class="ident">bytes</span>, <span class="ident">gas</span> <span class="kw">as</span> <span class="kw">_</span>)
+        <span class="prelude-val">Ok</span>((<span class="ident">bytes</span>, <span class="ident">gas</span> <span class="kw">as</span> <span class="kw">_</span>))
     }
 
     <span class="doccomment">/// Write bytes into memory at the given offset and return the gas cost</span>
-    <span class="kw">fn</span> <span class="ident">write_bytes</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">offset</span>: <span class="ident">u64</span>, <span class="ident">bytes</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span>[<span class="ident">u8</span>]<span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u64</span> {
+    <span class="kw">fn</span> <span class="ident">write_bytes</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">offset</span>: <span class="ident">u64</span>, <span class="ident">bytes</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span>[<span class="ident">u8</span>]<span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">gas</span> <span class="op">=</span> <span class="ident">bytes</span>.<span class="ident">as_ref</span>().<span class="ident">len</span>();
-        <span class="kw">let</span> <span class="ident">memory</span> <span class="op">=</span>
-            <span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">get_ref</span>().<span class="ident">expect</span>(<span class="string">&quot;Memory should be initialized&quot;</span>);
-        <span class="ident">write_memory_bytes</span>(<span class="ident">memory</span>, <span class="ident">offset</span>, <span class="ident">bytes</span>)
-            .<span class="ident">expect</span>(<span class="string">&quot;Writing memory shouldn&#39;t fail&quot;</span>);
-        <span class="ident">gas</span> <span class="kw">as</span> <span class="kw">_</span>
+        <span class="kw">let</span> <span class="ident">memory</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">get_ref</span>().<span class="ident">ok_or</span>(<span class="ident">Error</span>::<span class="ident">UninitializedMemory</span>)<span class="question-mark">?</span>;
+        <span class="ident">write_memory_bytes</span>(<span class="ident">memory</span>, <span class="ident">offset</span>, <span class="ident">bytes</span>)<span class="question-mark">?</span>;
+        <span class="prelude-val">Ok</span>(<span class="ident">gas</span> <span class="kw">as</span> <span class="kw">_</span>)
     }
 
     <span class="doccomment">/// Read string from memory at the given offset and bytes length, and return</span>
     <span class="doccomment">/// the gas cost</span>
-    <span class="kw">fn</span> <span class="ident">read_string</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">offset</span>: <span class="ident">u64</span>, <span class="ident">len</span>: <span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> (<span class="ident">String</span>, <span class="ident">u64</span>) {
-        <span class="kw">let</span> (<span class="ident">bytes</span>, <span class="ident">gas</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">read_bytes</span>(<span class="ident">offset</span>, <span class="ident">len</span>);
+    <span class="kw">fn</span> <span class="ident">read_string</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">offset</span>: <span class="ident">u64</span>, <span class="ident">len</span>: <span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="ident">String</span>, <span class="ident">u64</span>)<span class="op">&gt;</span> {
+        <span class="kw">let</span> (<span class="ident">bytes</span>, <span class="ident">gas</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">read_bytes</span>(<span class="ident">offset</span>, <span class="ident">len</span>)<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">string</span> <span class="op">=</span> <span class="ident">std</span>::<span class="ident">str</span>::<span class="ident">from_utf8</span>(<span class="kw-2">&amp;</span><span class="ident">bytes</span>)
-            .<span class="ident">expect</span>(<span class="string">&quot;Decoding string from memory shouldn&#39;t fail&quot;</span>)
+            .<span class="ident">map_err</span>(<span class="ident">Error</span>::<span class="ident">InvalidUtf8String</span>)<span class="question-mark">?</span>
             .<span class="ident">to_string</span>();
-        (<span class="ident">string</span>, <span class="ident">gas</span> <span class="kw">as</span> <span class="kw">_</span>)
+        <span class="prelude-val">Ok</span>((<span class="ident">string</span>, <span class="ident">gas</span> <span class="kw">as</span> <span class="kw">_</span>))
     }
 
     <span class="doccomment">/// Write string into memory at the given offset and return the gas cost</span>
     <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">dead_code</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">write_string</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">offset</span>: <span class="ident">u64</span>, <span class="ident">string</span>: <span class="ident">String</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u64</span> {
+    <span class="kw">fn</span> <span class="ident">write_string</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">offset</span>: <span class="ident">u64</span>, <span class="ident">string</span>: <span class="ident">String</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">write_bytes</span>(<span class="ident">offset</span>, <span class="ident">string</span>.<span class="ident">as_bytes</span>())
     }
 }
