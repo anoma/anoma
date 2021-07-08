@@ -57,7 +57,7 @@ The transaction is given an IBC packet or message which specifies what to do. Be
 IBC-related transaction for some messages or packets makes a packet. For example, when a transaction wants to transfer a token between ledgers, it should make a packet including `FungibleTokenPacketData` to specify the sender, receiver, token, and amount.
 
 ### Store IBC-related data
-The IBC-related transaction can write IBC-related data to check the state or to be proved by other ledgers according to IBC protocol. Its storage key should be prefixed with `InternalAddress::Ibc` and a specific character `^` to protect them from other storage operations. The paths(keys) for Tendermint client are defined by [ICS 24](https://github.com/cosmos/ibc/blob/master/spec/core/ics-024-host-requirements/README.md#path-space). For example, a client state will be stored with a key `#IBC/^/clients/{client_id}/clientState`.
+The IBC-related transaction can write IBC-related data to check the state or to be proved by other ledgers according to IBC protocol. Its storage key should be prefixed with `InternalAddress::Ibc` to protect them from other storage operations. The paths(keys) for Tendermint client are defined by [ICS 24](https://github.com/cosmos/ibc/blob/master/spec/core/ics-024-host-requirements/README.md#path-space). For example, a client state will be stored with a key `#IBC_encoded_addr/clients/{client_id}/clientState`.
 
 ### Emit IBC event
 The ledger should set an IBC event to `events` in the ABCI response to allow relayers to get the events. The transaction execution should return `TxResult` including an event. IBC relayer can subscribe the ledger with Tendermint RPC and get the event.
