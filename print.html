@@ -346,7 +346,7 @@ predicate (and other state changes included in the transaction) is valid</li>
 <h2 id="native-vps"><a class="header" href="#native-vps">Native VPs</a></h2>
 <p>The native VPs follow the same interface as WASM VPs and rules for how they are <a href="explore/design/ledger/tx.html#tx-execution">triggered by a transaction</a>. They can also call the same host functions as those provided in <a href="explore/design/ledger/wasm-vm.html#vps-environment">WASM VPs environment</a> and must also account any computation for gas usage.</p>
 <h2 id="fungible-token-vp"><a class="header" href="#fungible-token-vp">Fungible token VP</a></h2>
-<p>The <a href="https://github.com/anomanetwork/anoma/tree/master/vps/vp_token">fungible token VP</a> allows to associate accounts balances of a specific token under its account. </p>
+<p>The <a href="https://github.com/anomanetwork/anoma/tree/master/wasm/vp_token.wasm">fungible token VP</a> allows to associate accounts balances of a specific token under its account. </p>
 <p>For illustration, users <code>Albert</code> and <code>Bertha</code> might hold some amount of token with the address <code>XAN</code>. Their balances would be stored in the <code>XAN</code>'s storage sub-space under the storage keys <code>@XAN/balance/@Albert</code> and <code>@XAN/balance/@Bertha</code>, respectively. When <code>Albert</code> or <code>Bertha</code> attempt to transact with their <code>XAN</code> tokens, its validity predicate would be triggered to check:</p>
 <ul>
 <li>the total supply of <code>XAN</code> token is preserved (i.e. inputs = outputs)</li>
@@ -354,7 +354,7 @@ predicate (and other state changes included in the transaction) is valid</li>
 </ul>
 <p>Note that the fungible token VP doesn't need to know whether any of involved users accepted or rejected the transaction, because if any of the involved users rejects it, the whole transaction will be rejected.</p>
 <h2 id="user-vp"><a class="header" href="#user-vp">User VP</a></h2>
-<p>The <a href="https://github.com/anomanetwork/anoma/tree/master/vps/vp_user">user VP</a> currently provides a signature verification against a public key for sending tokens as prescribed by the fungible token VP. In this VP, a transfer of tokens doesn't have to be authorized by the receiving party. </p>
+<p>The <a href="https://github.com/anomanetwork/anoma/tree/master/wasm/vp_user.wasm">user VP</a> currently provides a signature verification against a public key for sending tokens as prescribed by the fungible token VP. In this VP, a transfer of tokens doesn't have to be authorized by the receiving party. </p>
 <p>It also allows arbitrary storage modifications to the user's sub-space to be performed by a transaction that has been signed by the secret key corresponding to the user's public key stored on-chain. This functionality also allows one to update their own validity predicate.</p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="transactions"><a class="header" href="#transactions">Transactions</a></h1>
 <p><a href="https://github.com/anomanetwork/anoma/issues/43">Tracking Issue</a></p>

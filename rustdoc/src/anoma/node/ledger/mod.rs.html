@@ -649,10 +649,10 @@
         }
 
         <span class="comment">// Initialize because there is no block</span>
-        <span class="kw">let</span> <span class="ident">token_vp</span> <span class="op">=</span> <span class="ident">std</span>::<span class="ident">fs</span>::<span class="ident">read</span>(<span class="string">&quot;wasm/vps/vp_token/vp.wasm&quot;</span>)
-            .<span class="ident">expect</span>(<span class="string">&quot;cannot load token VP&quot;</span>);
-        <span class="kw">let</span> <span class="ident">user_vp</span> <span class="op">=</span> <span class="ident">std</span>::<span class="ident">fs</span>::<span class="ident">read</span>(<span class="string">&quot;wasm/vps/vp_user/vp.wasm&quot;</span>)
-            .<span class="ident">expect</span>(<span class="string">&quot;cannot load user VP&quot;</span>);
+        <span class="kw">let</span> <span class="ident">token_vp</span> <span class="op">=</span>
+            <span class="ident">std</span>::<span class="ident">fs</span>::<span class="ident">read</span>(<span class="string">&quot;wasm/vp_token.wasm&quot;</span>).<span class="ident">expect</span>(<span class="string">&quot;cannot load token VP&quot;</span>);
+        <span class="kw">let</span> <span class="ident">user_vp</span> <span class="op">=</span>
+            <span class="ident">std</span>::<span class="ident">fs</span>::<span class="ident">read</span>(<span class="string">&quot;wasm/vp_user.wasm&quot;</span>).<span class="ident">expect</span>(<span class="string">&quot;cannot load user VP&quot;</span>);
 
         <span class="comment">// TODO load initial accounts from genesis</span>
 
