@@ -4,22 +4,18 @@ pub mod storage;
 
 use std::convert::{TryFrom, TryInto};
 use std::future::Future;
-use std::path::Path;
 use std::pin::Pin;
 use std::task::{Context, Poll};
 
 use anoma_shared::types::storage::{BlockHash, BlockHeight};
+use ed25519_dalek::PublicKey as Ed25519;
 use futures::future::FutureExt;
-use tendermint::abci::{
-    event::{Event, EventAttributeIndexExt},
-    request, response, Request, Response,
-};
-use thiserror::Error;
+use tendermint::abci::{request, response, Request, Response};
 use tower::{Service, ServiceBuilder};
 use tower_abci::{split, BoxError, Server};
 
 use crate::config;
-use crate::genesis::{self, Validator};
+use crate::genesis;
 use crate::node::ledger::shell::{MempoolTxType, Shell};
 
 impl Service<Request> for Shell {
@@ -40,38 +36,41 @@ impl Service<Request> for Shell {
                     Ok(mut resp) => {
                         // Set the initial validator set
                         let genesis = genesis::genesis();
-                        let mut abci_validator =
-                            tendermint_proto::abci::ValidatorUpdate::default();
-                        let pub_key = tendermint_proto::crypto::PublicKey {
-                            sum: Some(tendermint_proto::crypto::public_key::Sum::Ed25519(
-                                genesis.validator.keypair.public.to_bytes().to_vec(),
-                            )),
-                        };
-                        abci_validator.pub_key = Some(pub_key);
-                        abci_validator.power = genesis
+                        let pub_key = tendermint::PublicKey::Ed25519(
+                                Ed25519::from_bytes(&genesis.validator.keypair.public.to_bytes())
+                                    .expect("Invalid public key"),
+                            );
+                        let power = genesis
                             .validator
                             .voting_power
                             .try_into()
                             .expect("unexpected validator's voting power");
+                        let abci_validator =
+                            tendermint::abci::types::ValidatorUpdate {
+                                pub_key,
+                                power
+                            };
                         resp.validators.push(abci_validator);
                         Ok(Response::InitChain(resp))
                     },
-                    err @ Err(_) => err
+                    Err(inner) => Err(inner)
                 }
 
             },
             Request::Info(_) => Ok(Response::Info(self.last_state())),
-            Request::Query(query) => self.query(query).map(Response::Query),
+            Request::Query(query) => Ok(Response::Query(self.query(query))),
             Request::BeginBlock(block) => {
                 match (
-                    BlockHash::try_from(block.hash),
-                    BlockHeight::try_from(block.header.height as i64).expect("Invalid block height")
+                    BlockHash::try_from(&*block.hash),
+                    BlockHeight::try_from(i64::from(block.header.height))
                 ) {
-                    (Ok(hash), Ok(height)) => self.begin_block(hash, height),
+                    (Ok(hash), Ok(height)) => {
+                        let _ = self.begin_block(hash, height);
+                    },
                     (Ok(_), Err(_)) => {
                         tracing::error!(
                             "Unexpected block height {}",
-                            req.header.unwrap().height
+                            block.header.height
                         );
                     },
                     (err @ Err(_), _) => tracing::error!("{:#?}", err)
@@ -96,7 +95,7 @@ impl Service<Request> for Shell {
                     request::CheckTxKind::New => MempoolTxType::NewTransaction,
                     request::CheckTxKind::Recheck => MempoolTxType::RecheckTransaction,
                 };
-                Ok(Response::CheckTx(self.mempool_validate(tx.tx.into(), r#type)))
+                Ok(Response::CheckTx(self.mempool_validate(&*tx.tx, r#type)))
             }
             Request::ListSnapshots => Ok(Response::ListSnapshots(Default::default())),
             Request::OfferSnapshot(_) => Ok(Response::OfferSnapshot(Default::default())),
@@ -104,7 +103,7 @@ impl Service<Request> for Shell {
             Request::ApplySnapshotChunk(_) => Ok(Response::ApplySnapshotChunk(Default::default())),
         };
         tracing::info!(?rsp);
-        async move { rsp }.boxed()
+        Box::pin(async move { rsp.map_err(|e| e.into()) }.boxed())
     }
 }
 
@@ -115,6 +114,7 @@ pub fn reset(config: config::Ledger) -> Result<(), shell::Error> {
 
 #[tokio::main]
 pub async fn run(config: config::Ledger) {
+
     tracing_subscriber::fmt::init();
 
     // Construct our ABCI application.
@@ -149,6 +149,6 @@ pub async fn run(config: config::Ledger) {
     server
         .listen(config.address)
         .await
-        .uwnrap()?
+        .unwrap();
 
 }

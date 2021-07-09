@@ -78,6 +78,7 @@ dependencies = [
  "blake2b-rs",
  "borsh",
  "byteorder",
+ "bytes 1.0.1",
  "bytesize",
  "cargo-watch",
  "clap 3.0.0-beta.2",
@@ -105,9 +106,8 @@ dependencies = [
  "signal-hook",
  "sparse-merkle-tree",
  "tempfile",
- "tendermint 0.20.0",
+ "tendermint",
  "tendermint-abci",
- "tendermint-proto 0.20.0",
  "tendermint-rpc",
  "thiserror",
  "tokio",
@@ -1591,12 +1591,6 @@ name = "fuchsia-zircon-sys"
 version = "0.3.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3dcaa9ae7725d12cdb85b3ad99a434db70b468c09ded17e012d86b5c1010f7a7"
-
-[[package]]
-name = "funty"
-version = "1.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fed34cd105917e91daa4da6b3728c47b068749d6a62c59811f06ed2ac71d9da7"
 
 [[package]]
 name = "futures"
@@ -4544,38 +4538,6 @@ dependencies = [
 
 [[package]]
 name = "tendermint"
-version = "0.19.0"
-source = "git+https://github.com/hdevalence/tendermint-rs.git?branch=abci-domain-types#1175d4f6690a3fefa26e847dde3644b200cc7e30"
-dependencies = [
- "anomaly",
- "async-trait",
- "bytes 1.0.1",
- "chrono",
- "ed25519",
- "ed25519-dalek",
- "funty",
- "futures",
- "num-traits 0.2.14",
- "once_cell",
- "prost",
- "prost-types",
- "serde 1.0.126",
- "serde_bytes",
- "serde_json",
- "serde_repr",
- "sha2 0.9.5",
- "signature",
- "subtle 2.4.0",
- "subtle-encoding",
- "tendermint-proto 0.19.0",
- "thiserror",
- "toml",
- "url",
- "zeroize",
-]
-
-[[package]]
-name = "tendermint"
 version = "0.20.0"
 source = "git+https://github.com/heliaxdev/tendermint-rs?branch=bat/abci-domain-types#1350eae179bd4d8b4aa8808adc69ccbae12c4d79"
 dependencies = [
@@ -4598,7 +4560,7 @@ dependencies = [
  "signature",
  "subtle 2.4.0",
  "subtle-encoding",
- "tendermint-proto 0.20.0",
+ "tendermint-proto",
  "thiserror",
  "toml",
  "url",
@@ -4613,27 +4575,9 @@ dependencies = [
  "bytes 1.0.1",
  "eyre",
  "prost",
- "tendermint-proto 0.20.0",
+ "tendermint-proto",
  "thiserror",
  "tracing",
-]
-
-[[package]]
-name = "tendermint-proto"
-version = "0.19.0"
-source = "git+https://github.com/hdevalence/tendermint-rs.git?branch=abci-domain-types#1175d4f6690a3fefa26e847dde3644b200cc7e30"
-dependencies = [
- "anomaly",
- "bytes 1.0.1",
- "chrono",
- "num-derive",
- "num-traits 0.2.14",
- "prost",
- "prost-types",
- "serde 1.0.126",
- "serde_bytes",
- "subtle-encoding",
- "thiserror",
 ]
 
 [[package]]
@@ -4673,8 +4617,8 @@ dependencies = [
  "serde_bytes",
  "serde_json",
  "subtle-encoding",
- "tendermint 0.20.0",
- "tendermint-proto 0.20.0",
+ "tendermint",
+ "tendermint-proto",
  "thiserror",
  "tokio",
  "tracing",
@@ -4966,8 +4910,8 @@ dependencies = [
  "futures",
  "pin-project 1.0.7",
  "prost",
- "tendermint 0.19.0",
- "tendermint-proto 0.19.0",
+ "tendermint",
+ "tendermint-proto",
  "tokio",
  "tokio-stream",
  "tokio-util",

@@ -4,7 +4,6 @@ use std::path::Path;
 use anoma_shared::ledger::gas::{self, BlockGasMeter};
 use anoma_shared::ledger::native_vp;
 use anoma_shared::ledger::storage::write_log::WriteLog;
-use anoma_shared::ledger::storage::MerkleRoot;
 use anoma_shared::proto::{self, Tx};
 use anoma_shared::types::address::Address;
 use anoma_shared::types::key::ed25519::PublicKey;
@@ -12,11 +11,9 @@ use anoma_shared::types::storage::{BlockHash, BlockHeight, Key};
 use anoma_shared::types::token::Amount;
 use anoma_shared::types::{address, key, token};
 use borsh::BorshSerialize;
+use bytes;
 use itertools::Itertools;
-use tendermint::abci::{
-    event::{Event, EventAttributeIndexExt},
-    request, response, Request, Response,
-};
+use tendermint::abci::{request, response};
 use thiserror::Error;
 
 use crate::{config, wallet};
@@ -96,7 +93,7 @@ impl Shell {
         &mut self,
         init: request::InitChain
     ) -> Result<response::InitChain> {
-        let mut response = response::InitChain::default();
+        let response = response::InitChain::default();
         let (current_chain_id, _) = self.storage.get_chain_id();
         if current_chain_id != init.chain_id {
             return Err(Error::ChainIdError(format!(
@@ -243,7 +240,7 @@ impl Shell {
     ) -> response::DeliverTx {
         let mut response = response::DeliverTx::default();
         let result = protocol::apply_tx(
-            req.tx.into(),
+            &*req.tx,
             &mut self.gas_meter,
             &mut self.write_log,
             &self.storage,
@@ -309,7 +306,7 @@ impl Shell {
             root,
             self.storage.current_height,
         );
-        response.data = root.into();
+        response.data = bytes::Bytes::copy_from_slice(&root.0);
         response
     }
 

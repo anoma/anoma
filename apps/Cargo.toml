@@ -45,6 +45,7 @@ bech32 = "0.8.0"
 blake2b-rs = "0.2.0"
 borsh = "0.9.0"
 byteorder = "1.4.2"
+bytes = "1.0.1"
 bytesize = "1.0.1"
 # https://github.com/clap-rs/clap/issues/1037
 clap = {git = "https://github.com/clap-rs/clap/", tag = "v3.0.0-beta.2", default-features = false, features = ["std", "suggestions", "color"]}
@@ -75,7 +76,7 @@ sparse-merkle-tree = {git = "https://github.com/heliaxdev/sparse-merkle-tree", b
 # temporarily using fork work-around for https://github.com/informalsystems/tendermint-rs/issues/856
 tendermint = {git = "https://github.com/heliaxdev/tendermint-rs", branch = "bat/abci-domain-types"}
 tendermint-abci = {git = "https://github.com/heliaxdev/tendermint-rs", branch = "bat/abci-domain-types"}
-tendermint-proto = {git = "https://github.com/heliaxdev/tendermint-rs", branch = "bat/abci-domain-types"}
+# tendermint-proto = {git = "https://github.com/heliaxdev/tendermint-rs", branch = "bat/abci-domain-types"}
 tendermint-rpc = {git = "https://github.com/heliaxdev/tendermint-rs", branch = "bat/abci-domain-types", features = ["http-client"]}
 thiserror = "1.0.24"
 tokio = {version = "1.2.0", features = ["full"]}
