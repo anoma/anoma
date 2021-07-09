@@ -3,64 +3,58 @@
 [IBC](https://arxiv.org/pdf/2006.15918.pdf) allows a ledger to track another ledger's consensus state using a light client. IBC is a protocol to agree the consensus state and to send/receive packets between ledgers.
 
 ## Transaction for IBC
-A requester (IBC relayer or user) who wants to execute IBC operations on a ledger sets IBC packet or message like `MsgCreateAnyClient` as transaction data and submit the following transaction. IBC validity predicate is invoked after this transaction execution to check the IBC operation is validated. The trigger to invoke IBC validity predicate is changing IBC-related keys (e.g. prefixed with `ibc/`).
+A requester (IBC relayer or user) who wants to execute IBC operations on a ledger sets required data (packet, proofs, module state, timeout height/timestamp etc.) as transaction data, and submit a transaction with the transaction data. The transaction executes the specified IBC operation. IBC validity predicate is invoked after this transaction execution to verify the IBC operation. The trigger to invoke IBC validity predicate is changing IBC-related keys prefixed with `#encoded-ibc-address/`.
 
-The transaction is given an IBC packet or message which specifies what to do. Because the packet or message has been encoded and stored in transaction data and there are some types of messages, it has to check what packet or message is given first and then decodes the message or packet. Then, it can modify the ledger state by writing not only data specified in the transaction but also IBC-related data on the storage sub-space. After the process according to the packet or message, it emits an IBC event.
+The transaction can modify the ledger state by writing not only data specified in the transaction but also IBC-related data on the storage sub-space. Also, it emits an IBC event at the end of the transaction.
 
-- Transaction given a message
+- Transaction to create a client
   ```rust
   #[transaction]
   fn apply_tx(tx_data: Vec<u8>) {
       let signed =
           key::ed25519::SignedTxData::try_from_slice(&tx_data[..]).unwrap();
-      let messages: Vec<Any> = prost::Message::decode(&signed.data[..]).unwrap();
-      let result = match message.type_url.as_str() {
-          // decode each message: refer to `ibc-rs`
-          create_client::TYPE_URL => {
-              let domain_msg = create_client::MsgCreateAnyClient::decode_vec(&any_msg.value)
-                  .map_err(|e| Kind::MalformedMessageBytes.context(e))?;
-              create_client(domain_msg.client_state, &domain_msg.consensus_state)
-          }
-          // other messages
-          ...
-      };
+      let states: CreateClientStates =
+          prost::Message::decode(&signed.data[..]).unwrap();
+
+      let result = create_client(&states.client_state, &states.consensus_state);
+
       match &result {
           Ok(output) => emit_event(output.events),
           Err(e) => {
-              tx::log_string(format!("IBC operation faild {}", e));
+              tx::log_string(format!("Creating an IBC client faild: {}", e));
               unreachable!()
           }
       }
   }
   ```
 
-- Transaction given a packet
+- Transaction to transfer a token
   ```rust
   #[transaction]
   fn apply_tx(tx_data: Vec<u8>) {
       let signed =
           key::ed25519::SignedTxData::try_from_slice(&tx_data[..]).unwrap();
-      let packet: Packet = prost::Message::decode(&signed.data[..]).unwrap();
-      let data: FungibleTokenPacketData = prost::Message::decode(&packet.data[..]).unwrap();
+      let data: FungibleTokenPacketData =
+          prost::Message::decode(&signed.data[..]).unwrap();
+
+      // escrow the token and make a packet
       let result = ibc_transfer(data);
+
       match &result {
           Ok(output) => emit_event(output.events),
           Err(e) => {
-              tx::log_string(format!("IBC transfer faild {}", e));
-              unreachable!()
+              tx::log_string(format!("IBC transfer faild: {}", e));
+              unreachable!();
           }
       }
   }
   ```
-
-### Make a packet
-IBC-related transaction for some messages or packets makes a packet. For example, when a transaction wants to transfer a token between ledgers, it should make a packet including `FungibleTokenPacketData` to specify the sender, receiver, token, and amount.
 
 ### Store IBC-related data
 The IBC-related transaction can write IBC-related data to check the state or to be proved by other ledgers according to IBC protocol. Its storage key should be prefixed with `InternalAddress::Ibc` to protect them from other storage operations. The paths(keys) for Tendermint client are defined by [ICS 24](https://github.com/cosmos/ibc/blob/master/spec/core/ics-024-host-requirements/README.md#path-space). For example, a client state will be stored with a key `#IBC_encoded_addr/clients/{client_id}/clientState`.
 
 ### Emit IBC event
-The ledger should set an IBC event to `events` in the ABCI response to allow relayers to get the events. The transaction execution should return `TxResult` including an event. IBC relayer can subscribe the ledger with Tendermint RPC and get the event.
+The ledger should set an IBC event to `events` in the ABCI response to allow relayers to get the events. The transaction execution should return `TxResult` including an event. IBC relayer can subscribe the ledger with Tendermint RPC and get the event. The [events](https://github.com/informalsystems/ibc-rs/blob/5cf3b6790c45539c5aaadeef6e1af1f51a5f437f/modules/src/events.rs#L39) are defined in `ibc-rs`.
 
 ### Handle IBC modules
 IBC-related transactions should call functions to handle IBC modules. These functions are defined in [ibc-rs](https://github.com/informalsystems/ibc-rs) in traits (e.g. [`ClientReader`](https://github.com/informalsystems/ibc-rs/blob/d41e7253b997024e9f5852735450e1049176ed3a/modules/src/ics02_client/context.rs#L14)). But we can implement IBC-related operations (e.g. `create_client()`) without these traits because Anoma WASM transaction accesses the storage through the host environment functions.
@@ -138,7 +132,6 @@ impl NativeVp for Ibc {
 
     fn validate_tx(
         tx_data: &[u8],
-        data_from_tx: &HashMap<Key, Vec<u8>>,
         keys_changed: &HashSet<Key>,
         _verifiers: &HashSet<Address>,
     ) -> Result<bool> {
@@ -150,6 +143,8 @@ impl NativeVp for Ibc {
             match get_ibc_prefix(key) {
                 // client
                 "clients" => {
+                    // Use ClientReader functions to load the posterior state of modules
+
                     let client_id = get_client_id(key);
                     // Check the client state change
                     //   - created or updated
@@ -159,7 +154,7 @@ impl NativeVp for Ibc {
                             // Assert that the corresponding consensus state exists
                         }
                         StateChange::Update => {
-                            match get_header(data_from_tx) {
+                            match get_header(key, tx_data) {
                                 Some(header) => {
                                     // "UpdateClient"
                                     // Verify the header with the stored client state’s validity predicate and consensus state
@@ -178,6 +173,8 @@ impl NativeVp for Ibc {
 
                 // connection handshake
                 "connections" => {
+                    // Use ConnectionReader functions to load the posterior state of modules
+
                     let connection_id = get_connection_id(key);
                     // Check the connection state change
                     //   - none => INIT, none => TRYOPEN, INIT => OPEN, or TRYOPEN => OPEN
@@ -199,6 +196,8 @@ impl NativeVp for Ibc {
 
                 // channel handshake or closing
                 "channelEnds" => {
+                    // Use ChannelReader functions to load the posterior state of modules
+
                     // Assert that the port is owend
 
                     // Assert that the corresponding connection exists
@@ -214,7 +213,7 @@ impl NativeVp for Ibc {
                         }
                         StateChange::Closed => {
                             // OPEN => CLOSED
-                            match get_proofs(data_from_tx) {
+                            match get_proofs(tx_data) {
                                 Some(proofs) => {
                                     // "ChanCloseConfirm"
                                     // Verify the proofs to check the counterpart ledger's channel has been closed
@@ -237,7 +236,9 @@ impl NativeVp for Ibc {
 
                 "nextSequenceSend" => {
                     // "SendPacket"
-                    let packet = get_packet(key, data_from_tx)?;
+                    let packet = get_packet(key, tx_data)?;
+
+                    // Use ChannelReader functions to load the posterior state of modules
 
                     // Assert that the packet metadata matches the channel and connection information
                     //   - the port is owend
@@ -256,8 +257,10 @@ impl NativeVp for Ibc {
 
                 "nextSequenceRecv" => {
                     // "RecvPacket"
-                    let packet = get_packet(key, data_from_tx)?;
-                    let proofs = get_proofs(key, data_from_tx)?;
+                    let packet = get_packet(key, tx_data)?;
+                    let proofs = get_proofs(key, tx_data)?;
+
+                    // Use ChannelReader functions to load the posterior state of modules
 
                     // Assert that the packet metadata matches the channel and connection information
 
@@ -275,8 +278,10 @@ impl NativeVp for Ibc {
 
                 "nextSequenceAck" => {
                     // "Acknowledgement"
-                    let packet = get_packet(key, data_from_tx)?;
-                    let proofs = get_proofs(key, data_from_tx)?;
+                    let packet = get_packet(key, tx_data)?;
+                    let proofs = get_proofs(key, tx_data)?;
+
+                    // Use ChannelReader functions to load the posterior state of modules
 
                     // Assert that the packet metadata matches the channel and connection information
 
@@ -294,7 +299,11 @@ impl NativeVp for Ibc {
                 }
 
                 "commitments" => {
-                    let packet = get_packet(key, data_from_tx)?;
+                    let packet = get_packet(key, tx_data)?;
+                    let proofs = get_proofs(key, tx_data)?;
+
+                    // Use ChannelReader functions to load the posterior state of modules
+
                     // check if the commitment is deleted
                     match check_commitment_state(key) {
                         StateChange::Deleted => {
@@ -325,20 +334,46 @@ impl NativeVp for Ibc {
                             }
                         }
                         StateChange::Created | StateChange::Updated => {
-                            // They are checked in other cases
+                            // Assert that the commitment is valid
                         }
                         _ => return Err(Error::InvalidStateChange("Invalid state change happened")),
                     }
                 }
 
-                "ports" | "receipts" | "acks" => {
-                    // They are checked in other cases
+                "ports" => {
+                    // check the state change
+                    match check_port_state(key) {
+                        StateChange::Created | StateChange::Updated => {
+                            // check the authentication
+                            self.authenticated_capability(port_id)?;
+                        }
+                        _ => return Err(Error::InvalidStateChange("Invalid state change happened")),
+                    }
                 }
 
-                _ => {
-                    // unknown prefix
-                    return Ok(false);
+                "receipts" => {
+                    // Use ChannelReader functions to load the posterior state of modules
+
+                    match check_state(key) {
+                        StateChange::Created => {
+                            // Assert that the receipt is valid
+                        }
+                        _ => return Err(Error::InvalidStateChange("Invalid state change happened")),
+                    }
                 }
+
+                "acks" => {
+                    // Use ChannelReader functions to load the posterior state of modules
+
+                    match check_port_state(key) {
+                        StateChange::Created => {
+                            // Assert that the ack is valid
+                        }
+                        _ => return Err(Error::InvalidStateChange("Invalid state change happened")),
+                    }
+                }
+
+                _ => return Err(Error::UnknownKeyPrefix("Found an unknown key prefix")),
             }
         }
         Ok(true)
