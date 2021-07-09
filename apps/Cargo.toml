@@ -82,7 +82,7 @@ tokio = {version = "1.2.0", features = ["full"]}
 toml = "0.5.8"
 tonic = "0.4.0"
 tower = "0.4"
-tower-abci = {path = "../../tower-abci"} #{git = "https://github.com/hdevalence/tower-abci", branch = "main"}
+tower-abci = {git = "https://github.com/hdevalence/tower-abci", branch = "main"}
 tracing = "0.1.26"
 tracing-log = "0.1.2"
 tracing-subscriber = "0.2.18"

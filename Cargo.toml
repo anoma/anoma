@@ -14,3 +14,7 @@ exclude = [
   "wasm",
   "wasm_for_tests",
 ]
+[patch.crates-io]
+tracing = { git = "https://github.com/tokio-rs/tracing/", branch = "v0.1.x" }
+tracing-subscriber = { git = "https://github.com/tokio-rs/tracing/", branch = "v0.1.x" }
+tracing-core = { git = "https://github.com/tokio-rs/tracing/", branch = "v0.1.x" }
