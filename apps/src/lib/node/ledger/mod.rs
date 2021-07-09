@@ -14,16 +14,20 @@ use tendermint::abci::{request, response, Request, Response};
 use tower::{Service, ServiceBuilder};
 use tower_abci::{split, BoxError, Server};
 
-use crate::config;
-use crate::genesis;
 use crate::node::ledger::shell::{MempoolTxType, Shell};
+use crate::{config, genensis};
 
 impl Service<Request> for Shell {
-    type Response = Response;
     type Error = BoxError;
-    type Future = Pin<Box<dyn Future<Output= Result<Response, BoxError>> + Send + 'static>>;
+    type Future = Pin<
+        Box<dyn Future<Output = Result<Response, BoxError>> + Send + 'static>,
+    >;
+    type Response = Response;
 
-    fn poll_ready(&mut self, _cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
+    fn poll_ready(
+        &mut self,
+        _cx: &mut Context<'_>,
+    ) -> Poll<Result<(), Self::Error>> {
         // TODO: is this how we want to do this?
         Poll::Ready(Ok(()))
     }
@@ -37,9 +41,11 @@ impl Service<Request> for Shell {
                         // Set the initial validator set
                         let genesis = genesis::genesis();
                         let pub_key = tendermint::PublicKey::Ed25519(
-                                Ed25519::from_bytes(&genesis.validator.keypair.public.to_bytes())
-                                    .expect("Invalid public key"),
-                            );
+                            Ed25519::from_bytes(
+                                &genesis.validator.keypair.public.to_bytes(),
+                            )
+                            .expect("Invalid public key"),
+                        );
                         let power = genesis
                             .validator
                             .voting_power
@@ -48,59 +54,70 @@ impl Service<Request> for Shell {
                         let abci_validator =
                             tendermint::abci::types::ValidatorUpdate {
                                 pub_key,
-                                power
+                                power,
                             };
                         resp.validators.push(abci_validator);
                         Ok(Response::InitChain(resp))
-                    },
-                    Err(inner) => Err(inner)
+                    }
+                    Err(inner) => Err(inner),
                 }
-
-            },
+            }
             Request::Info(_) => Ok(Response::Info(self.last_state())),
             Request::Query(query) => Ok(Response::Query(self.query(query))),
             Request::BeginBlock(block) => {
                 match (
                     BlockHash::try_from(&*block.hash),
-                    BlockHeight::try_from(i64::from(block.header.height))
+                    BlockHeight::try_from(i64::from(block.header.height)),
                 ) {
                     (Ok(hash), Ok(height)) => {
                         let _ = self.begin_block(hash, height);
-                    },
+                    }
                     (Ok(_), Err(_)) => {
                         tracing::error!(
                             "Unexpected block height {}",
                             block.header.height
                         );
-                    },
-                    (err @ Err(_), _) => tracing::error!("{:#?}", err)
+                    }
+                    (err @ Err(_), _) => tracing::error!("{:#?}", err),
                 };
                 Ok(Response::BeginBlock(Default::default()))
-            },
-            Request::DeliverTx(deliver_tx) => Ok(Response::DeliverTx(self.apply_tx(deliver_tx))),
-            Request::EndBlock(end) => {
-                match BlockHeight::try_from(end.height) {
-                    Ok(height) => Ok(Response::EndBlock(self.end_block(height))),
-                    Err(_) => {
-                        tracing::error!("Unexpected block height {}", end.height);
-                        Ok(Response::EndBlock(Default::default()))
-                    }
+            }
+            Request::DeliverTx(deliver_tx) => {
+                Ok(Response::DeliverTx(self.apply_tx(deliver_tx)))
+            }
+            Request::EndBlock(end) => match BlockHeight::try_from(end.height) {
+                Ok(height) => Ok(Response::EndBlock(self.end_block(height))),
+                Err(_) => {
+                    tracing::error!("Unexpected block height {}", end.height);
+                    Ok(Response::EndBlock(Default::default()))
                 }
             },
             Request::Commit => Ok(Response::Commit(self.commit())),
             Request::Flush => Ok(Response::Flush),
-            Request::Echo(msg) => Ok(Response::Echo(response::Echo{message: msg.message})),
+            Request::Echo(msg) => Ok(Response::Echo(response::Echo {
+                message: msg.message,
+            })),
             Request::CheckTx(tx) => {
                 let r#type = match tx.kind {
                     request::CheckTxKind::New => MempoolTxType::NewTransaction,
-                    request::CheckTxKind::Recheck => MempoolTxType::RecheckTransaction,
+                    request::CheckTxKind::Recheck => {
+                        MempoolTxType::RecheckTransaction
+                    }
                 };
                 Ok(Response::CheckTx(self.mempool_validate(&*tx.tx, r#type)))
             }
-            Request::ListSnapshots => Ok(Response::ListSnapshots(Default::default())),
-            Request::OfferSnapshot(_) => Ok(Response::OfferSnapshot(Default::default())),
-            Request::LoadSnapshotChunk(_) => Ok(Response::LoadSnapshotChunk(Default::default())),
-            Request::ApplySnapshotChunk(_) => Ok(Response::ApplySnapshotChunk(Default::default())),
+            Request::ListSnapshots => {
+                Ok(Response::ListSnapshots(Default::default()))
+            }
+            Request::OfferSnapshot(_) => {
+                Ok(Response::OfferSnapshot(Default::default()))
+            }
+            Request::LoadSnapshotChunk(_) => {
+                Ok(Response::LoadSnapshotChunk(Default::default()))
+            }
+            Request::ApplySnapshotChunk(_) => {
+                Ok(Response::ApplySnapshotChunk(Default::default()))
+            }
         };
         tracing::info!(?rsp);
         Box::pin(async move { rsp.map_err(|e| e.into()) }.boxed())
@@ -111,10 +128,8 @@ pub fn reset(config: config::Ledger) -> Result<(), shell::Error> {
     shell::reset(config)
 }
 
-
 #[tokio::main]
 pub async fn run(config: config::Ledger) {
-
     tracing_subscriber::fmt::init();
 
     // Construct our ABCI application.
@@ -146,9 +161,5 @@ pub async fn run(config: config::Ledger) {
         .unwrap();
 
     // Run the ABCI server.
-    server
-        .listen(config.address)
-        .await
-        .unwrap();
-
+    server.listen(config.address).await.unwrap();
 }

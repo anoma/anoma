@@ -11,14 +11,12 @@ use anoma_shared::types::storage::{BlockHash, BlockHeight, Key};
 use anoma_shared::types::token::Amount;
 use anoma_shared::types::{address, key, token};
 use borsh::BorshSerialize;
-use bytes;
 use itertools::Itertools;
 use tendermint::abci::{request, response};
 use thiserror::Error;
 
+use crate::node::ledger::{protocol, storage};
 use crate::{config, wallet};
-use crate::node::ledger::protocol;
-use crate::node::ledger::storage;
 
 #[derive(Error, Debug)]
 pub enum Error {
@@ -42,7 +40,7 @@ pub fn reset(config: config::Ledger) -> Result<()> {
         res => res.map_err(Error::RemoveDB)?,
     };
     // reset Tendermint state
-    //tendermint::reset(config);
+    // git tendermint::reset(config);
     Ok(())
 }
 
@@ -63,13 +61,9 @@ pub struct Shell {
 }
 
 impl Shell {
-
     /// Create a new shell from a path to a database and a chain id. Looks
     /// up the database with this data and tries to load the last state.
-    pub fn new(
-        db_path: impl AsRef<Path>,
-        chain_id: String,
-    ) -> Self {
+    pub fn new(db_path: impl AsRef<Path>, chain_id: String) -> Self {
         let mut storage = storage::open(db_path, chain_id);
         storage
             .load_last_state()
@@ -91,7 +85,7 @@ impl Shell {
     /// 3. A matchmaker
     pub fn init_chain(
         &mut self,
-        init: request::InitChain
+        init: request::InitChain,
     ) -> Result<response::InitChain> {
         let response = response::InitChain::default();
         let (current_chain_id, _) = self.storage.get_chain_id();
@@ -199,7 +193,8 @@ impl Shell {
                     height
                 );
                 response.last_block_app_hash = root.0.into();
-                response.last_block_height = height.try_into().expect("Invalid block height");
+                response.last_block_height =
+                    height.try_into().expect("Invalid block height");
             }
             None => {
                 tracing::info!(
@@ -214,30 +209,21 @@ impl Shell {
     /// Uses `path` in the query to forward the request to the
     /// right query method and returns the result (which may be
     /// the default if `path` is not a supported string.
-    pub fn query(
-        &mut self,
-        query: request::Query
-    ) -> response::Query {
+    pub fn query(&mut self, query: request::Query) -> response::Query {
         match query.path.as_str() {
             "dry_run_tx" => self.dry_run_tx(&query.data),
-            _ => response::Query::default()
+            _ => response::Query::default(),
         }
     }
 
     /// Begin a new block.
-    pub fn begin_block(
-        &mut self,
-        hash: BlockHash,
-        height: BlockHeight) {
+    pub fn begin_block(&mut self, hash: BlockHash, height: BlockHeight) {
         self.gas_meter.reset();
         self.storage.begin_block(hash, height).unwrap();
     }
 
     /// Validate and apply a transaction.
-    pub fn apply_tx(
-        &mut self,
-        req: request::DeliverTx,
-    ) -> response::DeliverTx {
+    pub fn apply_tx(&mut self, req: request::DeliverTx) -> response::DeliverTx {
         let mut response = response::DeliverTx::default();
         let result = protocol::apply_tx(
             &*req.tx,
@@ -245,7 +231,7 @@ impl Shell {
             &mut self.write_log,
             &self.storage,
         )
-            .map_err(Error::TxError);
+        .map_err(Error::TxError);
 
         match result {
             Ok(result) => {
@@ -270,17 +256,13 @@ impl Shell {
                 response.gas_used =
                     gas::as_i64(self.gas_meter.get_current_transaction_gas());
                 response.info = msg.to_string();
-
             }
         }
         response
     }
 
     /// End a block.
-    pub fn end_block(
-        &mut self,
-        _height: BlockHeight
-    ) -> response::EndBlock {
+    pub fn end_block(&mut self, _height: BlockHeight) -> response::EndBlock {
         Default::default()
     }
 
@@ -329,7 +311,6 @@ impl Shell {
         response
     }
 
-
     /// Simulate validation and application of a transaction.
     fn dry_run_tx(&mut self, tx_bytes: &[u8]) -> response::Query {
         let mut response = response::Query::default();
@@ -340,7 +321,9 @@ impl Shell {
             &mut gas_meter,
             &mut write_log,
             &self.storage,
-        ).map_err(Error::TxError){
+        )
+        .map_err(Error::TxError)
+        {
             Ok(result) => response.info = result.to_string(),
             Err(error) => {
                 response.code = 1;
@@ -349,5 +332,4 @@ impl Shell {
         }
         response
     }
-
 }
