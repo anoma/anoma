@@ -15,7 +15,7 @@ use tower::{Service, ServiceBuilder};
 use tower_abci::{split, BoxError, Server};
 
 use crate::node::ledger::shell::{MempoolTxType, Shell};
-use crate::{config, genensis};
+use crate::{config, genesis};
 
 impl Service<Request> for Shell {
     type Error = BoxError;
