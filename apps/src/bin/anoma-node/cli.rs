@@ -16,7 +16,7 @@ pub fn main() -> Result<()> {
             cli::cmds::Ledger::Run(_) => {
                 let config = get_cfg(base_dir);
                 let ledger_cfg = config.ledger.unwrap_or_default();
-                ledger::run(ledger_cfg).wrap_err("Failed to run Anoma node")?;
+                ledger::run(ledger_cfg).wrap_err("Failed to run Anoma node").await?;
             }
             cli::cmds::Ledger::Reset(_) => {
                 let config = get_cfg(base_dir);

@@ -72,15 +72,17 @@ serde_regex = "1.1.0"
 sha2 = "0.9.3"
 signal-hook = "0.3.9"
 sparse-merkle-tree = {git = "https://github.com/heliaxdev/sparse-merkle-tree", branch = "tomas/encoding-0.9.0b", features = ["borsh"]}
-# temporarily using fork work-around for https://github.com/informalsystems/tendermint-rs/issues/916
-tendermint = {git = "https://github.com/heliaxdev/tendermint-rs", branch = "tomas/update-genesis"}
-tendermint-abci = {git = "https://github.com/heliaxdev/tendermint-rs", branch = "tomas/update-genesis"}
-tendermint-proto = {git = "https://github.com/heliaxdev/tendermint-rs", branch = "tomas/update-genesis"}
-tendermint-rpc = {git = "https://github.com/heliaxdev/tendermint-rs", branch = "tomas/update-genesis", features = ["http-client"]}
+# temporarily using fork work-around for https://github.com/informalsystems/tendermint-rs/issues/856
+tendermint = {git = "https://github.com/heliaxdev/tendermint-rs", branch = "bat/abci-domain-types"}
+tendermint-abci = {git = "https://github.com/heliaxdev/tendermint-rs", branch = "bat/abci-domain-types"}
+tendermint-proto = {git = "https://github.com/heliaxdev/tendermint-rs", branch = "bat/abci-domain-types"}
+tendermint-rpc = {git = "https://github.com/heliaxdev/tendermint-rs", branch = "bat/abci-domain-types", features = ["http-client"]}
 thiserror = "1.0.24"
 tokio = {version = "1.2.0", features = ["full"]}
 toml = "0.5.8"
 tonic = "0.4.0"
+tower = "0.4"
+tower-abci = {path = "../../tower-abci"} #{git = "https://github.com/hdevalence/tower-abci", branch = "main"}
 tracing = "0.1.26"
 tracing-log = "0.1.2"
 tracing-subscriber = "0.2.18"
