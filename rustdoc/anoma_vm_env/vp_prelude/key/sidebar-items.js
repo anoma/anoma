@@ -1,1 +1,1 @@
-initSidebarItems({"mod":[["ed25519",""]]});
+initSidebarItems({});

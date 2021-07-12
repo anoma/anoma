@@ -171,6 +171,7 @@
 <span id="168">168</span>
 <span id="169">169</span>
 <span id="170">170</span>
+<span id="171">171</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! A basic fungible token</span>
 
@@ -221,6 +222,7 @@
     }
 
     <span class="doccomment">/// Spend a given amount</span>
+    <span class="doccomment">/// Panics when given `amount` &gt; `self.micro` amount.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">spend</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">amount</span>: <span class="kw-2">&amp;</span><span class="ident">Amount</span>) {
         <span class="self">self</span>.<span class="ident">micro</span> <span class="op">-</span><span class="op">=</span> <span class="ident">amount</span>.<span class="ident">micro</span>
     }

@@ -67,70 +67,94 @@
 <span id="64">64</span>
 <span id="65">65</span>
 <span id="66">66</span>
+<span id="67">67</span>
+<span id="68">68</span>
+<span id="69">69</span>
+<span id="70">70</span>
+<span id="71">71</span>
+<span id="72">72</span>
+<span id="73">73</span>
+<span id="74">74</span>
+<span id="75">75</span>
+<span id="76">76</span>
+<span id="77">77</span>
+<span id="78">78</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">collections</span>::<span class="ident">HashSet</span>;
 
 <span class="kw">use</span> <span class="ident">anoma_shared</span>::<span class="ident">types</span>::<span class="ident">address</span>::<span class="ident">Address</span>;
 <span class="kw">use</span> <span class="ident">anoma_shared</span>::<span class="ident">types</span>::<span class="ident">storage</span>::<span class="ident">Key</span>;
-<span class="kw">use</span> <span class="ident">anoma_shared</span>::<span class="ident">types</span>::<span class="ident">token</span>::{<span class="self">self</span>, <span class="ident">Amount</span>, <span class="ident">Change</span>};
+<span class="kw">use</span> <span class="ident">anoma_shared</span>::<span class="ident">types</span>::<span class="ident">token</span>;
 
-<span class="doccomment">/// A token validity predicate.</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">vp</span>(
-    <span class="ident">token</span>: <span class="kw-2">&amp;</span><span class="ident">Address</span>,
-    <span class="ident">keys_changed</span>: <span class="kw-2">&amp;</span><span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">Key</span><span class="op">&gt;</span>,
-    <span class="ident">verifiers</span>: <span class="kw-2">&amp;</span><span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span>,
-) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
+<span class="doccomment">/// Vp imports and functions.</span>
+<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">vp</span> {
+    <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">anoma_shared</span>::<span class="ident">types</span>::<span class="ident">token</span>::<span class="kw-2">*</span>;
+
+    <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
     <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">imports</span>::<span class="ident">vp</span>;
 
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">change</span>: <span class="ident">Change</span> <span class="op">=</span> <span class="number">0</span>;
-    <span class="kw">let</span> <span class="ident">all_checked</span> <span class="op">=</span> <span class="ident">keys_changed</span>.<span class="ident">iter</span>().<span class="ident">all</span>(<span class="op">|</span><span class="ident">key</span><span class="op">|</span> {
-        <span class="kw">match</span> <span class="ident">token</span>::<span class="ident">is_balance_key</span>(<span class="ident">token</span>, <span class="ident">key</span>) {
-            <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="comment">// deny any other keys</span>
-                <span class="bool-val">false</span>
-            }
-            <span class="prelude-val">Some</span>(<span class="ident">owner</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="comment">// accumulate the change</span>
-                <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">key</span>.<span class="ident">to_string</span>();
-                <span class="kw">let</span> <span class="ident">pre</span>: <span class="ident">Amount</span> <span class="op">=</span> <span class="ident">vp</span>::<span class="ident">read_pre</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>).<span class="ident">unwrap_or_default</span>();
-                <span class="kw">let</span> <span class="ident">post</span>: <span class="ident">Amount</span> <span class="op">=</span> <span class="ident">vp</span>::<span class="ident">read_post</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>).<span class="ident">unwrap_or_default</span>();
-                <span class="kw">let</span> <span class="ident">this_change</span> <span class="op">=</span> <span class="ident">post</span>.<span class="ident">change</span>() <span class="op">-</span> <span class="ident">pre</span>.<span class="ident">change</span>();
-                <span class="ident">change</span> <span class="op">+</span><span class="op">=</span> <span class="ident">this_change</span>;
-                <span class="comment">// make sure that the spender approved the transaction</span>
-                <span class="kw">if</span> <span class="ident">this_change</span> <span class="op">&lt;</span> <span class="number">0</span> {
-                    <span class="kw">return</span> <span class="ident">verifiers</span>.<span class="ident">contains</span>(<span class="ident">owner</span>);
+    <span class="doccomment">/// A token validity predicate.</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">vp</span>(
+        <span class="ident">token</span>: <span class="kw-2">&amp;</span><span class="ident">Address</span>,
+        <span class="ident">keys_changed</span>: <span class="kw-2">&amp;</span><span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">Key</span><span class="op">&gt;</span>,
+        <span class="ident">verifiers</span>: <span class="kw-2">&amp;</span><span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span>,
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">change</span>: <span class="ident">Change</span> <span class="op">=</span> <span class="number">0</span>;
+        <span class="kw">let</span> <span class="ident">all_checked</span> <span class="op">=</span> <span class="ident">keys_changed</span>.<span class="ident">iter</span>().<span class="ident">all</span>(<span class="op">|</span><span class="ident">key</span><span class="op">|</span> {
+            <span class="kw">match</span> <span class="ident">token</span>::<span class="ident">is_balance_key</span>(<span class="ident">token</span>, <span class="ident">key</span>) {
+                <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="comment">// deny any other keys</span>
+                    <span class="bool-val">false</span>
                 }
-                <span class="bool-val">true</span>
+                <span class="prelude-val">Some</span>(<span class="ident">owner</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="comment">// accumulate the change</span>
+                    <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">key</span>.<span class="ident">to_string</span>();
+                    <span class="kw">let</span> <span class="ident">pre</span>: <span class="ident">Amount</span> <span class="op">=</span> <span class="ident">vp</span>::<span class="ident">read_pre</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>).<span class="ident">unwrap_or_default</span>();
+                    <span class="kw">let</span> <span class="ident">post</span>: <span class="ident">Amount</span> <span class="op">=</span> <span class="ident">vp</span>::<span class="ident">read_post</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>).<span class="ident">unwrap_or_default</span>();
+                    <span class="kw">let</span> <span class="ident">this_change</span> <span class="op">=</span> <span class="ident">post</span>.<span class="ident">change</span>() <span class="op">-</span> <span class="ident">pre</span>.<span class="ident">change</span>();
+                    <span class="ident">change</span> <span class="op">+</span><span class="op">=</span> <span class="ident">this_change</span>;
+                    <span class="comment">// make sure that the spender approved the transaction</span>
+                    <span class="kw">if</span> <span class="ident">this_change</span> <span class="op">&lt;</span> <span class="number">0</span> {
+                        <span class="kw">return</span> <span class="ident">verifiers</span>.<span class="ident">contains</span>(<span class="ident">owner</span>);
+                    }
+                    <span class="bool-val">true</span>
+                }
             }
-        }
-    });
-    <span class="ident">all_checked</span> <span class="op">&amp;&amp;</span> <span class="ident">change</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span>
+        });
+        <span class="ident">all_checked</span> <span class="op">&amp;&amp;</span> <span class="ident">change</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span>
+    }
 }
 
-<span class="doccomment">/// A token transfer that can be used in a transaction.</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">transfer</span>(
-    <span class="ident">src</span>: <span class="kw-2">&amp;</span><span class="ident">Address</span>,
-    <span class="ident">dest</span>: <span class="kw-2">&amp;</span><span class="ident">Address</span>,
-    <span class="ident">token</span>: <span class="kw-2">&amp;</span><span class="ident">Address</span>,
-    <span class="ident">amount</span>: <span class="ident">Amount</span>,
-) {
+<span class="doccomment">/// Tx imports and functions.</span>
+<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">tx</span> {
+    <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">anoma_shared</span>::<span class="ident">types</span>::<span class="ident">token</span>::<span class="kw-2">*</span>;
+
+    <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
     <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">imports</span>::<span class="ident">tx</span>;
 
-    <span class="kw">let</span> <span class="ident">src_key</span> <span class="op">=</span> <span class="ident">token</span>::<span class="ident">balance_key</span>(<span class="ident">token</span>, <span class="ident">src</span>);
-    <span class="kw">let</span> <span class="ident">dest_key</span> <span class="op">=</span> <span class="ident">token</span>::<span class="ident">balance_key</span>(<span class="ident">token</span>, <span class="ident">dest</span>);
-    <span class="kw">let</span> <span class="ident">src_bal</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Amount</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">tx</span>::<span class="ident">read</span>(<span class="kw-2">&amp;</span><span class="ident">src_key</span>.<span class="ident">to_string</span>());
-    <span class="kw">match</span> <span class="ident">src_bal</span> {
-        <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> {
-            <span class="ident">tx</span>::<span class="ident">log_string</span>(<span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;src {} has no balance&quot;</span>, <span class="ident">src</span>));
-            <span class="macro">unreachable</span><span class="macro">!</span>()
-        }
-        <span class="prelude-val">Some</span>(<span class="kw-2">mut</span> <span class="ident">src_bal</span>) <span class="op">=</span><span class="op">&gt;</span> {
-            <span class="ident">src_bal</span>.<span class="ident">spend</span>(<span class="kw-2">&amp;</span><span class="ident">amount</span>);
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">dest_bal</span>: <span class="ident">Amount</span> <span class="op">=</span>
-                <span class="ident">tx</span>::<span class="ident">read</span>(<span class="kw-2">&amp;</span><span class="ident">dest_key</span>.<span class="ident">to_string</span>()).<span class="ident">unwrap_or_default</span>();
-            <span class="ident">dest_bal</span>.<span class="ident">receive</span>(<span class="kw-2">&amp;</span><span class="ident">amount</span>);
-            <span class="ident">tx</span>::<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="ident">src_key</span>.<span class="ident">to_string</span>(), <span class="ident">src_bal</span>);
-            <span class="ident">tx</span>::<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="ident">dest_key</span>.<span class="ident">to_string</span>(), <span class="ident">dest_bal</span>);
+    <span class="doccomment">/// A token transfer that can be used in a transaction.</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">transfer</span>(
+        <span class="ident">src</span>: <span class="kw-2">&amp;</span><span class="ident">Address</span>,
+        <span class="ident">dest</span>: <span class="kw-2">&amp;</span><span class="ident">Address</span>,
+        <span class="ident">token</span>: <span class="kw-2">&amp;</span><span class="ident">Address</span>,
+        <span class="ident">amount</span>: <span class="ident">Amount</span>,
+    ) {
+        <span class="kw">let</span> <span class="ident">src_key</span> <span class="op">=</span> <span class="ident">token</span>::<span class="ident">balance_key</span>(<span class="ident">token</span>, <span class="ident">src</span>);
+        <span class="kw">let</span> <span class="ident">dest_key</span> <span class="op">=</span> <span class="ident">token</span>::<span class="ident">balance_key</span>(<span class="ident">token</span>, <span class="ident">dest</span>);
+        <span class="kw">let</span> <span class="ident">src_bal</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Amount</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">tx</span>::<span class="ident">read</span>(<span class="kw-2">&amp;</span><span class="ident">src_key</span>.<span class="ident">to_string</span>());
+        <span class="kw">match</span> <span class="ident">src_bal</span> {
+            <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">tx</span>::<span class="ident">log_string</span>(<span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;src {} has no balance&quot;</span>, <span class="ident">src</span>));
+                <span class="macro">unreachable</span><span class="macro">!</span>()
+            }
+            <span class="prelude-val">Some</span>(<span class="kw-2">mut</span> <span class="ident">src_bal</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">src_bal</span>.<span class="ident">spend</span>(<span class="kw-2">&amp;</span><span class="ident">amount</span>);
+                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">dest_bal</span>: <span class="ident">Amount</span> <span class="op">=</span>
+                    <span class="ident">tx</span>::<span class="ident">read</span>(<span class="kw-2">&amp;</span><span class="ident">dest_key</span>.<span class="ident">to_string</span>()).<span class="ident">unwrap_or_default</span>();
+                <span class="ident">dest_bal</span>.<span class="ident">receive</span>(<span class="kw-2">&amp;</span><span class="ident">amount</span>);
+                <span class="ident">tx</span>::<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="ident">src_key</span>.<span class="ident">to_string</span>(), <span class="ident">src_bal</span>);
+                <span class="ident">tx</span>::<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="ident">dest_key</span>.<span class="ident">to_string</span>(), <span class="ident">dest_bal</span>);
+            }
         }
     }
 }

@@ -1,1 +1,1 @@
-initSidebarItems({"mod":[["filter_prelude",""],["imports",""],["key",""],["matchmaker_prelude",""],["tx_prelude",""],["vp_prelude",""]]});
+initSidebarItems({"mod":[["filter_prelude",""],["imports",""],["intent",""],["key",""],["matchmaker_prelude",""],["token",""],["tx_prelude",""],["vp_prelude",""]]});

@@ -18,8 +18,14 @@
 <span id="15">15</span>
 <span id="16">16</span>
 <span id="17">17</span>
+<span id="18">18</span>
+<span id="19">19</span>
+<span id="20">20</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Shared code for the node, client etc.</span>
+
+<span class="attribute">#![<span class="ident">deny</span>(<span class="ident">rustdoc</span>::<span class="ident">broken_intra_doc_links</span>)]</span>
+<span class="attribute">#![<span class="ident">deny</span>(<span class="ident">rustdoc</span>::<span class="ident">private_intra_doc_links</span>)]</span>
 
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">cli</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">client</span>;

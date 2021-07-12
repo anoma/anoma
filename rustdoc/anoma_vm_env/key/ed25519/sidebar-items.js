@@ -1,1 +1,1 @@
-initSidebarItems({"fn":[["get","Get the public key associated with the given address. Panics if not found."]]});
+initSidebarItems({"mod":[["vp","Vp imports and functions."]]});

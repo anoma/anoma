@@ -11,16 +11,30 @@
 <span id="8"> 8</span>
 <span id="9"> 9</span>
 <span id="10">10</span>
+<span id="11">11</span>
+<span id="12">12</span>
+<span id="13">13</span>
+<span id="14">14</span>
+<span id="15">15</span>
+<span id="16">16</span>
+<span id="17">17</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="ident">anoma_shared</span>::<span class="ident">types</span>::<span class="ident">address</span>::<span class="ident">Address</span>;
-<span class="kw">use</span> <span class="ident">anoma_shared</span>::<span class="ident">types</span>::<span class="ident">key</span>::<span class="ident">ed25519</span>::{<span class="self">self</span>, <span class="ident">PublicKey</span>};
+<span class="kw">use</span> <span class="ident">anoma_shared</span>::<span class="ident">types</span>::<span class="ident">key</span>::<span class="ident">ed25519</span>;
 
-<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">imports</span>::<span class="ident">vp</span>;
+<span class="doccomment">/// Vp imports and functions.</span>
+<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">vp</span> {
+    <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">anoma_shared</span>::<span class="ident">types</span>::<span class="ident">key</span>::<span class="ident">ed25519</span>::<span class="kw-2">*</span>;
 
-<span class="doccomment">/// Get the public key associated with the given address. Panics if not found.</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get</span>(<span class="ident">owner</span>: <span class="kw-2">&amp;</span><span class="ident">Address</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">PublicKey</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">ed25519</span>::<span class="ident">pk_key</span>(<span class="ident">owner</span>).<span class="ident">to_string</span>();
-    <span class="ident">vp</span>::<span class="ident">read_pre</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>)
+    <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
+    <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">imports</span>::<span class="ident">vp</span>;
+
+    <span class="doccomment">/// Get the public key associated with the given address. Panics if not</span>
+    <span class="doccomment">/// found.</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get</span>(<span class="ident">owner</span>: <span class="kw-2">&amp;</span><span class="ident">Address</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">PublicKey</span><span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">ed25519</span>::<span class="ident">pk_key</span>(<span class="ident">owner</span>).<span class="ident">to_string</span>();
+        <span class="ident">vp</span>::<span class="ident">read_pre</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>)
+    }
 }
 </pre></div>
 </section><section id="search" class="content hidden"></section><section class="footer"></section><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="anoma_vm_env" data-search-js="../../../search-index.js"></div>
