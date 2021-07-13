@@ -203,9 +203,9 @@ mod tests {
         session
             .exp_string("Anoma ledger node started")
             .map_err(|e| eyre!(format!("{}", e)))?;
-        session
+        /*session
             .exp_string("Started node")
-            .map_err(|e| eyre!(format!("{}", e)))?;
+            .map_err(|e| eyre!(format!("{}", e)))?;*/
 
         let txs_args = vec![
             // 2. Submit a token transfer tx

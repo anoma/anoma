@@ -4984,15 +4984,6 @@ dependencies = [
 [[package]]
 name = "tracing-futures"
 version = "0.2.5"
-source = "git+https://github.com/tokio-rs/tracing/?branch=v0.1.x#807bc8fae777e7e55147a7d21d547500037fd7ec"
-dependencies = [
- "pin-project 1.0.7",
- "tracing",
-]
-
-[[package]]
-name = "tracing-futures"
-version = "0.2.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "97d095ae15e245a057c8e8451bab9b3ee1e1f68e9ba2b4fbc18d0ac5237835f2"
 dependencies = [
@@ -5001,9 +4992,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "tracing-futures"
+version = "0.2.5"
+source = "git+https://github.com/tokio-rs/tracing/?branch=v0.1.x#807bc8fae777e7e55147a7d21d547500037fd7ec"
+dependencies = [
+ "pin-project 1.0.7",
+ "tracing",
+]
+
+[[package]]
 name = "tracing-log"
 version = "0.1.2"
-source = "git+https://github.com/tokio-rs/tracing/?branch=v0.1.x#807bc8fae777e7e55147a7d21d547500037fd7ec"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a6923477a48e41c1951f1999ef8bb5a3023eb723ceadafe78ffb65dc366761e3"
 dependencies = [
  "lazy_static 1.4.0",
  "log",
@@ -5013,8 +5014,7 @@ dependencies = [
 [[package]]
 name = "tracing-log"
 version = "0.1.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a6923477a48e41c1951f1999ef8bb5a3023eb723ceadafe78ffb65dc366761e3"
+source = "git+https://github.com/tokio-rs/tracing/?branch=v0.1.x#807bc8fae777e7e55147a7d21d547500037fd7ec"
 dependencies = [
  "lazy_static 1.4.0",
  "log",
