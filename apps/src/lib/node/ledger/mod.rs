@@ -4,7 +4,7 @@ pub mod storage;
 mod tendermint_node;
 
 use std::convert::{TryFrom, TryInto};
-use std::future::{Future};
+use std::future::Future;
 use std::pin::Pin;
 use std::sync::mpsc::channel;
 use std::task::{Context, Poll};
@@ -20,7 +20,6 @@ use tower_abci::{split, BoxError, Server};
 
 use crate::node::ledger::shell::{MempoolTxType, Shell};
 use crate::{config, genesis};
-
 
 impl Service<Request> for Shell {
     type Error = BoxError;
@@ -94,7 +93,7 @@ impl Service<Request> for Shell {
                 Ok(height) => Ok(Response::EndBlock(self.end_block(height))),
                 Err(_) => {
                     tracing::error!("Unexpected block height {}", end.height);
-                  
+                    Ok(Response::EndBlock(Default::default()))
                 }
             },
             Request::Commit => Ok(Response::Commit(self.commit())),
@@ -135,7 +134,6 @@ pub fn reset(config: config::Ledger) -> Result<(), shell::Error> {
 
 #[tokio::main]
 async fn run_shell(config: config::Ledger) {
-
     // Construct our ABCI application.
     let service = Shell::new(&config.db, config::DEFAULT_CHAIN_ID.to_owned());
 
@@ -167,7 +165,6 @@ async fn run_shell(config: config::Ledger) {
     server.listen(config.address).await.unwrap();
 }
 
-
 pub fn run(config: config::Ledger) {
     // Run Tendermint ABCI server in another thread
     let home_dir = config.tendermint.clone();
@@ -183,7 +180,7 @@ pub fn run(config: config::Ledger) {
         }
     });
     // start the shell + ABCI server
-    let _ = std::thread::spawn(move|| {
+    let _ = std::thread::spawn(move || {
         run_shell(config);
     });
     tracing::info!("Anoma ledger node started.");
@@ -197,5 +194,6 @@ pub fn run(config: config::Ledger) {
             break;
         }
     }
+
     tracing::info!("Shutting down Anoma node");
 }

@@ -13,8 +13,6 @@ use thiserror::Error;
 use crate::config;
 use crate::genesis::{self, Validator};
 
-
-
 #[derive(Error, Debug)]
 pub enum Error {
     #[error("Failed to initialize Tendermint: {0}")]
@@ -29,8 +27,6 @@ pub enum Error {
     TendermintWriteConfig(std::io::Error),
     #[error("Failed to start up Tendermint node: {0}")]
     TendermintStartUp(std::io::Error),
-    //#[error("Failed to create OS signal handlers: {0}")]
-    //SignalsHandlers(std::io::Error),
 }
 
 pub type Result<T> = std::result::Result<T, Error>;
@@ -86,7 +82,7 @@ pub fn reset(config: config::Ledger) {
         "{}/config",
         &config.tendermint.to_string_lossy()
     ))
-        .expect("Failed to reset tendermint node's config");
+    .expect("Failed to reset tendermint node's config");
 }
 
 fn update_tendermint_config(home_dir: impl AsRef<Path>) -> Result<()> {

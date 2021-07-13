@@ -15,9 +15,8 @@ use itertools::Itertools;
 use tendermint::abci::{request, response};
 use thiserror::Error;
 
-use crate::node::ledger::{protocol, storage};
+use crate::node::ledger::{protocol, storage, tendermint_node};
 use crate::{config, wallet};
-use crate::node::ledger::tendermint_node;
 
 #[derive(Error, Debug)]
 pub enum Error {
