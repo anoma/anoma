@@ -432,8 +432,8 @@ mod tests {
         pub const KARTOFFEL: &str = "a1qq5qqqqqxs6yvsekxuuyy3pjxsmrgd2rxuungdzpgsmyydjrxsenjdp5xaqn233sgccnjs3eak5wwh";
 
         // Paths to the WASMs used for tests
-        pub const TX_TRANSFER_WASM: &str = "wasm/txs/tx_transfer/tx.wasm";
-        pub const VP_USER_WASM: &str = "wasm/vps/vp_user/vp.wasm";
+        pub const TX_TRANSFER_WASM: &str = "wasm/tx_transfer.wasm";
+        pub const VP_USER_WASM: &str = "wasm/vp_user.wasm";
         pub const TX_NO_OP_WASM: &str = "wasm_for_tests/tx_no_op.wasm";
     }
 }

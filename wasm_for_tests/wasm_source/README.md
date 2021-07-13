@@ -15,5 +15,7 @@ make all
 
 make tx_no_op         # build
 make check_tx_no_op   # cargo check
+make test_tx_no_op    # cargo test
 make watch_tx_no_op   # cargo watch
+make clippy_tx_no_op  # cargo clippy
 ```

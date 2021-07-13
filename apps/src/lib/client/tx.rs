@@ -10,8 +10,8 @@ use tendermint_rpc::{Client, HttpClient};
 use crate::cli::args;
 use crate::wallet;
 
-const TX_UPDATE_VP_WASM: &str = "wasm/txs/tx_update_vp/tx.wasm";
-const TX_TRANSFER_WASM: &str = "wasm/txs/tx_transfer/tx.wasm";
+const TX_UPDATE_VP_WASM: &str = "wasm/tx_update_vp.wasm";
+const TX_TRANSFER_WASM: &str = "wasm/tx_transfer.wasm";
 
 pub async fn submit_custom(args: args::TxCustom) {
     let tx_code = std::fs::read(args.code_path)

@@ -5,13 +5,12 @@ rustup := $(env) rustup
 debug-env := RUST_BACKTRACE=1 RUST_LOG=$(package)=debug
 debug-cargo := $(env) $(debug-env) cargo
 # Nightly build is currently used for rustfmt and clippy.
-# NOTE On change also update `RUSTFMT_TOOLCHAIN` in `apps/build.rs`.
-nightly := nightly-2021-03-09
+nightly := $(shell cat rust-nightly-version)
 
-# Paths for all the wasm sources
-tx_wasms := $(dir $(wildcard wasm/txs/*/.))
-vp_wasms := $(dir $(wildcard wasm/vps/*/.))	
-wasms := $(tx_wasms) $(vp_wasms) wasm/matchmaker_template wasm/filter_template
+# Path to the wasm source for the provided txs and VPs
+wasms := wasm/wasm_source
+# Paths for all the wasm templates
+wasm_templates := wasm/tx_template wasm/vp_template wasm/mm_template wasm/mm_filter_template
 
 # Transitive dependency of wasmer. It's safe to ignore as we don't use cranelift compiler. It should disseaper once the wasmer library updates its dependencies
 audit-ignores := RUSTSEC-2021-0067
@@ -19,6 +18,8 @@ audit-ignores := RUSTSEC-2021-0067
 audit-ignores += RUSTSEC-2021-0064
 # Transitive dependency warning from tendermint-rpc
 audit-ignores += RUSTSEC-2020-0016
+# tokio issue affecting many deps
+audit-ignores += RUSTSEC-2021-0072 
 
 build:
 	$(cargo) build
@@ -32,12 +33,14 @@ build-release:
 check-wasm = $(cargo) check --target wasm32-unknown-unknown --manifest-path $(wasm)/Cargo.toml
 check:
 	$(cargo) check && \
-	$(foreach wasm,$(wasms),$(check-wasm) && ) true
+	make -C $(wasms) check && \
+	$(foreach wasm,$(wasm_templates),$(check-wasm) && ) true
 
 clippy-wasm = $(cargo) +$(nightly) clippy --manifest-path $(wasm)/Cargo.toml --all-targets -- -D warnings
 clippy:
 	$(cargo) +$(nightly) clippy --all-targets -- -D warnings && \
-	$(foreach wasm,$(wasms),$(clippy-wasm) && ) true
+	make -C $(wasms) clippy && \
+	$(foreach wasm,$(wasm_templates),$(clippy-wasm) && ) true
 
 install:
 	# Warning: built in debug mode for now
@@ -58,7 +61,6 @@ reset-ledger:
 audit:
 	$(cargo) audit $(foreach ignore,$(audit-ignores), --ignore $(ignore))
 
-test-wasm = $(cargo) test --manifest-path $(wasm)/Cargo.toml
 test:
 	make test-unit && \
 	make test-e2e && \
@@ -70,9 +72,12 @@ test-e2e:
 test-unit:
 	$(cargo) test -- --skip e2e
 
-test-wasm = $(cargo) test --manifest-path $(wasm)/Cargo.toml
 test-wasm:
-	$(foreach wasm,$(wasms),$(test-wasm) && ) true
+	make -C $(wasms) test
+
+test-wasm-template = $(cargo) test --manifest-path $(wasm)/Cargo.toml
+test-wasm-templates:
+	$(foreach wasm,$(wasm_templates),$(test-wasm-template) && ) true
 
 test-debug:
 	$(debug-cargo) test -- --nocapture
@@ -80,12 +85,14 @@ test-debug:
 fmt-wasm = $(cargo) +$(nightly) fmt --manifest-path $(wasm)/Cargo.toml
 fmt:
 	$(cargo) +$(nightly) fmt --all && \
-	$(foreach wasm,$(wasms),$(fmt-wasm) && ) true
+	make -C $(wasms) fmt && \
+	$(foreach wasm,$(wasm_templates),$(fmt-wasm) && ) true
 
 fmt-check-wasm = $(cargo) +$(nightly) fmt --manifest-path $(wasm)/Cargo.toml -- --check
 fmt-check:
 	$(cargo) +$(nightly) fmt --all -- --check && \
-	$(foreach wasm,$(wasms),$(fmt-check-wasm) && ) true
+	make -C $(wasms) fmt-check && \
+	$(foreach wasm,$(wasm_templates),$(fmt-check-wasm) && ) true
 
 watch:
 	$(cargo) watch
@@ -105,13 +112,11 @@ build-wasm-scripts-docker:
 	docker run --rm -v ${PWD}:/usr/local/rust/project anoma-wasm make build-wasm-scripts
 
 # Build the validity predicate, transactions, matchmaker and matchmaker filter wasm
-build-wasm = make -C $(wasm)
 build-wasm-scripts:
-	$(foreach wasm,$(wasms),$(build-wasm) && ) true
+	make -C $(wasms)
 
-clean-wasm = make -C $(wasm)
 clean-wasm-scripts:
-	$(foreach wasm,$(wasms),$(clean-wasm) && ) true
+	make -C $(wasms) clean
 
 dev-deps:
 	$(rustup) toolchain install $(nightly)

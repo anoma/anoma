@@ -72,8 +72,8 @@ pub mod cmds {
         }
     }
 
-    /// Used as top-level commands ([`Cmd`] instance) in `anoman` binary.
-    /// Used as sub-commands ([`SubCmd`] instance) in `anoma` binary.
+    /// Used as top-level commands (`Cmd` instance) in `anoman` binary.
+    /// Used as sub-commands (`SubCmd` instance) in `anoma` binary.
     #[derive(Debug)]
     pub enum AnomaNode {
         Ledger(Ledger),
@@ -117,8 +117,8 @@ pub mod cmds {
         }
     }
 
-    /// Used as top-level commands ([`Cmd`] instance) in `anomac` binary.
-    /// Used as sub-commands ([`SubCmd`] instance) in `anoma` binary.
+    /// Used as top-level commands (`Cmd` instance) in `anomac` binary.
+    /// Used as sub-commands (`SubCmd` instance) in `anoma` binary.
     #[derive(Debug)]
     pub enum AnomaClient {
         TxCustom(TxCustom),

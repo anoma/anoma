@@ -94,7 +94,7 @@ impl Service<Request> for Shell {
                 Ok(height) => Ok(Response::EndBlock(self.end_block(height))),
                 Err(_) => {
                     tracing::error!("Unexpected block height {}", end.height);
-                    Ok(Response::EndBlock(Default::default()))
+                  
                 }
             },
             Request::Commit => Ok(Response::Commit(self.commit())),

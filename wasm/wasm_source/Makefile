@@ -5,22 +5,16 @@ nightly := $(shell cat ../../rust-nightly-version)
 
 # All the wasms that can be built from this source, switched via Cargo features
 # Wasms can be added via the Cargo.toml `[features]` list.
-wasms := tx_memory_limit
-wasms += tx_no_op
-wasms += tx_read_storage_key
-wasms += vp_always_false
-wasms += vp_always_true
-wasms += vp_eval
-wasms += vp_memory_limit
-wasms += vp_read_storage_key
-
+wasms := tx_from_intent
+wasms += tx_transfer
+wasms += tx_update_vp
+wasms += vp_token
+wasms += vp_user
+wasms += mm_filter_token_exch
+wasms += mm_token_exch
 
 # Build all wasms
 all: $(wasms)
-
-# `cargo check` all wasms
-check:
-	$(foreach wasm,$(wasms),make check_$(wasm) && ) true
 
 # `cargo check` all wasms
 check:
@@ -43,19 +37,23 @@ fmt-check:
 # Build a selected wasm
 $(wasms): %:
 	$(cargo) build --release --target wasm32-unknown-unknown --features $@ && \
-	cp "./target/wasm32-unknown-unknown/release/anoma_wasm_for_tests.wasm" ../$@.wasm
+	cp "./target/wasm32-unknown-unknown/release/anoma_wasm.wasm" ../$@.wasm
 
-# `cargo check` one of the wasms, e.g. `make check_tx_no_op`
+# `cargo check` one of the wasms, e.g. `make check_tx_transfer`
 $(patsubst %,check_%,$(wasms)): check_%:
 	$(cargo) check --target wasm32-unknown-unknown --features $*
 
-# `cargo test` one of the wasms, e.g. `make test_tx_no_op`
+# `cargo test` one of the wasms, e.g. `make test_tx_transfer`
 $(patsubst %,test_%,$(wasms)): test_%:
 	$(cargo) test --features $*
 
-# `cargo watch` one of the wasms, e.g. `make watch_tx_no_op`
+# `cargo watch` one of the wasms, e.g. `make watch_tx_transfer`
 $(patsubst %,watch_%,$(wasms)): watch_%:
 	$(cargo) watch --features $*
+
+# `cargo clippy` one of the wasms, e.g. `make clippy_tx_transfer`
+$(patsubst %,clippy_%,$(wasms)): clippy_%:
+	$(cargo) +$(nightly) clippy --all-targets --features $* -- -D warnings
 
 clean-wasm = rm ../$(wasm).wasm
 clean:

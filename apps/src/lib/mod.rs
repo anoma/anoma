@@ -1,5 +1,8 @@
 //! Shared code for the node, client etc.
 
+#![deny(rustdoc::broken_intra_doc_links)]
+#![deny(rustdoc::private_intra_doc_links)]
+
 pub mod cli;
 pub mod client;
 pub mod config;

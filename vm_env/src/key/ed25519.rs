@@ -1,10 +1,17 @@
 use anoma_shared::types::address::Address;
-use anoma_shared::types::key::ed25519::{self, PublicKey};
+use anoma_shared::types::key::ed25519;
 
-use crate::imports::vp;
+/// Vp imports and functions.
+pub mod vp {
+    pub use anoma_shared::types::key::ed25519::*;
 
-/// Get the public key associated with the given address. Panics if not found.
-pub fn get(owner: &Address) -> Option<PublicKey> {
-    let key = ed25519::pk_key(owner).to_string();
-    vp::read_pre(&key)
+    use super::*;
+    use crate::imports::vp;
+
+    /// Get the public key associated with the given address. Panics if not
+    /// found.
+    pub fn get(owner: &Address) -> Option<PublicKey> {
+        let key = ed25519::pk_key(owner).to_string();
+        vp::read_pre(&key)
+    }
 }

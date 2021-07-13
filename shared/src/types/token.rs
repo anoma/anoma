@@ -47,6 +47,7 @@ impl Amount {
     }
 
     /// Spend a given amount
+    /// Panics when given `amount` > `self.micro` amount.
     pub fn spend(&mut self, amount: &Amount) {
         self.micro -= amount.micro
     }

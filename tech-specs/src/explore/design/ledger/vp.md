@@ -33,7 +33,7 @@ The native VPs follow the same interface as WASM VPs and rules for how they are 
 
 ## Fungible token VP
 
-The [fungible token VP](https://github.com/anomanetwork/anoma/tree/master/vps/vp_token) allows to associate accounts balances of a specific token under its account. 
+The [fungible token VP](https://github.com/anomanetwork/anoma/tree/master/wasm/vp_token.wasm) allows to associate accounts balances of a specific token under its account. 
 
 For illustration, users `Albert` and `Bertha` might hold some amount of token with the address `XAN`. Their balances would be stored in the `XAN`'s storage sub-space under the storage keys `@XAN/balance/@Albert` and `@XAN/balance/@Bertha`, respectively. When `Albert` or `Bertha` attempt to transact with their `XAN` tokens, its validity predicate would be triggered to check:
 
@@ -44,7 +44,7 @@ Note that the fungible token VP doesn't need to know whether any of involved use
 
 ## User VP
 
-The [user VP](https://github.com/anomanetwork/anoma/tree/master/vps/vp_user) currently provides a signature verification against a public key for sending tokens as prescribed by the fungible token VP. In this VP, a transfer of tokens doesn't have to be authorized by the receiving party. 
+The [user VP](https://github.com/anomanetwork/anoma/tree/master/wasm/vp_user.wasm) currently provides a signature verification against a public key for sending tokens as prescribed by the fungible token VP. In this VP, a transfer of tokens doesn't have to be authorized by the receiving party. 
 
 It also allows arbitrary storage modifications to the user's sub-space to be performed by a transaction that has been signed by the secret key corresponding to the user's public key stored on-chain. This functionality also allows one to update their own validity predicate.
 

@@ -19,15 +19,11 @@ STEP_NAME = 'check-scripts-integrity'
 
 files_to_check = [
     'Makefile',
-    'wasm/vps/vp_template/Makefile',
-    'wasm/vps/vp_token/Makefile',
-    'wasm/vps/vp_user/Makefile',
-    'wasm/txs/tx_template/Makefile',
-    'wasm/txs/tx_transfer/Makefile',
-    'wasm/txs/tx_from_intent/Makefile',
-    'wasm/txs/tx_update_vp/Makefile',
-    'wasm/matchmaker_template/Makefile',
-    'wasm/filter_template/Makefile',
+    'wasm/wasm_source/Makefile',
+    'wasm/vp_template/Makefile',
+    'wasm/tx_template/Makefile',
+    'wasm/mm_template/Makefile',
+    'wasm/mm_filter_template/Makefile',
     'tech-specs/Makefile',
     'scripts/ci/update-wasm.sh',
     'scripts/ci/pre-run.sh'

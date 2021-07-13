@@ -51,7 +51,7 @@ pub trait NativeVp {
 
 /// A validity predicate's host context.
 ///
-/// This is similar to [`anoma_shared::vm::host_env::VpCtx`], but without the VM
+/// This is similar to [`crate::vm::host_env::VpCtx`], but without the VM
 /// wrapper types and `eval_runner` field. The references must not be changed
 /// when [`Ctx`] is mutable.
 #[derive(Debug)]
