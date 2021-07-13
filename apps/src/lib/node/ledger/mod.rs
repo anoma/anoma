@@ -1,21 +1,26 @@
 pub mod protocol;
 mod shell;
 pub mod storage;
+mod tendermint_node;
 
 use std::convert::{TryFrom, TryInto};
-use std::future::Future;
+use std::future::{Future};
 use std::pin::Pin;
+use std::sync::mpsc::channel;
 use std::task::{Context, Poll};
 
 use anoma_shared::types::storage::{BlockHash, BlockHeight};
 use ed25519_dalek::PublicKey as Ed25519;
 use futures::future::FutureExt;
+use signal_hook::consts::TERM_SIGNALS;
+use signal_hook::iterator::Signals;
 use tendermint::abci::{request, response, Request, Response};
 use tower::{Service, ServiceBuilder};
 use tower_abci::{split, BoxError, Server};
 
 use crate::node::ledger::shell::{MempoolTxType, Shell};
 use crate::{config, genesis};
+
 
 impl Service<Request> for Shell {
     type Error = BoxError;
@@ -129,8 +134,7 @@ pub fn reset(config: config::Ledger) -> Result<(), shell::Error> {
 }
 
 #[tokio::main]
-pub async fn run(config: config::Ledger) {
-    tracing_subscriber::fmt::init();
+async fn run_shell(config: config::Ledger) {
 
     // Construct our ABCI application.
     let service = Shell::new(&config.db, config::DEFAULT_CHAIN_ID.to_owned());
@@ -139,8 +143,7 @@ pub async fn run(config: config::Ledger) {
     let (consensus, mempool, snapshot, info) = split::service(service, 1);
 
     // Hand those components to the ABCI server, but customize request behavior
-    // for each category -- for instance, apply load-shedding only to mempool
-    // and info requests, but not to consensus requests.
+    // for each category
     let server = Server::builder()
         .consensus(consensus)
         .snapshot(snapshot)
@@ -160,6 +163,39 @@ pub async fn run(config: config::Ledger) {
         .finish()
         .unwrap();
 
-    // Run the ABCI server.
+    // Run the server with the shell
     server.listen(config.address).await.unwrap();
+}
+
+
+pub fn run(config: config::Ledger) {
+    // Run Tendermint ABCI server in another thread
+    let home_dir = config.tendermint.clone();
+    // used for shutting down Tendermint node
+    let (sender, receiver) = channel();
+    // start Tendermint node
+    let _ = std::thread::spawn(move || {
+        if let Err(err) = tendermint_node::run(home_dir, receiver) {
+            tracing::error!(
+                "Failed to start-up a Tendermint node with {}",
+                err
+            );
+        }
+    });
+    // start the shell + ABCI server
+    let _ = std::thread::spawn(move|| {
+        run_shell(config);
+    });
+    tracing::info!("Anoma ledger node started.");
+
+    // If a termination signal is received, shut down the tendermint node
+    let mut signals =
+        Signals::new(TERM_SIGNALS).expect("Failed to creat OS signal handlers");
+    for sig in signals.forever() {
+        if TERM_SIGNALS.contains(&sig) {
+            sender.send(true).unwrap();
+            break;
+        }
+    }
+    tracing::info!("Shutting down Anoma node");
 }

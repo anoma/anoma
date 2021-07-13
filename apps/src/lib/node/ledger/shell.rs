@@ -17,6 +17,7 @@ use thiserror::Error;
 
 use crate::node::ledger::{protocol, storage};
 use crate::{config, wallet};
+use crate::node::ledger::tendermint_node;
 
 #[derive(Error, Debug)]
 pub enum Error {
@@ -40,7 +41,7 @@ pub fn reset(config: config::Ledger) -> Result<()> {
         res => res.map_err(Error::RemoveDB)?,
     };
     // reset Tendermint state
-    // git tendermint::reset(config);
+    tendermint_node::reset(config);
     Ok(())
 }
 
