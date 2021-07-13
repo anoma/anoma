@@ -1,8 +1,10 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, convert::TryInto};
 
 type Address = String;
 type Validator = Address;
 type Tokens = u64;
+type Shares = u64;
+type ShareChange = i64;
 type BondId = u64;
 
 /// Epoch is an index starting from 0.
@@ -14,7 +16,7 @@ struct PosStorage {
     delta: EpochDelta,
 }
 
-fn init_genesis(params:&PosParams, validators: Vec<Validator,Tokens>) -> PosStorage {
+fn init_genesis(params:&PosParams, validators: Vec<Validator, Tokens>) -> PosStorage {
     let mut storage = PosStorage {
         epochs: HashMap::default(),
         delta: EpochDelta::default(),
@@ -26,7 +28,7 @@ fn init_genesis(params:&PosParams, validators: Vec<Validator,Tokens>) -> PosStor
     for (validator, tokens) in validators {
 let bond = Bond {
     delegator: validator.clone(),
-    validators: ,
+    validators: (),
     amount: (),
 };
     }
@@ -44,7 +46,7 @@ struct EpochState {
 
 struct EpochDelta {
     bond_changes: Vec<(BondId, Tokens)>,
-    validators_changes: Vec<(Validator, ValidatorState)>,
+    validators_changes: Vec<(Validator, ValidatorState, ShareChange)>,
 }
 
 enum ValidatorState {
@@ -55,15 +57,10 @@ enum ValidatorState {
 }
 
 #[derive(Debug)]
-struct ValidatorBond {
-    validator: Address,
-    amount: Tokens,
-}
-
-#[derive(Debug)]
-struct DelegatorBond {
-    validator: Address,
-    amount: Shares,
+struct Bond {
+    delegator: Address,
+    validators: Vec<(Epoch, Option<Address>)>,
+    amount: Tokens
 }
 
 struct PosParams {
@@ -98,6 +95,38 @@ impl Default for PosParams {
             slashable_period_len: 4,
         }
     }
+}
+
+impl Bond {
+    fn current_validator(&self) -> Address {
+        return self.validators.last()
+        .expect("Error retrieving current validator.").1
+        .expect("Bond is in the process of unbonding.")
+    }
+
+    fn add_to_bond(self, tokens: Tokens) -> Bond {
+        let updated_amount = self.amount + tokens;
+        let updated_bond = Bond {amount: updated_amount, ..self};
+        return updated_bond;
+        // add ledger interaction
+    }
+
+    fn delegate(current_epoch: Epoch,
+            delegator_address: Address,
+            validator_address: Address,
+            tokens: Tokens) -> () {
+        // create transaction to lock tokens [still needed]
+        // submit it for processing [ledger interaction]
+
+        let delegation = Bond {
+            delegator: delegator_address,
+            validators: vec![(current_epoch, Some(validator_address))],
+            amount: tokens};
+        
+        // increment validator voting power
+        let voting_change: Result<u64, i64> = tokens.try_into();
+    }
+
 }
 
 #[cfg(test)]
