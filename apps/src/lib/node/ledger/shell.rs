@@ -28,6 +28,8 @@ pub enum Error {
     TxDecodingError(proto::Error),
     #[error("Error trying to apply a transaction: {0}")]
     TxError(protocol::Error),
+    #[error("{0}")]
+    Tendermint(tendermint_node::Error)
 }
 
 pub type Result<T> = std::result::Result<T, Error>;
@@ -40,7 +42,7 @@ pub fn reset(config: config::Ledger) -> Result<()> {
         res => res.map_err(Error::RemoveDB)?,
     };
     // reset Tendermint state
-    tendermint_node::reset(config);
+    tendermint_node::reset(config).map_err(Error::Tendermint)?;
     Ok(())
 }
 
@@ -97,9 +99,9 @@ impl Shell {
         }
 
         // Initialize because there is no block
-        let token_vp = std::fs::read("wasm/vps/vp_token/vp.wasm")
+        let token_vp = std::fs::read("wasm/vp_token.wasm")
             .expect("cannot load token VP");
-        let user_vp = std::fs::read("wasm/vps/vp_user/vp.wasm")
+        let user_vp = std::fs::read("wasm/vp_user.wasm")
             .expect("cannot load user VP");
 
         // TODO load initial accounts from genesis

@@ -168,11 +168,12 @@ async fn run_shell(config: config::Ledger) {
 pub fn run(config: config::Ledger) {
     // Run Tendermint ABCI server in another thread
     let home_dir = config.tendermint.clone();
+    let socket_address = config.address.to_string();
     // used for shutting down Tendermint node
     let (sender, receiver) = channel();
     // start Tendermint node
     let _ = std::thread::spawn(move || {
-        if let Err(err) = tendermint_node::run(home_dir, receiver) {
+        if let Err(err) = tendermint_node::run(home_dir, &socket_address, receiver) {
             tracing::error!(
                 "Failed to start-up a Tendermint node with {}",
                 err

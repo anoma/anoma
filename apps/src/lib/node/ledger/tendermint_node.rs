@@ -27,15 +27,36 @@ pub enum Error {
     TendermintWriteConfig(std::io::Error),
     #[error("Failed to start up Tendermint node: {0}")]
     TendermintStartUp(std::io::Error),
+    #[error("Failed to convert to String: {0:?}")]
+    TendermintPathError(std::ffi::OsString)
 }
 
 pub type Result<T> = std::result::Result<T, Error>;
 
+fn from_env_or_default() -> Result<String> {
+    match std::env::var_os("TENDERMINT") {
+        Some(str) => {
+            match str.into_string() {
+                Ok(path) => {
+                    tracing::info!("Using tendermint path from env variable: {}", &path);
+                    Ok(path)
+                }
+                Err(msg) => Err(Error::TendermintPathError(msg))
+            }
+        }
+        _ => {
+            Ok(String::from("tendermint"))
+        }
+    }
+}
+
 /// Run the ABCI server in the current thread (blocking).
-pub fn run(home_dir: PathBuf, receiver: Receiver<bool>) -> Result<()> {
+pub fn run(home_dir: PathBuf, socket_address: &str, receiver: Receiver<bool>) -> Result<()> {
     let home_dir_string = home_dir.to_string_lossy().to_string();
+    // can set an env variable to locate tendermint if not on path
+    let tendermint_path =  from_env_or_default()?;
     // init and run a Tendermint node child process
-    Command::new("tendermint")
+    Command::new(&tendermint_path)
         .args(&["init", "--home", &home_dir_string])
         .output()
         .map_err(Error::TendermintInit)?;
@@ -48,8 +69,8 @@ pub fn run(home_dir: PathBuf, receiver: Receiver<bool>) -> Result<()> {
 
     update_tendermint_config(&home_dir)?;
 
-    let tendermint_node = Command::new("tendermint")
-        .args(&["node", "--home", &home_dir_string])
+    let tendermint_node = Command::new(tendermint_path)
+        .args(&["node", "--proxy-app", socket_address, "--home", &home_dir_string])
         .spawn()
         .map_err(Error::TendermintStartUp)?;
     tracing::info!("Tendermint node started");
@@ -66,11 +87,12 @@ pub fn run(home_dir: PathBuf, receiver: Receiver<bool>) -> Result<()> {
     Ok(())
 }
 
-pub fn reset(config: config::Ledger) {
+pub fn reset(config: config::Ledger) -> Result<()> {
+    let tendermint_path = from_env_or_default()?;
     // reset all the Tendermint state, if any
-    Command::new("tendermint")
+    Command::new(tendermint_path)
         .args(&[
-            "unsafe_reset_all",
+            "unsafe-reset-all",
             // NOTE: log config: https://docs.tendermint.com/master/nodes/logging.html#configuring-log-levels
             // "--log-level=\"*debug\"",
             "--home",
@@ -83,6 +105,7 @@ pub fn reset(config: config::Ledger) {
         &config.tendermint.to_string_lossy()
     ))
     .expect("Failed to reset tendermint node's config");
+    Ok(())
 }
 
 fn update_tendermint_config(home_dir: impl AsRef<Path>) -> Result<()> {
