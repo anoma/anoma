@@ -81,9 +81,27 @@ And this is correct
     }
 "#;
 
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub enum TendermintMode {
+    Full,
+    Validator,
+    Seed,
+}
+
+impl TendermintMode {
+    pub fn to_str(&self) -> &str {
+        match self {
+            &TendermintMode::Full => "full",
+            &TendermintMode::Validator => "validator",
+            &TendermintMode::Seed => "seed"
+        }
+    }
+}
+
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Ledger {
     pub tendermint: PathBuf,
+    pub tendermint_mode: TendermintMode,
     pub db: PathBuf,
     pub address: SocketAddr,
     pub network: String,
@@ -95,10 +113,11 @@ impl Default for Ledger {
             // this two value are override when generating a default config in
             // config::generate(base_dir). There must be a better way ?
             tendermint: PathBuf::from(BASEDIR).join(TENDERMINT_DIR),
+            tendermint_mode: TendermintMode::Full,
             db: PathBuf::from(BASEDIR).join(DB_DIR).join(DEFAULT_CHAIN_ID),
             address: SocketAddr::new(
                 IpAddr::V4(Ipv4Addr::new(0, 0, 0, 0)),
-                26658,
+                26659,
             ),
             network: String::from("mainnet"),
         }

@@ -33,25 +33,27 @@ pub enum Error {
 
 pub type Result<T> = std::result::Result<T, Error>;
 
+/// Check if the TENDERMINT env var has been set and use that as the
+/// location of the tendermint binary. Otherwise, assume it is on path
+///
+/// Can return an error if the env var is defined but cannot be interpreted
+/// as String
 fn from_env_or_default() -> Result<String> {
-    match std::env::var_os("TENDERMINT") {
-        Some(str) => {
-            match str.into_string() {
-                Ok(path) => {
-                    tracing::info!("Using tendermint path from env variable: {}", &path);
-                    Ok(path)
-                }
-                Err(msg) => Err(Error::TendermintPathError(msg))
-            }
+    if let Some(str) =  std::env::var_os("TENDERMINT") {
+        match str.into_string() {
+            Ok(path) => {
+                tracing::info!("Using tendermint path from env variable: {}", &path);
+                Ok(path)
+            },
+            Err(msg) => Err(Error::TendermintPathError(msg))
         }
-        _ => {
-            Ok(String::from("tendermint"))
-        }
+    } else {
+        Ok(String::from("tendermint"))
     }
 }
 
 /// Run the ABCI server in the current thread (blocking).
-pub fn run(home_dir: PathBuf, socket_address: &str, receiver: Receiver<bool>) -> Result<()> {
+pub fn run(home_dir: PathBuf, mode: config::TendermintMode, socket_address: &str, receiver: Receiver<bool>) -> Result<()> {
     let home_dir_string = home_dir.to_string_lossy().to_string();
     // can set an env variable to locate tendermint if not on path
     let tendermint_path =  from_env_or_default()?;
@@ -62,6 +64,8 @@ pub fn run(home_dir: PathBuf, socket_address: &str, receiver: Receiver<bool>) ->
         .map_err(Error::TendermintInit)?;
 
     if cfg!(feature = "dev") {
+        // initialize the node data if necessary
+        init_if_needed(&home_dir, &mode)?;
         // override the validator key file
         write_validator_key(&home_dir, &genesis::genesis().validator);
         write_chain_id(&home_dir, config::DEFAULT_CHAIN_ID);
@@ -105,6 +109,29 @@ pub fn reset(config: config::Ledger) -> Result<()> {
         &config.tendermint.to_string_lossy()
     ))
     .expect("Failed to reset tendermint node's config");
+    Ok(())
+}
+
+pub fn init(home_dir: &PathBuf, mode: &config::TendermintMode) -> Result<()> {
+    let tendermint_path = from_env_or_default()?;
+    Command::new(tendermint_path)
+        .args(&[
+            "init",
+            mode.to_str(),
+            "--home",
+            &home_dir.to_string_lossy(),
+        ])
+        .output()
+        .expect("Failed to initialize tendermint node's data");
+    Ok(())
+}
+
+fn init_if_needed(home_dir: &PathBuf, mode: &config::TendermintMode) -> Result<()> {
+    let home: &Path = home_dir.as_ref();
+    let path = home.join("config").join("genesis.json");
+    if !path.exists() {
+        init(home_dir, &mode)?;
+    }
     Ok(())
 }
 

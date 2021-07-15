@@ -4539,7 +4539,7 @@ dependencies = [
 [[package]]
 name = "tendermint"
 version = "0.20.0"
-source = "git+https://github.com/heliaxdev/tendermint-rs?branch=bat/abci-domain-types#1350eae179bd4d8b4aa8808adc69ccbae12c4d79"
+source = "git+https://github.com/heliaxdev/tendermint-rs?branch=bat/abci-domain-types#32a18c40f8f1885707e9a3004c1b8cc1519b243b"
 dependencies = [
  "anomaly",
  "async-trait",
@@ -4570,7 +4570,7 @@ dependencies = [
 [[package]]
 name = "tendermint-abci"
 version = "0.20.0"
-source = "git+https://github.com/heliaxdev/tendermint-rs?branch=bat/abci-domain-types#1350eae179bd4d8b4aa8808adc69ccbae12c4d79"
+source = "git+https://github.com/heliaxdev/tendermint-rs?branch=bat/abci-domain-types#32a18c40f8f1885707e9a3004c1b8cc1519b243b"
 dependencies = [
  "bytes 1.0.1",
  "eyre",
@@ -4583,7 +4583,7 @@ dependencies = [
 [[package]]
 name = "tendermint-proto"
 version = "0.20.0"
-source = "git+https://github.com/heliaxdev/tendermint-rs?branch=bat/abci-domain-types#1350eae179bd4d8b4aa8808adc69ccbae12c4d79"
+source = "git+https://github.com/heliaxdev/tendermint-rs?branch=bat/abci-domain-types#32a18c40f8f1885707e9a3004c1b8cc1519b243b"
 dependencies = [
  "anomaly",
  "bytes 1.0.1",
@@ -4601,7 +4601,7 @@ dependencies = [
 [[package]]
 name = "tendermint-rpc"
 version = "0.20.0"
-source = "git+https://github.com/heliaxdev/tendermint-rs?branch=bat/abci-domain-types#1350eae179bd4d8b4aa8808adc69ccbae12c4d79"
+source = "git+https://github.com/heliaxdev/tendermint-rs?branch=bat/abci-domain-types#32a18c40f8f1885707e9a3004c1b8cc1519b243b"
 dependencies = [
  "async-trait",
  "bytes 1.0.1",
