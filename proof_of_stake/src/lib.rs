@@ -125,8 +125,17 @@ impl Bond {
         
         // increment validator voting power
         let voting_change: Result<u64, i64> = tokens.try_into();
+
+        // TO FIX: ValidatorState enum should be read from the EpochState, for now set to Active
+        let delta: EpochDelta = vec![ (validator_address, ValidatorState::Active, voting_change) ];
     }
 
+    fn redelegate(current_epoch: Epoch, bond_id: BondId) -> () {
+
+    }
+
+    //fn undelegate
+    //fn complete_undelegate
 }
 
 #[cfg(test)]
