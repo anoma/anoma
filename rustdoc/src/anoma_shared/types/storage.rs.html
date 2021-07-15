@@ -495,6 +495,88 @@
 <span id="492">492</span>
 <span id="493">493</span>
 <span id="494">494</span>
+<span id="495">495</span>
+<span id="496">496</span>
+<span id="497">497</span>
+<span id="498">498</span>
+<span id="499">499</span>
+<span id="500">500</span>
+<span id="501">501</span>
+<span id="502">502</span>
+<span id="503">503</span>
+<span id="504">504</span>
+<span id="505">505</span>
+<span id="506">506</span>
+<span id="507">507</span>
+<span id="508">508</span>
+<span id="509">509</span>
+<span id="510">510</span>
+<span id="511">511</span>
+<span id="512">512</span>
+<span id="513">513</span>
+<span id="514">514</span>
+<span id="515">515</span>
+<span id="516">516</span>
+<span id="517">517</span>
+<span id="518">518</span>
+<span id="519">519</span>
+<span id="520">520</span>
+<span id="521">521</span>
+<span id="522">522</span>
+<span id="523">523</span>
+<span id="524">524</span>
+<span id="525">525</span>
+<span id="526">526</span>
+<span id="527">527</span>
+<span id="528">528</span>
+<span id="529">529</span>
+<span id="530">530</span>
+<span id="531">531</span>
+<span id="532">532</span>
+<span id="533">533</span>
+<span id="534">534</span>
+<span id="535">535</span>
+<span id="536">536</span>
+<span id="537">537</span>
+<span id="538">538</span>
+<span id="539">539</span>
+<span id="540">540</span>
+<span id="541">541</span>
+<span id="542">542</span>
+<span id="543">543</span>
+<span id="544">544</span>
+<span id="545">545</span>
+<span id="546">546</span>
+<span id="547">547</span>
+<span id="548">548</span>
+<span id="549">549</span>
+<span id="550">550</span>
+<span id="551">551</span>
+<span id="552">552</span>
+<span id="553">553</span>
+<span id="554">554</span>
+<span id="555">555</span>
+<span id="556">556</span>
+<span id="557">557</span>
+<span id="558">558</span>
+<span id="559">559</span>
+<span id="560">560</span>
+<span id="561">561</span>
+<span id="562">562</span>
+<span id="563">563</span>
+<span id="564">564</span>
+<span id="565">565</span>
+<span id="566">566</span>
+<span id="567">567</span>
+<span id="568">568</span>
+<span id="569">569</span>
+<span id="570">570</span>
+<span id="571">571</span>
+<span id="572">572</span>
+<span id="573">573</span>
+<span id="574">574</span>
+<span id="575">575</span>
+<span id="576">576</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Storage types</span>
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">convert</span>::{<span class="ident">TryFrom</span>, <span class="ident">TryInto</span>};
@@ -505,7 +587,7 @@
 <span class="kw">use</span> <span class="ident">thiserror</span>::<span class="ident">Error</span>;
 
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">bytes</span>::<span class="ident">ByteBuf</span>;
-<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">types</span>::<span class="ident">address</span>::{<span class="self">self</span>, <span class="ident">Address</span>};
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">types</span>::<span class="ident">address</span>::{<span class="self">self</span>, <span class="ident">Address</span>, <span class="ident">InternalAddress</span>};
 
 <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">missing_docs</span>)]</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Error</span>, <span class="ident">Debug</span>)]</span>
@@ -734,6 +816,78 @@
             <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">false</span>,
         }
     }
+
+    <span class="doccomment">/// Check if the given key is a key to IBC-related data</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_ibc_key</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
+        <span class="kw">match</span> <span class="self">self</span>.<span class="ident">segments</span>.<span class="ident">get</span>(<span class="number">0</span>) {
+            <span class="prelude-val">Some</span>(<span class="ident">seg</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="kw-2">*</span><span class="ident">seg</span> <span class="op">=</span><span class="op">=</span> <span class="ident">DbKeySeg</span>::<span class="ident">AddressSeg</span>(<span class="ident">Address</span>::<span class="ident">Internal</span>(
+                    <span class="ident">InternalAddress</span>::<span class="ident">Ibc</span>,
+                ))
+            }
+            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">false</span>,
+        }
+    }
+
+    <span class="doccomment">/// Returns a key of the IBC-related data</span>
+    <span class="doccomment">/// Only this function can push &quot;^&quot; segment for IBC</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">ibc_key</span>(<span class="ident">path</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span><span class="ident">str</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="ident">path</span> <span class="op">=</span> <span class="self">Self</span>::<span class="ident">parse</span>(<span class="ident">path</span>)<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">addr</span> <span class="op">=</span> <span class="ident">Address</span>::<span class="ident">Internal</span>(<span class="ident">InternalAddress</span>::<span class="ident">Ibc</span>);
+        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="self">Self</span>::<span class="ident">from</span>(<span class="ident">addr</span>.<span class="ident">to_db_key</span>());
+        <span class="prelude-val">Ok</span>(<span class="ident">key</span>.<span class="ident">join</span>(<span class="kw-2">&amp;</span><span class="ident">path</span>))
+    }
+
+    <span class="doccomment">/// Returns a key from the given DB key path that has the height and</span>
+    <span class="doccomment">/// the space type</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">parse_db_key</span>(<span class="ident">db_key</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">segments</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">str</span><span class="op">&gt;</span> <span class="op">=</span>
+            <span class="ident">db_key</span>.<span class="ident">split</span>(<span class="ident">KEY_SEGMENT_SEPARATOR</span>).<span class="ident">collect</span>();
+        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">segments</span>.<span class="ident">get</span>(<span class="number">2</span>) {
+            <span class="prelude-val">Some</span>(<span class="ident">seg</span>)
+                <span class="kw">if</span> <span class="kw-2">*</span><span class="ident">seg</span> <span class="op">=</span><span class="op">=</span> <span class="ident">Address</span>::<span class="ident">Internal</span>(<span class="ident">InternalAddress</span>::<span class="ident">Ibc</span>).<span class="ident">raw</span>() <span class="op">=</span><span class="op">&gt;</span>
+            {
+                <span class="comment">// the path of IBC-related data should start with</span>
+                <span class="comment">// height/subspace/#IBC</span>
+                <span class="self">Self</span>::<span class="ident">ibc_key</span>(
+                    <span class="ident">segments</span>
+                        .<span class="ident">split_off</span>(<span class="number">3</span>)
+                        .<span class="ident">join</span>(<span class="kw-2">&amp;</span><span class="ident">KEY_SEGMENT_SEPARATOR</span>.<span class="ident">to_string</span>()),
+                )
+                .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">Error</span>::<span class="ident">Temporary</span> {
+                    <span class="ident">error</span>: <span class="macro">format</span><span class="macro">!</span>(
+                        <span class="string">&quot;Cannot parse key segments {}: {}&quot;</span>,
+                        <span class="ident">db_key</span>, <span class="ident">e</span>
+                    ),
+                })<span class="question-mark">?</span>
+            }
+            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="ident">segments</span>.<span class="ident">get</span>(<span class="number">3</span>) {
+                <span class="prelude-val">Some</span>(<span class="ident">seg</span>) <span class="kw">if</span> <span class="kw-2">*</span><span class="ident">seg</span> <span class="op">=</span><span class="op">=</span> <span class="ident">RESERVED_VP_KEY</span> <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="comment">// the path of a validity predicate should be</span>
+                    <span class="comment">// height/subspace/{address}/?</span>
+                    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">addr_str</span> <span class="op">=</span>
+                        (<span class="kw-2">*</span><span class="ident">segments</span>.<span class="ident">get</span>(<span class="number">2</span>).<span class="ident">expect</span>(<span class="string">&quot;the address not found&quot;</span>))
+                            .<span class="ident">to_owned</span>();
+                    <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">addr_str</span>.<span class="ident">remove</span>(<span class="number">0</span>);
+                    <span class="kw">let</span> <span class="ident">addr</span> <span class="op">=</span> <span class="ident">Address</span>::<span class="ident">decode</span>(<span class="kw-2">&amp;</span><span class="ident">addr_str</span>)
+                        .<span class="ident">expect</span>(<span class="string">&quot;cannot decode the address&quot;</span>);
+                    <span class="self">Self</span>::<span class="ident">validity_predicate</span>(<span class="kw-2">&amp;</span><span class="ident">addr</span>)
+                }
+                <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">Self</span>::<span class="ident">parse</span>(
+                    <span class="ident">segments</span>
+                        .<span class="ident">split_off</span>(<span class="number">2</span>)
+                        .<span class="ident">join</span>(<span class="kw-2">&amp;</span><span class="ident">KEY_SEGMENT_SEPARATOR</span>.<span class="ident">to_string</span>()),
+                )
+                .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">Error</span>::<span class="ident">Temporary</span> {
+                    <span class="ident">error</span>: <span class="macro">format</span><span class="macro">!</span>(
+                        <span class="string">&quot;Cannot parse key segments {}: {}&quot;</span>,
+                        <span class="ident">db_key</span>, <span class="ident">e</span>
+                    ),
+                })<span class="question-mark">?</span>,
+            },
+        };
+        <span class="prelude-val">Ok</span>(<span class="ident">key</span>)
+    }
 }
 
 <span class="kw">impl</span> <span class="ident">Display</span> <span class="kw">for</span> <span class="ident">Key</span> {
@@ -789,6 +943,9 @@
     <span class="kw">fn</span> <span class="ident">parse</span>(<span class="kw-2">mut</span> <span class="ident">string</span>: <span class="ident">String</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
         <span class="comment">// a separator should not included</span>
         <span class="kw">if</span> <span class="ident">string</span>.<span class="ident">contains</span>(<span class="ident">KEY_SEGMENT_SEPARATOR</span>) {
+            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error</span>::<span class="ident">InvalidKeySeg</span>(<span class="ident">string</span>));
+        }
+        <span class="kw">if</span> <span class="ident">string</span> <span class="op">=</span><span class="op">=</span> <span class="ident">Address</span>::<span class="ident">Internal</span>(<span class="ident">InternalAddress</span>::<span class="ident">Ibc</span>).<span class="ident">raw</span>() {
             <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error</span>::<span class="ident">InvalidKeySeg</span>(<span class="ident">string</span>));
         }
         <span class="kw">match</span> <span class="ident">string</span>.<span class="ident">chars</span>().<span class="ident">next</span>() {
@@ -917,6 +1074,13 @@
         <span class="kw">let</span> <span class="ident">target</span> <span class="op">=</span> <span class="string">&quot;?/test&quot;</span>.<span class="ident">to_owned</span>();
         <span class="kw">match</span> <span class="ident">Key</span>::<span class="ident">parse</span>(<span class="ident">target</span>).<span class="ident">expect_err</span>(<span class="string">&quot;unexpectedly succeeded&quot;</span>) {
             <span class="ident">Error</span>::<span class="ident">InvalidKeySeg</span>(<span class="ident">s</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">s</span>, <span class="string">&quot;?&quot;</span>),
+            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;unexpected error happens&quot;</span>),
+        }
+
+        <span class="kw">let</span> <span class="ident">encoded_ibc_addr</span> <span class="op">=</span> <span class="ident">Address</span>::<span class="ident">Internal</span>(<span class="ident">InternalAddress</span>::<span class="ident">Ibc</span>).<span class="ident">raw</span>();
+        <span class="kw">let</span> <span class="ident">target</span> <span class="op">=</span> <span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;{}/test&quot;</span>, <span class="ident">encoded_ibc_addr</span>);
+        <span class="kw">match</span> <span class="ident">Key</span>::<span class="ident">parse</span>(<span class="ident">target</span>).<span class="ident">expect_err</span>(<span class="string">&quot;unexpectedly succeeded&quot;</span>) {
+            <span class="ident">Error</span>::<span class="ident">InvalidKeySeg</span>(<span class="ident">s</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">s</span>, <span class="ident">encoded_ibc_addr</span>),
             <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;unexpected error happens&quot;</span>),
         }
     }

@@ -1,1 +1,1 @@
-initSidebarItems({"struct":[["PoS","Proof-of-Stake VP"]]});
+initSidebarItems({"enum":[["Error",""]],"struct":[["PoS","Proof-of-Stake VP"]],"type":[["Result","PoS functions result"]]});
