@@ -14,6 +14,26 @@ type Epoch = u64;
 type PublicKey = String;
 type VotingPower = u64;
 
+// trait EpochedOffset {
+//     fn offset() -> Epoch;
+// }
+
+// struct EpochedPipelined;
+// impl EpochedOffset for EpochedPipelined {
+//     fn offset() -> Epoch {
+//         // TODO this should be read from parameters in storage
+//         2
+//     }
+// }
+
+// struct EpochedUnbonding;
+// impl EpochedOffset for EpochedUnbonding {
+//     fn offset() -> Epoch {
+//         // TODO this should also be read from parameters in storage
+//         6
+//     }
+// }
+
 struct EpochedPipelined<Data> {
     /// The epoch in which this data was last updated
     last_update: Epoch,
@@ -99,23 +119,56 @@ type ValidatorSets = EpochedUnbonding<ValidatorSet>;
 /// The sum of all active and inactive validators' voting power
 type TotalVotingPower = EpochedUnbonding<VotingPower>;
 
+trait Pos {
+    // TODO consider paraterizing types like so:
+    // type Address;
+
+    fn read_validator_consensus_key(
+        &self,
+        validator: Address,
+    ) -> Option<EpochedPipelined<PublicKey>>;
+
+    fn write_validator_consensus_key(
+        &mut self,
+        validator: Address,
+        key: EpochedPipelined<PublicKey>,
+    );
+    fn write_validator_state(
+        &mut self,
+        validator: Address,
+        key: EpochedPipelined<ValidatorState>,
+    );
+    fn write_validator_total_deltas(
+        &mut self,
+        validator: Address,
+        key: EpochedUnbonding<i128>,
+    );
+    fn write_validator_voting_power(
+        &mut self,
+        validator: Address,
+        key: EpochedUnbonding<u64>,
+    );
+}
+
 fn init_genesis(
+    pos: &mut impl Pos,
     params: &PosParams,
     validators: Vec<(Validator, TokenAmount, PublicKey)>,
     epoch: Epoch,
-) -> InitialPosStorage {
-    let validators = validators
-        .iter()
-        .map(|(addr, tokens, pk)| ValidatorData {
-            consensus_key: EpochedPipelined::init(*pk, epoch),
-            state: EpochedPipelined::init(ValidatorState::Candidate, epoch),
-            total_deltas: EpochedUnbonding::init(*tokens as i128, epoch),
-            voting_power: EpochedUnbonding::init(
-                tokens * 10_000 / params.votes_per_token,
-                epoch,
-            ),
-        })
-        .collect();
+) {
+    for (addr, tokens, pk) in validators {
+        let consensus_key = EpochedPipelined::init(pk, epoch);
+        pos.write_validator_consensus_key(addr, consensus_key);
+        let state = EpochedPipelined::init(ValidatorState::Candidate, epoch);
+        pos.write_validator_state(addr, state);
+        let total_deltas = EpochedUnbonding::init(tokens as i128, epoch);
+        pos.write_validator_total_deltas(addr, total_deltas);
+        let voting_power = EpochedUnbonding::init(
+            tokens * 10_000 / params.votes_per_token,
+            epoch,
+        );
+        pos.write_validator_voting_power(addr, voting_power);
+    }
 
     let mut bonds = HashMap::default;
     for (addr, tokens, pk) in validators.iter() {
