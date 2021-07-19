@@ -12,8 +12,8 @@ use ibc::ics02_client::height::Height;
 use ibc::ics03_connection::connection::Counterparty;
 use ibc::ics03_connection::version::Version;
 use ibc::ics23_commitment::commitment::CommitmentProofBytes;
-use ibc::proofs::{ConsensusProof, Proofs};
 use ibc::ics24_host::identifier::{ClientId, ConnectionId};
+use ibc::proofs::{ConsensusProof, Proofs};
 use ibc_proto::ibc::core::commitment::v1::MerkleProof;
 use ibc_proto::ibc::core::connection::v1::Counterparty as RawCounterparty;
 use prost::Message;
@@ -284,6 +284,7 @@ pub struct ConnectionOpenTryData {
 
 impl ConnectionOpenTryData {
     /// Returns the data to try to open a connection
+    #[allow(clippy::too_many_arguments)]
     pub fn new(
         prev_conn_id: Option<ConnectionId>,
         client_id: ClientId,
@@ -360,8 +361,8 @@ impl ConnectionOpenTryData {
     /// Returns the list of versions
     pub fn counterparty_versions(&self) -> Vec<Version> {
         let mut versions = vec![];
-        for v in self.counterparty_versions {
-            match Version::decode_vec(&v) {
+        for v in &self.counterparty_versions {
+            match Version::decode_vec(v) {
                 Ok(v) => versions.push(v),
                 Err(_) => return vec![],
             }
@@ -376,17 +377,17 @@ impl ConnectionOpenTryData {
 
     /// Returns the proof for connection
     pub fn proof_connection(&self) -> CommitmentProofBytes {
-        self.proof_connection.into()
+        self.proof_connection.clone().into()
     }
 
     /// Returns the proof for client state
     pub fn proof_client(&self) -> CommitmentProofBytes {
-        self.proof_client.into()
+        self.proof_client.clone().into()
     }
 
     /// Returns the proof for consensus state
     pub fn proof_consensus(&self) -> CommitmentProofBytes {
-        self.proof_consensus.into()
+        self.proof_consensus.clone().into()
     }
 
     /// Returns the delay period
@@ -397,13 +398,218 @@ impl ConnectionOpenTryData {
     /// Returns the proofs
     pub fn proofs(&self) -> Result<Proofs> {
         let height = self.proof_height();
-        let consensus_proof = ConsensusProof::new(self.proof_consensus(), height).map_err(|e| Error::DecodingError(e.to_string()))?;
+        let consensus_proof =
+            ConsensusProof::new(self.proof_consensus(), height)
+                .map_err(Error::DecodingError)?;
         Proofs::new(
             self.proof_connection(),
             Some(self.proof_client()),
             Some(consensus_proof),
             None,
             height,
-            ).map_err(|e| Error::DecodingError(e.to_string()))
+        )
+        .map_err(Error::DecodingError)
+    }
+}
+
+/// Data to acknowledge a connection
+#[derive(
+    Debug, Clone, BorshSerialize, BorshDeserialize, Serialize, Deserialize,
+)]
+pub struct ConnectionOpenAckData {
+    /// The connection ID
+    conn_id: String,
+    /// The counterpart connection ID
+    counterpart_conn_id: String,
+    /// The client state
+    client_state: Vec<u8>,
+    /// The height of the proof
+    proof_height: (u64, u64),
+    /// The proof of the connection
+    proof_connection: Vec<u8>,
+    /// The proof of the client state
+    proof_client: Vec<u8>,
+    /// The proof of the consensus state
+    proof_consensus: Vec<u8>,
+    /// The version
+    version: Vec<u8>,
+}
+
+impl ConnectionOpenAckData {
+    /// Returns the data to acknowledge a connection
+    #[allow(clippy::too_many_arguments)]
+    pub fn new(
+        conn_id: ConnectionId,
+        counterparty_conn_id: ConnectionId,
+        client_state: AnyClientState,
+        proof_height: Height,
+        proof_connection: CommitmentProofBytes,
+        proof_client: CommitmentProofBytes,
+        proof_consensus: CommitmentProofBytes,
+        version: Version,
+    ) -> Self {
+        let conn_id = conn_id.as_str().to_owned();
+        let counterpart_conn_id = counterparty_conn_id.as_str().to_owned();
+        let client_state = client_state
+            .encode_vec()
+            .expect("Encoding a client state shouldn't fail");
+        let version = version
+            .encode_vec()
+            .expect("Encoding a version shouldn't fail");
+        Self {
+            conn_id,
+            counterpart_conn_id,
+            client_state,
+            proof_height: (
+                proof_height.revision_number,
+                proof_height.revision_height,
+            ),
+            proof_connection: proof_connection.into(),
+            proof_client: proof_client.into(),
+            proof_consensus: proof_consensus.into(),
+            version,
+        }
+    }
+
+    /// Returns the connection ID
+    pub fn connnection_id(&self) -> Result<ConnectionId> {
+        ConnectionId::from_str(&self.conn_id)
+            .map_err(|e| Error::DecodingError(e.to_string()))
+    }
+
+    /// Returns the counterpart connection ID
+    pub fn counterpart_connection_id(&self) -> Result<ConnectionId> {
+        ConnectionId::from_str(&self.counterpart_conn_id)
+            .map_err(|e| Error::DecodingError(e.to_string()))
+    }
+
+    /// Returns the client state
+    pub fn client_state(&self) -> Result<AnyClientState> {
+        AnyClientState::decode_vec(&self.client_state)
+            .map_err(|e| Error::DecodingError(e.to_string()))
+    }
+
+    /// Returns the height of the proofs
+    pub fn proof_height(&self) -> Height {
+        Height::new(self.proof_height.0, self.proof_height.1)
+    }
+
+    /// Returns the proof for connection
+    pub fn proof_connection(&self) -> CommitmentProofBytes {
+        self.proof_connection.clone().into()
+    }
+
+    /// Returns the proof for client state
+    pub fn proof_client(&self) -> CommitmentProofBytes {
+        self.proof_client.clone().into()
+    }
+
+    /// Returns the proof for consensus state
+    pub fn proof_consensus(&self) -> CommitmentProofBytes {
+        self.proof_consensus.clone().into()
+    }
+
+    /// Returns the version
+    pub fn version(&self) -> Result<Version> {
+        Version::decode_vec(&self.version)
+            .map_err(|e| Error::DecodingError(e.to_string()))
+    }
+
+    /// Returns the proofs
+    pub fn proofs(&self) -> Result<Proofs> {
+        let height = self.proof_height();
+        let consensus_proof =
+            ConsensusProof::new(self.proof_consensus(), height)
+                .map_err(Error::DecodingError)?;
+        Proofs::new(
+            self.proof_connection(),
+            Some(self.proof_client()),
+            Some(consensus_proof),
+            None,
+            height,
+        )
+        .map_err(Error::DecodingError)
+    }
+}
+
+/// Data to confirm a connection
+#[derive(
+    Debug, Clone, BorshSerialize, BorshDeserialize, Serialize, Deserialize,
+)]
+pub struct ConnectionOpenConfirmData {
+    /// The connection ID
+    conn_id: String,
+    /// The height of the proof
+    proof_height: (u64, u64),
+    /// The proof of the connection
+    proof_connection: Vec<u8>,
+    /// The proof of the client state
+    proof_client: Vec<u8>,
+    /// The proof of the consensus state
+    proof_consensus: Vec<u8>,
+}
+
+impl ConnectionOpenConfirmData {
+    /// Returns the data to confirm a connection
+    pub fn new(
+        conn_id: ConnectionId,
+        proof_height: Height,
+        proof_connection: CommitmentProofBytes,
+        proof_client: CommitmentProofBytes,
+        proof_consensus: CommitmentProofBytes,
+    ) -> Self {
+        let conn_id = conn_id.as_str().to_owned();
+        Self {
+            conn_id,
+            proof_height: (
+                proof_height.revision_number,
+                proof_height.revision_height,
+            ),
+            proof_connection: proof_connection.into(),
+            proof_client: proof_client.into(),
+            proof_consensus: proof_consensus.into(),
+        }
+    }
+
+    /// Returns the connection ID
+    pub fn connnection_id(&self) -> Result<ConnectionId> {
+        ConnectionId::from_str(&self.conn_id)
+            .map_err(|e| Error::DecodingError(e.to_string()))
+    }
+
+    /// Returns the height of the proofs
+    pub fn proof_height(&self) -> Height {
+        Height::new(self.proof_height.0, self.proof_height.1)
+    }
+
+    /// Returns the proof for connection
+    pub fn proof_connection(&self) -> CommitmentProofBytes {
+        self.proof_connection.clone().into()
+    }
+
+    /// Returns the proof for client state
+    pub fn proof_client(&self) -> CommitmentProofBytes {
+        self.proof_client.clone().into()
+    }
+
+    /// Returns the proof for consensus state
+    pub fn proof_consensus(&self) -> CommitmentProofBytes {
+        self.proof_consensus.clone().into()
+    }
+
+    /// Returns the proofs
+    pub fn proofs(&self) -> Result<Proofs> {
+        let height = self.proof_height();
+        let consensus_proof =
+            ConsensusProof::new(self.proof_consensus(), height)
+                .map_err(Error::DecodingError)?;
+        Proofs::new(
+            self.proof_connection(),
+            Some(self.proof_client()),
+            Some(consensus_proof),
+            None,
+            height,
+        )
+        .map_err(Error::DecodingError)
     }
 }
