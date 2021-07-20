@@ -398,6 +398,9 @@ fn init_genesis(
     // }
 }
 
+/// This trait add shims for BTreeSet methods that not yet stable. They have the
+/// same behavior as their nightly counterparts, but additionally require
+/// `Clone` bound on the element type (for `pop_first` and `pop_last`).
 trait BTreeSetShims<T> {
     fn first_shim(&self) -> Option<&T>;
     fn last_shim(&self) -> Option<&T>;
@@ -405,31 +408,39 @@ trait BTreeSetShims<T> {
     fn pop_last_shim(&mut self) -> Option<T>;
 }
 
-impl<T: Ord> BTreeSetShims<T> for BTreeSet<T> {
-    fn pop_last_shim(&mut self) -> Option<T> {
-        let iter = self.iter();
-        let last = iter.last();
-        if let Some(last) = last {
-            return self.take(last);
-        }
-        None
-    }
-
+impl<T: Ord + Clone> BTreeSetShims<T> for BTreeSet<T> {
+    /// Returns a reference to the first value in the set, if any. This value is
+    /// always the minimum of all values in the set.
     fn first_shim(&self) -> Option<&T> {
         let mut iter = self.iter();
         iter.next()
     }
 
+    /// Returns a reference to the last value in the set, if any. This value is
+    /// always the maximum of all values in the set.
     fn last_shim(&self) -> Option<&T> {
         let iter = self.iter();
         iter.last()
     }
 
+    /// Removes the first value from the set and returns it, if any. The first
+    /// value is always the minimum value in the set.
     fn pop_first_shim(&mut self) -> Option<T> {
         let iter = self.iter();
-        let first = iter.last();
+        let first = iter.last().cloned();
         if let Some(first) = first {
-            return self.take(first);
+            return self.take(&first);
+        }
+        None
+    }
+
+    /// Removes the last value from the set and returns it, if any. The last
+    /// value is always the maximum value in the set.
+    fn pop_last_shim(&mut self) -> Option<T> {
+        let iter = self.iter();
+        let last = iter.last().cloned();
+        if let Some(last) = last {
+            return self.take(&last);
         }
         None
     }
@@ -447,20 +458,20 @@ type Bonds = HashMap<BondId, Epoched<Bond>>;
 type Unbonds = HashMap<BondId, Epoched<Unbond>>;
 
 #[derive(Debug)]
-struct Bond {
+pub struct Bond {
     /// A key is a the epoch set for the bond. This is used in unbonding, where
     // it's needed for slash epoch range check.
     delta: HashMap<Epoch, TokenAmount>,
 }
 
-struct Unbond {
+pub struct Unbond {
     /// A key is a pair of the epoch of the bond from which a unbond was
     /// created the epoch of unboding. This is needed for slash epoch range
     /// check.
     deltas: HashMap<(Epoch, Epoch), TokenAmount>,
 }
 
-struct PosParams {
+pub struct PosParams {
     /// A maximum number of [`ValidatorState::Active`] validators
     max_validator_slots: u64,
     /// Any change applied during an epoch `n` will become active at the
