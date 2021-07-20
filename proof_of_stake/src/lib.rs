@@ -1,5 +1,6 @@
 use std::collections::{BTreeSet, HashMap};
 use std::convert::TryInto;
+use std::{cmp, ops};
 
 type Address = String;
 type Validator = Address;
@@ -14,71 +15,184 @@ type Epoch = u64;
 type PublicKey = String;
 type VotingPower = u64;
 
-// trait EpochedOffset {
-//     fn offset() -> Epoch;
-// }
-
-// struct EpochedPipelined;
-// impl EpochedOffset for EpochedPipelined {
-//     fn offset() -> Epoch {
-//         // TODO this should be read from parameters in storage
-//         2
-//     }
-// }
-
-// struct EpochedUnbonding;
-// impl EpochedOffset for EpochedUnbonding {
-//     fn offset() -> Epoch {
-//         // TODO this should also be read from parameters in storage
-//         6
-//     }
-// }
-
-struct EpochedPipelined<Data> {
+#[derive(Debug, Clone)]
+struct Epoched<Data> {
     /// The epoch in which this data was last updated
     last_update: Epoch,
-    /// Fixed-size array in which the head is the data for epoch in which the
-    /// `last_update` was performed and every consecutive array element is the
-    /// successor epoch of the predecessor array element.
-    /// For system parameters, validator's consensus key and state,
-    /// `LENGTH = pipeline_length`. For all others, `LENGTH =
-    /// unbonding_length`.
-    // TODO parameterize the length
-    data: [Option<Data>; 3],
+    data: Vec<Option<Data>>,
 }
 
-struct EpochedUnbonding<Data> {
+#[derive(Debug, Clone)]
+struct EpochedDelta<Data>
+where
+    Data: Copy + ops::Add<Output = Data>,
+{
     /// The epoch in which this data was last updated
     last_update: Epoch,
-    /// Fixed-size array in which the head is the data for epoch in which the
-    /// `last_update` was performed and every consecutive array element is the
-    /// successor epoch of the predecessor array element.
-    /// For system parameters, validator's consensus key and state,
-    /// `LENGTH = pipeline_length`. For all others, `LENGTH =
-    /// unbonding_length`.
-    // TODO parameterize the length
-    data: [Option<Data>; 7],
+    data: Vec<Option<Data>>,
 }
 
-impl<Data> EpochedPipelined<Data> {
-    pub fn init(value: Data, epoch: Epoch) -> Self {
-        let mut data = [None; 3];
-        data[0] = Some(value);
+/// Which offset should be used to set data. The value is read from
+/// [`PosParams`].
+#[derive(Debug, Clone)]
+pub enum EpochOffset {
+    PipelineLen,
+    UnbondingLen,
+}
+
+impl EpochOffset {
+    /// Find the length of a given offset from PoS parameters.
+    pub fn length(&self, params: &PosParams) -> u64 {
+        match self {
+            EpochOffset::PipelineLen => params.pipeline_len,
+            EpochOffset::UnbondingLen => params.unbonding_len,
+        }
+    }
+}
+
+impl<Data> Epoched<Data> {
+    /// Initialize new epoched data. Sets the head to the given value.
+    /// This should only be used at genesis.
+    pub fn init_at_genesis(value: Data, epoch: Epoch) -> Self {
+        Self {
+            last_update: epoch,
+            data: vec![Some(value)],
+        }
+    }
+
+    /// Initialize new data at the given epoch offset.
+    pub fn init(
+        value: Data,
+        epoch: Epoch,
+        offset: EpochOffset,
+        params: &PosParams,
+    ) -> Self {
+        let offset_len = offset.length(params);
+        let mut data = vec![];
+        for ix in 0..offset_len {
+            data.push(None);
+        }
+        data.push(Some(value));
         Self {
             last_update: epoch,
             data,
         }
     }
+
+    /// Update the value at the given offset.
+    pub fn update(
+        &mut self,
+        value: Data,
+        epoch: Epoch,
+        offset: EpochOffset,
+        params: &PosParams,
+    ) {
+        let offset_len = offset.length(params);
+        let offset = offset_len as usize;
+        let last_update = self.last_update;
+        let shift = cmp::min((epoch - last_update) as usize, offset);
+
+        // Resize the data if needed
+        if self.data.len() < offset {
+            self.data.resize_with(offset, Default::default);
+        }
+
+        if shift != 0 {
+            let mid_point = cmp::min(shift, self.data.len());
+            let mut latest_value: Option<Data> = None;
+            // Find the latest value in and clear all the elements before the
+            // mid-point
+            for i in 0..mid_point {
+                if let Some(data) = self.data[i] {
+                    latest_value = Some(data);
+                }
+                self.data[i] = None;
+            }
+            // Rotate left on the mid-point
+            self.data.rotate_left(mid_point);
+        }
+
+        self.data[offset] = Some(value);
+        self.last_update = epoch;
+    }
 }
 
-impl<Data> EpochedUnbonding<Data> {
-    pub fn init(value: Data, epoch: Epoch) -> Self {
-        let mut data = [None; 7];
-        data[0] = Some(value);
+impl<Data> EpochedDelta<Data>
+where
+    Data: Copy + ops::Add<Output = Data>,
+{
+    /// Initialize new epoched delta data. Sets the head to the given value.
+    /// This should only be used at genesis.
+    pub fn init_at_genesis(value: Data, epoch: Epoch) -> Self {
+        Self {
+            last_update: epoch,
+            data: vec![Some(value)],
+        }
+    }
+
+    /// Initialize new data at the given epoch offset.
+    pub fn init(
+        value: Data,
+        epoch: Epoch,
+        offset: EpochOffset,
+        params: &PosParams,
+    ) -> Self {
+        let offset_len = offset.length(params);
+        let mut data = vec![];
+        for ix in 0..offset_len {
+            data.push(None);
+        }
+        data.push(Some(value));
         Self {
             last_update: epoch,
             data,
         }
+    }
+
+    /// Update the value at the given offset.
+    pub fn update(
+        &mut self,
+        value: Data,
+        epoch: Epoch,
+        offset: EpochOffset,
+        params: &PosParams,
+    ) {
+        let offset_len = offset.length(params);
+        let offset = offset_len as usize;
+        let last_update = self.last_update;
+        let shift = cmp::min((epoch - last_update) as usize, offset);
+
+        // Resize the data if needed
+        if self.data.len() < offset {
+            self.data.resize_with(offset, Default::default);
+        }
+
+        if shift != 0 {
+            let mid_point = cmp::min(shift, self.data.len());
+            let mut sum: Option<Data> = None;
+            // Sum and clear all the elements before the mid-point
+            for i in 0..mid_point {
+                if let Some(next) = self.data.get(i) {
+                    // Add current to the sum, if any
+                    sum = match (sum, next) {
+                        (Some(sum), Some(next)) => Some(sum + *next),
+                        (Some(sum), None) => Some(sum),
+                        (None, Some(next)) => Some(*next),
+                        _ => sum,
+                    };
+                    // Clear the field
+                    self.data[i] = None;
+                }
+            }
+            // Rotate left on the mid-point
+            self.data.rotate_left(mid_point);
+            // Update the head with the sum
+            self.data[0] = sum;
+        }
+
+        self.data[offset] = self.data[shift]
+            .map_or_else(|| Some(value), |last_delta| Some(last_delta + value));
+        self.last_update = epoch;
     }
 }
 
@@ -90,10 +204,10 @@ struct InitialPosStorage {
 }
 
 struct ValidatorData {
-    pub consensus_key: EpochedPipelined<PublicKey>,
-    pub state: EpochedPipelined<ValidatorState>,
-    pub total_deltas: EpochedUnbonding<TokenChange>,
-    pub voting_power: EpochedUnbonding<VotingPower>,
+    pub consensus_key: Epoched<PublicKey>,
+    pub state: Epoched<ValidatorState>,
+    pub total_deltas: Epoched<TokenChange>,
+    pub voting_power: Epoched<VotingPower>,
 }
 
 /// Validator's address with its voting power.
@@ -114,10 +228,10 @@ struct ValidatorSet {
     inactive: BTreeSet<WeightedValidator>,
 }
 
-type ValidatorSets = EpochedUnbonding<ValidatorSet>;
+type ValidatorSets = Epoched<ValidatorSet>;
 
 /// The sum of all active and inactive validators' voting power
-type TotalVotingPower = EpochedUnbonding<VotingPower>;
+type TotalVotingPower = Epoched<VotingPower>;
 
 trait Pos {
     // TODO consider paraterizing types like so:
@@ -126,27 +240,27 @@ trait Pos {
     fn read_validator_consensus_key(
         &self,
         validator: Address,
-    ) -> Option<EpochedPipelined<PublicKey>>;
+    ) -> Option<Epoched<PublicKey>>;
 
     fn write_validator_consensus_key(
         &mut self,
         validator: Address,
-        key: EpochedPipelined<PublicKey>,
+        key: Epoched<PublicKey>,
     );
     fn write_validator_state(
         &mut self,
         validator: Address,
-        key: EpochedPipelined<ValidatorState>,
+        key: Epoched<ValidatorState>,
     );
     fn write_validator_total_deltas(
         &mut self,
         validator: Address,
-        key: EpochedUnbonding<i128>,
+        key: Epoched<i128>,
     );
     fn write_validator_voting_power(
         &mut self,
         validator: Address,
-        key: EpochedUnbonding<u64>,
+        key: Epoched<u64>,
     );
 }
 
@@ -157,13 +271,13 @@ fn init_genesis(
     epoch: Epoch,
 ) {
     for (addr, tokens, pk) in validators {
-        let consensus_key = EpochedPipelined::init(pk, epoch);
+        let consensus_key = Epoched::init_at_genesis(pk, epoch);
         pos.write_validator_consensus_key(addr, consensus_key);
-        let state = EpochedPipelined::init(ValidatorState::Candidate, epoch);
+        let state = Epoched::init_at_genesis(ValidatorState::Candidate, epoch);
         pos.write_validator_state(addr, state);
-        let total_deltas = EpochedUnbonding::init(tokens as i128, epoch);
+        let total_deltas = Epoched::init_at_genesis(tokens as i128, epoch);
         pos.write_validator_total_deltas(addr, total_deltas);
-        let voting_power = EpochedUnbonding::init(
+        let voting_power = Epoched::init_at_genesis(
             tokens * 10_000 / params.votes_per_token,
             epoch,
         );
@@ -178,7 +292,7 @@ fn init_genesis(
         };
         let mut delta = HashMap::default();
         delta.insert(epoch, tokens);
-        let bond = EpochedPipelined::init(Bond { delta }, epoch);
+        let bond = Epoched::init_at_genesis(Bond { delta }, epoch);
         bonds.insert(bond_id, bond);
     }
 
@@ -203,7 +317,7 @@ fn init_genesis(
         active: active_validators,
         inactive: inactive_validators,
     };
-    let validator_sets = EpochedUnbonding::init(validator_set, epoch);
+    let validator_sets = Epoched::init_at_genesis(validator_set, epoch);
 
     let total_voting_power = todo!();
     let mut storage = InitialPosStorage {
@@ -284,8 +398,8 @@ enum ValidatorState {
     // TODO consider adding `Jailed`
 }
 
-type Bonds = HashMap<BondId, EpochedPipelined<Bond>>;
-type Unbonds = HashMap<BondId, EpochedUnbonding<Unbond>>;
+type Bonds = HashMap<BondId, Epoched<Bond>>;
+type Unbonds = HashMap<BondId, Epoched<Unbond>>;
 
 #[derive(Debug)]
 struct Bond {
@@ -310,7 +424,7 @@ struct PosParams {
     /// How many epochs after a committed fault a validator can be slashed.
     /// If a fault is detected in epoch `n`, it can slashed up until the end of
     /// `n + slashable_period_len` epoch.
-    unboding_len: u64,
+    unbonding_len: u64,
     /// Used in validators' voting power calculation
     votes_per_token: u64,
     /// Amount of tokens rewarded to a validator for proposing a block
@@ -323,12 +437,12 @@ struct PosParams {
 impl Default for PosParams {
     fn default() -> Self {
         Self {
-            epoch_duration: 1024,
             max_validator_slots: 128,
             pipeline_len: 2,
-            // TODO figure out the value, after we spec out the specifics of how
-            // slashing works
-            slashable_period_len: 4,
+            unbonding_len: 6,
+            votes_per_token: 1000,
+            block_proposer_reward: 100,
+            block_vote_reward: 1,
         }
     }
 }
