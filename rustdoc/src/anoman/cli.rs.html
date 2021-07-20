@@ -109,7 +109,7 @@
             <span class="ident">cli</span>::<span class="ident">cmds</span>::<span class="ident">Ledger</span>::<span class="ident">Run</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">let</span> <span class="ident">config</span> <span class="op">=</span> <span class="ident">get_cfg</span>(<span class="ident">base_dir</span>);
                 <span class="kw">let</span> <span class="ident">ledger_cfg</span> <span class="op">=</span> <span class="ident">config</span>.<span class="ident">ledger</span>.<span class="ident">unwrap_or_default</span>();
-                <span class="ident">ledger</span>::<span class="ident">run</span>(<span class="ident">ledger_cfg</span>).<span class="ident">wrap_err</span>(<span class="string">&quot;Failed to run Anoma node&quot;</span>)<span class="question-mark">?</span>;
+                <span class="ident">ledger</span>::<span class="ident">run</span>(<span class="ident">ledger_cfg</span>);
             }
             <span class="ident">cli</span>::<span class="ident">cmds</span>::<span class="ident">Ledger</span>::<span class="ident">Reset</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">let</span> <span class="ident">config</span> <span class="op">=</span> <span class="ident">get_cfg</span>(<span class="ident">base_dir</span>);

@@ -234,6 +234,40 @@
 <span id="231">231</span>
 <span id="232">232</span>
 <span id="233">233</span>
+<span id="234">234</span>
+<span id="235">235</span>
+<span id="236">236</span>
+<span id="237">237</span>
+<span id="238">238</span>
+<span id="239">239</span>
+<span id="240">240</span>
+<span id="241">241</span>
+<span id="242">242</span>
+<span id="243">243</span>
+<span id="244">244</span>
+<span id="245">245</span>
+<span id="246">246</span>
+<span id="247">247</span>
+<span id="248">248</span>
+<span id="249">249</span>
+<span id="250">250</span>
+<span id="251">251</span>
+<span id="252">252</span>
+<span id="253">253</span>
+<span id="254">254</span>
+<span id="255">255</span>
+<span id="256">256</span>
+<span id="257">257</span>
+<span id="258">258</span>
+<span id="259">259</span>
+<span id="260">260</span>
+<span id="261">261</span>
+<span id="262">262</span>
+<span id="263">263</span>
+<span id="264">264</span>
+<span id="265">265</span>
+<span id="266">266</span>
+<span id="267">267</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">PartialEq</span>, ::<span class="ident">prost</span>::<span class="ident">Message</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">IntentMessage</span> {
@@ -272,8 +306,9 @@
 }
 <span class="doccomment">/// Generated client implementations.</span>
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">rpc_service_client</span> {
-    <span class="attribute">#![<span class="ident">allow</span>(<span class="ident">unused_variables</span>, <span class="ident">dead_code</span>, <span class="ident">missing_docs</span>)]</span>
+    <span class="attribute">#![<span class="ident">allow</span>(<span class="ident">unused_variables</span>, <span class="ident">dead_code</span>, <span class="ident">missing_docs</span>, <span class="ident">clippy</span>::<span class="ident">let_unit_value</span>)]</span>
     <span class="kw">use</span> <span class="ident">tonic</span>::<span class="ident">codegen</span>::<span class="kw-2">*</span>;
+    <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>)]</span>
     <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">RpcServiceClient</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
         <span class="ident">inner</span>: <span class="ident">tonic</span>::<span class="ident">client</span>::<span class="ident">Grpc</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>,
     }
@@ -291,22 +326,53 @@
     <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="ident">RpcServiceClient</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>
     <span class="kw">where</span>
         <span class="ident">T</span>: <span class="ident">tonic</span>::<span class="ident">client</span>::<span class="ident">GrpcService</span><span class="op">&lt;</span><span class="ident">tonic</span>::<span class="ident">body</span>::<span class="ident">BoxBody</span><span class="op">&gt;</span>,
-        <span class="ident">T</span>::<span class="ident">ResponseBody</span>: <span class="ident">Body</span> <span class="op">+</span> <span class="ident">HttpBody</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>,
+        <span class="ident">T</span>::<span class="ident">ResponseBody</span>: <span class="ident">Body</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>,
         <span class="ident">T</span>::<span class="ident">Error</span>: <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">StdError</span><span class="op">&gt;</span>,
-        <span class="op">&lt;</span><span class="ident">T</span>::<span class="ident">ResponseBody</span> <span class="kw">as</span> <span class="ident">HttpBody</span><span class="op">&gt;</span>::<span class="ident">Error</span>: <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">StdError</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Send</span>,
+        <span class="op">&lt;</span><span class="ident">T</span>::<span class="ident">ResponseBody</span> <span class="kw">as</span> <span class="ident">Body</span><span class="op">&gt;</span>::<span class="ident">Error</span>: <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">StdError</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Send</span>,
     {
         <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">inner</span>: <span class="ident">T</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
             <span class="kw">let</span> <span class="ident">inner</span> <span class="op">=</span> <span class="ident">tonic</span>::<span class="ident">client</span>::<span class="ident">Grpc</span>::<span class="ident">new</span>(<span class="ident">inner</span>);
             <span class="self">Self</span> { <span class="ident">inner</span> }
         }
 
-        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">with_interceptor</span>(
+        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">with_interceptor</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>(
             <span class="ident">inner</span>: <span class="ident">T</span>,
-            <span class="ident">interceptor</span>: <span class="kw">impl</span> <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">tonic</span>::<span class="ident">Interceptor</span><span class="op">&gt;</span>,
-        ) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
-            <span class="kw">let</span> <span class="ident">inner</span> <span class="op">=</span>
-                <span class="ident">tonic</span>::<span class="ident">client</span>::<span class="ident">Grpc</span>::<span class="ident">with_interceptor</span>(<span class="ident">inner</span>, <span class="ident">interceptor</span>);
-            <span class="self">Self</span> { <span class="ident">inner</span> }
+            <span class="ident">interceptor</span>: <span class="ident">F</span>,
+        ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">RpcServiceClient</span><span class="op">&lt;</span><span class="ident">InterceptedService</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">F</span><span class="op">&gt;</span><span class="op">&gt;</span>
+        <span class="kw">where</span>
+            <span class="ident">F</span>: <span class="ident">FnMut</span>(
+                <span class="ident">tonic</span>::<span class="ident">Request</span><span class="op">&lt;</span>()<span class="op">&gt;</span>,
+            ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">tonic</span>::<span class="ident">Request</span><span class="op">&lt;</span>()<span class="op">&gt;</span>, <span class="ident">tonic</span>::<span class="ident">Status</span><span class="op">&gt;</span>,
+            <span class="ident">T</span>:
+                <span class="ident">tonic</span>::<span class="ident">codegen</span>::<span class="ident">Service</span><span class="op">&lt;</span>
+                    <span class="ident">http</span>::<span class="ident">Request</span><span class="op">&lt;</span><span class="ident">tonic</span>::<span class="ident">body</span>::<span class="ident">BoxBody</span><span class="op">&gt;</span>,
+                    <span class="ident">Response</span> <span class="op">=</span> <span class="ident">http</span>::<span class="ident">Response</span><span class="op">&lt;</span>
+                        <span class="op">&lt;</span><span class="ident">T</span> <span class="kw">as</span> <span class="ident">tonic</span>::<span class="ident">client</span>::<span class="ident">GrpcService</span><span class="op">&lt;</span>
+                            <span class="ident">tonic</span>::<span class="ident">body</span>::<span class="ident">BoxBody</span>,
+                        <span class="op">&gt;</span><span class="op">&gt;</span>::<span class="ident">ResponseBody</span>,
+                    <span class="op">&gt;</span>,
+                <span class="op">&gt;</span>,
+            <span class="op">&lt;</span><span class="ident">T</span> <span class="kw">as</span> <span class="ident">tonic</span>::<span class="ident">codegen</span>::<span class="ident">Service</span><span class="op">&lt;</span>
+                <span class="ident">http</span>::<span class="ident">Request</span><span class="op">&lt;</span><span class="ident">tonic</span>::<span class="ident">body</span>::<span class="ident">BoxBody</span><span class="op">&gt;</span>,
+            <span class="op">&gt;</span><span class="op">&gt;</span>::<span class="ident">Error</span>: <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">StdError</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span>,
+        {
+            <span class="ident">RpcServiceClient</span>::<span class="ident">new</span>(<span class="ident">InterceptedService</span>::<span class="ident">new</span>(<span class="ident">inner</span>, <span class="ident">interceptor</span>))
+        }
+
+        <span class="doccomment">/// Compress requests with `gzip`.</span>
+        <span class="doccomment">///</span>
+        <span class="doccomment">/// This requires the server to support it otherwise it might respond</span>
+        <span class="doccomment">/// with an</span>
+        <span class="doccomment">/// error.</span>
+        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">send_gzip</span>(<span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+            <span class="self">self</span>.<span class="ident">inner</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">send_gzip</span>();
+            <span class="self">self</span>
+        }
+
+        <span class="doccomment">/// Enable decompressing responses with `gzip`.</span>
+        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">accept_gzip</span>(<span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+            <span class="self">self</span>.<span class="ident">inner</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">accept_gzip</span>();
+            <span class="self">self</span>
         }
 
         <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">send_message</span>(
@@ -327,22 +393,11 @@
             <span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">unary</span>(<span class="ident">request</span>.<span class="ident">into_request</span>(), <span class="ident">path</span>, <span class="ident">codec</span>).<span class="kw">await</span>
         }
     }
-    <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Clone</span><span class="op">&gt;</span> <span class="ident">Clone</span> <span class="kw">for</span> <span class="ident">RpcServiceClient</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
-        <span class="kw">fn</span> <span class="ident">clone</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
-            <span class="self">Self</span> {
-                <span class="ident">inner</span>: <span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">clone</span>(),
-            }
-        }
-    }
-    <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="ident">std</span>::<span class="ident">fmt</span>::<span class="ident">Debug</span> <span class="kw">for</span> <span class="ident">RpcServiceClient</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
-        <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">std</span>::<span class="ident">fmt</span>::<span class="ident">Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">std</span>::<span class="ident">fmt</span>::<span class="prelude-ty">Result</span> {
-            <span class="macro">write</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot;RpcServiceClient {{ ... }}&quot;</span>)
-        }
-    }
 }
 <span class="doccomment">/// Generated server implementations.</span>
+<span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy</span>::<span class="ident">unit_arg</span>)]</span>
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">rpc_service_server</span> {
-    <span class="attribute">#![<span class="ident">allow</span>(<span class="ident">unused_variables</span>, <span class="ident">dead_code</span>, <span class="ident">missing_docs</span>)]</span>
+    <span class="attribute">#![<span class="ident">allow</span>(<span class="ident">unused_variables</span>, <span class="ident">dead_code</span>, <span class="ident">missing_docs</span>, <span class="ident">clippy</span>::<span class="ident">let_unit_value</span>)]</span>
     <span class="kw">use</span> <span class="ident">tonic</span>::<span class="ident">codegen</span>::<span class="kw-2">*</span>;
     <span class="doccomment">/// Generated trait containing gRPC methods that should be implemented for</span>
     <span class="doccomment">/// use with RpcServiceServer.</span>
@@ -356,28 +411,37 @@
     <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
     <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">RpcServiceServer</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">RpcService</span><span class="op">&gt;</span> {
         <span class="ident">inner</span>: <span class="ident">_Inner</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>,
+        <span class="ident">accept_compression_encodings</span>: (),
+        <span class="ident">send_compression_encodings</span>: (),
     }
-    <span class="kw">struct</span> <span class="ident">_Inner</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>, <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">tonic</span>::<span class="ident">Interceptor</span><span class="op">&gt;</span>);
+    <span class="kw">struct</span> <span class="ident">_Inner</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>);
     <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">RpcService</span><span class="op">&gt;</span> <span class="ident">RpcServiceServer</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
         <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">inner</span>: <span class="ident">T</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
             <span class="kw">let</span> <span class="ident">inner</span> <span class="op">=</span> <span class="ident">Arc</span>::<span class="ident">new</span>(<span class="ident">inner</span>);
-            <span class="kw">let</span> <span class="ident">inner</span> <span class="op">=</span> <span class="ident">_Inner</span>(<span class="ident">inner</span>, <span class="prelude-val">None</span>);
-            <span class="self">Self</span> { <span class="ident">inner</span> }
+            <span class="kw">let</span> <span class="ident">inner</span> <span class="op">=</span> <span class="ident">_Inner</span>(<span class="ident">inner</span>);
+            <span class="self">Self</span> {
+                <span class="ident">inner</span>,
+                <span class="ident">accept_compression_encodings</span>: <span class="ident">Default</span>::<span class="ident">default</span>(),
+                <span class="ident">send_compression_encodings</span>: <span class="ident">Default</span>::<span class="ident">default</span>(),
+            }
         }
 
-        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">with_interceptor</span>(
+        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">with_interceptor</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>(
             <span class="ident">inner</span>: <span class="ident">T</span>,
-            <span class="ident">interceptor</span>: <span class="kw">impl</span> <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">tonic</span>::<span class="ident">Interceptor</span><span class="op">&gt;</span>,
-        ) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
-            <span class="kw">let</span> <span class="ident">inner</span> <span class="op">=</span> <span class="ident">Arc</span>::<span class="ident">new</span>(<span class="ident">inner</span>);
-            <span class="kw">let</span> <span class="ident">inner</span> <span class="op">=</span> <span class="ident">_Inner</span>(<span class="ident">inner</span>, <span class="prelude-val">Some</span>(<span class="ident">interceptor</span>.<span class="ident">into</span>()));
-            <span class="self">Self</span> { <span class="ident">inner</span> }
+            <span class="ident">interceptor</span>: <span class="ident">F</span>,
+        ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">InterceptedService</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident">F</span><span class="op">&gt;</span>
+        <span class="kw">where</span>
+            <span class="ident">F</span>: <span class="ident">FnMut</span>(
+                <span class="ident">tonic</span>::<span class="ident">Request</span><span class="op">&lt;</span>()<span class="op">&gt;</span>,
+            ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">tonic</span>::<span class="ident">Request</span><span class="op">&lt;</span>()<span class="op">&gt;</span>, <span class="ident">tonic</span>::<span class="ident">Status</span><span class="op">&gt;</span>,
+        {
+            <span class="ident">InterceptedService</span>::<span class="ident">new</span>(<span class="self">Self</span>::<span class="ident">new</span>(<span class="ident">inner</span>), <span class="ident">interceptor</span>)
         }
     }
-    <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">B</span><span class="op">&gt;</span> <span class="ident">Service</span><span class="op">&lt;</span><span class="ident">http</span>::<span class="ident">Request</span><span class="op">&lt;</span><span class="ident">B</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">RpcServiceServer</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>
+    <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">B</span><span class="op">&gt;</span> <span class="ident">tonic</span>::<span class="ident">codegen</span>::<span class="ident">Service</span><span class="op">&lt;</span><span class="ident">http</span>::<span class="ident">Request</span><span class="op">&lt;</span><span class="ident">B</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">RpcServiceServer</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>
     <span class="kw">where</span>
         <span class="ident">T</span>: <span class="ident">RpcService</span>,
-        <span class="ident">B</span>: <span class="ident">HttpBody</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>,
+        <span class="ident">B</span>: <span class="ident">Body</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>,
         <span class="ident">B</span>::<span class="ident">Error</span>: <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">StdError</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>,
     {
         <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">Never</span>;
@@ -418,20 +482,20 @@
                             <span class="ident">Box</span>::<span class="ident">pin</span>(<span class="ident">fut</span>)
                         }
                     }
+                    <span class="kw">let</span> <span class="ident">accept_compression_encodings</span> <span class="op">=</span>
+                        <span class="self">self</span>.<span class="ident">accept_compression_encodings</span>;
+                    <span class="kw">let</span> <span class="ident">send_compression_encodings</span> <span class="op">=</span>
+                        <span class="self">self</span>.<span class="ident">send_compression_encodings</span>;
                     <span class="kw">let</span> <span class="ident">inner</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">clone</span>();
                     <span class="kw">let</span> <span class="ident">fut</span> <span class="op">=</span> <span class="kw">async</span> <span class="kw">move</span> {
-                        <span class="kw">let</span> <span class="ident">interceptor</span> <span class="op">=</span> <span class="ident">inner</span>.<span class="number">1</span>.<span class="ident">clone</span>();
                         <span class="kw">let</span> <span class="ident">inner</span> <span class="op">=</span> <span class="ident">inner</span>.<span class="number">0</span>;
                         <span class="kw">let</span> <span class="ident">method</span> <span class="op">=</span> <span class="ident">SendMessageSvc</span>(<span class="ident">inner</span>);
                         <span class="kw">let</span> <span class="ident">codec</span> <span class="op">=</span> <span class="ident">tonic</span>::<span class="ident">codec</span>::<span class="ident">ProstCodec</span>::<span class="ident">default</span>();
-                        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">grpc</span> <span class="op">=</span> <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">interceptor</span>) <span class="op">=</span> <span class="ident">interceptor</span> {
-                            <span class="ident">tonic</span>::<span class="ident">server</span>::<span class="ident">Grpc</span>::<span class="ident">with_interceptor</span>(
-                                <span class="ident">codec</span>,
-                                <span class="ident">interceptor</span>,
-                            )
-                        } <span class="kw">else</span> {
-                            <span class="ident">tonic</span>::<span class="ident">server</span>::<span class="ident">Grpc</span>::<span class="ident">new</span>(<span class="ident">codec</span>)
-                        };
+                        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">grpc</span> <span class="op">=</span> <span class="ident">tonic</span>::<span class="ident">server</span>::<span class="ident">Grpc</span>::<span class="ident">new</span>(<span class="ident">codec</span>)
+                            .<span class="ident">apply_compression_config</span>(
+                                <span class="ident">accept_compression_encodings</span>,
+                                <span class="ident">send_compression_encodings</span>,
+                            );
                         <span class="kw">let</span> <span class="ident">res</span> <span class="op">=</span> <span class="ident">grpc</span>.<span class="ident">unary</span>(<span class="ident">method</span>, <span class="ident">req</span>).<span class="kw">await</span>;
                         <span class="prelude-val">Ok</span>(<span class="ident">res</span>)
                     };
@@ -442,7 +506,7 @@
                         .<span class="ident">status</span>(<span class="number">200</span>)
                         .<span class="ident">header</span>(<span class="string">&quot;grpc-status&quot;</span>, <span class="string">&quot;12&quot;</span>)
                         .<span class="ident">header</span>(<span class="string">&quot;content-type&quot;</span>, <span class="string">&quot;application/grpc&quot;</span>)
-                        .<span class="ident">body</span>(<span class="ident">tonic</span>::<span class="ident">body</span>::<span class="ident">BoxBody</span>::<span class="ident">empty</span>())
+                        .<span class="ident">body</span>(<span class="ident">empty_body</span>())
                         .<span class="ident">unwrap</span>())
                 }),
             }
@@ -451,12 +515,16 @@
     <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">RpcService</span><span class="op">&gt;</span> <span class="ident">Clone</span> <span class="kw">for</span> <span class="ident">RpcServiceServer</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
         <span class="kw">fn</span> <span class="ident">clone</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
             <span class="kw">let</span> <span class="ident">inner</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">clone</span>();
-            <span class="self">Self</span> { <span class="ident">inner</span> }
+            <span class="self">Self</span> {
+                <span class="ident">inner</span>,
+                <span class="ident">accept_compression_encodings</span>: <span class="self">self</span>.<span class="ident">accept_compression_encodings</span>,
+                <span class="ident">send_compression_encodings</span>: <span class="self">self</span>.<span class="ident">send_compression_encodings</span>,
+            }
         }
     }
     <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">RpcService</span><span class="op">&gt;</span> <span class="ident">Clone</span> <span class="kw">for</span> <span class="ident">_Inner</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
         <span class="kw">fn</span> <span class="ident">clone</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
-            <span class="self">Self</span>(<span class="self">self</span>.<span class="number">0</span>.<span class="ident">clone</span>(), <span class="self">self</span>.<span class="number">1</span>.<span class="ident">clone</span>())
+            <span class="self">Self</span>(<span class="self">self</span>.<span class="number">0</span>.<span class="ident">clone</span>())
         }
     }
     <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">std</span>::<span class="ident">fmt</span>::<span class="ident">Debug</span><span class="op">&gt;</span> <span class="ident">std</span>::<span class="ident">fmt</span>::<span class="ident">Debug</span> <span class="kw">for</span> <span class="ident">_Inner</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {

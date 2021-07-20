@@ -360,6 +360,11 @@
 <span id="357">357</span>
 <span id="358">358</span>
 <span id="359">359</span>
+<span id="360">360</span>
+<span id="361">361</span>
+<span id="362">362</span>
+<span id="363">363</span>
+<span id="364">364</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">collections</span>::<span class="ident">hash_map</span>::<span class="ident">DefaultHasher</span>;
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">convert</span>::{<span class="ident">TryFrom</span>, <span class="ident">TryInto</span>};
@@ -405,7 +410,8 @@
         <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">types</span>::<span class="ident">Tx</span>::<span class="ident">decode</span>(<span class="ident">tx_bytes</span>).<span class="ident">map_err</span>(<span class="ident">Error</span>::<span class="ident">TxDecodingError</span>)<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">timestamp</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">tx</span>.<span class="ident">timestamp</span> {
             <span class="prelude-val">Some</span>(<span class="ident">t</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="kw">let</span> <span class="ident">t</span>: <span class="ident">std</span>::<span class="ident">time</span>::<span class="ident">SystemTime</span> <span class="op">=</span> <span class="ident">t</span>.<span class="ident">into</span>();
+                <span class="kw">let</span> <span class="ident">t</span>: <span class="ident">std</span>::<span class="ident">time</span>::<span class="ident">SystemTime</span> <span class="op">=</span>
+                    <span class="ident">t</span>.<span class="ident">try_into</span>().<span class="ident">expect</span>(<span class="string">&quot;Timestamp shouldn&#39;t be out of range&quot;</span>);
                 <span class="kw">let</span> <span class="ident">dt</span>: <span class="ident">DateTime</span><span class="op">&lt;</span><span class="ident">Utc</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">t</span>.<span class="ident">into</span>();
                 <span class="ident">dt</span>.<span class="ident">to_rfc3339</span>()
             }
@@ -599,7 +605,11 @@
 <span class="kw">impl</span> <span class="ident">Hash</span> <span class="kw">for</span> <span class="ident">Intent</span> {
     <span class="kw">fn</span> <span class="ident">hash</span><span class="op">&lt;</span><span class="ident">H</span>: <span class="ident">std</span>::<span class="ident">hash</span>::<span class="ident">Hasher</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">state</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">H</span>) {
         <span class="self">self</span>.<span class="ident">data</span>.<span class="ident">hash</span>(<span class="ident">state</span>);
-        <span class="kw">let</span> <span class="ident">timestamp</span>: <span class="ident">std</span>::<span class="ident">time</span>::<span class="ident">SystemTime</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">timestamp</span>.<span class="ident">clone</span>().<span class="ident">into</span>();
+        <span class="kw">let</span> <span class="ident">timestamp</span>: <span class="ident">std</span>::<span class="ident">time</span>::<span class="ident">SystemTime</span> <span class="op">=</span> <span class="self">self</span>
+            .<span class="ident">timestamp</span>
+            .<span class="ident">clone</span>()
+            .<span class="ident">try_into</span>()
+            .<span class="ident">expect</span>(<span class="string">&quot;Timestamp shouldn&#39;t be out of range&quot;</span>);
         <span class="ident">timestamp</span>.<span class="ident">hash</span>(<span class="ident">state</span>);
     }
 }
