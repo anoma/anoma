@@ -11,10 +11,14 @@
 <span id="8"> 8</span>
 <span id="9"> 9</span>
 <span id="10">10</span>
+<span id="11">11</span>
+<span id="12">12</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Types definitions.</span>
 
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">address</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ibc-vp&quot;</span>)]</span>
+<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">ibc</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">intent</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">internal</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">key</span>;

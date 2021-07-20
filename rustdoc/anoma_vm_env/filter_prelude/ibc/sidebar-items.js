@@ -1,0 +1,1 @@
+initSidebarItems({"enum":[["Error",""]],"struct":[["ClientCreationData","States to create a new client"],["ClientUpdateData","Data to update a client"],["ClientUpgradeData","Data to upgrade a client"]],"type":[["Result","Decode result for IBC data"]]});
