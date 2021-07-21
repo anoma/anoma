@@ -3,13 +3,14 @@
 use std::str::FromStr;
 
 use borsh::{BorshDeserialize, BorshSerialize};
-use ibc::ics02_client::client_consensus::AnyConsensusState;
+use ibc::ics02_client::client_consensus::{AnyConsensusState, ConsensusState};
 use ibc::ics02_client::client_state::AnyClientState;
 use ibc::ics02_client::context::ClientReader;
 use ibc::ics02_client::height::Height;
 use ibc::ics03_connection::connection::{ConnectionEnd, Counterparty, State};
 use ibc::ics03_connection::context::ConnectionReader;
 use ibc::ics03_connection::handler::verify::verify_proofs;
+use ibc::ics07_tendermint::consensus_state::ConsensusState as TendermintConsensusState;
 use ibc::ics23_commitment::commitment::CommitmentPrefix;
 use ibc::ics24_host::identifier::{ClientId, ConnectionId};
 use ibc::ics24_host::Path;
@@ -21,36 +22,17 @@ use crate::ledger::storage::{self, StorageHasher};
 use crate::types::address::{Address, InternalAddress};
 use crate::types::ibc::{
     ConnectionOpenAckData, ConnectionOpenConfirmData, ConnectionOpenTryData,
+    Error as IbcDataError,
 };
 use crate::types::storage::{Key, KeySeg};
+
+pub(super) const COUNTER_PATH: &str = "connections/counter";
 
 impl<'a, DB, H> Ibc<'a, DB, H>
 where
     DB: 'static + storage::DB + for<'iter> storage::DBIter<'iter>,
     H: 'static + StorageHasher,
 {
-    /// Returns the connection ID after #IBC/connections
-    fn get_connection_id(key: &Key) -> Result<ConnectionId> {
-        match key.segments.get(2) {
-            Some(id) => ConnectionId::from_str(&id.raw())
-                .map_err(|e| Error::KeyError(e.to_string())),
-            None => Err(Error::KeyError(format!(
-                "The connection key doesn't have a connection ID: {}",
-                key
-            ))),
-        }
-    }
-
-    fn get_connection_state_change(
-        &self,
-        conn_id: &ConnectionId,
-    ) -> Result<StateChange> {
-        let path = Path::Connections(conn_id.clone()).to_string();
-        let key = Key::ibc_key(path)
-            .expect("Creating a key for a client type failed");
-        self.get_state_change(&key)
-    }
-
     pub(super) fn validate_connection(
         &self,
         key: &Key,
@@ -83,6 +65,28 @@ where
                 Ok(false)
             }
         }
+    }
+
+    /// Returns the connection ID after #IBC/connections
+    fn get_connection_id(key: &Key) -> Result<ConnectionId> {
+        match key.segments.get(2) {
+            Some(id) => ConnectionId::from_str(&id.raw())
+                .map_err(|e| Error::KeyError(e.to_string())),
+            None => Err(Error::KeyError(format!(
+                "The connection key doesn't have a connection ID: {}",
+                key
+            ))),
+        }
+    }
+
+    fn get_connection_state_change(
+        &self,
+        conn_id: &ConnectionId,
+    ) -> Result<StateChange> {
+        let path = Path::Connections(conn_id.clone()).to_string();
+        let key = Key::ibc_key(path)
+            .expect("Creating a key for a client type failed");
+        self.get_state_change(&key)
     }
 
     fn validate_created_connection(
@@ -191,7 +195,7 @@ where
             data.delay_period(),
         );
 
-        let proofs = data.proofs().map_err(Error::IbcDataError)?;
+        let proofs = data.proofs()?;
         self.verify_connection_proof(conn, expected_conn, proofs)
     }
 
@@ -204,21 +208,14 @@ where
             .map_err(Error::DecodingTxDataError)?;
 
         // version check
-        if conn
-            .versions()
-            .contains(&data.version().map_err(Error::IbcDataError)?)
-        {
+        if conn.versions().contains(&data.version()?) {
             tracing::info!("unsupported version");
             return Ok(false);
         }
 
         // counterpart connection ID check
         if let Some(counterpart_conn_id) = conn.counterparty().connection_id() {
-            if *counterpart_conn_id
-                != data
-                    .counterpart_connection_id()
-                    .map_err(Error::IbcDataError)?
-            {
+            if *counterpart_conn_id != data.counterpart_connection_id()? {
                 tracing::info!("counterpart connection ID mismatched");
                 return Ok(false);
             }
@@ -230,14 +227,14 @@ where
             conn.counterparty().client_id().clone(),
             Counterparty::new(
                 conn.client_id().clone(),
-                Some(data.connnection_id().map_err(Error::IbcDataError)?),
+                Some(data.connnection_id()?),
                 self.commitment_prefix(),
             ),
-            vec![data.version().map_err(Error::IbcDataError)?],
+            vec![data.version()?],
             conn.delay_period(),
         );
 
-        let proofs = data.proofs().map_err(Error::IbcDataError)?;
+        let proofs = data.proofs()?;
         self.verify_connection_proof(conn, expected_conn, proofs)
     }
 
@@ -255,14 +252,14 @@ where
             conn.counterparty().client_id().clone(),
             Counterparty::new(
                 conn.client_id().clone(),
-                Some(data.connnection_id().map_err(Error::IbcDataError)?),
+                Some(data.connnection_id()?),
                 self.commitment_prefix(),
             ),
             conn.versions(),
             conn.delay_period(),
         );
 
-        let proofs = data.proofs().map_err(Error::IbcDataError)?;
+        let proofs = data.proofs()?;
         self.verify_connection_proof(conn, expected_conn, proofs)
     }
 
@@ -362,13 +359,15 @@ where
         &self,
         _height: Height,
     ) -> Option<AnyConsensusState> {
-        // Returns the ConsensusState of the host (local) chain at a specific
-        // height.
-        todo!()
+        self.ctx
+            .storage
+            .get_block_header()
+            .0
+            .map(|h| TendermintConsensusState::from(h).wrap_any())
     }
 
     fn connection_counter(&self) -> u64 {
-        let path = "connections/counter".to_owned();
+        let path = COUNTER_PATH.to_owned();
         let key = Key::ibc_key(path)
             .expect("Creating a key for a connection counter failed");
         match self.ctx.read_post(&key) {
@@ -379,5 +378,11 @@ where
                 unreachable!();
             }
         }
+    }
+}
+
+impl From<IbcDataError> for Error {
+    fn from(err: IbcDataError) -> Self {
+        Self::IbcDataError(err)
     }
 }
