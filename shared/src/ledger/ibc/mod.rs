@@ -807,6 +807,8 @@ mod tests {
         );
     }
 
+    // TODO check after implementing MockConsensusState and verification
+    // functions in ibc-rs
     #[test]
     #[ignore]
     fn test_try_connection() {
