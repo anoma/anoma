@@ -3,13 +3,13 @@
 use std::str::FromStr;
 
 use borsh::{BorshDeserialize, BorshSerialize};
-use ibc::ics02_client::client_consensus::{AnyConsensusState, ConsensusState};
-use ibc::ics02_client::client_def::{AnyClient, ClientDef};
+use ibc::ics02_client::client_consensus::AnyConsensusState;
 use ibc::ics02_client::client_state::AnyClientState;
 use ibc::ics02_client::context::ClientReader;
 use ibc::ics02_client::height::Height;
 use ibc::ics03_connection::connection::{ConnectionEnd, Counterparty, State};
 use ibc::ics03_connection::context::ConnectionReader;
+use ibc::ics03_connection::handler::verify::verify_proofs;
 use ibc::ics23_commitment::commitment::CommitmentPrefix;
 use ibc::ics24_host::identifier::{ClientId, ConnectionId};
 use ibc::ics24_host::Path;
@@ -266,8 +266,6 @@ where
         self.verify_connection_proof(conn, expected_conn, proofs)
     }
 
-    /// TODO: replace this function with
-    /// ics03_connection::handler::verify::verify_proofs
     fn verify_connection_proof(
         &self,
         conn: ConnectionEnd,
@@ -277,80 +275,26 @@ where
         let client_state =
             match ConnectionReader::client_state(self, conn.client_id()) {
                 Some(c) => c,
-                None => return Ok(false),
+                None => {
+                    tracing::info!(
+                        "The corresponding client state doesn't exist"
+                    );
+                    return Ok(false);
+                }
             };
-        let height = proofs.height();
-        let consensus_state = match ConnectionReader::client_consensus_state(
+        match verify_proofs(
             self,
-            conn.client_id(),
-            height,
+            Some(client_state),
+            &conn,
+            &expected_conn,
+            &proofs,
         ) {
-            Some(c) => c,
-            None => return Ok(false),
-        };
-
-        let client_def =
-            AnyClient::from_client_type(client_state.client_type());
-        let counterparty = conn.counterparty();
-        let prefix = counterparty.prefix();
-        if client_def
-            .verify_connection_state(
-                &client_state,
-                height,
-                prefix,
-                proofs.object_proof(),
-                counterparty.connection_id(),
-                &expected_conn,
-            )
-            .is_err()
-        {
-            tracing::info!("the proof of the connection is invalid");
-            return Ok(false);
+            Ok(_) => Ok(true),
+            Err(e) => {
+                tracing::info!("Proof verification failed: {}", e);
+                Ok(false)
+            }
         }
-
-        let client_proof = proofs.client_proof().as_ref().ok_or_else(|| {
-            Error::IbcProofError("No proof of client state".to_owned())
-        })?;
-        if client_def
-            .verify_client_full_state(
-                &client_state,
-                height,
-                consensus_state.root(),
-                counterparty.prefix(),
-                counterparty.client_id(),
-                client_proof,
-                &client_state,
-            )
-            .is_err()
-        {
-            tracing::info!("the proof of the client is invalid");
-            return Ok(false);
-        }
-
-        let expected_consensus = match self.host_consensus_state(height) {
-            Some(c) => c,
-            None => return Ok(false),
-        };
-        let consensus_proof = proofs.consensus_proof().ok_or_else(|| {
-            Error::IbcProofError("No proof of consensus state".to_owned())
-        })?;
-        if client_def
-            .verify_client_consensus_state(
-                &client_state,
-                height,
-                counterparty.prefix(),
-                consensus_proof.proof(),
-                counterparty.client_id(),
-                height,
-                &expected_consensus,
-            )
-            .is_err()
-        {
-            tracing::info!("the proof of consensus state is invalid");
-            return Ok(false);
-        }
-
-        Ok(true)
     }
 
     fn connection_end_pre(
@@ -390,7 +334,7 @@ where
 
     fn host_current_height(&self) -> Height {
         // TODO: set the epoch(revision_number)
-        Height::new(0, self.ctx.storage.current_height.0)
+        Height::new(0, self.ctx.storage.get_block_height().0.0)
     }
 
     fn host_oldest_height(&self) -> Height {

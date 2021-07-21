@@ -523,10 +523,17 @@ where
 
 #[cfg(test)]
 mod tests {
+    use std::time::Duration;
+
     use borsh::ser::BorshSerialize;
     use ibc::ics02_client::client_consensus::ConsensusState;
     use ibc::ics02_client::client_state::ClientState;
     use ibc::ics02_client::header::AnyHeader;
+    use ibc::ics03_connection::connection::{
+        ConnectionEnd, Counterparty, State,
+    };
+    use ibc::ics03_connection::version::Version;
+    use ibc::ics24_host::identifier::ConnectionId;
     use ibc::mock::client_state::{MockClientState, MockConsensusState};
     use ibc::mock::header::MockHeader;
     use ibc::Height;
@@ -592,6 +599,17 @@ mod tests {
             .write(&consensus_key, bytes)
             .expect("write failed");
         write_log.commit_tx();
+    }
+
+    fn get_connection_id() -> ConnectionId {
+        ConnectionId::from_str("test_connection")
+            .expect("Creating a connection ID failed")
+    }
+
+    fn get_connection_key() -> Key {
+        let conn_id = get_connection_id();
+        let path = Path::Connections(conn_id).to_string();
+        Key::ibc_key(path).expect("Creating a key for a connection failed")
     }
 
     #[test]
@@ -685,6 +703,84 @@ mod tests {
         // this should return true because state has been stored
         assert!(
             ibc.validate_tx(&tx_data, &keys_changed, &verifiers)
+                .expect("validation failed")
+        );
+    }
+
+    #[test]
+    fn test_init_connection() {
+        let mut storage = TestStorage::default();
+        let mut write_log = WriteLog::default();
+        insert_init_states(&mut write_log);
+        write_log.commit_block(&mut storage).expect("commit failed");
+
+        // insert a initial connection
+        let client_id = get_client_id();
+        let conn_key = get_connection_key();
+        let conn = ConnectionEnd::new(
+            State::Init,
+            client_id,
+            Counterparty::default(),
+            vec![Version::default()],
+            Duration::new(100, 0),
+        );
+        let bytes = conn.encode_vec().expect("encoding failed");
+        write_log.write(&conn_key, bytes).expect("write failed");
+        write_log.commit_tx();
+
+        let tx_code = vec![];
+        let tx_data = vec![];
+        let tx = Tx::new(tx_code, Some(tx_data.clone()));
+        let gas_meter = VpGasMeter::new(0);
+        let ctx = Ctx::new(&storage, &write_log, &tx, gas_meter);
+
+        let mut keys_changed = HashSet::new();
+        keys_changed.insert(get_connection_key());
+
+        let verifiers = HashSet::new();
+
+        let ibc = Ibc { ctx };
+        // this should return true because state has been stored
+        assert!(
+            ibc.validate_tx(&tx_data, &keys_changed, &verifiers)
+                .expect("validation failed")
+        );
+    }
+
+    #[test]
+    fn test_init_connection_fail() {
+        let storage = TestStorage::default();
+        let mut write_log = WriteLog::default();
+
+        // insert a initial connection
+        let client_id = get_client_id();
+        let conn_key = get_connection_key();
+        let conn = ConnectionEnd::new(
+            State::Init,
+            client_id,
+            Counterparty::default(),
+            vec![Version::default()],
+            Duration::new(100, 0),
+        );
+        let bytes = conn.encode_vec().expect("encoding failed");
+        write_log.write(&conn_key, bytes).expect("write failed");
+        write_log.commit_tx();
+
+        let tx_code = vec![];
+        let tx_data = vec![];
+        let tx = Tx::new(tx_code, Some(tx_data.clone()));
+        let gas_meter = VpGasMeter::new(0);
+        let ctx = Ctx::new(&storage, &write_log, &tx, gas_meter);
+
+        let mut keys_changed = HashSet::new();
+        keys_changed.insert(get_connection_key());
+
+        let verifiers = HashSet::new();
+
+        let ibc = Ibc { ctx };
+        // this should return false because no client exists
+        assert!(
+            !ibc.validate_tx(&tx_data, &keys_changed, &verifiers)
                 .expect("validation failed")
         );
     }
