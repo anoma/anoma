@@ -83,7 +83,7 @@ dependencies = [
  "loupe",
  "parity-wasm",
  "pretty_assertions",
- "proptest",
+ "proptest 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "prost 0.8.0",
  "prost-types 0.8.0",
  "pwasm-utils",
@@ -130,7 +130,7 @@ dependencies = [
  "itertools 0.10.1",
  "libc",
  "libp2p",
- "proptest",
+ "proptest 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "prost 0.8.0",
  "prost-types 0.8.0",
  "rand 0.7.3",
@@ -3671,6 +3671,28 @@ dependencies = [
 [[package]]
 name = "proof_of_stake"
 version = "0.1.0"
+dependencies = [
+ "proptest 1.0.0 (git+https://github.com/heliaxdev/proptest?branch=tomas/state-machine)",
+]
+
+[[package]]
+name = "proptest"
+version = "1.0.0"
+source = "git+https://github.com/heliaxdev/proptest?branch=tomas/state-machine#121b0544cc0b4f01132965adc3db2f538498c4cb"
+dependencies = [
+ "bit-set",
+ "bitflags",
+ "byteorder",
+ "lazy_static 1.4.0",
+ "num-traits 0.2.14",
+ "quick-error 2.0.1",
+ "rand 0.8.4",
+ "rand_chacha 0.3.1",
+ "rand_xorshift",
+ "regex-syntax",
+ "rusty-fork",
+ "tempfile",
+]
 
 [[package]]
 name = "proptest"
@@ -5162,8 +5184,7 @@ dependencies = [
 [[package]]
 name = "tracing-futures"
 version = "0.2.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "97d095ae15e245a057c8e8451bab9b3ee1e1f68e9ba2b4fbc18d0ac5237835f2"
+source = "git+https://github.com/tokio-rs/tracing/?branch=v0.1.x#8cc3c51a5be9767c1bf73ef9386f7cc479b1c371"
 dependencies = [
  "pin-project 1.0.7",
  "tracing",
@@ -5172,7 +5193,8 @@ dependencies = [
 [[package]]
 name = "tracing-futures"
 version = "0.2.5"
-source = "git+https://github.com/tokio-rs/tracing/?branch=v0.1.x#8cc3c51a5be9767c1bf73ef9386f7cc479b1c371"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "97d095ae15e245a057c8e8451bab9b3ee1e1f68e9ba2b4fbc18d0ac5237835f2"
 dependencies = [
  "pin-project 1.0.7",
  "tracing",

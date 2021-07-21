@@ -9,3 +9,7 @@ resolver = "2"
 version = "0.1.0"
 
 [dependencies]
+
+[dev-dependencies]
+proptest = {git = "https://github.com/heliaxdev/proptest", branch = "tomas/state-machine"}
+# proptest = {path = "../../proptest/proptest"}
