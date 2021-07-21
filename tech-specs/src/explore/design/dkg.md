@@ -22,8 +22,13 @@ Ferveo library.
 ## Aggregation
 
 At some point, enough validators (meaning their combined weight exceeds
-\\( \frac{2}{3}\\) of the total weight) have their signed message on chain for
-the session with id \\( \tau \\). At this point, the next block proposer can 
-aggregate the messages into a single instance using Ferveo. This is then included
-in the next block. Once this DKG is on the blockchain, it can be used for encryption
-of transactions until the next DKG instance is run.
+\\( \frac{2}{3}\\) of the total weight) have their signed message on chain 
+for the session with id \\( \tau \\). At this point, the next block proposer can 
+aggregate the messages into a single instance using Ferveo. This is then 
+included in the next block. Once this DKG is on the blockchain, it can be 
+used for encryption of transactions until the next DKG instance is run.
+
+When deciding to aggregate the PVSS instances into a single one, we shall 
+consider the instances ranked in terms of the weights of their dealers (in 
+descending order). The topmost dealers constituting enough weight are then 
+chosen and aggregated in their specified order.
