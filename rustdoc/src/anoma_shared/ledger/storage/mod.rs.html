@@ -431,6 +431,24 @@
 <span id="428">428</span>
 <span id="429">429</span>
 <span id="430">430</span>
+<span id="431">431</span>
+<span id="432">432</span>
+<span id="433">433</span>
+<span id="434">434</span>
+<span id="435">435</span>
+<span id="436">436</span>
+<span id="437">437</span>
+<span id="438">438</span>
+<span id="439">439</span>
+<span id="440">440</span>
+<span id="441">441</span>
+<span id="442">442</span>
+<span id="443">443</span>
+<span id="444">444</span>
+<span id="445">445</span>
+<span id="446">446</span>
+<span id="447">447</span>
+<span id="448">448</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Ledger&#39;s state storage with key-value backed store and a merkle tree</span>
 
@@ -445,6 +463,7 @@
 
 <span class="kw">use</span> <span class="ident">sparse_merkle_tree</span>::<span class="ident">default_store</span>::<span class="ident">DefaultStore</span>;
 <span class="kw">use</span> <span class="ident">sparse_merkle_tree</span>::{<span class="ident">SparseMerkleTree</span>, <span class="ident">H256</span>};
+<span class="kw">use</span> <span class="ident">tendermint</span>::<span class="ident">block</span>::<span class="ident">Header</span>;
 <span class="kw">use</span> <span class="ident">thiserror</span>::<span class="ident">Error</span>;
 <span class="kw">use</span> <span class="ident">types</span>::<span class="ident">MerkleTree</span>;
 
@@ -469,10 +488,12 @@
     <span class="kw">pub</span> <span class="ident">db</span>: <span class="ident">D</span>,
     <span class="doccomment">/// The ID of the chain</span>
     <span class="kw">pub</span> <span class="ident">chain_id</span>: <span class="ident">String</span>,
-    <span class="doccomment">/// The storage for the last committed block</span>
+    <span class="doccomment">/// The storage for the current (yet to be committed) block</span>
     <span class="kw">pub</span> <span class="ident">block</span>: <span class="ident">BlockStorage</span><span class="op">&lt;</span><span class="ident">H</span><span class="op">&gt;</span>,
-    <span class="doccomment">/// The height of the current block</span>
-    <span class="kw">pub</span> <span class="ident">current_height</span>: <span class="ident">BlockHeight</span>,
+    <span class="doccomment">/// The latest block header</span>
+    <span class="kw">pub</span> <span class="ident">header</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Header</span><span class="op">&gt;</span>,
+    <span class="doccomment">/// The height of the committed block</span>
+    <span class="kw">pub</span> <span class="ident">last_height</span>: <span class="ident">BlockHeight</span>,
     <span class="doccomment">/// The current established address generator</span>
     <span class="kw">pub</span> <span class="ident">address_gen</span>: <span class="ident">EstablishedAddressGen</span>,
 }
@@ -581,7 +602,7 @@
             <span class="self">self</span>.<span class="ident">block</span>.<span class="ident">hash</span> <span class="op">=</span> <span class="ident">hash</span>;
             <span class="self">self</span>.<span class="ident">block</span>.<span class="ident">height</span> <span class="op">=</span> <span class="ident">height</span>;
             <span class="self">self</span>.<span class="ident">block</span>.<span class="ident">subspaces</span> <span class="op">=</span> <span class="ident">subspaces</span>;
-            <span class="self">self</span>.<span class="ident">current_height</span> <span class="op">=</span> <span class="ident">height</span>;
+            <span class="self">self</span>.<span class="ident">last_height</span> <span class="op">=</span> <span class="ident">height</span>;
             <span class="self">self</span>.<span class="ident">address_gen</span> <span class="op">=</span> <span class="ident">address_gen</span>;
             <span class="ident">tracing</span>::<span class="macro">debug</span><span class="macro">!</span>(<span class="string">&quot;Loaded storage from DB&quot;</span>);
         } <span class="kw">else</span> {
@@ -614,7 +635,8 @@
             <span class="ident">address_gen</span>: <span class="self">self</span>.<span class="ident">address_gen</span>.<span class="ident">clone</span>(),
         };
         <span class="self">self</span>.<span class="ident">db</span>.<span class="ident">write_block</span>(<span class="ident">state</span>)<span class="question-mark">?</span>;
-        <span class="self">self</span>.<span class="ident">current_height</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">block</span>.<span class="ident">height</span>;
+        <span class="self">self</span>.<span class="ident">last_height</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">block</span>.<span class="ident">height</span>;
+        <span class="self">self</span>.<span class="ident">header</span> <span class="op">=</span> <span class="prelude-val">None</span>;
         <span class="prelude-val">Ok</span>(())
     }
 
@@ -666,7 +688,7 @@
             <span class="kw">return</span> <span class="prelude-val">Ok</span>((<span class="prelude-val">Some</span>(<span class="ident">v</span>.<span class="ident">to_vec</span>()), <span class="ident">gas</span> <span class="kw">as</span> <span class="kw">_</span>));
         }
 
-        <span class="kw">match</span> <span class="self">self</span>.<span class="ident">db</span>.<span class="ident">read</span>(<span class="self">self</span>.<span class="ident">current_height</span>, <span class="ident">key</span>)<span class="question-mark">?</span> {
+        <span class="kw">match</span> <span class="self">self</span>.<span class="ident">db</span>.<span class="ident">read</span>(<span class="self">self</span>.<span class="ident">last_height</span>, <span class="ident">key</span>)<span class="question-mark">?</span> {
             <span class="prelude-val">Some</span>(<span class="ident">v</span>) <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">let</span> <span class="ident">gas</span> <span class="op">=</span> <span class="ident">key</span>.<span class="ident">len</span>() <span class="op">+</span> <span class="ident">v</span>.<span class="ident">len</span>();
                 <span class="prelude-val">Ok</span>((<span class="prelude-val">Some</span>(<span class="ident">v</span>), <span class="ident">gas</span> <span class="kw">as</span> <span class="kw">_</span>))
@@ -681,7 +703,7 @@
         <span class="ident">prefix</span>: <span class="kw-2">&amp;</span><span class="ident">Key</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> (<span class="op">&lt;</span><span class="ident">D</span> <span class="kw">as</span> <span class="ident">DBIter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span><span class="op">&gt;</span>::<span class="ident">PrefixIter</span>, <span class="ident">u64</span>) {
         (
-            <span class="self">self</span>.<span class="ident">db</span>.<span class="ident">iter_prefix</span>(<span class="self">self</span>.<span class="ident">current_height</span>, <span class="ident">prefix</span>),
+            <span class="self">self</span>.<span class="ident">db</span>.<span class="ident">iter_prefix</span>(<span class="self">self</span>.<span class="ident">last_height</span>, <span class="ident">prefix</span>),
             <span class="ident">prefix</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="kw">_</span>,
         )
     }
@@ -723,6 +745,14 @@
     <span class="doccomment">/// block header. Hence, we don&#39;t update the tree when this is set.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set_chain_id</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">chain_id</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">chain_id</span> <span class="op">=</span> <span class="ident">chain_id</span>.<span class="ident">to_owned</span>();
+        <span class="prelude-val">Ok</span>(())
+    }
+
+    <span class="doccomment">/// Set the block header.</span>
+    <span class="doccomment">/// The header is not in the Merkle tree as it&#39;s tracked by Tendermint.</span>
+    <span class="doccomment">/// Hence, we don&#39;t update the tree when this is set.</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set_header</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">header</span>: <span class="ident">Header</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+        <span class="self">self</span>.<span class="ident">header</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">header</span>);
         <span class="prelude-val">Ok</span>(())
     }
 
@@ -768,6 +798,11 @@
     <span class="doccomment">/// Get the current (yet to be committed) block hash</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_block_hash</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> (<span class="ident">BlockHash</span>, <span class="ident">u64</span>) {
         (<span class="self">self</span>.<span class="ident">block</span>.<span class="ident">hash</span>.<span class="ident">clone</span>(), <span class="ident">BLOCK_HASH_LENGTH</span> <span class="kw">as</span> <span class="kw">_</span>)
+    }
+
+    <span class="doccomment">/// Get the block header</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_block_header</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> (<span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Header</span><span class="op">&gt;</span>, <span class="ident">u64</span>) {
+        (<span class="self">self</span>.<span class="ident">header</span>.<span class="ident">clone</span>(), <span class="ident">MIN_STORAGE_GAS</span>)
     }
 }
 
@@ -854,7 +889,8 @@
                 <span class="ident">db</span>: <span class="ident">MockDB</span>::<span class="ident">default</span>(),
                 <span class="ident">chain_id</span>,
                 <span class="ident">block</span>,
-                <span class="ident">current_height</span>: <span class="ident">BlockHeight</span>(<span class="number">0</span>),
+                <span class="ident">header</span>: <span class="prelude-val">None</span>,
+                <span class="ident">last_height</span>: <span class="ident">BlockHeight</span>(<span class="number">0</span>),
                 <span class="ident">address_gen</span>: <span class="ident">EstablishedAddressGen</span>::<span class="ident">new</span>(
                     <span class="string">&quot;Test address generator seed&quot;</span>,
                 ),

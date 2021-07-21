@@ -239,8 +239,6 @@
 <span id="236">236</span>
 <span id="237">237</span>
 <span id="238">238</span>
-<span id="239">239</span>
-<span id="240">240</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">protocol</span>;
 <span class="kw">mod</span> <span class="ident">shell</span>;
@@ -320,15 +318,13 @@
             <span class="ident">Request</span>::<span class="ident">BeginBlock</span>(<span class="ident">block</span>) <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">match</span> (
                     <span class="ident">BlockHash</span>::<span class="ident">try_from</span>(<span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="ident">block</span>.<span class="ident">hash</span>),
-                    <span class="ident">BlockHeight</span>::<span class="ident">try_from</span>(
-                        <span class="ident">block</span>.<span class="ident">header</span>.<span class="ident">expect</span>(<span class="string">&quot;missing block&#39;s header&quot;</span>).<span class="ident">height</span>,
-                    ),
+                    <span class="ident">block</span>.<span class="ident">header</span>.<span class="ident">expect</span>(<span class="string">&quot;missing block&#39;s header&quot;</span>).<span class="ident">try_into</span>(),
                 ) {
-                    (<span class="prelude-val">Ok</span>(<span class="ident">hash</span>), <span class="prelude-val">Ok</span>(<span class="ident">height</span>)) <span class="op">=</span><span class="op">&gt;</span> {
-                        <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">begin_block</span>(<span class="ident">hash</span>, <span class="ident">height</span>);
+                    (<span class="prelude-val">Ok</span>(<span class="ident">hash</span>), <span class="prelude-val">Ok</span>(<span class="ident">header</span>)) <span class="op">=</span><span class="op">&gt;</span> {
+                        <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">begin_block</span>(<span class="ident">hash</span>, <span class="ident">header</span>);
                     }
                     (<span class="prelude-val">Ok</span>(<span class="kw">_</span>), <span class="prelude-val">Err</span>(<span class="ident">msg</span>)) <span class="op">=</span><span class="op">&gt;</span> {
-                        <span class="ident">tracing</span>::<span class="macro">error</span><span class="macro">!</span>(<span class="string">&quot;Unexpected block height {}&quot;</span>, <span class="ident">msg</span>);
+                        <span class="ident">tracing</span>::<span class="macro">error</span><span class="macro">!</span>(<span class="string">&quot;Unexpected block header {}&quot;</span>, <span class="ident">msg</span>);
                     }
                     (<span class="ident">err</span> @ <span class="prelude-val">Err</span>(<span class="kw">_</span>), <span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">tracing</span>::<span class="macro">error</span><span class="macro">!</span>(<span class="string">&quot;{:#?}&quot;</span>, <span class="ident">err</span>),
                 };

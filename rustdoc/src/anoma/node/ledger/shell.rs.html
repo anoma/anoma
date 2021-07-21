@@ -338,6 +338,13 @@
 <span id="335">335</span>
 <span id="336">336</span>
 <span id="337">337</span>
+<span id="338">338</span>
+<span id="339">339</span>
+<span id="340">340</span>
+<span id="341">341</span>
+<span id="342">342</span>
+<span id="343">343</span>
+<span id="344">344</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">convert</span>::{<span class="ident">TryFrom</span>, <span class="ident">TryInto</span>};
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">path</span>::<span class="ident">Path</span>;
@@ -353,6 +360,7 @@
 <span class="kw">use</span> <span class="ident">anoma_shared</span>::<span class="ident">types</span>::{<span class="ident">address</span>, <span class="ident">key</span>, <span class="ident">token</span>};
 <span class="kw">use</span> <span class="ident">borsh</span>::<span class="ident">BorshSerialize</span>;
 <span class="kw">use</span> <span class="ident">itertools</span>::<span class="ident">Itertools</span>;
+<span class="kw">use</span> <span class="ident">tendermint</span>::<span class="ident">block</span>::<span class="ident">Header</span>;
 <span class="kw">use</span> <span class="ident">thiserror</span>::<span class="ident">Error</span>;
 <span class="kw">use</span> <span class="ident">tower_abci</span>::{<span class="ident">request</span>, <span class="ident">response</span>};
 
@@ -560,9 +568,15 @@
     }
 
     <span class="doccomment">/// Begin a new block.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">begin_block</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">hash</span>: <span class="ident">BlockHash</span>, <span class="ident">height</span>: <span class="ident">BlockHeight</span>) {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">begin_block</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">hash</span>: <span class="ident">BlockHash</span>, <span class="ident">header</span>: <span class="ident">Header</span>) {
         <span class="self">self</span>.<span class="ident">gas_meter</span>.<span class="ident">reset</span>();
-        <span class="self">self</span>.<span class="ident">storage</span>.<span class="ident">begin_block</span>(<span class="ident">hash</span>, <span class="ident">height</span>).<span class="ident">unwrap</span>();
+        <span class="kw">let</span> <span class="ident">height</span> <span class="op">=</span> <span class="ident">BlockHeight</span>(<span class="ident">header</span>.<span class="ident">height</span>.<span class="ident">into</span>());
+        <span class="self">self</span>.<span class="ident">storage</span>
+            .<span class="ident">begin_block</span>(<span class="ident">hash</span>, <span class="ident">height</span>)
+            .<span class="ident">expect</span>(<span class="string">&quot;BeginBlock shouldn&#39;t fail&quot;</span>);
+        <span class="self">self</span>.<span class="ident">storage</span>
+            .<span class="ident">set_header</span>(<span class="ident">header</span>)
+            .<span class="ident">expect</span>(<span class="string">&quot;Setting a header shouldn&#39;t fail&quot;</span>);
     }
 
     <span class="doccomment">/// Validate and apply a transaction.</span>
@@ -629,7 +643,7 @@
         <span class="ident">tracing</span>::<span class="macro">info</span><span class="macro">!</span>(
             <span class="string">&quot;Committed block hash: {}, height: {}&quot;</span>,
             <span class="ident">root</span>,
-            <span class="self">self</span>.<span class="ident">storage</span>.<span class="ident">current_height</span>,
+            <span class="self">self</span>.<span class="ident">storage</span>.<span class="ident">last_height</span>,
         );
         <span class="ident">response</span>.<span class="ident">data</span> <span class="op">=</span> <span class="ident">root</span>.<span class="number">0</span>;
         <span class="ident">response</span>
