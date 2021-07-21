@@ -162,5 +162,6 @@ mod native_tx_host_env {
     native_host_fn!(tx_get_chain_id(result_ptr: u64));
     native_host_fn!(tx_get_block_height() -> u64);
     native_host_fn!(tx_get_block_hash(result_ptr: u64));
+    native_host_fn!(tx_get_block_epoch() -> u64);
     native_host_fn!(tx_log_string(str_ptr: u64, str_len: u64));
 }

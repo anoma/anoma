@@ -47,6 +47,22 @@ where
     pub ctx: Ctx<'a, DB, H>,
 }
 
+/// Initialize storage in the genesis block.
+pub fn init_genesis_storage<DB, H>(storage: &mut Storage<DB, H>)
+where
+    DB: storage::DB + for<'iter> storage::DBIter<'iter>,
+    H: StorageHasher,
+{
+    // the client counter
+    let path = "clients/counter".to_owned();
+    let key =
+        Key::ibc_key(path).expect("Creating a key for a client counter failed");
+    let value = crate::ledger::storage::types::encode(&0);
+    storage
+        .write(&key, value)
+        .expect("Unable to write the initial client counter");
+}
+
 impl<'a, DB, H> NativeVp for Ibc<'a, DB, H>
 where
     DB: 'static + storage::DB + for<'iter> storage::DBIter<'iter>,
@@ -55,21 +71,6 @@ where
     type Error = Error;
 
     const ADDR: InternalAddress = InternalAddress::Ibc;
-
-    fn init_genesis_storage<D, SH>(storage: &mut Storage<D, SH>)
-    where
-        D: storage::DB + for<'iter> storage::DBIter<'iter>,
-        SH: StorageHasher,
-    {
-        // the client counter
-        let path = "clients/counter".to_owned();
-        let key = Key::ibc_key(path)
-            .expect("Creating a key for a client counter failed");
-        let value = crate::ledger::storage::types::encode(&0);
-        storage
-            .write(&key, value)
-            .expect("Unable to write the initial client counter");
-    }
 
     fn validate_tx(
         &self,

@@ -3,11 +3,14 @@
 //! The current storage tree is:
 //! - `chain_id`
 //! - `height`: the last committed block height
+//! - `epoch_start_height`: block height at which the current epoch started
+//! - `epoch_start_time`: block time at which the current epoch started
 //! - `h`: for each block at height `h`:
 //!   - `tree`: merkle tree
 //!     - `root`: root hash
 //!     - `store`: the tree's store
 //!   - `hash`: block hash
+//!   - `epoch`: block epoch
 //!   - `subspace`: any byte data associated with accounts
 //!   - `address_gen`: established address generator
 
@@ -22,6 +25,7 @@ use anoma_shared::ledger::storage::{
 use anoma_shared::types::storage::{
     BlockHeight, Key, KeySeg, KEY_SEGMENT_SEPARATOR,
 };
+use anoma_shared::types::time::DateTimeUtc;
 use rocksdb::{
     BlockBasedOptions, Direction, FlushOptions, IteratorMode, Options,
     ReadOptions, SliceTransform, WriteBatch, WriteOptions,
@@ -104,6 +108,16 @@ impl DB for RocksDB {
     fn write_block(&mut self, state: BlockState) -> Result<()> {
         let mut batch = WriteBatch::default();
 
+        // Epoch start height and time
+        batch.put(
+            "next_epoch_min_start_height",
+            types::encode(&state.next_epoch_min_start_height),
+        );
+        batch.put(
+            "next_epoch_min_start_time",
+            types::encode(&state.next_epoch_min_start_time),
+        );
+
         let prefix_key = Key::from(state.height.to_db_key());
         // Merkle tree
         {
@@ -135,6 +149,14 @@ impl DB for RocksDB {
             let value = &state.hash;
             batch.put(key.to_string(), types::encode(value));
         }
+        // Block epoch
+        {
+            let key = prefix_key
+                .push(&"epoch".to_owned())
+                .map_err(Error::KeyError)?;
+            let value = &state.epoch;
+            batch.put(key.to_string(), types::encode(value));
+        }
         // SubSpace
         {
             let subspace_prefix = prefix_key
@@ -158,6 +180,7 @@ impl DB for RocksDB {
         self.0
             .write_opt(batch, &write_opts)
             .map_err(|e| Error::DBError(e.into_string()))?;
+
         // Block height - write after everything else is written
         // NOTE for async writes, we need to take care that all previous heights
         // are known when updating this
@@ -196,6 +219,35 @@ impl DB for RocksDB {
             }
             None => return Ok(None),
         }
+
+        // Epoch start height and time
+        let next_epoch_min_start_height: BlockHeight = match self
+            .0
+            .get("next_epoch_min_start_height")
+            .map_err(|e| Error::DBError(e.into_string()))?
+        {
+            Some(bytes) => types::decode(bytes).map_err(Error::CodingError)?,
+            None => {
+                tracing::error!(
+                    "Couldn't load next epoch start height from the DB"
+                );
+                return Ok(None);
+            }
+        };
+        let next_epoch_min_start_time: DateTimeUtc = match self
+            .0
+            .get("next_epoch_min_start_time")
+            .map_err(|e| Error::DBError(e.into_string()))?
+        {
+            Some(bytes) => types::decode(bytes).map_err(Error::CodingError)?,
+            None => {
+                tracing::error!(
+                    "Couldn't load next epoch start time from the DB"
+                );
+                return Ok(None);
+            }
+        };
+
         // Load data at the height
         let prefix = format!("{}/", height.raw());
         let mut read_opts = ReadOptions::default();
@@ -205,6 +257,7 @@ impl DB for RocksDB {
         let mut root = None;
         let mut store = None;
         let mut hash = None;
+        let mut epoch = None;
         let mut address_gen = None;
         let mut subspaces: HashMap<Key, Vec<u8>> = HashMap::new();
         for (key, bytes) in self.0.iterator_opt(
@@ -246,6 +299,11 @@ impl DB for RocksDB {
                             types::decode(bytes).map_err(Error::CodingError)?,
                         )
                     }
+                    "epoch" => {
+                        epoch = Some(
+                            types::decode(bytes).map_err(Error::CodingError)?,
+                        )
+                    }
                     "subspace" => {
                         let key = Key::parse_db_key(path).map_err(|e| {
                             Error::Temporary {
@@ -264,17 +322,24 @@ impl DB for RocksDB {
                 None => unknown_key_error(path)?,
             }
         }
-        match (root, store, hash, address_gen) {
-            (Some(root), Some(store), Some(hash), Some(address_gen)) => {
-                Ok(Some(BlockState {
-                    root,
-                    store,
-                    hash,
-                    height,
-                    subspaces,
-                    address_gen,
-                }))
-            }
+        match (root, store, hash, epoch, address_gen) {
+            (
+                Some(root),
+                Some(store),
+                Some(hash),
+                Some(epoch),
+                Some(address_gen),
+            ) => Ok(Some(BlockState {
+                root,
+                store,
+                hash,
+                height,
+                epoch,
+                next_epoch_min_start_height,
+                next_epoch_min_start_time,
+                subspaces,
+                address_gen,
+            })),
             _ => Err(Error::Temporary {
                 error: "Essential data couldn't be read from the DB"
                     .to_string(),

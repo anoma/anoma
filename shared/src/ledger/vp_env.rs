@@ -9,7 +9,7 @@ use crate::ledger::gas;
 use crate::ledger::gas::VpGasMeter;
 use crate::ledger::storage::write_log::WriteLog;
 use crate::ledger::storage::{self, write_log, Storage, StorageHasher};
-use crate::types::storage::{BlockHash, BlockHeight, Key};
+use crate::types::storage::{BlockHash, BlockHeight, Epoch, Key};
 
 /// These runtime errors will abort VP execution immediately
 #[allow(missing_docs)]
@@ -188,6 +188,21 @@ where
     let (hash, gas) = storage.get_block_hash();
     add_gas(gas_meter, gas)?;
     Ok(hash)
+}
+
+/// Getting the block epoch. The epoch is that of the block to which the
+/// current transaction is being applied.
+pub fn get_block_epoch<DB, H>(
+    gas_meter: &mut VpGasMeter,
+    storage: &Storage<DB, H>,
+) -> Result<Epoch>
+where
+    DB: storage::DB + for<'iter> storage::DBIter<'iter>,
+    H: StorageHasher,
+{
+    let (epoch, gas) = storage.get_block_epoch();
+    add_gas(gas_meter, gas)?;
+    Ok(epoch)
 }
 
 /// Storage prefix iterator. It will try to get an iterator from the storage.

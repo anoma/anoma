@@ -5,6 +5,8 @@
   - [Design](./explore/design/README.md)
     - [Overview](./explore/design/overview.md)
     - [The ledger](./explore/design/ledger.md)
+      - [Parameters](./explore/design/ledger/parameters.md)
+      - [Epochs](./explore/design/ledger/epochs.md)
       - [Accounts](./explore/design/ledger/accounts.md)
       - [Validity predicates](./explore/design/ledger/vp.md)
       - [Transactions](./explore/design/ledger/tx.md)

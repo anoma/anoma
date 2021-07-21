@@ -245,6 +245,8 @@ pub enum InternalAddress {
     PoS,
     /// Inter-blockchain communication
     Ibc,
+    /// Protocol parameters
+    Parameters,
 }
 
 impl Display for InternalAddress {
@@ -255,6 +257,7 @@ impl Display for InternalAddress {
             match self {
                 Self::PoS => "PoS",
                 Self::Ibc => "IBC",
+                Self::Parameters => "Parameters",
             }
         )
     }

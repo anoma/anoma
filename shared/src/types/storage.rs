@@ -1,6 +1,7 @@
 //! Storage types
 use std::convert::{TryFrom, TryInto};
 use std::fmt::Display;
+use std::ops::Add;
 
 use borsh::{BorshDeserialize, BorshSerialize};
 use serde::{Deserialize, Serialize};
@@ -43,6 +44,7 @@ pub const RESERVED_VP_KEY: &str = "?";
 
 /// Height of a block, i.e. the level.
 #[derive(
+    Default,
     Clone,
     Copy,
     BorshSerialize,
@@ -60,6 +62,14 @@ pub struct BlockHeight(pub u64);
 impl Display for BlockHeight {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self.0)
+    }
+}
+
+impl Add<u64> for BlockHeight {
+    type Output = BlockHeight;
+
+    fn add(self, rhs: u64) -> Self::Output {
+        Self(self.0 + rhs)
     }
 }
 
@@ -446,6 +456,43 @@ impl KeySeg for Address {
 
     fn to_db_key(&self) -> DbKeySeg {
         DbKeySeg::AddressSeg(self.clone())
+    }
+}
+
+/// Epoch identifier. Epochs are identified by consecutive numbers.
+#[derive(
+    Clone,
+    Copy,
+    Default,
+    Debug,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    BorshSerialize,
+    BorshDeserialize,
+)]
+pub struct Epoch(pub u64);
+
+impl Display for Epoch {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.0)
+    }
+}
+
+impl Epoch {
+    /// Change to the next epoch
+    pub fn next(&self) -> Self {
+        Self(self.0 + 1)
+    }
+}
+
+impl Add<u64> for Epoch {
+    type Output = Epoch;
+
+    fn add(self, rhs: u64) -> Self::Output {
+        Self(self.0 + rhs)
     }
 }
 

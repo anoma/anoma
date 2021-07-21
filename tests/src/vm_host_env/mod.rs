@@ -203,6 +203,10 @@ mod tests {
             tx_host_env::get_block_hash(),
             env.storage.get_block_hash().0
         );
+        assert_eq!(
+            tx_host_env::get_block_epoch(),
+            env.storage.get_block_epoch().0
+        );
     }
 
     /// An example how to write a VP host environment integration test
@@ -411,6 +415,10 @@ mod tests {
         assert_eq!(
             vp_host_env::get_block_hash(),
             env.storage.get_block_hash().0
+        );
+        assert_eq!(
+            vp_host_env::get_block_epoch(),
+            env.storage.get_block_epoch().0
         );
     }
 

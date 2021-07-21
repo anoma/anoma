@@ -57,7 +57,7 @@ pub mod tx {
     use anoma_shared::types::address::Address;
     use anoma_shared::types::internal::HostEnvResult;
     use anoma_shared::types::storage::{
-        BlockHash, BlockHeight, BLOCK_HASH_LENGTH, CHAIN_ID_LENGTH,
+        BlockHash, BlockHeight, Epoch, BLOCK_HASH_LENGTH, CHAIN_ID_LENGTH,
     };
     pub use borsh::{BorshDeserialize, BorshSerialize};
 
@@ -180,12 +180,12 @@ pub mod tx {
         String::from_utf8(slice.to_vec()).expect("Cannot convert the ID string")
     }
 
-    /// Get the committed block height
+    /// Get height of the current block
     pub fn get_block_height() -> BlockHeight {
         BlockHeight(unsafe { anoma_tx_get_block_height() })
     }
 
-    /// Get a block hash
+    /// Get hash of the current block
     pub fn get_block_hash() -> BlockHash {
         let result = Vec::with_capacity(BLOCK_HASH_LENGTH);
         unsafe {
@@ -195,6 +195,11 @@ pub mod tx {
             slice::from_raw_parts(result.as_ptr(), BLOCK_HASH_LENGTH)
         };
         BlockHash::try_from(slice).expect("Cannot convert the hash")
+    }
+
+    /// Get epoch of the current block
+    pub fn get_block_epoch() -> Epoch {
+        Epoch(unsafe { anoma_tx_get_block_epoch() })
     }
 
     /// Log a string. The message will be printed at the `tracing::Level::Info`.
@@ -264,6 +269,9 @@ pub mod tx {
         // Get the current block hash
         fn anoma_tx_get_block_hash(result_ptr: u64);
 
+        // Get the current block epoch
+        fn anoma_tx_get_block_epoch() -> u64;
+
         // Requires a node running with "Info" log level
         fn anoma_tx_log_string(str_ptr: u64, str_len: u64);
     }
@@ -278,7 +286,7 @@ pub mod vp {
     use anoma_shared::types::internal::HostEnvResult;
     use anoma_shared::types::key::ed25519::{PublicKey, Signature};
     use anoma_shared::types::storage::{
-        BlockHash, BlockHeight, BLOCK_HASH_LENGTH, CHAIN_ID_LENGTH,
+        BlockHash, BlockHeight, Epoch, BLOCK_HASH_LENGTH, CHAIN_ID_LENGTH,
     };
     pub use borsh::{BorshDeserialize, BorshSerialize};
 
@@ -373,7 +381,7 @@ pub mod vp {
         String::from_utf8(slice.to_vec()).expect("Cannot convert the ID string")
     }
 
-    /// Get the committed block height
+    /// Get height of the current block
     pub fn get_block_height() -> BlockHeight {
         BlockHeight(unsafe { anoma_vp_get_block_height() })
     }
@@ -388,6 +396,11 @@ pub mod vp {
             slice::from_raw_parts(result.as_ptr(), BLOCK_HASH_LENGTH)
         };
         BlockHash::try_from(slice).expect("Cannot convert the hash")
+    }
+
+    /// Get epoch of the current block
+    pub fn get_block_epoch() -> Epoch {
+        Epoch(unsafe { anoma_vp_get_block_epoch() })
     }
 
     /// Verify a transaction signature. The signature is expected to have been
@@ -484,6 +497,9 @@ pub mod vp {
 
         // Get the current block hash
         fn anoma_vp_get_block_hash(result_ptr: u64);
+
+        // Get the current block epoch
+        fn anoma_vp_get_block_epoch() -> u64;
 
         // Verify a transaction signature
         fn anoma_vp_verify_tx_signature(

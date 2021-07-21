@@ -29,6 +29,14 @@ where
     pub ctx: Ctx<'a, DB, H>,
 }
 
+/// Initialize storage in the genesis block.
+pub fn init_genesis_storage<DB, H>(_storage: &mut Storage<DB, H>)
+where
+    DB: storage::DB + for<'iter> storage::DBIter<'iter>,
+    H: StorageHasher,
+{
+}
+
 impl<'a, DB, H> NativeVp for PoS<'a, DB, H>
 where
     DB: storage::DB + for<'iter> storage::DBIter<'iter>,
@@ -37,13 +45,6 @@ where
     type Error = Error;
 
     const ADDR: InternalAddress = InternalAddress::PoS;
-
-    fn init_genesis_storage<D, SH>(_storage: &mut Storage<D, SH>)
-    where
-        D: storage::DB + for<'iter> storage::DBIter<'iter>,
-        SH: StorageHasher,
-    {
-    }
 
     fn validate_tx(
         &self,

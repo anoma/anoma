@@ -6,6 +6,7 @@ use std::ops::Bound::{Excluded, Included};
 use super::{BlockState, DBIter, Error, Result, DB};
 use crate::ledger::storage::types::{self, KVBytes, PrefixIterator};
 use crate::types::storage::{BlockHeight, Key, KeySeg, KEY_SEGMENT_SEPARATOR};
+use crate::types::time::DateTimeUtc;
 
 /// An in-memory DB for testing.
 #[derive(Debug)]
@@ -23,6 +24,16 @@ impl DB for MockDB {
     }
 
     fn write_block(&mut self, state: BlockState) -> Result<()> {
+        // Epoch start height and time
+        self.0.insert(
+            "next_epoch_min_start_height".into(),
+            types::encode(&state.next_epoch_min_start_height),
+        );
+        self.0.insert(
+            "next_epoch_min_start_time".into(),
+            types::encode(&state.next_epoch_min_start_time),
+        );
+
         let prefix_key = Key::from(state.height.to_db_key());
         // Merkle tree
         {
@@ -52,6 +63,14 @@ impl DB for MockDB {
                 .push(&"hash".to_owned())
                 .map_err(Error::KeyError)?;
             let value = &state.hash;
+            self.0.insert(key.to_string(), types::encode(value));
+        }
+        // Block epoch
+        {
+            let key = prefix_key
+                .push(&"epoch".to_owned())
+                .map_err(Error::KeyError)?;
+            let value = &state.epoch;
             self.0.insert(key.to_string(), types::encode(value));
         }
         // SubSpace
@@ -97,12 +116,30 @@ impl DB for MockDB {
             }
             None => return Ok(None),
         }
+
+        // Epoch start height and time
+        let next_epoch_min_start_height: BlockHeight = match self
+            .0
+            .get("next_epoch_min_start_height")
+        {
+            Some(bytes) => types::decode(bytes).map_err(Error::CodingError)?,
+            None => return Ok(None),
+        };
+        let next_epoch_min_start_time: DateTimeUtc = match self
+            .0
+            .get("next_epoch_min_start_time")
+        {
+            Some(bytes) => types::decode(bytes).map_err(Error::CodingError)?,
+            None => return Ok(None),
+        };
+
         // Load data at the height
         let prefix = format!("{}/", height.raw());
         let upper_prefix = format!("{}/", height.next_height().raw());
         let mut root = None;
         let mut store = None;
         let mut hash = None;
+        let mut epoch = None;
         let mut address_gen = None;
         let mut subspaces: HashMap<Key, Vec<u8>> = HashMap::new();
         for (path, bytes) in
@@ -135,6 +172,11 @@ impl DB for MockDB {
                             types::decode(bytes).map_err(Error::CodingError)?,
                         )
                     }
+                    "epoch" => {
+                        epoch = Some(
+                            types::decode(bytes).map_err(Error::CodingError)?,
+                        )
+                    }
                     "subspace" => {
                         let key = Key::parse_db_key(path).map_err(|e| {
                             Error::Temporary {
@@ -153,17 +195,24 @@ impl DB for MockDB {
                 None => unknown_key_error(path)?,
             }
         }
-        match (root, store, hash, address_gen) {
-            (Some(root), Some(store), Some(hash), Some(address_gen)) => {
-                Ok(Some(BlockState {
-                    root,
-                    store,
-                    hash,
-                    height,
-                    subspaces,
-                    address_gen,
-                }))
-            }
+        match (root, store, hash, epoch, address_gen) {
+            (
+                Some(root),
+                Some(store),
+                Some(hash),
+                Some(epoch),
+                Some(address_gen),
+            ) => Ok(Some(BlockState {
+                root,
+                store,
+                hash,
+                height,
+                epoch,
+                next_epoch_min_start_height,
+                next_epoch_min_start_time,
+                subspaces,
+                address_gen,
+            })),
             _ => Err(Error::Temporary {
                 error: "Essential data couldn't be read from the DB"
                     .to_string(),

@@ -12,7 +12,8 @@ use anoma_shared::ledger::storage::{
     types, BlockStorage, Storage, StorageHasher,
 };
 use anoma_shared::types::address::EstablishedAddressGen;
-use anoma_shared::types::storage::{BlockHash, BlockHeight, Key};
+use anoma_shared::types::storage::{BlockHash, BlockHeight, Epoch, Key};
+use anoma_shared::types::time::DateTimeUtc;
 use blake2b_rs::{Blake2b, Blake2bBuilder};
 use sparse_merkle_tree::blake2b::Blake2bHasher;
 use sparse_merkle_tree::traits::Hasher;
@@ -28,8 +29,9 @@ pub fn open(db_path: impl AsRef<Path>, chain_id: String) -> PersistentStorage {
     let block = BlockStorage {
         tree: MerkleTree::default(),
         hash: BlockHash::default(),
-        height: BlockHeight(0),
-        subspaces: HashMap::new(),
+        height: BlockHeight::default(),
+        epoch: Epoch::default(),
+        subspaces: HashMap::default(),
     };
     PersistentStorage {
         db: rocksdb::open(db_path).expect("cannot open the DB"),
@@ -37,6 +39,9 @@ pub fn open(db_path: impl AsRef<Path>, chain_id: String) -> PersistentStorage {
         block,
         header: None,
         last_height: BlockHeight(0),
+        current_epoch: Epoch::default(),
+        next_epoch_min_start_height: BlockHeight::default(),
+        next_epoch_min_start_time: DateTimeUtc::now(),
         address_gen: EstablishedAddressGen::new(
             "Privacy is a function of liberty.",
         ),

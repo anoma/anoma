@@ -2,12 +2,13 @@ use std::convert::{TryFrom, TryInto};
 use std::path::Path;
 
 use anoma_shared::ledger::gas::{self, BlockGasMeter};
-use anoma_shared::ledger::native_vp;
 use anoma_shared::ledger::storage::write_log::WriteLog;
+use anoma_shared::ledger::{ibc, parameters, pos};
 use anoma_shared::proto::{self, Tx};
 use anoma_shared::types::address::Address;
 use anoma_shared::types::key::ed25519::PublicKey;
 use anoma_shared::types::storage::{BlockHash, BlockHeight, Key};
+use anoma_shared::types::time::{DateTime, DateTimeUtc, TimeZone, Utc};
 use anoma_shared::types::token::Amount;
 use anoma_shared::types::{address, key, token};
 use borsh::BorshSerialize;
@@ -17,7 +18,7 @@ use thiserror::Error;
 use tower_abci::{request, response};
 
 use crate::node::ledger::{protocol, storage, tendermint_node};
-use crate::{config, wallet};
+use crate::{config, genesis, wallet};
 
 #[derive(Error, Debug)]
 pub enum Error {
@@ -98,6 +99,7 @@ impl Shell {
                 current_chain_id, init.chain_id
             )));
         }
+        let genesis = genesis::genesis();
 
         // Initialize because there is no block
         let token_vp =
@@ -178,8 +180,27 @@ impl Shell {
             .write(&Key::validity_predicate(&matchmaker), user_vp.to_vec())
             .expect("Unable to write matchmaker VP");
 
-        // TODO pass in the genesis object
-        native_vp::init_genesis_storage(&mut self.storage);
+        pos::init_genesis_storage(&mut self.storage);
+        ibc::init_genesis_storage(&mut self.storage);
+        parameters::init_genesis_storage(
+            &mut self.storage,
+            &genesis.parameters,
+        );
+
+        let ts: tendermint_proto::google::protobuf::Timestamp =
+            init.time.expect("Missing genesis time");
+        let initial_height = init
+            .initial_height
+            .try_into()
+            .expect("Unexpected block height");
+        // TODO hacky conversion, depends on https://github.com/informalsystems/tendermint-rs/issues/870
+        let genesis_time: DateTimeUtc =
+            (Utc.timestamp(ts.seconds, ts.nanos as u32)).into();
+
+        self.storage
+            .init_genesis_epoch(initial_height, genesis_time)
+            .expect("Initializing genesis epoch must not fail");
+
         Ok(response)
     }
 
@@ -221,14 +242,20 @@ impl Shell {
 
     /// Begin a new block.
     pub fn begin_block(&mut self, hash: BlockHash, header: Header) {
-        self.gas_meter.reset();
         let height = BlockHeight(header.height.into());
+        let time: DateTime<Utc> = header.time.into();
+        let time: DateTimeUtc = time.into();
+
+        self.gas_meter.reset();
         self.storage
             .begin_block(hash, height)
             .expect("BeginBlock shouldn't fail");
         self.storage
             .set_header(header)
             .expect("Setting a header shouldn't fail");
+        self.storage
+            .update_epoch(height, time)
+            .expect("Must be able to update epoch");
     }
 
     /// Validate and apply a transaction.

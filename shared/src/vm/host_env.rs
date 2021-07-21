@@ -1272,6 +1272,21 @@ where
     tx_add_gas(env, gas)
 }
 
+/// Getting the block epoch function exposed to the wasm VM Tx
+/// environment. The epoch is that of the block to which the current
+/// transaction is being applied.
+pub fn tx_get_block_epoch<MEM, DB, H>(env: &TxEnv<MEM, DB, H>) -> TxResult<u64>
+where
+    MEM: VmMemory,
+    DB: storage::DB + for<'iter> storage::DBIter<'iter>,
+    H: StorageHasher,
+{
+    let storage = unsafe { env.ctx.storage.get() };
+    let (epoch, gas) = storage.get_block_epoch();
+    tx_add_gas(env, gas)?;
+    Ok(epoch.0)
+}
+
 /// Getting the chain ID function exposed to the wasm VM VP environment.
 pub fn vp_get_chain_id<MEM, DB, H, EVAL>(
     env: &VpEnv<MEM, DB, H, EVAL>,
@@ -1331,6 +1346,24 @@ where
         .write_bytes(result_ptr, hash.0)
         .map_err(|e| vp_env::RuntimeError::MemoryError(Box::new(e)))?;
     vp_env::add_gas(gas_meter, gas)
+}
+
+/// Getting the block epoch function exposed to the wasm VM VP
+/// environment. The epoch is that of the block to which the current
+/// transaction is being applied.
+pub fn vp_get_block_epoch<MEM, DB, H, EVAL>(
+    env: &VpEnv<MEM, DB, H, EVAL>,
+) -> vp_env::Result<u64>
+where
+    MEM: VmMemory,
+    DB: storage::DB + for<'iter> storage::DBIter<'iter>,
+    H: StorageHasher,
+    EVAL: VpEvaluator,
+{
+    let gas_meter = unsafe { env.ctx.gas_meter.get() };
+    let storage = unsafe { env.ctx.storage.get() };
+    let epoch = vp_env::get_block_epoch(gas_meter, storage)?;
+    Ok(epoch.0)
 }
 
 /// Verify a transaction signature.

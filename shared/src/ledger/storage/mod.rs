@@ -17,10 +17,13 @@ use types::MerkleTree;
 
 use crate::bytes::ByteBuf;
 use crate::ledger::gas::MIN_STORAGE_GAS;
+use crate::ledger::parameters::{self, EpochDuration};
 use crate::types::address::{Address, EstablishedAddressGen};
 use crate::types::storage::{
-    BlockHash, BlockHeight, Key, BLOCK_HASH_LENGTH, CHAIN_ID_LENGTH,
+    BlockHash, BlockHeight, DbKeySeg, Epoch, Key, BLOCK_HASH_LENGTH,
+    CHAIN_ID_LENGTH,
 };
+use crate::types::time::DateTimeUtc;
 
 /// A result of a function that may fail
 pub type Result<T> = std::result::Result<T, Error>;
@@ -42,6 +45,12 @@ where
     pub header: Option<Header>,
     /// The height of the committed block
     pub last_height: BlockHeight,
+    /// The epoch of the current block
+    pub current_epoch: Epoch,
+    /// Minimum block height at which the next epoch may start
+    pub next_epoch_min_start_height: BlockHeight,
+    /// Minimum block time at which the next epoch may start
+    pub next_epoch_min_start_time: DateTimeUtc,
     /// The current established address generator
     pub address_gen: EstablishedAddressGen,
 }
@@ -55,6 +64,8 @@ pub struct BlockStorage<H: StorageHasher> {
     pub hash: BlockHash,
     /// Height of the block (i.e. the level)
     pub height: BlockHeight,
+    /// Epoch of the block
+    pub epoch: Epoch,
     /// Accounts' subspaces storage for arbitrary key-values
     pub subspaces: HashMap<Key, Vec<u8>>,
 }
@@ -86,6 +97,12 @@ pub struct BlockState {
     pub hash: BlockHash,
     /// Height of the block
     pub height: BlockHeight,
+    /// Epoch of the block
+    pub epoch: Epoch,
+    /// Minimum block height at which the next epoch may start
+    pub next_epoch_min_start_height: BlockHeight,
+    /// Minimum block time at which the next epoch may start
+    pub next_epoch_min_start_time: DateTimeUtc,
     /// Accounts' subspaces storage for arbitrary key-values
     pub subspaces: HashMap<Key, Vec<u8>>,
     /// Established address generator
@@ -142,6 +159,9 @@ where
             store,
             hash,
             height,
+            epoch,
+            next_epoch_min_start_height,
+            next_epoch_min_start_time,
             subspaces,
             address_gen,
         }) = self.db.read_last_block()?
@@ -149,8 +169,12 @@ where
             self.block.tree = MerkleTree(SparseMerkleTree::new(root, store));
             self.block.hash = hash;
             self.block.height = height;
+            self.block.epoch = epoch;
             self.block.subspaces = subspaces;
             self.last_height = height;
+            self.current_epoch = epoch;
+            self.next_epoch_min_start_height = next_epoch_min_start_height;
+            self.next_epoch_min_start_time = next_epoch_min_start_time;
             self.address_gen = address_gen;
             tracing::debug!("Loaded storage from DB");
         } else {
@@ -179,6 +203,9 @@ where
             store: self.block.tree.0.store().clone(),
             hash: self.block.hash.clone(),
             height: self.block.height,
+            epoch: self.block.epoch,
+            next_epoch_min_start_height: self.next_epoch_min_start_height,
+            next_epoch_min_start_time: self.next_epoch_min_start_time,
             subspaces: self.block.subspaces.clone(),
             address_gen: self.address_gen.clone(),
         };
@@ -348,9 +375,85 @@ where
         (self.block.hash.clone(), BLOCK_HASH_LENGTH as _)
     }
 
+    /// Get the current (yet to be committed) block epoch
+    pub fn get_block_epoch(&self) -> (Epoch, u64) {
+        (self.current_epoch, MIN_STORAGE_GAS)
+    }
+
+    /// Initialize the first epoch. The first epoch begins at genesis time.
+    pub fn init_genesis_epoch(
+        &mut self,
+        initial_height: BlockHeight,
+        genesis_time: DateTimeUtc,
+    ) -> Result<()> {
+        let (parameters, _gas) =
+            parameters::read(&self).expect("Couldn't read protocol parameters");
+        let EpochDuration {
+            min_num_of_blocks,
+            min_duration,
+        } = parameters.epoch_duration;
+        self.next_epoch_min_start_height = initial_height + min_num_of_blocks;
+        self.next_epoch_min_start_time = genesis_time + min_duration;
+        self.update_epoch_in_merkle_tree()
+    }
+
     /// Get the block header
     pub fn get_block_header(&self) -> (Option<Header>, u64) {
         (self.header.clone(), MIN_STORAGE_GAS)
+    }
+
+    /// Initialize a new epoch when the current epoch is finished.
+    pub fn update_epoch(
+        &mut self,
+        height: BlockHeight,
+        time: DateTimeUtc,
+    ) -> Result<()> {
+        let (parameters, _gas) =
+            parameters::read(&self).expect("Couldn't read protocol parameters");
+
+        // Check if the current epoch is over
+        if height >= self.next_epoch_min_start_height
+            && time >= self.next_epoch_min_start_time
+        {
+            // Begin a new epoch
+            self.block.epoch = self.block.epoch.next();
+            self.current_epoch = self.current_epoch.next();
+            debug_assert_eq!(self.block.epoch, self.current_epoch);
+            let EpochDuration {
+                min_num_of_blocks,
+                min_duration,
+            } = parameters.epoch_duration;
+            self.next_epoch_min_start_height = height + min_num_of_blocks;
+            self.next_epoch_min_start_time = time + min_duration;
+            tracing::info!("Began a new epoch {}", self.block.epoch);
+        }
+        self.update_epoch_in_merkle_tree()
+    }
+
+    /// Update the merkle tree with epoch data
+    fn update_epoch_in_merkle_tree(&mut self) -> Result<()> {
+        self.update_tree(
+            H::hash_key(&Key {
+                segments: vec![DbKeySeg::StringSeg(
+                    "epoch_start_height".into(),
+                )],
+            }),
+            H::hash_value(&types::encode(&self.next_epoch_min_start_height)),
+        )?;
+        self.update_tree(
+            H::hash_key(&Key {
+                segments: vec![DbKeySeg::StringSeg(
+                    "epoch_start_height".into(),
+                )],
+            }),
+            H::hash_value(&types::encode(&self.next_epoch_min_start_time)),
+        )?;
+        self.update_tree(
+            H::hash_key(&Key {
+                segments: vec![DbKeySeg::StringSeg("current_epoch".into())],
+            }),
+            H::hash_value(&types::encode(&self.current_epoch)),
+        )
     }
 }
 
@@ -430,7 +533,8 @@ pub mod testing {
             let block = BlockStorage {
                 tree,
                 hash: BlockHash::default(),
-                height: BlockHeight(0),
+                height: BlockHeight::default(),
+                epoch: Epoch::default(),
                 subspaces,
             };
             Self {
@@ -439,10 +543,151 @@ pub mod testing {
                 block,
                 header: None,
                 last_height: BlockHeight(0),
+                current_epoch: Epoch::default(),
+                next_epoch_min_start_height: BlockHeight::default(),
+                next_epoch_min_start_time: DateTimeUtc::now(),
                 address_gen: EstablishedAddressGen::new(
                     "Test address generator seed",
                 ),
             }
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use chrono::{TimeZone, Utc};
+    use proptest::prelude::*;
+
+    use super::testing::*;
+    use super::*;
+    use crate::ledger::parameters::Parameters;
+    use crate::types::time::{self, Duration};
+
+    prop_compose! {
+        /// Setup test input data with arbitrary epoch duration, epoch start
+        /// height and time, and a block height and time that are greater than
+        /// the epoch start height and time, and the change to be applied to
+        /// the epoch duration parameters.
+        fn arb_and_epoch_duration_start_and_block()
+        (
+            start_height in 0..1000_u64,
+            start_time in 0..10000_i64,
+            min_num_of_blocks in 1..10_u64,
+            min_duration in 1..100_i64,
+        )
+        (
+            min_num_of_blocks in Just(min_num_of_blocks),
+            min_duration in Just(min_duration),
+            start_height in Just(start_height),
+            start_time in Just(start_time),
+            block_height in start_height + 1..(start_height + 2 * min_num_of_blocks as u64),
+            block_time in start_time + 1..(start_time + 2 * min_duration),
+            // Delta will be applied on the `min_num_of_blocks` parameter
+            min_blocks_delta in -(min_num_of_blocks as i64 - 1)..5,
+            // Delta will be applied on the `min_duration` parameter
+            min_duration_delta in -(min_duration as i64 - 1)..50,
+        ) -> (EpochDuration, BlockHeight, DateTimeUtc, BlockHeight, DateTimeUtc,
+                i64, i64) {
+            let epoch_duration = EpochDuration {
+                min_num_of_blocks,
+                min_duration: Duration::seconds(min_duration).into(),
+            };
+            (epoch_duration,
+                BlockHeight(start_height), Utc.timestamp(start_time, 0).into(),
+                BlockHeight(block_height), Utc.timestamp(block_time, 0).into(),
+                min_blocks_delta, min_duration_delta)
+        }
+    }
+
+    proptest! {
+        /// Test that:
+        /// 1. When the minimum blocks have been created since the epoch
+        ///    start height and minimum time passed since the epoch start time,
+        ///    a new epoch must start.
+        /// 2. When the epoch duration parameters change, the current epoch's
+        ///    duration doesn't change, but the next one does.
+        #[test]
+        fn update_epoch_after_its_duration(
+            (epoch_duration, start_height, start_time, block_height, block_time,
+            min_blocks_delta, min_duration_delta)
+            in arb_and_epoch_duration_start_and_block())
+        {
+            let mut storage = TestStorage {
+                next_epoch_min_start_height:
+                    start_height + epoch_duration.min_num_of_blocks,
+                next_epoch_min_start_time:
+                    start_time + epoch_duration.min_duration,
+                ..Default::default()
+            };
+            let mut parameters = Parameters {
+                epoch_duration: epoch_duration.clone(),
+            };
+            parameters::init_genesis_storage(&mut storage, &parameters);
+
+            let epoch_before = storage.current_epoch;
+            assert_eq!(epoch_before, storage.block.epoch);
+
+            // Try to apply the epoch update
+            storage.update_epoch(block_height, block_time).unwrap();
+
+            // Test for 1.
+            if block_height.0 - start_height.0
+                >= epoch_duration.min_num_of_blocks as u64
+                && time::duration_passed(
+                    block_time,
+                    start_time,
+                    epoch_duration.min_duration,
+                )
+            {
+                assert_eq!(storage.block.epoch, epoch_before.next());
+                assert_eq!(storage.current_epoch, epoch_before.next());
+                assert_eq!(storage.next_epoch_min_start_height,
+                    block_height + epoch_duration.min_num_of_blocks);
+                assert_eq!(storage.next_epoch_min_start_time,
+                    block_time + epoch_duration.min_duration);
+            } else {
+                assert_eq!(storage.block.epoch, epoch_before);
+                assert_eq!(storage.current_epoch, epoch_before);
+            }
+
+            // Update the epoch duration parameters
+            parameters.epoch_duration.min_num_of_blocks =
+                (parameters.epoch_duration.min_num_of_blocks as i64 + min_blocks_delta) as u64;
+            let min_duration: i64 = parameters.epoch_duration.min_duration.0 as _;
+            parameters.epoch_duration.min_duration =
+                Duration::seconds(min_duration + min_duration_delta).into();
+            parameters::update(&mut storage, &parameters).unwrap();
+
+            // Test for 2.
+            let epoch_before = storage.current_epoch;
+            let height_of_update = storage.next_epoch_min_start_height.0 ;
+            let time_of_update = storage.next_epoch_min_start_time;
+            let height_before_update = BlockHeight(height_of_update - 1);
+            let height_of_update = BlockHeight(height_of_update);
+            let time_before_update = time_of_update - Duration::seconds(1);
+
+            // No update should happen before both epoch duration conditions are
+            // satisfied
+            storage.update_epoch(height_before_update, time_before_update).unwrap();
+            assert_eq!(storage.block.epoch, epoch_before);
+            assert_eq!(storage.current_epoch, epoch_before);
+            storage.update_epoch(height_of_update, time_before_update).unwrap();
+            assert_eq!(storage.block.epoch, epoch_before);
+            assert_eq!(storage.current_epoch, epoch_before);
+            storage.update_epoch(height_before_update, time_of_update).unwrap();
+            assert_eq!(storage.block.epoch, epoch_before);
+            assert_eq!(storage.current_epoch, epoch_before);
+
+            // Update should happen at this or after this height and time
+            storage.update_epoch(height_of_update, time_of_update).unwrap();
+            assert_eq!(storage.block.epoch, epoch_before.next());
+            assert_eq!(storage.current_epoch, epoch_before.next());
+            // The next epoch's minimum duration should change
+            assert_eq!(storage.next_epoch_min_start_height,
+                height_of_update + parameters.epoch_duration.min_num_of_blocks);
+            assert_eq!(storage.next_epoch_min_start_time,
+                time_of_update + parameters.epoch_duration.min_duration);
         }
     }
 }

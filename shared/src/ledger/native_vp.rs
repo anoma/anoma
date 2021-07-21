@@ -6,9 +6,6 @@ use std::collections::HashSet;
 use thiserror::Error;
 
 use crate::ledger::gas::VpGasMeter;
-#[cfg(feature = "ibc-vp")]
-use crate::ledger::ibc::Ibc;
-use crate::ledger::pos::PoS;
 use crate::ledger::storage::write_log::WriteLog;
 use crate::ledger::storage::{Storage, StorageHasher};
 use crate::ledger::{storage, vp_env};
@@ -27,31 +24,13 @@ pub enum Error {
 /// Native VP function result
 pub type Result<T> = std::result::Result<T, Error>;
 
-/// Initialize genesis storage for all the [`NativeVp`]s.
-pub fn init_genesis_storage<'a, DB, H>(storage: &mut Storage<DB, H>)
-where
-    DB: 'static + storage::DB + for<'iter> storage::DBIter<'iter>,
-    H: 'static + StorageHasher,
-{
-    PoS::<'a, DB, H>::init_genesis_storage(storage);
-    #[cfg(feature = "ibc-vp")]
-    Ibc::<'a, DB, H>::init_genesis_storage(storage);
-}
-
-/// A native VP module should implement this module and add its initialization
-/// call to [`init_genesis_storage`].
+/// A native VP module should implement its validation logic using this trait.
 pub trait NativeVp {
     /// The address of this VP
     const ADDR: InternalAddress;
 
     /// Error type for the methods' results.
     type Error: std::error::Error;
-
-    /// Initialize storage in the genesis block
-    fn init_genesis_storage<DB, H>(storage: &mut Storage<DB, H>)
-    where
-        DB: storage::DB + for<'iter> storage::DBIter<'iter>,
-        H: StorageHasher;
 
     /// Run the validity predicate
     fn validate_tx(
