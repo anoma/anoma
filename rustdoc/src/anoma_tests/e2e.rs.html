@@ -440,6 +440,55 @@
 <span id="437">437</span>
 <span id="438">438</span>
 <span id="439">439</span>
+<span id="440">440</span>
+<span id="441">441</span>
+<span id="442">442</span>
+<span id="443">443</span>
+<span id="444">444</span>
+<span id="445">445</span>
+<span id="446">446</span>
+<span id="447">447</span>
+<span id="448">448</span>
+<span id="449">449</span>
+<span id="450">450</span>
+<span id="451">451</span>
+<span id="452">452</span>
+<span id="453">453</span>
+<span id="454">454</span>
+<span id="455">455</span>
+<span id="456">456</span>
+<span id="457">457</span>
+<span id="458">458</span>
+<span id="459">459</span>
+<span id="460">460</span>
+<span id="461">461</span>
+<span id="462">462</span>
+<span id="463">463</span>
+<span id="464">464</span>
+<span id="465">465</span>
+<span id="466">466</span>
+<span id="467">467</span>
+<span id="468">468</span>
+<span id="469">469</span>
+<span id="470">470</span>
+<span id="471">471</span>
+<span id="472">472</span>
+<span id="473">473</span>
+<span id="474">474</span>
+<span id="475">475</span>
+<span id="476">476</span>
+<span id="477">477</span>
+<span id="478">478</span>
+<span id="479">479</span>
+<span id="480">480</span>
+<span id="481">481</span>
+<span id="482">482</span>
+<span id="483">483</span>
+<span id="484">484</span>
+<span id="485">485</span>
+<span id="486">486</span>
+<span id="487">487</span>
+<span id="488">488</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! End-to-end tests for Anoma binaries</span>
 
@@ -515,6 +564,55 @@
                     <span class="macro">eyre</span><span class="macro">!</span>(<span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;in command: {}\n\nReason: {}&quot;</span>, <span class="ident">cmd_str</span>, <span class="ident">e</span>))
                 })<span class="question-mark">?</span>;
         }
+
+        <span class="prelude-val">Ok</span>(())
+    }
+
+    <span class="doccomment">/// In this test we:</span>
+    <span class="doccomment">/// 1. Start up the ledger</span>
+    <span class="doccomment">/// 2. Kill the tendermint process</span>
+    <span class="doccomment">/// 3. Check that the node detects this</span>
+    <span class="doccomment">/// 4. Check that the node shuts down</span>
+    <span class="attribute">#[<span class="ident">test</span>]</span>
+    <span class="kw">fn</span> <span class="ident">test_anoma_shuts_down_if_tendermint_dies</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="ident">dir</span> <span class="op">=</span> <span class="ident">setup</span>();
+
+        <span class="kw">let</span> <span class="ident">base_dir</span> <span class="op">=</span> <span class="ident">tempdir</span>().<span class="ident">unwrap</span>();
+        <span class="kw">let</span> <span class="ident">base_dir_arg</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">base_dir</span>.<span class="ident">path</span>().<span class="ident">to_string_lossy</span>();
+
+        <span class="comment">// 1. Run the ledger node</span>
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">cmd</span> <span class="op">=</span> <span class="ident">Command</span>::<span class="ident">cargo_bin</span>(<span class="string">&quot;anoma&quot;</span>)<span class="question-mark">?</span>;
+        <span class="ident">cmd</span>.<span class="ident">current_dir</span>(<span class="kw-2">&amp;</span><span class="ident">dir</span>).<span class="ident">env</span>(<span class="string">&quot;ANOMA_LOG&quot;</span>, <span class="string">&quot;debug&quot;</span>).<span class="ident">args</span>(<span class="kw-2">&amp;</span>[
+            <span class="string">&quot;--base-dir&quot;</span>,
+            <span class="ident">base_dir_arg</span>,
+            <span class="string">&quot;ledger&quot;</span>,
+        ]);
+        <span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot;Running {:?}&quot;</span>, <span class="ident">cmd</span>);
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">session</span> <span class="op">=</span> <span class="ident">spawn_command</span>(<span class="ident">cmd</span>, <span class="prelude-val">Some</span>(<span class="number">20_000</span>))
+            .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="macro">eyre</span><span class="macro">!</span>(<span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">e</span>)))<span class="question-mark">?</span>;
+
+        <span class="ident">session</span>
+            .<span class="ident">exp_string</span>(<span class="string">&quot;Anoma ledger node started&quot;</span>)
+            .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="macro">eyre</span><span class="macro">!</span>(<span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">e</span>)))<span class="question-mark">?</span>;
+
+        <span class="comment">// 2. Kill the tendermint node</span>
+        <span class="ident">std</span>::<span class="ident">thread</span>::<span class="ident">sleep</span>(<span class="ident">std</span>::<span class="ident">time</span>::<span class="ident">Duration</span>::<span class="ident">from_secs</span>(<span class="number">1</span>));
+        <span class="ident">Command</span>::<span class="ident">new</span>(<span class="string">&quot;pkill&quot;</span>)
+            .<span class="ident">args</span>(<span class="kw-2">&amp;</span>[<span class="string">&quot;tendermint&quot;</span>])
+            .<span class="ident">spawn</span>()
+            .<span class="ident">expect</span>(<span class="string">&quot;Test failed&quot;</span>)
+            .<span class="ident">wait</span>()
+            .<span class="ident">expect</span>(<span class="string">&quot;Test failed&quot;</span>);
+
+        <span class="comment">// 3. Check that anoma detects that the tendermint node is dead</span>
+        <span class="ident">session</span>
+            .<span class="ident">exp_string</span>(<span class="string">&quot;Tendermint node shut down unexpectedly.&quot;</span>)
+            .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="macro">eyre</span><span class="macro">!</span>(<span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">e</span>)))<span class="question-mark">?</span>;
+
+        <span class="comment">// 4. Check that the ledger node shuts down</span>
+        <span class="ident">session</span>
+            .<span class="ident">exp_string</span>(<span class="string">&quot;Shutting down Anoma node&quot;</span>)
+            .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="macro">eyre</span><span class="macro">!</span>(<span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">e</span>)))<span class="question-mark">?</span>;
 
         <span class="prelude-val">Ok</span>(())
     }

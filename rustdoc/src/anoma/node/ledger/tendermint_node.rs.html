@@ -204,6 +204,24 @@
 <span id="201">201</span>
 <span id="202">202</span>
 <span id="203">203</span>
+<span id="204">204</span>
+<span id="205">205</span>
+<span id="206">206</span>
+<span id="207">207</span>
+<span id="208">208</span>
+<span id="209">209</span>
+<span id="210">210</span>
+<span id="211">211</span>
+<span id="212">212</span>
+<span id="213">213</span>
+<span id="214">214</span>
+<span id="215">215</span>
+<span id="216">216</span>
+<span id="217">217</span>
+<span id="218">218</span>
+<span id="219">219</span>
+<span id="220">220</span>
+<span id="221">221</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">fs</span>::{<span class="self">self</span>, <span class="ident">File</span>, <span class="ident">OpenOptions</span>};
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">io</span>::{<span class="ident">BufReader</span>, <span class="ident">Write</span>};
@@ -250,7 +268,7 @@
 ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="ident">home_dir_string</span> <span class="op">=</span> <span class="ident">home_dir</span>.<span class="ident">to_string_lossy</span>().<span class="ident">to_string</span>();
 
-    <span class="comment">// init and run a Tendermint node child process</span>
+    <span class="comment">// init and run a tendermint node child process</span>
     <span class="ident">Command</span>::<span class="ident">new</span>(<span class="string">&quot;tendermint&quot;</span>)
         .<span class="ident">args</span>(<span class="kw-2">&amp;</span>[<span class="string">&quot;init&quot;</span>, <span class="string">&quot;--home&quot;</span>, <span class="kw-2">&amp;</span><span class="ident">home_dir_string</span>])
         .<span class="ident">output</span>()
@@ -273,15 +291,16 @@
         ])
         .<span class="ident">spawn</span>()
         .<span class="ident">map_err</span>(<span class="ident">Error</span>::<span class="ident">TendermintStartUp</span>)<span class="question-mark">?</span>;
+    <span class="kw">let</span> <span class="ident">pid</span> <span class="op">=</span> <span class="ident">tendermint_node</span>.<span class="ident">id</span>();
     <span class="ident">tracing</span>::<span class="macro">info</span><span class="macro">!</span>(<span class="string">&quot;Tendermint node started&quot;</span>);
 
-    <span class="ident">kill_on_term_signal</span>(<span class="ident">kill_switch</span>);
+    <span class="comment">// make sure to shut down when receiving a termination signal</span>
+    <span class="ident">kill_on_term_signal</span>(<span class="ident">kill_switch</span>.<span class="ident">clone</span>());
+    <span class="comment">// shut down the anoma node if tendermint unexpectedly stops</span>
+    <span class="ident">monitor_process</span>(<span class="ident">tendermint_node</span>, <span class="ident">kill_switch</span>);
     <span class="kw">if</span> <span class="ident">receiver</span>.<span class="ident">recv</span>().<span class="ident">unwrap</span>() {
-        <span class="ident">tracing</span>::<span class="macro">info</span><span class="macro">!</span>(
-            <span class="string">&quot;Received termination signal, shutting down Tendermint node&quot;</span>
-        );
         <span class="kw">unsafe</span> {
-            <span class="ident">libc</span>::<span class="ident">kill</span>(<span class="ident">tendermint_node</span>.<span class="ident">id</span>() <span class="kw">as</span> <span class="ident">i32</span>, <span class="ident">libc</span>::<span class="ident">SIGTERM</span>);
+            <span class="ident">libc</span>::<span class="ident">kill</span>(<span class="ident">pid</span> <span class="kw">as</span> <span class="ident">i32</span>, <span class="ident">libc</span>::<span class="ident">SIGTERM</span>);
         };
     }
     <span class="prelude-val">Ok</span>(())
@@ -295,10 +314,27 @@
             .<span class="ident">expect</span>(<span class="string">&quot;Failed to creat OS signal handlers&quot;</span>);
         <span class="kw">for</span> <span class="ident">sig</span> <span class="kw">in</span> <span class="ident">signals</span>.<span class="ident">forever</span>() {
             <span class="kw">if</span> <span class="ident">TERM_SIGNALS</span>.<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">sig</span>) {
+                <span class="ident">tracing</span>::<span class="macro">info</span><span class="macro">!</span>(
+                    <span class="string">&quot;Received termination signal, shutting down Tendermint \
+                     node&quot;</span>
+                );
                 <span class="ident">kill_switch</span>.<span class="ident">send</span>(<span class="bool-val">true</span>).<span class="ident">unwrap</span>();
                 <span class="kw">break</span>;
             }
         }
+    });
+}
+
+<span class="doccomment">/// Monitors the tendermint node. If it shuts down, this detects it and</span>
+<span class="doccomment">/// shuts down the anoma node</span>
+<span class="kw">fn</span> <span class="ident">monitor_process</span>(
+    <span class="kw-2">mut</span> <span class="ident">process</span>: <span class="ident">std</span>::<span class="ident">process</span>::<span class="ident">Child</span>,
+    <span class="ident">kill_switch</span>: <span class="ident">Sender</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span>,
+) {
+    <span class="ident">std</span>::<span class="ident">thread</span>::<span class="ident">spawn</span>(<span class="kw">move</span> <span class="op">|</span><span class="op">|</span> {
+        <span class="ident">process</span>.<span class="ident">wait</span>().<span class="ident">expect</span>(<span class="string">&quot;Tendermint was not running&quot;</span>);
+        <span class="ident">tracing</span>::<span class="macro">info</span><span class="macro">!</span>(<span class="string">&quot;Tendermint node shut down unexpectedly.&quot;</span>);
+        <span class="ident">kill_switch</span>.<span class="ident">send</span>(<span class="bool-val">true</span>).<span class="ident">unwrap</span>();
     });
 }
 
