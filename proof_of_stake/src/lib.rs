@@ -1,6 +1,7 @@
+use core::convert::TryInto;
+use core::marker::PhantomData;
+use core::{cmp, fmt, ops};
 use std::collections::{BTreeSet, HashMap};
-use std::convert::TryInto;
-use std::{cmp, ops};
 
 type Address = String;
 type Validator = Address;
@@ -16,51 +17,84 @@ type PublicKey = String;
 type VotingPower = u64;
 
 #[derive(Debug, Clone)]
-struct Epoched<Data>
+struct Epoched<Data, Offset>
 where
     Data: Clone,
+    Offset: EpochOffset,
 {
     /// The epoch in which this data was last updated
     last_update: Epoch,
     data: Vec<Option<Data>>,
+    offset: PhantomData<Offset>,
 }
 
 #[derive(Debug, Clone)]
-struct EpochedDelta<Data>
+struct EpochedDelta<Data, Offset>
 where
     Data: Copy + ops::Add<Output = Data>,
+    Offset: EpochOffset,
 {
     /// The epoch in which this data was last updated
     last_update: Epoch,
     data: Vec<Option<Data>>,
+    offset: PhantomData<Offset>,
 }
 
 /// Which offset should be used to set data. The value is read from
 /// [`PosParams`].
-#[derive(Debug, Clone)]
-pub enum EpochOffset {
-    PipelineLen,
-    UnbondingLen,
+trait EpochOffset: fmt::Debug + Clone {
+    /// Find the value of a given offset from PoS parameters.
+    fn value(params: &PosParams) -> u64;
 }
-
-impl EpochOffset {
-    /// Find the length of a given offset from PoS parameters.
-    pub fn length(&self, params: &PosParams) -> u64 {
-        match self {
-            EpochOffset::PipelineLen => params.pipeline_len,
-            EpochOffset::UnbondingLen => params.unbonding_len,
-        }
+#[derive(Debug, Clone)]
+struct OffsetPipelineLen;
+impl EpochOffset for OffsetPipelineLen {
+    fn value(params: &PosParams) -> u64 {
+        params.pipeline_len
+    }
+}
+#[derive(Debug, Clone)]
+struct OffsetUnboundingLen;
+impl EpochOffset for OffsetUnboundingLen {
+    fn value(params: &PosParams) -> u64 {
+        params.unbonding_len
     }
 }
 
-impl<Data> Epoched<Data>
+impl<Data, Offset> Epoched<Data, Offset>
 where
-    Data: Clone,
+    Data: fmt::Debug + Clone,
+    Offset: EpochOffset,
 {
+    /// Initialize new epoched data. Sets the head to the given value.
+    /// This should only be used at genesis.
+    pub fn init_at_genesis(value: Data, epoch: Epoch) -> Self {
+        Self {
+            last_update: epoch,
+            data: vec![Some(value)],
+            offset: PhantomData,
+        }
+    }
+
+    /// Initialize new data at the data's epoch offset.
+    pub fn init(value: Data, epoch: Epoch, params: &PosParams) -> Self {
+        let offset = Offset::value(params);
+        let mut data = vec![];
+        for ix in 0..offset {
+            data.push(None);
+        }
+        data.push(Some(value));
+        Self {
+            last_update: epoch,
+            data,
+            offset: PhantomData,
+        }
+    }
+
     /// Find the value for the given epoch.
-    pub fn get(&self, epoch: Epoch, params: &PosParams) -> Option<&Data> {
+    pub fn get(&self, epoch: Epoch) -> Option<&Data> {
         let offset = (epoch - self.last_update) as usize;
-        let mut index = cmp::max(cmp::min(offset, self.data.len()), 0);
+        let mut index = cmp::min(offset, self.data.len());
         loop {
             if let Some(result @ Some(_)) = self.data.get(index) {
                 return result.as_ref();
@@ -73,55 +107,20 @@ where
         }
     }
 
-    /// Initialize new epoched data. Sets the head to the given value.
-    /// This should only be used at genesis.
-    pub fn init_at_genesis(value: Data, epoch: Epoch) -> Self {
-        Self {
-            last_update: epoch,
-            data: vec![Some(value)],
-        }
-    }
-
-    /// Initialize new data at the given epoch offset.
-    pub fn init(
-        value: Data,
-        epoch: Epoch,
-        offset: EpochOffset,
-        params: &PosParams,
-    ) -> Self {
-        let offset_len = offset.length(params);
-        let mut data = vec![];
-        for ix in 0..offset_len {
-            data.push(None);
-        }
-        data.push(Some(value));
-        Self {
-            last_update: epoch,
-            data,
-        }
-    }
-
-    /// Update the value at the given offset.
-    pub fn update(
-        &mut self,
-        value: Data,
-        epoch: Epoch,
-        offset: EpochOffset,
-        params: &PosParams,
-    ) {
+    /// Update the value at the data's epoch offset.
+    pub fn update(&mut self, value: Data, epoch: Epoch, params: &PosParams) {
         debug_assert!(
             epoch >= self.last_update,
             "The current epoch must be greater than or equal to the last \
              update"
         );
-        let offset_len = offset.length(params);
-        let offset = offset_len as usize;
+        let offset = Offset::value(params) as usize;
         let last_update = self.last_update;
         let shift = cmp::min((epoch - last_update) as usize, offset);
 
         // Resize the data if needed
-        if self.data.len() < offset {
-            self.data.resize_with(offset, Default::default);
+        if self.data.len() < offset + 1 {
+            self.data.resize_with(offset + 1, Default::default);
         }
 
         if shift != 0 {
@@ -146,14 +145,40 @@ where
     }
 }
 
-impl<Data> EpochedDelta<Data>
+impl<Data, Offset> EpochedDelta<Data, Offset>
 where
     Data: Copy + ops::Add<Output = Data>,
+    Offset: EpochOffset,
 {
+    /// Initialize new epoched delta data. Sets the head to the given value.
+    /// This should only be used at genesis.
+    pub fn init_at_genesis(value: Data, epoch: Epoch) -> Self {
+        Self {
+            last_update: epoch,
+            data: vec![Some(value)],
+            offset: PhantomData,
+        }
+    }
+
+    /// Initialize new data at the data's epoch offset.
+    pub fn init(value: Data, epoch: Epoch, params: &PosParams) -> Self {
+        let offset = Offset::value(params) as usize;
+        let mut data = vec![];
+        for ix in 0..offset {
+            data.push(None);
+        }
+        data.push(Some(value));
+        Self {
+            last_update: epoch,
+            data,
+            offset: PhantomData,
+        }
+    }
+
     /// Find the sum of delta values for the given epoch.
-    pub fn get(&self, epoch: Epoch, params: &PosParams) -> Option<Data> {
+    pub fn get(&self, epoch: Epoch) -> Option<Data> {
         let offset = (epoch - self.last_update) as usize;
-        let mut index = cmp::max(cmp::min(offset, self.data.len()), 0);
+        let index = cmp::min(offset, self.data.len());
         let mut sum: Option<Data> = None;
         for i in 0..index + 1 {
             if let Some(next) = self.data.get(i) {
@@ -169,55 +194,20 @@ where
         sum
     }
 
-    /// Initialize new epoched delta data. Sets the head to the given value.
-    /// This should only be used at genesis.
-    pub fn init_at_genesis(value: Data, epoch: Epoch) -> Self {
-        Self {
-            last_update: epoch,
-            data: vec![Some(value)],
-        }
-    }
-
-    /// Initialize new data at the given epoch offset.
-    pub fn init(
-        value: Data,
-        epoch: Epoch,
-        offset: EpochOffset,
-        params: &PosParams,
-    ) -> Self {
-        let offset_len = offset.length(params);
-        let mut data = vec![];
-        for ix in 0..offset_len {
-            data.push(None);
-        }
-        data.push(Some(value));
-        Self {
-            last_update: epoch,
-            data,
-        }
-    }
-
-    /// Update the value at the given offset.
-    pub fn update(
-        &mut self,
-        value: Data,
-        epoch: Epoch,
-        offset: EpochOffset,
-        params: &PosParams,
-    ) {
+    /// Update the value at the data's epoch offset.
+    pub fn update(&mut self, value: Data, epoch: Epoch, params: &PosParams) {
         debug_assert!(
             epoch >= self.last_update,
             "The current epoch must be greater than or equal to the last \
              update"
         );
-        let offset_len = offset.length(params);
-        let offset = offset_len as usize;
+        let offset = Offset::value(params) as usize;
         let last_update = self.last_update;
         let shift = cmp::min((epoch - last_update) as usize, offset);
 
         // Resize the data if needed
-        if self.data.len() < offset {
-            self.data.resize_with(offset, Default::default);
+        if self.data.len() < offset + 1 {
+            self.data.resize_with(offset + 1, Default::default);
         }
 
         if shift != 0 {
@@ -281,10 +271,10 @@ struct ValidatorSet {
     inactive: BTreeSet<WeightedValidator>,
 }
 
-type ValidatorSets = Epoched<ValidatorSet>;
+type ValidatorSets = Epoched<ValidatorSet, OffsetUnboundingLen>;
 
 /// The sum of all active and inactive validators' voting power
-type TotalVotingPower = Epoched<VotingPower>;
+type TotalVotingPower = Epoched<VotingPower, OffsetUnboundingLen>;
 
 trait Pos {
     // TODO consider paraterizing types like so:
@@ -293,27 +283,27 @@ trait Pos {
     fn read_validator_consensus_key(
         &self,
         validator: Address,
-    ) -> Option<Epoched<PublicKey>>;
+    ) -> Option<Epoched<PublicKey, OffsetPipelineLen>>;
 
     fn write_validator_consensus_key(
         &mut self,
         validator: Address,
-        key: Epoched<PublicKey>,
+        key: Epoched<PublicKey, OffsetPipelineLen>,
     );
     fn write_validator_state(
         &mut self,
         validator: Address,
-        key: Epoched<ValidatorState>,
+        key: Epoched<ValidatorState, OffsetPipelineLen>,
     );
     fn write_validator_total_deltas(
         &mut self,
         validator: Address,
-        key: Epoched<i128>,
+        key: Epoched<i128, OffsetUnboundingLen>,
     );
     fn write_validator_voting_power(
         &mut self,
         validator: Address,
-        key: Epoched<u64>,
+        key: Epoched<u64, OffsetUnboundingLen>,
     );
 }
 
@@ -454,8 +444,8 @@ enum ValidatorState {
     // TODO consider adding `Jailed`
 }
 
-type Bonds = HashMap<BondId, Epoched<Bond>>;
-type Unbonds = HashMap<BondId, Epoched<Unbond>>;
+type Bonds = HashMap<BondId, Epoched<Bond, OffsetPipelineLen>>;
+type Unbonds = HashMap<BondId, Epoched<Unbond, OffsetUnboundingLen>>;
 
 #[derive(Debug)]
 pub struct Bond {
@@ -471,6 +461,7 @@ pub struct Unbond {
     deltas: HashMap<(Epoch, Epoch), TokenAmount>,
 }
 
+#[derive(Debug, Clone)]
 pub struct PosParams {
     /// A maximum number of [`ValidatorState::Active`] validators
     max_validator_slots: u64,
@@ -556,8 +547,257 @@ impl Default for PosParams {
 
 #[cfg(test)]
 mod tests {
-    #[test]
-    fn it_works() {
-        assert_eq!(2 + 2, 4);
+    use proptest::prelude::*;
+    // use proptest::prop_state_machine;
+    use proptest::state_machine::{AbstractStateMachine, StateMachineTest};
+
+    use super::*;
+
+    /// Abstract state machine model for [`Epoched`].
+    #[derive(Clone, Debug)]
+    struct AbstractEpoched<Data> {
+        init_at_genesis: bool,
+        params: PosParams,
+        last_update: Epoch,
+        data: HashMap<Epoch, Data>,
+    }
+
+    #[derive(Clone, Debug)]
+    enum EpochedTransition<Data> {
+        Get(Epoch),
+        Update(Data, Epoch),
+    }
+
+    /// Abstract state machine implementation for [`Epoched`].
+    struct EpochedStateMachine<Offset: EpochOffset> {
+        phantom: PhantomData<Offset>,
+    }
+    impl<Offset> AbstractStateMachine for EpochedStateMachine<Offset>
+    where
+        Offset: EpochOffset,
+    {
+        type State = AbstractEpoched<u64>;
+        type Transition = EpochedTransition<u64>;
+
+        fn init_state() -> BoxedStrategy<Self::State> {
+            prop_oneof![
+                // Initialized at genesis
+                (arb_pos_params(), 0_u64..1_000_000, any::<u64>()).prop_map(
+                    |(params, epoch, initial)| {
+                        let mut data = HashMap::default();
+                        data.insert(epoch, initial);
+                        AbstractEpoched {
+                            init_at_genesis: true,
+                            params,
+                            last_update: epoch,
+                            data,
+                        }
+                    }
+                ),
+                // Initialized after genesis
+                (arb_pos_params(), 0_u64..1_000_000, any::<u64>()).prop_map(
+                    |(params, epoch, initial)| {
+                        let offset = Offset::value(&params);
+                        let mut data = HashMap::default();
+                        data.insert(epoch + offset, initial);
+                        AbstractEpoched {
+                            init_at_genesis: false,
+                            params,
+                            last_update: epoch,
+                            data,
+                        }
+                    }
+                ),
+            ]
+            .boxed()
+        }
+
+        fn transitions(state: &Self::State) -> BoxedStrategy<Self::Transition> {
+            let offset = Offset::value(&state.params);
+            prop_oneof![
+                (state.last_update..state.last_update + 4 * offset)
+                    .prop_map(EpochedTransition::Get),
+                (
+                    any::<u64>(),
+                    // Update's epoch may not be lower than the last_update
+                    state.last_update..state.last_update + 10,
+                )
+                    .prop_map(|(value, epoch)| {
+                        EpochedTransition::Update(value, epoch)
+                    })
+            ]
+            .boxed()
+        }
+
+        fn apply_abstract(
+            mut state: Self::State,
+            transition: &Self::Transition,
+        ) -> Self::State {
+            match transition {
+                EpochedTransition::Get(_epoch) => {
+                    // no side effects
+                }
+                EpochedTransition::Update(value, epoch) => {
+                    let offset = Offset::value(&state.params);
+                    state.last_update = *epoch;
+                    state.data.insert(epoch + offset, *value);
+                }
+            }
+            state
+        }
+    }
+
+    impl<Offset> StateMachineTest for EpochedStateMachine<Offset>
+    where
+        Offset: EpochOffset,
+    {
+        type Abstract = Self;
+        type ConcreteState = (PosParams, Epoched<u64, Offset>);
+
+        fn init_test(
+            initial_state: <Self::Abstract as AbstractStateMachine>::State,
+        ) -> Self::ConcreteState {
+            assert!(initial_state.data.len() == 1);
+            let data = if initial_state.init_at_genesis {
+                let genesis_epoch = initial_state.last_update;
+                let value = initial_state.data.get(&genesis_epoch).unwrap();
+                Epoched::init_at_genesis(*value, genesis_epoch)
+            } else {
+                let (key, value) = initial_state.data.iter().next().unwrap();
+                let data = Epoched::init(
+                    *value,
+                    initial_state.last_update,
+                    &initial_state.params,
+                );
+                assert_eq!(
+                    Some(*value),
+                    data.data[(key - initial_state.last_update) as usize]
+                );
+                data
+            };
+            (initial_state.params, data)
+        }
+
+        fn apply_concrete(
+            (params, mut data): Self::ConcreteState,
+            transition: &<Self as AbstractStateMachine>::Transition,
+        ) -> Self::ConcreteState {
+            let offset = Offset::value(&params);
+            match transition {
+                EpochedTransition::Get(epoch) => {
+                    let value = data.get(*epoch);
+                    // Post-conditions
+                    let last_update = data.last_update;
+                    match value {
+                        Some(val) => {
+                            // When a value found, it should be the last value
+                            // before or on the upper bound
+                            let upper_bound = cmp::min(
+                                cmp::min(epoch - last_update, offset) as usize
+                                    + 1,
+                                data.data.len(),
+                            );
+                            for i in (0..upper_bound).rev() {
+                                match data.data[i] {
+                                    Some(ref stored_val) => {
+                                        assert_eq!(val, stored_val);
+                                        break;
+                                    }
+                                    None => {
+                                        // The value must be found on or after 0
+                                        // index
+                                        assert_ne!(i, 0);
+                                    }
+                                }
+                            }
+                        }
+                        None => {
+                            // When no value found, there should be no values
+                            // before the upper bound
+                            let upper_bound = cmp::min(
+                                cmp::min(epoch - last_update, offset) as usize
+                                    + 1,
+                                data.data.len(),
+                            );
+                            for i in 0..upper_bound {
+                                assert_eq!(None, data.data[i]);
+                            }
+                        }
+                    }
+                }
+                EpochedTransition::Update(value, epoch) => {
+                    data.update(*value, *epoch, &params);
+                    // TODO: Post-conditions
+                    assert_eq!(data.last_update, *epoch);
+                }
+            }
+            (params, data)
+        }
+
+        fn invariants((params, data): &Self::ConcreteState) {
+            let offset = Offset::value(&params);
+            assert!(data.data.len() <= (offset + 1) as usize);
+        }
+    }
+
+    // TODO the macro doesn't work with the generic param on EpochedStateMachine
+    // prop_state_machine! {
+    //     #[test]
+    //     fn run_epoched_state_machine_with_pipeline_offset(
+    //         sequential EpochedStateMachine::<OffsetPipelineLen> 1..20)
+    // }
+    // prop_state_machine! {
+    //     #[test]
+    //     fn run_epoched_state_machine_with_unbounding_offset(
+    //         sequential EpochedStateMachine::<OffsetUnboundingLen> 1..20)
+    // }
+    type EpochedPipeline = EpochedStateMachine<OffsetPipelineLen>;
+    type EpochedUnbonding = EpochedStateMachine<OffsetUnboundingLen>;
+
+    proptest! {
+
+        #[test]
+        fn run_epoched_state_machine_with_pipeline_offset(
+            (initial_state, transitions) in EpochedPipeline::sequential_strategy(1..20)
+        ) {
+            EpochedPipeline::test_sequential(initial_state, transitions)
+        }
+
+        #[test]
+        fn run_epoched_state_machine_with_unbounding_offset(
+            (initial_state, transitions) in EpochedUnbonding::sequential_strategy(1..20)
+        ) {
+            EpochedUnbonding::test_sequential(initial_state, transitions)
+        }
+    }
+
+    fn arb_pos_params() -> impl Strategy<Value = PosParams> {
+        (
+            10..500_u64,
+            1..10_u64,
+            1..10_000_u64,
+            1..1_000_u64,
+            1..1_000_u64,
+        )
+            .prop_flat_map(
+                |(
+                    max_validator_slots,
+                    pipeline_len,
+                    votes_per_token,
+                    block_proposer_reward,
+                    block_vote_reward,
+                )| {
+                    (pipeline_len + 1..pipeline_len + 10).prop_map(
+                        move |unbonding_len| PosParams {
+                            max_validator_slots,
+                            pipeline_len,
+                            unbonding_len,
+                            votes_per_token,
+                            block_proposer_reward,
+                            block_vote_reward,
+                        },
+                    )
+                },
+            )
     }
 }
