@@ -257,6 +257,21 @@
 <span id="254">254</span>
 <span id="255">255</span>
 <span id="256">256</span>
+<span id="257">257</span>
+<span id="258">258</span>
+<span id="259">259</span>
+<span id="260">260</span>
+<span id="261">261</span>
+<span id="262">262</span>
+<span id="263">263</span>
+<span id="264">264</span>
+<span id="265">265</span>
+<span id="266">266</span>
+<span id="267">267</span>
+<span id="268">268</span>
+<span id="269">269</span>
+<span id="270">270</span>
+<span id="271">271</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Validity predicate environment contains functions that can be called from</span>
 <span class="doccomment">//! inside validity predicates.</span>
@@ -269,7 +284,7 @@
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">ledger</span>::<span class="ident">gas</span>::<span class="ident">VpGasMeter</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">ledger</span>::<span class="ident">storage</span>::<span class="ident">write_log</span>::<span class="ident">WriteLog</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">ledger</span>::<span class="ident">storage</span>::{<span class="self">self</span>, <span class="ident">write_log</span>, <span class="ident">Storage</span>, <span class="ident">StorageHasher</span>};
-<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">types</span>::<span class="ident">storage</span>::{<span class="ident">BlockHash</span>, <span class="ident">BlockHeight</span>, <span class="ident">Key</span>};
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">types</span>::<span class="ident">storage</span>::{<span class="ident">BlockHash</span>, <span class="ident">BlockHeight</span>, <span class="ident">Epoch</span>, <span class="ident">Key</span>};
 
 <span class="doccomment">/// These runtime errors will abort VP execution immediately</span>
 <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">missing_docs</span>)]</span>
@@ -448,6 +463,21 @@
     <span class="kw">let</span> (<span class="ident">hash</span>, <span class="ident">gas</span>) <span class="op">=</span> <span class="ident">storage</span>.<span class="ident">get_block_hash</span>();
     <span class="ident">add_gas</span>(<span class="ident">gas_meter</span>, <span class="ident">gas</span>)<span class="question-mark">?</span>;
     <span class="prelude-val">Ok</span>(<span class="ident">hash</span>)
+}
+
+<span class="doccomment">/// Getting the block epoch. The epoch is that of the block to which the</span>
+<span class="doccomment">/// current transaction is being applied.</span>
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_block_epoch</span><span class="op">&lt;</span><span class="ident">DB</span>, <span class="ident">H</span><span class="op">&gt;</span>(
+    <span class="ident">gas_meter</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">VpGasMeter</span>,
+    <span class="ident">storage</span>: <span class="kw-2">&amp;</span><span class="ident">Storage</span><span class="op">&lt;</span><span class="ident">DB</span>, <span class="ident">H</span><span class="op">&gt;</span>,
+) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Epoch</span><span class="op">&gt;</span>
+<span class="kw">where</span>
+    <span class="ident">DB</span>: <span class="ident">storage</span>::<span class="ident">DB</span> <span class="op">+</span> <span class="kw">for</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span> <span class="ident">storage</span>::<span class="ident">DBIter</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span>,
+    <span class="ident">H</span>: <span class="ident">StorageHasher</span>,
+{
+    <span class="kw">let</span> (<span class="ident">epoch</span>, <span class="ident">gas</span>) <span class="op">=</span> <span class="ident">storage</span>.<span class="ident">get_block_epoch</span>();
+    <span class="ident">add_gas</span>(<span class="ident">gas_meter</span>, <span class="ident">gas</span>)<span class="question-mark">?</span>;
+    <span class="prelude-val">Ok</span>(<span class="ident">epoch</span>)
 }
 
 <span class="doccomment">/// Storage prefix iterator. It will try to get an iterator from the storage.</span>

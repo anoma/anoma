@@ -250,6 +250,11 @@
 <span id="247">247</span>
 <span id="248">248</span>
 <span id="249">249</span>
+<span id="250">250</span>
+<span id="251">251</span>
+<span id="252">252</span>
+<span id="253">253</span>
+<span id="254">254</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! The storage module handles both the current state in-memory and the stored</span>
 <span class="doccomment">//! state in DB.</span>
@@ -265,7 +270,8 @@
     <span class="ident">types</span>, <span class="ident">BlockStorage</span>, <span class="ident">Storage</span>, <span class="ident">StorageHasher</span>,
 };
 <span class="kw">use</span> <span class="ident">anoma_shared</span>::<span class="ident">types</span>::<span class="ident">address</span>::<span class="ident">EstablishedAddressGen</span>;
-<span class="kw">use</span> <span class="ident">anoma_shared</span>::<span class="ident">types</span>::<span class="ident">storage</span>::{<span class="ident">BlockHash</span>, <span class="ident">BlockHeight</span>, <span class="ident">Key</span>};
+<span class="kw">use</span> <span class="ident">anoma_shared</span>::<span class="ident">types</span>::<span class="ident">storage</span>::{<span class="ident">BlockHash</span>, <span class="ident">BlockHeight</span>, <span class="ident">Epoch</span>, <span class="ident">Key</span>};
+<span class="kw">use</span> <span class="ident">anoma_shared</span>::<span class="ident">types</span>::<span class="ident">time</span>::<span class="ident">DateTimeUtc</span>;
 <span class="kw">use</span> <span class="ident">blake2b_rs</span>::{<span class="ident">Blake2b</span>, <span class="ident">Blake2bBuilder</span>};
 <span class="kw">use</span> <span class="ident">sparse_merkle_tree</span>::<span class="ident">blake2b</span>::<span class="ident">Blake2bHasher</span>;
 <span class="kw">use</span> <span class="ident">sparse_merkle_tree</span>::<span class="ident">traits</span>::<span class="ident">Hasher</span>;
@@ -281,8 +287,9 @@
     <span class="kw">let</span> <span class="ident">block</span> <span class="op">=</span> <span class="ident">BlockStorage</span> {
         <span class="ident">tree</span>: <span class="ident">MerkleTree</span>::<span class="ident">default</span>(),
         <span class="ident">hash</span>: <span class="ident">BlockHash</span>::<span class="ident">default</span>(),
-        <span class="ident">height</span>: <span class="ident">BlockHeight</span>(<span class="number">0</span>),
-        <span class="ident">subspaces</span>: <span class="ident">HashMap</span>::<span class="ident">new</span>(),
+        <span class="ident">height</span>: <span class="ident">BlockHeight</span>::<span class="ident">default</span>(),
+        <span class="ident">epoch</span>: <span class="ident">Epoch</span>::<span class="ident">default</span>(),
+        <span class="ident">subspaces</span>: <span class="ident">HashMap</span>::<span class="ident">default</span>(),
     };
     <span class="ident">PersistentStorage</span> {
         <span class="ident">db</span>: <span class="ident">rocksdb</span>::<span class="ident">open</span>(<span class="ident">db_path</span>).<span class="ident">expect</span>(<span class="string">&quot;cannot open the DB&quot;</span>),
@@ -290,6 +297,9 @@
         <span class="ident">block</span>,
         <span class="ident">header</span>: <span class="prelude-val">None</span>,
         <span class="ident">last_height</span>: <span class="ident">BlockHeight</span>(<span class="number">0</span>),
+        <span class="ident">current_epoch</span>: <span class="ident">Epoch</span>::<span class="ident">default</span>(),
+        <span class="ident">next_epoch_min_start_height</span>: <span class="ident">BlockHeight</span>::<span class="ident">default</span>(),
+        <span class="ident">next_epoch_min_start_time</span>: <span class="ident">DateTimeUtc</span>::<span class="ident">now</span>(),
         <span class="ident">address_gen</span>: <span class="ident">EstablishedAddressGen</span>::<span class="ident">new</span>(
             <span class="string">&quot;Privacy is a function of liberty.&quot;</span>,
         ),

@@ -63,6 +63,7 @@
 <span id="60">60</span>
 <span id="61">61</span>
 <span id="62">62</span>
+<span id="63">63</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Proof-of-Stake integration as a native validity predicate</span>
 
@@ -95,6 +96,14 @@
     <span class="kw">pub</span> <span class="ident">ctx</span>: <span class="ident">Ctx</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">DB</span>, <span class="ident">H</span><span class="op">&gt;</span>,
 }
 
+<span class="doccomment">/// Initialize storage in the genesis block.</span>
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">init_genesis_storage</span><span class="op">&lt;</span><span class="ident">DB</span>, <span class="ident">H</span><span class="op">&gt;</span>(<span class="ident">_storage</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Storage</span><span class="op">&lt;</span><span class="ident">DB</span>, <span class="ident">H</span><span class="op">&gt;</span>)
+<span class="kw">where</span>
+    <span class="ident">DB</span>: <span class="ident">storage</span>::<span class="ident">DB</span> <span class="op">+</span> <span class="kw">for</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span> <span class="ident">storage</span>::<span class="ident">DBIter</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span>,
+    <span class="ident">H</span>: <span class="ident">StorageHasher</span>,
+{
+}
+
 <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">DB</span>, <span class="ident">H</span><span class="op">&gt;</span> <span class="ident">NativeVp</span> <span class="kw">for</span> <span class="ident">PoS</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">DB</span>, <span class="ident">H</span><span class="op">&gt;</span>
 <span class="kw">where</span>
     <span class="ident">DB</span>: <span class="ident">storage</span>::<span class="ident">DB</span> <span class="op">+</span> <span class="kw">for</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span> <span class="ident">storage</span>::<span class="ident">DBIter</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span>,
@@ -103,13 +112,6 @@
     <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">Error</span>;
 
     <span class="kw">const</span> <span class="ident">ADDR</span>: <span class="ident">InternalAddress</span> <span class="op">=</span> <span class="ident">InternalAddress</span>::<span class="ident">PoS</span>;
-
-    <span class="kw">fn</span> <span class="ident">init_genesis_storage</span><span class="op">&lt;</span><span class="ident">D</span>, <span class="ident">SH</span><span class="op">&gt;</span>(<span class="ident">_storage</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Storage</span><span class="op">&lt;</span><span class="ident">D</span>, <span class="ident">SH</span><span class="op">&gt;</span>)
-    <span class="kw">where</span>
-        <span class="ident">D</span>: <span class="ident">storage</span>::<span class="ident">DB</span> <span class="op">+</span> <span class="kw">for</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span> <span class="ident">storage</span>::<span class="ident">DBIter</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span>,
-        <span class="ident">SH</span>: <span class="ident">StorageHasher</span>,
-    {
-    }
 
     <span class="kw">fn</span> <span class="ident">validate_tx</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,

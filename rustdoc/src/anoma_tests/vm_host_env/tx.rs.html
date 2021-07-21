@@ -167,6 +167,7 @@
 <span id="164">164</span>
 <span id="165">165</span>
 <span id="166">166</span>
+<span id="167">167</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">collections</span>::<span class="ident">HashSet</span>;
 
@@ -332,6 +333,7 @@
     <span class="macro">native_host_fn</span><span class="macro">!</span>(<span class="ident">tx_get_chain_id</span>(<span class="ident">result_ptr</span>: <span class="ident">u64</span>));
     <span class="macro">native_host_fn</span><span class="macro">!</span>(<span class="ident">tx_get_block_height</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u64</span>);
     <span class="macro">native_host_fn</span><span class="macro">!</span>(<span class="ident">tx_get_block_hash</span>(<span class="ident">result_ptr</span>: <span class="ident">u64</span>));
+    <span class="macro">native_host_fn</span><span class="macro">!</span>(<span class="ident">tx_get_block_epoch</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u64</span>);
     <span class="macro">native_host_fn</span><span class="macro">!</span>(<span class="ident">tx_log_string</span>(<span class="ident">str_ptr</span>: <span class="ident">u64</span>, <span class="ident">str_len</span>: <span class="ident">u64</span>));
 }
 </pre></div>

@@ -262,27 +262,6 @@
 <span id="259">259</span>
 <span id="260">260</span>
 <span id="261">261</span>
-<span id="262">262</span>
-<span id="263">263</span>
-<span id="264">264</span>
-<span id="265">265</span>
-<span id="266">266</span>
-<span id="267">267</span>
-<span id="268">268</span>
-<span id="269">269</span>
-<span id="270">270</span>
-<span id="271">271</span>
-<span id="272">272</span>
-<span id="273">273</span>
-<span id="274">274</span>
-<span id="275">275</span>
-<span id="276">276</span>
-<span id="277">277</span>
-<span id="278">278</span>
-<span id="279">279</span>
-<span id="280">280</span>
-<span id="281">281</span>
-<span id="282">282</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Native validity predicate interface associated with internal accounts such</span>
 <span class="doccomment">//! as the PoS and IBC modules.</span>
@@ -292,9 +271,6 @@
 <span class="kw">use</span> <span class="ident">thiserror</span>::<span class="ident">Error</span>;
 
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">ledger</span>::<span class="ident">gas</span>::<span class="ident">VpGasMeter</span>;
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ibc-vp&quot;</span>)]</span>
-<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">ledger</span>::<span class="ident">ibc</span>::<span class="ident">Ibc</span>;
-<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">ledger</span>::<span class="ident">pos</span>::<span class="ident">PoS</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">ledger</span>::<span class="ident">storage</span>::<span class="ident">write_log</span>::<span class="ident">WriteLog</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">ledger</span>::<span class="ident">storage</span>::{<span class="ident">Storage</span>, <span class="ident">StorageHasher</span>};
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">ledger</span>::{<span class="ident">storage</span>, <span class="ident">vp_env</span>};
@@ -313,31 +289,13 @@
 <span class="doccomment">/// Native VP function result</span>
 <span class="kw">pub</span> <span class="kw">type</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">std</span>::<span class="ident">result</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">Error</span><span class="op">&gt;</span>;
 
-<span class="doccomment">/// Initialize genesis storage for all the [`NativeVp`]s.</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">init_genesis_storage</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">DB</span>, <span class="ident">H</span><span class="op">&gt;</span>(<span class="ident">storage</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Storage</span><span class="op">&lt;</span><span class="ident">DB</span>, <span class="ident">H</span><span class="op">&gt;</span>)
-<span class="kw">where</span>
-    <span class="ident">DB</span>: <span class="lifetime">&#39;static</span> <span class="op">+</span> <span class="ident">storage</span>::<span class="ident">DB</span> <span class="op">+</span> <span class="kw">for</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span> <span class="ident">storage</span>::<span class="ident">DBIter</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span>,
-    <span class="ident">H</span>: <span class="lifetime">&#39;static</span> <span class="op">+</span> <span class="ident">StorageHasher</span>,
-{
-    <span class="ident">PoS</span>::<span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">DB</span>, <span class="ident">H</span><span class="op">&gt;</span>::<span class="ident">init_genesis_storage</span>(<span class="ident">storage</span>);
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ibc-vp&quot;</span>)]</span>
-    <span class="ident">Ibc</span>::<span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">DB</span>, <span class="ident">H</span><span class="op">&gt;</span>::<span class="ident">init_genesis_storage</span>(<span class="ident">storage</span>);
-}
-
-<span class="doccomment">/// A native VP module should implement this module and add its initialization</span>
-<span class="doccomment">/// call to [`init_genesis_storage`].</span>
+<span class="doccomment">/// A native VP module should implement its validation logic using this trait.</span>
 <span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">NativeVp</span> {
     <span class="doccomment">/// The address of this VP</span>
     <span class="kw">const</span> <span class="ident">ADDR</span>: <span class="ident">InternalAddress</span>;
 
     <span class="doccomment">/// Error type for the methods&#39; results.</span>
     <span class="kw">type</span> <span class="ident">Error</span>: <span class="ident">std</span>::<span class="ident">error</span>::<span class="ident">Error</span>;
-
-    <span class="doccomment">/// Initialize storage in the genesis block</span>
-    <span class="kw">fn</span> <span class="ident">init_genesis_storage</span><span class="op">&lt;</span><span class="ident">DB</span>, <span class="ident">H</span><span class="op">&gt;</span>(<span class="ident">storage</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Storage</span><span class="op">&lt;</span><span class="ident">DB</span>, <span class="ident">H</span><span class="op">&gt;</span>)
-    <span class="kw">where</span>
-        <span class="ident">DB</span>: <span class="ident">storage</span>::<span class="ident">DB</span> <span class="op">+</span> <span class="kw">for</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span> <span class="ident">storage</span>::<span class="ident">DBIter</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span>,
-        <span class="ident">H</span>: <span class="ident">StorageHasher</span>;
 
     <span class="doccomment">/// Run the validity predicate</span>
     <span class="kw">fn</span> <span class="ident">validate_tx</span>(

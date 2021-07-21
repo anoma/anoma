@@ -687,6 +687,7 @@
 <span id="684">684</span>
 <span id="685">685</span>
 <span id="686">686</span>
+<span id="687">687</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! IBC integration as a native validity predicate</span>
 
@@ -737,6 +738,22 @@
     <span class="kw">pub</span> <span class="ident">ctx</span>: <span class="ident">Ctx</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">DB</span>, <span class="ident">H</span><span class="op">&gt;</span>,
 }
 
+<span class="doccomment">/// Initialize storage in the genesis block.</span>
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">init_genesis_storage</span><span class="op">&lt;</span><span class="ident">DB</span>, <span class="ident">H</span><span class="op">&gt;</span>(<span class="ident">storage</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Storage</span><span class="op">&lt;</span><span class="ident">DB</span>, <span class="ident">H</span><span class="op">&gt;</span>)
+<span class="kw">where</span>
+    <span class="ident">DB</span>: <span class="ident">storage</span>::<span class="ident">DB</span> <span class="op">+</span> <span class="kw">for</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span> <span class="ident">storage</span>::<span class="ident">DBIter</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span>,
+    <span class="ident">H</span>: <span class="ident">StorageHasher</span>,
+{
+    <span class="comment">// the client counter</span>
+    <span class="kw">let</span> <span class="ident">path</span> <span class="op">=</span> <span class="string">&quot;clients/counter&quot;</span>.<span class="ident">to_owned</span>();
+    <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span>
+        <span class="ident">Key</span>::<span class="ident">ibc_key</span>(<span class="ident">path</span>).<span class="ident">expect</span>(<span class="string">&quot;Creating a key for a client counter failed&quot;</span>);
+    <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="kw">crate</span>::<span class="ident">ledger</span>::<span class="ident">storage</span>::<span class="ident">types</span>::<span class="ident">encode</span>(<span class="kw-2">&amp;</span><span class="number">0</span>);
+    <span class="ident">storage</span>
+        .<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>, <span class="ident">value</span>)
+        .<span class="ident">expect</span>(<span class="string">&quot;Unable to write the initial client counter&quot;</span>);
+}
+
 <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">DB</span>, <span class="ident">H</span><span class="op">&gt;</span> <span class="ident">NativeVp</span> <span class="kw">for</span> <span class="ident">Ibc</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">DB</span>, <span class="ident">H</span><span class="op">&gt;</span>
 <span class="kw">where</span>
     <span class="ident">DB</span>: <span class="lifetime">&#39;static</span> <span class="op">+</span> <span class="ident">storage</span>::<span class="ident">DB</span> <span class="op">+</span> <span class="kw">for</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span> <span class="ident">storage</span>::<span class="ident">DBIter</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span>,
@@ -745,21 +762,6 @@
     <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">Error</span>;
 
     <span class="kw">const</span> <span class="ident">ADDR</span>: <span class="ident">InternalAddress</span> <span class="op">=</span> <span class="ident">InternalAddress</span>::<span class="ident">Ibc</span>;
-
-    <span class="kw">fn</span> <span class="ident">init_genesis_storage</span><span class="op">&lt;</span><span class="ident">D</span>, <span class="ident">SH</span><span class="op">&gt;</span>(<span class="ident">storage</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Storage</span><span class="op">&lt;</span><span class="ident">D</span>, <span class="ident">SH</span><span class="op">&gt;</span>)
-    <span class="kw">where</span>
-        <span class="ident">D</span>: <span class="ident">storage</span>::<span class="ident">DB</span> <span class="op">+</span> <span class="kw">for</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span> <span class="ident">storage</span>::<span class="ident">DBIter</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span>,
-        <span class="ident">SH</span>: <span class="ident">StorageHasher</span>,
-    {
-        <span class="comment">// the client counter</span>
-        <span class="kw">let</span> <span class="ident">path</span> <span class="op">=</span> <span class="string">&quot;clients/counter&quot;</span>.<span class="ident">to_owned</span>();
-        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Key</span>::<span class="ident">ibc_key</span>(<span class="ident">path</span>)
-            .<span class="ident">expect</span>(<span class="string">&quot;Creating a key for a client counter failed&quot;</span>);
-        <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="kw">crate</span>::<span class="ident">ledger</span>::<span class="ident">storage</span>::<span class="ident">types</span>::<span class="ident">encode</span>(<span class="kw-2">&amp;</span><span class="number">0</span>);
-        <span class="ident">storage</span>
-            .<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>, <span class="ident">value</span>)
-            .<span class="ident">expect</span>(<span class="string">&quot;Unable to write the initial client counter&quot;</span>);
-    }
 
     <span class="kw">fn</span> <span class="ident">validate_tx</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,

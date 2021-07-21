@@ -1605,6 +1605,39 @@
 <span id="1602">1602</span>
 <span id="1603">1603</span>
 <span id="1604">1604</span>
+<span id="1605">1605</span>
+<span id="1606">1606</span>
+<span id="1607">1607</span>
+<span id="1608">1608</span>
+<span id="1609">1609</span>
+<span id="1610">1610</span>
+<span id="1611">1611</span>
+<span id="1612">1612</span>
+<span id="1613">1613</span>
+<span id="1614">1614</span>
+<span id="1615">1615</span>
+<span id="1616">1616</span>
+<span id="1617">1617</span>
+<span id="1618">1618</span>
+<span id="1619">1619</span>
+<span id="1620">1620</span>
+<span id="1621">1621</span>
+<span id="1622">1622</span>
+<span id="1623">1623</span>
+<span id="1624">1624</span>
+<span id="1625">1625</span>
+<span id="1626">1626</span>
+<span id="1627">1627</span>
+<span id="1628">1628</span>
+<span id="1629">1629</span>
+<span id="1630">1630</span>
+<span id="1631">1631</span>
+<span id="1632">1632</span>
+<span id="1633">1633</span>
+<span id="1634">1634</span>
+<span id="1635">1635</span>
+<span id="1636">1636</span>
+<span id="1637">1637</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Virtual machine&#39;s host environment exposes functions that may be called from</span>
 <span class="doccomment">//! within a virtual machine.</span>
@@ -2880,6 +2913,21 @@
     <span class="ident">tx_add_gas</span>(<span class="ident">env</span>, <span class="ident">gas</span>)
 }
 
+<span class="doccomment">/// Getting the block epoch function exposed to the wasm VM Tx</span>
+<span class="doccomment">/// environment. The epoch is that of the block to which the current</span>
+<span class="doccomment">/// transaction is being applied.</span>
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">tx_get_block_epoch</span><span class="op">&lt;</span><span class="ident">MEM</span>, <span class="ident">DB</span>, <span class="ident">H</span><span class="op">&gt;</span>(<span class="ident">env</span>: <span class="kw-2">&amp;</span><span class="ident">TxEnv</span><span class="op">&lt;</span><span class="ident">MEM</span>, <span class="ident">DB</span>, <span class="ident">H</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">TxResult</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span>
+<span class="kw">where</span>
+    <span class="ident">MEM</span>: <span class="ident">VmMemory</span>,
+    <span class="ident">DB</span>: <span class="ident">storage</span>::<span class="ident">DB</span> <span class="op">+</span> <span class="kw">for</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span> <span class="ident">storage</span>::<span class="ident">DBIter</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span>,
+    <span class="ident">H</span>: <span class="ident">StorageHasher</span>,
+{
+    <span class="kw">let</span> <span class="ident">storage</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">env</span>.<span class="ident">ctx</span>.<span class="ident">storage</span>.<span class="ident">get</span>() };
+    <span class="kw">let</span> (<span class="ident">epoch</span>, <span class="ident">gas</span>) <span class="op">=</span> <span class="ident">storage</span>.<span class="ident">get_block_epoch</span>();
+    <span class="ident">tx_add_gas</span>(<span class="ident">env</span>, <span class="ident">gas</span>)<span class="question-mark">?</span>;
+    <span class="prelude-val">Ok</span>(<span class="ident">epoch</span>.<span class="number">0</span>)
+}
+
 <span class="doccomment">/// Getting the chain ID function exposed to the wasm VM VP environment.</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">vp_get_chain_id</span><span class="op">&lt;</span><span class="ident">MEM</span>, <span class="ident">DB</span>, <span class="ident">H</span>, <span class="ident">EVAL</span><span class="op">&gt;</span>(
     <span class="ident">env</span>: <span class="kw-2">&amp;</span><span class="ident">VpEnv</span><span class="op">&lt;</span><span class="ident">MEM</span>, <span class="ident">DB</span>, <span class="ident">H</span>, <span class="ident">EVAL</span><span class="op">&gt;</span>,
@@ -2939,6 +2987,24 @@
         .<span class="ident">write_bytes</span>(<span class="ident">result_ptr</span>, <span class="ident">hash</span>.<span class="number">0</span>)
         .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">vp_env</span>::<span class="ident">RuntimeError</span>::<span class="ident">MemoryError</span>(<span class="ident">Box</span>::<span class="ident">new</span>(<span class="ident">e</span>)))<span class="question-mark">?</span>;
     <span class="ident">vp_env</span>::<span class="ident">add_gas</span>(<span class="ident">gas_meter</span>, <span class="ident">gas</span>)
+}
+
+<span class="doccomment">/// Getting the block epoch function exposed to the wasm VM VP</span>
+<span class="doccomment">/// environment. The epoch is that of the block to which the current</span>
+<span class="doccomment">/// transaction is being applied.</span>
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">vp_get_block_epoch</span><span class="op">&lt;</span><span class="ident">MEM</span>, <span class="ident">DB</span>, <span class="ident">H</span>, <span class="ident">EVAL</span><span class="op">&gt;</span>(
+    <span class="ident">env</span>: <span class="kw-2">&amp;</span><span class="ident">VpEnv</span><span class="op">&lt;</span><span class="ident">MEM</span>, <span class="ident">DB</span>, <span class="ident">H</span>, <span class="ident">EVAL</span><span class="op">&gt;</span>,
+) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">vp_env</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span>
+<span class="kw">where</span>
+    <span class="ident">MEM</span>: <span class="ident">VmMemory</span>,
+    <span class="ident">DB</span>: <span class="ident">storage</span>::<span class="ident">DB</span> <span class="op">+</span> <span class="kw">for</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span> <span class="ident">storage</span>::<span class="ident">DBIter</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span>,
+    <span class="ident">H</span>: <span class="ident">StorageHasher</span>,
+    <span class="ident">EVAL</span>: <span class="ident">VpEvaluator</span>,
+{
+    <span class="kw">let</span> <span class="ident">gas_meter</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">env</span>.<span class="ident">ctx</span>.<span class="ident">gas_meter</span>.<span class="ident">get</span>() };
+    <span class="kw">let</span> <span class="ident">storage</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">env</span>.<span class="ident">ctx</span>.<span class="ident">storage</span>.<span class="ident">get</span>() };
+    <span class="kw">let</span> <span class="ident">epoch</span> <span class="op">=</span> <span class="ident">vp_env</span>::<span class="ident">get_block_epoch</span>(<span class="ident">gas_meter</span>, <span class="ident">storage</span>)<span class="question-mark">?</span>;
+    <span class="prelude-val">Ok</span>(<span class="ident">epoch</span>.<span class="number">0</span>)
 }
 
 <span class="doccomment">/// Verify a transaction signature.</span>

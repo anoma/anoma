@@ -583,6 +583,22 @@
 <span id="580">580</span>
 <span id="581">581</span>
 <span id="582">582</span>
+<span id="583">583</span>
+<span id="584">584</span>
+<span id="585">585</span>
+<span id="586">586</span>
+<span id="587">587</span>
+<span id="588">588</span>
+<span id="589">589</span>
+<span id="590">590</span>
+<span id="591">591</span>
+<span id="592">592</span>
+<span id="593">593</span>
+<span id="594">594</span>
+<span id="595">595</span>
+<span id="596">596</span>
+<span id="597">597</span>
+<span id="598">598</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">mem</span>::<span class="ident">ManuallyDrop</span>;
 
@@ -643,7 +659,7 @@
     <span class="kw">use</span> <span class="ident">anoma_shared</span>::<span class="ident">types</span>::<span class="ident">address</span>::<span class="ident">Address</span>;
     <span class="kw">use</span> <span class="ident">anoma_shared</span>::<span class="ident">types</span>::<span class="ident">internal</span>::<span class="ident">HostEnvResult</span>;
     <span class="kw">use</span> <span class="ident">anoma_shared</span>::<span class="ident">types</span>::<span class="ident">storage</span>::{
-        <span class="ident">BlockHash</span>, <span class="ident">BlockHeight</span>, <span class="ident">BLOCK_HASH_LENGTH</span>, <span class="ident">CHAIN_ID_LENGTH</span>,
+        <span class="ident">BlockHash</span>, <span class="ident">BlockHeight</span>, <span class="ident">Epoch</span>, <span class="ident">BLOCK_HASH_LENGTH</span>, <span class="ident">CHAIN_ID_LENGTH</span>,
     };
     <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">borsh</span>::{<span class="ident">BorshDeserialize</span>, <span class="ident">BorshSerialize</span>};
 
@@ -766,12 +782,12 @@
         <span class="ident">String</span>::<span class="ident">from_utf8</span>(<span class="ident">slice</span>.<span class="ident">to_vec</span>()).<span class="ident">expect</span>(<span class="string">&quot;Cannot convert the ID string&quot;</span>)
     }
 
-    <span class="doccomment">/// Get the committed block height</span>
+    <span class="doccomment">/// Get height of the current block</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_block_height</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">BlockHeight</span> {
         <span class="ident">BlockHeight</span>(<span class="kw">unsafe</span> { <span class="ident">anoma_tx_get_block_height</span>() })
     }
 
-    <span class="doccomment">/// Get a block hash</span>
+    <span class="doccomment">/// Get hash of the current block</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_block_hash</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">BlockHash</span> {
         <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="ident">with_capacity</span>(<span class="ident">BLOCK_HASH_LENGTH</span>);
         <span class="kw">unsafe</span> {
@@ -781,6 +797,11 @@
             <span class="ident">slice</span>::<span class="ident">from_raw_parts</span>(<span class="ident">result</span>.<span class="ident">as_ptr</span>(), <span class="ident">BLOCK_HASH_LENGTH</span>)
         };
         <span class="ident">BlockHash</span>::<span class="ident">try_from</span>(<span class="ident">slice</span>).<span class="ident">expect</span>(<span class="string">&quot;Cannot convert the hash&quot;</span>)
+    }
+
+    <span class="doccomment">/// Get epoch of the current block</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_block_epoch</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Epoch</span> {
+        <span class="ident">Epoch</span>(<span class="kw">unsafe</span> { <span class="ident">anoma_tx_get_block_epoch</span>() })
     }
 
     <span class="doccomment">/// Log a string. The message will be printed at the `tracing::Level::Info`.</span>
@@ -850,6 +871,9 @@
         <span class="comment">// Get the current block hash</span>
         <span class="kw">fn</span> <span class="ident">anoma_tx_get_block_hash</span>(<span class="ident">result_ptr</span>: <span class="ident">u64</span>);
 
+        <span class="comment">// Get the current block epoch</span>
+        <span class="kw">fn</span> <span class="ident">anoma_tx_get_block_epoch</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u64</span>;
+
         <span class="comment">// Requires a node running with &quot;Info&quot; log level</span>
         <span class="kw">fn</span> <span class="ident">anoma_tx_log_string</span>(<span class="ident">str_ptr</span>: <span class="ident">u64</span>, <span class="ident">str_len</span>: <span class="ident">u64</span>);
     }
@@ -864,7 +888,7 @@
     <span class="kw">use</span> <span class="ident">anoma_shared</span>::<span class="ident">types</span>::<span class="ident">internal</span>::<span class="ident">HostEnvResult</span>;
     <span class="kw">use</span> <span class="ident">anoma_shared</span>::<span class="ident">types</span>::<span class="ident">key</span>::<span class="ident">ed25519</span>::{<span class="ident">PublicKey</span>, <span class="ident">Signature</span>};
     <span class="kw">use</span> <span class="ident">anoma_shared</span>::<span class="ident">types</span>::<span class="ident">storage</span>::{
-        <span class="ident">BlockHash</span>, <span class="ident">BlockHeight</span>, <span class="ident">BLOCK_HASH_LENGTH</span>, <span class="ident">CHAIN_ID_LENGTH</span>,
+        <span class="ident">BlockHash</span>, <span class="ident">BlockHeight</span>, <span class="ident">Epoch</span>, <span class="ident">BLOCK_HASH_LENGTH</span>, <span class="ident">CHAIN_ID_LENGTH</span>,
     };
     <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">borsh</span>::{<span class="ident">BorshDeserialize</span>, <span class="ident">BorshSerialize</span>};
 
@@ -959,7 +983,7 @@
         <span class="ident">String</span>::<span class="ident">from_utf8</span>(<span class="ident">slice</span>.<span class="ident">to_vec</span>()).<span class="ident">expect</span>(<span class="string">&quot;Cannot convert the ID string&quot;</span>)
     }
 
-    <span class="doccomment">/// Get the committed block height</span>
+    <span class="doccomment">/// Get height of the current block</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_block_height</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">BlockHeight</span> {
         <span class="ident">BlockHeight</span>(<span class="kw">unsafe</span> { <span class="ident">anoma_vp_get_block_height</span>() })
     }
@@ -974,6 +998,11 @@
             <span class="ident">slice</span>::<span class="ident">from_raw_parts</span>(<span class="ident">result</span>.<span class="ident">as_ptr</span>(), <span class="ident">BLOCK_HASH_LENGTH</span>)
         };
         <span class="ident">BlockHash</span>::<span class="ident">try_from</span>(<span class="ident">slice</span>).<span class="ident">expect</span>(<span class="string">&quot;Cannot convert the hash&quot;</span>)
+    }
+
+    <span class="doccomment">/// Get epoch of the current block</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_block_epoch</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Epoch</span> {
+        <span class="ident">Epoch</span>(<span class="kw">unsafe</span> { <span class="ident">anoma_vp_get_block_epoch</span>() })
     }
 
     <span class="doccomment">/// Verify a transaction signature. The signature is expected to have been</span>
@@ -1070,6 +1099,9 @@
 
         <span class="comment">// Get the current block hash</span>
         <span class="kw">fn</span> <span class="ident">anoma_vp_get_block_hash</span>(<span class="ident">result_ptr</span>: <span class="ident">u64</span>);
+
+        <span class="comment">// Get the current block epoch</span>
+        <span class="kw">fn</span> <span class="ident">anoma_vp_get_block_epoch</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u64</span>;
 
         <span class="comment">// Verify a transaction signature</span>
         <span class="kw">fn</span> <span class="ident">anoma_vp_verify_tx_signature</span>(

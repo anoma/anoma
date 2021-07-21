@@ -390,6 +390,9 @@
 <span id="387">387</span>
 <span id="388">388</span>
 <span id="389">389</span>
+<span id="390">390</span>
+<span id="391">391</span>
+<span id="392">392</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Implements transparent addresses as described in [Accounts</span>
 <span class="doccomment">//! Addresses](tech-specs/src/explore/design/ledger/accounts.md#addresses).</span>
@@ -638,6 +641,8 @@
     <span class="ident">PoS</span>,
     <span class="doccomment">/// Inter-blockchain communication</span>
     <span class="ident">Ibc</span>,
+    <span class="doccomment">/// Protocol parameters</span>
+    <span class="ident">Parameters</span>,
 }
 
 <span class="kw">impl</span> <span class="ident">Display</span> <span class="kw">for</span> <span class="ident">InternalAddress</span> {
@@ -648,6 +653,7 @@
             <span class="kw">match</span> <span class="self">self</span> {
                 <span class="self">Self</span>::<span class="ident">PoS</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;PoS&quot;</span>,
                 <span class="self">Self</span>::<span class="ident">Ibc</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;IBC&quot;</span>,
+                <span class="self">Self</span>::<span class="ident">Parameters</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;Parameters&quot;</span>,
             }
         )
     }

@@ -577,10 +577,58 @@
 <span id="574">574</span>
 <span id="575">575</span>
 <span id="576">576</span>
+<span id="577">577</span>
+<span id="578">578</span>
+<span id="579">579</span>
+<span id="580">580</span>
+<span id="581">581</span>
+<span id="582">582</span>
+<span id="583">583</span>
+<span id="584">584</span>
+<span id="585">585</span>
+<span id="586">586</span>
+<span id="587">587</span>
+<span id="588">588</span>
+<span id="589">589</span>
+<span id="590">590</span>
+<span id="591">591</span>
+<span id="592">592</span>
+<span id="593">593</span>
+<span id="594">594</span>
+<span id="595">595</span>
+<span id="596">596</span>
+<span id="597">597</span>
+<span id="598">598</span>
+<span id="599">599</span>
+<span id="600">600</span>
+<span id="601">601</span>
+<span id="602">602</span>
+<span id="603">603</span>
+<span id="604">604</span>
+<span id="605">605</span>
+<span id="606">606</span>
+<span id="607">607</span>
+<span id="608">608</span>
+<span id="609">609</span>
+<span id="610">610</span>
+<span id="611">611</span>
+<span id="612">612</span>
+<span id="613">613</span>
+<span id="614">614</span>
+<span id="615">615</span>
+<span id="616">616</span>
+<span id="617">617</span>
+<span id="618">618</span>
+<span id="619">619</span>
+<span id="620">620</span>
+<span id="621">621</span>
+<span id="622">622</span>
+<span id="623">623</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Storage types</span>
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">convert</span>::{<span class="ident">TryFrom</span>, <span class="ident">TryInto</span>};
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">fmt</span>::<span class="ident">Display</span>;
+<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">ops</span>::<span class="ident">Add</span>;
 
 <span class="kw">use</span> <span class="ident">borsh</span>::{<span class="ident">BorshDeserialize</span>, <span class="ident">BorshSerialize</span>};
 <span class="kw">use</span> <span class="ident">serde</span>::{<span class="ident">Deserialize</span>, <span class="ident">Serialize</span>};
@@ -623,6 +671,7 @@
 
 <span class="doccomment">/// Height of a block, i.e. the level.</span>
 <span class="attribute">#[<span class="ident">derive</span>(
+    <span class="ident">Default</span>,
     <span class="ident">Clone</span>,
     <span class="ident">Copy</span>,
     <span class="ident">BorshSerialize</span>,
@@ -640,6 +689,14 @@
 <span class="kw">impl</span> <span class="ident">Display</span> <span class="kw">for</span> <span class="ident">BlockHeight</span> {
     <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">std</span>::<span class="ident">fmt</span>::<span class="ident">Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">std</span>::<span class="ident">fmt</span>::<span class="prelude-ty">Result</span> {
         <span class="macro">write</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot;{}&quot;</span>, <span class="self">self</span>.<span class="number">0</span>)
+    }
+}
+
+<span class="kw">impl</span> <span class="ident">Add</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">BlockHeight</span> {
+    <span class="kw">type</span> <span class="ident">Output</span> <span class="op">=</span> <span class="ident">BlockHeight</span>;
+
+    <span class="kw">fn</span> <span class="ident">add</span>(<span class="self">self</span>, <span class="ident">rhs</span>: <span class="ident">u64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span>::<span class="ident">Output</span> {
+        <span class="self">Self</span>(<span class="self">self</span>.<span class="number">0</span> <span class="op">+</span> <span class="ident">rhs</span>)
     }
 }
 
@@ -1026,6 +1083,43 @@
 
     <span class="kw">fn</span> <span class="ident">to_db_key</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">DbKeySeg</span> {
         <span class="ident">DbKeySeg</span>::<span class="ident">AddressSeg</span>(<span class="self">self</span>.<span class="ident">clone</span>())
+    }
+}
+
+<span class="doccomment">/// Epoch identifier. Epochs are identified by consecutive numbers.</span>
+<span class="attribute">#[<span class="ident">derive</span>(
+    <span class="ident">Clone</span>,
+    <span class="ident">Copy</span>,
+    <span class="ident">Default</span>,
+    <span class="ident">Debug</span>,
+    <span class="ident">PartialEq</span>,
+    <span class="ident">Eq</span>,
+    <span class="ident">PartialOrd</span>,
+    <span class="ident">Ord</span>,
+    <span class="ident">Hash</span>,
+    <span class="ident">BorshSerialize</span>,
+    <span class="ident">BorshDeserialize</span>,
+)]</span>
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Epoch</span>(<span class="kw">pub</span> <span class="ident">u64</span>);
+
+<span class="kw">impl</span> <span class="ident">Display</span> <span class="kw">for</span> <span class="ident">Epoch</span> {
+    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">std</span>::<span class="ident">fmt</span>::<span class="ident">Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">std</span>::<span class="ident">fmt</span>::<span class="prelude-ty">Result</span> {
+        <span class="macro">write</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot;{}&quot;</span>, <span class="self">self</span>.<span class="number">0</span>)
+    }
+}
+
+<span class="kw">impl</span> <span class="ident">Epoch</span> {
+    <span class="doccomment">/// Change to the next epoch</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">next</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="self">Self</span>(<span class="self">self</span>.<span class="number">0</span> <span class="op">+</span> <span class="number">1</span>)
+    }
+}
+
+<span class="kw">impl</span> <span class="ident">Add</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Epoch</span> {
+    <span class="kw">type</span> <span class="ident">Output</span> <span class="op">=</span> <span class="ident">Epoch</span>;
+
+    <span class="kw">fn</span> <span class="ident">add</span>(<span class="self">self</span>, <span class="ident">rhs</span>: <span class="ident">u64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span>::<span class="ident">Output</span> {
+        <span class="self">Self</span>(<span class="self">self</span>.<span class="number">0</span> <span class="op">+</span> <span class="ident">rhs</span>)
     }
 }
 

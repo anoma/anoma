@@ -445,6 +445,14 @@
 <span id="442">442</span>
 <span id="443">443</span>
 <span id="444">444</span>
+<span id="445">445</span>
+<span id="446">446</span>
+<span id="447">447</span>
+<span id="448">448</span>
+<span id="449">449</span>
+<span id="450">450</span>
+<span id="451">451</span>
+<span id="452">452</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! VM host environment integration tests.</span>
 <span class="doccomment">//!</span>
@@ -650,6 +658,10 @@
         <span class="macro">assert_eq</span><span class="macro">!</span>(
             <span class="ident">tx_host_env</span>::<span class="ident">get_block_hash</span>(),
             <span class="ident">env</span>.<span class="ident">storage</span>.<span class="ident">get_block_hash</span>().<span class="number">0</span>
+        );
+        <span class="macro">assert_eq</span><span class="macro">!</span>(
+            <span class="ident">tx_host_env</span>::<span class="ident">get_block_epoch</span>(),
+            <span class="ident">env</span>.<span class="ident">storage</span>.<span class="ident">get_block_epoch</span>().<span class="number">0</span>
         );
     }
 
@@ -859,6 +871,10 @@
         <span class="macro">assert_eq</span><span class="macro">!</span>(
             <span class="ident">vp_host_env</span>::<span class="ident">get_block_hash</span>(),
             <span class="ident">env</span>.<span class="ident">storage</span>.<span class="ident">get_block_hash</span>().<span class="number">0</span>
+        );
+        <span class="macro">assert_eq</span><span class="macro">!</span>(
+            <span class="ident">vp_host_env</span>::<span class="ident">get_block_epoch</span>(),
+            <span class="ident">env</span>.<span class="ident">storage</span>.<span class="ident">get_block_epoch</span>().<span class="number">0</span>
         );
     }
 

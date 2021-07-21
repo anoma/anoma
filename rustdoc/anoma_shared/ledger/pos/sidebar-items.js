@@ -1,1 +1,1 @@
-initSidebarItems({"enum":[["Error",""]],"struct":[["PoS","Proof-of-Stake VP"]],"type":[["Result","PoS functions result"]]});
+initSidebarItems({"enum":[["Error",""]],"fn":[["init_genesis_storage","Initialize storage in the genesis block."]],"struct":[["PoS","Proof-of-Stake VP"]],"type":[["Result","PoS functions result"]]});
