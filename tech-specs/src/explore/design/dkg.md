@@ -127,8 +127,8 @@ each of the above transactions.
  - `PartitionShares`: This is added to the block after the block starting
    DKG instance by the block proposer. It is based off all the `AnnounceStake`
    transactions that it is including in the block. When other validators see
-   this proposed block, they should extra their weight shares and store them
-   in the DKG state machine.
+   this proposed block, they should extract their weight shares and store them
+   in the DKG state machine. Then they should send out `Deal` transactions.
  - `Deal`: These need to be verified. The current block proposer checks if 
    enough PVSS instances have been reached to meet the security threshold.
    If so, it adds a `Aggregate` transaction to the block. Otherwise, the
@@ -136,16 +136,16 @@ each of the above transactions.
  - `Aggregate`: This simply needs to be verified and the resulting key added
    to the DKG instance. 
 
+Most of the above transactions occur as a reaction to other transactions. The
+two exceptions are the `PartitionShares` and `Aggregate` transactions. This
+must be made by the current block if their current DKG state machine is in
+the appropriate state (and for the `Aggregate` transaction if enough PVSS
+instances have been committed). Thus block proposers must check the state
+machines of their active DKG instances.
+
 ## ABCI vs ABCI++
 
-The creation of the public key and the shared secrets does not require ABCI++.
-We detail here how to acheive the protocol using both ABCI and ABCI++.
+The creation of the public key and the shared secrets requires ABCI++ as we
+need control over block preparation and finalization. 
 
-### ABCI
-
-In ABCI, the `DeliverTx` call can be used to drive the DKG protocol completely. 
-This is not optimal from a performance perspective, but will allow us to 
-test the protocol without waiting on ABCI++ (which will improve things 
-dramatically). It also locks us into the second option listed above for starting
-the protocol; namely that it must be instantiated by someone by sending a
-particular transaction.
+### ABCI++
