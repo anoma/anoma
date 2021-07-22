@@ -4,9 +4,8 @@
 use core::marker::PhantomData;
 use core::{cmp, fmt, ops};
 
+use crate::types::Epoch;
 use crate::PosParams;
-
-type Epoch = u64;
 
 #[derive(Debug, Clone)]
 pub struct Epoched<Data, Offset>
@@ -60,32 +59,36 @@ where
 {
     /// Initialize new epoched data. Sets the head to the given value.
     /// This should only be used at genesis.
-    pub fn init_at_genesis(value: Data, epoch: Epoch) -> Self {
+    pub fn init_at_genesis(value: Data, epoch: impl Into<Epoch>) -> Self {
         Self {
-            last_update: epoch,
+            last_update: epoch.into(),
             data: vec![Some(value)],
             offset: PhantomData,
         }
     }
 
     /// Initialize new data at the data's epoch offset.
-    pub fn init(value: Data, epoch: Epoch, params: &PosParams) -> Self {
+    pub fn init(
+        value: Data,
+        epoch: impl Into<Epoch>,
+        params: &PosParams,
+    ) -> Self {
         let offset = Offset::value(params);
         let mut data = vec![];
-        for ix in 0..offset {
+        for _ in 0..offset {
             data.push(None);
         }
         data.push(Some(value));
         Self {
-            last_update: epoch,
+            last_update: epoch.into(),
             data,
             offset: PhantomData,
         }
     }
 
     /// Find the value for the given epoch.
-    pub fn get(&self, epoch: Epoch) -> Option<&Data> {
-        let offset = (epoch - self.last_update) as usize;
+    pub fn get(&self, epoch: impl Into<Epoch>) -> Option<&Data> {
+        let offset: usize = (epoch.into() - self.last_update).into();
         let mut index = cmp::min(offset, self.data.len());
         loop {
             if let Some(result @ Some(_)) = self.data.get(index) {
@@ -100,7 +103,13 @@ where
     }
 
     /// Update the value at the data's epoch offset.
-    pub fn update(&mut self, value: Data, epoch: Epoch, params: &PosParams) {
+    pub fn update(
+        &mut self,
+        value: Data,
+        epoch: impl Into<Epoch>,
+        params: &PosParams,
+    ) {
+        let epoch = epoch.into();
         debug_assert!(
             epoch >= self.last_update,
             "The current epoch must be greater than or equal to the last \
@@ -108,7 +117,7 @@ where
         );
         let offset = Offset::value(params) as usize;
         let last_update = self.last_update;
-        let shift = cmp::min((epoch - last_update) as usize, offset);
+        let shift: usize = cmp::min((epoch - last_update).into(), offset);
 
         // Resize the data if needed
         if self.data.len() < offset + 1 {
@@ -144,32 +153,37 @@ where
 {
     /// Initialize new epoched delta data. Sets the head to the given value.
     /// This should only be used at genesis.
-    pub fn init_at_genesis(value: Data, epoch: Epoch) -> Self {
+    pub fn init_at_genesis(value: Data, epoch: impl Into<Epoch>) -> Self {
         Self {
-            last_update: epoch,
+            last_update: epoch.into(),
             data: vec![Some(value)],
             offset: PhantomData,
         }
     }
 
     /// Initialize new data at the data's epoch offset.
-    pub fn init(value: Data, epoch: Epoch, params: &PosParams) -> Self {
+    pub fn init(
+        value: Data,
+        epoch: impl Into<Epoch>,
+        params: &PosParams,
+    ) -> Self {
         let offset = Offset::value(params) as usize;
         let mut data = vec![];
-        for ix in 0..offset {
+        for _ in 0..offset {
             data.push(None);
         }
         data.push(Some(value));
         Self {
-            last_update: epoch,
+            last_update: epoch.into(),
             data,
             offset: PhantomData,
         }
     }
 
     /// Find the sum of delta values for the given epoch.
-    pub fn get(&self, epoch: Epoch) -> Option<Data> {
-        let offset = (epoch - self.last_update) as usize;
+    pub fn get(&self, epoch: impl Into<Epoch>) -> Option<Data> {
+        let epoch = epoch.into();
+        let offset: usize = (epoch - self.last_update).into();
         let index = cmp::min(offset, self.data.len());
         let mut sum: Option<Data> = None;
         for i in 0..index + 1 {
@@ -186,7 +200,13 @@ where
     }
 
     /// Update the value at the data's epoch offset.
-    pub fn update(&mut self, value: Data, epoch: Epoch, params: &PosParams) {
+    pub fn update(
+        &mut self,
+        value: Data,
+        epoch: impl Into<Epoch>,
+        params: &PosParams,
+    ) {
+        let epoch = epoch.into();
         debug_assert!(
             epoch >= self.last_update,
             "The current epoch must be greater than or equal to the last \
@@ -194,7 +214,7 @@ where
         );
         let offset = Offset::value(params) as usize;
         let last_update = self.last_update;
-        let shift = cmp::min((epoch - last_update) as usize, offset);
+        let shift: usize = cmp::min((epoch - last_update).into(), offset);
 
         // Resize the data if needed
         if self.data.len() < offset + 1 {
@@ -239,6 +259,7 @@ mod tests {
     use proptest::state_machine::{AbstractStateMachine, StateMachineTest};
 
     use super::*;
+    use crate::types::tests::arb_epoch;
 
     prop_state_machine! {
         #[test]
@@ -290,11 +311,11 @@ mod tests {
                 (arb_pos_params(), 0_u64..1_000_000, any::<u64>()).prop_map(
                     |(params, epoch, initial)| {
                         let mut data = HashMap::default();
-                        data.insert(epoch, initial);
+                        data.insert(epoch.into(), initial);
                         EpochedState {
                             init_at_genesis: true,
                             params,
-                            last_update: epoch,
+                            last_update: epoch.into(),
                             data,
                         }
                     }
@@ -304,11 +325,11 @@ mod tests {
                     |(params, epoch, initial)| {
                         let offset = Offset::value(&params);
                         let mut data = HashMap::default();
-                        data.insert(epoch + offset, initial);
+                        data.insert((epoch + offset).into(), initial);
                         EpochedState {
                             init_at_genesis: false,
                             params,
-                            last_update: epoch,
+                            last_update: epoch.into(),
                             data,
                         }
                     }
@@ -319,13 +340,14 @@ mod tests {
 
         fn transitions(state: &Self::State) -> BoxedStrategy<Self::Transition> {
             let offset = Offset::value(&state.params);
+            let last_update: u64 = state.last_update.into();
             prop_oneof![
-                (state.last_update..state.last_update + 4 * offset)
+                arb_epoch(last_update..last_update + 4 * offset)
                     .prop_map(EpochedTransition::Get),
                 (
                     any::<u64>(),
                     // Update's epoch may not be lower than the last_update
-                    state.last_update..state.last_update + 10,
+                    arb_epoch(last_update..last_update + 10),
                 )
                     .prop_map(|(value, epoch)| {
                         EpochedTransition::Update { value, epoch }
@@ -345,7 +367,7 @@ mod tests {
                 EpochedTransition::Update { value, epoch } => {
                     let offset = Offset::value(&state.params);
                     state.last_update = *epoch;
-                    state.data.insert(epoch + offset, *value);
+                    state.data.insert(*epoch + offset, *value);
                 }
             }
             state
@@ -376,7 +398,7 @@ mod tests {
                 );
                 assert_eq!(
                     Some(*value),
-                    data.data[(key - initial_state.last_update) as usize]
+                    data.data[usize::from(*key - initial_state.last_update)]
                 );
                 data
             };
@@ -387,10 +409,11 @@ mod tests {
             (params, mut data): Self::ConcreteState,
             transition: &<Self::Abstract as AbstractStateMachine>::Transition,
         ) -> Self::ConcreteState {
-            let offset = Offset::value(&params);
+            let offset = Offset::value(&params) as usize;
             match transition {
                 EpochedTransition::Get(epoch) => {
-                    let value = data.get(*epoch);
+                    let epoch = *epoch;
+                    let value = data.get(epoch);
                     // Post-conditions
                     let last_update = data.last_update;
                     match value {
@@ -398,7 +421,7 @@ mod tests {
                             // When a value found, it should be the last value
                             // before or on the upper bound
                             let upper_bound = cmp::min(
-                                cmp::min(epoch - last_update, offset) as usize
+                                cmp::min((epoch - last_update).into(), offset)
                                     + 1,
                                 data.data.len(),
                             );
@@ -420,7 +443,7 @@ mod tests {
                             // When no value found, there should be no values
                             // before the upper bound
                             let upper_bound = cmp::min(
-                                cmp::min(epoch - last_update, offset) as usize
+                                cmp::min((epoch - last_update).into(), offset)
                                     + 1,
                                 data.data.len(),
                             );
@@ -476,7 +499,7 @@ mod tests {
         fn init_state() -> BoxedStrategy<Self::State> {
             prop_oneof![
                 // Initialized at genesis
-                (arb_pos_params(), 0..1_000_000_u64, 1..10_000_000_u64)
+                (arb_pos_params(), arb_epoch(0..1_000_000), 1..10_000_000_u64)
                     .prop_map(|(params, epoch, initial)| {
                         let mut data = HashMap::default();
                         data.insert(epoch, initial);
@@ -488,7 +511,7 @@ mod tests {
                         }
                     }),
                 // Initialized after genesis
-                (arb_pos_params(), 0..1_000_000_u64, 1..10_000_000_u64)
+                (arb_pos_params(), arb_epoch(0..1_000_000), 1..10_000_000_u64)
                     .prop_map(|(params, epoch, initial)| {
                         let offset = Offset::value(&params);
                         let mut data = HashMap::default();
@@ -506,16 +529,20 @@ mod tests {
 
         fn transitions(state: &Self::State) -> BoxedStrategy<Self::Transition> {
             let offset = Offset::value(&state.params);
+            let last_update: u64 = state.last_update.into();
             prop_oneof![
-                (state.last_update..state.last_update + 4 * offset)
-                    .prop_map(EpochedTransition::Get),
+                (last_update..last_update + 4 * offset)
+                    .prop_map(|epoch| EpochedTransition::Get(epoch.into())),
                 (
                     1..10_000_000_u64,
                     // Update's epoch may not be lower than the last_update
-                    state.last_update..state.last_update + 10,
+                    last_update..last_update + 10,
                 )
                     .prop_map(|(value, epoch)| {
-                        EpochedTransition::Update { value, epoch }
+                        EpochedTransition::Update {
+                            value,
+                            epoch: epoch.into(),
+                        }
                     })
             ]
             .boxed()
@@ -533,8 +560,9 @@ mod tests {
                     value: change,
                     epoch,
                 } => {
+                    let epoch = *epoch;
                     let offset = Offset::value(&state.params);
-                    state.last_update = *epoch;
+                    state.last_update = epoch;
                     let current = state.data.entry(epoch + offset).or_insert(0);
                     *current += *change;
                 }
@@ -567,7 +595,7 @@ mod tests {
                 );
                 assert_eq!(
                     Some(*value),
-                    data.data[(key - initial_state.last_update) as usize]
+                    data.data[usize::from(*key - initial_state.last_update)]
                 );
                 data
             };
@@ -578,10 +606,11 @@ mod tests {
             (params, mut data): Self::ConcreteState,
             transition: &<Self::Abstract as AbstractStateMachine>::Transition,
         ) -> Self::ConcreteState {
-            let offset = Offset::value(&params);
+            let offset = Offset::value(&params) as usize;
             match transition {
                 EpochedTransition::Get(epoch) => {
-                    let value = data.get(*epoch);
+                    let epoch = *epoch;
+                    let value = data.get(epoch);
                     // Post-conditions
                     let last_update = data.last_update;
                     match value {
@@ -589,7 +618,7 @@ mod tests {
                             // When a value found, it should be equal to the sum
                             // of deltas before and on the upper bound
                             let upper_bound = cmp::min(
-                                cmp::min(epoch - last_update, offset) as usize
+                                cmp::min((epoch - last_update).into(), offset)
                                     + 1,
                                 data.data.len(),
                             );
@@ -605,7 +634,7 @@ mod tests {
                             // When no value found, there should be no values
                             // before the upper bound
                             let upper_bound = cmp::min(
-                                cmp::min(epoch - last_update, offset) as usize
+                                cmp::min((epoch - last_update).into(), offset)
                                     + 1,
                                 data.data.len(),
                             );

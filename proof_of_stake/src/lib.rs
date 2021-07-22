@@ -1,8 +1,10 @@
 pub mod epoched;
+pub mod types;
 
 use std::collections::{BTreeSet, HashMap};
 
 use epoched::{Epoched, EpochedDelta, OffsetPipelineLen, OffsetUnboundingLen};
+use types::Epoch;
 
 type Address = String;
 type Validator = Address;
@@ -12,7 +14,6 @@ struct BondId {
     source: Address,
     validator: Validator,
 }
-type Epoch = u64;
 // TODO parameterize
 type PublicKey = String;
 type VotingPower = u64;
