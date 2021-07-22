@@ -124,7 +124,7 @@ where
         }
 
         if shift != 0 {
-            let mid_point = cmp::min(shift, self.data.len());
+            let mid_point = cmp::min(shift + 1, self.data.len());
             let mut latest_value: Option<Data> = None;
             // Find the latest value in and clear all the elements before the
             // mid-point
@@ -211,7 +211,7 @@ where
         }
 
         if shift != 0 {
-            let mid_point = cmp::min(shift, self.data.len());
+            let mid_point = cmp::min(shift + 1, self.data.len());
             let mut sum: Option<Data> = None;
             // Sum and clear all the elements before the mid-point
             for i in 0..mid_point {
@@ -548,7 +548,7 @@ impl Default for PosParams {
 #[cfg(test)]
 mod tests {
     use proptest::prelude::*;
-    // use proptest::prop_state_machine;
+    use proptest::prop_state_machine;
     use proptest::state_machine::{AbstractStateMachine, StateMachineTest};
 
     use super::*;
@@ -726,9 +726,17 @@ mod tests {
                     }
                 }
                 EpochedTransition::Update(value, epoch) => {
+                    let current_before_update = data.get(*epoch).copied();
                     data.update(*value, *epoch, &params);
-                    // TODO: Post-conditions
+
+                    // Post-conditions
                     assert_eq!(data.last_update, *epoch);
+                    assert_eq!(data.data[offset as usize], Some(*value));
+                    assert!(data.data.len() > offset as usize);
+                    assert_eq!(
+                        data.get(*epoch),
+                        current_before_update.as_ref()
+                    );
                 }
             }
             (params, data)
@@ -740,35 +748,14 @@ mod tests {
         }
     }
 
-    // TODO the macro doesn't work with the generic param on EpochedStateMachine
-    // prop_state_machine! {
-    //     #[test]
-    //     fn run_epoched_state_machine_with_pipeline_offset(
-    //         sequential EpochedStateMachine::<OffsetPipelineLen> 1..20)
-    // }
-    // prop_state_machine! {
-    //     #[test]
-    //     fn run_epoched_state_machine_with_unbounding_offset(
-    //         sequential EpochedStateMachine::<OffsetUnboundingLen> 1..20)
-    // }
-    type EpochedPipeline = EpochedStateMachine<OffsetPipelineLen>;
-    type EpochedUnbonding = EpochedStateMachine<OffsetUnboundingLen>;
-
-    proptest! {
-
+    prop_state_machine! {
         #[test]
         fn run_epoched_state_machine_with_pipeline_offset(
-            (initial_state, transitions) in EpochedPipeline::sequential_strategy(1..20)
-        ) {
-            EpochedPipeline::test_sequential(initial_state, transitions)
-        }
+            sequential 1..20 => EpochedStateMachine<OffsetPipelineLen>);
 
         #[test]
         fn run_epoched_state_machine_with_unbounding_offset(
-            (initial_state, transitions) in EpochedUnbonding::sequential_strategy(1..20)
-        ) {
-            EpochedUnbonding::test_sequential(initial_state, transitions)
-        }
+            sequential 1..20 => EpochedStateMachine<OffsetUnboundingLen>);
     }
 
     fn arb_pos_params() -> impl Strategy<Value = PosParams> {
