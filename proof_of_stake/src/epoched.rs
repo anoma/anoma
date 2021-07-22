@@ -116,11 +116,11 @@ where
         }
 
         if shift != 0 {
-            let mid_point = cmp::min(shift + 1, self.data.len());
+            let mid_point = cmp::min(shift, self.data.len());
             let mut latest_value: Option<Data> = None;
-            // Find the latest value in and clear all the elements before the
-            // mid-point
-            for i in 0..mid_point {
+            // Find the latest value in elements before the mid-point and clear
+            // them
+            for i in 0..mid_point + 1 {
                 if let Some(Some(data)) = self.data.get(i) {
                     latest_value = Some(data.clone());
                 }
@@ -139,7 +139,7 @@ where
 
 impl<Data, Offset> EpochedDelta<Data, Offset>
 where
-    Data: Copy + ops::Add<Output = Data>,
+    Data: fmt::Debug + Copy + ops::Add<Output = Data>,
     Offset: EpochOffset,
 {
     /// Initialize new epoched delta data. Sets the head to the given value.
@@ -177,7 +177,6 @@ where
                 // Add current to the sum, if any
                 sum = match (sum, next) {
                     (Some(sum), Some(next)) => Some(sum + *next),
-                    (Some(sum), None) => Some(sum),
                     (None, Some(next)) => Some(*next),
                     _ => sum,
                 };
@@ -203,10 +202,10 @@ where
         }
 
         if shift != 0 {
-            let mid_point = cmp::min(shift + 1, self.data.len());
+            let mid_point = cmp::min(shift, self.data.len());
             let mut sum: Option<Data> = None;
             // Sum and clear all the elements before the mid-point
-            for i in 0..mid_point {
+            for i in 0..mid_point + 1 {
                 if let Some(next) = self.data.get(i) {
                     // Add current to the sum, if any
                     sum = match (sum, next) {
@@ -225,7 +224,7 @@ where
             self.data[0] = sum;
         }
 
-        self.data[offset] = self.data[shift]
+        self.data[offset] = self.data[offset]
             .map_or_else(|| Some(value), |last_delta| Some(last_delta + value));
         self.last_update = epoch;
     }
@@ -243,12 +242,20 @@ mod tests {
 
     prop_state_machine! {
         #[test]
-        fn run_epoched_state_machine_with_pipeline_offset(
+        fn epoched_state_machine_with_pipeline_offset(
             sequential 1..20 => EpochedAbstractStateMachine<OffsetPipelineLen>);
 
         #[test]
-        fn run_epoched_state_machine_with_unbounding_offset(
+        fn epoched_state_machine_with_unbounding_offset(
             sequential 1..20 => EpochedAbstractStateMachine<OffsetUnboundingLen>);
+
+        #[test]
+        fn epoched_delta_state_machine_with_pipeline_offset(
+            sequential 1..20 => EpochedDeltaAbstractStateMachine<OffsetPipelineLen>);
+
+        #[test]
+        fn epoched_delta_state_machine_with_unbounding_offset(
+            sequential 1..20 => EpochedDeltaAbstractStateMachine<OffsetUnboundingLen>);
     }
 
     /// Abstract representation of [`Epoched`].
@@ -263,7 +270,7 @@ mod tests {
     #[derive(Clone, Debug)]
     enum EpochedTransition<Data> {
         Get(Epoch),
-        Update(Data, Epoch),
+        Update { value: Data, epoch: Epoch },
     }
 
     /// Abstract state machine implementation for [`Epoched`].
@@ -321,7 +328,7 @@ mod tests {
                     state.last_update..state.last_update + 10,
                 )
                     .prop_map(|(value, epoch)| {
-                        EpochedTransition::Update(value, epoch)
+                        EpochedTransition::Update { value, epoch }
                     })
             ]
             .boxed()
@@ -335,7 +342,7 @@ mod tests {
                 EpochedTransition::Get(_epoch) => {
                     // no side effects
                 }
-                EpochedTransition::Update(value, epoch) => {
+                EpochedTransition::Update { value, epoch } => {
                     let offset = Offset::value(&state.params);
                     state.last_update = *epoch;
                     state.data.insert(epoch + offset, *value);
@@ -423,17 +430,220 @@ mod tests {
                         }
                     }
                 }
-                EpochedTransition::Update(value, epoch) => {
+                EpochedTransition::Update { value, epoch } => {
                     let current_before_update = data.get(*epoch).copied();
                     data.update(*value, *epoch, &params);
 
                     // Post-conditions
                     assert_eq!(data.last_update, *epoch);
-                    assert_eq!(data.data[offset as usize], Some(*value));
-                    assert!(data.data.len() > offset as usize);
+                    assert_eq!(
+                        data.data[offset as usize],
+                        Some(*value),
+                        "The value at offset must be updated"
+                    );
+                    assert!(
+                        data.data.len() > offset as usize,
+                        "The length of the data must be greater than the \
+                         offset"
+                    );
                     assert_eq!(
                         data.get(*epoch),
-                        current_before_update.as_ref()
+                        current_before_update.as_ref(),
+                        "The current value must not change"
+                    );
+                }
+            }
+            (params, data)
+        }
+
+        fn invariants((params, data): &Self::ConcreteState) {
+            let offset = Offset::value(&params);
+            assert!(data.data.len() <= (offset + 1) as usize);
+        }
+    }
+
+    /// Abstract state machine implementation for [`EpochedDelta`].
+    struct EpochedDeltaAbstractStateMachine<Offset: EpochOffset> {
+        phantom: PhantomData<Offset>,
+    }
+    impl<Offset> AbstractStateMachine for EpochedDeltaAbstractStateMachine<Offset>
+    where
+        Offset: EpochOffset,
+    {
+        type State = EpochedState<u64>;
+        type Transition = EpochedTransition<u64>;
+
+        fn init_state() -> BoxedStrategy<Self::State> {
+            prop_oneof![
+                // Initialized at genesis
+                (arb_pos_params(), 0..1_000_000_u64, 1..10_000_000_u64)
+                    .prop_map(|(params, epoch, initial)| {
+                        let mut data = HashMap::default();
+                        data.insert(epoch, initial);
+                        EpochedState {
+                            init_at_genesis: true,
+                            params,
+                            last_update: epoch,
+                            data,
+                        }
+                    }),
+                // Initialized after genesis
+                (arb_pos_params(), 0..1_000_000_u64, 1..10_000_000_u64)
+                    .prop_map(|(params, epoch, initial)| {
+                        let offset = Offset::value(&params);
+                        let mut data = HashMap::default();
+                        data.insert(epoch + offset, initial);
+                        EpochedState {
+                            init_at_genesis: false,
+                            params,
+                            last_update: epoch,
+                            data,
+                        }
+                    }),
+            ]
+            .boxed()
+        }
+
+        fn transitions(state: &Self::State) -> BoxedStrategy<Self::Transition> {
+            let offset = Offset::value(&state.params);
+            prop_oneof![
+                (state.last_update..state.last_update + 4 * offset)
+                    .prop_map(EpochedTransition::Get),
+                (
+                    1..10_000_000_u64,
+                    // Update's epoch may not be lower than the last_update
+                    state.last_update..state.last_update + 10,
+                )
+                    .prop_map(|(value, epoch)| {
+                        EpochedTransition::Update { value, epoch }
+                    })
+            ]
+            .boxed()
+        }
+
+        fn apply_abstract(
+            mut state: Self::State,
+            transition: &Self::Transition,
+        ) -> Self::State {
+            match transition {
+                EpochedTransition::Get(_epoch) => {
+                    // no side effects
+                }
+                EpochedTransition::Update {
+                    value: change,
+                    epoch,
+                } => {
+                    let offset = Offset::value(&state.params);
+                    state.last_update = *epoch;
+                    let current = state.data.entry(epoch + offset).or_insert(0);
+                    *current += *change;
+                }
+            }
+            state
+        }
+    }
+
+    impl<Offset> StateMachineTest for EpochedDeltaAbstractStateMachine<Offset>
+    where
+        Offset: EpochOffset,
+    {
+        type Abstract = Self;
+        type ConcreteState = (PosParams, EpochedDelta<u64, Offset>);
+
+        fn init_test(
+            initial_state: <Self::Abstract as AbstractStateMachine>::State,
+        ) -> Self::ConcreteState {
+            assert!(initial_state.data.len() == 1);
+            let data = if initial_state.init_at_genesis {
+                let genesis_epoch = initial_state.last_update;
+                let value = initial_state.data.get(&genesis_epoch).unwrap();
+                EpochedDelta::init_at_genesis(*value, genesis_epoch)
+            } else {
+                let (key, value) = initial_state.data.iter().next().unwrap();
+                let data = EpochedDelta::init(
+                    *value,
+                    initial_state.last_update,
+                    &initial_state.params,
+                );
+                assert_eq!(
+                    Some(*value),
+                    data.data[(key - initial_state.last_update) as usize]
+                );
+                data
+            };
+            (initial_state.params, data)
+        }
+
+        fn apply_concrete(
+            (params, mut data): Self::ConcreteState,
+            transition: &<Self::Abstract as AbstractStateMachine>::Transition,
+        ) -> Self::ConcreteState {
+            let offset = Offset::value(&params);
+            match transition {
+                EpochedTransition::Get(epoch) => {
+                    let value = data.get(*epoch);
+                    // Post-conditions
+                    let last_update = data.last_update;
+                    match value {
+                        Some(val) => {
+                            // When a value found, it should be equal to the sum
+                            // of deltas before and on the upper bound
+                            let upper_bound = cmp::min(
+                                cmp::min(epoch - last_update, offset) as usize
+                                    + 1,
+                                data.data.len(),
+                            );
+                            let mut sum = 0;
+                            for i in (0..upper_bound).rev() {
+                                if let Some(stored_val) = data.data[i] {
+                                    sum += stored_val;
+                                }
+                            }
+                            assert_eq!(val, sum);
+                        }
+                        None => {
+                            // When no value found, there should be no values
+                            // before the upper bound
+                            let upper_bound = cmp::min(
+                                cmp::min(epoch - last_update, offset) as usize
+                                    + 1,
+                                data.data.len(),
+                            );
+                            for i in 0..upper_bound {
+                                assert_eq!(None, data.data[i]);
+                            }
+                        }
+                    }
+                }
+                EpochedTransition::Update {
+                    value: change,
+                    epoch,
+                } => {
+                    let current_value_before_update = data.get(*epoch);
+                    let value_at_offset_before_update =
+                        data.get(*epoch + offset);
+                    data.update(*change, *epoch, &params);
+
+                    // Post-conditions
+                    assert_eq!(data.last_update, *epoch);
+                    let value_at_offset_after_update =
+                        data.get(*epoch + offset);
+                    assert_eq!(
+                        value_at_offset_after_update.unwrap_or_default(),
+                        *change
+                            + value_at_offset_before_update.unwrap_or_default(),
+                        "The value at the offset must have increased by the \
+                         change"
+                    );
+                    assert!(
+                        data.data.len() > offset as usize,
+                        "The length of the data must be greater than the \
+                         offset"
+                    );
+                    assert_eq!(
+                        data.get(*epoch),
+                        current_value_before_update,
+                        "The current value must not change"
                     );
                 }
             }
