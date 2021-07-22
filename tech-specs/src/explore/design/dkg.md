@@ -1,9 +1,9 @@
 # Distributed key generation
 
-Here we given an overview of how the DKG protocol works with the ledger and 
+Here we give an overview of how the DKG protocol works with the ledger and 
 the roles of each node in the network per this protocol. This portion of the 
 book focuses solely on the production of a new public encryption key via the
-DKG sheme. It does not cover encryption, decrpytion, or validation of transactions.
+DKG scheme. It does not cover encryption, decryption, or validation of transactions.
 
 Some parts of the DKG protocol may be done through the gossip layer or through
 off-chain communication. However, the entire DKG cannot exist solely in the 
@@ -12,26 +12,18 @@ will require posting information on chain.
 
 ## Starting the Protocol
 
-There are two natural possibilities for initializing the protocol to generate
-a new key. The first is that the protocol is started at fixed intervals (number
-of blocks perhaps.) Since the protocols will be pipelined (see below), the 
-only issue that can arise is that a newer instance may succeed before an older 
-one does. One policy is to consider the older instance failed and to 
-user the newer instance.
-
-The second natural option is that a current block proposer proposes a new instance. This
-would be posted on the blockchain and notify all the participating validators
-to begin the announcement phase. However, when should the proposer make this
-decision? In all likelihood it will be a combination of blocks transpired since
-the last instance completed as well as special cases (such as the an instance
+To initializing the protocol to generate a new key, the  current block 
+proposer proposes a new instance. This would be posted on the blockchain and
+notify all the participating validators to begin the announcement phase. 
+However, when should the proposer make this decision? In all likelihood it will be a combination of blocks transpired since
+the last instance completed as well as special cases (such as an instance
 failing to complete).
 
 ## Announcing and distributing weight shares
 
 In order for the DKG protocol to work, it requires the contribution of 
-\\(\frac{2}{3} \\) of the total staked weight among live validators. 
-
-In order to know when a subset of validators own at least\\(\frac{2}{3}\\)
+ \\(\frac{2}{3} \\) of the total staked weight among live validators. In 
+order to know when a subset of validators own at least \\(\frac{2}{3}\\)
 of the total weight, it is necessary for validators to announce their stake.
 
 Furthermore, the total weight will be scaled down to a fixed parameter 
@@ -39,17 +31,16 @@ Furthermore, the total weight will be scaled down to a fixed parameter
 values). After this procedure, each validator has a corresponding number of
 weight shares. 
 
-In order for the DKG protocol to work, a canonical ordering of validators with
+Lastly, the DKG protocol requires a canonical ordering of validators with
 shares must be agreed upon. This will be done via the consensus layer.
-
 The current block proposer will apportion out weight shares as well as the
 aforementioned ordering (which induces a natural partition of the weight 
-shares) to eachvalidator that made an announcement. This is included in the
+shares) to each validator that made an announcement. This is included in the
 block. Once this block is on the blockchain, the next step of the DKG can proceed.
 
 ## Dealers
-In a single DKG instance, a subset of validators whose staked weight exceeds
-\\( \frac{2}{3} \\) of the total staked weight must each act as dealers. It
+In a single DKG instance, a subset of validators holding at least
+\\( \frac{2}{3} \\) of the weight shares must each act as dealers. It
 is the responsibility of a dealer to post a signed message to the blockchain
 which includes the session id (\\( \tau \\)) as well the data of the
 PVSS (we do not concern ourselves with the details here). The creation of this
@@ -63,8 +54,8 @@ Ferveo library.
 
 ## Aggregation
 
-At some point, enough validators (meaning their combined weight exceeds
-\\( \frac{2}{3}\\) of the total weight) have their PVSS on chain 
+At some point, enough validators (meaning their combined weight  shares
+exceeds \\( \frac{2}{3}\\) of the total) have their PVSS on the chain 
 for the session with id \\( \tau \\). At this point, the next block proposer can
 aggregate the messages into a single instance using Ferveo. This is then 
 included in the next block. Once this DKG is on the blockchain, it can be 
@@ -81,12 +72,10 @@ block.
 
 ## Notes on pipelining
 
-Note that in the decription above, depending on how the protocol is started,
-at least two or three blocks must be submitted to the blockchain in order to
-produce the next public encryption key. The (optional) first block kicks off
-the protocol instance. The next determines the partition of weight shares of
-the validators and the last aggregates the PVSS instances from the dealers 
-leading to the final key.
+Note that in the decription above, at least two blocks must be submitted to the blockchain in order to
+produce the next public encryption key. The first block determines the 
+partition of weight shares of the validators and the last aggregates the 
+PVSS instances from the dealers leading to the final key.
 
 In practice, it may take even longer as the protocol waits for enough PVSS 
 instances to get onto the blockchain. Depending on the chosen refresh rate
@@ -103,32 +92,33 @@ from the protocol instance. We thus need to store the following data
 
 ##  The DKG state machine
 
-We first describe each new transaction type needed for the protocol.
+We first describe each new message type needed for the protocol.
 - `StartDKG`: A message from the current block proposer to start the protocol
 - `AnnounceStake`: Validators participating in this instance of the DKG
   broadcast their stake
 - `PartitionShares`: Once the block containing all of the `AnnounceStake`
-  transactions is finalized, the set of participants is fixed and the
+  messages are finalized, the set of participants is fixed and the
   partition of the weight shares is added to the block.
-- `Deal`: This transaction contains the PVSS transcript from a validator
+- `Deal`: This message contains the PVSS transcript from a validator
   acting as a dealer
 - `Aggregate`: Combine the PVSS instances into a single one, thereby
   producing the final key.
 
 In Ferveo, the DKG protocol is modelled as a state machine. This allows a
 validator to initialize an instance and drive it forward by reacting to
-each of the above transactions in the appropriate way. All necessary state
+each of the above message in the appropriate way. All necessary state
 is persisted by this state machine. We describe the  appropriate action for
 each of the above transactions.
 
  - `StartDKG`: Initialize a fresh instace of the DKG protocol from Ferveo.
    Then send out an `AnnounceStake` transaction.
- - `AnnounceStake`: These simply need to be verified.
- - `PartitionShares`: This is added to the block after the block starting
-   DKG instance by the block proposer. It is based off all the `AnnounceStake`
-   transactions that it is including in the block. When other validators see
-   this proposed block, they should extract their weight shares and store them
-   in the DKG state machine. Then they should send out `Deal` transactions.
+ - `AnnounceStake`: These simply need to be verified. The current block
+   proposer adds a `PartitionShares` message to the block after the block starting
+   the DKG instance. It is based off all the `AnnounceStake` transactions
+   which will also be included in the next block (for verification).
+ - `PartitionShares`: Validators verify the partitions and weights and
+   should extract their weight shares and store them in the DKG state machine.
+   Then they should send out `Deal` transactions.
  - `Deal`: These need to be verified. The current block proposer checks if 
    enough PVSS instances have been reached to meet the security threshold.
    If so, it adds a `Aggregate` transaction to the block. Otherwise, the
@@ -136,16 +126,29 @@ each of the above transactions.
  - `Aggregate`: This simply needs to be verified and the resulting key added
    to the DKG instance. 
 
-Most of the above transactions occur as a reaction to other transactions. The
-two exceptions are the `PartitionShares` and `Aggregate` transactions. This
-must be made by the current block if their current DKG state machine is in
-the appropriate state (and for the `Aggregate` transaction if enough PVSS
-instances have been committed). Thus block proposers must check the state
-machines of their active DKG instances.
+Most of the above transactions occur as a reaction to other messages
+and/or data in the proposed block header. The three exceptions are the 
+`StartDKG`, `PartitionShares`, and `Aggregate` transactions. These must be 
+made by the current block proposer if their current DKG state machine is in the 
+appropriate state and/or the appropriate conditions are met. Thus block 
+proposers must check the state machines of their active DKG instances.
 
-## ABCI vs ABCI++
+## ABCI++
 
 The creation of the public key and the shared secrets requires ABCI++ as we
-need control over block preparation and finalization. 
+need control over block preparation as well extra data from the Vote Extension
+phase. 
 
-### ABCI++
+We list the phase of ABCI++ in which each of the above actions takes place.
+ - `StartDKG`: This is added to the block by the current proposer as part of 
+    the Prepare Proposal phase.
+ - `AnnounceStake`: These are sent out by validators during the Vote
+    Extension phase.
+ - `PartitionShares`: This also happens in the Vote Extension phase and the
+    result will be included in the next block's header.
+ - `Deal`: Validators should verify the weight shares included in the block 
+    header. If validation fails, the DKG instance fails.  Otherwise, `Deal` 
+    happens during the Vote Extension.
+ - `Aggregate`: This is done during the Vote Extension and will be included
+    in the header of the next block. The final result should be verified
+    by validators in the next round or else the protocol has failed. 
