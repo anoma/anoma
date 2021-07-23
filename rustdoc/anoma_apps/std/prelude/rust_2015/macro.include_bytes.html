@@ -1,0 +1,31 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Includes a file as a reference to a byte array."><meta name="keywords" content="rust, rustlang, rust-lang, include_bytes"><title>anoma_apps::std::prelude::rust_2015::include_bytes - Rust</title><link rel="stylesheet" type="text/css" href="../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../../ayu.css" disabled ><script id="default-settings"></script><script src="../../../../storage.js"></script><script src="../../../../crates.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg">
+<link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png">
+<link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../../../down-arrow.svg");}</style></head><body class="rustdoc macro"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../../anoma_apps/index.html'><div class='logo-container rust-logo'><img src='../../../../rust-logo.png' alt='logo'></div></a><div class="sidebar-elems"><p class="location"><a href="../../../index.html">anoma_apps</a>::<wbr><a href="../../index.html">std</a>::<wbr><a href="../index.html">prelude</a>::<wbr><a href="index.html">rust_2015</a></p><div id="sidebar-vars" data-name="include_bytes" data-ty="macro" data-relpath=""></div><script defer src="sidebar-items.js"></script></div></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../../../../brush.svg" width="18" height="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><script src="../../../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" class="help-button">?</button>
+                <a id="settings-menu" href="../../../../settings.html"><img src="../../../../wheel.svg" width="18" height="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><h1 class="fqn"><span class="in-band">Macro <a href="../../../index.html">anoma_apps</a>::<wbr><a href="../../index.html">std</a>::<wbr><a href="../index.html">prelude</a>::<wbr><a href="index.html">rust_2015</a>::<wbr><a class="macro" href="">include_bytes</a></span><span class="out-of-band"><span class="since" title="Stable since Rust version 1.0.0">1.0.0</span><span id="render-detail"><a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">[<span class="inner">&#x2212;</span>]</a></span><a class="srclink" href="https://doc.rust-lang.org/nightly/src/core/macros/mod.rs.html#1054-1056" title="goto source code">[src]</a></span></h1><div class="docblock type-decl hidden-by-usual-hider"><div class="example-wrap"><pre class="rust macro">
+<span class="macro">macro_rules</span><span class="macro">!</span> <span class="ident">include_bytes</span> {
+    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">file</span>:<span class="ident">expr</span> $(,)<span class="question-mark">?</span>) <span class="op">=</span><span class="op">&gt;</span> { ... };
+}</pre></div>
+</div><div class="docblock"><p>Includes a file as a reference to a byte array.</p>
+<p>The file is located relative to the current file (similarly to how
+modules are found). The provided path is interpreted in a platform-specific
+way at compile time. So, for instance, an invocation with a Windows path
+containing backslashes <code>\</code> would not compile correctly on Unix.</p>
+<p>This macro will yield an expression of type <code>&amp;'static [u8; N]</code> which is
+the contents of the file.</p>
+<h1 id="examples" class="section-header"><a href="#examples">Examples</a></h1>
+<p>Assume there are two files in the same directory with the following
+contents:</p>
+<p>File ‘spanish.in’:</p>
+<pre><code class="language-text">adiós
+</code></pre>
+<p>File ‘main.rs’:</p>
+
+<div class='information'><div class='tooltip ignore'>ⓘ</div></div><div class="example-wrap"><pre class="rust rust-example-rendered ignore">
+<span class="kw">fn</span> <span class="ident">main</span>() {
+    <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="macro">include_bytes</span><span class="macro">!</span>(<span class="string">&quot;spanish.in&quot;</span>);
+    <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">bytes</span>, <span class="string">b&quot;adi\xc3\xb3s\n&quot;</span>);
+    <span class="macro">print</span><span class="macro">!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">String</span>::<span class="ident">from_utf8_lossy</span>(<span class="ident">bytes</span>));
+}</pre></div>
+<p>Compiling ‘main.rs’ and running the resulting binary will print “adiós”.</p>
+</div></section><section id="search" class="content hidden"></section><section class="footer"></section><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="anoma_apps" data-search-js="../../../../search-index.js"></div>
+    <script src="../../../../main.js"></script></body></html>

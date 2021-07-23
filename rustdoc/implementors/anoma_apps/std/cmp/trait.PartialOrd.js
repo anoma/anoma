@@ -1,0 +1,3 @@
+(function() {var implementors = {};
+implementors["anoma_apps"] = [{"text":"impl <a class=\"trait\" href=\"anoma_apps/std/cmp/trait.PartialOrd.html\" title=\"trait anoma_apps::std::cmp::PartialOrd\">PartialOrd</a>&lt;<a class=\"struct\" href=\"anoma_apps/config/struct.PeerAddress.html\" title=\"struct anoma_apps::config::PeerAddress\">PeerAddress</a>&gt; for <a class=\"struct\" href=\"anoma_apps/config/struct.PeerAddress.html\" title=\"struct anoma_apps::config::PeerAddress\">PeerAddress</a>","synthetic":false,"types":["anoma_apps::config::PeerAddress"]}];
+if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()

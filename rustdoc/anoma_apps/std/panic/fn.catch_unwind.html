@@ -1,0 +1,44 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Invokes a closure, capturing the cause of an unwinding panic if one occurs."><meta name="keywords" content="rust, rustlang, rust-lang, catch_unwind"><title>anoma_apps::std::panic::catch_unwind - Rust</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script id="default-settings"></script><script src="../../../storage.js"></script><script src="../../../crates.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../../favicon.svg">
+<link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png">
+<link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc fn"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../anoma_apps/index.html'><div class='logo-container rust-logo'><img src='../../../rust-logo.png' alt='logo'></div></a><div class="sidebar-elems"><p class="location"><a href="../../index.html">anoma_apps</a>::<wbr><a href="../index.html">std</a>::<wbr><a href="index.html">panic</a></p><div id="sidebar-vars" data-name="catch_unwind" data-ty="fn" data-relpath=""></div><script defer src="sidebar-items.js"></script></div></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../../../brush.svg" width="18" height="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><script src="../../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" class="help-button">?</button>
+                <a id="settings-menu" href="../../../settings.html"><img src="../../../wheel.svg" width="18" height="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><h1 class="fqn"><span class="in-band">Function <a href="../../index.html">anoma_apps</a>::<wbr><a href="../index.html">std</a>::<wbr><a href="index.html">panic</a>::<wbr><a class="fn" href="">catch_unwind</a></span><span class="out-of-band"><span class="since" title="Stable since Rust version 1.9.0">1.9.0</span><span id="render-detail"><a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">[<span class="inner">&#x2212;</span>]</a></span><a class="srclink" href="https://doc.rust-lang.org/nightly/src/std/panic.rs.html#430" title="goto source code">[src]</a></span></h1><pre class="rust fn">pub fn catch_unwind&lt;F, R&gt;(<br>&nbsp;&nbsp;&nbsp;&nbsp;f: F<br>) -&gt; <a class="enum" href="../../../anoma_apps/std/result/enum.Result.html" title="enum anoma_apps::std::result::Result">Result</a>&lt;R, <a class="struct" href="../../../anoma_apps/std/boxed/struct.Box.html" title="struct anoma_apps::std::boxed::Box">Box</a>&lt;dyn <a class="trait" href="../../../anoma_apps/std/any/trait.Any.html" title="trait anoma_apps::std::any::Any">Any</a> + 'static + <a class="trait" href="../../../anoma_apps/std/marker/trait.Send.html" title="trait anoma_apps::std::marker::Send">Send</a>, <a class="struct" href="../../../anoma_apps/std/alloc/struct.Global.html" title="struct anoma_apps::std::alloc::Global">Global</a>&gt;&gt; <span class="where fmt-newline">where<br>&nbsp;&nbsp;&nbsp;&nbsp;F: <a class="trait" href="../../../anoma_apps/std/ops/trait.FnOnce.html" title="trait anoma_apps::std::ops::FnOnce">FnOnce</a>() -&gt; R + <a class="trait" href="../../../anoma_apps/std/panic/trait.UnwindSafe.html" title="trait anoma_apps::std::panic::UnwindSafe">UnwindSafe</a>,&nbsp;</span></pre><div class="docblock"><p>Invokes a closure, capturing the cause of an unwinding panic if one occurs.</p>
+<p>This function will return <code>Ok</code> with the closure’s result if the closure
+does not panic, and will return <code>Err(cause)</code> if the closure panics. The
+<code>cause</code> returned is the object with which panic was originally invoked.</p>
+<p>It is currently undefined behavior to unwind from Rust code into foreign
+code, so this function is particularly useful when Rust is called from
+another language (normally C). This can run arbitrary Rust code, capturing a
+panic and allowing a graceful handling of the error.</p>
+<p>It is <strong>not</strong> recommended to use this function for a general try/catch
+mechanism. The <a href="../../../anoma_apps/std/thread/type.Result.html" title="Result"><code>Result</code></a> type is more appropriate to use for functions that
+can fail on a regular basis. Additionally, this function is not guaranteed
+to catch all panics, see the “Notes” section below.</p>
+<p>The closure provided is required to adhere to the <a href="../../../anoma_apps/std/panic/trait.UnwindSafe.html" title="UnwindSafe"><code>UnwindSafe</code></a> trait to ensure
+that all captured variables are safe to cross this boundary. The purpose of
+this bound is to encode the concept of <a href="https://github.com/rust-lang/rfcs/blob/master/text/1236-stabilize-catch-panic.md">exception safety</a> in the type
+system. Most usage of this function should not need to worry about this
+bound as programs are naturally unwind safe without <code>unsafe</code> code. If it
+becomes a problem the <a href="../../../anoma_apps/std/panic/struct.AssertUnwindSafe.html" title="AssertUnwindSafe"><code>AssertUnwindSafe</code></a> wrapper struct can be used to quickly
+assert that the usage here is indeed unwind safe.</p>
+<h1 id="notes" class="section-header"><a href="#notes">Notes</a></h1>
+<p>Note that this function <strong>may not catch all panics</strong> in Rust. A panic in
+Rust is not always implemented via unwinding, but can be implemented by
+aborting the process as well. This function <em>only</em> catches unwinding panics,
+not those that abort the process.</p>
+<p>Also note that unwinding into Rust code with a foreign exception (e.g.
+an exception thrown from C++ code) is undefined behavior.</p>
+<h1 id="examples" class="section-header"><a href="#examples">Examples</a></h1>
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">panic</span>;
+
+<span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">panic</span>::<span class="ident">catch_unwind</span>(<span class="op">|</span><span class="op">|</span> {
+    <span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot;hello!&quot;</span>);
+});
+<span class="macro">assert</span><span class="macro">!</span>(<span class="ident">result</span>.<span class="ident">is_ok</span>());
+
+<span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">panic</span>::<span class="ident">catch_unwind</span>(<span class="op">|</span><span class="op">|</span> {
+    <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;oh no!&quot;</span>);
+});
+<span class="macro">assert</span><span class="macro">!</span>(<span class="ident">result</span>.<span class="ident">is_err</span>());</pre></div>
+</div></section><section id="search" class="content hidden"></section><section class="footer"></section><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="anoma_apps" data-search-js="../../../search-index.js"></div>
+    <script src="../../../main.js"></script></body></html>

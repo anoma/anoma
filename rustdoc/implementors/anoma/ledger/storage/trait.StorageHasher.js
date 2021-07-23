@@ -1,0 +1,4 @@
+(function() {var implementors = {};
+implementors["anoma"] = [];
+implementors["anoma_apps"] = [{"text":"impl <a class=\"trait\" href=\"anoma/ledger/storage/trait.StorageHasher.html\" title=\"trait anoma::ledger::storage::StorageHasher\">StorageHasher</a> for <a class=\"struct\" href=\"anoma_apps/node/ledger/storage/struct.PersistentStorageHasher.html\" title=\"struct anoma_apps::node::ledger::storage::PersistentStorageHasher\">PersistentStorageHasher</a>","synthetic":false,"types":["anoma_apps::node::ledger::storage::PersistentStorageHasher"]}];
+if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()

@@ -1,0 +1,87 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Spawns a new thread, returning a [`JoinHandle`] for it."><meta name="keywords" content="rust, rustlang, rust-lang, spawn"><title>anoma_apps::std::thread::spawn - Rust</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script id="default-settings"></script><script src="../../../storage.js"></script><script src="../../../crates.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../../favicon.svg">
+<link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png">
+<link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc fn"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../anoma_apps/index.html'><div class='logo-container rust-logo'><img src='../../../rust-logo.png' alt='logo'></div></a><div class="sidebar-elems"><p class="location"><a href="../../index.html">anoma_apps</a>::<wbr><a href="../index.html">std</a>::<wbr><a href="index.html">thread</a></p><div id="sidebar-vars" data-name="spawn" data-ty="fn" data-relpath=""></div><script defer src="sidebar-items.js"></script></div></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../../../brush.svg" width="18" height="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><script src="../../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" class="help-button">?</button>
+                <a id="settings-menu" href="../../../settings.html"><img src="../../../wheel.svg" width="18" height="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><h1 class="fqn"><span class="in-band">Function <a href="../../index.html">anoma_apps</a>::<wbr><a href="../index.html">std</a>::<wbr><a href="index.html">thread</a>::<wbr><a class="fn" href="">spawn</a></span><span class="out-of-band"><span class="since" title="Stable since Rust version 1.0.0">1.0.0</span><span id="render-detail"><a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">[<span class="inner">&#x2212;</span>]</a></span><a class="srclink" href="https://doc.rust-lang.org/nightly/src/std/thread/mod.rs.html#614-618" title="goto source code">[src]</a></span></h1><pre class="rust fn">pub fn spawn&lt;F, T&gt;(f: F) -&gt; <a class="struct" href="../../../anoma_apps/std/thread/struct.JoinHandle.html" title="struct anoma_apps::std::thread::JoinHandle">JoinHandle</a>&lt;T&gt; <span class="where fmt-newline">where<br>&nbsp;&nbsp;&nbsp;&nbsp;T: <a class="trait" href="../../../anoma_apps/std/marker/trait.Send.html" title="trait anoma_apps::std::marker::Send">Send</a> + 'static,<br>&nbsp;&nbsp;&nbsp;&nbsp;F: <a class="trait" href="../../../anoma_apps/std/ops/trait.FnOnce.html" title="trait anoma_apps::std::ops::FnOnce">FnOnce</a>() -&gt; T + <a class="trait" href="../../../anoma_apps/std/marker/trait.Send.html" title="trait anoma_apps::std::marker::Send">Send</a> + 'static,&nbsp;</span></pre><div class="docblock"><p>Spawns a new thread, returning a <a href="../../../anoma_apps/std/thread/struct.JoinHandle.html" title="JoinHandle"><code>JoinHandle</code></a> for it.</p>
+<p>The join handle will implicitly <em>detach</em> the child thread upon being
+dropped. In this case, the child thread may outlive the parent (unless
+the parent thread is the main thread; the whole process is terminated when
+the main thread finishes). Additionally, the join handle provides a <a href="../../../anoma_apps/std/thread/struct.JoinHandle.html#method.join"><code>join</code></a>
+method that can be used to join the child thread. If the child thread
+panics, <a href="../../../anoma_apps/std/thread/struct.JoinHandle.html#method.join"><code>join</code></a> will return an <a href="../../../anoma_apps/std/result/enum.Result.html#variant.Err"><code>Err</code></a> containing the argument given to
+<a href="../../../anoma_apps/std/macro.panic.html" title="panic!"><code>panic!</code></a>.</p>
+<p>This will create a thread using default parameters of <a href="../../../anoma_apps/std/thread/struct.Builder.html" title="Builder"><code>Builder</code></a>, if you
+want to specify the stack size or the name of the thread, use this API
+instead.</p>
+<p>As you can see in the signature of <code>spawn</code> there are two constraints on
+both the closure given to <code>spawn</code> and its return value, let’s explain them:</p>
+<ul>
+<li>The <code>'static</code> constraint means that the closure and its return value
+must have a lifetime of the whole program execution. The reason for this
+is that threads can <code>detach</code> and outlive the lifetime they have been
+created in.
+Indeed if the thread, and by extension its return value, can outlive their
+caller, we need to make sure that they will be valid afterwards, and since
+we <em>can’t</em> know when it will return we need to have them valid as long as
+possible, that is until the end of the program, hence the <code>'static</code>
+lifetime.</li>
+<li>The <a href="../../../anoma_apps/std/marker/trait.Send.html" title="Send"><code>Send</code></a> constraint is because the closure will need to be passed
+<em>by value</em> from the thread where it is spawned to the new thread. Its
+return value will need to be passed from the new thread to the thread
+where it is <code>join</code>ed.
+As a reminder, the <a href="../../../anoma_apps/std/marker/trait.Send.html" title="Send"><code>Send</code></a> marker trait expresses that it is safe to be
+passed from thread to thread. <a href="../../../anoma_apps/std/marker/trait.Sync.html" title="Sync"><code>Sync</code></a> expresses that it is safe to have a
+reference be passed from thread to thread.</li>
+</ul>
+<h1 id="panics" class="section-header"><a href="#panics">Panics</a></h1>
+<p>Panics if the OS fails to create a thread; use <a href="../../../anoma_apps/std/thread/struct.Builder.html#method.spawn" title="Builder::spawn"><code>Builder::spawn</code></a>
+to recover from such errors.</p>
+<h1 id="examples" class="section-header"><a href="#examples">Examples</a></h1>
+<p>Creating a thread.</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">thread</span>;
+
+<span class="kw">let</span> <span class="ident">handler</span> <span class="op">=</span> <span class="ident">thread</span>::<span class="ident">spawn</span>(<span class="op">|</span><span class="op">|</span> {
+    <span class="comment">// thread code</span>
+});
+
+<span class="ident">handler</span>.<span class="ident">join</span>().<span class="ident">unwrap</span>();</pre></div>
+<p>As mentioned in the module documentation, threads are usually made to
+communicate using <a href="../../../anoma_apps/std/sync/mpsc/index.html"><code>channels</code></a>, here is how it usually looks.</p>
+<p>This example also shows how to use <code>move</code>, in order to give ownership
+of values to a thread.</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">thread</span>;
+<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">sync</span>::<span class="ident">mpsc</span>::<span class="ident">channel</span>;
+
+<span class="kw">let</span> (<span class="ident">tx</span>, <span class="ident">rx</span>) <span class="op">=</span> <span class="ident">channel</span>();
+
+<span class="kw">let</span> <span class="ident">sender</span> <span class="op">=</span> <span class="ident">thread</span>::<span class="ident">spawn</span>(<span class="kw">move</span> <span class="op">|</span><span class="op">|</span> {
+    <span class="ident">tx</span>.<span class="ident">send</span>(<span class="string">&quot;Hello, thread&quot;</span>.<span class="ident">to_owned</span>())
+        .<span class="ident">expect</span>(<span class="string">&quot;Unable to send on channel&quot;</span>);
+});
+
+<span class="kw">let</span> <span class="ident">receiver</span> <span class="op">=</span> <span class="ident">thread</span>::<span class="ident">spawn</span>(<span class="kw">move</span> <span class="op">|</span><span class="op">|</span> {
+    <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">rx</span>.<span class="ident">recv</span>().<span class="ident">expect</span>(<span class="string">&quot;Unable to receive from channel&quot;</span>);
+    <span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">value</span>);
+});
+
+<span class="ident">sender</span>.<span class="ident">join</span>().<span class="ident">expect</span>(<span class="string">&quot;The sender thread has panicked&quot;</span>);
+<span class="ident">receiver</span>.<span class="ident">join</span>().<span class="ident">expect</span>(<span class="string">&quot;The receiver thread has panicked&quot;</span>);</pre></div>
+<p>A thread can also return a value through its <a href="../../../anoma_apps/std/thread/struct.JoinHandle.html" title="JoinHandle"><code>JoinHandle</code></a>, you can use
+this to make asynchronous computations (futures might be more appropriate
+though).</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">thread</span>;
+
+<span class="kw">let</span> <span class="ident">computation</span> <span class="op">=</span> <span class="ident">thread</span>::<span class="ident">spawn</span>(<span class="op">|</span><span class="op">|</span> {
+    <span class="comment">// Some expensive computation.</span>
+    <span class="number">42</span>
+});
+
+<span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">computation</span>.<span class="ident">join</span>().<span class="ident">unwrap</span>();
+<span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">result</span>);</pre></div>
+</div></section><section id="search" class="content hidden"></section><section class="footer"></section><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="anoma_apps" data-search-js="../../../search-index.js"></div>
+    <script src="../../../main.js"></script></body></html>

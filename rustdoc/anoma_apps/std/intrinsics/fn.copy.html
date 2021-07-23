@@ -1,0 +1,54 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Copies `count * size_of::<T>()` bytes from `src` to `dst`. The source and destination may overlap."><meta name="keywords" content="rust, rustlang, rust-lang, copy"><title>anoma_apps::std::intrinsics::copy - Rust</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script id="default-settings"></script><script src="../../../storage.js"></script><script src="../../../crates.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../../favicon.svg">
+<link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png">
+<link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc fn"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../anoma_apps/index.html'><div class='logo-container rust-logo'><img src='../../../rust-logo.png' alt='logo'></div></a><div class="sidebar-elems"><p class="location"><a href="../../index.html">anoma_apps</a>::<wbr><a href="../index.html">std</a>::<wbr><a href="index.html">intrinsics</a></p><div id="sidebar-vars" data-name="copy" data-ty="fn" data-relpath=""></div><script defer src="sidebar-items.js"></script></div></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../../../brush.svg" width="18" height="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><script src="../../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" class="help-button">?</button>
+                <a id="settings-menu" href="../../../settings.html"><img src="../../../wheel.svg" width="18" height="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><h1 class="fqn"><span class="in-band">Function <a href="../../index.html">anoma_apps</a>::<wbr><a href="../index.html">std</a>::<wbr><a href="index.html">intrinsics</a>::<wbr><a class="fn" href="">copy</a></span><span class="out-of-band"><span class="since" title="Stable since Rust version 1.0.0">1.0.0</span><span id="render-detail"><a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">[<span class="inner">&#x2212;</span>]</a></span><a class="srclink" href="https://doc.rust-lang.org/nightly/src/core/intrinsics.rs.html#1928" title="goto source code">[src]</a></span></h1><pre class="rust fn">pub const unsafe fn copy&lt;T&gt;(src: <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.pointer.html">*const T</a>, dst: <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.pointer.html">*mut T</a>, count: <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.usize.html">usize</a>)</pre><div class="docblock"><p>Copies <code>count * size_of::&lt;T&gt;()</code> bytes from <code>src</code> to <code>dst</code>. The source
+and destination may overlap.</p>
+<p>If the source and destination will <em>never</em> overlap,
+<a href="../../../anoma_apps/std/ptr/fn.copy_nonoverlapping.html" title="copy_nonoverlapping"><code>copy_nonoverlapping</code></a> can be used instead.</p>
+<p><code>copy</code> is semantically equivalent to C’s <a href="https://en.cppreference.com/w/c/string/byte/memmove"><code>memmove</code></a>, but with the argument
+order swapped. Copying takes place as if the bytes were copied from <code>src</code>
+to a temporary array and then copied from the array to <code>dst</code>.</p>
+<h1 id="safety" class="section-header"><a href="#safety">Safety</a></h1>
+<p>Behavior is undefined if any of the following conditions are violated:</p>
+<ul>
+<li>
+<p><code>src</code> must be <a href="../../../anoma_apps/std/ptr/index.html#safety">valid</a> for reads of <code>count * size_of::&lt;T&gt;()</code> bytes.</p>
+</li>
+<li>
+<p><code>dst</code> must be <a href="../../../anoma_apps/std/ptr/index.html#safety">valid</a> for writes of <code>count * size_of::&lt;T&gt;()</code> bytes.</p>
+</li>
+<li>
+<p>Both <code>src</code> and <code>dst</code> must be properly aligned.</p>
+</li>
+</ul>
+<p>Like <a href="../../../anoma_apps/std/ptr/fn.read.html"><code>read</code></a>, <code>copy</code> creates a bitwise copy of <code>T</code>, regardless of
+whether <code>T</code> is <a href="../../../anoma_apps/std/marker/trait.Copy.html" title="Copy"><code>Copy</code></a>. If <code>T</code> is not <a href="../../../anoma_apps/std/marker/trait.Copy.html" title="Copy"><code>Copy</code></a>, using both the values
+in the region beginning at <code>*src</code> and the region beginning at <code>*dst</code> can
+<a href="../../../anoma_apps/std/ptr/fn.read.html#ownership-of-the-returned-value">violate memory safety</a>.</p>
+<p>Note that even if the effectively copied size (<code>count * size_of::&lt;T&gt;()</code>) is
+<code>0</code>, the pointers must be non-NULL and properly aligned.</p>
+<h1 id="examples" class="section-header"><a href="#examples">Examples</a></h1>
+<p>Efficiently create a Rust vector from an unsafe buffer:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">ptr</span>;
+
+<span class="doccomment">/// # Safety</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// * `ptr` must be correctly aligned for its type and non-zero.</span>
+<span class="doccomment">/// * `ptr` must be valid for reads of `elts` contiguous elements of type `T`.</span>
+<span class="doccomment">/// * Those elements must not be used after calling this function unless `T: Copy`.</span>
+<span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">from_buf_raw</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="ident">ptr</span>: <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">T</span>, <span class="ident">elts</span>: <span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">dst</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="ident">with_capacity</span>(<span class="ident">elts</span>);
+
+    <span class="comment">// SAFETY: Our precondition ensures the source is aligned and valid,</span>
+    <span class="comment">// and `Vec::with_capacity` ensures that we have usable space to write them.</span>
+    <span class="ident">ptr</span>::<span class="ident">copy</span>(<span class="ident">ptr</span>, <span class="ident">dst</span>.<span class="ident">as_mut_ptr</span>(), <span class="ident">elts</span>);
+
+    <span class="comment">// SAFETY: We created it with this much capacity earlier,</span>
+    <span class="comment">// and the previous `copy` has initialized these elements.</span>
+    <span class="ident">dst</span>.<span class="ident">set_len</span>(<span class="ident">elts</span>);
+    <span class="ident">dst</span>
+}</pre></div>
+</div></section><section id="search" class="content hidden"></section><section class="footer"></section><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="anoma_apps" data-search-js="../../../search-index.js"></div>
+    <script src="../../../main.js"></script></body></html>

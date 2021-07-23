@@ -82,13 +82,13 @@
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">collections</span>::<span class="ident">HashSet</span>;
 
-<span class="kw">use</span> <span class="ident">anoma_shared</span>::<span class="ident">types</span>::<span class="ident">address</span>::<span class="ident">Address</span>;
-<span class="kw">use</span> <span class="ident">anoma_shared</span>::<span class="ident">types</span>::<span class="ident">storage</span>::<span class="ident">Key</span>;
-<span class="kw">use</span> <span class="ident">anoma_shared</span>::<span class="ident">types</span>::<span class="ident">token</span>;
+<span class="kw">use</span> <span class="ident">anoma</span>::<span class="ident">types</span>::<span class="ident">address</span>::<span class="ident">Address</span>;
+<span class="kw">use</span> <span class="ident">anoma</span>::<span class="ident">types</span>::<span class="ident">storage</span>::<span class="ident">Key</span>;
+<span class="kw">use</span> <span class="ident">anoma</span>::<span class="ident">types</span>::<span class="ident">token</span>;
 
 <span class="doccomment">/// Vp imports and functions.</span>
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">vp</span> {
-    <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">anoma_shared</span>::<span class="ident">types</span>::<span class="ident">token</span>::<span class="kw-2">*</span>;
+    <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">anoma</span>::<span class="ident">types</span>::<span class="ident">token</span>::<span class="kw-2">*</span>;
 
     <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
     <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">imports</span>::<span class="ident">vp</span>;
@@ -127,7 +127,7 @@
 
 <span class="doccomment">/// Tx imports and functions.</span>
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">tx</span> {
-    <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">anoma_shared</span>::<span class="ident">types</span>::<span class="ident">token</span>::<span class="kw-2">*</span>;
+    <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">anoma</span>::<span class="ident">types</span>::<span class="ident">token</span>::<span class="kw-2">*</span>;
 
     <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
     <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">imports</span>::<span class="ident">tx</span>;

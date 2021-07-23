@@ -42,12 +42,12 @@
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">collections</span>::<span class="ident">HashSet</span>;
 
-<span class="kw">use</span> <span class="ident">anoma_shared</span>::<span class="ident">types</span>::<span class="ident">intent</span>;
-<span class="kw">use</span> <span class="ident">anoma_shared</span>::<span class="ident">types</span>::<span class="ident">key</span>::<span class="ident">ed25519</span>::{<span class="ident">Signature</span>, <span class="ident">Signed</span>};
+<span class="kw">use</span> <span class="ident">anoma</span>::<span class="ident">types</span>::<span class="ident">intent</span>;
+<span class="kw">use</span> <span class="ident">anoma</span>::<span class="ident">types</span>::<span class="ident">key</span>::<span class="ident">ed25519</span>::{<span class="ident">Signature</span>, <span class="ident">Signed</span>};
 
 <span class="doccomment">/// Tx imports and functions.</span>
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">tx</span> {
-    <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">anoma_shared</span>::<span class="ident">types</span>::<span class="ident">intent</span>::<span class="kw-2">*</span>;
+    <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">anoma</span>::<span class="ident">types</span>::<span class="ident">intent</span>::<span class="kw-2">*</span>;
 
     <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">invalidate_intent</span>(<span class="ident">intent</span>: <span class="kw-2">&amp;</span><span class="ident">Signed</span><span class="op">&lt;</span><span class="ident">Intent</span><span class="op">&gt;</span>) {
@@ -62,7 +62,7 @@
 
 <span class="doccomment">/// Vp imports and functions.</span>
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">vp</span> {
-    <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">anoma_shared</span>::<span class="ident">types</span>::<span class="ident">intent</span>::<span class="kw-2">*</span>;
+    <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">anoma</span>::<span class="ident">types</span>::<span class="ident">intent</span>::<span class="kw-2">*</span>;
 
     <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
 

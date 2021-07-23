@@ -1,0 +1,50 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Creates an iterator that lazily generates a value exactly once by invoking the provided closure."><meta name="keywords" content="rust, rustlang, rust-lang, once_with"><title>anoma_apps::std::iter::once_with - Rust</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script id="default-settings"></script><script src="../../../storage.js"></script><script src="../../../crates.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../../favicon.svg">
+<link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png">
+<link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc fn"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../anoma_apps/index.html'><div class='logo-container rust-logo'><img src='../../../rust-logo.png' alt='logo'></div></a><div class="sidebar-elems"><p class="location"><a href="../../index.html">anoma_apps</a>::<wbr><a href="../index.html">std</a>::<wbr><a href="index.html">iter</a></p><div id="sidebar-vars" data-name="once_with" data-ty="fn" data-relpath=""></div><script defer src="sidebar-items.js"></script></div></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../../../brush.svg" width="18" height="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><script src="../../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" class="help-button">?</button>
+                <a id="settings-menu" href="../../../settings.html"><img src="../../../wheel.svg" width="18" height="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><h1 class="fqn"><span class="in-band">Function <a href="../../index.html">anoma_apps</a>::<wbr><a href="../index.html">std</a>::<wbr><a href="index.html">iter</a>::<wbr><a class="fn" href="">once_with</a></span><span class="out-of-band"><span class="since" title="Stable since Rust version 1.43.0">1.43.0</span><span id="render-detail"><a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">[<span class="inner">&#x2212;</span>]</a></span><a class="srclink" href="https://doc.rust-lang.org/nightly/src/core/iter/sources/once_with.rs.html#60" title="goto source code">[src]</a></span></h1><pre class="rust fn">pub fn once_with&lt;A, F&gt;(gen: F) -&gt; <a class="struct" href="../../../anoma_apps/std/iter/struct.OnceWith.html" title="struct anoma_apps::std::iter::OnceWith">OnceWith</a>&lt;F&gt;<span class="notable-traits"><span class="notable-traits-tooltip">ⓘ<div class="notable-traits-tooltiptext"><span class="docblock"><h3 class="notable">Notable traits for <a class="struct" href="../../../anoma_apps/std/iter/struct.OnceWith.html" title="struct anoma_apps::std::iter::OnceWith">OnceWith</a>&lt;F&gt;</h3><code class="content"><span class="where fmt-newline">impl&lt;A, F&gt; <a class="trait" href="../../../anoma_apps/std/iter/trait.Iterator.html" title="trait anoma_apps::std::iter::Iterator">Iterator</a> for <a class="struct" href="../../../anoma_apps/std/iter/struct.OnceWith.html" title="struct anoma_apps::std::iter::OnceWith">OnceWith</a>&lt;F&gt; <span class="where fmt-newline">where<br>&nbsp;&nbsp;&nbsp;&nbsp;F: <a class="trait" href="../../../anoma_apps/std/ops/trait.FnOnce.html" title="trait anoma_apps::std::ops::FnOnce">FnOnce</a>() -&gt; A,&nbsp;</span></span><span class="where fmt-newline">    type <a href="../../../anoma_apps/std/iter/trait.Iterator.html#associatedtype.Item" class="type">Item</a> = A;</span></code></span></div></span></span> <span class="where fmt-newline">where<br>&nbsp;&nbsp;&nbsp;&nbsp;F: <a class="trait" href="../../../anoma_apps/std/ops/trait.FnOnce.html" title="trait anoma_apps::std::ops::FnOnce">FnOnce</a>() -&gt; A,&nbsp;</span></pre><div class="docblock"><p>Creates an iterator that lazily generates a value exactly once by invoking
+the provided closure.</p>
+<p>This is commonly used to adapt a single value generator into a <a href="../../../anoma_apps/std/iter/trait.Iterator.html#method.chain"><code>chain()</code></a> of
+other kinds of iteration. Maybe you have an iterator that covers almost
+everything, but you need an extra special case. Maybe you have a function
+which works on iterators, but you only need to process one value.</p>
+<p>Unlike <a href="../../../anoma_apps/std/iter/fn.once.html"><code>once()</code></a>, this function will lazily generate the value on request.</p>
+<h1 id="examples" class="section-header"><a href="#examples">Examples</a></h1>
+<p>Basic usage:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">iter</span>;
+
+<span class="comment">// one is the loneliest number</span>
+<span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">one</span> <span class="op">=</span> <span class="ident">iter</span>::<span class="ident">once_with</span>(<span class="op">|</span><span class="op">|</span> <span class="number">1</span>);
+
+<span class="macro">assert_eq</span><span class="macro">!</span>(<span class="prelude-val">Some</span>(<span class="number">1</span>), <span class="ident">one</span>.<span class="ident">next</span>());
+
+<span class="comment">// just one, that&#39;s all we get</span>
+<span class="macro">assert_eq</span><span class="macro">!</span>(<span class="prelude-val">None</span>, <span class="ident">one</span>.<span class="ident">next</span>());</pre></div>
+<p>Chaining together with another iterator. Let’s say that we want to iterate
+over each file of the <code>.foo</code> directory, but also a configuration file,
+<code>.foorc</code>:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">iter</span>;
+<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">fs</span>;
+<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">path</span>::<span class="ident">PathBuf</span>;
+
+<span class="kw">let</span> <span class="ident">dirs</span> <span class="op">=</span> <span class="ident">fs</span>::<span class="ident">read_dir</span>(<span class="string">&quot;.foo&quot;</span>).<span class="ident">unwrap</span>();
+
+<span class="comment">// we need to convert from an iterator of DirEntry-s to an iterator of</span>
+<span class="comment">// PathBufs, so we use map</span>
+<span class="kw">let</span> <span class="ident">dirs</span> <span class="op">=</span> <span class="ident">dirs</span>.<span class="ident">map</span>(<span class="op">|</span><span class="ident">file</span><span class="op">|</span> <span class="ident">file</span>.<span class="ident">unwrap</span>().<span class="ident">path</span>());
+
+<span class="comment">// now, our iterator just for our config file</span>
+<span class="kw">let</span> <span class="ident">config</span> <span class="op">=</span> <span class="ident">iter</span>::<span class="ident">once_with</span>(<span class="op">|</span><span class="op">|</span> <span class="ident">PathBuf</span>::<span class="ident">from</span>(<span class="string">&quot;.foorc&quot;</span>));
+
+<span class="comment">// chain the two iterators together into one big iterator</span>
+<span class="kw">let</span> <span class="ident">files</span> <span class="op">=</span> <span class="ident">dirs</span>.<span class="ident">chain</span>(<span class="ident">config</span>);
+
+<span class="comment">// this will give us all of the files in .foo as well as .foorc</span>
+<span class="kw">for</span> <span class="ident">f</span> <span class="kw">in</span> <span class="ident">files</span> {
+    <span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="ident">f</span>);
+}</pre></div>
+</div></section><section id="search" class="content hidden"></section><section class="footer"></section><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="anoma_apps" data-search-js="../../../search-index.js"></div>
+    <script src="../../../main.js"></script></body></html>

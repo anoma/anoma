@@ -1,3 +1,0 @@
-(function() {var implementors = {};
-implementors["anoma"] = [{"text":"impl <a class=\"trait\" href=\"anoma/std/convert/trait.TryFrom.html\" title=\"trait anoma::std::convert::TryFrom\">TryFrom</a>&lt;<a class=\"struct\" href=\"anoma/proto/services/struct.IntentMessage.html\" title=\"struct anoma::proto::services::IntentMessage\">IntentMessage</a>&gt; for <a class=\"struct\" href=\"anoma/proto/struct.IntentMessage.html\" title=\"struct anoma::proto::IntentMessage\">IntentMessage</a>","synthetic":false,"types":["anoma::proto::types::IntentMessage"]}];
-if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()

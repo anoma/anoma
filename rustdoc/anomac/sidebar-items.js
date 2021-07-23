@@ -1,1 +1,0 @@
-initSidebarItems({"fn":[["main",""]],"mod":[["cli","Anoma client CLI."]]});

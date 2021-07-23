@@ -1,0 +1,63 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="An atomic fence."><meta name="keywords" content="rust, rustlang, rust-lang, fence"><title>anoma_apps::std::sync::atomic::fence - Rust</title><link rel="stylesheet" type="text/css" href="../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../../ayu.css" disabled ><script id="default-settings"></script><script src="../../../../storage.js"></script><script src="../../../../crates.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg">
+<link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png">
+<link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../../../down-arrow.svg");}</style></head><body class="rustdoc fn"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../../anoma_apps/index.html'><div class='logo-container rust-logo'><img src='../../../../rust-logo.png' alt='logo'></div></a><div class="sidebar-elems"><p class="location"><a href="../../../index.html">anoma_apps</a>::<wbr><a href="../../index.html">std</a>::<wbr><a href="../index.html">sync</a>::<wbr><a href="index.html">atomic</a></p><div id="sidebar-vars" data-name="fence" data-ty="fn" data-relpath=""></div><script defer src="sidebar-items.js"></script></div></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../../../../brush.svg" width="18" height="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><script src="../../../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" class="help-button">?</button>
+                <a id="settings-menu" href="../../../../settings.html"><img src="../../../../wheel.svg" width="18" height="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><h1 class="fqn"><span class="in-band">Function <a href="../../../index.html">anoma_apps</a>::<wbr><a href="../../index.html">std</a>::<wbr><a href="../index.html">sync</a>::<wbr><a href="index.html">atomic</a>::<wbr><a class="fn" href="">fence</a></span><span class="out-of-band"><span class="since" title="Stable since Rust version 1.0.0">1.0.0</span><span id="render-detail"><a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">[<span class="inner">&#x2212;</span>]</a></span><a class="srclink" href="https://doc.rust-lang.org/nightly/src/core/sync/atomic.rs.html#2658" title="goto source code">[src]</a></span></h1><pre class="rust fn">pub fn fence(order: <a class="enum" href="../../../../anoma_apps/std/sync/atomic/enum.Ordering.html" title="enum anoma_apps::std::sync::atomic::Ordering">Ordering</a>)</pre><div class="docblock"><p>An atomic fence.</p>
+<p>Depending on the specified order, a fence prevents the compiler and CPU from
+reordering certain types of memory operations around it.
+That creates synchronizes-with relationships between it and atomic operations
+or fences in other threads.</p>
+<p>A fence ‘A’ which has (at least) <a href="../../../../anoma_apps/std/sync/atomic/enum.Ordering.html#variant.Release" title="Release"><code>Release</code></a> ordering semantics, synchronizes
+with a fence ‘B’ with (at least) <a href="../../../../anoma_apps/std/sync/atomic/enum.Ordering.html#variant.Acquire" title="Acquire"><code>Acquire</code></a> semantics, if and only if there
+exist operations X and Y, both operating on some atomic object ‘M’ such
+that A is sequenced before X, Y is synchronized before B and Y observes
+the change to M. This provides a happens-before dependence between A and B.</p>
+<pre><code class="language-text">    Thread 1                                          Thread 2
+
+fence(Release);      A --------------
+x.store(3, Relaxed); X ---------    |
+                               |    |
+                               |    |
+                               -------------&gt; Y  if x.load(Relaxed) == 3 {
+                                    |-------&gt; B      fence(Acquire);
+                                                     ...
+                                                 }
+</code></pre>
+<p>Atomic operations with <a href="../../../../anoma_apps/std/sync/atomic/enum.Ordering.html#variant.Release" title="Release"><code>Release</code></a> or <a href="../../../../anoma_apps/std/sync/atomic/enum.Ordering.html#variant.Acquire" title="Acquire"><code>Acquire</code></a> semantics can also synchronize
+with a fence.</p>
+<p>A fence which has <a href="../../../../anoma_apps/std/sync/atomic/enum.Ordering.html#variant.SeqCst" title="SeqCst"><code>SeqCst</code></a> ordering, in addition to having both <a href="../../../../anoma_apps/std/sync/atomic/enum.Ordering.html#variant.Acquire" title="Acquire"><code>Acquire</code></a>
+and <a href="../../../../anoma_apps/std/sync/atomic/enum.Ordering.html#variant.Release" title="Release"><code>Release</code></a> semantics, participates in the global program order of the
+other <a href="../../../../anoma_apps/std/sync/atomic/enum.Ordering.html#variant.SeqCst" title="SeqCst"><code>SeqCst</code></a> operations and/or fences.</p>
+<p>Accepts <a href="../../../../anoma_apps/std/sync/atomic/enum.Ordering.html#variant.Acquire" title="Acquire"><code>Acquire</code></a>, <a href="../../../../anoma_apps/std/sync/atomic/enum.Ordering.html#variant.Release" title="Release"><code>Release</code></a>, <a href="../../../../anoma_apps/std/sync/atomic/enum.Ordering.html#variant.AcqRel" title="AcqRel"><code>AcqRel</code></a> and <a href="../../../../anoma_apps/std/sync/atomic/enum.Ordering.html#variant.SeqCst" title="SeqCst"><code>SeqCst</code></a> orderings.</p>
+<h1 id="panics" class="section-header"><a href="#panics">Panics</a></h1>
+<p>Panics if <code>order</code> is <a href="../../../../anoma_apps/std/sync/atomic/enum.Ordering.html#variant.Relaxed" title="Relaxed"><code>Relaxed</code></a>.</p>
+<h1 id="examples" class="section-header"><a href="#examples">Examples</a></h1>
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">sync</span>::<span class="ident">atomic</span>::<span class="ident">AtomicBool</span>;
+<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">sync</span>::<span class="ident">atomic</span>::<span class="ident">fence</span>;
+<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">sync</span>::<span class="ident">atomic</span>::<span class="ident">Ordering</span>;
+
+<span class="comment">// A mutual exclusion primitive based on spinlock.</span>
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Mutex</span> {
+    <span class="ident">flag</span>: <span class="ident">AtomicBool</span>,
+}
+
+<span class="kw">impl</span> <span class="ident">Mutex</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Mutex</span> {
+        <span class="ident">Mutex</span> {
+            <span class="ident">flag</span>: <span class="ident">AtomicBool</span>::<span class="ident">new</span>(<span class="bool-val">false</span>),
+        }
+    }
+
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">lock</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) {
+        <span class="comment">// Wait until the old value is `false`.</span>
+        <span class="kw">while</span> <span class="self">self</span>.<span class="ident">flag</span>.<span class="ident">compare_and_swap</span>(<span class="bool-val">false</span>, <span class="bool-val">true</span>, <span class="ident">Ordering</span>::<span class="ident">Relaxed</span>) <span class="op">!</span><span class="op">=</span> <span class="bool-val">false</span> {}
+        <span class="comment">// This fence synchronizes-with store in `unlock`.</span>
+        <span class="ident">fence</span>(<span class="ident">Ordering</span>::<span class="ident">Acquire</span>);
+    }
+
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">unlock</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) {
+        <span class="self">self</span>.<span class="ident">flag</span>.<span class="ident">store</span>(<span class="bool-val">false</span>, <span class="ident">Ordering</span>::<span class="ident">Release</span>);
+    }
+}</pre></div>
+</div></section><section id="search" class="content hidden"></section><section class="footer"></section><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="anoma_apps" data-search-js="../../../../search-index.js"></div>
+    <script src="../../../../main.js"></script></body></html>

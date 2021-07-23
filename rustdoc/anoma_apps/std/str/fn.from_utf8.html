@@ -1,0 +1,60 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Converts a slice of bytes to a string slice."><meta name="keywords" content="rust, rustlang, rust-lang, from_utf8"><title>anoma_apps::std::str::from_utf8 - Rust</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script id="default-settings"></script><script src="../../../storage.js"></script><script src="../../../crates.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../../favicon.svg">
+<link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png">
+<link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc fn"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../anoma_apps/index.html'><div class='logo-container rust-logo'><img src='../../../rust-logo.png' alt='logo'></div></a><div class="sidebar-elems"><p class="location"><a href="../../index.html">anoma_apps</a>::<wbr><a href="../index.html">std</a>::<wbr><a href="index.html">str</a></p><div id="sidebar-vars" data-name="from_utf8" data-ty="fn" data-relpath=""></div><script defer src="sidebar-items.js"></script></div></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../../../brush.svg" width="18" height="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><script src="../../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" class="help-button">?</button>
+                <a id="settings-menu" href="../../../settings.html"><img src="../../../wheel.svg" width="18" height="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><h1 class="fqn"><span class="in-band">Function <a href="../../index.html">anoma_apps</a>::<wbr><a href="../index.html">std</a>::<wbr><a href="index.html">str</a>::<wbr><a class="fn" href="">from_utf8</a></span><span class="out-of-band"><span class="since" title="Stable since Rust version 1.0.0">1.0.0</span><span id="render-detail"><a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">[<span class="inner">&#x2212;</span>]</a></span><a class="srclink" href="https://doc.rust-lang.org/nightly/src/core/str/converts.rs.html#85" title="goto source code">[src]</a></span></h1><pre class="rust fn">pub fn from_utf8(v: <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.slice.html">&amp;[</a><a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.u8.html">u8</a><a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.slice.html">]</a>) -&gt; <a class="enum" href="../../../anoma_apps/std/result/enum.Result.html" title="enum anoma_apps::std::result::Result">Result</a>&lt;&amp;<a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.str.html">str</a>, <a class="struct" href="../../../anoma_apps/std/str/struct.Utf8Error.html" title="struct anoma_apps::std::str::Utf8Error">Utf8Error</a>&gt;</pre><div class="docblock"><p>Converts a slice of bytes to a string slice.</p>
+<p>A string slice (<a href="https://doc.rust-lang.org/nightly/std/primitive.str.html"><code>&amp;str</code></a>) is made of bytes (<a href="https://doc.rust-lang.org/nightly/std/primitive.u8.html" title="u8"><code>u8</code></a>), and a byte slice
+(<a href="https://doc.rust-lang.org/nightly/std/primitive.slice.html"><code>&amp;[u8]</code></a>) is made of bytes, so this function converts between
+the two. Not all byte slices are valid string slices, however: <a href="https://doc.rust-lang.org/nightly/std/primitive.str.html"><code>&amp;str</code></a> requires
+that it is valid UTF-8. <code>from_utf8()</code> checks to ensure that the bytes are valid
+UTF-8, and then does the conversion.</p>
+<p>If you are sure that the byte slice is valid UTF-8, and you don’t want to
+incur the overhead of the validity check, there is an unsafe version of
+this function, <a href="../../../anoma_apps/std/str/fn.from_utf8_unchecked.html" title="from_utf8_unchecked"><code>from_utf8_unchecked</code></a>, which has the same
+behavior but skips the check.</p>
+<p>If you need a <code>String</code> instead of a <code>&amp;str</code>, consider
+<a href="../../std/string/struct.String.html#method.from_utf8"><code>String::from_utf8</code></a>.</p>
+<p>Because you can stack-allocate a <code>[u8; N]</code>, and you can take a
+<a href="https://doc.rust-lang.org/nightly/std/primitive.slice.html"><code>&amp;[u8]</code></a> of it, this function is one way to have a
+stack-allocated string. There is an example of this in the
+examples section below.</p>
+<h1 id="errors" class="section-header"><a href="#errors">Errors</a></h1>
+<p>Returns <code>Err</code> if the slice is not UTF-8 with a description as to why the
+provided slice is not UTF-8.</p>
+<h1 id="examples" class="section-header"><a href="#examples">Examples</a></h1>
+<p>Basic usage:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">str</span>;
+
+<span class="comment">// some bytes, in a vector</span>
+<span class="kw">let</span> <span class="ident">sparkle_heart</span> <span class="op">=</span> <span class="macro">vec</span><span class="macro">!</span>[<span class="number">240</span>, <span class="number">159</span>, <span class="number">146</span>, <span class="number">150</span>];
+
+<span class="comment">// We know these bytes are valid, so just use `unwrap()`.</span>
+<span class="kw">let</span> <span class="ident">sparkle_heart</span> <span class="op">=</span> <span class="ident">str</span>::<span class="ident">from_utf8</span>(<span class="kw-2">&amp;</span><span class="ident">sparkle_heart</span>).<span class="ident">unwrap</span>();
+
+<span class="macro">assert_eq</span><span class="macro">!</span>(<span class="string">&quot;💖&quot;</span>, <span class="ident">sparkle_heart</span>);</pre></div>
+<p>Incorrect bytes:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">str</span>;
+
+<span class="comment">// some invalid bytes, in a vector</span>
+<span class="kw">let</span> <span class="ident">sparkle_heart</span> <span class="op">=</span> <span class="macro">vec</span><span class="macro">!</span>[<span class="number">0</span>, <span class="number">159</span>, <span class="number">146</span>, <span class="number">150</span>];
+
+<span class="macro">assert</span><span class="macro">!</span>(<span class="ident">str</span>::<span class="ident">from_utf8</span>(<span class="kw-2">&amp;</span><span class="ident">sparkle_heart</span>).<span class="ident">is_err</span>());</pre></div>
+<p>See the docs for <a href="../../../anoma_apps/std/str/struct.Utf8Error.html" title="Utf8Error"><code>Utf8Error</code></a> for more details on the kinds of
+errors that can be returned.</p>
+<p>A “stack allocated string”:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">str</span>;
+
+<span class="comment">// some bytes, in a stack-allocated array</span>
+<span class="kw">let</span> <span class="ident">sparkle_heart</span> <span class="op">=</span> [<span class="number">240</span>, <span class="number">159</span>, <span class="number">146</span>, <span class="number">150</span>];
+
+<span class="comment">// We know these bytes are valid, so just use `unwrap()`.</span>
+<span class="kw">let</span> <span class="ident">sparkle_heart</span> <span class="op">=</span> <span class="ident">str</span>::<span class="ident">from_utf8</span>(<span class="kw-2">&amp;</span><span class="ident">sparkle_heart</span>).<span class="ident">unwrap</span>();
+
+<span class="macro">assert_eq</span><span class="macro">!</span>(<span class="string">&quot;💖&quot;</span>, <span class="ident">sparkle_heart</span>);</pre></div>
+</div></section><section id="search" class="content hidden"></section><section class="footer"></section><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="anoma_apps" data-search-js="../../../search-index.js"></div>
+    <script src="../../../main.js"></script></body></html>

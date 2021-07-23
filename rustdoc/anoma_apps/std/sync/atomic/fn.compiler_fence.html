@@ -1,0 +1,62 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="A compiler memory fence."><meta name="keywords" content="rust, rustlang, rust-lang, compiler_fence"><title>anoma_apps::std::sync::atomic::compiler_fence - Rust</title><link rel="stylesheet" type="text/css" href="../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../../ayu.css" disabled ><script id="default-settings"></script><script src="../../../../storage.js"></script><script src="../../../../crates.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg">
+<link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png">
+<link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../../../down-arrow.svg");}</style></head><body class="rustdoc fn"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../../anoma_apps/index.html'><div class='logo-container rust-logo'><img src='../../../../rust-logo.png' alt='logo'></div></a><div class="sidebar-elems"><p class="location"><a href="../../../index.html">anoma_apps</a>::<wbr><a href="../../index.html">std</a>::<wbr><a href="../index.html">sync</a>::<wbr><a href="index.html">atomic</a></p><div id="sidebar-vars" data-name="compiler_fence" data-ty="fn" data-relpath=""></div><script defer src="sidebar-items.js"></script></div></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../../../../brush.svg" width="18" height="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><script src="../../../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" class="help-button">?</button>
+                <a id="settings-menu" href="../../../../settings.html"><img src="../../../../wheel.svg" width="18" height="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><h1 class="fqn"><span class="in-band">Function <a href="../../../index.html">anoma_apps</a>::<wbr><a href="../../index.html">std</a>::<wbr><a href="../index.html">sync</a>::<wbr><a href="index.html">atomic</a>::<wbr><a class="fn" href="">compiler_fence</a></span><span class="out-of-band"><span class="since" title="Stable since Rust version 1.21.0">1.21.0</span><span id="render-detail"><a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">[<span class="inner">&#x2212;</span>]</a></span><a class="srclink" href="https://doc.rust-lang.org/nightly/src/core/sync/atomic.rs.html#2739" title="goto source code">[src]</a></span></h1><pre class="rust fn">pub fn compiler_fence(order: <a class="enum" href="../../../../anoma_apps/std/sync/atomic/enum.Ordering.html" title="enum anoma_apps::std::sync::atomic::Ordering">Ordering</a>)</pre><div class="docblock"><p>A compiler memory fence.</p>
+<p><code>compiler_fence</code> does not emit any machine code, but restricts the kinds
+of memory re-ordering the compiler is allowed to do. Specifically, depending on
+the given <a href="../../../../anoma_apps/std/sync/atomic/enum.Ordering.html" title="Ordering"><code>Ordering</code></a> semantics, the compiler may be disallowed from moving reads
+or writes from before or after the call to the other side of the call to
+<code>compiler_fence</code>. Note that it does <strong>not</strong> prevent the <em>hardware</em>
+from doing such re-ordering. This is not a problem in a single-threaded,
+execution context, but when other threads may modify memory at the same
+time, stronger synchronization primitives such as <a href="../../../../anoma_apps/std/sync/atomic/fn.fence.html" title="fence"><code>fence</code></a> are required.</p>
+<p>The re-ordering prevented by the different ordering semantics are:</p>
+<ul>
+<li>with <a href="../../../../anoma_apps/std/sync/atomic/enum.Ordering.html#variant.SeqCst" title="SeqCst"><code>SeqCst</code></a>, no re-ordering of reads and writes across this point is allowed.</li>
+<li>with <a href="../../../../anoma_apps/std/sync/atomic/enum.Ordering.html#variant.Release" title="Release"><code>Release</code></a>, preceding reads and writes cannot be moved past subsequent writes.</li>
+<li>with <a href="../../../../anoma_apps/std/sync/atomic/enum.Ordering.html#variant.Acquire" title="Acquire"><code>Acquire</code></a>, subsequent reads and writes cannot be moved ahead of preceding reads.</li>
+<li>with <a href="../../../../anoma_apps/std/sync/atomic/enum.Ordering.html#variant.AcqRel" title="AcqRel"><code>AcqRel</code></a>, both of the above rules are enforced.</li>
+</ul>
+<p><code>compiler_fence</code> is generally only useful for preventing a thread from
+racing <em>with itself</em>. That is, if a given thread is executing one piece
+of code, and is then interrupted, and starts executing code elsewhere
+(while still in the same thread, and conceptually still on the same
+core). In traditional programs, this can only occur when a signal
+handler is registered. In more low-level code, such situations can also
+arise when handling interrupts, when implementing green threads with
+pre-emption, etc. Curious readers are encouraged to read the Linux kernel’s
+discussion of <a href="https://www.kernel.org/doc/Documentation/memory-barriers.txt">memory barriers</a>.</p>
+<h1 id="panics" class="section-header"><a href="#panics">Panics</a></h1>
+<p>Panics if <code>order</code> is <a href="../../../../anoma_apps/std/sync/atomic/enum.Ordering.html#variant.Relaxed" title="Relaxed"><code>Relaxed</code></a>.</p>
+<h1 id="examples" class="section-header"><a href="#examples">Examples</a></h1>
+<p>Without <code>compiler_fence</code>, the <code>assert_eq!</code> in following code
+is <em>not</em> guaranteed to succeed, despite everything happening in a single thread.
+To see why, remember that the compiler is free to swap the stores to
+<code>IMPORTANT_VARIABLE</code> and <code>IS_READ</code> since they are both
+<code>Ordering::Relaxed</code>. If it does, and the signal handler is invoked right
+after <code>IS_READY</code> is updated, then the signal handler will see
+<code>IS_READY=1</code>, but <code>IMPORTANT_VARIABLE=0</code>.
+Using a <code>compiler_fence</code> remedies this situation.</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">sync</span>::<span class="ident">atomic</span>::{<span class="ident">AtomicBool</span>, <span class="ident">AtomicUsize</span>};
+<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">sync</span>::<span class="ident">atomic</span>::<span class="ident">Ordering</span>;
+<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">sync</span>::<span class="ident">atomic</span>::<span class="ident">compiler_fence</span>;
+
+<span class="kw">static</span> <span class="ident">IMPORTANT_VARIABLE</span>: <span class="ident">AtomicUsize</span> <span class="op">=</span> <span class="ident">AtomicUsize</span>::<span class="ident">new</span>(<span class="number">0</span>);
+<span class="kw">static</span> <span class="ident">IS_READY</span>: <span class="ident">AtomicBool</span> <span class="op">=</span> <span class="ident">AtomicBool</span>::<span class="ident">new</span>(<span class="bool-val">false</span>);
+
+<span class="kw">fn</span> <span class="ident">main</span>() {
+    <span class="ident">IMPORTANT_VARIABLE</span>.<span class="ident">store</span>(<span class="number">42</span>, <span class="ident">Ordering</span>::<span class="ident">Relaxed</span>);
+    <span class="comment">// prevent earlier writes from being moved beyond this point</span>
+    <span class="ident">compiler_fence</span>(<span class="ident">Ordering</span>::<span class="ident">Release</span>);
+    <span class="ident">IS_READY</span>.<span class="ident">store</span>(<span class="bool-val">true</span>, <span class="ident">Ordering</span>::<span class="ident">Relaxed</span>);
+}
+
+<span class="kw">fn</span> <span class="ident">signal_handler</span>() {
+    <span class="kw">if</span> <span class="ident">IS_READY</span>.<span class="ident">load</span>(<span class="ident">Ordering</span>::<span class="ident">Relaxed</span>) {
+        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">IMPORTANT_VARIABLE</span>.<span class="ident">load</span>(<span class="ident">Ordering</span>::<span class="ident">Relaxed</span>), <span class="number">42</span>);
+    }
+}</pre></div>
+</div></section><section id="search" class="content hidden"></section><section class="footer"></section><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="anoma_apps" data-search-js="../../../../search-index.js"></div>
+    <script src="../../../../main.js"></script></body></html>

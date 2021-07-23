@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `apps/src/lib/proto/types.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>types.rs - source</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script id="default-settings"></script><script src="../../../storage.js"></script><script src="../../../crates.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../../favicon.svg">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `shared/src/proto/types.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>types.rs - source</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script id="default-settings"></script><script src="../../../storage.js"></script><script src="../../../crates.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../../favicon.svg">
 <link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png">
 <link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../anoma/index.html'><div class='logo-container rust-logo'><img src='../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../../../brush.svg" width="18" height="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><script src="../../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" class="help-button">?</button>
                 <a id="settings-menu" href="../../../settings.html"><img src="../../../wheel.svg" width="18" height="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">  1</span>
@@ -149,111 +149,502 @@
 <span id="146">146</span>
 <span id="147">147</span>
 <span id="148">148</span>
+<span id="149">149</span>
+<span id="150">150</span>
+<span id="151">151</span>
+<span id="152">152</span>
+<span id="153">153</span>
+<span id="154">154</span>
+<span id="155">155</span>
+<span id="156">156</span>
+<span id="157">157</span>
+<span id="158">158</span>
+<span id="159">159</span>
+<span id="160">160</span>
+<span id="161">161</span>
+<span id="162">162</span>
+<span id="163">163</span>
+<span id="164">164</span>
+<span id="165">165</span>
+<span id="166">166</span>
+<span id="167">167</span>
+<span id="168">168</span>
+<span id="169">169</span>
+<span id="170">170</span>
+<span id="171">171</span>
+<span id="172">172</span>
+<span id="173">173</span>
+<span id="174">174</span>
+<span id="175">175</span>
+<span id="176">176</span>
+<span id="177">177</span>
+<span id="178">178</span>
+<span id="179">179</span>
+<span id="180">180</span>
+<span id="181">181</span>
+<span id="182">182</span>
+<span id="183">183</span>
+<span id="184">184</span>
+<span id="185">185</span>
+<span id="186">186</span>
+<span id="187">187</span>
+<span id="188">188</span>
+<span id="189">189</span>
+<span id="190">190</span>
+<span id="191">191</span>
+<span id="192">192</span>
+<span id="193">193</span>
+<span id="194">194</span>
+<span id="195">195</span>
+<span id="196">196</span>
+<span id="197">197</span>
+<span id="198">198</span>
+<span id="199">199</span>
+<span id="200">200</span>
+<span id="201">201</span>
+<span id="202">202</span>
+<span id="203">203</span>
+<span id="204">204</span>
+<span id="205">205</span>
+<span id="206">206</span>
+<span id="207">207</span>
+<span id="208">208</span>
+<span id="209">209</span>
+<span id="210">210</span>
+<span id="211">211</span>
+<span id="212">212</span>
+<span id="213">213</span>
+<span id="214">214</span>
+<span id="215">215</span>
+<span id="216">216</span>
+<span id="217">217</span>
+<span id="218">218</span>
+<span id="219">219</span>
+<span id="220">220</span>
+<span id="221">221</span>
+<span id="222">222</span>
+<span id="223">223</span>
+<span id="224">224</span>
+<span id="225">225</span>
+<span id="226">226</span>
+<span id="227">227</span>
+<span id="228">228</span>
+<span id="229">229</span>
+<span id="230">230</span>
+<span id="231">231</span>
+<span id="232">232</span>
+<span id="233">233</span>
+<span id="234">234</span>
+<span id="235">235</span>
+<span id="236">236</span>
+<span id="237">237</span>
+<span id="238">238</span>
+<span id="239">239</span>
+<span id="240">240</span>
+<span id="241">241</span>
+<span id="242">242</span>
+<span id="243">243</span>
+<span id="244">244</span>
+<span id="245">245</span>
+<span id="246">246</span>
+<span id="247">247</span>
+<span id="248">248</span>
+<span id="249">249</span>
+<span id="250">250</span>
+<span id="251">251</span>
+<span id="252">252</span>
+<span id="253">253</span>
+<span id="254">254</span>
+<span id="255">255</span>
+<span id="256">256</span>
+<span id="257">257</span>
+<span id="258">258</span>
+<span id="259">259</span>
+<span id="260">260</span>
+<span id="261">261</span>
+<span id="262">262</span>
+<span id="263">263</span>
+<span id="264">264</span>
+<span id="265">265</span>
+<span id="266">266</span>
+<span id="267">267</span>
+<span id="268">268</span>
+<span id="269">269</span>
+<span id="270">270</span>
+<span id="271">271</span>
+<span id="272">272</span>
+<span id="273">273</span>
+<span id="274">274</span>
+<span id="275">275</span>
+<span id="276">276</span>
+<span id="277">277</span>
+<span id="278">278</span>
+<span id="279">279</span>
+<span id="280">280</span>
+<span id="281">281</span>
+<span id="282">282</span>
+<span id="283">283</span>
+<span id="284">284</span>
+<span id="285">285</span>
+<span id="286">286</span>
+<span id="287">287</span>
+<span id="288">288</span>
+<span id="289">289</span>
+<span id="290">290</span>
+<span id="291">291</span>
+<span id="292">292</span>
+<span id="293">293</span>
+<span id="294">294</span>
+<span id="295">295</span>
+<span id="296">296</span>
+<span id="297">297</span>
+<span id="298">298</span>
+<span id="299">299</span>
+<span id="300">300</span>
+<span id="301">301</span>
+<span id="302">302</span>
+<span id="303">303</span>
+<span id="304">304</span>
+<span id="305">305</span>
+<span id="306">306</span>
+<span id="307">307</span>
+<span id="308">308</span>
+<span id="309">309</span>
+<span id="310">310</span>
+<span id="311">311</span>
+<span id="312">312</span>
+<span id="313">313</span>
+<span id="314">314</span>
+<span id="315">315</span>
+<span id="316">316</span>
+<span id="317">317</span>
+<span id="318">318</span>
+<span id="319">319</span>
+<span id="320">320</span>
+<span id="321">321</span>
+<span id="322">322</span>
+<span id="323">323</span>
+<span id="324">324</span>
+<span id="325">325</span>
+<span id="326">326</span>
+<span id="327">327</span>
+<span id="328">328</span>
+<span id="329">329</span>
+<span id="330">330</span>
+<span id="331">331</span>
+<span id="332">332</span>
+<span id="333">333</span>
+<span id="334">334</span>
+<span id="335">335</span>
+<span id="336">336</span>
+<span id="337">337</span>
+<span id="338">338</span>
+<span id="339">339</span>
+<span id="340">340</span>
+<span id="341">341</span>
+<span id="342">342</span>
+<span id="343">343</span>
+<span id="344">344</span>
+<span id="345">345</span>
+<span id="346">346</span>
+<span id="347">347</span>
+<span id="348">348</span>
+<span id="349">349</span>
+<span id="350">350</span>
+<span id="351">351</span>
+<span id="352">352</span>
+<span id="353">353</span>
+<span id="354">354</span>
+<span id="355">355</span>
+<span id="356">356</span>
+<span id="357">357</span>
+<span id="358">358</span>
+<span id="359">359</span>
+<span id="360">360</span>
+<span id="361">361</span>
+<span id="362">362</span>
+<span id="363">363</span>
+<span id="364">364</span>
 </pre><div class="example-wrap"><pre class="rust ">
+<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">collections</span>::<span class="ident">hash_map</span>::<span class="ident">DefaultHasher</span>;
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">convert</span>::{<span class="ident">TryFrom</span>, <span class="ident">TryInto</span>};
+<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">hash</span>::{<span class="ident">Hash</span>, <span class="ident">Hasher</span>};
 
-<span class="kw">use</span> <span class="ident">anoma_shared</span>::<span class="ident">proto</span>::{<span class="ident">Dkg</span>, <span class="ident">Error</span>, <span class="ident">Intent</span>};
+<span class="kw">use</span> <span class="ident">chrono</span>::{<span class="ident">DateTime</span>, <span class="ident">Utc</span>};
+<span class="kw">use</span> <span class="ident">prost</span>::<span class="ident">Message</span>;
+<span class="kw">use</span> <span class="ident">prost_types</span>::<span class="ident">Timestamp</span>;
+<span class="kw">use</span> <span class="ident">thiserror</span>::<span class="ident">Error</span>;
 
-<span class="kw">use</span> <span class="kw">super</span>::<span class="ident">generated</span>::<span class="ident">services</span>;
+<span class="kw">use</span> <span class="kw">super</span>::<span class="ident">generated</span>::<span class="ident">types</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">types</span>::<span class="ident">key</span>::<span class="ident">ed25519</span>::{<span class="self">self</span>, <span class="ident">Keypair</span>};
+
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Error</span>, <span class="ident">Debug</span>)]</span>
+<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">Error</span> {
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Error decoding a transaction from bytes: {0}&quot;</span>)]</span>
+    <span class="ident">TxDecodingError</span>(<span class="ident">prost</span>::<span class="ident">DecodeError</span>),
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Error decoding an IntentGossipMessage from bytes: {0}&quot;</span>)]</span>
+    <span class="ident">IntentDecodingError</span>(<span class="ident">prost</span>::<span class="ident">DecodeError</span>),
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Error decoding an DkgGossipMessage from bytes: {0}&quot;</span>)]</span>
+    <span class="ident">DkgDecodingError</span>(<span class="ident">prost</span>::<span class="ident">DecodeError</span>),
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Intent is empty&quot;</span>)]</span>
+    <span class="ident">NoIntentError</span>,
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Dkg is empty&quot;</span>)]</span>
+    <span class="ident">NoDkgError</span>,
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Timestamp is empty&quot;</span>)]</span>
+    <span class="ident">NoTimestampError</span>,
+}
 
 <span class="kw">pub</span> <span class="kw">type</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">std</span>::<span class="ident">result</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">Error</span><span class="op">&gt;</span>;
 
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">RpcMessage</span> {
-    <span class="ident">IntentMessage</span>(<span class="ident">IntentMessage</span>),
-    <span class="ident">SubscribeTopicMessage</span>(<span class="ident">SubscribeTopicMessage</span>),
-    <span class="ident">Dkg</span>(<span class="ident">Dkg</span>),
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">PartialEq</span>)]</span>
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Tx</span> {
+    <span class="kw">pub</span> <span class="ident">code</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span> <span class="ident">data</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span> <span class="ident">timestamp</span>: <span class="ident">String</span>,
 }
 
-<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">RpcMessage</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">services</span>::<span class="ident">RpcMessage</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">message</span>: <span class="ident">RpcMessage</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
-        <span class="kw">let</span> <span class="ident">message</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">message</span> {
-            <span class="ident">RpcMessage</span>::<span class="ident">IntentMessage</span>(<span class="ident">m</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="ident">services</span>::<span class="ident">rpc_message</span>::<span class="ident">Message</span>::<span class="ident">Intent</span>(<span class="ident">m</span>.<span class="ident">into</span>())
+<span class="kw">impl</span> <span class="ident">TryFrom</span><span class="op">&lt;</span><span class="kw-2">&amp;</span>[<span class="ident">u8</span>]<span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Tx</span> {
+    <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">Error</span>;
+
+    <span class="kw">fn</span> <span class="ident">try_from</span>(<span class="ident">tx_bytes</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">types</span>::<span class="ident">Tx</span>::<span class="ident">decode</span>(<span class="ident">tx_bytes</span>).<span class="ident">map_err</span>(<span class="ident">Error</span>::<span class="ident">TxDecodingError</span>)<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">timestamp</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">tx</span>.<span class="ident">timestamp</span> {
+            <span class="prelude-val">Some</span>(<span class="ident">t</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="kw">let</span> <span class="ident">t</span>: <span class="ident">std</span>::<span class="ident">time</span>::<span class="ident">SystemTime</span> <span class="op">=</span>
+                    <span class="ident">t</span>.<span class="ident">try_into</span>().<span class="ident">expect</span>(<span class="string">&quot;Timestamp shouldn&#39;t be out of range&quot;</span>);
+                <span class="kw">let</span> <span class="ident">dt</span>: <span class="ident">DateTime</span><span class="op">&lt;</span><span class="ident">Utc</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">t</span>.<span class="ident">into</span>();
+                <span class="ident">dt</span>.<span class="ident">to_rfc3339</span>()
             }
-            <span class="ident">RpcMessage</span>::<span class="ident">SubscribeTopicMessage</span>(<span class="ident">m</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="ident">services</span>::<span class="ident">rpc_message</span>::<span class="ident">Message</span>::<span class="ident">Topic</span>(<span class="ident">m</span>.<span class="ident">into</span>())
-            }
-            <span class="ident">RpcMessage</span>::<span class="ident">Dkg</span>(<span class="ident">d</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">services</span>::<span class="ident">rpc_message</span>::<span class="ident">Message</span>::<span class="ident">Dkg</span>(<span class="ident">d</span>.<span class="ident">into</span>()),
+            <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error</span>::<span class="ident">NoTimestampError</span>),
         };
-        <span class="ident">services</span>::<span class="ident">RpcMessage</span> {
-            <span class="ident">message</span>: <span class="prelude-val">Some</span>(<span class="ident">message</span>),
+        <span class="prelude-val">Ok</span>(<span class="ident">Tx</span> {
+            <span class="ident">code</span>: <span class="ident">tx</span>.<span class="ident">code</span>,
+            <span class="ident">data</span>: <span class="ident">tx</span>.<span class="ident">data</span>,
+            <span class="ident">timestamp</span>,
+        })
+    }
+}
+
+<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">Tx</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">types</span>::<span class="ident">Tx</span> {
+    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">tx</span>: <span class="ident">Tx</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="kw">let</span> <span class="ident">dt</span> <span class="op">=</span> <span class="ident">DateTime</span>::<span class="ident">parse_from_rfc3339</span>(<span class="kw-2">&amp;</span><span class="ident">tx</span>.<span class="ident">timestamp</span>)
+            .<span class="ident">expect</span>(<span class="string">&quot;conversion shouldn&#39;t fail&quot;</span>);
+        <span class="kw">let</span> <span class="ident">st</span>: <span class="ident">std</span>::<span class="ident">time</span>::<span class="ident">SystemTime</span> <span class="op">=</span> <span class="ident">dt</span>.<span class="ident">into</span>();
+        <span class="ident">types</span>::<span class="ident">Tx</span> {
+            <span class="ident">code</span>: <span class="ident">tx</span>.<span class="ident">code</span>,
+            <span class="ident">data</span>: <span class="ident">tx</span>.<span class="ident">data</span>,
+            <span class="ident">timestamp</span>: <span class="prelude-val">Some</span>(<span class="ident">st</span>.<span class="ident">into</span>()),
         }
     }
 }
 
-<span class="kw">impl</span> <span class="ident">RpcMessage</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new_intent</span>(<span class="ident">intent</span>: <span class="ident">Intent</span>, <span class="ident">topic</span>: <span class="ident">String</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
-        <span class="ident">RpcMessage</span>::<span class="ident">IntentMessage</span>(<span class="ident">IntentMessage</span>::<span class="ident">new</span>(<span class="ident">intent</span>, <span class="ident">topic</span>))
+<span class="kw">impl</span> <span class="ident">Tx</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">code</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>, <span class="ident">data</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="ident">Tx</span> {
+            <span class="ident">code</span>,
+            <span class="ident">data</span>,
+            <span class="ident">timestamp</span>: <span class="ident">Utc</span>::<span class="ident">now</span>().<span class="ident">to_rfc3339</span>(),
+        }
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new_topic</span>(<span class="ident">topic</span>: <span class="ident">String</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
-        <span class="ident">RpcMessage</span>::<span class="ident">SubscribeTopicMessage</span>(<span class="ident">SubscribeTopicMessage</span>::<span class="ident">new</span>(<span class="ident">topic</span>))
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">to_bytes</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="macro">vec</span><span class="macro">!</span>[];
+        <span class="kw">let</span> <span class="ident">tx</span>: <span class="ident">types</span>::<span class="ident">Tx</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">clone</span>().<span class="ident">into</span>();
+        <span class="ident">tx</span>.<span class="ident">encode</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">bytes</span>)
+            .<span class="ident">expect</span>(<span class="string">&quot;encoding a transaction failed&quot;</span>);
+        <span class="ident">bytes</span>
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new_dkg</span>(<span class="ident">dkg</span>: <span class="ident">Dkg</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
-        <span class="ident">RpcMessage</span>::<span class="ident">Dkg</span>(<span class="ident">dkg</span>)
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">sign</span>(<span class="self">self</span>, <span class="ident">keypair</span>: <span class="kw-2">&amp;</span><span class="ident">Keypair</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Tx</span> {
+        <span class="ident">ed25519</span>::<span class="ident">sign_tx</span>(<span class="ident">keypair</span>, <span class="self">self</span>)
     }
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">PartialEq</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">IntentMessage</span> {
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">PartialEq</span>)]</span>
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">IntentGossipMessage</span> {
     <span class="kw">pub</span> <span class="ident">intent</span>: <span class="ident">Intent</span>,
-    <span class="kw">pub</span> <span class="ident">topic</span>: <span class="ident">String</span>,
 }
 
-<span class="kw">impl</span> <span class="ident">TryFrom</span><span class="op">&lt;</span><span class="ident">services</span>::<span class="ident">IntentMessage</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">IntentMessage</span> {
+<span class="kw">impl</span> <span class="ident">TryFrom</span><span class="op">&lt;</span><span class="kw-2">&amp;</span>[<span class="ident">u8</span>]<span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">IntentGossipMessage</span> {
     <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">Error</span>;
 
-    <span class="kw">fn</span> <span class="ident">try_from</span>(<span class="ident">message</span>: <span class="ident">services</span>::<span class="ident">IntentMessage</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
-        <span class="kw">match</span> <span class="ident">message</span>.<span class="ident">intent</span> {
-            <span class="prelude-val">Some</span>(<span class="ident">intent</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="ident">IntentMessage</span> {
-                <span class="ident">intent</span>: <span class="ident">intent</span>.<span class="ident">try_into</span>()<span class="question-mark">?</span>,
-                <span class="ident">topic</span>: <span class="ident">message</span>.<span class="ident">topic</span>,
-            }),
+    <span class="kw">fn</span> <span class="ident">try_from</span>(<span class="ident">intent_bytes</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="ident">intent</span> <span class="op">=</span> <span class="ident">types</span>::<span class="ident">IntentGossipMessage</span>::<span class="ident">decode</span>(<span class="ident">intent_bytes</span>)
+            .<span class="ident">map_err</span>(<span class="ident">Error</span>::<span class="ident">IntentDecodingError</span>)<span class="question-mark">?</span>;
+        <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="ident">intent</span>.<span class="ident">msg</span> {
+            <span class="prelude-val">Some</span>(<span class="ident">types</span>::<span class="ident">intent_gossip_message</span>::<span class="ident">Msg</span>::<span class="ident">Intent</span>(<span class="ident">intent</span>)) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="prelude-val">Ok</span>(<span class="ident">IntentGossipMessage</span> {
+                    <span class="ident">intent</span>: <span class="ident">intent</span>.<span class="ident">clone</span>().<span class="ident">try_into</span>()<span class="question-mark">?</span>,
+                })
+            }
             <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">Error</span>::<span class="ident">NoIntentError</span>),
         }
     }
 }
 
-<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">IntentMessage</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">services</span>::<span class="ident">IntentMessage</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">message</span>: <span class="ident">IntentMessage</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
-        <span class="ident">services</span>::<span class="ident">IntentMessage</span> {
-            <span class="ident">intent</span>: <span class="prelude-val">Some</span>(<span class="ident">message</span>.<span class="ident">intent</span>.<span class="ident">into</span>()),
-            <span class="ident">topic</span>: <span class="ident">message</span>.<span class="ident">topic</span>,
+<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">IntentGossipMessage</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">types</span>::<span class="ident">IntentGossipMessage</span> {
+    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">message</span>: <span class="ident">IntentGossipMessage</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="ident">types</span>::<span class="ident">IntentGossipMessage</span> {
+            <span class="ident">msg</span>: <span class="prelude-val">Some</span>(<span class="ident">types</span>::<span class="ident">intent_gossip_message</span>::<span class="ident">Msg</span>::<span class="ident">Intent</span>(
+                <span class="ident">message</span>.<span class="ident">intent</span>.<span class="ident">into</span>(),
+            )),
         }
     }
 }
 
-<span class="kw">impl</span> <span class="ident">IntentMessage</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">intent</span>: <span class="ident">Intent</span>, <span class="ident">topic</span>: <span class="ident">String</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
-        <span class="ident">IntentMessage</span> { <span class="ident">intent</span>, <span class="ident">topic</span> }
+<span class="kw">impl</span> <span class="ident">IntentGossipMessage</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">intent</span>: <span class="ident">Intent</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="ident">IntentGossipMessage</span> { <span class="ident">intent</span> }
+    }
+
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">to_bytes</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="macro">vec</span><span class="macro">!</span>[];
+        <span class="kw">let</span> <span class="ident">message</span>: <span class="ident">types</span>::<span class="ident">IntentGossipMessage</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">clone</span>().<span class="ident">into</span>();
+        <span class="ident">message</span>
+            .<span class="ident">encode</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">bytes</span>)
+            .<span class="ident">expect</span>(<span class="string">&quot;encoding an intent gossip message failed&quot;</span>);
+        <span class="ident">bytes</span>
     }
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">PartialEq</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">SubscribeTopicMessage</span> {
-    <span class="kw">pub</span> <span class="ident">topic</span>: <span class="ident">String</span>,
+<span class="attribute">#[<span class="ident">allow</span>(<span class="ident">dead_code</span>)]</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">PartialEq</span>)]</span>
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">DkgGossipMessage</span> {
+    <span class="kw">pub</span> <span class="ident">dkg</span>: <span class="ident">Dkg</span>,
 }
 
-<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">services</span>::<span class="ident">SubscribeTopicMessage</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">SubscribeTopicMessage</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">message</span>: <span class="ident">services</span>::<span class="ident">SubscribeTopicMessage</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
-        <span class="ident">SubscribeTopicMessage</span> {
-            <span class="ident">topic</span>: <span class="ident">message</span>.<span class="ident">topic</span>,
+<span class="kw">impl</span> <span class="ident">TryFrom</span><span class="op">&lt;</span><span class="kw-2">&amp;</span>[<span class="ident">u8</span>]<span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">DkgGossipMessage</span> {
+    <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">Error</span>;
+
+    <span class="kw">fn</span> <span class="ident">try_from</span>(<span class="ident">dkg_bytes</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="ident">message</span> <span class="op">=</span> <span class="ident">types</span>::<span class="ident">DkgGossipMessage</span>::<span class="ident">decode</span>(<span class="ident">dkg_bytes</span>)
+            .<span class="ident">map_err</span>(<span class="ident">Error</span>::<span class="ident">DkgDecodingError</span>)<span class="question-mark">?</span>;
+        <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="ident">message</span>.<span class="ident">dkg_message</span> {
+            <span class="prelude-val">Some</span>(<span class="ident">types</span>::<span class="ident">dkg_gossip_message</span>::<span class="ident">DkgMessage</span>::<span class="ident">Dkg</span>(<span class="ident">dkg</span>)) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="prelude-val">Ok</span>(<span class="ident">DkgGossipMessage</span> {
+                    <span class="ident">dkg</span>: <span class="ident">dkg</span>.<span class="ident">clone</span>().<span class="ident">into</span>(),
+                })
+            }
+            <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">Error</span>::<span class="ident">NoDkgError</span>),
         }
     }
 }
 
-<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">SubscribeTopicMessage</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">services</span>::<span class="ident">SubscribeTopicMessage</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">message</span>: <span class="ident">SubscribeTopicMessage</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
-        <span class="ident">services</span>::<span class="ident">SubscribeTopicMessage</span> {
-            <span class="ident">topic</span>: <span class="ident">message</span>.<span class="ident">topic</span>,
+<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">DkgGossipMessage</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">types</span>::<span class="ident">DkgGossipMessage</span> {
+    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">message</span>: <span class="ident">DkgGossipMessage</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="ident">types</span>::<span class="ident">DkgGossipMessage</span> {
+            <span class="ident">dkg_message</span>: <span class="prelude-val">Some</span>(<span class="ident">types</span>::<span class="ident">dkg_gossip_message</span>::<span class="ident">DkgMessage</span>::<span class="ident">Dkg</span>(
+                <span class="ident">message</span>.<span class="ident">dkg</span>.<span class="ident">into</span>(),
+            )),
         }
     }
 }
 
-<span class="kw">impl</span> <span class="ident">SubscribeTopicMessage</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">topic</span>: <span class="ident">String</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
-        <span class="ident">SubscribeTopicMessage</span> { <span class="ident">topic</span> }
+<span class="attribute">#[<span class="ident">allow</span>(<span class="ident">dead_code</span>)]</span>
+<span class="kw">impl</span> <span class="ident">DkgGossipMessage</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">dkg</span>: <span class="ident">Dkg</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="ident">DkgGossipMessage</span> { <span class="ident">dkg</span> }
+    }
+
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">to_bytes</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="macro">vec</span><span class="macro">!</span>[];
+        <span class="kw">let</span> <span class="ident">message</span>: <span class="ident">types</span>::<span class="ident">DkgGossipMessage</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">clone</span>().<span class="ident">into</span>();
+        <span class="ident">message</span>
+            .<span class="ident">encode</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">bytes</span>)
+            .<span class="ident">expect</span>(<span class="string">&quot;encoding a DKG gossip message failed&quot;</span>);
+        <span class="ident">bytes</span>
+    }
+}
+
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">PartialEq</span>)]</span>
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Intent</span> {
+    <span class="kw">pub</span> <span class="ident">data</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span> <span class="ident">timestamp</span>: <span class="ident">Timestamp</span>,
+}
+
+<span class="kw">impl</span> <span class="ident">TryFrom</span><span class="op">&lt;</span><span class="ident">types</span>::<span class="ident">Intent</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Intent</span> {
+    <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">Error</span>;
+
+    <span class="kw">fn</span> <span class="ident">try_from</span>(<span class="ident">intent</span>: <span class="ident">types</span>::<span class="ident">Intent</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="ident">timestamp</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">intent</span>.<span class="ident">timestamp</span> {
+            <span class="prelude-val">Some</span>(<span class="ident">t</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">t</span>,
+            <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error</span>::<span class="ident">NoTimestampError</span>),
+        };
+        <span class="prelude-val">Ok</span>(<span class="ident">Intent</span> {
+            <span class="ident">data</span>: <span class="ident">intent</span>.<span class="ident">data</span>,
+            <span class="ident">timestamp</span>,
+        })
+    }
+}
+
+<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">Intent</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">types</span>::<span class="ident">Intent</span> {
+    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">intent</span>: <span class="ident">Intent</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="ident">types</span>::<span class="ident">Intent</span> {
+            <span class="ident">data</span>: <span class="ident">intent</span>.<span class="ident">data</span>,
+            <span class="ident">timestamp</span>: <span class="prelude-val">Some</span>(<span class="ident">intent</span>.<span class="ident">timestamp</span>),
+        }
+    }
+}
+
+<span class="kw">impl</span> <span class="ident">Intent</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">data</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="ident">Intent</span> {
+            <span class="ident">data</span>,
+            <span class="ident">timestamp</span>: <span class="ident">std</span>::<span class="ident">time</span>::<span class="ident">SystemTime</span>::<span class="ident">now</span>().<span class="ident">into</span>(),
+        }
+    }
+
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">id</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">IntentId</span> {
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">hasher</span> <span class="op">=</span> <span class="ident">DefaultHasher</span>::<span class="ident">new</span>();
+        <span class="self">self</span>.<span class="ident">hash</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">hasher</span>);
+        <span class="ident">IntentId</span>::<span class="ident">from</span>(<span class="ident">hasher</span>.<span class="ident">finish</span>().<span class="ident">to_string</span>())
+    }
+}
+
+<span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy</span>::<span class="ident">derive_hash_xor_eq</span>)]</span>
+<span class="kw">impl</span> <span class="ident">Hash</span> <span class="kw">for</span> <span class="ident">Intent</span> {
+    <span class="kw">fn</span> <span class="ident">hash</span><span class="op">&lt;</span><span class="ident">H</span>: <span class="ident">std</span>::<span class="ident">hash</span>::<span class="ident">Hasher</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">state</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">H</span>) {
+        <span class="self">self</span>.<span class="ident">data</span>.<span class="ident">hash</span>(<span class="ident">state</span>);
+        <span class="kw">let</span> <span class="ident">timestamp</span>: <span class="ident">std</span>::<span class="ident">time</span>::<span class="ident">SystemTime</span> <span class="op">=</span> <span class="self">self</span>
+            .<span class="ident">timestamp</span>
+            .<span class="ident">clone</span>()
+            .<span class="ident">try_into</span>()
+            .<span class="ident">expect</span>(<span class="string">&quot;Timestamp shouldn&#39;t be out of range&quot;</span>);
+        <span class="ident">timestamp</span>.<span class="ident">hash</span>(<span class="ident">state</span>);
+    }
+}
+
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">Hash</span>)]</span>
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">IntentId</span>(<span class="kw">pub</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>);
+
+<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">IntentId</span> {
+    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">value</span>: <span class="ident">T</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="self">Self</span>(<span class="ident">value</span>.<span class="ident">into</span>())
+    }
+}
+
+<span class="attribute">#[<span class="ident">allow</span>(<span class="ident">dead_code</span>)]</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">PartialEq</span>)]</span>
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Dkg</span> {
+    <span class="kw">pub</span> <span class="ident">data</span>: <span class="ident">String</span>,
+}
+
+<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">types</span>::<span class="ident">Dkg</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Dkg</span> {
+    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">dkg</span>: <span class="ident">types</span>::<span class="ident">Dkg</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="ident">Dkg</span> { <span class="ident">data</span>: <span class="ident">dkg</span>.<span class="ident">data</span> }
+    }
+}
+
+<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">Dkg</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">types</span>::<span class="ident">Dkg</span> {
+    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">dkg</span>: <span class="ident">Dkg</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="ident">types</span>::<span class="ident">Dkg</span> { <span class="ident">data</span>: <span class="ident">dkg</span>.<span class="ident">data</span> }
+    }
+}
+
+<span class="attribute">#[<span class="ident">allow</span>(<span class="ident">dead_code</span>)]</span>
+<span class="kw">impl</span> <span class="ident">Dkg</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">data</span>: <span class="ident">String</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="ident">Dkg</span> { <span class="ident">data</span> }
     }
 }
 
@@ -262,40 +653,81 @@
     <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_intent_message</span>() {
+    <span class="kw">fn</span> <span class="ident">test_tx</span>() {
+        <span class="kw">let</span> <span class="ident">code</span> <span class="op">=</span> <span class="string">&quot;wasm code&quot;</span>.<span class="ident">as_bytes</span>().<span class="ident">to_owned</span>();
         <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="string">&quot;arbitrary data&quot;</span>.<span class="ident">as_bytes</span>().<span class="ident">to_owned</span>();
-        <span class="kw">let</span> <span class="ident">intent</span> <span class="op">=</span> <span class="ident">Intent</span>::<span class="ident">new</span>(<span class="ident">data</span>);
-        <span class="kw">let</span> <span class="ident">topic</span> <span class="op">=</span> <span class="string">&quot;arbitrary string&quot;</span>.<span class="ident">to_owned</span>();
-        <span class="kw">let</span> <span class="ident">intent_message</span> <span class="op">=</span> <span class="ident">IntentMessage</span>::<span class="ident">new</span>(<span class="ident">intent</span>.<span class="ident">clone</span>(), <span class="ident">topic</span>.<span class="ident">clone</span>());
+        <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx</span>::<span class="ident">new</span>(<span class="ident">code</span>.<span class="ident">clone</span>(), <span class="prelude-val">Some</span>(<span class="ident">data</span>.<span class="ident">clone</span>()));
 
-        <span class="kw">let</span> <span class="ident">intent_rpc_message</span> <span class="op">=</span> <span class="ident">RpcMessage</span>::<span class="ident">new_intent</span>(<span class="ident">intent</span>, <span class="ident">topic</span>);
-        <span class="kw">let</span> <span class="ident">services_rpc_message</span>: <span class="ident">services</span>::<span class="ident">RpcMessage</span> <span class="op">=</span>
-            <span class="ident">intent_rpc_message</span>.<span class="ident">into</span>();
-        <span class="kw">match</span> <span class="ident">services_rpc_message</span>.<span class="ident">message</span> {
-            <span class="prelude-val">Some</span>(<span class="ident">services</span>::<span class="ident">rpc_message</span>::<span class="ident">Message</span>::<span class="ident">Intent</span>(<span class="ident">i</span>)) <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="kw">let</span> <span class="ident">message_from_types</span> <span class="op">=</span>
-                    <span class="ident">IntentMessage</span>::<span class="ident">try_from</span>(<span class="ident">i</span>).<span class="ident">expect</span>(<span class="string">&quot;no intent&quot;</span>);
-                <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">intent_message</span>, <span class="ident">message_from_types</span>);
-            }
-            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;no intent message&quot;</span>),
+        <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="ident">tx</span>.<span class="ident">to_bytes</span>();
+        <span class="kw">let</span> <span class="ident">tx_from_bytes</span> <span class="op">=</span>
+            <span class="ident">Tx</span>::<span class="ident">try_from</span>(<span class="ident">bytes</span>.<span class="ident">as_ref</span>()).<span class="ident">expect</span>(<span class="string">&quot;decoding failed&quot;</span>);
+        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">tx_from_bytes</span>, <span class="ident">tx</span>);
+
+        <span class="kw">let</span> <span class="ident">types_tx</span> <span class="op">=</span> <span class="ident">types</span>::<span class="ident">Tx</span> {
+            <span class="ident">code</span>,
+            <span class="ident">data</span>: <span class="prelude-val">Some</span>(<span class="ident">data</span>),
+            <span class="ident">timestamp</span>: <span class="prelude-val">None</span>,
+        };
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="macro">vec</span><span class="macro">!</span>[];
+        <span class="ident">types_tx</span>.<span class="ident">encode</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">bytes</span>).<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
+        <span class="kw">match</span> <span class="ident">Tx</span>::<span class="ident">try_from</span>(<span class="ident">bytes</span>.<span class="ident">as_ref</span>()) {
+            <span class="prelude-val">Err</span>(<span class="ident">Error</span>::<span class="ident">NoTimestampError</span>) <span class="op">=</span><span class="op">&gt;</span> {}
+            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;unexpected result&quot;</span>),
         }
     }
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_topic_message</span>() {
-        <span class="kw">let</span> <span class="ident">topic</span> <span class="op">=</span> <span class="string">&quot;arbitrary string&quot;</span>.<span class="ident">to_owned</span>();
-        <span class="kw">let</span> <span class="ident">topic_message</span> <span class="op">=</span> <span class="ident">SubscribeTopicMessage</span>::<span class="ident">new</span>(<span class="ident">topic</span>.<span class="ident">clone</span>());
+    <span class="kw">fn</span> <span class="ident">test_intent_gossip_message</span>() {
+        <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="string">&quot;arbitrary data&quot;</span>.<span class="ident">as_bytes</span>().<span class="ident">to_owned</span>();
+        <span class="kw">let</span> <span class="ident">intent</span> <span class="op">=</span> <span class="ident">Intent</span>::<span class="ident">new</span>(<span class="ident">data</span>);
+        <span class="kw">let</span> <span class="ident">message</span> <span class="op">=</span> <span class="ident">IntentGossipMessage</span>::<span class="ident">new</span>(<span class="ident">intent</span>);
 
-        <span class="kw">let</span> <span class="ident">topic_rpc_message</span> <span class="op">=</span> <span class="ident">RpcMessage</span>::<span class="ident">new_topic</span>(<span class="ident">topic</span>);
-        <span class="kw">let</span> <span class="ident">services_rpc_message</span>: <span class="ident">services</span>::<span class="ident">RpcMessage</span> <span class="op">=</span>
-            <span class="ident">topic_rpc_message</span>.<span class="ident">into</span>();
-        <span class="kw">match</span> <span class="ident">services_rpc_message</span>.<span class="ident">message</span> {
-            <span class="prelude-val">Some</span>(<span class="ident">services</span>::<span class="ident">rpc_message</span>::<span class="ident">Message</span>::<span class="ident">Topic</span>(<span class="ident">t</span>)) <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="kw">let</span> <span class="ident">message_from_types</span> <span class="op">=</span> <span class="ident">SubscribeTopicMessage</span>::<span class="ident">from</span>(<span class="ident">t</span>);
-                <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">topic_message</span>, <span class="ident">message_from_types</span>);
-            }
-            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;no intent message&quot;</span>),
+        <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="ident">message</span>.<span class="ident">to_bytes</span>();
+        <span class="kw">let</span> <span class="ident">message_from_bytes</span> <span class="op">=</span> <span class="ident">IntentGossipMessage</span>::<span class="ident">try_from</span>(<span class="ident">bytes</span>.<span class="ident">as_ref</span>())
+            .<span class="ident">expect</span>(<span class="string">&quot;decoding failed&quot;</span>);
+        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">message_from_bytes</span>, <span class="ident">message</span>);
+    }
+
+    <span class="attribute">#[<span class="ident">test</span>]</span>
+    <span class="kw">fn</span> <span class="ident">test_dkg_gossip_message</span>() {
+        <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="string">&quot;arbitrary string&quot;</span>.<span class="ident">to_owned</span>();
+        <span class="kw">let</span> <span class="ident">dkg</span> <span class="op">=</span> <span class="ident">Dkg</span>::<span class="ident">new</span>(<span class="ident">data</span>);
+        <span class="kw">let</span> <span class="ident">message</span> <span class="op">=</span> <span class="ident">DkgGossipMessage</span>::<span class="ident">new</span>(<span class="ident">dkg</span>);
+
+        <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="ident">message</span>.<span class="ident">to_bytes</span>();
+        <span class="kw">let</span> <span class="ident">message_from_bytes</span> <span class="op">=</span> <span class="ident">DkgGossipMessage</span>::<span class="ident">try_from</span>(<span class="ident">bytes</span>.<span class="ident">as_ref</span>())
+            .<span class="ident">expect</span>(<span class="string">&quot;decoding failed&quot;</span>);
+        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">message_from_bytes</span>, <span class="ident">message</span>);
+    }
+
+    <span class="attribute">#[<span class="ident">test</span>]</span>
+    <span class="kw">fn</span> <span class="ident">test_intent</span>() {
+        <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="string">&quot;arbitrary data&quot;</span>.<span class="ident">as_bytes</span>().<span class="ident">to_owned</span>();
+        <span class="kw">let</span> <span class="ident">intent</span> <span class="op">=</span> <span class="ident">Intent</span>::<span class="ident">new</span>(<span class="ident">data</span>.<span class="ident">clone</span>());
+
+        <span class="kw">let</span> <span class="ident">types_intent</span>: <span class="ident">types</span>::<span class="ident">Intent</span> <span class="op">=</span> <span class="ident">intent</span>.<span class="ident">clone</span>().<span class="ident">into</span>();
+        <span class="kw">let</span> <span class="ident">intent_from_types</span> <span class="op">=</span>
+            <span class="ident">Intent</span>::<span class="ident">try_from</span>(<span class="ident">types_intent</span>).<span class="ident">expect</span>(<span class="string">&quot;no timestamp&quot;</span>);
+        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">intent_from_types</span>, <span class="ident">intent</span>);
+
+        <span class="kw">let</span> <span class="ident">types_intent</span> <span class="op">=</span> <span class="ident">types</span>::<span class="ident">Intent</span> {
+            <span class="ident">data</span>,
+            <span class="ident">timestamp</span>: <span class="prelude-val">None</span>,
+        };
+        <span class="kw">match</span> <span class="ident">Intent</span>::<span class="ident">try_from</span>(<span class="ident">types_intent</span>) {
+            <span class="prelude-val">Err</span>(<span class="ident">Error</span>::<span class="ident">NoTimestampError</span>) <span class="op">=</span><span class="op">&gt;</span> {}
+            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;unexpected result&quot;</span>),
         }
+    }
+
+    <span class="attribute">#[<span class="ident">test</span>]</span>
+    <span class="kw">fn</span> <span class="ident">test_dkg</span>() {
+        <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="string">&quot;arbitrary string&quot;</span>.<span class="ident">to_owned</span>();
+        <span class="kw">let</span> <span class="ident">dkg</span> <span class="op">=</span> <span class="ident">Dkg</span>::<span class="ident">new</span>(<span class="ident">data</span>);
+
+        <span class="kw">let</span> <span class="ident">types_dkg</span>: <span class="ident">types</span>::<span class="ident">Dkg</span> <span class="op">=</span> <span class="ident">dkg</span>.<span class="ident">clone</span>().<span class="ident">into</span>();
+        <span class="kw">let</span> <span class="ident">dkg_from_types</span> <span class="op">=</span> <span class="ident">Dkg</span>::<span class="ident">from</span>(<span class="ident">types_dkg</span>);
+        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">dkg_from_types</span>, <span class="ident">dkg</span>);
     }
 }
 </pre></div>
