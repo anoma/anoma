@@ -222,6 +222,9 @@
 <span id="219">219</span>
 <span id="220">220</span>
 <span id="221">221</span>
+<span id="222">222</span>
+<span id="223">223</span>
+<span id="224">224</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">fs</span>::{<span class="self">self</span>, <span class="ident">File</span>, <span class="ident">OpenOptions</span>};
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">io</span>::{<span class="ident">BufReader</span>, <span class="ident">Write</span>};
@@ -269,10 +272,13 @@
     <span class="kw">let</span> <span class="ident">home_dir_string</span> <span class="op">=</span> <span class="ident">home_dir</span>.<span class="ident">to_string_lossy</span>().<span class="ident">to_string</span>();
 
     <span class="comment">// init and run a tendermint node child process</span>
-    <span class="ident">Command</span>::<span class="ident">new</span>(<span class="string">&quot;tendermint&quot;</span>)
+    <span class="kw">let</span> <span class="ident">output</span> <span class="op">=</span> <span class="ident">Command</span>::<span class="ident">new</span>(<span class="string">&quot;tendermint&quot;</span>)
         .<span class="ident">args</span>(<span class="kw-2">&amp;</span>[<span class="string">&quot;init&quot;</span>, <span class="string">&quot;--home&quot;</span>, <span class="kw-2">&amp;</span><span class="ident">home_dir_string</span>])
         .<span class="ident">output</span>()
         .<span class="ident">map_err</span>(<span class="ident">Error</span>::<span class="ident">TendermintInit</span>)<span class="question-mark">?</span>;
+    <span class="kw">if</span> <span class="op">!</span><span class="ident">output</span>.<span class="ident">status</span>.<span class="ident">success</span>() {
+        <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;Tendermint failed to initialize with {:#?}&quot;</span>, <span class="ident">output</span>);
+    }
 
     <span class="kw">if</span> <span class="macro">cfg</span><span class="macro">!</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;dev&quot;</span>) {
         <span class="comment">// override the validator key file</span>
