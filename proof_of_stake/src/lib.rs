@@ -79,6 +79,9 @@ pub trait Pos {
         key: &Self::Address,
     ) -> Option<Epoched<Self::PublicKey, OffsetPipelineLen>>;
 
+    /// Initialize the PoS system the genesis block for the given PoS parameters
+    /// and initial validator set. The validators' tokens will be put into
+    /// self-bonds.
     fn init_genesis(
         &mut self,
         params: &PosParams,
@@ -188,8 +191,8 @@ where
             address: address.clone(),
         });
     }
-    // Pop the smallest validators from the active set and insert them into
-    // inactive set until its size is under the limit
+    // Pop the smallest validators from the active set until its size is under
+    // the limit and insert them into the inactive set
     let mut inactive: BTreeSet<WeightedValidator<Address>> =
         BTreeSet::default();
     while active.len() > params.max_validator_slots as usize {

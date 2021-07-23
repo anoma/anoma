@@ -4,7 +4,7 @@ use std::ops::Mul;
 
 #[derive(Debug, Clone)]
 pub struct PosParams {
-    /// A maximum number of [`ValidatorState::Active`] validators
+    /// A maximum number of active validators
     pub max_validator_slots: u64,
     /// Any change applied during an epoch `n` will become active at the
     /// beginning of epoch `n + pipeline_len`.
