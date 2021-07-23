@@ -259,6 +259,7 @@ mod tests {
     use proptest::state_machine::{AbstractStateMachine, StateMachineTest};
 
     use super::*;
+    use crate::parameters::BasisPoints;
     use crate::types::tests::arb_epoch;
 
     prop_state_machine! {
@@ -706,7 +707,7 @@ mod tests {
                             max_validator_slots,
                             pipeline_len,
                             unbonding_len,
-                            votes_per_token,
+                            votes_per_token: BasisPoints::new(votes_per_token),
                             block_proposer_reward,
                             block_vote_reward,
                         },

@@ -1,5 +1,7 @@
 //! PoS system parameters
 
+use std::ops::Mul;
+
 #[derive(Debug, Clone)]
 pub struct PosParams {
     /// A maximum number of [`ValidatorState::Active`] validators
@@ -11,13 +13,36 @@ pub struct PosParams {
     /// If a fault is detected in epoch `n`, it can slashed up until the end of
     /// `n + slashable_period_len` epoch.
     pub unbonding_len: u64,
-    /// Used in validators' voting power calculation
-    pub votes_per_token: u64,
+    /// Used in validators' voting power calculation. Given in basis points
+    /// (voting power per ten thousand tokens).
+    pub votes_per_token: BasisPoints,
     /// Amount of tokens rewarded to a validator for proposing a block
     pub block_proposer_reward: u64,
     /// Amount of tokens rewarded to each validator that voted on a block
     /// proposal
     pub block_vote_reward: u64,
+}
+
+/// ‱ (Parts per then thousand). This can be multiplied by any type that
+/// implements [`Into<u64>`].
+#[derive(Debug, Clone, Copy)]
+pub struct BasisPoints(u64);
+
+impl BasisPoints {
+    pub fn new(value: u64) -> Self {
+        Self(value)
+    }
+}
+
+impl<T> Mul<T> for BasisPoints
+where
+    T: Into<u64>,
+{
+    type Output = u64;
+
+    fn mul(self, rhs: T) -> Self::Output {
+        rhs.into() * 10_000 / self.0
+    }
 }
 
 impl Default for PosParams {
@@ -26,7 +51,8 @@ impl Default for PosParams {
             max_validator_slots: 128,
             pipeline_len: 2,
             unbonding_len: 6,
-            votes_per_token: 1000,
+            // 1 voting power per 1000 tokens
+            votes_per_token: BasisPoints::new(10),
             block_proposer_reward: 100,
             block_vote_reward: 1,
         }

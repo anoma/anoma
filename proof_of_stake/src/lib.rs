@@ -4,140 +4,245 @@ pub mod parameters;
 pub mod types;
 
 use core::fmt::Debug;
+use std::collections::{BTreeSet, HashMap};
 use std::hash::Hash;
-use std::ops::{Add, Sub};
+use std::ops::{self, Add, Sub};
 
-use epoched::{Epoched, OffsetPipelineLen, OffsetUnboundingLen};
+use epoched::{Epoched, EpochedDelta, OffsetPipelineLen, OffsetUnboundingLen};
 use parameters::PosParams;
-use types::{Epoch, GenesisValidator, ValidatorState};
+use types::{
+    Epoch, GenesisValidator, ValidatorSet, ValidatorState, VotingPower,
+};
 
-// struct InitialPosStorage {
-//     validators: Vec<ValidatorData>,
-//     bonds: Bonds,
-//     validator_sets: ValidatorSets,
-//     total_voting_power: TotalVotingPower,
-// }
-
-// struct ValidatorData {
-//     pub consensus_key: Epoched<PublicKey>,
-//     pub state: Epoched<ValidatorState>,
-//     pub total_deltas: Epoched<TokenChange>,
-//     pub voting_power: Epoched<VotingPower>,
-// }
+use crate::btree_set::BTreeSetShims;
+use crate::types::{Bond, BondId, WeightedValidator};
 
 pub trait Pos {
     type Address: Debug + Clone + PartialEq + Eq + PartialOrd + Ord + Hash;
-    type TokenAmount: Debug + Clone + Copy + Add + Sub;
-    type TokenChange: Debug + Clone + Copy + Add + Sub;
+    type TokenAmount: Debug
+        + Clone
+        + Copy
+        + Add
+        + Sub
+        + Into<u64>
+        + Into<Self::TokenChange>;
+    type TokenChange: Debug
+        + Clone
+        + Copy
+        + Add<Output = Self::TokenChange>
+        + Sub
+        + From<Self::TokenAmount>
+        + Into<i128>;
     type PublicKey: Debug + Clone;
 
-    fn read_validator_consensus_key(
-        &self,
-        validator: Self::Address,
-    ) -> Option<Epoched<Self::PublicKey, OffsetPipelineLen>>;
-
+    // TODO it may be nicer to instead provide generic functions for storage
+    // write/read and a way for implementors to assign storage keys and convert
+    // data into/from storage values (e.g. our ledger storage key type and
+    // borsh encoding for values)
+    fn write_params(&mut self, params: &PosParams);
     fn write_validator_consensus_key(
         &mut self,
-        validator: Self::Address,
-        key: Epoched<Self::PublicKey, OffsetPipelineLen>,
+        key: &Self::Address,
+        value: Epoched<Self::PublicKey, OffsetPipelineLen>,
     );
     fn write_validator_state(
         &mut self,
-        validator: Self::Address,
-        key: Epoched<ValidatorState, OffsetPipelineLen>,
+        key: &Self::Address,
+        value: Epoched<ValidatorState, OffsetPipelineLen>,
     );
     fn write_validator_total_deltas(
         &mut self,
-        validator: Self::Address,
-        key: Epoched<i128, OffsetUnboundingLen>,
+        key: &Self::Address,
+        value: EpochedDelta<Self::TokenChange, OffsetUnboundingLen>,
     );
     fn write_validator_voting_power(
         &mut self,
-        validator: Self::Address,
-        key: Epoched<u64, OffsetUnboundingLen>,
+        key: &Self::Address,
+        value: Epoched<VotingPower, OffsetUnboundingLen>,
+    );
+    fn write_bond(
+        &mut self,
+        key: &BondId<Self::Address>,
+        value: Epoched<Bond<Self::TokenAmount>, OffsetPipelineLen>,
+    );
+    fn write_validator_set(
+        &mut self,
+        value: Epoched<ValidatorSet<Self::Address>, OffsetUnboundingLen>,
+    );
+    fn write_total_voting_power(
+        &mut self,
+        value: Epoched<VotingPower, OffsetUnboundingLen>,
     );
 
+    fn read_validator_consensus_key(
+        &self,
+        key: &Self::Address,
+    ) -> Option<Epoched<Self::PublicKey, OffsetPipelineLen>>;
+
     fn init_genesis(
-        pos: &mut impl Pos,
+        &mut self,
         params: &PosParams,
         validators: Vec<
             GenesisValidator<Self::Address, Self::TokenAmount, Self::PublicKey>,
         >,
         epoch: Epoch,
     ) {
-        todo!()
-        // for (adDr, tokens, pk) in validators {
-        //     let consensus_key = Epoched::init_at_genesis(pk, epoch);
-        //     pos.write_validator_consensus_key(addr, consensus_key);
-        //     let state = Epoched::init_at_genesis(ValidatorState::Candidate,
-        // epoch);     pos.write_validator_state(addr, state);
-        //     let total_deltas = Epoched::init_at_genesis(tokens as i128,
-        // epoch);     pos.write_validator_total_deltas(addr,
-        // total_deltas);     let voting_power =
-        // Epoched::init_at_genesis(         tokens * 10_000 /
-        // params.votes_per_token,         epoch,
-        //     );
-        //     pos.write_validator_voting_power(addr, voting_power);
-        // }
+        self.write_params(params);
 
-        // let mut bonds = HashMap::default;
-        // for (addr, tokens, pk) in validators.iter() {
-        //     let bond_id = BondId {
-        //         source: addr.clone(),
-        //         validator: addr.clone(),
-        //     };
-        //     let mut delta = HashMap::default();
-        //     delta.insert(epoch, tokens);
-        //     let bond = Epoched::init_at_genesis(Bond { delta }, epoch);
-        //     bonds.insert(bond_id, bond);
-        // }
+        let GenesisData {
+            validators,
+            validator_set,
+            total_voting_power,
+        } = init_genesis_data(params, validators.iter(), epoch);
 
-        // let mut active_validators: BTreeSet<WeightedValidator> = validators
-        //     .iter()
-        //     .map(|(address, tokens, pk)| WeightedValidator {
-        //         voting_power: tokens * 10_000 / params.votes_per_token,
-        //         address,
-        //     })
-        //     .collect();
-        // let mut inactive_validators: BTreeSet<WeightedValidator> =
-        //     BTreeSet::default();
-        // while active_validators.len() > params.max_validator_slots as usize {
-        //     match active_validators.pop_first_shim() {
-        //         Some(first) => {
-        //             inactive_validators.insert(first);
-        //         }
-        //         None => break,
-        //     }
-        // }
-        // let mut validator_set = ValidatorSet {
-        //     active: active_validators,
-        //     inactive: inactive_validators,
-        // };
-        // let validator_sets = Epoched::init_at_genesis(validator_set, epoch);
+        validators.for_each(
+            |GenesisValidatorData {
+                 ref address,
+                 consensus_key,
+                 state,
+                 total_deltas,
+                 voting_power,
+                 bond: (bond_id, bond),
+             }| {
+                self.write_validator_consensus_key(address, consensus_key);
+                self.write_validator_state(address, state);
+                self.write_validator_total_deltas(address, total_deltas);
+                self.write_validator_voting_power(address, voting_power);
+                self.write_bond(&bond_id, bond);
+            },
+        );
+        self.write_validator_set(validator_set);
+        self.write_total_voting_power(total_voting_power);
+    }
+}
 
-        // let total_voting_power = todo!();
-        // let mut storage = InitialPosStorage {
-        //     validators: (),
-        //     bonds: (),
-        //     validator_sets: (),
-        //     total_voting_power: (),
-        // };
-        // let mut state = EpochState {
-        //     bonds: HashMap::default(),
-        //     validators: validators.map(|(validator, tokens)| {
-        //         (validator, ValidatorState::Active, tokens)
-        //     }),
-        // };
-        // for (validator, tokens) in validators {
-        //     let bond = Bond {
-        //         delegator: validator.clone(),
-        //         validators: (),
-        //         amount: (),
-        //     };
-        // }
-        // for epoch_ix in 0..params.pipeline_len {
-        //     let epoch = Epoch(epoch_ix);
-        // }
+struct GenesisData<Validators, Address, TokenAmount, TokenChange, PK>
+where
+    Validators: Iterator<
+        Item = GenesisValidatorData<Address, TokenAmount, TokenChange, PK>,
+    >,
+    Address: Debug + Clone + Ord + Hash,
+    TokenAmount: Debug + Clone,
+    TokenChange: Debug + Copy + ops::Add<Output = TokenChange>,
+    PK: Debug + Clone,
+{
+    validators: Validators,
+    /// Active and inactive validator sets
+    validator_set: Epoched<ValidatorSet<Address>, OffsetUnboundingLen>,
+    /// The sum of all active and inactive validators' voting power
+    total_voting_power: Epoched<VotingPower, OffsetUnboundingLen>,
+}
+struct GenesisValidatorData<Address, TokenAmount, TokenChange, PK>
+where
+    Address: Debug + Clone + Ord + Hash,
+    TokenAmount: Debug + Clone,
+    TokenChange: Debug + Copy + ops::Add<Output = TokenChange>,
+    PK: Debug + Clone,
+{
+    address: Address,
+    consensus_key: Epoched<PK, OffsetPipelineLen>,
+    state: Epoched<ValidatorState, OffsetPipelineLen>,
+    total_deltas: EpochedDelta<TokenChange, OffsetUnboundingLen>,
+    voting_power: Epoched<VotingPower, OffsetUnboundingLen>,
+    bond: (
+        BondId<Address>,
+        Epoched<Bond<TokenAmount>, OffsetPipelineLen>,
+    ),
+}
+
+/// A pure function that returns genesis data created from the initial validator
+/// set.
+fn init_genesis_data<'a, Address, TokenAmount, TokenChange, PK>(
+    params: &'a PosParams,
+    validators: impl Iterator<Item = &'a GenesisValidator<Address, TokenAmount, PK>>
+    + Clone
+    + 'a,
+    epoch: Epoch,
+) -> GenesisData<
+    impl Iterator<
+        Item = GenesisValidatorData<Address, TokenAmount, TokenChange, PK>,
+    > + 'a,
+    Address,
+    TokenAmount,
+    TokenChange,
+    PK,
+>
+where
+    Address: 'a + Debug + Clone + Ord + Hash,
+    TokenAmount: 'a + Debug + Clone + Into<u64>,
+    TokenChange:
+        'a + Debug + Copy + ops::Add<Output = TokenChange> + From<TokenAmount>,
+    PK: 'a + Debug + Clone,
+{
+    // Accumulate the validator set and total voting power
+    let mut active: BTreeSet<WeightedValidator<Address>> = BTreeSet::default();
+    let mut total_voting_power = VotingPower::default();
+    for GenesisValidator {
+        address, tokens, ..
+    } in validators.clone()
+    {
+        let voting_power = VotingPower::from_tokens(tokens.clone(), params);
+        total_voting_power += voting_power;
+        active.insert(WeightedValidator {
+            voting_power,
+            address: address.clone(),
+        });
+    }
+    // Pop the smallest validators from the active set and insert them into
+    // inactive set until its size is under the limit
+    let mut inactive: BTreeSet<WeightedValidator<Address>> =
+        BTreeSet::default();
+    while active.len() > params.max_validator_slots as usize {
+        match active.pop_first_shim() {
+            Some(first) => {
+                inactive.insert(first);
+            }
+            None => break,
+        }
+    }
+    let validator_set = ValidatorSet { active, inactive };
+    let validator_set = Epoched::init_at_genesis(validator_set, epoch);
+    let total_voting_power =
+        Epoched::init_at_genesis(total_voting_power, epoch);
+
+    // Adapt the genesis validators data to PoS data
+    let validators = validators.map(
+        move |GenesisValidator {
+                  address,
+                  tokens,
+                  consensus_key,
+              }| {
+            let consensus_key =
+                Epoched::init_at_genesis(consensus_key.clone(), epoch);
+            let state =
+                Epoched::init_at_genesis(ValidatorState::Candidate, epoch);
+            let token_delta = TokenChange::from(tokens.clone());
+            let total_deltas =
+                EpochedDelta::init_at_genesis(token_delta, epoch);
+            let voting_power = VotingPower::from_tokens(tokens.clone(), params);
+            let voting_power = Epoched::init_at_genesis(voting_power, epoch);
+            let bond_id = BondId {
+                source: address.clone(),
+                validator: address.clone(),
+            };
+            let mut delta = HashMap::default();
+            delta.insert(epoch, tokens.clone());
+            let bond = Epoched::init_at_genesis(Bond { delta }, epoch);
+            GenesisValidatorData {
+                address: address.clone(),
+                consensus_key,
+                state,
+                total_deltas,
+                voting_power,
+                bond: (bond_id, bond),
+            }
+        },
+    );
+
+    GenesisData {
+        validators,
+        validator_set,
+        total_voting_power,
     }
 }
 
