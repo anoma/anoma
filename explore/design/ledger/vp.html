@@ -147,11 +147,11 @@
                 <div id="content" class="content">
                     <main>
                         <h1 id="validity-predicates"><a class="header" href="#validity-predicates">Validity predicates</a></h1>
-<p><a href="https://github.com/anomanetwork/anoma/issues/44">Tracking Issue</a></p>
+<p><a href="https://github.com/anoma/anoma/issues/44">Tracking Issue</a></p>
 <hr />
 <p>Each <a href="accounts.html">account</a> is associated with exactly one validity predicate (VP).</p>
 <p>Conceptually, a VP is a function from the transaction's data and the storage state prior and posterior to a transaction execution returning a boolean value. A transaction may modify any data in the <a href="accounts.html#dynamic-storage-sub-space">accounts' dynamic storage sub-space</a>. Upon <a href="tx-execution.html">execution</a>, the VPs associated with the accounts whose storage has been modified are invoked to verify the transaction. If any of them reject the transaction, all of its storage modifications are discarded.</p>
-<p>There are some native VPs for <a href="accounts.html#internal-transparent-addresses">internal transparent addresses</a> that are built into the ledger. All the other VPs are implemented as <a href="wasm-vm.html">WASM programs</a>. One can build a custom VP using the <a href="https://github.com/anomanetwork/anoma/tree/master/vps/vp_template">VP template</a> or use one of the pre-defined VPs.</p>
+<p>There are some native VPs for <a href="accounts.html#internal-transparent-addresses">internal transparent addresses</a> that are built into the ledger. All the other VPs are implemented as <a href="wasm-vm.html">WASM programs</a>. One can build a custom VP using the <a href="https://github.com/anoma/anoma/tree/master/vps/vp_template">VP template</a> or use one of the pre-defined VPs.</p>
 <p>The VPs must implement the following interface that will be invoked by the protocol:</p>
 <pre><pre class="playground"><code class="language-rust">
 <span class="boring">#![allow(unused)]
@@ -168,11 +168,11 @@
 ) -&gt; bool;
 <span class="boring">}
 </span></code></pre></pre>
-<p>The host functions available to call from inside the VP code can be found in <a href="https://anomanetwork.github.io/anoma/rustdoc/anoma_vm_env/imports/vp/index.html#functions">docs generated from code</a>.</p>
+<p>The host functions available to call from inside the VP code can be found in <a href="https://anoma.github.io/anoma/rustdoc/anoma_vm_env/imports/vp/index.html#functions">docs generated from code</a>.</p>
 <h2 id="native-vps"><a class="header" href="#native-vps">Native VPs</a></h2>
 <p>The native VPs follow the same interface as WASM VPs and rules for how they are <a href="tx.html#tx-execution">triggered by a transaction</a>. They can also call the same host functions as those provided in <a href="wasm-vm.html#vps-environment">WASM VPs environment</a> and must also account any computation for gas usage.</p>
 <h2 id="fungible-token-vp"><a class="header" href="#fungible-token-vp">Fungible token VP</a></h2>
-<p>The <a href="https://github.com/anomanetwork/anoma/tree/master/wasm/vp_token.wasm">fungible token VP</a> allows to associate accounts balances of a specific token under its account. </p>
+<p>The <a href="https://github.com/anoma/anoma/tree/master/wasm/vp_token.wasm">fungible token VP</a> allows to associate accounts balances of a specific token under its account. </p>
 <p>For illustration, users <code>Albert</code> and <code>Bertha</code> might hold some amount of token with the address <code>XAN</code>. Their balances would be stored in the <code>XAN</code>'s storage sub-space under the storage keys <code>@XAN/balance/@Albert</code> and <code>@XAN/balance/@Bertha</code>, respectively. When <code>Albert</code> or <code>Bertha</code> attempt to transact with their <code>XAN</code> tokens, its validity predicate would be triggered to check:</p>
 <ul>
 <li>the total supply of <code>XAN</code> token is preserved (i.e. inputs = outputs)</li>
@@ -180,7 +180,7 @@
 </ul>
 <p>Note that the fungible token VP doesn't need to know whether any of involved users accepted or rejected the transaction, because if any of the involved users rejects it, the whole transaction will be rejected.</p>
 <h2 id="user-vp"><a class="header" href="#user-vp">User VP</a></h2>
-<p>The <a href="https://github.com/anomanetwork/anoma/tree/master/wasm/vp_user.wasm">user VP</a> currently provides a signature verification against a public key for sending tokens as prescribed by the fungible token VP. In this VP, a transfer of tokens doesn't have to be authorized by the receiving party. </p>
+<p>The <a href="https://github.com/anoma/anoma/tree/master/wasm/vp_user.wasm">user VP</a> currently provides a signature verification against a public key for sending tokens as prescribed by the fungible token VP. In this VP, a transfer of tokens doesn't have to be authorized by the receiving party. </p>
 <p>It also allows arbitrary storage modifications to the user's sub-space to be performed by a transaction that has been signed by the secret key corresponding to the user's public key stored on-chain. This functionality also allows one to update their own validity predicate.</p>
 
                     </main>

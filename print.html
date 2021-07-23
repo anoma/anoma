@@ -148,7 +148,7 @@
                 <div id="content" class="content">
                     <main>
                         <h1 id="introduction"><a class="header" href="#introduction">Introduction</a></h1>
-<p>This book is written using <a href="https://rust-lang.github.io/mdBook/">mdBook</a> with <a href="https://github.com/badboy/mdbook-mermaid">mdbook-mermaid</a> for diagrams, it currently lives in the <a href="https://github.com/anomanetwork/anoma">Anoma repo</a>.</p>
+<p>This book is written using <a href="https://rust-lang.github.io/mdBook/">mdBook</a> with <a href="https://github.com/badboy/mdbook-mermaid">mdbook-mermaid</a> for diagrams, it currently lives in the <a href="https://github.com/anoma/anoma">Anoma repo</a>.</p>
 <p>To get started quickly, one can:</p>
 <pre><code class="language-shell"># Install dependencies
 make dev-deps
@@ -255,7 +255,7 @@ re-checked when it has been validated at some previous level.</p>
 <p>The first epoch (ID 0) starts on the genesis block. The next epoch minimum start time is set to the genesis time configured for the chain + minimum duration and the next epoch minimum height is set to the height of the genesis block (typically 1) + minimum number of blocks.</p>
 <p>On each block <code>BeginBlock</code> Tendermint call, we check if the current epoch is finished, in which case we move on to the next epoch. An epoch is finished when both the minimum number of blocks and minimum duration of an epoch have been created from the first block of a current epoch. When a new epoch starts, the next epoch minimum height is set to the block's height + minimum number of blocks and minimum start time time is set to block's time from the block header + minimum duration.</p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="accounts"><a class="header" href="#accounts">Accounts</a></h1>
-<p><a href="https://github.com/anomanetwork/anoma/issues/45">Tracking Issue</a></p>
+<p><a href="https://github.com/anoma/anoma/issues/45">Tracking Issue</a></p>
 <hr />
 <p>There's only a single account type. Each account is associated with:</p>
 <ul>
@@ -335,11 +335,11 @@ predicate (and other state changes included in the transaction) is valid</li>
 </ul>
 <p>A newly created account should be validated by all the VPs triggered by the transaction, i.e. it should be included in the set of changed keys passed to each VP. If the VPs are not interested in the newly created account, they can choose to ignore it.</p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="validity-predicates"><a class="header" href="#validity-predicates">Validity predicates</a></h1>
-<p><a href="https://github.com/anomanetwork/anoma/issues/44">Tracking Issue</a></p>
+<p><a href="https://github.com/anoma/anoma/issues/44">Tracking Issue</a></p>
 <hr />
 <p>Each <a href="explore/design/ledger/accounts.html">account</a> is associated with exactly one validity predicate (VP).</p>
 <p>Conceptually, a VP is a function from the transaction's data and the storage state prior and posterior to a transaction execution returning a boolean value. A transaction may modify any data in the <a href="explore/design/ledger/accounts.html#dynamic-storage-sub-space">accounts' dynamic storage sub-space</a>. Upon <a href="explore/design/ledger/tx-execution.html">execution</a>, the VPs associated with the accounts whose storage has been modified are invoked to verify the transaction. If any of them reject the transaction, all of its storage modifications are discarded.</p>
-<p>There are some native VPs for <a href="explore/design/ledger/accounts.html#internal-transparent-addresses">internal transparent addresses</a> that are built into the ledger. All the other VPs are implemented as <a href="explore/design/ledger/wasm-vm.html">WASM programs</a>. One can build a custom VP using the <a href="https://github.com/anomanetwork/anoma/tree/master/vps/vp_template">VP template</a> or use one of the pre-defined VPs.</p>
+<p>There are some native VPs for <a href="explore/design/ledger/accounts.html#internal-transparent-addresses">internal transparent addresses</a> that are built into the ledger. All the other VPs are implemented as <a href="explore/design/ledger/wasm-vm.html">WASM programs</a>. One can build a custom VP using the <a href="https://github.com/anoma/anoma/tree/master/vps/vp_template">VP template</a> or use one of the pre-defined VPs.</p>
 <p>The VPs must implement the following interface that will be invoked by the protocol:</p>
 <pre><pre class="playground"><code class="language-rust">
 <span class="boring">#![allow(unused)]
@@ -356,11 +356,11 @@ predicate (and other state changes included in the transaction) is valid</li>
 ) -&gt; bool;
 <span class="boring">}
 </span></code></pre></pre>
-<p>The host functions available to call from inside the VP code can be found in <a href="https://anomanetwork.github.io/anoma/rustdoc/anoma_vm_env/imports/vp/index.html#functions">docs generated from code</a>.</p>
+<p>The host functions available to call from inside the VP code can be found in <a href="https://anoma.github.io/anoma/rustdoc/anoma_vm_env/imports/vp/index.html#functions">docs generated from code</a>.</p>
 <h2 id="native-vps"><a class="header" href="#native-vps">Native VPs</a></h2>
 <p>The native VPs follow the same interface as WASM VPs and rules for how they are <a href="explore/design/ledger/tx.html#tx-execution">triggered by a transaction</a>. They can also call the same host functions as those provided in <a href="explore/design/ledger/wasm-vm.html#vps-environment">WASM VPs environment</a> and must also account any computation for gas usage.</p>
 <h2 id="fungible-token-vp"><a class="header" href="#fungible-token-vp">Fungible token VP</a></h2>
-<p>The <a href="https://github.com/anomanetwork/anoma/tree/master/wasm/vp_token.wasm">fungible token VP</a> allows to associate accounts balances of a specific token under its account. </p>
+<p>The <a href="https://github.com/anoma/anoma/tree/master/wasm/vp_token.wasm">fungible token VP</a> allows to associate accounts balances of a specific token under its account. </p>
 <p>For illustration, users <code>Albert</code> and <code>Bertha</code> might hold some amount of token with the address <code>XAN</code>. Their balances would be stored in the <code>XAN</code>'s storage sub-space under the storage keys <code>@XAN/balance/@Albert</code> and <code>@XAN/balance/@Bertha</code>, respectively. When <code>Albert</code> or <code>Bertha</code> attempt to transact with their <code>XAN</code> tokens, its validity predicate would be triggered to check:</p>
 <ul>
 <li>the total supply of <code>XAN</code> token is preserved (i.e. inputs = outputs)</li>
@@ -368,10 +368,10 @@ predicate (and other state changes included in the transaction) is valid</li>
 </ul>
 <p>Note that the fungible token VP doesn't need to know whether any of involved users accepted or rejected the transaction, because if any of the involved users rejects it, the whole transaction will be rejected.</p>
 <h2 id="user-vp"><a class="header" href="#user-vp">User VP</a></h2>
-<p>The <a href="https://github.com/anomanetwork/anoma/tree/master/wasm/vp_user.wasm">user VP</a> currently provides a signature verification against a public key for sending tokens as prescribed by the fungible token VP. In this VP, a transfer of tokens doesn't have to be authorized by the receiving party. </p>
+<p>The <a href="https://github.com/anoma/anoma/tree/master/wasm/vp_user.wasm">user VP</a> currently provides a signature verification against a public key for sending tokens as prescribed by the fungible token VP. In this VP, a transfer of tokens doesn't have to be authorized by the receiving party. </p>
 <p>It also allows arbitrary storage modifications to the user's sub-space to be performed by a transaction that has been signed by the secret key corresponding to the user's public key stored on-chain. This functionality also allows one to update their own validity predicate.</p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="transactions"><a class="header" href="#transactions">Transactions</a></h1>
-<p><a href="https://github.com/anomanetwork/anoma/issues/43">Tracking Issue</a></p>
+<p><a href="https://github.com/anoma/anoma/issues/43">Tracking Issue</a></p>
 <hr />
 <p>There is only a single general transaction (tx) type:</p>
 <pre><pre class="playground"><code class="language-rust">
@@ -550,7 +550,7 @@ predicate (and other state changes included in the transaction) is valid</li>
 <p>For safety, we need to limit the stack height in wasm code. Similarly to gas metering, we can also use <code>wasmer</code> middleware or <code>pwasm-utils</code>.</p>
 <p>We have to use <code>pwasm-utils</code>, because <code>wasmer</code>'s stack limiter is currently non-deterministic (platform specific). This is to be fixed in this PR: <a href="https://github.com/wasmerio/wasmer/pull/1037">https://github.com/wasmerio/wasmer/pull/1037</a>.</p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="front-running-prevention"><a class="header" href="#front-running-prevention">Front-running prevention</a></h1>
-<p><a href="https://github.com/anomanetwork/anoma/issues/42">Tracking Issue</a></p>
+<p><a href="https://github.com/anoma/anoma/issues/42">Tracking Issue</a></p>
 <hr />
 <p>This page should describe how DKG can be integrated for front-running prevention.</p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="the-gossip-network"><a class="header" href="#the-gossip-network">The gossip network</a></h1>
@@ -600,7 +600,7 @@ more information on the network topology.</p>
 cycle" /> <a href="https://excalidraw.com/#room=7ac107b3757c64049003,cdMInfvdLtjaGWSZWEKrhw">exilidraw
 link</a></p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="intents"><a class="header" href="#intents">Intents</a></h1>
-<p><a href="https://github.com/anomanetwork/anoma/issues/36">Tracking Issue</a></p>
+<p><a href="https://github.com/anoma/anoma/issues/36">Tracking Issue</a></p>
 <hr />
 <p>There is only a single intent type that is composed of arbitrary data and a
 possible schema definition.</p>
@@ -617,7 +617,7 @@ possible schema definition.</p>
 <p>The arbitrary data will be broadcasted to any interested matchmaker to craft
 valid transactions. For an intent to find a match with a public matchmaker, it must use a known data schema or else no matchmaker will be able to decode its data (see <a href="explore/design/intent_gossip/../data-schema.html">data schema</a>).</p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="incentive"><a class="header" href="#incentive">Incentive</a></h1>
-<p><a href="https://github.com/anomanetwork/anoma/issues/37">Tracking Issue</a></p>
+<p><a href="https://github.com/anoma/anoma/issues/37">Tracking Issue</a></p>
 <hr />
 <p>TODO</p>
 <ul>
@@ -633,13 +633,13 @@ matchmaker program and a transaction template.</p>
 <p><a href="https://excalidraw.com/#room=92b291c13cfab8fb22a4,OvHfWIrL0jeDzPI-EFZMaw">excalidraw link</a></p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="distributed-key-generation-gossip"><a class="header" href="#distributed-key-generation-gossip">Distributed key generation gossip</a></h1>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="fractal-scaling"><a class="header" href="#fractal-scaling">Fractal scaling</a></h1>
-<p><a href="https://github.com/anomanetwork/anoma/issues/41">Tracking Issue</a></p>
+<p><a href="https://github.com/anoma/anoma/issues/41">Tracking Issue</a></p>
 <hr />
 <div style="break-before: page; page-break-before: always;"></div><h1 id="upgrade-system"><a class="header" href="#upgrade-system">Upgrade system</a></h1>
-<p><a href="https://github.com/anomanetwork/anoma/issues/40">Tracking Issue</a></p>
+<p><a href="https://github.com/anoma/anoma/issues/40">Tracking Issue</a></p>
 <hr />
 <div style="break-before: page; page-break-before: always;"></div><h1 id="crypto-primitives"><a class="header" href="#crypto-primitives">Crypto primitives</a></h1>
-<p><a href="https://github.com/anomanetwork/anoma/issues/39">Tracking Issue</a></p>
+<p><a href="https://github.com/anoma/anoma/issues/39">Tracking Issue</a></p>
 <hr />
 <p>This page should describe cryptography primitives that we might want to use, such as types of keys, hashing functions, etc.</p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="storage"><a class="header" href="#storage">Storage</a></h1>
@@ -912,7 +912,7 @@ fn transaction(...) {
 </ul>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="base-ledger-prototype"><a class="header" href="#base-ledger-prototype">Base ledger prototype</a></h1>
 <h2 id="version-2"><a class="header" href="#version-2">Version 2</a></h2>
-<p>tracking issue <a href="https://github.com/anomanetwork/anoma/issues/62">https://github.com/anomanetwork/anoma/issues/62</a></p>
+<p>tracking issue <a href="https://github.com/anoma/anoma/issues/62">https://github.com/anoma/anoma/issues/62</a></p>
 <h3 id="goals"><a class="header" href="#goals">Goals</a></h3>
 <ul>
 <li>storage
@@ -987,7 +987,7 @@ fn transaction(...) {
 <h5 id="rpc-types"><a class="header" href="#rpc-types">RPC types</a></h5>
 <p>The types for data that can be submitted to the node via the client's RPC commands.</p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="intent-gossip-system-prototype"><a class="header" href="#intent-gossip-system-prototype">Intent Gossip system prototype</a></h1>
-<p>tracking issue <a href="https://github.com/anomanetwork/anoma/issues/35">https://github.com/anomanetwork/anoma/issues/35</a></p>
+<p>tracking issue <a href="https://github.com/anoma/anoma/issues/35">https://github.com/anoma/anoma/issues/35</a></p>
 <h2 id="goals-2"><a class="header" href="#goals-2">Goals</a></h2>
 <ul>
 <li>learning rust</li>
@@ -1482,7 +1482,7 @@ forked with more option and better integration/default value</li>
 <p>The ledger is a distributed state machine, relying on functionality provided by <a href="https://docs.tendermint.com/master/spec/">Tendermint</a> such as its BFT consensus algorithm with instant finality, P2P networking capabilities, transaction mempool and more. The ledger state machine is built on top the <a href="https://docs.tendermint.com/master/spec/abci/">ABCI</a>.</p>
 <p>For block validator voting power assignment, the ledger employs a proof-of-stake system.</p>
 <p>The ledger's key-value storage is organized into blocks and user specific state is organized into accounts. The state machine executes transactions, which can apply arbitrary changes to the state that are validated by validity predicates associated with the accounts involved in the transaction.</p>
-<p>To prevent transaction front-running, the ledger employs a DKG scheme as implemented in <a href="https://github.com/anomanetwork/ferveo">Ferveo</a>. Using this scheme, transactions are encrypted before being submitted to the ledger. The encrypted transactions are committed by a block proposer to a specific order in which they must be executed once decrypted.</p>
+<p>To prevent transaction front-running, the ledger employs a DKG scheme as implemented in <a href="https://github.com/anoma/ferveo">Ferveo</a>. Using this scheme, transactions are encrypted before being submitted to the ledger. The encrypted transactions are committed by a block proposer to a specific order in which they must be executed once decrypted.</p>
 <ul>
 <li>TODO add fractal scaling &amp; protocol upgrade system overview</li>
 </ul>
@@ -1529,7 +1529,7 @@ The first argument is the offset to the <code>data</code> input written into the
 <ol>
 <li>
 <p>The addresses set by the transaction (see <code>insert_verifier</code> in <a href="specs/ledger.html#transaction-host-environment-functions">transaction host environment functions</a>) are associated with <em>all</em> the modified storage keys.</p>
-<p>TODO - <a href="https://github.com/anomanetwork/anoma/issues/292">https://github.com/anomanetwork/anoma/issues/292</a></p>
+<p>TODO - <a href="https://github.com/anoma/anoma/issues/292">https://github.com/anoma/anoma/issues/292</a></p>
 </li>
 <li>
 <p>The storage keys that were modified by the transaction are associated with the addresses included in the storage keys. Note that a storage key may contain more than one address, in which case all its addresses are associated with this key. </p>
@@ -1712,7 +1712,7 @@ message DkgGossipMessage{
 <p>You can either use the pre-built binaries we've released on Github or build from source. If you'll want to customize any of the wasm code (transactions, validity predicates and/or matchmaker), we recommend that you build from source to have the source available.</p>
 <h3 id="pre-built-binaries"><a class="header" href="#pre-built-binaries">Pre-built binaries</a></h3>
 <p>We have built for Mac (darwin_amd64) and Linux (linux_amd64). If you're not on one of these, you'll have to build from the source.</p>
-<p>Download the release for your platform from <a href="https://github.com/anomanetwork/anoma/releases">https://github.com/anomanetwork/anoma/releases</a>. They are packaged with Tendermint, which will be used by the Anoma node.</p>
+<p>Download the release for your platform from <a href="https://github.com/anoma/anoma/releases">https://github.com/anoma/anoma/releases</a>. They are packaged with Tendermint, which will be used by the Anoma node.</p>
 <pre><code class="language-shell"># Extract the archive
 tar -xf anoma_0.1_darwin_amd64.tar.gz
 
@@ -1724,9 +1724,9 @@ export PATH=&quot;$(pwd):$PATH&quot;
 <p>And you're ready to go!</p>
 <h3 id="build-from-the-source"><a class="header" href="#build-from-the-source">Build from the source</a></h3>
 <pre><code class="language-shell"># Clone the repo
-git clone https://github.com/anomanetwork/anoma.git
+git clone https://github.com/anoma/anoma.git
 # or
-git clone git@github.com:anomanetwork/anoma.git
+git clone git@github.com:anoma/anoma.git
 
 cd anoma
 
