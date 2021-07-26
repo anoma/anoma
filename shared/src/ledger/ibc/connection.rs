@@ -38,6 +38,13 @@ where
         key: &Key,
         tx_data: &[u8],
     ) -> Result<bool> {
+        if Self::is_counter_key(key) {
+            // the counter should be increased
+            return Ok(
+                self.connection_counter_pre() < self.connection_counter()
+            );
+        }
+
         let conn_id = Self::get_connection_id(key)?;
         let conn = match self.connection_end(&conn_id) {
             Some(c) => c,
@@ -65,6 +72,13 @@ where
                 Ok(false)
             }
         }
+    }
+
+    fn is_counter_key(key: &Key) -> bool {
+        let path = COUNTER_PATH.to_owned();
+        let counter_key = Key::ibc_key(path)
+            .expect("Creating a key for a connection counter failed");
+        *key == counter_key
     }
 
     /// Returns the connection ID after #IBC/connections
@@ -303,6 +317,20 @@ where
             Ok(Some(value)) => ConnectionEnd::decode_vec(&value).ok(),
             // returns None even if DB read fails
             _ => None,
+        }
+    }
+
+    fn connection_counter_pre(&self) -> u64 {
+        let path = COUNTER_PATH.to_owned();
+        let key = Key::ibc_key(path)
+            .expect("Creating a key for a connection counter failed");
+        match self.ctx.read_pre(&key) {
+            Ok(Some(value)) => storage::types::decode(&value)
+                .expect("converting a connection counter shouldn't failed"),
+            _ => {
+                tracing::error!("connection counter should exist");
+                unreachable!();
+            }
         }
     }
 }
