@@ -34,8 +34,6 @@ pub enum Error {
     DecodingTxDataError(std::io::Error),
     #[error("IBC data error: {0}")]
     IbcDataError(crate::types::ibc::Error),
-    #[error("No proof error: {0}")]
-    IbcProofError(String),
 }
 
 /// IBC functions result
