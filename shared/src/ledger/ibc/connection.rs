@@ -24,7 +24,7 @@ use crate::types::ibc::{
     ConnectionOpenAckData, ConnectionOpenConfirmData, ConnectionOpenTryData,
     Error as IbcDataError,
 };
-use crate::types::storage::{Key, KeySeg};
+use crate::types::storage::{BlockHeight, Epoch, Key, KeySeg};
 
 pub(super) const COUNTER_PATH: &str = "connections/counter";
 
@@ -59,7 +59,7 @@ where
             }
             _ => {
                 tracing::info!(
-                    "unexpected state change for an IBC connection: key {}",
+                    "unexpected state change for an IBC connection: {}",
                     key
                 );
                 Ok(false)
@@ -170,8 +170,8 @@ where
         conn: ConnectionEnd,
         tx_data: &[u8],
     ) -> Result<bool> {
-        let data = ConnectionOpenTryData::try_from_slice(tx_data)
-            .map_err(Error::DecodingTxDataError)?;
+        let data = ConnectionOpenTryData::try_from_slice(tx_data)?;
+
         let client_id = match data.client_id() {
             Some(id) => id,
             None => {
@@ -182,7 +182,7 @@ where
         let counterpart_client_id = match data.counterparty() {
             Some(c) => c.client_id().clone(),
             None => {
-                tracing::info!("no counterparty exist in the tx data");
+                tracing::info!("no counterparty exists in the tx data");
                 return Ok(false);
             }
         };
@@ -204,8 +204,7 @@ where
         conn: ConnectionEnd,
         tx_data: &[u8],
     ) -> Result<bool> {
-        let data = ConnectionOpenAckData::try_from_slice(tx_data)
-            .map_err(Error::DecodingTxDataError)?;
+        let data = ConnectionOpenAckData::try_from_slice(tx_data)?;
 
         // version check
         if conn.versions().contains(&data.version()?) {
@@ -243,8 +242,7 @@ where
         conn: ConnectionEnd,
         tx_data: &[u8],
     ) -> Result<bool> {
-        let data = ConnectionOpenConfirmData::try_from_slice(tx_data)
-            .map_err(Error::DecodingTxDataError)?;
+        let data = ConnectionOpenConfirmData::try_from_slice(tx_data)?;
 
         // expected counterpart connection
         let expected_conn = ConnectionEnd::new(
@@ -274,7 +272,7 @@ where
                 Some(c) => c,
                 None => {
                     tracing::info!(
-                        "The corresponding client state doesn't exist"
+                        "the corresponding client state doesn't exist"
                     );
                     return Ok(false);
                 }
@@ -288,7 +286,7 @@ where
         ) {
             Ok(_) => Ok(true),
             Err(e) => {
-                tracing::info!("Proof verification failed: {}", e);
+                tracing::info!("proof verification failed: {}", e);
                 Ok(false)
             }
         }
@@ -330,12 +328,15 @@ where
     }
 
     fn host_current_height(&self) -> Height {
-        // TODO: set the epoch(revision_number)
-        Height::new(0, self.ctx.storage.get_block_height().0.0)
+        let epoch = self.ctx.storage.get_block_epoch().0.0;
+        let height = self.ctx.storage.get_block_height().0.0;
+        Height::new(epoch, height)
     }
 
     fn host_oldest_height(&self) -> Height {
-        Height::new(0, 1)
+        let epoch = Epoch::default().0;
+        let height = BlockHeight::default().0;
+        Height::new(epoch, height)
     }
 
     fn commitment_prefix(&self) -> CommitmentPrefix {
@@ -384,5 +385,11 @@ where
 impl From<IbcDataError> for Error {
     fn from(err: IbcDataError) -> Self {
         Self::IbcDataError(err)
+    }
+}
+
+impl From<std::io::Error> for Error {
+    fn from(err: std::io::Error) -> Self {
+        Self::DecodingTxDataError(err)
     }
 }
