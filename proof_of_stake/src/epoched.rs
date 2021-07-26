@@ -102,8 +102,8 @@ where
         }
     }
 
-    /// Update the value at the data's epoch offset.
-    pub fn update(
+    /// Set the value at the data's epoch offset.
+    pub fn set(
         &mut self,
         value: Data,
         epoch: impl Into<Epoch>,
@@ -199,8 +199,9 @@ where
         sum
     }
 
-    /// Update the value at the data's epoch offset.
-    pub fn update(
+    /// Set the value at the data's epoch offset. If there's an existing value,
+    /// it will be added to the new value.
+    pub fn set(
         &mut self,
         value: Data,
         epoch: impl Into<Epoch>,
@@ -292,7 +293,7 @@ mod tests {
     #[derive(Clone, Debug)]
     enum EpochedTransition<Data> {
         Get(Epoch),
-        Update { value: Data, epoch: Epoch },
+        Set { value: Data, epoch: Epoch },
     }
 
     /// Abstract state machine implementation for [`Epoched`].
@@ -351,7 +352,7 @@ mod tests {
                     arb_epoch(last_update..last_update + 10),
                 )
                     .prop_map(|(value, epoch)| {
-                        EpochedTransition::Update { value, epoch }
+                        EpochedTransition::Set { value, epoch }
                     })
             ]
             .boxed()
@@ -365,7 +366,7 @@ mod tests {
                 EpochedTransition::Get(_epoch) => {
                     // no side effects
                 }
-                EpochedTransition::Update { value, epoch } => {
+                EpochedTransition::Set { value, epoch } => {
                     let offset = Offset::value(&state.params);
                     state.last_update = *epoch;
                     state.data.insert(*epoch + offset, *value);
@@ -454,9 +455,9 @@ mod tests {
                         }
                     }
                 }
-                EpochedTransition::Update { value, epoch } => {
+                EpochedTransition::Set { value, epoch } => {
                     let current_before_update = data.get(*epoch).copied();
-                    data.update(*value, *epoch, &params);
+                    data.set(*value, *epoch, &params);
 
                     // Post-conditions
                     assert_eq!(data.last_update, *epoch);
@@ -540,7 +541,7 @@ mod tests {
                     last_update..last_update + 10,
                 )
                     .prop_map(|(value, epoch)| {
-                        EpochedTransition::Update {
+                        EpochedTransition::Set {
                             value,
                             epoch: epoch.into(),
                         }
@@ -557,7 +558,7 @@ mod tests {
                 EpochedTransition::Get(_epoch) => {
                     // no side effects
                 }
-                EpochedTransition::Update {
+                EpochedTransition::Set {
                     value: change,
                     epoch,
                 } => {
@@ -645,14 +646,14 @@ mod tests {
                         }
                     }
                 }
-                EpochedTransition::Update {
+                EpochedTransition::Set {
                     value: change,
                     epoch,
                 } => {
                     let current_value_before_update = data.get(*epoch);
                     let value_at_offset_before_update =
                         data.get(*epoch + offset);
-                    data.update(*change, *epoch, &params);
+                    data.set(*change, *epoch, &params);
 
                     // Post-conditions
                     assert_eq!(data.last_update, *epoch);
