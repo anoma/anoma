@@ -1,9 +1,9 @@
 [package]
 authors = ["Heliax AG <hello@heliax.dev>"]
-description = "Anoma apps"
+description = "Anoma Proof of Stake system"
 edition = "2018"
 license = "GPL-3.0"
-name = "proof_of_stake"
+name = "anoma_proof_of_stake"
 readme = "../README.md"
 resolver = "2"
 version = "0.1.0"
