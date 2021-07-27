@@ -40,6 +40,11 @@ pub trait Pos {
     // data into/from storage values (e.g. our ledger storage key type and
     // borsh encoding for values)
     fn write_params(&mut self, params: &PosParams);
+    fn write_validator_staking_reward_address(
+        &mut self,
+        key: &Self::Address,
+        value: Self::Address,
+    );
     fn write_validator_consensus_key(
         &mut self,
         key: &Self::Address,
@@ -79,14 +84,19 @@ pub trait Pos {
         key: &Self::Address,
     ) -> Option<Epoched<Self::PublicKey, OffsetPipelineLen>>;
 
-    /// Initialize the PoS system the genesis block for the given PoS parameters
-    /// and initial validator set. The validators' tokens will be put into
-    /// self-bonds.
+    /// Initialize the PoS system storage data in the genesis block for the
+    /// given PoS parameters and initial validator set. The validators'
+    /// tokens will be put into self-bonds. The given PoS parameters are written
+    /// with the [`Pos::write_params`] method.
     fn init_genesis(
         &mut self,
         params: &PosParams,
-        validators: Vec<
-            GenesisValidator<Self::Address, Self::TokenAmount, Self::PublicKey>,
+        validators: impl AsRef<
+            [GenesisValidator<
+                Self::Address,
+                Self::TokenAmount,
+                Self::PublicKey,
+            >],
         >,
         epoch: Epoch,
     ) {
@@ -96,17 +106,22 @@ pub trait Pos {
             validators,
             validator_set,
             total_voting_power,
-        } = init_genesis_data(params, validators.iter(), epoch);
+        } = init_genesis_data(params, validators.as_ref().iter(), epoch);
 
         validators.for_each(
             |GenesisValidatorData {
                  ref address,
+                 staking_reward_address,
                  consensus_key,
                  state,
                  total_deltas,
                  voting_power,
                  bond: (bond_id, bond),
              }| {
+                self.write_validator_staking_reward_address(
+                    address,
+                    staking_reward_address,
+                );
                 self.write_validator_consensus_key(address, consensus_key);
                 self.write_validator_state(address, state);
                 self.write_validator_total_deltas(address, total_deltas);
@@ -143,6 +158,7 @@ where
     PK: Debug + Clone,
 {
     address: Address,
+    staking_reward_address: Address,
     consensus_key: Epoched<PK, OffsetPipelineLen>,
     state: Epoched<ValidatorState, OffsetPipelineLen>,
     total_deltas: EpochedDelta<TokenChange, OffsetUnboundingLen>,
@@ -153,8 +169,7 @@ where
     ),
 }
 
-/// A pure function that returns genesis data created from the initial validator
-/// set.
+/// A function that returns genesis data created from the initial validator set.
 fn init_genesis_data<'a, Address, TokenAmount, TokenChange, PK>(
     params: &'a PosParams,
     validators: impl Iterator<Item = &'a GenesisValidator<Address, TokenAmount, PK>>
@@ -212,6 +227,8 @@ where
     let validators = validators.map(
         move |GenesisValidator {
                   address,
+
+                  staking_reward_address,
                   tokens,
                   consensus_key,
               }| {
@@ -233,6 +250,7 @@ where
             let bond = Epoched::init_at_genesis(Bond { delta }, epoch);
             GenesisValidatorData {
                 address: address.clone(),
+                staking_reward_address: staking_reward_address.clone(),
                 consensus_key,
                 state,
                 total_deltas,

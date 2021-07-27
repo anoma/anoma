@@ -22,6 +22,9 @@ pub struct VotingPower(u64);
 #[derive(Debug, Clone)]
 pub struct GenesisValidator<Address, Token, PK> {
     pub address: Address,
+    /// An address to which any staking rewards will be credited, must be
+    /// different from the `address`
+    pub staking_reward_address: Address,
     /// Staked tokens
     pub tokens: Token,
     pub consensus_key: PK,
