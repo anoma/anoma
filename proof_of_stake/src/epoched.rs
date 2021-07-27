@@ -102,13 +102,10 @@ where
         }
     }
 
-    /// Set the value at the data's epoch offset.
-    pub fn set(
-        &mut self,
-        value: Data,
-        epoch: impl Into<Epoch>,
-        params: &PosParams,
-    ) {
+    /// Update the data associated with epochs, if needed. The head element is
+    /// set to the latest value and any value before the current epoch is
+    /// dropped.
+    fn update_data(&mut self, epoch: impl Into<Epoch>, params: &PosParams) {
         let epoch = epoch.into();
         debug_assert!(
             epoch >= self.last_update,
@@ -129,7 +126,7 @@ where
             let mut latest_value: Option<Data> = None;
             // Find the latest value in elements before the mid-point and clear
             // them
-            for i in 0..mid_point + 1 {
+            for i in 0..mid_point {
                 if let Some(Some(data)) = self.data.get(i) {
                     latest_value = Some(data.clone());
                 }
@@ -137,12 +134,27 @@ where
             }
             // Rotate left on the mid-point
             self.data.rotate_left(mid_point);
-            // Update the head with the latest value
-            self.data[0] = latest_value;
+            // Update the head with the latest value, if it's not already set
+            let current = self.data.get_mut(0).unwrap();
+            if current.is_none() {
+                *current = latest_value;
+            }
         }
 
-        self.data[offset] = Some(value);
         self.last_update = epoch;
+    }
+
+    /// Set the value at the data's epoch offset.
+    pub fn set(
+        &mut self,
+        value: Data,
+        epoch: impl Into<Epoch>,
+        params: &PosParams,
+    ) {
+        self.update_data(epoch, params);
+
+        let offset = Offset::value(params) as usize;
+        self.data[offset] = Some(value);
     }
 }
 
@@ -199,14 +211,9 @@ where
         sum
     }
 
-    /// Set the value at the data's epoch offset. If there's an existing value,
-    /// it will be added to the new value.
-    pub fn set(
-        &mut self,
-        value: Data,
-        epoch: impl Into<Epoch>,
-        params: &PosParams,
-    ) {
+    /// Update the data associated with epochs, if needed. Any value before the
+    /// current epoch is added to the head element before being dropped.
+    fn update_data(&mut self, epoch: impl Into<Epoch>, params: &PosParams) {
         let epoch = epoch.into();
         debug_assert!(
             epoch >= self.last_update,
@@ -226,7 +233,7 @@ where
             let mid_point = cmp::min(shift, self.data.len());
             let mut sum: Option<Data> = None;
             // Sum and clear all the elements before the mid-point
-            for i in 0..mid_point + 1 {
+            for i in 0..mid_point {
                 if let Some(next) = self.data.get(i) {
                     // Add current to the sum, if any
                     sum = match (sum, next) {
@@ -241,13 +248,31 @@ where
             }
             // Rotate left on the mid-point
             self.data.rotate_left(mid_point);
-            // Update the head with the sum
-            self.data[0] = sum;
+            // Add the sum to the head
+            let mut current = self.data.get_mut(0).unwrap();
+            match (sum, &mut current) {
+                (Some(sum), Some(current)) => *current = *current + sum,
+                (Some(_), None) => *current = sum,
+                _ => {}
+            }
         }
 
+        self.last_update = epoch;
+    }
+
+    /// Set the value at the data's epoch offset. If there's an existing value,
+    /// it will be added to the new value.
+    pub fn set(
+        &mut self,
+        value: Data,
+        epoch: impl Into<Epoch>,
+        params: &PosParams,
+    ) {
+        self.update_data(epoch, params);
+
+        let offset = Offset::value(params) as usize;
         self.data[offset] = self.data[offset]
             .map_or_else(|| Some(value), |last_delta| Some(last_delta + value));
-        self.last_update = epoch;
     }
 }
 
@@ -457,6 +482,14 @@ mod tests {
                 }
                 EpochedTransition::Set { value, epoch } => {
                     let current_before_update = data.get(*epoch).copied();
+                    let next_epoch: u64 = (*epoch + 1_u64).into();
+                    let epoch_at_offset: u64 = (*epoch + offset).into();
+                    // Find the values in epochs before the offset
+                    let range_before_update: Vec<_> = (next_epoch
+                        ..epoch_at_offset)
+                        .map(|i: u64| data.get(Epoch::from(i)).copied())
+                        .collect();
+
                     data.set(*value, *epoch, &params);
 
                     // Post-conditions
@@ -475,6 +508,15 @@ mod tests {
                         data.get(*epoch),
                         current_before_update.as_ref(),
                         "The current value must not change"
+                    );
+                    let range_after_update: Vec<_> = (next_epoch
+                        ..epoch_at_offset)
+                        .map(|i: u64| data.get(Epoch::from(i)).copied())
+                        .collect();
+                    assert_eq!(
+                        range_before_update, range_after_update,
+                        "The values in epochs before the offset must not \
+                         change"
                     );
                 }
             }
@@ -653,6 +695,14 @@ mod tests {
                     let current_value_before_update = data.get(*epoch);
                     let value_at_offset_before_update =
                         data.get(*epoch + offset);
+                    let next_epoch: u64 = (*epoch + 1_u64).into();
+                    let epoch_at_offset: u64 = (*epoch + offset).into();
+                    // Find the values in epochs before the offset
+                    let range_before_update: Vec<_> = (next_epoch
+                        ..epoch_at_offset)
+                        .map(|i: u64| data.get(Epoch::from(i)))
+                        .collect();
+
                     data.set(*change, *epoch, &params);
 
                     // Post-conditions
@@ -675,6 +725,15 @@ mod tests {
                         data.get(*epoch),
                         current_value_before_update,
                         "The current value must not change"
+                    );
+                    let range_after_update: Vec<_> = (next_epoch
+                        ..epoch_at_offset)
+                        .map(|i: u64| data.get(Epoch::from(i)))
+                        .collect();
+                    assert_eq!(
+                        range_before_update, range_after_update,
+                        "The values in epochs before the offset must not \
+                         change"
                     );
                 }
             }
