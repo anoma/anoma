@@ -156,6 +156,51 @@ where
         let offset = Offset::value(params) as usize;
         self.data[offset] = Some(value);
     }
+
+    /// Update the values starting from the given epoch offset (which must not
+    /// be greater than the `Offset` type parameter of self) with the given
+    /// function.
+    pub fn update_from_offset<UpdateOffset>(
+        &mut self,
+        update_value: impl Fn(&mut Data),
+        epoch: impl Into<Epoch>,
+        _offset: UpdateOffset,
+        params: &PosParams,
+    ) where
+        UpdateOffset: EpochOffset,
+    {
+        let offset = UpdateOffset::value(params) as usize;
+        debug_assert!(offset <= Offset::value(params) as usize);
+        let epoch = epoch.into();
+        self.update_data(epoch, params);
+
+        if let Some(data) = self.data.get_mut(offset).unwrap() {
+            // If there's a value at `offset`, update it
+            update_value(data)
+        } else {
+            // Try to find if there's any value before `offset`
+            let mut latest_value: Option<Data> = None;
+            for i in (0..offset).rev() {
+                if let Some(Some(data)) = self.data.get(i) {
+                    latest_value = Some(data.clone());
+                    break;
+                }
+            }
+            // If there's a value before `offset`, update it and use it as the
+            // current value
+            if let Some(mut latest_value) = latest_value {
+                let val_at_offset = self.data.get_mut(offset).unwrap();
+                update_value(&mut latest_value);
+                *val_at_offset = Some(latest_value);
+            }
+        }
+        // Update any data after `offset`
+        for i in offset + 1..self.data.len() {
+            if let Some(Some(data)) = self.data.get_mut(i) {
+                update_value(data)
+            }
+        }
+    }
 }
 
 impl<Data, Offset> EpochedDelta<Data, Offset>
