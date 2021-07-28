@@ -100,6 +100,16 @@ impl VotingPower {
     }
 }
 
+impl Epoch {
+    /// Iterate a range of consecutive epochs starting from `self` of a given
+    /// length. Work-around for `Step` implementation pending on stabilization of <https://github.com/rust-lang/rust/issues/42168>.
+    pub fn iter_range(self, len: u64) -> impl Iterator<Item = Epoch> {
+        let start_ix: u64 = self.into();
+        let end_ix: u64 = start_ix + len;
+        (start_ix..end_ix).map(|ix| Epoch::from(ix))
+    }
+}
+
 impl From<u64> for Epoch {
     fn from(epoch: u64) -> Self {
         Epoch(epoch)
@@ -150,6 +160,19 @@ impl ops::Sub<Epoch> for Epoch {
     }
 }
 
+impl<Token> ops::Add for Bond<Token>
+where
+    Token: Clone + ops::Add<Output = Token>,
+{
+    type Output = Self;
+
+    fn add(self, rhs: Self) -> Self::Output {
+        let mut delta = self.delta.clone();
+        delta.extend(rhs.delta);
+        Self { delta }
+    }
+}
+
 impl From<u64> for VotingPower {
     fn from(voting_power: u64) -> Self {
         Self(voting_power)
@@ -159,6 +182,14 @@ impl From<u64> for VotingPower {
 impl From<VotingPower> for u64 {
     fn from(vp: VotingPower) -> Self {
         vp.0
+    }
+}
+
+impl ops::Add for VotingPower {
+    type Output = Self;
+
+    fn add(self, rhs: Self) -> Self::Output {
+        Self(self.0 + rhs.0)
     }
 }
 

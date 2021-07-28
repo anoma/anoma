@@ -5,7 +5,7 @@ use core::marker::PhantomData;
 use core::{cmp, fmt, ops};
 
 use crate::types::Epoch;
-use crate::PosParams;
+use crate::{Pos, PosParams};
 
 #[derive(Debug, Clone)]
 pub struct Epoched<Data, Offset>
@@ -22,7 +22,7 @@ where
 #[derive(Debug, Clone)]
 pub struct EpochedDelta<Data, Offset>
 where
-    Data: Copy + ops::Add<Output = Data>,
+    Data: Clone + ops::Add<Output = Data>,
     Offset: EpochOffset,
 {
     /// The epoch in which this data was last updated
@@ -83,9 +83,12 @@ where
 {
     /// Initialize new epoched data. Sets the head to the given value.
     /// This should only be used at genesis.
-    pub fn init_at_genesis(value: Data, epoch: impl Into<Epoch>) -> Self {
+    pub fn init_at_genesis(
+        value: Data,
+        current_epoch: impl Into<Epoch>,
+    ) -> Self {
         Self {
-            last_update: epoch.into(),
+            last_update: current_epoch.into(),
             data: vec![Some(value)],
             offset: PhantomData,
         }
@@ -94,7 +97,7 @@ where
     /// Initialize new data at the data's epoch offset.
     pub fn init(
         value: Data,
-        epoch: impl Into<Epoch>,
+        current_epoch: impl Into<Epoch>,
         params: &PosParams,
     ) -> Self {
         let offset = Offset::value(params);
@@ -104,7 +107,7 @@ where
         }
         data.push(Some(value));
         Self {
-            last_update: epoch.into(),
+            last_update: current_epoch.into(),
             data,
             offset: PhantomData,
         }
@@ -113,11 +116,33 @@ where
     /// Find the value for the given epoch.
     pub fn get(&self, epoch: impl Into<Epoch>) -> Option<&Data> {
         let epoch = epoch.into();
-        let offset: usize = if self.last_update >= epoch {
+        let index: usize = if self.last_update >= epoch {
             0
         } else {
             (epoch - self.last_update).into()
         };
+        self.get_at_index(index)
+    }
+
+    /// Find the value at the offset from the given epoch.
+    pub fn get_at_offset(
+        &self,
+        epoch: impl Into<Epoch>,
+        offset: DynEpochOffset,
+        params: &PosParams,
+    ) -> Option<&Data> {
+        let offset = offset.value(params);
+        let epoch_at_offset = epoch.into() + offset;
+        let index: usize = if self.last_update >= epoch_at_offset {
+            0
+        } else {
+            (epoch_at_offset - self.last_update).into()
+        };
+        self.get_at_index(index)
+    }
+
+    /// Find the value at or before the given index.
+    fn get_at_index(&self, offset: usize) -> Option<&Data> {
         let mut index = cmp::min(offset, self.data.len());
         loop {
             if let Some(result @ Some(_)) = self.data.get(index) {
@@ -134,8 +159,12 @@ where
     /// Update the data associated with epochs, if needed. The head element is
     /// set to the latest value and any value before the current epoch is
     /// dropped.
-    fn update_data(&mut self, epoch: impl Into<Epoch>, params: &PosParams) {
-        let epoch = epoch.into();
+    fn update_data(
+        &mut self,
+        current_epoch: impl Into<Epoch>,
+        params: &PosParams,
+    ) {
+        let epoch = current_epoch.into();
         debug_assert!(
             epoch >= self.last_update,
             "The current epoch must be greater than or equal to the last \
@@ -177,10 +206,10 @@ where
     pub fn set(
         &mut self,
         value: Data,
-        epoch: impl Into<Epoch>,
+        current_epoch: impl Into<Epoch>,
         params: &PosParams,
     ) {
-        self.update_data(epoch, params);
+        self.update_data(current_epoch, params);
 
         let offset = Offset::value(params) as usize;
         self.data[offset] = Some(value);
@@ -192,13 +221,13 @@ where
     pub fn update_from_offset(
         &mut self,
         update_value: impl Fn(&mut Data),
-        epoch: impl Into<Epoch>,
+        current_epoch: impl Into<Epoch>,
         offset: DynEpochOffset,
         params: &PosParams,
     ) {
         let offset = offset.value(params) as usize;
         debug_assert!(offset <= Offset::value(params) as usize);
-        let epoch = epoch.into();
+        let epoch = current_epoch.into();
         self.update_data(epoch, params);
 
         if let Some(data) = self.data.get_mut(offset).unwrap() {
@@ -232,39 +261,60 @@ where
 
 impl<Data, Offset> EpochedDelta<Data, Offset>
 where
-    Data: fmt::Debug + Copy + ops::Add<Output = Data>,
+    Data: fmt::Debug + Clone + ops::Add<Output = Data>,
     Offset: EpochOffset,
 {
     /// Initialize new epoched delta data. Sets the head to the given value.
     /// This should only be used at genesis.
-    pub fn init_at_genesis(value: Data, epoch: impl Into<Epoch>) -> Self {
-        Self {
-            last_update: epoch.into(),
-            data: vec![Some(value)],
-            offset: PhantomData,
-        }
+    pub fn init_at_genesis(
+        value: Data,
+        current_epoch: impl Into<Epoch>,
+    ) -> Self {
+        Self::init_at_index(value, current_epoch, 0)
     }
 
     /// Initialize new data at the data's epoch offset.
     pub fn init(
         value: Data,
-        epoch: impl Into<Epoch>,
+        current_epoch: impl Into<Epoch>,
         params: &PosParams,
     ) -> Self {
-        let offset = Offset::value(params) as usize;
+        let index = Offset::value(params) as usize;
+        Self::init_at_index(value, current_epoch, index)
+    }
+
+    /// Initialize new data at the given epoch offset (which must not be greater
+    /// than the `Offset` type parameter of self).
+    pub fn init_at_offset(
+        value: Data,
+        current_epoch: impl Into<Epoch>,
+        offset: DynEpochOffset,
+        params: &PosParams,
+    ) -> Self {
+        let index = offset.value(params) as usize;
+        Self::init_at_index(value, current_epoch, index)
+    }
+
+    /// Initialize new data at the given index.
+    fn init_at_index(
+        value: Data,
+        current_epoch: impl Into<Epoch>,
+        offset: usize,
+    ) -> Self {
         let mut data = vec![];
         for _ in 0..offset {
             data.push(None);
         }
         data.push(Some(value));
         Self {
-            last_update: epoch.into(),
+            last_update: current_epoch.into(),
             data,
             offset: PhantomData,
         }
     }
 
-    /// Find the sum of delta values for the given epoch.
+    /// Find the current value for the given epoch as the sum of delta values at
+    /// and before the current epoch.
     pub fn get(&self, epoch: impl Into<Epoch>) -> Option<Data> {
         let epoch = epoch.into();
         let offset: usize = if self.last_update >= epoch {
@@ -272,15 +322,41 @@ where
         } else {
             (epoch - self.last_update).into()
         };
+        self.get_at_index(offset)
+    }
+
+    /// Find the value at the offset from the given epoch as the sum of delta
+    /// values at and before the epoch offset.
+    pub fn get_at_offset(
+        &self,
+        epoch: impl Into<Epoch>,
+        offset: DynEpochOffset,
+        params: &PosParams,
+    ) -> Option<Data> {
+        let offset = offset.value(params);
+        let epoch_at_offset = epoch.into() + offset;
+        let offset: usize = if self.last_update >= epoch_at_offset {
+            0
+        } else {
+            (epoch_at_offset - self.last_update).into()
+        };
+        self.get_at_index(offset)
+    }
+
+    /// Find the value at the given index as the sum of delta values at and
+    /// before the index.
+    fn get_at_index(&self, offset: usize) -> Option<Data> {
         let index = cmp::min(offset, self.data.len());
         let mut sum: Option<Data> = None;
         for i in 0..index + 1 {
             if let Some(next) = self.data.get(i) {
                 // Add current to the sum, if any
-                sum = match (sum, next) {
-                    (Some(sum), Some(next)) => Some(sum + *next),
-                    (None, Some(next)) => Some(*next),
-                    _ => sum,
+                match (&sum, next) {
+                    (Some(current_sum), Some(next)) => {
+                        sum = Some(current_sum.clone() + next.clone())
+                    }
+                    (None, Some(next)) => sum = Some(next.clone()),
+                    _ => {}
                 };
             }
         }
@@ -289,8 +365,12 @@ where
 
     /// Update the data associated with epochs, if needed. Any value before the
     /// current epoch is added to the head element before being dropped.
-    fn update_data(&mut self, epoch: impl Into<Epoch>, params: &PosParams) {
-        let epoch = epoch.into();
+    fn update_data(
+        &mut self,
+        current_epoch: impl Into<Epoch>,
+        params: &PosParams,
+    ) {
+        let epoch = current_epoch.into();
         debug_assert!(
             epoch >= self.last_update,
             "The current epoch must be greater than or equal to the last \
@@ -312,11 +392,15 @@ where
             for i in 0..mid_point {
                 if let Some(next) = self.data.get(i) {
                     // Add current to the sum, if any
-                    sum = match (sum, next) {
-                        (Some(sum), Some(next)) => Some(sum + *next),
-                        (Some(sum), None) => Some(sum),
-                        (None, Some(next)) => Some(*next),
-                        _ => sum,
+                    match (&sum, next) {
+                        (Some(current_sum), Some(next)) => {
+                            sum = Some(current_sum.clone() + next.clone())
+                        }
+                        (Some(current_sum), None) => {
+                            sum = Some(current_sum.clone())
+                        }
+                        (None, Some(next)) => sum = Some(next.clone()),
+                        _ => {}
                     };
                     // Clear the field
                     self.data[i] = None;
@@ -326,8 +410,10 @@ where
             self.data.rotate_left(mid_point);
             // Add the sum to the head
             let mut current = self.data.get_mut(0).unwrap();
-            match (sum, &mut current) {
-                (Some(sum), Some(current)) => *current = *current + sum,
+            match (&sum, &mut current) {
+                (Some(sum), Some(current)) => {
+                    *current = current.clone() + sum.clone()
+                }
                 (Some(_), None) => *current = sum,
                 _ => {}
             }
@@ -336,19 +422,33 @@ where
         self.last_update = epoch;
     }
 
-    /// Set the value at the data's epoch offset. If there's an existing value,
-    /// it will be added to the new value.
-    pub fn set(
+    /// Update or set the delta value at the data's epoch offset. If there's an
+    /// existing value, it will be added to the new value.
+    pub fn update(
         &mut self,
         value: Data,
-        epoch: impl Into<Epoch>,
+        current_epoch: impl Into<Epoch>,
         params: &PosParams,
     ) {
-        self.update_data(epoch, params);
+        self.update_data(current_epoch, params);
 
         let offset = Offset::value(params) as usize;
-        self.data[offset] = self.data[offset]
-            .map_or_else(|| Some(value), |last_delta| Some(last_delta + value));
+        self.data[offset] = self.data[offset].as_ref().map_or_else(
+            || Some(value.clone()),
+            |last_delta| Some(last_delta.clone() + value.clone()),
+        );
+    }
+
+    /// Update the delta value at the given epoch offset (which must not be
+    /// greater than the `Offset` type parameter of self).
+    pub fn update_at_offset(
+        &mut self,
+        delta: Data,
+        current_epoch: impl Into<Epoch>,
+        offset: DynEpochOffset,
+        params: &PosParams,
+    ) {
+        todo!();
     }
 }
 
@@ -757,7 +857,7 @@ mod tests {
     #[derive(Clone, Debug)]
     enum EpochedDeltaTransition<Data> {
         Get(Epoch),
-        Set { value: Data, epoch: Epoch },
+        Update { value: Data, epoch: Epoch },
     }
 
     /// Abstract state machine implementation for [`EpochedDelta`].
@@ -815,7 +915,7 @@ mod tests {
                     last_update..last_update + 10,
                 )
                     .prop_map(|(value, epoch)| {
-                        EpochedDeltaTransition::Set {
+                        EpochedDeltaTransition::Update {
                             value,
                             epoch: epoch.into(),
                         }
@@ -832,7 +932,7 @@ mod tests {
                 EpochedDeltaTransition::Get(_epoch) => {
                     // no side effects
                 }
-                EpochedDeltaTransition::Set {
+                EpochedDeltaTransition::Update {
                     value: change,
                     epoch,
                 } => {
@@ -932,7 +1032,7 @@ mod tests {
                         }
                     }
                 }
-                EpochedDeltaTransition::Set {
+                EpochedDeltaTransition::Update {
                     value: change,
                     epoch,
                 } => {
@@ -947,7 +1047,7 @@ mod tests {
                         .map(|i: u64| data.get(Epoch::from(i)))
                         .collect();
 
-                    data.set(*change, *epoch, &params);
+                    data.update(*change, *epoch, &params);
 
                     // Post-conditions
                     assert_eq!(data.last_update, *epoch);

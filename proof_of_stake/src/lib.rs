@@ -9,7 +9,7 @@ use std::hash::Hash;
 use std::ops::{self, Add, Sub};
 
 use epoched::{
-    DynEpochOffset, Epoched, EpochedDelta, OffsetPipelineLen,
+    DynEpochOffset, EpochOffset, Epoched, EpochedDelta, OffsetPipelineLen,
     OffsetUnboundingLen,
 };
 use parameters::PosParams;
@@ -26,7 +26,7 @@ pub trait Pos {
     type TokenAmount: Debug
         + Clone
         + Copy
-        + Add
+        + Add<Output = Self::TokenAmount>
         + Sub
         + Into<u64>
         + Into<Self::TokenChange>;
@@ -41,6 +41,8 @@ pub trait Pos {
 
     /// Address of the PoS account
     const POS_ADDRESS: Self::Address;
+    /// Address of the staking token
+    const STAKING_TOKEN_ADDRESS: Self::Address;
 
     // TODO it may be nicer to instead provide generic functions for storage
     // write/read and a way for implementors to assign storage keys and convert
@@ -77,12 +79,12 @@ pub trait Pos {
     fn write_validator_voting_power(
         &mut self,
         key: &Self::Address,
-        value: Epoched<VotingPower, OffsetUnboundingLen>,
+        value: EpochedDelta<VotingPower, OffsetUnboundingLen>,
     );
     fn write_bond(
         &mut self,
         key: &BondId<Self::Address>,
-        value: Epoched<Bond<Self::TokenAmount>, OffsetPipelineLen>,
+        value: EpochedDelta<Bond<Self::TokenAmount>, OffsetPipelineLen>,
     );
     fn write_validator_set(
         &mut self,
@@ -90,7 +92,7 @@ pub trait Pos {
     );
     fn write_total_voting_power(
         &mut self,
-        value: Epoched<VotingPower, OffsetUnboundingLen>,
+        value: EpochedDelta<VotingPower, OffsetUnboundingLen>,
     );
 
     fn read_params(&self) -> PosParams;
@@ -109,25 +111,26 @@ pub trait Pos {
     fn read_validator_total_deltas(
         &self,
         key: &Self::Address,
-    ) -> Option<Epoched<Self::TokenChange, OffsetUnboundingLen>>;
+    ) -> Option<EpochedDelta<Self::TokenChange, OffsetUnboundingLen>>;
     fn read_validator_voting_power(
         &self,
         key: &Self::Address,
-    ) -> Option<Epoched<VotingPower, OffsetUnboundingLen>>;
+    ) -> Option<EpochedDelta<VotingPower, OffsetUnboundingLen>>;
     fn read_bond(
         &mut self,
         key: &BondId<Self::Address>,
-    ) -> Option<Epoched<Bond<Self::TokenAmount>, OffsetPipelineLen>>;
+    ) -> Option<EpochedDelta<Bond<Self::TokenAmount>, OffsetPipelineLen>>;
     fn read_validator_set(
         &mut self,
     ) -> Epoched<ValidatorSet<Self::Address>, OffsetUnboundingLen>;
     fn read_total_voting_power(
         &mut self,
-    ) -> Epoched<Bond<Self::TokenAmount>, OffsetPipelineLen>;
+    ) -> EpochedDelta<VotingPower, OffsetUnboundingLen>;
 
     fn transfer(
         &mut self,
         token: &Self::Address,
+        amount: Self::TokenAmount,
         source: &Self::Address,
         target: &Self::Address,
     );
@@ -146,8 +149,9 @@ pub trait Pos {
                 Self::PublicKey,
             >],
         >,
-        current_epoch: Epoch,
+        current_epoch: impl Into<Epoch>,
     ) {
+        let current_epoch = current_epoch.into();
         self.write_params(params);
 
         let GenesisData {
@@ -191,11 +195,12 @@ pub trait Pos {
         address: &Self::Address,
         staking_reward_address: &Self::Address,
         consensus_key: &Self::PublicKey,
-        current_epoch: Epoch,
+        current_epoch: impl Into<Epoch>,
     ) -> Result<(), BecomeValidatorError> {
+        let current_epoch = current_epoch.into();
         let params = self.read_params();
         let mut validator_set = self.read_validator_set();
-        if self.is_validator(address) {
+        if self.is_validator(address).is_some() {
             return Err(BecomeValidatorError::AlreadyValidator);
         }
         let BecomeValidatorData {
@@ -220,8 +225,64 @@ pub trait Pos {
 
     /// Check if the given address is a validator by checking that it has some
     /// state.
-    fn is_validator(&mut self, address: &Self::Address) -> bool {
-        self.read_validator_state(address).is_some()
+    fn is_validator(
+        &mut self,
+        address: &Self::Address,
+    ) -> Option<Epoched<ValidatorState, OffsetPipelineLen>> {
+        self.read_validator_state(address)
+    }
+
+    fn validator_self_bond(
+        &mut self,
+        address: &Self::Address,
+        amount: Self::TokenAmount,
+        current_epoch: impl Into<Epoch>,
+    ) -> Result<(), BondError> {
+        let current_epoch = current_epoch.into();
+        let params = self.read_params();
+        let validator_state = self.is_validator(address);
+        let bond_id = BondId {
+            source: address.clone(),
+            validator: address.clone(),
+        };
+        let bond = self.read_bond(&bond_id);
+        let validator_total_deltas = self.read_validator_total_deltas(address);
+        let validator_voting_power = self.read_validator_voting_power(address);
+        let mut total_voting_power = self.read_total_voting_power();
+        let mut validator_set = self.read_validator_set();
+
+        let BondData {
+            bond,
+            validator_total_deltas,
+            validator_voting_power,
+        } = bond_tokens(
+            &params,
+            validator_state,
+            &bond_id,
+            bond,
+            amount,
+            validator_total_deltas,
+            validator_voting_power,
+            &mut total_voting_power,
+            &mut validator_set,
+            current_epoch,
+        )?;
+
+        self.write_bond(&bond_id, bond);
+        self.write_validator_total_deltas(address, validator_total_deltas);
+        self.write_validator_voting_power(address, validator_voting_power);
+        self.write_total_voting_power(total_voting_power);
+        self.write_validator_set(validator_set);
+
+        // Transfer the bonded tokens
+        self.transfer(
+            &Self::STAKING_TOKEN_ADDRESS,
+            amount,
+            address,
+            &Self::POS_ADDRESS,
+        );
+
+        Ok(())
     }
 }
 
@@ -232,13 +293,22 @@ pub enum BecomeValidatorError {
     AlreadyValidator,
 }
 
+#[allow(missing_docs)]
+#[derive(Error, Debug)]
+pub enum BondError {
+    #[error("The given address is not a validator address")]
+    NotAValidator,
+    #[error("The given validator address is inactive")]
+    InactiveValidator,
+}
+
 struct GenesisData<Validators, Address, TokenAmount, TokenChange, PK>
 where
     Validators: Iterator<
         Item = GenesisValidatorData<Address, TokenAmount, TokenChange, PK>,
     >,
     Address: Debug + Clone + Ord + Hash,
-    TokenAmount: Debug + Clone,
+    TokenAmount: Debug + Clone + ops::Add<Output = TokenAmount>,
     TokenChange: Debug + Copy + ops::Add<Output = TokenChange>,
     PK: Debug + Clone,
 {
@@ -246,12 +316,12 @@ where
     /// Active and inactive validator sets
     validator_set: Epoched<ValidatorSet<Address>, OffsetUnboundingLen>,
     /// The sum of all active and inactive validators' voting power
-    total_voting_power: Epoched<VotingPower, OffsetUnboundingLen>,
+    total_voting_power: EpochedDelta<VotingPower, OffsetUnboundingLen>,
 }
 struct GenesisValidatorData<Address, TokenAmount, TokenChange, PK>
 where
     Address: Debug + Clone + Ord + Hash,
-    TokenAmount: Debug + Clone,
+    TokenAmount: Debug + Clone + ops::Add<Output = TokenAmount>,
     TokenChange: Debug + Copy + ops::Add<Output = TokenChange>,
     PK: Debug + Clone,
 {
@@ -260,19 +330,11 @@ where
     consensus_key: Epoched<PK, OffsetPipelineLen>,
     state: Epoched<ValidatorState, OffsetPipelineLen>,
     total_deltas: EpochedDelta<TokenChange, OffsetUnboundingLen>,
-    voting_power: Epoched<VotingPower, OffsetUnboundingLen>,
+    voting_power: EpochedDelta<VotingPower, OffsetUnboundingLen>,
     bond: (
         BondId<Address>,
-        Epoched<Bond<TokenAmount>, OffsetPipelineLen>,
+        EpochedDelta<Bond<TokenAmount>, OffsetPipelineLen>,
     ),
-}
-
-struct BecomeValidatorData<PK>
-where
-    PK: Debug + Clone,
-{
-    consensus_key: Epoched<PK, OffsetPipelineLen>,
-    state: Epoched<ValidatorState, OffsetPipelineLen>,
 }
 
 /// A function that returns genesis data created from the initial validator set.
@@ -293,7 +355,8 @@ fn init_genesis_data<'a, Address, TokenAmount, TokenChange, PK>(
 >
 where
     Address: 'a + Debug + Clone + Ord + Hash,
-    TokenAmount: 'a + Debug + Clone + Into<u64>,
+    TokenAmount:
+        'a + Debug + Clone + ops::Add<Output = TokenAmount> + Into<u64>,
     TokenChange:
         'a + Debug + Copy + ops::Add<Output = TokenChange> + From<TokenAmount>,
     PK: 'a + Debug + Clone,
@@ -327,7 +390,7 @@ where
     let validator_set = ValidatorSet { active, inactive };
     let validator_set = Epoched::init_at_genesis(validator_set, current_epoch);
     let total_voting_power =
-        Epoched::init_at_genesis(total_voting_power, current_epoch);
+        EpochedDelta::init_at_genesis(total_voting_power, current_epoch);
 
     // Adapt the genesis validators data to PoS data
     let validators = validators.map(
@@ -349,14 +412,15 @@ where
                 EpochedDelta::init_at_genesis(token_delta, current_epoch);
             let voting_power = VotingPower::from_tokens(tokens.clone(), params);
             let voting_power =
-                Epoched::init_at_genesis(voting_power, current_epoch);
+                EpochedDelta::init_at_genesis(voting_power, current_epoch);
             let bond_id = BondId {
                 source: address.clone(),
                 validator: address.clone(),
             };
             let mut delta = HashMap::default();
             delta.insert(current_epoch, tokens.clone());
-            let bond = Epoched::init_at_genesis(Bond { delta }, current_epoch);
+            let bond =
+                EpochedDelta::init_at_genesis(Bond { delta }, current_epoch);
             GenesisValidatorData {
                 address: address.clone(),
                 staking_reward_address: staking_reward_address.clone(),
@@ -374,6 +438,14 @@ where
         validator_set,
         total_voting_power,
     }
+}
+
+struct BecomeValidatorData<PK>
+where
+    PK: Debug + Clone,
+{
+    consensus_key: Epoched<PK, OffsetPipelineLen>,
+    state: Epoched<ValidatorState, OffsetPipelineLen>,
 }
 
 /// A function that initialized data for a new validator.
@@ -409,6 +481,190 @@ where
         consensus_key,
         state,
     }
+}
+
+struct BondData<TokenAmount, TokenChange>
+where
+    TokenAmount: Debug + Clone + Copy + Add<Output = TokenAmount>,
+    TokenChange: Debug + Clone + Copy + Add<Output = TokenChange>,
+{
+    pub bond: EpochedDelta<Bond<TokenAmount>, OffsetPipelineLen>,
+    pub validator_total_deltas: EpochedDelta<TokenChange, OffsetUnboundingLen>,
+    pub validator_voting_power: EpochedDelta<VotingPower, OffsetUnboundingLen>,
+}
+
+fn bond_tokens<Address, TokenAmount, TokenChange>(
+    params: &PosParams,
+    validator_state: Option<Epoched<ValidatorState, OffsetPipelineLen>>,
+    bond_id: &BondId<Address>,
+    current_bond: Option<EpochedDelta<Bond<TokenAmount>, OffsetPipelineLen>>,
+    amount: TokenAmount,
+    validator_total_deltas: Option<
+        EpochedDelta<TokenChange, OffsetUnboundingLen>,
+    >,
+    validator_voting_power: Option<
+        EpochedDelta<VotingPower, OffsetUnboundingLen>,
+    >,
+    total_voting_power: &mut EpochedDelta<VotingPower, OffsetUnboundingLen>,
+    validator_set: &mut Epoched<ValidatorSet<Address>, OffsetUnboundingLen>,
+    current_epoch: Epoch,
+) -> Result<BondData<TokenAmount, TokenChange>, BondError>
+where
+    Address: Debug + Clone + PartialEq + Eq + PartialOrd + Ord + Hash,
+    TokenAmount: Debug + Clone + Copy + Add<Output = TokenAmount> + Into<u64>,
+    TokenChange: Debug
+        + Clone
+        + Copy
+        + Add<Output = TokenChange>
+        + Sub
+        + From<TokenAmount>,
+{
+    // Check the validator state
+    match validator_state {
+        None => return Err(BondError::NotAValidator),
+        Some(validator_state) => {
+            // Check that it's not inactive anywhere from the current epoch
+            // to the pipeline offset
+            for epoch in
+                current_epoch.iter_range(OffsetPipelineLen::value(&params))
+            {
+                if let Some(ValidatorState::Inactive) =
+                    validator_state.get(epoch)
+                {
+                    return Err(BondError::InactiveValidator);
+                }
+            }
+        }
+    }
+
+    // Update or create the bond
+    let mut value = Bond {
+        delta: HashMap::default(),
+    };
+    value.delta.insert(current_epoch, amount);
+    let bond = match current_bond {
+        None => EpochedDelta::init(value, current_epoch, &params),
+        Some(mut bond) => {
+            bond.update(value, current_epoch, &params);
+            bond
+        }
+    };
+
+    // Update validator's total deltas
+    let delta = TokenChange::from(amount);
+    let validator_total_deltas = match validator_total_deltas {
+        Some(mut deltas) => {
+            deltas.update(delta, current_epoch, params);
+            deltas
+        }
+        None => EpochedDelta::init_at_offset(
+            delta,
+            current_epoch,
+            DynEpochOffset::PipelineLen,
+            params,
+        ),
+    };
+
+    // Find the validator's voting power at pipeline offset for validator set
+    // update
+    let voting_power_at_pipeline = validator_voting_power
+        .as_ref()
+        .map(|voting_power| {
+            voting_power
+                .get_at_offset(
+                    current_epoch,
+                    DynEpochOffset::PipelineLen,
+                    params,
+                )
+                .unwrap_or_default()
+        })
+        .unwrap_or_default();
+
+    // Update validator's voting power
+    let voting_power_delta = VotingPower::from_tokens(amount, params);
+    let validator_voting_power = match validator_voting_power {
+        Some(mut voting_power) => {
+            voting_power.update_at_offset(
+                voting_power_delta,
+                current_epoch,
+                DynEpochOffset::PipelineLen,
+                params,
+            );
+            voting_power
+        }
+        None => EpochedDelta::init_at_offset(
+            voting_power_delta,
+            current_epoch,
+            DynEpochOffset::PipelineLen,
+            params,
+        ),
+    };
+
+    // Update total voting power
+    total_voting_power.update_at_offset(
+        voting_power_delta,
+        current_epoch,
+        DynEpochOffset::PipelineLen,
+        params,
+    );
+
+    // Update validator set
+    // TODO voting_power_at_pipeline must be taken dynamically in the update fn below
+    let validator_at_pipeline = WeightedValidator {
+        voting_power: voting_power_at_pipeline,
+        address: bond_id.validator.clone(),
+    };
+    validator_set.update_from_offset(
+        |validator_set| {
+            if validator_set.inactive.contains(&validator_at_pipeline) {
+                let min_active_validator = validator_set.active.first_shim();
+                let min_voting_power = min_active_validator
+                    .map(|v| v.voting_power)
+                    .unwrap_or_default();
+                if voting_power_at_pipeline + voting_power_delta
+                    > min_voting_power
+                {
+                    let deactivate_min = validator_set.active.pop_first_shim();
+                    let popped =
+                        validator_set.inactive.remove(&validator_at_pipeline);
+                    debug_assert!(popped);
+                    validator_set.active.insert(validator_at_pipeline.clone());
+                    if let Some(deactivate_min) = deactivate_min {
+                        validator_set.inactive.insert(deactivate_min);
+                    }
+                }
+            } else {
+                debug_assert!(
+                    validator_set.active.contains(&validator_at_pipeline)
+                );
+                let max_inactive_validator = validator_set.inactive.last_shim();
+                let max_voting_power = max_inactive_validator
+                    .map(|v| v.voting_power)
+                    .unwrap_or_default();
+                if voting_power_at_pipeline + voting_power_delta
+                    < max_voting_power
+                {
+                    let activate_max = validator_set.inactive.pop_last_shim();
+                    let popped =
+                        validator_set.active.remove(&validator_at_pipeline);
+                    debug_assert!(popped);
+                    validator_set.inactive.insert(validator_at_pipeline.clone());
+                    if let Some(activate_max) = activate_max {
+                        validator_set.active.insert(activate_max);
+                    }
+                }
+            }
+        },
+        current_epoch,
+        DynEpochOffset::PipelineLen,
+        params,
+    );
+
+    Ok(BondData {
+        bond,
+        validator_total_deltas,
+        validator_voting_power,
+    })
 }
 
 // TODO
