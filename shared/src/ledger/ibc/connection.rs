@@ -26,8 +26,6 @@ use crate::types::ibc::{
 };
 use crate::types::storage::{BlockHeight, Epoch, Key, KeySeg};
 
-pub(super) const COUNTER_PATH: &str = "connections/counter";
-
 impl<'a, DB, H> Ibc<'a, DB, H>
 where
     DB: 'static + storage::DB + for<'iter> storage::DBIter<'iter>,
@@ -38,7 +36,7 @@ where
         key: &Key,
         tx_data: &[u8],
     ) -> Result<bool> {
-        if Self::is_counter_key(key) {
+        if key.is_ibc_connection_counter() {
             // the counter should be increased
             return Ok(
                 self.connection_counter_pre() < self.connection_counter()
@@ -72,13 +70,6 @@ where
                 Ok(false)
             }
         }
-    }
-
-    fn is_counter_key(key: &Key) -> bool {
-        let path = COUNTER_PATH.to_owned();
-        let counter_key = Key::ibc_key(path)
-            .expect("Creating a key for a connection counter failed");
-        *key == counter_key
     }
 
     /// Returns the connection ID after #IBC/connections
@@ -321,12 +312,18 @@ where
     }
 
     fn connection_counter_pre(&self) -> u64 {
-        let path = COUNTER_PATH.to_owned();
-        let key = Key::ibc_key(path)
-            .expect("Creating a key for a connection counter failed");
+        let key = Key::ibc_connection_counter();
         match self.ctx.read_pre(&key) {
-            Ok(Some(value)) => storage::types::decode(&value)
-                .expect("converting a connection counter shouldn't failed"),
+            Ok(Some(value)) => match storage::types::decode(&value) {
+                Ok(c) => c,
+                Err(e) => {
+                    tracing::error!(
+                        "decoding a connection counter failed: {}",
+                        e
+                    );
+                    u64::MAX
+                }
+            },
             _ => {
                 tracing::error!("connection counter should exist");
                 unreachable!();
@@ -396,12 +393,18 @@ where
     }
 
     fn connection_counter(&self) -> u64 {
-        let path = COUNTER_PATH.to_owned();
-        let key = Key::ibc_key(path)
-            .expect("Creating a key for a connection counter failed");
+        let key = Key::ibc_connection_counter();
         match self.ctx.read_post(&key) {
-            Ok(Some(value)) => storage::types::decode(&value)
-                .expect("converting a connection counter shouldn't failed"),
+            Ok(Some(value)) => match storage::types::decode(&value) {
+                Ok(c) => c,
+                Err(e) => {
+                    tracing::error!(
+                        "decoding a connection counter failed: {}",
+                        e
+                    );
+                    u64::MIN
+                }
+            },
             _ => {
                 tracing::error!("connection counter doesn't exist");
                 unreachable!();

@@ -65,9 +65,7 @@ where
         .expect("Unable to write the initial client counter");
 
     // the connection counter
-    let path = connection::COUNTER_PATH.to_owned();
-    let key = Key::ibc_key(path)
-        .expect("Creating a key for a connection counter failed");
+    let key = Key::ibc_connection_counter();
     let value = crate::ledger::storage::types::encode(&0);
     storage
         .write(&key, value)

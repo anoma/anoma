@@ -17,9 +17,10 @@ use ibc::proofs::{ConsensusProof, Proofs};
 use ibc_proto::ibc::core::commitment::v1::MerkleProof;
 use ibc_proto::ibc::core::connection::v1::Counterparty as RawCounterparty;
 use prost::Message;
-use serde::{Deserialize, Serialize};
 use tendermint_proto::Protobuf;
 use thiserror::Error;
+
+use crate::types::time::DurationNanos;
 
 #[allow(missing_docs)]
 #[derive(Error, Debug)]
@@ -32,9 +33,7 @@ pub enum Error {
 pub type Result<T> = std::result::Result<T, Error>;
 
 /// States to create a new client
-#[derive(
-    Debug, Clone, BorshSerialize, BorshDeserialize, Serialize, Deserialize,
-)]
+#[derive(Debug, Clone, BorshSerialize, BorshDeserialize)]
 pub struct ClientCreationData {
     /// The client state
     client_state: Vec<u8>,
@@ -74,9 +73,7 @@ impl ClientCreationData {
 }
 
 /// Data to update a client
-#[derive(
-    Debug, Clone, BorshSerialize, BorshDeserialize, Serialize, Deserialize,
-)]
+#[derive(Debug, Clone, BorshSerialize, BorshDeserialize)]
 pub struct ClientUpdateData {
     /// The updated client ID
     client_id: String,
@@ -117,9 +114,7 @@ impl ClientUpdateData {
 }
 
 /// Data to upgrade a client
-#[derive(
-    Debug, Clone, BorshSerialize, BorshDeserialize, Serialize, Deserialize,
-)]
+#[derive(Debug, Clone, BorshSerialize, BorshDeserialize)]
 pub struct ClientUpgradeData {
     /// The upgraded client ID
     client_id: String,
@@ -198,9 +193,7 @@ impl ClientUpgradeData {
 }
 
 /// Data to initialize a connection
-#[derive(
-    Debug, Clone, BorshSerialize, BorshDeserialize, Serialize, Deserialize,
-)]
+#[derive(Debug, Clone, BorshSerialize, BorshDeserialize)]
 pub struct ConnectionOpenInitData {
     /// The corresponding client ID
     client_id: String,
@@ -209,7 +202,7 @@ pub struct ConnectionOpenInitData {
     /// The version
     version: Vec<u8>,
     /// The delay period as (secs, nanos)
-    delay_period: (u64, u32),
+    delay_period: DurationNanos,
 }
 
 impl ConnectionOpenInitData {
@@ -235,7 +228,7 @@ impl ConnectionOpenInitData {
             client_id,
             counterparty: bytes,
             version,
-            delay_period: (delay_period.as_secs(), delay_period.subsec_nanos()),
+            delay_period: delay_period.into(),
         }
     }
 
@@ -261,25 +254,33 @@ impl ConnectionOpenInitData {
 
     /// Returns the delay period
     pub fn delay_period(&self) -> Duration {
-        Duration::new(self.delay_period.0, self.delay_period.1)
+        Duration::new(self.delay_period.secs, self.delay_period.nanos)
     }
 }
 
 /// Data to try to open a connection
-#[derive(
-    Debug, Clone, BorshSerialize, BorshDeserialize, Serialize, Deserialize,
-)]
+#[derive(Debug, Clone, BorshSerialize, BorshDeserialize)]
 pub struct ConnectionOpenTryData {
+    /// The previous connection ID
     prev_conn_id: Option<String>,
+    /// The client ID
     client_id: String,
+    /// The client state
     client_state: Vec<u8>,
+    /// The counterparty
     counterparty: Vec<u8>,
+    /// The counterpart versions
     counterparty_versions: Vec<Vec<u8>>,
+    /// The height of the proof
     proof_height: (u64, u64),
+    /// The proof of the connection
     proof_connection: Vec<u8>,
+    /// The proof of the client state
     proof_client: Vec<u8>,
+    /// The proof of the consensus state
     proof_consensus: Vec<u8>,
-    delay_period: (u64, u32),
+    /// The delay period
+    delay_period: DurationNanos,
 }
 
 impl ConnectionOpenTryData {
@@ -326,7 +327,7 @@ impl ConnectionOpenTryData {
             proof_connection: proof_connection.into(),
             proof_client: proof_client.into(),
             proof_consensus: proof_consensus.into(),
-            delay_period: (delay_period.as_secs(), delay_period.subsec_nanos()),
+            delay_period: delay_period.into(),
         }
     }
 
@@ -392,7 +393,7 @@ impl ConnectionOpenTryData {
 
     /// Returns the delay period
     pub fn delay_period(&self) -> Duration {
-        Duration::new(self.delay_period.0, self.delay_period.1)
+        Duration::new(self.delay_period.secs, self.delay_period.nanos)
     }
 
     /// Returns the proofs
@@ -413,9 +414,7 @@ impl ConnectionOpenTryData {
 }
 
 /// Data to acknowledge a connection
-#[derive(
-    Debug, Clone, BorshSerialize, BorshDeserialize, Serialize, Deserialize,
-)]
+#[derive(Debug, Clone, BorshSerialize, BorshDeserialize)]
 pub struct ConnectionOpenAckData {
     /// The connection ID
     conn_id: String,
@@ -533,9 +532,7 @@ impl ConnectionOpenAckData {
 }
 
 /// Data to confirm a connection
-#[derive(
-    Debug, Clone, BorshSerialize, BorshDeserialize, Serialize, Deserialize,
-)]
+#[derive(Debug, Clone, BorshSerialize, BorshDeserialize)]
 pub struct ConnectionOpenConfirmData {
     /// The connection ID
     conn_id: String,

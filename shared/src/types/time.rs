@@ -45,6 +45,35 @@ impl From<std::time::Duration> for DurationSecs {
     }
 }
 
+/// A duration in nanos precision.
+#[derive(
+    Clone,
+    Copy,
+    Debug,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    BorshSerialize,
+    BorshDeserialize,
+)]
+pub struct DurationNanos {
+    /// The seconds
+    pub secs: u64,
+    /// The nano seconds
+    pub nanos: u32,
+}
+
+impl From<std::time::Duration> for DurationNanos {
+    fn from(duration_std: std::time::Duration) -> Self {
+        DurationNanos {
+            secs: duration_std.as_secs(),
+            nanos: duration_std.subsec_nanos(),
+        }
+    }
+}
+
 /// A duration in seconds precision.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct DateTimeUtc(pub DateTime<Utc>);
