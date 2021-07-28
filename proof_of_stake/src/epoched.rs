@@ -36,6 +36,8 @@ where
 pub trait EpochOffset: fmt::Debug + Clone {
     /// Find the value of a given offset from PoS parameters.
     fn value(params: &PosParams) -> u64;
+    /// Convert to [`DynEpochOffset`]
+    fn dyn_offset() -> DynEpochOffset;
 }
 #[derive(Debug, Clone)]
 pub struct OffsetPipelineLen;
@@ -43,12 +45,34 @@ impl EpochOffset for OffsetPipelineLen {
     fn value(params: &PosParams) -> u64 {
         params.pipeline_len
     }
+
+    fn dyn_offset() -> DynEpochOffset {
+        DynEpochOffset::PipelineLen
+    }
 }
 #[derive(Debug, Clone)]
 pub struct OffsetUnboundingLen;
 impl EpochOffset for OffsetUnboundingLen {
     fn value(params: &PosParams) -> u64 {
         params.unbonding_len
+    }
+
+    fn dyn_offset() -> DynEpochOffset {
+        DynEpochOffset::UnbondingLen
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum DynEpochOffset {
+    PipelineLen,
+    UnbondingLen,
+}
+impl DynEpochOffset {
+    fn value(&self, params: &PosParams) -> u64 {
+        match self {
+            DynEpochOffset::PipelineLen => params.pipeline_len,
+            DynEpochOffset::UnbondingLen => params.unbonding_len,
+        }
     }
 }
 
@@ -88,7 +112,12 @@ where
 
     /// Find the value for the given epoch.
     pub fn get(&self, epoch: impl Into<Epoch>) -> Option<&Data> {
-        let offset: usize = (epoch.into() - self.last_update).into();
+        let epoch = epoch.into();
+        let offset: usize = if self.last_update >= epoch {
+            0
+        } else {
+            (epoch - self.last_update).into()
+        };
         let mut index = cmp::min(offset, self.data.len());
         loop {
             if let Some(result @ Some(_)) = self.data.get(index) {
@@ -160,16 +189,14 @@ where
     /// Update the values starting from the given epoch offset (which must not
     /// be greater than the `Offset` type parameter of self) with the given
     /// function.
-    pub fn update_from_offset<UpdateOffset>(
+    pub fn update_from_offset(
         &mut self,
         update_value: impl Fn(&mut Data),
         epoch: impl Into<Epoch>,
-        _offset: UpdateOffset,
+        offset: DynEpochOffset,
         params: &PosParams,
-    ) where
-        UpdateOffset: EpochOffset,
-    {
-        let offset = UpdateOffset::value(params) as usize;
+    ) {
+        let offset = offset.value(params) as usize;
         debug_assert!(offset <= Offset::value(params) as usize);
         let epoch = epoch.into();
         self.update_data(epoch, params);
@@ -240,7 +267,11 @@ where
     /// Find the sum of delta values for the given epoch.
     pub fn get(&self, epoch: impl Into<Epoch>) -> Option<Data> {
         let epoch = epoch.into();
-        let offset: usize = (epoch - self.last_update).into();
+        let offset: usize = if self.last_update >= epoch {
+            0
+        } else {
+            (epoch - self.last_update).into()
+        };
         let index = cmp::min(offset, self.data.len());
         let mut sum: Option<Data> = None;
         for i in 0..index + 1 {
@@ -324,6 +355,7 @@ where
 #[cfg(test)]
 mod tests {
     use std::collections::HashMap;
+    use std::rc::Rc;
 
     use proptest::prelude::*;
     use proptest::prop_state_machine;
@@ -364,6 +396,33 @@ mod tests {
     enum EpochedTransition<Data> {
         Get(Epoch),
         Set { value: Data, epoch: Epoch },
+        UpdateFromOffset(UpdateFromOffset<Data>),
+    }
+    /// These are the arguments of one of the constructors in
+    /// [`EpochedTransition`]. It's not inlined because we need to manually
+    /// implement `Debug`.
+    struct UpdateFromOffset<Data> {
+        update_value: Rc<dyn Fn(&mut Data)>,
+        epoch: Epoch,
+        offset: DynEpochOffset,
+    }
+    impl<Data> Clone for UpdateFromOffset<Data> {
+        fn clone(&self) -> Self {
+            Self {
+                update_value: self.update_value.clone(),
+                epoch: self.epoch,
+                offset: self.offset.clone(),
+            }
+        }
+    }
+    impl<Data> fmt::Debug for UpdateFromOffset<Data> {
+        fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+            f.debug_struct("UpdateFromOffset")
+                .field("update_value", &"Rc<dyn Fn(&mut Data)>")
+                .field("epoch", &self.epoch)
+                .field("offset", &self.offset)
+                .finish()
+        }
     }
 
     /// Abstract state machine implementation for [`Epoched`].
@@ -412,9 +471,10 @@ mod tests {
 
         fn transitions(state: &Self::State) -> BoxedStrategy<Self::Transition> {
             let offset = Offset::value(&state.params);
+            let dyn_offset = Offset::dyn_offset();
             let last_update: u64 = state.last_update.into();
             prop_oneof![
-                arb_epoch(last_update..last_update + 4 * offset)
+                arb_epoch(last_update - 4 * offset..last_update + 4 * offset)
                     .prop_map(EpochedTransition::Get),
                 (
                     any::<u64>(),
@@ -423,7 +483,22 @@ mod tests {
                 )
                     .prop_map(|(value, epoch)| {
                         EpochedTransition::Set { value, epoch }
-                    })
+                    }),
+                (
+                    any::<u64>(),
+                    arb_epoch(last_update..last_update + 4 * offset),
+                    arb_offset(Some(dyn_offset))
+                )
+                    .prop_map(|(new_value, epoch, offset)| {
+                        EpochedTransition::UpdateFromOffset(UpdateFromOffset {
+                            update_value: Rc::new(move |current: &mut u64| {
+                                let value = new_value;
+                                *current = value
+                            }),
+                            epoch,
+                            offset,
+                        })
+                    }),
             ]
             .boxed()
         }
@@ -440,6 +515,32 @@ mod tests {
                     let offset = Offset::value(&state.params);
                     state.last_update = *epoch;
                     state.data.insert(*epoch + offset, *value);
+                }
+                EpochedTransition::UpdateFromOffset(UpdateFromOffset {
+                    update_value,
+                    epoch,
+                    offset,
+                }) => {
+                    state.last_update = *epoch;
+                    let offset = *epoch + offset.value(&state.params);
+                    if !state.data.contains_key(epoch) {
+                        let mut latest_key = Epoch::default();
+                        let mut latest = None;
+                        for (key, value) in state.data.iter() {
+                            if key > &latest_key && key < &offset {
+                                latest_key = *key;
+                                latest = Some(*value)
+                            }
+                        }
+                        if let Some(latest) = latest {
+                            state.data.insert(*epoch, latest);
+                        }
+                    }
+                    for (key, value) in state.data.iter_mut() {
+                        if key >= &offset {
+                            update_value(value)
+                        }
+                    }
                 }
             }
             state
@@ -493,8 +594,14 @@ mod tests {
                             // When a value found, it should be the last value
                             // before or on the upper bound
                             let upper_bound = cmp::min(
-                                cmp::min((epoch - last_update).into(), offset)
-                                    + 1,
+                                cmp::min(
+                                    if last_update >= epoch {
+                                        0
+                                    } else {
+                                        (epoch - last_update).into()
+                                    },
+                                    offset,
+                                ) + 1,
                                 data.data.len(),
                             );
                             for i in (0..upper_bound).rev() {
@@ -515,8 +622,14 @@ mod tests {
                             // When no value found, there should be no values
                             // before the upper bound
                             let upper_bound = cmp::min(
-                                cmp::min((epoch - last_update).into(), offset)
-                                    + 1,
+                                cmp::min(
+                                    if last_update >= epoch {
+                                        0
+                                    } else {
+                                        (epoch - last_update).into()
+                                    },
+                                    offset,
+                                ) + 1,
                                 data.data.len(),
                             );
                             for i in 0..upper_bound {
@@ -564,6 +677,73 @@ mod tests {
                          change"
                     );
                 }
+                EpochedTransition::UpdateFromOffset(UpdateFromOffset {
+                    update_value,
+                    epoch,
+                    offset: update_offset,
+                }) => {
+                    let update_offset_val = update_offset.value(&params);
+                    let current_before_update = data.get(*epoch).copied();
+                    let next_epoch: u64 = (*epoch + 1_u64).into();
+                    let epoch_at_update_offset: u64 =
+                        (*epoch + update_offset_val).into();
+                    // Find the values in epochs before the offset
+                    let range_up_to_offset_before_update: Vec<_> = (next_epoch
+                        ..epoch_at_update_offset)
+                        .map(|i: u64| data.get(Epoch::from(i)).copied())
+                        .collect();
+                    let epoch_after_offset: u64 = epoch_at_update_offset + 1;
+                    let epoch_at_offset: u64 = (*epoch + offset).into();
+                    // Find the values in epochs after the offset
+                    let mut range_from_offset_before_update: Vec<_> =
+                        (epoch_after_offset..epoch_at_offset)
+                            .map(|i: u64| data.get(Epoch::from(i)).copied())
+                            .collect();
+
+                    data.update_from_offset(
+                        |val| update_value(val),
+                        *epoch,
+                        *update_offset,
+                        &params,
+                    );
+
+                    // Post-conditions
+                    assert_eq!(data.last_update, *epoch);
+                    // Update all the values with the update function
+                    let range_from_offset_before_update: Vec<_> =
+                        range_from_offset_before_update
+                            .iter_mut()
+                            .map(|val| {
+                                if let Some(val) = val.as_mut() {
+                                    update_value(val);
+                                }
+                                *val
+                            })
+                            .collect();
+                    let range_from_offset_after_update: Vec<_> =
+                        (epoch_after_offset..epoch_at_offset)
+                            .map(|i: u64| data.get(Epoch::from(i)).copied())
+                            .collect();
+                    assert_eq!(
+                        range_from_offset_before_update,
+                        range_from_offset_after_update,
+                        "The values in epochs from the offset must be updated"
+                    );
+                    assert_eq!(
+                        data.get(*epoch),
+                        current_before_update.as_ref(),
+                        "The current value must not change"
+                    );
+                    let range_up_to_offset_after_update: Vec<_> = (next_epoch
+                        ..epoch_at_update_offset)
+                        .map(|i: u64| data.get(Epoch::from(i)).copied())
+                        .collect();
+                    assert_eq!(
+                        range_up_to_offset_before_update,
+                        range_up_to_offset_after_update,
+                        "The values in epochs up to the offset must not change"
+                    );
+                }
             }
             (params, data)
         }
@@ -572,6 +752,12 @@ mod tests {
             let offset = Offset::value(&params);
             assert!(data.data.len() <= (offset + 1) as usize);
         }
+    }
+
+    #[derive(Clone, Debug)]
+    enum EpochedDeltaTransition<Data> {
+        Get(Epoch),
+        Set { value: Data, epoch: Epoch },
     }
 
     /// Abstract state machine implementation for [`EpochedDelta`].
@@ -583,7 +769,7 @@ mod tests {
         Offset: EpochOffset,
     {
         type State = EpochedState<u64>;
-        type Transition = EpochedTransition<u64>;
+        type Transition = EpochedDeltaTransition<u64>;
 
         fn init_state() -> BoxedStrategy<Self::State> {
             prop_oneof![
@@ -620,15 +806,16 @@ mod tests {
             let offset = Offset::value(&state.params);
             let last_update: u64 = state.last_update.into();
             prop_oneof![
-                (last_update..last_update + 4 * offset)
-                    .prop_map(|epoch| EpochedTransition::Get(epoch.into())),
+                (last_update - 4 * offset..last_update + 4 * offset).prop_map(
+                    |epoch| { EpochedDeltaTransition::Get(epoch.into()) }
+                ),
                 (
                     1..10_000_000_u64,
                     // Update's epoch may not be lower than the last_update
                     last_update..last_update + 10,
                 )
                     .prop_map(|(value, epoch)| {
-                        EpochedTransition::Set {
+                        EpochedDeltaTransition::Set {
                             value,
                             epoch: epoch.into(),
                         }
@@ -642,10 +829,10 @@ mod tests {
             transition: &Self::Transition,
         ) -> Self::State {
             match transition {
-                EpochedTransition::Get(_epoch) => {
+                EpochedDeltaTransition::Get(_epoch) => {
                     // no side effects
                 }
-                EpochedTransition::Set {
+                EpochedDeltaTransition::Set {
                     value: change,
                     epoch,
                 } => {
@@ -697,7 +884,7 @@ mod tests {
         ) -> Self::ConcreteState {
             let offset = Offset::value(&params) as usize;
             match transition {
-                EpochedTransition::Get(epoch) => {
+                EpochedDeltaTransition::Get(epoch) => {
                     let epoch = *epoch;
                     let value = data.get(epoch);
                     // Post-conditions
@@ -707,8 +894,14 @@ mod tests {
                             // When a value found, it should be equal to the sum
                             // of deltas before and on the upper bound
                             let upper_bound = cmp::min(
-                                cmp::min((epoch - last_update).into(), offset)
-                                    + 1,
+                                cmp::min(
+                                    if last_update >= epoch {
+                                        0
+                                    } else {
+                                        (epoch - last_update).into()
+                                    },
+                                    offset,
+                                ) + 1,
                                 data.data.len(),
                             );
                             let mut sum = 0;
@@ -723,8 +916,14 @@ mod tests {
                             // When no value found, there should be no values
                             // before the upper bound
                             let upper_bound = cmp::min(
-                                cmp::min((epoch - last_update).into(), offset)
-                                    + 1,
+                                cmp::min(
+                                    if last_update >= epoch {
+                                        0
+                                    } else {
+                                        (epoch - last_update).into()
+                                    },
+                                    offset,
+                                ) + 1,
                                 data.data.len(),
                             );
                             for i in 0..upper_bound {
@@ -733,7 +932,7 @@ mod tests {
                         }
                     }
                 }
-                EpochedTransition::Set {
+                EpochedDeltaTransition::Set {
                     value: change,
                     epoch,
                 } => {
@@ -819,5 +1018,20 @@ mod tests {
                     )
                 },
             )
+    }
+
+    fn arb_offset(
+        min: Option<DynEpochOffset>,
+    ) -> impl Strategy<Value = DynEpochOffset> {
+        match min {
+            Some(DynEpochOffset::PipelineLen) => {
+                Just(DynEpochOffset::PipelineLen).boxed()
+            }
+            Some(DynEpochOffset::UnbondingLen) | None => prop_oneof![
+                Just(DynEpochOffset::PipelineLen),
+                Just(DynEpochOffset::UnbondingLen),
+            ]
+            .boxed(),
+        }
     }
 }

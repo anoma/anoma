@@ -9,7 +9,8 @@ use std::hash::Hash;
 use std::ops::{self, Add, Sub};
 
 use epoched::{
-    EpochOffset, Epoched, EpochedDelta, OffsetPipelineLen, OffsetUnboundingLen,
+    DynEpochOffset, Epoched, EpochedDelta, OffsetPipelineLen,
+    OffsetUnboundingLen,
 };
 use parameters::PosParams;
 use thiserror::Error;
@@ -400,7 +401,7 @@ where
             });
         },
         current_epoch,
-        OffsetPipelineLen,
+        DynEpochOffset::PipelineLen,
         params,
     );
 

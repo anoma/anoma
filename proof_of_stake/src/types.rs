@@ -12,7 +12,7 @@ use crate::parameters::PosParams;
 /// In the API functions, this type is wrapped in [`Into`]. When using this
 /// library, to replace [`Epoch`] with a custom type, simply implement [`From`]
 /// to and from the types here.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Epoch(u64);
 
 /// Voting power is calculated from staked tokens.
