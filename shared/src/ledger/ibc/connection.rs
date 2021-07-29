@@ -14,7 +14,6 @@ use ibc::ics07_tendermint::consensus_state::ConsensusState as TendermintConsensu
 use ibc::ics23_commitment::commitment::CommitmentPrefix;
 use ibc::ics24_host::identifier::{ClientId, ConnectionId};
 use ibc::ics24_host::Path;
-use ibc::proofs::Proofs;
 use tendermint_proto::Protobuf;
 
 use super::{Error, Ibc, Result, StateChange};
@@ -146,11 +145,11 @@ where
                 };
                 match prev_conn.state() {
                     State::Init => {
-                        self.verify_connection_ack_proof(conn, tx_data)
+                        self.verify_connection_ack_proof(conn_id, conn, tx_data)
                     }
-                    State::TryOpen => {
-                        self.verify_connection_confirm_proof(conn, tx_data)
-                    }
+                    State::TryOpen => self.verify_connection_confirm_proof(
+                        conn_id, conn, tx_data,
+                    ),
                     _ => {
                         tracing::info!(
                             "the state change of connection ID {} was invalid",
@@ -177,35 +176,36 @@ where
     ) -> Result<bool> {
         let data = ConnectionOpenTryData::try_from_slice(tx_data)?;
 
-        let client_id = match data.client_id() {
-            Some(id) => id,
-            None => {
-                tracing::info!("no client ID exist in the tx data");
-                return Ok(false);
-            }
-        };
-        let counterpart_client_id = match data.counterparty() {
-            Some(c) => c.client_id().clone(),
-            None => {
-                tracing::info!("no counterparty exists in the tx data");
-                return Ok(false);
-            }
-        };
+        let client_id = conn.client_id().clone();
+        let counterpart_client_id = conn.counterparty().client_id().clone();
         // expected connection end
         let expected_conn = ConnectionEnd::new(
             State::Init,
             counterpart_client_id,
             Counterparty::new(client_id, None, self.commitment_prefix()),
-            data.counterparty_versions(),
-            data.delay_period(),
+            conn.versions(),
+            conn.delay_period(),
         );
 
         let proofs = data.proofs()?;
-        self.verify_connection_proof(conn, expected_conn, proofs)
+        match verify_proofs(
+            self,
+            Some(data.client_state()?),
+            &conn,
+            &expected_conn,
+            &proofs,
+        ) {
+            Ok(_) => Ok(true),
+            Err(e) => {
+                tracing::info!("proof verification failed: {}", e);
+                Ok(false)
+            }
+        }
     }
 
     fn verify_connection_ack_proof(
         &self,
+        conn_id: &ConnectionId,
         conn: ConnectionEnd,
         tx_data: &[u8],
     ) -> Result<bool> {
@@ -231,19 +231,32 @@ where
             conn.counterparty().client_id().clone(),
             Counterparty::new(
                 conn.client_id().clone(),
-                Some(data.connnection_id()?),
+                Some(conn_id.clone()),
                 self.commitment_prefix(),
             ),
-            vec![data.version()?],
+            conn.versions(),
             conn.delay_period(),
         );
 
         let proofs = data.proofs()?;
-        self.verify_connection_proof(conn, expected_conn, proofs)
+        match verify_proofs(
+            self,
+            Some(data.client_state()?),
+            &conn,
+            &expected_conn,
+            &proofs,
+        ) {
+            Ok(_) => Ok(true),
+            Err(e) => {
+                tracing::info!("proof verification failed: {}", e);
+                Ok(false)
+            }
+        }
     }
 
     fn verify_connection_confirm_proof(
         &self,
+        conn_id: &ConnectionId,
         conn: ConnectionEnd,
         tx_data: &[u8],
     ) -> Result<bool> {
@@ -255,7 +268,7 @@ where
             conn.counterparty().client_id().clone(),
             Counterparty::new(
                 conn.client_id().clone(),
-                Some(data.connnection_id()?),
+                Some(conn_id.clone()),
                 self.commitment_prefix(),
             ),
             conn.versions(),
@@ -263,32 +276,7 @@ where
         );
 
         let proofs = data.proofs()?;
-        self.verify_connection_proof(conn, expected_conn, proofs)
-    }
-
-    fn verify_connection_proof(
-        &self,
-        conn: ConnectionEnd,
-        expected_conn: ConnectionEnd,
-        proofs: Proofs,
-    ) -> Result<bool> {
-        let client_state =
-            match ConnectionReader::client_state(self, conn.client_id()) {
-                Some(c) => c,
-                None => {
-                    tracing::info!(
-                        "the corresponding client state doesn't exist"
-                    );
-                    return Ok(false);
-                }
-            };
-        match verify_proofs(
-            self,
-            Some(client_state),
-            &conn,
-            &expected_conn,
-            &proofs,
-        ) {
+        match verify_proofs(self, None, &conn, &expected_conn, &proofs) {
             Ok(_) => Ok(true),
             Err(e) => {
                 tracing::info!("proof verification failed: {}", e);

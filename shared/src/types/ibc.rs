@@ -1,6 +1,6 @@
 //! IBC-related data definitions and transaction and validity-predicate helpers.
 
-use std::convert::TryInto;
+use std::convert::{TryFrom, TryInto};
 use std::str::FromStr;
 use std::time::Duration;
 
@@ -261,8 +261,6 @@ impl ConnectionOpenInitData {
 /// Data to try to open a connection
 #[derive(Debug, Clone, BorshSerialize, BorshDeserialize)]
 pub struct ConnectionOpenTryData {
-    /// The previous connection ID
-    prev_conn_id: Option<String>,
     /// The client ID
     client_id: String,
     /// The client state
@@ -287,7 +285,6 @@ impl ConnectionOpenTryData {
     /// Returns the data to try to open a connection
     #[allow(clippy::too_many_arguments)]
     pub fn new(
-        prev_conn_id: Option<ConnectionId>,
         client_id: ClientId,
         client_state: AnyClientState,
         counterparty: Counterparty,
@@ -298,7 +295,6 @@ impl ConnectionOpenTryData {
         proof_consensus: CommitmentProofBytes,
         delay_period: Duration,
     ) -> Self {
-        let prev_conn_id = prev_conn_id.map(|id| id.as_str().to_owned());
         let client_id = client_id.as_str().to_owned();
         let client_state = client_state
             .encode_vec()
@@ -315,7 +311,6 @@ impl ConnectionOpenTryData {
             .map(|v| v.encode_vec().expect("Encoding a version shouldn't fail"))
             .collect();
         Self {
-            prev_conn_id,
             client_id,
             client_state,
             counterparty: bytes,
@@ -331,44 +326,39 @@ impl ConnectionOpenTryData {
         }
     }
 
-    /// Returns the previous connection ID
-    pub fn previous_connection_id(&self) -> Option<ConnectionId> {
-        match &self.prev_conn_id {
-            Some(id) => ConnectionId::from_str(id).ok(),
-            None => None,
-        }
-    }
-
     /// Returns the client ID
-    pub fn client_id(&self) -> Option<ClientId> {
-        ClientId::from_str(&self.client_id).ok()
+    pub fn client_id(&self) -> Result<ClientId> {
+        ClientId::from_str(&self.client_id)
+            .map_err(|e| Error::DecodingError(e.to_string()))
     }
 
     /// Returns the client state
-    pub fn client_state(&self) -> Option<AnyClientState> {
-        AnyClientState::decode_vec(&self.client_state).ok()
+    pub fn client_state(&self) -> Result<AnyClientState> {
+        AnyClientState::decode_vec(&self.client_state)
+            .map_err(|e| Error::DecodingError(e.to_string()))
     }
 
     /// Returns the counterparty
-    pub fn counterparty(&self) -> Option<Counterparty> {
+    pub fn counterparty(&self) -> Result<Counterparty> {
         // TODO: Need Profobuf implementation for Counterparty in ibc-rs
         // Counterparty::decode_vec(self.counterparty).ok()
         match RawCounterparty::decode(&self.counterparty[..]) {
-            Ok(c) => c.try_into().ok(),
-            Err(_) => None,
+            Ok(c) => Counterparty::try_from(c)
+                .map_err(|e| Error::DecodingError(e.to_string())),
+            Err(e) => Err(Error::DecodingError(e.to_string())),
         }
     }
 
     /// Returns the list of versions
-    pub fn counterparty_versions(&self) -> Vec<Version> {
+    pub fn counterparty_versions(&self) -> Result<Vec<Version>> {
         let mut versions = vec![];
         for v in &self.counterparty_versions {
-            match Version::decode_vec(v) {
-                Ok(v) => versions.push(v),
-                Err(_) => return vec![],
-            }
+            versions.push(
+                Version::decode_vec(v)
+                    .map_err(|e| Error::DecodingError(e.to_string()))?,
+            )
         }
-        versions
+        Ok(versions)
     }
 
     /// Returns the height of the proofs
