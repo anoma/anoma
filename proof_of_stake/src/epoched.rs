@@ -68,7 +68,7 @@ pub enum DynEpochOffset {
     UnbondingLen,
 }
 impl DynEpochOffset {
-    fn value(&self, params: &PosParams) -> u64 {
+    pub fn value(&self, params: &PosParams) -> u64 {
         match self {
             DynEpochOffset::PipelineLen => params.pipeline_len,
             DynEpochOffset::UnbondingLen => params.unbonding_len,
@@ -410,9 +410,9 @@ where
         self.last_update = epoch;
     }
 
-    /// Update or set the delta value at the data's epoch offset. If there's an
+    /// Add or set the delta value at the data's epoch offset. If there's an
     /// existing value, it will be added to the new value.
-    pub fn update(
+    pub fn add(
         &mut self,
         value: Data,
         current_epoch: impl Into<Epoch>,
@@ -427,9 +427,9 @@ where
         );
     }
 
-    /// Update or set the delta value at the given epoch offset (which must not
+    /// Add or set the delta value at the given epoch offset (which must not
     /// be greater than the `Offset` type parameter of self).
-    pub fn update_at_offset(
+    pub fn add_at_offset(
         &mut self,
         value: Data,
         current_epoch: impl Into<Epoch>,
@@ -445,6 +445,28 @@ where
             || Some(value.clone()),
             |last_delta| Some(last_delta.clone() + value.clone()),
         );
+    }
+
+    /// Update the delta values in reverse order (starting from the future-most
+    /// epoch) while the update function returns `true`.
+    pub fn rev_update_while(
+        &mut self,
+        mut update_value: impl FnMut(&mut Data, Epoch) -> bool,
+        current_epoch: impl Into<Epoch>,
+        params: &PosParams,
+    ) {
+        let epoch = current_epoch.into();
+        self.update_data(epoch, params);
+
+        let offset = Offset::value(params) as usize;
+        for ix in (0..offset + 1).rev() {
+            if let Some(Some(current)) = self.data.get_mut(ix) {
+                let keep_going = update_value(current, epoch + ix);
+                if !keep_going {
+                    break;
+                }
+            }
+        }
     }
 }
 
@@ -852,7 +874,7 @@ mod tests {
     #[derive(Clone, Debug)]
     enum EpochedDeltaTransition<Data> {
         Get(Epoch),
-        Update { value: Data, epoch: Epoch },
+        Add { value: Data, epoch: Epoch },
     }
 
     /// Abstract state machine implementation for [`EpochedDelta`].
@@ -912,7 +934,7 @@ mod tests {
                     last_update..last_update + 10,
                 )
                     .prop_map(|(value, epoch)| {
-                        EpochedDeltaTransition::Update {
+                        EpochedDeltaTransition::Add {
                             value,
                             epoch: epoch.into(),
                         }
@@ -929,7 +951,7 @@ mod tests {
                 EpochedDeltaTransition::Get(_epoch) => {
                     // no side effects
                 }
-                EpochedDeltaTransition::Update {
+                EpochedDeltaTransition::Add {
                     value: change,
                     epoch,
                 } => {
@@ -1021,7 +1043,7 @@ mod tests {
                         }
                     }
                 }
-                EpochedDeltaTransition::Update {
+                EpochedDeltaTransition::Add {
                     value: change,
                     epoch,
                 } => {
@@ -1036,7 +1058,7 @@ mod tests {
                         .map(|epoch| data.get(epoch))
                         .collect();
 
-                    data.update(*change, *epoch, &params);
+                    data.add(*change, *epoch, &params);
 
                     // Post-conditions
                     assert_eq!(data.last_update, *epoch);

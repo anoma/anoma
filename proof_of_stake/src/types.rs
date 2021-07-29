@@ -1,7 +1,9 @@
 use core::fmt::Debug;
 use core::ops;
 use std::collections::{BTreeSet, HashMap};
+use std::convert::TryFrom;
 use std::hash::Hash;
+use std::num::TryFromIntError;
 use std::ops::AddAssign;
 
 use crate::epoched::{Epoched, OffsetPipelineLen, OffsetUnboundingLen};
@@ -18,6 +20,9 @@ pub struct Epoch(u64);
 /// Voting power is calculated from staked tokens.
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct VotingPower(u64);
+
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct VotingPowerDelta(i64);
 
 #[derive(Debug, Clone)]
 pub struct GenesisValidator<Address, Token, PK> {
@@ -79,24 +84,49 @@ pub type Bonds<Address, Token> =
 pub type Unbonds<Address, Token> =
     HashMap<BondId<Address>, Epoched<Unbond<Token>, OffsetUnboundingLen>>;
 
-#[derive(Debug, Clone)]
-pub struct Bond<Token> {
+#[derive(Debug, Clone, Default)]
+pub struct Bond<Token: Default> {
     /// A key is a the epoch set for the bond. This is used in unbonding, where
-    // it's needed for slash epoch range check.
+    /// it's needed for slash epoch range check.
+    ///
+    /// TODO: For Bonds, there's unnecessary redundancy with this hash map.
+    /// We only need to keep the start `Epoch` for the Epoched head element
+    /// (i.e. the current epoch data), the rest of the array can be calculated
+    /// from the offset from the head
     pub delta: HashMap<Epoch, Token>,
 }
 
-#[derive(Debug, Clone)]
-pub struct Unbond<Token> {
+#[derive(Debug, Clone, Default)]
+pub struct Unbond<Token: Default> {
     /// A key is a pair of the epoch of the bond from which a unbond was
-    /// created the epoch of unboding. This is needed for slash epoch range
+    /// created the epoch of unbonding. This is needed for slash epoch range
     /// check.
     pub deltas: HashMap<(Epoch, Epoch), Token>,
 }
 
 impl VotingPower {
     pub fn from_tokens(tokens: impl Into<u64>, params: &PosParams) -> Self {
-        Self(params.votes_per_token * tokens)
+        Self(params.votes_per_token * tokens.into())
+    }
+}
+
+impl VotingPowerDelta {
+    pub fn from_token_change(
+        change: impl Into<i128>,
+        params: &PosParams,
+    ) -> Result<Self, TryFromIntError> {
+        let delta: i128 = params.votes_per_token * change.into();
+        let delta: i64 = TryFrom::try_from(delta)?;
+        Ok(Self(delta))
+    }
+
+    pub fn try_from_tokens(
+        tokens: impl Into<u64>,
+        params: &PosParams,
+    ) -> Result<Self, TryFromIntError> {
+        let delta: i64 =
+            TryFrom::try_from(params.votes_per_token * tokens.into())?;
+        Ok(Self(delta))
     }
 }
 
@@ -180,9 +210,21 @@ impl ops::Sub<Epoch> for Epoch {
     }
 }
 
+impl<Token> Bond<Token>
+where
+    Token: Clone + Copy + ops::Add<Output = Token> + Default,
+{
+    /// Find the sum of all the bonds amounts.
+    pub fn sum(&self) -> Token {
+        self.delta
+            .iter()
+            .fold(Default::default(), |acc, (_epoch, amount)| acc + *amount)
+    }
+}
+
 impl<Token> ops::Add for Bond<Token>
 where
-    Token: Clone + ops::Add<Output = Token>,
+    Token: Clone + ops::Add<Output = Token> + Default,
 {
     type Output = Self;
 
@@ -190,6 +232,19 @@ where
         let mut delta = self.delta.clone();
         delta.extend(rhs.delta);
         Self { delta }
+    }
+}
+
+impl<Token> ops::Add for Unbond<Token>
+where
+    Token: Clone + ops::Add<Output = Token> + Default,
+{
+    type Output = Self;
+
+    fn add(self, rhs: Self) -> Self::Output {
+        let mut deltas = self.deltas.clone();
+        deltas.extend(rhs.deltas);
+        Self { deltas }
     }
 }
 
@@ -216,6 +271,48 @@ impl ops::Add for VotingPower {
 impl AddAssign for VotingPower {
     fn add_assign(&mut self, rhs: Self) {
         self.0 += rhs.0
+    }
+}
+
+impl From<i64> for VotingPowerDelta {
+    fn from(delta: i64) -> Self {
+        Self(delta)
+    }
+}
+
+impl From<VotingPowerDelta> for i64 {
+    fn from(vp: VotingPowerDelta) -> Self {
+        vp.0
+    }
+}
+
+impl ops::Add for VotingPowerDelta {
+    type Output = Self;
+
+    fn add(self, rhs: Self) -> Self::Output {
+        Self(self.0 + rhs.0)
+    }
+}
+
+impl AddAssign for VotingPowerDelta {
+    fn add_assign(&mut self, rhs: Self) {
+        self.0 += rhs.0
+    }
+}
+
+impl ops::Sub for VotingPowerDelta {
+    type Output = Self;
+
+    fn sub(self, rhs: Self) -> Self::Output {
+        Self(self.0 - rhs.0)
+    }
+}
+
+impl ops::Sub<i64> for VotingPowerDelta {
+    type Output = Self;
+
+    fn sub(self, rhs: i64) -> Self::Output {
+        Self(self.0 - rhs)
     }
 }
 

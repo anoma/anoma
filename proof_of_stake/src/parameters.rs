@@ -34,14 +34,21 @@ impl BasisPoints {
     }
 }
 
-impl<T> Mul<T> for BasisPoints
-where
-    T: Into<u64>,
-{
+impl Mul<u64> for BasisPoints {
     type Output = u64;
 
-    fn mul(self, rhs: T) -> Self::Output {
-        rhs.into() * 10_000 / self.0
+    fn mul(self, rhs: u64) -> Self::Output {
+        // TODO checked arithmetics
+        rhs * 10_000 / self.0
+    }
+}
+
+impl Mul<i128> for BasisPoints {
+    type Output = i128;
+
+    fn mul(self, rhs: i128) -> Self::Output {
+        // TODO checked arithmetics
+        rhs * 10_000 / self.0 as i128
     }
 }
 
