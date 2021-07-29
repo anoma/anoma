@@ -5,7 +5,7 @@ use core::marker::PhantomData;
 use core::{cmp, fmt, ops};
 
 use crate::types::Epoch;
-use crate::{Pos, PosParams};
+use crate::PosParams;
 
 #[derive(Debug, Clone)]
 pub struct Epoched<Data, Offset>
@@ -220,7 +220,7 @@ where
     /// function.
     pub fn update_from_offset(
         &mut self,
-        update_value: impl Fn(&mut Data),
+        update_value: impl Fn(&mut Data, Epoch),
         current_epoch: impl Into<Epoch>,
         offset: DynEpochOffset,
         params: &PosParams,
@@ -232,7 +232,7 @@ where
 
         if let Some(data) = self.data.get_mut(offset).unwrap() {
             // If there's a value at `offset`, update it
-            update_value(data)
+            update_value(data, self.last_update + offset)
         } else {
             // Try to find if there's any value before `offset`
             let mut latest_value: Option<Data> = None;
@@ -246,14 +246,14 @@ where
             // current value
             if let Some(mut latest_value) = latest_value {
                 let val_at_offset = self.data.get_mut(offset).unwrap();
-                update_value(&mut latest_value);
+                update_value(&mut latest_value, self.last_update + offset);
                 *val_at_offset = Some(latest_value);
             }
         }
         // Update any data after `offset`
         for i in offset + 1..self.data.len() {
             if let Some(Some(data)) = self.data.get_mut(i) {
-                update_value(data)
+                update_value(data, self.last_update + i)
             }
         }
     }
@@ -439,16 +439,24 @@ where
         );
     }
 
-    /// Update the delta value at the given epoch offset (which must not be
-    /// greater than the `Offset` type parameter of self).
+    /// Update or set the delta value at the given epoch offset (which must not
+    /// be greater than the `Offset` type parameter of self).
     pub fn update_at_offset(
         &mut self,
-        delta: Data,
+        value: Data,
         current_epoch: impl Into<Epoch>,
         offset: DynEpochOffset,
         params: &PosParams,
     ) {
-        todo!();
+        let offset = offset.value(params) as usize;
+        debug_assert!(offset <= Offset::value(params) as usize);
+        let epoch = current_epoch.into();
+        self.update_data(epoch, params);
+
+        self.data[offset] = self.data[offset].as_ref().map_or_else(
+            || Some(value.clone()),
+            |last_delta| Some(last_delta.clone() + value.clone()),
+        );
     }
 }
 
@@ -502,7 +510,7 @@ mod tests {
     /// [`EpochedTransition`]. It's not inlined because we need to manually
     /// implement `Debug`.
     struct UpdateFromOffset<Data> {
-        update_value: Rc<dyn Fn(&mut Data)>,
+        update_value: Rc<dyn Fn(&mut Data, Epoch)>,
         epoch: Epoch,
         offset: DynEpochOffset,
     }
@@ -518,7 +526,7 @@ mod tests {
     impl<Data> fmt::Debug for UpdateFromOffset<Data> {
         fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
             f.debug_struct("UpdateFromOffset")
-                .field("update_value", &"Rc<dyn Fn(&mut Data)>")
+                .field("update_value", &"Rc<dyn Fn(&mut Data, Epoch)>")
                 .field("epoch", &self.epoch)
                 .field("offset", &self.offset)
                 .finish()
@@ -574,8 +582,11 @@ mod tests {
             let dyn_offset = Offset::dyn_offset();
             let last_update: u64 = state.last_update.into();
             prop_oneof![
-                arb_epoch(last_update - 4 * offset..last_update + 4 * offset)
-                    .prop_map(EpochedTransition::Get),
+                arb_epoch(
+                    last_update.checked_sub(4 * offset).unwrap_or_default()
+                        ..last_update + 4 * offset
+                )
+                .prop_map(EpochedTransition::Get),
                 (
                     any::<u64>(),
                     // Update's epoch may not be lower than the last_update
@@ -591,10 +602,12 @@ mod tests {
                 )
                     .prop_map(|(new_value, epoch, offset)| {
                         EpochedTransition::UpdateFromOffset(UpdateFromOffset {
-                            update_value: Rc::new(move |current: &mut u64| {
-                                let value = new_value;
-                                *current = value
-                            }),
+                            update_value: Rc::new(
+                                move |current: &mut u64, _epoch| {
+                                    let value = new_value;
+                                    *current = value
+                                },
+                            ),
                             epoch,
                             offset,
                         })
@@ -638,7 +651,7 @@ mod tests {
                     }
                     for (key, value) in state.data.iter_mut() {
                         if key >= &offset {
-                            update_value(value)
+                            update_value(value, *key)
                         }
                     }
                 }
@@ -797,11 +810,14 @@ mod tests {
                     // Find the values in epochs after the offset
                     let mut range_from_offset_before_update: Vec<_> =
                         (epoch_after_offset..epoch_at_offset)
-                            .map(|i: u64| data.get(Epoch::from(i)).copied())
+                            .map(|i: u64| {
+                                let epoch = Epoch::from(i);
+                                (data.get(epoch).copied(), epoch)
+                            })
                             .collect();
 
                     data.update_from_offset(
-                        |val| update_value(val),
+                        |val, epoch| update_value(val, epoch),
                         *epoch,
                         *update_offset,
                         &params,
@@ -813,9 +829,9 @@ mod tests {
                     let range_from_offset_before_update: Vec<_> =
                         range_from_offset_before_update
                             .iter_mut()
-                            .map(|val| {
+                            .map(|(val, epoch)| {
                                 if let Some(val) = val.as_mut() {
-                                    update_value(val);
+                                    update_value(val, *epoch);
                                 }
                                 *val
                             })
@@ -906,9 +922,11 @@ mod tests {
             let offset = Offset::value(&state.params);
             let last_update: u64 = state.last_update.into();
             prop_oneof![
-                (last_update - 4 * offset..last_update + 4 * offset).prop_map(
-                    |epoch| { EpochedDeltaTransition::Get(epoch.into()) }
-                ),
+                (last_update.checked_sub(4 * offset).unwrap_or_default()
+                    ..last_update + 4 * offset)
+                    .prop_map(|epoch| {
+                        EpochedDeltaTransition::Get(epoch.into())
+                    }),
                 (
                     1..10_000_000_u64,
                     // Update's epoch may not be lower than the last_update

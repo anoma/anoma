@@ -466,7 +466,7 @@ where
         Epoched::init(ValidatorState::Pending, current_epoch, params);
     state.set(ValidatorState::Candidate, current_epoch, params);
     validator_set.update_from_offset(
-        |validator_set| {
+        |validator_set, _epoch| {
             validator_set.inactive.insert(WeightedValidator {
                 voting_power: VotingPower::default(),
                 address: address.clone(),
@@ -565,57 +565,23 @@ where
         ),
     };
 
-    // Find the validator's voting power at pipeline offset for validator set
-    // update
-    let voting_power_at_pipeline = validator_voting_power
-        .as_ref()
-        .map(|voting_power| {
-            voting_power
-                .get_at_offset(
-                    current_epoch,
-                    DynEpochOffset::PipelineLen,
-                    params,
-                )
-                .unwrap_or_default()
-        })
-        .unwrap_or_default();
-
-    // Update validator's voting power
+    // Update validator set. This has to be done before we update the
+    // `validator_voting_power`, because we need to look-up the validator with
+    // its voting power before the change.
     let voting_power_delta = VotingPower::from_tokens(amount, params);
-    let validator_voting_power = match validator_voting_power {
-        Some(mut voting_power) => {
-            voting_power.update_at_offset(
-                voting_power_delta,
-                current_epoch,
-                DynEpochOffset::PipelineLen,
-                params,
-            );
-            voting_power
-        }
-        None => EpochedDelta::init_at_offset(
-            voting_power_delta,
-            current_epoch,
-            DynEpochOffset::PipelineLen,
-            params,
-        ),
-    };
-
-    // Update total voting power
-    total_voting_power.update_at_offset(
-        voting_power_delta,
-        current_epoch,
-        DynEpochOffset::PipelineLen,
-        params,
-    );
-
-    // Update validator set
-    // TODO voting_power_at_pipeline must be taken dynamically in the update fn below
-    let validator_at_pipeline = WeightedValidator {
-        voting_power: voting_power_at_pipeline,
-        address: bond_id.validator.clone(),
-    };
     validator_set.update_from_offset(
-        |validator_set| {
+        |validator_set, epoch| {
+            // Find the validator's voting power at the epoch that's being
+            // updated
+            let voting_power_at_pipeline = validator_voting_power
+                .as_ref()
+                .map(|voting_power| voting_power.get(epoch).unwrap_or_default())
+                .unwrap_or_default();
+            let validator_at_pipeline = WeightedValidator {
+                voting_power: voting_power_at_pipeline,
+                address: bond_id.validator.clone(),
+            };
+
             if validator_set.inactive.contains(&validator_at_pipeline) {
                 let min_active_validator = validator_set.active.first_shim();
                 let min_voting_power = min_active_validator
@@ -648,13 +614,42 @@ where
                     let popped =
                         validator_set.active.remove(&validator_at_pipeline);
                     debug_assert!(popped);
-                    validator_set.inactive.insert(validator_at_pipeline.clone());
+                    validator_set
+                        .inactive
+                        .insert(validator_at_pipeline.clone());
                     if let Some(activate_max) = activate_max {
                         validator_set.active.insert(activate_max);
                     }
                 }
             }
         },
+        current_epoch,
+        DynEpochOffset::PipelineLen,
+        params,
+    );
+
+    // Update validator's voting power
+    let validator_voting_power = match validator_voting_power {
+        Some(mut voting_power) => {
+            voting_power.update_at_offset(
+                voting_power_delta,
+                current_epoch,
+                DynEpochOffset::PipelineLen,
+                params,
+            );
+            voting_power
+        }
+        None => EpochedDelta::init_at_offset(
+            voting_power_delta,
+            current_epoch,
+            DynEpochOffset::PipelineLen,
+            params,
+        ),
+    };
+
+    // Update total voting power
+    total_voting_power.update_at_offset(
+        voting_power_delta,
         current_epoch,
         DynEpochOffset::PipelineLen,
         params,
