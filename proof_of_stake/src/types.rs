@@ -103,10 +103,30 @@ impl VotingPower {
 impl Epoch {
     /// Iterate a range of consecutive epochs starting from `self` of a given
     /// length. Work-around for `Step` implementation pending on stabilization of <https://github.com/rust-lang/rust/issues/42168>.
-    pub fn iter_range(self, len: u64) -> impl Iterator<Item = Epoch> {
+    pub fn iter_range(self, len: u64) -> impl Iterator<Item = Epoch> + Clone {
         let start_ix: u64 = self.into();
         let end_ix: u64 = start_ix + len;
         (start_ix..end_ix).map(|ix| Epoch::from(ix))
+    }
+
+    /// Checked epoch subtraction. Computes self - rhs, returning None if
+    /// overflow occurred.
+    #[must_use = "this returns the result of the operation, without modifying \
+                  the original"]
+    pub fn checked_sub(self, rhs: Epoch) -> Option<Self> {
+        if rhs.0 > self.0 {
+            None
+        } else {
+            Some(Self(self.0 - rhs.0))
+        }
+    }
+
+    /// Checked epoch subtraction. Computes self - rhs, returning default
+    /// `Epoch(0)` if overflow occurred.
+    #[must_use = "this returns the result of the operation, without modifying \
+                  the original"]
+    pub fn sub_or_default(self, rhs: Epoch) -> Self {
+        self.checked_sub(rhs).unwrap_or_default()
     }
 }
 

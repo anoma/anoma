@@ -116,11 +116,7 @@ where
     /// Find the value for the given epoch.
     pub fn get(&self, epoch: impl Into<Epoch>) -> Option<&Data> {
         let epoch = epoch.into();
-        let index: usize = if self.last_update >= epoch {
-            0
-        } else {
-            (epoch - self.last_update).into()
-        };
+        let index: usize = (epoch.sub_or_default(self.last_update)).into();
         self.get_at_index(index)
     }
 
@@ -133,11 +129,8 @@ where
     ) -> Option<&Data> {
         let offset = offset.value(params);
         let epoch_at_offset = epoch.into() + offset;
-        let index: usize = if self.last_update >= epoch_at_offset {
-            0
-        } else {
-            (epoch_at_offset - self.last_update).into()
-        };
+        let index: usize =
+            (epoch_at_offset.sub_or_default(self.last_update)).into();
         self.get_at_index(index)
     }
 
@@ -172,7 +165,8 @@ where
         );
         let offset = Offset::value(params) as usize;
         let last_update = self.last_update;
-        let shift: usize = cmp::min((epoch - last_update).into(), offset);
+        let shift: usize =
+            cmp::min((epoch.sub_or_default(last_update)).into(), offset);
 
         // Resize the data if needed
         if self.data.len() < offset + 1 {
@@ -317,12 +311,8 @@ where
     /// and before the current epoch.
     pub fn get(&self, epoch: impl Into<Epoch>) -> Option<Data> {
         let epoch = epoch.into();
-        let offset: usize = if self.last_update >= epoch {
-            0
-        } else {
-            (epoch - self.last_update).into()
-        };
-        self.get_at_index(offset)
+        let index: usize = (epoch.sub_or_default(self.last_update)).into();
+        self.get_at_index(index)
     }
 
     /// Find the value at the offset from the given epoch as the sum of delta
@@ -335,12 +325,9 @@ where
     ) -> Option<Data> {
         let offset = offset.value(params);
         let epoch_at_offset = epoch.into() + offset;
-        let offset: usize = if self.last_update >= epoch_at_offset {
-            0
-        } else {
-            (epoch_at_offset - self.last_update).into()
-        };
-        self.get_at_index(offset)
+        let index: usize =
+            (epoch_at_offset.sub_or_default(self.last_update)).into();
+        self.get_at_index(index)
     }
 
     /// Find the value at the given index as the sum of delta values at and
@@ -378,7 +365,8 @@ where
         );
         let offset = Offset::value(params) as usize;
         let last_update = self.last_update;
-        let shift: usize = cmp::min((epoch - last_update).into(), offset);
+        let shift: usize =
+            cmp::min((epoch.sub_or_default(last_update)).into(), offset);
 
         // Resize the data if needed
         if self.data.len() < offset + 1 {
@@ -708,11 +696,7 @@ mod tests {
                             // before or on the upper bound
                             let upper_bound = cmp::min(
                                 cmp::min(
-                                    if last_update >= epoch {
-                                        0
-                                    } else {
-                                        (epoch - last_update).into()
-                                    },
+                                    (epoch.sub_or_default(last_update)).into(),
                                     offset,
                                 ) + 1,
                                 data.data.len(),
@@ -736,11 +720,7 @@ mod tests {
                             // before the upper bound
                             let upper_bound = cmp::min(
                                 cmp::min(
-                                    if last_update >= epoch {
-                                        0
-                                    } else {
-                                        (epoch - last_update).into()
-                                    },
+                                    (epoch.sub_or_default(last_update)).into(),
                                     offset,
                                 ) + 1,
                                 data.data.len(),
@@ -753,12 +733,12 @@ mod tests {
                 }
                 EpochedTransition::Set { value, epoch } => {
                     let current_before_update = data.get(*epoch).copied();
-                    let next_epoch: u64 = (*epoch + 1_u64).into();
-                    let epoch_at_offset: u64 = (*epoch + offset).into();
-                    // Find the values in epochs before the offset
-                    let range_before_update: Vec<_> = (next_epoch
-                        ..epoch_at_offset)
-                        .map(|i: u64| data.get(Epoch::from(i)).copied())
+                    let epochs_up_to_offset =
+                        (*epoch + 1_u64).iter_range(offset as u64 - 1);
+                    // Find the values in epochs up to the offset
+                    let range_before_update: Vec<_> = epochs_up_to_offset
+                        .clone()
+                        .map(|epoch| data.get(epoch).copied())
                         .collect();
 
                     data.set(*value, *epoch, &params);
@@ -780,9 +760,8 @@ mod tests {
                         current_before_update.as_ref(),
                         "The current value must not change"
                     );
-                    let range_after_update: Vec<_> = (next_epoch
-                        ..epoch_at_offset)
-                        .map(|i: u64| data.get(Epoch::from(i)).copied())
+                    let range_after_update: Vec<_> = epochs_up_to_offset
+                        .map(|epoch| data.get(epoch).copied())
                         .collect();
                     assert_eq!(
                         range_before_update, range_after_update,
@@ -1013,11 +992,7 @@ mod tests {
                             // of deltas before and on the upper bound
                             let upper_bound = cmp::min(
                                 cmp::min(
-                                    if last_update >= epoch {
-                                        0
-                                    } else {
-                                        (epoch - last_update).into()
-                                    },
+                                    (epoch.sub_or_default(last_update)).into(),
                                     offset,
                                 ) + 1,
                                 data.data.len(),
@@ -1035,11 +1010,7 @@ mod tests {
                             // before the upper bound
                             let upper_bound = cmp::min(
                                 cmp::min(
-                                    if last_update >= epoch {
-                                        0
-                                    } else {
-                                        (epoch - last_update).into()
-                                    },
+                                    (epoch.sub_or_default(last_update)).into(),
                                     offset,
                                 ) + 1,
                                 data.data.len(),
@@ -1057,12 +1028,12 @@ mod tests {
                     let current_value_before_update = data.get(*epoch);
                     let value_at_offset_before_update =
                         data.get(*epoch + offset);
-                    let next_epoch: u64 = (*epoch + 1_u64).into();
-                    let epoch_at_offset: u64 = (*epoch + offset).into();
+                    let epochs_up_to_offset =
+                        (*epoch + 1_u64).iter_range(offset as u64 - 1);
                     // Find the values in epochs before the offset
-                    let range_before_update: Vec<_> = (next_epoch
-                        ..epoch_at_offset)
-                        .map(|i: u64| data.get(Epoch::from(i)))
+                    let range_before_update: Vec<_> = epochs_up_to_offset
+                        .clone()
+                        .map(|epoch| data.get(epoch))
                         .collect();
 
                     data.update(*change, *epoch, &params);
@@ -1088,9 +1059,8 @@ mod tests {
                         current_value_before_update,
                         "The current value must not change"
                     );
-                    let range_after_update: Vec<_> = (next_epoch
-                        ..epoch_at_offset)
-                        .map(|i: u64| data.get(Epoch::from(i)))
+                    let range_after_update: Vec<_> = epochs_up_to_offset
+                        .map(|epoch| data.get(epoch))
                         .collect();
                     assert_eq!(
                         range_before_update, range_after_update,
