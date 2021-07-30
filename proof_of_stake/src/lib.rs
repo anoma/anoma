@@ -661,10 +661,16 @@ where
     state.set(ValidatorState::Candidate, current_epoch, params);
     validator_set.update_from_offset(
         |validator_set, _epoch| {
-            validator_set.inactive.insert(WeightedValidator {
+            let validator = WeightedValidator {
                 voting_power: VotingPower::default(),
                 address: address.clone(),
-            });
+            };
+            if validator_set.active.len() < params.max_validator_slots as usize
+            {
+                validator_set.active.insert(validator);
+            } else {
+                validator_set.inactive.insert(validator);
+            }
         },
         current_epoch,
         DynEpochOffset::PipelineLen,
