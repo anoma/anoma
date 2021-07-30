@@ -1072,7 +1072,7 @@ where
         .get_at_offset(current_epoch, change_offset, params)
         .unwrap_or_default();
     let voting_power_delta = voting_power_at_pipeline
-        + VotingPowerDelta::try_from_tokens(total_deltas_at_pipeline, params)?;
+        - VotingPowerDelta::try_from_tokens(total_deltas_at_pipeline, params)?;
     validator_voting_power.add_at_offset(
         voting_power_delta,
         current_epoch,
