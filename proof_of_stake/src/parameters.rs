@@ -2,7 +2,9 @@
 
 use std::ops::Mul;
 
-#[derive(Debug, Clone)]
+use borsh::{BorshDeserialize, BorshSerialize};
+
+#[derive(Debug, Clone, BorshDeserialize, BorshSerialize)]
 pub struct PosParams {
     /// A maximum number of active validators
     pub max_validator_slots: u64,
@@ -25,7 +27,7 @@ pub struct PosParams {
 
 /// ‱ (Parts per then thousand). This can be multiplied by any type that
 /// implements [`Into<u64>`].
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, BorshDeserialize, BorshSerialize)]
 pub struct BasisPoints(u64);
 
 impl BasisPoints {

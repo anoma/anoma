@@ -7,6 +7,8 @@ use std::hash::Hash;
 use std::num::TryFromIntError;
 use std::ops::AddAssign;
 
+use borsh::{BorshDeserialize, BorshSerialize};
+
 use crate::epoched::{Epoched, OffsetPipelineLen, OffsetUnboundingLen};
 use crate::parameters::PosParams;
 
@@ -15,14 +17,50 @@ use crate::parameters::PosParams;
 /// In the API functions, this type is wrapped in [`Into`]. When using this
 /// library, to replace [`Epoch`] with a custom type, simply implement [`From`]
 /// to and from the types here.
-#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(
+    Debug,
+    Default,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    BorshDeserialize,
+    BorshSerialize,
+)]
 pub struct Epoch(u64);
 
 /// Voting power is calculated from staked tokens.
-#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(
+    Debug,
+    Default,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    BorshDeserialize,
+    BorshSerialize,
+)]
 pub struct VotingPower(u64);
 
-#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(
+    Debug,
+    Default,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    BorshDeserialize,
+    BorshSerialize,
+)]
 pub struct VotingPowerDelta(i64);
 
 #[derive(Debug, Clone)]
@@ -36,7 +74,17 @@ pub struct GenesisValidator<Address, Token, PK> {
     pub consensus_key: PK,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    BorshDeserialize,
+    BorshSerialize,
+)]
 pub struct BondId<Address>
 where
     Address: Display + Debug + Clone + PartialEq + Eq + PartialOrd + Ord + Hash,
@@ -46,10 +94,27 @@ where
 }
 
 /// Validator's address with its voting power.
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    BorshDeserialize,
+    BorshSerialize,
+)]
 pub struct WeightedValidator<Address>
 where
-    Address: Debug + Clone + PartialEq + Eq + PartialOrd + Ord + Hash,
+    Address: Debug
+        + Clone
+        + PartialEq
+        + Eq
+        + PartialOrd
+        + Ord
+        + Hash
+        + BorshDeserialize
+        + BorshSerialize,
 {
     /// The `voting_power` field must be on top, because lexicographic ordering
     /// is based on the top-to-bottom declaration order and in the
@@ -59,10 +124,27 @@ where
     pub address: Address,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    BorshDeserialize,
+    BorshSerialize,
+)]
 pub struct ValidatorSet<Address>
 where
-    Address: Debug + Clone + PartialEq + Eq + PartialOrd + Ord + Hash,
+    Address: Debug
+        + Clone
+        + PartialEq
+        + Eq
+        + PartialOrd
+        + Ord
+        + Hash
+        + BorshDeserialize
+        + BorshSerialize,
 {
     /// Active validator set with maximum size equal to `max_validator_slots`
     /// in [`PosParams`].
@@ -71,7 +153,7 @@ where
     pub inactive: BTreeSet<WeightedValidator<Address>>,
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, BorshDeserialize, BorshSerialize)]
 pub enum ValidatorState {
     Inactive,
     Pending,
@@ -85,7 +167,7 @@ pub type Bonds<Address, Token> =
 pub type Unbonds<Address, Token> =
     HashMap<BondId<Address>, Epoched<Unbond<Token>, OffsetUnboundingLen>>;
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, BorshDeserialize, BorshSerialize)]
 pub struct Bond<Token: Default> {
     /// A key is a the epoch set for the bond. This is used in unbonding, where
     /// it's needed for slash epoch range check.
@@ -97,7 +179,7 @@ pub struct Bond<Token: Default> {
     pub delta: HashMap<Epoch, Token>,
 }
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, BorshDeserialize, BorshSerialize)]
 pub struct Unbond<Token: Default> {
     /// A key is a pair of the epoch of the bond from which a unbond was
     /// created the epoch of unbonding. This is needed for slash epoch range

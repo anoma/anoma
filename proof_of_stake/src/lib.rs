@@ -11,6 +11,7 @@ use std::hash::Hash;
 use std::num::TryFromIntError;
 use std::ops::{self, Add, Neg, Sub, SubAssign};
 
+use borsh::{BorshDeserialize, BorshSerialize};
 use epoched::{
     DynEpochOffset, EpochOffset, Epoched, EpochedDelta, OffsetPipelineLen,
     OffsetUnboundingLen,
@@ -34,7 +35,9 @@ pub trait PoSReadOnly {
         + Eq
         + PartialOrd
         + Ord
-        + Hash;
+        + Hash
+        + BorshDeserialize
+        + BorshSerialize;
     type TokenAmount: Display
         + Debug
         + Default
@@ -46,7 +49,9 @@ pub trait PoSReadOnly {
         + Into<u64>
         + From<u64>
         + Into<Self::TokenChange>
-        + SubAssign;
+        + SubAssign
+        + BorshDeserialize
+        + BorshSerialize;
     type TokenChange: Display
         + Debug
         + Default
@@ -56,8 +61,10 @@ pub trait PoSReadOnly {
         + Sub
         + From<Self::TokenAmount>
         + Into<i128>
-        + Neg<Output = Self::TokenChange>;
-    type PublicKey: Debug + Clone;
+        + Neg<Output = Self::TokenChange>
+        + BorshDeserialize
+        + BorshSerialize;
+    type PublicKey: Debug + Clone + BorshDeserialize + BorshSerialize;
 
     /// Address of the PoS account
     const POS_ADDRESS: Self::Address;
@@ -482,10 +489,25 @@ where
             GenesisError,
         >,
     >,
-    Address: Display + Debug + Clone + Ord + Hash,
-    TokenAmount: Debug + Default + Clone + ops::Add<Output = TokenAmount>,
-    TokenChange: Debug + Copy + ops::Add<Output = TokenChange>,
-    PK: Debug + Clone,
+    Address: Display
+        + Debug
+        + Clone
+        + Ord
+        + Hash
+        + BorshDeserialize
+        + BorshSerialize,
+    TokenAmount: Debug
+        + Default
+        + Clone
+        + ops::Add<Output = TokenAmount>
+        + BorshDeserialize
+        + BorshSerialize,
+    TokenChange: Debug
+        + Copy
+        + ops::Add<Output = TokenChange>
+        + BorshDeserialize
+        + BorshSerialize,
+    PK: Debug + Clone + BorshDeserialize + BorshSerialize,
 {
     validators: Validators,
     /// Active and inactive validator sets
@@ -495,10 +517,25 @@ where
 }
 struct GenesisValidatorData<Address, TokenAmount, TokenChange, PK>
 where
-    Address: Display + Debug + Clone + Ord + Hash,
-    TokenAmount: Debug + Default + Clone + ops::Add<Output = TokenAmount>,
-    TokenChange: Debug + Copy + ops::Add<Output = TokenChange>,
-    PK: Debug + Clone,
+    Address: Display
+        + Debug
+        + Clone
+        + Ord
+        + Hash
+        + BorshDeserialize
+        + BorshSerialize,
+    TokenAmount: Debug
+        + Default
+        + Clone
+        + ops::Add<Output = TokenAmount>
+        + BorshDeserialize
+        + BorshSerialize,
+    TokenChange: Debug
+        + Copy
+        + ops::Add<Output = TokenChange>
+        + BorshDeserialize
+        + BorshSerialize,
+    PK: Debug + Clone + BorshDeserialize + BorshSerialize,
 {
     address: Address,
     staking_reward_address: Address,
@@ -535,16 +572,30 @@ fn init_genesis<'a, Address, TokenAmount, TokenChange, PK>(
     GenesisError,
 >
 where
-    Address: 'a + Display + Debug + Clone + Ord + Hash,
+    Address: 'a
+        + Display
+        + Debug
+        + Clone
+        + Ord
+        + Hash
+        + BorshDeserialize
+        + BorshSerialize,
     TokenAmount: 'a
         + Debug
         + Default
         + Clone
         + ops::Add<Output = TokenAmount>
-        + Into<u64>,
-    TokenChange:
-        'a + Debug + Copy + ops::Add<Output = TokenChange> + From<TokenAmount>,
-    PK: 'a + Debug + Clone,
+        + Into<u64>
+        + BorshDeserialize
+        + BorshSerialize,
+    TokenChange: 'a
+        + Debug
+        + Copy
+        + ops::Add<Output = TokenChange>
+        + From<TokenAmount>
+        + BorshDeserialize
+        + BorshSerialize,
+    PK: 'a + Debug + Clone + BorshDeserialize + BorshSerialize,
 {
     // Accumulate the validator set and total voting power
     let mut active: BTreeSet<WeightedValidator<Address>> = BTreeSet::default();
@@ -631,7 +682,7 @@ where
 
 struct BecomeValidatorData<PK>
 where
-    PK: Debug + Clone,
+    PK: Debug + Clone + BorshDeserialize + BorshSerialize,
 {
     consensus_key: Epoched<PK, OffsetPipelineLen>,
     state: Epoched<ValidatorState, OffsetPipelineLen>,
@@ -646,8 +697,8 @@ fn become_validator<Address, PK>(
     current_epoch: Epoch,
 ) -> BecomeValidatorData<PK>
 where
-    Address: Debug + Clone + Ord + Hash,
-    PK: Debug + Clone,
+    Address: Debug + Clone + Ord + Hash + BorshDeserialize + BorshSerialize,
+    PK: Debug + Clone + BorshDeserialize + BorshSerialize,
 {
     let consensus_key =
         Epoched::init(consensus_key.clone(), current_epoch, params);
@@ -680,8 +731,19 @@ where
 
 struct BondData<TokenAmount, TokenChange>
 where
-    TokenAmount: Debug + Default + Clone + Copy + Add<Output = TokenAmount>,
-    TokenChange: Debug + Clone + Copy + Add<Output = TokenChange>,
+    TokenAmount: Debug
+        + Default
+        + Clone
+        + Copy
+        + Add<Output = TokenAmount>
+        + BorshDeserialize
+        + BorshSerialize,
+    TokenChange: Debug
+        + Clone
+        + Copy
+        + Add<Output = TokenChange>
+        + BorshDeserialize
+        + BorshSerialize,
 {
     pub bond: EpochedDelta<Bond<TokenAmount>, OffsetPipelineLen>,
     pub validator_total_deltas: EpochedDelta<TokenChange, OffsetUnboundingLen>,
@@ -711,14 +773,25 @@ fn bond_tokens<Address, TokenAmount, TokenChange>(
     current_epoch: Epoch,
 ) -> Result<BondData<TokenAmount, TokenChange>, BondError<Address>>
 where
-    Address: Display + Debug + Clone + PartialEq + Eq + PartialOrd + Ord + Hash,
+    Address: Display
+        + Debug
+        + Clone
+        + PartialEq
+        + Eq
+        + PartialOrd
+        + Ord
+        + Hash
+        + BorshDeserialize
+        + BorshSerialize,
     TokenAmount: Display
         + Debug
         + Default
         + Clone
         + Copy
         + Add<Output = TokenAmount>
-        + Into<u64>,
+        + Into<u64>
+        + BorshDeserialize
+        + BorshSerialize,
     TokenChange: Display
         + Debug
         + Default
@@ -727,7 +800,9 @@ where
         + Add<Output = TokenChange>
         + Sub
         + From<TokenAmount>
-        + Into<i128>,
+        + Into<i128>
+        + BorshDeserialize
+        + BorshSerialize,
 {
     // Check the validator state
     match validator_state {
@@ -825,7 +900,13 @@ where
 
 struct UnbondData<TokenAmount>
 where
-    TokenAmount: Debug + Default + Clone + Copy + Add<Output = TokenAmount>,
+    TokenAmount: Debug
+        + Default
+        + Clone
+        + Copy
+        + Add<Output = TokenAmount>
+        + BorshDeserialize
+        + BorshSerialize,
 {
     pub unbond: EpochedDelta<Unbond<TokenAmount>, OffsetUnboundingLen>,
 }
@@ -851,7 +932,16 @@ fn unbond_tokens<Address, TokenAmount, TokenChange>(
     current_epoch: Epoch,
 ) -> Result<UnbondData<TokenAmount>, UnbondError<Address, TokenAmount>>
 where
-    Address: Display + Debug + Clone + PartialEq + Eq + PartialOrd + Ord + Hash,
+    Address: Display
+        + Debug
+        + Clone
+        + PartialEq
+        + Eq
+        + PartialOrd
+        + Ord
+        + Hash
+        + BorshDeserialize
+        + BorshSerialize,
     TokenAmount: Display
         + Debug
         + Default
@@ -861,7 +951,9 @@ where
         + Add<Output = TokenAmount>
         + Into<u64>
         + From<u64>
-        + SubAssign,
+        + SubAssign
+        + BorshDeserialize
+        + BorshSerialize,
     TokenChange: Display
         + Debug
         + Default
@@ -871,7 +963,9 @@ where
         + Sub
         + From<TokenAmount>
         + Neg<Output = TokenChange>
-        + Into<i128>,
+        + Into<i128>
+        + BorshDeserialize
+        + BorshSerialize,
 {
     // We can unbond tokens that are bonded for a future epoch (not yet
     // active), hence we check the total at the pipeline offset
@@ -967,7 +1061,16 @@ fn update_validator_set<Address, TokenChange>(
     validator_total_deltas: &EpochedDelta<TokenChange, OffsetUnboundingLen>,
     current_epoch: Epoch,
 ) where
-    Address: Display + Debug + Clone + PartialEq + Eq + PartialOrd + Ord + Hash,
+    Address: Display
+        + Debug
+        + Clone
+        + PartialEq
+        + Eq
+        + PartialOrd
+        + Ord
+        + Hash
+        + BorshDeserialize
+        + BorshSerialize,
     TokenChange: Display
         + Default
         + Debug
@@ -975,7 +1078,9 @@ fn update_validator_set<Address, TokenChange>(
         + Copy
         + Add<Output = TokenChange>
         + Sub
-        + Into<i128>,
+        + Into<i128>
+        + BorshDeserialize
+        + BorshSerialize,
 {
     validator_set.update_from_offset(
         |validator_set, epoch| {
@@ -1058,7 +1163,9 @@ where
         + Copy
         + Add<Output = TokenChange>
         + Sub
-        + Into<i128>,
+        + Into<i128>
+        + BorshDeserialize
+        + BorshSerialize,
 {
     // Update validator's voting power. Recalculate it from validator's total
     // deltas.
@@ -1092,7 +1199,13 @@ where
 
 struct WithdrawData<TokenAmount>
 where
-    TokenAmount: Debug + Default + Clone + Copy + Add<Output = TokenAmount>,
+    TokenAmount: Debug
+        + Default
+        + Clone
+        + Copy
+        + Add<Output = TokenAmount>
+        + BorshDeserialize
+        + BorshSerialize,
 {
     pub unbond: EpochedDelta<Unbond<TokenAmount>, OffsetUnboundingLen>,
     pub withdrawn_amount: TokenAmount,
@@ -1106,7 +1219,16 @@ fn withdraw_unbonds<Address, TokenAmount>(
     current_epoch: Epoch,
 ) -> Result<WithdrawData<TokenAmount>, WithdrawError<Address>>
 where
-    Address: Display + Debug + Clone + PartialEq + Eq + PartialOrd + Ord + Hash,
+    Address: Display
+        + Debug
+        + Clone
+        + PartialEq
+        + Eq
+        + PartialOrd
+        + Ord
+        + Hash
+        + BorshDeserialize
+        + BorshSerialize,
     TokenAmount: Display
         + Debug
         + Default
@@ -1116,7 +1238,9 @@ where
         + Add<Output = TokenAmount>
         + Into<u64>
         + From<u64>
-        + SubAssign,
+        + SubAssign
+        + BorshDeserialize
+        + BorshSerialize,
 {
     let mut unbond =
         unbond.ok_or_else(|| WithdrawError::NoUnbondFound(bond_id.clone()))?;
