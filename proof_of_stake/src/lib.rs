@@ -867,7 +867,7 @@ where
     // future-most epoch) until whole amount is decremented
     bond.rev_update_while(
         |bonds, _epoch| {
-            for (bond_start, bond_amount) in bonds.delta.iter_mut() {
+            bonds.delta.retain(|bond_start, bond_amount| {
                 let mut deltas = HashMap::default();
                 let unbond_end = current_epoch
                     + DynEpochOffset::UnbondingLen.value(params)
@@ -876,18 +876,19 @@ where
                     *to_unbond -= *bond_amount;
                     deltas.insert((*bond_start, unbond_end), *bond_amount);
                     *bond_amount = 0.into();
-                    // TODO we can delete the bond because its 0
                 } else {
                     *to_unbond = 0.into();
                     deltas.insert((*bond_start, unbond_end), *to_unbond);
                     *bond_amount -= *to_unbond;
                 }
                 // For each decremented bond value write a new unbond
-                unbond.add(Unbond { deltas }, current_epoch, params)
-            }
+                unbond.add(Unbond { deltas }, current_epoch, params);
+                // Remove bonds with no tokens left
+                *bond_amount != 0.into()
+            });
 
             // Stop the update once all the tokens are unbonded
-            *to_unbond != TokenAmount::default()
+            *to_unbond != 0.into()
         },
         current_epoch,
         params,
