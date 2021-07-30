@@ -163,6 +163,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "anoma_proof_of_stake"
+version = "0.1.0"
+dependencies = [
+ "proptest 1.0.0 (git+https://github.com/heliaxdev/proptest?branch=tomas/state-machine)",
+ "thiserror",
+]
+
+[[package]]
 name = "anoma_tests"
 version = "0.1.0"
 dependencies = [
@@ -3669,16 +3677,10 @@ dependencies = [
 ]
 
 [[package]]
-name = "proof_of_stake"
-version = "0.1.0"
-dependencies = [
- "proptest 1.0.0 (git+https://github.com/heliaxdev/proptest?branch=tomas/state-machine)",
-]
-
-[[package]]
 name = "proptest"
 version = "1.0.0"
-source = "git+https://github.com/heliaxdev/proptest?branch=tomas/state-machine#121b0544cc0b4f01132965adc3db2f538498c4cb"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1e0d9cc07f18492d879586c92b485def06bc850da3118075cd45d50e9c95b0e5"
 dependencies = [
  "bit-set",
  "bitflags",
@@ -3697,8 +3699,7 @@ dependencies = [
 [[package]]
 name = "proptest"
 version = "1.0.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1e0d9cc07f18492d879586c92b485def06bc850da3118075cd45d50e9c95b0e5"
+source = "git+https://github.com/heliaxdev/proptest?branch=tomas/state-machine#121b0544cc0b4f01132965adc3db2f538498c4cb"
 dependencies = [
  "bit-set",
  "bitflags",
@@ -5184,7 +5185,8 @@ dependencies = [
 [[package]]
 name = "tracing-futures"
 version = "0.2.5"
-source = "git+https://github.com/tokio-rs/tracing/?branch=v0.1.x#8cc3c51a5be9767c1bf73ef9386f7cc479b1c371"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "97d095ae15e245a057c8e8451bab9b3ee1e1f68e9ba2b4fbc18d0ac5237835f2"
 dependencies = [
  "pin-project 1.0.7",
  "tracing",
@@ -5193,8 +5195,7 @@ dependencies = [
 [[package]]
 name = "tracing-futures"
 version = "0.2.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "97d095ae15e245a057c8e8451bab9b3ee1e1f68e9ba2b4fbc18d0ac5237835f2"
+source = "git+https://github.com/tokio-rs/tracing/?branch=v0.1.x#8cc3c51a5be9767c1bf73ef9386f7cc479b1c371"
 dependencies = [
  "pin-project 1.0.7",
  "tracing",

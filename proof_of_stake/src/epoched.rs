@@ -427,6 +427,16 @@ where
         );
     }
 
+    /// Delete the current delta value (the data's head element).
+    pub fn delete_current(
+        &mut self,
+        current_epoch: impl Into<Epoch>,
+        params: &PosParams,
+    ) {
+        self.update_data(current_epoch, params);
+        self.data[0] = None;
+    }
+
     /// Add or set the delta value at the given epoch offset (which must not
     /// be greater than the `Offset` type parameter of self).
     pub fn add_at_offset(

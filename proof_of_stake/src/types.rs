@@ -2,6 +2,7 @@ use core::fmt::Debug;
 use core::ops;
 use std::collections::{BTreeSet, HashMap};
 use std::convert::TryFrom;
+use std::fmt::Display;
 use std::hash::Hash;
 use std::num::TryFromIntError;
 use std::ops::AddAssign;
@@ -38,7 +39,7 @@ pub struct GenesisValidator<Address, Token, PK> {
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct BondId<Address>
 where
-    Address: Debug + Clone + PartialEq + Eq + PartialOrd + Ord + Hash,
+    Address: Display + Debug + Clone + PartialEq + Eq + PartialOrd + Ord + Hash,
 {
     pub source: Address,
     pub validator: Address,
@@ -207,6 +208,19 @@ impl ops::Sub<Epoch> for Epoch {
 
     fn sub(self, rhs: Epoch) -> Self::Output {
         Epoch(self.0 - rhs.0)
+    }
+}
+
+impl<Address> Display for BondId<Address>
+where
+    Address: Display + Debug + Clone + PartialEq + Eq + PartialOrd + Ord + Hash,
+{
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "Bond source: {}, validator: {}",
+            self.source, self.validator
+        )
     }
 }
 

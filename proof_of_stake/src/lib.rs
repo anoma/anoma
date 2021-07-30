@@ -301,7 +301,7 @@ pub trait Pos {
         self.write_total_voting_power(total_voting_power);
         self.write_validator_set(validator_set);
 
-        // Transfer the bonded tokens
+        // Transfer the bonded tokens from the validator to PoS
         self.transfer(
             &Self::STAKING_TOKEN_ADDRESS,
             amount,
@@ -359,6 +359,40 @@ pub trait Pos {
 
         Ok(())
     }
+
+    /// Withdraw tokens from validator's unbonds of self-bonds back into its
+    /// account address.
+    fn validator_withdraw_unbonds(
+        &mut self,
+        address: &Self::Address,
+        current_epoch: impl Into<Epoch>,
+    ) -> Result<(), WithdrawError<Self::Address>> {
+        let current_epoch = current_epoch.into();
+        let params = self.read_params();
+        let bond_id = BondId {
+            source: address.clone(),
+            validator: address.clone(),
+        };
+
+        let unbond = self.read_unbond(&bond_id);
+
+        let WithdrawData {
+            unbond,
+            withdrawn_amount,
+        } = withdraw_unbonds(&params, &bond_id, unbond, current_epoch)?;
+
+        self.write_unbond(&bond_id, unbond);
+
+        // Transfer the tokens from PoS to the validator
+        self.transfer(
+            &Self::STAKING_TOKEN_ADDRESS,
+            withdrawn_amount,
+            &Self::POS_ADDRESS,
+            address,
+        );
+
+        Ok(())
+    }
 }
 
 #[allow(missing_docs)]
@@ -403,6 +437,18 @@ pub enum UnbondError<Address: Display + Debug, TokenAmount: Display + Debug> {
     VotingPowerOverflow(TryFromIntError),
 }
 
+#[allow(missing_docs)]
+#[derive(Error, Debug)]
+pub enum WithdrawError<Address>
+where
+    Address: Display + Debug + Clone + PartialOrd + Ord + Hash,
+{
+    #[error("No unbond could be found for {0}")]
+    NoUnbondFound(BondId<Address>),
+    #[error("No unbond may be withdrawn yet for {0}")]
+    NoWithdrawableUnbond(BondId<Address>),
+}
+
 struct GenesisData<Validators, Address, TokenAmount, TokenChange, PK>
 where
     Validators: Iterator<
@@ -411,7 +457,7 @@ where
             GenesisError,
         >,
     >,
-    Address: Debug + Clone + Ord + Hash,
+    Address: Display + Debug + Clone + Ord + Hash,
     TokenAmount: Debug + Default + Clone + ops::Add<Output = TokenAmount>,
     TokenChange: Debug + Copy + ops::Add<Output = TokenChange>,
     PK: Debug + Clone,
@@ -424,7 +470,7 @@ where
 }
 struct GenesisValidatorData<Address, TokenAmount, TokenChange, PK>
 where
-    Address: Debug + Clone + Ord + Hash,
+    Address: Display + Debug + Clone + Ord + Hash,
     TokenAmount: Debug + Default + Clone + ops::Add<Output = TokenAmount>,
     TokenChange: Debug + Copy + ops::Add<Output = TokenChange>,
     PK: Debug + Clone,
@@ -464,7 +510,7 @@ fn init_genesis<'a, Address, TokenAmount, TokenChange, PK>(
     GenesisError,
 >
 where
-    Address: 'a + Debug + Clone + Ord + Hash,
+    Address: 'a + Display + Debug + Clone + Ord + Hash,
     TokenAmount: 'a
         + Debug
         + Default
@@ -820,8 +866,9 @@ where
         |bonds, _epoch| {
             for (bond_start, bond_amount) in bonds.delta.iter_mut() {
                 let mut deltas = HashMap::default();
-                let unbond_end =
-                    current_epoch + DynEpochOffset::UnbondingLen.value(params);
+                let unbond_end = current_epoch
+                    + DynEpochOffset::UnbondingLen.value(params)
+                    - 1;
                 if to_unbond > bond_amount {
                     *to_unbond -= *bond_amount;
                     deltas.insert((*bond_start, unbond_end), *bond_amount);
@@ -954,7 +1001,7 @@ fn update_validator_set<Address, TokenChange>(
     )
 }
 
-// Update the validator's voting power and the total voting power.
+/// Update the validator's voting power and the total voting power.
 fn update_voting_powers<TokenChange>(
     params: &PosParams,
     change_offset: DynEpochOffset,
@@ -1007,4 +1054,51 @@ where
         params,
     );
     Ok(())
+}
+
+struct WithdrawData<TokenAmount>
+where
+    TokenAmount: Debug + Default + Clone + Copy + Add<Output = TokenAmount>,
+{
+    pub unbond: EpochedDelta<Unbond<TokenAmount>, OffsetUnboundingLen>,
+    pub withdrawn_amount: TokenAmount,
+}
+
+/// Withdraw tokens from unbonds of self-bonds or delegations.
+fn withdraw_unbonds<Address, TokenAmount>(
+    params: &PosParams,
+    bond_id: &BondId<Address>,
+    unbond: Option<EpochedDelta<Unbond<TokenAmount>, OffsetUnboundingLen>>,
+    current_epoch: Epoch,
+) -> Result<WithdrawData<TokenAmount>, WithdrawError<Address>>
+where
+    Address: Display + Debug + Clone + PartialEq + Eq + PartialOrd + Ord + Hash,
+    TokenAmount: Display
+        + Debug
+        + Default
+        + Clone
+        + Copy
+        + PartialOrd
+        + Add<Output = TokenAmount>
+        + Into<u64>
+        + From<u64>
+        + SubAssign,
+{
+    let mut unbond =
+        unbond.ok_or_else(|| WithdrawError::NoUnbondFound(bond_id.clone()))?;
+    let withdrawable_unbond = unbond
+        .get(current_epoch)
+        .ok_or_else(|| WithdrawError::NoWithdrawableUnbond(bond_id.clone()))?;
+    let withdrawn_amount = withdrawable_unbond.deltas.iter().fold(
+        TokenAmount::default(),
+        |sum, ((_epoch_start, _epoch_end), amount)| {
+            // TODO check slashes
+            sum + *amount
+        },
+    );
+    unbond.delete_current(current_epoch, &params);
+    Ok(WithdrawData {
+        unbond,
+        withdrawn_amount,
+    })
 }
