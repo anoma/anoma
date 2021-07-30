@@ -248,6 +248,18 @@ where
     }
 }
 
+impl<Token> Unbond<Token>
+where
+    Token: Clone + Copy + ops::Add<Output = Token> + Default,
+{
+    /// Find the sum of all the unbonds amounts.
+    pub fn sum(&self) -> Token {
+        self.deltas
+            .iter()
+            .fold(Default::default(), |acc, (_epoch, amount)| acc + *amount)
+    }
+}
+
 impl<Token> ops::Add for Unbond<Token>
 where
     Token: Clone + ops::Add<Output = Token> + Default,

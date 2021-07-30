@@ -155,6 +155,9 @@ pub trait Pos {
         &mut self,
     ) -> EpochedDelta<VotingPowerDelta, OffsetUnboundingLen>;
 
+    fn delete_bond(&mut self, key: &BondId<Self::Address>);
+    fn delete_unbond(&mut self, key: &BondId<Self::Address>);
+
     fn transfer(
         &mut self,
         token: &Self::Address,
@@ -351,7 +354,20 @@ pub trait Pos {
             current_epoch,
         )?;
 
-        self.write_bond(&bond_id, bond);
+        let total_bonds = bond.get_at_offset(
+            current_epoch,
+            DynEpochOffset::PipelineLen,
+            &params,
+        );
+        match total_bonds {
+            Some(total_bonds) if total_bonds.sum() != 0.into() => {
+                self.write_bond(&bond_id, bond);
+            }
+            _ => {
+                // If the bond is left empty, delete it
+                self.delete_bond(&bond_id)
+            }
+        }
         self.write_unbond(&bond_id, unbond);
         self.write_validator_total_deltas(address, validator_total_deltas);
         self.write_validator_voting_power(address, validator_voting_power);
@@ -382,7 +398,20 @@ pub trait Pos {
             withdrawn_amount,
         } = withdraw_unbonds(&params, &bond_id, unbond, current_epoch)?;
 
-        self.write_unbond(&bond_id, unbond);
+        let total_unbonds = unbond.get_at_offset(
+            current_epoch,
+            DynEpochOffset::UnbondingLen,
+            &params,
+        );
+        match total_unbonds {
+            Some(total_unbonds) if total_unbonds.sum() != 0.into() => {
+                self.write_unbond(&bond_id, unbond);
+            }
+            _ => {
+                // If the unbond is left empty, delete it
+                self.delete_unbond(&bond_id)
+            }
+        }
 
         // Transfer the tokens from PoS to the validator
         self.transfer(
