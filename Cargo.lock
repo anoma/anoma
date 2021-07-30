@@ -71,6 +71,7 @@ dependencies = [
 name = "anoma"
 version = "0.1.0"
 dependencies = [
+ "anoma_proof_of_stake",
  "assert_matches",
  "bech32",
  "borsh",

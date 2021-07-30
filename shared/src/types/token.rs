@@ -1,5 +1,7 @@
 //! A basic fungible token
 
+use std::fmt::Display;
+use std::ops::{Add, Sub, SubAssign};
 use std::str::FromStr;
 
 use borsh::{BorshDeserialize, BorshSerialize};
@@ -71,6 +73,36 @@ impl From<u64> for Amount {
     }
 }
 
+impl From<Amount> for u64 {
+    fn from(amount: Amount) -> Self {
+        amount.micro
+    }
+}
+
+impl Add for Amount {
+    type Output = Amount;
+
+    fn add(self, rhs: Self) -> Self::Output {
+        self.micro + rhs.micro;
+        self
+    }
+}
+
+impl Sub for Amount {
+    type Output = Amount;
+
+    fn sub(mut self, rhs: Self) -> Self::Output {
+        self.micro -= rhs.micro;
+        self
+    }
+}
+
+impl SubAssign for Amount {
+    fn sub_assign(&mut self, rhs: Self) {
+        self.micro -= rhs.micro
+    }
+}
+
 #[allow(missing_docs)]
 #[derive(Error, Debug)]
 pub enum AmountParseError {
@@ -103,6 +135,19 @@ impl FromStr for Amount {
             }
             Err(err) => Err(AmountParseError::InvalidDecimal(err)),
         }
+    }
+}
+
+impl Display for Amount {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let decimal = rust_decimal::Decimal::new(self.micro as i64, MAX_SCALE);
+        write!(f, "{}", decimal)
+    }
+}
+
+impl From<Amount> for Change {
+    fn from(amount: Amount) -> Self {
+        amount.micro as i128
     }
 }
 

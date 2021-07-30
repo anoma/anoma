@@ -61,7 +61,9 @@ pub trait Pos {
     /// Address of the PoS account
     const POS_ADDRESS: Self::Address;
     /// Address of the staking token
-    const STAKING_TOKEN_ADDRESS: Self::Address;
+    /// TODO: this should be `const`, but in the ledger `address::xan` is not a
+    /// `const fn`
+    fn staking_token_address() -> Self::Address;
 
     // TODO it may be nicer to instead provide generic functions for storage
     // write/read and a way for implementors to assign storage keys and convert
@@ -306,7 +308,7 @@ pub trait Pos {
 
         // Transfer the bonded tokens from the validator to PoS
         self.transfer(
-            &Self::STAKING_TOKEN_ADDRESS,
+            &Self::staking_token_address(),
             amount,
             address,
             &Self::POS_ADDRESS,
@@ -415,7 +417,7 @@ pub trait Pos {
 
         // Transfer the tokens from PoS to the validator
         self.transfer(
-            &Self::STAKING_TOKEN_ADDRESS,
+            &Self::staking_token_address(),
             withdrawn_amount,
             &Self::POS_ADDRESS,
             address,
