@@ -1,3 +1,11 @@
+//! Proof of Stake system.
+//!
+//! TODO: We might need to storage both active and total validator set voting
+//! power. For consensus, we only consider active validator set voting power,
+//! but for other activities in which inactive validators can participate (e.g.
+//! voting on a protocol parameter changes, upgrades, default VP changes) we
+//! should use the total validator set voting power.
+
 mod btree_set;
 pub mod epoched;
 pub mod parameters;
