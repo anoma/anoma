@@ -330,10 +330,11 @@ pub trait Pos {
         let unbond = self.read_unbond(&bond_id);
         let mut validator_total_deltas = self
             .read_validator_total_deltas(address)
-            .ok_or(UnbondError::ValidatorHasNoBonds(address.clone()))?;
-        let mut validator_voting_power = self
-            .read_validator_voting_power(address)
-            .ok_or(UnbondError::ValidatorHasNoVotingPower(address.clone()))?;
+            .ok_or_else(|| UnbondError::ValidatorHasNoBonds(address.clone()))?;
+        let mut validator_voting_power =
+            self.read_validator_voting_power(address).ok_or_else(|| {
+                UnbondError::ValidatorHasNoVotingPower(address.clone())
+            })?;
         let mut total_voting_power = self.read_total_voting_power();
         let mut validator_set = self.read_validator_set();
 
@@ -659,6 +660,7 @@ where
 }
 
 /// Bond tokens to a validator (self-bond or delegation).
+#[allow(clippy::too_many_arguments)]
 fn bond_tokens<Address, TokenAmount, TokenChange>(
     params: &PosParams,
     validator_state: Option<Epoched<ValidatorState, OffsetPipelineLen>>,
@@ -799,6 +801,7 @@ where
 }
 
 /// Unbond tokens from a validator's bond (self-bond or delegation).
+#[allow(clippy::too_many_arguments)]
 fn unbond_tokens<Address, TokenAmount, TokenChange>(
     params: &PosParams,
     bond_id: &BondId<Address>,
@@ -970,7 +973,7 @@ fn update_validator_set<Address, TokenChange>(
                     let popped =
                         validator_set.inactive.remove(&validator_at_epoch);
                     debug_assert!(popped);
-                    validator_set.active.insert(validator_at_epoch.clone());
+                    validator_set.active.insert(validator_at_epoch);
                     if let Some(deactivate_min) = deactivate_min {
                         validator_set.inactive.insert(deactivate_min);
                     }
@@ -988,7 +991,7 @@ fn update_validator_set<Address, TokenChange>(
                     let popped =
                         validator_set.active.remove(&validator_at_epoch);
                     debug_assert!(popped);
-                    validator_set.inactive.insert(validator_at_epoch.clone());
+                    validator_set.inactive.insert(validator_at_epoch);
                     if let Some(activate_max) = activate_max {
                         validator_set.active.insert(activate_max);
                     }

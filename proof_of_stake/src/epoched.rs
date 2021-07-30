@@ -539,7 +539,7 @@ mod tests {
             Self {
                 update_value: self.update_value.clone(),
                 epoch: self.epoch,
-                offset: self.offset.clone(),
+                offset: self.offset,
             }
         }
     }

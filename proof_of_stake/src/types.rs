@@ -137,7 +137,7 @@ impl Epoch {
     pub fn iter_range(self, len: u64) -> impl Iterator<Item = Epoch> + Clone {
         let start_ix: u64 = self.into();
         let end_ix: u64 = start_ix + len;
-        (start_ix..end_ix).map(|ix| Epoch::from(ix))
+        (start_ix..end_ix).map(Epoch::from)
     }
 
     /// Checked epoch subtraction. Computes self - rhs, returning None if
@@ -242,10 +242,9 @@ where
 {
     type Output = Self;
 
-    fn add(self, rhs: Self) -> Self::Output {
-        let mut delta = self.delta.clone();
-        delta.extend(rhs.delta);
-        Self { delta }
+    fn add(mut self, rhs: Self) -> Self::Output {
+        self.delta.extend(rhs.delta);
+        self
     }
 }
 
@@ -255,10 +254,9 @@ where
 {
     type Output = Self;
 
-    fn add(self, rhs: Self) -> Self::Output {
-        let mut deltas = self.deltas.clone();
-        deltas.extend(rhs.deltas);
-        Self { deltas }
+    fn add(mut self, rhs: Self) -> Self::Output {
+        self.deltas.extend(rhs.deltas);
+        self
     }
 }
 
