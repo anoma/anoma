@@ -1,6 +1,6 @@
 //! Proof of Stake system integration with functions for transactions
+use anoma::ledger::pos::anoma_proof_of_stake;
 use anoma::types::address::{self, Address, InternalAddress};
-pub use anoma::types::token::*;
 use anoma::types::{key, token};
 
 use crate::imports::tx;

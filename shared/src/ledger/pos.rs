@@ -2,8 +2,8 @@
 
 use std::collections::HashSet;
 
+pub use anoma_proof_of_stake;
 use anoma_proof_of_stake::types::BondId;
-pub use borsh::{BorshDeserialize, BorshSerialize};
 use thiserror::Error;
 
 use crate::ledger::native_vp::{self, Ctx, NativeVp};
