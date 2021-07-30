@@ -25,7 +25,8 @@ use types::{
 use crate::btree_set::BTreeSetShims;
 use crate::types::{Bond, BondId, WeightedValidator};
 
-pub trait Pos {
+/// Read-only part of the PoS system
+pub trait PoSReadOnly {
     type Address: Display
         + Debug
         + Clone
@@ -65,6 +66,45 @@ pub trait Pos {
     /// `const fn`
     fn staking_token_address() -> Self::Address;
 
+    fn read_params(&self) -> PosParams;
+    fn read_validator_staking_reward_address(
+        &self,
+        key: &Self::Address,
+    ) -> Option<Self::Address>;
+    fn read_validator_consensus_key(
+        &self,
+        key: &Self::Address,
+    ) -> Option<Epoched<Self::PublicKey, OffsetPipelineLen>>;
+    fn read_validator_state(
+        &self,
+        key: &Self::Address,
+    ) -> Option<Epoched<ValidatorState, OffsetPipelineLen>>;
+    fn read_validator_total_deltas(
+        &self,
+        key: &Self::Address,
+    ) -> Option<EpochedDelta<Self::TokenChange, OffsetUnboundingLen>>;
+    fn read_validator_voting_power(
+        &self,
+        key: &Self::Address,
+    ) -> Option<EpochedDelta<VotingPowerDelta, OffsetUnboundingLen>>;
+    fn read_bond(
+        &mut self,
+        key: &BondId<Self::Address>,
+    ) -> Option<EpochedDelta<Bond<Self::TokenAmount>, OffsetPipelineLen>>;
+    fn read_unbond(
+        &mut self,
+        key: &BondId<Self::Address>,
+    ) -> Option<EpochedDelta<Unbond<Self::TokenAmount>, OffsetUnboundingLen>>;
+    fn read_validator_set(
+        &mut self,
+    ) -> Epoched<ValidatorSet<Self::Address>, OffsetUnboundingLen>;
+    fn read_total_voting_power(
+        &mut self,
+    ) -> EpochedDelta<VotingPowerDelta, OffsetUnboundingLen>;
+}
+
+/// PoS system trait to be implemented in integration.
+pub trait PoS: PoSReadOnly {
     fn write_params(&mut self, params: &PosParams);
     fn write_validator_staking_reward_address(
         &mut self,
@@ -109,42 +149,6 @@ pub trait Pos {
         &mut self,
         value: EpochedDelta<VotingPowerDelta, OffsetUnboundingLen>,
     );
-
-    fn read_params(&self) -> PosParams;
-    fn read_validator_staking_reward_address(
-        &self,
-        key: &Self::Address,
-    ) -> Option<Self::Address>;
-    fn read_validator_consensus_key(
-        &self,
-        key: &Self::Address,
-    ) -> Option<Epoched<Self::PublicKey, OffsetPipelineLen>>;
-    fn read_validator_state(
-        &self,
-        key: &Self::Address,
-    ) -> Option<Epoched<ValidatorState, OffsetPipelineLen>>;
-    fn read_validator_total_deltas(
-        &self,
-        key: &Self::Address,
-    ) -> Option<EpochedDelta<Self::TokenChange, OffsetUnboundingLen>>;
-    fn read_validator_voting_power(
-        &self,
-        key: &Self::Address,
-    ) -> Option<EpochedDelta<VotingPowerDelta, OffsetUnboundingLen>>;
-    fn read_bond(
-        &mut self,
-        key: &BondId<Self::Address>,
-    ) -> Option<EpochedDelta<Bond<Self::TokenAmount>, OffsetPipelineLen>>;
-    fn read_unbond(
-        &mut self,
-        key: &BondId<Self::Address>,
-    ) -> Option<EpochedDelta<Unbond<Self::TokenAmount>, OffsetUnboundingLen>>;
-    fn read_validator_set(
-        &mut self,
-    ) -> Epoched<ValidatorSet<Self::Address>, OffsetUnboundingLen>;
-    fn read_total_voting_power(
-        &mut self,
-    ) -> EpochedDelta<VotingPowerDelta, OffsetUnboundingLen>;
 
     fn delete_bond(&mut self, key: &BondId<Self::Address>);
     fn delete_unbond(&mut self, key: &BondId<Self::Address>);
