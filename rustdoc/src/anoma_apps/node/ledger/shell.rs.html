@@ -371,7 +371,6 @@
 <span id="368">368</span>
 <span id="369">369</span>
 <span id="370">370</span>
-<span id="371">371</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">convert</span>::{<span class="ident">TryFrom</span>, <span class="ident">TryInto</span>};
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">path</span>::<span class="ident">Path</span>;
@@ -686,7 +685,6 @@
             .<span class="ident">commit_block</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">storage</span>)
             .<span class="ident">expect</span>(<span class="string">&quot;Expected committing block write log success&quot;</span>);
         <span class="comment">// store the block&#39;s data in DB</span>
-        <span class="comment">// TODO commit async?</span>
         <span class="self">self</span>.<span class="ident">storage</span>.<span class="ident">commit</span>().<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> {
             <span class="ident">tracing</span>::<span class="macro">error</span><span class="macro">!</span>(
                 <span class="string">&quot;Encountered a storage error while committing a block {:?}&quot;</span>,
@@ -723,10 +721,10 @@
     }
 
     <span class="doccomment">/// Simulate validation and application of a transaction.</span>
-    <span class="kw">fn</span> <span class="ident">dry_run_tx</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">tx_bytes</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">response</span>::<span class="ident">Query</span> {
+    <span class="kw">fn</span> <span class="ident">dry_run_tx</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">tx_bytes</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">response</span>::<span class="ident">Query</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">response</span> <span class="op">=</span> <span class="ident">response</span>::<span class="ident">Query</span>::<span class="ident">default</span>();
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">gas_meter</span> <span class="op">=</span> <span class="ident">BlockGasMeter</span>::<span class="ident">default</span>();
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">write_log</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">write_log</span>.<span class="ident">clone</span>();
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">write_log</span> <span class="op">=</span> <span class="ident">WriteLog</span>::<span class="ident">default</span>();
         <span class="kw">match</span> <span class="ident">protocol</span>::<span class="ident">apply_tx</span>(
             <span class="ident">tx_bytes</span>,
             <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">gas_meter</span>,

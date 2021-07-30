@@ -1127,8 +1127,8 @@
     <span class="ident">storage</span>: <span class="kw-2">&amp;</span><span class="ident">Storage</span><span class="op">&lt;</span><span class="ident">DB</span>, <span class="ident">H</span><span class="op">&gt;</span>,
     <span class="ident">write_log</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">WriteLog</span>,
     <span class="ident">gas_meter</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">BlockGasMeter</span>,
-    <span class="ident">tx_code</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>,
-    <span class="ident">tx_data</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>,
+    <span class="ident">tx_code</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span>[<span class="ident">u8</span>]<span class="op">&gt;</span>,
+    <span class="ident">tx_data</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span>[<span class="ident">u8</span>]<span class="op">&gt;</span>,
 ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span><span class="op">&gt;</span>
 <span class="kw">where</span>
     <span class="ident">DB</span>: <span class="lifetime">&#39;static</span> <span class="op">+</span> <span class="ident">storage</span>::<span class="ident">DB</span> <span class="op">+</span> <span class="kw">for</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span> <span class="ident">storage</span>::<span class="ident">DBIter</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span>,
@@ -1152,7 +1152,7 @@
         <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">result_buffer</span>,
     );
 
-    <span class="kw">let</span> <span class="ident">tx_code</span> <span class="op">=</span> <span class="ident">prepare_wasm_code</span>(<span class="kw-2">&amp;</span><span class="ident">tx_code</span>)<span class="question-mark">?</span>;
+    <span class="kw">let</span> <span class="ident">tx_code</span> <span class="op">=</span> <span class="ident">prepare_wasm_code</span>(<span class="ident">tx_code</span>)<span class="question-mark">?</span>;
 
     <span class="kw">let</span> <span class="ident">initial_memory</span> <span class="op">=</span>
         <span class="ident">memory</span>::<span class="ident">prepare_tx_memory</span>(<span class="kw-2">&amp;</span><span class="ident">wasm_store</span>).<span class="ident">map_err</span>(<span class="ident">Error</span>::<span class="ident">MemoryError</span>)<span class="question-mark">?</span>;

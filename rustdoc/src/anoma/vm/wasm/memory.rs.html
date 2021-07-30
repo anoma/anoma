@@ -561,6 +561,7 @@
 <span id="558">558</span>
 <span id="559">559</span>
 <span id="560">560</span>
+<span id="561">561</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Wasm memory is used for bi-directionally passing data between the host and a</span>
 <span class="doccomment">//! wasm instance.</span>
@@ -666,10 +667,10 @@
 <span class="doccomment">/// Write transaction inputs into wasm memory</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">write_tx_inputs</span>(
     <span class="ident">memory</span>: <span class="kw-2">&amp;</span><span class="ident">wasmer</span>::<span class="ident">Memory</span>,
-    <span class="ident">tx_data_bytes</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>,
+    <span class="ident">tx_data_bytes</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span>[<span class="ident">u8</span>]<span class="op">&gt;</span>,
 ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">TxCallInput</span><span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="ident">tx_data_ptr</span> <span class="op">=</span> <span class="number">0</span>;
-    <span class="kw">let</span> <span class="ident">tx_data_len</span> <span class="op">=</span> <span class="ident">tx_data_bytes</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="kw">_</span>;
+    <span class="kw">let</span> <span class="ident">tx_data_len</span> <span class="op">=</span> <span class="ident">tx_data_bytes</span>.<span class="ident">as_ref</span>().<span class="ident">len</span>() <span class="kw">as</span> <span class="kw">_</span>;
 
     <span class="ident">write_memory_bytes</span>(<span class="ident">memory</span>, <span class="ident">tx_data_ptr</span>, <span class="ident">tx_data_bytes</span>)<span class="question-mark">?</span>;
 
@@ -857,10 +858,11 @@
 }
 
 <span class="doccomment">/// Write bytes into memory at the given offset</span>
-<span class="kw">fn</span> <span class="ident">write_memory_bytes</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="ident">memory</span>: <span class="kw-2">&amp;</span><span class="ident">Memory</span>, <span class="ident">offset</span>: <span class="ident">u64</span>, <span class="ident">bytes</span>: <span class="ident">T</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">T</span>: <span class="ident">AsRef</span><span class="op">&lt;</span>[<span class="ident">u8</span>]<span class="op">&gt;</span>,
-{
+<span class="kw">fn</span> <span class="ident">write_memory_bytes</span>(
+    <span class="ident">memory</span>: <span class="kw-2">&amp;</span><span class="ident">Memory</span>,
+    <span class="ident">offset</span>: <span class="ident">u64</span>,
+    <span class="ident">bytes</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span>[<span class="ident">u8</span>]<span class="op">&gt;</span>,
+) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="ident">slice</span> <span class="op">=</span> <span class="ident">bytes</span>.<span class="ident">as_ref</span>();
     <span class="kw">let</span> <span class="ident">len</span> <span class="op">=</span> <span class="ident">slice</span>.<span class="ident">len</span>();
     <span class="ident">check_bounds</span>(<span class="ident">memory</span>, <span class="ident">offset</span>, <span class="ident">len</span> <span class="kw">as</span> <span class="kw">_</span>)<span class="question-mark">?</span>;
