@@ -65,17 +65,6 @@ pub trait Pos {
     /// `const fn`
     fn staking_token_address() -> Self::Address;
 
-    // TODO it may be nicer to instead provide generic functions for storage
-    // write/read and a way for implementors to assign storage keys and convert
-    // data into/from storage values (e.g. our ledger storage key type and
-    // borsh encoding for values)
-    // e.g.
-    // fn write(&mut self, key: &impl StorageKey, value: &impl StorageValue);
-    // fn read(&self, key: &impl StorageKey) -> Option<impl StorageValue>;
-    // fn params_key() -> impl StorageKey;
-    // fn validator_staking_reward_address_key(address: &Self::Address)
-    // -> impl StorageKey;
-
     fn write_params(&mut self, params: &PosParams);
     fn write_validator_staking_reward_address(
         &mut self,
@@ -164,8 +153,8 @@ pub trait Pos {
         &mut self,
         token: &Self::Address,
         amount: Self::TokenAmount,
-        source: &Self::Address,
-        target: &Self::Address,
+        src: &Self::Address,
+        dest: &Self::Address,
     );
 
     /// Initialize the PoS system storage data in the genesis block for the
