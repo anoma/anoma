@@ -1,4 +1,5 @@
 //! Proof of Stake system integration with functions for transactions
+
 use anoma::ledger::pos::{
     anoma_proof_of_stake, bond_key, params_key, total_voting_power_key,
     unbond_key, validator_consensus_key_key, validator_set_key,
@@ -8,6 +9,7 @@ use anoma::ledger::pos::{
 use anoma::ledger::storage::types::encode;
 use anoma::types::address::{self, Address, InternalAddress};
 use anoma::types::{key, token};
+pub use anoma_proof_of_stake::{PoS as PosWrite, PoSReadOnly as PosRead};
 
 use crate::imports::tx;
 
