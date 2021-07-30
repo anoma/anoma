@@ -2,6 +2,7 @@
 
 use std::collections::HashSet;
 
+pub use borsh::{BorshDeserialize, BorshSerialize};
 use thiserror::Error;
 
 use crate::ledger::native_vp::{self, Ctx, NativeVp};
@@ -63,7 +64,7 @@ impl From<native_vp::Error> for Error {
     }
 }
 
-impl<D, H> anoma_proof_of_stake::Pos for Storage<D, H>
+impl<D, H> anoma_proof_of_stake::PoSReadOnly for PoS<'_, D, H>
 where
     D: storage::DB + for<'iter> storage::DBIter<'iter>,
     H: StorageHasher,
@@ -77,107 +78,6 @@ where
 
     fn staking_token_address() -> Self::Address {
         address::xan()
-    }
-
-    fn write_params(
-        &mut self,
-        params: &anoma_proof_of_stake::parameters::PosParams,
-    ) {
-        todo!()
-    }
-
-    fn write_validator_staking_reward_address(
-        &mut self,
-        key: &Self::Address,
-        value: Self::Address,
-    ) {
-        todo!()
-    }
-
-    fn write_validator_consensus_key(
-        &mut self,
-        key: &Self::Address,
-        value: anoma_proof_of_stake::epoched::Epoched<
-            Self::PublicKey,
-            anoma_proof_of_stake::epoched::OffsetPipelineLen,
-        >,
-    ) {
-        todo!()
-    }
-
-    fn write_validator_state(
-        &mut self,
-        key: &Self::Address,
-        value: anoma_proof_of_stake::epoched::Epoched<
-            anoma_proof_of_stake::types::ValidatorState,
-            anoma_proof_of_stake::epoched::OffsetPipelineLen,
-        >,
-    ) {
-        todo!()
-    }
-
-    fn write_validator_total_deltas(
-        &mut self,
-        key: &Self::Address,
-        value: anoma_proof_of_stake::epoched::EpochedDelta<
-            Self::TokenChange,
-            anoma_proof_of_stake::epoched::OffsetUnboundingLen,
-        >,
-    ) {
-        todo!()
-    }
-
-    fn write_validator_voting_power(
-        &mut self,
-        key: &Self::Address,
-        value: anoma_proof_of_stake::epoched::EpochedDelta<
-            anoma_proof_of_stake::types::VotingPowerDelta,
-            anoma_proof_of_stake::epoched::OffsetUnboundingLen,
-        >,
-    ) {
-        todo!()
-    }
-
-    fn write_bond(
-        &mut self,
-        key: &anoma_proof_of_stake::types::BondId<Self::Address>,
-        value: anoma_proof_of_stake::epoched::EpochedDelta<
-            anoma_proof_of_stake::types::Bond<Self::TokenAmount>,
-            anoma_proof_of_stake::epoched::OffsetPipelineLen,
-        >,
-    ) {
-        todo!()
-    }
-
-    fn write_unbond(
-        &mut self,
-        key: &anoma_proof_of_stake::types::BondId<Self::Address>,
-        value: anoma_proof_of_stake::epoched::EpochedDelta<
-            anoma_proof_of_stake::types::Unbond<Self::TokenAmount>,
-            anoma_proof_of_stake::epoched::OffsetUnboundingLen,
-        >,
-    ) {
-        todo!()
-    }
-
-    fn write_validator_set(
-        &mut self,
-        value: anoma_proof_of_stake::epoched::Epoched<
-            anoma_proof_of_stake::types::ValidatorSet<Self::Address>,
-            anoma_proof_of_stake::epoched::OffsetUnboundingLen,
-        >,
-    ) {
-        todo!()
-    }
-
-    fn write_total_voting_power(
-        &mut self,
-        value: anoma_proof_of_stake::epoched::EpochedDelta<
-            anoma_proof_of_stake::types::VotingPowerDelta,
-            anoma_proof_of_stake::epoched::OffsetUnboundingLen,
-        >,
-    ) {
-        todo!()
     }
 
     fn read_params(&self) -> anoma_proof_of_stake::parameters::PosParams {
@@ -278,30 +178,6 @@ where
         anoma_proof_of_stake::types::VotingPowerDelta,
         anoma_proof_of_stake::epoched::OffsetUnboundingLen,
     > {
-        todo!()
-    }
-
-    fn delete_bond(
-        &mut self,
-        key: &anoma_proof_of_stake::types::BondId<Self::Address>,
-    ) {
-        todo!()
-    }
-
-    fn delete_unbond(
-        &mut self,
-        key: &anoma_proof_of_stake::types::BondId<Self::Address>,
-    ) {
-        todo!()
-    }
-
-    fn transfer(
-        &mut self,
-        token: &Self::Address,
-        amount: Self::TokenAmount,
-        source: &Self::Address,
-        target: &Self::Address,
-    ) {
         todo!()
     }
 }

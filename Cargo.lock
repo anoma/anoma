@@ -197,6 +197,7 @@ name = "anoma_vm_env"
 version = "0.1.0"
 dependencies = [
  "anoma",
+ "anoma_proof_of_stake",
  "anoma_vm_macro",
  "borsh",
 ]
