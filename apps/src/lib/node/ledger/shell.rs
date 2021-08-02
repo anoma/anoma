@@ -209,7 +209,24 @@ impl Shell {
         let validators = vec![genesis.validator];
         #[cfg(not(feature = "dev"))]
         let validators = genesis.validators;
-        // Depends on epoch being initialized
+
+        // Write validators' non-staked tokens amount
+        for (validator, non_staked_tokens) in
+            validators.iter().map(|validator| {
+                (&validator.pos_data.address, validator.non_staked_balance)
+            })
+        {
+            self.storage
+                .write(
+                    &token::balance_key(&address::xan(), validator),
+                    non_staked_tokens
+                        .try_to_vec()
+                        .expect("encode token amount"),
+                )
+                .expect("Unable to set genesis balance");
+        }
+
+        // PoS system depends on epoch being initialized
         let (current_epoch, _gas) = self.storage.get_block_epoch();
         pos::init_genesis_storage(
             &mut self.storage,

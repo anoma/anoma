@@ -4,9 +4,8 @@ use std::collections::HashSet;
 
 pub use anoma_proof_of_stake;
 pub use anoma_proof_of_stake::parameters::PosParams;
-use anoma_proof_of_stake::types::{
-    BondId, GenesisValidator as PoSGenesisValidator,
-};
+use anoma_proof_of_stake::types::BondId;
+pub use anoma_proof_of_stake::types::GenesisValidator as PoSGenesisValidator;
 use anoma_proof_of_stake::PoSBase;
 use thiserror::Error;
 
@@ -39,9 +38,16 @@ where
     pub ctx: Ctx<'a, DB, H>,
 }
 
+#[derive(Clone, Debug)]
 /// Type alias for library type with concrete type parameters.
-pub type GenesisValidator =
-    PoSGenesisValidator<Address, token::Amount, key::ed25519::PublicKey>;
+pub struct GenesisValidator {
+    /// Data that is used for PoS system initialization
+    pub pos_data:
+        PoSGenesisValidator<Address, token::Amount, key::ed25519::PublicKey>,
+    /// These tokens are no staked and hence do not contribute to the
+    /// validator's voting power
+    pub non_staked_balance: token::Amount,
+}
 
 /// Initialize storage in the genesis block.
 pub fn init_genesis_storage<DB, H>(
@@ -53,8 +59,12 @@ pub fn init_genesis_storage<DB, H>(
     DB: storage::DB + for<'iter> storage::DBIter<'iter>,
     H: StorageHasher,
 {
+    let pos_validators = validators
+        .as_ref()
+        .iter()
+        .map(|validator| &validator.pos_data);
     storage
-        .init_genesis(params, validators, current_epoch)
+        .init_genesis(params, pos_validators, current_epoch)
         .expect("Initialize PoS genesis storage")
 }
 

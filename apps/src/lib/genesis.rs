@@ -19,6 +19,7 @@ pub struct Genesis {
 
 #[cfg(feature = "dev")]
 pub fn genesis() -> Genesis {
+    use anoma::ledger::pos::PoSGenesisValidator;
     use anoma::types::address::Address;
     use anoma::types::token;
 
@@ -44,11 +45,14 @@ pub fn genesis() -> Genesis {
     let address = Address::decode("a1qq5qqqqqgfqnsd6pxse5zdj9g5crzsf5x4zyzv6yxerr2d2rxpryzwp5g5m5zvfjxv6ygsekjmraj0").unwrap();
     let staking_reward_address = Address::decode("a1qq5qqqqqxaz5vven8yu5gdpng9zrys6ygvurwv3sgsmrvd6xgdzrys6yg4pnwd6z89rrqv2xvjcy9t").unwrap();
     let validator = GenesisValidator {
-        address,
-        staking_reward_address,
-        tokens: token::Amount::whole(100_000),
-        consensus_key: keypair.public.clone().into(),
-        staking_reward_key: staking_reward_keypair.public.clone().into(),
+        pos_data: PoSGenesisValidator {
+            address,
+            staking_reward_address,
+            tokens: token::Amount::whole(100_000),
+            consensus_key: keypair.public.clone().into(),
+            staking_reward_key: staking_reward_keypair.public.clone().into(),
+        },
+        non_staked_balance: token::Amount::whole(1_000),
     };
     let parameters = Parameters {
         epoch_duration: EpochDuration {

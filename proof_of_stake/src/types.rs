@@ -69,7 +69,7 @@ pub struct GenesisValidator<Address, Token, PK> {
     /// An address to which any staking rewards will be credited, must be
     /// different from the `address`
     pub staking_reward_address: Address,
-    /// Staked tokens
+    /// Staked tokens are put into a self-bond
     pub tokens: Token,
     /// A public key used for signing validator's consensus actions
     pub consensus_key: PK,

@@ -188,10 +188,11 @@ fn write_validator_key(
     let path = home_dir.join("config").join("priv_validator_key.json");
     let file =
         File::create(path).expect("Couldn't create private validator key file");
-    let pk: ed25519_dalek::PublicKey = validator.consensus_key.clone().into();
+    let pk: ed25519_dalek::PublicKey =
+        validator.pos_data.consensus_key.clone().into();
     let pk = base64::encode(pk.as_bytes());
     let sk = base64::encode(validator_key.to_bytes());
-    let address = validator.address.raw_hash().unwrap();
+    let address = validator.pos_data.address.raw_hash().unwrap();
     let key = json!({
        "address": address,
        "pub_key": {

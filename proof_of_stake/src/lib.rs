@@ -389,7 +389,8 @@ pub trait PoS: PoSReadOnly {
 /// PoS system base trait for system initialization on genesis block, updating
 /// the validator on a new epoch and applying slashes.
 pub trait PoSBase {
-    type Address: Display
+    type Address: 'static
+        + Display
         + Debug
         + Clone
         + PartialEq
@@ -399,7 +400,8 @@ pub trait PoSBase {
         + Hash
         + BorshDeserialize
         + BorshSerialize;
-    type TokenAmount: Display
+    type TokenAmount: 'static
+        + Display
         + Debug
         + Default
         + Clone
@@ -413,7 +415,8 @@ pub trait PoSBase {
         + SubAssign
         + BorshDeserialize
         + BorshSerialize;
-    type TokenChange: Display
+    type TokenChange: 'static
+        + Display
         + Debug
         + Default
         + Clone
@@ -425,7 +428,7 @@ pub trait PoSBase {
         + Neg<Output = Self::TokenChange>
         + BorshDeserialize
         + BorshSerialize;
-    type PublicKey: Debug + Clone + BorshDeserialize + BorshSerialize;
+    type PublicKey: 'static + Debug + Clone + BorshDeserialize + BorshSerialize;
 
     fn read_validator_set(
         &self,
@@ -484,16 +487,17 @@ pub trait PoSBase {
     /// given PoS parameters and initial validator set. The validators'
     /// tokens will be put into self-bonds. The given PoS parameters are written
     /// with the [`Pos::write_params`] method.
-    fn init_genesis(
+    fn init_genesis<'a>(
         &mut self,
-        params: &PosParams,
-        validators: impl AsRef<
-            [GenesisValidator<
+        params: &'a PosParams,
+        validators: impl Iterator<
+            Item = &'a GenesisValidator<
                 Self::Address,
                 Self::TokenAmount,
                 Self::PublicKey,
-            >],
-        >,
+            >,
+        > + Clone
+        + 'a,
         current_epoch: impl Into<Epoch>,
     ) -> Result<(), GenesisError> {
         let current_epoch = current_epoch.into();
@@ -503,7 +507,7 @@ pub trait PoSBase {
             validators,
             validator_set,
             total_voting_power,
-        } = init_genesis(params, validators.as_ref().iter(), current_epoch)?;
+        } = init_genesis(params, validators, current_epoch)?;
 
         for res in validators {
             let GenesisValidatorData {
@@ -568,6 +572,7 @@ pub trait PoSBase {
         active_validators
     }
 }
+
 #[allow(missing_docs)]
 #[derive(Error, Debug)]
 pub enum GenesisError {
