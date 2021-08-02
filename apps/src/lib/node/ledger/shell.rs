@@ -2,7 +2,9 @@ use std::convert::{TryFrom, TryInto};
 use std::path::Path;
 
 use anoma::ledger::gas::{self, BlockGasMeter};
-use anoma::ledger::pos::anoma_proof_of_stake::types::ActiveValidator;
+use anoma::ledger::pos::anoma_proof_of_stake::types::{
+    ActiveValidator, ValidatorSetUpdate,
+};
 use anoma::ledger::pos::anoma_proof_of_stake::PoSBase;
 use anoma::ledger::storage::write_log::WriteLog;
 use anoma::ledger::{ibc, parameters, pos};
@@ -338,33 +340,41 @@ impl Shell {
         let mut response = response::EndBlock::default();
         if self.new_epoch {
             let (current_epoch, _gas) = self.storage.get_block_epoch();
-            let validator_set = self.storage.validator_set(current_epoch);
             // TODO ABCI validator updates on block H affects the validator set
             // on block H+2, do we need to update a block earlier?
-            response.validator_updates = validator_set
-                .into_iter()
-                .map(
-                    |ActiveValidator {
-                         consensus_key,
-                         voting_power,
-                     }: ActiveValidator<PublicKey>| {
+            self.storage.validator_set_update(current_epoch, |update| {
+                let (consensus_key, power) = match update {
+                    ValidatorSetUpdate::Active(ActiveValidator {
+                        consensus_key,
+                        voting_power,
+                    }) => {
                         let power: u64 = voting_power.into();
-                        let power: i64 =
-                            power
+                        let power: i64 = power
                             .try_into()
                             .expect("unexpected validator's voting power");
-                        let consensus_key: ed25519_dalek::PublicKey =
-                            consensus_key.into();
-                        let pub_key = tendermint_proto::crypto::PublicKey {
-                            sum: Some(tendermint_proto::crypto::public_key::Sum::Ed25519(
-                                consensus_key.to_bytes().to_vec(),
-                            )),
-                        };
-                        let pub_key = Some(pub_key);
-                        ValidatorUpdate { pub_key, power }
-                    },
-                )
-                .collect();
+                        (consensus_key, power)
+                    }
+                    ValidatorSetUpdate::Deactived(consensus_key) => {
+                        // Any validators that have become inactive must
+                        // have voting power set to 0 to remove them from
+                        // the active set
+                        let power = 0_i64;
+                        (consensus_key, power)
+                    }
+                };
+                let consensus_key: ed25519_dalek::PublicKey =
+                    consensus_key.into();
+                let pub_key = tendermint_proto::crypto::PublicKey {
+                    sum: Some(
+                        tendermint_proto::crypto::public_key::Sum::Ed25519(
+                            consensus_key.to_bytes().to_vec(),
+                        ),
+                    ),
+                };
+                let pub_key = Some(pub_key);
+                let update = ValidatorUpdate { pub_key, power };
+                response.validator_updates.push(update);
+            });
         }
         response
     }

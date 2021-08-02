@@ -78,6 +78,14 @@ pub struct GenesisValidator<Address, Token, PK> {
 }
 
 #[derive(Debug, Clone)]
+pub enum ValidatorSetUpdate<PK> {
+    /// A validator is active
+    Active(ActiveValidator<PK>),
+    /// A validator who was active in the last update and is now inactive
+    Deactived(PK),
+}
+
+#[derive(Debug, Clone)]
 pub struct ActiveValidator<PK> {
     /// A public key used for signing validator's consensus actions
     pub consensus_key: PK,

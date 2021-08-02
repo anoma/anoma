@@ -28,7 +28,7 @@ use parameters::PosParams;
 use thiserror::Error;
 use types::{
     ActiveValidator, Epoch, GenesisValidator, Unbond, ValidatorSet,
-    ValidatorState, VotingPower, VotingPowerDelta,
+    ValidatorSetUpdate, ValidatorState, VotingPower, VotingPowerDelta,
 };
 
 use crate::btree_set::BTreeSetShims;
@@ -539,37 +539,49 @@ pub trait PoSBase {
         Ok(())
     }
 
-    fn validator_set(
+    /// Calls a closure on each validator update element.
+    fn validator_set_update(
         &self,
         current_epoch: impl Into<Epoch>,
-    ) -> Vec<ActiveValidator<Self::PublicKey>> {
+        f: impl FnMut(ValidatorSetUpdate<Self::PublicKey>),
+    ) {
         let current_epoch = current_epoch.into();
         let validators = self.read_validator_set();
         let validators = validators.get(current_epoch).unwrap();
-        // TODO for tendermint ABCI, we also need to add any validators that
-        // have become inactive with voting_power = 0
-        let active_validators: Vec<_> = validators
-            .active
-            .iter()
-            .map(
-                |WeightedValidator {
-                     voting_power,
-                     address,
-                 }: &WeightedValidator<Self::Address>| {
-                    let consensus_key = self
-                        .read_validator_consensus_key(&address)
-                        .unwrap()
-                        .get(current_epoch)
-                        .unwrap()
-                        .clone();
-                    ActiveValidator {
-                        consensus_key,
-                        voting_power: *voting_power,
-                    }
-                },
-            )
-            .collect();
-        active_validators
+        let active_validators = validators.active.iter().map(
+            |WeightedValidator {
+                 voting_power,
+                 address,
+             }: &WeightedValidator<Self::Address>| {
+                let consensus_key = self
+                    .read_validator_consensus_key(&address)
+                    .unwrap()
+                    .get(current_epoch)
+                    .unwrap()
+                    .clone();
+                ValidatorSetUpdate::Active(ActiveValidator {
+                    consensus_key,
+                    voting_power: *voting_power,
+                })
+            },
+        );
+        // TODO we only need inactive validators that were active in the last
+        // update
+        let inactive_validators = validators.inactive.iter().map(
+            |WeightedValidator {
+                 voting_power: _,
+                 address,
+             }: &WeightedValidator<Self::Address>| {
+                let consensus_key = self
+                    .read_validator_consensus_key(&address)
+                    .unwrap()
+                    .get(current_epoch)
+                    .unwrap()
+                    .clone();
+                ValidatorSetUpdate::Deactived(consensus_key)
+            },
+        );
+        active_validators.chain(inactive_validators).for_each(f)
     }
 }
 
