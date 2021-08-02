@@ -2,8 +2,8 @@ use std::str::FromStr;
 
 use anoma::proto::Tx;
 use anoma::types::key::ed25519::Keypair;
-use anoma::types::token;
 use anoma::types::transaction::UpdateVp;
+use anoma::types::{pos, token};
 use borsh::BorshSerialize;
 use tendermint_rpc::{Client, HttpClient};
 
@@ -12,6 +12,7 @@ use crate::wallet;
 
 const TX_UPDATE_VP_WASM: &str = "wasm/tx_update_vp.wasm";
 const TX_TRANSFER_WASM: &str = "wasm/tx_transfer.wasm";
+const TX_BOND_WASM: &str = "wasm/tx_bond.wasm";
 
 pub async fn submit_custom(args: args::TxCustom) {
     let tx_code = std::fs::read(args.code_path)
@@ -53,6 +54,24 @@ pub async fn submit_transfer(args: args::TxTransfer) {
     };
     tracing::debug!("Transfer data {:?}", transfer);
     let data = transfer
+        .try_to_vec()
+        .expect("Encoding unsigned transfer shouldn't fail");
+    let tx = Tx::new(tx_code, Some(data)).sign(&source_key);
+
+    submit_tx(args.tx, tx).await
+}
+
+pub async fn submit_bond(args: args::Bond) {
+    let source_key: Keypair = wallet::key_of(args.source.encode());
+    let tx_code = std::fs::read(TX_BOND_WASM).unwrap();
+
+    let bond = pos::Bond {
+        source: args.source,
+        validator: args.validator,
+        amount: args.amount,
+    };
+    tracing::debug!("Bond data {:?}", bond);
+    let data = bond
         .try_to_vec()
         .expect("Encoding unsigned transfer shouldn't fail");
     let tx = Tx::new(tx_code, Some(data)).sign(&source_key);

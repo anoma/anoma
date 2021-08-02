@@ -127,6 +127,7 @@ pub mod cmds {
         Intent(Intent),
         CraftIntent(CraftIntent),
         SubscribeTopic(SubscribeTopic),
+        Bond(Bond),
     }
     impl Cmd for AnomaClient {
         fn add_sub(app: App) -> App {
@@ -406,6 +407,27 @@ pub mod cmds {
     }
 
     #[derive(Debug)]
+    pub struct Bond(pub args::Bond);
+    impl SubCmd for Bond {
+        const CMD: &'static str = "bond";
+
+        fn parse(matches: &ArgMatches) -> Option<(Self, &ArgMatches)>
+        where
+            Self: Sized,
+        {
+            matches
+                .subcommand_matches(Self::CMD)
+                .map(|matches| (Bond(args::Bond::parse(matches)), matches))
+        }
+
+        fn def() -> App {
+            App::new(Self::CMD)
+                .about("subscribe to a topic.")
+                .add_args::<args::SubscribeTopic>()
+        }
+    }
+
+    #[derive(Debug)]
     pub struct Intent(pub args::Intent);
     impl SubCmd for Intent {
         const CMD: &'static str = "intent";
@@ -518,6 +540,7 @@ pub mod args {
     const TARGET: Arg<Address> = arg("target");
     const TOKEN: Arg<Address> = arg("token");
     const AMOUNT: Arg<token::Amount> = arg("amount");
+    const VALIDATOR: Arg<Address> = arg("validator");
 
     /// Global command arguments
     #[derive(Debug)]
@@ -654,6 +677,44 @@ pub mod args {
                     "The account's address. It's key is used to produce the \
                      signature.",
                 ))
+        }
+    }
+
+    /// Bond arguments
+    #[derive(Debug)]
+    pub struct Bond {
+        /// Common tx arguments
+        pub tx: Tx,
+        /// Source address (delegator for delegation or validator for
+        /// self-bonds)
+        pub source: Address,
+        /// Validator address
+        pub validator: Address,
+        /// Amount of tokens to stake in a bond
+        pub amount: token::Amount,
+    }
+    impl Args for Bond {
+        fn parse(matches: &ArgMatches) -> Self {
+            let tx = Tx::parse(matches);
+            let source = SOURCE.parse(matches);
+            let validator = VALIDATOR.parse(matches);
+            let amount = AMOUNT.parse(matches);
+            Self {
+                tx,
+                source,
+                validator,
+                amount,
+            }
+        }
+
+        fn def(app: App) -> App {
+            app.add_args::<Tx>()
+                .arg(SOURCE.def().about(
+                    "Source address (delegator for delegation or validator \
+                     for self-bonds).",
+                ))
+                .arg(VALIDATOR.def().about("Validator address."))
+                .arg(AMOUNT.def().about("Amount of tokens to stake in a bond."))
         }
     }
 

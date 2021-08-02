@@ -16,6 +16,7 @@ use color_eyre::eyre::Result;
 pub async fn main() -> Result<()> {
     let (cmd, _global_args) = cli::anoma_client_cli();
     match cmd {
+        // Ledger cmds
         cmds::AnomaClient::TxCustom(cmds::TxCustom(args)) => {
             tx::submit_custom(args).await;
         }
@@ -25,6 +26,10 @@ pub async fn main() -> Result<()> {
         cmds::AnomaClient::TxUpdateVp(cmds::TxUpdateVp(args)) => {
             tx::submit_update_vp(args).await;
         }
+        cmds::AnomaClient::Bond(cmds::Bond(args)) => {
+            tx::submit_bond(args).await;
+        }
+        // Gossip cmds
         cmds::AnomaClient::Intent(cmds::Intent(args)) => {
             gossip_intent(args).await;
         }
