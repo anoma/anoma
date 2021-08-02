@@ -82,8 +82,8 @@ impl From<Amount> for u64 {
 impl Add for Amount {
     type Output = Amount;
 
-    fn add(self, rhs: Self) -> Self::Output {
-        self.micro + rhs.micro;
+    fn add(mut self, rhs: Self) -> Self::Output {
+        self.micro += rhs.micro;
         self
     }
 }

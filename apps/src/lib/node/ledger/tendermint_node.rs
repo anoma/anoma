@@ -6,15 +6,17 @@ use std::str::FromStr;
 use std::sync::mpsc::Receiver;
 use std::time::Duration;
 
+use anoma::ledger::pos::GenesisValidator;
+#[cfg(feature = "dev")]
+use anoma::types::key::ed25519::Keypair;
 use serde_json::json;
 use signal_hook::consts::TERM_SIGNALS;
 use signal_hook::iterator::Signals;
 use tendermint::config::TendermintConfig;
 use thiserror::Error;
 
-use crate::config;
-use crate::genesis::{self, Validator};
 use crate::std::sync::mpsc::Sender;
+use crate::{config, genesis};
 
 #[derive(Error, Debug)]
 pub enum Error {
@@ -53,8 +55,13 @@ pub fn run(
     }
 
     if cfg!(feature = "dev") {
+        let genesis = &genesis::genesis();
         // override the validator key file
-        write_validator_key(&home_dir, &genesis::genesis().validator);
+        write_validator_key(
+            &home_dir,
+            &genesis.validator,
+            &genesis.validator_key,
+        );
         write_chain_id(&home_dir, config::DEFAULT_CHAIN_ID);
     }
 
@@ -112,7 +119,8 @@ fn monitor_process(
     std::thread::spawn(move || {
         process.wait().expect("Tendermint was not running");
         tracing::info!("Tendermint node shut down unexpectedly.");
-        kill_switch.send(true).unwrap();
+        // Ignore error, the node might have already shut down
+        let _ = kill_switch.send(true);
     });
 }
 
@@ -171,15 +179,21 @@ fn update_tendermint_config(home_dir: impl AsRef<Path>) -> Result<()> {
 }
 
 #[cfg(feature = "dev")]
-fn write_validator_key(home_dir: impl AsRef<Path>, account: &Validator) {
+fn write_validator_key(
+    home_dir: impl AsRef<Path>,
+    validator: &GenesisValidator,
+    validator_key: &Keypair,
+) {
     let home_dir = home_dir.as_ref();
     let path = home_dir.join("config").join("priv_validator_key.json");
     let file =
         File::create(path).expect("Couldn't create private validator key file");
-    let pk = base64::encode(account.keypair.public.as_bytes());
-    let sk = base64::encode(account.keypair.to_bytes());
+    let pk: ed25519_dalek::PublicKey = validator.consensus_key.clone().into();
+    let pk = base64::encode(pk.as_bytes());
+    let sk = base64::encode(validator_key.to_bytes());
+    let address = validator.address.raw_hash().unwrap();
     let key = json!({
-       "address": account.address,
+       "address": address,
        "pub_key": {
          "type": "tendermint/PubKeyEd25519",
          "value": pk,

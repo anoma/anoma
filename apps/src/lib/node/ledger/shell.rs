@@ -2,6 +2,8 @@ use std::convert::{TryFrom, TryInto};
 use std::path::Path;
 
 use anoma::ledger::gas::{self, BlockGasMeter};
+use anoma::ledger::pos::anoma_proof_of_stake::types::ActiveValidator;
+use anoma::ledger::pos::anoma_proof_of_stake::PoSBase;
 use anoma::ledger::storage::write_log::WriteLog;
 use anoma::ledger::{ibc, parameters, pos};
 use anoma::proto::{self, Tx};
@@ -14,6 +16,7 @@ use anoma::types::{address, key, token};
 use borsh::BorshSerialize;
 use itertools::Itertools;
 use tendermint::block::Header;
+use tendermint_proto::abci::ValidatorUpdate;
 use thiserror::Error;
 use tower_abci::{request, response};
 
@@ -62,6 +65,8 @@ pub struct Shell {
     storage: storage::PersistentStorage,
     gas_meter: BlockGasMeter,
     write_log: WriteLog,
+    /// Did the current block start a new epoch?
+    new_epoch: bool,
 }
 
 impl Shell {
@@ -80,6 +85,7 @@ impl Shell {
             storage,
             gas_meter: BlockGasMeter::default(),
             write_log: WriteLog::default(),
+            new_epoch: false,
         }
     }
 
@@ -180,13 +186,6 @@ impl Shell {
             .write(&Key::validity_predicate(&matchmaker), user_vp.to_vec())
             .expect("Unable to write matchmaker VP");
 
-        pos::init_genesis_storage(&mut self.storage);
-        ibc::init_genesis_storage(&mut self.storage);
-        parameters::init_genesis_storage(
-            &mut self.storage,
-            &genesis.parameters,
-        );
-
         let ts: tendermint_proto::google::protobuf::Timestamp =
             init.time.expect("Missing genesis time");
         let initial_height = init
@@ -197,9 +196,28 @@ impl Shell {
         let genesis_time: DateTimeUtc =
             (Utc.timestamp(ts.seconds, ts.nanos as u32)).into();
 
+        parameters::init_genesis_storage(
+            &mut self.storage,
+            &genesis.parameters,
+        );
+        // Depends on parameters being initialized
         self.storage
             .init_genesis_epoch(initial_height, genesis_time)
             .expect("Initializing genesis epoch must not fail");
+
+        #[cfg(feature = "dev")]
+        let validators = vec![genesis.validator];
+        #[cfg(not(feature = "dev"))]
+        let validators = genesis.validators;
+        // Depends on epoch being initialized
+        let (current_epoch, _gas) = self.storage.get_block_epoch();
+        pos::init_genesis_storage(
+            &mut self.storage,
+            &genesis.pos_params,
+            validators,
+            current_epoch,
+        );
+        ibc::init_genesis_storage(&mut self.storage);
 
         Ok(response)
     }
@@ -253,7 +271,8 @@ impl Shell {
         self.storage
             .set_header(header)
             .expect("Setting a header shouldn't fail");
-        self.storage
+        self.new_epoch = self
+            .storage
             .update_epoch(height, time)
             .expect("Must be able to update epoch");
     }
@@ -299,7 +318,38 @@ impl Shell {
 
     /// End a block.
     pub fn end_block(&mut self, _height: BlockHeight) -> response::EndBlock {
-        Default::default()
+        let mut response = response::EndBlock::default();
+        if self.new_epoch {
+            let (current_epoch, _gas) = self.storage.get_block_epoch();
+            let validator_set = self.storage.validator_set(current_epoch);
+            // TODO ABCI validator updates on block H affects the validator set
+            // on block H+2, do we need to update a block earlier?
+            response.validator_updates = validator_set
+                .into_iter()
+                .map(
+                    |ActiveValidator {
+                         consensus_key,
+                         voting_power,
+                     }: ActiveValidator<PublicKey>| {
+                        let power: u64 = voting_power.into();
+                        let power: i64 =
+                            power
+                            .try_into()
+                            .expect("unexpected validator's voting power");
+                        let consensus_key: ed25519_dalek::PublicKey =
+                            consensus_key.into();
+                        let pub_key = tendermint_proto::crypto::PublicKey {
+                            sum: Some(tendermint_proto::crypto::public_key::Sum::Ed25519(
+                                consensus_key.to_bytes().to_vec(),
+                            )),
+                        };
+                        let pub_key = Some(pub_key);
+                        ValidatorUpdate { pub_key, power }
+                    },
+                )
+                .collect();
+        }
+        response
     }
 
     /// Commit a block. Persist the application state and return the Merkle root
@@ -317,6 +367,9 @@ impl Shell {
                 e
             )
         });
+        // Reset `new_epoch`
+        self.new_epoch = false;
+
         let root = self.storage.merkle_root();
         tracing::info!(
             "Committed block hash: {}, height: {}",

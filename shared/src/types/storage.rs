@@ -496,6 +496,12 @@ impl Add<u64> for Epoch {
     }
 }
 
+impl From<Epoch> for u64 {
+    fn from(epoch: Epoch) -> Self {
+        epoch.0
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use proptest::prelude::*;

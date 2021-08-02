@@ -402,19 +402,20 @@ where
         (self.header.clone(), MIN_STORAGE_GAS)
     }
 
-    /// Initialize a new epoch when the current epoch is finished.
+    /// Initialize a new epoch when the current epoch is finished. Returns
+    /// `true` on a new epoch.
     pub fn update_epoch(
         &mut self,
         height: BlockHeight,
         time: DateTimeUtc,
-    ) -> Result<()> {
+    ) -> Result<bool> {
         let (parameters, _gas) =
             parameters::read(&self).expect("Couldn't read protocol parameters");
 
         // Check if the current epoch is over
-        if height >= self.next_epoch_min_start_height
-            && time >= self.next_epoch_min_start_time
-        {
+        let new_epoch = height >= self.next_epoch_min_start_height
+            && time >= self.next_epoch_min_start_time;
+        if new_epoch {
             // Begin a new epoch
             self.block.epoch = self.block.epoch.next();
             self.current_epoch = self.current_epoch.next();
@@ -427,7 +428,8 @@ where
             self.next_epoch_min_start_time = time + min_duration;
             tracing::info!("Began a new epoch {}", self.block.epoch);
         }
-        self.update_epoch_in_merkle_tree()
+        self.update_epoch_in_merkle_tree()?;
+        Ok(new_epoch)
     }
 
     /// Update the merkle tree with epoch data

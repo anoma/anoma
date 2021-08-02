@@ -294,6 +294,12 @@ impl From<ed25519_dalek::PublicKey> for PublicKey {
     }
 }
 
+impl From<PublicKey> for ed25519_dalek::PublicKey {
+    fn from(pk: PublicKey) -> Self {
+        pk.0
+    }
+}
+
 impl From<PublicKey> for PublicKeyHash {
     fn from(pk: PublicKey) -> Self {
         let pk_bytes =

@@ -120,6 +120,18 @@ impl Address {
         Ok(address)
     }
 
+    /// Try to get a raw hash of an address, only defined for established and
+    /// implicit addresses.
+    pub fn raw_hash(&self) -> Option<&str> {
+        match self {
+            Address::Established(established) => Some(&established.hash),
+            Address::Implicit(ImplicitAddress::Ed25519(implicit)) => {
+                Some(&implicit.0)
+            }
+            Address::Internal(_) => None,
+        }
+    }
+
     fn pretty_fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Address::Established(_) => {
@@ -305,27 +317,13 @@ pub fn matchmaker() -> Address {
 
 #[cfg(test)]
 pub mod tests {
-    use rand::prelude::ThreadRng;
-    use rand::{thread_rng, RngCore};
-
     use super::*;
 
     /// Run `cargo test gen_established_address -- --nocapture` to generate a
     /// new established address.
     #[test]
-    fn gen_established_address() {
-        let seed = "such randomness, much wow";
-        let mut key_gen = EstablishedAddressGen::new(seed);
-
-        let mut rng: ThreadRng = thread_rng();
-        let mut rng_bytes = vec![0u8; 32];
-        rng.fill_bytes(&mut rng_bytes[..]);
-        let rng_source = rng_bytes
-            .iter()
-            .map(|b| format!("{:02X}", b))
-            .collect::<Vec<String>>()
-            .join("");
-        let address = key_gen.generate_address(rng_source);
+    pub fn gen_established_address() {
+        let address = testing::gen_established_address();
         println!("address {}", address);
     }
 
@@ -342,9 +340,27 @@ pub mod tests {
 #[cfg(any(test, feature = "testing"))]
 pub mod testing {
     use proptest::prelude::*;
+    use rand::prelude::ThreadRng;
+    use rand::{thread_rng, RngCore};
 
     use super::*;
     use crate::types::key::ed25519;
+
+    /// Generate a new established address.
+    pub fn gen_established_address() -> Address {
+        let seed = "such randomness, much wow";
+        let mut key_gen = EstablishedAddressGen::new(seed);
+
+        let mut rng: ThreadRng = thread_rng();
+        let mut rng_bytes = vec![0u8; 32];
+        rng.fill_bytes(&mut rng_bytes[..]);
+        let rng_source = rng_bytes
+            .iter()
+            .map(|b| format!("{:02X}", b))
+            .collect::<Vec<String>>()
+            .join("");
+        key_gen.generate_address(rng_source)
+    }
 
     /// A sampled established address for tests
     pub fn established_address_1() -> Address {

@@ -3,13 +3,18 @@
 use std::collections::HashSet;
 
 pub use anoma_proof_of_stake;
-use anoma_proof_of_stake::types::BondId;
+pub use anoma_proof_of_stake::parameters::PosParams;
+use anoma_proof_of_stake::types::{
+    BondId, GenesisValidator as PoSGenesisValidator,
+};
+use anoma_proof_of_stake::PoSBase;
 use thiserror::Error;
 
+use super::storage::types::{decode, encode};
 use crate::ledger::native_vp::{self, Ctx, NativeVp};
 use crate::ledger::storage::{self, Storage, StorageHasher};
 use crate::types::address::{self, Address, InternalAddress};
-use crate::types::storage::{Key, KeySeg};
+use crate::types::storage::{Epoch, Key, KeySeg};
 use crate::types::{key, token};
 
 #[allow(missing_docs)]
@@ -34,12 +39,23 @@ where
     pub ctx: Ctx<'a, DB, H>,
 }
 
+/// Type alias for library type with concrete type parameters.
+pub type GenesisValidator =
+    PoSGenesisValidator<Address, token::Amount, key::ed25519::PublicKey>;
+
 /// Initialize storage in the genesis block.
-pub fn init_genesis_storage<DB, H>(_storage: &mut Storage<DB, H>)
-where
+pub fn init_genesis_storage<DB, H>(
+    storage: &mut Storage<DB, H>,
+    params: &PosParams,
+    validators: impl AsRef<[GenesisValidator]>,
+    current_epoch: Epoch,
+) where
     DB: storage::DB + for<'iter> storage::DBIter<'iter>,
     H: StorageHasher,
 {
+    storage
+        .init_genesis(params, validators, current_epoch)
+        .expect("Initialize PoS genesis storage")
 }
 
 impl<'a, DB, H> NativeVp for PoS<'a, DB, H>
@@ -286,6 +302,160 @@ where
         anoma_proof_of_stake::epoched::OffsetUnboundingLen,
     > {
         todo!()
+    }
+}
+
+impl<D, H> PoSBase for Storage<D, H>
+where
+    D: storage::DB + for<'iter> storage::DBIter<'iter>,
+    H: StorageHasher,
+{
+    type Address = Address;
+    type PublicKey = key::ed25519::PublicKey;
+    type TokenAmount = token::Amount;
+    type TokenChange = token::Change;
+
+    fn read_validator_set(
+        &self,
+    ) -> anoma_proof_of_stake::epoched::Epoched<
+        anoma_proof_of_stake::types::ValidatorSet<Self::Address>,
+        anoma_proof_of_stake::epoched::OffsetUnboundingLen,
+    > {
+        let (value, _gas) = self.read(&validator_set_key()).unwrap();
+        decode(value.unwrap()).unwrap()
+    }
+
+    fn read_validator_consensus_key(
+        &self,
+        key: &Self::Address,
+    ) -> Option<
+        anoma_proof_of_stake::epoched::Epoched<
+            Self::PublicKey,
+            anoma_proof_of_stake::epoched::OffsetPipelineLen,
+        >,
+    > {
+        let (value, _gas) =
+            self.read(&validator_consensus_key_key(key)).unwrap();
+        value.map(|value| decode(value).unwrap())
+    }
+
+    fn write_params(
+        &mut self,
+        params: &anoma_proof_of_stake::parameters::PosParams,
+    ) {
+        self.write(&params_key(), encode(params)).unwrap();
+    }
+
+    fn write_validator_staking_reward_address(
+        &mut self,
+        key: &Self::Address,
+        value: &Self::Address,
+    ) {
+        self.write(&validator_staking_reward_address_key(key), encode(value))
+            .unwrap();
+    }
+
+    fn write_validator_consensus_key(
+        &mut self,
+        key: &Self::Address,
+        value: &anoma_proof_of_stake::epoched::Epoched<
+            Self::PublicKey,
+            anoma_proof_of_stake::epoched::OffsetPipelineLen,
+        >,
+    ) {
+        self.write(&validator_consensus_key_key(key), encode(value))
+            .unwrap();
+    }
+
+    fn write_validator_state(
+        &mut self,
+        key: &Self::Address,
+        value: &anoma_proof_of_stake::epoched::Epoched<
+            anoma_proof_of_stake::types::ValidatorState,
+            anoma_proof_of_stake::epoched::OffsetPipelineLen,
+        >,
+    ) {
+        self.write(&validator_state_key(key), encode(value))
+            .unwrap();
+    }
+
+    fn write_validator_total_deltas(
+        &mut self,
+        key: &Self::Address,
+        value: &anoma_proof_of_stake::epoched::EpochedDelta<
+            Self::TokenChange,
+            anoma_proof_of_stake::epoched::OffsetUnboundingLen,
+        >,
+    ) {
+        self.write(&validator_total_deltas_key(key), encode(value))
+            .unwrap();
+    }
+
+    fn write_validator_voting_power(
+        &mut self,
+        key: &Self::Address,
+        value: &anoma_proof_of_stake::epoched::EpochedDelta<
+            anoma_proof_of_stake::types::VotingPowerDelta,
+            anoma_proof_of_stake::epoched::OffsetUnboundingLen,
+        >,
+    ) {
+        self.write(&validator_voting_power_key(key), encode(value))
+            .unwrap();
+    }
+
+    fn write_bond(
+        &mut self,
+        key: &BondId<Self::Address>,
+        value: &anoma_proof_of_stake::epoched::EpochedDelta<
+            anoma_proof_of_stake::types::Bond<Self::TokenAmount>,
+            anoma_proof_of_stake::epoched::OffsetPipelineLen,
+        >,
+    ) {
+        self.write(&bond_key(key), encode(value)).unwrap();
+    }
+
+    fn write_validator_set(
+        &mut self,
+        value: &anoma_proof_of_stake::epoched::Epoched<
+            anoma_proof_of_stake::types::ValidatorSet<Self::Address>,
+            anoma_proof_of_stake::epoched::OffsetUnboundingLen,
+        >,
+    ) {
+        self.write(&validator_set_key(), encode(value)).unwrap();
+    }
+
+    fn write_total_voting_power(
+        &mut self,
+        value: &anoma_proof_of_stake::epoched::EpochedDelta<
+            anoma_proof_of_stake::types::VotingPowerDelta,
+            anoma_proof_of_stake::epoched::OffsetUnboundingLen,
+        >,
+    ) {
+        self.write(&total_voting_power_key(), encode(value))
+            .unwrap();
+    }
+
+    fn init_staking_reward_account(
+        &mut self,
+        address: &Self::Address,
+        pk: &Self::PublicKey,
+    ) {
+        let user_vp =
+            std::fs::read("wasm/vp_user.wasm").expect("cannot load user VP");
+        // The staking reward accounts are setup with a user VP
+        self.write(&Key::validity_predicate(address), user_vp.to_vec())
+            .unwrap();
+
+        // Write the public key
+        let pk_key = key::ed25519::pk_key(address);
+        self.write(&pk_key, encode(pk)).unwrap();
+    }
+}
+
+impl From<Epoch> for anoma_proof_of_stake::types::Epoch {
+    fn from(epoch: Epoch) -> Self {
+        let epoch: u64 = epoch.into();
+        anoma_proof_of_stake::types::Epoch::from(epoch)
     }
 }
 
