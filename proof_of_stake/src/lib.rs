@@ -27,8 +27,8 @@ use epoched::{
 use parameters::PosParams;
 use thiserror::Error;
 use types::{
-    Epoch, GenesisValidator, Unbond, ValidatorSet, ValidatorState, VotingPower,
-    VotingPowerDelta,
+    ActiveValidator, Epoch, GenesisValidator, Unbond, ValidatorSet,
+    ValidatorState, VotingPower, VotingPowerDelta,
 };
 
 use crate::btree_set::BTreeSetShims;
@@ -103,22 +103,23 @@ pub trait PoSReadOnly {
         key: &Self::Address,
     ) -> Option<EpochedDelta<VotingPowerDelta, OffsetUnboundingLen>>;
     fn read_bond(
-        &mut self,
+        &self,
         key: &BondId<Self::Address>,
     ) -> Option<EpochedDelta<Bond<Self::TokenAmount>, OffsetPipelineLen>>;
     fn read_unbond(
-        &mut self,
+        &self,
         key: &BondId<Self::Address>,
     ) -> Option<EpochedDelta<Unbond<Self::TokenAmount>, OffsetUnboundingLen>>;
     fn read_validator_set(
-        &mut self,
+        &self,
     ) -> Epoched<ValidatorSet<Self::Address>, OffsetUnboundingLen>;
     fn read_total_voting_power(
-        &mut self,
+        &self,
     ) -> EpochedDelta<VotingPowerDelta, OffsetUnboundingLen>;
 }
 
-/// PoS system trait to be implemented in integration.
+/// PoS system trait to be implemented in integration that can read and write
+/// PoS data.
 pub trait PoS: PoSReadOnly {
     fn write_params(&mut self, params: &PosParams);
     fn write_validator_staking_reward_address(
@@ -175,56 +176,6 @@ pub trait PoS: PoSReadOnly {
         src: &Self::Address,
         dest: &Self::Address,
     );
-
-    /// Initialize the PoS system storage data in the genesis block for the
-    /// given PoS parameters and initial validator set. The validators'
-    /// tokens will be put into self-bonds. The given PoS parameters are written
-    /// with the [`Pos::write_params`] method.
-    fn init_genesis(
-        &mut self,
-        params: &PosParams,
-        validators: impl AsRef<
-            [GenesisValidator<
-                Self::Address,
-                Self::TokenAmount,
-                Self::PublicKey,
-            >],
-        >,
-        current_epoch: impl Into<Epoch>,
-    ) -> Result<(), GenesisError> {
-        let current_epoch = current_epoch.into();
-        self.write_params(params);
-
-        let GenesisData {
-            validators,
-            validator_set,
-            total_voting_power,
-        } = init_genesis(params, validators.as_ref().iter(), current_epoch)?;
-
-        for res in validators {
-            let GenesisValidatorData {
-                ref address,
-                staking_reward_address,
-                consensus_key,
-                state,
-                total_deltas,
-                voting_power,
-                bond: (bond_id, bond),
-            } = res?;
-            self.write_validator_staking_reward_address(
-                address,
-                staking_reward_address,
-            );
-            self.write_validator_consensus_key(address, consensus_key);
-            self.write_validator_state(address, state);
-            self.write_validator_total_deltas(address, total_deltas);
-            self.write_validator_voting_power(address, voting_power);
-            self.write_bond(&bond_id, bond);
-        }
-        self.write_validator_set(validator_set);
-        self.write_total_voting_power(total_voting_power);
-        Ok(())
-    }
 
     /// Attempt to update the given account to become a validator.
     fn become_validator(
@@ -435,6 +386,188 @@ pub trait PoS: PoSReadOnly {
     }
 }
 
+/// PoS system base trait for system initialization on genesis block, updating
+/// the validator on a new epoch and applying slashes.
+pub trait PoSBase {
+    type Address: Display
+        + Debug
+        + Clone
+        + PartialEq
+        + Eq
+        + PartialOrd
+        + Ord
+        + Hash
+        + BorshDeserialize
+        + BorshSerialize;
+    type TokenAmount: Display
+        + Debug
+        + Default
+        + Clone
+        + Copy
+        + Add<Output = Self::TokenAmount>
+        + Sub
+        + PartialOrd
+        + Into<u64>
+        + From<u64>
+        + Into<Self::TokenChange>
+        + SubAssign
+        + BorshDeserialize
+        + BorshSerialize;
+    type TokenChange: Display
+        + Debug
+        + Default
+        + Clone
+        + Copy
+        + Add<Output = Self::TokenChange>
+        + Sub
+        + From<Self::TokenAmount>
+        + Into<i128>
+        + Neg<Output = Self::TokenChange>
+        + BorshDeserialize
+        + BorshSerialize;
+    type PublicKey: Debug + Clone + BorshDeserialize + BorshSerialize;
+
+    fn read_validator_set(
+        &self,
+    ) -> Epoched<ValidatorSet<Self::Address>, OffsetUnboundingLen>;
+    fn read_validator_consensus_key(
+        &self,
+        key: &Self::Address,
+    ) -> Option<Epoched<Self::PublicKey, OffsetPipelineLen>>;
+
+    fn write_params(&mut self, params: &PosParams);
+    fn write_validator_staking_reward_address(
+        &mut self,
+        key: &Self::Address,
+        value: &Self::Address,
+    );
+    fn write_validator_consensus_key(
+        &mut self,
+        key: &Self::Address,
+        value: &Epoched<Self::PublicKey, OffsetPipelineLen>,
+    );
+    fn write_validator_state(
+        &mut self,
+        key: &Self::Address,
+        value: &Epoched<ValidatorState, OffsetPipelineLen>,
+    );
+    fn write_validator_total_deltas(
+        &mut self,
+        key: &Self::Address,
+        value: &EpochedDelta<Self::TokenChange, OffsetUnboundingLen>,
+    );
+    fn write_validator_voting_power(
+        &mut self,
+        key: &Self::Address,
+        value: &EpochedDelta<VotingPowerDelta, OffsetUnboundingLen>,
+    );
+    fn write_bond(
+        &mut self,
+        key: &BondId<Self::Address>,
+        value: &EpochedDelta<Bond<Self::TokenAmount>, OffsetPipelineLen>,
+    );
+    fn write_validator_set(
+        &mut self,
+        value: &Epoched<ValidatorSet<Self::Address>, OffsetUnboundingLen>,
+    );
+    fn write_total_voting_power(
+        &mut self,
+        value: &EpochedDelta<VotingPowerDelta, OffsetUnboundingLen>,
+    );
+    fn init_staking_reward_account(
+        &mut self,
+        address: &Self::Address,
+        pk: &Self::PublicKey,
+    );
+
+    /// Initialize the PoS system storage data in the genesis block for the
+    /// given PoS parameters and initial validator set. The validators'
+    /// tokens will be put into self-bonds. The given PoS parameters are written
+    /// with the [`Pos::write_params`] method.
+    fn init_genesis(
+        &mut self,
+        params: &PosParams,
+        validators: impl AsRef<
+            [GenesisValidator<
+                Self::Address,
+                Self::TokenAmount,
+                Self::PublicKey,
+            >],
+        >,
+        current_epoch: impl Into<Epoch>,
+    ) -> Result<(), GenesisError> {
+        let current_epoch = current_epoch.into();
+        self.write_params(params);
+
+        let GenesisData {
+            validators,
+            validator_set,
+            total_voting_power,
+        } = init_genesis(params, validators.as_ref().iter(), current_epoch)?;
+
+        for res in validators {
+            let GenesisValidatorData {
+                ref address,
+                staking_reward_address,
+                consensus_key,
+                staking_reward_key,
+                state,
+                total_deltas,
+                voting_power,
+                bond: (bond_id, bond),
+            } = res?;
+            self.write_validator_staking_reward_address(
+                address,
+                &staking_reward_address,
+            );
+            self.write_validator_consensus_key(address, &consensus_key);
+            self.write_validator_state(address, &state);
+            self.write_validator_total_deltas(address, &total_deltas);
+            self.write_validator_voting_power(address, &voting_power);
+            self.write_bond(&bond_id, &bond);
+            self.init_staking_reward_account(
+                &staking_reward_address,
+                &staking_reward_key,
+            );
+        }
+        self.write_validator_set(&validator_set);
+        self.write_total_voting_power(&total_voting_power);
+        Ok(())
+    }
+
+    fn validator_set(
+        &self,
+        current_epoch: impl Into<Epoch>,
+    ) -> Vec<ActiveValidator<Self::PublicKey>> {
+        let current_epoch = current_epoch.into();
+        let validators = self.read_validator_set();
+        let validators = validators.get(current_epoch).unwrap();
+        // TODO for tendermint ABCI, we also need to add any validators that
+        // have become inactive with voting_power = 0
+        let active_validators: Vec<_> = validators
+            .active
+            .iter()
+            .map(
+                |WeightedValidator {
+                     voting_power,
+                     address,
+                 }: &WeightedValidator<Self::Address>| {
+                    let consensus_key = self
+                        .read_validator_consensus_key(&address)
+                        .unwrap()
+                        .get(current_epoch)
+                        .unwrap()
+                        .clone();
+                    ActiveValidator {
+                        consensus_key,
+                        voting_power: *voting_power,
+                    }
+                },
+            )
+            .collect();
+        active_validators
+    }
+}
 #[allow(missing_docs)]
 #[derive(Error, Debug)]
 pub enum GenesisError {
@@ -548,6 +681,7 @@ where
     address: Address,
     staking_reward_address: Address,
     consensus_key: Epoched<PK, OffsetPipelineLen>,
+    staking_reward_key: PK,
     state: Epoched<ValidatorState, OffsetPipelineLen>,
     total_deltas: EpochedDelta<TokenChange, OffsetUnboundingLen>,
     voting_power: EpochedDelta<VotingPowerDelta, OffsetUnboundingLen>,
@@ -642,10 +776,11 @@ where
     let validators = validators.map(
         move |GenesisValidator {
                   address,
-
                   staking_reward_address,
+
                   tokens,
                   consensus_key,
+                  staking_reward_key,
               }| {
             let consensus_key =
                 Epoched::init_at_genesis(consensus_key.clone(), current_epoch);
@@ -673,6 +808,7 @@ where
                 address: address.clone(),
                 staking_reward_address: staking_reward_address.clone(),
                 consensus_key,
+                staking_reward_key: staking_reward_key.clone(),
                 state,
                 total_deltas,
                 voting_power,

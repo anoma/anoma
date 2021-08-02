@@ -71,7 +71,18 @@ pub struct GenesisValidator<Address, Token, PK> {
     pub staking_reward_address: Address,
     /// Staked tokens
     pub tokens: Token,
+    /// A public key used for signing validator's consensus actions
     pub consensus_key: PK,
+    /// An public key associated with the staking reward address
+    pub staking_reward_key: PK,
+}
+
+#[derive(Debug, Clone)]
+pub struct ActiveValidator<PK> {
+    /// A public key used for signing validator's consensus actions
+    pub consensus_key: PK,
+    /// Voting power
+    pub voting_power: VotingPower,
 }
 
 #[derive(
@@ -419,6 +430,16 @@ impl ops::Sub<i64> for VotingPowerDelta {
 
     fn sub(self, rhs: i64) -> Self::Output {
         Self(self.0 - rhs)
+    }
+}
+
+impl<Address, Token, PK> GenesisValidator<Address, Token, PK>
+where
+    Token: Copy + Into<u64>,
+{
+    /// Calculate validator's voting power
+    pub fn voting_power(&self, params: &PosParams) -> VotingPower {
+        VotingPower::from_tokens(self.tokens, params)
     }
 }
 

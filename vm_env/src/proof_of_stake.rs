@@ -88,7 +88,7 @@ impl anoma_proof_of_stake::PoSReadOnly for PoS {
     }
 
     fn read_bond(
-        &mut self,
+        &self,
         key: &anoma_proof_of_stake::types::BondId<Self::Address>,
     ) -> Option<
         anoma_proof_of_stake::epoched::EpochedDelta<
@@ -100,7 +100,7 @@ impl anoma_proof_of_stake::PoSReadOnly for PoS {
     }
 
     fn read_unbond(
-        &mut self,
+        &self,
         key: &anoma_proof_of_stake::types::BondId<Self::Address>,
     ) -> Option<
         anoma_proof_of_stake::epoched::EpochedDelta<
@@ -112,7 +112,7 @@ impl anoma_proof_of_stake::PoSReadOnly for PoS {
     }
 
     fn read_validator_set(
-        &mut self,
+        &self,
     ) -> anoma_proof_of_stake::epoched::Epoched<
         anoma_proof_of_stake::types::ValidatorSet<Self::Address>,
         anoma_proof_of_stake::epoched::OffsetUnboundingLen,
@@ -121,7 +121,7 @@ impl anoma_proof_of_stake::PoSReadOnly for PoS {
     }
 
     fn read_total_voting_power(
-        &mut self,
+        &self,
     ) -> anoma_proof_of_stake::epoched::EpochedDelta<
         anoma_proof_of_stake::types::VotingPowerDelta,
         anoma_proof_of_stake::epoched::OffsetUnboundingLen,
