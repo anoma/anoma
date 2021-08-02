@@ -189,8 +189,8 @@ pub fn total_voting_power_key() -> Key {
 
 impl<D, H> anoma_proof_of_stake::PoSReadOnly for PoS<'_, D, H>
 where
-    D: storage::DB + for<'iter> storage::DBIter<'iter>,
-    H: StorageHasher,
+    D: 'static + storage::DB + for<'iter> storage::DBIter<'iter>,
+    H: 'static + StorageHasher,
 {
     type Address = Address;
     type PublicKey = key::ed25519::PublicKey;
@@ -204,14 +204,19 @@ where
     }
 
     fn read_params(&self) -> anoma_proof_of_stake::parameters::PosParams {
-        todo!()
+        let value = self.ctx.read_pre(&params_key()).unwrap().unwrap();
+        decode(value).unwrap()
     }
 
     fn read_validator_staking_reward_address(
         &self,
         key: &Self::Address,
     ) -> Option<Self::Address> {
-        todo!()
+        let value = self
+            .ctx
+            .read_pre(&validator_staking_reward_address_key(key))
+            .unwrap();
+        value.map(|value| decode(value).unwrap())
     }
 
     fn read_validator_consensus_key(
@@ -223,7 +228,11 @@ where
             anoma_proof_of_stake::epoched::OffsetPipelineLen,
         >,
     > {
-        todo!()
+        let value = self
+            .ctx
+            .read_pre(&validator_consensus_key_key(key))
+            .unwrap();
+        value.map(|value| decode(value).unwrap())
     }
 
     fn read_validator_state(
@@ -235,7 +244,8 @@ where
             anoma_proof_of_stake::epoched::OffsetPipelineLen,
         >,
     > {
-        todo!()
+        let value = self.ctx.read_pre(&validator_state_key(key)).unwrap();
+        value.map(|value| decode(value).unwrap())
     }
 
     fn read_validator_total_deltas(
@@ -247,7 +257,9 @@ where
             anoma_proof_of_stake::epoched::OffsetUnboundingLen,
         >,
     > {
-        todo!()
+        let value =
+            self.ctx.read_pre(&validator_total_deltas_key(key)).unwrap();
+        value.map(|value| decode(value).unwrap())
     }
 
     fn read_validator_voting_power(
@@ -259,7 +271,9 @@ where
             anoma_proof_of_stake::epoched::OffsetUnboundingLen,
         >,
     > {
-        todo!()
+        let value =
+            self.ctx.read_pre(&validator_voting_power_key(key)).unwrap();
+        value.map(|value| decode(value).unwrap())
     }
 
     fn read_bond(
@@ -271,7 +285,8 @@ where
             anoma_proof_of_stake::epoched::OffsetPipelineLen,
         >,
     > {
-        todo!()
+        let value = self.ctx.read_pre(&bond_key(key)).unwrap();
+        value.map(|value| decode(value).unwrap())
     }
 
     fn read_unbond(
@@ -283,7 +298,8 @@ where
             anoma_proof_of_stake::epoched::OffsetUnboundingLen,
         >,
     > {
-        todo!()
+        let value = self.ctx.read_pre(&unbond_key(key)).unwrap();
+        value.map(|value| decode(value).unwrap())
     }
 
     fn read_validator_set(
@@ -292,7 +308,8 @@ where
         anoma_proof_of_stake::types::ValidatorSet<Self::Address>,
         anoma_proof_of_stake::epoched::OffsetUnboundingLen,
     > {
-        todo!()
+        let value = self.ctx.read_pre(&validator_set_key()).unwrap().unwrap();
+        decode(value).unwrap()
     }
 
     fn read_total_voting_power(
@@ -301,7 +318,12 @@ where
         anoma_proof_of_stake::types::VotingPowerDelta,
         anoma_proof_of_stake::epoched::OffsetUnboundingLen,
     > {
-        todo!()
+        let value = self
+            .ctx
+            .read_pre(&total_voting_power_key())
+            .unwrap()
+            .unwrap();
+        decode(value).unwrap()
     }
 }
 
