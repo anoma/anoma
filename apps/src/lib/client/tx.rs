@@ -1,5 +1,3 @@
-use std::str::FromStr;
-
 use anoma::proto::Tx;
 use anoma::types::key::ed25519::Keypair;
 use anoma::types::token;
@@ -7,6 +5,7 @@ use anoma::types::transaction::UpdateVp;
 use borsh::BorshSerialize;
 use tendermint_rpc::{Client, HttpClient};
 
+use super::rpc;
 use crate::cli::args;
 use crate::wallet;
 
@@ -73,17 +72,11 @@ async fn submit_tx(args: args::Tx, tx: Tx) {
     // let request_body = request.into_json();
     // println!("HTTP request body: {}", request_body);
 
-    let client = HttpClient::new(args.ledger_address).unwrap();
-    // TODO broadcast_tx_commit shouldn't be used live;
     if args.dry_run {
-        let path = FromStr::from_str("dry_run_tx").unwrap();
-
-        let response = client
-            .abci_query(Some(path), tx_bytes, None, false)
-            .await
-            .unwrap();
-        println!("{:#?}", response);
+        rpc::dry_run_tx(&args.ledger_address, tx_bytes).await
     } else {
+        // TODO broadcast_tx_commit shouldn't be used live;
+        let client = HttpClient::new(args.ledger_address).unwrap();
         let response =
             client.broadcast_tx_commit(tx_bytes.into()).await.unwrap();
         println!("{:#?}", response);
