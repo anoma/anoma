@@ -6,7 +6,6 @@ use anoma::ledger::pos::{
     validator_staking_reward_address_key, validator_state_key,
     validator_total_deltas_key, validator_voting_power_key,
 };
-use anoma::ledger::storage::types::encode;
 use anoma::types::address::{self, Address, InternalAddress};
 use anoma::types::{key, token};
 pub use anoma_proof_of_stake::{PoS as PosWrite, PoSReadOnly as PosRead};
@@ -135,7 +134,7 @@ impl anoma_proof_of_stake::PoS for PoS {
         &mut self,
         params: &anoma_proof_of_stake::parameters::PosParams,
     ) {
-        tx::write(params_key().to_string(), encode(params))
+        tx::write(params_key().to_string(), params)
     }
 
     fn write_validator_staking_reward_address(
@@ -145,7 +144,7 @@ impl anoma_proof_of_stake::PoS for PoS {
     ) {
         tx::write(
             validator_staking_reward_address_key(key).to_string(),
-            encode(&value),
+            &value,
         )
     }
 
@@ -157,7 +156,7 @@ impl anoma_proof_of_stake::PoS for PoS {
             anoma_proof_of_stake::epoched::OffsetPipelineLen,
         >,
     ) {
-        tx::write(validator_consensus_key_key(key).to_string(), encode(&value))
+        tx::write(validator_consensus_key_key(key).to_string(), &value)
     }
 
     fn write_validator_state(
@@ -168,7 +167,7 @@ impl anoma_proof_of_stake::PoS for PoS {
             anoma_proof_of_stake::epoched::OffsetPipelineLen,
         >,
     ) {
-        tx::write(validator_state_key(key).to_string(), encode(&value))
+        tx::write(validator_state_key(key).to_string(), &value)
     }
 
     fn write_validator_total_deltas(
@@ -179,7 +178,7 @@ impl anoma_proof_of_stake::PoS for PoS {
             anoma_proof_of_stake::epoched::OffsetUnboundingLen,
         >,
     ) {
-        tx::write(validator_total_deltas_key(key).to_string(), encode(&value))
+        tx::write(validator_total_deltas_key(key).to_string(), &value)
     }
 
     fn write_validator_voting_power(
@@ -190,7 +189,7 @@ impl anoma_proof_of_stake::PoS for PoS {
             anoma_proof_of_stake::epoched::OffsetUnboundingLen,
         >,
     ) {
-        tx::write(validator_voting_power_key(key).to_string(), encode(&value))
+        tx::write(validator_voting_power_key(key).to_string(), &value)
     }
 
     fn write_bond(
@@ -201,7 +200,7 @@ impl anoma_proof_of_stake::PoS for PoS {
             anoma_proof_of_stake::epoched::OffsetPipelineLen,
         >,
     ) {
-        tx::write(bond_key(key).to_string(), encode(&value))
+        tx::write(bond_key(key).to_string(), &value)
     }
 
     fn write_unbond(
@@ -212,7 +211,7 @@ impl anoma_proof_of_stake::PoS for PoS {
             anoma_proof_of_stake::epoched::OffsetUnboundingLen,
         >,
     ) {
-        tx::write(unbond_key(key).to_string(), encode(&value))
+        tx::write(unbond_key(key).to_string(), &value)
     }
 
     fn write_validator_set(
@@ -222,7 +221,7 @@ impl anoma_proof_of_stake::PoS for PoS {
             anoma_proof_of_stake::epoched::OffsetUnboundingLen,
         >,
     ) {
-        tx::write(validator_set_key().to_string(), encode(&value))
+        tx::write(validator_set_key().to_string(), &value)
     }
 
     fn write_total_voting_power(
@@ -232,7 +231,7 @@ impl anoma_proof_of_stake::PoS for PoS {
             anoma_proof_of_stake::epoched::OffsetUnboundingLen,
         >,
     ) {
-        tx::write(total_voting_power_key().to_string(), encode(&value))
+        tx::write(total_voting_power_key().to_string(), &value)
     }
 
     fn delete_bond(
