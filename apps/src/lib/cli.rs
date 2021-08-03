@@ -124,6 +124,7 @@ pub mod cmds {
         TxCustom(TxCustom),
         TxTransfer(TxTransfer),
         TxUpdateVp(TxUpdateVp),
+        QueryBalance(QueryBalance),
         Intent(Intent),
         CraftIntent(CraftIntent),
         SubscribeTopic(SubscribeTopic),
@@ -133,6 +134,7 @@ pub mod cmds {
             app.subcommand(TxCustom::def())
                 .subcommand(TxTransfer::def())
                 .subcommand(TxUpdateVp::def())
+                .subcommand(QueryBalance::def())
                 .subcommand(Intent::def())
                 .subcommand(CraftIntent::def())
                 .subcommand(SubscribeTopic::def())
@@ -142,6 +144,8 @@ pub mod cmds {
             let tx_custom = SubCmd::parse(matches).map_fst(Self::TxCustom);
             let tx_transfer = SubCmd::parse(matches).map_fst(Self::TxTransfer);
             let tx_update_vp = SubCmd::parse(matches).map_fst(Self::TxUpdateVp);
+            let query_balance =
+                SubCmd::parse(matches).map_fst(Self::QueryBalance);
             let intent = SubCmd::parse(matches).map_fst(Self::Intent);
             let craft_intent =
                 SubCmd::parse(matches).map_fst(Self::CraftIntent);
@@ -150,6 +154,7 @@ pub mod cmds {
             tx_custom
                 .or(tx_transfer)
                 .or(tx_update_vp)
+                .or(query_balance)
                 .or(intent)
                 .or(craft_intent)
                 .or(subscribe_topic)
@@ -406,6 +411,27 @@ pub mod cmds {
     }
 
     #[derive(Debug)]
+    pub struct QueryBalance(pub args::QueryBalance);
+    impl SubCmd for QueryBalance {
+        const CMD: &'static str = "balance";
+
+        fn parse(matches: &ArgMatches) -> Option<(Self, &ArgMatches)>
+        where
+            Self: Sized,
+        {
+            matches.subcommand_matches(Self::CMD).map(|matches| {
+                (QueryBalance(args::QueryBalance::parse(matches)), matches)
+            })
+        }
+
+        fn def() -> App {
+            App::new(Self::CMD)
+                .about("Query balance(s) of tokens")
+                .add_args::<args::QueryBalance>()
+        }
+    }
+
+    #[derive(Debug)]
     pub struct Intent(pub args::Intent);
     impl SubCmd for Intent {
         const CMD: &'static str = "intent";
@@ -517,7 +543,9 @@ pub mod args {
     const SOURCE: Arg<Address> = arg("source");
     const TARGET: Arg<Address> = arg("target");
     const TOKEN: Arg<Address> = arg("token");
+    const TOKEN_OPT: ArgOpt<Address> = TOKEN.opt();
     const AMOUNT: Arg<token::Amount> = arg("amount");
+    const OWNER: ArgOpt<Address> = arg_opt("owner");
 
     /// Global command arguments
     #[derive(Debug)]
@@ -654,6 +682,44 @@ pub mod args {
                     "The account's address. It's key is used to produce the \
                      signature.",
                 ))
+        }
+    }
+
+    /// Query token balance(s)
+    #[derive(Debug)]
+    pub struct QueryBalance {
+        /// Common query args
+        pub query: Query,
+        /// Address of the owner
+        pub owner: Option<Address>,
+        /// Address of the token
+        pub token: Option<Address>,
+    }
+
+    impl Args for QueryBalance {
+        fn parse(matches: &ArgMatches) -> Self {
+            let query = Query::parse(matches);
+            let owner = OWNER.parse(matches);
+            let token = TOKEN_OPT.parse(matches);
+            Self {
+                query,
+                owner,
+                token,
+            }
+        }
+
+        fn def(app: App) -> App {
+            app.add_args::<Query>()
+                .arg(
+                    OWNER
+                        .def()
+                        .about("The account address whose balance to query"),
+                )
+                .arg(
+                    TOKEN_OPT
+                        .def()
+                        .about("The token's address whose balance to query"),
+                )
         }
     }
 
@@ -852,6 +918,27 @@ pub mod args {
                 dry_run,
                 ledger_address,
             }
+        }
+    }
+
+    /// Common query arguments
+    #[derive(Debug)]
+    pub struct Query {
+        /// The address of the ledger node as host:port
+        pub ledger_address: tendermint::net::Address,
+    }
+
+    impl Args for Query {
+        fn def(app: App) -> App {
+            app.arg(LEDGER_ADDRESS_DEFAULT.def().about(
+                "Address of a ledger node as \"{scheme}://{host}:{port}\". If \
+                 the scheme is not supplied, it is assumed to be TCP.",
+            ))
+        }
+
+        fn parse(matches: &ArgMatches) -> Self {
+            let ledger_address = LEDGER_ADDRESS_DEFAULT.parse(matches);
+            Self { ledger_address }
         }
     }
 }
