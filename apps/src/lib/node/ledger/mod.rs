@@ -1,4 +1,5 @@
 pub mod protocol;
+pub mod rpc;
 mod shell;
 pub mod storage;
 mod tendermint_node;
