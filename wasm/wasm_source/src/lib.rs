@@ -19,9 +19,13 @@ pub mod tx_bond {
             Some(_source) => {
                 todo!("delegation")
             }
-            None => PoS
-                .validator_self_bond(&bond.validator, bond.amount, epoch)
-                .unwrap(),
+            None => {
+                if let Err(err) =
+                    PoS.validator_self_bond(&bond.validator, bond.amount, epoch)
+                {
+                    log_string(format!("self-bond failed with {}", err));
+                }
+            }
         }
     }
 }
