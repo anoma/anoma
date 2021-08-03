@@ -212,16 +212,31 @@ impl Shell {
         #[cfg(not(feature = "dev"))]
         let validators = genesis.validators;
 
-        // Write validators' non-staked tokens amount
-        for (validator, non_staked_tokens) in
-            validators.iter().map(|validator| {
-                (&validator.pos_data.address, validator.non_staked_balance)
-            })
-        {
+        // Write validators' VPs and non-staked tokens amount
+        for validator in &validators {
+            let addr = &validator.pos_data.address;
+            // Write the VP
+            // TODO replace with https://github.com/anoma/anoma/issues/25)
+            self.storage
+                .write(&Key::validity_predicate(addr), user_vp.to_vec())
+                .expect("Unable to write user VP");
+            // Validator account key
+            let pk_key = key::ed25519::pk_key(addr);
             self.storage
                 .write(
-                    &token::balance_key(&address::xan(), validator),
-                    non_staked_tokens
+                    &pk_key,
+                    validator
+                        .account_key
+                        .try_to_vec()
+                        .expect("encode public key"),
+                )
+                .expect("Unable to set genesis user public key");
+            // Account balance (tokens no staked in PoS)
+            self.storage
+                .write(
+                    &token::balance_key(&address::xan(), addr),
+                    validator
+                        .non_staked_balance
                         .try_to_vec()
                         .expect("encode token amount"),
                 )
@@ -233,7 +248,7 @@ impl Shell {
         pos::init_genesis_storage(
             &mut self.storage,
             &genesis.pos_params,
-            validators,
+            validators.iter().map(|validator| &validator.pos_data),
             current_epoch,
         );
         ibc::init_genesis_storage(&mut self.storage);

@@ -121,19 +121,22 @@ pub mod cmds {
     /// Used as sub-commands (`SubCmd` instance) in `anoma` binary.
     #[derive(Debug)]
     pub enum AnomaClient {
+        // Ledger cmds
         TxCustom(TxCustom),
         TxTransfer(TxTransfer),
         TxUpdateVp(TxUpdateVp),
+        Bond(Bond),
+        // Gossip cmds
         Intent(Intent),
         CraftIntent(CraftIntent),
         SubscribeTopic(SubscribeTopic),
-        Bond(Bond),
     }
     impl Cmd for AnomaClient {
         fn add_sub(app: App) -> App {
             app.subcommand(TxCustom::def())
                 .subcommand(TxTransfer::def())
                 .subcommand(TxUpdateVp::def())
+                .subcommand(Bond::def())
                 .subcommand(Intent::def())
                 .subcommand(CraftIntent::def())
                 .subcommand(SubscribeTopic::def())
@@ -143,6 +146,7 @@ pub mod cmds {
             let tx_custom = SubCmd::parse(matches).map_fst(Self::TxCustom);
             let tx_transfer = SubCmd::parse(matches).map_fst(Self::TxTransfer);
             let tx_update_vp = SubCmd::parse(matches).map_fst(Self::TxUpdateVp);
+            let bond = SubCmd::parse(matches).map_fst(Self::Bond);
             let intent = SubCmd::parse(matches).map_fst(Self::Intent);
             let craft_intent =
                 SubCmd::parse(matches).map_fst(Self::CraftIntent);
@@ -151,6 +155,7 @@ pub mod cmds {
             tx_custom
                 .or(tx_transfer)
                 .or(tx_update_vp)
+                .or(bond)
                 .or(intent)
                 .or(craft_intent)
                 .or(subscribe_topic)
@@ -422,8 +427,8 @@ pub mod cmds {
 
         fn def() -> App {
             App::new(Self::CMD)
-                .about("subscribe to a topic.")
-                .add_args::<args::SubscribeTopic>()
+                .about("Bond tokens.")
+                .add_args::<args::Bond>()
         }
     }
 
@@ -540,6 +545,7 @@ pub mod args {
     const TARGET: Arg<Address> = arg("target");
     const TOKEN: Arg<Address> = arg("token");
     const AMOUNT: Arg<token::Amount> = arg("amount");
+    const SOURCE_OPT: ArgOpt<Address> = arg_opt("source");
     const VALIDATOR: Arg<Address> = arg("validator");
 
     /// Global command arguments
@@ -685,36 +691,36 @@ pub mod args {
     pub struct Bond {
         /// Common tx arguments
         pub tx: Tx,
-        /// Source address (delegator for delegation or validator for
-        /// self-bonds)
-        pub source: Address,
         /// Validator address
         pub validator: Address,
         /// Amount of tokens to stake in a bond
         pub amount: token::Amount,
+        /// Source address for delegations. For self-bonds, the validator is
+        /// also the source.
+        pub source: Option<Address>,
     }
     impl Args for Bond {
         fn parse(matches: &ArgMatches) -> Self {
             let tx = Tx::parse(matches);
-            let source = SOURCE.parse(matches);
             let validator = VALIDATOR.parse(matches);
             let amount = AMOUNT.parse(matches);
+            let source = SOURCE_OPT.parse(matches);
             Self {
                 tx,
-                source,
                 validator,
                 amount,
+                source,
             }
         }
 
         fn def(app: App) -> App {
             app.add_args::<Tx>()
-                .arg(SOURCE.def().about(
-                    "Source address (delegator for delegation or validator \
-                     for self-bonds).",
-                ))
                 .arg(VALIDATOR.def().about("Validator address."))
                 .arg(AMOUNT.def().about("Amount of tokens to stake in a bond."))
+                .arg(SOURCE_OPT.def().about(
+                    "Source address for delegations. For self-bonds, the \
+                     validator is also the source",
+                ))
         }
     }
 

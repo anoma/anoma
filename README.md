@@ -59,6 +59,7 @@ make reset-ledger
 export ALBERT=a1qq5qqqqqg4znssfsgcurjsfhgfpy2vjyxy6yg3z98pp5zvp5xgersvfjxvcnx3f4xycrzdfkak0xhx
 export BERTHA=a1qq5qqqqqxv6yydz9xc6ry33589q5x33eggcnjs2xx9znydj9xuens3phxppnwvzpg4rrqdpswve4n9
 export CHRISTEL=a1qq5qqqqqxsuygd2x8pq5yw2ygdryxs6xgsmrsdzx8pryxv34gfrrssfjgccyg3zpxezrqd2y2s3g5s
+export VALIDATOR=a1qq5qqqqqgfqnsd6pxse5zdj9g5crzsf5x4zyzv6yxerr2d2rxpryzwp5g5m5zvfjxv6ygsekjmraj0
 
 # Fungible token addresses
 export XAN=a1qq5qqqqqxuc5gvz9gycryv3sgye5v3j9gvurjv34g9prsd6x8qu5xs2ygdzrzsf38q6rss33xf42f3
@@ -80,6 +81,9 @@ cargo run --bin anomac -- transfer --source $BERTHA --target $ALBERT --token $XA
 
 # Submit a transaction to update an account's validity predicate
 cargo run --bin anomac -- update --address $BERTHA --code-path wasm/vp_user.wasm
+
+# Submit a self-bond of tokens for a validator
+cargo run --bin anomac -- bond --validator $VALIDATOR --amount 3.3
 
 # run gossip node with intent gossip system and rpc server (use default config)
 cargo run --bin anoma -- gossip --rpc "127.0.0.1:39111"
@@ -110,6 +114,7 @@ make clippy-check
 ## Logging
 
 To change the log level, set `ANOMA_LOG` environment variable to one of:
+
 - `error`
 - `warn`
 - `info`

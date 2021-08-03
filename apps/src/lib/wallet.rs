@@ -2,6 +2,20 @@
 
 use anoma::types::key::ed25519::{Keypair, PublicKey};
 
+#[cfg(feature = "dev")]
+pub fn validator_keypair() -> Keypair {
+    // generated from
+    // [`anoma::types::key::ed25519::gen_keypair`]
+    let bytes = [
+        80, 110, 166, 33, 135, 254, 34, 138, 253, 44, 214, 71, 50, 230, 39,
+        246, 124, 201, 68, 138, 194, 251, 192, 36, 55, 160, 211, 68, 65, 189,
+        121, 217, 94, 112, 76, 78, 70, 38, 94, 28, 204, 135, 80, 81, 73, 247,
+        155, 157, 46, 65, 77, 1, 164, 227, 128, 109, 252, 101, 240, 167, 57, 1,
+        193, 208,
+    ];
+    Keypair::from_bytes(&bytes).unwrap()
+}
+
 pub fn alberto_keypair() -> Keypair {
     // generated from
     // [`anoma::types::key::ed25519::gen_keypair`]
@@ -76,6 +90,7 @@ pub fn key_of(name: impl AsRef<str>) -> Keypair {
         "a1qq5qqqqqxv6yydz9xc6ry33589q5x33eggcnjs2xx9znydj9xuens3phxppnwvzpg4rrqdpswve4n9" => bertha_keypair(),
         "a1qq5qqqqqxsuygd2x8pq5yw2ygdryxs6xgsmrsdzx8pryxv34gfrrssfjgccyg3zpxezrqd2y2s3g5s" => christel_keypair(),
         "a1qq5qqqqqxu6rvdzpxymnqwfkxfznvsjxggunyd3jg5erg3p3geqnvv35gep5yvzxx5m5x3fsfje8td" => matchmaker_keypair(),
+        "a1qq5qqqqqgfqnsd6pxse5zdj9g5crzsf5x4zyzv6yxerr2d2rxpryzwp5g5m5zvfjxv6ygsekjmraj0" => validator_keypair(),
         other => {
             panic!("Dont' have keys for: {}", other)
         }

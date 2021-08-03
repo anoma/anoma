@@ -1,3 +1,31 @@
+/// A tx for a PoS bond that stakes tokens via a self-bond or delegation.
+#[cfg(feature = "tx_bond")]
+pub mod tx_bond {
+    use anoma_vm_env::tx_prelude::*;
+
+    #[transaction]
+    fn apply_tx(tx_data: Vec<u8>) {
+        let signed =
+            key::ed25519::SignedTxData::try_from_slice(&tx_data[..]).unwrap();
+        let bond =
+            pos::Bond::try_from_slice(&signed.data.unwrap()[..]).unwrap();
+        log_string(format!(
+            "apply_tx called with intent transfers: {:#?}",
+            tx_data
+        ));
+
+        let epoch = get_block_epoch();
+        match bond.source {
+            Some(_source) => {
+                todo!("delegation")
+            }
+            None => PoS
+                .validator_self_bond(&bond.validator, bond.amount, epoch)
+                .unwrap(),
+        }
+    }
+}
+
 /// A tx for a token transfer crafted by matchmaker from intents.
 /// This tx uses `intent::IntentTransfers` wrapped inside
 /// `key::ed25519::SignedTxData` as its input as declared in `shared` crate.
@@ -88,15 +116,15 @@ pub mod vp_token {
 
     #[validity_predicate]
     fn validate_tx(
-        tx_data: Vec<u8>,
+        _tx_data: Vec<u8>,
         addr: Address,
         keys_changed: HashSet<storage::Key>,
         verifiers: HashSet<Address>,
     ) -> bool {
         log_string(format!(
-            "validate_tx called with token addr: {}, key_changed: {:#?}, \
-             tx_data: {:#?}, verifiers: {:?}",
-            addr, keys_changed, tx_data, verifiers
+            "validate_tx called with token addr: {}, key_changed: {:?}, \
+             verifiers: {:?}",
+            addr, keys_changed, verifiers
         ));
 
         token::vp(&addr, &keys_changed, &verifiers)
@@ -138,7 +166,7 @@ pub mod vp_user {
         verifiers: HashSet<Address>,
     ) -> bool {
         log_string(format!(
-            "validate_tx called with user addr: {}, key_changed: {:#?}, \
+            "validate_tx called with user addr: {}, key_changed: {:?}, \
              verifiers: {:?}",
             addr, keys_changed, verifiers
         ));

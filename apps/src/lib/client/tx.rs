@@ -62,13 +62,14 @@ pub async fn submit_transfer(args: args::TxTransfer) {
 }
 
 pub async fn submit_bond(args: args::Bond) {
-    let source_key: Keypair = wallet::key_of(args.source.encode());
+    let source = args.source.as_ref().unwrap_or(&args.validator);
+    let source_key: Keypair = wallet::key_of(source.encode());
     let tx_code = std::fs::read(TX_BOND_WASM).unwrap();
 
     let bond = pos::Bond {
-        source: args.source,
         validator: args.validator,
         amount: args.amount,
+        source: args.source,
     };
     tracing::debug!("Bond data {:?}", bond);
     let data = bond

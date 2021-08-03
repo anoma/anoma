@@ -6,7 +6,6 @@ use std::str::FromStr;
 use std::sync::mpsc::Receiver;
 use std::time::Duration;
 
-use anoma::ledger::pos::GenesisValidator;
 #[cfg(feature = "dev")]
 use anoma::types::key::ed25519::Keypair;
 use serde_json::json;
@@ -15,6 +14,7 @@ use signal_hook::iterator::Signals;
 use tendermint::config::TendermintConfig;
 use thiserror::Error;
 
+use crate::genesis::Validator;
 use crate::std::sync::mpsc::Sender;
 use crate::{config, genesis};
 
@@ -60,7 +60,7 @@ pub fn run(
         write_validator_key(
             &home_dir,
             &genesis.validator,
-            &genesis.validator_key,
+            &genesis.validator_consensus_key,
         );
         write_chain_id(&home_dir, config::DEFAULT_CHAIN_ID);
     }
@@ -181,7 +181,7 @@ fn update_tendermint_config(home_dir: impl AsRef<Path>) -> Result<()> {
 #[cfg(feature = "dev")]
 fn write_validator_key(
     home_dir: impl AsRef<Path>,
-    validator: &GenesisValidator,
+    validator: &Validator,
     validator_key: &Keypair,
 ) {
     let home_dir = home_dir.as_ref();

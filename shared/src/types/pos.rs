@@ -19,10 +19,11 @@ use super::token;
     Deserialize,
 )]
 pub struct Bond {
-    /// Source address
-    pub source: Address,
     /// Validator address
     pub validator: Address,
     /// The amount of tokens
     pub amount: token::Amount,
+    /// Source address for delegations. For self-bonds, the validator is
+    /// also the source.
+    pub source: Option<Address>,
 }
