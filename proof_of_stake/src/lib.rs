@@ -578,7 +578,7 @@ pub trait PoSBase {
                     .get(current_epoch)
                     .unwrap()
                     .clone();
-                ValidatorSetUpdate::Deactived(consensus_key)
+                ValidatorSetUpdate::Deactivated(consensus_key)
             },
         );
         active_validators.chain(inactive_validators).for_each(f)
@@ -974,7 +974,7 @@ where
             // Check that it's not inactive anywhere from the current epoch
             // to the pipeline offset
             for epoch in
-                current_epoch.iter_range(OffsetPipelineLen::value(&params))
+                current_epoch.iter_range(OffsetPipelineLen::value(params))
             {
                 if let Some(ValidatorState::Inactive) =
                     validator_state.get(epoch)
@@ -987,18 +987,19 @@ where
         }
     }
 
+    let update_offset = DynEpochOffset::PipelineLen;
+
     // Update or create the bond
     let mut value = Bond {
         delta: HashMap::default(),
     };
-    value.delta.insert(
-        current_epoch + DynEpochOffset::PipelineLen.value(params),
-        amount,
-    );
+    value
+        .delta
+        .insert(current_epoch + update_offset.value(params), amount);
     let bond = match current_bond {
-        None => EpochedDelta::init(value, current_epoch, &params),
+        None => EpochedDelta::init(value, current_epoch, params),
         Some(mut bond) => {
-            bond.add(value, current_epoch, &params);
+            bond.add(value, current_epoch, params);
             bond
         }
     };
@@ -1007,13 +1008,18 @@ where
     let delta = TokenChange::from(amount);
     let validator_total_deltas = match validator_total_deltas {
         Some(mut validator_total_deltas) => {
-            validator_total_deltas.add(delta, current_epoch, params);
+            validator_total_deltas.add_at_offset(
+                delta,
+                current_epoch,
+                update_offset,
+                params,
+            );
             validator_total_deltas
         }
         None => EpochedDelta::init_at_offset(
             delta,
             current_epoch,
-            DynEpochOffset::PipelineLen,
+            update_offset,
             params,
         ),
     };
@@ -1026,7 +1032,7 @@ where
         params,
         &bond_id.validator,
         token_change,
-        DynEpochOffset::PipelineLen,
+        update_offset,
         validator_set,
         &validator_total_deltas,
         current_epoch,
@@ -1038,13 +1044,13 @@ where
         None => EpochedDelta::init_at_offset(
             VotingPowerDelta::default(),
             current_epoch,
-            DynEpochOffset::PipelineLen,
+            update_offset,
             params,
         ),
     };
     update_voting_powers(
         params,
-        DynEpochOffset::PipelineLen,
+        update_offset,
         &validator_total_deltas,
         &mut validator_voting_power,
         total_voting_power,
@@ -1146,6 +1152,7 @@ where
         None => EpochedDelta::init(Unbond::default(), current_epoch, params),
     };
 
+    let update_offset = DynEpochOffset::UnbondingLen;
     let mut to_unbond = amount;
     let to_unbond = &mut to_unbond;
     // Decrement the bond deltas starting from the rightmost value (a bond in a
@@ -1154,9 +1161,8 @@ where
         |bonds, _epoch| {
             bonds.delta.retain(|bond_start, bond_amount| {
                 let mut deltas = HashMap::default();
-                let unbond_end = current_epoch
-                    + DynEpochOffset::UnbondingLen.value(params)
-                    - 1;
+                let unbond_end =
+                    current_epoch + update_offset.value(params) - 1;
                 if to_unbond > bond_amount {
                     *to_unbond -= *bond_amount;
                     deltas.insert((*bond_start, unbond_end), *bond_amount);
@@ -1191,7 +1197,7 @@ where
         params,
         &bond_id.validator,
         token_change,
-        DynEpochOffset::UnbondingLen,
+        update_offset,
         validator_set,
         &validator_total_deltas,
         current_epoch,
@@ -1200,7 +1206,7 @@ where
     // Update the validator's and the total voting power.
     update_voting_powers(
         params,
-        DynEpochOffset::UnbondingLen,
+        update_offset,
         validator_total_deltas,
         validator_voting_power,
         total_voting_power,
@@ -1339,8 +1345,9 @@ where
     let voting_power_at_pipeline = validator_voting_power
         .get_at_offset(current_epoch, change_offset, params)
         .unwrap_or_default();
-    let voting_power_delta = voting_power_at_pipeline
-        - VotingPowerDelta::try_from_tokens(total_deltas_at_pipeline, params)?;
+    let voting_power_delta =
+        VotingPowerDelta::try_from_tokens(total_deltas_at_pipeline, params)?
+            - voting_power_at_pipeline;
     validator_voting_power.add_at_offset(
         voting_power_delta,
         current_epoch,

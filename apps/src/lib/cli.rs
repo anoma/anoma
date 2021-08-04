@@ -542,10 +542,10 @@ pub mod args {
     const FILE_PATH: ArgDefault<String> =
         arg_default("file-path", DefaultFn(|| "intent.data".into()));
     const SOURCE: Arg<Address> = arg("source");
+    const SOURCE_OPT: ArgOpt<Address> = SOURCE.opt();
     const TARGET: Arg<Address> = arg("target");
     const TOKEN: Arg<Address> = arg("token");
     const AMOUNT: Arg<token::Amount> = arg("amount");
-    const SOURCE_OPT: ArgOpt<Address> = arg_opt("source");
     const VALIDATOR: Arg<Address> = arg("validator");
 
     /// Global command arguments

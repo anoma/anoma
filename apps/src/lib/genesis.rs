@@ -60,10 +60,10 @@ pub fn genesis() -> Genesis {
             address,
             staking_reward_address,
             tokens: token::Amount::whole(100_000),
-            consensus_key: consensus_keypair.public.clone().into(),
-            staking_reward_key: staking_reward_keypair.public.clone().into(),
+            consensus_key: consensus_keypair.public.into(),
+            staking_reward_key: staking_reward_keypair.public.into(),
         },
-        account_key: account_keypair.public.clone().into(),
+        account_key: account_keypair.public.into(),
         non_staked_balance: token::Amount::whole(1_000),
     };
     let parameters = Parameters {

@@ -82,7 +82,7 @@ pub enum ValidatorSetUpdate<PK> {
     /// A validator is active
     Active(ActiveValidator<PK>),
     /// A validator who was active in the last update and is now inactive
-    Deactived(PK),
+    Deactivated(PK),
 }
 
 #[derive(Debug, Clone)]
@@ -217,7 +217,7 @@ impl VotingPowerDelta {
         change: impl Into<i128>,
         params: &PosParams,
     ) -> Result<Self, TryFromIntError> {
-        let delta: i128 = params.votes_per_token * change.into();
+        let delta: i128 = params.votes_per_token * change.into() / 1_000_000;
         let delta: i64 = TryFrom::try_from(delta)?;
         Ok(Self(delta))
     }
@@ -226,9 +226,16 @@ impl VotingPowerDelta {
         tokens: impl Into<u64>,
         params: &PosParams,
     ) -> Result<Self, TryFromIntError> {
-        let delta: i64 =
-            TryFrom::try_from(params.votes_per_token * tokens.into())?;
+        let delta: i64 = TryFrom::try_from(
+            params.votes_per_token * tokens.into() / 1_000_000,
+        )?;
         Ok(Self(delta))
+    }
+}
+
+impl Display for VotingPower {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.0)
     }
 }
 

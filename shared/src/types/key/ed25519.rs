@@ -1,7 +1,7 @@
 //! Ed25519 keys and related functionality
 
 use std::convert::TryInto;
-use std::fmt::Debug;
+use std::fmt::{Debug, Display};
 use std::hash::{Hash, Hasher};
 use std::io::{ErrorKind, Write};
 
@@ -312,6 +312,12 @@ impl From<PublicKey> for PublicKeyHash {
             hasher.finalize(),
             width = address::HASH_LEN
         ))
+    }
+}
+
+impl Display for PublicKeyHash {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.0)
     }
 }
 

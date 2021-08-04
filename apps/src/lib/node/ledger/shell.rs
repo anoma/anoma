@@ -369,7 +369,7 @@ impl Shell {
                             .expect("unexpected validator's voting power");
                         (consensus_key, power)
                     }
-                    ValidatorSetUpdate::Deactived(consensus_key) => {
+                    ValidatorSetUpdate::Deactivated(consensus_key) => {
                         // Any validators that have become inactive must
                         // have voting power set to 0 to remove them from
                         // the active set
