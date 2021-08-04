@@ -231,8 +231,9 @@ mod tests {
     /// 2. Submit a token transfer tx
     /// 3. Submit a transaction to update an account's validity predicate
     /// 4. Submit a custom tx
+    /// 5. Query token balance
     #[test]
-    fn ledger_txs() -> Result<()> {
+    fn ledger_txs_and_queries() -> Result<()> {
         let dir = setup();
 
         let base_dir = tempdir().unwrap();
@@ -313,6 +314,37 @@ mod tests {
                     status
                 );
             }
+        }
+
+        let query_args_and_expected_response = vec![
+            // 5. Query token balance
+            (
+                vec!["balance", "--owner", BERTHA, "--token", XAN],
+                // expect a decimal
+                r"XAN: (\d*\.)\d+",
+            ),
+        ];
+        for (query_args, expected) in &query_args_and_expected_response {
+            let mut cmd = Command::cargo_bin("anomac")?;
+            cmd.current_dir(&dir)
+                .env("ANOMA_LOG", "debug")
+                .args(&["--base-dir", base_dir_arg])
+                .args(query_args);
+            let cmd_str = format!("{:?}", cmd);
+
+            let mut session =
+                spawn_command(cmd, Some(10_000)).map_err(|e| {
+                    eyre!(format!("in command: {}\n\nReason: {}", cmd_str, e))
+                })?;
+            session.exp_regex(expected).map_err(|e| {
+                eyre!(format!("in command: {}\n\nReason: {}", cmd_str, e))
+            })?;
+
+            let status = session.process.wait().unwrap();
+            assert_eq!(
+                WaitStatus::Exited(session.process.child_pid, 0),
+                status
+            );
         }
 
         Ok(())
