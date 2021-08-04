@@ -521,6 +521,9 @@ pub mod args {
         }));
     const LEDGER_ADDRESS_OPT: ArgOpt<tendermint::net::Address> =
         LEDGER_ADDRESS.opt();
+    const LEDGER_ADDRESS_ABOUT: &str =
+        "Address of a ledger node as \"{scheme}://{host}:{port}\". If the \
+         scheme is not supplied, it is assumed to be TCP.";
     const DATA_PATH: Arg<PathBuf> = arg("data-path");
     const DATA_PATH_OPT: ArgOpt<PathBuf> = arg_opt("data-path");
     const CODE_PATH: Arg<PathBuf> = arg("code-path");
@@ -905,10 +908,7 @@ pub mod args {
                     .def()
                     .about("Simulate the transaction application."),
             )
-            .arg(LEDGER_ADDRESS_DEFAULT.def().about(
-                "Address of a ledger node as \"{scheme}://{host}:{port}\". If \
-                 the scheme is not supplied, it is assumed to be TCP.",
-            ))
+            .arg(LEDGER_ADDRESS_DEFAULT.def().about(LEDGER_ADDRESS_ABOUT))
         }
 
         fn parse(matches: &ArgMatches) -> Self {
@@ -930,10 +930,7 @@ pub mod args {
 
     impl Args for Query {
         fn def(app: App) -> App {
-            app.arg(LEDGER_ADDRESS_DEFAULT.def().about(
-                "Address of a ledger node as \"{scheme}://{host}:{port}\". If \
-                 the scheme is not supplied, it is assumed to be TCP.",
-            ))
+            app.arg(LEDGER_ADDRESS_DEFAULT.def().about(LEDGER_ADDRESS_ABOUT))
         }
 
         fn parse(matches: &ArgMatches) -> Self {
