@@ -5,14 +5,17 @@ use std::collections::HashSet;
 pub use anoma_proof_of_stake;
 pub use anoma_proof_of_stake::parameters::PosParams;
 use anoma_proof_of_stake::types::{BondId, GenesisValidator};
-use anoma_proof_of_stake::PoSBase;
+use anoma_proof_of_stake::validation::validate;
+use anoma_proof_of_stake::{validation, PoSBase};
+use borsh::BorshDeserialize;
+use itertools::Itertools;
 use thiserror::Error;
 
 use super::storage::types::{decode, encode};
 use crate::ledger::native_vp::{self, Ctx, NativeVp};
 use crate::ledger::storage::{self, Storage, StorageHasher};
 use crate::types::address::{self, Address, InternalAddress};
-use crate::types::storage::{Epoch, Key, KeySeg};
+use crate::types::storage::{DbKeySeg, Epoch, Key, KeySeg};
 use crate::types::{key, token};
 
 #[allow(missing_docs)]
@@ -57,10 +60,16 @@ pub fn init_genesis_storage<'a, DB, H>(
         .expect("Initialize PoS genesis storage")
 }
 
+// TODO export and re-use in vm_env::proof_of_stake
+type EpochedBond = anoma_proof_of_stake::epoched::EpochedDelta<
+    anoma_proof_of_stake::types::Bond<token::Amount>,
+    anoma_proof_of_stake::epoched::OffsetPipelineLen,
+>;
+
 impl<'a, DB, H> NativeVp for PoS<'a, DB, H>
 where
-    DB: storage::DB + for<'iter> storage::DBIter<'iter>,
-    H: StorageHasher,
+    DB: 'static + storage::DB + for<'iter> storage::DBIter<'iter>,
+    H: 'static + StorageHasher,
 {
     type Error = Error;
 
@@ -69,15 +78,85 @@ where
     fn validate_tx(
         &self,
         _tx_data: &[u8],
-        _keys_changed: &HashSet<Key>,
+        keys_changed: &HashSet<Key>,
         _verifiers: &HashSet<Address>,
     ) -> Result<bool> {
-        Ok(true)
+        use validation::Data;
+        use validation::DataUpdate::{self, *};
+        use validation::ValidatorUpdate::*;
+
+        let mut changes: Vec<DataUpdate<_, _>> = vec![];
+        let current_epoch = self.ctx.get_block_epoch()?;
+        for key in keys_changed {
+            if is_params_key(key) {
+                // TODO parameters changes are not yet implemented
+                return Ok(false);
+            } else if let Some(validator) =
+                is_validator_staking_reward_address_key(key)
+            {
+                let pre = self
+                    .ctx
+                    .read_pre(key)?
+                    .and_then(|bytes| Address::try_from_slice(&bytes[..]).ok());
+                let post = self
+                    .ctx
+                    .read_post(key)?
+                    .and_then(|bytes| Address::try_from_slice(&bytes[..]).ok());
+                changes.push(Validator {
+                    address: validator.clone(),
+                    update: StakingRewardAddress(Data { pre, post }),
+                });
+            } else if let Some(owner) =
+                token::is_balance_key(&<Self as anoma_proof_of_stake::PoSReadOnly>::staking_token_address(), key) {
+                if owner != &Address::Internal(Self::ADDR) {
+                    continue;
+                }
+                let pre = self
+                    .ctx
+                    .read_pre(key)?
+                    .and_then(|bytes| token::Amount::try_from_slice(&bytes[..]).ok());
+                let post = self
+                    .ctx
+                    .read_post(key)?
+                    .and_then(|bytes| token::Amount::try_from_slice(&bytes[..]).ok());
+                changes.push(Balance(Data{pre, post}));
+            } else if let Some(bond_id) =
+                is_bond_key(key) {
+                let pre = self
+                    .ctx
+                    .read_pre(key)?
+                    .and_then(|bytes| EpochedBond::try_from_slice(&bytes[..]).ok());
+                let post = self
+                    .ctx
+                    .read_post(key)?
+                    .and_then(|bytes| EpochedBond::try_from_slice(&bytes[..]).ok());
+                changes.push(Bond {
+                    id: bond_id.clone(),
+                    data: Data { pre, post },
+                });
+            } else {
+                return Ok(false);
+            }
+        }
+
+        let errors = validate::<Address, token::Amount, token::Change>(
+            changes,
+            current_epoch,
+        );
+        Ok(if errors.is_empty() {
+            true
+        } else {
+            tracing::info!(
+                "PoS validation errors: {}",
+                errors.iter().format(", ")
+            );
+            false
+        })
     }
 }
 
 const PARAMS_STORAGE_KEY: &str = "params";
-const VALIDATOR_STORAGE_KEY: &str = "validator";
+const VALIDATOR_STORAGE_PREFIX: &str = "validator";
 const VALIDATOR_STAKING_REWARD_ADDRESS_STORAGE_KEY: &str =
     "staking_reward_address";
 const VALIDATOR_CONSENSUS_KEY_STORAGE_KEY: &str = "consensus_key";
@@ -96,10 +175,22 @@ pub fn params_key() -> Key {
         .expect("Cannot obtain a storage key")
 }
 
+/// Is storage key for PoS parameters?
+pub fn is_params_key(key: &Key) -> bool {
+    match &key.segments[..] {
+        [DbKeySeg::AddressSeg(addr), DbKeySeg::StringSeg(key)]
+            if addr == &ADDRESS && key == PARAMS_STORAGE_KEY =>
+        {
+            true
+        }
+        _ => false,
+    }
+}
+
 /// Storage key prefix for validator data.
 fn validator_prefix(validator: &Address) -> Key {
     Key::from(ADDRESS.to_db_key())
-        .push(&VALIDATOR_STORAGE_KEY.to_owned())
+        .push(&VALIDATOR_STORAGE_PREFIX.to_owned())
         .expect("Cannot obtain a storage key")
         .push(&validator.to_db_key())
         .expect("Cannot obtain a storage key")
@@ -110,6 +201,20 @@ pub fn validator_staking_reward_address_key(validator: &Address) -> Key {
     validator_prefix(validator)
         .push(&VALIDATOR_STAKING_REWARD_ADDRESS_STORAGE_KEY.to_owned())
         .expect("Cannot obtain a storage key")
+}
+
+/// Is storage key for validator's staking reward address?
+pub fn is_validator_staking_reward_address_key(key: &Key) -> Option<&Address> {
+    match &key.segments[..] {
+        [DbKeySeg::AddressSeg(addr), DbKeySeg::StringSeg(prefix), DbKeySeg::AddressSeg(validator), DbKeySeg::StringSeg(key)]
+            if addr == &ADDRESS
+                && prefix == VALIDATOR_STORAGE_PREFIX
+                && key == VALIDATOR_STAKING_REWARD_ADDRESS_STORAGE_KEY =>
+        {
+            Some(validator)
+        }
+        _ => None,
+    }
 }
 
 /// Storage key for validator's consensus key.
@@ -154,6 +259,18 @@ pub fn bond_key(bond_id: &BondId<Address>) -> Key {
     bonds_prefix(&bond_id.source)
         .push(&bond_id.validator.to_db_key())
         .expect("Cannot obtain a storage key")
+}
+
+/// Is storage key for a bond?
+pub fn is_bond_key(key: &Key) -> Option<&BondId> {
+    match &key.segments[..] {
+        [DbKeySeg::AddressSeg(addr), DbKeySeg::StringSeg(prefix), DbKeySeg::AddressSeg(source), DbKeySeg::AddressSeg(validator)]
+            if addr == &ADDRESS && prefix == BOND_STORAGE_KEY =>
+        {
+            Some(BondId { source, validator })
+        }
+        _ => None,
+    }
 }
 
 /// Storage key prefix for all unbonds of the given source address.
@@ -278,12 +395,7 @@ where
     fn read_bond(
         &self,
         key: &anoma_proof_of_stake::types::BondId<Self::Address>,
-    ) -> Option<
-        anoma_proof_of_stake::epoched::EpochedDelta<
-            anoma_proof_of_stake::types::Bond<Self::TokenAmount>,
-            anoma_proof_of_stake::epoched::OffsetPipelineLen,
-        >,
-    > {
+    ) -> Option<EpochedBond> {
         let value = self.ctx.read_pre(&bond_key(key)).unwrap();
         value.map(|value| decode(value).unwrap())
     }

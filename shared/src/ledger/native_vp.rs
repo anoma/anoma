@@ -11,7 +11,7 @@ use crate::ledger::storage::{Storage, StorageHasher};
 use crate::ledger::{storage, vp_env};
 use crate::proto::Tx;
 use crate::types::address::{Address, InternalAddress};
-use crate::types::storage::{BlockHash, BlockHeight, Key};
+use crate::types::storage::{BlockHash, BlockHeight, Epoch, Key};
 use crate::vm::prefix_iter::PrefixIterators;
 
 #[allow(missing_docs)]
@@ -154,6 +154,13 @@ where
     /// current transaction is being applied.
     pub fn get_block_hash(&self) -> Result<BlockHash> {
         vp_env::get_block_hash(&mut *self.gas_meter.borrow_mut(), self.storage)
+            .map_err(Error::ContextError)
+    }
+
+    /// Getting the block epoch. The epoch is that of the block to which the
+    /// current transaction is being applied.
+    pub fn get_block_epoch(&self) -> Result<Epoch> {
+        vp_env::get_block_epoch(&mut *self.gas_meter.borrow_mut(), self.storage)
             .map_err(Error::ContextError)
     }
 

@@ -10,6 +10,7 @@ mod btree_set;
 pub mod epoched;
 pub mod parameters;
 pub mod types;
+pub mod validation;
 
 use core::fmt::Debug;
 use std::collections::{BTreeSet, HashMap};

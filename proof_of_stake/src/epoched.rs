@@ -16,9 +16,10 @@ where
     Offset: EpochOffset,
 {
     /// The epoch in which this data was last updated
-    last_update: Epoch,
-    data: Vec<Option<Data>>,
-    offset: PhantomData<Offset>,
+    // TODO maybe this would be better private (needed for validation)
+    pub(crate) last_update: Epoch,
+    pub(crate) data: Vec<Option<Data>>,
+    pub(crate) offset: PhantomData<Offset>,
 }
 
 #[derive(Debug, Clone, BorshDeserialize, BorshSerialize)]
@@ -28,9 +29,9 @@ where
     Offset: EpochOffset,
 {
     /// The epoch in which this data was last updated
-    last_update: Epoch,
-    data: Vec<Option<Data>>,
-    offset: PhantomData<Offset>,
+    pub(crate) last_update: Epoch,
+    pub(crate) data: Vec<Option<Data>>,
+    pub(crate) offset: PhantomData<Offset>,
 }
 
 /// Which offset should be used to set data. The value is read from
