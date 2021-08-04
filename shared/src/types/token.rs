@@ -1,5 +1,6 @@
 //! A basic fungible token
 
+use std::fmt::Display;
 use std::str::FromStr;
 
 use borsh::{BorshDeserialize, BorshSerialize};
@@ -14,6 +15,7 @@ use crate::types::storage::{DbKeySeg, Key, KeySeg};
 #[derive(
     Clone,
     Copy,
+    Default,
     BorshSerialize,
     BorshDeserialize,
     PartialEq,
@@ -33,12 +35,6 @@ const MAX_SCALE: u32 = 6;
 
 /// A change in tokens amount
 pub type Change = i128;
-
-impl Default for Amount {
-    fn default() -> Self {
-        Self { micro: 0 }
-    }
-}
 
 impl Amount {
     /// Get the amount as a [`Change`]
@@ -68,6 +64,14 @@ impl Amount {
 impl From<u64> for Amount {
     fn from(micro: u64) -> Self {
         Self { micro }
+    }
+}
+
+impl Display for Amount {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let decimal =
+            rust_decimal::Decimal::new(self.micro as i64, 6).normalize();
+        write!(f, "{}", decimal)
     }
 }
 
