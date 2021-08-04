@@ -121,6 +121,13 @@ pub fn balance_key(token_addr: &Address, owner: &Address) -> Key {
         .expect("Cannot obtain a storage key")
 }
 
+/// Obtain a storage key prefix for all users' balances.
+pub fn balance_prefix(token_addr: &Address) -> Key {
+    Key::from(token_addr.to_db_key())
+        .push(&BALANCE_STORAGE_KEY.to_owned())
+        .expect("Cannot obtain a storage key")
+}
+
 /// Check if the given storage key is balance key for the given token. If it is,
 /// returns the owner.
 pub fn is_balance_key<'a>(
