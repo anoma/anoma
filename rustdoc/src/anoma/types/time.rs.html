@@ -116,6 +116,35 @@
 <span id="113">113</span>
 <span id="114">114</span>
 <span id="115">115</span>
+<span id="116">116</span>
+<span id="117">117</span>
+<span id="118">118</span>
+<span id="119">119</span>
+<span id="120">120</span>
+<span id="121">121</span>
+<span id="122">122</span>
+<span id="123">123</span>
+<span id="124">124</span>
+<span id="125">125</span>
+<span id="126">126</span>
+<span id="127">127</span>
+<span id="128">128</span>
+<span id="129">129</span>
+<span id="130">130</span>
+<span id="131">131</span>
+<span id="132">132</span>
+<span id="133">133</span>
+<span id="134">134</span>
+<span id="135">135</span>
+<span id="136">136</span>
+<span id="137">137</span>
+<span id="138">138</span>
+<span id="139">139</span>
+<span id="140">140</span>
+<span id="141">141</span>
+<span id="142">142</span>
+<span id="143">143</span>
+<span id="144">144</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Types for dealing with time and durations.</span>
 
@@ -161,6 +190,35 @@
 <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">std</span>::<span class="ident">time</span>::<span class="ident">Duration</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">DurationSecs</span> {
     <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">duration_std</span>: <span class="ident">std</span>::<span class="ident">time</span>::<span class="ident">Duration</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="ident">DurationSecs</span>(<span class="ident">duration_std</span>.<span class="ident">as_secs</span>())
+    }
+}
+
+<span class="doccomment">/// A duration in nanos precision.</span>
+<span class="attribute">#[<span class="ident">derive</span>(
+    <span class="ident">Clone</span>,
+    <span class="ident">Copy</span>,
+    <span class="ident">Debug</span>,
+    <span class="ident">PartialEq</span>,
+    <span class="ident">Eq</span>,
+    <span class="ident">PartialOrd</span>,
+    <span class="ident">Ord</span>,
+    <span class="ident">Hash</span>,
+    <span class="ident">BorshSerialize</span>,
+    <span class="ident">BorshDeserialize</span>,
+)]</span>
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">DurationNanos</span> {
+    <span class="doccomment">/// The seconds</span>
+    <span class="kw">pub</span> <span class="ident">secs</span>: <span class="ident">u64</span>,
+    <span class="doccomment">/// The nano seconds</span>
+    <span class="kw">pub</span> <span class="ident">nanos</span>: <span class="ident">u32</span>,
+}
+
+<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">std</span>::<span class="ident">time</span>::<span class="ident">Duration</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">DurationNanos</span> {
+    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">duration_std</span>: <span class="ident">std</span>::<span class="ident">time</span>::<span class="ident">Duration</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="ident">DurationNanos</span> {
+            <span class="ident">secs</span>: <span class="ident">duration_std</span>.<span class="ident">as_secs</span>(),
+            <span class="ident">nanos</span>: <span class="ident">duration_std</span>.<span class="ident">subsec_nanos</span>(),
+        }
     }
 }
 
