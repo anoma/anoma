@@ -119,17 +119,8 @@ impl Shell {
             .expect("The genesis address shouldn't fail decoding");
         let users = vec![alberto, bertha, christel];
 
-        let tokens = vec![
-            address::xan(),
-            address::btc(),
-            address::eth(),
-            address::dot(),
-            address::schnitzel(),
-            address::apfel(),
-            address::kartoffel(),
-        ];
-
-        for token in &tokens {
+        let tokens = address::tokens();
+        for token in tokens.keys() {
             // default tokens VPs for testing
             let key = Key::validity_predicate(&token);
             self.storage
@@ -137,7 +128,7 @@ impl Shell {
                 .expect("Unable to write token VP");
         }
 
-        for (user, token) in users.iter().cartesian_product(tokens.iter()) {
+        for (user, token) in users.iter().cartesian_product(tokens.keys()) {
             // default user VPs for testing
             self.storage
                 .write(&Key::validity_predicate(user), user_vp.to_vec())
