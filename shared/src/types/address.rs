@@ -301,16 +301,18 @@ pub fn kartoffel() -> Address {
 
 /// Temporary helper for testing, a hash map of tokens addresses with their
 /// informal currency codes.
-pub fn tokens() -> HashMap<Address, String> {
-    let mut result = HashMap::default();
-    result.insert(xan(), "XAN".to_string());
-    result.insert(btc(), "BTC".into());
-    result.insert(eth(), "ETH".into());
-    result.insert(dot(), "DOT".into());
-    result.insert(schnitzel(), "Schnitzel".into());
-    result.insert(apfel(), "Apfel".into());
-    result.insert(kartoffel(), "Kartoffel".into());
-    result
+pub fn tokens() -> HashMap<Address, &'static str> {
+    vec![
+        (xan(), "XAN"),
+        (btc(), "BTC"),
+        (eth(), "ETH"),
+        (dot(), "DOT"),
+        (schnitzel(), "Schnitzel"),
+        (apfel(), "Apfel"),
+        (kartoffel(), "Kartoffel"),
+    ]
+    .into_iter()
+    .collect()
 }
 
 /// Temporary helper for testing
