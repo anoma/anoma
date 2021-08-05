@@ -7,26 +7,40 @@ use std::ops::{Add, Sub};
 use borsh::{BorshDeserialize, BorshSerialize};
 use thiserror::Error;
 
-use crate::epoched::{EpochedDelta, OffsetPipelineLen};
+use crate::epoched::{EpochedDelta, OffsetPipelineLen, OffsetUnboundingLen};
 use crate::types::{Bond, BondId, Epoch};
 
 #[allow(missing_docs)]
 #[derive(Error, Debug)]
-pub enum Error {
-    #[error("Validator staking reward address is required")]
-    StakingRewardAddressIsRequired,
+pub enum Error<TokenChange>
+where
+    TokenChange: Debug + Display,
+{
+    #[error("Validator staking reward address is required for validator {0}")]
+    StakingRewardAddressIsRequired(String),
     #[error(
-        "Staking reward address must be different from the validator's address"
+        "Staking reward address must be different from the validator's \
+         address {0}"
     )]
-    StakingRewardAddressEqValidator,
+    StakingRewardAddressEqValidator(String),
     #[error("Unexpectedly missing balance value")]
     MissingBalance,
     #[error("Last update should be equal to the current epoch")]
     InvalidLastUpdate,
+    #[error(
+        "Invalid staking token balances. Balance delta {balance_delta}, \
+         bonded {bonded}, unbonded {unbonded}, withdrawn {}."
+    )]
+    InvalidBalances {
+        balance_delta: TokenChange,
+        bonded: TokenChange,
+        unbonded: TokenChange,
+        withdrawn: TokenChange,
+    },
 }
 
 #[derive(Clone, Debug)]
-pub enum DataUpdate<Address, TokenAmount>
+pub enum DataUpdate<Address, TokenAmount, TokenChange>
 where
     Address: Display + Debug + Clone + PartialEq + Eq + PartialOrd + Ord + Hash,
     TokenAmount: Clone
@@ -37,6 +51,19 @@ where
         + Add<Output = TokenAmount>
         + BorshDeserialize
         + BorshSerialize,
+    TokenChange: Display
+        + Debug
+        + Default
+        + Clone
+        + Copy
+        + Add<Output = TokenChange>
+        + Sub<Output = TokenChange>
+        + From<TokenAmount>
+        + Into<i128>
+        + PartialEq
+        + Eq
+        + BorshDeserialize
+        + BorshSerialize,
 {
     Balance(Data<TokenAmount>),
     Bond {
@@ -45,16 +72,28 @@ where
     },
     Validator {
         address: Address,
-        update: ValidatorUpdate<Address>,
+        update: ValidatorUpdate<Address, TokenChange>,
     },
 }
 
 #[derive(Clone, Debug)]
-pub enum ValidatorUpdate<Address>
+pub enum ValidatorUpdate<Address, TokenChange>
 where
     Address: Clone + Debug,
+    TokenChange: Display
+        + Debug
+        + Default
+        + Clone
+        + Copy
+        + Add<Output = TokenChange>
+        + Sub<Output = TokenChange>
+        + PartialEq
+        + Eq
+        + BorshDeserialize
+        + BorshSerialize,
 {
     StakingRewardAddress(Data<Address>),
+    TotalDeltas(Data<EpochedDelta<TokenChange, OffsetUnboundingLen>>),
 }
 
 #[derive(Clone, Debug)]
@@ -69,12 +108,13 @@ where
 }
 
 pub fn validate<Address, TokenAmount, TokenChange>(
-    changes: Vec<DataUpdate<Address, TokenAmount>>,
+    changes: Vec<DataUpdate<Address, TokenAmount, TokenChange>>,
     current_epoch: impl Into<Epoch>,
-) -> Vec<Error>
+) -> Vec<Error<TokenChange>>
 where
     Address: Display + Debug + Clone + PartialEq + Eq + PartialOrd + Ord + Hash,
-    TokenAmount: Clone
+    TokenAmount: Display
+        + Clone
         + Debug
         + Default
         + Eq
@@ -82,13 +122,19 @@ where
         + Add<Output = TokenAmount>
         + BorshDeserialize
         + BorshSerialize,
-    TokenChange: Debug
+    TokenChange: Display
+        + Debug
+        + Default
         + Clone
         + Copy
         + Add<Output = TokenChange>
         + Sub<Output = TokenChange>
         + From<TokenAmount>
-        + Into<i128>,
+        + Into<i128>
+        + PartialEq
+        + Eq
+        + BorshDeserialize
+        + BorshSerialize,
 {
     let current_epoch = current_epoch.into();
     use DataUpdate::*;
@@ -97,19 +143,26 @@ where
     let mut errors = vec![];
     let mut balance_delta: Option<TokenChange> = None;
     let mut bond_delta: Option<TokenChange> = None;
+    let mut unbond_delta: Option<TokenChange> = None;
     let mut withdraw_delta: Option<TokenChange> = None;
     for change in changes {
         match change {
-            Validator {
-                address,
-                update: StakingRewardAddress(data),
-            } => match (data.pre, data.post) {
-                (Some(_), Some(post)) => {
-                    if post == address {
-                        errors.push(Error::StakingRewardAddressEqValidator);
+            Validator { address, update } => match update {
+                StakingRewardAddress(data) => match (data.pre, data.post) {
+                    (Some(_), Some(post)) => {
+                        if post == address {
+                            errors.push(
+                                Error::StakingRewardAddressEqValidator(
+                                    address.to_string(),
+                                ),
+                            );
+                        }
                     }
-                }
-                _ => errors.push(Error::StakingRewardAddressIsRequired),
+                    _ => errors.push(Error::StakingRewardAddressIsRequired(
+                        address.to_string(),
+                    )),
+                },
+                TotalDeltas(data) => todo!(),
             },
             Balance(data) => match (data.pre, data.post) {
                 (None, Some(post)) => balance_delta = Some(post.into()),
@@ -134,8 +187,17 @@ where
         }
     }
     // TODO check balance_delta against bonds & withdrawals
-    if balance_delta != bond_delta - withdraw_delta {
-        errors.push(todo!())
+    let balance_delta = balance_delta.unwrap_or_default();
+    let bonded = bond_delta.unwrap_or_default();
+    let unbonded = unbond_delta.unwrap_or_default();
+    let withdrawn = withdraw_delta.unwrap_or_default();
+    if balance_delta != bonded - unbonded - withdrawn {
+        errors.push(Error::InvalidBalances {
+            balance_delta,
+            bonded,
+            unbonded,
+            withdrawn,
+        })
     }
 
     errors

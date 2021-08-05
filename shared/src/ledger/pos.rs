@@ -4,7 +4,9 @@ use std::collections::HashSet;
 
 pub use anoma_proof_of_stake;
 pub use anoma_proof_of_stake::parameters::PosParams;
-use anoma_proof_of_stake::types::{BondId, GenesisValidator};
+pub use anoma_proof_of_stake::types::{
+    self, TotalVotingPowers, ValidatorStates, ValidatorVotingPowers,
+};
 use anoma_proof_of_stake::validation::validate;
 use anoma_proof_of_stake::{validation, PoSBase};
 use borsh::BorshDeserialize;
@@ -28,11 +30,6 @@ pub enum Error {
 /// PoS functions result
 pub type Result<T> = std::result::Result<T, Error>;
 
-/// Genesis validator data for PoS. Type alias for library type with concrete
-/// type parameters.
-pub type PoSGenesisValidator =
-    GenesisValidator<Address, token::Amount, key::ed25519::PublicKey>;
-
 const ADDRESS: Address = Address::Internal(InternalAddress::PoS);
 
 /// Proof-of-Stake VP
@@ -49,7 +46,7 @@ where
 pub fn init_genesis_storage<'a, DB, H>(
     storage: &mut Storage<DB, H>,
     params: &'a PosParams,
-    validators: impl Iterator<Item = &'a PoSGenesisValidator> + Clone + 'a,
+    validators: impl Iterator<Item = &'a GenesisValidator> + Clone + 'a,
     current_epoch: Epoch,
 ) where
     DB: storage::DB + for<'iter> storage::DBIter<'iter>,
@@ -60,10 +57,33 @@ pub fn init_genesis_storage<'a, DB, H>(
         .expect("Initialize PoS genesis storage")
 }
 
-// TODO export and re-use in vm_env::proof_of_stake
-type EpochedBond = anoma_proof_of_stake::epoched::EpochedDelta<
-    anoma_proof_of_stake::types::Bond<token::Amount>,
-    anoma_proof_of_stake::epoched::OffsetPipelineLen,
+/// Alias for a PoS type with the same name with concrete type parameters
+pub type ValidatorConsensusKeys =
+    anoma_proof_of_stake::types::ValidatorConsensusKeys<
+        key::ed25519::PublicKey,
+    >;
+
+/// Alias for a PoS type with the same name with concrete type parameters
+pub type ValidatorTotalDeltas =
+    anoma_proof_of_stake::types::ValidatorTotalDeltas<token::Change>;
+
+/// Alias for a PoS type with the same name with concrete type parameters
+pub type Bonds = anoma_proof_of_stake::types::Bonds<token::Amount>;
+
+/// Alias for a PoS type with the same name with concrete type parameters
+pub type Unbonds = anoma_proof_of_stake::types::Unbonds<token::Amount>;
+
+/// Alias for a PoS type with the same name with concrete type parameters
+pub type ValidatorSets = anoma_proof_of_stake::types::ValidatorSets<Address>;
+
+/// Alias for a PoS type with the same name with concrete type parameters
+pub type BondId = anoma_proof_of_stake::types::BondId<Address>;
+
+/// Alias for a PoS type with the same name with concrete type parameters
+pub type GenesisValidator = anoma_proof_of_stake::types::GenesisValidator<
+    Address,
+    token::Amount,
+    key::ed25519::PublicKey,
 >;
 
 impl<'a, DB, H> NativeVp for PoS<'a, DB, H>
@@ -85,7 +105,7 @@ where
         use validation::DataUpdate::{self, *};
         use validation::ValidatorUpdate::*;
 
-        let mut changes: Vec<DataUpdate<_, _>> = vec![];
+        let mut changes: Vec<DataUpdate<_, _, _>> = vec![];
         let current_epoch = self.ctx.get_block_epoch()?;
         for key in keys_changed {
             if is_params_key(key) {
@@ -106,6 +126,21 @@ where
                     address: validator.clone(),
                     update: StakingRewardAddress(Data { pre, post }),
                 });
+            } else if let Some(validator) =
+                is_validator_total_deltas_key(key)
+            {
+                let pre = self
+                    .ctx
+                    .read_pre(key)?
+                    .and_then(|bytes| ValidatorTotalDeltas::try_from_slice(&bytes[..]).ok());
+                let post = self
+                    .ctx
+                    .read_post(key)?
+                    .and_then(|bytes| ValidatorTotalDeltas::try_from_slice(&bytes[..]).ok());
+                changes.push(Validator {
+                    address: validator.clone(),
+                    update: TotalDeltas(Data { pre, post }),
+                });
             } else if let Some(owner) =
                 token::is_balance_key(&<Self as anoma_proof_of_stake::PoSReadOnly>::staking_token_address(), key) {
                 if owner != &Address::Internal(Self::ADDR) {
@@ -125,11 +160,11 @@ where
                 let pre = self
                     .ctx
                     .read_pre(key)?
-                    .and_then(|bytes| EpochedBond::try_from_slice(&bytes[..]).ok());
+                    .and_then(|bytes| Bonds::try_from_slice(&bytes[..]).ok());
                 let post = self
                     .ctx
                     .read_post(key)?
-                    .and_then(|bytes| EpochedBond::try_from_slice(&bytes[..]).ok());
+                    .and_then(|bytes| Bonds::try_from_slice(&bytes[..]).ok());
                 changes.push(Bond {
                     id: bond_id.clone(),
                     data: Data { pre, post },
@@ -139,10 +174,7 @@ where
             }
         }
 
-        let errors = validate::<Address, token::Amount, token::Change>(
-            changes,
-            current_epoch,
-        );
+        let errors = validate(changes, current_epoch);
         Ok(if errors.is_empty() {
             true
         } else {
@@ -224,11 +256,39 @@ pub fn validator_consensus_key_key(validator: &Address) -> Key {
         .expect("Cannot obtain a storage key")
 }
 
+/// Is storage key for validator's consensus key?
+pub fn is_validator_consensus_key_key(key: &Key) -> Option<&Address> {
+    match &key.segments[..] {
+        [DbKeySeg::AddressSeg(addr), DbKeySeg::StringSeg(prefix), DbKeySeg::AddressSeg(validator), DbKeySeg::StringSeg(key)]
+            if addr == &ADDRESS
+                && prefix == VALIDATOR_STORAGE_PREFIX
+                && key == VALIDATOR_CONSENSUS_KEY_STORAGE_KEY =>
+        {
+            Some(validator)
+        }
+        _ => None,
+    }
+}
+
 /// Storage key for validator's state.
 pub fn validator_state_key(validator: &Address) -> Key {
     validator_prefix(validator)
         .push(&VALIDATOR_STATE_STORAGE_KEY.to_owned())
         .expect("Cannot obtain a storage key")
+}
+
+/// Is storage key for validator's state?
+pub fn is_validator_state_key(key: &Key) -> Option<&Address> {
+    match &key.segments[..] {
+        [DbKeySeg::AddressSeg(addr), DbKeySeg::StringSeg(prefix), DbKeySeg::AddressSeg(validator), DbKeySeg::StringSeg(key)]
+            if addr == &ADDRESS
+                && prefix == VALIDATOR_STORAGE_PREFIX
+                && key == VALIDATOR_STATE_STORAGE_KEY =>
+        {
+            Some(validator)
+        }
+        _ => None,
+    }
 }
 
 /// Storage key for validator's total deltas.
@@ -238,11 +298,39 @@ pub fn validator_total_deltas_key(validator: &Address) -> Key {
         .expect("Cannot obtain a storage key")
 }
 
+/// Is storage key for validator's total deltas?
+pub fn is_validator_total_deltas_key(key: &Key) -> Option<&Address> {
+    match &key.segments[..] {
+        [DbKeySeg::AddressSeg(addr), DbKeySeg::StringSeg(prefix), DbKeySeg::AddressSeg(validator), DbKeySeg::StringSeg(key)]
+            if addr == &ADDRESS
+                && prefix == VALIDATOR_STORAGE_PREFIX
+                && key == VALIDATOR_TOTAL_DELTAS_STORAGE_KEY =>
+        {
+            Some(validator)
+        }
+        _ => None,
+    }
+}
+
 /// Storage key for validator's voting power.
 pub fn validator_voting_power_key(validator: &Address) -> Key {
     validator_prefix(validator)
         .push(&VALIDATOR_VOTING_POWER_STORAGE_KEY.to_owned())
         .expect("Cannot obtain a storage key")
+}
+
+/// Is storage key for validator's voting power?
+pub fn is_validator_voting_power_key(key: &Key) -> Option<&Address> {
+    match &key.segments[..] {
+        [DbKeySeg::AddressSeg(addr), DbKeySeg::StringSeg(prefix), DbKeySeg::AddressSeg(validator), DbKeySeg::StringSeg(key)]
+            if addr == &ADDRESS
+                && prefix == VALIDATOR_STORAGE_PREFIX
+                && key == VALIDATOR_VOTING_POWER_STORAGE_KEY =>
+        {
+            Some(validator)
+        }
+        _ => None,
+    }
 }
 
 /// Storage key prefix for all bonds of the given source address.
@@ -255,19 +343,22 @@ fn bonds_prefix(source: &Address) -> Key {
 }
 
 /// Storage key for a bond with the given ID (source and validator).
-pub fn bond_key(bond_id: &BondId<Address>) -> Key {
+pub fn bond_key(bond_id: &BondId) -> Key {
     bonds_prefix(&bond_id.source)
         .push(&bond_id.validator.to_db_key())
         .expect("Cannot obtain a storage key")
 }
 
 /// Is storage key for a bond?
-pub fn is_bond_key(key: &Key) -> Option<&BondId> {
+pub fn is_bond_key(key: &Key) -> Option<BondId> {
     match &key.segments[..] {
         [DbKeySeg::AddressSeg(addr), DbKeySeg::StringSeg(prefix), DbKeySeg::AddressSeg(source), DbKeySeg::AddressSeg(validator)]
             if addr == &ADDRESS && prefix == BOND_STORAGE_KEY =>
         {
-            Some(BondId { source, validator })
+            Some(BondId {
+                source: source.clone(),
+                validator: validator.clone(),
+            })
         }
         _ => None,
     }
@@ -283,10 +374,25 @@ fn unbonds_prefix(source: &Address) -> Key {
 }
 
 /// Storage key for an unbond with the given ID (source and validator).
-pub fn unbond_key(bond_id: &BondId<Address>) -> Key {
+pub fn unbond_key(bond_id: &BondId) -> Key {
     unbonds_prefix(&bond_id.source)
         .push(&bond_id.validator.to_db_key())
         .expect("Cannot obtain a storage key")
+}
+
+/// Is storage key for a unbond?
+pub fn is_unbond_key(key: &Key) -> Option<BondId> {
+    match &key.segments[..] {
+        [DbKeySeg::AddressSeg(addr), DbKeySeg::StringSeg(prefix), DbKeySeg::AddressSeg(source), DbKeySeg::AddressSeg(validator)]
+            if addr == &ADDRESS && prefix == UNBOND_STORAGE_KEY =>
+        {
+            Some(BondId {
+                source: source.clone(),
+                validator: validator.clone(),
+            })
+        }
+        _ => None,
+    }
 }
 
 /// Storage key for validator set (active and inactive).
@@ -296,11 +402,35 @@ pub fn validator_set_key() -> Key {
         .expect("Cannot obtain a storage key")
 }
 
+/// Is storage key for a validator set?
+pub fn is_validator_set_key(key: &Key) -> bool {
+    match &key.segments[..] {
+        [DbKeySeg::AddressSeg(addr), DbKeySeg::StringSeg(key)]
+            if addr == &ADDRESS && key == VALIDATOR_SET_STORAGE_KEY =>
+        {
+            true
+        }
+        _ => false,
+    }
+}
+
 /// Storage key for total voting power.
 pub fn total_voting_power_key() -> Key {
     Key::from(ADDRESS.to_db_key())
         .push(&TOTAL_VOTING_POWER_STORAGE_KEY.to_owned())
         .expect("Cannot obtain a storage key")
+}
+
+/// Is storage key for total voting power?
+pub fn is_total_voting_power_key(key: &Key) -> bool {
+    match &key.segments[..] {
+        [DbKeySeg::AddressSeg(addr), DbKeySeg::StringSeg(key)]
+            if addr == &ADDRESS && key == TOTAL_VOTING_POWER_STORAGE_KEY =>
+        {
+            true
+        }
+        _ => false,
+    }
 }
 
 impl<D, H> anoma_proof_of_stake::PoSReadOnly for PoS<'_, D, H>
@@ -319,7 +449,7 @@ where
         address::xan()
     }
 
-    fn read_params(&self) -> anoma_proof_of_stake::parameters::PosParams {
+    fn read_params(&self) -> PosParams {
         let value = self.ctx.read_pre(&params_key()).unwrap().unwrap();
         decode(value).unwrap()
     }
@@ -338,12 +468,7 @@ where
     fn read_validator_consensus_key(
         &self,
         key: &Self::Address,
-    ) -> Option<
-        anoma_proof_of_stake::epoched::Epoched<
-            Self::PublicKey,
-            anoma_proof_of_stake::epoched::OffsetPipelineLen,
-        >,
-    > {
+    ) -> Option<ValidatorConsensusKeys> {
         let value = self
             .ctx
             .read_pre(&validator_consensus_key_key(key))
@@ -354,12 +479,7 @@ where
     fn read_validator_state(
         &self,
         key: &Self::Address,
-    ) -> Option<
-        anoma_proof_of_stake::epoched::Epoched<
-            anoma_proof_of_stake::types::ValidatorState,
-            anoma_proof_of_stake::epoched::OffsetPipelineLen,
-        >,
-    > {
+    ) -> Option<ValidatorStates> {
         let value = self.ctx.read_pre(&validator_state_key(key)).unwrap();
         value.map(|value| decode(value).unwrap())
     }
@@ -367,12 +487,7 @@ where
     fn read_validator_total_deltas(
         &self,
         key: &Self::Address,
-    ) -> Option<
-        anoma_proof_of_stake::epoched::EpochedDelta<
-            Self::TokenChange,
-            anoma_proof_of_stake::epoched::OffsetUnboundingLen,
-        >,
-    > {
+    ) -> Option<ValidatorTotalDeltas> {
         let value =
             self.ctx.read_pre(&validator_total_deltas_key(key)).unwrap();
         value.map(|value| decode(value).unwrap())
@@ -381,54 +496,28 @@ where
     fn read_validator_voting_power(
         &self,
         key: &Self::Address,
-    ) -> Option<
-        anoma_proof_of_stake::epoched::EpochedDelta<
-            anoma_proof_of_stake::types::VotingPowerDelta,
-            anoma_proof_of_stake::epoched::OffsetUnboundingLen,
-        >,
-    > {
+    ) -> Option<ValidatorVotingPowers> {
         let value =
             self.ctx.read_pre(&validator_voting_power_key(key)).unwrap();
         value.map(|value| decode(value).unwrap())
     }
 
-    fn read_bond(
-        &self,
-        key: &anoma_proof_of_stake::types::BondId<Self::Address>,
-    ) -> Option<EpochedBond> {
+    fn read_bond(&self, key: &BondId) -> Option<Bonds> {
         let value = self.ctx.read_pre(&bond_key(key)).unwrap();
         value.map(|value| decode(value).unwrap())
     }
 
-    fn read_unbond(
-        &self,
-        key: &anoma_proof_of_stake::types::BondId<Self::Address>,
-    ) -> Option<
-        anoma_proof_of_stake::epoched::EpochedDelta<
-            anoma_proof_of_stake::types::Unbond<Self::TokenAmount>,
-            anoma_proof_of_stake::epoched::OffsetUnboundingLen,
-        >,
-    > {
+    fn read_unbond(&self, key: &BondId) -> Option<Unbonds> {
         let value = self.ctx.read_pre(&unbond_key(key)).unwrap();
         value.map(|value| decode(value).unwrap())
     }
 
-    fn read_validator_set(
-        &self,
-    ) -> anoma_proof_of_stake::epoched::Epoched<
-        anoma_proof_of_stake::types::ValidatorSet<Self::Address>,
-        anoma_proof_of_stake::epoched::OffsetUnboundingLen,
-    > {
+    fn read_validator_set(&self) -> ValidatorSets {
         let value = self.ctx.read_pre(&validator_set_key()).unwrap().unwrap();
         decode(value).unwrap()
     }
 
-    fn read_total_voting_power(
-        &self,
-    ) -> anoma_proof_of_stake::epoched::EpochedDelta<
-        anoma_proof_of_stake::types::VotingPowerDelta,
-        anoma_proof_of_stake::epoched::OffsetUnboundingLen,
-    > {
+    fn read_total_voting_power(&self) -> TotalVotingPowers {
         let value = self
             .ctx
             .read_pre(&total_voting_power_key())
@@ -448,12 +537,7 @@ where
     type TokenAmount = token::Amount;
     type TokenChange = token::Change;
 
-    fn read_validator_set(
-        &self,
-    ) -> anoma_proof_of_stake::epoched::Epoched<
-        anoma_proof_of_stake::types::ValidatorSet<Self::Address>,
-        anoma_proof_of_stake::epoched::OffsetUnboundingLen,
-    > {
+    fn read_validator_set(&self) -> ValidatorSets {
         let (value, _gas) = self.read(&validator_set_key()).unwrap();
         decode(value.unwrap()).unwrap()
     }
@@ -461,21 +545,13 @@ where
     fn read_validator_consensus_key(
         &self,
         key: &Self::Address,
-    ) -> Option<
-        anoma_proof_of_stake::epoched::Epoched<
-            Self::PublicKey,
-            anoma_proof_of_stake::epoched::OffsetPipelineLen,
-        >,
-    > {
+    ) -> Option<ValidatorConsensusKeys> {
         let (value, _gas) =
             self.read(&validator_consensus_key_key(key)).unwrap();
         value.map(|value| decode(value).unwrap())
     }
 
-    fn write_params(
-        &mut self,
-        params: &anoma_proof_of_stake::parameters::PosParams,
-    ) {
+    fn write_params(&mut self, params: &PosParams) {
         self.write(&params_key(), encode(params)).unwrap();
     }
 
@@ -491,10 +567,7 @@ where
     fn write_validator_consensus_key(
         &mut self,
         key: &Self::Address,
-        value: &anoma_proof_of_stake::epoched::Epoched<
-            Self::PublicKey,
-            anoma_proof_of_stake::epoched::OffsetPipelineLen,
-        >,
+        value: &ValidatorConsensusKeys,
     ) {
         self.write(&validator_consensus_key_key(key), encode(value))
             .unwrap();
@@ -503,10 +576,7 @@ where
     fn write_validator_state(
         &mut self,
         key: &Self::Address,
-        value: &anoma_proof_of_stake::epoched::Epoched<
-            anoma_proof_of_stake::types::ValidatorState,
-            anoma_proof_of_stake::epoched::OffsetPipelineLen,
-        >,
+        value: &ValidatorStates,
     ) {
         self.write(&validator_state_key(key), encode(value))
             .unwrap();
@@ -515,10 +585,7 @@ where
     fn write_validator_total_deltas(
         &mut self,
         key: &Self::Address,
-        value: &anoma_proof_of_stake::epoched::EpochedDelta<
-            Self::TokenChange,
-            anoma_proof_of_stake::epoched::OffsetUnboundingLen,
-        >,
+        value: &ValidatorTotalDeltas,
     ) {
         self.write(&validator_total_deltas_key(key), encode(value))
             .unwrap();
@@ -527,43 +594,21 @@ where
     fn write_validator_voting_power(
         &mut self,
         key: &Self::Address,
-        value: &anoma_proof_of_stake::epoched::EpochedDelta<
-            anoma_proof_of_stake::types::VotingPowerDelta,
-            anoma_proof_of_stake::epoched::OffsetUnboundingLen,
-        >,
+        value: &ValidatorVotingPowers,
     ) {
         self.write(&validator_voting_power_key(key), encode(value))
             .unwrap();
     }
 
-    fn write_bond(
-        &mut self,
-        key: &BondId<Self::Address>,
-        value: &anoma_proof_of_stake::epoched::EpochedDelta<
-            anoma_proof_of_stake::types::Bond<Self::TokenAmount>,
-            anoma_proof_of_stake::epoched::OffsetPipelineLen,
-        >,
-    ) {
+    fn write_bond(&mut self, key: &BondId, value: &Bonds) {
         self.write(&bond_key(key), encode(value)).unwrap();
     }
 
-    fn write_validator_set(
-        &mut self,
-        value: &anoma_proof_of_stake::epoched::Epoched<
-            anoma_proof_of_stake::types::ValidatorSet<Self::Address>,
-            anoma_proof_of_stake::epoched::OffsetUnboundingLen,
-        >,
-    ) {
+    fn write_validator_set(&mut self, value: &ValidatorSets) {
         self.write(&validator_set_key(), encode(value)).unwrap();
     }
 
-    fn write_total_voting_power(
-        &mut self,
-        value: &anoma_proof_of_stake::epoched::EpochedDelta<
-            anoma_proof_of_stake::types::VotingPowerDelta,
-            anoma_proof_of_stake::epoched::OffsetUnboundingLen,
-        >,
-    ) {
+    fn write_total_voting_power(&mut self, value: &TotalVotingPowers) {
         self.write(&total_voting_power_key(), encode(value))
             .unwrap();
     }

@@ -23,13 +23,14 @@ use std::ops::{self, Add, Neg, Sub, SubAssign};
 use borsh::{BorshDeserialize, BorshSerialize};
 use epoched::{
     DynEpochOffset, EpochOffset, Epoched, EpochedDelta, OffsetPipelineLen,
-    OffsetUnboundingLen,
 };
 use parameters::PosParams;
 use thiserror::Error;
 use types::{
-    ActiveValidator, Epoch, GenesisValidator, Unbond, ValidatorSet,
-    ValidatorSetUpdate, ValidatorState, VotingPower, VotingPowerDelta,
+    ActiveValidator, Bonds, Epoch, GenesisValidator, TotalVotingPowers, Unbond,
+    Unbonds, ValidatorConsensusKeys, ValidatorSet, ValidatorSetUpdate,
+    ValidatorSets, ValidatorState, ValidatorStates, ValidatorTotalDeltas,
+    ValidatorVotingPowers, VotingPower, VotingPowerDelta,
 };
 
 use crate::btree_set::BTreeSetShims;
@@ -90,33 +91,29 @@ pub trait PoSReadOnly {
     fn read_validator_consensus_key(
         &self,
         key: &Self::Address,
-    ) -> Option<Epoched<Self::PublicKey, OffsetPipelineLen>>;
+    ) -> Option<ValidatorConsensusKeys<Self::PublicKey>>;
     fn read_validator_state(
         &self,
         key: &Self::Address,
-    ) -> Option<Epoched<ValidatorState, OffsetPipelineLen>>;
+    ) -> Option<ValidatorStates>;
     fn read_validator_total_deltas(
         &self,
         key: &Self::Address,
-    ) -> Option<EpochedDelta<Self::TokenChange, OffsetUnboundingLen>>;
+    ) -> Option<ValidatorTotalDeltas<Self::TokenChange>>;
     fn read_validator_voting_power(
         &self,
         key: &Self::Address,
-    ) -> Option<EpochedDelta<VotingPowerDelta, OffsetUnboundingLen>>;
+    ) -> Option<ValidatorVotingPowers>;
     fn read_bond(
         &self,
         key: &BondId<Self::Address>,
-    ) -> Option<EpochedDelta<Bond<Self::TokenAmount>, OffsetPipelineLen>>;
+    ) -> Option<Bonds<Self::TokenAmount>>;
     fn read_unbond(
         &self,
         key: &BondId<Self::Address>,
-    ) -> Option<EpochedDelta<Unbond<Self::TokenAmount>, OffsetUnboundingLen>>;
-    fn read_validator_set(
-        &self,
-    ) -> Epoched<ValidatorSet<Self::Address>, OffsetUnboundingLen>;
-    fn read_total_voting_power(
-        &self,
-    ) -> EpochedDelta<VotingPowerDelta, OffsetUnboundingLen>;
+    ) -> Option<Unbonds<Self::TokenAmount>>;
+    fn read_validator_set(&self) -> ValidatorSets<Self::Address>;
+    fn read_total_voting_power(&self) -> TotalVotingPowers;
 }
 
 /// PoS system trait to be implemented in integration that can read and write
@@ -131,41 +128,35 @@ pub trait PoS: PoSReadOnly {
     fn write_validator_consensus_key(
         &mut self,
         key: &Self::Address,
-        value: Epoched<Self::PublicKey, OffsetPipelineLen>,
+        value: ValidatorConsensusKeys<Self::PublicKey>,
     );
     fn write_validator_state(
         &mut self,
         key: &Self::Address,
-        value: Epoched<ValidatorState, OffsetPipelineLen>,
+        value: ValidatorStates,
     );
     fn write_validator_total_deltas(
         &mut self,
         key: &Self::Address,
-        value: EpochedDelta<Self::TokenChange, OffsetUnboundingLen>,
+        value: ValidatorTotalDeltas<Self::TokenChange>,
     );
     fn write_validator_voting_power(
         &mut self,
         key: &Self::Address,
-        value: EpochedDelta<VotingPowerDelta, OffsetUnboundingLen>,
+        value: ValidatorVotingPowers,
     );
     fn write_bond(
         &mut self,
         key: &BondId<Self::Address>,
-        value: EpochedDelta<Bond<Self::TokenAmount>, OffsetPipelineLen>,
+        value: Bonds<Self::TokenAmount>,
     );
     fn write_unbond(
         &mut self,
         key: &BondId<Self::Address>,
-        value: EpochedDelta<Unbond<Self::TokenAmount>, OffsetUnboundingLen>,
+        value: Unbonds<Self::TokenAmount>,
     );
-    fn write_validator_set(
-        &mut self,
-        value: Epoched<ValidatorSet<Self::Address>, OffsetUnboundingLen>,
-    );
-    fn write_total_voting_power(
-        &mut self,
-        value: EpochedDelta<VotingPowerDelta, OffsetUnboundingLen>,
-    );
+    fn write_validator_set(&mut self, value: ValidatorSets<Self::Address>);
+    fn write_total_voting_power(&mut self, value: TotalVotingPowers);
 
     fn delete_bond(&mut self, key: &BondId<Self::Address>);
     fn delete_unbond(&mut self, key: &BondId<Self::Address>);
@@ -431,13 +422,11 @@ pub trait PoSBase {
         + BorshSerialize;
     type PublicKey: 'static + Debug + Clone + BorshDeserialize + BorshSerialize;
 
-    fn read_validator_set(
-        &self,
-    ) -> Epoched<ValidatorSet<Self::Address>, OffsetUnboundingLen>;
+    fn read_validator_set(&self) -> ValidatorSets<Self::Address>;
     fn read_validator_consensus_key(
         &self,
         key: &Self::Address,
-    ) -> Option<Epoched<Self::PublicKey, OffsetPipelineLen>>;
+    ) -> Option<ValidatorConsensusKeys<Self::PublicKey>>;
 
     fn write_params(&mut self, params: &PosParams);
     fn write_validator_staking_reward_address(
@@ -448,36 +437,30 @@ pub trait PoSBase {
     fn write_validator_consensus_key(
         &mut self,
         key: &Self::Address,
-        value: &Epoched<Self::PublicKey, OffsetPipelineLen>,
+        value: &ValidatorConsensusKeys<Self::PublicKey>,
     );
     fn write_validator_state(
         &mut self,
         key: &Self::Address,
-        value: &Epoched<ValidatorState, OffsetPipelineLen>,
+        value: &ValidatorStates,
     );
     fn write_validator_total_deltas(
         &mut self,
         key: &Self::Address,
-        value: &EpochedDelta<Self::TokenChange, OffsetUnboundingLen>,
+        value: &ValidatorTotalDeltas<Self::TokenChange>,
     );
     fn write_validator_voting_power(
         &mut self,
         key: &Self::Address,
-        value: &EpochedDelta<VotingPowerDelta, OffsetUnboundingLen>,
+        value: &ValidatorVotingPowers,
     );
     fn write_bond(
         &mut self,
         key: &BondId<Self::Address>,
-        value: &EpochedDelta<Bond<Self::TokenAmount>, OffsetPipelineLen>,
+        value: &Bonds<Self::TokenAmount>,
     );
-    fn write_validator_set(
-        &mut self,
-        value: &Epoched<ValidatorSet<Self::Address>, OffsetUnboundingLen>,
-    );
-    fn write_total_voting_power(
-        &mut self,
-        value: &EpochedDelta<VotingPowerDelta, OffsetUnboundingLen>,
-    );
+    fn write_validator_set(&mut self, value: &ValidatorSets<Self::Address>);
+    fn write_total_voting_power(&mut self, value: &TotalVotingPowers);
     fn init_staking_reward_account(
         &mut self,
         address: &Self::Address,
@@ -555,7 +538,7 @@ pub trait PoSBase {
                  address,
              }: &WeightedValidator<Self::Address>| {
                 let consensus_key = self
-                    .read_validator_consensus_key(&address)
+                    .read_validator_consensus_key(address)
                     .unwrap()
                     .get(current_epoch)
                     .unwrap()
@@ -574,7 +557,7 @@ pub trait PoSBase {
                  address,
              }: &WeightedValidator<Self::Address>| {
                 let consensus_key = self
-                    .read_validator_consensus_key(&address)
+                    .read_validator_consensus_key(address)
                     .unwrap()
                     .get(current_epoch)
                     .unwrap()
@@ -670,9 +653,9 @@ where
 {
     validators: Validators,
     /// Active and inactive validator sets
-    validator_set: Epoched<ValidatorSet<Address>, OffsetUnboundingLen>,
+    validator_set: ValidatorSets<Address>,
     /// The sum of all active and inactive validators' voting power
-    total_voting_power: EpochedDelta<VotingPowerDelta, OffsetUnboundingLen>,
+    total_voting_power: TotalVotingPowers,
 }
 struct GenesisValidatorData<Address, TokenAmount, TokenChange, PK>
 where
@@ -698,15 +681,12 @@ where
 {
     address: Address,
     staking_reward_address: Address,
-    consensus_key: Epoched<PK, OffsetPipelineLen>,
+    consensus_key: ValidatorConsensusKeys<PK>,
     staking_reward_key: PK,
-    state: Epoched<ValidatorState, OffsetPipelineLen>,
-    total_deltas: EpochedDelta<TokenChange, OffsetUnboundingLen>,
-    voting_power: EpochedDelta<VotingPowerDelta, OffsetUnboundingLen>,
-    bond: (
-        BondId<Address>,
-        EpochedDelta<Bond<TokenAmount>, OffsetPipelineLen>,
-    ),
+    state: ValidatorStates,
+    total_deltas: ValidatorTotalDeltas<TokenChange>,
+    voting_power: ValidatorVotingPowers,
+    bond: (BondId<Address>, Bonds<TokenAmount>),
 }
 
 /// A function that returns genesis data created from the initial validator set.
@@ -846,8 +826,8 @@ struct BecomeValidatorData<PK>
 where
     PK: Debug + Clone + BorshDeserialize + BorshSerialize,
 {
-    consensus_key: Epoched<PK, OffsetPipelineLen>,
-    state: Epoched<ValidatorState, OffsetPipelineLen>,
+    consensus_key: ValidatorConsensusKeys<PK>,
+    state: ValidatorStates,
 }
 
 /// A function that initialized data for a new validator.
@@ -855,7 +835,7 @@ fn become_validator<Address, PK>(
     params: &PosParams,
     address: &Address,
     consensus_key: &PK,
-    validator_set: &mut Epoched<ValidatorSet<Address>, OffsetUnboundingLen>,
+    validator_set: &mut ValidatorSets<Address>,
     current_epoch: Epoch,
 ) -> BecomeValidatorData<PK>
 where
@@ -907,31 +887,23 @@ where
         + BorshDeserialize
         + BorshSerialize,
 {
-    pub bond: EpochedDelta<Bond<TokenAmount>, OffsetPipelineLen>,
-    pub validator_total_deltas: EpochedDelta<TokenChange, OffsetUnboundingLen>,
-    pub validator_voting_power:
-        EpochedDelta<VotingPowerDelta, OffsetUnboundingLen>,
+    pub bond: Bonds<TokenAmount>,
+    pub validator_total_deltas: ValidatorTotalDeltas<TokenChange>,
+    pub validator_voting_power: ValidatorVotingPowers,
 }
 
 /// Bond tokens to a validator (self-bond or delegation).
 #[allow(clippy::too_many_arguments)]
 fn bond_tokens<Address, TokenAmount, TokenChange>(
     params: &PosParams,
-    validator_state: Option<Epoched<ValidatorState, OffsetPipelineLen>>,
+    validator_state: Option<ValidatorStates>,
     bond_id: &BondId<Address>,
-    current_bond: Option<EpochedDelta<Bond<TokenAmount>, OffsetPipelineLen>>,
+    current_bond: Option<Bonds<TokenAmount>>,
     amount: TokenAmount,
-    validator_total_deltas: Option<
-        EpochedDelta<TokenChange, OffsetUnboundingLen>,
-    >,
-    validator_voting_power: Option<
-        EpochedDelta<VotingPowerDelta, OffsetUnboundingLen>,
-    >,
-    total_voting_power: &mut EpochedDelta<
-        VotingPowerDelta,
-        OffsetUnboundingLen,
-    >,
-    validator_set: &mut Epoched<ValidatorSet<Address>, OffsetUnboundingLen>,
+    validator_total_deltas: Option<ValidatorTotalDeltas<TokenChange>>,
+    validator_voting_power: Option<ValidatorVotingPowers>,
+    total_voting_power: &mut TotalVotingPowers,
+    validator_set: &mut ValidatorSets<Address>,
     current_epoch: Epoch,
 ) -> Result<BondData<TokenAmount, TokenChange>, BondError<Address>>
 where
@@ -1076,7 +1048,7 @@ where
         + BorshDeserialize
         + BorshSerialize,
 {
-    pub unbond: EpochedDelta<Unbond<TokenAmount>, OffsetUnboundingLen>,
+    pub unbond: Unbonds<TokenAmount>,
 }
 
 /// Unbond tokens from a validator's bond (self-bond or delegation).
@@ -1084,19 +1056,13 @@ where
 fn unbond_tokens<Address, TokenAmount, TokenChange>(
     params: &PosParams,
     bond_id: &BondId<Address>,
-    bond: &mut EpochedDelta<Bond<TokenAmount>, OffsetPipelineLen>,
-    unbond: Option<EpochedDelta<Unbond<TokenAmount>, OffsetUnboundingLen>>,
+    bond: &mut Bonds<TokenAmount>,
+    unbond: Option<Unbonds<TokenAmount>>,
     amount: TokenAmount,
-    validator_total_deltas: &mut EpochedDelta<TokenChange, OffsetUnboundingLen>,
-    validator_voting_power: &mut EpochedDelta<
-        VotingPowerDelta,
-        OffsetUnboundingLen,
-    >,
-    total_voting_power: &mut EpochedDelta<
-        VotingPowerDelta,
-        OffsetUnboundingLen,
-    >,
-    validator_set: &mut Epoched<ValidatorSet<Address>, OffsetUnboundingLen>,
+    validator_total_deltas: &mut ValidatorTotalDeltas<TokenChange>,
+    validator_voting_power: &mut ValidatorVotingPowers,
+    total_voting_power: &mut TotalVotingPowers,
+    validator_set: &mut ValidatorSets<Address>,
     current_epoch: Epoch,
 ) -> Result<UnbondData<TokenAmount>, UnbondError<Address, TokenAmount>>
 where
@@ -1225,8 +1191,8 @@ fn update_validator_set<Address, TokenChange>(
     validator: &Address,
     token_change: TokenChange,
     change_offset: DynEpochOffset,
-    validator_set: &mut Epoched<ValidatorSet<Address>, OffsetUnboundingLen>,
-    validator_total_deltas: &EpochedDelta<TokenChange, OffsetUnboundingLen>,
+    validator_set: &mut ValidatorSets<Address>,
+    validator_total_deltas: &ValidatorTotalDeltas<TokenChange>,
     current_epoch: Epoch,
 ) where
     Address: Display
@@ -1312,15 +1278,9 @@ fn update_validator_set<Address, TokenChange>(
 fn update_voting_powers<TokenChange>(
     params: &PosParams,
     change_offset: DynEpochOffset,
-    validator_total_deltas: &EpochedDelta<TokenChange, OffsetUnboundingLen>,
-    validator_voting_power: &mut EpochedDelta<
-        VotingPowerDelta,
-        OffsetUnboundingLen,
-    >,
-    total_voting_power: &mut EpochedDelta<
-        VotingPowerDelta,
-        OffsetUnboundingLen,
-    >,
+    validator_total_deltas: &ValidatorTotalDeltas<TokenChange>,
+    validator_voting_power: &mut ValidatorVotingPowers,
+    total_voting_power: &mut TotalVotingPowers,
     current_epoch: Epoch,
 ) -> Result<(), TryFromIntError>
 where
@@ -1376,7 +1336,7 @@ where
         + BorshDeserialize
         + BorshSerialize,
 {
-    pub unbond: EpochedDelta<Unbond<TokenAmount>, OffsetUnboundingLen>,
+    pub unbond: Unbonds<TokenAmount>,
     pub withdrawn_amount: TokenAmount,
 }
 
@@ -1384,7 +1344,7 @@ where
 fn withdraw_unbonds<Address, TokenAmount>(
     params: &PosParams,
     bond_id: &BondId<Address>,
-    unbond: Option<EpochedDelta<Unbond<TokenAmount>, OffsetUnboundingLen>>,
+    unbond: Option<Unbonds<TokenAmount>>,
     current_epoch: Epoch,
 ) -> Result<WithdrawData<TokenAmount>, WithdrawError<Address>>
 where

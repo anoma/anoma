@@ -9,8 +9,26 @@ use std::ops::AddAssign;
 
 use borsh::{BorshDeserialize, BorshSerialize};
 
-use crate::epoched::{Epoched, OffsetPipelineLen, OffsetUnboundingLen};
+use crate::epoched::{
+    Epoched, EpochedDelta, OffsetPipelineLen, OffsetUnboundingLen,
+};
 use crate::parameters::PosParams;
+
+pub type ValidatorConsensusKeys<PublicKey> =
+    Epoched<PublicKey, OffsetPipelineLen>;
+pub type ValidatorStates = Epoched<ValidatorState, OffsetPipelineLen>;
+pub type ValidatorTotalDeltas<TokenChange> =
+    EpochedDelta<TokenChange, OffsetUnboundingLen>;
+pub type ValidatorVotingPowers =
+    EpochedDelta<VotingPowerDelta, OffsetUnboundingLen>;
+pub type Bonds<TokenAmount> =
+    EpochedDelta<Bond<TokenAmount>, OffsetPipelineLen>;
+pub type Unbonds<TokenAmount> =
+    EpochedDelta<Unbond<TokenAmount>, OffsetUnboundingLen>;
+pub type ValidatorSets<Address> =
+    Epoched<ValidatorSet<Address>, OffsetUnboundingLen>;
+pub type TotalVotingPowers =
+    EpochedDelta<VotingPowerDelta, OffsetUnboundingLen>;
 
 /// Epoch identifier. Epochs are identified by consecutive natural numbers.
 ///
@@ -179,12 +197,6 @@ pub enum ValidatorState {
     Candidate,
     // TODO consider adding `Jailed`
 }
-
-pub type Bonds<Address, Token> =
-    HashMap<BondId<Address>, Epoched<Bond<Token>, OffsetPipelineLen>>;
-
-pub type Unbonds<Address, Token> =
-    HashMap<BondId<Address>, Epoched<Unbond<Token>, OffsetUnboundingLen>>;
 
 #[derive(Debug, Clone, Default, BorshDeserialize, BorshSerialize)]
 pub struct Bond<Token: Default> {

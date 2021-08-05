@@ -1,7 +1,7 @@
 //! The parameters used for the chain's genesis
 
 use anoma::ledger::parameters::{EpochDuration, Parameters};
-use anoma::ledger::pos::{PoSGenesisValidator, PosParams};
+use anoma::ledger::pos::{GenesisValidator, PosParams};
 use anoma::types::address::Address;
 #[cfg(feature = "dev")]
 use anoma::types::key::ed25519::Keypair;
@@ -26,7 +26,7 @@ pub struct Genesis {
 /// Genesis validator definition
 pub struct Validator {
     /// Data that is used for PoS system initialization
-    pub pos_data: PoSGenesisValidator,
+    pub pos_data: GenesisValidator,
     /// Public key associated with the validator account. The default validator
     /// VP will check authorization of transactions from this account against
     /// this key on a transaction signature.
@@ -56,7 +56,7 @@ pub fn genesis() -> Genesis {
     let address = Address::decode("a1qq5qqqqqgfqnsd6pxse5zdj9g5crzsf5x4zyzv6yxerr2d2rxpryzwp5g5m5zvfjxv6ygsekjmraj0").unwrap();
     let staking_reward_address = Address::decode("a1qq5qqqqqxaz5vven8yu5gdpng9zrys6ygvurwv3sgsmrvd6xgdzrys6yg4pnwd6z89rrqv2xvjcy9t").unwrap();
     let validator = Validator {
-        pos_data: PoSGenesisValidator {
+        pos_data: GenesisValidator {
             address,
             staking_reward_address,
             tokens: token::Amount::whole(100_000),

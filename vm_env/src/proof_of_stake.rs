@@ -4,7 +4,10 @@ use anoma::ledger::pos::{
     anoma_proof_of_stake, bond_key, params_key, total_voting_power_key,
     unbond_key, validator_consensus_key_key, validator_set_key,
     validator_staking_reward_address_key, validator_state_key,
-    validator_total_deltas_key, validator_voting_power_key,
+    validator_total_deltas_key, validator_voting_power_key, BondId, Bonds,
+    PosParams, TotalVotingPowers, Unbonds, ValidatorConsensusKeys,
+    ValidatorSets, ValidatorStates, ValidatorTotalDeltas,
+    ValidatorVotingPowers,
 };
 use anoma::types::address::{self, Address, InternalAddress};
 use anoma::types::{key, token};
@@ -27,7 +30,7 @@ impl anoma_proof_of_stake::PoSReadOnly for PoS {
         address::xan()
     }
 
-    fn read_params(&self) -> anoma_proof_of_stake::parameters::PosParams {
+    fn read_params(&self) -> PosParams {
         tx::read(params_key().to_string()).unwrap()
     }
 
@@ -41,99 +44,50 @@ impl anoma_proof_of_stake::PoSReadOnly for PoS {
     fn read_validator_consensus_key(
         &self,
         key: &Self::Address,
-    ) -> Option<
-        anoma_proof_of_stake::epoched::Epoched<
-            Self::PublicKey,
-            anoma_proof_of_stake::epoched::OffsetPipelineLen,
-        >,
-    > {
+    ) -> Option<ValidatorConsensusKeys> {
         tx::read(validator_consensus_key_key(key).to_string())
     }
 
     fn read_validator_state(
         &self,
         key: &Self::Address,
-    ) -> Option<
-        anoma_proof_of_stake::epoched::Epoched<
-            anoma_proof_of_stake::types::ValidatorState,
-            anoma_proof_of_stake::epoched::OffsetPipelineLen,
-        >,
-    > {
+    ) -> Option<ValidatorStates> {
         tx::read(validator_state_key(key).to_string())
     }
 
     fn read_validator_total_deltas(
         &self,
         key: &Self::Address,
-    ) -> Option<
-        anoma_proof_of_stake::epoched::EpochedDelta<
-            Self::TokenChange,
-            anoma_proof_of_stake::epoched::OffsetUnboundingLen,
-        >,
-    > {
+    ) -> Option<ValidatorTotalDeltas> {
         tx::read(validator_total_deltas_key(key).to_string())
     }
 
     fn read_validator_voting_power(
         &self,
         key: &Self::Address,
-    ) -> Option<
-        anoma_proof_of_stake::epoched::EpochedDelta<
-            anoma_proof_of_stake::types::VotingPowerDelta,
-            anoma_proof_of_stake::epoched::OffsetUnboundingLen,
-        >,
-    > {
+    ) -> Option<ValidatorVotingPowers> {
         tx::read(validator_voting_power_key(key).to_string())
     }
 
-    fn read_bond(
-        &self,
-        key: &anoma_proof_of_stake::types::BondId<Self::Address>,
-    ) -> Option<
-        anoma_proof_of_stake::epoched::EpochedDelta<
-            anoma_proof_of_stake::types::Bond<Self::TokenAmount>,
-            anoma_proof_of_stake::epoched::OffsetPipelineLen,
-        >,
-    > {
+    fn read_bond(&self, key: &BondId) -> Option<Bonds> {
         tx::read(bond_key(key).to_string())
     }
 
-    fn read_unbond(
-        &self,
-        key: &anoma_proof_of_stake::types::BondId<Self::Address>,
-    ) -> Option<
-        anoma_proof_of_stake::epoched::EpochedDelta<
-            anoma_proof_of_stake::types::Unbond<Self::TokenAmount>,
-            anoma_proof_of_stake::epoched::OffsetUnboundingLen,
-        >,
-    > {
+    fn read_unbond(&self, key: &BondId) -> Option<Unbonds> {
         tx::read(unbond_key(key).to_string())
     }
 
-    fn read_validator_set(
-        &self,
-    ) -> anoma_proof_of_stake::epoched::Epoched<
-        anoma_proof_of_stake::types::ValidatorSet<Self::Address>,
-        anoma_proof_of_stake::epoched::OffsetUnboundingLen,
-    > {
+    fn read_validator_set(&self) -> ValidatorSets {
         tx::read(validator_set_key().to_string()).unwrap()
     }
 
-    fn read_total_voting_power(
-        &self,
-    ) -> anoma_proof_of_stake::epoched::EpochedDelta<
-        anoma_proof_of_stake::types::VotingPowerDelta,
-        anoma_proof_of_stake::epoched::OffsetUnboundingLen,
-    > {
+    fn read_total_voting_power(&self) -> TotalVotingPowers {
         tx::read(total_voting_power_key().to_string()).unwrap()
     }
 }
 
 impl anoma_proof_of_stake::PoS for PoS {
-    fn write_params(
-        &mut self,
-        params: &anoma_proof_of_stake::parameters::PosParams,
-    ) {
+    fn write_params(&mut self, params: &PosParams) {
         tx::write(params_key().to_string(), params)
     }
 
@@ -151,10 +105,7 @@ impl anoma_proof_of_stake::PoS for PoS {
     fn write_validator_consensus_key(
         &mut self,
         key: &Self::Address,
-        value: anoma_proof_of_stake::epoched::Epoched<
-            Self::PublicKey,
-            anoma_proof_of_stake::epoched::OffsetPipelineLen,
-        >,
+        value: ValidatorConsensusKeys,
     ) {
         tx::write(validator_consensus_key_key(key).to_string(), &value)
     }
@@ -162,10 +113,7 @@ impl anoma_proof_of_stake::PoS for PoS {
     fn write_validator_state(
         &mut self,
         key: &Self::Address,
-        value: anoma_proof_of_stake::epoched::Epoched<
-            anoma_proof_of_stake::types::ValidatorState,
-            anoma_proof_of_stake::epoched::OffsetPipelineLen,
-        >,
+        value: ValidatorStates,
     ) {
         tx::write(validator_state_key(key).to_string(), &value)
     }
@@ -173,10 +121,7 @@ impl anoma_proof_of_stake::PoS for PoS {
     fn write_validator_total_deltas(
         &mut self,
         key: &Self::Address,
-        value: anoma_proof_of_stake::epoched::EpochedDelta<
-            Self::TokenChange,
-            anoma_proof_of_stake::epoched::OffsetUnboundingLen,
-        >,
+        value: ValidatorTotalDeltas,
     ) {
         tx::write(validator_total_deltas_key(key).to_string(), &value)
     }
@@ -184,67 +129,32 @@ impl anoma_proof_of_stake::PoS for PoS {
     fn write_validator_voting_power(
         &mut self,
         key: &Self::Address,
-        value: anoma_proof_of_stake::epoched::EpochedDelta<
-            anoma_proof_of_stake::types::VotingPowerDelta,
-            anoma_proof_of_stake::epoched::OffsetUnboundingLen,
-        >,
+        value: ValidatorVotingPowers,
     ) {
         tx::write(validator_voting_power_key(key).to_string(), &value)
     }
 
-    fn write_bond(
-        &mut self,
-        key: &anoma_proof_of_stake::types::BondId<Self::Address>,
-        value: anoma_proof_of_stake::epoched::EpochedDelta<
-            anoma_proof_of_stake::types::Bond<Self::TokenAmount>,
-            anoma_proof_of_stake::epoched::OffsetPipelineLen,
-        >,
-    ) {
+    fn write_bond(&mut self, key: &BondId, value: Bonds) {
         tx::write(bond_key(key).to_string(), &value)
     }
 
-    fn write_unbond(
-        &mut self,
-        key: &anoma_proof_of_stake::types::BondId<Self::Address>,
-        value: anoma_proof_of_stake::epoched::EpochedDelta<
-            anoma_proof_of_stake::types::Unbond<Self::TokenAmount>,
-            anoma_proof_of_stake::epoched::OffsetUnboundingLen,
-        >,
-    ) {
+    fn write_unbond(&mut self, key: &BondId, value: Unbonds) {
         tx::write(unbond_key(key).to_string(), &value)
     }
 
-    fn write_validator_set(
-        &mut self,
-        value: anoma_proof_of_stake::epoched::Epoched<
-            anoma_proof_of_stake::types::ValidatorSet<Self::Address>,
-            anoma_proof_of_stake::epoched::OffsetUnboundingLen,
-        >,
-    ) {
+    fn write_validator_set(&mut self, value: ValidatorSets) {
         tx::write(validator_set_key().to_string(), &value)
     }
 
-    fn write_total_voting_power(
-        &mut self,
-        value: anoma_proof_of_stake::epoched::EpochedDelta<
-            anoma_proof_of_stake::types::VotingPowerDelta,
-            anoma_proof_of_stake::epoched::OffsetUnboundingLen,
-        >,
-    ) {
+    fn write_total_voting_power(&mut self, value: TotalVotingPowers) {
         tx::write(total_voting_power_key().to_string(), &value)
     }
 
-    fn delete_bond(
-        &mut self,
-        key: &anoma_proof_of_stake::types::BondId<Self::Address>,
-    ) {
+    fn delete_bond(&mut self, key: &BondId) {
         tx::delete(bond_key(key).to_string())
     }
 
-    fn delete_unbond(
-        &mut self,
-        key: &anoma_proof_of_stake::types::BondId<Self::Address>,
-    ) {
+    fn delete_unbond(&mut self, key: &BondId) {
         tx::delete(unbond_key(key).to_string())
     }
 
