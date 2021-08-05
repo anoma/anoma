@@ -41,6 +41,7 @@ pub mod cmds {
         TxUpdateVp(TxUpdateVp),
         Intent(Intent),
     }
+
     impl Cmd for Anoma {
         fn add_sub(app: App) -> App {
             app.subcommand(AnomaNode::def())
@@ -81,6 +82,7 @@ pub mod cmds {
         Gossip(Box<Gossip>),
         Config(Config),
     }
+
     impl Cmd for AnomaNode {
         fn add_sub(app: App) -> App {
             app.subcommand(Ledger::def())
@@ -129,6 +131,7 @@ pub mod cmds {
         CraftIntent(CraftIntent),
         SubscribeTopic(SubscribeTopic),
     }
+
     impl Cmd for AnomaClient {
         fn add_sub(app: App) -> App {
             app.subcommand(TxCustom::def())
@@ -186,6 +189,7 @@ pub mod cmds {
         Run(LedgerRun),
         Reset(LedgerReset),
     }
+
     impl SubCmd for Ledger {
         const CMD: &'static str = "ledger";
 
@@ -212,6 +216,7 @@ pub mod cmds {
 
     #[derive(Debug)]
     pub struct LedgerRun;
+
     impl SubCmd for LedgerRun {
         const CMD: &'static str = "run";
 
@@ -228,6 +233,7 @@ pub mod cmds {
 
     #[derive(Debug)]
     pub struct LedgerReset;
+
     impl SubCmd for LedgerReset {
         const CMD: &'static str = "reset";
 
@@ -249,6 +255,7 @@ pub mod cmds {
     pub enum Gossip {
         Run(GossipRun),
     }
+
     impl SubCmd for Gossip {
         const CMD: &'static str = "gossip";
 
@@ -284,6 +291,7 @@ pub mod cmds {
 
     #[derive(Debug)]
     pub struct GossipRun(pub args::GossipRun);
+
     impl SubCmd for GossipRun {
         const CMD: &'static str = "run";
 
@@ -307,6 +315,7 @@ pub mod cmds {
     pub enum Config {
         Gen(ConfigGen),
     }
+
     impl SubCmd for Config {
         const CMD: &'static str = "config";
 
@@ -330,6 +339,7 @@ pub mod cmds {
 
     #[derive(Debug)]
     pub struct ConfigGen;
+
     impl SubCmd for ConfigGen {
         const CMD: &'static str = "gen";
 
@@ -349,6 +359,7 @@ pub mod cmds {
 
     #[derive(Debug)]
     pub struct TxCustom(pub args::TxCustom);
+
     impl SubCmd for TxCustom {
         const CMD: &'static str = "tx";
 
@@ -367,6 +378,7 @@ pub mod cmds {
 
     #[derive(Debug)]
     pub struct TxTransfer(pub args::TxTransfer);
+
     impl SubCmd for TxTransfer {
         const CMD: &'static str = "transfer";
 
@@ -388,6 +400,7 @@ pub mod cmds {
 
     #[derive(Debug)]
     pub struct TxUpdateVp(pub args::TxUpdateVp);
+
     impl SubCmd for TxUpdateVp {
         const CMD: &'static str = "update";
 
@@ -412,6 +425,7 @@ pub mod cmds {
 
     #[derive(Debug)]
     pub struct QueryBalance(pub args::QueryBalance);
+
     impl SubCmd for QueryBalance {
         const CMD: &'static str = "balance";
 
@@ -433,6 +447,7 @@ pub mod cmds {
 
     #[derive(Debug)]
     pub struct Intent(pub args::Intent);
+
     impl SubCmd for Intent {
         const CMD: &'static str = "intent";
 
@@ -454,6 +469,7 @@ pub mod cmds {
 
     #[derive(Debug)]
     pub struct CraftIntent(pub args::CraftIntent);
+
     impl SubCmd for CraftIntent {
         const CMD: &'static str = "craft-intent";
 
@@ -475,6 +491,7 @@ pub mod cmds {
 
     #[derive(Debug)]
     pub struct SubscribeTopic(pub args::SubscribeTopic);
+
     impl SubCmd for SubscribeTopic {
         const CMD: &'static str = "subscribe-topic";
 
@@ -510,10 +527,22 @@ pub mod args {
     use super::utils::*;
     use super::ArgMatches;
 
+    const ADDRESS: Arg<Address> = arg("address");
+    const AMOUNT_BUY: Arg<token::Amount> = arg("amount-buy");
+    const AMOUNT_SELL: Arg<token::Amount> = arg("amount-sell");
+    const AMOUNT: Arg<token::Amount> = arg("amount");
     const BASE_DIR: ArgDefault<PathBuf> =
         arg_default("base-dir", DefaultFn(|| ".anoma".into()));
+    const CODE_PATH: Arg<PathBuf> = arg("code-path");
+    const DATA_PATH_OPT: ArgOpt<PathBuf> = arg_opt("data-path");
+    const DATA_PATH: Arg<PathBuf> = arg("data-path");
     const DRY_RUN_TX: ArgFlag = flag("dry-run");
-    const LEDGER_ADDRESS: Arg<tendermint::net::Address> = arg("ledger-address");
+    const FILE_PATH: ArgDefault<String> =
+        arg_default("file-path", DefaultFn(|| "intent.data".into()));
+    const FILTER_PATH: ArgOpt<PathBuf> = arg_opt("filter-path");
+    const LEDGER_ADDRESS_ABOUT: &str =
+        "Address of a ledger node as \"{scheme}://{host}:{port}\". If the \
+         scheme is not supplied, it is assumed to be TCP.";
     const LEDGER_ADDRESS_DEFAULT: ArgDefault<tendermint::net::Address> =
         LEDGER_ADDRESS.default(DefaultFn(|| {
             let raw = "127.0.0.1:26657";
@@ -521,34 +550,22 @@ pub mod args {
         }));
     const LEDGER_ADDRESS_OPT: ArgOpt<tendermint::net::Address> =
         LEDGER_ADDRESS.opt();
-    const LEDGER_ADDRESS_ABOUT: &str =
-        "Address of a ledger node as \"{scheme}://{host}:{port}\". If the \
-         scheme is not supplied, it is assumed to be TCP.";
-    const DATA_PATH: Arg<PathBuf> = arg("data-path");
-    const DATA_PATH_OPT: ArgOpt<PathBuf> = arg_opt("data-path");
-    const CODE_PATH: Arg<PathBuf> = arg("code-path");
-    const PEERS: ArgMulti<String> = arg_multi("peers");
-    const TOPIC: Arg<String> = arg("topic");
-    const TOPICS: ArgMulti<String> = TOPIC.multi();
-    const ADDRESS: Arg<Address> = arg("address");
-    const MULTIADDR_OPT: ArgOpt<Multiaddr> = arg_opt("address");
-    const RPC_SOCKET_ADDR: ArgOpt<SocketAddr> = arg_opt("rpc");
+    const LEDGER_ADDRESS: Arg<tendermint::net::Address> = arg("ledger-address");
     const MATCHMAKER_PATH: ArgOpt<PathBuf> = arg_opt("matchmaker-path");
-    const TX_CODE_PATH: ArgOpt<PathBuf> = arg_opt("tx-code-path");
-    const FILTER_PATH: ArgOpt<PathBuf> = arg_opt("filter-path");
+    const MULTIADDR_OPT: ArgOpt<Multiaddr> = arg_opt("address");
     const NODE: Arg<String> = arg("node");
-    const TOKEN_SELL: Arg<Address> = arg("token-sell");
-    const TOKEN_BUY: Arg<Address> = arg("token-buy");
-    const AMOUNT_SELL: Arg<token::Amount> = arg("amount-sell");
-    const AMOUNT_BUY: Arg<token::Amount> = arg("amount-buy");
-    const FILE_PATH: ArgDefault<String> =
-        arg_default("file-path", DefaultFn(|| "intent.data".into()));
+    const OWNER: ArgOpt<Address> = arg_opt("owner");
+    const PEERS: ArgMulti<String> = arg_multi("peers");
+    const RPC_SOCKET_ADDR: ArgOpt<SocketAddr> = arg_opt("rpc");
     const SOURCE: Arg<Address> = arg("source");
     const TARGET: Arg<Address> = arg("target");
-    const TOKEN: Arg<Address> = arg("token");
+    const TOKEN_BUY: Arg<Address> = arg("token-buy");
     const TOKEN_OPT: ArgOpt<Address> = TOKEN.opt();
-    const AMOUNT: Arg<token::Amount> = arg("amount");
-    const OWNER: ArgOpt<Address> = arg_opt("owner");
+    const TOKEN_SELL: Arg<Address> = arg("token-sell");
+    const TOKEN: Arg<Address> = arg("token");
+    const TOPIC: Arg<String> = arg("topic");
+    const TOPICS: ArgMulti<String> = TOPIC.multi();
+    const TX_CODE_PATH: ArgOpt<PathBuf> = arg_opt("tx-code-path");
 
     /// Global command arguments
     #[derive(Debug)]
@@ -779,6 +796,7 @@ pub mod args {
         /// Target file path
         pub file_path: String,
     }
+
     impl Args for CraftIntent {
         fn parse(matches: &ArgMatches) -> Self {
             let addr = ADDRESS.parse(matches);
@@ -815,6 +833,7 @@ pub mod args {
         /// Intent topic
         pub topic: String,
     }
+
     impl Args for SubscribeTopic {
         fn parse(matches: &ArgMatches) -> Self {
             let node_addr = NODE.parse(matches);
@@ -842,6 +861,7 @@ pub mod args {
         pub ledger_addr: Option<tendermint::net::Address>,
         pub filter_path: Option<PathBuf>,
     }
+
     impl Args for GossipRun {
         fn parse(matches: &ArgMatches) -> Self {
             let addr = MULTIADDR_OPT.parse(matches);
