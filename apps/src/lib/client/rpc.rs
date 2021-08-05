@@ -1,5 +1,6 @@
 //! Client RPC queries
 
+use std::borrow::Cow;
 use std::io::{self, Write};
 
 use anoma::types::{address, storage, token};
@@ -33,8 +34,8 @@ pub async fn query_balance(args: args::QueryBalance) {
             let balance: token::Amount = query_storage_value(client, key).await;
             let currency_code = tokens
                 .get(token)
-                .cloned()
-                .unwrap_or_else(|| token.to_string());
+                .map(|c| Cow::Borrowed(*c))
+                .unwrap_or_else(|| Cow::Owned(token.to_string()));
             println!("{}: {}", currency_code, balance);
         }
         (None, Some(owner)) => {
@@ -51,8 +52,8 @@ pub async fn query_balance(args: args::QueryBalance) {
                 query_storage_prefix::<token::Amount>(client, key).await;
             let currency_code = tokens
                 .get(token)
-                .cloned()
-                .unwrap_or_else(|| token.to_string());
+                .map(|c| Cow::Borrowed(*c))
+                .unwrap_or_else(|| Cow::Owned(token.to_string()));
             let stdout = io::stdout();
             let mut w = stdout.lock();
             writeln!(w, "Token {}:", currency_code).unwrap();
