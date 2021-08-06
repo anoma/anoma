@@ -142,3 +142,17 @@ impl TryFrom<prost_types::Timestamp> for DateTimeUtc {
         Ok(Self(system_time.into()))
     }
 }
+
+impl From<DateTimeUtc> for prost_types::Timestamp {
+    fn from(dt: DateTimeUtc) -> Self {
+        let seconds = dt.0.timestamp();
+        let nanos = dt.0.timestamp_subsec_nanos() as i32;
+        prost_types::Timestamp { seconds, nanos }
+    }
+}
+
+impl From<DateTimeUtc> for std::time::SystemTime {
+    fn from(dt: DateTimeUtc) -> Self {
+        dt.0.into()
+    }
+}
