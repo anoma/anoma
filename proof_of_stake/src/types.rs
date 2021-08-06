@@ -338,7 +338,7 @@ where
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
-            "Bond source: {}, validator: {}",
+            "Bond ID {{source: {}, validator: {}}}",
             self.source, self.validator
         )
     }

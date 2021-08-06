@@ -1166,7 +1166,7 @@ where
         token_change,
         update_offset,
         validator_set,
-        &validator_total_deltas,
+        validator_total_deltas,
         current_epoch,
     );
 

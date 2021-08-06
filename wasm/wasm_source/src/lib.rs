@@ -1,7 +1,7 @@
 /// A tx for a PoS bond that stakes tokens via a self-bond or delegation.
 #[cfg(feature = "tx_bond")]
 pub mod tx_bond {
-    use anoma_vm_env::tx_prelude::*;
+    use anoma_vm_env::tx_prelude::{*, proof_of_stake::BondId};
 
     #[transaction]
     fn apply_tx(tx_data: Vec<u8>) {
@@ -14,6 +14,13 @@ pub mod tx_bond {
             tx_data
         ));
 
+        // TODO temporary for logging:
+        let bond_id = BondId {
+            source: bond.validator.clone(),
+            validator: bond.validator.clone(),
+        };
+        let bond_pre = PoS.read_bond(&bond_id);
+
         let epoch = get_block_epoch();
         match bond.source {
             Some(_source) => {
@@ -25,6 +32,9 @@ pub mod tx_bond {
                 {
                     log_string(format!("self-bond failed with {}", err));
                 }
+                // TODO temporary for logging:
+                let bond_post = PoS.read_bond(&bond_id);
+                log_string(format!("bond pre {:#?}, post {:#?}", bond_pre, bond_post));
             }
         }
     }

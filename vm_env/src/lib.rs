@@ -17,7 +17,7 @@ pub mod tx_prelude {
 
     pub use crate::imports::tx::*;
     pub use crate::intent::tx as intent;
-    pub use crate::proof_of_stake::{PoS, PosRead, PosWrite};
+    pub use crate::proof_of_stake::{self, PoS, PosRead, PosWrite};
     pub use crate::token::tx as token;
 }
 

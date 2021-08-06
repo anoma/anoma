@@ -4,7 +4,8 @@ use anoma::ledger::pos::{
     anoma_proof_of_stake, bond_key, params_key, total_voting_power_key,
     unbond_key, validator_consensus_key_key, validator_set_key,
     validator_staking_reward_address_key, validator_state_key,
-    validator_total_deltas_key, validator_voting_power_key, BondId, Bonds,
+    validator_total_deltas_key, validator_voting_power_key};
+pub use anoma::ledger::pos::{BondId, Bonds,
     PosParams, TotalVotingPowers, Unbonds, ValidatorConsensusKeys,
     ValidatorSets, ValidatorStates, ValidatorTotalDeltas,
     ValidatorVotingPowers,

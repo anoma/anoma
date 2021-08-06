@@ -16,10 +16,9 @@ where
     Offset: EpochOffset,
 {
     /// The epoch in which this data was last updated
-    // TODO maybe this would be better private (needed for validation)
-    pub(crate) last_update: Epoch,
-    pub(crate) data: Vec<Option<Data>>,
-    pub(crate) offset: PhantomData<Offset>,
+    last_update: Epoch,
+    data: Vec<Option<Data>>,
+    offset: PhantomData<Offset>,
 }
 
 #[derive(Debug, Clone, BorshDeserialize, BorshSerialize)]
@@ -29,9 +28,9 @@ where
     Offset: EpochOffset,
 {
     /// The epoch in which this data was last updated
-    pub(crate) last_update: Epoch,
-    pub(crate) data: Vec<Option<Data>>,
-    pub(crate) offset: PhantomData<Offset>,
+    last_update: Epoch,
+    data: Vec<Option<Data>>,
+    offset: PhantomData<Offset>,
 }
 
 /// Which offset should be used to set data. The value is read from
@@ -118,14 +117,16 @@ where
         }
     }
 
-    /// Find the value for the given epoch.
+    /// Find the value for the given epoch as a sum of all the deltas at and
+    /// before the given epochs.
     pub fn get(&self, epoch: impl Into<Epoch>) -> Option<&Data> {
         let epoch = epoch.into();
         let index: usize = (epoch.sub_or_default(self.last_update)).into();
         self.get_at_index(index)
     }
 
-    /// Find the value at the offset from the given epoch.
+    /// Find the value at the offset from the given epoch as a sum of all the
+    /// deltas at and before the given epochs.
     pub fn get_at_offset(
         &self,
         epoch: impl Into<Epoch>,
@@ -139,7 +140,7 @@ where
         self.get_at_index(index)
     }
 
-    /// Find the value at or before the given index.
+    /// Find the delta value at or before the given index.
     fn get_at_index(&self, offset: usize) -> Option<&Data> {
         let mut index = cmp::min(offset, self.data.len());
         loop {
@@ -151,6 +152,19 @@ where
             } else {
                 index -= 1;
             }
+        }
+    }
+
+    /// Find the value for given epoch.
+    pub(crate) fn get_at_epoch(
+        &self,
+        epoch: impl Into<Epoch>,
+    ) -> Option<&Data> {
+        let epoch = epoch.into();
+        let index: usize = (epoch.sub_or_default(self.last_update)).into();
+        match self.data.get(index) {
+            Some(result) => result.as_ref(),
+            None => None,
         }
     }
 
@@ -256,6 +270,11 @@ where
             }
         }
     }
+
+    /// Get the epoch of the last update
+    pub fn last_update(&self) -> Epoch {
+        self.last_update
+    }
 }
 
 impl<Data, Offset> EpochedDelta<Data, Offset>
@@ -357,6 +376,19 @@ where
             }
         }
         sum
+    }
+
+    /// Find the delta value for the given epoch.
+    pub(crate) fn get_delta_at_epoch(
+        &self,
+        epoch: impl Into<Epoch>,
+    ) -> Option<&Data> {
+        let epoch = epoch.into();
+        let index: usize = (epoch.sub_or_default(self.last_update)).into();
+        match self.data.get(index) {
+            Some(result) => result.as_ref(),
+            None => None,
+        }
     }
 
     /// Update the data associated with epochs, if needed. Any value before the
@@ -486,6 +518,11 @@ where
                 }
             }
         }
+    }
+
+    /// Get the epoch of the last update
+    pub fn last_update(&self) -> Epoch {
+        self.last_update
     }
 }
 
