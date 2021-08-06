@@ -178,8 +178,8 @@ where
             true
         } else {
             tracing::info!(
-                "PoS validation errors: {}",
-                errors.iter().format(", ")
+                "PoS validation errors:\n - {}",
+                errors.iter().format("\n - ")
             );
             false
         })

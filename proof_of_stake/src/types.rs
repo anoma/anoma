@@ -1,11 +1,10 @@
 use core::fmt::Debug;
-use core::ops;
 use std::collections::{BTreeSet, HashMap};
 use std::convert::TryFrom;
 use std::fmt::Display;
 use std::hash::Hash;
 use std::num::TryFromIntError;
-use std::ops::AddAssign;
+use std::ops::{Add, AddAssign, Sub};
 
 use borsh::{BorshDeserialize, BorshSerialize};
 
@@ -299,7 +298,7 @@ impl From<Epoch> for usize {
     }
 }
 
-impl ops::Add<u64> for Epoch {
+impl Add<u64> for Epoch {
     type Output = Self;
 
     fn add(self, rhs: u64) -> Self::Output {
@@ -307,7 +306,7 @@ impl ops::Add<u64> for Epoch {
     }
 }
 
-impl ops::Add<usize> for Epoch {
+impl Add<usize> for Epoch {
     type Output = Self;
 
     fn add(self, rhs: usize) -> Self::Output {
@@ -315,7 +314,7 @@ impl ops::Add<usize> for Epoch {
     }
 }
 
-impl ops::Sub<u64> for Epoch {
+impl Sub<u64> for Epoch {
     type Output = Epoch;
 
     fn sub(self, rhs: u64) -> Self::Output {
@@ -323,7 +322,7 @@ impl ops::Sub<u64> for Epoch {
     }
 }
 
-impl ops::Sub<Epoch> for Epoch {
+impl Sub<Epoch> for Epoch {
     type Output = Self;
 
     fn sub(self, rhs: Epoch) -> Self::Output {
@@ -338,7 +337,7 @@ where
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
-            "Bond ID {{source: {}, validator: {}}}",
+            "{{source: {}, validator: {}}}",
             self.source, self.validator
         )
     }
@@ -346,7 +345,7 @@ where
 
 impl<Token> Bond<Token>
 where
-    Token: Clone + Copy + ops::Add<Output = Token> + Default,
+    Token: Clone + Copy + Add<Output = Token> + Default,
 {
     /// Find the sum of all the bonds amounts.
     pub fn sum(&self) -> Token {
@@ -356,21 +355,38 @@ where
     }
 }
 
-impl<Token> ops::Add for Bond<Token>
+impl<Token> Add for Bond<Token>
 where
-    Token: Clone + ops::Add<Output = Token> + Default,
+    Token: Clone + AddAssign + Default,
 {
     type Output = Self;
 
     fn add(mut self, rhs: Self) -> Self::Output {
-        self.delta.extend(rhs.delta);
+        // This is almost the same as `self.delta.extend(rhs.delta);`, except
+        // that we add values where a key is present on both sides.
+        let iter = rhs.delta.into_iter();
+        let reserve = if self.delta.is_empty() {
+            iter.size_hint().0
+        } else {
+            (iter.size_hint().0 + 1) / 2
+        };
+        self.delta.reserve(reserve);
+        iter.for_each(|(k, v)| {
+            // Add or insert
+            match self.delta.get_mut(&k) {
+                Some(value) => *value += v,
+                None => {
+                    self.delta.insert(k, v);
+                }
+            }
+        });
         self
     }
 }
 
 impl<Token> Unbond<Token>
 where
-    Token: Clone + Copy + ops::Add<Output = Token> + Default,
+    Token: Clone + Copy + Add<Output = Token> + Default,
 {
     /// Find the sum of all the unbonds amounts.
     pub fn sum(&self) -> Token {
@@ -380,14 +396,31 @@ where
     }
 }
 
-impl<Token> ops::Add for Unbond<Token>
+impl<Token> Add for Unbond<Token>
 where
-    Token: Clone + ops::Add<Output = Token> + Default,
+    Token: Clone + AddAssign + Default,
 {
     type Output = Self;
 
     fn add(mut self, rhs: Self) -> Self::Output {
-        self.deltas.extend(rhs.deltas);
+        // This is almost the same as `self.deltas.extend(rhs.deltas);`, except
+        // that we add values where a key is present on both sides.
+        let iter = rhs.deltas.into_iter();
+        let reserve = if self.deltas.is_empty() {
+            iter.size_hint().0
+        } else {
+            (iter.size_hint().0 + 1) / 2
+        };
+        self.deltas.reserve(reserve);
+        iter.for_each(|(k, v)| {
+            // Add or insert
+            match self.deltas.get_mut(&k) {
+                Some(value) => *value += v,
+                None => {
+                    self.deltas.insert(k, v);
+                }
+            }
+        });
         self
     }
 }
@@ -404,7 +437,7 @@ impl From<VotingPower> for u64 {
     }
 }
 
-impl ops::Add for VotingPower {
+impl Add for VotingPower {
     type Output = Self;
 
     fn add(self, rhs: Self) -> Self::Output {
@@ -430,7 +463,7 @@ impl From<VotingPowerDelta> for i64 {
     }
 }
 
-impl ops::Add for VotingPowerDelta {
+impl Add for VotingPowerDelta {
     type Output = Self;
 
     fn add(self, rhs: Self) -> Self::Output {
@@ -444,7 +477,7 @@ impl AddAssign for VotingPowerDelta {
     }
 }
 
-impl ops::Sub for VotingPowerDelta {
+impl Sub for VotingPowerDelta {
     type Output = Self;
 
     fn sub(self, rhs: Self) -> Self::Output {
@@ -452,7 +485,7 @@ impl ops::Sub for VotingPowerDelta {
     }
 }
 
-impl ops::Sub<i64> for VotingPowerDelta {
+impl Sub<i64> for VotingPowerDelta {
     type Output = Self;
 
     fn sub(self, rhs: i64) -> Self::Output {
@@ -473,12 +506,14 @@ where
 #[cfg(test)]
 pub mod tests {
 
+    use std::ops::Range;
+
     use proptest::prelude::*;
 
     use super::*;
 
     /// Generate arbitrary epoch in given range
-    pub fn arb_epoch(range: ops::Range<u64>) -> impl Strategy<Value = Epoch> {
+    pub fn arb_epoch(range: Range<u64>) -> impl Strategy<Value = Epoch> {
         range.prop_map(Epoch)
     }
 }

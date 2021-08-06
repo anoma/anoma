@@ -1,7 +1,7 @@
 //! A basic fungible token
 
 use std::fmt::Display;
-use std::ops::{Add, Sub, SubAssign};
+use std::ops::{Add, AddAssign, Sub, SubAssign};
 use std::str::FromStr;
 
 use borsh::{BorshDeserialize, BorshSerialize};
@@ -85,6 +85,12 @@ impl Add for Amount {
     fn add(mut self, rhs: Self) -> Self::Output {
         self.micro += rhs.micro;
         self
+    }
+}
+
+impl AddAssign for Amount {
+    fn add_assign(&mut self, rhs: Self) {
+        self.micro += rhs.micro
     }
 }
 

@@ -51,7 +51,7 @@ where
     #[error("Empty bond {0} must be deleted")]
     EmptyBond(BondId<Address>),
     #[error(
-        "Bond {id} must start at the correct epoch. Got {got}, expected \
+        "Bond ID {id} must start at the correct epoch. Got {got}, expected \
          {expected}"
     )]
     InvalidBondStartEpoch {
@@ -60,7 +60,7 @@ where
         expected: u64,
     },
     #[error(
-        "Bond {id} must be added at the correct epoch. Got {got}, expected \
+        "Bond ID {id} must be added at the correct epoch. Got {got}, expected \
          {expected}"
     )]
     InvalidNewBondEpoch {
@@ -80,6 +80,7 @@ where
         + Eq
         + Sub
         + Add<Output = TokenAmount>
+        + AddAssign
         + BorshDeserialize
         + BorshSerialize,
     TokenChange: Display
@@ -153,6 +154,7 @@ where
         + Eq
         + Sub
         + Add<Output = TokenAmount>
+        + AddAssign
         + BorshDeserialize
         + BorshSerialize,
     TokenChange: Display
@@ -225,24 +227,27 @@ where
                     }
                     let mut total_pre_delta = TokenChange::default();
                     let mut total_post_delta = TokenChange::default();
-                    for epoch in
-                        Epoch::iter_range(current_epoch, pipeline_offset + 1)
-                    {
-                        let mut current_delta = TokenChange::default();
-                        // Pre-bonds keyed by their `start_epoch`
-                        let mut pre_bonds: HashMap<Epoch, TokenChange> =
-                            HashMap::default();
+                    // Pre-bonds keyed by their `start_epoch`
+                    let mut pre_bonds: HashMap<Epoch, TokenChange> =
+                        HashMap::default();
+                    // Iter from the first epoch of `pre` to the last epoch of
+                    // `post`
+                    let pre_offset: u64 =
+                        (current_epoch - pre.last_update()).into();
+                    for epoch in Epoch::iter_range(
+                        pre.last_update(),
+                        pre_offset + pipeline_offset + 1,
+                    ) {
                         if let Some(bond) = pre.get_delta_at_epoch(epoch) {
                             for (start_epoch, delta) in bond.delta.iter() {
                                 let delta: TokenChange = (*delta).into();
                                 total_pre_delta += delta;
-                                current_delta -= delta;
                                 pre_bonds.insert(*start_epoch, delta);
                             }
                         }
                         if let Some(bond) = post.get_delta_at_epoch(epoch) {
                             for (start_epoch, delta) in bond.delta.iter() {
-                                // In the current epoch, all bond's
+                                // On the current epoch, all bond's
                                 // `start_epoch`s must be equal or lower than
                                 // `current_epoch`. For all others, the
                                 // `start_epoch` must be equal
@@ -260,25 +265,23 @@ where
                                 }
                                 let delta: TokenChange = (*delta).into();
                                 total_post_delta += delta;
-                                current_delta += delta;
 
                                 // Anywhere other than at `pipeline_offset`
                                 // where new bonds are added, check against the
                                 // data in `pre_bonds` to ensure that no new
                                 // bond has been added and that the deltas are
-                                // equal or lower to `pre_bonds` delta.
+                                // equal or lower to `pre_bonds` deltas.
                                 // Note that any bonds from any epoch can be
-                                // unbonded.
-                                if epoch != current_epoch + pipeline_offset {
-                                    match pre_bonds.get(&epoch) {
+                                // unbonded, even if they are not yet active.
+                                if epoch != pipeline_epoch {
+                                    match pre_bonds.get(start_epoch) {
                                         Some(pre_delta) => {
                                             if &delta > pre_delta {
                                                 errors.push(
                                                 Error::InvalidNewBondEpoch {
                                                     id: id.clone(),
                                                     got: epoch.into(),
-                                                    expected: (current_epoch
-                                                        + pipeline_offset)
+                                                    expected: pipeline_epoch
                                                         .into(),
                                                 });
                                             }
@@ -297,17 +300,6 @@ where
                                     }
                                 }
                             }
-                        }
-                        // An increase (newly bonded tokens) is only allowed at
-                        // `pipeline_offset`. Decrease happens on unbonding,
-                        // which can remove tokens from bond at any epoch.
-                        if epoch != pipeline_epoch
-                            && current_delta > TokenChange::default()
-                        {
-                            errors.push(Error::EpochedDataWrongEpoch {
-                                got: epoch.into(),
-                                expected: pipeline_epoch.into(),
-                            })
                         }
                     }
                     // An empty bond must be deleted
@@ -355,9 +347,9 @@ where
                 }
                 // Bond may be deleted when all the tokens are unbonded
                 (Some(pre), None) => {
-                    for epoch in
-                        Epoch::iter_range(current_epoch, pipeline_offset + 1)
-                    {
+                    for index in 0..pipeline_offset + 1 {
+                        let index = index as usize;
+                        let epoch = pre.last_update() + index;
                         if let Some(bond) = pre.get_delta_at_epoch(epoch) {
                             for delta in bond.delta.values() {
                                 bond_delta -= (*delta).into();

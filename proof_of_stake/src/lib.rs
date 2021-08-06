@@ -18,7 +18,7 @@ use std::convert::TryFrom;
 use std::fmt::Display;
 use std::hash::Hash;
 use std::num::TryFromIntError;
-use std::ops::{self, Add, Neg, Sub, SubAssign};
+use std::ops::{Add, AddAssign, Neg, Sub, SubAssign};
 
 use borsh::{BorshDeserialize, BorshSerialize};
 use epoched::{
@@ -54,6 +54,7 @@ pub trait PoSReadOnly {
         + Clone
         + Copy
         + Add<Output = Self::TokenAmount>
+        + AddAssign
         + Sub
         + PartialOrd
         + Into<u64>
@@ -399,6 +400,7 @@ pub trait PoSBase {
         + Clone
         + Copy
         + Add<Output = Self::TokenAmount>
+        + AddAssign
         + Sub
         + PartialOrd
         + Into<u64>
@@ -641,12 +643,13 @@ where
     TokenAmount: Debug
         + Default
         + Clone
-        + ops::Add<Output = TokenAmount>
+        + Add<Output = TokenAmount>
+        + AddAssign
         + BorshDeserialize
         + BorshSerialize,
     TokenChange: Debug
         + Copy
-        + ops::Add<Output = TokenChange>
+        + Add<Output = TokenChange>
         + BorshDeserialize
         + BorshSerialize,
     PK: Debug + Clone + BorshDeserialize + BorshSerialize,
@@ -669,12 +672,13 @@ where
     TokenAmount: Debug
         + Default
         + Clone
-        + ops::Add<Output = TokenAmount>
+        + Add<Output = TokenAmount>
+        + AddAssign
         + BorshDeserialize
         + BorshSerialize,
     TokenChange: Debug
         + Copy
-        + ops::Add<Output = TokenChange>
+        + Add<Output = TokenChange>
         + BorshDeserialize
         + BorshSerialize,
     PK: Debug + Clone + BorshDeserialize + BorshSerialize,
@@ -724,14 +728,15 @@ where
         + Debug
         + Default
         + Clone
-        + ops::Add<Output = TokenAmount>
+        + Add<Output = TokenAmount>
+        + AddAssign
         + Into<u64>
         + BorshDeserialize
         + BorshSerialize,
     TokenChange: 'a
         + Debug
         + Copy
-        + ops::Add<Output = TokenChange>
+        + Add<Output = TokenChange>
         + From<TokenAmount>
         + BorshDeserialize
         + BorshSerialize,
@@ -878,6 +883,7 @@ where
         + Clone
         + Copy
         + Add<Output = TokenAmount>
+        + AddAssign
         + BorshDeserialize
         + BorshSerialize,
     TokenChange: Debug
@@ -923,6 +929,7 @@ where
         + Clone
         + Copy
         + Add<Output = TokenAmount>
+        + AddAssign
         + Into<u64>
         + BorshDeserialize
         + BorshSerialize,
@@ -1045,6 +1052,7 @@ where
         + Clone
         + Copy
         + Add<Output = TokenAmount>
+        + AddAssign
         + BorshDeserialize
         + BorshSerialize,
 {
@@ -1083,6 +1091,7 @@ where
         + Copy
         + PartialOrd
         + Add<Output = TokenAmount>
+        + AddAssign
         + Into<u64>
         + From<u64>
         + SubAssign
@@ -1333,6 +1342,7 @@ where
         + Clone
         + Copy
         + Add<Output = TokenAmount>
+        + AddAssign
         + BorshDeserialize
         + BorshSerialize,
 {
@@ -1365,6 +1375,7 @@ where
         + Copy
         + PartialOrd
         + Add<Output = TokenAmount>
+        + AddAssign
         + Into<u64>
         + From<u64>
         + SubAssign
