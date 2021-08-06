@@ -440,6 +440,7 @@
 <span id="437">437</span>
 <span id="438">438</span>
 <span id="439">439</span>
+<span id="440">440</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">convert</span>::{<span class="ident">TryFrom</span>, <span class="ident">TryInto</span>};
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">path</span>::<span class="ident">Path</span>;
@@ -462,9 +463,10 @@
 <span class="kw">use</span> <span class="ident">tower_abci</span>::{<span class="ident">request</span>, <span class="ident">response</span>};
 
 <span class="kw">use</span> <span class="kw">super</span>::<span class="ident">rpc</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">config</span>::<span class="ident">genesis</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">node</span>::<span class="ident">ledger</span>::<span class="ident">rpc</span>::<span class="ident">PrefixValue</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">node</span>::<span class="ident">ledger</span>::{<span class="ident">protocol</span>, <span class="ident">storage</span>, <span class="ident">tendermint_node</span>};
-<span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">config</span>, <span class="ident">genesis</span>, <span class="ident">wallet</span>};
+<span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">config</span>, <span class="ident">wallet</span>};
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Error</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">Error</span> {

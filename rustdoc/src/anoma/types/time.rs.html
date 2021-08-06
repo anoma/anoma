@@ -145,6 +145,20 @@
 <span id="142">142</span>
 <span id="143">143</span>
 <span id="144">144</span>
+<span id="145">145</span>
+<span id="146">146</span>
+<span id="147">147</span>
+<span id="148">148</span>
+<span id="149">149</span>
+<span id="150">150</span>
+<span id="151">151</span>
+<span id="152">152</span>
+<span id="153">153</span>
+<span id="154">154</span>
+<span id="155">155</span>
+<span id="156">156</span>
+<span id="157">157</span>
+<span id="158">158</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Types for dealing with time and durations.</span>
 
@@ -288,6 +302,20 @@
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="self">Self</span>::<span class="ident">Error</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">system_time</span>: <span class="ident">std</span>::<span class="ident">time</span>::<span class="ident">SystemTime</span> <span class="op">=</span> <span class="ident">timestamp</span>.<span class="ident">try_into</span>()<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(<span class="self">Self</span>(<span class="ident">system_time</span>.<span class="ident">into</span>()))
+    }
+}
+
+<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">DateTimeUtc</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">prost_types</span>::<span class="ident">Timestamp</span> {
+    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">dt</span>: <span class="ident">DateTimeUtc</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="kw">let</span> <span class="ident">seconds</span> <span class="op">=</span> <span class="ident">dt</span>.<span class="number">0</span>.<span class="ident">timestamp</span>();
+        <span class="kw">let</span> <span class="ident">nanos</span> <span class="op">=</span> <span class="ident">dt</span>.<span class="number">0</span>.<span class="ident">timestamp_subsec_nanos</span>() <span class="kw">as</span> <span class="ident">i32</span>;
+        <span class="ident">prost_types</span>::<span class="ident">Timestamp</span> { <span class="ident">seconds</span>, <span class="ident">nanos</span> }
+    }
+}
+
+<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">DateTimeUtc</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">std</span>::<span class="ident">time</span>::<span class="ident">SystemTime</span> {
+    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">dt</span>: <span class="ident">DateTimeUtc</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="ident">dt</span>.<span class="number">0</span>.<span class="ident">into</span>()
     }
 }
 </pre></div>

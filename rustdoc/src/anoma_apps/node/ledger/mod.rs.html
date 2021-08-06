@@ -240,6 +240,7 @@
 <span id="237">237</span>
 <span id="238">238</span>
 <span id="239">239</span>
+<span id="240">240</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">protocol</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">rpc</span>;
@@ -259,8 +260,9 @@
 <span class="kw">use</span> <span class="ident">tower</span>::{<span class="ident">Service</span>, <span class="ident">ServiceBuilder</span>};
 <span class="kw">use</span> <span class="ident">tower_abci</span>::{<span class="ident">response</span>, <span class="ident">split</span>, <span class="ident">BoxError</span>, <span class="ident">Request</span>, <span class="ident">Response</span>, <span class="ident">Server</span>};
 
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">config</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">config</span>::<span class="ident">genesis</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">node</span>::<span class="ident">ledger</span>::<span class="ident">shell</span>::{<span class="ident">MempoolTxType</span>, <span class="ident">Shell</span>};
-<span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">config</span>, <span class="ident">genesis</span>};
 
 <span class="doccomment">/// A panic-proof handle for aborting a future. Will abort during</span>
 <span class="doccomment">/// stack unwinding as its drop method calls abort.</span>
