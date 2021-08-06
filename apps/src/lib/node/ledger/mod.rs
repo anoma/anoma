@@ -16,8 +16,9 @@ use tendermint_proto::abci::CheckTxType;
 use tower::{Service, ServiceBuilder};
 use tower_abci::{response, split, BoxError, Request, Response, Server};
 
+use crate::config;
+use crate::config::genesis;
 use crate::node::ledger::shell::{MempoolTxType, Shell};
-use crate::{config, genesis};
 
 /// A panic-proof handle for aborting a future. Will abort during
 /// stack unwinding as its drop method calls abort.

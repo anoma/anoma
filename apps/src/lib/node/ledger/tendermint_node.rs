@@ -13,7 +13,7 @@ use tendermint::config::TendermintConfig;
 use thiserror::Error;
 
 use crate::config;
-use crate::genesis::{self, Validator};
+use crate::config::genesis::{self, Validator};
 use crate::std::sync::mpsc::Sender;
 
 #[derive(Error, Debug)]

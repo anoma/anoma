@@ -19,9 +19,10 @@ use thiserror::Error;
 use tower_abci::{request, response};
 
 use super::rpc;
+use crate::config::genesis;
 use crate::node::ledger::rpc::PrefixValue;
 use crate::node::ledger::{protocol, storage, tendermint_node};
-use crate::{config, genesis, wallet};
+use crate::{config, wallet};
 
 #[derive(Error, Debug)]
 pub enum Error {

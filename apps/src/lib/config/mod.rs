@@ -1,4 +1,8 @@
 //! Node and client configuration
+
+pub mod genesis;
+pub mod gossiper;
+
 use std::collections::HashSet;
 use std::fmt::Display;
 use std::fs::{create_dir_all, File};
@@ -7,6 +11,7 @@ use std::net::{IpAddr, Ipv4Addr, SocketAddr};
 use std::path::{Path, PathBuf};
 use std::str::FromStr;
 
+use gossiper::Gossiper;
 use libp2p::multiaddr::{Multiaddr, Protocol};
 use libp2p::multihash::Multihash;
 use libp2p::PeerId;
@@ -14,8 +19,6 @@ use regex::Regex;
 use serde::{de, Deserialize, Serialize};
 use tendermint::net;
 use thiserror::Error;
-
-use crate::gossiper::Gossiper;
 
 #[derive(Error, Debug)]
 pub enum Error {
