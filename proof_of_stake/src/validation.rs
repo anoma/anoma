@@ -1,5 +1,6 @@
 //! Validation of updated PoS data
 
+use std::collections::HashMap;
 use std::fmt::{Debug, Display};
 use std::hash::Hash;
 use std::ops::{Add, AddAssign, Sub, SubAssign};
@@ -54,6 +55,15 @@ where
          {expected}"
     )]
     InvalidBondStartEpoch {
+        id: BondId<Address>,
+        got: u64,
+        expected: u64,
+    },
+    #[error(
+        "Bond {id} must be added at the correct epoch. Got {got}, expected \
+         {expected}"
+    )]
+    InvalidNewBondEpoch {
         id: BondId<Address>,
         got: u64,
         expected: u64,
@@ -208,6 +218,7 @@ where
                 _ => continue,
             },
             Bond { id, data } => match (data.pre, data.post) {
+                // Bond may be updated from newly bonded tokens and unbonding
                 (Some(pre), Some(post)) => {
                     if post.last_update() != current_epoch {
                         errors.push(Error::InvalidLastUpdate)
@@ -218,21 +229,19 @@ where
                         Epoch::iter_range(current_epoch, pipeline_offset + 1)
                     {
                         let mut current_delta = TokenChange::default();
+                        // Pre-bonds keyed by their `start_epoch`
+                        let mut pre_bonds: HashMap<Epoch, TokenChange> =
+                            HashMap::default();
                         if let Some(bond) = pre.get_delta_at_epoch(epoch) {
-                            for delta in bond.delta.values() {
-                                let delta = (*delta).into();
+                            for (start_epoch, delta) in bond.delta.iter() {
+                                let delta: TokenChange = (*delta).into();
                                 total_pre_delta += delta;
                                 current_delta -= delta;
+                                pre_bonds.insert(*start_epoch, delta);
                             }
                         }
                         if let Some(bond) = post.get_delta_at_epoch(epoch) {
                             for (start_epoch, delta) in bond.delta.iter() {
-                                // TODO check `start_epoch` against data in
-                                // `pre`, ensure that no new `start_epoch` has
-                                // been added and that the deltas are equal or
-                                // lower to `pre`, anywhere else than at
-                                // `pipeline_offset` (where new bonds are added)
-
                                 // In the current epoch, all bond's
                                 // `start_epoch`s must be equal or lower than
                                 // `current_epoch`. For all others, the
@@ -249,9 +258,44 @@ where
                                         expected: epoch.into(),
                                     })
                                 }
-                                let delta = (*delta).into();
+                                let delta: TokenChange = (*delta).into();
                                 total_post_delta += delta;
                                 current_delta += delta;
+
+                                // Anywhere other than at `pipeline_offset`
+                                // where new bonds are added, check against the
+                                // data in `pre_bonds` to ensure that no new
+                                // bond has been added and that the deltas are
+                                // equal or lower to `pre_bonds` delta.
+                                // Note that any bonds from any epoch can be
+                                // unbonded.
+                                if epoch != current_epoch + pipeline_offset {
+                                    match pre_bonds.get(&epoch) {
+                                        Some(pre_delta) => {
+                                            if &delta > pre_delta {
+                                                errors.push(
+                                                Error::InvalidNewBondEpoch {
+                                                    id: id.clone(),
+                                                    got: epoch.into(),
+                                                    expected: (current_epoch
+                                                        + pipeline_offset)
+                                                        .into(),
+                                                });
+                                            }
+                                        }
+                                        None => {
+                                            errors.push(
+                                                Error::InvalidNewBondEpoch {
+                                                    id: id.clone(),
+                                                    got: epoch.into(),
+                                                    expected: (current_epoch
+                                                        + pipeline_offset)
+                                                        .into(),
+                                                },
+                                            );
+                                        }
+                                    }
+                                }
                             }
                         }
                         // An increase (newly bonded tokens) is only allowed at
@@ -273,6 +317,7 @@ where
                     bond_delta -= total_pre_delta;
                     bond_delta += total_post_delta;
                 }
+                // Bond may be created from newly bonded tokens only
                 (None, Some(post)) => {
                     if post.last_update() != current_epoch {
                         errors.push(Error::InvalidLastUpdate)
@@ -308,6 +353,7 @@ where
                     }
                     bond_delta += total_delta;
                 }
+                // Bond may be deleted when all the tokens are unbonded
                 (Some(pre), None) => {
                     for epoch in
                         Epoch::iter_range(current_epoch, pipeline_offset + 1)
