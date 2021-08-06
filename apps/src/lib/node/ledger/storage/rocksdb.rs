@@ -62,6 +62,9 @@ pub fn open(path: impl AsRef<Path>) -> Result<RocksDB> {
         .map_err(|e| Error::DBError(e.into_string()))
 }
 
+/// A custom key comparator is used to sort keys by the height. In
+/// lexicographical order, the height aren't ordered. For example, "11" is
+/// before "2".
 fn key_comparator(a: &[u8], b: &[u8]) -> Ordering {
     let a_str = &String::from_utf8(a.to_vec()).unwrap();
     let b_str = &String::from_utf8(b.to_vec()).unwrap();
