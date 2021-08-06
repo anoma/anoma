@@ -172,9 +172,21 @@
 <span id="169">169</span>
 <span id="170">170</span>
 <span id="171">171</span>
+<span id="172">172</span>
+<span id="173">173</span>
+<span id="174">174</span>
+<span id="175">175</span>
+<span id="176">176</span>
+<span id="177">177</span>
+<span id="178">178</span>
+<span id="179">179</span>
+<span id="180">180</span>
+<span id="181">181</span>
+<span id="182">182</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! A basic fungible token</span>
 
+<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">fmt</span>::<span class="ident">Display</span>;
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">str</span>::<span class="ident">FromStr</span>;
 
 <span class="kw">use</span> <span class="ident">borsh</span>::{<span class="ident">BorshDeserialize</span>, <span class="ident">BorshSerialize</span>};
@@ -189,6 +201,7 @@
 <span class="attribute">#[<span class="ident">derive</span>(
     <span class="ident">Clone</span>,
     <span class="ident">Copy</span>,
+    <span class="ident">Default</span>,
     <span class="ident">BorshSerialize</span>,
     <span class="ident">BorshDeserialize</span>,
     <span class="ident">PartialEq</span>,
@@ -208,12 +221,6 @@
 
 <span class="doccomment">/// A change in tokens amount</span>
 <span class="kw">pub</span> <span class="kw">type</span> <span class="ident">Change</span> <span class="op">=</span> <span class="ident">i128</span>;
-
-<span class="kw">impl</span> <span class="ident">Default</span> <span class="kw">for</span> <span class="ident">Amount</span> {
-    <span class="kw">fn</span> <span class="ident">default</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
-        <span class="self">Self</span> { <span class="ident">micro</span>: <span class="number">0</span> }
-    }
-}
 
 <span class="kw">impl</span> <span class="ident">Amount</span> {
     <span class="doccomment">/// Get the amount as a [`Change`]</span>
@@ -243,6 +250,14 @@
 <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Amount</span> {
     <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">micro</span>: <span class="ident">u64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="self">Self</span> { <span class="ident">micro</span> }
+    }
+}
+
+<span class="kw">impl</span> <span class="ident">Display</span> <span class="kw">for</span> <span class="ident">Amount</span> {
+    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">std</span>::<span class="ident">fmt</span>::<span class="ident">Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">std</span>::<span class="ident">fmt</span>::<span class="prelude-ty">Result</span> {
+        <span class="kw">let</span> <span class="ident">decimal</span> <span class="op">=</span>
+            <span class="ident">rust_decimal</span>::<span class="ident">Decimal</span>::<span class="ident">new</span>(<span class="self">self</span>.<span class="ident">micro</span> <span class="kw">as</span> <span class="ident">i64</span>, <span class="number">6</span>).<span class="ident">normalize</span>();
+        <span class="macro">write</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot;{}&quot;</span>, <span class="ident">decimal</span>)
     }
 }
 
@@ -289,6 +304,13 @@
         .<span class="ident">push</span>(<span class="kw-2">&amp;</span><span class="ident">BALANCE_STORAGE_KEY</span>.<span class="ident">to_owned</span>())
         .<span class="ident">expect</span>(<span class="string">&quot;Cannot obtain a storage key&quot;</span>)
         .<span class="ident">push</span>(<span class="kw-2">&amp;</span><span class="ident">owner</span>.<span class="ident">to_db_key</span>())
+        .<span class="ident">expect</span>(<span class="string">&quot;Cannot obtain a storage key&quot;</span>)
+}
+
+<span class="doccomment">/// Obtain a storage key prefix for all users&#39; balances.</span>
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">balance_prefix</span>(<span class="ident">token_addr</span>: <span class="kw-2">&amp;</span><span class="ident">Address</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Key</span> {
+    <span class="ident">Key</span>::<span class="ident">from</span>(<span class="ident">token_addr</span>.<span class="ident">to_db_key</span>())
+        .<span class="ident">push</span>(<span class="kw-2">&amp;</span><span class="ident">BALANCE_STORAGE_KEY</span>.<span class="ident">to_owned</span>())
         .<span class="ident">expect</span>(<span class="string">&quot;Cannot obtain a storage key&quot;</span>)
 }
 

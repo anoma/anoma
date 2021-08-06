@@ -1,1 +1,1 @@
-initSidebarItems({"mod":[["tx",""]]});
+initSidebarItems({"mod":[["rpc","Client RPC queries"],["tx",""]]});

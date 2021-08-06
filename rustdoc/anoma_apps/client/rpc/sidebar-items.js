@@ -1,0 +1,1 @@
+initSidebarItems({"fn":[["dry_run_tx","Dry run a transaction"],["query_balance","Query token balance(s)"]]});

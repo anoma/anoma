@@ -169,9 +169,9 @@ function playground_text(playground) {
         Array
         code_nodes
             .filter(function (node) {return !node.classList.contains("editable"); })
-            .forEach(function (block) { hljs.highlightElement(block); });
+            .forEach(function (block) { hljs.highlightBlock(block); });
     } else {
-        code_nodes.forEach(function (block) { hljs.highlightElement(block); });
+        code_nodes.forEach(function (block) { hljs.highlightBlock(block); });
     }
 
     // Adding the hljs class gives code blocks the color css

@@ -393,10 +393,28 @@
 <span id="390">390</span>
 <span id="391">391</span>
 <span id="392">392</span>
+<span id="393">393</span>
+<span id="394">394</span>
+<span id="395">395</span>
+<span id="396">396</span>
+<span id="397">397</span>
+<span id="398">398</span>
+<span id="399">399</span>
+<span id="400">400</span>
+<span id="401">401</span>
+<span id="402">402</span>
+<span id="403">403</span>
+<span id="404">404</span>
+<span id="405">405</span>
+<span id="406">406</span>
+<span id="407">407</span>
+<span id="408">408</span>
+<span id="409">409</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Implements transparent addresses as described in [Accounts</span>
 <span class="doccomment">//! Addresses](docs/src/explore/design/ledger/accounts.md#addresses).</span>
 
+<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">collections</span>::<span class="ident">HashMap</span>;
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">fmt</span>::{<span class="ident">Debug</span>, <span class="ident">Display</span>};
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">hash</span>::<span class="ident">Hash</span>;
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">str</span>::<span class="ident">FromStr</span>;
@@ -692,6 +710,22 @@
 <span class="doccomment">/// Temporary helper for testing</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">kartoffel</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Address</span> {
     <span class="ident">Address</span>::<span class="ident">decode</span>(<span class="string">&quot;a1qq5qqqqqxs6yvsekxuuyy3pjxsmrgd2rxuungdzpgsmyydjrxsenjdp5xaqn233sgccnjs3eak5wwh&quot;</span>).<span class="ident">expect</span>(<span class="string">&quot;The token address decoding shouldn&#39;t fail&quot;</span>)
+}
+
+<span class="doccomment">/// Temporary helper for testing, a hash map of tokens addresses with their</span>
+<span class="doccomment">/// informal currency codes.</span>
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">tokens</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">Address</span>, <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span><span class="op">&gt;</span> {
+    <span class="macro">vec</span><span class="macro">!</span>[
+        (<span class="ident">xan</span>(), <span class="string">&quot;XAN&quot;</span>),
+        (<span class="ident">btc</span>(), <span class="string">&quot;BTC&quot;</span>),
+        (<span class="ident">eth</span>(), <span class="string">&quot;ETH&quot;</span>),
+        (<span class="ident">dot</span>(), <span class="string">&quot;DOT&quot;</span>),
+        (<span class="ident">schnitzel</span>(), <span class="string">&quot;Schnitzel&quot;</span>),
+        (<span class="ident">apfel</span>(), <span class="string">&quot;Apfel&quot;</span>),
+        (<span class="ident">kartoffel</span>(), <span class="string">&quot;Kartoffel&quot;</span>),
+    ]
+    .<span class="ident">into_iter</span>()
+    .<span class="ident">collect</span>()
 }
 
 <span class="doccomment">/// Temporary helper for testing</span>

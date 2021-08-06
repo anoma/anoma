@@ -489,6 +489,38 @@
 <span id="486">486</span>
 <span id="487">487</span>
 <span id="488">488</span>
+<span id="489">489</span>
+<span id="490">490</span>
+<span id="491">491</span>
+<span id="492">492</span>
+<span id="493">493</span>
+<span id="494">494</span>
+<span id="495">495</span>
+<span id="496">496</span>
+<span id="497">497</span>
+<span id="498">498</span>
+<span id="499">499</span>
+<span id="500">500</span>
+<span id="501">501</span>
+<span id="502">502</span>
+<span id="503">503</span>
+<span id="504">504</span>
+<span id="505">505</span>
+<span id="506">506</span>
+<span id="507">507</span>
+<span id="508">508</span>
+<span id="509">509</span>
+<span id="510">510</span>
+<span id="511">511</span>
+<span id="512">512</span>
+<span id="513">513</span>
+<span id="514">514</span>
+<span id="515">515</span>
+<span id="516">516</span>
+<span id="517">517</span>
+<span id="518">518</span>
+<span id="519">519</span>
+<span id="520">520</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! End-to-end tests for Anoma binaries</span>
 
@@ -723,8 +755,9 @@
     <span class="doccomment">/// 2. Submit a token transfer tx</span>
     <span class="doccomment">/// 3. Submit a transaction to update an account&#39;s validity predicate</span>
     <span class="doccomment">/// 4. Submit a custom tx</span>
+    <span class="doccomment">/// 5. Query token balance</span>
     <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">ledger_txs</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">ledger_txs_and_queries</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">dir</span> <span class="op">=</span> <span class="ident">setup</span>();
 
         <span class="kw">let</span> <span class="ident">base_dir</span> <span class="op">=</span> <span class="ident">tempdir</span>().<span class="ident">unwrap</span>();
@@ -805,6 +838,37 @@
                     <span class="ident">status</span>
                 );
             }
+        }
+
+        <span class="kw">let</span> <span class="ident">query_args_and_expected_response</span> <span class="op">=</span> <span class="macro">vec</span><span class="macro">!</span>[
+            <span class="comment">// 5. Query token balance</span>
+            (
+                <span class="macro">vec</span><span class="macro">!</span>[<span class="string">&quot;balance&quot;</span>, <span class="string">&quot;--owner&quot;</span>, <span class="ident">BERTHA</span>, <span class="string">&quot;--token&quot;</span>, <span class="ident">XAN</span>],
+                <span class="comment">// expect a decimal</span>
+                <span class="string">r&quot;XAN: (\d*\.)\d+&quot;</span>,
+            ),
+        ];
+        <span class="kw">for</span> (<span class="ident">query_args</span>, <span class="ident">expected</span>) <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="ident">query_args_and_expected_response</span> {
+            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">cmd</span> <span class="op">=</span> <span class="ident">Command</span>::<span class="ident">cargo_bin</span>(<span class="string">&quot;anomac&quot;</span>)<span class="question-mark">?</span>;
+            <span class="ident">cmd</span>.<span class="ident">current_dir</span>(<span class="kw-2">&amp;</span><span class="ident">dir</span>)
+                .<span class="ident">env</span>(<span class="string">&quot;ANOMA_LOG&quot;</span>, <span class="string">&quot;debug&quot;</span>)
+                .<span class="ident">args</span>(<span class="kw-2">&amp;</span>[<span class="string">&quot;--base-dir&quot;</span>, <span class="ident">base_dir_arg</span>])
+                .<span class="ident">args</span>(<span class="ident">query_args</span>);
+            <span class="kw">let</span> <span class="ident">cmd_str</span> <span class="op">=</span> <span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="ident">cmd</span>);
+
+            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">session</span> <span class="op">=</span>
+                <span class="ident">spawn_command</span>(<span class="ident">cmd</span>, <span class="prelude-val">Some</span>(<span class="number">10_000</span>)).<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> {
+                    <span class="macro">eyre</span><span class="macro">!</span>(<span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;in command: {}\n\nReason: {}&quot;</span>, <span class="ident">cmd_str</span>, <span class="ident">e</span>))
+                })<span class="question-mark">?</span>;
+            <span class="ident">session</span>.<span class="ident">exp_regex</span>(<span class="ident">expected</span>).<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> {
+                <span class="macro">eyre</span><span class="macro">!</span>(<span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;in command: {}\n\nReason: {}&quot;</span>, <span class="ident">cmd_str</span>, <span class="ident">e</span>))
+            })<span class="question-mark">?</span>;
+
+            <span class="kw">let</span> <span class="ident">status</span> <span class="op">=</span> <span class="ident">session</span>.<span class="ident">process</span>.<span class="ident">wait</span>().<span class="ident">unwrap</span>();
+            <span class="macro">assert_eq</span><span class="macro">!</span>(
+                <span class="ident">WaitStatus</span>::<span class="ident">Exited</span>(<span class="ident">session</span>.<span class="ident">process</span>.<span class="ident">child_pid</span>, <span class="number">0</span>),
+                <span class="ident">status</span>
+            );
         }
 
         <span class="prelude-val">Ok</span>(())
