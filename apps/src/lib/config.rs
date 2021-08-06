@@ -244,7 +244,6 @@ impl Default for Config {
     fn default() -> Self {
         Self {
             ledger: Some(Ledger::default()),
-            // TODO Should it be None by default
             intent_gossiper: Some(IntentGossiper::default()),
         }
     }
