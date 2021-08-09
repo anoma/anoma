@@ -1,7 +1,6 @@
 <!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `tests/src/vm_host_env/vp.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>vp.rs - source</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script id="default-settings"></script><script src="../../../storage.js"></script><script src="../../../crates.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../../favicon.svg">
 <link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png">
-<link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../anoma_tests/index.html'><div class='logo-container rust-logo'><img src='../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../../../brush.svg" width="18" height="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><script src="../../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" class="help-button">?</button>
-                <a id="settings-menu" href="../../../settings.html"><img src="../../../wheel.svg" width="18" height="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">  1</span>
+<link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../anoma_tests/index.html'><div class='logo-container rust-logo'><img src='../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img src="../../../brush.svg" width="18" height="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../../settings.html" title="settings"><img src="../../../wheel.svg" width="18" height="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">  1</span>
 <span id="2">  2</span>
 <span id="3">  3</span>
 <span id="4">  4</span>
@@ -252,29 +251,29 @@
 <span id="249">249</span>
 <span id="250">250</span>
 <span id="251">251</span>
-</pre><div class="example-wrap"><pre class="rust ">
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">collections</span>::<span class="ident">HashSet</span>;
+</pre><pre class="rust">
+<span class="kw">use</span> <span class="ident">std::collections::HashSet</span>;
 
-<span class="kw">use</span> <span class="ident">anoma</span>::<span class="ident">ledger</span>::<span class="ident">gas</span>::<span class="ident">VpGasMeter</span>;
-<span class="kw">use</span> <span class="ident">anoma</span>::<span class="ident">ledger</span>::<span class="ident">storage</span>::<span class="ident">mockdb</span>::<span class="ident">MockDB</span>;
-<span class="kw">use</span> <span class="ident">anoma</span>::<span class="ident">ledger</span>::<span class="ident">storage</span>::<span class="ident">testing</span>::<span class="ident">TestStorage</span>;
-<span class="kw">use</span> <span class="ident">anoma</span>::<span class="ident">ledger</span>::<span class="ident">storage</span>::<span class="ident">write_log</span>::<span class="ident">WriteLog</span>;
-<span class="kw">use</span> <span class="ident">anoma</span>::<span class="ident">proto</span>::<span class="ident">Tx</span>;
-<span class="kw">use</span> <span class="ident">anoma</span>::<span class="ident">types</span>::<span class="ident">address</span>::{<span class="self">self</span>, <span class="ident">Address</span>};
-<span class="kw">use</span> <span class="ident">anoma</span>::<span class="ident">types</span>::<span class="ident">storage</span>::{<span class="self">self</span>, <span class="ident">Key</span>};
-<span class="kw">use</span> <span class="ident">anoma</span>::<span class="ident">vm</span>;
-<span class="kw">use</span> <span class="ident">anoma</span>::<span class="ident">vm</span>::<span class="ident">prefix_iter</span>::<span class="ident">PrefixIterators</span>;
+<span class="kw">use</span> <span class="ident">anoma::ledger::gas::VpGasMeter</span>;
+<span class="kw">use</span> <span class="ident">anoma::ledger::storage::mockdb::MockDB</span>;
+<span class="kw">use</span> <span class="ident">anoma::ledger::storage::testing::TestStorage</span>;
+<span class="kw">use</span> <span class="ident">anoma::ledger::storage::write_log::WriteLog</span>;
+<span class="kw">use</span> <span class="ident">anoma::proto::Tx</span>;
+<span class="kw">use</span> <span class="ident">anoma::types::address</span>::{<span class="self">self</span>, <span class="ident">Address</span>};
+<span class="kw">use</span> <span class="ident">anoma::types::storage</span>::{<span class="self">self</span>, <span class="ident">Key</span>};
+<span class="kw">use</span> <span class="ident">anoma::vm</span>;
+<span class="kw">use</span> <span class="ident">anoma::vm::prefix_iter::PrefixIterators</span>;
 
-<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">tx</span>::{<span class="ident">init_tx_env</span>, <span class="ident">TestTxEnv</span>};
+<span class="kw">use</span> <span class="kw">crate</span><span class="ident">::tx</span>::{<span class="ident">init_tx_env</span>, <span class="ident">TestTxEnv</span>};
 
 <span class="doccomment">/// This module combines the native host function implementations from</span>
 <span class="doccomment">/// `native_vp_host_env` with the functions exposed to the vp wasm</span>
 <span class="doccomment">/// that will call to the native functions, instead of interfacing via a</span>
 <span class="doccomment">/// wasm runtime. It can be used for host environment integration tests.</span>
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">vp_host_env</span> {
-    <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">anoma_vm_env</span>::<span class="ident">imports</span>::<span class="ident">vp</span>::<span class="kw-2">*</span>;
+    <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">anoma_vm_env::imports::vp</span>::<span class="kw-2">*</span>;
 
-    <span class="kw">pub</span> <span class="kw">use</span> <span class="kw">super</span>::<span class="ident">native_vp_host_env</span>::<span class="kw-2">*</span>;
+    <span class="kw">pub</span> <span class="kw">use</span> <span class="kw">super</span><span class="ident">::native_vp_host_env</span>::<span class="kw-2">*</span>;
 }
 
 <span class="doccomment">/// Host environment structures required for transactions.</span>
@@ -285,28 +284,28 @@
     <span class="kw">pub</span> <span class="ident">iterators</span>: <span class="ident">PrefixIterators</span><span class="op">&lt;</span><span class="lifetime">&#39;static</span>, <span class="ident">MockDB</span><span class="op">&gt;</span>,
     <span class="kw">pub</span> <span class="ident">gas_meter</span>: <span class="ident">VpGasMeter</span>,
     <span class="kw">pub</span> <span class="ident">tx</span>: <span class="ident">Tx</span>,
-    <span class="kw">pub</span> <span class="ident">keys_changed</span>: <span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">storage</span>::<span class="ident">Key</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span> <span class="ident">keys_changed</span>: <span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">storage::Key</span><span class="op">&gt;</span>,
     <span class="kw">pub</span> <span class="ident">verifiers</span>: <span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span> <span class="ident">eval_runner</span>: <span class="ident">native_vp_host_env</span>::<span class="ident">VpEval</span>,
+    <span class="kw">pub</span> <span class="ident">eval_runner</span>: <span class="ident">native_vp_host_env::VpEval</span>,
     <span class="kw">pub</span> <span class="ident">result_buffer</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span>,
 }
 
 <span class="kw">impl</span> <span class="ident">Default</span> <span class="kw">for</span> <span class="ident">TestVpEnv</span> {
     <span class="kw">fn</span> <span class="ident">default</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;wasm-runtime&quot;</span>)]</span>
-        <span class="kw">let</span> <span class="ident">eval_runner</span> <span class="op">=</span> <span class="ident">anoma</span>::<span class="ident">vm</span>::<span class="ident">wasm</span>::<span class="ident">run</span>::<span class="ident">VpEvalWasm</span>::<span class="ident">default</span>();
+        <span class="kw">let</span> <span class="ident">eval_runner</span> <span class="op">=</span> <span class="ident">anoma::vm::wasm::run::VpEvalWasm::default</span>();
         <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;wasm-runtime&quot;</span>))]</span>
-        <span class="kw">let</span> <span class="ident">eval_runner</span> <span class="op">=</span> <span class="ident">native_vp_host_env</span>::<span class="ident">VpEval</span>;
+        <span class="kw">let</span> <span class="ident">eval_runner</span> <span class="op">=</span> <span class="ident">native_vp_host_env::VpEval</span>;
 
         <span class="self">Self</span> {
-            <span class="ident">addr</span>: <span class="ident">address</span>::<span class="ident">testing</span>::<span class="ident">established_address_1</span>(),
-            <span class="ident">storage</span>: <span class="ident">TestStorage</span>::<span class="ident">default</span>(),
-            <span class="ident">write_log</span>: <span class="ident">WriteLog</span>::<span class="ident">default</span>(),
-            <span class="ident">iterators</span>: <span class="ident">PrefixIterators</span>::<span class="ident">default</span>(),
-            <span class="ident">gas_meter</span>: <span class="ident">VpGasMeter</span>::<span class="ident">new</span>(<span class="number">0</span>),
-            <span class="ident">tx</span>: <span class="ident">Tx</span>::<span class="ident">new</span>(<span class="macro">vec</span><span class="macro">!</span>[], <span class="prelude-val">None</span>),
-            <span class="ident">keys_changed</span>: <span class="ident">HashSet</span>::<span class="ident">default</span>(),
-            <span class="ident">verifiers</span>: <span class="ident">HashSet</span>::<span class="ident">default</span>(),
+            <span class="ident">addr</span>: <span class="ident">address::testing::established_address_1</span>(),
+            <span class="ident">storage</span>: <span class="ident">TestStorage::default</span>(),
+            <span class="ident">write_log</span>: <span class="ident">WriteLog::default</span>(),
+            <span class="ident">iterators</span>: <span class="ident">PrefixIterators::default</span>(),
+            <span class="ident">gas_meter</span>: <span class="ident">VpGasMeter::new</span>(<span class="number">0</span>),
+            <span class="ident">tx</span>: <span class="ident">Tx::new</span>(<span class="macro">vec!</span>[], <span class="prelude-val">None</span>),
+            <span class="ident">keys_changed</span>: <span class="ident">HashSet::default</span>(),
+            <span class="ident">verifiers</span>: <span class="ident">HashSet::default</span>(),
             <span class="ident">eval_runner</span>,
             <span class="ident">result_buffer</span>: <span class="prelude-val">None</span>,
         }
@@ -327,8 +326,8 @@
 {
     <span class="comment">// Write an empty validity predicate for the address, because it&#39;s used to</span>
     <span class="comment">// check if the address exists when we write into its storage</span>
-    <span class="kw">let</span> <span class="ident">vp_key</span> <span class="op">=</span> <span class="ident">Key</span>::<span class="ident">validity_predicate</span>(<span class="kw-2">&amp;</span><span class="ident">addr</span>);
-    <span class="ident">tx_env</span>.<span class="ident">storage</span>.<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="ident">vp_key</span>, <span class="macro">vec</span><span class="macro">!</span>[]).<span class="ident">unwrap</span>();
+    <span class="kw">let</span> <span class="ident">vp_key</span> <span class="op">=</span> <span class="ident">Key::validity_predicate</span>(<span class="kw-2">&amp;</span><span class="ident">addr</span>);
+    <span class="ident">tx_env</span>.<span class="ident">storage</span>.<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="ident">vp_key</span>, <span class="macro">vec!</span>[]).<span class="ident">unwrap</span>();
 
     <span class="ident">init_tx_env</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">tx_env</span>);
     <span class="ident">apply_tx</span>(<span class="kw-2">&amp;</span><span class="ident">addr</span>);
@@ -351,7 +350,7 @@
         <span class="ident">write_log</span>: <span class="ident">tx_env</span>.<span class="ident">write_log</span>,
         <span class="ident">keys_changed</span>,
         <span class="ident">verifiers</span>,
-        ..<span class="ident">Default</span>::<span class="ident">default</span>()
+        ..<span class="ident">Default::default</span>()
     };
 
     <span class="ident">init_vp_env</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">vp_env</span>);
@@ -373,9 +372,9 @@
         <span class="ident">result_buffer</span>,
     }: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">TestVpEnv</span>,
 ) {
-    <span class="ident">vp_host_env</span>::<span class="ident">ENV</span>.<span class="ident">with</span>(<span class="op">|</span><span class="ident">env</span><span class="op">|</span> {
+    <span class="ident">vp_host_env::ENV</span>.<span class="ident">with</span>(<span class="op">|</span><span class="ident">env</span><span class="op">|</span> {
         <span class="kw-2">*</span><span class="ident">env</span>.<span class="ident">borrow_mut</span>() <span class="op">=</span> <span class="prelude-val">Some</span>({
-            <span class="ident">vm</span>::<span class="ident">host_env</span>::<span class="ident">testing</span>::<span class="ident">vp_env</span>(
+            <span class="ident">vm::host_env::testing::vp_env</span>(
                 <span class="ident">addr</span>,
                 <span class="ident">storage</span>,
                 <span class="ident">write_log</span>,
@@ -397,23 +396,23 @@
 <span class="doccomment">/// before the test.</span>
 <span class="kw">mod</span> <span class="ident">native_vp_host_env</span> {
 
-    <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">cell</span>::<span class="ident">RefCell</span>;
+    <span class="kw">use</span> <span class="ident">std::cell::RefCell</span>;
 
-    <span class="kw">use</span> <span class="ident">anoma</span>::<span class="ident">ledger</span>::<span class="ident">storage</span>::<span class="ident">testing</span>::<span class="ident">Sha256Hasher</span>;
-    <span class="kw">use</span> <span class="ident">anoma</span>::<span class="ident">vm</span>::<span class="ident">host_env</span>::<span class="kw-2">*</span>;
-    <span class="kw">use</span> <span class="ident">anoma</span>::<span class="ident">vm</span>::<span class="ident">memory</span>::<span class="ident">testing</span>::<span class="ident">NativeMemory</span>;
+    <span class="kw">use</span> <span class="ident">anoma::ledger::storage::testing::Sha256Hasher</span>;
+    <span class="kw">use</span> <span class="ident">anoma::vm::host_env</span>::<span class="kw-2">*</span>;
+    <span class="kw">use</span> <span class="ident">anoma::vm::memory::testing::NativeMemory</span>;
     <span class="comment">// TODO replace with `std::concat_idents` once stabilized (https://github.com/rust-lang/rust/issues/29599)</span>
-    <span class="kw">use</span> <span class="ident">concat_idents</span>::<span class="ident">concat_idents</span>;
+    <span class="kw">use</span> <span class="ident">concat_idents::concat_idents</span>;
 
     <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
 
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;wasm-runtime&quot;</span>)]</span>
-    <span class="kw">pub</span> <span class="kw">type</span> <span class="ident">VpEval</span> <span class="op">=</span> <span class="ident">anoma</span>::<span class="ident">vm</span>::<span class="ident">wasm</span>::<span class="ident">run</span>::<span class="ident">VpEvalWasm</span><span class="op">&lt;</span><span class="ident">MockDB</span>, <span class="ident">Sha256Hasher</span><span class="op">&gt;</span>;
+    <span class="kw">pub</span> <span class="kw">type</span> <span class="ident">VpEval</span> <span class="op">=</span> <span class="ident">anoma::vm::wasm::run::VpEvalWasm</span><span class="op">&lt;</span><span class="ident">MockDB</span>, <span class="ident">Sha256Hasher</span><span class="op">&gt;</span>;
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;wasm-runtime&quot;</span>))]</span>
     <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">VpEval</span>;
 
-    <span class="macro">thread_local</span><span class="macro">!</span> {
-        <span class="kw">pub</span> <span class="kw">static</span> <span class="ident">ENV</span>: <span class="ident">RefCell</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">VpEnv</span><span class="op">&lt;</span><span class="lifetime">&#39;static</span>, <span class="ident">NativeMemory</span>, <span class="ident">MockDB</span>, <span class="ident">Sha256Hasher</span>, <span class="ident">VpEval</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">RefCell</span>::<span class="ident">new</span>(<span class="prelude-val">None</span>);
+    <span class="macro">thread_local!</span> {
+        <span class="kw">pub</span> <span class="kw">static</span> <span class="ident">ENV</span>: <span class="ident">RefCell</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">VpEnv</span><span class="op">&lt;</span><span class="lifetime">&#39;static</span>, <span class="ident">NativeMemory</span>, <span class="ident">MockDB</span>, <span class="ident">Sha256Hasher</span>, <span class="ident">VpEval</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">RefCell::new</span>(<span class="prelude-val">None</span>);
     }
 
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;wasm-runtime&quot;</span>))]</span>
@@ -424,11 +423,11 @@
 
         <span class="kw">fn</span> <span class="ident">eval</span>(
             <span class="kw-2">&amp;</span><span class="self">self</span>,
-            <span class="ident">_ctx</span>: <span class="ident">VpCtx</span><span class="op">&lt;</span><span class="lifetime">&#39;static</span>, <span class="self">Self</span>::<span class="ident">Db</span>, <span class="self">Self</span>::<span class="ident">H</span>, <span class="self">Self</span>::<span class="ident">Eval</span><span class="op">&gt;</span>,
+            <span class="ident">_ctx</span>: <span class="ident">VpCtx</span><span class="op">&lt;</span><span class="lifetime">&#39;static</span>, <span class="self">Self</span><span class="ident">::Db</span>, <span class="self">Self</span><span class="ident">::H</span>, <span class="self">Self</span><span class="ident">::Eval</span><span class="op">&gt;</span>,
             <span class="ident">_vp_code</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>,
             <span class="ident">_input_data</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>,
-        ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">anoma</span>::<span class="ident">types</span>::<span class="ident">internal</span>::<span class="ident">HostEnvResult</span> {
-            <span class="macro">unimplemented</span><span class="macro">!</span>(
+        ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">anoma::types::internal::HostEnvResult</span> {
+            <span class="macro">unimplemented!</span>(
                 <span class="string">&quot;The \&quot;wasm-runtime\&quot; feature must be enabled to test with \
                  the `eval` function.&quot;</span>
             )
@@ -438,10 +437,10 @@
     <span class="doccomment">/// A helper macro to create implementations of the host environment</span>
     <span class="doccomment">/// functions exported to wasm, which uses the environment from the</span>
     <span class="doccomment">/// `ENV` variable.</span>
-    <span class="macro">macro_rules</span><span class="macro">!</span> <span class="ident">native_host_fn</span> {
+    <span class="macro">macro_rules!</span> <span class="ident">native_host_fn</span> {
             <span class="comment">// unit return type</span>
             ( <span class="macro-nonterminal">$</span><span class="kw">fn</span>:<span class="macro-nonterminal">ident</span> ( $(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">arg</span>:<span class="ident">ident</span> : <span class="macro-nonterminal">$</span><span class="kw">type</span>:<span class="macro-nonterminal">ty</span>),<span class="op">*</span> $(,)<span class="question-mark">?</span>) ) <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="macro">concat_idents</span><span class="macro">!</span>(<span class="ident">extern_fn_name</span> <span class="op">=</span> <span class="ident">anoma</span>, <span class="kw">_</span>, <span class="macro-nonterminal">$</span><span class="kw">fn</span> {
+                <span class="macro">concat_idents!</span>(<span class="ident">extern_fn_name</span> <span class="op">=</span> <span class="ident">anoma</span>, <span class="kw">_</span>, <span class="macro-nonterminal">$</span><span class="kw">fn</span> {
                     <span class="attribute">#[<span class="macro-nonterminal">no_mangle</span>]</span>
                     <span class="kw">extern</span> <span class="string">&quot;C&quot;</span> <span class="kw">fn</span> <span class="ident">extern_fn_name</span>( $(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">arg</span>: <span class="macro-nonterminal">$</span><span class="kw">type</span>),<span class="op">*</span> ) {
                         <span class="macro-nonterminal">ENV</span>.<span class="ident">with</span>(<span class="op">|</span><span class="ident">env</span><span class="op">|</span> {
@@ -459,7 +458,7 @@
 
             <span class="comment">// non-unit return type</span>
             ( <span class="macro-nonterminal">$</span><span class="kw">fn</span>:<span class="macro-nonterminal">ident</span> ( $(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">arg</span>:<span class="ident">ident</span> : <span class="macro-nonterminal">$</span><span class="kw">type</span>:<span class="macro-nonterminal">ty</span>),<span class="op">*</span> $(,)<span class="question-mark">?</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">ret</span>:<span class="ident">ty</span> ) <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="macro">concat_idents</span><span class="macro">!</span>(<span class="ident">extern_fn_name</span> <span class="op">=</span> <span class="ident">anoma</span>, <span class="kw">_</span>, <span class="macro-nonterminal">$</span><span class="kw">fn</span> {
+                <span class="macro">concat_idents!</span>(<span class="ident">extern_fn_name</span> <span class="op">=</span> <span class="ident">anoma</span>, <span class="kw">_</span>, <span class="macro-nonterminal">$</span><span class="kw">fn</span> {
                     <span class="attribute">#[<span class="macro-nonterminal">no_mangle</span>]</span>
                     <span class="kw">extern</span> <span class="string">&quot;C&quot;</span> <span class="kw">fn</span> <span class="ident">extern_fn_name</span>( $(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">arg</span>: <span class="macro-nonterminal">$</span><span class="kw">type</span>),<span class="op">*</span> ) <span class="op">-</span><span class="op">&gt;</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">ret</span> {
                         <span class="ident">ENV</span>.<span class="ident">with</span>(<span class="op">|</span><span class="ident">env</span><span class="op">|</span> {
@@ -478,32 +477,31 @@
 
     <span class="comment">// Implement all the exported functions from</span>
     <span class="comment">// [`anoma_vm_env::imports::vp`] `extern &quot;C&quot;` section.</span>
-    <span class="macro">native_host_fn</span><span class="macro">!</span>(<span class="ident">vp_read_pre</span>(<span class="ident">key_ptr</span>: <span class="ident">u64</span>, <span class="ident">key_len</span>: <span class="ident">u64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">i64</span>);
-    <span class="macro">native_host_fn</span><span class="macro">!</span>(<span class="ident">vp_read_post</span>(<span class="ident">key_ptr</span>: <span class="ident">u64</span>, <span class="ident">key_len</span>: <span class="ident">u64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">i64</span>);
-    <span class="macro">native_host_fn</span><span class="macro">!</span>(<span class="ident">vp_result_buffer</span>(<span class="ident">result_ptr</span>: <span class="ident">u64</span>));
-    <span class="macro">native_host_fn</span><span class="macro">!</span>(<span class="ident">vp_has_key_pre</span>(<span class="ident">key_ptr</span>: <span class="ident">u64</span>, <span class="ident">key_len</span>: <span class="ident">u64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">i64</span>);
-    <span class="macro">native_host_fn</span><span class="macro">!</span>(<span class="ident">vp_has_key_post</span>(<span class="ident">key_ptr</span>: <span class="ident">u64</span>, <span class="ident">key_len</span>: <span class="ident">u64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">i64</span>);
-    <span class="macro">native_host_fn</span><span class="macro">!</span>(<span class="ident">vp_iter_prefix</span>(<span class="ident">prefix_ptr</span>: <span class="ident">u64</span>, <span class="ident">prefix_len</span>: <span class="ident">u64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u64</span>);
-    <span class="macro">native_host_fn</span><span class="macro">!</span>(<span class="ident">vp_iter_pre_next</span>(<span class="ident">iter_id</span>: <span class="ident">u64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">i64</span>);
-    <span class="macro">native_host_fn</span><span class="macro">!</span>(<span class="ident">vp_iter_post_next</span>(<span class="ident">iter_id</span>: <span class="ident">u64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">i64</span>);
-    <span class="macro">native_host_fn</span><span class="macro">!</span>(<span class="ident">vp_get_chain_id</span>(<span class="ident">result_ptr</span>: <span class="ident">u64</span>));
-    <span class="macro">native_host_fn</span><span class="macro">!</span>(<span class="ident">vp_get_block_height</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u64</span>);
-    <span class="macro">native_host_fn</span><span class="macro">!</span>(<span class="ident">vp_get_block_hash</span>(<span class="ident">result_ptr</span>: <span class="ident">u64</span>));
-    <span class="macro">native_host_fn</span><span class="macro">!</span>(<span class="ident">vp_get_block_epoch</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u64</span>);
-    <span class="macro">native_host_fn</span><span class="macro">!</span>(<span class="ident">vp_verify_tx_signature</span>(
+    <span class="macro">native_host_fn!</span>(<span class="ident">vp_read_pre</span>(<span class="ident">key_ptr</span>: <span class="ident">u64</span>, <span class="ident">key_len</span>: <span class="ident">u64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">i64</span>);
+    <span class="macro">native_host_fn!</span>(<span class="ident">vp_read_post</span>(<span class="ident">key_ptr</span>: <span class="ident">u64</span>, <span class="ident">key_len</span>: <span class="ident">u64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">i64</span>);
+    <span class="macro">native_host_fn!</span>(<span class="ident">vp_result_buffer</span>(<span class="ident">result_ptr</span>: <span class="ident">u64</span>));
+    <span class="macro">native_host_fn!</span>(<span class="ident">vp_has_key_pre</span>(<span class="ident">key_ptr</span>: <span class="ident">u64</span>, <span class="ident">key_len</span>: <span class="ident">u64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">i64</span>);
+    <span class="macro">native_host_fn!</span>(<span class="ident">vp_has_key_post</span>(<span class="ident">key_ptr</span>: <span class="ident">u64</span>, <span class="ident">key_len</span>: <span class="ident">u64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">i64</span>);
+    <span class="macro">native_host_fn!</span>(<span class="ident">vp_iter_prefix</span>(<span class="ident">prefix_ptr</span>: <span class="ident">u64</span>, <span class="ident">prefix_len</span>: <span class="ident">u64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u64</span>);
+    <span class="macro">native_host_fn!</span>(<span class="ident">vp_iter_pre_next</span>(<span class="ident">iter_id</span>: <span class="ident">u64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">i64</span>);
+    <span class="macro">native_host_fn!</span>(<span class="ident">vp_iter_post_next</span>(<span class="ident">iter_id</span>: <span class="ident">u64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">i64</span>);
+    <span class="macro">native_host_fn!</span>(<span class="ident">vp_get_chain_id</span>(<span class="ident">result_ptr</span>: <span class="ident">u64</span>));
+    <span class="macro">native_host_fn!</span>(<span class="ident">vp_get_block_height</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u64</span>);
+    <span class="macro">native_host_fn!</span>(<span class="ident">vp_get_block_hash</span>(<span class="ident">result_ptr</span>: <span class="ident">u64</span>));
+    <span class="macro">native_host_fn!</span>(<span class="ident">vp_get_block_epoch</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u64</span>);
+    <span class="macro">native_host_fn!</span>(<span class="ident">vp_verify_tx_signature</span>(
             <span class="ident">pk_ptr</span>: <span class="ident">u64</span>,
             <span class="ident">pk_len</span>: <span class="ident">u64</span>,
             <span class="ident">sig_ptr</span>: <span class="ident">u64</span>,
             <span class="ident">sig_len</span>: <span class="ident">u64</span>,
         ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">i64</span>);
-    <span class="macro">native_host_fn</span><span class="macro">!</span>(<span class="ident">vp_eval</span>(
+    <span class="macro">native_host_fn!</span>(<span class="ident">vp_eval</span>(
             <span class="ident">vp_code_ptr</span>: <span class="ident">u64</span>,
             <span class="ident">vp_code_len</span>: <span class="ident">u64</span>,
             <span class="ident">input_data_ptr</span>: <span class="ident">u64</span>,
             <span class="ident">input_data_len</span>: <span class="ident">u64</span>,
         ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">i64</span>);
-    <span class="macro">native_host_fn</span><span class="macro">!</span>(<span class="ident">vp_log_string</span>(<span class="ident">str_ptr</span>: <span class="ident">u64</span>, <span class="ident">str_len</span>: <span class="ident">u64</span>));
+    <span class="macro">native_host_fn!</span>(<span class="ident">vp_log_string</span>(<span class="ident">str_ptr</span>: <span class="ident">u64</span>, <span class="ident">str_len</span>: <span class="ident">u64</span>));
 }
 </pre></div>
-</section><section id="search" class="content hidden"></section><section class="footer"></section><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="anoma_tests" data-search-js="../../../search-index.js"></div>
-    <script src="../../../main.js"></script><script src="../../../source-script.js"></script><script src="../../../source-files.js"></script></body></html>
+</section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="anoma_tests" data-search-index-js="../../../search-index.js" data-search-js="../../../search.js"></div><script src="../../../main.js"></script><script src="../../../source-script.js"></script><script src="../../../source-files.js"></script></body></html>

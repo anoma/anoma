@@ -1,7 +1,6 @@
 <!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `apps/src/lib/node/ledger/storage/rocksdb.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>rocksdb.rs - source</title><link rel="stylesheet" type="text/css" href="../../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../../../ayu.css" disabled ><script id="default-settings"></script><script src="../../../../../storage.js"></script><script src="../../../../../crates.js"></script><noscript><link rel="stylesheet" href="../../../../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../../../../favicon.svg">
 <link rel="alternate icon" type="image/png" href="../../../../../favicon-16x16.png">
-<link rel="alternate icon" type="image/png" href="../../../../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../../../anoma_apps/index.html'><div class='logo-container rust-logo'><img src='../../../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../../../../../brush.svg" width="18" height="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><script src="../../../../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" class="help-button">?</button>
-                <a id="settings-menu" href="../../../../../settings.html"><img src="../../../../../wheel.svg" width="18" height="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">  1</span>
+<link rel="alternate icon" type="image/png" href="../../../../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../../../anoma_apps/index.html'><div class='logo-container rust-logo'><img src='../../../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img src="../../../../../brush.svg" width="18" height="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../../../../settings.html" title="settings"><img src="../../../../../wheel.svg" width="18" height="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">  1</span>
 <span id="2">  2</span>
 <span id="3">  3</span>
 <span id="4">  4</span>
@@ -410,7 +409,7 @@
 <span id="407">407</span>
 <span id="408">408</span>
 <span id="409">409</span>
-</pre><div class="example-wrap"><pre class="rust ">
+</pre><pre class="rust">
 <span class="doccomment">//! The persistent storage in RocksDB.</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//! The current storage tree is:</span>
@@ -427,14 +426,14 @@
 <span class="doccomment">//!   - `subspace`: any byte data associated with accounts</span>
 <span class="doccomment">//!   - `address_gen`: established address generator</span>
 
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">cmp</span>::<span class="ident">Ordering</span>;
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">collections</span>::<span class="ident">HashMap</span>;
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">path</span>::<span class="ident">Path</span>;
+<span class="kw">use</span> <span class="ident">std::cmp::Ordering</span>;
+<span class="kw">use</span> <span class="ident">std::collections::HashMap</span>;
+<span class="kw">use</span> <span class="ident">std::path::Path</span>;
 
-<span class="kw">use</span> <span class="ident">anoma</span>::<span class="ident">ledger</span>::<span class="ident">storage</span>::<span class="ident">types</span>::<span class="ident">PrefixIterator</span>;
-<span class="kw">use</span> <span class="ident">anoma</span>::<span class="ident">ledger</span>::<span class="ident">storage</span>::{<span class="ident">types</span>, <span class="ident">BlockState</span>, <span class="ident">DBIter</span>, <span class="ident">Error</span>, <span class="prelude-ty">Result</span>, <span class="ident">DB</span>};
-<span class="kw">use</span> <span class="ident">anoma</span>::<span class="ident">types</span>::<span class="ident">storage</span>::{<span class="ident">BlockHeight</span>, <span class="ident">Key</span>, <span class="ident">KeySeg</span>, <span class="ident">KEY_SEGMENT_SEPARATOR</span>};
-<span class="kw">use</span> <span class="ident">anoma</span>::<span class="ident">types</span>::<span class="ident">time</span>::<span class="ident">DateTimeUtc</span>;
+<span class="kw">use</span> <span class="ident">anoma::ledger::storage::types::PrefixIterator</span>;
+<span class="kw">use</span> <span class="ident">anoma::ledger::storage</span>::{<span class="ident">types</span>, <span class="ident">BlockState</span>, <span class="ident">DBIter</span>, <span class="ident">Error</span>, <span class="prelude-ty">Result</span>, <span class="ident">DB</span>};
+<span class="kw">use</span> <span class="ident">anoma::types::storage</span>::{<span class="ident">BlockHeight</span>, <span class="ident">Key</span>, <span class="ident">KeySeg</span>, <span class="ident">KEY_SEGMENT_SEPARATOR</span>};
+<span class="kw">use</span> <span class="ident">anoma::types::time::DateTimeUtc</span>;
 <span class="kw">use</span> <span class="ident">rocksdb</span>::{
     <span class="ident">BlockBasedOptions</span>, <span class="ident">Direction</span>, <span class="ident">FlushOptions</span>, <span class="ident">IteratorMode</span>, <span class="ident">Options</span>,
     <span class="ident">ReadOptions</span>, <span class="ident">SliceTransform</span>, <span class="ident">WriteBatch</span>, <span class="ident">WriteOptions</span>,
@@ -443,11 +442,11 @@
 <span class="comment">// TODO the DB schema will probably need some kind of versioning</span>
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">RocksDB</span>(<span class="ident">rocksdb</span>::<span class="ident">DB</span>);
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">RocksDB</span>(<span class="ident">rocksdb::DB</span>);
 
 <span class="doccomment">/// Open RocksDB for the DB</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">open</span>(<span class="ident">path</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span><span class="ident">Path</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">RocksDB</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">cf_opts</span> <span class="op">=</span> <span class="ident">Options</span>::<span class="ident">default</span>();
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">cf_opts</span> <span class="op">=</span> <span class="ident">Options::default</span>();
     <span class="comment">// ! recommended initial setup https://github.com/facebook/rocksdb/wiki/Setup-Options-and-Basic-Tuning#other-general-options</span>
     <span class="ident">cf_opts</span>.<span class="ident">set_level_compaction_dynamic_level_bytes</span>(<span class="bool-val">true</span>);
     <span class="comment">// compactions + flushes</span>
@@ -455,7 +454,7 @@
     <span class="ident">cf_opts</span>.<span class="ident">set_bytes_per_sync</span>(<span class="number">1048576</span>);
     <span class="comment">// TODO the recommended default `options.compaction_pri =</span>
     <span class="comment">// kMinOverlappingRatio` doesn&#39;t seem to be available in Rust</span>
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">table_opts</span> <span class="op">=</span> <span class="ident">BlockBasedOptions</span>::<span class="ident">default</span>();
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">table_opts</span> <span class="op">=</span> <span class="ident">BlockBasedOptions::default</span>();
     <span class="ident">table_opts</span>.<span class="ident">set_block_size</span>(<span class="number">16</span> <span class="op">*</span> <span class="number">1024</span>);
     <span class="ident">table_opts</span>.<span class="ident">set_cache_index_and_filter_blocks</span>(<span class="bool-val">true</span>);
     <span class="ident">table_opts</span>.<span class="ident">set_pin_l0_filter_and_index_blocks_in_cache</span>(<span class="bool-val">true</span>);
@@ -466,21 +465,21 @@
     <span class="ident">cf_opts</span>.<span class="ident">create_missing_column_families</span>(<span class="bool-val">true</span>);
     <span class="ident">cf_opts</span>.<span class="ident">create_if_missing</span>(<span class="bool-val">true</span>);
 
-    <span class="ident">cf_opts</span>.<span class="ident">set_comparator</span>(<span class="kw-2">&amp;</span><span class="string">&quot;key_comparator&quot;</span>, <span class="ident">key_comparator</span>);
-    <span class="kw">let</span> <span class="ident">extractor</span> <span class="op">=</span> <span class="ident">SliceTransform</span>::<span class="ident">create_fixed_prefix</span>(<span class="number">20</span>);
+    <span class="ident">cf_opts</span>.<span class="ident">set_comparator</span>(<span class="string">&quot;key_comparator&quot;</span>, <span class="ident">key_comparator</span>);
+    <span class="kw">let</span> <span class="ident">extractor</span> <span class="op">=</span> <span class="ident">SliceTransform::create_fixed_prefix</span>(<span class="number">20</span>);
     <span class="ident">cf_opts</span>.<span class="ident">set_prefix_extractor</span>(<span class="ident">extractor</span>);
     <span class="comment">// TODO use column families</span>
-    <span class="ident">rocksdb</span>::<span class="ident">DB</span>::<span class="ident">open_cf_descriptors</span>(<span class="kw-2">&amp;</span><span class="ident">cf_opts</span>, <span class="ident">path</span>, <span class="macro">vec</span><span class="macro">!</span>[])
+    <span class="ident">rocksdb::DB::open_cf_descriptors</span>(<span class="kw-2">&amp;</span><span class="ident">cf_opts</span>, <span class="ident">path</span>, <span class="macro">vec!</span>[])
         .<span class="ident">map</span>(<span class="ident">RocksDB</span>)
-        .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">Error</span>::<span class="ident">DBError</span>(<span class="ident">e</span>.<span class="ident">into_string</span>()))
+        .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">Error::DBError</span>(<span class="ident">e</span>.<span class="ident">into_string</span>()))
 }
 
 <span class="doccomment">/// A custom key comparator is used to sort keys by the height. In</span>
 <span class="doccomment">/// lexicographical order, the height aren&#39;t ordered. For example, &quot;11&quot; is</span>
 <span class="doccomment">/// before &quot;2&quot;.</span>
 <span class="kw">fn</span> <span class="ident">key_comparator</span>(<span class="ident">a</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>], <span class="ident">b</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Ordering</span> {
-    <span class="kw">let</span> <span class="ident">a_str</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">String</span>::<span class="ident">from_utf8</span>(<span class="ident">a</span>.<span class="ident">to_vec</span>()).<span class="ident">unwrap</span>();
-    <span class="kw">let</span> <span class="ident">b_str</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">String</span>::<span class="ident">from_utf8</span>(<span class="ident">b</span>.<span class="ident">to_vec</span>()).<span class="ident">unwrap</span>();
+    <span class="kw">let</span> <span class="ident">a_str</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">String::from_utf8</span>(<span class="ident">a</span>.<span class="ident">to_vec</span>()).<span class="ident">unwrap</span>();
+    <span class="kw">let</span> <span class="ident">b_str</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">String::from_utf8</span>(<span class="ident">b</span>.<span class="ident">to_vec</span>()).<span class="ident">unwrap</span>();
 
     <span class="kw">let</span> <span class="ident">a_vec</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">str</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">a_str</span>.<span class="ident">split</span>(<span class="string">&#39;/&#39;</span>).<span class="ident">collect</span>();
     <span class="kw">let</span> <span class="ident">b_vec</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">str</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">b_str</span>.<span class="ident">split</span>(<span class="string">&#39;/&#39;</span>).<span class="ident">collect</span>();
@@ -510,37 +509,37 @@
 
 <span class="kw">impl</span> <span class="ident">DB</span> <span class="kw">for</span> <span class="ident">RocksDB</span> {
     <span class="kw">fn</span> <span class="ident">flush</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">flush_opts</span> <span class="op">=</span> <span class="ident">FlushOptions</span>::<span class="ident">default</span>();
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">flush_opts</span> <span class="op">=</span> <span class="ident">FlushOptions::default</span>();
         <span class="ident">flush_opts</span>.<span class="ident">set_wait</span>(<span class="bool-val">true</span>);
         <span class="self">self</span>.<span class="number">0</span>
             .<span class="ident">flush_opt</span>(<span class="kw-2">&amp;</span><span class="ident">flush_opts</span>)
-            .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">Error</span>::<span class="ident">DBError</span>(<span class="ident">e</span>.<span class="ident">into_string</span>()))
+            .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">Error::DBError</span>(<span class="ident">e</span>.<span class="ident">into_string</span>()))
     }
 
     <span class="kw">fn</span> <span class="ident">write_block</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">state</span>: <span class="ident">BlockState</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">batch</span> <span class="op">=</span> <span class="ident">WriteBatch</span>::<span class="ident">default</span>();
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">batch</span> <span class="op">=</span> <span class="ident">WriteBatch::default</span>();
 
         <span class="comment">// Epoch start height and time</span>
         <span class="ident">batch</span>.<span class="ident">put</span>(
             <span class="string">&quot;next_epoch_min_start_height&quot;</span>,
-            <span class="ident">types</span>::<span class="ident">encode</span>(<span class="kw-2">&amp;</span><span class="ident">state</span>.<span class="ident">next_epoch_min_start_height</span>),
+            <span class="ident">types::encode</span>(<span class="kw-2">&amp;</span><span class="ident">state</span>.<span class="ident">next_epoch_min_start_height</span>),
         );
         <span class="ident">batch</span>.<span class="ident">put</span>(
             <span class="string">&quot;next_epoch_min_start_time&quot;</span>,
-            <span class="ident">types</span>::<span class="ident">encode</span>(<span class="kw-2">&amp;</span><span class="ident">state</span>.<span class="ident">next_epoch_min_start_time</span>),
+            <span class="ident">types::encode</span>(<span class="kw-2">&amp;</span><span class="ident">state</span>.<span class="ident">next_epoch_min_start_time</span>),
         );
 
-        <span class="kw">let</span> <span class="ident">prefix_key</span> <span class="op">=</span> <span class="ident">Key</span>::<span class="ident">from</span>(<span class="ident">state</span>.<span class="ident">height</span>.<span class="ident">to_db_key</span>());
+        <span class="kw">let</span> <span class="ident">prefix_key</span> <span class="op">=</span> <span class="ident">Key::from</span>(<span class="ident">state</span>.<span class="ident">height</span>.<span class="ident">to_db_key</span>());
         <span class="comment">// Merkle tree</span>
         {
             <span class="kw">let</span> <span class="ident">prefix_key</span> <span class="op">=</span> <span class="ident">prefix_key</span>
                 .<span class="ident">push</span>(<span class="kw-2">&amp;</span><span class="string">&quot;tree&quot;</span>.<span class="ident">to_owned</span>())
-                .<span class="ident">map_err</span>(<span class="ident">Error</span>::<span class="ident">KeyError</span>)<span class="question-mark">?</span>;
+                .<span class="ident">map_err</span>(<span class="ident">Error::KeyError</span>)<span class="question-mark">?</span>;
             <span class="comment">// Merkle root hash</span>
             {
                 <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">prefix_key</span>
                     .<span class="ident">push</span>(<span class="kw-2">&amp;</span><span class="string">&quot;root&quot;</span>.<span class="ident">to_owned</span>())
-                    .<span class="ident">map_err</span>(<span class="ident">Error</span>::<span class="ident">KeyError</span>)<span class="question-mark">?</span>;
+                    .<span class="ident">map_err</span>(<span class="ident">Error::KeyError</span>)<span class="question-mark">?</span>;
                 <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">state</span>.<span class="ident">root</span>;
                 <span class="ident">batch</span>.<span class="ident">put</span>(<span class="ident">key</span>.<span class="ident">to_string</span>(), <span class="ident">value</span>.<span class="ident">as_slice</span>());
             }
@@ -548,32 +547,32 @@
             {
                 <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">prefix_key</span>
                     .<span class="ident">push</span>(<span class="kw-2">&amp;</span><span class="string">&quot;store&quot;</span>.<span class="ident">to_owned</span>())
-                    .<span class="ident">map_err</span>(<span class="ident">Error</span>::<span class="ident">KeyError</span>)<span class="question-mark">?</span>;
+                    .<span class="ident">map_err</span>(<span class="ident">Error::KeyError</span>)<span class="question-mark">?</span>;
                 <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">state</span>.<span class="ident">store</span>;
-                <span class="ident">batch</span>.<span class="ident">put</span>(<span class="ident">key</span>.<span class="ident">to_string</span>(), <span class="ident">types</span>::<span class="ident">encode</span>(<span class="ident">value</span>));
+                <span class="ident">batch</span>.<span class="ident">put</span>(<span class="ident">key</span>.<span class="ident">to_string</span>(), <span class="ident">types::encode</span>(<span class="ident">value</span>));
             }
         }
         <span class="comment">// Block hash</span>
         {
             <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">prefix_key</span>
                 .<span class="ident">push</span>(<span class="kw-2">&amp;</span><span class="string">&quot;hash&quot;</span>.<span class="ident">to_owned</span>())
-                .<span class="ident">map_err</span>(<span class="ident">Error</span>::<span class="ident">KeyError</span>)<span class="question-mark">?</span>;
+                .<span class="ident">map_err</span>(<span class="ident">Error::KeyError</span>)<span class="question-mark">?</span>;
             <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">state</span>.<span class="ident">hash</span>;
-            <span class="ident">batch</span>.<span class="ident">put</span>(<span class="ident">key</span>.<span class="ident">to_string</span>(), <span class="ident">types</span>::<span class="ident">encode</span>(<span class="ident">value</span>));
+            <span class="ident">batch</span>.<span class="ident">put</span>(<span class="ident">key</span>.<span class="ident">to_string</span>(), <span class="ident">types::encode</span>(<span class="ident">value</span>));
         }
         <span class="comment">// Block epoch</span>
         {
             <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">prefix_key</span>
                 .<span class="ident">push</span>(<span class="kw-2">&amp;</span><span class="string">&quot;epoch&quot;</span>.<span class="ident">to_owned</span>())
-                .<span class="ident">map_err</span>(<span class="ident">Error</span>::<span class="ident">KeyError</span>)<span class="question-mark">?</span>;
+                .<span class="ident">map_err</span>(<span class="ident">Error::KeyError</span>)<span class="question-mark">?</span>;
             <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">state</span>.<span class="ident">epoch</span>;
-            <span class="ident">batch</span>.<span class="ident">put</span>(<span class="ident">key</span>.<span class="ident">to_string</span>(), <span class="ident">types</span>::<span class="ident">encode</span>(<span class="ident">value</span>));
+            <span class="ident">batch</span>.<span class="ident">put</span>(<span class="ident">key</span>.<span class="ident">to_string</span>(), <span class="ident">types::encode</span>(<span class="ident">value</span>));
         }
         <span class="comment">// SubSpace</span>
         {
             <span class="kw">let</span> <span class="ident">subspace_prefix</span> <span class="op">=</span> <span class="ident">prefix_key</span>
                 .<span class="ident">push</span>(<span class="kw-2">&amp;</span><span class="string">&quot;subspace&quot;</span>.<span class="ident">to_owned</span>())
-                .<span class="ident">map_err</span>(<span class="ident">Error</span>::<span class="ident">KeyError</span>)<span class="question-mark">?</span>;
+                .<span class="ident">map_err</span>(<span class="ident">Error::KeyError</span>)<span class="question-mark">?</span>;
             <span class="ident">state</span>.<span class="ident">subspaces</span>.<span class="ident">iter</span>().<span class="ident">for_each</span>(<span class="op">|</span>(<span class="ident">key</span>, <span class="ident">value</span>)<span class="op">|</span> {
                 <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">subspace_prefix</span>.<span class="ident">join</span>(<span class="ident">key</span>);
                 <span class="ident">batch</span>.<span class="ident">put</span>(<span class="ident">key</span>.<span class="ident">to_string</span>(), <span class="ident">value</span>);
@@ -583,33 +582,33 @@
         {
             <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">prefix_key</span>
                 .<span class="ident">push</span>(<span class="kw-2">&amp;</span><span class="string">&quot;address_gen&quot;</span>.<span class="ident">to_owned</span>())
-                .<span class="ident">map_err</span>(<span class="ident">Error</span>::<span class="ident">KeyError</span>)<span class="question-mark">?</span>;
+                .<span class="ident">map_err</span>(<span class="ident">Error::KeyError</span>)<span class="question-mark">?</span>;
             <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">state</span>.<span class="ident">address_gen</span>;
-            <span class="ident">batch</span>.<span class="ident">put</span>(<span class="ident">key</span>.<span class="ident">to_string</span>(), <span class="ident">types</span>::<span class="ident">encode</span>(<span class="ident">value</span>));
+            <span class="ident">batch</span>.<span class="ident">put</span>(<span class="ident">key</span>.<span class="ident">to_string</span>(), <span class="ident">types::encode</span>(<span class="ident">value</span>));
         }
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">write_opts</span> <span class="op">=</span> <span class="ident">WriteOptions</span>::<span class="ident">default</span>();
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">write_opts</span> <span class="op">=</span> <span class="ident">WriteOptions::default</span>();
         <span class="ident">write_opts</span>.<span class="ident">disable_wal</span>(<span class="bool-val">true</span>);
         <span class="self">self</span>.<span class="number">0</span>
             .<span class="ident">write_opt</span>(<span class="ident">batch</span>, <span class="kw-2">&amp;</span><span class="ident">write_opts</span>)
-            .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">Error</span>::<span class="ident">DBError</span>(<span class="ident">e</span>.<span class="ident">into_string</span>()))<span class="question-mark">?</span>;
+            .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">Error::DBError</span>(<span class="ident">e</span>.<span class="ident">into_string</span>()))<span class="question-mark">?</span>;
 
         <span class="comment">// Block height - write after everything else is written</span>
         <span class="comment">// NOTE for async writes, we need to take care that all previous heights</span>
         <span class="comment">// are known when updating this</span>
         <span class="self">self</span>.<span class="number">0</span>
-            .<span class="ident">put_opt</span>(<span class="string">&quot;height&quot;</span>, <span class="ident">types</span>::<span class="ident">encode</span>(<span class="kw-2">&amp;</span><span class="ident">state</span>.<span class="ident">height</span>), <span class="kw-2">&amp;</span><span class="ident">write_opts</span>)
-            .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">Error</span>::<span class="ident">DBError</span>(<span class="ident">e</span>.<span class="ident">into_string</span>()))
+            .<span class="ident">put_opt</span>(<span class="string">&quot;height&quot;</span>, <span class="ident">types::encode</span>(<span class="kw-2">&amp;</span><span class="ident">state</span>.<span class="ident">height</span>), <span class="kw-2">&amp;</span><span class="ident">write_opts</span>)
+            .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">Error::DBError</span>(<span class="ident">e</span>.<span class="ident">into_string</span>()))
     }
 
     <span class="kw">fn</span> <span class="ident">read</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">height</span>: <span class="ident">BlockHeight</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">Key</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Key</span>::<span class="ident">from</span>(<span class="ident">height</span>.<span class="ident">to_db_key</span>())
+        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Key::from</span>(<span class="ident">height</span>.<span class="ident">to_db_key</span>())
             .<span class="ident">push</span>(<span class="kw-2">&amp;</span><span class="string">&quot;subspace&quot;</span>.<span class="ident">to_owned</span>())
-            .<span class="ident">map_err</span>(<span class="ident">Error</span>::<span class="ident">KeyError</span>)<span class="question-mark">?</span>
+            .<span class="ident">map_err</span>(<span class="ident">Error::KeyError</span>)<span class="question-mark">?</span>
             .<span class="ident">join</span>(<span class="ident">key</span>);
         <span class="kw">match</span> <span class="self">self</span>
             .<span class="number">0</span>
             .<span class="ident">get</span>(<span class="ident">key</span>.<span class="ident">to_string</span>())
-            .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">Error</span>::<span class="ident">DBError</span>(<span class="ident">e</span>.<span class="ident">into_string</span>()))<span class="question-mark">?</span>
+            .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">Error::DBError</span>(<span class="ident">e</span>.<span class="ident">into_string</span>()))<span class="question-mark">?</span>
         {
             <span class="prelude-val">Some</span>(<span class="ident">bytes</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="ident">bytes</span>)),
             <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>),
@@ -622,12 +621,12 @@
         <span class="kw">match</span> <span class="self">self</span>
             .<span class="number">0</span>
             .<span class="ident">get</span>(<span class="string">&quot;height&quot;</span>)
-            .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">Error</span>::<span class="ident">DBError</span>(<span class="ident">e</span>.<span class="ident">into_string</span>()))<span class="question-mark">?</span>
+            .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">Error::DBError</span>(<span class="ident">e</span>.<span class="ident">into_string</span>()))<span class="question-mark">?</span>
         {
             <span class="prelude-val">Some</span>(<span class="ident">bytes</span>) <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="comment">// TODO if there&#39;s an issue decoding this height, should we try</span>
                 <span class="comment">// load its predecessor instead?</span>
-                <span class="ident">height</span> <span class="op">=</span> <span class="ident">types</span>::<span class="ident">decode</span>(<span class="ident">bytes</span>).<span class="ident">map_err</span>(<span class="ident">Error</span>::<span class="ident">CodingError</span>)<span class="question-mark">?</span>;
+                <span class="ident">height</span> <span class="op">=</span> <span class="ident">types::decode</span>(<span class="ident">bytes</span>).<span class="ident">map_err</span>(<span class="ident">Error::CodingError</span>)<span class="question-mark">?</span>;
             }
             <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>),
         }
@@ -636,11 +635,11 @@
         <span class="kw">let</span> <span class="ident">next_epoch_min_start_height</span>: <span class="ident">BlockHeight</span> <span class="op">=</span> <span class="kw">match</span> <span class="self">self</span>
             .<span class="number">0</span>
             .<span class="ident">get</span>(<span class="string">&quot;next_epoch_min_start_height&quot;</span>)
-            .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">Error</span>::<span class="ident">DBError</span>(<span class="ident">e</span>.<span class="ident">into_string</span>()))<span class="question-mark">?</span>
+            .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">Error::DBError</span>(<span class="ident">e</span>.<span class="ident">into_string</span>()))<span class="question-mark">?</span>
         {
-            <span class="prelude-val">Some</span>(<span class="ident">bytes</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">types</span>::<span class="ident">decode</span>(<span class="ident">bytes</span>).<span class="ident">map_err</span>(<span class="ident">Error</span>::<span class="ident">CodingError</span>)<span class="question-mark">?</span>,
+            <span class="prelude-val">Some</span>(<span class="ident">bytes</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">types::decode</span>(<span class="ident">bytes</span>).<span class="ident">map_err</span>(<span class="ident">Error::CodingError</span>)<span class="question-mark">?</span>,
             <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="ident">tracing</span>::<span class="macro">error</span><span class="macro">!</span>(
+                <span class="macro">tracing::error!</span>(
                     <span class="string">&quot;Couldn&#39;t load next epoch start height from the DB&quot;</span>
                 );
                 <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>);
@@ -649,11 +648,11 @@
         <span class="kw">let</span> <span class="ident">next_epoch_min_start_time</span>: <span class="ident">DateTimeUtc</span> <span class="op">=</span> <span class="kw">match</span> <span class="self">self</span>
             .<span class="number">0</span>
             .<span class="ident">get</span>(<span class="string">&quot;next_epoch_min_start_time&quot;</span>)
-            .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">Error</span>::<span class="ident">DBError</span>(<span class="ident">e</span>.<span class="ident">into_string</span>()))<span class="question-mark">?</span>
+            .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">Error::DBError</span>(<span class="ident">e</span>.<span class="ident">into_string</span>()))<span class="question-mark">?</span>
         {
-            <span class="prelude-val">Some</span>(<span class="ident">bytes</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">types</span>::<span class="ident">decode</span>(<span class="ident">bytes</span>).<span class="ident">map_err</span>(<span class="ident">Error</span>::<span class="ident">CodingError</span>)<span class="question-mark">?</span>,
+            <span class="prelude-val">Some</span>(<span class="ident">bytes</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">types::decode</span>(<span class="ident">bytes</span>).<span class="ident">map_err</span>(<span class="ident">Error::CodingError</span>)<span class="question-mark">?</span>,
             <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="ident">tracing</span>::<span class="macro">error</span><span class="macro">!</span>(
+                <span class="macro">tracing::error!</span>(
                     <span class="string">&quot;Couldn&#39;t load next epoch start time from the DB&quot;</span>
                 );
                 <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>);
@@ -661,24 +660,24 @@
         };
 
         <span class="comment">// Load data at the height</span>
-        <span class="kw">let</span> <span class="ident">prefix</span> <span class="op">=</span> <span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;{}/&quot;</span>, <span class="ident">height</span>.<span class="ident">raw</span>());
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">read_opts</span> <span class="op">=</span> <span class="ident">ReadOptions</span>::<span class="ident">default</span>();
+        <span class="kw">let</span> <span class="ident">prefix</span> <span class="op">=</span> <span class="macro">format!</span>(<span class="string">&quot;{}/&quot;</span>, <span class="ident">height</span>.<span class="ident">raw</span>());
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">read_opts</span> <span class="op">=</span> <span class="ident">ReadOptions::default</span>();
         <span class="ident">read_opts</span>.<span class="ident">set_total_order_seek</span>(<span class="bool-val">false</span>);
-        <span class="kw">let</span> <span class="ident">next_height_prefix</span> <span class="op">=</span> <span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;{}/&quot;</span>, <span class="ident">height</span>.<span class="ident">next_height</span>().<span class="ident">raw</span>());
+        <span class="kw">let</span> <span class="ident">next_height_prefix</span> <span class="op">=</span> <span class="macro">format!</span>(<span class="string">&quot;{}/&quot;</span>, <span class="ident">height</span>.<span class="ident">next_height</span>().<span class="ident">raw</span>());
         <span class="ident">read_opts</span>.<span class="ident">set_iterate_upper_bound</span>(<span class="ident">next_height_prefix</span>);
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">root</span> <span class="op">=</span> <span class="prelude-val">None</span>;
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">store</span> <span class="op">=</span> <span class="prelude-val">None</span>;
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">hash</span> <span class="op">=</span> <span class="prelude-val">None</span>;
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">epoch</span> <span class="op">=</span> <span class="prelude-val">None</span>;
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">address_gen</span> <span class="op">=</span> <span class="prelude-val">None</span>;
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">subspaces</span>: <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">Key</span>, <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">HashMap</span>::<span class="ident">new</span>();
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">subspaces</span>: <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">Key</span>, <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">HashMap::new</span>();
         <span class="kw">for</span> (<span class="ident">key</span>, <span class="ident">bytes</span>) <span class="kw">in</span> <span class="self">self</span>.<span class="number">0</span>.<span class="ident">iterator_opt</span>(
-            <span class="ident">IteratorMode</span>::<span class="ident">From</span>(<span class="ident">prefix</span>.<span class="ident">as_bytes</span>(), <span class="ident">Direction</span>::<span class="ident">Forward</span>),
+            <span class="ident">IteratorMode::From</span>(<span class="ident">prefix</span>.<span class="ident">as_bytes</span>(), <span class="ident">Direction::Forward</span>),
             <span class="ident">read_opts</span>,
         ) {
-            <span class="kw">let</span> <span class="ident">path</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">String</span>::<span class="ident">from_utf8</span>((<span class="kw-2">*</span><span class="ident">key</span>).<span class="ident">to_vec</span>()).<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> {
-                <span class="ident">Error</span>::<span class="ident">Temporary</span> {
-                    <span class="ident">error</span>: <span class="macro">format</span><span class="macro">!</span>(
+            <span class="kw">let</span> <span class="ident">path</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">String::from_utf8</span>((<span class="kw-2">*</span><span class="ident">key</span>).<span class="ident">to_vec</span>()).<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> {
+                <span class="ident">Error::Temporary</span> {
+                    <span class="ident">error</span>: <span class="macro">format!</span>(
                         <span class="string">&quot;Cannot convert path from utf8 bytes to string: {}&quot;</span>,
                         <span class="ident">e</span>
                     ),
@@ -692,14 +691,14 @@
                         <span class="prelude-val">Some</span>(<span class="ident">smt</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="kw-2">*</span><span class="ident">smt</span> {
                             <span class="string">&quot;root&quot;</span> <span class="op">=</span><span class="op">&gt;</span> {
                                 <span class="ident">root</span> <span class="op">=</span> <span class="prelude-val">Some</span>(
-                                    <span class="ident">types</span>::<span class="ident">decode</span>(<span class="ident">bytes</span>)
-                                        .<span class="ident">map_err</span>(<span class="ident">Error</span>::<span class="ident">CodingError</span>)<span class="question-mark">?</span>,
+                                    <span class="ident">types::decode</span>(<span class="ident">bytes</span>)
+                                        .<span class="ident">map_err</span>(<span class="ident">Error::CodingError</span>)<span class="question-mark">?</span>,
                                 )
                             }
                             <span class="string">&quot;store&quot;</span> <span class="op">=</span><span class="op">&gt;</span> {
                                 <span class="ident">store</span> <span class="op">=</span> <span class="prelude-val">Some</span>(
-                                    <span class="ident">types</span>::<span class="ident">decode</span>(<span class="ident">bytes</span>)
-                                        .<span class="ident">map_err</span>(<span class="ident">Error</span>::<span class="ident">CodingError</span>)<span class="question-mark">?</span>,
+                                    <span class="ident">types::decode</span>(<span class="ident">bytes</span>)
+                                        .<span class="ident">map_err</span>(<span class="ident">Error::CodingError</span>)<span class="question-mark">?</span>,
                                 )
                             }
                             <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">unknown_key_error</span>(<span class="ident">path</span>)<span class="question-mark">?</span>,
@@ -708,17 +707,17 @@
                     },
                     <span class="string">&quot;hash&quot;</span> <span class="op">=</span><span class="op">&gt;</span> {
                         <span class="ident">hash</span> <span class="op">=</span> <span class="prelude-val">Some</span>(
-                            <span class="ident">types</span>::<span class="ident">decode</span>(<span class="ident">bytes</span>).<span class="ident">map_err</span>(<span class="ident">Error</span>::<span class="ident">CodingError</span>)<span class="question-mark">?</span>,
+                            <span class="ident">types::decode</span>(<span class="ident">bytes</span>).<span class="ident">map_err</span>(<span class="ident">Error::CodingError</span>)<span class="question-mark">?</span>,
                         )
                     }
                     <span class="string">&quot;epoch&quot;</span> <span class="op">=</span><span class="op">&gt;</span> {
                         <span class="ident">epoch</span> <span class="op">=</span> <span class="prelude-val">Some</span>(
-                            <span class="ident">types</span>::<span class="ident">decode</span>(<span class="ident">bytes</span>).<span class="ident">map_err</span>(<span class="ident">Error</span>::<span class="ident">CodingError</span>)<span class="question-mark">?</span>,
+                            <span class="ident">types::decode</span>(<span class="ident">bytes</span>).<span class="ident">map_err</span>(<span class="ident">Error::CodingError</span>)<span class="question-mark">?</span>,
                         )
                     }
                     <span class="string">&quot;subspace&quot;</span> <span class="op">=</span><span class="op">&gt;</span> {
-                        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Key</span>::<span class="ident">parse_db_key</span>(<span class="ident">path</span>).<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> {
-                            <span class="ident">Error</span>::<span class="ident">Temporary</span> {
+                        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Key::parse_db_key</span>(<span class="ident">path</span>).<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> {
+                            <span class="ident">Error::Temporary</span> {
                                 <span class="ident">error</span>: <span class="ident">e</span>.<span class="ident">to_string</span>(),
                             }
                         })<span class="question-mark">?</span>;
@@ -726,7 +725,7 @@
                     }
                     <span class="string">&quot;address_gen&quot;</span> <span class="op">=</span><span class="op">&gt;</span> {
                         <span class="ident">address_gen</span> <span class="op">=</span> <span class="prelude-val">Some</span>(
-                            <span class="ident">types</span>::<span class="ident">decode</span>(<span class="ident">bytes</span>).<span class="ident">map_err</span>(<span class="ident">Error</span>::<span class="ident">CodingError</span>)<span class="question-mark">?</span>,
+                            <span class="ident">types::decode</span>(<span class="ident">bytes</span>).<span class="ident">map_err</span>(<span class="ident">Error::CodingError</span>)<span class="question-mark">?</span>,
                         );
                     }
                     <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">unknown_key_error</span>(<span class="ident">path</span>)<span class="question-mark">?</span>,
@@ -752,7 +751,7 @@
                 <span class="ident">subspaces</span>,
                 <span class="ident">address_gen</span>,
             })),
-            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">Error</span>::<span class="ident">Temporary</span> {
+            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">Error::Temporary</span> {
                 <span class="ident">error</span>: <span class="string">&quot;Essential data couldn&#39;t be read from the DB&quot;</span>
                     .<span class="ident">to_string</span>(),
             }),
@@ -768,10 +767,10 @@
         <span class="ident">height</span>: <span class="ident">BlockHeight</span>,
         <span class="ident">prefix</span>: <span class="kw-2">&amp;</span><span class="ident">Key</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">PersistentPrefixIterator</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">db_prefix</span> <span class="op">=</span> <span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;{}/subspace/&quot;</span>, <span class="ident">height</span>.<span class="ident">raw</span>());
-        <span class="kw">let</span> <span class="ident">prefix</span> <span class="op">=</span> <span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;{}{}&quot;</span>, <span class="ident">db_prefix</span>, <span class="ident">prefix</span>.<span class="ident">to_string</span>());
+        <span class="kw">let</span> <span class="ident">db_prefix</span> <span class="op">=</span> <span class="macro">format!</span>(<span class="string">&quot;{}/subspace/&quot;</span>, <span class="ident">height</span>.<span class="ident">raw</span>());
+        <span class="kw">let</span> <span class="ident">prefix</span> <span class="op">=</span> <span class="macro">format!</span>(<span class="string">&quot;{}{}&quot;</span>, <span class="ident">db_prefix</span>, <span class="ident">prefix</span>.<span class="ident">to_string</span>());
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">read_opts</span> <span class="op">=</span> <span class="ident">ReadOptions</span>::<span class="ident">default</span>();
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">read_opts</span> <span class="op">=</span> <span class="ident">ReadOptions::default</span>();
         <span class="comment">// don&#39;t use the prefix bloom filter</span>
         <span class="ident">read_opts</span>.<span class="ident">set_total_order_seek</span>(<span class="bool-val">true</span>);
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">upper_prefix</span> <span class="op">=</span> <span class="ident">prefix</span>.<span class="ident">clone</span>().<span class="ident">into_bytes</span>();
@@ -781,16 +780,16 @@
         <span class="ident">read_opts</span>.<span class="ident">set_iterate_upper_bound</span>(<span class="ident">upper_prefix</span>);
 
         <span class="kw">let</span> <span class="ident">iter</span> <span class="op">=</span> <span class="self">self</span>.<span class="number">0</span>.<span class="ident">iterator_opt</span>(
-            <span class="ident">IteratorMode</span>::<span class="ident">From</span>(<span class="ident">prefix</span>.<span class="ident">as_bytes</span>(), <span class="ident">Direction</span>::<span class="ident">Forward</span>),
+            <span class="ident">IteratorMode::From</span>(<span class="ident">prefix</span>.<span class="ident">as_bytes</span>(), <span class="ident">Direction::Forward</span>),
             <span class="ident">read_opts</span>,
         );
-        <span class="ident">PersistentPrefixIterator</span>(<span class="ident">PrefixIterator</span>::<span class="ident">new</span>(<span class="ident">iter</span>, <span class="ident">db_prefix</span>))
+        <span class="ident">PersistentPrefixIterator</span>(<span class="ident">PrefixIterator::new</span>(<span class="ident">iter</span>, <span class="ident">db_prefix</span>))
     }
 }
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">PersistentPrefixIterator</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>(
-    <span class="ident">PrefixIterator</span><span class="op">&lt;</span><span class="ident">rocksdb</span>::<span class="ident">DBIterator</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="ident">PrefixIterator</span><span class="op">&lt;</span><span class="ident">rocksdb::DBIterator</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span><span class="op">&gt;</span>,
 );
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">Iterator</span> <span class="kw">for</span> <span class="ident">PersistentPrefixIterator</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
@@ -800,7 +799,7 @@
     <span class="kw">fn</span> <span class="ident">next</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span>(<span class="ident">String</span>, <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>, <span class="ident">u64</span>)<span class="op">&gt;</span> {
         <span class="kw">match</span> <span class="self">self</span>.<span class="number">0</span>.<span class="ident">iter</span>.<span class="ident">next</span>() {
             <span class="prelude-val">Some</span>((<span class="ident">key</span>, <span class="ident">val</span>)) <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">String</span>::<span class="ident">from_utf8</span>(<span class="ident">key</span>.<span class="ident">to_vec</span>())
+                <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">String::from_utf8</span>(<span class="ident">key</span>.<span class="ident">to_vec</span>())
                     .<span class="ident">expect</span>(<span class="string">&quot;Cannot convert from bytes to key string&quot;</span>);
                 <span class="kw">match</span> <span class="ident">key</span>.<span class="ident">strip_prefix</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>.<span class="ident">db_prefix</span>) {
                     <span class="prelude-val">Some</span>(<span class="ident">k</span>) <span class="op">=</span><span class="op">&gt;</span> {
@@ -816,10 +815,9 @@
 }
 
 <span class="kw">fn</span> <span class="ident">unknown_key_error</span>(<span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-    <span class="prelude-val">Err</span>(<span class="ident">Error</span>::<span class="ident">UnknownKey</span> {
+    <span class="prelude-val">Err</span>(<span class="ident">Error::UnknownKey</span> {
         <span class="ident">key</span>: <span class="ident">key</span>.<span class="ident">to_owned</span>(),
     })
 }
 </pre></div>
-</section><section id="search" class="content hidden"></section><section class="footer"></section><div id="rustdoc-vars" data-root-path="../../../../../" data-current-crate="anoma_apps" data-search-js="../../../../../search-index.js"></div>
-    <script src="../../../../../main.js"></script><script src="../../../../../source-script.js"></script><script src="../../../../../source-files.js"></script></body></html>
+</section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../../../../" data-current-crate="anoma_apps" data-search-index-js="../../../../../search-index.js" data-search-js="../../../../../search.js"></div><script src="../../../../../main.js"></script><script src="../../../../../source-script.js"></script><script src="../../../../../source-files.js"></script></body></html>

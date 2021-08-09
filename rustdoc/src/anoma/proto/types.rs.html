@@ -1,7 +1,6 @@
 <!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `shared/src/proto/types.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>types.rs - source</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script id="default-settings"></script><script src="../../../storage.js"></script><script src="../../../crates.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../../favicon.svg">
 <link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png">
-<link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../anoma/index.html'><div class='logo-container rust-logo'><img src='../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../../../brush.svg" width="18" height="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><script src="../../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" class="help-button">?</button>
-                <a id="settings-menu" href="../../../settings.html"><img src="../../../wheel.svg" width="18" height="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">  1</span>
+<link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../anoma/index.html'><div class='logo-container rust-logo'><img src='../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img src="../../../brush.svg" width="18" height="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../../settings.html" title="settings"><img src="../../../wheel.svg" width="18" height="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">  1</span>
 <span id="2">  2</span>
 <span id="3">  3</span>
 <span id="4">  4</span>
@@ -347,26 +346,26 @@
 <span id="344">344</span>
 <span id="345">345</span>
 <span id="346">346</span>
-</pre><div class="example-wrap"><pre class="rust ">
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">collections</span>::<span class="ident">hash_map</span>::<span class="ident">DefaultHasher</span>;
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">convert</span>::{<span class="ident">TryFrom</span>, <span class="ident">TryInto</span>};
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">hash</span>::{<span class="ident">Hash</span>, <span class="ident">Hasher</span>};
+</pre><pre class="rust">
+<span class="kw">use</span> <span class="ident">std::collections::hash_map::DefaultHasher</span>;
+<span class="kw">use</span> <span class="ident">std::convert</span>::{<span class="ident">TryFrom</span>, <span class="ident">TryInto</span>};
+<span class="kw">use</span> <span class="ident">std::hash</span>::{<span class="ident">Hash</span>, <span class="ident">Hasher</span>};
 
-<span class="kw">use</span> <span class="ident">prost</span>::<span class="ident">Message</span>;
-<span class="kw">use</span> <span class="ident">thiserror</span>::<span class="ident">Error</span>;
+<span class="kw">use</span> <span class="ident">prost::Message</span>;
+<span class="kw">use</span> <span class="ident">thiserror::Error</span>;
 
-<span class="kw">use</span> <span class="kw">super</span>::<span class="ident">generated</span>::<span class="ident">types</span>;
-<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">types</span>::<span class="ident">key</span>::<span class="ident">ed25519</span>::{<span class="self">self</span>, <span class="ident">Keypair</span>};
-<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">types</span>::<span class="ident">time</span>::<span class="ident">DateTimeUtc</span>;
+<span class="kw">use</span> <span class="kw">super</span><span class="ident">::generated::types</span>;
+<span class="kw">use</span> <span class="kw">crate</span><span class="ident">::types::key::ed25519</span>::{<span class="self">self</span>, <span class="ident">Keypair</span>};
+<span class="kw">use</span> <span class="kw">crate</span><span class="ident">::types::time::DateTimeUtc</span>;
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Error</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">Error</span> {
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Error decoding a transaction from bytes: {0}&quot;</span>)]</span>
-    <span class="ident">TxDecodingError</span>(<span class="ident">prost</span>::<span class="ident">DecodeError</span>),
+    <span class="ident">TxDecodingError</span>(<span class="ident">prost::DecodeError</span>),
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Error decoding an IntentGossipMessage from bytes: {0}&quot;</span>)]</span>
-    <span class="ident">IntentDecodingError</span>(<span class="ident">prost</span>::<span class="ident">DecodeError</span>),
+    <span class="ident">IntentDecodingError</span>(<span class="ident">prost::DecodeError</span>),
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Error decoding an DkgGossipMessage from bytes: {0}&quot;</span>)]</span>
-    <span class="ident">DkgDecodingError</span>(<span class="ident">prost</span>::<span class="ident">DecodeError</span>),
+    <span class="ident">DkgDecodingError</span>(<span class="ident">prost::DecodeError</span>),
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Intent is empty&quot;</span>)]</span>
     <span class="ident">NoIntentError</span>,
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Dkg is empty&quot;</span>)]</span>
@@ -374,10 +373,10 @@
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Timestamp is empty&quot;</span>)]</span>
     <span class="ident">NoTimestampError</span>,
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Timestamp is invalid: {0}&quot;</span>)]</span>
-    <span class="ident">InvalidTimestamp</span>(<span class="ident">prost_types</span>::<span class="ident">TimestampOutOfSystemRangeError</span>),
+    <span class="ident">InvalidTimestamp</span>(<span class="ident">prost_types::TimestampOutOfSystemRangeError</span>),
 }
 
-<span class="kw">pub</span> <span class="kw">type</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">std</span>::<span class="ident">result</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">Error</span><span class="op">&gt;</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">std::result::Result</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">Error</span><span class="op">&gt;</span>;
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">PartialEq</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Tx</span> {
@@ -390,10 +389,10 @@
     <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">Error</span>;
 
     <span class="kw">fn</span> <span class="ident">try_from</span>(<span class="ident">tx_bytes</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">types</span>::<span class="ident">Tx</span>::<span class="ident">decode</span>(<span class="ident">tx_bytes</span>).<span class="ident">map_err</span>(<span class="ident">Error</span>::<span class="ident">TxDecodingError</span>)<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">types::Tx::decode</span>(<span class="ident">tx_bytes</span>).<span class="ident">map_err</span>(<span class="ident">Error::TxDecodingError</span>)<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">timestamp</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">tx</span>.<span class="ident">timestamp</span> {
-            <span class="prelude-val">Some</span>(<span class="ident">t</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">t</span>.<span class="ident">try_into</span>().<span class="ident">map_err</span>(<span class="ident">Error</span>::<span class="ident">InvalidTimestamp</span>)<span class="question-mark">?</span>,
-            <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error</span>::<span class="ident">NoTimestampError</span>),
+            <span class="prelude-val">Some</span>(<span class="ident">t</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">t</span>.<span class="ident">try_into</span>().<span class="ident">map_err</span>(<span class="ident">Error::InvalidTimestamp</span>)<span class="question-mark">?</span>,
+            <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error::NoTimestampError</span>),
         };
         <span class="prelude-val">Ok</span>(<span class="ident">Tx</span> {
             <span class="ident">code</span>: <span class="ident">tx</span>.<span class="ident">code</span>,
@@ -403,10 +402,10 @@
     }
 }
 
-<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">Tx</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">types</span>::<span class="ident">Tx</span> {
+<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">Tx</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">types::Tx</span> {
     <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">tx</span>: <span class="ident">Tx</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="kw">let</span> <span class="ident">timestamp</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">tx</span>.<span class="ident">timestamp</span>.<span class="ident">into</span>());
-        <span class="ident">types</span>::<span class="ident">Tx</span> {
+        <span class="ident">types::Tx</span> {
             <span class="ident">code</span>: <span class="ident">tx</span>.<span class="ident">code</span>,
             <span class="ident">data</span>: <span class="ident">tx</span>.<span class="ident">data</span>,
             <span class="ident">timestamp</span>,
@@ -419,20 +418,20 @@
         <span class="ident">Tx</span> {
             <span class="ident">code</span>,
             <span class="ident">data</span>,
-            <span class="ident">timestamp</span>: <span class="ident">DateTimeUtc</span>::<span class="ident">now</span>(),
+            <span class="ident">timestamp</span>: <span class="ident">DateTimeUtc::now</span>(),
         }
     }
 
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">to_bytes</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="macro">vec</span><span class="macro">!</span>[];
-        <span class="kw">let</span> <span class="ident">tx</span>: <span class="ident">types</span>::<span class="ident">Tx</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">clone</span>().<span class="ident">into</span>();
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="macro">vec!</span>[];
+        <span class="kw">let</span> <span class="ident">tx</span>: <span class="ident">types::Tx</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">clone</span>().<span class="ident">into</span>();
         <span class="ident">tx</span>.<span class="ident">encode</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">bytes</span>)
             .<span class="ident">expect</span>(<span class="string">&quot;encoding a transaction failed&quot;</span>);
         <span class="ident">bytes</span>
     }
 
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">sign</span>(<span class="self">self</span>, <span class="ident">keypair</span>: <span class="kw-2">&amp;</span><span class="ident">Keypair</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Tx</span> {
-        <span class="ident">ed25519</span>::<span class="ident">sign_tx</span>(<span class="ident">keypair</span>, <span class="self">self</span>)
+        <span class="ident">ed25519::sign_tx</span>(<span class="ident">keypair</span>, <span class="self">self</span>)
     }
 }
 
@@ -445,23 +444,23 @@
     <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">Error</span>;
 
     <span class="kw">fn</span> <span class="ident">try_from</span>(<span class="ident">intent_bytes</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">intent</span> <span class="op">=</span> <span class="ident">types</span>::<span class="ident">IntentGossipMessage</span>::<span class="ident">decode</span>(<span class="ident">intent_bytes</span>)
-            .<span class="ident">map_err</span>(<span class="ident">Error</span>::<span class="ident">IntentDecodingError</span>)<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">intent</span> <span class="op">=</span> <span class="ident">types::IntentGossipMessage::decode</span>(<span class="ident">intent_bytes</span>)
+            .<span class="ident">map_err</span>(<span class="ident">Error::IntentDecodingError</span>)<span class="question-mark">?</span>;
         <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="ident">intent</span>.<span class="ident">msg</span> {
-            <span class="prelude-val">Some</span>(<span class="ident">types</span>::<span class="ident">intent_gossip_message</span>::<span class="ident">Msg</span>::<span class="ident">Intent</span>(<span class="ident">intent</span>)) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="prelude-val">Some</span>(<span class="ident">types::intent_gossip_message::Msg::Intent</span>(<span class="ident">intent</span>)) <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="prelude-val">Ok</span>(<span class="ident">IntentGossipMessage</span> {
                     <span class="ident">intent</span>: <span class="ident">intent</span>.<span class="ident">clone</span>().<span class="ident">try_into</span>()<span class="question-mark">?</span>,
                 })
             }
-            <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">Error</span>::<span class="ident">NoIntentError</span>),
+            <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">Error::NoIntentError</span>),
         }
     }
 }
 
-<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">IntentGossipMessage</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">types</span>::<span class="ident">IntentGossipMessage</span> {
+<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">IntentGossipMessage</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">types::IntentGossipMessage</span> {
     <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">message</span>: <span class="ident">IntentGossipMessage</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
-        <span class="ident">types</span>::<span class="ident">IntentGossipMessage</span> {
-            <span class="ident">msg</span>: <span class="prelude-val">Some</span>(<span class="ident">types</span>::<span class="ident">intent_gossip_message</span>::<span class="ident">Msg</span>::<span class="ident">Intent</span>(
+        <span class="ident">types::IntentGossipMessage</span> {
+            <span class="ident">msg</span>: <span class="prelude-val">Some</span>(<span class="ident">types::intent_gossip_message::Msg::Intent</span>(
                 <span class="ident">message</span>.<span class="ident">intent</span>.<span class="ident">into</span>(),
             )),
         }
@@ -474,8 +473,8 @@
     }
 
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">to_bytes</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="macro">vec</span><span class="macro">!</span>[];
-        <span class="kw">let</span> <span class="ident">message</span>: <span class="ident">types</span>::<span class="ident">IntentGossipMessage</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">clone</span>().<span class="ident">into</span>();
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="macro">vec!</span>[];
+        <span class="kw">let</span> <span class="ident">message</span>: <span class="ident">types::IntentGossipMessage</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">clone</span>().<span class="ident">into</span>();
         <span class="ident">message</span>
             .<span class="ident">encode</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">bytes</span>)
             .<span class="ident">expect</span>(<span class="string">&quot;encoding an intent gossip message failed&quot;</span>);
@@ -493,23 +492,23 @@
     <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">Error</span>;
 
     <span class="kw">fn</span> <span class="ident">try_from</span>(<span class="ident">dkg_bytes</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">message</span> <span class="op">=</span> <span class="ident">types</span>::<span class="ident">DkgGossipMessage</span>::<span class="ident">decode</span>(<span class="ident">dkg_bytes</span>)
-            .<span class="ident">map_err</span>(<span class="ident">Error</span>::<span class="ident">DkgDecodingError</span>)<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">message</span> <span class="op">=</span> <span class="ident">types::DkgGossipMessage::decode</span>(<span class="ident">dkg_bytes</span>)
+            .<span class="ident">map_err</span>(<span class="ident">Error::DkgDecodingError</span>)<span class="question-mark">?</span>;
         <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="ident">message</span>.<span class="ident">dkg_message</span> {
-            <span class="prelude-val">Some</span>(<span class="ident">types</span>::<span class="ident">dkg_gossip_message</span>::<span class="ident">DkgMessage</span>::<span class="ident">Dkg</span>(<span class="ident">dkg</span>)) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="prelude-val">Some</span>(<span class="ident">types::dkg_gossip_message::DkgMessage::Dkg</span>(<span class="ident">dkg</span>)) <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="prelude-val">Ok</span>(<span class="ident">DkgGossipMessage</span> {
                     <span class="ident">dkg</span>: <span class="ident">dkg</span>.<span class="ident">clone</span>().<span class="ident">into</span>(),
                 })
             }
-            <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">Error</span>::<span class="ident">NoDkgError</span>),
+            <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">Error::NoDkgError</span>),
         }
     }
 }
 
-<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">DkgGossipMessage</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">types</span>::<span class="ident">DkgGossipMessage</span> {
+<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">DkgGossipMessage</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">types::DkgGossipMessage</span> {
     <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">message</span>: <span class="ident">DkgGossipMessage</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
-        <span class="ident">types</span>::<span class="ident">DkgGossipMessage</span> {
-            <span class="ident">dkg_message</span>: <span class="prelude-val">Some</span>(<span class="ident">types</span>::<span class="ident">dkg_gossip_message</span>::<span class="ident">DkgMessage</span>::<span class="ident">Dkg</span>(
+        <span class="ident">types::DkgGossipMessage</span> {
+            <span class="ident">dkg_message</span>: <span class="prelude-val">Some</span>(<span class="ident">types::dkg_gossip_message::DkgMessage::Dkg</span>(
                 <span class="ident">message</span>.<span class="ident">dkg</span>.<span class="ident">into</span>(),
             )),
         }
@@ -523,8 +522,8 @@
     }
 
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">to_bytes</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="macro">vec</span><span class="macro">!</span>[];
-        <span class="kw">let</span> <span class="ident">message</span>: <span class="ident">types</span>::<span class="ident">DkgGossipMessage</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">clone</span>().<span class="ident">into</span>();
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="macro">vec!</span>[];
+        <span class="kw">let</span> <span class="ident">message</span>: <span class="ident">types::DkgGossipMessage</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">clone</span>().<span class="ident">into</span>();
         <span class="ident">message</span>
             .<span class="ident">encode</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">bytes</span>)
             .<span class="ident">expect</span>(<span class="string">&quot;encoding a DKG gossip message failed&quot;</span>);
@@ -538,13 +537,13 @@
     <span class="kw">pub</span> <span class="ident">timestamp</span>: <span class="ident">DateTimeUtc</span>,
 }
 
-<span class="kw">impl</span> <span class="ident">TryFrom</span><span class="op">&lt;</span><span class="ident">types</span>::<span class="ident">Intent</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Intent</span> {
+<span class="kw">impl</span> <span class="ident">TryFrom</span><span class="op">&lt;</span><span class="ident">types::Intent</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Intent</span> {
     <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">Error</span>;
 
-    <span class="kw">fn</span> <span class="ident">try_from</span>(<span class="ident">intent</span>: <span class="ident">types</span>::<span class="ident">Intent</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">try_from</span>(<span class="ident">intent</span>: <span class="ident">types::Intent</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">timestamp</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">intent</span>.<span class="ident">timestamp</span> {
-            <span class="prelude-val">Some</span>(<span class="ident">t</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">t</span>.<span class="ident">try_into</span>().<span class="ident">map_err</span>(<span class="ident">Error</span>::<span class="ident">InvalidTimestamp</span>)<span class="question-mark">?</span>,
-            <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error</span>::<span class="ident">NoTimestampError</span>),
+            <span class="prelude-val">Some</span>(<span class="ident">t</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">t</span>.<span class="ident">try_into</span>().<span class="ident">map_err</span>(<span class="ident">Error::InvalidTimestamp</span>)<span class="question-mark">?</span>,
+            <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error::NoTimestampError</span>),
         };
         <span class="prelude-val">Ok</span>(<span class="ident">Intent</span> {
             <span class="ident">data</span>: <span class="ident">intent</span>.<span class="ident">data</span>,
@@ -553,10 +552,10 @@
     }
 }
 
-<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">Intent</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">types</span>::<span class="ident">Intent</span> {
+<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">Intent</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">types::Intent</span> {
     <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">intent</span>: <span class="ident">Intent</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="kw">let</span> <span class="ident">timestamp</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">intent</span>.<span class="ident">timestamp</span>.<span class="ident">into</span>());
-        <span class="ident">types</span>::<span class="ident">Intent</span> {
+        <span class="ident">types::Intent</span> {
             <span class="ident">data</span>: <span class="ident">intent</span>.<span class="ident">data</span>,
             <span class="ident">timestamp</span>,
         }
@@ -567,14 +566,14 @@
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">data</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="ident">Intent</span> {
             <span class="ident">data</span>,
-            <span class="ident">timestamp</span>: <span class="ident">DateTimeUtc</span>::<span class="ident">now</span>(),
+            <span class="ident">timestamp</span>: <span class="ident">DateTimeUtc::now</span>(),
         }
     }
 
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">id</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">IntentId</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">hasher</span> <span class="op">=</span> <span class="ident">DefaultHasher</span>::<span class="ident">new</span>();
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">hasher</span> <span class="op">=</span> <span class="ident">DefaultHasher::new</span>();
         <span class="self">self</span>.<span class="ident">hash</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">hasher</span>);
-        <span class="ident">IntentId</span>::<span class="ident">from</span>(<span class="ident">hasher</span>.<span class="ident">finish</span>().<span class="ident">to_string</span>())
+        <span class="ident">IntentId::from</span>(<span class="ident">hasher</span>.<span class="ident">finish</span>().<span class="ident">to_string</span>())
     }
 }
 
@@ -593,15 +592,15 @@
     <span class="kw">pub</span> <span class="ident">data</span>: <span class="ident">String</span>,
 }
 
-<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">types</span>::<span class="ident">Dkg</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Dkg</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">dkg</span>: <span class="ident">types</span>::<span class="ident">Dkg</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">types::Dkg</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Dkg</span> {
+    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">dkg</span>: <span class="ident">types::Dkg</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="ident">Dkg</span> { <span class="ident">data</span>: <span class="ident">dkg</span>.<span class="ident">data</span> }
     }
 }
 
-<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">Dkg</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">types</span>::<span class="ident">Dkg</span> {
+<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">Dkg</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">types::Dkg</span> {
     <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">dkg</span>: <span class="ident">Dkg</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
-        <span class="ident">types</span>::<span class="ident">Dkg</span> { <span class="ident">data</span>: <span class="ident">dkg</span>.<span class="ident">data</span> }
+        <span class="ident">types::Dkg</span> { <span class="ident">data</span>: <span class="ident">dkg</span>.<span class="ident">data</span> }
     }
 }
 
@@ -620,80 +619,79 @@
     <span class="kw">fn</span> <span class="ident">test_tx</span>() {
         <span class="kw">let</span> <span class="ident">code</span> <span class="op">=</span> <span class="string">&quot;wasm code&quot;</span>.<span class="ident">as_bytes</span>().<span class="ident">to_owned</span>();
         <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="string">&quot;arbitrary data&quot;</span>.<span class="ident">as_bytes</span>().<span class="ident">to_owned</span>();
-        <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx</span>::<span class="ident">new</span>(<span class="ident">code</span>.<span class="ident">clone</span>(), <span class="prelude-val">Some</span>(<span class="ident">data</span>.<span class="ident">clone</span>()));
+        <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx::new</span>(<span class="ident">code</span>.<span class="ident">clone</span>(), <span class="prelude-val">Some</span>(<span class="ident">data</span>.<span class="ident">clone</span>()));
 
         <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="ident">tx</span>.<span class="ident">to_bytes</span>();
         <span class="kw">let</span> <span class="ident">tx_from_bytes</span> <span class="op">=</span>
-            <span class="ident">Tx</span>::<span class="ident">try_from</span>(<span class="ident">bytes</span>.<span class="ident">as_ref</span>()).<span class="ident">expect</span>(<span class="string">&quot;decoding failed&quot;</span>);
-        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">tx_from_bytes</span>, <span class="ident">tx</span>);
+            <span class="ident">Tx::try_from</span>(<span class="ident">bytes</span>.<span class="ident">as_ref</span>()).<span class="ident">expect</span>(<span class="string">&quot;decoding failed&quot;</span>);
+        <span class="macro">assert_eq!</span>(<span class="ident">tx_from_bytes</span>, <span class="ident">tx</span>);
 
-        <span class="kw">let</span> <span class="ident">types_tx</span> <span class="op">=</span> <span class="ident">types</span>::<span class="ident">Tx</span> {
+        <span class="kw">let</span> <span class="ident">types_tx</span> <span class="op">=</span> <span class="ident">types::Tx</span> {
             <span class="ident">code</span>,
             <span class="ident">data</span>: <span class="prelude-val">Some</span>(<span class="ident">data</span>),
             <span class="ident">timestamp</span>: <span class="prelude-val">None</span>,
         };
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="macro">vec</span><span class="macro">!</span>[];
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="macro">vec!</span>[];
         <span class="ident">types_tx</span>.<span class="ident">encode</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">bytes</span>).<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
-        <span class="kw">match</span> <span class="ident">Tx</span>::<span class="ident">try_from</span>(<span class="ident">bytes</span>.<span class="ident">as_ref</span>()) {
-            <span class="prelude-val">Err</span>(<span class="ident">Error</span>::<span class="ident">NoTimestampError</span>) <span class="op">=</span><span class="op">&gt;</span> {}
-            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;unexpected result&quot;</span>),
+        <span class="kw">match</span> <span class="ident">Tx::try_from</span>(<span class="ident">bytes</span>.<span class="ident">as_ref</span>()) {
+            <span class="prelude-val">Err</span>(<span class="ident">Error::NoTimestampError</span>) <span class="op">=</span><span class="op">&gt;</span> {}
+            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">panic!</span>(<span class="string">&quot;unexpected result&quot;</span>),
         }
     }
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="kw">fn</span> <span class="ident">test_intent_gossip_message</span>() {
         <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="string">&quot;arbitrary data&quot;</span>.<span class="ident">as_bytes</span>().<span class="ident">to_owned</span>();
-        <span class="kw">let</span> <span class="ident">intent</span> <span class="op">=</span> <span class="ident">Intent</span>::<span class="ident">new</span>(<span class="ident">data</span>);
-        <span class="kw">let</span> <span class="ident">message</span> <span class="op">=</span> <span class="ident">IntentGossipMessage</span>::<span class="ident">new</span>(<span class="ident">intent</span>);
+        <span class="kw">let</span> <span class="ident">intent</span> <span class="op">=</span> <span class="ident">Intent::new</span>(<span class="ident">data</span>);
+        <span class="kw">let</span> <span class="ident">message</span> <span class="op">=</span> <span class="ident">IntentGossipMessage::new</span>(<span class="ident">intent</span>);
 
         <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="ident">message</span>.<span class="ident">to_bytes</span>();
-        <span class="kw">let</span> <span class="ident">message_from_bytes</span> <span class="op">=</span> <span class="ident">IntentGossipMessage</span>::<span class="ident">try_from</span>(<span class="ident">bytes</span>.<span class="ident">as_ref</span>())
+        <span class="kw">let</span> <span class="ident">message_from_bytes</span> <span class="op">=</span> <span class="ident">IntentGossipMessage::try_from</span>(<span class="ident">bytes</span>.<span class="ident">as_ref</span>())
             .<span class="ident">expect</span>(<span class="string">&quot;decoding failed&quot;</span>);
-        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">message_from_bytes</span>, <span class="ident">message</span>);
+        <span class="macro">assert_eq!</span>(<span class="ident">message_from_bytes</span>, <span class="ident">message</span>);
     }
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="kw">fn</span> <span class="ident">test_dkg_gossip_message</span>() {
         <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="string">&quot;arbitrary string&quot;</span>.<span class="ident">to_owned</span>();
-        <span class="kw">let</span> <span class="ident">dkg</span> <span class="op">=</span> <span class="ident">Dkg</span>::<span class="ident">new</span>(<span class="ident">data</span>);
-        <span class="kw">let</span> <span class="ident">message</span> <span class="op">=</span> <span class="ident">DkgGossipMessage</span>::<span class="ident">new</span>(<span class="ident">dkg</span>);
+        <span class="kw">let</span> <span class="ident">dkg</span> <span class="op">=</span> <span class="ident">Dkg::new</span>(<span class="ident">data</span>);
+        <span class="kw">let</span> <span class="ident">message</span> <span class="op">=</span> <span class="ident">DkgGossipMessage::new</span>(<span class="ident">dkg</span>);
 
         <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="ident">message</span>.<span class="ident">to_bytes</span>();
-        <span class="kw">let</span> <span class="ident">message_from_bytes</span> <span class="op">=</span> <span class="ident">DkgGossipMessage</span>::<span class="ident">try_from</span>(<span class="ident">bytes</span>.<span class="ident">as_ref</span>())
+        <span class="kw">let</span> <span class="ident">message_from_bytes</span> <span class="op">=</span> <span class="ident">DkgGossipMessage::try_from</span>(<span class="ident">bytes</span>.<span class="ident">as_ref</span>())
             .<span class="ident">expect</span>(<span class="string">&quot;decoding failed&quot;</span>);
-        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">message_from_bytes</span>, <span class="ident">message</span>);
+        <span class="macro">assert_eq!</span>(<span class="ident">message_from_bytes</span>, <span class="ident">message</span>);
     }
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="kw">fn</span> <span class="ident">test_intent</span>() {
         <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="string">&quot;arbitrary data&quot;</span>.<span class="ident">as_bytes</span>().<span class="ident">to_owned</span>();
-        <span class="kw">let</span> <span class="ident">intent</span> <span class="op">=</span> <span class="ident">Intent</span>::<span class="ident">new</span>(<span class="ident">data</span>.<span class="ident">clone</span>());
+        <span class="kw">let</span> <span class="ident">intent</span> <span class="op">=</span> <span class="ident">Intent::new</span>(<span class="ident">data</span>.<span class="ident">clone</span>());
 
-        <span class="kw">let</span> <span class="ident">types_intent</span>: <span class="ident">types</span>::<span class="ident">Intent</span> <span class="op">=</span> <span class="ident">intent</span>.<span class="ident">clone</span>().<span class="ident">into</span>();
+        <span class="kw">let</span> <span class="ident">types_intent</span>: <span class="ident">types::Intent</span> <span class="op">=</span> <span class="ident">intent</span>.<span class="ident">clone</span>().<span class="ident">into</span>();
         <span class="kw">let</span> <span class="ident">intent_from_types</span> <span class="op">=</span>
-            <span class="ident">Intent</span>::<span class="ident">try_from</span>(<span class="ident">types_intent</span>).<span class="ident">expect</span>(<span class="string">&quot;no timestamp&quot;</span>);
-        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">intent_from_types</span>, <span class="ident">intent</span>);
+            <span class="ident">Intent::try_from</span>(<span class="ident">types_intent</span>).<span class="ident">expect</span>(<span class="string">&quot;no timestamp&quot;</span>);
+        <span class="macro">assert_eq!</span>(<span class="ident">intent_from_types</span>, <span class="ident">intent</span>);
 
-        <span class="kw">let</span> <span class="ident">types_intent</span> <span class="op">=</span> <span class="ident">types</span>::<span class="ident">Intent</span> {
+        <span class="kw">let</span> <span class="ident">types_intent</span> <span class="op">=</span> <span class="ident">types::Intent</span> {
             <span class="ident">data</span>,
             <span class="ident">timestamp</span>: <span class="prelude-val">None</span>,
         };
-        <span class="kw">match</span> <span class="ident">Intent</span>::<span class="ident">try_from</span>(<span class="ident">types_intent</span>) {
-            <span class="prelude-val">Err</span>(<span class="ident">Error</span>::<span class="ident">NoTimestampError</span>) <span class="op">=</span><span class="op">&gt;</span> {}
-            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;unexpected result&quot;</span>),
+        <span class="kw">match</span> <span class="ident">Intent::try_from</span>(<span class="ident">types_intent</span>) {
+            <span class="prelude-val">Err</span>(<span class="ident">Error::NoTimestampError</span>) <span class="op">=</span><span class="op">&gt;</span> {}
+            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">panic!</span>(<span class="string">&quot;unexpected result&quot;</span>),
         }
     }
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="kw">fn</span> <span class="ident">test_dkg</span>() {
         <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="string">&quot;arbitrary string&quot;</span>.<span class="ident">to_owned</span>();
-        <span class="kw">let</span> <span class="ident">dkg</span> <span class="op">=</span> <span class="ident">Dkg</span>::<span class="ident">new</span>(<span class="ident">data</span>);
+        <span class="kw">let</span> <span class="ident">dkg</span> <span class="op">=</span> <span class="ident">Dkg::new</span>(<span class="ident">data</span>);
 
-        <span class="kw">let</span> <span class="ident">types_dkg</span>: <span class="ident">types</span>::<span class="ident">Dkg</span> <span class="op">=</span> <span class="ident">dkg</span>.<span class="ident">clone</span>().<span class="ident">into</span>();
-        <span class="kw">let</span> <span class="ident">dkg_from_types</span> <span class="op">=</span> <span class="ident">Dkg</span>::<span class="ident">from</span>(<span class="ident">types_dkg</span>);
-        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">dkg_from_types</span>, <span class="ident">dkg</span>);
+        <span class="kw">let</span> <span class="ident">types_dkg</span>: <span class="ident">types::Dkg</span> <span class="op">=</span> <span class="ident">dkg</span>.<span class="ident">clone</span>().<span class="ident">into</span>();
+        <span class="kw">let</span> <span class="ident">dkg_from_types</span> <span class="op">=</span> <span class="ident">Dkg::from</span>(<span class="ident">types_dkg</span>);
+        <span class="macro">assert_eq!</span>(<span class="ident">dkg_from_types</span>, <span class="ident">dkg</span>);
     }
 }
 </pre></div>
-</section><section id="search" class="content hidden"></section><section class="footer"></section><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="anoma" data-search-js="../../../search-index.js"></div>
-    <script src="../../../main.js"></script><script src="../../../source-script.js"></script><script src="../../../source-files.js"></script></body></html>
+</section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="anoma" data-search-index-js="../../../search-index.js" data-search-js="../../../search.js"></div><script src="../../../main.js"></script><script src="../../../source-script.js"></script><script src="../../../source-files.js"></script></body></html>

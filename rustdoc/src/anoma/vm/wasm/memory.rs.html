@@ -1,7 +1,6 @@
 <!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `shared/src/vm/wasm/memory.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>memory.rs - source</title><link rel="stylesheet" type="text/css" href="../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../../ayu.css" disabled ><script id="default-settings"></script><script src="../../../../storage.js"></script><script src="../../../../crates.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg">
 <link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png">
-<link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../../anoma/index.html'><div class='logo-container rust-logo'><img src='../../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../../../../brush.svg" width="18" height="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><script src="../../../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" class="help-button">?</button>
-                <a id="settings-menu" href="../../../../settings.html"><img src="../../../../wheel.svg" width="18" height="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">  1</span>
+<link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../../anoma/index.html'><div class='logo-container rust-logo'><img src='../../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img src="../../../../brush.svg" width="18" height="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../../../settings.html" title="settings"><img src="../../../../wheel.svg" width="18" height="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">  1</span>
 <span id="2">  2</span>
 <span id="3">  3</span>
 <span id="4">  4</span>
@@ -562,17 +561,17 @@
 <span id="559">559</span>
 <span id="560">560</span>
 <span id="561">561</span>
-</pre><div class="example-wrap"><pre class="rust ">
+</pre><pre class="rust">
 <span class="doccomment">//! Wasm memory is used for bi-directionally passing data between the host and a</span>
 <span class="doccomment">//! wasm instance.</span>
 
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">ptr</span>::<span class="ident">NonNull</span>;
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">str</span>::<span class="ident">Utf8Error</span>;
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">sync</span>::<span class="ident">Arc</span>;
+<span class="kw">use</span> <span class="ident">std::ptr::NonNull</span>;
+<span class="kw">use</span> <span class="ident">std::str::Utf8Error</span>;
+<span class="kw">use</span> <span class="ident">std::sync::Arc</span>;
 
-<span class="kw">use</span> <span class="ident">borsh</span>::<span class="ident">BorshSerialize</span>;
-<span class="kw">use</span> <span class="ident">loupe</span>::<span class="ident">MemoryUsage</span>;
-<span class="kw">use</span> <span class="ident">thiserror</span>::<span class="ident">Error</span>;
+<span class="kw">use</span> <span class="ident">borsh::BorshSerialize</span>;
+<span class="kw">use</span> <span class="ident">loupe::MemoryUsage</span>;
+<span class="kw">use</span> <span class="ident">thiserror::Error</span>;
 <span class="kw">use</span> <span class="ident">wasmer</span>::{
     <span class="ident">vm</span>, <span class="ident">BaseTunables</span>, <span class="ident">HostEnvInitError</span>, <span class="ident">LazyInit</span>, <span class="ident">Memory</span>, <span class="ident">MemoryError</span>,
     <span class="ident">MemoryType</span>, <span class="ident">Pages</span>, <span class="ident">TableType</span>, <span class="ident">Target</span>, <span class="ident">Tunables</span>,
@@ -581,18 +580,18 @@
     <span class="ident">MemoryStyle</span>, <span class="ident">TableStyle</span>, <span class="ident">VMMemoryDefinition</span>, <span class="ident">VMTableDefinition</span>,
 };
 
-<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">vm</span>::<span class="ident">memory</span>::<span class="ident">VmMemory</span>;
-<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">vm</span>::<span class="ident">types</span>::<span class="ident">VpInput</span>;
+<span class="kw">use</span> <span class="kw">crate</span><span class="ident">::vm::memory::VmMemory</span>;
+<span class="kw">use</span> <span class="kw">crate</span><span class="ident">::vm::types::VpInput</span>;
 
 <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">missing_docs</span>)]</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Error</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">Error</span> {
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Failed initializing the memory: {0}&quot;</span>)]</span>
-    <span class="ident">InitMemoryError</span>(<span class="ident">wasmer</span>::<span class="ident">MemoryError</span>),
+    <span class="ident">InitMemoryError</span>(<span class="ident">wasmer::MemoryError</span>),
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Memory ouf of bounds: {0}&quot;</span>)]</span>
-    <span class="ident">MemoryOutOfBounds</span>(<span class="ident">wasmer</span>::<span class="ident">MemoryError</span>),
+    <span class="ident">MemoryOutOfBounds</span>(<span class="ident">wasmer::MemoryError</span>),
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Encoding error: {0}&quot;</span>)]</span>
-    <span class="ident">EncodingError</span>(<span class="ident">std</span>::<span class="ident">io</span>::<span class="ident">Error</span>),
+    <span class="ident">EncodingError</span>(<span class="ident">std::io::Error</span>),
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Memory is not initialized&quot;</span>)]</span>
     <span class="ident">UninitializedMemory</span>,
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Invalid utf8 string read from memory&quot;</span>)]</span>
@@ -600,7 +599,7 @@
 }
 
 <span class="doccomment">/// Result of a function that may fail</span>
-<span class="kw">pub</span> <span class="kw">type</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">std</span>::<span class="ident">result</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">Error</span><span class="op">&gt;</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">std::result::Result</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">Error</span><span class="op">&gt;</span>;
 
 <span class="comment">// The bounds are set in number of pages, the actual size is multiplied by</span>
 <span class="comment">// `wasmer::WASM_PAGE_SIZE = 64kiB`.</span>
@@ -619,41 +618,41 @@
 <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">FILTER_MEMORY_INIT_PAGES</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="number">100</span>; <span class="comment">// 6.4 MiB</span>
 
 <span class="doccomment">/// Prepare memory for instantiating a transaction module</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">prepare_tx_memory</span>(<span class="ident">store</span>: <span class="kw-2">&amp;</span><span class="ident">wasmer</span>::<span class="ident">Store</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">wasmer</span>::<span class="ident">Memory</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">mem_type</span> <span class="op">=</span> <span class="ident">wasmer</span>::<span class="ident">MemoryType</span>::<span class="ident">new</span>(
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">prepare_tx_memory</span>(<span class="ident">store</span>: <span class="kw-2">&amp;</span><span class="ident">wasmer::Store</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">wasmer::Memory</span><span class="op">&gt;</span> {
+    <span class="kw">let</span> <span class="ident">mem_type</span> <span class="op">=</span> <span class="ident">wasmer::MemoryType::new</span>(
         <span class="ident">TX_MEMORY_INIT_PAGES</span>,
         <span class="prelude-val">Some</span>(<span class="ident">TX_MEMORY_MAX_PAGES</span>),
         <span class="bool-val">false</span>,
     );
-    <span class="ident">Memory</span>::<span class="ident">new</span>(<span class="ident">store</span>, <span class="ident">mem_type</span>).<span class="ident">map_err</span>(<span class="ident">Error</span>::<span class="ident">InitMemoryError</span>)
+    <span class="ident">Memory::new</span>(<span class="ident">store</span>, <span class="ident">mem_type</span>).<span class="ident">map_err</span>(<span class="ident">Error::InitMemoryError</span>)
 }
 
 <span class="doccomment">/// Prepare memory for instantiating a validity predicate module</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">prepare_vp_memory</span>(<span class="ident">store</span>: <span class="kw-2">&amp;</span><span class="ident">wasmer</span>::<span class="ident">Store</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">wasmer</span>::<span class="ident">Memory</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">mem_type</span> <span class="op">=</span> <span class="ident">wasmer</span>::<span class="ident">MemoryType</span>::<span class="ident">new</span>(
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">prepare_vp_memory</span>(<span class="ident">store</span>: <span class="kw-2">&amp;</span><span class="ident">wasmer::Store</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">wasmer::Memory</span><span class="op">&gt;</span> {
+    <span class="kw">let</span> <span class="ident">mem_type</span> <span class="op">=</span> <span class="ident">wasmer::MemoryType::new</span>(
         <span class="ident">VP_MEMORY_INIT_PAGES</span>,
         <span class="prelude-val">Some</span>(<span class="ident">VP_MEMORY_MAX_PAGES</span>),
         <span class="bool-val">false</span>,
     );
     <span class="kw">let</span> <span class="ident">memory</span> <span class="op">=</span>
-        <span class="ident">Memory</span>::<span class="ident">new</span>(<span class="ident">store</span>, <span class="ident">mem_type</span>).<span class="ident">map_err</span>(<span class="ident">Error</span>::<span class="ident">InitMemoryError</span>)<span class="question-mark">?</span>;
+        <span class="ident">Memory::new</span>(<span class="ident">store</span>, <span class="ident">mem_type</span>).<span class="ident">map_err</span>(<span class="ident">Error::InitMemoryError</span>)<span class="question-mark">?</span>;
     <span class="prelude-val">Ok</span>(<span class="ident">memory</span>)
 }
 
 <span class="doccomment">/// Prepare memory for instantiating a matchmaker module</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">prepare_matchmaker_memory</span>(
-    <span class="ident">store</span>: <span class="kw-2">&amp;</span><span class="ident">wasmer</span>::<span class="ident">Store</span>,
-) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">wasmer</span>::<span class="ident">Memory</span><span class="op">&gt;</span> {
+    <span class="ident">store</span>: <span class="kw-2">&amp;</span><span class="ident">wasmer::Store</span>,
+) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">wasmer::Memory</span><span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="ident">mem_type</span> <span class="op">=</span>
-        <span class="ident">wasmer</span>::<span class="ident">MemoryType</span>::<span class="ident">new</span>(<span class="ident">MATCHMAKER_MEMORY_INIT_PAGES</span>, <span class="prelude-val">None</span>, <span class="bool-val">false</span>);
-    <span class="ident">Memory</span>::<span class="ident">new</span>(<span class="ident">store</span>, <span class="ident">mem_type</span>).<span class="ident">map_err</span>(<span class="ident">Error</span>::<span class="ident">InitMemoryError</span>)
+        <span class="ident">wasmer::MemoryType::new</span>(<span class="ident">MATCHMAKER_MEMORY_INIT_PAGES</span>, <span class="prelude-val">None</span>, <span class="bool-val">false</span>);
+    <span class="ident">Memory::new</span>(<span class="ident">store</span>, <span class="ident">mem_type</span>).<span class="ident">map_err</span>(<span class="ident">Error::InitMemoryError</span>)
 }
 
 <span class="doccomment">/// Prepare memory for instantiating a filter module</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">prepare_filter_memory</span>(<span class="ident">store</span>: <span class="kw-2">&amp;</span><span class="ident">wasmer</span>::<span class="ident">Store</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">wasmer</span>::<span class="ident">Memory</span><span class="op">&gt;</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">prepare_filter_memory</span>(<span class="ident">store</span>: <span class="kw-2">&amp;</span><span class="ident">wasmer::Store</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">wasmer::Memory</span><span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="ident">mem_type</span> <span class="op">=</span>
-        <span class="ident">wasmer</span>::<span class="ident">MemoryType</span>::<span class="ident">new</span>(<span class="ident">FILTER_MEMORY_INIT_PAGES</span>, <span class="prelude-val">None</span>, <span class="bool-val">false</span>);
-    <span class="ident">Memory</span>::<span class="ident">new</span>(<span class="ident">store</span>, <span class="ident">mem_type</span>).<span class="ident">map_err</span>(<span class="ident">Error</span>::<span class="ident">InitMemoryError</span>)
+        <span class="ident">wasmer::MemoryType::new</span>(<span class="ident">FILTER_MEMORY_INIT_PAGES</span>, <span class="prelude-val">None</span>, <span class="bool-val">false</span>);
+    <span class="ident">Memory::new</span>(<span class="ident">store</span>, <span class="ident">mem_type</span>).<span class="ident">map_err</span>(<span class="ident">Error::InitMemoryError</span>)
 }
 
 <span class="doccomment">/// Input data for transaction wasm call</span>
@@ -666,7 +665,7 @@
 
 <span class="doccomment">/// Write transaction inputs into wasm memory</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">write_tx_inputs</span>(
-    <span class="ident">memory</span>: <span class="kw-2">&amp;</span><span class="ident">wasmer</span>::<span class="ident">Memory</span>,
+    <span class="ident">memory</span>: <span class="kw-2">&amp;</span><span class="ident">wasmer::Memory</span>,
     <span class="ident">tx_data_bytes</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span>[<span class="ident">u8</span>]<span class="op">&gt;</span>,
 ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">TxCallInput</span><span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="ident">tx_data_ptr</span> <span class="op">=</span> <span class="number">0</span>;
@@ -703,7 +702,7 @@
 
 <span class="doccomment">/// Write validity predicate inputs into wasm memory</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">write_vp_inputs</span>(
-    <span class="ident">memory</span>: <span class="kw-2">&amp;</span><span class="ident">wasmer</span>::<span class="ident">Memory</span>,
+    <span class="ident">memory</span>: <span class="kw-2">&amp;</span><span class="ident">wasmer::Memory</span>,
     <span class="ident">VpInput</span> {
         <span class="ident">addr</span>,
         <span class="ident">data</span>,
@@ -712,19 +711,19 @@
     }: <span class="ident">VpInput</span>,
 ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">VpCallInput</span><span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="ident">addr_ptr</span> <span class="op">=</span> <span class="number">0</span>;
-    <span class="kw">let</span> <span class="ident">addr_bytes</span> <span class="op">=</span> <span class="ident">addr</span>.<span class="ident">try_to_vec</span>().<span class="ident">map_err</span>(<span class="ident">Error</span>::<span class="ident">EncodingError</span>)<span class="question-mark">?</span>;
+    <span class="kw">let</span> <span class="ident">addr_bytes</span> <span class="op">=</span> <span class="ident">addr</span>.<span class="ident">try_to_vec</span>().<span class="ident">map_err</span>(<span class="ident">Error::EncodingError</span>)<span class="question-mark">?</span>;
     <span class="kw">let</span> <span class="ident">addr_len</span> <span class="op">=</span> <span class="ident">addr_bytes</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="kw">_</span>;
 
     <span class="kw">let</span> <span class="ident">data_ptr</span> <span class="op">=</span> <span class="ident">addr_ptr</span> <span class="op">+</span> <span class="ident">addr_len</span>;
     <span class="kw">let</span> <span class="ident">data_len</span> <span class="op">=</span> <span class="ident">data</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="kw">_</span>;
 
     <span class="kw">let</span> <span class="ident">keys_changed_bytes</span> <span class="op">=</span>
-        <span class="ident">keys_changed</span>.<span class="ident">try_to_vec</span>().<span class="ident">map_err</span>(<span class="ident">Error</span>::<span class="ident">EncodingError</span>)<span class="question-mark">?</span>;
+        <span class="ident">keys_changed</span>.<span class="ident">try_to_vec</span>().<span class="ident">map_err</span>(<span class="ident">Error::EncodingError</span>)<span class="question-mark">?</span>;
     <span class="kw">let</span> <span class="ident">keys_changed_ptr</span> <span class="op">=</span> <span class="ident">data_ptr</span> <span class="op">+</span> <span class="ident">data_len</span>;
     <span class="kw">let</span> <span class="ident">keys_changed_len</span> <span class="op">=</span> <span class="ident">keys_changed_bytes</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="kw">_</span>;
 
     <span class="kw">let</span> <span class="ident">verifiers_bytes</span> <span class="op">=</span>
-        <span class="ident">verifiers</span>.<span class="ident">try_to_vec</span>().<span class="ident">map_err</span>(<span class="ident">Error</span>::<span class="ident">EncodingError</span>)<span class="question-mark">?</span>;
+        <span class="ident">verifiers</span>.<span class="ident">try_to_vec</span>().<span class="ident">map_err</span>(<span class="ident">Error::EncodingError</span>)<span class="question-mark">?</span>;
     <span class="kw">let</span> <span class="ident">verifiers_ptr</span> <span class="op">=</span> <span class="ident">keys_changed_ptr</span> <span class="op">+</span> <span class="ident">keys_changed_len</span>;
     <span class="kw">let</span> <span class="ident">verifiers_len</span> <span class="op">=</span> <span class="ident">verifiers_bytes</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="kw">_</span>;
 
@@ -767,7 +766,7 @@
 
 <span class="doccomment">/// Write matchmaker inputs into wasm memory</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">write_matchmaker_inputs</span>(
-    <span class="ident">memory</span>: <span class="kw-2">&amp;</span><span class="ident">wasmer</span>::<span class="ident">Memory</span>,
+    <span class="ident">memory</span>: <span class="kw-2">&amp;</span><span class="ident">wasmer::Memory</span>,
     <span class="ident">data</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span>[<span class="ident">u8</span>]<span class="op">&gt;</span>,
     <span class="ident">intent_id</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span>[<span class="ident">u8</span>]<span class="op">&gt;</span>,
     <span class="ident">intent_data</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span>[<span class="ident">u8</span>]<span class="op">&gt;</span>,
@@ -805,13 +804,13 @@
 
 <span class="doccomment">/// Write matchmaker filter inputs into wasm memory</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">write_filter_inputs</span>(
-    <span class="ident">memory</span>: <span class="kw-2">&amp;</span><span class="ident">wasmer</span>::<span class="ident">Memory</span>,
+    <span class="ident">memory</span>: <span class="kw-2">&amp;</span><span class="ident">wasmer::Memory</span>,
     <span class="ident">intent_data</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span>[<span class="ident">u8</span>]<span class="op">&gt;</span>,
 ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">FilterCallInput</span><span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="ident">intent_data_ptr</span> <span class="op">=</span> <span class="number">0</span>;
     <span class="kw">let</span> <span class="ident">intent_data_len</span> <span class="op">=</span> <span class="ident">intent_data</span>.<span class="ident">as_ref</span>().<span class="ident">len</span>() <span class="kw">as</span> <span class="kw">_</span>;
 
-    <span class="ident">tracing</span>::<span class="macro">info</span><span class="macro">!</span>(<span class="string">&quot;write_data_inputs of len {}&quot;</span>, <span class="ident">intent_data_len</span>);
+    <span class="macro">tracing::info!</span>(<span class="string">&quot;write_data_inputs of len {}&quot;</span>, <span class="ident">intent_data_len</span>);
     <span class="ident">write_memory_bytes</span>(<span class="ident">memory</span>, <span class="ident">intent_data_ptr</span>, <span class="ident">intent_data</span>)<span class="question-mark">?</span>;
 
     <span class="prelude-val">Ok</span>(<span class="ident">FilterCallInput</span> {
@@ -823,7 +822,7 @@
 <span class="doccomment">/// Check that the given offset and length fits into the memory bounds. If not,</span>
 <span class="doccomment">/// it will try to grow the memory.</span>
 <span class="kw">fn</span> <span class="ident">check_bounds</span>(<span class="ident">memory</span>: <span class="kw-2">&amp;</span><span class="ident">Memory</span>, <span class="ident">offset</span>: <span class="ident">u64</span>, <span class="ident">len</span>: <span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-    <span class="ident">tracing</span>::<span class="macro">debug</span><span class="macro">!</span>(
+    <span class="macro">tracing::debug!</span>(
         <span class="string">&quot;check_bounds pages {}, data_size {}, offset + len {}&quot;</span>,
         <span class="ident">memory</span>.<span class="ident">size</span>().<span class="number">0</span>,
         <span class="ident">memory</span>.<span class="ident">data_size</span>(),
@@ -831,13 +830,13 @@
     );
     <span class="kw">if</span> <span class="ident">memory</span>.<span class="ident">data_size</span>() <span class="op">&lt;</span> <span class="ident">offset</span> <span class="op">+</span> <span class="ident">len</span> <span class="kw">as</span> <span class="ident">u64</span> {
         <span class="kw">let</span> <span class="ident">cur_pages</span> <span class="op">=</span> <span class="ident">memory</span>.<span class="ident">size</span>().<span class="number">0</span>;
-        <span class="kw">let</span> <span class="ident">capacity</span> <span class="op">=</span> <span class="ident">cur_pages</span> <span class="kw">as</span> <span class="ident">usize</span> <span class="op">*</span> <span class="ident">wasmer</span>::<span class="ident">WASM_PAGE_SIZE</span>;
+        <span class="kw">let</span> <span class="ident">capacity</span> <span class="op">=</span> <span class="ident">cur_pages</span> <span class="kw">as</span> <span class="ident">usize</span> <span class="op">*</span> <span class="ident">wasmer::WASM_PAGE_SIZE</span>;
         <span class="kw">let</span> <span class="ident">missing</span> <span class="op">=</span> <span class="ident">offset</span> <span class="kw">as</span> <span class="ident">usize</span> <span class="op">+</span> <span class="ident">len</span> <span class="op">-</span> <span class="ident">capacity</span>;
         <span class="comment">// Ceiling division</span>
-        <span class="kw">let</span> <span class="ident">req_pages</span> <span class="op">=</span> ((<span class="ident">missing</span> <span class="op">+</span> <span class="ident">wasmer</span>::<span class="ident">WASM_PAGE_SIZE</span> <span class="op">-</span> <span class="number">1</span>)
-            <span class="op">/</span> <span class="ident">wasmer</span>::<span class="ident">WASM_PAGE_SIZE</span>) <span class="kw">as</span> <span class="ident">u32</span>;
-        <span class="ident">tracing</span>::<span class="macro">info</span><span class="macro">!</span>(<span class="string">&quot;trying to grow memory by {} pages&quot;</span>, <span class="ident">req_pages</span>);
-        <span class="ident">memory</span>.<span class="ident">grow</span>(<span class="ident">req_pages</span>).<span class="ident">map_err</span>(<span class="ident">Error</span>::<span class="ident">MemoryOutOfBounds</span>)<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">req_pages</span> <span class="op">=</span> ((<span class="ident">missing</span> <span class="op">+</span> <span class="ident">wasmer::WASM_PAGE_SIZE</span> <span class="op">-</span> <span class="number">1</span>)
+            <span class="op">/</span> <span class="ident">wasmer::WASM_PAGE_SIZE</span>) <span class="kw">as</span> <span class="ident">u32</span>;
+        <span class="macro">tracing::info!</span>(<span class="string">&quot;trying to grow memory by {} pages&quot;</span>, <span class="ident">req_pages</span>);
+        <span class="ident">memory</span>.<span class="ident">grow</span>(<span class="ident">req_pages</span>).<span class="ident">map_err</span>(<span class="ident">Error::MemoryOutOfBounds</span>)<span class="question-mark">?</span>;
     }
     <span class="prelude-val">Ok</span>(())
 }
@@ -877,7 +876,7 @@
 <span class="doccomment">/// The wasm memory</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">Default</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">WasmMemory</span> {
-    <span class="ident">inner</span>: <span class="ident">LazyInit</span><span class="op">&lt;</span><span class="ident">wasmer</span>::<span class="ident">Memory</span><span class="op">&gt;</span>,
+    <span class="ident">inner</span>: <span class="ident">LazyInit</span><span class="op">&lt;</span><span class="ident">wasmer::Memory</span><span class="op">&gt;</span>,
 }
 
 <span class="kw">impl</span> <span class="ident">WasmMemory</span> {
@@ -885,11 +884,11 @@
     <span class="doccomment">/// [`wasmer::WasmerEnv`].</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">init_env_memory</span>(
         <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
-        <span class="ident">exports</span>: <span class="kw-2">&amp;</span><span class="ident">wasmer</span>::<span class="ident">Exports</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">std</span>::<span class="ident">result</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">HostEnvInitError</span><span class="op">&gt;</span> {
+        <span class="ident">exports</span>: <span class="kw-2">&amp;</span><span class="ident">wasmer::Exports</span>,
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">std::result::Result</span><span class="op">&lt;</span>(), <span class="ident">HostEnvInitError</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">memory</span> <span class="op">=</span> <span class="ident">exports</span>.<span class="ident">get_memory</span>(<span class="string">&quot;memory&quot;</span>)<span class="question-mark">?</span>;
         <span class="kw">if</span> <span class="op">!</span><span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">initialize</span>(<span class="ident">memory</span>.<span class="ident">clone</span>()) {
-            <span class="ident">tracing</span>::<span class="macro">error</span><span class="macro">!</span>(<span class="string">&quot;wasm memory is already initialized&quot;</span>);
+            <span class="macro">tracing::error!</span>(<span class="string">&quot;wasm memory is already initialized&quot;</span>);
         }
         <span class="prelude-val">Ok</span>(())
     }
@@ -901,7 +900,7 @@
     <span class="doccomment">/// Read bytes from memory at the given offset and length, return the bytes</span>
     <span class="doccomment">/// and the gas cost</span>
     <span class="kw">fn</span> <span class="ident">read_bytes</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">offset</span>: <span class="ident">u64</span>, <span class="ident">len</span>: <span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>, <span class="ident">u64</span>)<span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">memory</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">get_ref</span>().<span class="ident">ok_or</span>(<span class="ident">Error</span>::<span class="ident">UninitializedMemory</span>)<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">memory</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">get_ref</span>().<span class="ident">ok_or</span>(<span class="ident">Error::UninitializedMemory</span>)<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="ident">read_memory_bytes</span>(<span class="ident">memory</span>, <span class="ident">offset</span>, <span class="ident">len</span>)<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">gas</span> <span class="op">=</span> <span class="ident">bytes</span>.<span class="ident">len</span>();
         <span class="prelude-val">Ok</span>((<span class="ident">bytes</span>, <span class="ident">gas</span> <span class="kw">as</span> <span class="kw">_</span>))
@@ -910,7 +909,7 @@
     <span class="doccomment">/// Write bytes into memory at the given offset and return the gas cost</span>
     <span class="kw">fn</span> <span class="ident">write_bytes</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">offset</span>: <span class="ident">u64</span>, <span class="ident">bytes</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span>[<span class="ident">u8</span>]<span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">gas</span> <span class="op">=</span> <span class="ident">bytes</span>.<span class="ident">as_ref</span>().<span class="ident">len</span>();
-        <span class="kw">let</span> <span class="ident">memory</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">get_ref</span>().<span class="ident">ok_or</span>(<span class="ident">Error</span>::<span class="ident">UninitializedMemory</span>)<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">memory</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">get_ref</span>().<span class="ident">ok_or</span>(<span class="ident">Error::UninitializedMemory</span>)<span class="question-mark">?</span>;
         <span class="ident">write_memory_bytes</span>(<span class="ident">memory</span>, <span class="ident">offset</span>, <span class="ident">bytes</span>)<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(<span class="ident">gas</span> <span class="kw">as</span> <span class="kw">_</span>)
     }
@@ -919,8 +918,8 @@
     <span class="doccomment">/// the gas cost</span>
     <span class="kw">fn</span> <span class="ident">read_string</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">offset</span>: <span class="ident">u64</span>, <span class="ident">len</span>: <span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="ident">String</span>, <span class="ident">u64</span>)<span class="op">&gt;</span> {
         <span class="kw">let</span> (<span class="ident">bytes</span>, <span class="ident">gas</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">read_bytes</span>(<span class="ident">offset</span>, <span class="ident">len</span>)<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">string</span> <span class="op">=</span> <span class="ident">std</span>::<span class="ident">str</span>::<span class="ident">from_utf8</span>(<span class="kw-2">&amp;</span><span class="ident">bytes</span>)
-            .<span class="ident">map_err</span>(<span class="ident">Error</span>::<span class="ident">InvalidUtf8String</span>)<span class="question-mark">?</span>
+        <span class="kw">let</span> <span class="ident">string</span> <span class="op">=</span> <span class="ident">std::str::from_utf8</span>(<span class="kw-2">&amp;</span><span class="ident">bytes</span>)
+            .<span class="ident">map_err</span>(<span class="ident">Error::InvalidUtf8String</span>)<span class="question-mark">?</span>
             .<span class="ident">to_string</span>();
         <span class="prelude-val">Ok</span>((<span class="ident">string</span>, <span class="ident">gas</span> <span class="kw">as</span> <span class="kw">_</span>))
     }
@@ -948,13 +947,13 @@
 <span class="doccomment">/// A [`Limit`] with memory limit setup for validity predicate WASM</span>
 <span class="doccomment">/// execution.</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">vp_limit</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Limit</span><span class="op">&lt;</span><span class="ident">BaseTunables</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">base</span> <span class="op">=</span> <span class="ident">BaseTunables</span>::<span class="ident">for_target</span>(<span class="kw-2">&amp;</span><span class="ident">Target</span>::<span class="ident">default</span>());
+    <span class="kw">let</span> <span class="ident">base</span> <span class="op">=</span> <span class="ident">BaseTunables::for_target</span>(<span class="kw-2">&amp;</span><span class="ident">Target::default</span>());
     <span class="kw">let</span> <span class="ident">limit</span> <span class="op">=</span> <span class="ident">Pages</span>(<span class="ident">VP_MEMORY_MAX_PAGES</span>);
     <span class="ident">Limit</span> { <span class="ident">limit</span>, <span class="ident">base</span> }
 }
 <span class="doccomment">/// A [`Limit`] with memory limit setup for transaction WASM execution.</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">tx_limit</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Limit</span><span class="op">&lt;</span><span class="ident">BaseTunables</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">base</span> <span class="op">=</span> <span class="ident">BaseTunables</span>::<span class="ident">for_target</span>(<span class="kw-2">&amp;</span><span class="ident">Target</span>::<span class="ident">default</span>());
+    <span class="kw">let</span> <span class="ident">base</span> <span class="op">=</span> <span class="ident">BaseTunables::for_target</span>(<span class="kw-2">&amp;</span><span class="ident">Target::default</span>());
     <span class="kw">let</span> <span class="ident">limit</span> <span class="op">=</span> <span class="ident">Pages</span>(<span class="ident">TX_MEMORY_MAX_PAGES</span>);
     <span class="ident">Limit</span> { <span class="ident">limit</span>, <span class="ident">base</span> }
 }
@@ -977,21 +976,21 @@
     <span class="kw">fn</span> <span class="ident">validate_memory</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">ty</span>: <span class="kw-2">&amp;</span><span class="ident">MemoryType</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">std</span>::<span class="ident">result</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">MemoryError</span><span class="op">&gt;</span> {
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">std::result::Result</span><span class="op">&lt;</span>(), <span class="ident">MemoryError</span><span class="op">&gt;</span> {
         <span class="kw">if</span> <span class="ident">ty</span>.<span class="ident">minimum</span> <span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">limit</span> {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">MemoryError</span>::<span class="ident">Generic</span>(
+            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">MemoryError::Generic</span>(
                 <span class="string">&quot;Minimum exceeds the allowed memory limit&quot;</span>.<span class="ident">to_string</span>(),
             ));
         }
 
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">max</span>) <span class="op">=</span> <span class="ident">ty</span>.<span class="ident">maximum</span> {
             <span class="kw">if</span> <span class="ident">max</span> <span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">limit</span> {
-                <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">MemoryError</span>::<span class="ident">Generic</span>(
+                <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">MemoryError::Generic</span>(
                     <span class="string">&quot;Maximum exceeds the allowed memory limit&quot;</span>.<span class="ident">to_string</span>(),
                 ));
             }
         } <span class="kw">else</span> {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">MemoryError</span>::<span class="ident">Generic</span>(<span class="string">&quot;Maximum unset&quot;</span>.<span class="ident">to_string</span>()));
+            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">MemoryError::Generic</span>(<span class="string">&quot;Maximum unset&quot;</span>.<span class="ident">to_string</span>()));
         }
 
         <span class="prelude-val">Ok</span>(())
@@ -1023,7 +1022,7 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">ty</span>: <span class="kw-2">&amp;</span><span class="ident">MemoryType</span>,
         <span class="ident">style</span>: <span class="kw-2">&amp;</span><span class="ident">MemoryStyle</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">std</span>::<span class="ident">result</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Arc</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">vm</span>::<span class="ident">Memory</span><span class="op">&gt;</span>, <span class="ident">MemoryError</span><span class="op">&gt;</span> {
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">std::result::Result</span><span class="op">&lt;</span><span class="ident">Arc</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">vm::Memory</span><span class="op">&gt;</span>, <span class="ident">MemoryError</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">adjusted</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">adjust_memory</span>(<span class="ident">ty</span>);
         <span class="self">self</span>.<span class="ident">validate_memory</span>(<span class="kw-2">&amp;</span><span class="ident">adjusted</span>)<span class="question-mark">?</span>;
         <span class="self">self</span>.<span class="ident">base</span>.<span class="ident">create_host_memory</span>(<span class="kw-2">&amp;</span><span class="ident">adjusted</span>, <span class="ident">style</span>)
@@ -1038,7 +1037,7 @@
         <span class="ident">ty</span>: <span class="kw-2">&amp;</span><span class="ident">MemoryType</span>,
         <span class="ident">style</span>: <span class="kw-2">&amp;</span><span class="ident">MemoryStyle</span>,
         <span class="ident">vm_definition_location</span>: <span class="ident">NonNull</span><span class="op">&lt;</span><span class="ident">VMMemoryDefinition</span><span class="op">&gt;</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">std</span>::<span class="ident">result</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Arc</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">vm</span>::<span class="ident">Memory</span><span class="op">&gt;</span>, <span class="ident">MemoryError</span><span class="op">&gt;</span> {
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">std::result::Result</span><span class="op">&lt;</span><span class="ident">Arc</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">vm::Memory</span><span class="op">&gt;</span>, <span class="ident">MemoryError</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">adjusted</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">adjust_memory</span>(<span class="ident">ty</span>);
         <span class="self">self</span>.<span class="ident">validate_memory</span>(<span class="kw-2">&amp;</span><span class="ident">adjusted</span>)<span class="question-mark">?</span>;
         <span class="self">self</span>.<span class="ident">base</span>
@@ -1053,7 +1052,7 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">ty</span>: <span class="kw-2">&amp;</span><span class="ident">TableType</span>,
         <span class="ident">style</span>: <span class="kw-2">&amp;</span><span class="ident">TableStyle</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">std</span>::<span class="ident">result</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Arc</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">vm</span>::<span class="ident">Table</span><span class="op">&gt;</span>, <span class="ident">String</span><span class="op">&gt;</span> {
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">std::result::Result</span><span class="op">&lt;</span><span class="ident">Arc</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">vm::Table</span><span class="op">&gt;</span>, <span class="ident">String</span><span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">base</span>.<span class="ident">create_host_table</span>(<span class="ident">ty</span>, <span class="ident">style</span>)
     }
 
@@ -1066,7 +1065,7 @@
         <span class="ident">ty</span>: <span class="kw-2">&amp;</span><span class="ident">TableType</span>,
         <span class="ident">style</span>: <span class="kw-2">&amp;</span><span class="ident">TableStyle</span>,
         <span class="ident">vm_definition_location</span>: <span class="ident">NonNull</span><span class="op">&lt;</span><span class="ident">VMTableDefinition</span><span class="op">&gt;</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">std</span>::<span class="ident">result</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Arc</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">vm</span>::<span class="ident">Table</span><span class="op">&gt;</span>, <span class="ident">String</span><span class="op">&gt;</span> {
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">std::result::Result</span><span class="op">&lt;</span><span class="ident">Arc</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">vm::Table</span><span class="op">&gt;</span>, <span class="ident">String</span><span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">base</span>.<span class="ident">create_vm_table</span>(<span class="ident">ty</span>, <span class="ident">style</span>, <span class="ident">vm_definition_location</span>)
     }
 }
@@ -1091,24 +1090,24 @@
         <span class="kw">let</span> <span class="ident">wasm_bytes</span> <span class="op">=</span> <span class="ident">wat2wasm</span>(<span class="ident">wat</span>).<span class="ident">unwrap</span>();
 
         <span class="comment">// Any compiler and any engine do the job here</span>
-        <span class="kw">let</span> <span class="ident">compiler</span> <span class="op">=</span> <span class="ident">Cranelift</span>::<span class="ident">default</span>();
-        <span class="kw">let</span> <span class="ident">engine</span> <span class="op">=</span> <span class="ident">wasmer_engine_universal</span>::<span class="ident">Universal</span>::<span class="ident">new</span>(<span class="ident">compiler</span>).<span class="ident">engine</span>();
+        <span class="kw">let</span> <span class="ident">compiler</span> <span class="op">=</span> <span class="ident">Cranelift::default</span>();
+        <span class="kw">let</span> <span class="ident">engine</span> <span class="op">=</span> <span class="ident">wasmer_engine_universal::Universal::new</span>(<span class="ident">compiler</span>).<span class="ident">engine</span>();
 
-        <span class="kw">let</span> <span class="ident">base</span> <span class="op">=</span> <span class="ident">BaseTunables</span>::<span class="ident">for_target</span>(<span class="kw-2">&amp;</span><span class="ident">Target</span>::<span class="ident">default</span>());
+        <span class="kw">let</span> <span class="ident">base</span> <span class="op">=</span> <span class="ident">BaseTunables::for_target</span>(<span class="kw-2">&amp;</span><span class="ident">Target::default</span>());
         <span class="kw">let</span> <span class="ident">limit</span> <span class="op">=</span> <span class="ident">Pages</span>(<span class="number">24</span>);
         <span class="kw">let</span> <span class="ident">tunables</span> <span class="op">=</span> <span class="ident">Limit</span> { <span class="ident">limit</span>, <span class="ident">base</span> };
 
         <span class="comment">// Create a store, that holds the engine and our custom tunables</span>
-        <span class="kw">let</span> <span class="ident">store</span> <span class="op">=</span> <span class="ident">Store</span>::<span class="ident">new_with_tunables</span>(<span class="kw-2">&amp;</span><span class="ident">engine</span>, <span class="ident">tunables</span>);
+        <span class="kw">let</span> <span class="ident">store</span> <span class="op">=</span> <span class="ident">Store::new_with_tunables</span>(<span class="kw-2">&amp;</span><span class="ident">engine</span>, <span class="ident">tunables</span>);
 
-        <span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot;Compiling module...&quot;</span>);
-        <span class="kw">let</span> <span class="ident">module</span> <span class="op">=</span> <span class="ident">Module</span>::<span class="ident">new</span>(<span class="kw-2">&amp;</span><span class="ident">store</span>, <span class="ident">wasm_bytes</span>).<span class="ident">unwrap</span>();
+        <span class="macro">println!</span>(<span class="string">&quot;Compiling module...&quot;</span>);
+        <span class="kw">let</span> <span class="ident">module</span> <span class="op">=</span> <span class="ident">Module::new</span>(<span class="kw-2">&amp;</span><span class="ident">store</span>, <span class="ident">wasm_bytes</span>).<span class="ident">unwrap</span>();
 
-        <span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot;Instantiating module...&quot;</span>);
-        <span class="kw">let</span> <span class="ident">import_object</span> <span class="op">=</span> <span class="ident">wasmer</span>::<span class="macro">imports</span><span class="macro">!</span> {};
+        <span class="macro">println!</span>(<span class="string">&quot;Instantiating module...&quot;</span>);
+        <span class="kw">let</span> <span class="ident">import_object</span> <span class="op">=</span> <span class="macro">wasmer::imports!</span> {};
 
         <span class="comment">// Now at this point, our custom tunables are used</span>
-        <span class="kw">let</span> <span class="ident">instance</span> <span class="op">=</span> <span class="ident">Instance</span>::<span class="ident">new</span>(<span class="kw-2">&amp;</span><span class="ident">module</span>, <span class="kw-2">&amp;</span><span class="ident">import_object</span>).<span class="ident">unwrap</span>();
+        <span class="kw">let</span> <span class="ident">instance</span> <span class="op">=</span> <span class="ident">Instance::new</span>(<span class="kw-2">&amp;</span><span class="ident">module</span>, <span class="kw-2">&amp;</span><span class="ident">import_object</span>).<span class="ident">unwrap</span>();
 
         <span class="comment">// Check what happened</span>
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">memories</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Memory</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">instance</span>
@@ -1117,13 +1116,12 @@
             .<span class="ident">memories</span>()
             .<span class="ident">map</span>(<span class="op">|</span><span class="ident">pair</span><span class="op">|</span> <span class="ident">pair</span>.<span class="number">1</span>.<span class="ident">clone</span>())
             .<span class="ident">collect</span>();
-        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">memories</span>.<span class="ident">len</span>(), <span class="number">1</span>);
+        <span class="macro">assert_eq!</span>(<span class="ident">memories</span>.<span class="ident">len</span>(), <span class="number">1</span>);
 
         <span class="kw">let</span> <span class="ident">first_memory</span> <span class="op">=</span> <span class="ident">memories</span>.<span class="ident">pop</span>().<span class="ident">unwrap</span>();
-        <span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot;Memory of this instance: {:?}&quot;</span>, <span class="ident">first_memory</span>);
-        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">first_memory</span>.<span class="ident">ty</span>().<span class="ident">maximum</span>.<span class="ident">unwrap</span>(), <span class="ident">limit</span>);
+        <span class="macro">println!</span>(<span class="string">&quot;Memory of this instance: {:?}&quot;</span>, <span class="ident">first_memory</span>);
+        <span class="macro">assert_eq!</span>(<span class="ident">first_memory</span>.<span class="ident">ty</span>().<span class="ident">maximum</span>.<span class="ident">unwrap</span>(), <span class="ident">limit</span>);
     }
 }
 </pre></div>
-</section><section id="search" class="content hidden"></section><section class="footer"></section><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="anoma" data-search-js="../../../../search-index.js"></div>
-    <script src="../../../../main.js"></script><script src="../../../../source-script.js"></script><script src="../../../../source-files.js"></script></body></html>
+</section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="anoma" data-search-index-js="../../../../search-index.js" data-search-js="../../../../search.js"></div><script src="../../../../main.js"></script><script src="../../../../source-script.js"></script><script src="../../../../source-files.js"></script></body></html>

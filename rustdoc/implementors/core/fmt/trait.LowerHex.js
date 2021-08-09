@@ -1,3 +1,3 @@
 (function() {var implementors = {};
-implementors["anoma"] = [{"text":"impl&lt;'a&gt; <a class=\"trait\" href=\"https://doc.rust-lang.org/nightly/core/fmt/trait.LowerHex.html\" title=\"trait core::fmt::LowerHex\">LowerHex</a> for <a class=\"struct\" href=\"anoma/bytes/struct.ByteBuf.html\" title=\"struct anoma::bytes::ByteBuf\">ByteBuf</a>&lt;'a&gt;","synthetic":false,"types":["anoma::bytes::ByteBuf"]}];
+implementors["anoma"] = [{"text":"impl&lt;'a&gt; <a class=\"trait\" href=\"https://doc.rust-lang.org/1.54.0/core/fmt/trait.LowerHex.html\" title=\"trait core::fmt::LowerHex\">LowerHex</a> for <a class=\"struct\" href=\"anoma/bytes/struct.ByteBuf.html\" title=\"struct anoma::bytes::ByteBuf\">ByteBuf</a>&lt;'a&gt;","synthetic":false,"types":["anoma::bytes::ByteBuf"]}];
 if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()

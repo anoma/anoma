@@ -1,7 +1,6 @@
 <!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `shared/src/types/storage.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>storage.rs - source</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script id="default-settings"></script><script src="../../../storage.js"></script><script src="../../../crates.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../../favicon.svg">
 <link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png">
-<link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../anoma/index.html'><div class='logo-container rust-logo'><img src='../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../../../brush.svg" width="18" height="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><script src="../../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" class="help-button">?</button>
-                <a id="settings-menu" href="../../../settings.html"><img src="../../../wheel.svg" width="18" height="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">  1</span>
+<link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../anoma/index.html'><div class='logo-container rust-logo'><img src='../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img src="../../../brush.svg" width="18" height="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../../settings.html" title="settings"><img src="../../../wheel.svg" width="18" height="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">  1</span>
 <span id="2">  2</span>
 <span id="3">  3</span>
 <span id="4">  4</span>
@@ -636,18 +635,18 @@
 <span id="633">633</span>
 <span id="634">634</span>
 <span id="635">635</span>
-</pre><div class="example-wrap"><pre class="rust ">
+</pre><pre class="rust">
 <span class="doccomment">//! Storage types</span>
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">convert</span>::{<span class="ident">TryFrom</span>, <span class="ident">TryInto</span>};
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">fmt</span>::<span class="ident">Display</span>;
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">ops</span>::<span class="ident">Add</span>;
+<span class="kw">use</span> <span class="ident">std::convert</span>::{<span class="ident">TryFrom</span>, <span class="ident">TryInto</span>};
+<span class="kw">use</span> <span class="ident">std::fmt::Display</span>;
+<span class="kw">use</span> <span class="ident">std::ops::Add</span>;
 
 <span class="kw">use</span> <span class="ident">borsh</span>::{<span class="ident">BorshDeserialize</span>, <span class="ident">BorshSerialize</span>};
 <span class="kw">use</span> <span class="ident">serde</span>::{<span class="ident">Deserialize</span>, <span class="ident">Serialize</span>};
-<span class="kw">use</span> <span class="ident">thiserror</span>::<span class="ident">Error</span>;
+<span class="kw">use</span> <span class="ident">thiserror::Error</span>;
 
-<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">bytes</span>::<span class="ident">ByteBuf</span>;
-<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">types</span>::<span class="ident">address</span>::{<span class="self">self</span>, <span class="ident">Address</span>, <span class="ident">InternalAddress</span>};
+<span class="kw">use</span> <span class="kw">crate</span><span class="ident">::bytes::ByteBuf</span>;
+<span class="kw">use</span> <span class="kw">crate</span><span class="ident">::types::address</span>::{<span class="self">self</span>, <span class="ident">Address</span>, <span class="ident">InternalAddress</span>};
 
 <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">missing_docs</span>)]</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Error</span>, <span class="ident">Debug</span>)]</span>
@@ -655,7 +654,7 @@
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;TEMPORARY error: {error}&quot;</span>)]</span>
     <span class="ident">Temporary</span> { <span class="ident">error</span>: <span class="ident">String</span> },
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Error parsing address: {0}&quot;</span>)]</span>
-    <span class="ident">ParseAddress</span>(<span class="ident">address</span>::<span class="ident">Error</span>),
+    <span class="ident">ParseAddress</span>(<span class="ident">address::Error</span>),
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Error parsing address from a storage key&quot;</span>)]</span>
     <span class="ident">ParseAddressFromKey</span>,
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Reserved prefix or string is specified: {0}&quot;</span>)]</span>
@@ -663,7 +662,7 @@
 }
 
 <span class="doccomment">/// Result for functions that may fail</span>
-<span class="kw">pub</span> <span class="kw">type</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">std</span>::<span class="ident">result</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">Error</span><span class="op">&gt;</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">std::result::Result</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">Error</span><span class="op">&gt;</span>;
 
 <span class="doccomment">/// The length of chain ID string</span>
 <span class="comment">// TODO adjust once chain ID scheme is chosen, add `Default` impl that allocates</span>
@@ -699,15 +698,15 @@
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">BlockHeight</span>(<span class="kw">pub</span> <span class="ident">u64</span>);
 
 <span class="kw">impl</span> <span class="ident">Display</span> <span class="kw">for</span> <span class="ident">BlockHeight</span> {
-    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">std</span>::<span class="ident">fmt</span>::<span class="ident">Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">std</span>::<span class="ident">fmt</span>::<span class="prelude-ty">Result</span> {
-        <span class="macro">write</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot;{}&quot;</span>, <span class="self">self</span>.<span class="number">0</span>)
+    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">std::fmt::Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">std::fmt::Result</span> {
+        <span class="macro">write!</span>(<span class="ident">f</span>, <span class="string">&quot;{}&quot;</span>, <span class="self">self</span>.<span class="number">0</span>)
     }
 }
 
 <span class="kw">impl</span> <span class="ident">Add</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">BlockHeight</span> {
     <span class="kw">type</span> <span class="ident">Output</span> <span class="op">=</span> <span class="ident">BlockHeight</span>;
 
-    <span class="kw">fn</span> <span class="ident">add</span>(<span class="self">self</span>, <span class="ident">rhs</span>: <span class="ident">u64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span>::<span class="ident">Output</span> {
+    <span class="kw">fn</span> <span class="ident">add</span>(<span class="self">self</span>, <span class="ident">rhs</span>: <span class="ident">u64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span><span class="ident">::Output</span> {
         <span class="self">Self</span>(<span class="self">self</span>.<span class="number">0</span> <span class="op">+</span> <span class="ident">rhs</span>)
     }
 }
@@ -729,11 +728,11 @@
 <span class="kw">impl</span> <span class="ident">TryFrom</span><span class="op">&lt;</span><span class="ident">i64</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">BlockHeight</span> {
     <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">String</span>;
 
-    <span class="kw">fn</span> <span class="ident">try_from</span>(<span class="ident">value</span>: <span class="ident">i64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">std</span>::<span class="ident">result</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="self">Self</span>::<span class="ident">Error</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">try_from</span>(<span class="ident">value</span>: <span class="ident">i64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">std::result::Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="self">Self</span><span class="ident">::Error</span><span class="op">&gt;</span> {
         <span class="ident">value</span>
             .<span class="ident">try_into</span>()
             .<span class="ident">map</span>(<span class="ident">BlockHeight</span>)
-            .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;Unexpected height value {}, {}&quot;</span>, <span class="ident">value</span>, <span class="ident">e</span>))
+            .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="macro">format!</span>(<span class="string">&quot;Unexpected height value {}, {}&quot;</span>, <span class="ident">value</span>, <span class="ident">e</span>))
     }
 }
 <span class="kw">impl</span> <span class="ident">BlockHeight</span> {
@@ -749,12 +748,12 @@
     }
 }
 <span class="kw">impl</span> <span class="ident">TryFrom</span><span class="op">&lt;</span><span class="kw-2">&amp;</span>[<span class="ident">u8</span>]<span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">BlockHash</span> {
-    <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="self">self</span>::<span class="ident">Error</span>;
+    <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="self">self</span><span class="ident">::Error</span>;
 
     <span class="kw">fn</span> <span class="ident">try_from</span>(<span class="ident">value</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
         <span class="kw">if</span> <span class="ident">value</span>.<span class="ident">len</span>() <span class="op">!</span><span class="op">=</span> <span class="ident">BLOCK_HASH_LENGTH</span> {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error</span>::<span class="ident">Temporary</span> {
-                <span class="ident">error</span>: <span class="macro">format</span><span class="macro">!</span>(
+            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error::Temporary</span> {
+                <span class="ident">error</span>: <span class="macro">format!</span>(
                     <span class="string">&quot;Unexpected block hash length {}, expected {}&quot;</span>,
                     <span class="ident">value</span>.<span class="ident">len</span>(),
                     <span class="ident">BLOCK_HASH_LENGTH</span>
@@ -767,12 +766,12 @@
     }
 }
 <span class="kw">impl</span> <span class="ident">TryFrom</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">BlockHash</span> {
-    <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="self">self</span>::<span class="ident">Error</span>;
+    <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="self">self</span><span class="ident">::Error</span>;
 
     <span class="kw">fn</span> <span class="ident">try_from</span>(<span class="ident">value</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
         <span class="kw">if</span> <span class="ident">value</span>.<span class="ident">len</span>() <span class="op">!</span><span class="op">=</span> <span class="ident">BLOCK_HASH_LENGTH</span> {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error</span>::<span class="ident">Temporary</span> {
-                <span class="ident">error</span>: <span class="macro">format</span><span class="macro">!</span>(
+            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error::Temporary</span> {
+                <span class="ident">error</span>: <span class="macro">format!</span>(
                     <span class="string">&quot;Unexpected block hash length {}, expected {}&quot;</span>,
                     <span class="ident">value</span>.<span class="ident">len</span>(),
                     <span class="ident">BLOCK_HASH_LENGTH</span>
@@ -784,9 +783,9 @@
         <span class="prelude-val">Ok</span>(<span class="ident">BlockHash</span>(<span class="ident">hash</span>))
     }
 }
-<span class="kw">impl</span> <span class="ident">core</span>::<span class="ident">fmt</span>::<span class="ident">Debug</span> <span class="kw">for</span> <span class="ident">BlockHash</span> {
-    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">std</span>::<span class="ident">fmt</span>::<span class="ident">Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">std</span>::<span class="ident">fmt</span>::<span class="prelude-ty">Result</span> {
-        <span class="kw">let</span> <span class="ident">hash</span> <span class="op">=</span> <span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">ByteBuf</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>));
+<span class="kw">impl</span> <span class="ident">core::fmt::Debug</span> <span class="kw">for</span> <span class="ident">BlockHash</span> {
+    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">std::fmt::Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">std::fmt::Result</span> {
+        <span class="kw">let</span> <span class="ident">hash</span> <span class="op">=</span> <span class="macro">format!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">ByteBuf</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>));
         <span class="ident">f</span>.<span class="ident">debug_tuple</span>(<span class="string">&quot;BlockHash&quot;</span>).<span class="ident">field</span>(<span class="kw-2">&amp;</span><span class="ident">hash</span>).<span class="ident">finish</span>()
     }
 }
@@ -814,7 +813,7 @@
 <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">DbKeySeg</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Key</span> {
     <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">seg</span>: <span class="ident">DbKeySeg</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="self">Self</span> {
-            <span class="ident">segments</span>: <span class="macro">vec</span><span class="macro">!</span>[<span class="ident">seg</span>],
+            <span class="ident">segments</span>: <span class="macro">vec!</span>[<span class="ident">seg</span>],
         }
     }
 }
@@ -822,9 +821,9 @@
 <span class="kw">impl</span> <span class="ident">Key</span> {
     <span class="doccomment">/// Parses string and returns a key</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">parse</span>(<span class="ident">string</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span><span class="ident">str</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">segments</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="ident">new</span>();
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">segments</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
         <span class="kw">for</span> <span class="ident">s</span> <span class="kw">in</span> <span class="ident">string</span>.<span class="ident">as_ref</span>().<span class="ident">split</span>(<span class="ident">KEY_SEGMENT_SEPARATOR</span>) {
-            <span class="ident">segments</span>.<span class="ident">push</span>(<span class="ident">DbKeySeg</span>::<span class="ident">parse</span>(<span class="ident">s</span>.<span class="ident">to_owned</span>())<span class="question-mark">?</span>);
+            <span class="ident">segments</span>.<span class="ident">push</span>(<span class="ident">DbKeySeg::parse</span>(<span class="ident">s</span>.<span class="ident">to_owned</span>())<span class="question-mark">?</span>);
         }
         <span class="prelude-val">Ok</span>(<span class="ident">Key</span> { <span class="ident">segments</span> })
     }
@@ -832,7 +831,7 @@
     <span class="doccomment">/// Returns a new key with segments of `Self` and the given segment</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">push</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">KeySeg</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">other</span>: <span class="kw-2">&amp;</span><span class="ident">T</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">segments</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">segments</span>.<span class="ident">clone</span>();
-        <span class="ident">segments</span>.<span class="ident">push</span>(<span class="ident">DbKeySeg</span>::<span class="ident">parse</span>(<span class="ident">other</span>.<span class="ident">raw</span>())<span class="question-mark">?</span>);
+        <span class="ident">segments</span>.<span class="ident">push</span>(<span class="ident">DbKeySeg::parse</span>(<span class="ident">other</span>.<span class="ident">raw</span>())<span class="question-mark">?</span>);
         <span class="prelude-val">Ok</span>(<span class="ident">Key</span> { <span class="ident">segments</span> })
     }
 
@@ -846,10 +845,10 @@
 
     <span class="doccomment">/// Returns the addresses from the key segments</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">find_addresses</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">addresses</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="ident">new</span>();
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">addresses</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
         <span class="kw">for</span> <span class="ident">s</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">segments</span> {
             <span class="kw">match</span> <span class="ident">s</span> {
-                <span class="ident">DbKeySeg</span>::<span class="ident">AddressSeg</span>(<span class="ident">addr</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">addresses</span>.<span class="ident">push</span>(<span class="ident">addr</span>.<span class="ident">clone</span>()),
+                <span class="ident">DbKeySeg::AddressSeg</span>(<span class="ident">addr</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">addresses</span>.<span class="ident">push</span>(<span class="ident">addr</span>.<span class="ident">clone</span>()),
                 <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">continue</span>,
             }
         }
@@ -869,15 +868,15 @@
     <span class="doccomment">/// Returns a key of the validity predicate of the given address</span>
     <span class="doccomment">/// Only this function can push &quot;?&quot; segment for validity predicate</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">validity_predicate</span>(<span class="ident">addr</span>: <span class="kw-2">&amp;</span><span class="ident">Address</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">segments</span> <span class="op">=</span> <span class="self">Self</span>::<span class="ident">from</span>(<span class="ident">addr</span>.<span class="ident">to_db_key</span>()).<span class="ident">segments</span>;
-        <span class="ident">segments</span>.<span class="ident">push</span>(<span class="ident">DbKeySeg</span>::<span class="ident">StringSeg</span>(<span class="ident">RESERVED_VP_KEY</span>.<span class="ident">to_owned</span>()));
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">segments</span> <span class="op">=</span> <span class="self">Self</span><span class="ident">::from</span>(<span class="ident">addr</span>.<span class="ident">to_db_key</span>()).<span class="ident">segments</span>;
+        <span class="ident">segments</span>.<span class="ident">push</span>(<span class="ident">DbKeySeg::StringSeg</span>(<span class="ident">RESERVED_VP_KEY</span>.<span class="ident">to_owned</span>()));
         <span class="ident">Key</span> { <span class="ident">segments</span> }
     }
 
     <span class="doccomment">/// Check if the given key is a key to a validity predicate.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_validity_predicate</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
         <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">segments</span>[..] {
-            [<span class="ident">DbKeySeg</span>::<span class="ident">AddressSeg</span>(<span class="kw">_</span>), <span class="ident">DbKeySeg</span>::<span class="ident">StringSeg</span>(<span class="ident">sub_key</span>)]
+            [<span class="ident">DbKeySeg::AddressSeg</span>(<span class="kw">_</span>), <span class="ident">DbKeySeg::StringSeg</span>(<span class="ident">sub_key</span>)]
                 <span class="kw">if</span> <span class="ident">sub_key</span> <span class="op">=</span><span class="op">=</span> <span class="ident">RESERVED_VP_KEY</span> <span class="op">=</span><span class="op">&gt;</span>
             {
                 <span class="bool-val">true</span>
@@ -890,8 +889,8 @@
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_ibc_key</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
         <span class="kw">match</span> <span class="self">self</span>.<span class="ident">segments</span>.<span class="ident">get</span>(<span class="number">0</span>) {
             <span class="prelude-val">Some</span>(<span class="ident">seg</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="kw-2">*</span><span class="ident">seg</span> <span class="op">=</span><span class="op">=</span> <span class="ident">DbKeySeg</span>::<span class="ident">AddressSeg</span>(<span class="ident">Address</span>::<span class="ident">Internal</span>(
-                    <span class="ident">InternalAddress</span>::<span class="ident">Ibc</span>,
+                <span class="kw-2">*</span><span class="ident">seg</span> <span class="op">=</span><span class="op">=</span> <span class="ident">DbKeySeg::AddressSeg</span>(<span class="ident">Address::Internal</span>(
+                    <span class="ident">InternalAddress::Ibc</span>,
                 ))
             }
             <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">false</span>,
@@ -900,22 +899,22 @@
 
     <span class="doccomment">/// Check if the given key is a key of the connection counter</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_ibc_connection_counter</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
-        <span class="kw-2">*</span><span class="self">self</span> <span class="op">=</span><span class="op">=</span> <span class="self">Self</span>::<span class="ident">ibc_connection_counter</span>()
+        <span class="kw-2">*</span><span class="self">self</span> <span class="op">=</span><span class="op">=</span> <span class="self">Self</span><span class="ident">::ibc_connection_counter</span>()
     }
 
     <span class="doccomment">/// Returns a key of the IBC-related data</span>
     <span class="doccomment">/// Only this function can push `InternalAddress::Ibc` segment</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">ibc_key</span>(<span class="ident">path</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span><span class="ident">str</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">path</span> <span class="op">=</span> <span class="self">Self</span>::<span class="ident">parse</span>(<span class="ident">path</span>)<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">addr</span> <span class="op">=</span> <span class="ident">Address</span>::<span class="ident">Internal</span>(<span class="ident">InternalAddress</span>::<span class="ident">Ibc</span>);
-        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="self">Self</span>::<span class="ident">from</span>(<span class="ident">addr</span>.<span class="ident">to_db_key</span>());
+        <span class="kw">let</span> <span class="ident">path</span> <span class="op">=</span> <span class="self">Self</span><span class="ident">::parse</span>(<span class="ident">path</span>)<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">addr</span> <span class="op">=</span> <span class="ident">Address::Internal</span>(<span class="ident">InternalAddress::Ibc</span>);
+        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="self">Self</span><span class="ident">::from</span>(<span class="ident">addr</span>.<span class="ident">to_db_key</span>());
         <span class="prelude-val">Ok</span>(<span class="ident">key</span>.<span class="ident">join</span>(<span class="kw-2">&amp;</span><span class="ident">path</span>))
     }
 
     <span class="doccomment">/// Returns a key of the IBC connection counter</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">ibc_connection_counter</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="kw">let</span> <span class="ident">path</span> <span class="op">=</span> <span class="string">&quot;connections/counter&quot;</span>.<span class="ident">to_owned</span>();
-        <span class="ident">Key</span>::<span class="ident">ibc_key</span>(<span class="ident">path</span>)
+        <span class="ident">Key::ibc_key</span>(<span class="ident">path</span>)
             .<span class="ident">expect</span>(<span class="string">&quot;Creating a key for the connection counter shouldn&#39;t fail&quot;</span>)
     }
 
@@ -926,17 +925,17 @@
             <span class="ident">db_key</span>.<span class="ident">split</span>(<span class="ident">KEY_SEGMENT_SEPARATOR</span>).<span class="ident">collect</span>();
         <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">segments</span>.<span class="ident">get</span>(<span class="number">2</span>) {
             <span class="prelude-val">Some</span>(<span class="ident">seg</span>)
-                <span class="kw">if</span> <span class="kw-2">*</span><span class="ident">seg</span> <span class="op">=</span><span class="op">=</span> <span class="ident">Address</span>::<span class="ident">Internal</span>(<span class="ident">InternalAddress</span>::<span class="ident">Ibc</span>).<span class="ident">raw</span>() <span class="op">=</span><span class="op">&gt;</span>
+                <span class="kw">if</span> <span class="kw-2">*</span><span class="ident">seg</span> <span class="op">=</span><span class="op">=</span> <span class="ident">Address::Internal</span>(<span class="ident">InternalAddress::Ibc</span>).<span class="ident">raw</span>() <span class="op">=</span><span class="op">&gt;</span>
             {
                 <span class="comment">// the path of IBC-related data should start with</span>
                 <span class="comment">// height/subspace/#IBC</span>
-                <span class="self">Self</span>::<span class="ident">ibc_key</span>(
+                <span class="self">Self</span><span class="ident">::ibc_key</span>(
                     <span class="ident">segments</span>
                         .<span class="ident">split_off</span>(<span class="number">3</span>)
                         .<span class="ident">join</span>(<span class="kw-2">&amp;</span><span class="ident">KEY_SEGMENT_SEPARATOR</span>.<span class="ident">to_string</span>()),
                 )
-                .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">Error</span>::<span class="ident">Temporary</span> {
-                    <span class="ident">error</span>: <span class="macro">format</span><span class="macro">!</span>(
+                .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">Error::Temporary</span> {
+                    <span class="ident">error</span>: <span class="macro">format!</span>(
                         <span class="string">&quot;Cannot parse key segments {}: {}&quot;</span>,
                         <span class="ident">db_key</span>, <span class="ident">e</span>
                     ),
@@ -950,17 +949,17 @@
                         (<span class="kw-2">*</span><span class="ident">segments</span>.<span class="ident">get</span>(<span class="number">2</span>).<span class="ident">expect</span>(<span class="string">&quot;the address not found&quot;</span>))
                             .<span class="ident">to_owned</span>();
                     <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">addr_str</span>.<span class="ident">remove</span>(<span class="number">0</span>);
-                    <span class="kw">let</span> <span class="ident">addr</span> <span class="op">=</span> <span class="ident">Address</span>::<span class="ident">decode</span>(<span class="kw-2">&amp;</span><span class="ident">addr_str</span>)
+                    <span class="kw">let</span> <span class="ident">addr</span> <span class="op">=</span> <span class="ident">Address::decode</span>(<span class="kw-2">&amp;</span><span class="ident">addr_str</span>)
                         .<span class="ident">expect</span>(<span class="string">&quot;cannot decode the address&quot;</span>);
-                    <span class="self">Self</span>::<span class="ident">validity_predicate</span>(<span class="kw-2">&amp;</span><span class="ident">addr</span>)
+                    <span class="self">Self</span><span class="ident">::validity_predicate</span>(<span class="kw-2">&amp;</span><span class="ident">addr</span>)
                 }
-                <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">Self</span>::<span class="ident">parse</span>(
+                <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">Self</span><span class="ident">::parse</span>(
                     <span class="ident">segments</span>
                         .<span class="ident">split_off</span>(<span class="number">2</span>)
                         .<span class="ident">join</span>(<span class="kw-2">&amp;</span><span class="ident">KEY_SEGMENT_SEPARATOR</span>.<span class="ident">to_string</span>()),
                 )
-                .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">Error</span>::<span class="ident">Temporary</span> {
-                    <span class="ident">error</span>: <span class="macro">format</span><span class="macro">!</span>(
+                .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">Error::Temporary</span> {
+                    <span class="ident">error</span>: <span class="macro">format!</span>(
                         <span class="string">&quot;Cannot parse key segments {}: {}&quot;</span>,
                         <span class="ident">db_key</span>, <span class="ident">e</span>
                     ),
@@ -972,11 +971,11 @@
 }
 
 <span class="kw">impl</span> <span class="ident">Display</span> <span class="kw">for</span> <span class="ident">Key</span> {
-    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">std</span>::<span class="ident">fmt</span>::<span class="ident">Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">std</span>::<span class="ident">fmt</span>::<span class="prelude-ty">Result</span> {
+    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">std::fmt::Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">std::fmt::Result</span> {
         <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="self">self</span>
             .<span class="ident">segments</span>
             .<span class="ident">iter</span>()
-            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">s</span><span class="op">|</span> <span class="ident">DbKeySeg</span>::<span class="ident">raw</span>(<span class="ident">s</span>))
+            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">s</span><span class="op">|</span> <span class="ident">DbKeySeg::raw</span>(<span class="ident">s</span>))
             .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span><span class="op">&gt;</span>()
             .<span class="ident">join</span>(<span class="kw-2">&amp;</span><span class="ident">KEY_SEGMENT_SEPARATOR</span>.<span class="ident">to_string</span>());
         <span class="ident">f</span>.<span class="ident">write_str</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>)
@@ -1024,33 +1023,33 @@
     <span class="kw">fn</span> <span class="ident">parse</span>(<span class="kw-2">mut</span> <span class="ident">string</span>: <span class="ident">String</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
         <span class="comment">// a separator should not included</span>
         <span class="kw">if</span> <span class="ident">string</span>.<span class="ident">contains</span>(<span class="ident">KEY_SEGMENT_SEPARATOR</span>) {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error</span>::<span class="ident">InvalidKeySeg</span>(<span class="ident">string</span>));
+            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error::InvalidKeySeg</span>(<span class="ident">string</span>));
         }
-        <span class="kw">if</span> <span class="ident">string</span> <span class="op">=</span><span class="op">=</span> <span class="ident">Address</span>::<span class="ident">Internal</span>(<span class="ident">InternalAddress</span>::<span class="ident">Ibc</span>).<span class="ident">raw</span>() {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error</span>::<span class="ident">InvalidKeySeg</span>(<span class="ident">string</span>));
+        <span class="kw">if</span> <span class="ident">string</span> <span class="op">=</span><span class="op">=</span> <span class="ident">Address::Internal</span>(<span class="ident">InternalAddress::Ibc</span>).<span class="ident">raw</span>() {
+            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error::InvalidKeySeg</span>(<span class="ident">string</span>));
         }
         <span class="kw">match</span> <span class="ident">string</span>.<span class="ident">chars</span>().<span class="ident">next</span>() {
             <span class="comment">// address hashes are prefixed with `&#39;#&#39;`</span>
             <span class="prelude-val">Some</span>(<span class="ident">c</span>) <span class="kw">if</span> <span class="ident">c</span> <span class="op">=</span><span class="op">=</span> <span class="ident">RESERVED_ADDRESS_PREFIX</span> <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">string</span>.<span class="ident">remove</span>(<span class="number">0</span>);
-                <span class="ident">Address</span>::<span class="ident">decode</span>(<span class="kw-2">&amp;</span><span class="ident">string</span>)
-                    .<span class="ident">map_err</span>(<span class="ident">Error</span>::<span class="ident">ParseAddress</span>)
-                    .<span class="ident">map</span>(<span class="ident">DbKeySeg</span>::<span class="ident">AddressSeg</span>)
+                <span class="ident">Address::decode</span>(<span class="kw-2">&amp;</span><span class="ident">string</span>)
+                    .<span class="ident">map_err</span>(<span class="ident">Error::ParseAddress</span>)
+                    .<span class="ident">map</span>(<span class="ident">DbKeySeg::AddressSeg</span>)
             }
             <span class="comment">// reserved for a validity predicate</span>
             <span class="prelude-val">Some</span>(<span class="ident">c</span>) <span class="kw">if</span> <span class="ident">c</span> <span class="op">=</span><span class="op">=</span> <span class="ident">VP_KEY_PREFIX</span> <span class="op">&amp;&amp;</span> <span class="ident">string</span> <span class="op">=</span><span class="op">=</span> <span class="ident">RESERVED_VP_KEY</span> <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="prelude-val">Err</span>(<span class="ident">Error</span>::<span class="ident">InvalidKeySeg</span>(<span class="ident">string</span>))
+                <span class="prelude-val">Err</span>(<span class="ident">Error::InvalidKeySeg</span>(<span class="ident">string</span>))
             }
-            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="ident">DbKeySeg</span>::<span class="ident">StringSeg</span>(<span class="ident">string</span>)),
+            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="ident">DbKeySeg::StringSeg</span>(<span class="ident">string</span>)),
         }
     }
 
     <span class="kw">fn</span> <span class="ident">raw</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">String</span> {
         <span class="kw">match</span> <span class="self">self</span> {
-            <span class="ident">DbKeySeg</span>::<span class="ident">AddressSeg</span>(<span class="ident">addr</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;{}{}&quot;</span>, <span class="ident">RESERVED_ADDRESS_PREFIX</span>, <span class="ident">addr</span>.<span class="ident">encode</span>())
+            <span class="ident">DbKeySeg::AddressSeg</span>(<span class="ident">addr</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="macro">format!</span>(<span class="string">&quot;{}{}&quot;</span>, <span class="ident">RESERVED_ADDRESS_PREFIX</span>, <span class="ident">addr</span>.<span class="ident">encode</span>())
             }
-            <span class="ident">DbKeySeg</span>::<span class="ident">StringSeg</span>(<span class="ident">seg</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">seg</span>.<span class="ident">to_owned</span>(),
+            <span class="ident">DbKeySeg::StringSeg</span>(<span class="ident">seg</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">seg</span>.<span class="ident">to_owned</span>(),
         }
     }
 
@@ -1069,24 +1068,24 @@
     }
 
     <span class="kw">fn</span> <span class="ident">to_db_key</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">DbKeySeg</span> {
-        <span class="ident">DbKeySeg</span>::<span class="ident">StringSeg</span>(<span class="self">self</span>.<span class="ident">clone</span>())
+        <span class="ident">DbKeySeg::StringSeg</span>(<span class="self">self</span>.<span class="ident">clone</span>())
     }
 }
 
 <span class="kw">impl</span> <span class="ident">KeySeg</span> <span class="kw">for</span> <span class="ident">BlockHeight</span> {
     <span class="kw">fn</span> <span class="ident">parse</span>(<span class="ident">string</span>: <span class="ident">String</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">h</span> <span class="op">=</span> <span class="ident">string</span>.<span class="ident">parse</span>::<span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span>().<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">Error</span>::<span class="ident">Temporary</span> {
-            <span class="ident">error</span>: <span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;Unexpected height value {}, {}&quot;</span>, <span class="ident">string</span>, <span class="ident">e</span>),
+        <span class="kw">let</span> <span class="ident">h</span> <span class="op">=</span> <span class="ident">string</span>.<span class="ident">parse</span>::<span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span>().<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">Error::Temporary</span> {
+            <span class="ident">error</span>: <span class="macro">format!</span>(<span class="string">&quot;Unexpected height value {}, {}&quot;</span>, <span class="ident">string</span>, <span class="ident">e</span>),
         })<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(<span class="ident">BlockHeight</span>(<span class="ident">h</span>))
     }
 
     <span class="kw">fn</span> <span class="ident">raw</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">String</span> {
-        <span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;{}&quot;</span>, <span class="self">self</span>.<span class="number">0</span>)
+        <span class="macro">format!</span>(<span class="string">&quot;{}&quot;</span>, <span class="self">self</span>.<span class="number">0</span>)
     }
 
     <span class="kw">fn</span> <span class="ident">to_db_key</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">DbKeySeg</span> {
-        <span class="ident">DbKeySeg</span>::<span class="ident">StringSeg</span>(<span class="self">self</span>.<span class="ident">raw</span>())
+        <span class="ident">DbKeySeg::StringSeg</span>(<span class="self">self</span>.<span class="ident">raw</span>())
     }
 }
 
@@ -1095,18 +1094,18 @@
         <span class="kw">match</span> <span class="ident">seg</span>.<span class="ident">chars</span>().<span class="ident">next</span>() {
             <span class="prelude-val">Some</span>(<span class="ident">c</span>) <span class="kw">if</span> <span class="ident">c</span> <span class="op">=</span><span class="op">=</span> <span class="ident">RESERVED_ADDRESS_PREFIX</span> <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">seg</span>.<span class="ident">remove</span>(<span class="number">0</span>);
-                <span class="ident">Address</span>::<span class="ident">decode</span>(<span class="ident">seg</span>).<span class="ident">map_err</span>(<span class="ident">Error</span>::<span class="ident">ParseAddress</span>)
+                <span class="ident">Address::decode</span>(<span class="ident">seg</span>).<span class="ident">map_err</span>(<span class="ident">Error::ParseAddress</span>)
             }
-            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">Error</span>::<span class="ident">ParseAddressFromKey</span>),
+            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">Error::ParseAddressFromKey</span>),
         }
     }
 
     <span class="kw">fn</span> <span class="ident">raw</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">String</span> {
-        <span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;{}{}&quot;</span>, <span class="ident">RESERVED_ADDRESS_PREFIX</span>, <span class="self">self</span>.<span class="ident">encode</span>())
+        <span class="macro">format!</span>(<span class="string">&quot;{}{}&quot;</span>, <span class="ident">RESERVED_ADDRESS_PREFIX</span>, <span class="self">self</span>.<span class="ident">encode</span>())
     }
 
     <span class="kw">fn</span> <span class="ident">to_db_key</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">DbKeySeg</span> {
-        <span class="ident">DbKeySeg</span>::<span class="ident">AddressSeg</span>(<span class="self">self</span>.<span class="ident">clone</span>())
+        <span class="ident">DbKeySeg::AddressSeg</span>(<span class="self">self</span>.<span class="ident">clone</span>())
     }
 }
 
@@ -1127,8 +1126,8 @@
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Epoch</span>(<span class="kw">pub</span> <span class="ident">u64</span>);
 
 <span class="kw">impl</span> <span class="ident">Display</span> <span class="kw">for</span> <span class="ident">Epoch</span> {
-    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">std</span>::<span class="ident">fmt</span>::<span class="ident">Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">std</span>::<span class="ident">fmt</span>::<span class="prelude-ty">Result</span> {
-        <span class="macro">write</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot;{}&quot;</span>, <span class="self">self</span>.<span class="number">0</span>)
+    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">std::fmt::Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">std::fmt::Result</span> {
+        <span class="macro">write!</span>(<span class="ident">f</span>, <span class="string">&quot;{}&quot;</span>, <span class="self">self</span>.<span class="number">0</span>)
     }
 }
 
@@ -1142,25 +1141,25 @@
 <span class="kw">impl</span> <span class="ident">Add</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Epoch</span> {
     <span class="kw">type</span> <span class="ident">Output</span> <span class="op">=</span> <span class="ident">Epoch</span>;
 
-    <span class="kw">fn</span> <span class="ident">add</span>(<span class="self">self</span>, <span class="ident">rhs</span>: <span class="ident">u64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span>::<span class="ident">Output</span> {
+    <span class="kw">fn</span> <span class="ident">add</span>(<span class="self">self</span>, <span class="ident">rhs</span>: <span class="ident">u64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span><span class="ident">::Output</span> {
         <span class="self">Self</span>(<span class="self">self</span>.<span class="number">0</span> <span class="op">+</span> <span class="ident">rhs</span>)
     }
 }
 
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
 <span class="kw">mod</span> <span class="ident">tests</span> {
-    <span class="kw">use</span> <span class="ident">proptest</span>::<span class="ident">prelude</span>::<span class="kw-2">*</span>;
+    <span class="kw">use</span> <span class="ident">proptest::prelude</span>::<span class="kw-2">*</span>;
 
     <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
 
-    <span class="macro">proptest</span><span class="macro">!</span> {
+    <span class="macro">proptest!</span> {
         <span class="doccomment">/// Tests that any key that doesn&#39;t contain reserved prefixes is valid.</span>
         <span class="doccomment">/// This test excludes key segments starting with `#` or `?`</span>
         <span class="doccomment">/// because they are reserved for `Address` or a validity predicate.</span>
         <span class="attribute">#[<span class="ident">test</span>]</span>
         <span class="kw">fn</span> <span class="ident">test_key_parse</span>(<span class="ident">s</span> <span class="kw">in</span> <span class="string">&quot;[^#?/][^/]*/[^#?/][^/]*/[^#?/][^/]*&quot;</span>) {
-            <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Key</span>::<span class="ident">parse</span>(<span class="ident">s</span>.<span class="ident">clone</span>()).<span class="ident">expect</span>(<span class="string">&quot;cannnot parse the string&quot;</span>);
-            <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">key</span>.<span class="ident">to_string</span>(), <span class="ident">s</span>);
+            <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Key::parse</span>(<span class="ident">s</span>.<span class="ident">clone</span>()).<span class="ident">expect</span>(<span class="string">&quot;cannnot parse the string&quot;</span>);
+            <span class="macro">assert_eq!</span>(<span class="ident">key</span>.<span class="ident">to_string</span>(), <span class="ident">s</span>);
         }
 
         <span class="doccomment">/// Tests that any key that doesn&#39;t contain reserved prefixes and</span>
@@ -1169,76 +1168,76 @@
         <span class="doccomment">/// `Address` or validity predicate.</span>
         <span class="attribute">#[<span class="ident">test</span>]</span>
         <span class="kw">fn</span> <span class="ident">test_key_push</span>(<span class="ident">s</span> <span class="kw">in</span> <span class="string">&quot;[^#?/][^/]*&quot;</span>) {
-            <span class="kw">let</span> <span class="ident">addr</span> <span class="op">=</span> <span class="ident">address</span>::<span class="ident">testing</span>::<span class="ident">established_address_1</span>();
-            <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Key</span>::<span class="ident">from</span>(<span class="ident">addr</span>.<span class="ident">to_db_key</span>()).<span class="ident">push</span>(<span class="kw-2">&amp;</span><span class="ident">s</span>).<span class="ident">expect</span>(<span class="string">&quot;cannnot push the segment&quot;</span>);
-            <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">key</span>.<span class="ident">segments</span>[<span class="number">1</span>].<span class="ident">raw</span>(), <span class="ident">s</span>);
+            <span class="kw">let</span> <span class="ident">addr</span> <span class="op">=</span> <span class="ident">address::testing::established_address_1</span>();
+            <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Key::from</span>(<span class="ident">addr</span>.<span class="ident">to_db_key</span>()).<span class="ident">push</span>(<span class="kw-2">&amp;</span><span class="ident">s</span>).<span class="ident">expect</span>(<span class="string">&quot;cannnot push the segment&quot;</span>);
+            <span class="macro">assert_eq!</span>(<span class="ident">key</span>.<span class="ident">segments</span>[<span class="number">1</span>].<span class="ident">raw</span>(), <span class="ident">s</span>);
         }
     }
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="kw">fn</span> <span class="ident">test_key_parse_valid</span>() {
-        <span class="kw">let</span> <span class="ident">addr</span> <span class="op">=</span> <span class="ident">address</span>::<span class="ident">testing</span>::<span class="ident">established_address_1</span>();
-        <span class="kw">let</span> <span class="ident">target</span> <span class="op">=</span> <span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;{}/test&quot;</span>, <span class="ident">KeySeg</span>::<span class="ident">raw</span>(<span class="kw-2">&amp;</span><span class="ident">addr</span>));
-        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Key</span>::<span class="ident">parse</span>(<span class="ident">target</span>.<span class="ident">clone</span>()).<span class="ident">expect</span>(<span class="string">&quot;cannot parse the string&quot;</span>);
-        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">key</span>.<span class="ident">to_string</span>(), <span class="ident">target</span>);
+        <span class="kw">let</span> <span class="ident">addr</span> <span class="op">=</span> <span class="ident">address::testing::established_address_1</span>();
+        <span class="kw">let</span> <span class="ident">target</span> <span class="op">=</span> <span class="macro">format!</span>(<span class="string">&quot;{}/test&quot;</span>, <span class="ident">KeySeg::raw</span>(<span class="kw-2">&amp;</span><span class="ident">addr</span>));
+        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Key::parse</span>(<span class="ident">target</span>.<span class="ident">clone</span>()).<span class="ident">expect</span>(<span class="string">&quot;cannot parse the string&quot;</span>);
+        <span class="macro">assert_eq!</span>(<span class="ident">key</span>.<span class="ident">to_string</span>(), <span class="ident">target</span>);
 
         <span class="kw">let</span> <span class="ident">target</span> <span class="op">=</span> <span class="string">&quot;?test/test@&quot;</span>.<span class="ident">to_owned</span>();
-        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Key</span>::<span class="ident">parse</span>(<span class="ident">target</span>.<span class="ident">clone</span>()).<span class="ident">expect</span>(<span class="string">&quot;cannot parse the string&quot;</span>);
-        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">key</span>.<span class="ident">to_string</span>(), <span class="ident">target</span>);
+        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Key::parse</span>(<span class="ident">target</span>.<span class="ident">clone</span>()).<span class="ident">expect</span>(<span class="string">&quot;cannot parse the string&quot;</span>);
+        <span class="macro">assert_eq!</span>(<span class="ident">key</span>.<span class="ident">to_string</span>(), <span class="ident">target</span>);
     }
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="kw">fn</span> <span class="ident">test_key_parse_invalid</span>() {
         <span class="kw">let</span> <span class="ident">target</span> <span class="op">=</span> <span class="string">&quot;?/test&quot;</span>.<span class="ident">to_owned</span>();
-        <span class="kw">match</span> <span class="ident">Key</span>::<span class="ident">parse</span>(<span class="ident">target</span>).<span class="ident">expect_err</span>(<span class="string">&quot;unexpectedly succeeded&quot;</span>) {
-            <span class="ident">Error</span>::<span class="ident">InvalidKeySeg</span>(<span class="ident">s</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">s</span>, <span class="string">&quot;?&quot;</span>),
-            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;unexpected error happens&quot;</span>),
+        <span class="kw">match</span> <span class="ident">Key::parse</span>(<span class="ident">target</span>).<span class="ident">expect_err</span>(<span class="string">&quot;unexpectedly succeeded&quot;</span>) {
+            <span class="ident">Error::InvalidKeySeg</span>(<span class="ident">s</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="macro">assert_eq!</span>(<span class="ident">s</span>, <span class="string">&quot;?&quot;</span>),
+            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">panic!</span>(<span class="string">&quot;unexpected error happens&quot;</span>),
         }
 
-        <span class="kw">let</span> <span class="ident">encoded_ibc_addr</span> <span class="op">=</span> <span class="ident">Address</span>::<span class="ident">Internal</span>(<span class="ident">InternalAddress</span>::<span class="ident">Ibc</span>).<span class="ident">raw</span>();
-        <span class="kw">let</span> <span class="ident">target</span> <span class="op">=</span> <span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;{}/test&quot;</span>, <span class="ident">encoded_ibc_addr</span>);
-        <span class="kw">match</span> <span class="ident">Key</span>::<span class="ident">parse</span>(<span class="ident">target</span>).<span class="ident">expect_err</span>(<span class="string">&quot;unexpectedly succeeded&quot;</span>) {
-            <span class="ident">Error</span>::<span class="ident">InvalidKeySeg</span>(<span class="ident">s</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">s</span>, <span class="ident">encoded_ibc_addr</span>),
-            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;unexpected error happens&quot;</span>),
+        <span class="kw">let</span> <span class="ident">encoded_ibc_addr</span> <span class="op">=</span> <span class="ident">Address::Internal</span>(<span class="ident">InternalAddress::Ibc</span>).<span class="ident">raw</span>();
+        <span class="kw">let</span> <span class="ident">target</span> <span class="op">=</span> <span class="macro">format!</span>(<span class="string">&quot;{}/test&quot;</span>, <span class="ident">encoded_ibc_addr</span>);
+        <span class="kw">match</span> <span class="ident">Key::parse</span>(<span class="ident">target</span>).<span class="ident">expect_err</span>(<span class="string">&quot;unexpectedly succeeded&quot;</span>) {
+            <span class="ident">Error::InvalidKeySeg</span>(<span class="ident">s</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="macro">assert_eq!</span>(<span class="ident">s</span>, <span class="ident">encoded_ibc_addr</span>),
+            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">panic!</span>(<span class="string">&quot;unexpected error happens&quot;</span>),
         }
     }
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="kw">fn</span> <span class="ident">test_key_push_valid</span>() {
-        <span class="kw">let</span> <span class="ident">addr</span> <span class="op">=</span> <span class="ident">address</span>::<span class="ident">testing</span>::<span class="ident">established_address_1</span>();
-        <span class="kw">let</span> <span class="ident">other</span> <span class="op">=</span> <span class="ident">address</span>::<span class="ident">testing</span>::<span class="ident">established_address_2</span>();
-        <span class="kw">let</span> <span class="ident">target</span> <span class="op">=</span> <span class="ident">KeySeg</span>::<span class="ident">raw</span>(<span class="kw-2">&amp;</span><span class="ident">other</span>);
-        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Key</span>::<span class="ident">from</span>(<span class="ident">addr</span>.<span class="ident">to_db_key</span>())
+        <span class="kw">let</span> <span class="ident">addr</span> <span class="op">=</span> <span class="ident">address::testing::established_address_1</span>();
+        <span class="kw">let</span> <span class="ident">other</span> <span class="op">=</span> <span class="ident">address::testing::established_address_2</span>();
+        <span class="kw">let</span> <span class="ident">target</span> <span class="op">=</span> <span class="ident">KeySeg::raw</span>(<span class="kw-2">&amp;</span><span class="ident">other</span>);
+        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Key::from</span>(<span class="ident">addr</span>.<span class="ident">to_db_key</span>())
             .<span class="ident">push</span>(<span class="kw-2">&amp;</span><span class="ident">target</span>)
             .<span class="ident">expect</span>(<span class="string">&quot;cannnot push the segment&quot;</span>);
-        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">key</span>.<span class="ident">segments</span>[<span class="number">1</span>].<span class="ident">raw</span>(), <span class="ident">target</span>);
+        <span class="macro">assert_eq!</span>(<span class="ident">key</span>.<span class="ident">segments</span>[<span class="number">1</span>].<span class="ident">raw</span>(), <span class="ident">target</span>);
 
         <span class="kw">let</span> <span class="ident">target</span> <span class="op">=</span> <span class="string">&quot;?test&quot;</span>.<span class="ident">to_owned</span>();
-        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Key</span>::<span class="ident">from</span>(<span class="ident">addr</span>.<span class="ident">to_db_key</span>())
+        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Key::from</span>(<span class="ident">addr</span>.<span class="ident">to_db_key</span>())
             .<span class="ident">push</span>(<span class="kw-2">&amp;</span><span class="ident">target</span>)
             .<span class="ident">expect</span>(<span class="string">&quot;cannnot push the segment&quot;</span>);
-        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">key</span>.<span class="ident">segments</span>[<span class="number">1</span>].<span class="ident">raw</span>(), <span class="ident">target</span>);
+        <span class="macro">assert_eq!</span>(<span class="ident">key</span>.<span class="ident">segments</span>[<span class="number">1</span>].<span class="ident">raw</span>(), <span class="ident">target</span>);
     }
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="kw">fn</span> <span class="ident">test_key_push_invalid</span>() {
-        <span class="kw">let</span> <span class="ident">addr</span> <span class="op">=</span> <span class="ident">address</span>::<span class="ident">testing</span>::<span class="ident">established_address_1</span>();
+        <span class="kw">let</span> <span class="ident">addr</span> <span class="op">=</span> <span class="ident">address::testing::established_address_1</span>();
         <span class="kw">let</span> <span class="ident">target</span> <span class="op">=</span> <span class="string">&quot;/&quot;</span>.<span class="ident">to_owned</span>();
-        <span class="kw">match</span> <span class="ident">Key</span>::<span class="ident">from</span>(<span class="ident">addr</span>.<span class="ident">to_db_key</span>())
+        <span class="kw">match</span> <span class="ident">Key::from</span>(<span class="ident">addr</span>.<span class="ident">to_db_key</span>())
             .<span class="ident">push</span>(<span class="kw-2">&amp;</span><span class="ident">target</span>)
             .<span class="ident">expect_err</span>(<span class="string">&quot;unexpectedly succeeded&quot;</span>)
         {
-            <span class="ident">Error</span>::<span class="ident">InvalidKeySeg</span>(<span class="ident">s</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">s</span>, <span class="string">&quot;/&quot;</span>),
-            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;unexpected error happens&quot;</span>),
+            <span class="ident">Error::InvalidKeySeg</span>(<span class="ident">s</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="macro">assert_eq!</span>(<span class="ident">s</span>, <span class="string">&quot;/&quot;</span>),
+            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">panic!</span>(<span class="string">&quot;unexpected error happens&quot;</span>),
         }
 
         <span class="kw">let</span> <span class="ident">target</span> <span class="op">=</span> <span class="string">&quot;?&quot;</span>.<span class="ident">to_owned</span>();
-        <span class="kw">match</span> <span class="ident">Key</span>::<span class="ident">from</span>(<span class="ident">addr</span>.<span class="ident">to_db_key</span>())
+        <span class="kw">match</span> <span class="ident">Key::from</span>(<span class="ident">addr</span>.<span class="ident">to_db_key</span>())
             .<span class="ident">push</span>(<span class="kw-2">&amp;</span><span class="ident">target</span>)
             .<span class="ident">expect_err</span>(<span class="string">&quot;unexpectedly succeeded&quot;</span>)
         {
-            <span class="ident">Error</span>::<span class="ident">InvalidKeySeg</span>(<span class="ident">s</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">s</span>, <span class="string">&quot;?&quot;</span>),
-            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;unexpected error happens&quot;</span>),
+            <span class="ident">Error::InvalidKeySeg</span>(<span class="ident">s</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="macro">assert_eq!</span>(<span class="ident">s</span>, <span class="string">&quot;?&quot;</span>),
+            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">panic!</span>(<span class="string">&quot;unexpected error happens&quot;</span>),
         }
     }
 }
@@ -1246,32 +1245,31 @@
 <span class="doccomment">/// Helpers for testing with storage types.</span>
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">test</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;testing&quot;</span>))]</span>
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">testing</span> {
-    <span class="kw">use</span> <span class="ident">proptest</span>::<span class="ident">collection</span>;
-    <span class="kw">use</span> <span class="ident">proptest</span>::<span class="ident">prelude</span>::<span class="kw-2">*</span>;
+    <span class="kw">use</span> <span class="ident">proptest::collection</span>;
+    <span class="kw">use</span> <span class="ident">proptest::prelude</span>::<span class="kw-2">*</span>;
 
     <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
-    <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">types</span>::<span class="ident">address</span>::<span class="ident">testing</span>::<span class="ident">arb_address</span>;
+    <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::types::address::testing::arb_address</span>;
 
     <span class="doccomment">/// Generate an arbitrary [`Key`].</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">arb_key</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="kw">impl</span> <span class="ident">Strategy</span><span class="op">&lt;</span><span class="ident">Value</span> <span class="op">=</span> <span class="ident">Key</span><span class="op">&gt;</span> {
-        <span class="macro">prop_oneof</span><span class="macro">!</span>[
+        <span class="macro">prop_oneof!</span>[
             <span class="comment">// a key for a validity predicate</span>
-            <span class="ident">arb_address</span>().<span class="ident">prop_map</span>(<span class="op">|</span><span class="ident">addr</span><span class="op">|</span> <span class="ident">Key</span>::<span class="ident">validity_predicate</span>(<span class="kw-2">&amp;</span><span class="ident">addr</span>)),
+            <span class="ident">arb_address</span>().<span class="ident">prop_map</span>(<span class="op">|</span><span class="ident">addr</span><span class="op">|</span> <span class="ident">Key::validity_predicate</span>(<span class="kw-2">&amp;</span><span class="ident">addr</span>)),
             <span class="comment">// a key from key segments</span>
-            <span class="ident">collection</span>::<span class="ident">vec</span>(<span class="ident">arb_key_seg</span>(), <span class="number">1</span>..<span class="number">5</span>)
+            <span class="ident">collection::vec</span>(<span class="ident">arb_key_seg</span>(), <span class="number">1</span>..<span class="number">5</span>)
                 .<span class="ident">prop_map</span>(<span class="op">|</span><span class="ident">segments</span><span class="op">|</span> { <span class="ident">Key</span> { <span class="ident">segments</span> } }),
         ]
     }
 
     <span class="doccomment">/// Generate an arbitrary [`DbKeySeg`].</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">arb_key_seg</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="kw">impl</span> <span class="ident">Strategy</span><span class="op">&lt;</span><span class="ident">Value</span> <span class="op">=</span> <span class="ident">DbKeySeg</span><span class="op">&gt;</span> {
-        <span class="macro">prop_oneof</span><span class="macro">!</span>[
+        <span class="macro">prop_oneof!</span>[
             <span class="comment">// the string segment is 5 time more likely to be generated</span>
-            <span class="number">5</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;[a-zA-Z0-9_]{1,100}&quot;</span>.<span class="ident">prop_map</span>(<span class="ident">DbKeySeg</span>::<span class="ident">StringSeg</span>),
-            <span class="number">1</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">arb_address</span>().<span class="ident">prop_map</span>(<span class="ident">DbKeySeg</span>::<span class="ident">AddressSeg</span>),
+            <span class="number">5</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;[a-zA-Z0-9_]{1,100}&quot;</span>.<span class="ident">prop_map</span>(<span class="ident">DbKeySeg::StringSeg</span>),
+            <span class="number">1</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">arb_address</span>().<span class="ident">prop_map</span>(<span class="ident">DbKeySeg::AddressSeg</span>),
         ]
     }
 }
 </pre></div>
-</section><section id="search" class="content hidden"></section><section class="footer"></section><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="anoma" data-search-js="../../../search-index.js"></div>
-    <script src="../../../main.js"></script><script src="../../../source-script.js"></script><script src="../../../source-files.js"></script></body></html>
+</section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="anoma" data-search-index-js="../../../search-index.js" data-search-js="../../../search.js"></div><script src="../../../main.js"></script><script src="../../../source-script.js"></script><script src="../../../source-files.js"></script></body></html>

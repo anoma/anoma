@@ -1,13 +1,12 @@
 <!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="The Rust Standard Library"><meta name="keywords" content="rust, rustlang, rust-lang, std"><title>anoma_apps::std - Rust</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script id="default-settings"></script><script src="../../storage.js"></script><script src="../../crates.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../favicon.svg">
 <link rel="alternate icon" type="image/png" href="../../favicon-16x16.png">
-<link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc mod"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../anoma_apps/index.html'><div class='logo-container rust-logo'><img src='../../rust-logo.png' alt='logo'></div></a><p class="location">Module std</p><div class="sidebar-elems"><div class="block items"><ul><li><a href="#modules">Modules</a></li><li><a href="#macros">Macros</a></li></ul></div><p class="location"><a href="../index.html">anoma_apps</a></p><div id="sidebar-vars" data-name="std" data-ty="mod" data-relpath="../"></div><script defer src="../sidebar-items.js"></script></div></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../../brush.svg" width="18" height="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><script src="../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" class="help-button">?</button>
-                <a id="settings-menu" href="../../settings.html"><img src="../../wheel.svg" width="18" height="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><h1 class="fqn"><span class="in-band">Module <a href="../index.html">anoma_apps</a>::<wbr><a class="mod" href="">std</a></span><span class="out-of-band"><span class="since" title="Stable since Rust version 1.0.0">1.0.0</span><span id="render-detail"><a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">[<span class="inner">&#x2212;</span>]</a></span><a class="srclink" href="https://doc.rust-lang.org/nightly/src/std/lib.rs.html#1-599" title="goto source code">[src]</a></span></h1><div class="docblock"><h1 id="the-rust-standard-library" class="section-header"><a href="#the-rust-standard-library">The Rust Standard Library</a></h1>
+<link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc mod crate"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../anoma_apps/index.html'><div class='logo-container rust-logo'><img src='../../rust-logo.png' alt='logo'></div></a><h2 class="location">Crate std</h2><div class="block version"><p>Version 0.1.0</p></div><div class="sidebar-elems"><a id="all-types" href="all.html"><p>See all std's items</p></a><div class="block items"><ul><li><a href="#modules">Modules</a></li><li><a href="#macros">Macros</a></li></ul></div><div id="sidebar-vars" data-name="std" data-ty="mod" data-relpath="./"></div><script defer src="./sidebar-items.js"></script></div></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img src="../../brush.svg" width="18" height="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../settings.html" title="settings"><img src="../../wheel.svg" width="18" height="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><h1 class="fqn"><span class="in-band">Crate <a href="../index.html">anoma_apps</a>::<wbr><a class="mod" href="#">std</a><button id="copy-path" onclick="copy_path(this)" title="copy path"><img src="../../clipboard.svg" width="19" height="18" alt="Copy item import" title="Copy item import to clipboard"></button></span><span class="out-of-band"><span class="since" title="Stable since Rust version 1.0.0">1.0.0</span><span id="render-detail"><a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">[<span class="inner">&#x2212;</span>]</a></span><a class="srclink" href="https://doc.rust-lang.org/1.54.0/src/std/lib.rs.html#1-593" title="goto source code">[src]</a></span></h1><details class="rustdoc-toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><h1 id="the-rust-standard-library" class="section-header"><a href="#the-rust-standard-library">The Rust Standard Library</a></h1>
 <p>The Rust Standard Library is the foundation of portable Rust software, a
 set of minimal and battle-tested shared abstractions for the <a href="https://crates.io">broader Rust
-ecosystem</a>. It offers core types, like <a href="../../anoma_apps/std/vec/struct.Vec.html"><code>Vec&lt;T&gt;</code></a> and
-<a href="../../anoma_apps/std/option/enum.Option.html"><code>Option&lt;T&gt;</code></a>, library-defined <a href="#primitives">operations on language
-primitives</a>, <a href="#macros">standard macros</a>, <a href="../../anoma_apps/std/io/index.html">I/O</a> and
-<a href="../../anoma_apps/std/thread/index.html">multithreading</a>, among <a href="#what-is-in-the-standard-library-documentation">many other things</a>.</p>
+ecosystem</a>. It offers core types, like <a href="vec/struct.Vec.html"><code>Vec&lt;T&gt;</code></a> and
+<a href="option/enum.Option.html"><code>Option&lt;T&gt;</code></a>, library-defined <a href="#primitives">operations on language
+primitives</a>, <a href="#macros">standard macros</a>, <a href="io/index.html">I/O</a> and
+<a href="thread/index.html">multithreading</a>, among <a href="#what-is-in-the-standard-library-documentation">many other things</a>.</p>
 <p><code>std</code> is available to all Rust crates by default. Therefore, the
 standard library can be accessed in <a href="../book/ch07-02-defining-modules-to-control-scope-and-privacy.html"><code>use</code></a> statements through the path
 <code>std</code>, as in <a href="env/index.html"><code>use std::env</code></a>.</p>
@@ -20,7 +19,7 @@ bar</a> at the top of the page.</p>
 <li><a href="#modules"><code>std::*</code> modules</a></li>
 <li><a href="#primitives">Primitive types</a></li>
 <li><a href="#macros">Standard macros</a></li>
-<li><a href="../../anoma_apps/std/prelude/index.html">The Rust Prelude</a></li>
+<li><a href="prelude/index.html">The Rust Prelude</a></li>
 </ul>
 <p>If this is your first time, the documentation for the standard library is
 written to be casually perused. Clicking on interesting things should
@@ -39,7 +38,7 @@ quality and a peek behind the curtains is often enlightening.</p>
 <p>First of all, The Rust Standard Library is divided into a number of focused
 modules, <a href="#modules">all listed further down this page</a>. These modules are
 the bedrock upon which all of Rust is forged, and they have mighty names
-like <a href="../../anoma_apps/std/slice/index.html"><code>std::slice</code></a> and <a href="../../anoma_apps/std/cmp/index.html"><code>std::cmp</code></a>. Modules’ documentation typically
+like <a href="slice/index.html"><code>std::slice</code></a> and <a href="cmp/index.html"><code>std::cmp</code></a>. Modules’ documentation typically
 includes an overview of the module along with examples, and are a smart
 place to start familiarizing yourself with the library.</p>
 <p>Second, implicit methods on <a href="../book/ch03-02-data-types.html">primitive types</a> are documented here. This can
@@ -53,16 +52,16 @@ primitives</a>.</li>
 primitive types</em>. These define additional items related to the primitive
 type, but not the all-important methods.</li>
 </ol>
-<p>So for example there is a <a href="https://doc.rust-lang.org/nightly/std/primitive.i32.html">page for the primitive type
+<p>So for example there is a <a href="https://doc.rust-lang.org/1.54.0/std/primitive.i32.html">page for the primitive type
 <code>i32</code></a> that lists all the methods that can be called on
-32-bit integers (very useful), and there is a <a href="../../anoma_apps/std/i32/index.html">page for the module
-<code>std::i32</code></a> that documents the constant values <a href="../../anoma_apps/std/i32/constant.MIN.html"><code>MIN</code></a> and <a href="../../anoma_apps/std/i32/constant.MAX.html"><code>MAX</code></a> (rarely
+32-bit integers (very useful), and there is a <a href="i32/index.html">page for the module
+<code>std::i32</code></a> that documents the constant values <a href="i32/constant.MIN.html"><code>MIN</code></a> and <a href="i32/constant.MAX.html"><code>MAX</code></a> (rarely
 useful).</p>
-<p>Note the documentation for the primitives <a href="https://doc.rust-lang.org/nightly/std/primitive.str.html"><code>str</code></a> and <a href="https://doc.rust-lang.org/nightly/std/primitive.slice.html" title="slice"><code>[T]</code></a> (also
-called ‘slice’). Many method calls on <a href="../../anoma_apps/std/string/struct.String.html" title="String"><code>String</code></a> and <a href="../../anoma_apps/std/vec/struct.Vec.html"><code>Vec&lt;T&gt;</code></a> are actually
-calls to methods on <a href="https://doc.rust-lang.org/nightly/std/primitive.str.html"><code>str</code></a> and <a href="https://doc.rust-lang.org/nightly/std/primitive.slice.html" title="slice"><code>[T]</code></a> respectively, via <a href="../book/ch15-02-deref.html#implicit-deref-coercions-with-functions-and-methods">deref
+<p>Note the documentation for the primitives <a href="https://doc.rust-lang.org/1.54.0/std/primitive.str.html"><code>str</code></a> and <a href="https://doc.rust-lang.org/1.54.0/std/primitive.slice.html" title="slice"><code>[T]</code></a> (also
+called ‘slice’). Many method calls on <a href="string/struct.String.html" title="String"><code>String</code></a> and <a href="vec/struct.Vec.html"><code>Vec&lt;T&gt;</code></a> are actually
+calls to methods on <a href="https://doc.rust-lang.org/1.54.0/std/primitive.str.html"><code>str</code></a> and <a href="https://doc.rust-lang.org/1.54.0/std/primitive.slice.html" title="slice"><code>[T]</code></a> respectively, via <a href="../book/ch15-02-deref.html#implicit-deref-coercions-with-functions-and-methods">deref
 coercions</a>.</p>
-<p>Third, the standard library defines <a href="../../anoma_apps/std/prelude/index.html">The Rust Prelude</a>, a small collection
+<p>Third, the standard library defines <a href="prelude/index.html">The Rust Prelude</a>, a small collection
 of items - mostly traits - that are imported into every module of every
 crate. The traits in the prelude are pervasive, making the prelude
 documentation a good entry point to learning about the library.</p>
@@ -84,16 +83,16 @@ improved, submit a PR, or chat with us first on <a href="https://discord.gg/rust
 <p>The rest of this crate documentation is dedicated to pointing out notable
 features of The Rust Standard Library.</p>
 <h2 id="containers-and-collections" class="section-header"><a href="#containers-and-collections">Containers and collections</a></h2>
-<p>The <a href="../../anoma_apps/std/option/index.html" title="option"><code>option</code></a> and <a href="../../anoma_apps/std/result/index.html" title="result"><code>result</code></a> modules define optional and error-handling
-types, <a href="../../anoma_apps/std/option/enum.Option.html"><code>Option&lt;T&gt;</code></a> and <a href="../../anoma_apps/std/result/enum.Result.html"><code>Result&lt;T, E&gt;</code></a>. The <a href="../../anoma_apps/std/iter/index.html" title="iter"><code>iter</code></a> module defines
-Rust’s iterator trait, <a href="../../anoma_apps/std/iter/trait.Iterator.html" title="Iterator"><code>Iterator</code></a>, which works with the <a href="../book/ch03-05-control-flow.html#looping-through-a-collection-with-for"><code>for</code></a> loop to
+<p>The <a href="option/index.html" title="option"><code>option</code></a> and <a href="result/index.html" title="result"><code>result</code></a> modules define optional and error-handling
+types, <a href="option/enum.Option.html"><code>Option&lt;T&gt;</code></a> and <a href="result/enum.Result.html"><code>Result&lt;T, E&gt;</code></a>. The <a href="iter/index.html" title="iter"><code>iter</code></a> module defines
+Rust’s iterator trait, <a href="iter/trait.Iterator.html" title="Iterator"><code>Iterator</code></a>, which works with the <a href="../book/ch03-05-control-flow.html#looping-through-a-collection-with-for"><code>for</code></a> loop to
 access collections.</p>
 <p>The standard library exposes three common ways to deal with contiguous
 regions of memory:</p>
 <ul>
-<li><a href="../../anoma_apps/std/vec/struct.Vec.html"><code>Vec&lt;T&gt;</code></a> - A heap-allocated <em>vector</em> that is resizable at runtime.</li>
-<li><a href="https://doc.rust-lang.org/nightly/std/primitive.array.html" title="array"><code>[T; N]</code></a> - An inline <em>array</em> with a fixed size at compile time.</li>
-<li><a href="https://doc.rust-lang.org/nightly/std/primitive.slice.html" title="slice"><code>[T]</code></a> - A dynamically sized <em>slice</em> into any other kind of contiguous
+<li><a href="vec/struct.Vec.html"><code>Vec&lt;T&gt;</code></a> - A heap-allocated <em>vector</em> that is resizable at runtime.</li>
+<li><a href="https://doc.rust-lang.org/1.54.0/std/primitive.array.html" title="array"><code>[T; N]</code></a> - An inline <em>array</em> with a fixed size at compile time.</li>
+<li><a href="https://doc.rust-lang.org/1.54.0/std/primitive.slice.html" title="slice"><code>[T]</code></a> - A dynamically sized <em>slice</em> into any other kind of contiguous
 storage, whether heap-allocated or not.</li>
 </ul>
 <p>Slices can only be handled through some kind of <em>pointer</em>, and as such come
@@ -101,43 +100,42 @@ in many flavors such as:</p>
 <ul>
 <li><code>&amp;[T]</code> - <em>shared slice</em></li>
 <li><code>&amp;mut [T]</code> - <em>mutable slice</em></li>
-<li><a href="../../anoma_apps/std/boxed/index.html"><code>Box&lt;[T]&gt;</code></a> - <em>owned slice</em></li>
+<li><a href="boxed/index.html"><code>Box&lt;[T]&gt;</code></a> - <em>owned slice</em></li>
 </ul>
-<p><a href="https://doc.rust-lang.org/nightly/std/primitive.str.html"><code>str</code></a>, a UTF-8 string slice, is a primitive type, and the standard library
-defines many methods for it. Rust <a href="https://doc.rust-lang.org/nightly/std/primitive.str.html"><code>str</code></a>s are typically accessed as
-immutable references: <code>&amp;str</code>. Use the owned <a href="../../anoma_apps/std/string/struct.String.html" title="String"><code>String</code></a> for building and
+<p><a href="https://doc.rust-lang.org/1.54.0/std/primitive.str.html"><code>str</code></a>, a UTF-8 string slice, is a primitive type, and the standard library
+defines many methods for it. Rust <a href="https://doc.rust-lang.org/1.54.0/std/primitive.str.html"><code>str</code></a>s are typically accessed as
+immutable references: <code>&amp;str</code>. Use the owned <a href="string/struct.String.html" title="String"><code>String</code></a> for building and
 mutating strings.</p>
-<p>For converting to strings use the <a href="../../anoma_apps/std/macro.format.html" title="format!"><code>format!</code></a> macro, and for converting from
-strings use the <a href="../../anoma_apps/std/str/trait.FromStr.html"><code>FromStr</code></a> trait.</p>
-<p>Data may be shared by placing it in a reference-counted box or the <a href="../../anoma_apps/std/rc/struct.Rc.html"><code>Rc</code></a>
-type, and if further contained in a <a href="../../anoma_apps/std/cell/struct.Cell.html"><code>Cell</code></a> or <a href="../../anoma_apps/std/cell/struct.RefCell.html"><code>RefCell</code></a>, may be mutated
+<p>For converting to strings use the <a href="macro.format.html" title="format!"><code>format!</code></a> macro, and for converting from
+strings use the <a href="str/trait.FromStr.html"><code>FromStr</code></a> trait.</p>
+<p>Data may be shared by placing it in a reference-counted box or the <a href="rc/struct.Rc.html"><code>Rc</code></a>
+type, and if further contained in a <a href="cell/struct.Cell.html"><code>Cell</code></a> or <a href="cell/struct.RefCell.html"><code>RefCell</code></a>, may be mutated
 as well as shared. Likewise, in a concurrent setting it is common to pair an
-atomically-reference-counted box, <a href="../../anoma_apps/std/sync/struct.Arc.html"><code>Arc</code></a>, with a <a href="../../anoma_apps/std/sync/struct.Mutex.html"><code>Mutex</code></a> to get the same
+atomically-reference-counted box, <a href="sync/struct.Arc.html"><code>Arc</code></a>, with a <a href="sync/struct.Mutex.html"><code>Mutex</code></a> to get the same
 effect.</p>
-<p>The <a href="../../anoma_apps/std/collections/index.html" title="collections"><code>collections</code></a> module defines maps, sets, linked lists and other
-typical collection types, including the common <a href="../../anoma_apps/std/collections/struct.HashMap.html"><code>HashMap&lt;K, V&gt;</code></a>.</p>
+<p>The <a href="collections/index.html" title="collections"><code>collections</code></a> module defines maps, sets, linked lists and other
+typical collection types, including the common <a href="collections/struct.HashMap.html"><code>HashMap&lt;K, V&gt;</code></a>.</p>
 <h2 id="platform-abstractions-and-io" class="section-header"><a href="#platform-abstractions-and-io">Platform abstractions and I/O</a></h2>
 <p>Besides basic data types, the standard library is largely concerned with
 abstracting over differences in common platforms, most notably Windows and
 Unix derivatives.</p>
-<p>Common types of I/O, including <a href="../../anoma_apps/std/fs/struct.File.html">files</a>, <a href="../../anoma_apps/std/net/struct.TcpStream.html">TCP</a>, <a href="../../anoma_apps/std/net/struct.UdpSocket.html">UDP</a>, are defined in the
-<a href="../../anoma_apps/std/io/index.html" title="io"><code>io</code></a>, <a href="../../anoma_apps/std/fs/index.html" title="fs"><code>fs</code></a>, and <a href="../../anoma_apps/std/net/index.html" title="net"><code>net</code></a> modules.</p>
-<p>The <a href="../../anoma_apps/std/thread/index.html" title="thread"><code>thread</code></a> module contains Rust’s threading abstractions. <a href="../../anoma_apps/std/sync/index.html" title="sync"><code>sync</code></a>
-contains further primitive shared memory types, including <a href="../../anoma_apps/std/sync/atomic/index.html"><code>atomic</code></a> and
-<a href="../../anoma_apps/std/sync/mpsc/index.html"><code>mpsc</code></a>, which contains the channel types for message passing.</p>
-</div><h2 id="modules" class="section-header"><a href="#modules">Modules</a></h2>
-<table><tr class="unstable module-item"><td><a class="mod" href="backtrace/index.html" title="anoma_apps::std::backtrace mod">backtrace</a></td><td class="docblock-short"><span class="stab unstable" title="">Experimental</span><p>Support for capturing a stack backtrace of an OS thread</p>
+<p>Common types of I/O, including <a href="fs/struct.File.html">files</a>, <a href="net/struct.TcpStream.html">TCP</a>, <a href="net/struct.UdpSocket.html">UDP</a>, are defined in the
+<a href="io/index.html" title="io"><code>io</code></a>, <a href="fs/index.html" title="fs"><code>fs</code></a>, and <a href="net/index.html" title="net"><code>net</code></a> modules.</p>
+<p>The <a href="thread/index.html" title="thread"><code>thread</code></a> module contains Rust’s threading abstractions. <a href="sync/index.html" title="sync"><code>sync</code></a>
+contains further primitive shared memory types, including <a href="sync/atomic/index.html"><code>atomic</code></a> and
+<a href="sync/mpsc/index.html"><code>mpsc</code></a>, which contains the channel types for message passing.</p>
+</div></details><h2 id="modules" class="section-header"><a href="#modules">Modules</a></h2>
+<table><tr class="unstable module-item"><td><a class="mod" href="assert_matches/index.html" title="anoma_apps::std::assert_matches mod">assert_matches</a></td><td class="docblock-short"><span class="stab unstable" title="">Experimental</span><p>Unstable module containing the unstable <code>assert_matches</code> macro.</p>
+</td></tr><tr class="unstable module-item"><td><a class="mod" href="backtrace/index.html" title="anoma_apps::std::backtrace mod">backtrace</a></td><td class="docblock-short"><span class="stab unstable" title="">Experimental</span><p>Support for capturing a stack backtrace of an OS thread</p>
 </td></tr><tr class="unstable module-item"><td><a class="mod" href="intrinsics/index.html" title="anoma_apps::std::intrinsics mod">intrinsics</a></td><td class="docblock-short"><span class="stab unstable" title="">Experimental</span><p>Compiler intrinsics.</p>
 </td></tr><tr class="unstable module-item"><td><a class="mod" href="lazy/index.html" title="anoma_apps::std::lazy mod">lazy</a></td><td class="docblock-short"><span class="stab unstable" title="">Experimental</span><p>Lazy values and one-time initialization of static data.</p>
-</td></tr><tr class="unstable module-item"><td><a class="mod" href="raw/index.html" title="anoma_apps::std::raw mod">raw</a></td><td class="docblock-short"><span class="stab unstable" title="">Experimental</span><p>Contains struct definitions for the layout of compiler built-in types.</p>
+</td></tr><tr class="unstable deprecated module-item"><td><a class="mod" href="raw/index.html" title="anoma_apps::std::raw mod">raw</a></td><td class="docblock-short"><span class="stab deprecated" title="">Deprecated</span><span class="stab unstable" title="">Experimental</span><p>Contains struct definitions for the layout of compiler built-in types.</p>
 </td></tr><tr class="unstable module-item"><td><a class="mod" href="stream/index.html" title="anoma_apps::std::stream mod">stream</a></td><td class="docblock-short"><span class="stab unstable" title="">Experimental</span><p>Composable asynchronous iteration.</p>
 </td></tr><tr class="module-item"><td><a class="mod" href="alloc/index.html" title="anoma_apps::std::alloc mod">alloc</a></td><td class="docblock-short"><p>Memory allocation APIs.</p>
 </td></tr><tr class="module-item"><td><a class="mod" href="any/index.html" title="anoma_apps::std::any mod">any</a></td><td class="docblock-short"><p>This module implements the <code>Any</code> trait, which enables dynamic typing
 of any <code>'static</code> type through runtime reflection.</p>
 </td></tr><tr class="module-item"><td><a class="mod" href="arch/index.html" title="anoma_apps::std::arch mod">arch</a></td><td class="docblock-short"><p>SIMD and vendor intrinsics module.</p>
-</td></tr><tr class="module-item"><td><a class="mod" href="array/index.html" title="anoma_apps::std::array mod">array</a></td><td class="docblock-short"><p>Implementations of things like <code>Eq</code> for fixed-length arrays
-up to a certain length. Eventually, we should be able to generalize
-to all lengths.</p>
+</td></tr><tr class="module-item"><td><a class="mod" href="array/index.html" title="anoma_apps::std::array mod">array</a></td><td class="docblock-short"><p>Helper functions and types for fixed-length arrays.</p>
 </td></tr><tr class="module-item"><td><a class="mod" href="ascii/index.html" title="anoma_apps::std::ascii mod">ascii</a></td><td class="docblock-short"><p>Operations on ASCII strings and characters.</p>
 </td></tr><tr class="module-item"><td><a class="mod" href="borrow/index.html" title="anoma_apps::std::borrow mod">borrow</a></td><td class="docblock-short"><p>A module for working with borrowed data.</p>
 </td></tr><tr class="module-item"><td><a class="mod" href="boxed/index.html" title="anoma_apps::std::boxed mod">boxed</a></td><td class="docblock-short"><p>A pointer type for heap allocation.</p>
@@ -221,8 +219,8 @@ than <code>PowerPC</code> targets.</p>
 </td></tr><tr class="unstable module-item"><td><a class="macro" href="macro.log_syntax.html" title="anoma_apps::std::log_syntax macro">log_syntax</a></td><td class="docblock-short"><span class="stab unstable" title="">Experimental</span><p>Prints passed tokens into the standard output.</p>
 </td></tr><tr class="unstable module-item"><td><a class="macro" href="macro.trace_macros.html" title="anoma_apps::std::trace_macros macro">trace_macros</a></td><td class="docblock-short"><span class="stab unstable" title="">Experimental</span><p>Enables or disables tracing functionality used for debugging other macros.</p>
 </td></tr><tr class="module-item"><td><a class="macro" href="macro.assert.html" title="anoma_apps::std::assert macro">assert</a></td><td class="docblock-short"><p>Asserts that a boolean expression is <code>true</code> at runtime.</p>
-</td></tr><tr class="module-item"><td><a class="macro" href="macro.assert_eq.html" title="anoma_apps::std::assert_eq macro">assert_eq</a></td><td class="docblock-short"><p>Asserts that two expressions are equal to each other (using <a href="../../anoma_apps/std/cmp/trait.PartialEq.html" title="PartialEq"><code>PartialEq</code></a>).</p>
-</td></tr><tr class="module-item"><td><a class="macro" href="macro.assert_ne.html" title="anoma_apps::std::assert_ne macro">assert_ne</a></td><td class="docblock-short"><p>Asserts that two expressions are not equal to each other (using <a href="../../anoma_apps/std/cmp/trait.PartialEq.html" title="PartialEq"><code>PartialEq</code></a>).</p>
+</td></tr><tr class="module-item"><td><a class="macro" href="macro.assert_eq.html" title="anoma_apps::std::assert_eq macro">assert_eq</a></td><td class="docblock-short"><p>Asserts that two expressions are equal to each other (using <a href="cmp/trait.PartialEq.html" title="PartialEq"><code>PartialEq</code></a>).</p>
+</td></tr><tr class="module-item"><td><a class="macro" href="macro.assert_ne.html" title="anoma_apps::std::assert_ne macro">assert_ne</a></td><td class="docblock-short"><p>Asserts that two expressions are not equal to each other (using <a href="cmp/trait.PartialEq.html" title="PartialEq"><code>PartialEq</code></a>).</p>
 </td></tr><tr class="module-item"><td><a class="macro" href="macro.cfg.html" title="anoma_apps::std::cfg macro">cfg</a></td><td class="docblock-short"><p>Evaluates boolean combinations of configuration flags at compile-time.</p>
 </td></tr><tr class="module-item"><td><a class="macro" href="macro.column.html" title="anoma_apps::std::column macro">column</a></td><td class="docblock-short"><p>Expands to the column number at which it was invoked.</p>
 </td></tr><tr class="module-item"><td><a class="macro" href="macro.compile_error.html" title="anoma_apps::std::compile_error macro">compile_error</a></td><td class="docblock-short"><p>Causes compilation to fail with the given error message when encountered.</p>
@@ -251,13 +249,12 @@ x86/x86-64 platforms.</p>
 </td></tr><tr class="module-item"><td><a class="macro" href="macro.print.html" title="anoma_apps::std::print macro">print</a></td><td class="docblock-short"><p>Prints to the standard output.</p>
 </td></tr><tr class="module-item"><td><a class="macro" href="macro.println.html" title="anoma_apps::std::println macro">println</a></td><td class="docblock-short"><p>Prints to the standard output, with a newline.</p>
 </td></tr><tr class="module-item"><td><a class="macro" href="macro.stringify.html" title="anoma_apps::std::stringify macro">stringify</a></td><td class="docblock-short"><p>Stringifies its arguments.</p>
-</td></tr><tr class="module-item"><td><a class="macro" href="macro.thread_local.html" title="anoma_apps::std::thread_local macro">thread_local</a></td><td class="docblock-short"><p>Declare a new thread local storage key of type <a href="../../anoma_apps/std/thread/struct.LocalKey.html"><code>std::thread::LocalKey</code></a>.</p>
+</td></tr><tr class="module-item"><td><a class="macro" href="macro.thread_local.html" title="anoma_apps::std::thread_local macro">thread_local</a></td><td class="docblock-short"><p>Declare a new thread local storage key of type <a href="thread/struct.LocalKey.html"><code>std::thread::LocalKey</code></a>.</p>
 </td></tr><tr class="module-item"><td><a class="macro" href="macro.todo.html" title="anoma_apps::std::todo macro">todo</a></td><td class="docblock-short"><p>Indicates unfinished code.</p>
 </td></tr><tr class="deprecated module-item"><td><a class="macro" href="macro.try.html" title="anoma_apps::std::try macro">try</a></td><td class="docblock-short"><span class="stab deprecated" title="">Deprecated</span><p>Unwraps a result or propagates its error.</p>
 </td></tr><tr class="module-item"><td><a class="macro" href="macro.unimplemented.html" title="anoma_apps::std::unimplemented macro">unimplemented</a></td><td class="docblock-short"><p>Indicates unimplemented code by panicking with a message of “not implemented”.</p>
 </td></tr><tr class="module-item"><td><a class="macro" href="macro.unreachable.html" title="anoma_apps::std::unreachable macro">unreachable</a></td><td class="docblock-short"><p>Indicates unreachable code.</p>
-</td></tr><tr class="module-item"><td><a class="macro" href="macro.vec.html" title="anoma_apps::std::vec macro">vec</a></td><td class="docblock-short"><p>Creates a <a href="../../anoma_apps/std/vec/struct.Vec.html"><code>Vec</code></a> containing the arguments.</p>
+</td></tr><tr class="module-item"><td><a class="macro" href="macro.vec.html" title="anoma_apps::std::vec macro">vec</a></td><td class="docblock-short"><p>Creates a <a href="vec/struct.Vec.html"><code>Vec</code></a> containing the arguments.</p>
 </td></tr><tr class="module-item"><td><a class="macro" href="macro.write.html" title="anoma_apps::std::write macro">write</a></td><td class="docblock-short"><p>Writes formatted data into a buffer.</p>
 </td></tr><tr class="module-item"><td><a class="macro" href="macro.writeln.html" title="anoma_apps::std::writeln macro">writeln</a></td><td class="docblock-short"><p>Write formatted data into a buffer, with a newline appended.</p>
-</td></tr></table></section><section id="search" class="content hidden"></section><section class="footer"></section><div id="rustdoc-vars" data-root-path="../../" data-current-crate="anoma_apps" data-search-js="../../search-index.js"></div>
-    <script src="../../main.js"></script></body></html>
+</td></tr></table></section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../" data-current-crate="anoma_apps" data-search-index-js="../../search-index.js" data-search-js="../../search.js"></div><script src="../../main.js"></script></body></html>

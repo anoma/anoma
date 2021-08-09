@@ -1,7 +1,6 @@
 <!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `apps/src/lib/node/ledger/storage/mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs - source</title><link rel="stylesheet" type="text/css" href="../../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../../../ayu.css" disabled ><script id="default-settings"></script><script src="../../../../../storage.js"></script><script src="../../../../../crates.js"></script><noscript><link rel="stylesheet" href="../../../../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../../../../favicon.svg">
 <link rel="alternate icon" type="image/png" href="../../../../../favicon-16x16.png">
-<link rel="alternate icon" type="image/png" href="../../../../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../../../anoma_apps/index.html'><div class='logo-container rust-logo'><img src='../../../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../../../../../brush.svg" width="18" height="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><script src="../../../../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" class="help-button">?</button>
-                <a id="settings-menu" href="../../../../../settings.html"><img src="../../../../../wheel.svg" width="18" height="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">  1</span>
+<link rel="alternate icon" type="image/png" href="../../../../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../../../anoma_apps/index.html'><div class='logo-container rust-logo'><img src='../../../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img src="../../../../../brush.svg" width="18" height="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../../../../settings.html" title="settings"><img src="../../../../../wheel.svg" width="18" height="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">  1</span>
 <span id="2">  2</span>
 <span id="3">  3</span>
 <span id="4">  4</span>
@@ -253,50 +252,50 @@
 <span id="250">250</span>
 <span id="251">251</span>
 <span id="252">252</span>
-</pre><div class="example-wrap"><pre class="rust ">
+</pre><pre class="rust">
 <span class="doccomment">//! The storage module handles both the current state in-memory and the stored</span>
 <span class="doccomment">//! state in DB.</span>
 
 <span class="kw">mod</span> <span class="ident">rocksdb</span>;
 
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">collections</span>::<span class="ident">HashMap</span>;
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">fmt</span>;
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">path</span>::<span class="ident">Path</span>;
+<span class="kw">use</span> <span class="ident">std::collections::HashMap</span>;
+<span class="kw">use</span> <span class="ident">std::fmt</span>;
+<span class="kw">use</span> <span class="ident">std::path::Path</span>;
 
-<span class="kw">use</span> <span class="ident">anoma</span>::<span class="ident">ledger</span>::<span class="ident">storage</span>::<span class="ident">types</span>::<span class="ident">MerkleTree</span>;
-<span class="kw">use</span> <span class="ident">anoma</span>::<span class="ident">ledger</span>::<span class="ident">storage</span>::{<span class="ident">types</span>, <span class="ident">BlockStorage</span>, <span class="ident">Storage</span>, <span class="ident">StorageHasher</span>};
-<span class="kw">use</span> <span class="ident">anoma</span>::<span class="ident">types</span>::<span class="ident">address</span>::<span class="ident">EstablishedAddressGen</span>;
-<span class="kw">use</span> <span class="ident">anoma</span>::<span class="ident">types</span>::<span class="ident">storage</span>::{<span class="ident">BlockHash</span>, <span class="ident">BlockHeight</span>, <span class="ident">Epoch</span>, <span class="ident">Key</span>};
-<span class="kw">use</span> <span class="ident">anoma</span>::<span class="ident">types</span>::<span class="ident">time</span>::<span class="ident">DateTimeUtc</span>;
+<span class="kw">use</span> <span class="ident">anoma::ledger::storage::types::MerkleTree</span>;
+<span class="kw">use</span> <span class="ident">anoma::ledger::storage</span>::{<span class="ident">types</span>, <span class="ident">BlockStorage</span>, <span class="ident">Storage</span>, <span class="ident">StorageHasher</span>};
+<span class="kw">use</span> <span class="ident">anoma::types::address::EstablishedAddressGen</span>;
+<span class="kw">use</span> <span class="ident">anoma::types::storage</span>::{<span class="ident">BlockHash</span>, <span class="ident">BlockHeight</span>, <span class="ident">Epoch</span>, <span class="ident">Key</span>};
+<span class="kw">use</span> <span class="ident">anoma::types::time::DateTimeUtc</span>;
 <span class="kw">use</span> <span class="ident">blake2b_rs</span>::{<span class="ident">Blake2b</span>, <span class="ident">Blake2bBuilder</span>};
-<span class="kw">use</span> <span class="ident">sparse_merkle_tree</span>::<span class="ident">blake2b</span>::<span class="ident">Blake2bHasher</span>;
-<span class="kw">use</span> <span class="ident">sparse_merkle_tree</span>::<span class="ident">traits</span>::<span class="ident">Hasher</span>;
-<span class="kw">use</span> <span class="ident">sparse_merkle_tree</span>::<span class="ident">H256</span>;
+<span class="kw">use</span> <span class="ident">sparse_merkle_tree::blake2b::Blake2bHasher</span>;
+<span class="kw">use</span> <span class="ident">sparse_merkle_tree::traits::Hasher</span>;
+<span class="kw">use</span> <span class="ident">sparse_merkle_tree::H256</span>;
 
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">PersistentStorageHasher</span>(<span class="ident">Blake2bHasher</span>);
 
-<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">PersistentDB</span> <span class="op">=</span> <span class="ident">rocksdb</span>::<span class="ident">RocksDB</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">PersistentDB</span> <span class="op">=</span> <span class="ident">rocksdb::RocksDB</span>;
 
 <span class="kw">pub</span> <span class="kw">type</span> <span class="ident">PersistentStorage</span> <span class="op">=</span> <span class="ident">Storage</span><span class="op">&lt;</span><span class="ident">PersistentDB</span>, <span class="ident">PersistentStorageHasher</span><span class="op">&gt;</span>;
 
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">open</span>(<span class="ident">db_path</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span><span class="ident">Path</span><span class="op">&gt;</span>, <span class="ident">chain_id</span>: <span class="ident">String</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">PersistentStorage</span> {
     <span class="kw">let</span> <span class="ident">block</span> <span class="op">=</span> <span class="ident">BlockStorage</span> {
-        <span class="ident">tree</span>: <span class="ident">MerkleTree</span>::<span class="ident">default</span>(),
-        <span class="ident">hash</span>: <span class="ident">BlockHash</span>::<span class="ident">default</span>(),
-        <span class="ident">height</span>: <span class="ident">BlockHeight</span>::<span class="ident">default</span>(),
-        <span class="ident">epoch</span>: <span class="ident">Epoch</span>::<span class="ident">default</span>(),
-        <span class="ident">subspaces</span>: <span class="ident">HashMap</span>::<span class="ident">default</span>(),
+        <span class="ident">tree</span>: <span class="ident">MerkleTree::default</span>(),
+        <span class="ident">hash</span>: <span class="ident">BlockHash::default</span>(),
+        <span class="ident">height</span>: <span class="ident">BlockHeight::default</span>(),
+        <span class="ident">epoch</span>: <span class="ident">Epoch::default</span>(),
+        <span class="ident">subspaces</span>: <span class="ident">HashMap::default</span>(),
     };
     <span class="ident">PersistentStorage</span> {
-        <span class="ident">db</span>: <span class="ident">rocksdb</span>::<span class="ident">open</span>(<span class="ident">db_path</span>).<span class="ident">expect</span>(<span class="string">&quot;cannot open the DB&quot;</span>),
+        <span class="ident">db</span>: <span class="ident">rocksdb::open</span>(<span class="ident">db_path</span>).<span class="ident">expect</span>(<span class="string">&quot;cannot open the DB&quot;</span>),
         <span class="ident">chain_id</span>,
         <span class="ident">block</span>,
         <span class="ident">header</span>: <span class="prelude-val">None</span>,
         <span class="ident">last_height</span>: <span class="ident">BlockHeight</span>(<span class="number">0</span>),
-        <span class="ident">current_epoch</span>: <span class="ident">Epoch</span>::<span class="ident">default</span>(),
-        <span class="ident">next_epoch_min_start_height</span>: <span class="ident">BlockHeight</span>::<span class="ident">default</span>(),
-        <span class="ident">next_epoch_min_start_time</span>: <span class="ident">DateTimeUtc</span>::<span class="ident">now</span>(),
-        <span class="ident">address_gen</span>: <span class="ident">EstablishedAddressGen</span>::<span class="ident">new</span>(
+        <span class="ident">current_epoch</span>: <span class="ident">Epoch::default</span>(),
+        <span class="ident">next_epoch_min_start_height</span>: <span class="ident">BlockHeight::default</span>(),
+        <span class="ident">next_epoch_min_start_time</span>: <span class="ident">DateTimeUtc::now</span>(),
+        <span class="ident">address_gen</span>: <span class="ident">EstablishedAddressGen::new</span>(
             <span class="string">&quot;Privacy is a function of liberty.&quot;</span>,
         ),
     }
@@ -304,7 +303,7 @@
 
 <span class="kw">impl</span> <span class="ident">Default</span> <span class="kw">for</span> <span class="ident">PersistentStorageHasher</span> {
     <span class="kw">fn</span> <span class="ident">default</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
-        <span class="self">Self</span>(<span class="ident">Blake2bHasher</span>::<span class="ident">default</span>())
+        <span class="self">Self</span>(<span class="ident">Blake2bHasher::default</span>())
     }
 }
 
@@ -322,7 +321,7 @@
     <span class="kw">fn</span> <span class="ident">hash_key</span>(<span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">Key</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">H256</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">buf</span> <span class="op">=</span> [<span class="number">0u8</span>; <span class="number">32</span>];
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">hasher</span> <span class="op">=</span> <span class="ident">new_blake2b</span>();
-        <span class="ident">hasher</span>.<span class="ident">update</span>(<span class="kw-2">&amp;</span><span class="ident">types</span>::<span class="ident">encode</span>(<span class="ident">key</span>));
+        <span class="ident">hasher</span>.<span class="ident">update</span>(<span class="kw-2">&amp;</span><span class="ident">types::encode</span>(<span class="ident">key</span>));
         <span class="ident">hasher</span>.<span class="ident">finalize</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">buf</span>);
         <span class="ident">buf</span>.<span class="ident">into</span>()
     }
@@ -336,79 +335,79 @@
     }
 }
 
-<span class="kw">impl</span> <span class="ident">fmt</span>::<span class="ident">Debug</span> <span class="kw">for</span> <span class="ident">PersistentStorageHasher</span> {
-    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">fmt</span>::<span class="ident">Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">fmt</span>::<span class="prelude-ty">Result</span> {
-        <span class="macro">write</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot;PersistentStorageHasher&quot;</span>)
+<span class="kw">impl</span> <span class="ident">fmt::Debug</span> <span class="kw">for</span> <span class="ident">PersistentStorageHasher</span> {
+    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">fmt::Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">fmt::Result</span> {
+        <span class="macro">write!</span>(<span class="ident">f</span>, <span class="string">&quot;PersistentStorageHasher&quot;</span>)
     }
 }
 
 <span class="kw">fn</span> <span class="ident">new_blake2b</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Blake2b</span> {
-    <span class="ident">Blake2bBuilder</span>::<span class="ident">new</span>(<span class="number">32</span>).<span class="ident">personal</span>(<span class="string">b&quot;anoma storage&quot;</span>).<span class="ident">build</span>()
+    <span class="ident">Blake2bBuilder::new</span>(<span class="number">32</span>).<span class="ident">personal</span>(<span class="string">b&quot;anoma storage&quot;</span>).<span class="ident">build</span>()
 }
 
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
 <span class="kw">mod</span> <span class="ident">tests</span> {
-    <span class="kw">use</span> <span class="ident">anoma</span>::<span class="ident">ledger</span>::<span class="ident">storage</span>::<span class="ident">types</span>;
-    <span class="kw">use</span> <span class="ident">tempfile</span>::<span class="ident">TempDir</span>;
+    <span class="kw">use</span> <span class="ident">anoma::ledger::storage::types</span>;
+    <span class="kw">use</span> <span class="ident">tempfile::TempDir</span>;
 
     <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
-    <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">config</span>::<span class="ident">DEFAULT_CHAIN_ID</span>;
+    <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::config::DEFAULT_CHAIN_ID</span>;
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="kw">fn</span> <span class="ident">test_crud_value</span>() {
         <span class="kw">let</span> <span class="ident">db_path</span> <span class="op">=</span>
-            <span class="ident">TempDir</span>::<span class="ident">new</span>().<span class="ident">expect</span>(<span class="string">&quot;Unable to create a temporary DB directory&quot;</span>);
+            <span class="ident">TempDir::new</span>().<span class="ident">expect</span>(<span class="string">&quot;Unable to create a temporary DB directory&quot;</span>);
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">storage</span> <span class="op">=</span> <span class="ident">open</span>(<span class="ident">db_path</span>.<span class="ident">path</span>(), <span class="ident">DEFAULT_CHAIN_ID</span>.<span class="ident">to_owned</span>());
         <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span>
-            <span class="ident">Key</span>::<span class="ident">parse</span>(<span class="string">&quot;key&quot;</span>.<span class="ident">to_owned</span>()).<span class="ident">expect</span>(<span class="string">&quot;cannot parse the key string&quot;</span>);
+            <span class="ident">Key::parse</span>(<span class="string">&quot;key&quot;</span>.<span class="ident">to_owned</span>()).<span class="ident">expect</span>(<span class="string">&quot;cannot parse the key string&quot;</span>);
         <span class="kw">let</span> <span class="ident">value</span>: <span class="ident">u64</span> <span class="op">=</span> <span class="number">1</span>;
-        <span class="kw">let</span> <span class="ident">value_bytes</span> <span class="op">=</span> <span class="ident">types</span>::<span class="ident">encode</span>(<span class="kw-2">&amp;</span><span class="ident">value</span>);
+        <span class="kw">let</span> <span class="ident">value_bytes</span> <span class="op">=</span> <span class="ident">types::encode</span>(<span class="kw-2">&amp;</span><span class="ident">value</span>);
         <span class="kw">let</span> <span class="ident">value_bytes_len</span> <span class="op">=</span> <span class="ident">value_bytes</span>.<span class="ident">len</span>();
 
         <span class="comment">// before insertion</span>
         <span class="kw">let</span> (<span class="ident">result</span>, <span class="ident">gas</span>) <span class="op">=</span> <span class="ident">storage</span>.<span class="ident">has_key</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>).<span class="ident">expect</span>(<span class="string">&quot;has_key failed&quot;</span>);
-        <span class="macro">assert</span><span class="macro">!</span>(<span class="op">!</span><span class="ident">result</span>);
-        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">gas</span>, <span class="ident">key</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="ident">u64</span>);
+        <span class="macro">assert!</span>(<span class="op">!</span><span class="ident">result</span>);
+        <span class="macro">assert_eq!</span>(<span class="ident">gas</span>, <span class="ident">key</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="ident">u64</span>);
         <span class="kw">let</span> (<span class="ident">result</span>, <span class="ident">gas</span>) <span class="op">=</span> <span class="ident">storage</span>.<span class="ident">read</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>).<span class="ident">expect</span>(<span class="string">&quot;read failed&quot;</span>);
-        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">result</span>, <span class="prelude-val">None</span>);
-        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">gas</span>, <span class="ident">key</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="ident">u64</span>);
+        <span class="macro">assert_eq!</span>(<span class="ident">result</span>, <span class="prelude-val">None</span>);
+        <span class="macro">assert_eq!</span>(<span class="ident">gas</span>, <span class="ident">key</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="ident">u64</span>);
 
         <span class="comment">// insert</span>
         <span class="ident">storage</span>.<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>, <span class="ident">value_bytes</span>).<span class="ident">expect</span>(<span class="string">&quot;write failed&quot;</span>);
 
         <span class="comment">// read</span>
         <span class="kw">let</span> (<span class="ident">result</span>, <span class="ident">gas</span>) <span class="op">=</span> <span class="ident">storage</span>.<span class="ident">has_key</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>).<span class="ident">expect</span>(<span class="string">&quot;has_key failed&quot;</span>);
-        <span class="macro">assert</span><span class="macro">!</span>(<span class="ident">result</span>);
-        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">gas</span>, <span class="ident">key</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="ident">u64</span>);
+        <span class="macro">assert!</span>(<span class="ident">result</span>);
+        <span class="macro">assert_eq!</span>(<span class="ident">gas</span>, <span class="ident">key</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="ident">u64</span>);
         <span class="kw">let</span> (<span class="ident">result</span>, <span class="ident">gas</span>) <span class="op">=</span> <span class="ident">storage</span>.<span class="ident">read</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>).<span class="ident">expect</span>(<span class="string">&quot;read failed&quot;</span>);
         <span class="kw">let</span> <span class="ident">read_value</span>: <span class="ident">u64</span> <span class="op">=</span>
-            <span class="ident">types</span>::<span class="ident">decode</span>(<span class="kw-2">&amp;</span><span class="ident">result</span>.<span class="ident">expect</span>(<span class="string">&quot;value doesn&#39;t exist&quot;</span>))
+            <span class="ident">types::decode</span>(<span class="kw-2">&amp;</span><span class="ident">result</span>.<span class="ident">expect</span>(<span class="string">&quot;value doesn&#39;t exist&quot;</span>))
                 .<span class="ident">expect</span>(<span class="string">&quot;decoding failed&quot;</span>);
-        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">read_value</span>, <span class="ident">value</span>);
-        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">gas</span>, <span class="ident">key</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="ident">u64</span> <span class="op">+</span> <span class="ident">value_bytes_len</span> <span class="kw">as</span> <span class="ident">u64</span>);
+        <span class="macro">assert_eq!</span>(<span class="ident">read_value</span>, <span class="ident">value</span>);
+        <span class="macro">assert_eq!</span>(<span class="ident">gas</span>, <span class="ident">key</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="ident">u64</span> <span class="op">+</span> <span class="ident">value_bytes_len</span> <span class="kw">as</span> <span class="ident">u64</span>);
 
         <span class="comment">// delete</span>
         <span class="ident">storage</span>.<span class="ident">delete</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>).<span class="ident">expect</span>(<span class="string">&quot;delete failed&quot;</span>);
 
         <span class="comment">// read again</span>
         <span class="kw">let</span> (<span class="ident">result</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">storage</span>.<span class="ident">has_key</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>).<span class="ident">expect</span>(<span class="string">&quot;has_key failed&quot;</span>);
-        <span class="macro">assert</span><span class="macro">!</span>(<span class="op">!</span><span class="ident">result</span>);
+        <span class="macro">assert!</span>(<span class="op">!</span><span class="ident">result</span>);
         <span class="kw">let</span> (<span class="ident">result</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">storage</span>.<span class="ident">read</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>).<span class="ident">expect</span>(<span class="string">&quot;read failed&quot;</span>);
-        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">result</span>, <span class="prelude-val">None</span>);
+        <span class="macro">assert_eq!</span>(<span class="ident">result</span>, <span class="prelude-val">None</span>);
     }
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="kw">fn</span> <span class="ident">test_commit_block</span>() {
         <span class="kw">let</span> <span class="ident">db_path</span> <span class="op">=</span>
-            <span class="ident">TempDir</span>::<span class="ident">new</span>().<span class="ident">expect</span>(<span class="string">&quot;Unable to create a temporary DB directory&quot;</span>);
+            <span class="ident">TempDir::new</span>().<span class="ident">expect</span>(<span class="string">&quot;Unable to create a temporary DB directory&quot;</span>);
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">storage</span> <span class="op">=</span> <span class="ident">open</span>(<span class="ident">db_path</span>.<span class="ident">path</span>(), <span class="ident">DEFAULT_CHAIN_ID</span>.<span class="ident">to_owned</span>());
         <span class="ident">storage</span>
-            .<span class="ident">begin_block</span>(<span class="ident">BlockHash</span>::<span class="ident">default</span>(), <span class="ident">BlockHeight</span>(<span class="number">100</span>))
+            .<span class="ident">begin_block</span>(<span class="ident">BlockHash::default</span>(), <span class="ident">BlockHeight</span>(<span class="number">100</span>))
             .<span class="ident">expect</span>(<span class="string">&quot;begin_block failed&quot;</span>);
         <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span>
-            <span class="ident">Key</span>::<span class="ident">parse</span>(<span class="string">&quot;key&quot;</span>.<span class="ident">to_owned</span>()).<span class="ident">expect</span>(<span class="string">&quot;cannot parse the key string&quot;</span>);
+            <span class="ident">Key::parse</span>(<span class="string">&quot;key&quot;</span>.<span class="ident">to_owned</span>()).<span class="ident">expect</span>(<span class="string">&quot;cannot parse the key string&quot;</span>);
         <span class="kw">let</span> <span class="ident">value</span>: <span class="ident">u64</span> <span class="op">=</span> <span class="number">1</span>;
-        <span class="kw">let</span> <span class="ident">value_bytes</span> <span class="op">=</span> <span class="ident">types</span>::<span class="ident">encode</span>(<span class="kw-2">&amp;</span><span class="ident">value</span>);
+        <span class="kw">let</span> <span class="ident">value_bytes</span> <span class="op">=</span> <span class="ident">types::encode</span>(<span class="kw-2">&amp;</span><span class="ident">value</span>);
 
         <span class="comment">// insert and commit</span>
         <span class="ident">storage</span>
@@ -429,31 +428,31 @@
             .<span class="ident">expect</span>(<span class="string">&quot;loading the last state failed&quot;</span>);
         <span class="kw">let</span> (<span class="ident">loaded_root</span>, <span class="ident">height</span>) <span class="op">=</span>
             <span class="ident">storage</span>.<span class="ident">get_state</span>().<span class="ident">expect</span>(<span class="string">&quot;no block exists&quot;</span>);
-        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">loaded_root</span>.<span class="number">0</span>, <span class="ident">root</span>);
-        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">height</span>, <span class="number">100</span>);
-        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">storage</span>.<span class="ident">get_block_hash</span>().<span class="number">0</span>, <span class="ident">hash</span>);
-        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">storage</span>.<span class="ident">address_gen</span>, <span class="ident">address_gen</span>);
+        <span class="macro">assert_eq!</span>(<span class="ident">loaded_root</span>.<span class="number">0</span>, <span class="ident">root</span>);
+        <span class="macro">assert_eq!</span>(<span class="ident">height</span>, <span class="number">100</span>);
+        <span class="macro">assert_eq!</span>(<span class="ident">storage</span>.<span class="ident">get_block_hash</span>().<span class="number">0</span>, <span class="ident">hash</span>);
+        <span class="macro">assert_eq!</span>(<span class="ident">storage</span>.<span class="ident">address_gen</span>, <span class="ident">address_gen</span>);
         <span class="kw">let</span> (<span class="ident">val</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">storage</span>.<span class="ident">read</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>).<span class="ident">expect</span>(<span class="string">&quot;read failed&quot;</span>);
-        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">val</span>.<span class="ident">expect</span>(<span class="string">&quot;no value&quot;</span>), <span class="ident">value_bytes</span>);
+        <span class="macro">assert_eq!</span>(<span class="ident">val</span>.<span class="ident">expect</span>(<span class="string">&quot;no value&quot;</span>), <span class="ident">value_bytes</span>);
     }
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="kw">fn</span> <span class="ident">test_iter</span>() {
         <span class="kw">let</span> <span class="ident">db_path</span> <span class="op">=</span>
-            <span class="ident">TempDir</span>::<span class="ident">new</span>().<span class="ident">expect</span>(<span class="string">&quot;Unable to create a temporary DB directory&quot;</span>);
+            <span class="ident">TempDir::new</span>().<span class="ident">expect</span>(<span class="string">&quot;Unable to create a temporary DB directory&quot;</span>);
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">storage</span> <span class="op">=</span> <span class="ident">open</span>(<span class="ident">db_path</span>.<span class="ident">path</span>(), <span class="ident">DEFAULT_CHAIN_ID</span>.<span class="ident">to_owned</span>());
         <span class="ident">storage</span>
-            .<span class="ident">begin_block</span>(<span class="ident">BlockHash</span>::<span class="ident">default</span>(), <span class="ident">BlockHeight</span>(<span class="number">100</span>))
+            .<span class="ident">begin_block</span>(<span class="ident">BlockHash::default</span>(), <span class="ident">BlockHeight</span>(<span class="number">100</span>))
             .<span class="ident">expect</span>(<span class="string">&quot;begin_block failed&quot;</span>);
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">expected</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="ident">new</span>();
-        <span class="kw">let</span> <span class="ident">prefix</span> <span class="op">=</span> <span class="ident">Key</span>::<span class="ident">parse</span>(<span class="string">&quot;prefix&quot;</span>.<span class="ident">to_owned</span>())
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">expected</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
+        <span class="kw">let</span> <span class="ident">prefix</span> <span class="op">=</span> <span class="ident">Key::parse</span>(<span class="string">&quot;prefix&quot;</span>.<span class="ident">to_owned</span>())
             .<span class="ident">expect</span>(<span class="string">&quot;cannot parse the key string&quot;</span>);
         <span class="kw">for</span> <span class="ident">i</span> <span class="kw">in</span> (<span class="number">0</span>..<span class="number">9</span>).<span class="ident">rev</span>() {
             <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">prefix</span>
-                .<span class="ident">push</span>(<span class="kw-2">&amp;</span><span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">i</span>))
+                .<span class="ident">push</span>(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">i</span>))
                 .<span class="ident">expect</span>(<span class="string">&quot;cannot push the key segment&quot;</span>);
-            <span class="kw">let</span> <span class="ident">value_bytes</span> <span class="op">=</span> <span class="ident">types</span>::<span class="ident">encode</span>(<span class="kw-2">&amp;</span>(<span class="ident">i</span> <span class="kw">as</span> <span class="ident">u64</span>));
+            <span class="kw">let</span> <span class="ident">value_bytes</span> <span class="op">=</span> <span class="ident">types::encode</span>(<span class="kw-2">&amp;</span>(<span class="ident">i</span> <span class="kw">as</span> <span class="ident">u64</span>));
             <span class="comment">// insert</span>
             <span class="ident">storage</span>
                 .<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>, <span class="ident">value_bytes</span>.<span class="ident">clone</span>())
@@ -463,16 +462,16 @@
         <span class="ident">storage</span>.<span class="ident">commit</span>().<span class="ident">expect</span>(<span class="string">&quot;commit failed&quot;</span>);
 
         <span class="kw">let</span> (<span class="ident">iter</span>, <span class="ident">gas</span>) <span class="op">=</span> <span class="ident">storage</span>.<span class="ident">iter_prefix</span>(<span class="kw-2">&amp;</span><span class="ident">prefix</span>);
-        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">gas</span>, <span class="ident">prefix</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="ident">u64</span>);
+        <span class="macro">assert_eq!</span>(<span class="ident">gas</span>, <span class="ident">prefix</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="ident">u64</span>);
         <span class="kw">for</span> (<span class="ident">k</span>, <span class="ident">v</span>, <span class="ident">gas</span>) <span class="kw">in</span> <span class="ident">iter</span> {
             <span class="kw">match</span> <span class="ident">expected</span>.<span class="ident">pop</span>() {
                 <span class="prelude-val">Some</span>((<span class="ident">expected_key</span>, <span class="ident">expected_val</span>)) <span class="op">=</span><span class="op">&gt;</span> {
-                    <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">k</span>, <span class="ident">expected_key</span>);
-                    <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">v</span>, <span class="ident">expected_val</span>);
+                    <span class="macro">assert_eq!</span>(<span class="ident">k</span>, <span class="ident">expected_key</span>);
+                    <span class="macro">assert_eq!</span>(<span class="ident">v</span>, <span class="ident">expected_val</span>);
                     <span class="kw">let</span> <span class="ident">expected_gas</span> <span class="op">=</span> <span class="ident">expected_key</span>.<span class="ident">len</span>() <span class="op">+</span> <span class="ident">expected_val</span>.<span class="ident">len</span>();
-                    <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">gas</span>, <span class="ident">expected_gas</span> <span class="kw">as</span> <span class="ident">u64</span>);
+                    <span class="macro">assert_eq!</span>(<span class="ident">gas</span>, <span class="ident">expected_gas</span> <span class="kw">as</span> <span class="ident">u64</span>);
                 }
-                <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;read a pair though no expected pair&quot;</span>),
+                <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">panic!</span>(<span class="string">&quot;read a pair though no expected pair&quot;</span>),
             }
         }
     }
@@ -480,20 +479,20 @@
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="kw">fn</span> <span class="ident">test_validity_predicate</span>() {
         <span class="kw">let</span> <span class="ident">db_path</span> <span class="op">=</span>
-            <span class="ident">TempDir</span>::<span class="ident">new</span>().<span class="ident">expect</span>(<span class="string">&quot;Unable to create a temporary DB directory&quot;</span>);
+            <span class="ident">TempDir::new</span>().<span class="ident">expect</span>(<span class="string">&quot;Unable to create a temporary DB directory&quot;</span>);
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">storage</span> <span class="op">=</span> <span class="ident">open</span>(<span class="ident">db_path</span>.<span class="ident">path</span>(), <span class="ident">DEFAULT_CHAIN_ID</span>.<span class="ident">to_owned</span>());
         <span class="ident">storage</span>
-            .<span class="ident">begin_block</span>(<span class="ident">BlockHash</span>::<span class="ident">default</span>(), <span class="ident">BlockHeight</span>(<span class="number">100</span>))
+            .<span class="ident">begin_block</span>(<span class="ident">BlockHash::default</span>(), <span class="ident">BlockHeight</span>(<span class="number">100</span>))
             .<span class="ident">expect</span>(<span class="string">&quot;begin_block failed&quot;</span>);
 
         <span class="kw">let</span> <span class="ident">addr</span> <span class="op">=</span> <span class="ident">storage</span>.<span class="ident">address_gen</span>.<span class="ident">generate_address</span>(<span class="string">&quot;test&quot;</span>.<span class="ident">as_bytes</span>());
-        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Key</span>::<span class="ident">validity_predicate</span>(<span class="kw-2">&amp;</span><span class="ident">addr</span>);
+        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Key::validity_predicate</span>(<span class="kw-2">&amp;</span><span class="ident">addr</span>);
 
         <span class="comment">// not exist</span>
         <span class="kw">let</span> (<span class="ident">vp</span>, <span class="ident">gas</span>) <span class="op">=</span>
             <span class="ident">storage</span>.<span class="ident">validity_predicate</span>(<span class="kw-2">&amp;</span><span class="ident">addr</span>).<span class="ident">expect</span>(<span class="string">&quot;VP load failed&quot;</span>);
-        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">vp</span>, <span class="prelude-val">None</span>);
-        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">gas</span>, <span class="ident">key</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="ident">u64</span>);
+        <span class="macro">assert_eq!</span>(<span class="ident">vp</span>, <span class="prelude-val">None</span>);
+        <span class="macro">assert_eq!</span>(<span class="ident">gas</span>, <span class="ident">key</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="ident">u64</span>);
 
         <span class="comment">// insert</span>
         <span class="kw">let</span> <span class="ident">vp1</span> <span class="op">=</span> <span class="string">&quot;vp1&quot;</span>.<span class="ident">as_bytes</span>().<span class="ident">to_vec</span>();
@@ -502,10 +501,9 @@
         <span class="comment">// check</span>
         <span class="kw">let</span> (<span class="ident">vp</span>, <span class="ident">gas</span>) <span class="op">=</span>
             <span class="ident">storage</span>.<span class="ident">validity_predicate</span>(<span class="kw-2">&amp;</span><span class="ident">addr</span>).<span class="ident">expect</span>(<span class="string">&quot;VP load failed&quot;</span>);
-        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">vp</span>.<span class="ident">expect</span>(<span class="string">&quot;no VP&quot;</span>), <span class="ident">vp1</span>);
-        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">gas</span>, (<span class="ident">key</span>.<span class="ident">len</span>() <span class="op">+</span> <span class="ident">vp1</span>.<span class="ident">len</span>()) <span class="kw">as</span> <span class="ident">u64</span>);
+        <span class="macro">assert_eq!</span>(<span class="ident">vp</span>.<span class="ident">expect</span>(<span class="string">&quot;no VP&quot;</span>), <span class="ident">vp1</span>);
+        <span class="macro">assert_eq!</span>(<span class="ident">gas</span>, (<span class="ident">key</span>.<span class="ident">len</span>() <span class="op">+</span> <span class="ident">vp1</span>.<span class="ident">len</span>()) <span class="kw">as</span> <span class="ident">u64</span>);
     }
 }
 </pre></div>
-</section><section id="search" class="content hidden"></section><section class="footer"></section><div id="rustdoc-vars" data-root-path="../../../../../" data-current-crate="anoma_apps" data-search-js="../../../../../search-index.js"></div>
-    <script src="../../../../../main.js"></script><script src="../../../../../source-script.js"></script><script src="../../../../../source-files.js"></script></body></html>
+</section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../../../../" data-current-crate="anoma_apps" data-search-index-js="../../../../../search-index.js" data-search-js="../../../../../search.js"></div><script src="../../../../../main.js"></script><script src="../../../../../source-script.js"></script><script src="../../../../../source-files.js"></script></body></html>

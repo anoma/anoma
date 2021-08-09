@@ -1,7 +1,6 @@
 <!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="SIMD and vendor intrinsics module."><meta name="keywords" content="rust, rustlang, rust-lang, arch"><title>anoma_apps::std::arch - Rust</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script id="default-settings"></script><script src="../../../storage.js"></script><script src="../../../crates.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../../favicon.svg">
 <link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png">
-<link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc mod"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../anoma_apps/index.html'><div class='logo-container rust-logo'><img src='../../../rust-logo.png' alt='logo'></div></a><p class="location">Module arch</p><div class="sidebar-elems"><div class="block items"><ul><li><a href="#modules">Modules</a></li></ul></div><p class="location"><a href="../../index.html">anoma_apps</a>::<wbr><a href="../index.html">std</a></p><div id="sidebar-vars" data-name="arch" data-ty="mod" data-relpath="../"></div><script defer src="../sidebar-items.js"></script></div></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../../../brush.svg" width="18" height="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><script src="../../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" class="help-button">?</button>
-                <a id="settings-menu" href="../../../settings.html"><img src="../../../wheel.svg" width="18" height="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><h1 class="fqn"><span class="in-band">Module <a href="../../index.html">anoma_apps</a>::<wbr><a href="../index.html">std</a>::<wbr><a class="mod" href="">arch</a></span><span class="out-of-band"><span class="since" title="Stable since Rust version 1.27.0">1.27.0</span><span id="render-detail"><a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">[<span class="inner">&#x2212;</span>]</a></span><a class="srclink" href="https://doc.rust-lang.org/nightly/src/core/up/up/stdarch/crates/core_arch/src/mod.rs.html#14-222" title="goto source code">[src]</a></span></h1><div class="docblock"><p>SIMD and vendor intrinsics module.</p>
+<link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc mod"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../anoma_apps/index.html'><div class='logo-container rust-logo'><img src='../../../rust-logo.png' alt='logo'></div></a><h2 class="location">Module arch</h2><div class="sidebar-elems"><div class="block items"><ul><li><a href="#modules">Modules</a></li></ul></div><div id="sidebar-vars" data-name="arch" data-ty="mod" data-relpath="./"></div><script defer src="./sidebar-items.js"></script></div></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img src="../../../brush.svg" width="18" height="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../../settings.html" title="settings"><img src="../../../wheel.svg" width="18" height="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><h1 class="fqn"><span class="in-band">Module <a href="../../index.html">anoma_apps</a>::<wbr><a href="../index.html">std</a>::<wbr><a class="mod" href="#">arch</a><button id="copy-path" onclick="copy_path(this)" title="copy path"><img src="../../../clipboard.svg" width="19" height="18" alt="Copy item import" title="Copy item import to clipboard"></button></span><span class="out-of-band"><span class="since" title="Stable since Rust version 1.27.0">1.27.0</span><span id="render-detail"><a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">[<span class="inner">&#x2212;</span>]</a></span><a class="srclink" href="https://doc.rust-lang.org/1.54.0/src/core/up/up/stdarch/crates/core_arch/src/mod.rs.html#13-214" title="goto source code">[src]</a></span></h1><details class="rustdoc-toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><p>SIMD and vendor intrinsics module.</p>
 <p>This module is intended to be the gateway to architecture-specific
 intrinsic functions, typically related to SIMD (but not always!). Each
 architecture that Rust compiles to may contain a submodule here, which
@@ -53,9 +52,9 @@ available, and can be used like so:</p>
 )]</span>
 <span class="kw">fn</span> <span class="ident">foo</span>() {
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;x86&quot;</span>)]</span>
-    <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">arch</span>::<span class="ident">x86</span>::<span class="ident">_mm256_add_epi64</span>;
+    <span class="kw">use</span> <span class="ident">std::arch::x86::_mm256_add_epi64</span>;
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;x86_64&quot;</span>)]</span>
-    <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">arch</span>::<span class="ident">x86_64</span>::<span class="ident">_mm256_add_epi64</span>;
+    <span class="kw">use</span> <span class="ident">std::arch::x86_64::_mm256_add_epi64</span>;
 
     <span class="kw">unsafe</span> {
         <span class="ident">_mm256_add_epi64</span>(...);
@@ -91,7 +90,7 @@ We can do that in a manner like:</p>
 <span class="kw">fn</span> <span class="ident">foo</span>() {
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;x86&quot;</span>, <span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;x86_64&quot;</span>))]</span>
     {
-        <span class="kw">if</span> <span class="macro">is_x86_feature_detected</span><span class="macro">!</span>(<span class="string">&quot;avx2&quot;</span>) {
+        <span class="kw">if</span> <span class="macro">is_x86_feature_detected!</span>(<span class="string">&quot;avx2&quot;</span>) {
             <span class="kw">return</span> <span class="kw">unsafe</span> { <span class="ident">foo_avx2</span>() };
         }
     }
@@ -103,9 +102,9 @@ We can do that in a manner like:</p>
 <span class="attribute">#[<span class="ident">target_feature</span>(<span class="ident">enable</span> <span class="op">=</span> <span class="string">&quot;avx2&quot;</span>)]</span>
 <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">foo_avx2</span>() {
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;x86&quot;</span>)]</span>
-    <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">arch</span>::<span class="ident">x86</span>::<span class="ident">_mm256_add_epi64</span>;
+    <span class="kw">use</span> <span class="ident">std::arch::x86::_mm256_add_epi64</span>;
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;x86_64&quot;</span>)]</span>
-    <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">arch</span>::<span class="ident">x86_64</span>::<span class="ident">_mm256_add_epi64</span>;
+    <span class="kw">use</span> <span class="ident">std::arch::x86_64::_mm256_add_epi64</span>;
 
     <span class="ident">_mm256_add_epi64</span>(...);
 }</pre></div>
@@ -171,7 +170,7 @@ AVX2 and also for the default platform.</p>
 <span class="kw">fn</span> <span class="ident">main</span>() {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">dst</span> <span class="op">=</span> [<span class="number">0</span>];
     <span class="ident">add_quickly</span>(<span class="kw-2">&amp;</span>[<span class="number">1</span>], <span class="kw-2">&amp;</span>[<span class="number">2</span>], <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">dst</span>);
-    <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">dst</span>[<span class="number">0</span>], <span class="number">3</span>);
+    <span class="macro">assert_eq!</span>(<span class="ident">dst</span>[<span class="number">0</span>], <span class="number">3</span>);
 }
 
 <span class="kw">fn</span> <span class="ident">add_quickly</span>(<span class="ident">a</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>], <span class="ident">b</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>], <span class="ident">c</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> [<span class="ident">u8</span>]) {
@@ -179,7 +178,7 @@ AVX2 and also for the default platform.</p>
     {
         <span class="comment">// Note that this `unsafe` block is safe because we&#39;re testing</span>
         <span class="comment">// that the `avx2` feature is indeed available on our CPU.</span>
-        <span class="kw">if</span> <span class="macro">is_x86_feature_detected</span><span class="macro">!</span>(<span class="string">&quot;avx2&quot;</span>) {
+        <span class="kw">if</span> <span class="macro">is_x86_feature_detected!</span>(<span class="string">&quot;avx2&quot;</span>) {
             <span class="kw">return</span> <span class="kw">unsafe</span> { <span class="ident">add_quickly_avx2</span>(<span class="ident">a</span>, <span class="ident">b</span>, <span class="ident">c</span>) };
         }
     }
@@ -205,23 +204,23 @@ we’ll be using SSE4.1 features to implement hex encoding.</p>
 <span class="kw">fn</span> <span class="ident">main</span>() {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">dst</span> <span class="op">=</span> [<span class="number">0</span>; <span class="number">32</span>];
     <span class="ident">hex_encode</span>(<span class="string">b&quot;\x01\x02\x03&quot;</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">dst</span>);
-    <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="kw-2">&amp;</span><span class="ident">dst</span>[..<span class="number">6</span>], <span class="string">b&quot;010203&quot;</span>);
+    <span class="macro">assert_eq!</span>(<span class="kw-2">&amp;</span><span class="ident">dst</span>[..<span class="number">6</span>], <span class="string">b&quot;010203&quot;</span>);
 
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">src</span> <span class="op">=</span> [<span class="number">0</span>; <span class="number">16</span>];
     <span class="kw">for</span> <span class="ident">i</span> <span class="kw">in</span> <span class="number">0</span>..<span class="number">16</span> {
         <span class="ident">src</span>[<span class="ident">i</span>] <span class="op">=</span> (<span class="ident">i</span> <span class="op">+</span> <span class="number">1</span>) <span class="kw">as</span> <span class="ident">u8</span>;
     }
     <span class="ident">hex_encode</span>(<span class="kw-2">&amp;</span><span class="ident">src</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">dst</span>);
-    <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="kw-2">&amp;</span><span class="ident">dst</span>, <span class="string">b&quot;0102030405060708090a0b0c0d0e0f10&quot;</span>);
+    <span class="macro">assert_eq!</span>(<span class="kw-2">&amp;</span><span class="ident">dst</span>, <span class="string">b&quot;0102030405060708090a0b0c0d0e0f10&quot;</span>);
 }
 
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">hex_encode</span>(<span class="ident">src</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>], <span class="ident">dst</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> [<span class="ident">u8</span>]) {
     <span class="kw">let</span> <span class="ident">len</span> <span class="op">=</span> <span class="ident">src</span>.<span class="ident">len</span>().<span class="ident">checked_mul</span>(<span class="number">2</span>).<span class="ident">unwrap</span>();
-    <span class="macro">assert</span><span class="macro">!</span>(<span class="ident">dst</span>.<span class="ident">len</span>() <span class="op">&gt;</span><span class="op">=</span> <span class="ident">len</span>);
+    <span class="macro">assert!</span>(<span class="ident">dst</span>.<span class="ident">len</span>() <span class="op">&gt;</span><span class="op">=</span> <span class="ident">len</span>);
 
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;x86&quot;</span>, <span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;x86_64&quot;</span>))]</span>
     {
-        <span class="kw">if</span> <span class="macro">is_x86_feature_detected</span><span class="macro">!</span>(<span class="string">&quot;sse4.1&quot;</span>) {
+        <span class="kw">if</span> <span class="macro">is_x86_feature_detected!</span>(<span class="string">&quot;sse4.1&quot;</span>) {
             <span class="kw">return</span> <span class="kw">unsafe</span> { <span class="ident">hex_encode_sse41</span>(<span class="ident">src</span>, <span class="ident">dst</span>) };
         }
     }
@@ -235,9 +234,9 @@ we’ll be using SSE4.1 features to implement hex encoding.</p>
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;x86&quot;</span>, <span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;x86_64&quot;</span>))]</span>
 <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">hex_encode_sse41</span>(<span class="kw-2">mut</span> <span class="ident">src</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>], <span class="ident">dst</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> [<span class="ident">u8</span>]) {
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;x86&quot;</span>)]</span>
-    <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">arch</span>::<span class="ident">x86</span>::<span class="kw-2">*</span>;
+    <span class="kw">use</span> <span class="ident">std::arch::x86</span>::<span class="kw-2">*</span>;
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;x86_64&quot;</span>)]</span>
-    <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">arch</span>::<span class="ident">x86_64</span>::<span class="kw-2">*</span>;
+    <span class="kw">use</span> <span class="ident">std::arch::x86_64</span>::<span class="kw-2">*</span>;
 
     <span class="kw">let</span> <span class="ident">ascii_zero</span> <span class="op">=</span> <span class="ident">_mm_set1_epi8</span>(<span class="string">b&#39;0&#39;</span> <span class="kw">as</span> <span class="ident">i8</span>);
     <span class="kw">let</span> <span class="ident">nines</span> <span class="op">=</span> <span class="ident">_mm_set1_epi8</span>(<span class="number">9</span>);
@@ -293,7 +292,6 @@ we’ll be using SSE4.1 features to implement hex encoding.</p>
         <span class="ident">slots</span>[<span class="number">1</span>] <span class="op">=</span> <span class="ident">hex</span>(<span class="kw-2">*</span><span class="ident">byte</span> <span class="op">&amp;</span> <span class="number">0xf</span>);
     }
 }</pre></div>
-</div><h2 id="modules" class="section-header"><a href="#modules">Modules</a></h2>
+</div></details><h2 id="modules" class="section-header"><a href="#modules">Modules</a></h2>
 <table><tr class="module-item"><td><a class="mod" href="x86_64/index.html" title="anoma_apps::std::arch::x86_64 mod">x86_64</a></td><td class="docblock-short"><span class="stab portability" title="This is supported on x86-64 only">x86-64</span><p>Platform-specific intrinsics for the <code>x86_64</code> platform.</p>
-</td></tr></table></section><section id="search" class="content hidden"></section><section class="footer"></section><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="anoma_apps" data-search-js="../../../search-index.js"></div>
-    <script src="../../../main.js"></script></body></html>
+</td></tr></table></section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="anoma_apps" data-search-index-js="../../../search-index.js" data-search-js="../../../search.js"></div><script src="../../../main.js"></script></body></html>

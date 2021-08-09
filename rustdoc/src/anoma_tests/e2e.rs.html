@@ -1,7 +1,6 @@
 <!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `tests/src/e2e.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>e2e.rs - source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script id="default-settings"></script><script src="../../storage.js"></script><script src="../../crates.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../favicon.svg">
 <link rel="alternate icon" type="image/png" href="../../favicon-16x16.png">
-<link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../anoma_tests/index.html'><div class='logo-container rust-logo'><img src='../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../../brush.svg" width="18" height="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><script src="../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" class="help-button">?</button>
-                <a id="settings-menu" href="../../settings.html"><img src="../../wheel.svg" width="18" height="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">  1</span>
+<link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../anoma_tests/index.html'><div class='logo-container rust-logo'><img src='../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img src="../../brush.svg" width="18" height="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../settings.html" title="settings"><img src="../../wheel.svg" width="18" height="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">  1</span>
 <span id="2">  2</span>
 <span id="3">  3</span>
 <span id="4">  4</span>
@@ -521,39 +520,39 @@
 <span id="518">518</span>
 <span id="519">519</span>
 <span id="520">520</span>
-</pre><div class="example-wrap"><pre class="rust ">
+</pre><pre class="rust">
 <span class="doccomment">//! End-to-end tests for Anoma binaries</span>
 
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
 <span class="kw">mod</span> <span class="ident">tests</span> {
-    <span class="kw">use</span> <span class="ident">core</span>::<span class="ident">time</span>;
-    <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">path</span>::<span class="ident">PathBuf</span>;
-    <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">process</span>::<span class="ident">Command</span>;
+    <span class="kw">use</span> <span class="ident">core::time</span>;
+    <span class="kw">use</span> <span class="ident">std::path::PathBuf</span>;
+    <span class="kw">use</span> <span class="ident">std::process::Command</span>;
     <span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">fs</span>, <span class="ident">thread</span>};
 
-    <span class="kw">use</span> <span class="ident">anoma_apps</span>::<span class="ident">config</span>::{<span class="ident">Config</span>, <span class="ident">IntentGossiper</span>};
-    <span class="kw">use</span> <span class="ident">assert_cmd</span>::<span class="ident">assert</span>::<span class="ident">OutputAssertExt</span>;
-    <span class="kw">use</span> <span class="ident">assert_cmd</span>::<span class="ident">cargo</span>::<span class="ident">CommandCargoExt</span>;
-    <span class="kw">use</span> <span class="ident">color_eyre</span>::<span class="ident">eyre</span>::<span class="prelude-ty">Result</span>;
+    <span class="kw">use</span> <span class="ident">anoma_apps::config</span>::{<span class="ident">Config</span>, <span class="ident">IntentGossiper</span>};
+    <span class="kw">use</span> <span class="ident">assert_cmd::assert::OutputAssertExt</span>;
+    <span class="kw">use</span> <span class="ident">assert_cmd::cargo::CommandCargoExt</span>;
+    <span class="kw">use</span> <span class="ident">color_eyre::eyre::Result</span>;
     <span class="kw">use</span> <span class="ident">constants</span>::<span class="kw-2">*</span>;
-    <span class="kw">use</span> <span class="ident">eyre</span>::<span class="ident">eyre</span>;
-    <span class="kw">use</span> <span class="ident">libp2p</span>::<span class="ident">identity</span>::<span class="ident">Keypair</span>;
-    <span class="kw">use</span> <span class="ident">libp2p</span>::<span class="ident">PeerId</span>;
-    <span class="kw">use</span> <span class="ident">rexpect</span>::<span class="ident">process</span>::<span class="ident">wait</span>::<span class="ident">WaitStatus</span>;
-    <span class="kw">use</span> <span class="ident">rexpect</span>::<span class="ident">session</span>::<span class="ident">spawn_command</span>;
-    <span class="kw">use</span> <span class="ident">tempfile</span>::<span class="ident">tempdir</span>;
+    <span class="kw">use</span> <span class="ident">eyre::eyre</span>;
+    <span class="kw">use</span> <span class="ident">libp2p::identity::Keypair</span>;
+    <span class="kw">use</span> <span class="ident">libp2p::PeerId</span>;
+    <span class="kw">use</span> <span class="ident">rexpect::process::wait::WaitStatus</span>;
+    <span class="kw">use</span> <span class="ident">rexpect::session::spawn_command</span>;
+    <span class="kw">use</span> <span class="ident">tempfile::tempdir</span>;
 
     <span class="doccomment">/// A helper that should be ran on start of every e2e test case.</span>
     <span class="kw">fn</span> <span class="ident">setup</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">PathBuf</span> {
-        <span class="kw">let</span> <span class="ident">working_dir</span> <span class="op">=</span> <span class="ident">fs</span>::<span class="ident">canonicalize</span>(<span class="string">&quot;..&quot;</span>).<span class="ident">unwrap</span>();
+        <span class="kw">let</span> <span class="ident">working_dir</span> <span class="op">=</span> <span class="ident">fs::canonicalize</span>(<span class="string">&quot;..&quot;</span>).<span class="ident">unwrap</span>();
         <span class="comment">// Build the workspace</span>
-        <span class="ident">Command</span>::<span class="ident">new</span>(<span class="string">&quot;cargo&quot;</span>)
+        <span class="ident">Command::new</span>(<span class="string">&quot;cargo&quot;</span>)
             .<span class="ident">arg</span>(<span class="string">&quot;build&quot;</span>)
             .<span class="ident">current_dir</span>(<span class="kw-2">&amp;</span><span class="ident">working_dir</span>)
             .<span class="ident">output</span>()
             .<span class="ident">unwrap</span>();
         <span class="comment">// Check that tendermint is on $PATH</span>
-        <span class="ident">Command</span>::<span class="ident">new</span>(<span class="string">&quot;which&quot;</span>).<span class="ident">arg</span>(<span class="string">&quot;tendermint&quot;</span>).<span class="ident">assert</span>().<span class="ident">success</span>();
+        <span class="ident">Command::new</span>(<span class="string">&quot;which&quot;</span>).<span class="ident">arg</span>(<span class="string">&quot;tendermint&quot;</span>).<span class="ident">assert</span>().<span class="ident">success</span>();
         <span class="ident">working_dir</span>
     }
 
@@ -565,35 +564,35 @@
 
         <span class="kw">let</span> <span class="ident">base_dir</span> <span class="op">=</span> <span class="ident">tempdir</span>().<span class="ident">unwrap</span>();
 
-        <span class="kw">let</span> <span class="ident">cmd_combinations</span> <span class="op">=</span> <span class="macro">vec</span><span class="macro">!</span>[
-            (<span class="string">&quot;anoma&quot;</span>, <span class="macro">vec</span><span class="macro">!</span>[<span class="string">&quot;ledger&quot;</span>]),
-            (<span class="string">&quot;anoma&quot;</span>, <span class="macro">vec</span><span class="macro">!</span>[<span class="string">&quot;ledger&quot;</span>, <span class="string">&quot;run&quot;</span>]),
-            (<span class="string">&quot;anoma&quot;</span>, <span class="macro">vec</span><span class="macro">!</span>[<span class="string">&quot;node&quot;</span>, <span class="string">&quot;ledger&quot;</span>]),
-            (<span class="string">&quot;anoma&quot;</span>, <span class="macro">vec</span><span class="macro">!</span>[<span class="string">&quot;node&quot;</span>, <span class="string">&quot;ledger&quot;</span>, <span class="string">&quot;run&quot;</span>]),
-            (<span class="string">&quot;anoman&quot;</span>, <span class="macro">vec</span><span class="macro">!</span>[<span class="string">&quot;ledger&quot;</span>]),
-            (<span class="string">&quot;anoman&quot;</span>, <span class="macro">vec</span><span class="macro">!</span>[<span class="string">&quot;ledger&quot;</span>, <span class="string">&quot;run&quot;</span>]),
+        <span class="kw">let</span> <span class="ident">cmd_combinations</span> <span class="op">=</span> <span class="macro">vec!</span>[
+            (<span class="string">&quot;anoma&quot;</span>, <span class="macro">vec!</span>[<span class="string">&quot;ledger&quot;</span>]),
+            (<span class="string">&quot;anoma&quot;</span>, <span class="macro">vec!</span>[<span class="string">&quot;ledger&quot;</span>, <span class="string">&quot;run&quot;</span>]),
+            (<span class="string">&quot;anoma&quot;</span>, <span class="macro">vec!</span>[<span class="string">&quot;node&quot;</span>, <span class="string">&quot;ledger&quot;</span>]),
+            (<span class="string">&quot;anoma&quot;</span>, <span class="macro">vec!</span>[<span class="string">&quot;node&quot;</span>, <span class="string">&quot;ledger&quot;</span>, <span class="string">&quot;run&quot;</span>]),
+            (<span class="string">&quot;anoman&quot;</span>, <span class="macro">vec!</span>[<span class="string">&quot;ledger&quot;</span>]),
+            (<span class="string">&quot;anoman&quot;</span>, <span class="macro">vec!</span>[<span class="string">&quot;ledger&quot;</span>, <span class="string">&quot;run&quot;</span>]),
         ];
 
         <span class="comment">// Start the ledger</span>
         <span class="kw">for</span> (<span class="ident">cmd_name</span>, <span class="ident">args</span>) <span class="kw">in</span> <span class="ident">cmd_combinations</span> {
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">cmd</span> <span class="op">=</span> <span class="ident">Command</span>::<span class="ident">cargo_bin</span>(<span class="ident">cmd_name</span>)<span class="question-mark">?</span>;
+            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">cmd</span> <span class="op">=</span> <span class="ident">Command::cargo_bin</span>(<span class="ident">cmd_name</span>)<span class="question-mark">?</span>;
 
             <span class="ident">cmd</span>.<span class="ident">current_dir</span>(<span class="kw-2">&amp;</span><span class="ident">dir</span>)
                 .<span class="ident">env</span>(<span class="string">&quot;ANOMA_LOG&quot;</span>, <span class="string">&quot;debug&quot;</span>)
                 .<span class="ident">args</span>(<span class="kw-2">&amp;</span>[<span class="string">&quot;--base-dir&quot;</span>, <span class="kw-2">&amp;</span><span class="ident">base_dir</span>.<span class="ident">path</span>().<span class="ident">to_string_lossy</span>()])
                 .<span class="ident">args</span>(<span class="ident">args</span>);
 
-            <span class="kw">let</span> <span class="ident">cmd_str</span> <span class="op">=</span> <span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="ident">cmd</span>);
+            <span class="kw">let</span> <span class="ident">cmd_str</span> <span class="op">=</span> <span class="macro">format!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="ident">cmd</span>);
 
             <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">session</span> <span class="op">=</span>
                 <span class="ident">spawn_command</span>(<span class="ident">cmd</span>, <span class="prelude-val">Some</span>(<span class="number">20_000</span>)).<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> {
-                    <span class="macro">eyre</span><span class="macro">!</span>(<span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;in command: {}\n\nReason: {}&quot;</span>, <span class="ident">cmd_str</span>, <span class="ident">e</span>))
+                    <span class="macro">eyre!</span>(<span class="macro">format!</span>(<span class="string">&quot;in command: {}\n\nReason: {}&quot;</span>, <span class="ident">cmd_str</span>, <span class="ident">e</span>))
                 })<span class="question-mark">?</span>;
 
             <span class="ident">session</span>
                 .<span class="ident">exp_string</span>(<span class="string">&quot;Anoma ledger node started&quot;</span>)
                 .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> {
-                    <span class="macro">eyre</span><span class="macro">!</span>(<span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;in command: {}\n\nReason: {}&quot;</span>, <span class="ident">cmd_str</span>, <span class="ident">e</span>))
+                    <span class="macro">eyre!</span>(<span class="macro">format!</span>(<span class="string">&quot;in command: {}\n\nReason: {}&quot;</span>, <span class="ident">cmd_str</span>, <span class="ident">e</span>))
                 })<span class="question-mark">?</span>;
         }
 
@@ -613,23 +612,23 @@
         <span class="kw">let</span> <span class="ident">base_dir_arg</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">base_dir</span>.<span class="ident">path</span>().<span class="ident">to_string_lossy</span>();
 
         <span class="comment">// 1. Run the ledger node</span>
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">cmd</span> <span class="op">=</span> <span class="ident">Command</span>::<span class="ident">cargo_bin</span>(<span class="string">&quot;anoma&quot;</span>)<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">cmd</span> <span class="op">=</span> <span class="ident">Command::cargo_bin</span>(<span class="string">&quot;anoma&quot;</span>)<span class="question-mark">?</span>;
         <span class="ident">cmd</span>.<span class="ident">current_dir</span>(<span class="kw-2">&amp;</span><span class="ident">dir</span>).<span class="ident">env</span>(<span class="string">&quot;ANOMA_LOG&quot;</span>, <span class="string">&quot;debug&quot;</span>).<span class="ident">args</span>(<span class="kw-2">&amp;</span>[
             <span class="string">&quot;--base-dir&quot;</span>,
             <span class="ident">base_dir_arg</span>,
             <span class="string">&quot;ledger&quot;</span>,
         ]);
-        <span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot;Running {:?}&quot;</span>, <span class="ident">cmd</span>);
+        <span class="macro">println!</span>(<span class="string">&quot;Running {:?}&quot;</span>, <span class="ident">cmd</span>);
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">session</span> <span class="op">=</span> <span class="ident">spawn_command</span>(<span class="ident">cmd</span>, <span class="prelude-val">Some</span>(<span class="number">20_000</span>))
-            .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="macro">eyre</span><span class="macro">!</span>(<span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">e</span>)))<span class="question-mark">?</span>;
+            .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="macro">eyre!</span>(<span class="macro">format!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">e</span>)))<span class="question-mark">?</span>;
 
         <span class="ident">session</span>
             .<span class="ident">exp_string</span>(<span class="string">&quot;Anoma ledger node started&quot;</span>)
-            .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="macro">eyre</span><span class="macro">!</span>(<span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">e</span>)))<span class="question-mark">?</span>;
+            .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="macro">eyre!</span>(<span class="macro">format!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">e</span>)))<span class="question-mark">?</span>;
 
         <span class="comment">// 2. Kill the tendermint node</span>
-        <span class="ident">std</span>::<span class="ident">thread</span>::<span class="ident">sleep</span>(<span class="ident">std</span>::<span class="ident">time</span>::<span class="ident">Duration</span>::<span class="ident">from_secs</span>(<span class="number">1</span>));
-        <span class="ident">Command</span>::<span class="ident">new</span>(<span class="string">&quot;pkill&quot;</span>)
+        <span class="ident">std::thread::sleep</span>(<span class="ident">std::time::Duration::from_secs</span>(<span class="number">1</span>));
+        <span class="ident">Command::new</span>(<span class="string">&quot;pkill&quot;</span>)
             .<span class="ident">args</span>(<span class="kw-2">&amp;</span>[<span class="string">&quot;tendermint&quot;</span>])
             .<span class="ident">spawn</span>()
             .<span class="ident">expect</span>(<span class="string">&quot;Test failed&quot;</span>)
@@ -639,12 +638,12 @@
         <span class="comment">// 3. Check that anoma detects that the tendermint node is dead</span>
         <span class="ident">session</span>
             .<span class="ident">exp_string</span>(<span class="string">&quot;Tendermint node shut down unexpectedly.&quot;</span>)
-            .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="macro">eyre</span><span class="macro">!</span>(<span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">e</span>)))<span class="question-mark">?</span>;
+            .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="macro">eyre!</span>(<span class="macro">format!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">e</span>)))<span class="question-mark">?</span>;
 
         <span class="comment">// 4. Check that the ledger node shuts down</span>
         <span class="ident">session</span>
             .<span class="ident">exp_string</span>(<span class="string">&quot;Shutting down Anoma node&quot;</span>)
-            .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="macro">eyre</span><span class="macro">!</span>(<span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">e</span>)))<span class="question-mark">?</span>;
+            .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="macro">eyre!</span>(<span class="macro">format!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">e</span>)))<span class="question-mark">?</span>;
 
         <span class="prelude-val">Ok</span>(())
     }
@@ -664,62 +663,62 @@
         <span class="kw">let</span> <span class="ident">base_dir_arg</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">base_dir</span>.<span class="ident">path</span>().<span class="ident">to_string_lossy</span>();
 
         <span class="comment">// 1. Run the ledger node</span>
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">cmd</span> <span class="op">=</span> <span class="ident">Command</span>::<span class="ident">cargo_bin</span>(<span class="string">&quot;anoma&quot;</span>)<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">cmd</span> <span class="op">=</span> <span class="ident">Command::cargo_bin</span>(<span class="string">&quot;anoma&quot;</span>)<span class="question-mark">?</span>;
         <span class="ident">cmd</span>.<span class="ident">current_dir</span>(<span class="kw-2">&amp;</span><span class="ident">dir</span>).<span class="ident">env</span>(<span class="string">&quot;ANOMA_LOG&quot;</span>, <span class="string">&quot;debug&quot;</span>).<span class="ident">args</span>(<span class="kw-2">&amp;</span>[
             <span class="string">&quot;--base-dir&quot;</span>,
             <span class="ident">base_dir_arg</span>,
             <span class="string">&quot;ledger&quot;</span>,
         ]);
-        <span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot;Running {:?}&quot;</span>, <span class="ident">cmd</span>);
+        <span class="macro">println!</span>(<span class="string">&quot;Running {:?}&quot;</span>, <span class="ident">cmd</span>);
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">session</span> <span class="op">=</span> <span class="ident">spawn_command</span>(<span class="ident">cmd</span>, <span class="prelude-val">Some</span>(<span class="number">20_000</span>))
-            .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="macro">eyre</span><span class="macro">!</span>(<span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">e</span>)))<span class="question-mark">?</span>;
+            .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="macro">eyre!</span>(<span class="macro">format!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">e</span>)))<span class="question-mark">?</span>;
 
         <span class="ident">session</span>
             .<span class="ident">exp_string</span>(<span class="string">&quot;Anoma ledger node started&quot;</span>)
-            .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="macro">eyre</span><span class="macro">!</span>(<span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">e</span>)))<span class="question-mark">?</span>;
+            .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="macro">eyre!</span>(<span class="macro">format!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">e</span>)))<span class="question-mark">?</span>;
 
         <span class="comment">// There should be no previous state</span>
         <span class="ident">session</span>
             .<span class="ident">exp_string</span>(<span class="string">&quot;No state could be found&quot;</span>)
-            .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="macro">eyre</span><span class="macro">!</span>(<span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">e</span>)))<span class="question-mark">?</span>;
+            .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="macro">eyre!</span>(<span class="macro">format!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">e</span>)))<span class="question-mark">?</span>;
 
         <span class="comment">// Wait to commit a block</span>
         <span class="ident">session</span>
             .<span class="ident">exp_regex</span>(<span class="string">r&quot;Committed block hash.*, height: 2&quot;</span>)
-            .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="macro">eyre</span><span class="macro">!</span>(<span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">e</span>)))<span class="question-mark">?</span>;
+            .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="macro">eyre!</span>(<span class="macro">format!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">e</span>)))<span class="question-mark">?</span>;
         <span class="comment">// 2. Shut it down</span>
         <span class="ident">session</span>
             .<span class="ident">send_control</span>(<span class="string">&#39;c&#39;</span>)
-            .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="macro">eyre</span><span class="macro">!</span>(<span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">e</span>)))<span class="question-mark">?</span>;
+            .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="macro">eyre!</span>(<span class="macro">format!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">e</span>)))<span class="question-mark">?</span>;
         <span class="ident">drop</span>(<span class="ident">session</span>);
 
         <span class="comment">// 3. Run the ledger again, it should load its previous state</span>
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">cmd</span> <span class="op">=</span> <span class="ident">Command</span>::<span class="ident">cargo_bin</span>(<span class="string">&quot;anoma&quot;</span>)<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">cmd</span> <span class="op">=</span> <span class="ident">Command::cargo_bin</span>(<span class="string">&quot;anoma&quot;</span>)<span class="question-mark">?</span>;
         <span class="ident">cmd</span>.<span class="ident">current_dir</span>(<span class="kw-2">&amp;</span><span class="ident">dir</span>).<span class="ident">env</span>(<span class="string">&quot;ANOMA_LOG&quot;</span>, <span class="string">&quot;debug&quot;</span>).<span class="ident">args</span>(<span class="kw-2">&amp;</span>[
             <span class="string">&quot;--base-dir&quot;</span>,
             <span class="ident">base_dir_arg</span>,
             <span class="string">&quot;ledger&quot;</span>,
         ]);
-        <span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot;Running {:?}&quot;</span>, <span class="ident">cmd</span>);
+        <span class="macro">println!</span>(<span class="string">&quot;Running {:?}&quot;</span>, <span class="ident">cmd</span>);
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">session</span> <span class="op">=</span> <span class="ident">spawn_command</span>(<span class="ident">cmd</span>, <span class="prelude-val">Some</span>(<span class="number">20_000</span>))
-            .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="macro">eyre</span><span class="macro">!</span>(<span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">e</span>)))<span class="question-mark">?</span>;
+            .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="macro">eyre!</span>(<span class="macro">format!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">e</span>)))<span class="question-mark">?</span>;
 
         <span class="ident">session</span>
             .<span class="ident">exp_string</span>(<span class="string">&quot;Anoma ledger node started&quot;</span>)
-            .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="macro">eyre</span><span class="macro">!</span>(<span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">e</span>)))<span class="question-mark">?</span>;
+            .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="macro">eyre!</span>(<span class="macro">format!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">e</span>)))<span class="question-mark">?</span>;
 
         <span class="comment">// There should be previous state now</span>
         <span class="ident">session</span>
             .<span class="ident">exp_string</span>(<span class="string">&quot;Last state root hash:&quot;</span>)
-            .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="macro">eyre</span><span class="macro">!</span>(<span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">e</span>)))<span class="question-mark">?</span>;
+            .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="macro">eyre!</span>(<span class="macro">format!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">e</span>)))<span class="question-mark">?</span>;
         <span class="comment">// 4. Shut it down</span>
         <span class="ident">session</span>
             .<span class="ident">send_control</span>(<span class="string">&#39;c&#39;</span>)
-            .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="macro">eyre</span><span class="macro">!</span>(<span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">e</span>)))<span class="question-mark">?</span>;
+            .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="macro">eyre!</span>(<span class="macro">format!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">e</span>)))<span class="question-mark">?</span>;
         <span class="ident">drop</span>(<span class="ident">session</span>);
 
         <span class="comment">// 5. Reset the ledger&#39;s state</span>
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">cmd</span> <span class="op">=</span> <span class="ident">Command</span>::<span class="ident">cargo_bin</span>(<span class="string">&quot;anoma&quot;</span>)<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">cmd</span> <span class="op">=</span> <span class="ident">Command::cargo_bin</span>(<span class="string">&quot;anoma&quot;</span>)<span class="question-mark">?</span>;
         <span class="ident">cmd</span>.<span class="ident">current_dir</span>(<span class="kw-2">&amp;</span><span class="ident">dir</span>).<span class="ident">env</span>(<span class="string">&quot;ANOMA_LOG&quot;</span>, <span class="string">&quot;debug&quot;</span>).<span class="ident">args</span>(<span class="kw-2">&amp;</span>[
             <span class="string">&quot;--base-dir&quot;</span>,
             <span class="ident">base_dir_arg</span>,
@@ -729,23 +728,23 @@
         <span class="ident">cmd</span>.<span class="ident">assert</span>().<span class="ident">success</span>();
 
         <span class="comment">// 6. Run the ledger again, it should start from fresh state</span>
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">cmd</span> <span class="op">=</span> <span class="ident">Command</span>::<span class="ident">cargo_bin</span>(<span class="string">&quot;anoma&quot;</span>)<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">cmd</span> <span class="op">=</span> <span class="ident">Command::cargo_bin</span>(<span class="string">&quot;anoma&quot;</span>)<span class="question-mark">?</span>;
         <span class="ident">cmd</span>.<span class="ident">current_dir</span>(<span class="kw-2">&amp;</span><span class="ident">dir</span>).<span class="ident">env</span>(<span class="string">&quot;ANOMA_LOG&quot;</span>, <span class="string">&quot;debug&quot;</span>).<span class="ident">args</span>(<span class="kw-2">&amp;</span>[
             <span class="string">&quot;--base-dir&quot;</span>,
             <span class="kw-2">&amp;</span><span class="ident">base_dir</span>.<span class="ident">path</span>().<span class="ident">to_string_lossy</span>(),
             <span class="string">&quot;ledger&quot;</span>,
         ]);
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">session</span> <span class="op">=</span> <span class="ident">spawn_command</span>(<span class="ident">cmd</span>, <span class="prelude-val">Some</span>(<span class="number">20_000</span>))
-            .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="macro">eyre</span><span class="macro">!</span>(<span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">e</span>)))<span class="question-mark">?</span>;
+            .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="macro">eyre!</span>(<span class="macro">format!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">e</span>)))<span class="question-mark">?</span>;
 
         <span class="ident">session</span>
             .<span class="ident">exp_string</span>(<span class="string">&quot;Anoma ledger node started&quot;</span>)
-            .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="macro">eyre</span><span class="macro">!</span>(<span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">e</span>)))<span class="question-mark">?</span>;
+            .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="macro">eyre!</span>(<span class="macro">format!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">e</span>)))<span class="question-mark">?</span>;
 
         <span class="comment">// There should be no previous state</span>
         <span class="ident">session</span>
             .<span class="ident">exp_string</span>(<span class="string">&quot;No state could be found&quot;</span>)
-            .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="macro">eyre</span><span class="macro">!</span>(<span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">e</span>)))<span class="question-mark">?</span>;
+            .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="macro">eyre!</span>(<span class="macro">format!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">e</span>)))<span class="question-mark">?</span>;
 
         <span class="prelude-val">Ok</span>(())
     }
@@ -764,34 +763,34 @@
         <span class="kw">let</span> <span class="ident">base_dir_arg</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">base_dir</span>.<span class="ident">path</span>().<span class="ident">to_string_lossy</span>();
 
         <span class="comment">// 1. Run the ledger node</span>
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">cmd</span> <span class="op">=</span> <span class="ident">Command</span>::<span class="ident">cargo_bin</span>(<span class="string">&quot;anoman&quot;</span>)<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">cmd</span> <span class="op">=</span> <span class="ident">Command::cargo_bin</span>(<span class="string">&quot;anoman&quot;</span>)<span class="question-mark">?</span>;
         <span class="ident">cmd</span>.<span class="ident">current_dir</span>(<span class="kw-2">&amp;</span><span class="ident">dir</span>).<span class="ident">env</span>(<span class="string">&quot;ANOMA_LOG&quot;</span>, <span class="string">&quot;debug&quot;</span>).<span class="ident">args</span>(<span class="kw-2">&amp;</span>[
             <span class="string">&quot;--base-dir&quot;</span>,
             <span class="ident">base_dir_arg</span>,
             <span class="string">&quot;ledger&quot;</span>,
         ]);
-        <span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot;Running {:?}&quot;</span>, <span class="ident">cmd</span>);
+        <span class="macro">println!</span>(<span class="string">&quot;Running {:?}&quot;</span>, <span class="ident">cmd</span>);
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">session</span> <span class="op">=</span> <span class="ident">spawn_command</span>(<span class="ident">cmd</span>, <span class="prelude-val">Some</span>(<span class="number">20_000</span>))
-            .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="macro">eyre</span><span class="macro">!</span>(<span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">e</span>)))<span class="question-mark">?</span>;
+            .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="macro">eyre!</span>(<span class="macro">format!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">e</span>)))<span class="question-mark">?</span>;
 
         <span class="ident">session</span>
             .<span class="ident">exp_string</span>(<span class="string">&quot;Anoma ledger node started&quot;</span>)
-            .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="macro">eyre</span><span class="macro">!</span>(<span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">e</span>)))<span class="question-mark">?</span>;
+            .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="macro">eyre!</span>(<span class="macro">format!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">e</span>)))<span class="question-mark">?</span>;
         <span class="ident">session</span>
             .<span class="ident">exp_string</span>(<span class="string">&quot;Started node&quot;</span>)
-            .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="macro">eyre</span><span class="macro">!</span>(<span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">e</span>)))<span class="question-mark">?</span>;
+            .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="macro">eyre!</span>(<span class="macro">format!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">e</span>)))<span class="question-mark">?</span>;
 
-        <span class="kw">let</span> <span class="ident">txs_args</span> <span class="op">=</span> <span class="macro">vec</span><span class="macro">!</span>[
+        <span class="kw">let</span> <span class="ident">txs_args</span> <span class="op">=</span> <span class="macro">vec!</span>[
             <span class="comment">// 2. Submit a token transfer tx</span>
-            <span class="macro">vec</span><span class="macro">!</span>[
+            <span class="macro">vec!</span>[
                 <span class="string">&quot;transfer&quot;</span>, <span class="string">&quot;--source&quot;</span>, <span class="ident">BERTHA</span>, <span class="string">&quot;--target&quot;</span>, <span class="ident">ALBERT</span>, <span class="string">&quot;--token&quot;</span>,
                 <span class="ident">XAN</span>, <span class="string">&quot;--amount&quot;</span>, <span class="string">&quot;10.1&quot;</span>,
             ],
             <span class="comment">// 3. Submit a transaction to update an account&#39;s validity</span>
             <span class="comment">// predicate</span>
-            <span class="macro">vec</span><span class="macro">!</span>[<span class="string">&quot;update&quot;</span>, <span class="string">&quot;--address&quot;</span>, <span class="ident">BERTHA</span>, <span class="string">&quot;--code-path&quot;</span>, <span class="ident">VP_USER_WASM</span>],
+            <span class="macro">vec!</span>[<span class="string">&quot;update&quot;</span>, <span class="string">&quot;--address&quot;</span>, <span class="ident">BERTHA</span>, <span class="string">&quot;--code-path&quot;</span>, <span class="ident">VP_USER_WASM</span>],
             <span class="comment">// 4. Submit a custom tx</span>
-            <span class="macro">vec</span><span class="macro">!</span>[
+            <span class="macro">vec!</span>[
                 <span class="string">&quot;tx&quot;</span>,
                 <span class="string">&quot;--code-path&quot;</span>,
                 <span class="ident">TX_NO_OP_WASM</span>,
@@ -801,7 +800,7 @@
         ];
         <span class="kw">for</span> <span class="ident">tx_args</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="ident">txs_args</span> {
             <span class="kw">for</span> <span class="kw-2">&amp;</span><span class="ident">dry_run</span> <span class="kw">in</span> <span class="kw-2">&amp;</span>[<span class="bool-val">true</span>, <span class="bool-val">false</span>] {
-                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">cmd</span> <span class="op">=</span> <span class="ident">Command</span>::<span class="ident">cargo_bin</span>(<span class="string">&quot;anomac&quot;</span>)<span class="question-mark">?</span>;
+                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">cmd</span> <span class="op">=</span> <span class="ident">Command::cargo_bin</span>(<span class="string">&quot;anomac&quot;</span>)<span class="question-mark">?</span>;
                 <span class="ident">cmd</span>.<span class="ident">current_dir</span>(<span class="kw-2">&amp;</span><span class="ident">dir</span>)
                     .<span class="ident">env</span>(<span class="string">&quot;ANOMA_LOG&quot;</span>, <span class="string">&quot;debug&quot;</span>)
                     .<span class="ident">args</span>(<span class="kw-2">&amp;</span>[<span class="string">&quot;--base-dir&quot;</span>, <span class="ident">base_dir_arg</span>])
@@ -809,11 +808,11 @@
                 <span class="kw">if</span> <span class="ident">dry_run</span> {
                     <span class="ident">cmd</span>.<span class="ident">arg</span>(<span class="string">&quot;--dry-run&quot;</span>);
                 }
-                <span class="kw">let</span> <span class="ident">cmd_str</span> <span class="op">=</span> <span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="ident">cmd</span>);
+                <span class="kw">let</span> <span class="ident">cmd_str</span> <span class="op">=</span> <span class="macro">format!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="ident">cmd</span>);
 
                 <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">session</span> <span class="op">=</span>
                     <span class="ident">spawn_command</span>(<span class="ident">cmd</span>, <span class="prelude-val">Some</span>(<span class="number">20_000</span>)).<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> {
-                        <span class="macro">eyre</span><span class="macro">!</span>(<span class="macro">format</span><span class="macro">!</span>(
+                        <span class="macro">eyre!</span>(<span class="macro">format!</span>(
                             <span class="string">&quot;in command: {}\n\nReason: {}&quot;</span>,
                             <span class="ident">cmd_str</span>, <span class="ident">e</span>
                         ))
@@ -821,7 +820,7 @@
                 <span class="kw">if</span> <span class="op">!</span><span class="ident">dry_run</span> {
                     <span class="ident">session</span>.<span class="ident">exp_string</span>(<span class="string">&quot;Mempool validation passed&quot;</span>).<span class="ident">map_err</span>(
                         <span class="op">|</span><span class="ident">e</span><span class="op">|</span> {
-                            <span class="macro">eyre</span><span class="macro">!</span>(<span class="macro">format</span><span class="macro">!</span>(
+                            <span class="macro">eyre!</span>(<span class="macro">format!</span>(
                                 <span class="string">&quot;in command: {}\n\nReason: {}&quot;</span>,
                                 <span class="ident">cmd_str</span>, <span class="ident">e</span>
                             ))
@@ -829,44 +828,44 @@
                     )<span class="question-mark">?</span>;
                 }
                 <span class="ident">session</span>.<span class="ident">exp_string</span>(<span class="string">&quot;Transaction is valid.&quot;</span>).<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> {
-                    <span class="macro">eyre</span><span class="macro">!</span>(<span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;in command: {}\n\nReason: {}&quot;</span>, <span class="ident">cmd_str</span>, <span class="ident">e</span>))
+                    <span class="macro">eyre!</span>(<span class="macro">format!</span>(<span class="string">&quot;in command: {}\n\nReason: {}&quot;</span>, <span class="ident">cmd_str</span>, <span class="ident">e</span>))
                 })<span class="question-mark">?</span>;
 
                 <span class="kw">let</span> <span class="ident">status</span> <span class="op">=</span> <span class="ident">session</span>.<span class="ident">process</span>.<span class="ident">wait</span>().<span class="ident">unwrap</span>();
-                <span class="macro">assert_eq</span><span class="macro">!</span>(
-                    <span class="ident">WaitStatus</span>::<span class="ident">Exited</span>(<span class="ident">session</span>.<span class="ident">process</span>.<span class="ident">child_pid</span>, <span class="number">0</span>),
+                <span class="macro">assert_eq!</span>(
+                    <span class="ident">WaitStatus::Exited</span>(<span class="ident">session</span>.<span class="ident">process</span>.<span class="ident">child_pid</span>, <span class="number">0</span>),
                     <span class="ident">status</span>
                 );
             }
         }
 
-        <span class="kw">let</span> <span class="ident">query_args_and_expected_response</span> <span class="op">=</span> <span class="macro">vec</span><span class="macro">!</span>[
+        <span class="kw">let</span> <span class="ident">query_args_and_expected_response</span> <span class="op">=</span> <span class="macro">vec!</span>[
             <span class="comment">// 5. Query token balance</span>
             (
-                <span class="macro">vec</span><span class="macro">!</span>[<span class="string">&quot;balance&quot;</span>, <span class="string">&quot;--owner&quot;</span>, <span class="ident">BERTHA</span>, <span class="string">&quot;--token&quot;</span>, <span class="ident">XAN</span>],
+                <span class="macro">vec!</span>[<span class="string">&quot;balance&quot;</span>, <span class="string">&quot;--owner&quot;</span>, <span class="ident">BERTHA</span>, <span class="string">&quot;--token&quot;</span>, <span class="ident">XAN</span>],
                 <span class="comment">// expect a decimal</span>
                 <span class="string">r&quot;XAN: (\d*\.)\d+&quot;</span>,
             ),
         ];
         <span class="kw">for</span> (<span class="ident">query_args</span>, <span class="ident">expected</span>) <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="ident">query_args_and_expected_response</span> {
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">cmd</span> <span class="op">=</span> <span class="ident">Command</span>::<span class="ident">cargo_bin</span>(<span class="string">&quot;anomac&quot;</span>)<span class="question-mark">?</span>;
+            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">cmd</span> <span class="op">=</span> <span class="ident">Command::cargo_bin</span>(<span class="string">&quot;anomac&quot;</span>)<span class="question-mark">?</span>;
             <span class="ident">cmd</span>.<span class="ident">current_dir</span>(<span class="kw-2">&amp;</span><span class="ident">dir</span>)
                 .<span class="ident">env</span>(<span class="string">&quot;ANOMA_LOG&quot;</span>, <span class="string">&quot;debug&quot;</span>)
                 .<span class="ident">args</span>(<span class="kw-2">&amp;</span>[<span class="string">&quot;--base-dir&quot;</span>, <span class="ident">base_dir_arg</span>])
                 .<span class="ident">args</span>(<span class="ident">query_args</span>);
-            <span class="kw">let</span> <span class="ident">cmd_str</span> <span class="op">=</span> <span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="ident">cmd</span>);
+            <span class="kw">let</span> <span class="ident">cmd_str</span> <span class="op">=</span> <span class="macro">format!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="ident">cmd</span>);
 
             <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">session</span> <span class="op">=</span>
                 <span class="ident">spawn_command</span>(<span class="ident">cmd</span>, <span class="prelude-val">Some</span>(<span class="number">10_000</span>)).<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> {
-                    <span class="macro">eyre</span><span class="macro">!</span>(<span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;in command: {}\n\nReason: {}&quot;</span>, <span class="ident">cmd_str</span>, <span class="ident">e</span>))
+                    <span class="macro">eyre!</span>(<span class="macro">format!</span>(<span class="string">&quot;in command: {}\n\nReason: {}&quot;</span>, <span class="ident">cmd_str</span>, <span class="ident">e</span>))
                 })<span class="question-mark">?</span>;
             <span class="ident">session</span>.<span class="ident">exp_regex</span>(<span class="ident">expected</span>).<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> {
-                <span class="macro">eyre</span><span class="macro">!</span>(<span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;in command: {}\n\nReason: {}&quot;</span>, <span class="ident">cmd_str</span>, <span class="ident">e</span>))
+                <span class="macro">eyre!</span>(<span class="macro">format!</span>(<span class="string">&quot;in command: {}\n\nReason: {}&quot;</span>, <span class="ident">cmd_str</span>, <span class="ident">e</span>))
             })<span class="question-mark">?</span>;
 
             <span class="kw">let</span> <span class="ident">status</span> <span class="op">=</span> <span class="ident">session</span>.<span class="ident">process</span>.<span class="ident">wait</span>().<span class="ident">unwrap</span>();
-            <span class="macro">assert_eq</span><span class="macro">!</span>(
-                <span class="ident">WaitStatus</span>::<span class="ident">Exited</span>(<span class="ident">session</span>.<span class="ident">process</span>.<span class="ident">child_pid</span>, <span class="number">0</span>),
+            <span class="macro">assert_eq!</span>(
+                <span class="ident">WaitStatus::Exited</span>(<span class="ident">session</span>.<span class="ident">process</span>.<span class="ident">child_pid</span>, <span class="number">0</span>),
                 <span class="ident">status</span>
             );
         }
@@ -891,69 +890,69 @@
         <span class="kw">let</span> <span class="ident">second_node_dir</span> <span class="op">=</span> <span class="ident">node_dirs</span>[<span class="number">1</span>].<span class="number">0</span>.<span class="ident">to_str</span>().<span class="ident">unwrap</span>();
         <span class="kw">let</span> <span class="ident">second_node_peer_id</span> <span class="op">=</span> <span class="ident">node_dirs</span>[<span class="number">1</span>].<span class="number">1</span>.<span class="ident">to_string</span>();
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">base_node</span> <span class="op">=</span> <span class="ident">Command</span>::<span class="ident">cargo_bin</span>(<span class="string">&quot;anoman&quot;</span>)<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">base_node</span> <span class="op">=</span> <span class="ident">Command::cargo_bin</span>(<span class="string">&quot;anoman&quot;</span>)<span class="question-mark">?</span>;
         <span class="ident">base_node</span>.<span class="ident">env</span>(<span class="string">&quot;ANOMA_LOG&quot;</span>, <span class="string">&quot;debug,libp2p=debug&quot;</span>);
         <span class="ident">base_node</span>.<span class="ident">args</span>(<span class="kw-2">&amp;</span>[<span class="string">&quot;--base-dir&quot;</span>, <span class="ident">first_node_dir</span>, <span class="string">&quot;gossip&quot;</span>, <span class="string">&quot;run&quot;</span>]);
 
         <span class="comment">//  Node without peers</span>
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">session</span> <span class="op">=</span> <span class="ident">spawn_command</span>(<span class="ident">base_node</span>, <span class="prelude-val">Some</span>(<span class="number">20_000</span>))
-            .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="macro">eyre</span><span class="macro">!</span>(<span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">e</span>)))<span class="question-mark">?</span>;
+            .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="macro">eyre!</span>(<span class="macro">format!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">e</span>)))<span class="question-mark">?</span>;
 
         <span class="ident">session</span>
-            .<span class="ident">exp_string</span>(<span class="kw-2">&amp;</span><span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;Peer id: PeerId(\&quot;{}\&quot;)&quot;</span>, <span class="ident">first_node_peer_id</span>))
-            .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="macro">eyre</span><span class="macro">!</span>(<span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">e</span>)))<span class="question-mark">?</span>;
+            .<span class="ident">exp_string</span>(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;Peer id: PeerId(\&quot;{}\&quot;)&quot;</span>, <span class="ident">first_node_peer_id</span>))
+            .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="macro">eyre!</span>(<span class="macro">format!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">e</span>)))<span class="question-mark">?</span>;
 
         <span class="ident">session</span>
             .<span class="ident">exp_string</span>(<span class="string">&quot;failed to bootstrap kad : NoKnownPeers&quot;</span>)
-            .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="macro">eyre</span><span class="macro">!</span>(<span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">e</span>)))<span class="question-mark">?</span>;
+            .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="macro">eyre!</span>(<span class="macro">format!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">e</span>)))<span class="question-mark">?</span>;
 
         <span class="ident">session</span>
             .<span class="ident">exp_string</span>(<span class="string">&quot;listening on 127.0.0.1:20201&quot;</span>)
-            .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="macro">eyre</span><span class="macro">!</span>(<span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">e</span>)))<span class="question-mark">?</span>;
+            .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="macro">eyre!</span>(<span class="macro">format!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">e</span>)))<span class="question-mark">?</span>;
 
         <span class="ident">session</span>
             .<span class="ident">exp_string</span>(
                 <span class="string">&quot;HEARTBEAT: Mesh low. Topic: asset_v0 Contains: 0 needs: 2&quot;</span>,
             )
-            .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="macro">eyre</span><span class="macro">!</span>(<span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">e</span>)))<span class="question-mark">?</span>;
+            .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="macro">eyre!</span>(<span class="macro">format!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">e</span>)))<span class="question-mark">?</span>;
 
         <span class="ident">drop</span>(<span class="ident">session</span>);
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">base_node</span> <span class="op">=</span> <span class="ident">Command</span>::<span class="ident">cargo_bin</span>(<span class="string">&quot;anoman&quot;</span>)<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">base_node</span> <span class="op">=</span> <span class="ident">Command::cargo_bin</span>(<span class="string">&quot;anoman&quot;</span>)<span class="question-mark">?</span>;
         <span class="ident">base_node</span>.<span class="ident">args</span>(<span class="kw-2">&amp;</span>[<span class="string">&quot;--base-dir&quot;</span>, <span class="ident">first_node_dir</span>, <span class="string">&quot;gossip&quot;</span>]);
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">peer_node</span> <span class="op">=</span> <span class="ident">Command</span>::<span class="ident">cargo_bin</span>(<span class="string">&quot;anoman&quot;</span>)<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">peer_node</span> <span class="op">=</span> <span class="ident">Command::cargo_bin</span>(<span class="string">&quot;anoman&quot;</span>)<span class="question-mark">?</span>;
         <span class="ident">peer_node</span>.<span class="ident">args</span>(<span class="kw-2">&amp;</span>[<span class="string">&quot;--base-dir&quot;</span>, <span class="ident">second_node_dir</span>, <span class="string">&quot;gossip&quot;</span>]);
 
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">session</span> <span class="op">=</span> <span class="ident">spawn_command</span>(<span class="ident">base_node</span>, <span class="prelude-val">Some</span>(<span class="number">20_000</span>))
-            .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="macro">eyre</span><span class="macro">!</span>(<span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">e</span>)))<span class="question-mark">?</span>;
+            .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="macro">eyre!</span>(<span class="macro">format!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">e</span>)))<span class="question-mark">?</span>;
 
         <span class="ident">session</span>
-            .<span class="ident">exp_string</span>(<span class="kw-2">&amp;</span><span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;Peer id: PeerId(\&quot;{}\&quot;)&quot;</span>, <span class="ident">first_node_peer_id</span>))
-            .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="macro">eyre</span><span class="macro">!</span>(<span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">e</span>)))<span class="question-mark">?</span>;
+            .<span class="ident">exp_string</span>(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;Peer id: PeerId(\&quot;{}\&quot;)&quot;</span>, <span class="ident">first_node_peer_id</span>))
+            .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="macro">eyre!</span>(<span class="macro">format!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">e</span>)))<span class="question-mark">?</span>;
 
         <span class="ident">session</span>
-            .<span class="ident">exp_regex</span>(<span class="kw-2">&amp;</span><span class="macro">format</span><span class="macro">!</span>(
+            .<span class="ident">exp_regex</span>(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
                 <span class="string">&quot;.*(PeerConnected(PeerId(\&quot;{}\&quot;)))*&quot;</span>,
                 <span class="ident">second_node_peer_id</span>
             ))
-            .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="macro">eyre</span><span class="macro">!</span>(<span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">e</span>)))<span class="question-mark">?</span>;
+            .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="macro">eyre!</span>(<span class="macro">format!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">e</span>)))<span class="question-mark">?</span>;
 
         <span class="ident">sleep</span>(<span class="number">2</span>);
 
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">session_two</span> <span class="op">=</span> <span class="ident">spawn_command</span>(<span class="ident">peer_node</span>, <span class="prelude-val">Some</span>(<span class="number">20_000</span>))
-            .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="macro">eyre</span><span class="macro">!</span>(<span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">e</span>)))<span class="question-mark">?</span>;
+            .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="macro">eyre!</span>(<span class="macro">format!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">e</span>)))<span class="question-mark">?</span>;
 
         <span class="ident">session_two</span>
-            .<span class="ident">exp_string</span>(<span class="kw-2">&amp;</span><span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;Peer id: PeerId(\&quot;{}\&quot;&quot;</span>, <span class="ident">second_node_peer_id</span>))
-            .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="macro">eyre</span><span class="macro">!</span>(<span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">e</span>)))<span class="question-mark">?</span>;
+            .<span class="ident">exp_string</span>(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;Peer id: PeerId(\&quot;{}\&quot;&quot;</span>, <span class="ident">second_node_peer_id</span>))
+            .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="macro">eyre!</span>(<span class="macro">format!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">e</span>)))<span class="question-mark">?</span>;
 
         <span class="ident">session_two</span>
-            .<span class="ident">exp_regex</span>(<span class="kw-2">&amp;</span><span class="macro">format</span><span class="macro">!</span>(
+            .<span class="ident">exp_regex</span>(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
                 <span class="string">&quot;.*(PeerConnected(PeerId(\&quot;{}\&quot;)))*&quot;</span>,
                 <span class="ident">first_node_peer_id</span>
             ))
-            .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="macro">eyre</span><span class="macro">!</span>(<span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">e</span>)))<span class="question-mark">?</span>;
+            .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="macro">eyre!</span>(<span class="macro">format!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">e</span>)))<span class="question-mark">?</span>;
 
         <span class="ident">drop</span>(<span class="ident">session</span>);
 
@@ -970,15 +969,15 @@
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Vec</span><span class="op">&lt;</span>(<span class="ident">PathBuf</span>, <span class="ident">PeerId</span>)<span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">index</span> <span class="op">=</span> <span class="number">0</span>;
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">node_dirs</span>: <span class="ident">Vec</span><span class="op">&lt;</span>(<span class="ident">PathBuf</span>, <span class="ident">PeerId</span>)<span class="op">&gt;</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="ident">new</span>();
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">node_dirs</span>: <span class="ident">Vec</span><span class="op">&lt;</span>(<span class="ident">PathBuf</span>, <span class="ident">PeerId</span>)<span class="op">&gt;</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
 
         <span class="kw">while</span> <span class="ident">index</span> <span class="op">&lt;</span> <span class="ident">n_of_peers</span> {
-            <span class="kw">let</span> <span class="ident">node_path</span> <span class="op">=</span> <span class="ident">path</span>.<span class="ident">join</span>(<span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;anoma-{}&quot;</span>, <span class="ident">index</span>));
+            <span class="kw">let</span> <span class="ident">node_path</span> <span class="op">=</span> <span class="ident">path</span>.<span class="ident">join</span>(<span class="macro">format!</span>(<span class="string">&quot;anoma-{}&quot;</span>, <span class="ident">index</span>));
 
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">config</span> <span class="op">=</span> <span class="ident">Config</span>::<span class="ident">default</span>();
+            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">config</span> <span class="op">=</span> <span class="ident">Config::default</span>();
             <span class="kw">let</span> <span class="ident">info</span> <span class="op">=</span> <span class="ident">build_peers</span>(<span class="ident">index</span>, <span class="ident">node_dirs</span>.<span class="ident">clone</span>());
 
-            <span class="kw">let</span> <span class="ident">gossiper_config</span> <span class="op">=</span> <span class="ident">IntentGossiper</span>::<span class="ident">default_with_address</span>(
+            <span class="kw">let</span> <span class="ident">gossiper_config</span> <span class="op">=</span> <span class="ident">IntentGossiper::default_with_address</span>(
                 <span class="string">&quot;127.0.0.1&quot;</span>.<span class="ident">to_string</span>(),
                 <span class="number">20201</span> <span class="op">+</span> <span class="ident">index</span>,
                 <span class="ident">info</span>,
@@ -986,8 +985,8 @@
                 <span class="ident">with_kademlia</span>,
             );
             <span class="kw">let</span> <span class="ident">peer_key</span> <span class="op">=</span>
-                <span class="ident">Keypair</span>::<span class="ident">Ed25519</span>(<span class="ident">gossiper_config</span>.<span class="ident">gossiper</span>.<span class="ident">key</span>.<span class="ident">clone</span>());
-            <span class="kw">let</span> <span class="ident">peer_id</span> <span class="op">=</span> <span class="ident">PeerId</span>::<span class="ident">from</span>(<span class="ident">peer_key</span>.<span class="ident">public</span>());
+                <span class="ident">Keypair::Ed25519</span>(<span class="ident">gossiper_config</span>.<span class="ident">gossiper</span>.<span class="ident">key</span>.<span class="ident">clone</span>());
+            <span class="kw">let</span> <span class="ident">peer_id</span> <span class="op">=</span> <span class="ident">PeerId::from</span>(<span class="ident">peer_key</span>.<span class="ident">public</span>());
 
             <span class="ident">node_dirs</span>.<span class="ident">push</span>((<span class="ident">node_path</span>.<span class="ident">clone</span>(), <span class="ident">peer_id</span>));
 
@@ -1000,7 +999,7 @@
     }
 
     <span class="kw">fn</span> <span class="ident">sleep</span>(<span class="ident">seconds</span>: <span class="ident">u64</span>) {
-        <span class="ident">thread</span>::<span class="ident">sleep</span>(<span class="ident">time</span>::<span class="ident">Duration</span>::<span class="ident">from_secs</span>(<span class="ident">seconds</span>));
+        <span class="ident">thread::sleep</span>(<span class="ident">time::Duration::from_secs</span>(<span class="ident">seconds</span>));
     }
 
     <span class="kw">fn</span> <span class="ident">build_peers</span>(
@@ -1008,13 +1007,13 @@
         <span class="ident">network</span>: <span class="ident">Vec</span><span class="op">&lt;</span>(<span class="ident">PathBuf</span>, <span class="ident">PeerId</span>)<span class="op">&gt;</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Vec</span><span class="op">&lt;</span>(<span class="ident">String</span>, <span class="ident">u32</span>, <span class="ident">PeerId</span>)<span class="op">&gt;</span> {
         <span class="kw">if</span> <span class="ident">index</span> <span class="op">&gt;</span> <span class="number">0</span> {
-            <span class="kw">return</span> <span class="macro">vec</span><span class="macro">!</span>[(
+            <span class="kw">return</span> <span class="macro">vec!</span>[(
                 <span class="string">&quot;127.0.0.1&quot;</span>.<span class="ident">to_string</span>(),
                 <span class="number">20201</span> <span class="op">+</span> <span class="ident">index</span> <span class="op">-</span> <span class="number">1</span>,
                 <span class="ident">network</span>[<span class="ident">index</span> <span class="kw">as</span> <span class="ident">usize</span> <span class="op">-</span> <span class="number">1</span>].<span class="number">1</span>,
             )];
         }
-        <span class="kw">return</span> <span class="macro">vec</span><span class="macro">!</span>[];
+        <span class="kw">return</span> <span class="macro">vec!</span>[];
     }
 
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
@@ -1043,5 +1042,4 @@
     }
 }
 </pre></div>
-</section><section id="search" class="content hidden"></section><section class="footer"></section><div id="rustdoc-vars" data-root-path="../../" data-current-crate="anoma_tests" data-search-js="../../search-index.js"></div>
-    <script src="../../main.js"></script><script src="../../source-script.js"></script><script src="../../source-files.js"></script></body></html>
+</section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../" data-current-crate="anoma_tests" data-search-index-js="../../search-index.js" data-search-js="../../search.js"></div><script src="../../main.js"></script><script src="../../source-script.js"></script><script src="../../source-files.js"></script></body></html>

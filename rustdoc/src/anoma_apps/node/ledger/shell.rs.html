@@ -1,7 +1,6 @@
 <!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `apps/src/lib/node/ledger/shell.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>shell.rs - source</title><link rel="stylesheet" type="text/css" href="../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../../ayu.css" disabled ><script id="default-settings"></script><script src="../../../../storage.js"></script><script src="../../../../crates.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg">
 <link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png">
-<link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../../anoma_apps/index.html'><div class='logo-container rust-logo'><img src='../../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../../../../brush.svg" width="18" height="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><script src="../../../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" class="help-button">?</button>
-                <a id="settings-menu" href="../../../../settings.html"><img src="../../../../wheel.svg" width="18" height="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">  1</span>
+<link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../../anoma_apps/index.html'><div class='logo-container rust-logo'><img src='../../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img src="../../../../brush.svg" width="18" height="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../../../settings.html" title="settings"><img src="../../../../wheel.svg" width="18" height="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">  1</span>
 <span id="2">  2</span>
 <span id="3">  3</span>
 <span id="4">  4</span>
@@ -441,58 +440,58 @@
 <span id="438">438</span>
 <span id="439">439</span>
 <span id="440">440</span>
-</pre><div class="example-wrap"><pre class="rust ">
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">convert</span>::{<span class="ident">TryFrom</span>, <span class="ident">TryInto</span>};
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">path</span>::<span class="ident">Path</span>;
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">str</span>::<span class="ident">FromStr</span>;
+</pre><pre class="rust">
+<span class="kw">use</span> <span class="ident">std::convert</span>::{<span class="ident">TryFrom</span>, <span class="ident">TryInto</span>};
+<span class="kw">use</span> <span class="ident">std::path::Path</span>;
+<span class="kw">use</span> <span class="ident">std::str::FromStr</span>;
 
-<span class="kw">use</span> <span class="ident">anoma</span>::<span class="ident">ledger</span>::<span class="ident">gas</span>::{<span class="self">self</span>, <span class="ident">BlockGasMeter</span>};
-<span class="kw">use</span> <span class="ident">anoma</span>::<span class="ident">ledger</span>::<span class="ident">storage</span>::<span class="ident">write_log</span>::<span class="ident">WriteLog</span>;
-<span class="kw">use</span> <span class="ident">anoma</span>::<span class="ident">ledger</span>::{<span class="ident">ibc</span>, <span class="ident">parameters</span>, <span class="ident">pos</span>};
-<span class="kw">use</span> <span class="ident">anoma</span>::<span class="ident">proto</span>::{<span class="self">self</span>, <span class="ident">Tx</span>};
-<span class="kw">use</span> <span class="ident">anoma</span>::<span class="ident">types</span>::<span class="ident">address</span>::<span class="ident">Address</span>;
-<span class="kw">use</span> <span class="ident">anoma</span>::<span class="ident">types</span>::<span class="ident">key</span>::<span class="ident">ed25519</span>::<span class="ident">PublicKey</span>;
-<span class="kw">use</span> <span class="ident">anoma</span>::<span class="ident">types</span>::<span class="ident">storage</span>::{<span class="ident">BlockHash</span>, <span class="ident">BlockHeight</span>, <span class="ident">Key</span>};
-<span class="kw">use</span> <span class="ident">anoma</span>::<span class="ident">types</span>::<span class="ident">time</span>::{<span class="ident">DateTime</span>, <span class="ident">DateTimeUtc</span>, <span class="ident">TimeZone</span>, <span class="ident">Utc</span>};
-<span class="kw">use</span> <span class="ident">anoma</span>::<span class="ident">types</span>::<span class="ident">token</span>::<span class="ident">Amount</span>;
-<span class="kw">use</span> <span class="ident">anoma</span>::<span class="ident">types</span>::{<span class="ident">address</span>, <span class="ident">key</span>, <span class="ident">token</span>};
-<span class="kw">use</span> <span class="ident">borsh</span>::<span class="ident">BorshSerialize</span>;
-<span class="kw">use</span> <span class="ident">itertools</span>::<span class="ident">Itertools</span>;
-<span class="kw">use</span> <span class="ident">tendermint</span>::<span class="ident">block</span>::<span class="ident">Header</span>;
-<span class="kw">use</span> <span class="ident">thiserror</span>::<span class="ident">Error</span>;
+<span class="kw">use</span> <span class="ident">anoma::ledger::gas</span>::{<span class="self">self</span>, <span class="ident">BlockGasMeter</span>};
+<span class="kw">use</span> <span class="ident">anoma::ledger::storage::write_log::WriteLog</span>;
+<span class="kw">use</span> <span class="ident">anoma::ledger</span>::{<span class="ident">ibc</span>, <span class="ident">parameters</span>, <span class="ident">pos</span>};
+<span class="kw">use</span> <span class="ident">anoma::proto</span>::{<span class="self">self</span>, <span class="ident">Tx</span>};
+<span class="kw">use</span> <span class="ident">anoma::types::address::Address</span>;
+<span class="kw">use</span> <span class="ident">anoma::types::key::ed25519::PublicKey</span>;
+<span class="kw">use</span> <span class="ident">anoma::types::storage</span>::{<span class="ident">BlockHash</span>, <span class="ident">BlockHeight</span>, <span class="ident">Key</span>};
+<span class="kw">use</span> <span class="ident">anoma::types::time</span>::{<span class="ident">DateTime</span>, <span class="ident">DateTimeUtc</span>, <span class="ident">TimeZone</span>, <span class="ident">Utc</span>};
+<span class="kw">use</span> <span class="ident">anoma::types::token::Amount</span>;
+<span class="kw">use</span> <span class="ident">anoma::types</span>::{<span class="ident">address</span>, <span class="ident">key</span>, <span class="ident">token</span>};
+<span class="kw">use</span> <span class="ident">borsh::BorshSerialize</span>;
+<span class="kw">use</span> <span class="ident">itertools::Itertools</span>;
+<span class="kw">use</span> <span class="ident">tendermint::block::Header</span>;
+<span class="kw">use</span> <span class="ident">thiserror::Error</span>;
 <span class="kw">use</span> <span class="ident">tower_abci</span>::{<span class="ident">request</span>, <span class="ident">response</span>};
 
-<span class="kw">use</span> <span class="kw">super</span>::<span class="ident">rpc</span>;
-<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">config</span>::<span class="ident">genesis</span>;
-<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">node</span>::<span class="ident">ledger</span>::<span class="ident">rpc</span>::<span class="ident">PrefixValue</span>;
-<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">node</span>::<span class="ident">ledger</span>::{<span class="ident">protocol</span>, <span class="ident">storage</span>, <span class="ident">tendermint_node</span>};
+<span class="kw">use</span> <span class="kw">super</span><span class="ident">::rpc</span>;
+<span class="kw">use</span> <span class="kw">crate</span><span class="ident">::config::genesis</span>;
+<span class="kw">use</span> <span class="kw">crate</span><span class="ident">::node::ledger::rpc::PrefixValue</span>;
+<span class="kw">use</span> <span class="kw">crate</span><span class="ident">::node::ledger</span>::{<span class="ident">protocol</span>, <span class="ident">storage</span>, <span class="ident">tendermint_node</span>};
 <span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">config</span>, <span class="ident">wallet</span>};
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Error</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">Error</span> {
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Error removing the DB data: {0}&quot;</span>)]</span>
-    <span class="ident">RemoveDB</span>(<span class="ident">std</span>::<span class="ident">io</span>::<span class="ident">Error</span>),
+    <span class="ident">RemoveDB</span>(<span class="ident">std::io::Error</span>),
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;chain ID mismatch: {0}&quot;</span>)]</span>
-    <span class="ident">ChainIdError</span>(<span class="ident">String</span>),
+    <span class="ident">ChainId</span>(<span class="ident">String</span>),
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Error decoding a transaction from bytes: {0}&quot;</span>)]</span>
-    <span class="ident">TxDecodingError</span>(<span class="ident">proto</span>::<span class="ident">Error</span>),
+    <span class="ident">TxDecoding</span>(<span class="ident">proto::Error</span>),
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Error trying to apply a transaction: {0}&quot;</span>)]</span>
-    <span class="ident">TxError</span>(<span class="ident">protocol</span>::<span class="ident">Error</span>),
+    <span class="ident">TxApply</span>(<span class="ident">protocol::Error</span>),
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;{0}&quot;</span>)]</span>
-    <span class="ident">Tendermint</span>(<span class="ident">tendermint_node</span>::<span class="ident">Error</span>),
+    <span class="ident">Tendermint</span>(<span class="ident">tendermint_node::Error</span>),
 }
 
-<span class="kw">pub</span> <span class="kw">type</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">std</span>::<span class="ident">result</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">Error</span><span class="op">&gt;</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">std::result::Result</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">Error</span><span class="op">&gt;</span>;
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">reset</span>(<span class="ident">config</span>: <span class="ident">config</span>::<span class="ident">Ledger</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">reset</span>(<span class="ident">config</span>: <span class="ident">config::Ledger</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
     <span class="comment">// simply nuke the DB files</span>
     <span class="kw">let</span> <span class="ident">db_path</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">config</span>.<span class="ident">db</span>;
-    <span class="kw">match</span> <span class="ident">std</span>::<span class="ident">fs</span>::<span class="ident">remove_dir_all</span>(<span class="kw-2">&amp;</span><span class="ident">db_path</span>) {
-        <span class="prelude-val">Err</span>(<span class="ident">e</span>) <span class="kw">if</span> <span class="ident">e</span>.<span class="ident">kind</span>() <span class="op">=</span><span class="op">=</span> <span class="ident">std</span>::<span class="ident">io</span>::<span class="ident">ErrorKind</span>::<span class="ident">NotFound</span> <span class="op">=</span><span class="op">&gt;</span> (),
-        <span class="ident">res</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">res</span>.<span class="ident">map_err</span>(<span class="ident">Error</span>::<span class="ident">RemoveDB</span>)<span class="question-mark">?</span>,
+    <span class="kw">match</span> <span class="ident">std::fs::remove_dir_all</span>(<span class="kw-2">&amp;</span><span class="ident">db_path</span>) {
+        <span class="prelude-val">Err</span>(<span class="ident">e</span>) <span class="kw">if</span> <span class="ident">e</span>.<span class="ident">kind</span>() <span class="op">=</span><span class="op">=</span> <span class="ident">std::io::ErrorKind::NotFound</span> <span class="op">=</span><span class="op">&gt;</span> (),
+        <span class="ident">res</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">res</span>.<span class="ident">map_err</span>(<span class="ident">Error::RemoveDB</span>)<span class="question-mark">?</span>,
     };
     <span class="comment">// reset Tendermint state</span>
-    <span class="ident">tendermint_node</span>::<span class="ident">reset</span>(<span class="ident">config</span>).<span class="ident">map_err</span>(<span class="ident">Error</span>::<span class="ident">Tendermint</span>)<span class="question-mark">?</span>;
+    <span class="ident">tendermint_node::reset</span>(<span class="ident">config</span>).<span class="ident">map_err</span>(<span class="ident">Error::Tendermint</span>)<span class="question-mark">?</span>;
     <span class="prelude-val">Ok</span>(())
 }
 
@@ -507,7 +506,7 @@
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Shell</span> {
-    <span class="ident">storage</span>: <span class="ident">storage</span>::<span class="ident">PersistentStorage</span>,
+    <span class="ident">storage</span>: <span class="ident">storage::PersistentStorage</span>,
     <span class="ident">gas_meter</span>: <span class="ident">BlockGasMeter</span>,
     <span class="ident">write_log</span>: <span class="ident">WriteLog</span>,
 }
@@ -516,18 +515,18 @@
     <span class="doccomment">/// Create a new shell from a path to a database and a chain id. Looks</span>
     <span class="doccomment">/// up the database with this data and tries to load the last state.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">db_path</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span><span class="ident">Path</span><span class="op">&gt;</span>, <span class="ident">chain_id</span>: <span class="ident">String</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">storage</span> <span class="op">=</span> <span class="ident">storage</span>::<span class="ident">open</span>(<span class="ident">db_path</span>, <span class="ident">chain_id</span>);
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">storage</span> <span class="op">=</span> <span class="ident">storage::open</span>(<span class="ident">db_path</span>, <span class="ident">chain_id</span>);
         <span class="ident">storage</span>
             .<span class="ident">load_last_state</span>()
             .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> {
-                <span class="ident">tracing</span>::<span class="macro">error</span><span class="macro">!</span>(<span class="string">&quot;Cannot load the last state from the DB {}&quot;</span>, <span class="ident">e</span>);
+                <span class="macro">tracing::error!</span>(<span class="string">&quot;Cannot load the last state from the DB {}&quot;</span>, <span class="ident">e</span>);
             })
             .<span class="ident">expect</span>(<span class="string">&quot;PersistentStorage cannot be initialized&quot;</span>);
 
         <span class="self">Self</span> {
             <span class="ident">storage</span>,
-            <span class="ident">gas_meter</span>: <span class="ident">BlockGasMeter</span>::<span class="ident">default</span>(),
-            <span class="ident">write_log</span>: <span class="ident">WriteLog</span>::<span class="ident">default</span>(),
+            <span class="ident">gas_meter</span>: <span class="ident">BlockGasMeter::default</span>(),
+            <span class="ident">write_log</span>: <span class="ident">WriteLog::default</span>(),
         }
     }
 
@@ -537,40 +536,40 @@
     <span class="doccomment">/// 3. A matchmaker</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">init_chain</span>(
         <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
-        <span class="ident">init</span>: <span class="ident">request</span>::<span class="ident">InitChain</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">response</span>::<span class="ident">InitChain</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">response</span> <span class="op">=</span> <span class="ident">response</span>::<span class="ident">InitChain</span>::<span class="ident">default</span>();
+        <span class="ident">init</span>: <span class="ident">request::InitChain</span>,
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">response::InitChain</span><span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="ident">response</span> <span class="op">=</span> <span class="ident">response::InitChain::default</span>();
         <span class="kw">let</span> (<span class="ident">current_chain_id</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">storage</span>.<span class="ident">get_chain_id</span>();
         <span class="kw">if</span> <span class="ident">current_chain_id</span> <span class="op">!</span><span class="op">=</span> <span class="ident">init</span>.<span class="ident">chain_id</span> {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error</span>::<span class="ident">ChainIdError</span>(<span class="macro">format</span><span class="macro">!</span>(
+            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error::ChainId</span>(<span class="macro">format!</span>(
                 <span class="string">&quot;Current chain ID: {}, Tendermint chain ID: {}&quot;</span>,
                 <span class="ident">current_chain_id</span>, <span class="ident">init</span>.<span class="ident">chain_id</span>
             )));
         }
-        <span class="kw">let</span> <span class="ident">genesis</span> <span class="op">=</span> <span class="ident">genesis</span>::<span class="ident">genesis</span>();
+        <span class="kw">let</span> <span class="ident">genesis</span> <span class="op">=</span> <span class="ident">genesis::genesis</span>();
 
         <span class="comment">// Initialize because there is no block</span>
         <span class="kw">let</span> <span class="ident">token_vp</span> <span class="op">=</span>
-            <span class="ident">std</span>::<span class="ident">fs</span>::<span class="ident">read</span>(<span class="string">&quot;wasm/vp_token.wasm&quot;</span>).<span class="ident">expect</span>(<span class="string">&quot;cannot load token VP&quot;</span>);
+            <span class="ident">std::fs::read</span>(<span class="string">&quot;wasm/vp_token.wasm&quot;</span>).<span class="ident">expect</span>(<span class="string">&quot;cannot load token VP&quot;</span>);
         <span class="kw">let</span> <span class="ident">user_vp</span> <span class="op">=</span>
-            <span class="ident">std</span>::<span class="ident">fs</span>::<span class="ident">read</span>(<span class="string">&quot;wasm/vp_user.wasm&quot;</span>).<span class="ident">expect</span>(<span class="string">&quot;cannot load user VP&quot;</span>);
+            <span class="ident">std::fs::read</span>(<span class="string">&quot;wasm/vp_user.wasm&quot;</span>).<span class="ident">expect</span>(<span class="string">&quot;cannot load user VP&quot;</span>);
 
         <span class="comment">// TODO load initial accounts from genesis</span>
 
         <span class="comment">// temporary account addresses for testing, generated by the</span>
         <span class="comment">// address.rs module</span>
-        <span class="kw">let</span> <span class="ident">alberto</span> <span class="op">=</span> <span class="ident">Address</span>::<span class="ident">decode</span>(<span class="string">&quot;a1qq5qqqqqg4znssfsgcurjsfhgfpy2vjyxy6yg3z98pp5zvp5xgersvfjxvcnx3f4xycrzdfkak0xhx&quot;</span>)
+        <span class="kw">let</span> <span class="ident">alberto</span> <span class="op">=</span> <span class="ident">Address::decode</span>(<span class="string">&quot;a1qq5qqqqqg4znssfsgcurjsfhgfpy2vjyxy6yg3z98pp5zvp5xgersvfjxvcnx3f4xycrzdfkak0xhx&quot;</span>)
             .<span class="ident">expect</span>(<span class="string">&quot;The genesis address shouldn&#39;t fail decoding&quot;</span>);
-        <span class="kw">let</span> <span class="ident">bertha</span> <span class="op">=</span> <span class="ident">Address</span>::<span class="ident">decode</span>(<span class="string">&quot;a1qq5qqqqqxv6yydz9xc6ry33589q5x33eggcnjs2xx9znydj9xuens3phxppnwvzpg4rrqdpswve4n9&quot;</span>)
+        <span class="kw">let</span> <span class="ident">bertha</span> <span class="op">=</span> <span class="ident">Address::decode</span>(<span class="string">&quot;a1qq5qqqqqxv6yydz9xc6ry33589q5x33eggcnjs2xx9znydj9xuens3phxppnwvzpg4rrqdpswve4n9&quot;</span>)
             .<span class="ident">expect</span>(<span class="string">&quot;The genesis address shouldn&#39;t fail decoding&quot;</span>);
-        <span class="kw">let</span> <span class="ident">christel</span> <span class="op">=</span> <span class="ident">Address</span>::<span class="ident">decode</span>(<span class="string">&quot;a1qq5qqqqqxsuygd2x8pq5yw2ygdryxs6xgsmrsdzx8pryxv34gfrrssfjgccyg3zpxezrqd2y2s3g5s&quot;</span>)
+        <span class="kw">let</span> <span class="ident">christel</span> <span class="op">=</span> <span class="ident">Address::decode</span>(<span class="string">&quot;a1qq5qqqqqxsuygd2x8pq5yw2ygdryxs6xgsmrsdzx8pryxv34gfrrssfjgccyg3zpxezrqd2y2s3g5s&quot;</span>)
             .<span class="ident">expect</span>(<span class="string">&quot;The genesis address shouldn&#39;t fail decoding&quot;</span>);
-        <span class="kw">let</span> <span class="ident">users</span> <span class="op">=</span> <span class="macro">vec</span><span class="macro">!</span>[<span class="ident">alberto</span>, <span class="ident">bertha</span>, <span class="ident">christel</span>];
+        <span class="kw">let</span> <span class="ident">users</span> <span class="op">=</span> <span class="macro">vec!</span>[<span class="ident">alberto</span>, <span class="ident">bertha</span>, <span class="ident">christel</span>];
 
-        <span class="kw">let</span> <span class="ident">tokens</span> <span class="op">=</span> <span class="ident">address</span>::<span class="ident">tokens</span>();
+        <span class="kw">let</span> <span class="ident">tokens</span> <span class="op">=</span> <span class="ident">address::tokens</span>();
         <span class="kw">for</span> <span class="ident">token</span> <span class="kw">in</span> <span class="ident">tokens</span>.<span class="ident">keys</span>() {
             <span class="comment">// default tokens VPs for testing</span>
-            <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Key</span>::<span class="ident">validity_predicate</span>(<span class="kw-2">&amp;</span><span class="ident">token</span>);
+            <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Key::validity_predicate</span>(<span class="ident">token</span>);
             <span class="self">self</span>.<span class="ident">storage</span>
                 .<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>, <span class="ident">token_vp</span>.<span class="ident">to_vec</span>())
                 .<span class="ident">expect</span>(<span class="string">&quot;Unable to write token VP&quot;</span>);
@@ -579,22 +578,22 @@
         <span class="kw">for</span> (<span class="ident">user</span>, <span class="ident">token</span>) <span class="kw">in</span> <span class="ident">users</span>.<span class="ident">iter</span>().<span class="ident">cartesian_product</span>(<span class="ident">tokens</span>.<span class="ident">keys</span>()) {
             <span class="comment">// default user VPs for testing</span>
             <span class="self">self</span>.<span class="ident">storage</span>
-                .<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="ident">Key</span>::<span class="ident">validity_predicate</span>(<span class="ident">user</span>), <span class="ident">user_vp</span>.<span class="ident">to_vec</span>())
+                .<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="ident">Key::validity_predicate</span>(<span class="ident">user</span>), <span class="ident">user_vp</span>.<span class="ident">to_vec</span>())
                 .<span class="ident">expect</span>(<span class="string">&quot;Unable to write user VP&quot;</span>);
 
             <span class="comment">// default user&#39;s tokens for testing</span>
             <span class="self">self</span>.<span class="ident">storage</span>
                 .<span class="ident">write</span>(
-                    <span class="kw-2">&amp;</span><span class="ident">token</span>::<span class="ident">balance_key</span>(<span class="ident">token</span>, <span class="ident">user</span>),
-                    <span class="ident">Amount</span>::<span class="ident">whole</span>(<span class="number">1_000_000</span>)
+                    <span class="kw-2">&amp;</span><span class="ident">token::balance_key</span>(<span class="ident">token</span>, <span class="ident">user</span>),
+                    <span class="ident">Amount::whole</span>(<span class="number">1_000_000</span>)
                         .<span class="ident">try_to_vec</span>()
                         .<span class="ident">expect</span>(<span class="string">&quot;encode token amount&quot;</span>),
                 )
                 .<span class="ident">expect</span>(<span class="string">&quot;Unable to set genesis balance&quot;</span>);
 
             <span class="comment">// default user&#39;s public keys for testing</span>
-            <span class="kw">let</span> <span class="ident">pk_key</span> <span class="op">=</span> <span class="ident">key</span>::<span class="ident">ed25519</span>::<span class="ident">pk_key</span>(<span class="ident">user</span>);
-            <span class="kw">let</span> <span class="ident">pk</span> <span class="op">=</span> <span class="ident">PublicKey</span>::<span class="ident">from</span>(<span class="ident">wallet</span>::<span class="ident">key_of</span>(<span class="ident">user</span>.<span class="ident">encode</span>()).<span class="ident">public</span>);
+            <span class="kw">let</span> <span class="ident">pk_key</span> <span class="op">=</span> <span class="ident">key::ed25519::pk_key</span>(<span class="ident">user</span>);
+            <span class="kw">let</span> <span class="ident">pk</span> <span class="op">=</span> <span class="ident">PublicKey::from</span>(<span class="ident">wallet::key_of</span>(<span class="ident">user</span>.<span class="ident">encode</span>()).<span class="ident">public</span>);
             <span class="self">self</span>.<span class="ident">storage</span>
                 .<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="ident">pk_key</span>, <span class="ident">pk</span>.<span class="ident">try_to_vec</span>().<span class="ident">expect</span>(<span class="string">&quot;encode public key&quot;</span>))
                 .<span class="ident">expect</span>(<span class="string">&quot;Unable to set genesis user public key&quot;</span>);
@@ -605,28 +604,28 @@
         <span class="comment">// their signatures in its VP. The VP is the same as the user&#39;s VP,</span>
         <span class="comment">// which simply checks the signature. We could consider using the</span>
         <span class="comment">// same key as the intent gossip&#39;s p2p key.</span>
-        <span class="kw">let</span> <span class="ident">matchmaker</span> <span class="op">=</span> <span class="ident">address</span>::<span class="ident">matchmaker</span>();
-        <span class="kw">let</span> <span class="ident">matchmaker_pk</span> <span class="op">=</span> <span class="ident">key</span>::<span class="ident">ed25519</span>::<span class="ident">pk_key</span>(<span class="kw-2">&amp;</span><span class="ident">matchmaker</span>);
+        <span class="kw">let</span> <span class="ident">matchmaker</span> <span class="op">=</span> <span class="ident">address::matchmaker</span>();
+        <span class="kw">let</span> <span class="ident">matchmaker_pk</span> <span class="op">=</span> <span class="ident">key::ed25519::pk_key</span>(<span class="kw-2">&amp;</span><span class="ident">matchmaker</span>);
         <span class="self">self</span>.<span class="ident">storage</span>
             .<span class="ident">write</span>(
                 <span class="kw-2">&amp;</span><span class="ident">matchmaker_pk</span>,
-                <span class="ident">wallet</span>::<span class="ident">matchmaker_pk</span>()
+                <span class="ident">wallet::matchmaker_pk</span>()
                     .<span class="ident">try_to_vec</span>()
                     .<span class="ident">expect</span>(<span class="string">&quot;encode public key&quot;</span>),
             )
             .<span class="ident">expect</span>(<span class="string">&quot;Unable to set genesis user public key&quot;</span>);
         <span class="self">self</span>.<span class="ident">storage</span>
-            .<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="ident">Key</span>::<span class="ident">validity_predicate</span>(<span class="kw-2">&amp;</span><span class="ident">matchmaker</span>), <span class="ident">user_vp</span>.<span class="ident">to_vec</span>())
+            .<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="ident">Key::validity_predicate</span>(<span class="kw-2">&amp;</span><span class="ident">matchmaker</span>), <span class="ident">user_vp</span>.<span class="ident">to_vec</span>())
             .<span class="ident">expect</span>(<span class="string">&quot;Unable to write matchmaker VP&quot;</span>);
 
-        <span class="ident">pos</span>::<span class="ident">init_genesis_storage</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">storage</span>);
-        <span class="ident">ibc</span>::<span class="ident">init_genesis_storage</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">storage</span>);
-        <span class="ident">parameters</span>::<span class="ident">init_genesis_storage</span>(
+        <span class="ident">pos::init_genesis_storage</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">storage</span>);
+        <span class="ident">ibc::init_genesis_storage</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">storage</span>);
+        <span class="ident">parameters::init_genesis_storage</span>(
             <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">storage</span>,
             <span class="kw-2">&amp;</span><span class="ident">genesis</span>.<span class="ident">parameters</span>,
         );
 
-        <span class="kw">let</span> <span class="ident">ts</span>: <span class="ident">tendermint_proto</span>::<span class="ident">google</span>::<span class="ident">protobuf</span>::<span class="ident">Timestamp</span> <span class="op">=</span>
+        <span class="kw">let</span> <span class="ident">ts</span>: <span class="ident">tendermint_proto::google::protobuf::Timestamp</span> <span class="op">=</span>
             <span class="ident">init</span>.<span class="ident">time</span>.<span class="ident">expect</span>(<span class="string">&quot;Missing genesis time&quot;</span>);
         <span class="kw">let</span> <span class="ident">initial_height</span> <span class="op">=</span> <span class="ident">init</span>
             .<span class="ident">initial_height</span>
@@ -645,12 +644,12 @@
 
     <span class="doccomment">/// Load the Merkle root hash and the height of the last committed block, if</span>
     <span class="doccomment">/// any. This is returned when ABCI sends an `info` request.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">last_state</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">response</span>::<span class="ident">Info</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">response</span> <span class="op">=</span> <span class="ident">response</span>::<span class="ident">Info</span>::<span class="ident">default</span>();
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">last_state</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">response::Info</span> {
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">response</span> <span class="op">=</span> <span class="ident">response::Info::default</span>();
         <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">storage</span>.<span class="ident">get_state</span>();
         <span class="kw">match</span> <span class="ident">result</span> {
             <span class="prelude-val">Some</span>((<span class="ident">root</span>, <span class="ident">height</span>)) <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="ident">tracing</span>::<span class="macro">info</span><span class="macro">!</span>(
+                <span class="macro">tracing::info!</span>(
                     <span class="string">&quot;Last state root hash: {}, height: {}&quot;</span>,
                     <span class="ident">root</span>,
                     <span class="ident">height</span>
@@ -660,7 +659,7 @@
                     <span class="ident">height</span>.<span class="ident">try_into</span>().<span class="ident">expect</span>(<span class="string">&quot;Invalid block height&quot;</span>);
             }
             <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="ident">tracing</span>::<span class="macro">info</span><span class="macro">!</span>(
+                <span class="macro">tracing::info!</span>(
                     <span class="string">&quot;No state could be found, chain is not initialized&quot;</span>
                 );
             }
@@ -672,22 +671,22 @@
     <span class="doccomment">/// Uses `path` in the query to forward the request to the</span>
     <span class="doccomment">/// right query method and returns the result (which may be</span>
     <span class="doccomment">/// the default if `path` is not a supported string.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">query</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">query</span>: <span class="ident">request</span>::<span class="ident">Query</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">response</span>::<span class="ident">Query</span> {
-        <span class="kw">use</span> <span class="ident">rpc</span>::<span class="ident">Path</span>;
-        <span class="kw">match</span> <span class="ident">Path</span>::<span class="ident">from_str</span>(<span class="kw-2">&amp;</span><span class="ident">query</span>.<span class="ident">path</span>) {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">query</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">query</span>: <span class="ident">request::Query</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">response::Query</span> {
+        <span class="kw">use</span> <span class="ident">rpc::Path</span>;
+        <span class="kw">match</span> <span class="ident">Path::from_str</span>(<span class="kw-2">&amp;</span><span class="ident">query</span>.<span class="ident">path</span>) {
             <span class="prelude-val">Ok</span>(<span class="ident">path</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="ident">path</span> {
-                <span class="ident">Path</span>::<span class="ident">DryRunTx</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">dry_run_tx</span>(<span class="kw-2">&amp;</span><span class="ident">query</span>.<span class="ident">data</span>),
-                <span class="ident">Path</span>::<span class="ident">Value</span>(<span class="ident">storage_key</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">Path::DryRunTx</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">dry_run_tx</span>(<span class="kw-2">&amp;</span><span class="ident">query</span>.<span class="ident">data</span>),
+                <span class="ident">Path::Value</span>(<span class="ident">storage_key</span>) <span class="op">=</span><span class="op">&gt;</span> {
                     <span class="self">self</span>.<span class="ident">read_storage_value</span>(<span class="kw-2">&amp;</span><span class="ident">storage_key</span>)
                 }
-                <span class="ident">Path</span>::<span class="ident">Prefix</span>(<span class="ident">storage_key</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">Path::Prefix</span>(<span class="ident">storage_key</span>) <span class="op">=</span><span class="op">&gt;</span> {
                     <span class="self">self</span>.<span class="ident">read_storage_prefix</span>(<span class="kw-2">&amp;</span><span class="ident">storage_key</span>)
                 }
             },
-            <span class="prelude-val">Err</span>(<span class="ident">err</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">response</span>::<span class="ident">Query</span> {
+            <span class="prelude-val">Err</span>(<span class="ident">err</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">response::Query</span> {
                 <span class="ident">code</span>: <span class="number">1</span>,
-                <span class="ident">info</span>: <span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;RPC error: {}&quot;</span>, <span class="ident">err</span>),
-                ..<span class="ident">Default</span>::<span class="ident">default</span>()
+                <span class="ident">info</span>: <span class="macro">format!</span>(<span class="string">&quot;RPC error: {}&quot;</span>, <span class="ident">err</span>),
+                ..<span class="ident">Default::default</span>()
             },
         }
     }
@@ -711,38 +710,38 @@
     }
 
     <span class="doccomment">/// Validate and apply a transaction.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">apply_tx</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">req</span>: <span class="ident">request</span>::<span class="ident">DeliverTx</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">response</span>::<span class="ident">DeliverTx</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">response</span> <span class="op">=</span> <span class="ident">response</span>::<span class="ident">DeliverTx</span>::<span class="ident">default</span>();
-        <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">protocol</span>::<span class="ident">apply_tx</span>(
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">apply_tx</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">req</span>: <span class="ident">request::DeliverTx</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">response::DeliverTx</span> {
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">response</span> <span class="op">=</span> <span class="ident">response::DeliverTx::default</span>();
+        <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">protocol::apply_tx</span>(
             <span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="ident">req</span>.<span class="ident">tx</span>,
             <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">gas_meter</span>,
             <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">write_log</span>,
             <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">storage</span>,
         )
-        .<span class="ident">map_err</span>(<span class="ident">Error</span>::<span class="ident">TxError</span>);
+        .<span class="ident">map_err</span>(<span class="ident">Error::TxApply</span>);
 
         <span class="kw">match</span> <span class="ident">result</span> {
             <span class="prelude-val">Ok</span>(<span class="ident">result</span>) <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">if</span> <span class="ident">result</span>.<span class="ident">is_accepted</span>() {
-                    <span class="ident">tracing</span>::<span class="macro">info</span><span class="macro">!</span>(
+                    <span class="macro">tracing::info!</span>(
                         <span class="string">&quot;all VPs accepted apply_tx storage modification {:#?}&quot;</span>,
                         <span class="ident">result</span>
                     );
                     <span class="self">self</span>.<span class="ident">write_log</span>.<span class="ident">commit_tx</span>();
                 } <span class="kw">else</span> {
-                    <span class="ident">tracing</span>::<span class="macro">info</span><span class="macro">!</span>(
+                    <span class="macro">tracing::info!</span>(
                         <span class="string">&quot;some VPs rejected apply_tx storage modification {:#?}&quot;</span>,
                         <span class="ident">result</span>.<span class="ident">vps_result</span>.<span class="ident">rejected_vps</span>
                     );
                     <span class="self">self</span>.<span class="ident">write_log</span>.<span class="ident">drop_tx</span>();
                     <span class="ident">response</span>.<span class="ident">code</span> <span class="op">=</span> <span class="number">1</span>;
                 }
-                <span class="ident">response</span>.<span class="ident">gas_used</span> <span class="op">=</span> <span class="ident">gas</span>::<span class="ident">as_i64</span>(<span class="ident">result</span>.<span class="ident">gas_used</span>);
+                <span class="ident">response</span>.<span class="ident">gas_used</span> <span class="op">=</span> <span class="ident">gas::as_i64</span>(<span class="ident">result</span>.<span class="ident">gas_used</span>);
                 <span class="ident">response</span>.<span class="ident">info</span> <span class="op">=</span> <span class="ident">result</span>.<span class="ident">to_string</span>();
             }
             <span class="prelude-val">Err</span>(<span class="ident">msg</span>) <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="ident">response</span>.<span class="ident">gas_used</span> <span class="op">=</span>
-                    <span class="ident">gas</span>::<span class="ident">as_i64</span>(<span class="self">self</span>.<span class="ident">gas_meter</span>.<span class="ident">get_current_transaction_gas</span>());
+                    <span class="ident">gas::as_i64</span>(<span class="self">self</span>.<span class="ident">gas_meter</span>.<span class="ident">get_current_transaction_gas</span>());
                 <span class="ident">response</span>.<span class="ident">info</span> <span class="op">=</span> <span class="ident">msg</span>.<span class="ident">to_string</span>();
             }
         }
@@ -750,27 +749,27 @@
     }
 
     <span class="doccomment">/// End a block.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">end_block</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">_height</span>: <span class="ident">BlockHeight</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">response</span>::<span class="ident">EndBlock</span> {
-        <span class="ident">Default</span>::<span class="ident">default</span>()
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">end_block</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">_height</span>: <span class="ident">BlockHeight</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">response::EndBlock</span> {
+        <span class="ident">Default::default</span>()
     }
 
     <span class="doccomment">/// Commit a block. Persist the application state and return the Merkle root</span>
     <span class="doccomment">/// hash.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">commit</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">response</span>::<span class="ident">Commit</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">response</span> <span class="op">=</span> <span class="ident">response</span>::<span class="ident">Commit</span>::<span class="ident">default</span>();
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">commit</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">response::Commit</span> {
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">response</span> <span class="op">=</span> <span class="ident">response::Commit::default</span>();
         <span class="comment">// commit changes from the write-log to storage</span>
         <span class="self">self</span>.<span class="ident">write_log</span>
             .<span class="ident">commit_block</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">storage</span>)
             .<span class="ident">expect</span>(<span class="string">&quot;Expected committing block write log success&quot;</span>);
         <span class="comment">// store the block&#39;s data in DB</span>
         <span class="self">self</span>.<span class="ident">storage</span>.<span class="ident">commit</span>().<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> {
-            <span class="ident">tracing</span>::<span class="macro">error</span><span class="macro">!</span>(
+            <span class="macro">tracing::error!</span>(
                 <span class="string">&quot;Encountered a storage error while committing a block {:?}&quot;</span>,
                 <span class="ident">e</span>
             )
         });
         <span class="kw">let</span> <span class="ident">root</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">storage</span>.<span class="ident">merkle_root</span>();
-        <span class="ident">tracing</span>::<span class="macro">info</span><span class="macro">!</span>(
+        <span class="macro">tracing::info!</span>(
             <span class="string">&quot;Committed block hash: {}, height: {}&quot;</span>,
             <span class="ident">root</span>,
             <span class="self">self</span>.<span class="ident">storage</span>.<span class="ident">last_height</span>,
@@ -786,10 +785,10 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">tx_bytes</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>],
         <span class="ident">r#_type</span>: <span class="ident">MempoolTxType</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">response</span>::<span class="ident">CheckTx</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">response</span> <span class="op">=</span> <span class="ident">response</span>::<span class="ident">CheckTx</span>::<span class="ident">default</span>();
-        <span class="kw">match</span> <span class="ident">Tx</span>::<span class="ident">try_from</span>(<span class="ident">tx_bytes</span>).<span class="ident">map_err</span>(<span class="ident">Error</span>::<span class="ident">TxDecodingError</span>) {
-            <span class="prelude-val">Ok</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">response</span>.<span class="ident">info</span> <span class="op">=</span> <span class="ident">String</span>::<span class="ident">from</span>(<span class="string">&quot;Mempool validation passed&quot;</span>),
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">response::CheckTx</span> {
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">response</span> <span class="op">=</span> <span class="ident">response::CheckTx::default</span>();
+        <span class="kw">match</span> <span class="ident">Tx::try_from</span>(<span class="ident">tx_bytes</span>).<span class="ident">map_err</span>(<span class="ident">Error::TxDecoding</span>) {
+            <span class="prelude-val">Ok</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">response</span>.<span class="ident">info</span> <span class="op">=</span> <span class="ident">String::from</span>(<span class="string">&quot;Mempool validation passed&quot;</span>),
             <span class="prelude-val">Err</span>(<span class="ident">msg</span>) <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="ident">response</span>.<span class="ident">code</span> <span class="op">=</span> <span class="number">1</span>;
                 <span class="ident">response</span>.<span class="ident">log</span> <span class="op">=</span> <span class="ident">msg</span>.<span class="ident">to_string</span>();
@@ -799,43 +798,43 @@
     }
 
     <span class="doccomment">/// Simulate validation and application of a transaction.</span>
-    <span class="kw">fn</span> <span class="ident">dry_run_tx</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">tx_bytes</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">response</span>::<span class="ident">Query</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">response</span> <span class="op">=</span> <span class="ident">response</span>::<span class="ident">Query</span>::<span class="ident">default</span>();
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">gas_meter</span> <span class="op">=</span> <span class="ident">BlockGasMeter</span>::<span class="ident">default</span>();
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">write_log</span> <span class="op">=</span> <span class="ident">WriteLog</span>::<span class="ident">default</span>();
-        <span class="kw">match</span> <span class="ident">protocol</span>::<span class="ident">apply_tx</span>(
+    <span class="kw">fn</span> <span class="ident">dry_run_tx</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">tx_bytes</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">response::Query</span> {
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">response</span> <span class="op">=</span> <span class="ident">response::Query::default</span>();
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">gas_meter</span> <span class="op">=</span> <span class="ident">BlockGasMeter::default</span>();
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">write_log</span> <span class="op">=</span> <span class="ident">WriteLog::default</span>();
+        <span class="kw">match</span> <span class="ident">protocol::apply_tx</span>(
             <span class="ident">tx_bytes</span>,
             <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">gas_meter</span>,
             <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">write_log</span>,
             <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">storage</span>,
         )
-        .<span class="ident">map_err</span>(<span class="ident">Error</span>::<span class="ident">TxError</span>)
+        .<span class="ident">map_err</span>(<span class="ident">Error::TxApply</span>)
         {
             <span class="prelude-val">Ok</span>(<span class="ident">result</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">response</span>.<span class="ident">info</span> <span class="op">=</span> <span class="ident">result</span>.<span class="ident">to_string</span>(),
             <span class="prelude-val">Err</span>(<span class="ident">error</span>) <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="ident">response</span>.<span class="ident">code</span> <span class="op">=</span> <span class="number">1</span>;
-                <span class="ident">response</span>.<span class="ident">log</span> <span class="op">=</span> <span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">error</span>);
+                <span class="ident">response</span>.<span class="ident">log</span> <span class="op">=</span> <span class="macro">format!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">error</span>);
             }
         }
         <span class="ident">response</span>
     }
 
     <span class="doccomment">/// Query to read a value from storage</span>
-    <span class="kw">fn</span> <span class="ident">read_storage_value</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">Key</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">response</span>::<span class="ident">Query</span> {
+    <span class="kw">fn</span> <span class="ident">read_storage_value</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">Key</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">response::Query</span> {
         <span class="kw">match</span> <span class="self">self</span>.<span class="ident">storage</span>.<span class="ident">read</span>(<span class="ident">key</span>) {
-            <span class="prelude-val">Ok</span>((<span class="prelude-val">Some</span>(<span class="ident">value</span>), <span class="ident">_gas</span>)) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">response</span>::<span class="ident">Query</span> {
+            <span class="prelude-val">Ok</span>((<span class="prelude-val">Some</span>(<span class="ident">value</span>), <span class="ident">_gas</span>)) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">response::Query</span> {
                 <span class="ident">value</span>,
-                ..<span class="ident">Default</span>::<span class="ident">default</span>()
+                ..<span class="ident">Default::default</span>()
             },
-            <span class="prelude-val">Ok</span>((<span class="prelude-val">None</span>, <span class="ident">_gas</span>)) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">response</span>::<span class="ident">Query</span> {
+            <span class="prelude-val">Ok</span>((<span class="prelude-val">None</span>, <span class="ident">_gas</span>)) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">response::Query</span> {
                 <span class="ident">code</span>: <span class="number">1</span>,
-                <span class="ident">info</span>: <span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;No value found for key: {}&quot;</span>, <span class="ident">key</span>),
-                ..<span class="ident">Default</span>::<span class="ident">default</span>()
+                <span class="ident">info</span>: <span class="macro">format!</span>(<span class="string">&quot;No value found for key: {}&quot;</span>, <span class="ident">key</span>),
+                ..<span class="ident">Default::default</span>()
             },
-            <span class="prelude-val">Err</span>(<span class="ident">err</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">response</span>::<span class="ident">Query</span> {
+            <span class="prelude-val">Err</span>(<span class="ident">err</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">response::Query</span> {
                 <span class="ident">code</span>: <span class="number">2</span>,
-                <span class="ident">info</span>: <span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;Storage error: {}&quot;</span>, <span class="ident">err</span>),
-                ..<span class="ident">Default</span>::<span class="ident">default</span>()
+                <span class="ident">info</span>: <span class="macro">format!</span>(<span class="string">&quot;Storage error: {}&quot;</span>, <span class="ident">err</span>),
+                ..<span class="ident">Default::default</span>()
             },
         }
     }
@@ -843,45 +842,44 @@
     <span class="doccomment">/// Query to read a range of values from storage with a matching prefix. The</span>
     <span class="doccomment">/// value in successful response is a [`Vec&lt;PrefixValue&gt;`] encoded with</span>
     <span class="doccomment">/// [`BorshSerialize`].</span>
-    <span class="kw">fn</span> <span class="ident">read_storage_prefix</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">Key</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">response</span>::<span class="ident">Query</span> {
+    <span class="kw">fn</span> <span class="ident">read_storage_prefix</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">Key</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">response::Query</span> {
         <span class="kw">let</span> (<span class="ident">iter</span>, <span class="ident">_gas</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">storage</span>.<span class="ident">iter_prefix</span>(<span class="ident">key</span>);
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">iter</span> <span class="op">=</span> <span class="ident">iter</span>.<span class="ident">peekable</span>();
         <span class="kw">if</span> <span class="ident">iter</span>.<span class="ident">peek</span>().<span class="ident">is_none</span>() {
-            <span class="ident">response</span>::<span class="ident">Query</span> {
+            <span class="ident">response::Query</span> {
                 <span class="ident">code</span>: <span class="number">1</span>,
-                <span class="ident">info</span>: <span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;No value found for key: {}&quot;</span>, <span class="ident">key</span>),
-                ..<span class="ident">Default</span>::<span class="ident">default</span>()
+                <span class="ident">info</span>: <span class="macro">format!</span>(<span class="string">&quot;No value found for key: {}&quot;</span>, <span class="ident">key</span>),
+                ..<span class="ident">Default::default</span>()
             }
         } <span class="kw">else</span> {
-            <span class="kw">let</span> <span class="ident">values</span>: <span class="ident">std</span>::<span class="ident">result</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>
+            <span class="kw">let</span> <span class="ident">values</span>: <span class="ident">std::result::Result</span><span class="op">&lt;</span>
                 <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">PrefixValue</span><span class="op">&gt;</span>,
-                <span class="ident">anoma</span>::<span class="ident">types</span>::<span class="ident">storage</span>::<span class="ident">Error</span>,
+                <span class="ident">anoma::types::storage::Error</span>,
             <span class="op">&gt;</span> <span class="op">=</span> <span class="ident">iter</span>
                 .<span class="ident">map</span>(<span class="op">|</span>(<span class="ident">key</span>, <span class="ident">value</span>, <span class="ident">_gas</span>)<span class="op">|</span> {
-                    <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Key</span>::<span class="ident">parse</span>(<span class="ident">key</span>)<span class="question-mark">?</span>;
+                    <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Key::parse</span>(<span class="ident">key</span>)<span class="question-mark">?</span>;
                     <span class="prelude-val">Ok</span>(<span class="ident">PrefixValue</span> { <span class="ident">key</span>, <span class="ident">value</span> })
                 })
                 .<span class="ident">collect</span>();
             <span class="kw">match</span> <span class="ident">values</span> {
                 <span class="prelude-val">Ok</span>(<span class="ident">values</span>) <span class="op">=</span><span class="op">&gt;</span> {
                     <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">values</span>.<span class="ident">try_to_vec</span>().<span class="ident">unwrap</span>();
-                    <span class="ident">response</span>::<span class="ident">Query</span> {
+                    <span class="ident">response::Query</span> {
                         <span class="ident">value</span>,
-                        ..<span class="ident">Default</span>::<span class="ident">default</span>()
+                        ..<span class="ident">Default::default</span>()
                     }
                 }
-                <span class="prelude-val">Err</span>(<span class="ident">err</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">response</span>::<span class="ident">Query</span> {
+                <span class="prelude-val">Err</span>(<span class="ident">err</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">response::Query</span> {
                     <span class="ident">code</span>: <span class="number">1</span>,
-                    <span class="ident">info</span>: <span class="macro">format</span><span class="macro">!</span>(
+                    <span class="ident">info</span>: <span class="macro">format!</span>(
                         <span class="string">&quot;Error parsing a storage key {}: {}&quot;</span>,
                         <span class="ident">key</span>, <span class="ident">err</span>
                     ),
-                    ..<span class="ident">Default</span>::<span class="ident">default</span>()
+                    ..<span class="ident">Default::default</span>()
                 },
             }
         }
     }
 }
 </pre></div>
-</section><section id="search" class="content hidden"></section><section class="footer"></section><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="anoma_apps" data-search-js="../../../../search-index.js"></div>
-    <script src="../../../../main.js"></script><script src="../../../../source-script.js"></script><script src="../../../../source-files.js"></script></body></html>
+</section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="anoma_apps" data-search-index-js="../../../../search-index.js" data-search-js="../../../../search.js"></div><script src="../../../../main.js"></script><script src="../../../../source-script.js"></script><script src="../../../../source-files.js"></script></body></html>

@@ -137,9 +137,10 @@
 
                 <div id="content" class="content">
                     <main>
-                        <h1 id="vscode"><a class="header" href="#vscode">VsCode</a></h1>
+                        <h1 id="ide"><a class="header" href="#ide">IDE</a></h1>
+<h2 id="vscode"><a class="header" href="#vscode">VsCode</a></h2>
 <p>Some handy extensions (output of <code>code --list-extensions</code>):</p>
-<pre><code>aaron-bond.better-comments
+<pre><code class="language-shell">aaron-bond.better-comments
 be5invis.toml
 bodil.file-browser
 bungcip.better-toml
@@ -162,7 +163,7 @@ publicus.org-checkbox
 <p>Add these to your settings.json to get rustfmt and clippy with the nightly version that we use:</p>
 <pre><code class="language-json">&quot;rust-analyzer.checkOnSave.overrideCommand&quot;: [
     &quot;cargo&quot;,
-    &quot;+nightly-2021-03-09&quot;,
+    &quot;+nightly-2021-08-04&quot;,
     &quot;clippy&quot;,
     &quot;--workspace&quot;,
     &quot;--message-format=json&quot;,
@@ -171,7 +172,7 @@ publicus.org-checkbox
 &quot;rust-analyzer.rustfmt.overrideCommand&quot;: [
     &quot;rustup&quot;,
     &quot;run&quot;,
-    &quot;nightly-2021-03-09&quot;,
+    &quot;nightly-2021-08-04&quot;,
     &quot;--&quot;,
     &quot;rustfmt&quot;,
     &quot;--edition&quot;,
@@ -179,7 +180,8 @@ publicus.org-checkbox
     &quot;--&quot;
 ],
 </code></pre>
-<h1 id="emacs"><a class="header" href="#emacs">Emacs</a></h1>
+<p>When editing the wasms source (i.e. <code>wasm/wasm_source/src/..</code>), open the <code>wasm/wasm_source</code> as a workspace to get rust-analyzer working (because the crate is excluded from the root cargo workspace) and then active <code>--all-features</code> for it in the preferences.</p>
+<h2 id="emacs"><a class="header" href="#emacs">Emacs</a></h2>
 <p>two main mode:</p>
 <ul>
 <li><a href="https://github.com/rust-lang/rust-mode">rust-mode</a>
@@ -188,7 +190,7 @@ official mode supported by rust dev</li>
 forked with more option and better integration/default value</li>
 </ul>
 <h2 id="config-example-with-rustic-and-use-package"><a class="header" href="#config-example-with-rustic-and-use-package">config example with rustic and use-package</a></h2>
-<pre><code>    ;; all flycheck not mandatory not mandatory
+<pre><code class="language-elisp">    ;; all flycheck not mandatory not mandatory
   (use-package flycheck
     :commands flycheck-mode
     :init (global-flycheck-mode))

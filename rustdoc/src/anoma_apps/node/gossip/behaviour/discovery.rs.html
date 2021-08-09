@@ -1,7 +1,6 @@
 <!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `apps/src/lib/node/gossip/behaviour/discovery.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>discovery.rs - source</title><link rel="stylesheet" type="text/css" href="../../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../../../ayu.css" disabled ><script id="default-settings"></script><script src="../../../../../storage.js"></script><script src="../../../../../crates.js"></script><noscript><link rel="stylesheet" href="../../../../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../../../../favicon.svg">
 <link rel="alternate icon" type="image/png" href="../../../../../favicon-16x16.png">
-<link rel="alternate icon" type="image/png" href="../../../../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../../../anoma_apps/index.html'><div class='logo-container rust-logo'><img src='../../../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../../../../../brush.svg" width="18" height="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><script src="../../../../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" class="help-button">?</button>
-                <a id="settings-menu" href="../../../../../settings.html"><img src="../../../../../wheel.svg" width="18" height="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">  1</span>
+<link rel="alternate icon" type="image/png" href="../../../../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../../../anoma_apps/index.html'><div class='logo-container rust-logo'><img src='../../../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img src="../../../../../brush.svg" width="18" height="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../../../../settings.html" title="settings"><img src="../../../../../wheel.svg" width="18" height="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">  1</span>
 <span id="2">  2</span>
 <span id="3">  3</span>
 <span id="4">  4</span>
@@ -517,36 +516,36 @@
 <span id="514">514</span>
 <span id="515">515</span>
 <span id="516">516</span>
-</pre><div class="example-wrap"><pre class="rust ">
+</pre><pre class="rust">
 <span class="comment">// This file is almost identical to this</span>
 <span class="comment">// https://github.com/webb-tools/anonima/blob/main/network/src/discovery.rs</span>
 <span class="comment">// appropriate affiliation needs to be added here original header :</span>
 <span class="comment">//</span>
 <span class="comment">// Copyright 2020 ChainSafe Systems SPDX-License-Identifier: Apache-2.0, MIT</span>
 
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">collections</span>::{<span class="ident">HashSet</span>, <span class="ident">VecDeque</span>};
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">fmt</span>::<span class="ident">Display</span>;
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">task</span>::{<span class="ident">Context</span>, <span class="ident">Poll</span>};
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">time</span>::<span class="ident">Duration</span>;
+<span class="kw">use</span> <span class="ident">std::collections</span>::{<span class="ident">HashSet</span>, <span class="ident">VecDeque</span>};
+<span class="kw">use</span> <span class="ident">std::fmt::Display</span>;
+<span class="kw">use</span> <span class="ident">std::task</span>::{<span class="ident">Context</span>, <span class="ident">Poll</span>};
+<span class="kw">use</span> <span class="ident">std::time::Duration</span>;
 <span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">cmp</span>, <span class="ident">io</span>};
 
-<span class="kw">use</span> <span class="ident">async_std</span>::<span class="ident">stream</span>::{<span class="self">self</span>, <span class="ident">Interval</span>};
-<span class="kw">use</span> <span class="ident">futures</span>::<span class="ident">StreamExt</span>;
-<span class="kw">use</span> <span class="ident">libp2p</span>::<span class="ident">core</span>::<span class="ident">connection</span>::{<span class="ident">ConnectionId</span>, <span class="ident">ListenerId</span>};
-<span class="kw">use</span> <span class="ident">libp2p</span>::<span class="ident">core</span>::<span class="ident">ConnectedPoint</span>;
-<span class="kw">use</span> <span class="ident">libp2p</span>::<span class="ident">kad</span>::<span class="ident">handler</span>::<span class="ident">KademliaHandlerProto</span>;
-<span class="kw">use</span> <span class="ident">libp2p</span>::<span class="ident">kad</span>::<span class="ident">store</span>::<span class="ident">MemoryStore</span>;
-<span class="kw">use</span> <span class="ident">libp2p</span>::<span class="ident">kad</span>::{<span class="ident">Kademlia</span>, <span class="ident">KademliaConfig</span>, <span class="ident">KademliaEvent</span>, <span class="ident">QueryId</span>};
-<span class="kw">use</span> <span class="ident">libp2p</span>::<span class="ident">mdns</span>::{<span class="ident">Mdns</span>, <span class="ident">MdnsConfig</span>, <span class="ident">MdnsEvent</span>};
-<span class="kw">use</span> <span class="ident">libp2p</span>::<span class="ident">swarm</span>::<span class="ident">toggle</span>::{<span class="ident">Toggle</span>, <span class="ident">ToggleIntoProtoHandler</span>};
-<span class="kw">use</span> <span class="ident">libp2p</span>::<span class="ident">swarm</span>::{
+<span class="kw">use</span> <span class="ident">async_std::stream</span>::{<span class="self">self</span>, <span class="ident">Interval</span>};
+<span class="kw">use</span> <span class="ident">futures::StreamExt</span>;
+<span class="kw">use</span> <span class="ident">libp2p::core::connection</span>::{<span class="ident">ConnectionId</span>, <span class="ident">ListenerId</span>};
+<span class="kw">use</span> <span class="ident">libp2p::core::ConnectedPoint</span>;
+<span class="kw">use</span> <span class="ident">libp2p::kad::handler::KademliaHandlerProto</span>;
+<span class="kw">use</span> <span class="ident">libp2p::kad::store::MemoryStore</span>;
+<span class="kw">use</span> <span class="ident">libp2p::kad</span>::{<span class="ident">Kademlia</span>, <span class="ident">KademliaConfig</span>, <span class="ident">KademliaEvent</span>, <span class="ident">QueryId</span>};
+<span class="kw">use</span> <span class="ident">libp2p::mdns</span>::{<span class="ident">Mdns</span>, <span class="ident">MdnsConfig</span>, <span class="ident">MdnsEvent</span>};
+<span class="kw">use</span> <span class="ident">libp2p::swarm::toggle</span>::{<span class="ident">Toggle</span>, <span class="ident">ToggleIntoProtoHandler</span>};
+<span class="kw">use</span> <span class="ident">libp2p::swarm</span>::{
     <span class="ident">IntoProtocolsHandler</span>, <span class="ident">NetworkBehaviour</span>, <span class="ident">NetworkBehaviourAction</span>,
     <span class="ident">PollParameters</span>, <span class="ident">ProtocolsHandler</span>,
 };
 <span class="kw">use</span> <span class="ident">libp2p</span>::{<span class="ident">Multiaddr</span>, <span class="ident">PeerId</span>};
-<span class="kw">use</span> <span class="ident">thiserror</span>::<span class="ident">Error</span>;
+<span class="kw">use</span> <span class="ident">thiserror::Error</span>;
 
-<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">config</span>::<span class="ident">PeerAddress</span>;
+<span class="kw">use</span> <span class="kw">crate</span><span class="ident">::config::PeerAddress</span>;
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Error</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">Error</span> {
@@ -554,10 +553,10 @@
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Failed to bootstrap kademlia {0}&quot;</span>)]</span>
     <span class="ident">FailedBootstrap</span>(<span class="ident">String</span>),
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Failed to initialize mdns {0}&quot;</span>)]</span>
-    <span class="ident">FailedMdns</span>(<span class="ident">std</span>::<span class="ident">io</span>::<span class="ident">Error</span>),
+    <span class="ident">FailedMdns</span>(<span class="ident">std::io::Error</span>),
 }
 
-<span class="kw">pub</span> <span class="kw">type</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">std</span>::<span class="ident">result</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">Error</span><span class="op">&gt;</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">std::result::Result</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">Error</span><span class="op">&gt;</span>;
 
 <span class="doccomment">/// Event generated by the `DiscoveryBehaviour`.</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
@@ -583,8 +582,8 @@
 <span class="kw">impl</span> <span class="ident">Default</span> <span class="kw">for</span> <span class="ident">DiscoveryConfig</span> {
     <span class="kw">fn</span> <span class="ident">default</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="self">Self</span> {
-            <span class="ident">user_defined</span>: <span class="ident">Vec</span>::<span class="ident">new</span>(),
-            <span class="ident">discovery_max</span>: <span class="ident">u64</span>::<span class="ident">MAX</span>,
+            <span class="ident">user_defined</span>: <span class="ident">Vec::new</span>(),
+            <span class="ident">discovery_max</span>: <span class="ident">u64::MAX</span>,
             <span class="ident">enable_kademlia</span>: <span class="bool-val">true</span>,
             <span class="ident">enable_mdns</span>: <span class="bool-val">true</span>,
             <span class="ident">kademlia_disjoint_query_paths</span>: <span class="bool-val">true</span>,
@@ -664,9 +663,9 @@
     <span class="ident">discovery_max</span>: <span class="ident">u64</span>,
 }
 <span class="kw">impl</span> <span class="ident">Display</span> <span class="kw">for</span> <span class="ident">DiscoveryBehaviour</span> {
-    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">std</span>::<span class="ident">fmt</span>::<span class="ident">Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">std</span>::<span class="ident">fmt</span>::<span class="prelude-ty">Result</span> {
+    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">std::fmt::Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">std::fmt::Result</span> {
         <span class="ident">f</span>.<span class="ident">write_str</span>(
-            <span class="macro">format</span><span class="macro">!</span>(
+            <span class="macro">format!</span>(
                 <span class="string">&quot;user_defined {:?}, kademlia: {:?}, mdns: {:?}, \
                  next_kad_random_query: {:?}, duration_to_next_kad {:?}, \
                  num_connection: {:?}, peers: {:?}, discovery_max: {:?}&quot;</span>,
@@ -698,31 +697,31 @@
             <span class="ident">kademlia_disjoint_query_paths</span>,
         } <span class="op">=</span> <span class="ident">config</span>;
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">peers</span> <span class="op">=</span> <span class="ident">HashSet</span>::<span class="ident">new</span>();
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">peers</span> <span class="op">=</span> <span class="ident">HashSet::new</span>();
 
         <span class="kw">let</span> <span class="ident">kademlia_opt</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">enable_kademlia</span> {
             <span class="comment">// Kademlia config</span>
-            <span class="kw">let</span> <span class="ident">store</span> <span class="op">=</span> <span class="ident">MemoryStore</span>::<span class="ident">new</span>(<span class="ident">local_peer_id</span>.<span class="ident">to_owned</span>());
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">kad_config</span> <span class="op">=</span> <span class="ident">KademliaConfig</span>::<span class="ident">default</span>();
+            <span class="kw">let</span> <span class="ident">store</span> <span class="op">=</span> <span class="ident">MemoryStore::new</span>(<span class="ident">local_peer_id</span>.<span class="ident">to_owned</span>());
+            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">kad_config</span> <span class="op">=</span> <span class="ident">KademliaConfig::default</span>();
             <span class="ident">kad_config</span>.<span class="ident">disjoint_query_paths</span>(<span class="ident">kademlia_disjoint_query_paths</span>);
             <span class="ident">kad_config</span>.<span class="ident">set_protocol_name</span>(
-                <span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;/anoma/kad/{}/kad/1.0.0&quot;</span>, <span class="string">&quot;anoma&quot;</span>)
+                <span class="macro">format!</span>(<span class="string">&quot;/anoma/kad/{}/kad/1.0.0&quot;</span>, <span class="string">&quot;anoma&quot;</span>)
                     .<span class="ident">as_bytes</span>()
                     .<span class="ident">to_vec</span>(),
             );
 
             <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">kademlia</span> <span class="op">=</span>
-                <span class="ident">Kademlia</span>::<span class="ident">with_config</span>(<span class="ident">local_peer_id</span>, <span class="ident">store</span>, <span class="ident">kad_config</span>);
+                <span class="ident">Kademlia::with_config</span>(<span class="ident">local_peer_id</span>, <span class="ident">store</span>, <span class="ident">kad_config</span>);
 
             <span class="ident">user_defined</span>
                 .<span class="ident">iter</span>()
                 .<span class="ident">for_each</span>(<span class="op">|</span><span class="ident">PeerAddress</span> { <span class="ident">address</span>, <span class="ident">peer_id</span> }<span class="op">|</span> {
-                    <span class="ident">kademlia</span>.<span class="ident">add_address</span>(<span class="kw-2">&amp;</span><span class="ident">peer_id</span>, <span class="ident">address</span>.<span class="ident">clone</span>());
+                    <span class="ident">kademlia</span>.<span class="ident">add_address</span>(<span class="ident">peer_id</span>, <span class="ident">address</span>.<span class="ident">clone</span>());
                     <span class="ident">peers</span>.<span class="ident">insert</span>(<span class="kw-2">*</span><span class="ident">peer_id</span>);
                 });
 
             <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Err</span>(<span class="ident">err</span>) <span class="op">=</span> <span class="ident">kademlia</span>.<span class="ident">bootstrap</span>() {
-                <span class="ident">tracing</span>::<span class="macro">error</span><span class="macro">!</span>(<span class="string">&quot;failed to bootstrap kad : {:?}&quot;</span>, <span class="ident">err</span>);
+                <span class="macro">tracing::error!</span>(<span class="string">&quot;failed to bootstrap kad : {:?}&quot;</span>, <span class="ident">err</span>);
             };
             <span class="prelude-val">Some</span>(<span class="ident">kademlia</span>)
         } <span class="kw">else</span> {
@@ -730,10 +729,10 @@
         };
 
         <span class="kw">let</span> <span class="ident">mdns_opt</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">enable_mdns</span> {
-            <span class="kw">let</span> <span class="ident">rt</span> <span class="op">=</span> <span class="ident">tokio</span>::<span class="ident">runtime</span>::<span class="ident">Runtime</span>::<span class="ident">new</span>().<span class="ident">unwrap</span>();
+            <span class="kw">let</span> <span class="ident">rt</span> <span class="op">=</span> <span class="ident">tokio::runtime::Runtime::new</span>().<span class="ident">unwrap</span>();
             <span class="prelude-val">Some</span>(
-                <span class="ident">rt</span>.<span class="ident">block_on</span>(<span class="ident">Mdns</span>::<span class="ident">new</span>(<span class="ident">MdnsConfig</span>::<span class="ident">default</span>()))
-                    .<span class="ident">map_err</span>(<span class="ident">Error</span>::<span class="ident">FailedMdns</span>)<span class="question-mark">?</span>,
+                <span class="ident">rt</span>.<span class="ident">block_on</span>(<span class="ident">Mdns::new</span>(<span class="ident">MdnsConfig::default</span>()))
+                    .<span class="ident">map_err</span>(<span class="ident">Error::FailedMdns</span>)<span class="question-mark">?</span>,
             )
         } <span class="kw">else</span> {
             <span class="prelude-val">None</span>
@@ -744,8 +743,8 @@
             <span class="ident">kademlia</span>: <span class="ident">kademlia_opt</span>.<span class="ident">into</span>(),
             <span class="ident">mdns</span>: <span class="ident">mdns_opt</span>.<span class="ident">into</span>(),
             <span class="ident">next_kad_random_query</span>: <span class="prelude-val">None</span>,
-            <span class="ident">duration_to_next_kad</span>: <span class="ident">Duration</span>::<span class="ident">from_secs</span>(<span class="number">1</span>),
-            <span class="ident">pending_events</span>: <span class="ident">VecDeque</span>::<span class="ident">new</span>(),
+            <span class="ident">duration_to_next_kad</span>: <span class="ident">Duration::from_secs</span>(<span class="number">1</span>),
+            <span class="ident">pending_events</span>: <span class="ident">VecDeque::new</span>(),
             <span class="ident">num_connections</span>: <span class="number">0</span>,
             <span class="ident">peers</span>,
             <span class="ident">discovery_max</span>,
@@ -758,7 +757,7 @@
     <span class="kw">type</span> <span class="ident">ProtocolsHandler</span> <span class="op">=</span>
         <span class="ident">ToggleIntoProtoHandler</span><span class="op">&lt;</span><span class="ident">KademliaHandlerProto</span><span class="op">&lt;</span><span class="ident">QueryId</span><span class="op">&gt;</span><span class="op">&gt;</span>;
 
-    <span class="kw">fn</span> <span class="ident">new_handler</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span>::<span class="ident">ProtocolsHandler</span> {
+    <span class="kw">fn</span> <span class="ident">new_handler</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span><span class="ident">::ProtocolsHandler</span> {
         <span class="self">self</span>.<span class="ident">kademlia</span>.<span class="ident">new_handler</span>()
     }
 
@@ -785,7 +784,7 @@
     <span class="kw">fn</span> <span class="ident">inject_connected</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">peer_id</span>: <span class="kw-2">&amp;</span><span class="ident">PeerId</span>) {
         <span class="self">self</span>.<span class="ident">peers</span>.<span class="ident">insert</span>(<span class="kw-2">*</span><span class="ident">peer_id</span>);
         <span class="self">self</span>.<span class="ident">pending_events</span>
-            .<span class="ident">push_back</span>(<span class="ident">DiscoveryEvent</span>::<span class="ident">Connected</span>(<span class="kw-2">*</span><span class="ident">peer_id</span>));
+            .<span class="ident">push_back</span>(<span class="ident">DiscoveryEvent::Connected</span>(<span class="kw-2">*</span><span class="ident">peer_id</span>));
 
         <span class="self">self</span>.<span class="ident">kademlia</span>.<span class="ident">inject_connected</span>(<span class="ident">peer_id</span>)
     }
@@ -793,7 +792,7 @@
     <span class="kw">fn</span> <span class="ident">inject_disconnected</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">peer_id</span>: <span class="kw-2">&amp;</span><span class="ident">PeerId</span>) {
         <span class="self">self</span>.<span class="ident">peers</span>.<span class="ident">remove</span>(<span class="ident">peer_id</span>);
         <span class="self">self</span>.<span class="ident">pending_events</span>
-            .<span class="ident">push_back</span>(<span class="ident">DiscoveryEvent</span>::<span class="ident">Disconnected</span>(<span class="kw-2">*</span><span class="ident">peer_id</span>));
+            .<span class="ident">push_back</span>(<span class="ident">DiscoveryEvent::Disconnected</span>(<span class="kw-2">*</span><span class="ident">peer_id</span>));
 
         <span class="self">self</span>.<span class="ident">kademlia</span>.<span class="ident">inject_disconnected</span>(<span class="ident">peer_id</span>)
     }
@@ -836,7 +835,7 @@
         <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
         <span class="ident">peer_id</span>: <span class="ident">PeerId</span>,
         <span class="ident">connection</span>: <span class="ident">ConnectionId</span>,
-        <span class="ident">event</span>: <span class="op">&lt;</span><span class="op">&lt;</span><span class="self">Self</span>::<span class="ident">ProtocolsHandler</span> <span class="kw">as</span> <span class="ident">IntoProtocolsHandler</span><span class="op">&gt;</span>::<span class="ident">Handler</span> <span class="kw">as</span> <span class="ident">ProtocolsHandler</span><span class="op">&gt;</span>::<span class="ident">OutEvent</span>,
+        <span class="ident">event</span>: <span class="op">&lt;</span><span class="op">&lt;</span><span class="self">Self</span><span class="ident">::ProtocolsHandler</span> <span class="kw">as</span> <span class="ident">IntoProtocolsHandler</span><span class="op">&gt;</span><span class="ident">::Handler</span> <span class="kw">as</span> <span class="ident">ProtocolsHandler</span><span class="op">&gt;</span><span class="ident">::OutEvent</span>,
     ) {
         <span class="self">self</span>.<span class="ident">kademlia</span>.<span class="ident">inject_event</span>(<span class="ident">peer_id</span>, <span class="ident">connection</span>, <span class="ident">event</span>)
     }
@@ -845,7 +844,7 @@
         <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
         <span class="ident">peer_id</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">PeerId</span><span class="op">&gt;</span>,
         <span class="ident">addr</span>: <span class="kw-2">&amp;</span><span class="ident">Multiaddr</span>,
-        <span class="ident">error</span>: <span class="kw-2">&amp;</span><span class="kw">dyn</span> <span class="ident">std</span>::<span class="ident">error</span>::<span class="ident">Error</span>,
+        <span class="ident">error</span>: <span class="kw-2">&amp;</span><span class="kw">dyn</span> <span class="ident">std::error::Error</span>,
     ) {
         <span class="self">self</span>.<span class="ident">kademlia</span>
             .<span class="ident">inject_addr_reach_failure</span>(<span class="ident">peer_id</span>, <span class="ident">addr</span>, <span class="ident">error</span>)
@@ -866,7 +865,7 @@
     <span class="kw">fn</span> <span class="ident">inject_listener_error</span>(
         <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
         <span class="ident">id</span>: <span class="ident">ListenerId</span>,
-        <span class="ident">err</span>: <span class="kw-2">&amp;</span>(<span class="kw">dyn</span> <span class="ident">std</span>::<span class="ident">error</span>::<span class="ident">Error</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>),
+        <span class="ident">err</span>: <span class="kw-2">&amp;</span>(<span class="kw">dyn</span> <span class="ident">std::error::Error</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>),
     ) {
         <span class="self">self</span>.<span class="ident">kademlia</span>.<span class="ident">inject_listener_error</span>(<span class="ident">id</span>, <span class="ident">err</span>)
     }
@@ -874,7 +873,7 @@
     <span class="kw">fn</span> <span class="ident">inject_listener_closed</span>(
         <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
         <span class="ident">id</span>: <span class="ident">ListenerId</span>,
-        <span class="ident">reason</span>: <span class="ident">std</span>::<span class="ident">result</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="kw-2">&amp;</span><span class="ident">io</span>::<span class="ident">Error</span><span class="op">&gt;</span>,
+        <span class="ident">reason</span>: <span class="ident">std::result::Result</span><span class="op">&lt;</span>(), <span class="kw-2">&amp;</span><span class="ident">io::Error</span><span class="op">&gt;</span>,
     ) {
         <span class="self">self</span>.<span class="ident">kademlia</span>.<span class="ident">inject_listener_closed</span>(<span class="ident">id</span>, <span class="ident">reason</span>)
     }
@@ -883,64 +882,64 @@
         <span class="self">self</span>.<span class="ident">kademlia</span>.<span class="ident">inject_new_external_addr</span>(<span class="ident">addr</span>)
     }
 
-    <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy</span>::<span class="ident">type_complexity</span>)]</span>
+    <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy::type_complexity</span>)]</span>
     <span class="kw">fn</span> <span class="ident">poll</span>(
 	<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
 	<span class="ident">cx</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Context</span>,
 	<span class="ident">params</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="kw">impl</span> <span class="ident">PollParameters</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Poll</span><span class="op">&lt;</span>
 	    <span class="ident">NetworkBehaviourAction</span><span class="op">&lt;</span>
-		    <span class="op">&lt;</span><span class="op">&lt;</span><span class="self">Self</span>::<span class="ident">ProtocolsHandler</span> <span class="kw">as</span> <span class="ident">IntoProtocolsHandler</span><span class="op">&gt;</span>::<span class="ident">Handler</span> <span class="kw">as</span> <span class="ident">ProtocolsHandler</span><span class="op">&gt;</span>::<span class="ident">InEvent</span>,
-		<span class="self">Self</span>::<span class="ident">OutEvent</span>,
+		    <span class="op">&lt;</span><span class="op">&lt;</span><span class="self">Self</span><span class="ident">::ProtocolsHandler</span> <span class="kw">as</span> <span class="ident">IntoProtocolsHandler</span><span class="op">&gt;</span><span class="ident">::Handler</span> <span class="kw">as</span> <span class="ident">ProtocolsHandler</span><span class="op">&gt;</span><span class="ident">::InEvent</span>,
+		<span class="self">Self</span><span class="ident">::OutEvent</span>,
 		<span class="op">&gt;</span>,
     <span class="op">&gt;</span>{
         <span class="comment">// Immediately process the content of `discovered`.</span>
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">ev</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">pending_events</span>.<span class="ident">pop_front</span>() {
-            <span class="kw">return</span> <span class="ident">Poll</span>::<span class="ident">Ready</span>(<span class="ident">NetworkBehaviourAction</span>::<span class="ident">GenerateEvent</span>(<span class="ident">ev</span>));
+            <span class="kw">return</span> <span class="ident">Poll::Ready</span>(<span class="ident">NetworkBehaviourAction::GenerateEvent</span>(<span class="ident">ev</span>));
         }
 
         <span class="comment">// Poll Kademlia.</span>
-        <span class="kw">while</span> <span class="kw">let</span> <span class="ident">Poll</span>::<span class="ident">Ready</span>(<span class="ident">ev</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">kademlia</span>.<span class="ident">poll</span>(<span class="ident">cx</span>, <span class="ident">params</span>) {
+        <span class="kw">while</span> <span class="kw">let</span> <span class="ident">Poll::Ready</span>(<span class="ident">ev</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">kademlia</span>.<span class="ident">poll</span>(<span class="ident">cx</span>, <span class="ident">params</span>) {
             <span class="kw">match</span> <span class="ident">ev</span> {
-                <span class="ident">NetworkBehaviourAction</span>::<span class="ident">GenerateEvent</span>(<span class="ident">ev</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="ident">ev</span> {
+                <span class="ident">NetworkBehaviourAction::GenerateEvent</span>(<span class="ident">ev</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="ident">ev</span> {
                     <span class="comment">// Adding to Kademlia buckets is automatic with our config,</span>
                     <span class="comment">// no need to do manually.</span>
-                    <span class="ident">KademliaEvent</span>::<span class="ident">RoutingUpdated</span> { .. } <span class="op">=</span><span class="op">&gt;</span> {}
-                    <span class="ident">KademliaEvent</span>::<span class="ident">UnroutablePeer</span> { .. } <span class="op">=</span><span class="op">&gt;</span> {}
-                    <span class="ident">KademliaEvent</span>::<span class="ident">RoutablePeer</span> { .. } <span class="op">=</span><span class="op">&gt;</span> {}
-                    <span class="ident">KademliaEvent</span>::<span class="ident">QueryResult</span> { .. } <span class="op">=</span><span class="op">&gt;</span> {}
-                    <span class="ident">KademliaEvent</span>::<span class="ident">PendingRoutablePeer</span> { .. } <span class="op">=</span><span class="op">&gt;</span> {}
+                    <span class="ident">KademliaEvent::RoutingUpdated</span> { .. } <span class="op">=</span><span class="op">&gt;</span> {}
+                    <span class="ident">KademliaEvent::UnroutablePeer</span> { .. } <span class="op">=</span><span class="op">&gt;</span> {}
+                    <span class="ident">KademliaEvent::RoutablePeer</span> { .. } <span class="op">=</span><span class="op">&gt;</span> {}
+                    <span class="ident">KademliaEvent::QueryResult</span> { .. } <span class="op">=</span><span class="op">&gt;</span> {}
+                    <span class="ident">KademliaEvent::PendingRoutablePeer</span> { .. } <span class="op">=</span><span class="op">&gt;</span> {}
                 },
-                <span class="ident">NetworkBehaviourAction</span>::<span class="ident">DialAddress</span> { <span class="ident">address</span> } <span class="op">=</span><span class="op">&gt;</span> {
-                    <span class="kw">return</span> <span class="ident">Poll</span>::<span class="ident">Ready</span>(<span class="ident">NetworkBehaviourAction</span>::<span class="ident">DialAddress</span> {
+                <span class="ident">NetworkBehaviourAction::DialAddress</span> { <span class="ident">address</span> } <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="kw">return</span> <span class="ident">Poll::Ready</span>(<span class="ident">NetworkBehaviourAction::DialAddress</span> {
                         <span class="ident">address</span>,
                     });
                 }
-                <span class="ident">NetworkBehaviourAction</span>::<span class="ident">DialPeer</span> { <span class="ident">peer_id</span>, <span class="ident">condition</span> } <span class="op">=</span><span class="op">&gt;</span> {
-                    <span class="kw">return</span> <span class="ident">Poll</span>::<span class="ident">Ready</span>(<span class="ident">NetworkBehaviourAction</span>::<span class="ident">DialPeer</span> {
+                <span class="ident">NetworkBehaviourAction::DialPeer</span> { <span class="ident">peer_id</span>, <span class="ident">condition</span> } <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="kw">return</span> <span class="ident">Poll::Ready</span>(<span class="ident">NetworkBehaviourAction::DialPeer</span> {
                         <span class="ident">peer_id</span>,
                         <span class="ident">condition</span>,
                     });
                 }
-                <span class="ident">NetworkBehaviourAction</span>::<span class="ident">NotifyHandler</span> {
+                <span class="ident">NetworkBehaviourAction::NotifyHandler</span> {
                     <span class="ident">peer_id</span>,
                     <span class="ident">handler</span>,
                     <span class="ident">event</span>,
                 } <span class="op">=</span><span class="op">&gt;</span> {
-                    <span class="kw">return</span> <span class="ident">Poll</span>::<span class="ident">Ready</span>(
-                        <span class="ident">NetworkBehaviourAction</span>::<span class="ident">NotifyHandler</span> {
+                    <span class="kw">return</span> <span class="ident">Poll::Ready</span>(
+                        <span class="ident">NetworkBehaviourAction::NotifyHandler</span> {
                             <span class="ident">peer_id</span>,
                             <span class="ident">handler</span>,
                             <span class="ident">event</span>,
                         },
                     );
                 }
-                <span class="ident">NetworkBehaviourAction</span>::<span class="ident">ReportObservedAddr</span> {
+                <span class="ident">NetworkBehaviourAction::ReportObservedAddr</span> {
                     <span class="ident">address</span>,
                     <span class="ident">score</span>,
                 } <span class="op">=</span><span class="op">&gt;</span> {
-                    <span class="kw">return</span> <span class="ident">Poll</span>::<span class="ident">Ready</span>(
-                        <span class="ident">NetworkBehaviourAction</span>::<span class="ident">ReportObservedAddr</span> {
+                    <span class="kw">return</span> <span class="ident">Poll::Ready</span>(
+                        <span class="ident">NetworkBehaviourAction::ReportObservedAddr</span> {
                             <span class="ident">address</span>,
                             <span class="ident">score</span>,
                         },
@@ -955,8 +954,8 @@
         {
             <span class="kw">while</span> <span class="ident">next_kad_random_query</span>.<span class="ident">poll_next_unpin</span>(<span class="ident">cx</span>).<span class="ident">is_ready</span>() {
                 <span class="kw">if</span> <span class="self">self</span>.<span class="ident">num_connections</span> <span class="op">&lt;</span> <span class="self">self</span>.<span class="ident">discovery_max</span> {
-                    <span class="kw">let</span> <span class="ident">random_peer_id</span> <span class="op">=</span> <span class="ident">PeerId</span>::<span class="ident">random</span>();
-                    <span class="ident">tracing</span>::<span class="macro">debug</span><span class="macro">!</span>(
+                    <span class="kw">let</span> <span class="ident">random_peer_id</span> <span class="op">=</span> <span class="ident">PeerId::random</span>();
+                    <span class="macro">tracing::debug!</span>(
                         <span class="string">&quot;Libp2p &lt;= Starting random Kademlia request for {:?}&quot;</span>,
                         <span class="ident">random_peer_id</span>
                     );
@@ -966,21 +965,21 @@
                 }
 
                 <span class="kw-2">*</span><span class="ident">next_kad_random_query</span> <span class="op">=</span>
-                    <span class="ident">stream</span>::<span class="ident">interval</span>(<span class="self">self</span>.<span class="ident">duration_to_next_kad</span>);
-                <span class="self">self</span>.<span class="ident">duration_to_next_kad</span> <span class="op">=</span> <span class="ident">cmp</span>::<span class="ident">min</span>(
+                    <span class="ident">stream::interval</span>(<span class="self">self</span>.<span class="ident">duration_to_next_kad</span>);
+                <span class="self">self</span>.<span class="ident">duration_to_next_kad</span> <span class="op">=</span> <span class="ident">cmp::min</span>(
                     <span class="self">self</span>.<span class="ident">duration_to_next_kad</span> <span class="op">*</span> <span class="number">2</span>,
-                    <span class="ident">Duration</span>::<span class="ident">from_secs</span>(<span class="number">60</span>),
+                    <span class="ident">Duration::from_secs</span>(<span class="number">60</span>),
                 );
             }
         }
 
         <span class="comment">// Poll mdns.</span>
-        <span class="kw">while</span> <span class="kw">let</span> <span class="ident">Poll</span>::<span class="ident">Ready</span>(<span class="ident">ev</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">mdns</span>.<span class="ident">poll</span>(<span class="ident">cx</span>, <span class="ident">params</span>) {
+        <span class="kw">while</span> <span class="kw">let</span> <span class="ident">Poll::Ready</span>(<span class="ident">ev</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">mdns</span>.<span class="ident">poll</span>(<span class="ident">cx</span>, <span class="ident">params</span>) {
             <span class="kw">match</span> <span class="ident">ev</span> {
-                <span class="ident">NetworkBehaviourAction</span>::<span class="ident">GenerateEvent</span>(<span class="ident">event</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="ident">event</span> {
-                    <span class="ident">MdnsEvent</span>::<span class="ident">Discovered</span>(<span class="ident">list</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">NetworkBehaviourAction::GenerateEvent</span>(<span class="ident">event</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="ident">event</span> {
+                    <span class="ident">MdnsEvent::Discovered</span>(<span class="ident">list</span>) <span class="op">=</span><span class="op">&gt;</span> {
                         <span class="kw">if</span> <span class="self">self</span>.<span class="ident">num_connections</span> <span class="op">&gt;</span><span class="op">=</span> <span class="self">self</span>.<span class="ident">discovery_max</span> {
-                            <span class="ident">tracing</span>::<span class="macro">info</span><span class="macro">!</span>(
+                            <span class="macro">tracing::info!</span>(
                                 <span class="string">&quot;max reached {:?}, {:?}&quot;</span>,
                                 <span class="self">self</span>.<span class="ident">num_connections</span>,
                                 <span class="self">self</span>.<span class="ident">discovery_max</span>
@@ -1001,29 +1000,29 @@
                             }
                         }
                     }
-                    <span class="ident">MdnsEvent</span>::<span class="ident">Expired</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> {}
+                    <span class="ident">MdnsEvent::Expired</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> {}
                 },
-                <span class="ident">NetworkBehaviourAction</span>::<span class="ident">DialAddress</span> { <span class="ident">address</span> } <span class="op">=</span><span class="op">&gt;</span> {
-                    <span class="kw">return</span> <span class="ident">Poll</span>::<span class="ident">Ready</span>(<span class="ident">NetworkBehaviourAction</span>::<span class="ident">DialAddress</span> {
+                <span class="ident">NetworkBehaviourAction::DialAddress</span> { <span class="ident">address</span> } <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="kw">return</span> <span class="ident">Poll::Ready</span>(<span class="ident">NetworkBehaviourAction::DialAddress</span> {
                         <span class="ident">address</span>,
                     });
                 }
-                <span class="ident">NetworkBehaviourAction</span>::<span class="ident">DialPeer</span> { <span class="ident">peer_id</span>, <span class="ident">condition</span> } <span class="op">=</span><span class="op">&gt;</span> {
-                    <span class="kw">return</span> <span class="ident">Poll</span>::<span class="ident">Ready</span>(<span class="ident">NetworkBehaviourAction</span>::<span class="ident">DialPeer</span> {
+                <span class="ident">NetworkBehaviourAction::DialPeer</span> { <span class="ident">peer_id</span>, <span class="ident">condition</span> } <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="kw">return</span> <span class="ident">Poll::Ready</span>(<span class="ident">NetworkBehaviourAction::DialPeer</span> {
                         <span class="ident">peer_id</span>,
                         <span class="ident">condition</span>,
                     });
                 }
                 <span class="comment">// Nothing to notify handler</span>
-                <span class="ident">NetworkBehaviourAction</span>::<span class="ident">NotifyHandler</span> { <span class="ident">event</span>, .. } <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">NetworkBehaviourAction::NotifyHandler</span> { <span class="ident">event</span>, .. } <span class="op">=</span><span class="op">&gt;</span> {
                     <span class="kw">match</span> <span class="ident">event</span> {}
                 }
-                <span class="ident">NetworkBehaviourAction</span>::<span class="ident">ReportObservedAddr</span> {
+                <span class="ident">NetworkBehaviourAction::ReportObservedAddr</span> {
                     <span class="ident">address</span>,
                     <span class="ident">score</span>,
                 } <span class="op">=</span><span class="op">&gt;</span> {
-                    <span class="kw">return</span> <span class="ident">Poll</span>::<span class="ident">Ready</span>(
-                        <span class="ident">NetworkBehaviourAction</span>::<span class="ident">ReportObservedAddr</span> {
+                    <span class="kw">return</span> <span class="ident">Poll::Ready</span>(
+                        <span class="ident">NetworkBehaviourAction::ReportObservedAddr</span> {
                             <span class="ident">address</span>,
                             <span class="ident">score</span>,
                         },
@@ -1031,9 +1030,8 @@
                 }
             }
         }
-        <span class="ident">Poll</span>::<span class="ident">Pending</span>
+        <span class="ident">Poll::Pending</span>
     }
 }
 </pre></div>
-</section><section id="search" class="content hidden"></section><section class="footer"></section><div id="rustdoc-vars" data-root-path="../../../../../" data-current-crate="anoma_apps" data-search-js="../../../../../search-index.js"></div>
-    <script src="../../../../../main.js"></script><script src="../../../../../source-script.js"></script><script src="../../../../../source-files.js"></script></body></html>
+</section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../../../../" data-current-crate="anoma_apps" data-search-index-js="../../../../../search-index.js" data-search-js="../../../../../search.js"></div><script src="../../../../../main.js"></script><script src="../../../../../source-script.js"></script><script src="../../../../../source-files.js"></script></body></html>

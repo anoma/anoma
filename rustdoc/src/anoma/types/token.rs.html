@@ -1,7 +1,6 @@
 <!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `shared/src/types/token.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>token.rs - source</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script id="default-settings"></script><script src="../../../storage.js"></script><script src="../../../crates.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../../favicon.svg">
 <link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png">
-<link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../anoma/index.html'><div class='logo-container rust-logo'><img src='../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../../../brush.svg" width="18" height="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><script src="../../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" class="help-button">?</button>
-                <a id="settings-menu" href="../../../settings.html"><img src="../../../wheel.svg" width="18" height="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">  1</span>
+<link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../anoma/index.html'><div class='logo-container rust-logo'><img src='../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img src="../../../brush.svg" width="18" height="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../../settings.html" title="settings"><img src="../../../wheel.svg" width="18" height="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">  1</span>
 <span id="2">  2</span>
 <span id="3">  3</span>
 <span id="4">  4</span>
@@ -183,18 +182,18 @@
 <span id="180">180</span>
 <span id="181">181</span>
 <span id="182">182</span>
-</pre><div class="example-wrap"><pre class="rust ">
+</pre><pre class="rust">
 <span class="doccomment">//! A basic fungible token</span>
 
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">fmt</span>::<span class="ident">Display</span>;
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">str</span>::<span class="ident">FromStr</span>;
+<span class="kw">use</span> <span class="ident">std::fmt::Display</span>;
+<span class="kw">use</span> <span class="ident">std::str::FromStr</span>;
 
 <span class="kw">use</span> <span class="ident">borsh</span>::{<span class="ident">BorshDeserialize</span>, <span class="ident">BorshSerialize</span>};
 <span class="kw">use</span> <span class="ident">serde</span>::{<span class="ident">Deserialize</span>, <span class="ident">Serialize</span>};
-<span class="kw">use</span> <span class="ident">thiserror</span>::<span class="ident">Error</span>;
+<span class="kw">use</span> <span class="ident">thiserror::Error</span>;
 
-<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">types</span>::<span class="ident">address</span>::<span class="ident">Address</span>;
-<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">types</span>::<span class="ident">storage</span>::{<span class="ident">DbKeySeg</span>, <span class="ident">Key</span>, <span class="ident">KeySeg</span>};
+<span class="kw">use</span> <span class="kw">crate</span><span class="ident">::types::address::Address</span>;
+<span class="kw">use</span> <span class="kw">crate</span><span class="ident">::types::storage</span>::{<span class="ident">DbKeySeg</span>, <span class="ident">Key</span>, <span class="ident">KeySeg</span>};
 
 <span class="doccomment">/// Amount in micro units. For different granularity another representation</span>
 <span class="doccomment">/// might be more appropriate.</span>
@@ -254,10 +253,10 @@
 }
 
 <span class="kw">impl</span> <span class="ident">Display</span> <span class="kw">for</span> <span class="ident">Amount</span> {
-    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">std</span>::<span class="ident">fmt</span>::<span class="ident">Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">std</span>::<span class="ident">fmt</span>::<span class="prelude-ty">Result</span> {
+    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">std::fmt::Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">std::fmt::Result</span> {
         <span class="kw">let</span> <span class="ident">decimal</span> <span class="op">=</span>
-            <span class="ident">rust_decimal</span>::<span class="ident">Decimal</span>::<span class="ident">new</span>(<span class="self">self</span>.<span class="ident">micro</span> <span class="kw">as</span> <span class="ident">i64</span>, <span class="number">6</span>).<span class="ident">normalize</span>();
-        <span class="macro">write</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot;{}&quot;</span>, <span class="ident">decimal</span>)
+            <span class="ident">rust_decimal::Decimal::new</span>(<span class="self">self</span>.<span class="ident">micro</span> <span class="kw">as</span> <span class="ident">i64</span>, <span class="number">6</span>).<span class="ident">normalize</span>();
+        <span class="macro">write!</span>(<span class="ident">f</span>, <span class="string">&quot;{}&quot;</span>, <span class="ident">decimal</span>)
     }
 }
 
@@ -265,7 +264,7 @@
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Error</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">AmountParseError</span> {
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Error decoding token amount: {0}&quot;</span>)]</span>
-    <span class="ident">InvalidDecimal</span>(<span class="ident">rust_decimal</span>::<span class="ident">Error</span>),
+    <span class="ident">InvalidDecimal</span>(<span class="ident">rust_decimal::Error</span>),
     <span class="attribute">#[<span class="ident">error</span>(
         <span class="string">&quot;Error decoding token amount, scale too large: {0}. Maximum \
          {MAX_SCALE}&quot;</span>
@@ -278,20 +277,20 @@
 <span class="kw">impl</span> <span class="ident">FromStr</span> <span class="kw">for</span> <span class="ident">Amount</span> {
     <span class="kw">type</span> <span class="prelude-val">Err</span> <span class="op">=</span> <span class="ident">AmountParseError</span>;
 
-    <span class="kw">fn</span> <span class="ident">from_str</span>(<span class="ident">s</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="self">Self</span>::<span class="prelude-val">Err</span><span class="op">&gt;</span> {
-        <span class="kw">match</span> <span class="ident">rust_decimal</span>::<span class="ident">Decimal</span>::<span class="ident">from_str</span>(<span class="ident">s</span>) {
+    <span class="kw">fn</span> <span class="ident">from_str</span>(<span class="ident">s</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="self">Self</span><span class="ident">::Err</span><span class="op">&gt;</span> {
+        <span class="kw">match</span> <span class="ident">rust_decimal::Decimal::from_str</span>(<span class="ident">s</span>) {
             <span class="prelude-val">Ok</span>(<span class="ident">decimal</span>) <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">let</span> <span class="ident">scale</span> <span class="op">=</span> <span class="ident">decimal</span>.<span class="ident">scale</span>();
                 <span class="kw">if</span> <span class="ident">scale</span> <span class="op">&gt;</span> <span class="number">6</span> {
-                    <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">AmountParseError</span>::<span class="ident">ScaleTooLarge</span>(<span class="ident">scale</span>));
+                    <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">AmountParseError::ScaleTooLarge</span>(<span class="ident">scale</span>));
                 }
-                <span class="kw">let</span> <span class="ident">whole</span> <span class="op">=</span> <span class="ident">decimal</span> <span class="op">*</span> <span class="ident">rust_decimal</span>::<span class="ident">Decimal</span>::<span class="ident">new</span>(<span class="number">1_000_000</span>, <span class="number">0</span>);
+                <span class="kw">let</span> <span class="ident">whole</span> <span class="op">=</span> <span class="ident">decimal</span> <span class="op">*</span> <span class="ident">rust_decimal::Decimal::new</span>(<span class="number">1_000_000</span>, <span class="number">0</span>);
                 <span class="kw">let</span> <span class="ident">micro</span>: <span class="ident">u64</span> <span class="op">=</span>
-                    <span class="ident">rust_decimal</span>::<span class="ident">prelude</span>::<span class="ident">ToPrimitive</span>::<span class="ident">to_u64</span>(<span class="kw-2">&amp;</span><span class="ident">whole</span>)
-                        .<span class="ident">ok_or</span>(<span class="ident">AmountParseError</span>::<span class="ident">InvalidRange</span>)<span class="question-mark">?</span>;
+                    <span class="ident">rust_decimal::prelude::ToPrimitive::to_u64</span>(<span class="kw-2">&amp;</span><span class="ident">whole</span>)
+                        .<span class="ident">ok_or</span>(<span class="ident">AmountParseError::InvalidRange</span>)<span class="question-mark">?</span>;
                 <span class="prelude-val">Ok</span>(<span class="self">Self</span> { <span class="ident">micro</span> })
             }
-            <span class="prelude-val">Err</span>(<span class="ident">err</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">AmountParseError</span>::<span class="ident">InvalidDecimal</span>(<span class="ident">err</span>)),
+            <span class="prelude-val">Err</span>(<span class="ident">err</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">AmountParseError::InvalidDecimal</span>(<span class="ident">err</span>)),
         }
     }
 }
@@ -300,7 +299,7 @@
 
 <span class="doccomment">/// Obtain a storage key for user&#39;s balance.</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">balance_key</span>(<span class="ident">token_addr</span>: <span class="kw-2">&amp;</span><span class="ident">Address</span>, <span class="ident">owner</span>: <span class="kw-2">&amp;</span><span class="ident">Address</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Key</span> {
-    <span class="ident">Key</span>::<span class="ident">from</span>(<span class="ident">token_addr</span>.<span class="ident">to_db_key</span>())
+    <span class="ident">Key::from</span>(<span class="ident">token_addr</span>.<span class="ident">to_db_key</span>())
         .<span class="ident">push</span>(<span class="kw-2">&amp;</span><span class="ident">BALANCE_STORAGE_KEY</span>.<span class="ident">to_owned</span>())
         .<span class="ident">expect</span>(<span class="string">&quot;Cannot obtain a storage key&quot;</span>)
         .<span class="ident">push</span>(<span class="kw-2">&amp;</span><span class="ident">owner</span>.<span class="ident">to_db_key</span>())
@@ -309,7 +308,7 @@
 
 <span class="doccomment">/// Obtain a storage key prefix for all users&#39; balances.</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">balance_prefix</span>(<span class="ident">token_addr</span>: <span class="kw-2">&amp;</span><span class="ident">Address</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Key</span> {
-    <span class="ident">Key</span>::<span class="ident">from</span>(<span class="ident">token_addr</span>.<span class="ident">to_db_key</span>())
+    <span class="ident">Key::from</span>(<span class="ident">token_addr</span>.<span class="ident">to_db_key</span>())
         .<span class="ident">push</span>(<span class="kw-2">&amp;</span><span class="ident">BALANCE_STORAGE_KEY</span>.<span class="ident">to_owned</span>())
         .<span class="ident">expect</span>(<span class="string">&quot;Cannot obtain a storage key&quot;</span>)
 }
@@ -321,7 +320,7 @@
     <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">Key</span>,
 ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">Address</span><span class="op">&gt;</span> {
     <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="ident">key</span>.<span class="ident">segments</span>[..] {
-        [<span class="ident">DbKeySeg</span>::<span class="ident">AddressSeg</span>(<span class="ident">addr</span>), <span class="ident">DbKeySeg</span>::<span class="ident">StringSeg</span>(<span class="ident">key</span>), <span class="ident">DbKeySeg</span>::<span class="ident">AddressSeg</span>(<span class="ident">owner</span>)]
+        [<span class="ident">DbKeySeg::AddressSeg</span>(<span class="ident">addr</span>), <span class="ident">DbKeySeg::StringSeg</span>(<span class="ident">key</span>), <span class="ident">DbKeySeg::AddressSeg</span>(<span class="ident">owner</span>)]
             <span class="kw">if</span> <span class="ident">key</span> <span class="op">=</span><span class="op">=</span> <span class="ident">BALANCE_STORAGE_KEY</span> <span class="op">&amp;&amp;</span> <span class="ident">addr</span> <span class="op">=</span><span class="op">=</span> <span class="ident">token_addr</span> <span class="op">=</span><span class="op">&gt;</span>
         {
             <span class="prelude-val">Some</span>(<span class="ident">owner</span>)
@@ -334,7 +333,7 @@
 <span class="doccomment">/// is, returns the owner.</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_any_token_balance_key</span>(<span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">Key</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">Address</span><span class="op">&gt;</span> {
     <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="ident">key</span>.<span class="ident">segments</span>[..] {
-        [<span class="ident">DbKeySeg</span>::<span class="ident">AddressSeg</span>(<span class="kw">_</span>), <span class="ident">DbKeySeg</span>::<span class="ident">StringSeg</span>(<span class="ident">key</span>), <span class="ident">DbKeySeg</span>::<span class="ident">AddressSeg</span>(<span class="ident">owner</span>)]
+        [<span class="ident">DbKeySeg::AddressSeg</span>(<span class="kw">_</span>), <span class="ident">DbKeySeg::StringSeg</span>(<span class="ident">key</span>), <span class="ident">DbKeySeg::AddressSeg</span>(<span class="ident">owner</span>)]
             <span class="kw">if</span> <span class="ident">key</span> <span class="op">=</span><span class="op">=</span> <span class="ident">BALANCE_STORAGE_KEY</span> <span class="op">=</span><span class="op">&gt;</span>
         {
             <span class="prelude-val">Some</span>(<span class="ident">owner</span>)
@@ -367,5 +366,4 @@
     <span class="kw">pub</span> <span class="ident">amount</span>: <span class="ident">Amount</span>,
 }
 </pre></div>
-</section><section id="search" class="content hidden"></section><section class="footer"></section><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="anoma" data-search-js="../../../search-index.js"></div>
-    <script src="../../../main.js"></script><script src="../../../source-script.js"></script><script src="../../../source-files.js"></script></body></html>
+</section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="anoma" data-search-index-js="../../../search-index.js" data-search-js="../../../search.js"></div><script src="../../../main.js"></script><script src="../../../source-script.js"></script><script src="../../../source-files.js"></script></body></html>

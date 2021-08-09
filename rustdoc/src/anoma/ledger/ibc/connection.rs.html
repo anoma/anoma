@@ -1,7 +1,6 @@
 <!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `shared/src/ledger/ibc/connection.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>connection.rs - source</title><link rel="stylesheet" type="text/css" href="../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../../ayu.css" disabled ><script id="default-settings"></script><script src="../../../../storage.js"></script><script src="../../../../crates.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg">
 <link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png">
-<link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../../anoma/index.html'><div class='logo-container rust-logo'><img src='../../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../../../../brush.svg" width="18" height="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><script src="../../../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" class="help-button">?</button>
-                <a id="settings-menu" href="../../../../settings.html"><img src="../../../../wheel.svg" width="18" height="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">  1</span>
+<link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../../anoma/index.html'><div class='logo-container rust-logo'><img src='../../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img src="../../../../brush.svg" width="18" height="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../../../settings.html" title="settings"><img src="../../../../wheel.svg" width="18" height="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">  1</span>
 <span id="2">  2</span>
 <span id="3">  3</span>
 <span id="4">  4</span>
@@ -415,37 +414,37 @@
 <span id="412">412</span>
 <span id="413">413</span>
 <span id="414">414</span>
-</pre><div class="example-wrap"><pre class="rust ">
+</pre><pre class="rust">
 <span class="doccomment">//! IBC validity predicate for connection module</span>
 
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">str</span>::<span class="ident">FromStr</span>;
+<span class="kw">use</span> <span class="ident">std::str::FromStr</span>;
 
 <span class="kw">use</span> <span class="ident">borsh</span>::{<span class="ident">BorshDeserialize</span>, <span class="ident">BorshSerialize</span>};
-<span class="kw">use</span> <span class="ident">ibc</span>::<span class="ident">ics02_client</span>::<span class="ident">client_consensus</span>::{<span class="ident">AnyConsensusState</span>, <span class="ident">ConsensusState</span>};
-<span class="kw">use</span> <span class="ident">ibc</span>::<span class="ident">ics02_client</span>::<span class="ident">client_state</span>::<span class="ident">AnyClientState</span>;
-<span class="kw">use</span> <span class="ident">ibc</span>::<span class="ident">ics02_client</span>::<span class="ident">context</span>::<span class="ident">ClientReader</span>;
-<span class="kw">use</span> <span class="ident">ibc</span>::<span class="ident">ics02_client</span>::<span class="ident">height</span>::<span class="ident">Height</span>;
-<span class="kw">use</span> <span class="ident">ibc</span>::<span class="ident">ics03_connection</span>::<span class="ident">connection</span>::{<span class="ident">ConnectionEnd</span>, <span class="ident">Counterparty</span>, <span class="ident">State</span>};
-<span class="kw">use</span> <span class="ident">ibc</span>::<span class="ident">ics03_connection</span>::<span class="ident">context</span>::<span class="ident">ConnectionReader</span>;
-<span class="kw">use</span> <span class="ident">ibc</span>::<span class="ident">ics03_connection</span>::<span class="ident">handler</span>::<span class="ident">verify</span>::<span class="ident">verify_proofs</span>;
-<span class="kw">use</span> <span class="ident">ibc</span>::<span class="ident">ics07_tendermint</span>::<span class="ident">consensus_state</span>::<span class="ident">ConsensusState</span> <span class="kw">as</span> <span class="ident">TendermintConsensusState</span>;
-<span class="kw">use</span> <span class="ident">ibc</span>::<span class="ident">ics23_commitment</span>::<span class="ident">commitment</span>::<span class="ident">CommitmentPrefix</span>;
-<span class="kw">use</span> <span class="ident">ibc</span>::<span class="ident">ics24_host</span>::<span class="ident">identifier</span>::{<span class="ident">ClientId</span>, <span class="ident">ConnectionId</span>};
-<span class="kw">use</span> <span class="ident">ibc</span>::<span class="ident">ics24_host</span>::<span class="ident">Path</span>;
-<span class="kw">use</span> <span class="ident">tendermint_proto</span>::<span class="ident">Protobuf</span>;
+<span class="kw">use</span> <span class="ident">ibc::ics02_client::client_consensus</span>::{<span class="ident">AnyConsensusState</span>, <span class="ident">ConsensusState</span>};
+<span class="kw">use</span> <span class="ident">ibc::ics02_client::client_state::AnyClientState</span>;
+<span class="kw">use</span> <span class="ident">ibc::ics02_client::context::ClientReader</span>;
+<span class="kw">use</span> <span class="ident">ibc::ics02_client::height::Height</span>;
+<span class="kw">use</span> <span class="ident">ibc::ics03_connection::connection</span>::{<span class="ident">ConnectionEnd</span>, <span class="ident">Counterparty</span>, <span class="ident">State</span>};
+<span class="kw">use</span> <span class="ident">ibc::ics03_connection::context::ConnectionReader</span>;
+<span class="kw">use</span> <span class="ident">ibc::ics03_connection::handler::verify::verify_proofs</span>;
+<span class="kw">use</span> <span class="ident">ibc::ics07_tendermint::consensus_state::ConsensusState</span> <span class="kw">as</span> <span class="ident">TendermintConsensusState</span>;
+<span class="kw">use</span> <span class="ident">ibc::ics23_commitment::commitment::CommitmentPrefix</span>;
+<span class="kw">use</span> <span class="ident">ibc::ics24_host::identifier</span>::{<span class="ident">ClientId</span>, <span class="ident">ConnectionId</span>};
+<span class="kw">use</span> <span class="ident">ibc::ics24_host::Path</span>;
+<span class="kw">use</span> <span class="ident">tendermint_proto::Protobuf</span>;
 
 <span class="kw">use</span> <span class="kw">super</span>::{<span class="ident">Error</span>, <span class="ident">Ibc</span>, <span class="prelude-ty">Result</span>, <span class="ident">StateChange</span>};
-<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">ledger</span>::<span class="ident">storage</span>::{<span class="self">self</span>, <span class="ident">StorageHasher</span>};
-<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">types</span>::<span class="ident">address</span>::{<span class="ident">Address</span>, <span class="ident">InternalAddress</span>};
-<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">types</span>::<span class="ident">ibc</span>::{
+<span class="kw">use</span> <span class="kw">crate</span><span class="ident">::ledger::storage</span>::{<span class="self">self</span>, <span class="ident">StorageHasher</span>};
+<span class="kw">use</span> <span class="kw">crate</span><span class="ident">::types::address</span>::{<span class="ident">Address</span>, <span class="ident">InternalAddress</span>};
+<span class="kw">use</span> <span class="kw">crate</span><span class="ident">::types::ibc</span>::{
     <span class="ident">ConnectionOpenAckData</span>, <span class="ident">ConnectionOpenConfirmData</span>, <span class="ident">ConnectionOpenTryData</span>,
     <span class="ident">Error</span> <span class="kw">as</span> <span class="ident">IbcDataError</span>,
 };
-<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">types</span>::<span class="ident">storage</span>::{<span class="ident">BlockHeight</span>, <span class="ident">Epoch</span>, <span class="ident">Key</span>, <span class="ident">KeySeg</span>};
+<span class="kw">use</span> <span class="kw">crate</span><span class="ident">::types::storage</span>::{<span class="ident">BlockHeight</span>, <span class="ident">Epoch</span>, <span class="ident">Key</span>, <span class="ident">KeySeg</span>};
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">DB</span>, <span class="ident">H</span><span class="op">&gt;</span> <span class="ident">Ibc</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">DB</span>, <span class="ident">H</span><span class="op">&gt;</span>
 <span class="kw">where</span>
-    <span class="ident">DB</span>: <span class="lifetime">&#39;static</span> <span class="op">+</span> <span class="ident">storage</span>::<span class="ident">DB</span> <span class="op">+</span> <span class="kw">for</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span> <span class="ident">storage</span>::<span class="ident">DBIter</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span>,
+    <span class="ident">DB</span>: <span class="lifetime">&#39;static</span> <span class="op">+</span> <span class="ident">storage::DB</span> <span class="op">+</span> <span class="kw">for</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span> <span class="ident">storage::DBIter</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span>,
     <span class="ident">H</span>: <span class="lifetime">&#39;static</span> <span class="op">+</span> <span class="ident">StorageHasher</span>,
 {
     <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">validate_connection</span>(
@@ -460,11 +459,11 @@
             );
         }
 
-        <span class="kw">let</span> <span class="ident">conn_id</span> <span class="op">=</span> <span class="self">Self</span>::<span class="ident">get_connection_id</span>(<span class="ident">key</span>)<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">conn_id</span> <span class="op">=</span> <span class="self">Self</span><span class="ident">::get_connection_id</span>(<span class="ident">key</span>)<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">conn</span> <span class="op">=</span> <span class="kw">match</span> <span class="self">self</span>.<span class="ident">connection_end</span>(<span class="kw-2">&amp;</span><span class="ident">conn_id</span>) {
             <span class="prelude-val">Some</span>(<span class="ident">c</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">c</span>,
             <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="ident">tracing</span>::<span class="macro">info</span><span class="macro">!</span>(
+                <span class="macro">tracing::info!</span>(
                     <span class="string">&quot;the connection end of ID {} doesn&#39;t exist&quot;</span>,
                     <span class="ident">conn_id</span>
                 );
@@ -473,14 +472,14 @@
         };
 
         <span class="kw">match</span> <span class="self">self</span>.<span class="ident">get_connection_state_change</span>(<span class="kw-2">&amp;</span><span class="ident">conn_id</span>)<span class="question-mark">?</span> {
-            <span class="ident">StateChange</span>::<span class="ident">Created</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">StateChange::Created</span> <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="self">self</span>.<span class="ident">validate_created_connection</span>(<span class="kw-2">&amp;</span><span class="ident">conn_id</span>, <span class="ident">conn</span>, <span class="ident">tx_data</span>)
             }
-            <span class="ident">StateChange</span>::<span class="ident">Updated</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">StateChange::Updated</span> <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="self">self</span>.<span class="ident">validate_updated_connection</span>(<span class="kw-2">&amp;</span><span class="ident">conn_id</span>, <span class="ident">conn</span>, <span class="ident">tx_data</span>)
             }
             <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="ident">tracing</span>::<span class="macro">info</span><span class="macro">!</span>(
+                <span class="macro">tracing::info!</span>(
                     <span class="string">&quot;unexpected state change for an IBC connection: {}&quot;</span>,
                     <span class="ident">key</span>
                 );
@@ -492,9 +491,9 @@
     <span class="doccomment">/// Returns the connection ID after #IBC/connections</span>
     <span class="kw">fn</span> <span class="ident">get_connection_id</span>(<span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">Key</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ConnectionId</span><span class="op">&gt;</span> {
         <span class="kw">match</span> <span class="ident">key</span>.<span class="ident">segments</span>.<span class="ident">get</span>(<span class="number">2</span>) {
-            <span class="prelude-val">Some</span>(<span class="ident">id</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ConnectionId</span>::<span class="ident">from_str</span>(<span class="kw-2">&amp;</span><span class="ident">id</span>.<span class="ident">raw</span>())
-                .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">Error</span>::<span class="ident">KeyError</span>(<span class="ident">e</span>.<span class="ident">to_string</span>())),
-            <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">Error</span>::<span class="ident">KeyError</span>(<span class="macro">format</span><span class="macro">!</span>(
+            <span class="prelude-val">Some</span>(<span class="ident">id</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ConnectionId::from_str</span>(<span class="kw-2">&amp;</span><span class="ident">id</span>.<span class="ident">raw</span>())
+                .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">Error::KeyError</span>(<span class="ident">e</span>.<span class="ident">to_string</span>())),
+            <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">Error::KeyError</span>(<span class="macro">format!</span>(
                 <span class="string">&quot;The connection key doesn&#39;t have a connection ID: {}&quot;</span>,
                 <span class="ident">key</span>
             ))),
@@ -505,8 +504,8 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">conn_id</span>: <span class="kw-2">&amp;</span><span class="ident">ConnectionId</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">StateChange</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">path</span> <span class="op">=</span> <span class="ident">Path</span>::<span class="ident">Connections</span>(<span class="ident">conn_id</span>.<span class="ident">clone</span>()).<span class="ident">to_string</span>();
-        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Key</span>::<span class="ident">ibc_key</span>(<span class="ident">path</span>)
+        <span class="kw">let</span> <span class="ident">path</span> <span class="op">=</span> <span class="ident">Path::Connections</span>(<span class="ident">conn_id</span>.<span class="ident">clone</span>()).<span class="ident">to_string</span>();
+        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Key::ibc_key</span>(<span class="ident">path</span>)
             .<span class="ident">expect</span>(<span class="string">&quot;Creating a key for a client type failed&quot;</span>);
         <span class="self">self</span>.<span class="ident">get_state_change</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>)
     }
@@ -518,12 +517,12 @@
         <span class="ident">tx_data</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>],
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span> {
         <span class="kw">match</span> <span class="ident">conn</span>.<span class="ident">state</span>() {
-            <span class="ident">State</span>::<span class="ident">Init</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">State::Init</span> <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">let</span> <span class="ident">client_id</span> <span class="op">=</span> <span class="ident">conn</span>.<span class="ident">client_id</span>();
-                <span class="kw">match</span> <span class="ident">ConnectionReader</span>::<span class="ident">client_state</span>(<span class="self">self</span>, <span class="ident">client_id</span>) {
+                <span class="kw">match</span> <span class="ident">ConnectionReader::client_state</span>(<span class="self">self</span>, <span class="ident">client_id</span>) {
                     <span class="prelude-val">Some</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="bool-val">true</span>),
                     <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> {
-                        <span class="ident">tracing</span>::<span class="macro">info</span><span class="macro">!</span>(
+                        <span class="macro">tracing::info!</span>(
                             <span class="string">&quot;the client state corresponding to the connection \
                              ID {} doesn&#39;t exist&quot;</span>,
                             <span class="ident">conn_id</span>,
@@ -532,9 +531,9 @@
                     }
                 }
             }
-            <span class="ident">State</span>::<span class="ident">TryOpen</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">verify_connection_try_proof</span>(<span class="ident">conn</span>, <span class="ident">tx_data</span>),
+            <span class="ident">State::TryOpen</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">verify_connection_try_proof</span>(<span class="ident">conn</span>, <span class="ident">tx_data</span>),
             <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="ident">tracing</span>::<span class="macro">info</span><span class="macro">!</span>(
+                <span class="macro">tracing::info!</span>(
                     <span class="string">&quot;the connection state of ID {} is invalid&quot;</span>,
                     <span class="ident">conn_id</span>
                 );
@@ -550,11 +549,11 @@
         <span class="ident">tx_data</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>],
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span> {
         <span class="kw">match</span> <span class="ident">conn</span>.<span class="ident">state</span>() {
-            <span class="ident">State</span>::<span class="ident">Open</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">State::Open</span> <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">let</span> <span class="ident">prev_conn</span> <span class="op">=</span> <span class="kw">match</span> <span class="self">self</span>.<span class="ident">connection_end_pre</span>(<span class="ident">conn_id</span>) {
                     <span class="prelude-val">Some</span>(<span class="ident">c</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">c</span>,
                     <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> {
-                        <span class="ident">tracing</span>::<span class="macro">info</span><span class="macro">!</span>(
+                        <span class="macro">tracing::info!</span>(
                             <span class="string">&quot;the previous connection of ID {} doesn&#39;t exist&quot;</span>,
                             <span class="ident">conn_id</span>
                         );
@@ -562,14 +561,14 @@
                     }
                 };
                 <span class="kw">match</span> <span class="ident">prev_conn</span>.<span class="ident">state</span>() {
-                    <span class="ident">State</span>::<span class="ident">Init</span> <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="ident">State::Init</span> <span class="op">=</span><span class="op">&gt;</span> {
                         <span class="self">self</span>.<span class="ident">verify_connection_ack_proof</span>(<span class="ident">conn_id</span>, <span class="ident">conn</span>, <span class="ident">tx_data</span>)
                     }
-                    <span class="ident">State</span>::<span class="ident">TryOpen</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">verify_connection_confirm_proof</span>(
+                    <span class="ident">State::TryOpen</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">verify_connection_confirm_proof</span>(
                         <span class="ident">conn_id</span>, <span class="ident">conn</span>, <span class="ident">tx_data</span>,
                     ),
                     <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> {
-                        <span class="ident">tracing</span>::<span class="macro">info</span><span class="macro">!</span>(
+                        <span class="macro">tracing::info!</span>(
                             <span class="string">&quot;the state change of connection ID {} was invalid&quot;</span>,
                             <span class="ident">conn_id</span>
                         );
@@ -578,7 +577,7 @@
                 }
             }
             <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="ident">tracing</span>::<span class="macro">info</span><span class="macro">!</span>(
+                <span class="macro">tracing::info!</span>(
                     <span class="string">&quot;the state of connection ID {} is invalid&quot;</span>,
                     <span class="ident">conn_id</span>
                 );
@@ -592,15 +591,15 @@
         <span class="ident">conn</span>: <span class="ident">ConnectionEnd</span>,
         <span class="ident">tx_data</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>],
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="ident">ConnectionOpenTryData</span>::<span class="ident">try_from_slice</span>(<span class="ident">tx_data</span>)<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="ident">ConnectionOpenTryData::try_from_slice</span>(<span class="ident">tx_data</span>)<span class="question-mark">?</span>;
 
         <span class="kw">let</span> <span class="ident">client_id</span> <span class="op">=</span> <span class="ident">conn</span>.<span class="ident">client_id</span>().<span class="ident">clone</span>();
         <span class="kw">let</span> <span class="ident">counterpart_client_id</span> <span class="op">=</span> <span class="ident">conn</span>.<span class="ident">counterparty</span>().<span class="ident">client_id</span>().<span class="ident">clone</span>();
         <span class="comment">// expected connection end</span>
-        <span class="kw">let</span> <span class="ident">expected_conn</span> <span class="op">=</span> <span class="ident">ConnectionEnd</span>::<span class="ident">new</span>(
-            <span class="ident">State</span>::<span class="ident">Init</span>,
+        <span class="kw">let</span> <span class="ident">expected_conn</span> <span class="op">=</span> <span class="ident">ConnectionEnd::new</span>(
+            <span class="ident">State::Init</span>,
             <span class="ident">counterpart_client_id</span>,
-            <span class="ident">Counterparty</span>::<span class="ident">new</span>(<span class="ident">client_id</span>, <span class="prelude-val">None</span>, <span class="self">self</span>.<span class="ident">commitment_prefix</span>()),
+            <span class="ident">Counterparty::new</span>(<span class="ident">client_id</span>, <span class="prelude-val">None</span>, <span class="self">self</span>.<span class="ident">commitment_prefix</span>()),
             <span class="ident">conn</span>.<span class="ident">versions</span>(),
             <span class="ident">conn</span>.<span class="ident">delay_period</span>(),
         );
@@ -615,7 +614,7 @@
         ) {
             <span class="prelude-val">Ok</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="bool-val">true</span>),
             <span class="prelude-val">Err</span>(<span class="ident">e</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="ident">tracing</span>::<span class="macro">info</span><span class="macro">!</span>(<span class="string">&quot;proof verification failed: {}&quot;</span>, <span class="ident">e</span>);
+                <span class="macro">tracing::info!</span>(<span class="string">&quot;proof verification failed: {}&quot;</span>, <span class="ident">e</span>);
                 <span class="prelude-val">Ok</span>(<span class="bool-val">false</span>)
             }
         }
@@ -627,27 +626,27 @@
         <span class="ident">conn</span>: <span class="ident">ConnectionEnd</span>,
         <span class="ident">tx_data</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>],
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="ident">ConnectionOpenAckData</span>::<span class="ident">try_from_slice</span>(<span class="ident">tx_data</span>)<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="ident">ConnectionOpenAckData::try_from_slice</span>(<span class="ident">tx_data</span>)<span class="question-mark">?</span>;
 
         <span class="comment">// version check</span>
         <span class="kw">if</span> <span class="ident">conn</span>.<span class="ident">versions</span>().<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">data</span>.<span class="ident">version</span>()<span class="question-mark">?</span>) {
-            <span class="ident">tracing</span>::<span class="macro">info</span><span class="macro">!</span>(<span class="string">&quot;unsupported version&quot;</span>);
+            <span class="macro">tracing::info!</span>(<span class="string">&quot;unsupported version&quot;</span>);
             <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="bool-val">false</span>);
         }
 
         <span class="comment">// counterpart connection ID check</span>
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">counterpart_conn_id</span>) <span class="op">=</span> <span class="ident">conn</span>.<span class="ident">counterparty</span>().<span class="ident">connection_id</span>() {
             <span class="kw">if</span> <span class="kw-2">*</span><span class="ident">counterpart_conn_id</span> <span class="op">!</span><span class="op">=</span> <span class="ident">data</span>.<span class="ident">counterpart_connection_id</span>()<span class="question-mark">?</span> {
-                <span class="ident">tracing</span>::<span class="macro">info</span><span class="macro">!</span>(<span class="string">&quot;counterpart connection ID mismatched&quot;</span>);
+                <span class="macro">tracing::info!</span>(<span class="string">&quot;counterpart connection ID mismatched&quot;</span>);
                 <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="bool-val">false</span>);
             }
         }
 
         <span class="comment">// expected counterpart connection</span>
-        <span class="kw">let</span> <span class="ident">expected_conn</span> <span class="op">=</span> <span class="ident">ConnectionEnd</span>::<span class="ident">new</span>(
-            <span class="ident">State</span>::<span class="ident">TryOpen</span>,
+        <span class="kw">let</span> <span class="ident">expected_conn</span> <span class="op">=</span> <span class="ident">ConnectionEnd::new</span>(
+            <span class="ident">State::TryOpen</span>,
             <span class="ident">conn</span>.<span class="ident">counterparty</span>().<span class="ident">client_id</span>().<span class="ident">clone</span>(),
-            <span class="ident">Counterparty</span>::<span class="ident">new</span>(
+            <span class="ident">Counterparty::new</span>(
                 <span class="ident">conn</span>.<span class="ident">client_id</span>().<span class="ident">clone</span>(),
                 <span class="prelude-val">Some</span>(<span class="ident">conn_id</span>.<span class="ident">clone</span>()),
                 <span class="self">self</span>.<span class="ident">commitment_prefix</span>(),
@@ -666,7 +665,7 @@
         ) {
             <span class="prelude-val">Ok</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="bool-val">true</span>),
             <span class="prelude-val">Err</span>(<span class="ident">e</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="ident">tracing</span>::<span class="macro">info</span><span class="macro">!</span>(<span class="string">&quot;proof verification failed: {}&quot;</span>, <span class="ident">e</span>);
+                <span class="macro">tracing::info!</span>(<span class="string">&quot;proof verification failed: {}&quot;</span>, <span class="ident">e</span>);
                 <span class="prelude-val">Ok</span>(<span class="bool-val">false</span>)
             }
         }
@@ -678,13 +677,13 @@
         <span class="ident">conn</span>: <span class="ident">ConnectionEnd</span>,
         <span class="ident">tx_data</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>],
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="ident">ConnectionOpenConfirmData</span>::<span class="ident">try_from_slice</span>(<span class="ident">tx_data</span>)<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="ident">ConnectionOpenConfirmData::try_from_slice</span>(<span class="ident">tx_data</span>)<span class="question-mark">?</span>;
 
         <span class="comment">// expected counterpart connection</span>
-        <span class="kw">let</span> <span class="ident">expected_conn</span> <span class="op">=</span> <span class="ident">ConnectionEnd</span>::<span class="ident">new</span>(
-            <span class="ident">State</span>::<span class="ident">Open</span>,
+        <span class="kw">let</span> <span class="ident">expected_conn</span> <span class="op">=</span> <span class="ident">ConnectionEnd::new</span>(
+            <span class="ident">State::Open</span>,
             <span class="ident">conn</span>.<span class="ident">counterparty</span>().<span class="ident">client_id</span>().<span class="ident">clone</span>(),
-            <span class="ident">Counterparty</span>::<span class="ident">new</span>(
+            <span class="ident">Counterparty::new</span>(
                 <span class="ident">conn</span>.<span class="ident">client_id</span>().<span class="ident">clone</span>(),
                 <span class="prelude-val">Some</span>(<span class="ident">conn_id</span>.<span class="ident">clone</span>()),
                 <span class="self">self</span>.<span class="ident">commitment_prefix</span>(),
@@ -697,7 +696,7 @@
         <span class="kw">match</span> <span class="ident">verify_proofs</span>(<span class="self">self</span>, <span class="prelude-val">None</span>, <span class="kw-2">&amp;</span><span class="ident">conn</span>, <span class="kw-2">&amp;</span><span class="ident">expected_conn</span>, <span class="kw-2">&amp;</span><span class="ident">proofs</span>) {
             <span class="prelude-val">Ok</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="bool-val">true</span>),
             <span class="prelude-val">Err</span>(<span class="ident">e</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="ident">tracing</span>::<span class="macro">info</span><span class="macro">!</span>(<span class="string">&quot;proof verification failed: {}&quot;</span>, <span class="ident">e</span>);
+                <span class="macro">tracing::info!</span>(<span class="string">&quot;proof verification failed: {}&quot;</span>, <span class="ident">e</span>);
                 <span class="prelude-val">Ok</span>(<span class="bool-val">false</span>)
             }
         }
@@ -707,32 +706,32 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">conn_id</span>: <span class="kw-2">&amp;</span><span class="ident">ConnectionId</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">ConnectionEnd</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">path</span> <span class="op">=</span> <span class="ident">Path</span>::<span class="ident">Connections</span>(<span class="ident">conn_id</span>.<span class="ident">clone</span>()).<span class="ident">to_string</span>();
-        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Key</span>::<span class="ident">ibc_key</span>(<span class="ident">path</span>)
+        <span class="kw">let</span> <span class="ident">path</span> <span class="op">=</span> <span class="ident">Path::Connections</span>(<span class="ident">conn_id</span>.<span class="ident">clone</span>()).<span class="ident">to_string</span>();
+        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Key::ibc_key</span>(<span class="ident">path</span>)
             .<span class="ident">expect</span>(<span class="string">&quot;Creating a key for a connection end failed&quot;</span>);
         <span class="kw">match</span> <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">read_pre</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>) {
-            <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="ident">value</span>)) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ConnectionEnd</span>::<span class="ident">decode_vec</span>(<span class="kw-2">&amp;</span><span class="ident">value</span>).<span class="ident">ok</span>(),
+            <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="ident">value</span>)) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ConnectionEnd::decode_vec</span>(<span class="kw-2">&amp;</span><span class="ident">value</span>).<span class="ident">ok</span>(),
             <span class="comment">// returns None even if DB read fails</span>
             <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">None</span>,
         }
     }
 
     <span class="kw">fn</span> <span class="ident">connection_counter_pre</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u64</span> {
-        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Key</span>::<span class="ident">ibc_connection_counter</span>();
+        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Key::ibc_connection_counter</span>();
         <span class="kw">match</span> <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">read_pre</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>) {
-            <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="ident">value</span>)) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="ident">storage</span>::<span class="ident">types</span>::<span class="ident">decode</span>(<span class="kw-2">&amp;</span><span class="ident">value</span>) {
+            <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="ident">value</span>)) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="ident">storage::types::decode</span>(<span class="kw-2">&amp;</span><span class="ident">value</span>) {
                 <span class="prelude-val">Ok</span>(<span class="ident">c</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">c</span>,
                 <span class="prelude-val">Err</span>(<span class="ident">e</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                    <span class="ident">tracing</span>::<span class="macro">error</span><span class="macro">!</span>(
+                    <span class="macro">tracing::error!</span>(
                         <span class="string">&quot;decoding a connection counter failed: {}&quot;</span>,
                         <span class="ident">e</span>
                     );
-                    <span class="ident">u64</span>::<span class="ident">MAX</span>
+                    <span class="ident">u64::MAX</span>
                 }
             },
             <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="ident">tracing</span>::<span class="macro">error</span><span class="macro">!</span>(<span class="string">&quot;connection counter should exist&quot;</span>);
-                <span class="macro">unreachable</span><span class="macro">!</span>();
+                <span class="macro">tracing::error!</span>(<span class="string">&quot;connection counter should exist&quot;</span>);
+                <span class="macro">unreachable!</span>();
             }
         }
     }
@@ -740,43 +739,43 @@
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">DB</span>, <span class="ident">H</span><span class="op">&gt;</span> <span class="ident">ConnectionReader</span> <span class="kw">for</span> <span class="ident">Ibc</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">DB</span>, <span class="ident">H</span><span class="op">&gt;</span>
 <span class="kw">where</span>
-    <span class="ident">DB</span>: <span class="lifetime">&#39;static</span> <span class="op">+</span> <span class="ident">storage</span>::<span class="ident">DB</span> <span class="op">+</span> <span class="kw">for</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span> <span class="ident">storage</span>::<span class="ident">DBIter</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span>,
+    <span class="ident">DB</span>: <span class="lifetime">&#39;static</span> <span class="op">+</span> <span class="ident">storage::DB</span> <span class="op">+</span> <span class="kw">for</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span> <span class="ident">storage::DBIter</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span>,
     <span class="ident">H</span>: <span class="lifetime">&#39;static</span> <span class="op">+</span> <span class="ident">StorageHasher</span>,
 {
     <span class="kw">fn</span> <span class="ident">connection_end</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">conn_id</span>: <span class="kw-2">&amp;</span><span class="ident">ConnectionId</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">ConnectionEnd</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">path</span> <span class="op">=</span> <span class="ident">Path</span>::<span class="ident">Connections</span>(<span class="ident">conn_id</span>.<span class="ident">clone</span>()).<span class="ident">to_string</span>();
-        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Key</span>::<span class="ident">ibc_key</span>(<span class="ident">path</span>)
+        <span class="kw">let</span> <span class="ident">path</span> <span class="op">=</span> <span class="ident">Path::Connections</span>(<span class="ident">conn_id</span>.<span class="ident">clone</span>()).<span class="ident">to_string</span>();
+        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Key::ibc_key</span>(<span class="ident">path</span>)
             .<span class="ident">expect</span>(<span class="string">&quot;Creating a key for a connection end failed&quot;</span>);
         <span class="kw">match</span> <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">read_post</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>) {
-            <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="ident">value</span>)) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ConnectionEnd</span>::<span class="ident">decode_vec</span>(<span class="kw-2">&amp;</span><span class="ident">value</span>).<span class="ident">ok</span>(),
+            <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="ident">value</span>)) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ConnectionEnd::decode_vec</span>(<span class="kw-2">&amp;</span><span class="ident">value</span>).<span class="ident">ok</span>(),
             <span class="comment">// returns None even if DB read fails</span>
             <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">None</span>,
         }
     }
 
     <span class="kw">fn</span> <span class="ident">client_state</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">client_id</span>: <span class="kw-2">&amp;</span><span class="ident">ClientId</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">AnyClientState</span><span class="op">&gt;</span> {
-        <span class="ident">ClientReader</span>::<span class="ident">client_state</span>(<span class="self">self</span>, <span class="ident">client_id</span>)
+        <span class="ident">ClientReader::client_state</span>(<span class="self">self</span>, <span class="ident">client_id</span>)
     }
 
     <span class="kw">fn</span> <span class="ident">host_current_height</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Height</span> {
         <span class="kw">let</span> <span class="ident">epoch</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">storage</span>.<span class="ident">get_block_epoch</span>().<span class="number">0.0</span>;
         <span class="kw">let</span> <span class="ident">height</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">storage</span>.<span class="ident">get_block_height</span>().<span class="number">0.0</span>;
-        <span class="ident">Height</span>::<span class="ident">new</span>(<span class="ident">epoch</span>, <span class="ident">height</span>)
+        <span class="ident">Height::new</span>(<span class="ident">epoch</span>, <span class="ident">height</span>)
     }
 
     <span class="kw">fn</span> <span class="ident">host_oldest_height</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Height</span> {
-        <span class="kw">let</span> <span class="ident">epoch</span> <span class="op">=</span> <span class="ident">Epoch</span>::<span class="ident">default</span>().<span class="number">0</span>;
-        <span class="kw">let</span> <span class="ident">height</span> <span class="op">=</span> <span class="ident">BlockHeight</span>::<span class="ident">default</span>().<span class="number">0</span>;
-        <span class="ident">Height</span>::<span class="ident">new</span>(<span class="ident">epoch</span>, <span class="ident">height</span>)
+        <span class="kw">let</span> <span class="ident">epoch</span> <span class="op">=</span> <span class="ident">Epoch::default</span>().<span class="number">0</span>;
+        <span class="kw">let</span> <span class="ident">height</span> <span class="op">=</span> <span class="ident">BlockHeight::default</span>().<span class="number">0</span>;
+        <span class="ident">Height::new</span>(<span class="ident">epoch</span>, <span class="ident">height</span>)
     }
 
     <span class="kw">fn</span> <span class="ident">commitment_prefix</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">CommitmentPrefix</span> {
-        <span class="kw">let</span> <span class="ident">addr</span> <span class="op">=</span> <span class="ident">Address</span>::<span class="ident">Internal</span>(<span class="ident">InternalAddress</span>::<span class="ident">Ibc</span>);
+        <span class="kw">let</span> <span class="ident">addr</span> <span class="op">=</span> <span class="ident">Address::Internal</span>(<span class="ident">InternalAddress::Ibc</span>);
         <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="ident">addr</span>
             .<span class="ident">raw</span>()
             .<span class="ident">try_to_vec</span>()
             .<span class="ident">expect</span>(<span class="string">&quot;Encoding an address string shouldn&#39;t fail&quot;</span>);
-        <span class="ident">CommitmentPrefix</span>::<span class="ident">from</span>(<span class="ident">bytes</span>)
+        <span class="ident">CommitmentPrefix::from</span>(<span class="ident">bytes</span>)
     }
 
     <span class="kw">fn</span> <span class="ident">client_consensus_state</span>(
@@ -795,25 +794,25 @@
             .<span class="ident">storage</span>
             .<span class="ident">get_block_header</span>()
             .<span class="number">0</span>
-            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">h</span><span class="op">|</span> <span class="ident">TendermintConsensusState</span>::<span class="ident">from</span>(<span class="ident">h</span>).<span class="ident">wrap_any</span>())
+            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">h</span><span class="op">|</span> <span class="ident">TendermintConsensusState::from</span>(<span class="ident">h</span>).<span class="ident">wrap_any</span>())
     }
 
     <span class="kw">fn</span> <span class="ident">connection_counter</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u64</span> {
-        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Key</span>::<span class="ident">ibc_connection_counter</span>();
+        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Key::ibc_connection_counter</span>();
         <span class="kw">match</span> <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">read_post</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>) {
-            <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="ident">value</span>)) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="ident">storage</span>::<span class="ident">types</span>::<span class="ident">decode</span>(<span class="kw-2">&amp;</span><span class="ident">value</span>) {
+            <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="ident">value</span>)) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="ident">storage::types::decode</span>(<span class="kw-2">&amp;</span><span class="ident">value</span>) {
                 <span class="prelude-val">Ok</span>(<span class="ident">c</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">c</span>,
                 <span class="prelude-val">Err</span>(<span class="ident">e</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                    <span class="ident">tracing</span>::<span class="macro">error</span><span class="macro">!</span>(
+                    <span class="macro">tracing::error!</span>(
                         <span class="string">&quot;decoding a connection counter failed: {}&quot;</span>,
                         <span class="ident">e</span>
                     );
-                    <span class="ident">u64</span>::<span class="ident">MIN</span>
+                    <span class="ident">u64::MIN</span>
                 }
             },
             <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="ident">tracing</span>::<span class="macro">error</span><span class="macro">!</span>(<span class="string">&quot;connection counter doesn&#39;t exist&quot;</span>);
-                <span class="macro">unreachable</span><span class="macro">!</span>();
+                <span class="macro">tracing::error!</span>(<span class="string">&quot;connection counter doesn&#39;t exist&quot;</span>);
+                <span class="macro">unreachable!</span>();
             }
         }
     }
@@ -821,15 +820,14 @@
 
 <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">IbcDataError</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Error</span> {
     <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">err</span>: <span class="ident">IbcDataError</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
-        <span class="self">Self</span>::<span class="ident">IbcDataError</span>(<span class="ident">err</span>)
+        <span class="self">Self</span><span class="ident">::IbcDataError</span>(<span class="ident">err</span>)
     }
 }
 
-<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">std</span>::<span class="ident">io</span>::<span class="ident">Error</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Error</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">err</span>: <span class="ident">std</span>::<span class="ident">io</span>::<span class="ident">Error</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
-        <span class="self">Self</span>::<span class="ident">DecodingTxDataError</span>(<span class="ident">err</span>)
+<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">std::io::Error</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Error</span> {
+    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">err</span>: <span class="ident">std::io::Error</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="self">Self</span><span class="ident">::DecodingTxDataError</span>(<span class="ident">err</span>)
     }
 }
 </pre></div>
-</section><section id="search" class="content hidden"></section><section class="footer"></section><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="anoma" data-search-js="../../../../search-index.js"></div>
-    <script src="../../../../main.js"></script><script src="../../../../source-script.js"></script><script src="../../../../source-files.js"></script></body></html>
+</section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="anoma" data-search-index-js="../../../../search-index.js" data-search-js="../../../../search.js"></div><script src="../../../../main.js"></script><script src="../../../../source-script.js"></script><script src="../../../../source-files.js"></script></body></html>

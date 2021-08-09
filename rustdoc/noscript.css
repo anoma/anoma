@@ -1,1 +1,1 @@
- #main>h2+div,#main>h2+h3,#main>h3+div{display:block;}.loading-content{display:none;}#main>h2+div,#main>h3+div{display:block;}#main>h2+h3{display:flex;}#main .impl-items .hidden{display:block !important;}#main .impl-items h4.hidden{display:flex !important;}#main .attributes{margin-left:0 !important;}
+ #main .attributes{margin-left:0 !important;}#copy-path{display:none;}
