@@ -8,6 +8,7 @@ use anoma::ledger::gas::{self, BlockGasMeter, VpGasMeter, VpsGas};
 use anoma::ledger::ibc::{self, Ibc};
 use anoma::ledger::native_vp::{self, NativeVp};
 use anoma::ledger::parameters::{self, ParametersVp};
+use anoma::ledger::special::{self, SpecialVp};
 use anoma::ledger::pos::{self, PoS};
 use anoma::ledger::storage::write_log::WriteLog;
 use anoma::proto::{self, Tx};
@@ -39,6 +40,8 @@ pub enum Error {
     PosNativeVpError(pos::Error),
     #[error("Parameters native VP: {0}")]
     ParametersNativeVpError(parameters::Error),
+    #[error("Special native VP: {0}")]
+    SpecialNativeVpError(special::Error),
 }
 
 pub type Result<T> = std::result::Result<T, Error>;
@@ -145,7 +148,24 @@ fn check_vps(
         .map(|(addr, keys)| {
             let vp = match addr {
                 Address::Internal(addr) => Vp::Native(&addr),
-                Address::Established(_) | Address::Implicit(_) => {
+                // todo: memoize this so the implicit VP is only ever
+                // fetched once
+                Address::Implicit(_) => {
+                    let (implicit_vp, gas) = storage
+                        .implicit_vp()
+                        .map_err(Error::StorageError)?;
+                    gas_meter.add(gas).map_err(Error::GasError)?;
+
+                    let implicit_vp =
+                        // todo: the right error type (SpecialNativeVpError?)
+                        implicit_vp.ok_or_else(|| Error::MissingAddress(addr.clone()))?;
+
+                    gas_meter
+                        .add_compiling_fee(implicit_vp.len())
+                        .map_err(Error::GasError)?;
+                    Vp::Wasm(implicit_vp)
+                }
+                Address::Established(_) => {
                     let (vp, gas) = storage
                         .validity_predicate(&addr)
                         .map_err(Error::StorageError)?;
@@ -231,6 +251,12 @@ fn execute_vps(
                             parameters
                                 .validate_tx(tx_data, keys, &verifiers_addr)
                                 .map_err(Error::ParametersNativeVpError)
+                        }
+                        InternalAddress::Special => {
+                            let implicit = SpecialVp { ctx };
+                            implicit
+                                .validate_tx(tx_data, keys, &verifiers_addr)
+                                .map_err(Error::SpecialNativeVpError)
                         }
                     };
 

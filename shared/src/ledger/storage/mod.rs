@@ -18,6 +18,7 @@ use types::MerkleTree;
 use crate::bytes::ByteBuf;
 use crate::ledger::gas::MIN_STORAGE_GAS;
 use crate::ledger::parameters::{self, EpochDuration};
+use crate::ledger::special;
 use crate::types::address::{Address, EstablishedAddressGen};
 use crate::types::storage::{
     BlockHash, BlockHeight, DbKeySeg, Epoch, Key, BLOCK_HASH_LENGTH,
@@ -350,6 +351,12 @@ where
         addr: &Address,
     ) -> Result<(Option<Vec<u8>>, u64)> {
         let key = Key::validity_predicate(addr);
+        self.read(&key)
+    }
+
+    /// Get the implicit VP from the internal address which stores it.
+    pub fn implicit_vp(&self) -> Result<(Option<Vec<u8>>, u64)> {
+        let key = special::implicit_vp_key();
         self.read(&key)
     }
 

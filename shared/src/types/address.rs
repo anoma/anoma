@@ -248,6 +248,8 @@ pub enum InternalAddress {
     Ibc,
     /// Protocol parameters
     Parameters,
+    /// Implicit VP
+    Special,
 }
 
 impl Display for InternalAddress {
@@ -259,6 +261,7 @@ impl Display for InternalAddress {
                 Self::PoS => "PoS",
                 Self::Ibc => "IBC",
                 Self::Parameters => "Parameters",
+                Self::Special => "Special",
             }
         )
     }
