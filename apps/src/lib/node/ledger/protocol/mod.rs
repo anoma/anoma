@@ -8,6 +8,7 @@ use anoma::ledger::gas::{self, BlockGasMeter, VpGasMeter, VpsGas};
 use anoma::ledger::ibc::{self, Ibc};
 use anoma::ledger::native_vp::{self, NativeVp};
 use anoma::ledger::parameters::{self, ParametersVp};
+use anoma::ledger::special::{self, SpecialVp};
 use anoma::ledger::pos::{self, PoS};
 use anoma::ledger::storage::write_log::WriteLog;
 use anoma::proto::{self, Tx};
@@ -39,6 +40,8 @@ pub enum Error {
     PosNativeVpError(pos::Error),
     #[error("Parameters native VP: {0}")]
     ParametersNativeVpError(parameters::Error),
+    #[error("Special native VP: {0}")]
+    SpecialNativeVpError(special::Error),
 }
 
 pub type Result<T> = std::result::Result<T, Error>;
@@ -231,6 +234,12 @@ fn execute_vps(
                             parameters
                                 .validate_tx(tx_data, keys, &verifiers_addr)
                                 .map_err(Error::ParametersNativeVpError)
+                        }
+                        InternalAddress::Special => {
+                            let implicit = SpecialVp { ctx };
+                            implicit
+                                .validate_tx(tx_data, keys, &verifiers_addr)
+                                .map_err(Error::SpecialNativeVpError)
                         }
                     };
 
