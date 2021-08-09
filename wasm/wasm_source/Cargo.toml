@@ -17,6 +17,7 @@ mm_token_exch = ["petgraph", "serde", "serde_json"]
 tx_from_intent = []
 tx_transfer = []
 tx_update_vp = []
+vp_implicit = []
 vp_token = []
 vp_user = []
 
