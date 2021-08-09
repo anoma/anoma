@@ -148,7 +148,24 @@ fn check_vps(
         .map(|(addr, keys)| {
             let vp = match addr {
                 Address::Internal(addr) => Vp::Native(&addr),
-                Address::Established(_) | Address::Implicit(_) => {
+                // todo: memoize this so the implicit VP is only ever
+                // fetched once
+                Address::Implicit(_) => {
+                    let (implicit_vp, gas) = storage
+                        .implicit_vp()
+                        .map_err(Error::StorageError)?;
+                    gas_meter.add(gas).map_err(Error::GasError)?;
+
+                    let implicit_vp =
+                        // todo: the right error type (SpecialNativeVpError?)
+                        implicit_vp.ok_or_else(|| Error::MissingAddress(addr.clone()))?;
+
+                    gas_meter
+                        .add_compiling_fee(implicit_vp.len())
+                        .map_err(Error::GasError)?;
+                    Vp::Wasm(implicit_vp)
+                }
+                Address::Established(_) => {
                     let (vp, gas) = storage
                         .validity_predicate(&addr)
                         .map_err(Error::StorageError)?;
