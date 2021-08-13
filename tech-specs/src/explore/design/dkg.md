@@ -13,33 +13,43 @@ will require posting information on chain.
 ## Starting the Protocol
 
 The protocol to generate a new key will be scheduled to begin at specific 
-block heights, likely after a fixed number of blocks has passed since the 
-last protocol was initiated. This way all the participating validators 
-know when to begin the announcement phase. In addition to starting at
-the pre-determined blocks heights, if the protocol fails, all validators
-know to immediately start a new round of the protocol.
+block heights, in pratices this will be at the beginning of every eposh.
+This way all the validators know when to begin the announcement phase. In 
+addition to starting at the pre-determined blocks heights, if the protocol 
+fails, all validators know to immediately start a new round of the protocol.
 
-## Announcing and distributing weight shares
+It is important to note that the key that is being generated is to be used
+encrypting transactions in the epoch following the current one. However,
+this relies on the assumption that after the validators sets change between
+epochs that there is still validators whose combined weight exceeds 
+\\( \frac{2}{3} \\) of \\W\\. Otherwise, it will be impossible to decrypt
+transactions. If this does not happen a new key will need to be generated.
+
+__TBD__: Do we accept unencrypted transactions while the new key is generated
+or do we stop accepting transactions until the new key is available? Or 
+something else (that is hopefully smarter)?
+
+##  Distributing weight shares
 
 In order for the DKG protocol to work, it requires the contribution of 
- \\(\frac{2}{3} \\) of the total staked weight among live validators. In 
-order to know when a subset of validators own at least \\(\frac{2}{3}\\)
-of the total weight, it is necessary for validators to announce their stake.
-Each validator will announce their stake as part of their vote extension.
+ \\(\frac{2}{3} \\) of the total staked weight among validators. At the
+beginning of the DKG protocol, Tendermint can be queried each validator
+to get the set of validators, their associated address, and voting power
+(or weight).
 
-Furthermore, the total weight will be scaled down to a fixed parameter 
-\\( W\\) (and fractional weights rounded appropriately to acheive integral
+The total weight will be scaled down to a fixed parameter 
+\\( W\\) (and fractional weights rounded appropriately to achieve integral
 values). After this procedure, each validator has a corresponding number of
 weight shares. 
 
-Lastly, the DKG protocol requires a canonical ordering of validators with
-shares must be agreed upon. This will be done via the consensus layer.
-The current block proposer will apportion out weight shares as well as the
-aforementioned ordering (which induces a natural partition of the weight 
-shares) to each validator that made an announcement. This is done as part
-of the verify vote extension phase and  is included in the header of the 
-finalized  block. Once this block is on the blockchain, the next step of 
-the DKG can proceed.
+The DKG protocol requires a canonical ordering of validators. The ordering
+will be chosen by ordering validators in terms of decreasing voting power.
+If there is a tie, it is broken by considering the lexicographic ordering
+on their associated addresses. 
+
+This allows each validator to independently compute the partition of weight
+shares themselves which will be needed for the following steps of the DKG 
+protocol.
 
 ## Dealers
 In a single DKG instance, a subset of validators holding at least
@@ -73,38 +83,25 @@ PVSS transcripts. Once this DKG is on the blockchain, it can be
 used for encryption of transactions until the next DKG instance is run.
 
 When deciding to aggregate the PVSS instances into a single one, we shall 
-consider the instances ranked in terms of the weights of their dealers (in 
-descending order). The topmost dealers constituting enough weight are then 
-chosen and aggregated in their specified order.
+consider the instances ranked in terms of their validators as was also used
+for partitioning the weight shares (described above).
 
-## Notes on pipelining
+## Storage considerations
 
-Note that in the decription above, at least two blocks must be submitted to the blockchain in order to
-produce the next public encryption key. The first block determines the 
-partition of weight shares of the validators and the last aggregates the 
-PVSS instances from the dealers leading to the final key.
-
-In practice, it may take even longer as the protocol waits for enough PVSS 
-instances to get onto the blockchain. Depending on the chosen refresh rate
-of the keys, another instance of the DKG protocol may need to be started 
-before the current one finishes. This is possible so long as all data
-posted for a DKG instance includes the session id \\( \tau \\).
-
-This means that the storage of a node must be adapted. Each instance of a
-DKG protocol from Ferveo is a state machine that keeps all necessary data
-from the protocol instance. We thus need to store the following data
- - A list of sesssion ids from the last completed DKG instance up until the
+The storage of a node must be adapted to accommodate the DKG protocol. Each
+instance of a DKG protocol from Ferveo is a state machine that stores
+much of the necessary data from the protocol instance. The following data
+needs to be stored by each node
+ - The partition of the weight shares among the current validator set
+ - A session keypair for the current DKG session. Used for encrypting
+   PVSS transcripts and signing DKG protocol messages.
+ - A list of session ids from the last completed DKG instance up until the
    latest started (we may prune ids for failed instances however) 
  - The DKG state machine associated to each of these session ids.
 
 ##  The DKG state machine
 
 We first describe each new message type needed for the protocol.
-- `AnnounceStake`: Validators participating in this instance of the DKG
-  broadcast their stake
-- `PartitionShares`: Once the block containing all of the `AnnounceStake`
-  messages are finalized, the set of participants is fixed and the
-  partition of the weight shares is added to the block.
 - `Deal`: This message contains the PVSS transcript from a validator
   acting as a dealer
 - `Aggregate`: Combine the PVSS instances into a single one, thereby
@@ -118,14 +115,6 @@ each of the above message in the appropriate way. All necessary state
 is persisted by this state machine. We describe the  appropriate action for
 each of the above transactions.
 
- - `AnnounceStake`: These need to be verified. The current block proposer
-   adds a `PartitionShares` message to the block header of the 
-   block  starting the DKG instance. It is based off all the 
-   `AnnounceStake` transactions which will also be included in the same
-   block header (for verification).
- - `PartitionShares`: Validators verify the partitions and weights and
-   should extract their weight shares and store them in the DKG state machine.
-   Then they should send out `Deal` transactions.
  - `Deal`: These need to be verified. The current block proposer checks if 
    enough valid PVSS transcripts have been reached to meet the security 
    threshold. If so, it adds a `Aggregate` transaction to the block header. 
@@ -135,13 +124,12 @@ each of the above transactions.
    protocol in the next block.   For any PVSS transcript that fails verification, a `Complain` message is
    also included in the header.
  - `Aggregate`: This simply needs to be verified and the resulting key added
-   to the DKG instance along with the input PVSS transcripts. 
+   to the DKG instance along with the input PVSS transcripts. If validation
+   of the aggregated key fails, a `Complain` should be issued.
 
-Most of the above transactions occur as a reaction to other messages
-and/or data in the proposed block header. The two exceptions are the
-`PartitionShares`, and `Aggregate` transactions. These must be 
-made by the current block proposer if their current DKG state machine is 
-in the  appropriate state and/or the appropriate conditions are met. Thus 
+While every validator must send and react to `Deal` messages, `Aggregate` 
+must be made by the current block proposer if their current DKG state machine 
+is in the  appropriate state and/or the appropriate conditions are met. Thus 
 block proposers must check the state machines of their active DKG instances.
 
 ## ABCI++
@@ -151,10 +139,7 @@ need control over block preparation as well extra data from the Vote Extension
 phase. 
 
 We list the phase of ABCI++ in which each of the above actions takes place.
- - `AnnounceStake`: These are sent out by validators during the Vote
-    Extension phase.
- - `PartitionShares`: This also happens in the Verify Vote Extension phase
-    and the result will be included in the finalized block's header.
+
  - `Deal`: Validators should verify the weight shares included in the block 
     header. If validation fails, the DKG instance fails.  Otherwise, `Deal` 
     happens during the Vote Extension phase.
