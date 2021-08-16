@@ -17,7 +17,7 @@
         - [intent](./explore/design/intent_gossip/intent.md)
         - [incentive](./explore/design/intent_gossip/incentive.md)
         - [matchmaker](./explore/design/intent_gossip/matchmaker.md)
-    - [Distributed key generation gossip](./explore/design/dkg.md)
+    - [Distributed key generation](./explore/design/dkg.md)
     - [Fractal scaling](./explore/design/fractal-scaling.md)
     - [Upgrade system](./explore/design/upgrade-system.md)
     - [Crypto primitives](./explore/design/crypto-primitives.md)
