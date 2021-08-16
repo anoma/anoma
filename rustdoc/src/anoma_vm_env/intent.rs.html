@@ -49,7 +49,7 @@
     <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">anoma::types::intent</span>::<span class="kw-2">*</span>;
 
     <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">invalidate_intent</span>(<span class="ident">intent</span>: <span class="kw-2">&amp;</span><span class="ident">Signed</span><span class="op">&lt;</span><span class="ident">Intent</span><span class="op">&gt;</span>) {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">invalidate_exchange</span>(<span class="ident">intent</span>: <span class="kw-2">&amp;</span><span class="ident">Signed</span><span class="op">&lt;</span><span class="ident">Exchange</span><span class="op">&gt;</span>) {
         <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::imports::tx</span>;
         <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">intent::invalid_intent_key</span>(<span class="kw-2">&amp;</span><span class="ident">intent</span>.<span class="ident">data</span>.<span class="ident">addr</span>);
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">invalid_intent</span>: <span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">Signature</span><span class="op">&gt;</span> <span class="op">=</span>
@@ -65,7 +65,7 @@
 
     <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">vp</span>(<span class="ident">intent</span>: <span class="kw-2">&amp;</span><span class="ident">Signed</span><span class="op">&lt;</span><span class="ident">Intent</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">vp_exchange</span>(<span class="ident">intent</span>: <span class="kw-2">&amp;</span><span class="ident">Signed</span><span class="op">&lt;</span><span class="ident">Exchange</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
         <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::imports::vp</span>;
         <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">intent::invalid_intent_key</span>(<span class="kw-2">&amp;</span><span class="ident">intent</span>.<span class="ident">data</span>.<span class="ident">addr</span>);
 

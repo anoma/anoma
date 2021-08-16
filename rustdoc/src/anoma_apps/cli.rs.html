@@ -1066,12 +1066,6 @@
 <span id="1064">1064</span>
 <span id="1065">1065</span>
 <span id="1066">1066</span>
-<span id="1067">1067</span>
-<span id="1068">1068</span>
-<span id="1069">1069</span>
-<span id="1070">1070</span>
-<span id="1071">1071</span>
-<span id="1072">1072</span>
 </pre><pre class="rust">
 <span class="doccomment">//! The CLI commands that are re-used between the executables `anoma`,</span>
 <span class="doccomment">//! `anoma-node` and `anoma-client`.</span>
@@ -1591,11 +1585,13 @@
 }
 
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">args</span> {
+    <span class="kw">use</span> <span class="ident">std::fs::File</span>;
     <span class="kw">use</span> <span class="ident">std::net::SocketAddr</span>;
     <span class="kw">use</span> <span class="ident">std::path::PathBuf</span>;
     <span class="kw">use</span> <span class="ident">std::str::FromStr</span>;
 
     <span class="kw">use</span> <span class="ident">anoma::types::address::Address</span>;
+    <span class="kw">use</span> <span class="ident">anoma::types::intent::Exchange</span>;
     <span class="kw">use</span> <span class="ident">anoma::types::token</span>;
     <span class="kw">use</span> <span class="ident">libp2p::Multiaddr</span>;
 
@@ -1603,8 +1599,6 @@
     <span class="kw">use</span> <span class="kw">super</span><span class="ident">::ArgMatches</span>;
 
     <span class="kw">const</span> <span class="ident">ADDRESS</span>: <span class="ident">Arg</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">arg</span>(<span class="string">&quot;address&quot;</span>);
-    <span class="kw">const</span> <span class="ident">AMOUNT_BUY</span>: <span class="ident">Arg</span><span class="op">&lt;</span><span class="ident">token::Amount</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">arg</span>(<span class="string">&quot;amount-buy&quot;</span>);
-    <span class="kw">const</span> <span class="ident">AMOUNT_SELL</span>: <span class="ident">Arg</span><span class="op">&lt;</span><span class="ident">token::Amount</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">arg</span>(<span class="string">&quot;amount-sell&quot;</span>);
     <span class="kw">const</span> <span class="ident">AMOUNT</span>: <span class="ident">Arg</span><span class="op">&lt;</span><span class="ident">token::Amount</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">arg</span>(<span class="string">&quot;amount&quot;</span>);
     <span class="kw">const</span> <span class="ident">BASE_DIR</span>: <span class="ident">ArgDefault</span><span class="op">&lt;</span><span class="ident">PathBuf</span><span class="op">&gt;</span> <span class="op">=</span>
         <span class="ident">arg_default</span>(<span class="string">&quot;base-dir&quot;</span>, <span class="ident">DefaultFn</span>(<span class="op">|</span><span class="op">|</span> <span class="string">&quot;.anoma&quot;</span>.<span class="ident">into</span>()));
@@ -1612,8 +1606,6 @@
     <span class="kw">const</span> <span class="ident">DATA_PATH_OPT</span>: <span class="ident">ArgOpt</span><span class="op">&lt;</span><span class="ident">PathBuf</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">arg_opt</span>(<span class="string">&quot;data-path&quot;</span>);
     <span class="kw">const</span> <span class="ident">DATA_PATH</span>: <span class="ident">Arg</span><span class="op">&lt;</span><span class="ident">PathBuf</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">arg</span>(<span class="string">&quot;data-path&quot;</span>);
     <span class="kw">const</span> <span class="ident">DRY_RUN_TX</span>: <span class="ident">ArgFlag</span> <span class="op">=</span> <span class="ident">flag</span>(<span class="string">&quot;dry-run&quot;</span>);
-    <span class="kw">const</span> <span class="ident">FILE_PATH</span>: <span class="ident">ArgDefault</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> <span class="op">=</span>
-        <span class="ident">arg_default</span>(<span class="string">&quot;file-path&quot;</span>, <span class="ident">DefaultFn</span>(<span class="op">|</span><span class="op">|</span> <span class="string">&quot;intent.data&quot;</span>.<span class="ident">into</span>()));
     <span class="kw">const</span> <span class="ident">FILTER_PATH</span>: <span class="ident">ArgOpt</span><span class="op">&lt;</span><span class="ident">PathBuf</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">arg_opt</span>(<span class="string">&quot;filter-path&quot;</span>);
     <span class="kw">const</span> <span class="ident">LEDGER_ADDRESS_ABOUT</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span>
         <span class="string">&quot;Address of a ledger node as \&quot;{scheme}://{host}:{port}\&quot;. If the \
@@ -1625,21 +1617,25 @@
         }));
     <span class="kw">const</span> <span class="ident">LEDGER_ADDRESS_OPT</span>: <span class="ident">ArgOpt</span><span class="op">&lt;</span><span class="ident">tendermint::net::Address</span><span class="op">&gt;</span> <span class="op">=</span>
         <span class="ident">LEDGER_ADDRESS</span>.<span class="ident">opt</span>();
+    <span class="kw">const</span> <span class="ident">PEERS</span>: <span class="ident">ArgMulti</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">arg_multi</span>(<span class="string">&quot;peers&quot;</span>);
+    <span class="kw">const</span> <span class="ident">TOPIC</span>: <span class="ident">Arg</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">arg</span>(<span class="string">&quot;topic&quot;</span>);
+    <span class="kw">const</span> <span class="ident">TOPICS</span>: <span class="ident">ArgMulti</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">TOPIC</span>.<span class="ident">multi</span>();
+    <span class="comment">// TODO: once we have a wallet, we should also allow to use a key alias</span>
+    <span class="comment">// &lt;https://github.com/anoma/anoma/issues/167&gt;</span>
+    <span class="kw">const</span> <span class="ident">SIGNING_KEY</span>: <span class="ident">Arg</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">arg</span>(<span class="string">&quot;key&quot;</span>);
+    <span class="kw">const</span> <span class="ident">RPC_SOCKET_ADDR</span>: <span class="ident">ArgOpt</span><span class="op">&lt;</span><span class="ident">SocketAddr</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">arg_opt</span>(<span class="string">&quot;rpc&quot;</span>);
     <span class="kw">const</span> <span class="ident">LEDGER_ADDRESS</span>: <span class="ident">Arg</span><span class="op">&lt;</span><span class="ident">tendermint::net::Address</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">arg</span>(<span class="string">&quot;ledger-address&quot;</span>);
     <span class="kw">const</span> <span class="ident">MATCHMAKER_PATH</span>: <span class="ident">ArgOpt</span><span class="op">&lt;</span><span class="ident">PathBuf</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">arg_opt</span>(<span class="string">&quot;matchmaker-path&quot;</span>);
     <span class="kw">const</span> <span class="ident">MULTIADDR_OPT</span>: <span class="ident">ArgOpt</span><span class="op">&lt;</span><span class="ident">Multiaddr</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">arg_opt</span>(<span class="string">&quot;address&quot;</span>);
     <span class="kw">const</span> <span class="ident">NODE</span>: <span class="ident">Arg</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">arg</span>(<span class="string">&quot;node&quot;</span>);
+    <span class="kw">const</span> <span class="ident">FILE_PATH_OUTPUT</span>: <span class="ident">ArgDefault</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> <span class="op">=</span>
+        <span class="ident">arg_default</span>(<span class="string">&quot;file-path-output&quot;</span>, <span class="ident">DefaultFn</span>(<span class="op">|</span><span class="op">|</span> <span class="string">&quot;intent.data&quot;</span>.<span class="ident">into</span>()));
+    <span class="kw">const</span> <span class="ident">FILE_PATH_INPUT</span>: <span class="ident">Arg</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">arg</span>(<span class="string">&quot;file-path-input&quot;</span>);
     <span class="kw">const</span> <span class="ident">OWNER</span>: <span class="ident">ArgOpt</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">arg_opt</span>(<span class="string">&quot;owner&quot;</span>);
-    <span class="kw">const</span> <span class="ident">PEERS</span>: <span class="ident">ArgMulti</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">arg_multi</span>(<span class="string">&quot;peers&quot;</span>);
-    <span class="kw">const</span> <span class="ident">RPC_SOCKET_ADDR</span>: <span class="ident">ArgOpt</span><span class="op">&lt;</span><span class="ident">SocketAddr</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">arg_opt</span>(<span class="string">&quot;rpc&quot;</span>);
     <span class="kw">const</span> <span class="ident">SOURCE</span>: <span class="ident">Arg</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">arg</span>(<span class="string">&quot;source&quot;</span>);
     <span class="kw">const</span> <span class="ident">TARGET</span>: <span class="ident">Arg</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">arg</span>(<span class="string">&quot;target&quot;</span>);
-    <span class="kw">const</span> <span class="ident">TOKEN_BUY</span>: <span class="ident">Arg</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">arg</span>(<span class="string">&quot;token-buy&quot;</span>);
     <span class="kw">const</span> <span class="ident">TOKEN_OPT</span>: <span class="ident">ArgOpt</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">TOKEN</span>.<span class="ident">opt</span>();
-    <span class="kw">const</span> <span class="ident">TOKEN_SELL</span>: <span class="ident">Arg</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">arg</span>(<span class="string">&quot;token-sell&quot;</span>);
     <span class="kw">const</span> <span class="ident">TOKEN</span>: <span class="ident">Arg</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">arg</span>(<span class="string">&quot;token&quot;</span>);
-    <span class="kw">const</span> <span class="ident">TOPIC</span>: <span class="ident">Arg</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">arg</span>(<span class="string">&quot;topic&quot;</span>);
-    <span class="kw">const</span> <span class="ident">TOPICS</span>: <span class="ident">ArgMulti</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">TOPIC</span>.<span class="ident">multi</span>();
     <span class="kw">const</span> <span class="ident">TX_CODE_PATH</span>: <span class="ident">ArgOpt</span><span class="op">&lt;</span><span class="ident">PathBuf</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">arg_opt</span>(<span class="string">&quot;tx-code-path&quot;</span>);
 
     <span class="doccomment">/// Global command arguments</span>
@@ -1858,45 +1854,37 @@
     <span class="doccomment">/// Craft intent for token exchange arguments</span>
     <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
     <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">CraftIntent</span> {
-        <span class="doccomment">/// Source address</span>
-        <span class="kw">pub</span> <span class="ident">addr</span>: <span class="ident">Address</span>,
-        <span class="doccomment">/// Token to sell</span>
-        <span class="kw">pub</span> <span class="ident">token_sell</span>: <span class="ident">Address</span>,
-        <span class="doccomment">/// Amount of token to sell</span>
-        <span class="kw">pub</span> <span class="ident">amount_sell</span>: <span class="ident">token::Amount</span>,
-        <span class="doccomment">/// Token to buy</span>
-        <span class="kw">pub</span> <span class="ident">token_buy</span>: <span class="ident">Address</span>,
-        <span class="doccomment">/// Amount of token to buy</span>
-        <span class="kw">pub</span> <span class="ident">amount_buy</span>: <span class="ident">token::Amount</span>,
+        <span class="doccomment">/// Signing key</span>
+        <span class="kw">pub</span> <span class="ident">key</span>: <span class="ident">Address</span>,
+        <span class="doccomment">/// Exchange description</span>
+        <span class="kw">pub</span> <span class="ident">exchanges</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Exchange</span><span class="op">&gt;</span>,
         <span class="doccomment">/// Target file path</span>
         <span class="kw">pub</span> <span class="ident">file_path</span>: <span class="ident">String</span>,
     }
 
     <span class="kw">impl</span> <span class="ident">Args</span> <span class="kw">for</span> <span class="ident">CraftIntent</span> {
         <span class="kw">fn</span> <span class="ident">parse</span>(<span class="ident">matches</span>: <span class="kw-2">&amp;</span><span class="ident">ArgMatches</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
-            <span class="kw">let</span> <span class="ident">addr</span> <span class="op">=</span> <span class="ident">ADDRESS</span>.<span class="ident">parse</span>(<span class="ident">matches</span>);
-            <span class="kw">let</span> <span class="ident">token_sell</span> <span class="op">=</span> <span class="ident">TOKEN_SELL</span>.<span class="ident">parse</span>(<span class="ident">matches</span>);
-            <span class="kw">let</span> <span class="ident">amount_sell</span> <span class="op">=</span> <span class="ident">AMOUNT_SELL</span>.<span class="ident">parse</span>(<span class="ident">matches</span>);
-            <span class="kw">let</span> <span class="ident">token_buy</span> <span class="op">=</span> <span class="ident">TOKEN_BUY</span>.<span class="ident">parse</span>(<span class="ident">matches</span>);
-            <span class="kw">let</span> <span class="ident">amount_buy</span> <span class="op">=</span> <span class="ident">AMOUNT_BUY</span>.<span class="ident">parse</span>(<span class="ident">matches</span>);
-            <span class="kw">let</span> <span class="ident">file_path</span> <span class="op">=</span> <span class="ident">FILE_PATH</span>.<span class="ident">parse</span>(<span class="ident">matches</span>);
+            <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">SIGNING_KEY</span>.<span class="ident">parse</span>(<span class="ident">matches</span>);
+            <span class="kw">let</span> <span class="ident">file_path_output</span> <span class="op">=</span> <span class="ident">FILE_PATH_OUTPUT</span>.<span class="ident">parse</span>(<span class="ident">matches</span>);
+            <span class="kw">let</span> <span class="ident">file_path_input</span> <span class="op">=</span> <span class="ident">FILE_PATH_INPUT</span>.<span class="ident">parse</span>(<span class="ident">matches</span>);
+            <span class="kw">let</span> <span class="ident">file</span> <span class="op">=</span> <span class="ident">File::open</span>(<span class="kw-2">&amp;</span><span class="ident">file_path_input</span>).<span class="ident">expect</span>(<span class="string">&quot;File must exist.&quot;</span>);
+
+            <span class="kw">let</span> <span class="ident">exchanges</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Exchange</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">serde_json::from_reader</span>(<span class="ident">file</span>)
+                .<span class="ident">expect</span>(<span class="string">&quot;JSON was not well-formatted&quot;</span>);
+
             <span class="self">Self</span> {
-                <span class="ident">addr</span>,
-                <span class="ident">token_sell</span>,
-                <span class="ident">amount_sell</span>,
-                <span class="ident">token_buy</span>,
-                <span class="ident">amount_buy</span>,
-                <span class="ident">file_path</span>,
+                <span class="ident">key</span>,
+                <span class="ident">exchanges</span>,
+                <span class="ident">file_path</span>: <span class="ident">file_path_output</span>,
             }
         }
 
         <span class="kw">fn</span> <span class="ident">def</span>(<span class="ident">app</span>: <span class="ident">App</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">App</span> {
-            <span class="ident">app</span>.<span class="ident">arg</span>(<span class="ident">ADDRESS</span>.<span class="ident">def</span>().<span class="ident">about</span>(<span class="string">&quot;The account address.&quot;</span>))
-                .<span class="ident">arg</span>(<span class="ident">TOKEN_SELL</span>.<span class="ident">def</span>().<span class="ident">about</span>(<span class="string">&quot;The selling token.&quot;</span>))
-                .<span class="ident">arg</span>(<span class="ident">AMOUNT_SELL</span>.<span class="ident">def</span>().<span class="ident">about</span>(<span class="string">&quot;The amount selling.&quot;</span>))
-                .<span class="ident">arg</span>(<span class="ident">TOKEN_BUY</span>.<span class="ident">def</span>().<span class="ident">about</span>(<span class="string">&quot;The buying token.&quot;</span>))
-                .<span class="ident">arg</span>(<span class="ident">AMOUNT_BUY</span>.<span class="ident">def</span>().<span class="ident">about</span>(<span class="string">&quot;The amount buying.&quot;</span>))
-                .<span class="ident">arg</span>(<span class="ident">FILE_PATH</span>.<span class="ident">def</span>().<span class="ident">about</span>(<span class="string">&quot;The output file&quot;</span>))
+            <span class="ident">app</span>.<span class="ident">arg</span>(<span class="ident">SIGNING_KEY</span>.<span class="ident">def</span>().<span class="ident">about</span>(
+                <span class="string">&quot;Address of the account with key used to sign the intent.&quot;</span>,
+            ))
+            .<span class="ident">arg</span>(<span class="ident">FILE_PATH_OUTPUT</span>.<span class="ident">def</span>().<span class="ident">about</span>(<span class="string">&quot;The output file&quot;</span>))
+            .<span class="ident">arg</span>(<span class="ident">FILE_PATH_INPUT</span>.<span class="ident">def</span>().<span class="ident">about</span>(<span class="string">&quot;The input file&quot;</span>))
         }
     }
 

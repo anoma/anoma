@@ -333,6 +333,21 @@
 <span id="331">331</span>
 <span id="332">332</span>
 <span id="333">333</span>
+<span id="334">334</span>
+<span id="335">335</span>
+<span id="336">336</span>
+<span id="337">337</span>
+<span id="338">338</span>
+<span id="339">339</span>
+<span id="340">340</span>
+<span id="341">341</span>
+<span id="342">342</span>
+<span id="343">343</span>
+<span id="344">344</span>
+<span id="345">345</span>
+<span id="346">346</span>
+<span id="347">347</span>
+<span id="348">348</span>
 </pre><pre class="rust">
 <span class="doccomment">//! Node and client configuration</span>
 
@@ -640,6 +655,8 @@ And this is correct
         <span class="ident">peers_info</span>: <span class="ident">Vec</span><span class="op">&lt;</span>(<span class="ident">String</span>, <span class="ident">u32</span>, <span class="ident">PeerId</span>)<span class="op">&gt;</span>,
         <span class="ident">mdns</span>: <span class="ident">bool</span>,
         <span class="ident">kademlia</span>: <span class="ident">bool</span>,
+        <span class="ident">matchmaker</span>: <span class="ident">bool</span>,
+        <span class="ident">rpc</span>: <span class="ident">bool</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">gossiper_config</span> <span class="op">=</span> <span class="ident">IntentGossiper::default</span>();
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">discover_config</span> <span class="op">=</span> <span class="ident">DiscoverPeer::default</span>();
@@ -647,6 +664,19 @@ And this is correct
         <span class="ident">gossiper_config</span>.<span class="ident">address</span> <span class="op">=</span>
             <span class="ident">Multiaddr::from_str</span>(<span class="macro">format!</span>(<span class="string">&quot;/ip4/{}/tcp/{}&quot;</span>, <span class="ident">ip</span>, <span class="ident">port</span>).<span class="ident">as_str</span>())
                 .<span class="ident">unwrap</span>();
+
+        <span class="kw">if</span> <span class="ident">matchmaker</span> {
+            <span class="ident">gossiper_config</span>.<span class="ident">matchmaker</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">Matchmaker</span> {
+                <span class="ident">matchmaker</span>: <span class="string">&quot;../wasm/mm_token_exch.wasm&quot;</span>.<span class="ident">parse</span>().<span class="ident">unwrap</span>(),
+                <span class="ident">tx_code</span>: <span class="string">&quot;../wasm/tx_from_intent.wasm&quot;</span>.<span class="ident">parse</span>().<span class="ident">unwrap</span>(),
+                <span class="ident">ledger_address</span>: <span class="string">&quot;0.0.0.0:26657&quot;</span>.<span class="ident">parse</span>().<span class="ident">unwrap</span>(),
+                <span class="ident">filter</span>: <span class="prelude-val">None</span>,
+            })
+        }
+
+        <span class="kw">if</span> <span class="ident">rpc</span> {
+            <span class="ident">gossiper_config</span>.<span class="ident">rpc</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">RpcServer::default</span>())
+        }
 
         <span class="kw">let</span> <span class="ident">bootstrap_peers</span>: <span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">PeerAddress</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">peers_info</span>
             .<span class="ident">iter</span>()
