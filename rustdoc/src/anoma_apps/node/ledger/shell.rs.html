@@ -788,7 +788,7 @@
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">response::CheckTx</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">response</span> <span class="op">=</span> <span class="ident">response::CheckTx::default</span>();
         <span class="kw">match</span> <span class="ident">Tx::try_from</span>(<span class="ident">tx_bytes</span>).<span class="ident">map_err</span>(<span class="ident">Error::TxDecoding</span>) {
-            <span class="prelude-val">Ok</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">response</span>.<span class="ident">info</span> <span class="op">=</span> <span class="ident">String::from</span>(<span class="string">&quot;Mempool validation passed&quot;</span>),
+            <span class="prelude-val">Ok</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">response</span>.<span class="ident">log</span> <span class="op">=</span> <span class="ident">String::from</span>(<span class="string">&quot;Mempool validation passed&quot;</span>),
             <span class="prelude-val">Err</span>(<span class="ident">msg</span>) <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="ident">response</span>.<span class="ident">code</span> <span class="op">=</span> <span class="number">1</span>;
                 <span class="ident">response</span>.<span class="ident">log</span> <span class="op">=</span> <span class="ident">msg</span>.<span class="ident">to_string</span>();

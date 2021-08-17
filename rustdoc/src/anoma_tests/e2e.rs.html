@@ -901,7 +901,7 @@
 
         <span class="comment">// 3. Check that anoma detects that the tendermint node is dead</span>
         <span class="ident">session</span>
-            .<span class="ident">exp_string</span>(<span class="string">&quot;Tendermint node shut down unexpectedly.&quot;</span>)
+            .<span class="ident">exp_string</span>(<span class="string">&quot;Tendermint node is no longer running.&quot;</span>)
             .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="macro">eyre!</span>(<span class="macro">format!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">e</span>)))<span class="question-mark">?</span>;
 
         <span class="comment">// 4. Check that the ledger node shuts down</span>
