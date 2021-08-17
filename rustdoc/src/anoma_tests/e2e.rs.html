@@ -1265,8 +1265,8 @@
             {
                 <span class="string">&quot;key&quot;</span>: <span class="ident">BERTHA</span>,
                 <span class="string">&quot;addr&quot;</span>: <span class="ident">BERTHA</span>,
-                <span class="string">&quot;min_buy&quot;</span>: <span class="number">100</span>,
-                <span class="string">&quot;max_sell&quot;</span>: <span class="number">70</span>,
+                <span class="string">&quot;min_buy&quot;</span>: <span class="string">&quot;100.0&quot;</span>,
+                <span class="string">&quot;max_sell&quot;</span>: <span class="string">&quot;70&quot;</span>,
                 <span class="string">&quot;token_buy&quot;</span>: <span class="ident">XAN</span>,
                 <span class="string">&quot;token_sell&quot;</span>: <span class="ident">BTC</span>,
                 <span class="string">&quot;rate_min&quot;</span>: <span class="number">2</span>
@@ -1276,8 +1276,8 @@
             {
                 <span class="string">&quot;key&quot;</span>: <span class="ident">ALBERT</span>,
                 <span class="string">&quot;addr&quot;</span>: <span class="ident">ALBERT</span>,
-                <span class="string">&quot;min_buy&quot;</span>: <span class="number">50</span>,
-                <span class="string">&quot;max_sell&quot;</span>: <span class="number">300</span>,
+                <span class="string">&quot;min_buy&quot;</span>: <span class="string">&quot;50&quot;</span>,
+                <span class="string">&quot;max_sell&quot;</span>: <span class="string">&quot;300&quot;</span>,
                 <span class="string">&quot;token_buy&quot;</span>: <span class="ident">BTC</span>,
                 <span class="string">&quot;token_sell&quot;</span>: <span class="ident">ETH</span>,
                 <span class="string">&quot;rate_min&quot;</span>: <span class="number">0.7</span>
@@ -1287,8 +1287,8 @@
             {
                 <span class="string">&quot;key&quot;</span>: <span class="ident">CHRISTEL</span>,
                 <span class="string">&quot;addr&quot;</span>: <span class="ident">CHRISTEL</span>,
-                <span class="string">&quot;min_buy&quot;</span>: <span class="number">20</span>,
-                <span class="string">&quot;max_sell&quot;</span>: <span class="number">200</span>,
+                <span class="string">&quot;min_buy&quot;</span>: <span class="string">&quot;20&quot;</span>,
+                <span class="string">&quot;max_sell&quot;</span>: <span class="string">&quot;200&quot;</span>,
                 <span class="string">&quot;token_buy&quot;</span>: <span class="ident">ETH</span>,
                 <span class="string">&quot;token_sell&quot;</span>: <span class="ident">XAN</span>,
                 <span class="string">&quot;rate_min&quot;</span>: <span class="number">0.5</span>
@@ -1449,20 +1449,20 @@
 
         <span class="comment">// check that the amount matched are correct</span>
         <span class="ident">session_gossip</span>
-            .<span class="ident">exp_string</span>(<span class="string">&quot;amounts: [100000000, 70000000, 200000000]&quot;</span>)
+            .<span class="ident">exp_string</span>(<span class="string">&quot;amounts: 100, 70, 200&quot;</span>)
             .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="macro">eyre!</span>(<span class="macro">format!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">e</span>)))<span class="question-mark">?</span>;
 
         <span class="comment">// check that the transfers transactions are correct</span>
         <span class="ident">session_gossip</span>
-            .<span class="ident">exp_string</span>(<span class="string">&quot;crafting transfer: Established: a1qq5qqqqqxv6yydz9xc6ry33589q5x33eggcnjs2xx9znydj9xuens3phxppnwvzpg4rrqdpswve4n9, Established: a1qq5qqqqqg4znssfsgcurjsfhgfpy2vjyxy6yg3z98pp5zvp5xgersvfjxvcnx3f4xycrzdfkak0xhx, 70000000&quot;</span>)
+            .<span class="ident">exp_string</span>(<span class="string">&quot;crafting transfer: Established: a1qq5qqqqqxv6yydz9xc6ry33589q5x33eggcnjs2xx9znydj9xuens3phxppnwvzpg4rrqdpswve4n9, Established: a1qq5qqqqqg4znssfsgcurjsfhgfpy2vjyxy6yg3z98pp5zvp5xgersvfjxvcnx3f4xycrzdfkak0xhx, 70&quot;</span>)
             .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="macro">eyre!</span>(<span class="macro">format!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">e</span>)))<span class="question-mark">?</span>;
 
         <span class="ident">session_gossip</span>
-            .<span class="ident">exp_string</span>(<span class="string">&quot;crafting transfer: Established: a1qq5qqqqqxsuygd2x8pq5yw2ygdryxs6xgsmrsdzx8pryxv34gfrrssfjgccyg3zpxezrqd2y2s3g5s, Established: a1qq5qqqqqxv6yydz9xc6ry33589q5x33eggcnjs2xx9znydj9xuens3phxppnwvzpg4rrqdpswve4n9, 200000000&quot;</span>)
+            .<span class="ident">exp_string</span>(<span class="string">&quot;crafting transfer: Established: a1qq5qqqqqxsuygd2x8pq5yw2ygdryxs6xgsmrsdzx8pryxv34gfrrssfjgccyg3zpxezrqd2y2s3g5s, Established: a1qq5qqqqqxv6yydz9xc6ry33589q5x33eggcnjs2xx9znydj9xuens3phxppnwvzpg4rrqdpswve4n9, 200&quot;</span>)
             .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="macro">eyre!</span>(<span class="macro">format!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">e</span>)))<span class="question-mark">?</span>;
 
         <span class="ident">session_gossip</span>
-            .<span class="ident">exp_string</span>(<span class="string">&quot;crafting transfer: Established: a1qq5qqqqqg4znssfsgcurjsfhgfpy2vjyxy6yg3z98pp5zvp5xgersvfjxvcnx3f4xycrzdfkak0xhx, Established: a1qq5qqqqqxsuygd2x8pq5yw2ygdryxs6xgsmrsdzx8pryxv34gfrrssfjgccyg3zpxezrqd2y2s3g5s, 100000000&quot;</span>)
+            .<span class="ident">exp_string</span>(<span class="string">&quot;crafting transfer: Established: a1qq5qqqqqg4znssfsgcurjsfhgfpy2vjyxy6yg3z98pp5zvp5xgersvfjxvcnx3f4xycrzdfkak0xhx, Established: a1qq5qqqqqxsuygd2x8pq5yw2ygdryxs6xgsmrsdzx8pryxv34gfrrssfjgccyg3zpxezrqd2y2s3g5s, 100&quot;</span>)
             .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="macro">eyre!</span>(<span class="macro">format!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">e</span>)))<span class="question-mark">?</span>;
 
         <span class="prelude-val">Ok</span>(())

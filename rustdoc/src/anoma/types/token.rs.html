@@ -203,6 +203,57 @@
 <span id="201">201</span>
 <span id="202">202</span>
 <span id="203">203</span>
+<span id="204">204</span>
+<span id="205">205</span>
+<span id="206">206</span>
+<span id="207">207</span>
+<span id="208">208</span>
+<span id="209">209</span>
+<span id="210">210</span>
+<span id="211">211</span>
+<span id="212">212</span>
+<span id="213">213</span>
+<span id="214">214</span>
+<span id="215">215</span>
+<span id="216">216</span>
+<span id="217">217</span>
+<span id="218">218</span>
+<span id="219">219</span>
+<span id="220">220</span>
+<span id="221">221</span>
+<span id="222">222</span>
+<span id="223">223</span>
+<span id="224">224</span>
+<span id="225">225</span>
+<span id="226">226</span>
+<span id="227">227</span>
+<span id="228">228</span>
+<span id="229">229</span>
+<span id="230">230</span>
+<span id="231">231</span>
+<span id="232">232</span>
+<span id="233">233</span>
+<span id="234">234</span>
+<span id="235">235</span>
+<span id="236">236</span>
+<span id="237">237</span>
+<span id="238">238</span>
+<span id="239">239</span>
+<span id="240">240</span>
+<span id="241">241</span>
+<span id="242">242</span>
+<span id="243">243</span>
+<span id="244">244</span>
+<span id="245">245</span>
+<span id="246">246</span>
+<span id="247">247</span>
+<span id="248">248</span>
+<span id="249">249</span>
+<span id="250">250</span>
+<span id="251">251</span>
+<span id="252">252</span>
+<span id="253">253</span>
+<span id="254">254</span>
 </pre><pre class="rust">
 <span class="doccomment">//! A basic fungible token</span>
 
@@ -230,15 +281,16 @@
     <span class="ident">Ord</span>,
     <span class="ident">Debug</span>,
     <span class="ident">Hash</span>,
-    <span class="ident">Serialize</span>,
-    <span class="ident">Deserialize</span>,
 )]</span>
-<span class="attribute">#[<span class="ident">serde</span>(<span class="ident">transparent</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Amount</span> {
     <span class="ident">micro</span>: <span class="ident">u64</span>,
 }
 
-<span class="kw">const</span> <span class="ident">MAX_SCALE</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="number">6</span>;
+<span class="doccomment">/// Maximum decimal places in a token [`Amount`] and [`Change`].</span>
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">MAX_DECIMAL_PLACES</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="number">6</span>;
+<span class="doccomment">/// Decimal scale of token [`Amount`] and [`Change`].</span>
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">SCALE</span>: <span class="ident">u64</span> <span class="op">=</span> <span class="number">1_000_000</span>;
+<span class="kw">const</span> <span class="ident">SCALE_F64</span>: <span class="ident">f64</span> <span class="op">=</span> <span class="ident">SCALE</span> <span class="kw">as</span> <span class="ident">f64</span>;
 
 <span class="doccomment">/// A change in tokens amount</span>
 <span class="kw">pub</span> <span class="kw">type</span> <span class="ident">Change</span> <span class="op">=</span> <span class="ident">i128</span>;
@@ -263,14 +315,51 @@
     <span class="doccomment">/// Create a new amount from whole number of tokens</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">whole</span>(<span class="ident">amount</span>: <span class="ident">u64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="self">Self</span> {
-            <span class="ident">micro</span>: <span class="ident">amount</span> <span class="op">*</span> <span class="number">1_000_000</span>,
+            <span class="ident">micro</span>: <span class="ident">amount</span> <span class="op">*</span> <span class="ident">SCALE</span>,
         }
     }
 }
 
+<span class="kw">impl</span> <span class="ident">serde::Serialize</span> <span class="kw">for</span> <span class="ident">Amount</span> {
+    <span class="kw">fn</span> <span class="ident">serialize</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        <span class="ident">serializer</span>: <span class="ident">S</span>,
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">std::result::Result</span><span class="op">&lt;</span><span class="ident">S::Ok</span>, <span class="ident">S::Error</span><span class="op">&gt;</span>
+    <span class="kw">where</span>
+        <span class="ident">S</span>: <span class="ident">serde::Serializer</span>,
+    {
+        <span class="kw">let</span> <span class="ident">amount_string</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">to_string</span>();
+        <span class="ident">serde::Serialize::serialize</span>(<span class="kw-2">&amp;</span><span class="ident">amount_string</span>, <span class="ident">serializer</span>)
+    }
+}
+
+<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span> <span class="ident">serde::Deserialize</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Amount</span> {
+    <span class="kw">fn</span> <span class="ident">deserialize</span><span class="op">&lt;</span><span class="ident">D</span><span class="op">&gt;</span>(<span class="ident">deserializer</span>: <span class="ident">D</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">std::result::Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident">D::Error</span><span class="op">&gt;</span>
+    <span class="kw">where</span>
+        <span class="ident">D</span>: <span class="ident">serde::Deserializer</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span>,
+    {
+        <span class="kw">use</span> <span class="ident">serde::de::Error</span>;
+        <span class="kw">let</span> <span class="ident">amount_string</span>: <span class="ident">String</span> <span class="op">=</span>
+            <span class="ident">serde::Deserialize::deserialize</span>(<span class="ident">deserializer</span>)<span class="question-mark">?</span>;
+        <span class="self">Self</span><span class="ident">::from_str</span>(<span class="kw-2">&amp;</span><span class="ident">amount_string</span>).<span class="ident">map_err</span>(<span class="ident">D::Error::custom</span>)
+    }
+}
+
 <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">Amount</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">f64</span> {
+    <span class="doccomment">/// Warning: `f64` loses precision and it should not be used when exact</span>
+    <span class="doccomment">/// values are required.</span>
     <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">amount</span>: <span class="ident">Amount</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
-        <span class="ident">amount</span>.<span class="ident">micro</span> <span class="kw">as</span> <span class="ident">f64</span>
+        <span class="ident">amount</span>.<span class="ident">micro</span> <span class="kw">as</span> <span class="ident">f64</span> <span class="op">/</span> <span class="ident">SCALE_F64</span>
+    }
+}
+
+<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">f64</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Amount</span> {
+    <span class="doccomment">/// Warning: `f64` loses precision and it should not be used when exact</span>
+    <span class="doccomment">/// values are required.</span>
+    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">micro</span>: <span class="ident">f64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="self">Self</span> {
+            <span class="ident">micro</span>: (<span class="ident">micro</span> <span class="op">*</span> <span class="ident">SCALE_F64</span>).<span class="ident">round</span>() <span class="kw">as</span> <span class="ident">u64</span>,
+        }
     }
 }
 
@@ -283,14 +372,6 @@
 <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Amount</span> {
     <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">micro</span>: <span class="ident">u64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="self">Self</span> { <span class="ident">micro</span> }
-    }
-}
-
-<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">f64</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Amount</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">micro</span>: <span class="ident">f64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
-        <span class="self">Self</span> {
-            <span class="ident">micro</span>: (<span class="ident">micro</span> <span class="op">*</span> <span class="number">1_000_000_f64</span>) <span class="kw">as</span> <span class="ident">u64</span>,
-        }
     }
 }
 
@@ -308,8 +389,8 @@
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Error decoding token amount: {0}&quot;</span>)]</span>
     <span class="ident">InvalidDecimal</span>(<span class="ident">rust_decimal::Error</span>),
     <span class="attribute">#[<span class="ident">error</span>(
-        <span class="string">&quot;Error decoding token amount, scale too large: {0}. Maximum \
-         {MAX_SCALE}&quot;</span>
+        <span class="string">&quot;Error decoding token amount, too many decimal places: {0}. Maximum \
+         {MAX_DECIMAL_PLACES}&quot;</span>
     )]</span>
     <span class="ident">ScaleTooLarge</span>(<span class="ident">u32</span>),
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Error decoding token amount, the value is within invalid range.&quot;</span>)]</span>
@@ -326,7 +407,8 @@
                 <span class="kw">if</span> <span class="ident">scale</span> <span class="op">&gt;</span> <span class="number">6</span> {
                     <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">AmountParseError::ScaleTooLarge</span>(<span class="ident">scale</span>));
                 }
-                <span class="kw">let</span> <span class="ident">whole</span> <span class="op">=</span> <span class="ident">decimal</span> <span class="op">*</span> <span class="ident">rust_decimal::Decimal::new</span>(<span class="number">1_000_000</span>, <span class="number">0</span>);
+                <span class="kw">let</span> <span class="ident">whole</span> <span class="op">=</span>
+                    <span class="ident">decimal</span> <span class="op">*</span> <span class="ident">rust_decimal::Decimal::new</span>(<span class="ident">SCALE</span> <span class="kw">as</span> <span class="ident">i64</span>, <span class="number">0</span>);
                 <span class="kw">let</span> <span class="ident">micro</span>: <span class="ident">u64</span> <span class="op">=</span>
                     <span class="ident">rust_decimal::prelude::ToPrimitive::to_u64</span>(<span class="kw-2">&amp;</span><span class="ident">whole</span>)
                         .<span class="ident">ok_or</span>(<span class="ident">AmountParseError::InvalidRange</span>)<span class="question-mark">?</span>;
@@ -406,6 +488,26 @@
     <span class="kw">pub</span> <span class="ident">token</span>: <span class="ident">Address</span>,
     <span class="doccomment">/// The amount of tokens</span>
     <span class="kw">pub</span> <span class="ident">amount</span>: <span class="ident">Amount</span>,
+}
+
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
+<span class="kw">mod</span> <span class="ident">tests</span> {
+    <span class="kw">use</span> <span class="ident">proptest::prelude</span>::<span class="kw-2">*</span>;
+
+    <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
+
+    <span class="macro">proptest!</span> {
+            <span class="doccomment">/// The upper limit is set to `2^51`, because then the float is</span>
+            <span class="doccomment">/// starting to lose precision.</span>
+            <span class="attribute">#[<span class="ident">test</span>]</span>
+            <span class="kw">fn</span> <span class="ident">test_token_amount_f64_conversion</span>(<span class="ident">raw_amount</span> <span class="kw">in</span> <span class="number">0</span>..<span class="number">2_u64</span>.<span class="ident">pow</span>(<span class="number">51</span>)) {
+                <span class="kw">let</span> <span class="ident">amount</span> <span class="op">=</span> <span class="ident">Amount::from</span>(<span class="ident">raw_amount</span>);
+                <span class="comment">// A round-trip conversion to and from f64 should be an identity</span>
+                <span class="kw">let</span> <span class="ident">float</span> <span class="op">=</span> <span class="ident">f64::from</span>(<span class="ident">amount</span>);
+                <span class="kw">let</span> <span class="ident">identity</span> <span class="op">=</span> <span class="ident">Amount::from</span>(<span class="ident">float</span>);
+                <span class="macro">assert_eq!</span>(<span class="ident">amount</span>, <span class="ident">identity</span>);
+        }
+    }
 }
 </pre></div>
 </section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="anoma" data-search-index-js="../../../search-index.js" data-search-js="../../../search.js"></div><script src="../../../main.js"></script><script src="../../../source-script.js"></script><script src="../../../source-files.js"></script></body></html>
