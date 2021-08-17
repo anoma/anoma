@@ -409,11 +409,6 @@
 <span id="407">407</span>
 <span id="408">408</span>
 <span id="409">409</span>
-<span id="410">410</span>
-<span id="411">411</span>
-<span id="412">412</span>
-<span id="413">413</span>
-<span id="414">414</span>
 </pre><pre class="rust">
 <span class="doccomment">//! IBC validity predicate for connection module</span>
 
@@ -426,14 +421,16 @@
 <span class="kw">use</span> <span class="ident">ibc::ics02_client::height::Height</span>;
 <span class="kw">use</span> <span class="ident">ibc::ics03_connection::connection</span>::{<span class="ident">ConnectionEnd</span>, <span class="ident">Counterparty</span>, <span class="ident">State</span>};
 <span class="kw">use</span> <span class="ident">ibc::ics03_connection::context::ConnectionReader</span>;
+<span class="kw">use</span> <span class="ident">ibc::ics03_connection::error::Error</span> <span class="kw">as</span> <span class="ident">Ics03Error</span>;
 <span class="kw">use</span> <span class="ident">ibc::ics03_connection::handler::verify::verify_proofs</span>;
 <span class="kw">use</span> <span class="ident">ibc::ics07_tendermint::consensus_state::ConsensusState</span> <span class="kw">as</span> <span class="ident">TendermintConsensusState</span>;
 <span class="kw">use</span> <span class="ident">ibc::ics23_commitment::commitment::CommitmentPrefix</span>;
 <span class="kw">use</span> <span class="ident">ibc::ics24_host::identifier</span>::{<span class="ident">ClientId</span>, <span class="ident">ConnectionId</span>};
 <span class="kw">use</span> <span class="ident">ibc::ics24_host::Path</span>;
 <span class="kw">use</span> <span class="ident">tendermint_proto::Protobuf</span>;
+<span class="kw">use</span> <span class="ident">thiserror::Error</span>;
 
-<span class="kw">use</span> <span class="kw">super</span>::{<span class="ident">Error</span>, <span class="ident">Ibc</span>, <span class="prelude-ty">Result</span>, <span class="ident">StateChange</span>};
+<span class="kw">use</span> <span class="kw">super</span>::{<span class="ident">Ibc</span>, <span class="ident">StateChange</span>};
 <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::ledger::storage</span>::{<span class="self">self</span>, <span class="ident">StorageHasher</span>};
 <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::types::address</span>::{<span class="ident">Address</span>, <span class="ident">InternalAddress</span>};
 <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::types::ibc</span>::{
@@ -441,6 +438,30 @@
     <span class="ident">Error</span> <span class="kw">as</span> <span class="ident">IbcDataError</span>,
 };
 <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::types::storage</span>::{<span class="ident">BlockHeight</span>, <span class="ident">Epoch</span>, <span class="ident">Key</span>, <span class="ident">KeySeg</span>};
+
+<span class="attribute">#[<span class="ident">allow</span>(<span class="ident">missing_docs</span>)]</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Error</span>, <span class="ident">Debug</span>)]</span>
+<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">Error</span> {
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Key error: {0}&quot;</span>)]</span>
+    <span class="ident">InvalidKey</span>(<span class="ident">String</span>),
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;State change error: {0}&quot;</span>)]</span>
+    <span class="ident">InvalidStateChange</span>(<span class="ident">String</span>),
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Client error: {0}&quot;</span>)]</span>
+    <span class="ident">InvalidClient</span>(<span class="ident">String</span>),
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Connection error: {0}&quot;</span>)]</span>
+    <span class="ident">InvalidConnection</span>(<span class="ident">String</span>),
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Version error: {0}&quot;</span>)]</span>
+    <span class="ident">InvalidVersion</span>(<span class="ident">String</span>),
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Proof verification error: {0}&quot;</span>)]</span>
+    <span class="ident">ProofVerificationFailure</span>(<span class="ident">Ics03Error</span>),
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Decoding TX data error: {0}&quot;</span>)]</span>
+    <span class="ident">DecodingTxData</span>(<span class="ident">std::io::Error</span>),
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;IBC data error: {0}&quot;</span>)]</span>
+    <span class="ident">DecodingIbcData</span>(<span class="ident">IbcDataError</span>),
+}
+
+<span class="doccomment">/// IBC connection functions result</span>
+<span class="kw">pub</span> <span class="kw">type</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">std::result::Result</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">Error</span><span class="op">&gt;</span>;
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">DB</span>, <span class="ident">H</span><span class="op">&gt;</span> <span class="ident">Ibc</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">DB</span>, <span class="ident">H</span><span class="op">&gt;</span>
 <span class="kw">where</span>
@@ -455,21 +476,17 @@
         <span class="kw">if</span> <span class="ident">key</span>.<span class="ident">is_ibc_connection_counter</span>() {
             <span class="comment">// the counter should be increased</span>
             <span class="kw">return</span> <span class="prelude-val">Ok</span>(
-                <span class="self">self</span>.<span class="ident">connection_counter_pre</span>() <span class="op">&lt;</span> <span class="self">self</span>.<span class="ident">connection_counter</span>()
+                <span class="self">self</span>.<span class="ident">connection_counter_pre</span>()<span class="question-mark">?</span> <span class="op">&lt;</span> <span class="self">self</span>.<span class="ident">connection_counter</span>()
             );
         }
 
         <span class="kw">let</span> <span class="ident">conn_id</span> <span class="op">=</span> <span class="self">Self</span><span class="ident">::get_connection_id</span>(<span class="ident">key</span>)<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">conn</span> <span class="op">=</span> <span class="kw">match</span> <span class="self">self</span>.<span class="ident">connection_end</span>(<span class="kw-2">&amp;</span><span class="ident">conn_id</span>) {
-            <span class="prelude-val">Some</span>(<span class="ident">c</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">c</span>,
-            <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="macro">tracing::info!</span>(
-                    <span class="string">&quot;the connection end of ID {} doesn&#39;t exist&quot;</span>,
-                    <span class="ident">conn_id</span>
-                );
-                <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="bool-val">false</span>);
-            }
-        };
+        <span class="kw">let</span> <span class="ident">conn</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">connection_end</span>(<span class="kw-2">&amp;</span><span class="ident">conn_id</span>).<span class="ident">ok_or_else</span>(<span class="op">|</span><span class="op">|</span> {
+            <span class="ident">Error::InvalidConnection</span>(<span class="macro">format!</span>(
+                <span class="string">&quot;The connection doesn&#39;t exist: ID {}&quot;</span>,
+                <span class="ident">conn_id</span>
+            ))
+        })<span class="question-mark">?</span>;
 
         <span class="kw">match</span> <span class="self">self</span>.<span class="ident">get_connection_state_change</span>(<span class="kw-2">&amp;</span><span class="ident">conn_id</span>)<span class="question-mark">?</span> {
             <span class="ident">StateChange::Created</span> <span class="op">=</span><span class="op">&gt;</span> {
@@ -478,13 +495,10 @@
             <span class="ident">StateChange::Updated</span> <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="self">self</span>.<span class="ident">validate_updated_connection</span>(<span class="kw-2">&amp;</span><span class="ident">conn_id</span>, <span class="ident">conn</span>, <span class="ident">tx_data</span>)
             }
-            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="macro">tracing::info!</span>(
-                    <span class="string">&quot;unexpected state change for an IBC connection: {}&quot;</span>,
-                    <span class="ident">key</span>
-                );
-                <span class="prelude-val">Ok</span>(<span class="bool-val">false</span>)
-            }
+            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">Error::InvalidStateChange</span>(<span class="macro">format!</span>(
+                <span class="string">&quot;The state change of the connection is invalid: ID {}&quot;</span>,
+                <span class="ident">conn_id</span>
+            ))),
         }
     }
 
@@ -492,9 +506,9 @@
     <span class="kw">fn</span> <span class="ident">get_connection_id</span>(<span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">Key</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ConnectionId</span><span class="op">&gt;</span> {
         <span class="kw">match</span> <span class="ident">key</span>.<span class="ident">segments</span>.<span class="ident">get</span>(<span class="number">2</span>) {
             <span class="prelude-val">Some</span>(<span class="ident">id</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ConnectionId::from_str</span>(<span class="kw-2">&amp;</span><span class="ident">id</span>.<span class="ident">raw</span>())
-                .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">Error::KeyError</span>(<span class="ident">e</span>.<span class="ident">to_string</span>())),
-            <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">Error::KeyError</span>(<span class="macro">format!</span>(
-                <span class="string">&quot;The connection key doesn&#39;t have a connection ID: {}&quot;</span>,
+                .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">Error::InvalidKey</span>(<span class="ident">e</span>.<span class="ident">to_string</span>())),
+            <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">Error::InvalidKey</span>(<span class="macro">format!</span>(
+                <span class="string">&quot;The key doesn&#39;t have a connection ID: {}&quot;</span>,
                 <span class="ident">key</span>
             ))),
         }
@@ -508,6 +522,7 @@
         <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Key::ibc_key</span>(<span class="ident">path</span>)
             .<span class="ident">expect</span>(<span class="string">&quot;Creating a key for a client type failed&quot;</span>);
         <span class="self">self</span>.<span class="ident">get_state_change</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>)
+            .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">Error::InvalidStateChange</span>(<span class="ident">e</span>.<span class="ident">to_string</span>()))
     }
 
     <span class="kw">fn</span> <span class="ident">validate_created_connection</span>(
@@ -521,24 +536,18 @@
                 <span class="kw">let</span> <span class="ident">client_id</span> <span class="op">=</span> <span class="ident">conn</span>.<span class="ident">client_id</span>();
                 <span class="kw">match</span> <span class="ident">ConnectionReader::client_state</span>(<span class="self">self</span>, <span class="ident">client_id</span>) {
                     <span class="prelude-val">Some</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="bool-val">true</span>),
-                    <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> {
-                        <span class="macro">tracing::info!</span>(
-                            <span class="string">&quot;the client state corresponding to the connection \
-                             ID {} doesn&#39;t exist&quot;</span>,
-                            <span class="ident">conn_id</span>,
-                        );
-                        <span class="prelude-val">Ok</span>(<span class="bool-val">false</span>)
-                    }
+                    <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">Error::InvalidClient</span>(<span class="macro">format!</span>(
+                        <span class="string">&quot;The client state for the connection doesn&#39;t exist: \
+                         ID {}&quot;</span>,
+                        <span class="ident">conn_id</span>,
+                    ))),
                 }
             }
             <span class="ident">State::TryOpen</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">verify_connection_try_proof</span>(<span class="ident">conn</span>, <span class="ident">tx_data</span>),
-            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="macro">tracing::info!</span>(
-                    <span class="string">&quot;the connection state of ID {} is invalid&quot;</span>,
-                    <span class="ident">conn_id</span>
-                );
-                <span class="prelude-val">Ok</span>(<span class="bool-val">false</span>)
-            }
+            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">Error::InvalidConnection</span>(<span class="macro">format!</span>(
+                <span class="string">&quot;The connection state is invalid: ID {}&quot;</span>,
+                <span class="ident">conn_id</span>
+            ))),
         }
     }
 
@@ -550,16 +559,7 @@
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span> {
         <span class="kw">match</span> <span class="ident">conn</span>.<span class="ident">state</span>() {
             <span class="ident">State::Open</span> <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="kw">let</span> <span class="ident">prev_conn</span> <span class="op">=</span> <span class="kw">match</span> <span class="self">self</span>.<span class="ident">connection_end_pre</span>(<span class="ident">conn_id</span>) {
-                    <span class="prelude-val">Some</span>(<span class="ident">c</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">c</span>,
-                    <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> {
-                        <span class="macro">tracing::info!</span>(
-                            <span class="string">&quot;the previous connection of ID {} doesn&#39;t exist&quot;</span>,
-                            <span class="ident">conn_id</span>
-                        );
-                        <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="bool-val">false</span>);
-                    }
-                };
+                <span class="kw">let</span> <span class="ident">prev_conn</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">connection_end_pre</span>(<span class="ident">conn_id</span>)<span class="question-mark">?</span>;
                 <span class="kw">match</span> <span class="ident">prev_conn</span>.<span class="ident">state</span>() {
                     <span class="ident">State::Init</span> <span class="op">=</span><span class="op">&gt;</span> {
                         <span class="self">self</span>.<span class="ident">verify_connection_ack_proof</span>(<span class="ident">conn_id</span>, <span class="ident">conn</span>, <span class="ident">tx_data</span>)
@@ -567,22 +567,16 @@
                     <span class="ident">State::TryOpen</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">verify_connection_confirm_proof</span>(
                         <span class="ident">conn_id</span>, <span class="ident">conn</span>, <span class="ident">tx_data</span>,
                     ),
-                    <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> {
-                        <span class="macro">tracing::info!</span>(
-                            <span class="string">&quot;the state change of connection ID {} was invalid&quot;</span>,
-                            <span class="ident">conn_id</span>
-                        );
-                        <span class="prelude-val">Ok</span>(<span class="bool-val">false</span>)
-                    }
+                    <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">Error::InvalidStateChange</span>(<span class="macro">format!</span>(
+                        <span class="string">&quot;The state change of connection is invalid: ID {}&quot;</span>,
+                        <span class="ident">conn_id</span>
+                    ))),
                 }
             }
-            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="macro">tracing::info!</span>(
-                    <span class="string">&quot;the state of connection ID {} is invalid&quot;</span>,
-                    <span class="ident">conn_id</span>
-                );
-                <span class="prelude-val">Ok</span>(<span class="bool-val">false</span>)
-            }
+            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">Error::InvalidConnection</span>(<span class="macro">format!</span>(
+                <span class="string">&quot;The state of the connection is invalid: ID {}&quot;</span>,
+                <span class="ident">conn_id</span>
+            ))),
         }
     }
 
@@ -613,10 +607,7 @@
             <span class="kw-2">&amp;</span><span class="ident">proofs</span>,
         ) {
             <span class="prelude-val">Ok</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="bool-val">true</span>),
-            <span class="prelude-val">Err</span>(<span class="ident">e</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="macro">tracing::info!</span>(<span class="string">&quot;proof verification failed: {}&quot;</span>, <span class="ident">e</span>);
-                <span class="prelude-val">Ok</span>(<span class="bool-val">false</span>)
-            }
+            <span class="prelude-val">Err</span>(<span class="ident">e</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">Error::ProofVerificationFailure</span>(<span class="ident">e</span>)),
         }
     }
 
@@ -630,15 +621,18 @@
 
         <span class="comment">// version check</span>
         <span class="kw">if</span> <span class="ident">conn</span>.<span class="ident">versions</span>().<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">data</span>.<span class="ident">version</span>()<span class="question-mark">?</span>) {
-            <span class="macro">tracing::info!</span>(<span class="string">&quot;unsupported version&quot;</span>);
-            <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="bool-val">false</span>);
+            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error::InvalidVersion</span>(
+                <span class="string">&quot;The version is unsupported&quot;</span>.<span class="ident">to_owned</span>(),
+            ));
         }
 
         <span class="comment">// counterpart connection ID check</span>
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">counterpart_conn_id</span>) <span class="op">=</span> <span class="ident">conn</span>.<span class="ident">counterparty</span>().<span class="ident">connection_id</span>() {
             <span class="kw">if</span> <span class="kw-2">*</span><span class="ident">counterpart_conn_id</span> <span class="op">!</span><span class="op">=</span> <span class="ident">data</span>.<span class="ident">counterpart_connection_id</span>()<span class="question-mark">?</span> {
-                <span class="macro">tracing::info!</span>(<span class="string">&quot;counterpart connection ID mismatched&quot;</span>);
-                <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="bool-val">false</span>);
+                <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error::InvalidConnection</span>(<span class="macro">format!</span>(
+                    <span class="string">&quot;The counterpart connection ID mismatched: ID {}&quot;</span>,
+                    <span class="ident">counterpart_conn_id</span>
+                )));
             }
         }
 
@@ -664,10 +658,7 @@
             <span class="kw-2">&amp;</span><span class="ident">proofs</span>,
         ) {
             <span class="prelude-val">Ok</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="bool-val">true</span>),
-            <span class="prelude-val">Err</span>(<span class="ident">e</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="macro">tracing::info!</span>(<span class="string">&quot;proof verification failed: {}&quot;</span>, <span class="ident">e</span>);
-                <span class="prelude-val">Ok</span>(<span class="bool-val">false</span>)
-            }
+            <span class="prelude-val">Err</span>(<span class="ident">e</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">Error::ProofVerificationFailure</span>(<span class="ident">e</span>)),
         }
     }
 
@@ -695,44 +686,43 @@
         <span class="kw">let</span> <span class="ident">proofs</span> <span class="op">=</span> <span class="ident">data</span>.<span class="ident">proofs</span>()<span class="question-mark">?</span>;
         <span class="kw">match</span> <span class="ident">verify_proofs</span>(<span class="self">self</span>, <span class="prelude-val">None</span>, <span class="kw-2">&amp;</span><span class="ident">conn</span>, <span class="kw-2">&amp;</span><span class="ident">expected_conn</span>, <span class="kw-2">&amp;</span><span class="ident">proofs</span>) {
             <span class="prelude-val">Ok</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="bool-val">true</span>),
-            <span class="prelude-val">Err</span>(<span class="ident">e</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="macro">tracing::info!</span>(<span class="string">&quot;proof verification failed: {}&quot;</span>, <span class="ident">e</span>);
-                <span class="prelude-val">Ok</span>(<span class="bool-val">false</span>)
-            }
+            <span class="prelude-val">Err</span>(<span class="ident">e</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">Error::ProofVerificationFailure</span>(<span class="ident">e</span>)),
         }
     }
 
     <span class="kw">fn</span> <span class="ident">connection_end_pre</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">conn_id</span>: <span class="kw-2">&amp;</span><span class="ident">ConnectionId</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">ConnectionEnd</span><span class="op">&gt;</span> {
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ConnectionEnd</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">path</span> <span class="op">=</span> <span class="ident">Path::Connections</span>(<span class="ident">conn_id</span>.<span class="ident">clone</span>()).<span class="ident">to_string</span>();
         <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Key::ibc_key</span>(<span class="ident">path</span>)
             .<span class="ident">expect</span>(<span class="string">&quot;Creating a key for a connection end failed&quot;</span>);
         <span class="kw">match</span> <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">read_pre</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>) {
-            <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="ident">value</span>)) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ConnectionEnd::decode_vec</span>(<span class="kw-2">&amp;</span><span class="ident">value</span>).<span class="ident">ok</span>(),
-            <span class="comment">// returns None even if DB read fails</span>
-            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">None</span>,
+            <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="ident">value</span>)) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ConnectionEnd::decode_vec</span>(<span class="kw-2">&amp;</span><span class="ident">value</span>).<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> {
+                <span class="ident">Error::InvalidConnection</span>(<span class="macro">format!</span>(
+                    <span class="string">&quot;Decoding the connection failed: {}&quot;</span>,
+                    <span class="ident">e</span>
+                ))
+            }),
+            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">Error::InvalidConnection</span>(<span class="macro">format!</span>(
+                <span class="string">&quot;Unable to get the previous connection: ID {}&quot;</span>,
+                <span class="ident">conn_id</span>
+            ))),
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">connection_counter_pre</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u64</span> {
+    <span class="kw">fn</span> <span class="ident">connection_counter_pre</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Key::ibc_connection_counter</span>();
         <span class="kw">match</span> <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">read_pre</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>) {
-            <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="ident">value</span>)) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="ident">storage::types::decode</span>(<span class="kw-2">&amp;</span><span class="ident">value</span>) {
-                <span class="prelude-val">Ok</span>(<span class="ident">c</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">c</span>,
-                <span class="prelude-val">Err</span>(<span class="ident">e</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                    <span class="macro">tracing::error!</span>(
-                        <span class="string">&quot;decoding a connection counter failed: {}&quot;</span>,
-                        <span class="ident">e</span>
-                    );
-                    <span class="ident">u64::MAX</span>
-                }
-            },
-            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="macro">tracing::error!</span>(<span class="string">&quot;connection counter should exist&quot;</span>);
-                <span class="macro">unreachable!</span>();
-            }
+            <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="ident">value</span>)) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">storage::types::decode</span>(<span class="kw-2">&amp;</span><span class="ident">value</span>).<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> {
+                <span class="ident">Error::InvalidConnection</span>(<span class="macro">format!</span>(
+                    <span class="string">&quot;Decoding the connection counter failed: {}&quot;</span>,
+                    <span class="ident">e</span>
+                ))
+            }),
+            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">Error::InvalidConnection</span>(
+                <span class="string">&quot;The connection counter should exist&quot;</span>.<span class="ident">to_owned</span>(),
+            )),
         }
     }
 }
@@ -820,13 +810,13 @@
 
 <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">IbcDataError</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Error</span> {
     <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">err</span>: <span class="ident">IbcDataError</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
-        <span class="self">Self</span><span class="ident">::IbcDataError</span>(<span class="ident">err</span>)
+        <span class="self">Self</span><span class="ident">::DecodingIbcData</span>(<span class="ident">err</span>)
     }
 }
 
 <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">std::io::Error</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Error</span> {
     <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">err</span>: <span class="ident">std::io::Error</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
-        <span class="self">Self</span><span class="ident">::DecodingTxDataError</span>(<span class="ident">err</span>)
+        <span class="self">Self</span><span class="ident">::DecodingTxData</span>(<span class="ident">err</span>)
     }
 }
 </pre></div>

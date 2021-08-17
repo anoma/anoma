@@ -635,6 +635,18 @@
 <span id="633">633</span>
 <span id="634">634</span>
 <span id="635">635</span>
+<span id="636">636</span>
+<span id="637">637</span>
+<span id="638">638</span>
+<span id="639">639</span>
+<span id="640">640</span>
+<span id="641">641</span>
+<span id="642">642</span>
+<span id="643">643</span>
+<span id="644">644</span>
+<span id="645">645</span>
+<span id="646">646</span>
+<span id="647">647</span>
 </pre><pre class="rust">
 <span class="doccomment">//! Storage types</span>
 <span class="kw">use</span> <span class="ident">std::convert</span>::{<span class="ident">TryFrom</span>, <span class="ident">TryInto</span>};
@@ -898,6 +910,11 @@
     }
 
     <span class="doccomment">/// Check if the given key is a key of the connection counter</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_ibc_client_counter</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
+        <span class="kw-2">*</span><span class="self">self</span> <span class="op">=</span><span class="op">=</span> <span class="self">Self</span><span class="ident">::ibc_client_counter</span>()
+    }
+
+    <span class="doccomment">/// Check if the given key is a key of the connection counter</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_ibc_connection_counter</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
         <span class="kw-2">*</span><span class="self">self</span> <span class="op">=</span><span class="op">=</span> <span class="self">Self</span><span class="ident">::ibc_connection_counter</span>()
     }
@@ -909,6 +926,13 @@
         <span class="kw">let</span> <span class="ident">addr</span> <span class="op">=</span> <span class="ident">Address::Internal</span>(<span class="ident">InternalAddress::Ibc</span>);
         <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="self">Self</span><span class="ident">::from</span>(<span class="ident">addr</span>.<span class="ident">to_db_key</span>());
         <span class="prelude-val">Ok</span>(<span class="ident">key</span>.<span class="ident">join</span>(<span class="kw-2">&amp;</span><span class="ident">path</span>))
+    }
+
+    <span class="doccomment">/// Returns a key of the IBC client counter</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">ibc_client_counter</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="kw">let</span> <span class="ident">path</span> <span class="op">=</span> <span class="string">&quot;clients/counter&quot;</span>.<span class="ident">to_owned</span>();
+        <span class="ident">Key::ibc_key</span>(<span class="ident">path</span>)
+            .<span class="ident">expect</span>(<span class="string">&quot;Creating a key for the client counter shouldn&#39;t fail&quot;</span>)
     }
 
     <span class="doccomment">/// Returns a key of the IBC connection counter</span>
