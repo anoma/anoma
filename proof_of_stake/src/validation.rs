@@ -3,7 +3,7 @@
 use std::collections::HashMap;
 use std::fmt::{Debug, Display};
 use std::hash::Hash;
-use std::ops::{Add, AddAssign, Sub, SubAssign};
+use std::ops::{Add, AddAssign, Neg, Sub, SubAssign};
 
 use borsh::{BorshDeserialize, BorshSerialize};
 use thiserror::Error;
@@ -22,12 +22,16 @@ where
     TokenChange: Debug + Display,
 {
     #[error("Validator staking reward address is required for validator {0}")]
-    StakingRewardAddressIsRequired(String),
+    StakingRewardAddressIsRequired(Address),
     #[error(
         "Staking reward address must be different from the validator's \
          address {0}"
     )]
-    StakingRewardAddressEqValidator(String),
+    StakingRewardAddressEqValidator(Address),
+    #[error("Unexpectedly missing total deltas value for validator {0}")]
+    MissingValidatorTotalDeltas(Address),
+    #[error("The sum of total deltas for validator {0} are negative")]
+    NegativeValidatorTotalDeltasSum(Address),
     #[error("Unexpectedly missing balance value")]
     MissingBalance,
     #[error("Last update should be equal to the current epoch")]
@@ -67,6 +71,16 @@ where
         id: BondId<Address>,
         got: u64,
         expected: u64,
+    },
+    #[error(
+        "Invalid validator {address} sum of total deltas. Total delta \
+         {total_delta}, bonded {bond_delta}, unbonded {unbond_delta}."
+    )]
+    InvalidValidatorTotalDeltasSum {
+        address: Address,
+        total_delta: TokenChange,
+        bond_delta: TokenChange,
+        unbond_delta: TokenChange,
     },
 }
 
@@ -164,6 +178,7 @@ where
         + Copy
         + Add<Output = TokenChange>
         + Sub<Output = TokenChange>
+        + Neg<Output = TokenChange>
         + SubAssign
         + AddAssign
         + From<TokenAmount>
@@ -186,9 +201,12 @@ where
 
     let mut errors = vec![];
     let mut balance_delta = TokenChange::default();
-    let mut bond_delta = TokenChange::default();
-    let mut unbond_delta = TokenChange::default();
+    // Changes of validators' bonds
+    let mut bond_delta: HashMap<Address, TokenChange> = HashMap::default();
+    let mut unbond_delta: HashMap<Address, TokenChange> = HashMap::default();
     let mut withdraw_delta = TokenChange::default();
+    // Changes of validator total deltas
+    let mut total_deltas: HashMap<Address, TokenChange> = HashMap::default();
     for change in changes {
         match change {
             Validator { address, update } => match update {
@@ -197,18 +215,109 @@ where
                         if post == address {
                             errors.push(
                                 Error::StakingRewardAddressEqValidator(
-                                    address.to_string(),
+                                    address.clone(),
                                 ),
                             );
                         }
                     }
                     _ => errors.push(Error::StakingRewardAddressIsRequired(
-                        address.to_string(),
+                        address.clone(),
                     )),
                 },
-                TotalDeltas(data) => {
-                    // TODO
-                }
+                TotalDeltas(data) => match (data.pre, data.post) {
+                    (Some(pre), Some(post)) => {
+                        if post.last_update() != current_epoch {
+                            errors.push(Error::InvalidLastUpdate)
+                        }
+                        let mut deltas = TokenChange::default();
+                        // Iter from the first epoch to the last epoch of `post`
+                        for epoch in Epoch::iter_range(
+                            post.last_update(),
+                            unbonding_offset + 1,
+                        ) {
+                            let mut delta = TokenChange::default();
+                            if let Some(change) = if epoch == post.last_update()
+                            {
+                                // On the first epoch, we have to get the sum of
+                                // all deltas at and before that epoch as the
+                                // `pre` could have been set in an older epoch
+                                pre.get(epoch)
+                            } else {
+                                pre.get_delta_at_epoch(epoch).copied()
+                            } {
+                                delta -= change;
+                            }
+                            if let Some(change) = post.get_delta_at_epoch(epoch)
+                            {
+                                delta += *change;
+                            }
+                            deltas += delta;
+                            // A total delta can only be increased at
+                            // `pipeline_offset` from bonds and decreased at
+                            // `unbonding_offset` from unbonding
+                            if delta > TokenChange::default()
+                                && epoch != pipeline_epoch
+                            {
+                                errors.push(Error::EpochedDataWrongEpoch {
+                                    got: epoch.into(),
+                                    expected: pipeline_epoch.into(),
+                                })
+                            }
+                            if delta < TokenChange::default()
+                                && epoch != unbonding_epoch
+                            {
+                                errors.push(Error::EpochedDataWrongEpoch {
+                                    got: epoch.into(),
+                                    expected: pipeline_epoch.into(),
+                                })
+                            }
+                        }
+                        if deltas < TokenChange::default() {
+                            errors.push(Error::NegativeValidatorTotalDeltasSum(
+                                address.clone(),
+                            ))
+                        }
+                        total_deltas.insert(address.clone(), deltas);
+                    }
+                    (None, Some(post)) => {
+                        if post.last_update() != current_epoch {
+                            errors.push(Error::InvalidLastUpdate)
+                        }
+                        let mut delta = TokenChange::default();
+                        for epoch in Epoch::iter_range(
+                            current_epoch,
+                            unbonding_offset + 1,
+                        ) {
+                            if let Some(change) = post.get_delta_at_epoch(epoch)
+                            {
+                                // A new total delta can only be initialized at
+                                // `pipeline_offset` (from bonds) and
+                                // `unbonding_offset` (from unbonding)
+                                if epoch != pipeline_epoch
+                                    && epoch != unbonding_epoch
+                                {
+                                    errors.push(Error::EpochedDataWrongEpoch {
+                                        got: epoch.into(),
+                                        expected: pipeline_epoch.into(),
+                                    })
+                                }
+                                delta += *change;
+                            }
+                        }
+                        if delta < TokenChange::default() {
+                            errors.push(Error::NegativeValidatorTotalDeltasSum(
+                                address.clone(),
+                            ))
+                        }
+                        if delta != TokenChange::default() {
+                            total_deltas.insert(address.clone(), delta);
+                        }
+                    }
+                    (Some(_), None) => {
+                        errors.push(Error::MissingValidatorTotalDeltas(address))
+                    }
+                    (None, None) => continue,
+                },
             },
             Balance(data) => match (data.pre, data.post) {
                 (None, Some(post)) => balance_delta += post.into(),
@@ -217,7 +326,7 @@ where
                     balance_delta += post.into();
                 }
                 (Some(_), None) => errors.push(Error::MissingBalance),
-                _ => continue,
+                (None, None) => continue,
             },
             Bond { id, data } => match (data.pre, data.post) {
                 // Bond may be updated from newly bonded tokens and unbonding
@@ -304,10 +413,12 @@ where
                     }
                     // An empty bond must be deleted
                     if total_post_delta == TokenChange::default() {
-                        errors.push(Error::EmptyBond(id))
+                        errors.push(Error::EmptyBond(id.clone()))
                     }
-                    bond_delta -= total_pre_delta;
-                    bond_delta += total_post_delta;
+                    let total = total_post_delta - total_pre_delta;
+                    if total != TokenChange::default() {
+                        bond_delta.insert(id.validator, total);
+                    }
                 }
                 // Bond may be created from newly bonded tokens only
                 (None, Some(post)) => {
@@ -341,9 +452,9 @@ where
                     }
                     // An empty bond must be deleted
                     if total_delta == TokenChange::default() {
-                        errors.push(Error::EmptyBond(id))
+                        errors.push(Error::EmptyBond(id.clone()))
                     }
-                    bond_delta += total_delta;
+                    bond_delta.insert(id.validator, total_delta);
                 }
                 // Bond may be deleted when all the tokens are unbonded
                 (Some(pre), None) => {
@@ -352,7 +463,8 @@ where
                         let epoch = pre.last_update() + index;
                         if let Some(bond) = pre.get_delta_at_epoch(epoch) {
                             for delta in bond.delta.values() {
-                                bond_delta -= (*delta).into();
+                                let delta: TokenChange = (*delta).into();
+                                bond_delta.insert(id.validator.clone(), -delta);
                             }
                         }
                     }
@@ -361,6 +473,46 @@ where
             },
         }
     }
+    // Check total deltas against bonds and unbonds
+    for (validator, total_delta) in total_deltas.iter() {
+        let bond_delta =
+            bond_delta.get(&validator).copied().unwrap_or_default();
+        let unbond_delta =
+            unbond_delta.get(&validator).copied().unwrap_or_default();
+        let total_delta = *total_delta;
+        if total_delta != bond_delta - unbond_delta {
+            errors.push(Error::InvalidValidatorTotalDeltasSum {
+                address: validator.clone(),
+                total_delta,
+                bond_delta,
+                unbond_delta,
+            })
+        }
+    }
+    // Check that all bonds also have a total deltas update
+    for validator in bond_delta.keys() {
+        if !total_deltas.contains_key(validator) {
+            errors.push(Error::MissingValidatorTotalDeltas(validator.clone()))
+        }
+    }
+    // Check that all unbonds also have a total deltas update
+    for validator in unbond_delta.keys() {
+        if !total_deltas.contains_key(validator) {
+            errors.push(Error::MissingValidatorTotalDeltas(validator.clone()))
+        }
+    }
+
+    // Sum the bond totals
+    let bond_delta = bond_delta
+        .values()
+        .into_iter()
+        .fold(TokenChange::default(), |acc, delta| acc + (*delta));
+    // Sum the unbond totals
+    let unbond_delta = unbond_delta
+        .values()
+        .into_iter()
+        .fold(TokenChange::default(), |acc, delta| acc + (*delta));
+
     if balance_delta != bond_delta - unbond_delta - withdraw_delta {
         errors.push(Error::InvalidBalances {
             balance_delta,
