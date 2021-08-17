@@ -30,7 +30,13 @@ transaction will contain the following data:
  * fee payer signature: the above account's signature for verification
  * gas limit: A limit on the amount of gas the encrypted transaction can
    consume when it is applied.
+ * A ciphertext public key that can be used for deriving the decryption key later by 
+   using the decryption shares from enough validators.
  
+The encryption of the wrapped transaction using the public key from the DKG
+and the derivation of the ciphertext public key are provided by the Ferveo
+library.
+
 For a wrapped transaction to be included in a block proposal, the following 
 conditions must be met:
  * The fee payers signature must be checked
@@ -38,6 +44,7 @@ conditions must be met:
  * The fee payer must have sufficient balance to pay
  * The sum of all gas limits of transactions to be included cannot exceed
    the total gas limit of the block.
+ * The ciphertext public key must be checked for validity (handled by Ferveo)
 
 We note a few things above. Firstly, it is not required that the encrypted
 payload be a valid transaction or even able to be decrypted. In either case,
