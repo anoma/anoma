@@ -984,6 +984,20 @@ where
         }
     };
 
+    // Update validator set. This has to be done before we update the
+    // `validator_total_deltas`, because we need to look-up the validator with
+    // its voting power before the change.
+    let token_change = TokenChange::from(amount);
+    update_validator_set(
+        params,
+        &bond_id.validator,
+        token_change,
+        update_offset,
+        validator_set,
+        validator_total_deltas.as_ref(),
+        current_epoch,
+    );
+
     // Update validator's total deltas
     let delta = TokenChange::from(amount);
     let validator_total_deltas = match validator_total_deltas {
@@ -1003,20 +1017,6 @@ where
             params,
         ),
     };
-
-    // Update validator set. This has to be done before we update the
-    // `validator_voting_power`, because we need to look-up the validator with
-    // its voting power before the change.
-    let token_change = TokenChange::from(amount);
-    update_validator_set(
-        params,
-        &bond_id.validator,
-        token_change,
-        update_offset,
-        validator_set,
-        &validator_total_deltas,
-        current_epoch,
-    );
 
     // Update the validator's and the total voting power.
     let mut validator_voting_power = match validator_voting_power {
@@ -1161,23 +1161,23 @@ where
         params,
     );
 
-    // Update validator's total deltas
-    let delta = -TokenChange::from(amount);
-    validator_total_deltas.add(delta, current_epoch, params);
-
     // Update validator set. This has to be done before we update the
-    // `validator_voting_power`, because we need to look-up the validator with
+    // `validator_total_deltas`, because we need to look-up the validator with
     // its voting power before the change.
-    let token_change = TokenChange::from(amount);
+    let token_change = -TokenChange::from(amount);
     update_validator_set(
         params,
         &bond_id.validator,
         token_change,
         update_offset,
         validator_set,
-        validator_total_deltas,
+        Some(validator_total_deltas),
         current_epoch,
     );
+
+    // Update validator's total deltas
+    let delta = -TokenChange::from(amount);
+    validator_total_deltas.add(delta, current_epoch, params);
 
     // Update the validator's and the total voting power.
     update_voting_powers(
@@ -1201,7 +1201,7 @@ fn update_validator_set<Address, TokenChange>(
     token_change: TokenChange,
     change_offset: DynEpochOffset,
     validator_set: &mut ValidatorSets<Address>,
-    validator_total_deltas: &ValidatorTotalDeltas<TokenChange>,
+    validator_total_deltas: Option<&ValidatorTotalDeltas<TokenChange>>,
     current_epoch: Epoch,
 ) where
     Address: Display
@@ -1229,50 +1229,69 @@ fn update_validator_set<Address, TokenChange>(
         |validator_set, epoch| {
             // Find the validator's voting power at the epoch that's being
             // updated from its total deltas
-            let tokens_at_epoch =
-                validator_total_deltas.get(epoch).unwrap_or_default()
-                    + token_change;
-            let tokens_at_epoch: i128 = tokens_at_epoch.into();
-            let tokens_at_epoch: u64 =
-                TryFrom::try_from(tokens_at_epoch).unwrap();
-            let voting_power_at_epoch =
-                VotingPower::from_tokens(tokens_at_epoch, params);
-            let validator_at_epoch = WeightedValidator {
-                voting_power: voting_power_at_epoch,
-                address: validator.clone(),
-            };
+            let tokens_pre = validator_total_deltas
+                .and_then(|d| d.get(epoch))
+                .unwrap_or_default();
+            let tokens_post = tokens_pre + token_change;
+            let tokens_pre: i128 = tokens_pre.into();
+            let tokens_post: i128 = tokens_post.into();
+            let tokens_pre: u64 = TryFrom::try_from(tokens_pre).unwrap();
+            let tokens_post: u64 = TryFrom::try_from(tokens_post).unwrap();
+            let voting_power_pre = VotingPower::from_tokens(tokens_pre, params);
+            let voting_power_post =
+                VotingPower::from_tokens(tokens_post, params);
+            if voting_power_pre != voting_power_post {
+                let validator_pre = WeightedValidator {
+                    voting_power: voting_power_pre,
+                    address: validator.clone(),
+                };
+                let validator_post = WeightedValidator {
+                    voting_power: voting_power_post,
+                    address: validator.clone(),
+                };
 
-            if validator_set.inactive.contains(&validator_at_epoch) {
-                let min_active_validator = validator_set.active.first_shim();
-                let min_voting_power = min_active_validator
-                    .map(|v| v.voting_power)
-                    .unwrap_or_default();
-                if voting_power_at_epoch > min_voting_power {
-                    let deactivate_min = validator_set.active.pop_first_shim();
-                    let popped =
-                        validator_set.inactive.remove(&validator_at_epoch);
-                    debug_assert!(popped);
-                    validator_set.active.insert(validator_at_epoch);
-                    if let Some(deactivate_min) = deactivate_min {
-                        validator_set.inactive.insert(deactivate_min);
+                if validator_set.inactive.contains(&validator_pre) {
+                    let min_active_validator =
+                        validator_set.active.first_shim();
+                    let min_voting_power = min_active_validator
+                        .map(|v| v.voting_power)
+                        .unwrap_or_default();
+                    if voting_power_pre > min_voting_power {
+                        let deactivate_min =
+                            validator_set.active.pop_first_shim();
+                        let popped =
+                            validator_set.inactive.remove(&validator_pre);
+                        debug_assert!(popped);
+                        validator_set.active.insert(validator_post);
+                        if let Some(deactivate_min) = deactivate_min {
+                            validator_set.inactive.insert(deactivate_min);
+                        }
+                    } else {
+                        validator_set.inactive.remove(&validator_pre);
+                        validator_set.inactive.insert(validator_post);
                     }
-                }
-            } else {
-                debug_assert!(
-                    validator_set.active.contains(&validator_at_epoch)
-                );
-                let max_inactive_validator = validator_set.inactive.last_shim();
-                let max_voting_power = max_inactive_validator
-                    .map(|v| v.voting_power)
-                    .unwrap_or_default();
-                if voting_power_at_epoch < max_voting_power {
-                    let activate_max = validator_set.inactive.pop_last_shim();
-                    let popped =
-                        validator_set.active.remove(&validator_at_epoch);
-                    debug_assert!(popped);
-                    validator_set.inactive.insert(validator_at_epoch);
-                    if let Some(activate_max) = activate_max {
-                        validator_set.active.insert(activate_max);
+                } else {
+                    debug_assert!(
+                        validator_set.active.contains(&validator_pre)
+                    );
+                    let max_inactive_validator =
+                        validator_set.inactive.last_shim();
+                    let max_voting_power = max_inactive_validator
+                        .map(|v| v.voting_power)
+                        .unwrap_or_default();
+                    if voting_power_pre < max_voting_power {
+                        let activate_max =
+                            validator_set.inactive.pop_last_shim();
+                        let popped =
+                            validator_set.active.remove(&validator_pre);
+                        debug_assert!(popped);
+                        validator_set.inactive.insert(validator_pre);
+                        if let Some(activate_max) = activate_max {
+                            validator_set.active.insert(activate_max);
+                        }
+                    } else {
+                        validator_set.active.remove(&validator_pre);
+                        validator_set.active.insert(validator_post);
                     }
                 }
             }
