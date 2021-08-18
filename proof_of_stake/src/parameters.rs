@@ -41,7 +41,7 @@ impl Mul<u64> for BasisPoints {
 
     fn mul(self, rhs: u64) -> Self::Output {
         // TODO checked arithmetics
-        rhs * 10_000 / self.0
+        rhs * self.0 / 10_000
     }
 }
 
@@ -50,7 +50,7 @@ impl Mul<i128> for BasisPoints {
 
     fn mul(self, rhs: i128) -> Self::Output {
         // TODO checked arithmetics
-        rhs * 10_000 / self.0 as i128
+        rhs * self.0 as i128 / 10_000
     }
 }
 
