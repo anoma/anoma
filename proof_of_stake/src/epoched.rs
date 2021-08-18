@@ -117,16 +117,15 @@ where
         }
     }
 
-    /// Find the value for the given epoch as a sum of all the deltas at and
-    /// before the given epochs.
+    /// Find the value for the given epoch or a nearest epoch before it.
     pub fn get(&self, epoch: impl Into<Epoch>) -> Option<&Data> {
         let epoch = epoch.into();
         let index: usize = (epoch.sub_or_default(self.last_update)).into();
         self.get_at_index(index)
     }
 
-    /// Find the value at the offset from the given epoch as a sum of all the
-    /// deltas at and before the given epochs.
+    /// Find the value at the offset from the given epoch or a nearest epoch
+    /// before it.
     pub fn get_at_offset(
         &self,
         epoch: impl Into<Epoch>,
