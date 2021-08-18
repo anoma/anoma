@@ -160,6 +160,28 @@ where
     pub address: Address,
 }
 
+impl<Address> Display for WeightedValidator<Address>
+where
+    Address: Display
+        + Debug
+        + Clone
+        + PartialEq
+        + Eq
+        + PartialOrd
+        + Ord
+        + Hash
+        + BorshDeserialize
+        + BorshSerialize,
+{
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "{} with voting power {}",
+            self.address, self.voting_power
+        )
+    }
+}
+
 #[derive(
     Debug,
     Clone,
@@ -219,7 +241,7 @@ pub struct Unbond<Token: Default> {
 
 impl VotingPower {
     pub fn from_tokens(tokens: impl Into<u64>, params: &PosParams) -> Self {
-        Self(params.votes_per_token * tokens.into())
+        Self(params.votes_per_token * tokens.into() / 1_000_000)
     }
 }
 
