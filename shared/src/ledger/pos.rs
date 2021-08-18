@@ -111,6 +111,14 @@ where
             if is_params_key(key) {
                 // TODO parameters changes are not yet implemented
                 return Ok(false);
+            } else if is_validator_set_key(key) {
+                let pre = self.ctx.read_pre(key)?.and_then(|bytes| {
+                    ValidatorSets::try_from_slice(&bytes[..]).ok()
+                });
+                let post = self.ctx.read_post(key)?.and_then(|bytes| {
+                    ValidatorSets::try_from_slice(&bytes[..]).ok()
+                });
+                changes.push(ValidatorSet(Data { pre, post }));
             } else if let Some(validator) =
                 is_validator_staking_reward_address_key(key)
             {
