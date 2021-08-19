@@ -25,113 +25,6 @@
 \tableofcontents
 \clearpage
 
-\section{DKG}
-
-
-% \usetikzlibrary{fit}
-\usetikzlibrary{positioning}
-\begin{tikzpicture}[node distance={14mm}, thick, main/.style = {draw, rectangle}] 
-\node[main] (1) {Init}; 
-\node[main] (2) [below of=1] {Dealt}; 
-\node[main] (3) [below of=2] {Shared}; 
-\node[main] (4) [below=18mm of 3] {Aggregated}; 
-\node[main] (5) [below=18mm of 4] {Success}; 
-\node[main] (6) [right=30mm of 4] {Invalid}; 
-% \draw[->] (1) -- node[midway, right] {\textbf{start} (by block proposer)} (2); 
-\draw[->, dashed] (1) -- node[midway, right] {\textbf{deal} (by > (2/3) of validators)} (2); 
-\draw[->, dotted] (2) -- node[midway, right] {\textit{generate\_transcript} (internally)} (3); 
-\draw[->] (3) -- node[midway, right] {\textbf{aggregate} (by block proposer)} (4); 
-\draw[->, dashed] (4) -- node[midway, right] {\textbf{check} (by > (2/3) of validators)} (5);
-\draw[->, dashed] (4) -- node[midway, above] {\textbf{complain}} (6); 
-% \draw[->, dashed] (5) -- node[midway, right] {\textbf{check} (by > (2/3) of validators)} (6); 
-% \draw [->] (4) |- ([shift={(50mm,0mm)}]4.east) -- node[midway, right] {New epoch}  ([shift={(54mm,5mm)}]1.north east) -| node[above=1em, right=2em]{} (1); 
-
-% \node[draw,dotted,fit=(1) (2) (3) (4), label={[xshift=0mm]left:{DKG}}] {};
-% \node[draw, dotted, fit=(2) (3), label={[xshift=0mm]left:{PVSS}}] {};
-
-\end{tikzpicture} 
-
-% \subsection{Old}
-
-
-% \usetikzlibrary{fit}
-% \begin{tikzpicture}[node distance={14mm}, thick, main/.style = {draw, rectangle}] 
-% \node[main] (1) {Ready}; 
-% \node[main] (2) [below of=1] {Started}; 
-% \node[main] (3) [below of=2] {Announced}; 
-% \node[main] (4) [below of=3] {Shared}; 
-% \node[main] (5) [below of=4] {Aggregated}; 
-% \node[main] (6) [below of=5] {Checked}; 
-% \draw[->] (1) -- node[midway, right] {\textbf{start} (by block proposer)} (2); 
-% \draw[->, dotted] (3) -- node[midway, right] {\textbf{share\_secret}} (4); 
-% \draw[->, dashed] (2) -- node[midway, right] {\textbf{announce} (by > (2/3) of validators)} (3); 
-% \draw[->] (4) -- node[midway, right] {\textbf{aggregate} (by block proposer)} (5); 
-% \draw[->, dashed] (5) -- node[midway, right] {\textbf{check} (by > (2/3) of validators)} (6); 
-% % \draw [->] (4) |- ([shift={(50mm,0mm)}]4.east) -- node[midway, right] {New epoch}  ([shift={(54mm,5mm)}]1.north east) -| node[above=1em, right=2em]{} (1); 
-
-% % \node[draw,dotted,fit=(1) (2) (3) (4), label={[xshift=0mm]left:{DKG}}] {};
-% \node[draw, dotted, fit=(3) (4), label={[xshift=0mm]left:{Internal}}] {};
-
-% \end{tikzpicture} 
-
-\subsection{Start}
-
-The protocol for distributing signing keys (DKG) runs once per epoch, which means roughly once per day in our case.
-
-The starting phase is triggered by the block proposer. The \textit{start} message will contain the new epoch and a list of validator public keys together with their respective stake weights.
-\begin{lstlisting}
-fn start(
-    pk: PublicKey,
-    epoch: Timestamp,
-    stakes: Vec<(ValidatorPublicKey, ValidatorStakePercentage)>)
-\end{lstlisting}
-
-This phase is computationally expensive, since the block proposer needs to gather the current staking weights. Furthermore, we want to delay the creation of the new instance of the DKG as long as possible to minimise the divergence of the snapshot taken by the block proposer from the actual state by the time the new instance is used. This constraint implies that (at least) two instances of the DKG will run in parallel and that the new block proposer will be different from the existing one, as it needs to do some extra work during the existing DKG instance.
-
-Before the end of the current epoch, we need to run the DKG for the next epoch. We'll run each DKG in a separate process.
-
-Corner cases:
-\begin{enumerate}
-    \item \textit{Fallback}: What if the DKG is not completed before the expiration of the current epoch?
-    \item \textit{Stale keys}: What if the public keys used to encrypt transactions existing in the mempool become no longer valid once a new instance of the DKG starts?
-\end{enumerate}
-
-Note: The block proposer is chosen by Tendermint (?).
-
-\subsection{Announce}
-
-Once the DKG protocol is \textit{Started}, every validator will \textbf{announce} their encryption key. This is the only stage in which validators intervene.
-
-\begin{lstlisting}
-    fn announce(pk: PublicKey)
-\end{lstlisting}
-
-\subsection{Aggregate}
-
-Only one node, the block proposer, is necessary in this phase. Validators will check the aggregation was done correctly
-
-\section{ABCI}
-
-\usetikzlibrary{fit}
-\begin{tikzpicture}[node distance={14mm}, thick, main/.style = {draw, rectangle}] 
-\node[main] (1) {Propose}; 
-\node[main] (2) [below of=1] {Prevote}; 
-\node[main] (3) [below of=2] {Precommit}; 
-\node[main] (4) [below of=3] {Finalize Commit}; 
-\node[main, scale=1.5] (5) [below of=4] {State Machine}; 
-\draw[->] (1) -- node[midway, right]{} (2); 
-\draw[->] (2) -- node[midway, right] {Wait for 2/3 prevotes} (3); 
-\draw[->] (3) -- node[midway, right] {Wait for 2/3 precommits} (4); 
-\draw[->] (4) -- node[midway, right] {BeginBlock, DeliverTxs, EndBlock} (5); 
-\draw [->] (4) |- ([shift={(30mm,0mm)}]4.east) -- node[midway, right] {Wait for next proposal}  ([shift={(36mm,5mm)}]1.north east) -| node[above=1em, right=2em]{mempool.getblock()} (1);
-% \draw [->] (1.west) -- ++(-100pt,0pt) |- (5.west); 
-% \draw [->] (4.east) -- ++(100pt,0pt) |- (1.north); 
-
-\node[draw,dotted,fit=(1) (2) (3) (4), label={[xshift=0mm]left:{Tendermint Core}}] {};
-\node[draw,dotted,fit=(1), label={[xshift=0mm]right:{(Block proposer only)}}] {};
-\end{tikzpicture} 
-
-
 \section{ABCI++}
 
 \usetikzlibrary{fit}
@@ -154,126 +47,46 @@ Only one node, the block proposer, is necessary in this phase. Validators will c
 
 \end{tikzpicture} 
 
-% \clearpage
-
-% \subsection{Introduction}
 
 
+\subsection{ABCI (old)}
 
-% \subsection{Prepare Proposal}
-
-% This phase aims to allow the ledger to determine the validity of a new block proposal. It includes transactions encrypted to some past public key.
-
-% Features:
-% \begin{enumerate} 
-%     \item Allow validators to reject a block
-%     \item Change block execution pipeline
-% \end{enumerate}
-
-% This phase is only executed by the block proposer. The ledger takes in the block header and raw transaction data output by the consensus engine's mempool. It then returns block data that is prepared for gossip on the network, and additional fields to include into the block header.
-
-% \subsubsection{Ledger API}
-
-% \begin{lstlisting}
-%     fn PrepareProposal(block: Block) -> BlockData
-% \end{lstlisting}
-
-% \textit{BlockData} is a type alias for however data is internally stored in the consensus engine (currently is \textit{[]Tx} in Tendermint).
+\usetikzlibrary{fit}
+\begin{tikzpicture}[node distance={14mm}, thick, main/.style = {draw, rectangle}] 
+\node[main] (1) {Propose}; 
+\node[main] (2) [below of=1] {Prevote}; 
+\node[main] (3) [below of=2] {Precommit}; 
+\node[main] (4) [below of=3] {Finalize Commit}; 
+\node[main, scale=1.5] (5) [below of=4] {State Machine}; 
+\draw[->] (1) -- node[midway, right]{} (2); 
+\draw[->] (2) -- node[midway, right] {Wait for 2/3 prevotes} (3); 
+\draw[->] (3) -- node[midway, right] {Wait for 2/3 precommits} (4); 
+\draw[->] (4) -- node[midway, right] {BeginBlock, DeliverTxs, EndBlock} (5); 
+\draw [->] (4) |- ([shift={(30mm,0mm)}]4.east) -- node[midway, right] {Wait for next proposal}  ([shift={(36mm,5mm)}]1.north east) -| node[above=1em, right=2em]{mempool.getblock()} (1);
+\node[draw,dotted,fit=(1) (2) (3) (4), label={[xshift=0mm]left:{Tendermint Core}}] {};
+\node[draw,dotted,fit=(1), label={[xshift=0mm]right:{(Block proposer only)}}] {};
+\end{tikzpicture} 
 
 
-% \subsection{Process Proposal}
 
-% The Process Proposal phase sends the block data to the ledger, prior to running the last round of votes on the state machine (?). This enables features such as allowing validators to reject a block according to whether state machine deems it valid, and changing block execution pipeline.
-
-% \subsubsection{Ledger API}
-
-% \begin{enumerate}
-%     \item \textit{VerifyHeader}: Check announcements of stake, individual and aggregated PVSS instances from the DKG protocol. We will also probably decrypt transactions here (?).
-
-% \begin{lstlisting}
-%     fn VerifyHeader(header: Header, isValidator: bool) 
-%         -> ResponseVerifyHeader
-% \end{lstlisting}
+\section{DKG}
 
 
-% \textit{VerifyHeader} comes before \textit{ProcessProposal} because there may be application dependent data in the header that must be verified before accepting the header.
+\usetikzlibrary{positioning}
+\begin{tikzpicture}[node distance={14mm}, thick, main/.style = {draw, rectangle}] 
+\node[main] (1) {Init}; 
+\node[main] (2) [below of=1] {Dealt}; 
+\node[main] (3) [below of=2] {Shared}; 
+\node[main] (4) [below=18mm of 3] {Aggregated}; 
+\node[main] (5) [below=18mm of 4] {Success}; 
+\node[main] (6) [right=30mm of 4] {Invalid}; 
+\draw[->, dashed] (1) -- node[midway, right] {\textbf{deal} (by > (2/3) of validators)} (2); 
+\draw[->, dotted] (2) -- node[midway, right] {\textit{generate\_transcript} (internally)} (3); 
+\draw[->] (3) -- node[midway, right] {\textbf{aggregate} (by block proposer)} (4); 
+\draw[->, dashed] (4) -- node[midway, right] {\textbf{check} (by > (2/3) of validators)} (5);
+\draw[->] (4) -- node[midway, above] {\textbf{complain}} (6); 
 
-% \begin{lstlisting}
-% struct ResponseVerifyHeader {
-%     accept_header: bool,
-%     evidence: Vec<Evidence>
-% }
-% \end{lstlisting}
+\end{tikzpicture} 
 
-% If the returned \textit{ResponseVerifyHeader.accept\_header} is \textit{false}, then the validator must precommit nil on this block, and reject all other precommits on this block. \textit{ResponseVerifyHeader.evidence} is appended to the validators local EvidencePool.
-
-
-%     \item \textit{ProcessProposal}: Check the fees and signatures of the fee payer for a transaction.
-    
-% \begin{lstlisting}
-%     fn ProcessProposal(block: Block) -> ResponseProcessProposal
-% \end{lstlisting}
-
-% Upon receiving an entire block proposal (in the current implementation, all "block parts"), every validator runs \textit{ProcessProposal(block)}
-
-% \begin{lstlisting}
-% struct ResponseProcessProposal {
-%     accept_block: bool,
-%     evidence: Vec<Evidence>
-% }
-% \end{lstlisting}
-
-% If the returned \textit{ResponseProcessProposal.accept\_block} is \textit{false}, then the validator must precommit nil on this block, and reject all other precommits on this block. \textit{ResponseProcessProposal.evidence} is appended to the validators local \textit{EvidencePool}.
-
-
-%     \item \textit{RevertProposal}:
-% \begin{lstlisting}
-%     fn RevertProposal(height: usize, round: usize)
-% \end{lstlisting}
-
-% If a validator knows that consensus has failed to be achieved for a given block, it must run \textit{RevertProposal(block.height, block.round)}, in order to signal to the application to revert any potentially mutative state changes it may have made. In Tendermint, this occurs when incrementing rounds.
-
-% \end{enumerate}
-
-
-% After implementing \textit{ProcessProposal}, txs no longer need to be delivered during the block execution phase. Instead, they are already in the state machine. Thus \textit{BeginBlock, DeliverTx, EndBlock} can all be replaced with a single ABCI method for \textit{ExecuteBlock}.
-
-% \subsection{Vote Extension}
-
-% We allow the ledger to add more data to votes, in the final round of voting, namely the precommit. 
-
-% Examples usecases:
-% \begin{enumerate}
-%     \item Validator determined price oracles
-%     \item Validator guaranteed IBC connection attempts
-%     \item Validator based threshold crypto.
-% \end{enumerate}
-
-% The additional application data added to the votes will then appear in the block header.
-
-% There are two types of data that the application can enforce validators to include with their vote:
-% \begin{enumerate}
-%     \item Unsigned vote data:
-%     A use case of this is if you wanted validator backed oracles, where each validator independently signs some oracle data in their vote, and the median of these values is used on chain.
-%     \item Self-authenticating vote data
-% \end{enumerate}
-
-% \subsubsection{Ledger API}
-% \begin{enumerate}
-%     \item \begin{lstlisting}
-% fn ExtendVote(height: u64, round: u64) 
-%     -> (UnsignedAppVoteData, SelfAuthenticatingAppData)
-%     \end{lstlisting}
-
-
-%     \item \begin{lstlisting}
-% fn VerifyVoteExtension(
-%     signed_app_vote_data: Vec<u8>, 
-%     self_authenticating_app_vote_data: Vec<u8>) 
-%     -> bool
-% \end{lstlisting}
-% \end{enumerate}
-
-% \subsection{Finalize block}
 
 \end{document}
