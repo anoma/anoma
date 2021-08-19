@@ -387,7 +387,7 @@ where
         genesis_time: DateTimeUtc,
     ) -> Result<()> {
         let (parameters, _gas) =
-            parameters::read(&self).expect("Couldn't read protocol parameters");
+            parameters::read(self).expect("Couldn't read protocol parameters");
         let EpochDuration {
             min_num_of_blocks,
             min_duration,
@@ -409,7 +409,7 @@ where
         time: DateTimeUtc,
     ) -> Result<()> {
         let (parameters, _gas) =
-            parameters::read(&self).expect("Couldn't read protocol parameters");
+            parameters::read(self).expect("Couldn't read protocol parameters");
 
         // Check if the current epoch is over
         if height >= self.next_epoch_min_start_height

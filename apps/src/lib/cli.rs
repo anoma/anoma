@@ -41,6 +41,7 @@ pub mod cmds {
         TxUpdateVp(TxUpdateVp),
         Intent(Intent),
     }
+
     impl Cmd for Anoma {
         fn add_sub(app: App) -> App {
             app.subcommand(AnomaNode::def())
@@ -81,6 +82,7 @@ pub mod cmds {
         Gossip(Box<Gossip>),
         Config(Config),
     }
+
     impl Cmd for AnomaNode {
         fn add_sub(app: App) -> App {
             app.subcommand(Ledger::def())
@@ -124,15 +126,18 @@ pub mod cmds {
         TxCustom(TxCustom),
         TxTransfer(TxTransfer),
         TxUpdateVp(TxUpdateVp),
+        QueryBalance(QueryBalance),
         Intent(Intent),
         CraftIntent(CraftIntent),
         SubscribeTopic(SubscribeTopic),
     }
+
     impl Cmd for AnomaClient {
         fn add_sub(app: App) -> App {
             app.subcommand(TxCustom::def())
                 .subcommand(TxTransfer::def())
                 .subcommand(TxUpdateVp::def())
+                .subcommand(QueryBalance::def())
                 .subcommand(Intent::def())
                 .subcommand(CraftIntent::def())
                 .subcommand(SubscribeTopic::def())
@@ -142,6 +147,8 @@ pub mod cmds {
             let tx_custom = SubCmd::parse(matches).map_fst(Self::TxCustom);
             let tx_transfer = SubCmd::parse(matches).map_fst(Self::TxTransfer);
             let tx_update_vp = SubCmd::parse(matches).map_fst(Self::TxUpdateVp);
+            let query_balance =
+                SubCmd::parse(matches).map_fst(Self::QueryBalance);
             let intent = SubCmd::parse(matches).map_fst(Self::Intent);
             let craft_intent =
                 SubCmd::parse(matches).map_fst(Self::CraftIntent);
@@ -150,6 +157,7 @@ pub mod cmds {
             tx_custom
                 .or(tx_transfer)
                 .or(tx_update_vp)
+                .or(query_balance)
                 .or(intent)
                 .or(craft_intent)
                 .or(subscribe_topic)
@@ -181,6 +189,7 @@ pub mod cmds {
         Run(LedgerRun),
         Reset(LedgerReset),
     }
+
     impl SubCmd for Ledger {
         const CMD: &'static str = "ledger";
 
@@ -207,6 +216,7 @@ pub mod cmds {
 
     #[derive(Debug)]
     pub struct LedgerRun;
+
     impl SubCmd for LedgerRun {
         const CMD: &'static str = "run";
 
@@ -223,6 +233,7 @@ pub mod cmds {
 
     #[derive(Debug)]
     pub struct LedgerReset;
+
     impl SubCmd for LedgerReset {
         const CMD: &'static str = "reset";
 
@@ -244,6 +255,7 @@ pub mod cmds {
     pub enum Gossip {
         Run(GossipRun),
     }
+
     impl SubCmd for Gossip {
         const CMD: &'static str = "gossip";
 
@@ -279,6 +291,7 @@ pub mod cmds {
 
     #[derive(Debug)]
     pub struct GossipRun(pub args::GossipRun);
+
     impl SubCmd for GossipRun {
         const CMD: &'static str = "run";
 
@@ -302,6 +315,7 @@ pub mod cmds {
     pub enum Config {
         Gen(ConfigGen),
     }
+
     impl SubCmd for Config {
         const CMD: &'static str = "config";
 
@@ -325,6 +339,7 @@ pub mod cmds {
 
     #[derive(Debug)]
     pub struct ConfigGen;
+
     impl SubCmd for ConfigGen {
         const CMD: &'static str = "gen";
 
@@ -344,6 +359,7 @@ pub mod cmds {
 
     #[derive(Debug)]
     pub struct TxCustom(pub args::TxCustom);
+
     impl SubCmd for TxCustom {
         const CMD: &'static str = "tx";
 
@@ -362,6 +378,7 @@ pub mod cmds {
 
     #[derive(Debug)]
     pub struct TxTransfer(pub args::TxTransfer);
+
     impl SubCmd for TxTransfer {
         const CMD: &'static str = "transfer";
 
@@ -383,6 +400,7 @@ pub mod cmds {
 
     #[derive(Debug)]
     pub struct TxUpdateVp(pub args::TxUpdateVp);
+
     impl SubCmd for TxUpdateVp {
         const CMD: &'static str = "update";
 
@@ -406,7 +424,30 @@ pub mod cmds {
     }
 
     #[derive(Debug)]
+    pub struct QueryBalance(pub args::QueryBalance);
+
+    impl SubCmd for QueryBalance {
+        const CMD: &'static str = "balance";
+
+        fn parse(matches: &ArgMatches) -> Option<(Self, &ArgMatches)>
+        where
+            Self: Sized,
+        {
+            matches.subcommand_matches(Self::CMD).map(|matches| {
+                (QueryBalance(args::QueryBalance::parse(matches)), matches)
+            })
+        }
+
+        fn def() -> App {
+            App::new(Self::CMD)
+                .about("Query balance(s) of tokens")
+                .add_args::<args::QueryBalance>()
+        }
+    }
+
+    #[derive(Debug)]
     pub struct Intent(pub args::Intent);
+
     impl SubCmd for Intent {
         const CMD: &'static str = "intent";
 
@@ -428,6 +469,7 @@ pub mod cmds {
 
     #[derive(Debug)]
     pub struct CraftIntent(pub args::CraftIntent);
+
     impl SubCmd for CraftIntent {
         const CMD: &'static str = "craft-intent";
 
@@ -449,6 +491,7 @@ pub mod cmds {
 
     #[derive(Debug)]
     pub struct SubscribeTopic(pub args::SubscribeTopic);
+
     impl SubCmd for SubscribeTopic {
         const CMD: &'static str = "subscribe-topic";
 
@@ -473,21 +516,31 @@ pub mod cmds {
 }
 
 pub mod args {
+    use std::fs::File;
     use std::net::SocketAddr;
     use std::path::PathBuf;
     use std::str::FromStr;
 
-    use anoma_shared::types::address::Address;
-    use anoma_shared::types::token;
+    use anoma::types::address::Address;
+    use anoma::types::intent::Exchange;
+    use anoma::types::token;
     use libp2p::Multiaddr;
 
     use super::utils::*;
     use super::ArgMatches;
 
+    const ADDRESS: Arg<Address> = arg("address");
+    const AMOUNT: Arg<token::Amount> = arg("amount");
     const BASE_DIR: ArgDefault<PathBuf> =
         arg_default("base-dir", DefaultFn(|| ".anoma".into()));
+    const CODE_PATH: Arg<PathBuf> = arg("code-path");
+    const DATA_PATH_OPT: ArgOpt<PathBuf> = arg_opt("data-path");
+    const DATA_PATH: Arg<PathBuf> = arg("data-path");
     const DRY_RUN_TX: ArgFlag = flag("dry-run");
-    const LEDGER_ADDRESS: Arg<tendermint::net::Address> = arg("ledger-address");
+    const FILTER_PATH: ArgOpt<PathBuf> = arg_opt("filter-path");
+    const LEDGER_ADDRESS_ABOUT: &str =
+        "Address of a ledger node as \"{scheme}://{host}:{port}\". If the \
+         scheme is not supplied, it is assumed to be TCP.";
     const LEDGER_ADDRESS_DEFAULT: ArgDefault<tendermint::net::Address> =
         LEDGER_ADDRESS.default(DefaultFn(|| {
             let raw = "127.0.0.1:26657";
@@ -495,29 +548,26 @@ pub mod args {
         }));
     const LEDGER_ADDRESS_OPT: ArgOpt<tendermint::net::Address> =
         LEDGER_ADDRESS.opt();
-    const DATA_PATH: Arg<PathBuf> = arg("data-path");
-    const DATA_PATH_OPT: ArgOpt<PathBuf> = arg_opt("data-path");
-    const CODE_PATH: Arg<PathBuf> = arg("code-path");
     const PEERS: ArgMulti<String> = arg_multi("peers");
     const TOPIC: Arg<String> = arg("topic");
     const TOPICS: ArgMulti<String> = TOPIC.multi();
-    const ADDRESS: Arg<Address> = arg("address");
-    const MULTIADDR_OPT: ArgOpt<Multiaddr> = arg_opt("address");
+    // TODO: once we have a wallet, we should also allow to use a key alias
+    // <https://github.com/anoma/anoma/issues/167>
+    const SIGNING_KEY: Arg<Address> = arg("key");
     const RPC_SOCKET_ADDR: ArgOpt<SocketAddr> = arg_opt("rpc");
+    const LEDGER_ADDRESS: Arg<tendermint::net::Address> = arg("ledger-address");
     const MATCHMAKER_PATH: ArgOpt<PathBuf> = arg_opt("matchmaker-path");
-    const TX_CODE_PATH: ArgOpt<PathBuf> = arg_opt("tx-code-path");
-    const FILTER_PATH: ArgOpt<PathBuf> = arg_opt("filter-path");
+    const MULTIADDR_OPT: ArgOpt<Multiaddr> = arg_opt("address");
     const NODE: Arg<String> = arg("node");
-    const TOKEN_SELL: Arg<Address> = arg("token-sell");
-    const TOKEN_BUY: Arg<Address> = arg("token-buy");
-    const AMOUNT_SELL: Arg<token::Amount> = arg("amount-sell");
-    const AMOUNT_BUY: Arg<token::Amount> = arg("amount-buy");
-    const FILE_PATH: ArgDefault<String> =
-        arg_default("file-path", DefaultFn(|| "intent.data".into()));
+    const FILE_PATH_OUTPUT: ArgDefault<String> =
+        arg_default("file-path-output", DefaultFn(|| "intent.data".into()));
+    const FILE_PATH_INPUT: Arg<String> = arg("file-path-input");
+    const OWNER: ArgOpt<Address> = arg_opt("owner");
     const SOURCE: Arg<Address> = arg("source");
     const TARGET: Arg<Address> = arg("target");
+    const TOKEN_OPT: ArgOpt<Address> = TOKEN.opt();
     const TOKEN: Arg<Address> = arg("token");
-    const AMOUNT: Arg<token::Amount> = arg("amount");
+    const TX_CODE_PATH: ArgOpt<PathBuf> = arg_opt("tx-code-path");
 
     /// Global command arguments
     #[derive(Debug)]
@@ -657,6 +707,44 @@ pub mod args {
         }
     }
 
+    /// Query token balance(s)
+    #[derive(Debug)]
+    pub struct QueryBalance {
+        /// Common query args
+        pub query: Query,
+        /// Address of the owner
+        pub owner: Option<Address>,
+        /// Address of the token
+        pub token: Option<Address>,
+    }
+
+    impl Args for QueryBalance {
+        fn parse(matches: &ArgMatches) -> Self {
+            let query = Query::parse(matches);
+            let owner = OWNER.parse(matches);
+            let token = TOKEN_OPT.parse(matches);
+            Self {
+                query,
+                owner,
+                token,
+            }
+        }
+
+        fn def(app: App) -> App {
+            app.add_args::<Query>()
+                .arg(
+                    OWNER
+                        .def()
+                        .about("The account address whose balance to query"),
+                )
+                .arg(
+                    TOKEN_OPT
+                        .def()
+                        .about("The token's address whose balance to query"),
+                )
+        }
+    }
+
     /// Intent arguments
     #[derive(Debug)]
     pub struct Intent {
@@ -697,44 +785,37 @@ pub mod args {
     /// Craft intent for token exchange arguments
     #[derive(Debug)]
     pub struct CraftIntent {
-        /// Source address
-        pub addr: Address,
-        /// Token to sell
-        pub token_sell: Address,
-        /// Amount of token to sell
-        pub amount_sell: token::Amount,
-        /// Token to buy
-        pub token_buy: Address,
-        /// Amount of token to buy
-        pub amount_buy: token::Amount,
+        /// Signing key
+        pub key: Address,
+        /// Exchange description
+        pub exchanges: Vec<Exchange>,
         /// Target file path
         pub file_path: String,
     }
+
     impl Args for CraftIntent {
         fn parse(matches: &ArgMatches) -> Self {
-            let addr = ADDRESS.parse(matches);
-            let token_sell = TOKEN_SELL.parse(matches);
-            let amount_sell = AMOUNT_SELL.parse(matches);
-            let token_buy = TOKEN_BUY.parse(matches);
-            let amount_buy = AMOUNT_BUY.parse(matches);
-            let file_path = FILE_PATH.parse(matches);
+            let key = SIGNING_KEY.parse(matches);
+            let file_path_output = FILE_PATH_OUTPUT.parse(matches);
+            let file_path_input = FILE_PATH_INPUT.parse(matches);
+            let file = File::open(&file_path_input).expect("File must exist.");
+
+            let exchanges: Vec<Exchange> = serde_json::from_reader(file)
+                .expect("JSON was not well-formatted");
+
             Self {
-                addr,
-                token_sell,
-                amount_sell,
-                token_buy,
-                amount_buy,
-                file_path,
+                key,
+                exchanges,
+                file_path: file_path_output,
             }
         }
 
         fn def(app: App) -> App {
-            app.arg(ADDRESS.def().about("The account address."))
-                .arg(TOKEN_SELL.def().about("The selling token."))
-                .arg(AMOUNT_SELL.def().about("The amount selling."))
-                .arg(TOKEN_BUY.def().about("The buying token."))
-                .arg(AMOUNT_BUY.def().about("The amount buying."))
-                .arg(FILE_PATH.def().about("The output file"))
+            app.arg(SIGNING_KEY.def().about(
+                "Address of the account with key used to sign the intent.",
+            ))
+            .arg(FILE_PATH_OUTPUT.def().about("The output file"))
+            .arg(FILE_PATH_INPUT.def().about("The input file"))
         }
     }
 
@@ -746,6 +827,7 @@ pub mod args {
         /// Intent topic
         pub topic: String,
     }
+
     impl Args for SubscribeTopic {
         fn parse(matches: &ArgMatches) -> Self {
             let node_addr = NODE.parse(matches);
@@ -773,6 +855,7 @@ pub mod args {
         pub ledger_addr: Option<tendermint::net::Address>,
         pub filter_path: Option<PathBuf>,
     }
+
     impl Args for GossipRun {
         fn parse(matches: &ArgMatches) -> Self {
             let addr = MULTIADDR_OPT.parse(matches);
@@ -839,10 +922,7 @@ pub mod args {
                     .def()
                     .about("Simulate the transaction application."),
             )
-            .arg(LEDGER_ADDRESS_DEFAULT.def().about(
-                "Address of a ledger node as \"{scheme}://{host}:{port}\". If \
-                 the scheme is not supplied, it is assumed to be TCP.",
-            ))
+            .arg(LEDGER_ADDRESS_DEFAULT.def().about(LEDGER_ADDRESS_ABOUT))
         }
 
         fn parse(matches: &ArgMatches) -> Self {
@@ -852,6 +932,24 @@ pub mod args {
                 dry_run,
                 ledger_address,
             }
+        }
+    }
+
+    /// Common query arguments
+    #[derive(Debug)]
+    pub struct Query {
+        /// The address of the ledger node as host:port
+        pub ledger_address: tendermint::net::Address,
+    }
+
+    impl Args for Query {
+        fn def(app: App) -> App {
+            app.arg(LEDGER_ADDRESS_DEFAULT.def().about(LEDGER_ADDRESS_ABOUT))
+        }
+
+        fn parse(matches: &ArgMatches) -> Self {
+            let ledger_address = LEDGER_ADDRESS_DEFAULT.parse(matches);
+            Self { ledger_address }
         }
     }
 }

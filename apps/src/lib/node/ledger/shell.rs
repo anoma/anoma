@@ -1,35 +1,43 @@
 use std::convert::{TryFrom, TryInto};
 use std::path::Path;
+use std::str::FromStr;
 
-use anoma_shared::ledger::gas::{self, BlockGasMeter};
-use anoma_shared::ledger::storage::write_log::WriteLog;
-use anoma_shared::ledger::{ibc, parameters, pos};
-use anoma_shared::proto::{self, Tx};
-use anoma_shared::types::address::Address;
-use anoma_shared::types::key::ed25519::PublicKey;
-use anoma_shared::types::storage::{BlockHash, BlockHeight, Key};
-use anoma_shared::types::time::{DateTime, DateTimeUtc, TimeZone, Utc};
-use anoma_shared::types::token::Amount;
-use anoma_shared::types::{address, key, token};
+use anoma::ledger::gas::BlockGasMeter;
+use anoma::ledger::storage::write_log::WriteLog;
+use anoma::ledger::{ibc, parameters, pos};
+use anoma::proto::{self, Tx};
+use anoma::types::address::Address;
+use anoma::types::key::ed25519::PublicKey;
+use anoma::types::storage::{BlockHash, BlockHeight, Key};
+use anoma::types::time::{DateTime, DateTimeUtc, TimeZone, Utc};
+use anoma::types::token::Amount;
+use anoma::types::{address, key, token};
 use borsh::BorshSerialize;
 use itertools::Itertools;
 use tendermint::block::Header;
 use thiserror::Error;
 use tower_abci::{request, response};
 
+use super::rpc;
+use crate::config::genesis;
+use crate::node::ledger::events::{Event, EventType};
+use crate::node::ledger::rpc::PrefixValue;
+use crate::node::ledger::shims::abcipp_shim_types::shim;
 use crate::node::ledger::{protocol, storage, tendermint_node};
-use crate::{config, genesis, wallet};
+use crate::{config, wallet};
 
 #[derive(Error, Debug)]
 pub enum Error {
     #[error("Error removing the DB data: {0}")]
     RemoveDB(std::io::Error),
     #[error("chain ID mismatch: {0}")]
-    ChainIdError(String),
+    ChainId(String),
     #[error("Error decoding a transaction from bytes: {0}")]
-    TxDecodingError(proto::Error),
+    TxDecoding(proto::Error),
     #[error("Error trying to apply a transaction: {0}")]
-    TxError(protocol::Error),
+    TxApply(protocol::Error),
+    #[error("Gas limit exceeding while applying transactions in block")]
+    GasOverflow,
     #[error("{0}")]
     Tendermint(tendermint_node::Error),
 }
@@ -59,7 +67,7 @@ pub enum MempoolTxType {
 
 #[derive(Debug)]
 pub struct Shell {
-    storage: storage::PersistentStorage,
+    pub(super) storage: storage::PersistentStorage,
     gas_meter: BlockGasMeter,
     write_log: WriteLog,
 }
@@ -94,7 +102,7 @@ impl Shell {
         let response = response::InitChain::default();
         let (current_chain_id, _) = self.storage.get_chain_id();
         if current_chain_id != init.chain_id {
-            return Err(Error::ChainIdError(format!(
+            return Err(Error::ChainId(format!(
                 "Current chain ID: {}, Tendermint chain ID: {}",
                 current_chain_id, init.chain_id
             )));
@@ -119,25 +127,16 @@ impl Shell {
             .expect("The genesis address shouldn't fail decoding");
         let users = vec![alberto, bertha, christel];
 
-        let tokens = vec![
-            address::xan(),
-            address::btc(),
-            address::eth(),
-            address::dot(),
-            address::schnitzel(),
-            address::apfel(),
-            address::kartoffel(),
-        ];
-
-        for token in &tokens {
+        let tokens = address::tokens();
+        for token in tokens.keys() {
             // default tokens VPs for testing
-            let key = Key::validity_predicate(&token);
+            let key = Key::validity_predicate(token);
             self.storage
                 .write(&key, token_vp.to_vec())
                 .expect("Unable to write token VP");
         }
 
-        for (user, token) in users.iter().cartesian_product(tokens.iter()) {
+        for (user, token) in users.iter().cartesian_product(tokens.keys()) {
             // default user VPs for testing
             self.storage
                 .write(&Key::validity_predicate(user), user_vp.to_vec())
@@ -233,15 +232,28 @@ impl Shell {
     /// Uses `path` in the query to forward the request to the
     /// right query method and returns the result (which may be
     /// the default if `path` is not a supported string.
-    pub fn query(&mut self, query: request::Query) -> response::Query {
-        match query.path.as_str() {
-            "dry_run_tx" => self.dry_run_tx(&query.data),
-            _ => response::Query::default(),
+    pub fn query(&self, query: request::Query) -> response::Query {
+        use rpc::Path;
+        match Path::from_str(&query.path) {
+            Ok(path) => match path {
+                Path::DryRunTx => self.dry_run_tx(&query.data),
+                Path::Value(storage_key) => {
+                    self.read_storage_value(&storage_key)
+                }
+                Path::Prefix(storage_key) => {
+                    self.read_storage_prefix(&storage_key)
+                }
+            },
+            Err(err) => response::Query {
+                code: 1,
+                info: format!("RPC error: {}", err),
+                ..Default::default()
+            },
         }
     }
 
     /// Begin a new block.
-    pub fn begin_block(&mut self, hash: BlockHash, header: Header) {
+    pub fn prepare_proposal(&mut self, hash: BlockHash, header: Header) {
         let height = BlockHeight(header.height.into());
         let time: DateTime<Utc> = header.time.into();
         let time: DateTimeUtc = time.into();
@@ -249,7 +261,7 @@ impl Shell {
         self.gas_meter.reset();
         self.storage
             .begin_block(hash, height)
-            .expect("BeginBlock shouldn't fail");
+            .expect("Beginning a block shouldn't fail");
         self.storage
             .set_header(header)
             .expect("Setting a header shouldn't fail");
@@ -258,48 +270,90 @@ impl Shell {
             .expect("Must be able to update epoch");
     }
 
-    /// Validate and apply a transaction.
-    pub fn apply_tx(&mut self, req: request::DeliverTx) -> response::DeliverTx {
-        let mut response = response::DeliverTx::default();
-        let result = protocol::apply_tx(
-            &*req.tx,
-            &mut self.gas_meter,
-            &mut self.write_log,
-            &self.storage,
-        )
-        .map_err(Error::TxError);
-
-        match result {
-            Ok(result) => {
-                if result.is_accepted() {
-                    tracing::info!(
-                        "all VPs accepted apply_tx storage modification {:#?}",
-                        result
-                    );
-                    self.write_log.commit_tx();
-                } else {
-                    tracing::info!(
-                        "some VPs rejected apply_tx storage modification {:#?}",
-                        result.vps_result.rejected_vps
-                    );
-                    self.write_log.drop_tx();
-                    response.code = 1;
-                }
-                response.gas_used = gas::as_i64(result.gas_used);
-                response.info = result.to_string();
-            }
-            Err(msg) => {
-                response.gas_used =
-                    gas::as_i64(self.gas_meter.get_current_transaction_gas());
-                response.info = msg.to_string();
-            }
-        }
-        response
+    pub fn verify_header(
+        &self,
+        _req: shim::request::VerifyHeader,
+    ) -> shim::response::VerifyHeader {
+        Default::default()
     }
 
-    /// End a block.
-    pub fn end_block(&mut self, _height: BlockHeight) -> response::EndBlock {
+    /// Check the fees and signatures of the fee payer for a transaction
+    pub fn process_proposal(
+        &mut self,
+        _req: shim::request::ProcessProposal,
+    ) -> shim::response::ProcessProposal {
         Default::default()
+    }
+
+    pub fn revert_proposal(
+        &mut self,
+        _req: shim::request::RevertProposal,
+    ) -> shim::response::RevertProposal {
+        Default::default()
+    }
+
+    pub fn extend_vote(
+        &mut self,
+        _req: shim::request::ExtendVote,
+    ) -> shim::response::ExtendVote {
+        Default::default()
+    }
+
+    /// Validate and apply transactions.
+    pub fn finalize_block(
+        &mut self,
+        req: shim::request::FinalizeBlock,
+    ) -> Result<shim::response::FinalizeBlock> {
+        let mut response = shim::response::FinalizeBlock::default();
+        for tx in &req.txs {
+            let mut tx_result =
+                Event::new_tx_event(EventType::Applied, tx, req.height);
+            match protocol::apply_tx(
+                tx,
+                &mut self.gas_meter,
+                &mut self.write_log,
+                &self.storage,
+            )
+            .map_err(Error::TxApply)
+            {
+                Ok(result) => {
+                    if result.is_accepted() {
+                        tracing::info!(
+                            "all VPs accepted apply_tx storage modification \
+                             {:#?}",
+                            result
+                        );
+                        self.write_log.commit_tx();
+                        tx_result["code"] = "0".into();
+                    } else {
+                        tracing::info!(
+                            "some VPs rejected apply_tx storage modification \
+                             {:#?}",
+                            result.vps_result.rejected_vps
+                        );
+                        self.write_log.drop_tx();
+                        tx_result["code"] = "1".into();
+                    }
+                    tx_result["gas_used"] = result.gas_used.to_string();
+                    tx_result["info"] = result.to_string();
+                }
+                Err(msg) => {
+                    tx_result["gas_used"] = self
+                        .gas_meter
+                        .get_current_transaction_gas()
+                        .to_string();
+                    tx_result["info"] = msg.to_string();
+                    tx_result["code"] = "2".into();
+                }
+            }
+            response.events.push(tx_result.into());
+        }
+
+        response.gas_used = self
+            .gas_meter
+            .finalize_transaction()
+            .map_err(|_| Error::GasOverflow)?;
+        Ok(response)
     }
 
     /// Commit a block. Persist the application state and return the Merkle root
@@ -311,7 +365,6 @@ impl Shell {
             .commit_block(&mut self.storage)
             .expect("Expected committing block write log success");
         // store the block's data in DB
-        // TODO commit async?
         self.storage.commit().unwrap_or_else(|e| {
             tracing::error!(
                 "Encountered a storage error while committing a block {:?}",
@@ -337,8 +390,8 @@ impl Shell {
         r#_type: MempoolTxType,
     ) -> response::CheckTx {
         let mut response = response::CheckTx::default();
-        match Tx::try_from(tx_bytes).map_err(Error::TxDecodingError) {
-            Ok(_) => response.info = String::from("Mempool validation passed"),
+        match Tx::try_from(tx_bytes).map_err(Error::TxDecoding) {
+            Ok(_) => response.log = String::from("Mempool validation passed"),
             Err(msg) => {
                 response.code = 1;
                 response.log = msg.to_string();
@@ -348,17 +401,17 @@ impl Shell {
     }
 
     /// Simulate validation and application of a transaction.
-    fn dry_run_tx(&mut self, tx_bytes: &[u8]) -> response::Query {
+    fn dry_run_tx(&self, tx_bytes: &[u8]) -> response::Query {
         let mut response = response::Query::default();
         let mut gas_meter = BlockGasMeter::default();
-        let mut write_log = self.write_log.clone();
+        let mut write_log = WriteLog::default();
         match protocol::apply_tx(
             tx_bytes,
             &mut gas_meter,
             &mut write_log,
             &self.storage,
         )
-        .map_err(Error::TxError)
+        .map_err(Error::TxApply)
         {
             Ok(result) => response.info = result.to_string(),
             Err(error) => {
@@ -367,5 +420,67 @@ impl Shell {
             }
         }
         response
+    }
+
+    /// Query to read a value from storage
+    fn read_storage_value(&self, key: &Key) -> response::Query {
+        match self.storage.read(key) {
+            Ok((Some(value), _gas)) => response::Query {
+                value,
+                ..Default::default()
+            },
+            Ok((None, _gas)) => response::Query {
+                code: 1,
+                info: format!("No value found for key: {}", key),
+                ..Default::default()
+            },
+            Err(err) => response::Query {
+                code: 2,
+                info: format!("Storage error: {}", err),
+                ..Default::default()
+            },
+        }
+    }
+
+    /// Query to read a range of values from storage with a matching prefix. The
+    /// value in successful response is a [`Vec<PrefixValue>`] encoded with
+    /// [`BorshSerialize`].
+    fn read_storage_prefix(&self, key: &Key) -> response::Query {
+        let (iter, _gas) = self.storage.iter_prefix(key);
+        let mut iter = iter.peekable();
+        if iter.peek().is_none() {
+            response::Query {
+                code: 1,
+                info: format!("No value found for key: {}", key),
+                ..Default::default()
+            }
+        } else {
+            let values: std::result::Result<
+                Vec<PrefixValue>,
+                anoma::types::storage::Error,
+            > = iter
+                .map(|(key, value, _gas)| {
+                    let key = Key::parse(key)?;
+                    Ok(PrefixValue { key, value })
+                })
+                .collect();
+            match values {
+                Ok(values) => {
+                    let value = values.try_to_vec().unwrap();
+                    response::Query {
+                        value,
+                        ..Default::default()
+                    }
+                }
+                Err(err) => response::Query {
+                    code: 1,
+                    info: format!(
+                        "Error parsing a storage key {}: {}",
+                        key, err
+                    ),
+                    ..Default::default()
+                },
+            }
+        }
     }
 }

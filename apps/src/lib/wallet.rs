@@ -1,10 +1,10 @@
 //! Temporary helper until we have a proper wallet.
 
-use anoma_shared::types::key::ed25519::{Keypair, PublicKey};
+use anoma::types::key::ed25519::{Keypair, PublicKey};
 
 pub fn alberto_keypair() -> Keypair {
     // generated from
-    // [`anoma_shared::types::key::ed25519::gen_keypair`]
+    // [`anoma::types::key::ed25519::gen_keypair`]
     let bytes = [
         115, 191, 32, 247, 18, 101, 5, 106, 26, 203, 48, 145, 39, 41, 41, 196,
         252, 190, 245, 222, 96, 209, 34, 36, 40, 214, 169, 156, 235, 78, 188,
@@ -17,7 +17,7 @@ pub fn alberto_keypair() -> Keypair {
 
 pub fn bertha_keypair() -> Keypair {
     // generated from
-    // [`anoma_shared::types::key::ed25519::gen_keypair`]
+    // [`anoma::types::key::ed25519::gen_keypair`]
     let bytes = [
         240, 3, 224, 69, 201, 148, 60, 53, 112, 79, 80, 107, 101, 127, 186, 6,
         176, 162, 113, 224, 62, 8, 183, 187, 124, 234, 244, 251, 92, 36, 119,
@@ -30,7 +30,7 @@ pub fn bertha_keypair() -> Keypair {
 
 pub fn christel_keypair() -> Keypair {
     // generated from
-    // [`anoma_shared::types::key::ed25519::gen_keypair`]
+    // [`anoma::types::key::ed25519::gen_keypair`]
     let bytes = [
         65, 198, 96, 145, 237, 227, 84, 182, 107, 55, 209, 235, 115, 105, 71,
         190, 234, 137, 176, 188, 181, 174, 183, 49, 131, 230, 46, 39, 70, 20,
@@ -43,7 +43,7 @@ pub fn christel_keypair() -> Keypair {
 
 pub fn matchmaker_keypair() -> Keypair {
     // generated from
-    // [`anoma_shared::types::key::ed25519::gen_keypair`]
+    // [`anoma::types::key::ed25519::gen_keypair`]
     let bytes = [
         91, 67, 244, 37, 241, 33, 157, 218, 37, 172, 191, 122, 75, 2, 44, 219,
         28, 123, 44, 34, 9, 240, 244, 49, 112, 192, 180, 98, 142, 160, 182, 14,

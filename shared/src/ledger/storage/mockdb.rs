@@ -251,7 +251,7 @@ impl<'a> Iterator for MockIterator<'a> {
     type Item = KVBytes;
 
     fn next(&mut self) -> Option<Self::Item> {
-        while let Some((key, val)) = self.iter.next() {
+        for (key, val) in &mut self.iter {
             if key.starts_with(&self.prefix) {
                 return Some((
                     Box::from(key.as_bytes()),

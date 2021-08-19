@@ -12,5 +12,5 @@ RUN rustup target add wasm32-unknown-unknown
 
 WORKDIR /usr/local/rust/project
 
-# Tell anoma_shared build.rs not to compile proto files inside the docker
+# Tell anoma build.rs not to compile proto files inside the docker
 ENV COMPILE_PROTO=false

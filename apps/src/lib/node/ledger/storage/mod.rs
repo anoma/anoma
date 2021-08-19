@@ -7,13 +7,11 @@ use std::collections::HashMap;
 use std::fmt;
 use std::path::Path;
 
-use anoma_shared::ledger::storage::types::MerkleTree;
-use anoma_shared::ledger::storage::{
-    types, BlockStorage, Storage, StorageHasher,
-};
-use anoma_shared::types::address::EstablishedAddressGen;
-use anoma_shared::types::storage::{BlockHash, BlockHeight, Epoch, Key};
-use anoma_shared::types::time::DateTimeUtc;
+use anoma::ledger::storage::types::MerkleTree;
+use anoma::ledger::storage::{types, BlockStorage, Storage, StorageHasher};
+use anoma::types::address::EstablishedAddressGen;
+use anoma::types::storage::{BlockHash, BlockHeight, Epoch, Key};
+use anoma::types::time::DateTimeUtc;
 use blake2b_rs::{Blake2b, Blake2bBuilder};
 use sparse_merkle_tree::blake2b::Blake2bHasher;
 use sparse_merkle_tree::traits::Hasher;
@@ -94,7 +92,7 @@ fn new_blake2b() -> Blake2b {
 
 #[cfg(test)]
 mod tests {
-    use anoma_shared::ledger::storage::types;
+    use anoma::ledger::storage::types;
     use tempfile::TempDir;
 
     use super::*;

@@ -235,7 +235,7 @@ impl AppExt for App {
 
 impl ArgMatchesExt for ArgMatches {
     fn args_parse<T: Args>(&self) -> T {
-        T::parse(&self)
+        T::parse(self)
     }
 }
 

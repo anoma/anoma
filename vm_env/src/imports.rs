@@ -1,7 +1,7 @@
 use std::mem::ManuallyDrop;
 
-use anoma_shared::types::internal::HostEnvResult;
-use anoma_shared::vm::types::KeyVal;
+use anoma::types::internal::HostEnvResult;
+use anoma::vm::types::KeyVal;
 use borsh::BorshDeserialize;
 
 /// This function is a helper to handle the second step of reading var-len
@@ -53,10 +53,10 @@ pub mod tx {
     use std::convert::TryFrom;
     use std::marker::PhantomData;
 
-    use anoma_shared::types::address;
-    use anoma_shared::types::address::Address;
-    use anoma_shared::types::internal::HostEnvResult;
-    use anoma_shared::types::storage::{
+    use anoma::types::address;
+    use anoma::types::address::Address;
+    use anoma::types::internal::HostEnvResult;
+    use anoma::types::storage::{
         BlockHash, BlockHeight, Epoch, BLOCK_HASH_LENGTH, CHAIN_ID_LENGTH,
     };
     pub use borsh::{BorshDeserialize, BorshSerialize};
@@ -283,9 +283,9 @@ pub mod vp {
     use std::convert::TryFrom;
     use std::marker::PhantomData;
 
-    use anoma_shared::types::internal::HostEnvResult;
-    use anoma_shared::types::key::ed25519::{PublicKey, Signature};
-    use anoma_shared::types::storage::{
+    use anoma::types::internal::HostEnvResult;
+    use anoma::types::key::ed25519::{PublicKey, Signature};
+    use anoma::types::storage::{
         BlockHash, BlockHeight, Epoch, BLOCK_HASH_LENGTH, CHAIN_ID_LENGTH,
     };
     pub use borsh::{BorshDeserialize, BorshSerialize};
@@ -404,8 +404,8 @@ pub mod vp {
     }
 
     /// Verify a transaction signature. The signature is expected to have been
-    /// produced on the encoded transaction [`anoma_shared::proto::Tx`]
-    /// using [`anoma_shared::types::key::ed25519::sign_tx`].
+    /// produced on the encoded transaction [`anoma::proto::Tx`]
+    /// using [`anoma::types::key::ed25519::sign_tx`].
     pub fn verify_tx_signature(pk: &PublicKey, sig: &Signature) -> bool {
         let pk = BorshSerialize::try_to_vec(pk).unwrap();
         let sig = BorshSerialize::try_to_vec(sig).unwrap();

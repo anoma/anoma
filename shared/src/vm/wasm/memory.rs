@@ -102,10 +102,10 @@ pub struct TxCallInput {
 /// Write transaction inputs into wasm memory
 pub fn write_tx_inputs(
     memory: &wasmer::Memory,
-    tx_data_bytes: Vec<u8>,
+    tx_data_bytes: impl AsRef<[u8]>,
 ) -> Result<TxCallInput> {
     let tx_data_ptr = 0;
-    let tx_data_len = tx_data_bytes.len() as _;
+    let tx_data_len = tx_data_bytes.as_ref().len() as _;
 
     write_memory_bytes(memory, tx_data_ptr, tx_data_bytes)?;
 
@@ -293,10 +293,11 @@ fn read_memory_bytes(
 }
 
 /// Write bytes into memory at the given offset
-fn write_memory_bytes<T>(memory: &Memory, offset: u64, bytes: T) -> Result<()>
-where
-    T: AsRef<[u8]>,
-{
+fn write_memory_bytes(
+    memory: &Memory,
+    offset: u64,
+    bytes: impl AsRef<[u8]>,
+) -> Result<()> {
     let slice = bytes.as_ref();
     let len = slice.len();
     check_bounds(memory, offset, len as _)?;

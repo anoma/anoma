@@ -7,7 +7,7 @@
 use std::env;
 use std::process::Command;
 
-use anoma::cli;
+use anoma_apps::cli;
 use eyre::{eyre, Result};
 use signal_hook::consts::TERM_SIGNALS;
 use signal_hook::iterator::Signals;

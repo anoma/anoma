@@ -197,7 +197,7 @@ impl DiscoveryBehaviour {
             user_defined
                 .iter()
                 .for_each(|PeerAddress { address, peer_id }| {
-                    kademlia.add_address(&peer_id, address.clone());
+                    kademlia.add_address(peer_id, address.clone());
                     peers.insert(*peer_id);
                 });
 

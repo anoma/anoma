@@ -1,22 +1,25 @@
+mod events;
 pub mod protocol;
+pub mod rpc;
 mod shell;
+mod shims;
 pub mod storage;
 mod tendermint_node;
 
 use std::convert::{TryFrom, TryInto};
-use std::future::Future;
-use std::pin::Pin;
 use std::sync::mpsc::channel;
-use std::task::{Context, Poll};
 
-use anoma_shared::types::storage::{BlockHash, BlockHeight};
-use futures::future::{AbortHandle, AbortRegistration, Abortable, FutureExt};
+use anoma::types::storage::BlockHash;
+use futures::future::{AbortHandle, AbortRegistration, Abortable};
 use tendermint_proto::abci::CheckTxType;
-use tower::{Service, ServiceBuilder};
-use tower_abci::{response, split, BoxError, Request, Response, Server};
+use tower::ServiceBuilder;
+use tower_abci::{response, split, Server};
 
-use crate::node::ledger::shell::{MempoolTxType, Shell};
-use crate::{config, genesis};
+use crate::config;
+use crate::config::genesis;
+use crate::node::ledger::shell::{Error, MempoolTxType, Shell};
+use crate::node::ledger::shims::abcipp_shim::AbcippShim;
+use crate::node::ledger::shims::abcipp_shim_types::shim::{Request, Response};
 
 /// A panic-proof handle for aborting a future. Will abort during
 /// stack unwinding as its drop method calls abort.
@@ -30,23 +33,26 @@ impl Drop for Aborter {
     }
 }
 
-impl Service<Request> for Shell {
-    type Error = BoxError;
-    type Future = Pin<
-        Box<dyn Future<Output = Result<Response, BoxError>> + Send + 'static>,
-    >;
-    type Response = Response;
+// Until ABCI++ is ready, the shim provides the service implementation.
+// We will add this part back in once the shim is no longer needed.
+//```
+// impl Service<Request> for Shell {
+//     type Error = Error;
+//     type Future =
+//         Pin<Box<dyn Future<Output = Result<Response, BoxError>> + Send +
+// 'static>>;    type Response = Response;
+//
+//     fn poll_ready(
+//         &mut self,
+//         _cx: &mut Context<'_>,
+//     ) -> Poll<Result<(), Self::Error>> {
+//         Poll::Ready(Ok(()))
+//     }
+//```
 
-    fn poll_ready(
-        &mut self,
-        _cx: &mut Context<'_>,
-    ) -> Poll<Result<(), Self::Error>> {
-        Poll::Ready(Ok(()))
-    }
-
-    fn call(&mut self, req: Request) -> Self::Future {
-        tracing::debug!(?req);
-        let rsp = match req {
+impl Shell {
+    fn call(&mut self, req: Request) -> Result<Response, Error> {
+        match req {
             Request::InitChain(init) => {
                 match self.init_chain(init) {
                     Ok(mut resp) => {
@@ -73,31 +79,39 @@ impl Service<Request> for Shell {
             }
             Request::Info(_) => Ok(Response::Info(self.last_state())),
             Request::Query(query) => Ok(Response::Query(self.query(query))),
-            Request::BeginBlock(block) => {
+            Request::PrepareProposal(block) => {
                 match (
                     BlockHash::try_from(&*block.hash),
                     block.header.expect("missing block's header").try_into(),
                 ) {
                     (Ok(hash), Ok(header)) => {
-                        let _ = self.begin_block(hash, header);
+                        let _ = self.prepare_proposal(hash, header);
                     }
                     (Ok(_), Err(msg)) => {
                         tracing::error!("Unexpected block header {}", msg);
                     }
                     (err @ Err(_), _) => tracing::error!("{:#?}", err),
                 };
-                Ok(Response::BeginBlock(Default::default()))
+                Ok(Response::PrepareProposal(Default::default()))
             }
-            Request::DeliverTx(deliver_tx) => {
-                Ok(Response::DeliverTx(self.apply_tx(deliver_tx)))
+            Request::VerifyHeader(_req) => {
+                Ok(Response::VerifyHeader(self.verify_header(_req)))
             }
-            Request::EndBlock(end) => match BlockHeight::try_from(end.height) {
-                Ok(height) => Ok(Response::EndBlock(self.end_block(height))),
-                Err(_) => {
-                    tracing::error!("Unexpected block height {}", end.height);
-                    Ok(Response::EndBlock(Default::default()))
-                }
-            },
+            Request::ProcessProposal(block) => {
+                Ok(Response::ProcessProposal(self.process_proposal(block)))
+            }
+            Request::RevertProposal(_req) => {
+                Ok(Response::RevertProposal(self.revert_proposal(_req)))
+            }
+            Request::ExtendVote(_req) => {
+                Ok(Response::ExtendVote(self.extend_vote(_req)))
+            }
+            Request::VerifyVoteExtension(_req) => {
+                Ok(Response::VerifyVoteExtension(Default::default()))
+            }
+            Request::FinalizeBlock(finalize) => {
+                self.finalize_block(finalize).map(Response::FinalizeBlock)
+            }
             Request::Commit(_) => Ok(Response::Commit(self.commit())),
             Request::Flush(_) => Ok(Response::Flush(Default::default())),
             Request::SetOption(_) => {
@@ -127,9 +141,7 @@ impl Service<Request> for Shell {
             Request::ApplySnapshotChunk(_) => {
                 Ok(Response::ApplySnapshotChunk(Default::default()))
             }
-        };
-        tracing::debug!(?rsp);
-        Box::pin(async move { rsp.map_err(|e| e.into()) }.boxed())
+        }
     }
 }
 
@@ -148,7 +160,8 @@ async fn run_shell(
     abort_registration: AbortRegistration,
 ) {
     // Construct our ABCI application.
-    let service = Shell::new(&config.db, config::DEFAULT_CHAIN_ID.to_owned());
+    let service =
+        AbcippShim::new(&config.db, config::DEFAULT_CHAIN_ID.to_owned());
 
     // Split it into components.
     let (consensus, mempool, snapshot, info) = split::service(service, 5);

@@ -2,7 +2,7 @@ mod filter;
 mod matchmaker;
 mod mempool;
 
-use anoma_shared::proto::Intent;
+use anoma::proto::Intent;
 use matchmaker::Matchmaker;
 use thiserror::Error;
 use tokio::sync::mpsc::Receiver;
@@ -14,7 +14,7 @@ use crate::types::MatchmakerMessage;
 #[derive(Error, Debug)]
 pub enum Error {
     #[error("Error while decoding intent: {0}")]
-    DecodeError(prost::DecodeError),
+    Decode(prost::DecodeError),
     #[error("Error initializing the matchmaker: {0}")]
     MatchmakerInit(matchmaker::Error),
     #[error("Error running the matchmaker: {0}")]
@@ -36,7 +36,7 @@ impl GossipIntent {
             &config.matchmaker
         {
             let (matchmaker, matchmaker_event_receiver) =
-                Matchmaker::new(&matchmaker).map_err(Error::MatchmakerInit)?;
+                Matchmaker::new(matchmaker).map_err(Error::MatchmakerInit)?;
             (Some(matchmaker), Some(matchmaker_event_receiver))
         } else {
             (None, None)

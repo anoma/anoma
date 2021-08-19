@@ -1,7 +1,7 @@
 use std::convert::TryFrom;
 use std::time::Duration;
 
-use anoma_shared::proto::IntentGossipMessage;
+use anoma::proto::IntentGossipMessage;
 use libp2p::core::connection::ConnectionLimits;
 use libp2p::core::muxing::StreamMuxerBox;
 use libp2p::core::transport::Boxed;
@@ -25,7 +25,7 @@ pub type Swarm = libp2p::Swarm<Behaviour>;
 #[derive(Error, Debug)]
 pub enum Error {
     #[error("Failed initializing the transport: {0}")]
-    TransportError(std::io::Error),
+    Transport(std::io::Error),
     #[error("Error with the network behavior: {0}")]
     Behavior(super::behaviour::Error),
     #[error("Error while dialing: {0}")]

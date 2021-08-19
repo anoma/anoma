@@ -9,18 +9,19 @@ version = "0.1.0"
 
 [features]
 default = ["wasm-runtime"]
-wasm-runtime = ["anoma_shared/wasm-runtime"]
+wasm-runtime = ["anoma/wasm-runtime"]
 
 [dependencies]
-anoma_shared = {path = "../shared", features = ["testing"]}
+anoma = {path = "../shared", features = ["testing"]}
 anoma_vm_env = {path = "../vm_env"}
 concat-idents = "1.1.2"
 test-env-log = {version = "0.2.7", default-features = false, features = ["trace"]}
 tracing = "0.1.26"
 tracing-subscriber = {version = "0.2.18", default-features = false, features = ["env-filter", "fmt"]}
+serde_json = { version = "1.0.65" }
 
 [dev-dependencies]
-anoma = {path = "../apps", features = ["testing"]}
+anoma_apps = {path = "../apps", features = ["testing"]}
 assert_cmd = "1.0.7"
 color-eyre = "0.5.11"
 eyre = "0.6.5"
@@ -29,3 +30,7 @@ libp2p = "0.38.0"
 pretty_assertions = "0.7.2"
 rexpect = "0.4.0"
 tempfile = "3.2.0"
+
+# This is used to enable logging from tests
+[package.metadata.cargo-udeps.ignore]
+normal = ["test-env-log", "tracing-subscriber"]

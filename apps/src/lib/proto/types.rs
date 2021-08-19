@@ -1,6 +1,6 @@
 use std::convert::{TryFrom, TryInto};
 
-use anoma_shared::proto::{Dkg, Error, Intent};
+use anoma::proto::{Dkg, Error, Intent};
 
 use super::generated::services;
 
