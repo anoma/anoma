@@ -348,6 +348,13 @@
 <span id="346">346</span>
 <span id="347">347</span>
 <span id="348">348</span>
+<span id="349">349</span>
+<span id="350">350</span>
+<span id="351">351</span>
+<span id="352">352</span>
+<span id="353">353</span>
+<span id="354">354</span>
+<span id="355">355</span>
 </pre><pre class="rust">
 <span class="doccomment">//! Node and client configuration</span>
 
@@ -494,6 +501,8 @@ And this is correct
     <span class="ident">RegexFilter</span>(<span class="attribute">#[<span class="ident">serde</span>(<span class="ident">with</span> <span class="op">=</span> <span class="string">&quot;serde_regex&quot;</span>)]</span> <span class="ident">Regex</span>),
     <span class="ident">WhitelistFilter</span>(<span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>),
 }
+
+<span class="comment">// TODO peer_id can be part of Multiaddr, mayby this splitting is not useful ?</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">PartialOrd</span>, <span class="ident">Ord</span>, <span class="ident">Hash</span>, <span class="ident">Clone</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">PeerAddress</span> {
     <span class="kw">pub</span> <span class="ident">address</span>: <span class="ident">Multiaddr</span>,
@@ -540,16 +549,21 @@ And this is correct
     }
 }
 
+<span class="comment">// TODO add reserved_peers: explicit peers for gossipsub network, to not be</span>
+<span class="comment">// added to kademlia</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Serialize</span>, <span class="ident">Deserialize</span>, <span class="ident">Clone</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">DiscoverPeer</span> {
     <span class="kw">pub</span> <span class="ident">max_discovery_peers</span>: <span class="ident">u64</span>,
     <span class="kw">pub</span> <span class="ident">kademlia</span>: <span class="ident">bool</span>,
     <span class="kw">pub</span> <span class="ident">mdns</span>: <span class="ident">bool</span>,
-    <span class="kw">pub</span> <span class="ident">bootstrap_peers</span>: <span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">PeerAddress</span><span class="op">&gt;</span>, <span class="comment">/* TODO add reserved_peers(explicit peers for gossipsub network, to not
-                                                * be added to kademlia) */</span>
+    <span class="kw">pub</span> <span class="ident">bootstrap_peers</span>: <span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">PeerAddress</span><span class="op">&gt;</span>,
 }
 
 <span class="kw">impl</span> <span class="ident">Default</span> <span class="kw">for</span> <span class="ident">DiscoverPeer</span> {
+    <span class="doccomment">/// default configuration for discovering peer.</span>
+    <span class="doccomment">/// max_discovery_peers: 16,</span>
+    <span class="doccomment">/// kademlia: true,</span>
+    <span class="doccomment">/// mdns: true,</span>
     <span class="kw">fn</span> <span class="ident">default</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="self">Self</span> {
             <span class="ident">max_discovery_peers</span>: <span class="number">16</span>,

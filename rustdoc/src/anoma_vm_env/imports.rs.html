@@ -1139,8 +1139,8 @@
 
     <span class="doccomment">/// Update the matchmaker state. This state will be pass on the next run of</span>
     <span class="doccomment">/// the matchmaker.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">update_data</span>(<span class="ident">data</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>) {
-        <span class="kw">unsafe</span> { <span class="ident">anoma_mm_update_data</span>(<span class="ident">data</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="kw">_</span>, <span class="ident">data</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="kw">_</span>) };
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">update_state</span>(<span class="ident">state</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>) {
+        <span class="kw">unsafe</span> { <span class="ident">anoma_mm_update_state</span>(<span class="ident">state</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="kw">_</span>, <span class="ident">state</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="kw">_</span>) };
     }
 
     <span class="doccomment">/// Remove the intents from the matchmaker intent mempool, to call when they</span>
@@ -1169,7 +1169,7 @@
         <span class="comment">// Inject a transaction from matchmaker&#39;s matched intents to the ledger</span>
         <span class="kw">fn</span> <span class="ident">anoma_mm_send_match</span>(<span class="ident">data_ptr</span>: <span class="ident">u64</span>, <span class="ident">data_len</span>: <span class="ident">u64</span>);
 
-        <span class="kw">fn</span> <span class="ident">anoma_mm_update_data</span>(<span class="ident">data_ptr</span>: <span class="ident">u64</span>, <span class="ident">data_len</span>: <span class="ident">u64</span>);
+        <span class="kw">fn</span> <span class="ident">anoma_mm_update_state</span>(<span class="ident">state_ptr</span>: <span class="ident">u64</span>, <span class="ident">state_len</span>: <span class="ident">u64</span>);
 
         <span class="kw">fn</span> <span class="ident">anoma_mm_remove_intents</span>(<span class="ident">intents_id_ptr</span>: <span class="ident">u64</span>, <span class="ident">intents_id_len</span>: <span class="ident">u64</span>);
 

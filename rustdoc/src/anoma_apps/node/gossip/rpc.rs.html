@@ -72,7 +72,6 @@
 <span id="70">70</span>
 <span id="71">71</span>
 <span id="72">72</span>
-<span id="73">73</span>
 </pre><pre class="rust">
 <span class="kw">use</span> <span class="ident">std::net::SocketAddr</span>;
 <span class="kw">use</span> <span class="ident">std::thread</span>;
@@ -126,16 +125,15 @@
         <span class="ident">rpc_message::Message</span>,
         <span class="ident">oneshot::Sender</span><span class="op">&lt;</span><span class="ident">RpcResponse</span><span class="op">&gt;</span>,
     )<span class="op">&gt;</span>,
-) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">std::error::Error</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">tonic::transport::Error</span><span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="ident">rpc</span> <span class="op">=</span> <span class="ident">Rpc</span> { <span class="ident">inject_message</span> };
-
     <span class="kw">let</span> <span class="ident">svc</span> <span class="op">=</span> <span class="ident">RpcServiceServer::new</span>(<span class="ident">rpc</span>);
-
-    <span class="ident">Server::builder</span>().<span class="ident">add_service</span>(<span class="ident">svc</span>).<span class="ident">serve</span>(<span class="ident">addr</span>).<span class="kw">await</span><span class="question-mark">?</span>;
-
-    <span class="prelude-val">Ok</span>(())
+    <span class="ident">Server::builder</span>().<span class="ident">add_service</span>(<span class="ident">svc</span>).<span class="ident">serve</span>(<span class="ident">addr</span>).<span class="kw">await</span>
 }
 
+<span class="doccomment">/// Start a rpc server in it&#39;s own thread. The used address to listen is in the</span>
+<span class="doccomment">/// `config` argument. All received event by the rpc are send to the channel</span>
+<span class="doccomment">/// return by this function.</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">start_rpc_server</span>(
     <span class="ident">config</span>: <span class="kw-2">&amp;</span><span class="ident">RpcServer</span>,
 ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">mpsc::Receiver</span><span class="op">&lt;</span>(

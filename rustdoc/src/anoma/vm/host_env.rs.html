@@ -3139,7 +3139,7 @@
     <span class="ident">mm</span>.<span class="ident">remove_intents</span>(<span class="ident">intents_id</span>);
 }
 
-<span class="doccomment">/// Inject a transaction from matchmaker&#39;s matched intents to the ledger</span>
+<span class="doccomment">/// Injupdate_stateaction from matchmaker&#39;s matched intents to the ledger</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">mm_send_match</span><span class="op">&lt;</span><span class="ident">MEM</span>, <span class="ident">MM</span><span class="op">&gt;</span>(
     <span class="ident">env</span>: <span class="kw-2">&amp;</span><span class="ident">MatchmakerEnv</span><span class="op">&lt;</span><span class="ident">MEM</span>, <span class="ident">MM</span><span class="op">&gt;</span>,
     <span class="ident">data_ptr</span>: <span class="ident">u64</span>,
@@ -3158,21 +3158,21 @@
 }
 
 <span class="doccomment">/// Update matchmaker&#39;s state data</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">mm_update_data</span><span class="op">&lt;</span><span class="ident">MEM</span>, <span class="ident">MM</span><span class="op">&gt;</span>(
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">mm_update_state</span><span class="op">&lt;</span><span class="ident">MEM</span>, <span class="ident">MM</span><span class="op">&gt;</span>(
     <span class="ident">env</span>: <span class="kw-2">&amp;</span><span class="ident">MatchmakerEnv</span><span class="op">&lt;</span><span class="ident">MEM</span>, <span class="ident">MM</span><span class="op">&gt;</span>,
-    <span class="ident">data_ptr</span>: <span class="ident">u64</span>,
-    <span class="ident">data_len</span>: <span class="ident">u64</span>,
+    <span class="ident">state_ptr</span>: <span class="ident">u64</span>,
+    <span class="ident">state_len</span>: <span class="ident">u64</span>,
 ) <span class="kw">where</span>
     <span class="ident">MEM</span>: <span class="ident">VmMemory</span>,
     <span class="ident">MM</span>: <span class="ident">MmHost</span>,
 {
     <span class="kw">let</span> (<span class="ident">data</span>, <span class="ident">_gas</span>) <span class="op">=</span> <span class="ident">env</span>
         .<span class="ident">memory</span>
-        .<span class="ident">read_bytes</span>(<span class="ident">data_ptr</span>, <span class="ident">data_len</span> <span class="kw">as</span> <span class="kw">_</span>)
+        .<span class="ident">read_bytes</span>(<span class="ident">state_ptr</span>, <span class="ident">state_len</span> <span class="kw">as</span> <span class="kw">_</span>)
         .<span class="ident">expect</span>(<span class="string">&quot;TODO: handle runtime errors&quot;</span>);
 
     <span class="kw">let</span> <span class="ident">mm</span> <span class="op">=</span> <span class="ident">env</span>.<span class="ident">mm</span>.<span class="ident">lock</span>().<span class="ident">unwrap</span>();
-    <span class="ident">mm</span>.<span class="ident">update_data</span>(<span class="ident">data</span>);
+    <span class="ident">mm</span>.<span class="ident">update_state</span>(<span class="ident">data</span>);
 }
 
 <span class="doccomment">/// Log a string from exposed to the wasm VM matchmaker environment. The message</span>

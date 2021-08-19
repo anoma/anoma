@@ -507,15 +507,6 @@
 <span id="505">505</span>
 <span id="506">506</span>
 <span id="507">507</span>
-<span id="508">508</span>
-<span id="509">509</span>
-<span id="510">510</span>
-<span id="511">511</span>
-<span id="512">512</span>
-<span id="513">513</span>
-<span id="514">514</span>
-<span id="515">515</span>
-<span id="516">516</span>
 </pre><pre class="rust">
 <span class="comment">// This file is almost identical to this</span>
 <span class="comment">// https://github.com/webb-tools/anonima/blob/main/network/src/discovery.rs</span>
@@ -568,17 +559,31 @@
     <span class="doccomment">/// Event that notifies that we disconnected with the node with the given</span>
     <span class="doccomment">/// peer id.</span>
     <span class="ident">Disconnected</span>(<span class="ident">PeerId</span>),
+
+    <span class="doccomment">/// This case is only use to clean the code in the poll fct</span>
+    <span class="ident">KademliaEvent</span>(<span class="ident">KademliaEvent</span>),
 }
 
 <span class="doccomment">/// `DiscoveryBehaviour` configuration.</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">DiscoveryConfig</span> {
+    <span class="doccomment">/// user defined peer that are given to kad in order to connect to the</span>
+    <span class="doccomment">/// network</span>
     <span class="ident">user_defined</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">PeerAddress</span><span class="op">&gt;</span>,
+    <span class="doccomment">/// maximum number of peer to connect to</span>
     <span class="ident">discovery_max</span>: <span class="ident">u64</span>,
+    <span class="doccomment">/// enable kademlia to find new peer</span>
     <span class="ident">enable_kademlia</span>: <span class="ident">bool</span>,
+    <span class="doccomment">/// look for new peer over local network.</span>
+    <span class="comment">// TODO: it seems that kademlia must activated where it should not be</span>
+    <span class="comment">// mandatory</span>
     <span class="ident">enable_mdns</span>: <span class="ident">bool</span>,
+    <span class="comment">// TODO: should this be optional? if not explain why</span>
+    <span class="doccomment">/// use the option from kademlia. Prevent some type of attacks against</span>
+    <span class="doccomment">/// kademlia.</span>
     <span class="ident">kademlia_disjoint_query_paths</span>: <span class="ident">bool</span>,
 }
+
 <span class="kw">impl</span> <span class="ident">Default</span> <span class="kw">for</span> <span class="ident">DiscoveryConfig</span> {
     <span class="kw">fn</span> <span class="ident">default</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="self">Self</span> {
@@ -612,6 +617,7 @@
         <span class="self">self</span>
     }
 
+    <span class="doccomment">/// Configures if disjoint query path is enabled</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">use_kademlia_disjoint_query_paths</span>(
         <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
         <span class="ident">value</span>: <span class="ident">bool</span>,
@@ -632,6 +638,7 @@
         <span class="self">self</span>
     }
 
+    <span class="doccomment">/// Build the discovery config</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">build</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">DiscoveryConfig</span><span class="op">&gt;</span> {
         <span class="prelude-val">Ok</span>(<span class="self">self</span>.<span class="ident">config</span>.<span class="ident">clone</span>())
     }
@@ -662,13 +669,21 @@
     <span class="doccomment">/// Number of active connections to pause discovery on.</span>
     <span class="ident">discovery_max</span>: <span class="ident">u64</span>,
 }
+
 <span class="kw">impl</span> <span class="ident">Display</span> <span class="kw">for</span> <span class="ident">DiscoveryBehaviour</span> {
     <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">std::fmt::Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">std::fmt::Result</span> {
         <span class="ident">f</span>.<span class="ident">write_str</span>(
             <span class="macro">format!</span>(
-                <span class="string">&quot;user_defined {:?}, kademlia: {:?}, mdns: {:?}, \
-                 next_kad_random_query: {:?}, duration_to_next_kad {:?}, \
-                 num_connection: {:?}, peers: {:?}, discovery_max: {:?}&quot;</span>,
+                <span class="string">&quot;{{
+    user_defined {:?},
+    kademlia: {:?},
+    mdns: {:?},
+    next_kad_random_query: {:?},
+    duration_to_next_kad {:?},
+    num_connection: {:?},
+    peers: {:?},
+    discovery_max: {:?}
+}}&quot;</span>,
                 <span class="self">self</span>.<span class="ident">user_defined</span>,
                 <span class="self">self</span>.<span class="ident">kademlia</span>.<span class="ident">is_enabled</span>(),
                 <span class="self">self</span>.<span class="ident">mdns</span>.<span class="ident">is_enabled</span>(),
@@ -699,15 +714,14 @@
 
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">peers</span> <span class="op">=</span> <span class="ident">HashSet::new</span>();
 
+        <span class="comment">// Kademlia config</span>
         <span class="kw">let</span> <span class="ident">kademlia_opt</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">enable_kademlia</span> {
-            <span class="comment">// Kademlia config</span>
             <span class="kw">let</span> <span class="ident">store</span> <span class="op">=</span> <span class="ident">MemoryStore::new</span>(<span class="ident">local_peer_id</span>.<span class="ident">to_owned</span>());
             <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">kad_config</span> <span class="op">=</span> <span class="ident">KademliaConfig::default</span>();
             <span class="ident">kad_config</span>.<span class="ident">disjoint_query_paths</span>(<span class="ident">kademlia_disjoint_query_paths</span>);
+            <span class="comment">// TODO: choose a better protocol name</span>
             <span class="ident">kad_config</span>.<span class="ident">set_protocol_name</span>(
-                <span class="macro">format!</span>(<span class="string">&quot;/anoma/kad/{}/kad/1.0.0&quot;</span>, <span class="string">&quot;anoma&quot;</span>)
-                    .<span class="ident">as_bytes</span>()
-                    .<span class="ident">to_vec</span>(),
+                <span class="string">&quot;/anoma/kad/anoma/kad/1.0.0&quot;</span>.<span class="ident">as_bytes</span>().<span class="ident">to_vec</span>(),
             );
 
             <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">kademlia</span> <span class="op">=</span>
@@ -720,6 +734,8 @@
                     <span class="ident">peers</span>.<span class="ident">insert</span>(<span class="kw-2">*</span><span class="ident">peer_id</span>);
                 });
 
+            <span class="comment">// TODO: For production should node fail when kad failed to</span>
+            <span class="comment">// bootstrap?</span>
             <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Err</span>(<span class="ident">err</span>) <span class="op">=</span> <span class="ident">kademlia</span>.<span class="ident">bootstrap</span>() {
                 <span class="macro">tracing::error!</span>(<span class="string">&quot;failed to bootstrap kad : {:?}&quot;</span>, <span class="ident">err</span>);
             };
@@ -729,6 +745,10 @@
         };
 
         <span class="kw">let</span> <span class="ident">mdns_opt</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">enable_mdns</span> {
+            <span class="comment">// Because the mdns config needs to be created in an async way we</span>
+            <span class="comment">// need a runtime.</span>
+            <span class="comment">// TODO: Maybe do an MR upstream to add the possibility of a sync</span>
+            <span class="comment">// way</span>
             <span class="kw">let</span> <span class="ident">rt</span> <span class="op">=</span> <span class="ident">tokio::runtime::Runtime::new</span>().<span class="ident">unwrap</span>();
             <span class="prelude-val">Some</span>(
                 <span class="ident">rt</span>.<span class="ident">block_on</span>(<span class="ident">Mdns::new</span>(<span class="ident">MdnsConfig::default</span>()))
@@ -752,6 +772,7 @@
     }
 }
 
+<span class="comment">// Most function here are a wrapper around kad behaviour,</span>
 <span class="kw">impl</span> <span class="ident">NetworkBehaviour</span> <span class="kw">for</span> <span class="ident">DiscoveryBehaviour</span> {
     <span class="kw">type</span> <span class="ident">OutEvent</span> <span class="op">=</span> <span class="ident">DiscoveryEvent</span>;
     <span class="kw">type</span> <span class="ident">ProtocolsHandler</span> <span class="op">=</span>
@@ -761,6 +782,9 @@
         <span class="self">self</span>.<span class="ident">kademlia</span>.<span class="ident">new_handler</span>()
     }
 
+    <span class="doccomment">/// Look for the address of a peer first in the user defined list then in</span>
+    <span class="doccomment">/// kademlia then lastly in the local network. Sum all possible address and</span>
+    <span class="doccomment">/// returns.</span>
     <span class="kw">fn</span> <span class="ident">addresses_of_peer</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">peer_id</span>: <span class="kw-2">&amp;</span><span class="ident">PeerId</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Multiaddr</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">list</span> <span class="op">=</span> <span class="self">self</span>
             .<span class="ident">user_defined</span>
@@ -882,6 +906,8 @@
         <span class="self">self</span>.<span class="ident">kademlia</span>.<span class="ident">inject_new_external_addr</span>(<span class="ident">addr</span>)
     }
 
+    <span class="comment">// This poll function is called by libp2p to fetch/generate new event. First</span>
+    <span class="comment">// in the local queue then in kademlia and lastly in Mdns.</span>
     <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy::type_complexity</span>)]</span>
     <span class="kw">fn</span> <span class="ident">poll</span>(
 	<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
@@ -898,58 +924,18 @@
             <span class="kw">return</span> <span class="ident">Poll::Ready</span>(<span class="ident">NetworkBehaviourAction::GenerateEvent</span>(<span class="ident">ev</span>));
         }
 
-        <span class="comment">// Poll Kademlia.</span>
+        <span class="comment">// Poll Kademlia return every other event except kad event</span>
         <span class="kw">while</span> <span class="kw">let</span> <span class="ident">Poll::Ready</span>(<span class="ident">ev</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">kademlia</span>.<span class="ident">poll</span>(<span class="ident">cx</span>, <span class="ident">params</span>) {
-            <span class="kw">match</span> <span class="ident">ev</span> {
-                <span class="ident">NetworkBehaviourAction::GenerateEvent</span>(<span class="ident">ev</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="ident">ev</span> {
-                    <span class="comment">// Adding to Kademlia buckets is automatic with our config,</span>
-                    <span class="comment">// no need to do manually.</span>
-                    <span class="ident">KademliaEvent::RoutingUpdated</span> { .. } <span class="op">=</span><span class="op">&gt;</span> {}
-                    <span class="ident">KademliaEvent::UnroutablePeer</span> { .. } <span class="op">=</span><span class="op">&gt;</span> {}
-                    <span class="ident">KademliaEvent::RoutablePeer</span> { .. } <span class="op">=</span><span class="op">&gt;</span> {}
-                    <span class="ident">KademliaEvent::QueryResult</span> { .. } <span class="op">=</span><span class="op">&gt;</span> {}
-                    <span class="ident">KademliaEvent::PendingRoutablePeer</span> { .. } <span class="op">=</span><span class="op">&gt;</span> {}
-                },
-                <span class="ident">NetworkBehaviourAction::DialAddress</span> { <span class="ident">address</span> } <span class="op">=</span><span class="op">&gt;</span> {
-                    <span class="kw">return</span> <span class="ident">Poll::Ready</span>(<span class="ident">NetworkBehaviourAction::DialAddress</span> {
-                        <span class="ident">address</span>,
-                    });
-                }
-                <span class="ident">NetworkBehaviourAction::DialPeer</span> { <span class="ident">peer_id</span>, <span class="ident">condition</span> } <span class="op">=</span><span class="op">&gt;</span> {
-                    <span class="kw">return</span> <span class="ident">Poll::Ready</span>(<span class="ident">NetworkBehaviourAction::DialPeer</span> {
-                        <span class="ident">peer_id</span>,
-                        <span class="ident">condition</span>,
-                    });
-                }
-                <span class="ident">NetworkBehaviourAction::NotifyHandler</span> {
-                    <span class="ident">peer_id</span>,
-                    <span class="ident">handler</span>,
-                    <span class="ident">event</span>,
-                } <span class="op">=</span><span class="op">&gt;</span> {
-                    <span class="kw">return</span> <span class="ident">Poll::Ready</span>(
-                        <span class="ident">NetworkBehaviourAction::NotifyHandler</span> {
-                            <span class="ident">peer_id</span>,
-                            <span class="ident">handler</span>,
-                            <span class="ident">event</span>,
-                        },
-                    );
-                }
-                <span class="ident">NetworkBehaviourAction::ReportObservedAddr</span> {
-                    <span class="ident">address</span>,
-                    <span class="ident">score</span>,
-                } <span class="op">=</span><span class="op">&gt;</span> {
-                    <span class="kw">return</span> <span class="ident">Poll::Ready</span>(
-                        <span class="ident">NetworkBehaviourAction::ReportObservedAddr</span> {
-                            <span class="ident">address</span>,
-                            <span class="ident">score</span>,
-                        },
-                    );
-                }
+            <span class="kw">if</span> <span class="kw">let</span> <span class="ident">NetworkBehaviourAction::GenerateEvent</span>(<span class="ident">_kad_ev</span>) <span class="op">=</span> <span class="ident">ev</span> {
+            } <span class="kw">else</span> {
+                <span class="kw">return</span> <span class="ident">Poll::Ready</span>(<span class="ident">ev</span>.<span class="ident">map_out</span>(<span class="ident">DiscoveryEvent::KademliaEvent</span>));
             }
         }
 
         <span class="comment">// Poll the stream that fires when we need to start a random Kademlia</span>
-        <span class="comment">// query.</span>
+        <span class="comment">// query. When the stream provides a new value then it tries to look for</span>
+        <span class="comment">// a node and connect to it.</span>
+        <span class="comment">// TODO: explain a bit more the logic happening here</span>
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">next_kad_random_query</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">next_kad_random_query</span>.<span class="ident">as_mut</span>()
         {
             <span class="kw">while</span> <span class="ident">next_kad_random_query</span>.<span class="ident">poll_next_unpin</span>(<span class="ident">cx</span>).<span class="ident">is_ready</span>() {
@@ -973,31 +959,29 @@
             }
         }
 
-        <span class="comment">// Poll mdns.</span>
+        <span class="comment">// Poll mdns. If mdns generated new Discovered event then connect to it</span>
+        <span class="comment">// TODO: refactor this function, it can&#39;t be done as the kad done</span>
         <span class="kw">while</span> <span class="kw">let</span> <span class="ident">Poll::Ready</span>(<span class="ident">ev</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">mdns</span>.<span class="ident">poll</span>(<span class="ident">cx</span>, <span class="ident">params</span>) {
             <span class="kw">match</span> <span class="ident">ev</span> {
                 <span class="ident">NetworkBehaviourAction::GenerateEvent</span>(<span class="ident">event</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="ident">event</span> {
                     <span class="ident">MdnsEvent::Discovered</span>(<span class="ident">list</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">num_connections</span> <span class="op">&gt;</span><span class="op">=</span> <span class="self">self</span>.<span class="ident">discovery_max</span> {
+                        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">num_connections</span> <span class="op">&lt;</span> <span class="self">self</span>.<span class="ident">discovery_max</span> {
+                            <span class="comment">// Add any discovered peers to Kademlia</span>
+                            <span class="kw">for</span> (<span class="ident">peer_id</span>, <span class="ident">multiaddr</span>) <span class="kw">in</span> <span class="ident">list</span> {
+                                <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">kad</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">kademlia</span>.<span class="ident">as_mut</span>() {
+                                    <span class="ident">kad</span>.<span class="ident">add_address</span>(<span class="kw-2">&amp;</span><span class="ident">peer_id</span>, <span class="ident">multiaddr</span>);
+                                }
+                            }
+                        } <span class="kw">else</span> {
                             <span class="macro">tracing::info!</span>(
                                 <span class="string">&quot;max reached {:?}, {:?}&quot;</span>,
                                 <span class="self">self</span>.<span class="ident">num_connections</span>,
                                 <span class="self">self</span>.<span class="ident">discovery_max</span>
                             );
                             <span class="comment">// Already over discovery max, don&#39;t add discovered</span>
-                            <span class="comment">// peers.</span>
-                            <span class="comment">// We could potentially buffer these addresses to be</span>
-                            <span class="comment">// added later, but mdns</span>
-                            <span class="comment">// is not an important use case and may be removed</span>
-                            <span class="comment">// in future.</span>
-                            <span class="kw">continue</span>;
-                        }
-
-                        <span class="comment">// Add any discovered peers to Kademlia</span>
-                        <span class="kw">for</span> (<span class="ident">peer_id</span>, <span class="ident">multiaddr</span>) <span class="kw">in</span> <span class="ident">list</span> {
-                            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">kad</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">kademlia</span>.<span class="ident">as_mut</span>() {
-                                <span class="ident">kad</span>.<span class="ident">add_address</span>(<span class="kw-2">&amp;</span><span class="ident">peer_id</span>, <span class="ident">multiaddr</span>);
-                            }
+                            <span class="comment">// peers. We could potentially buffer these</span>
+                            <span class="comment">// addresses to be added later, but mdns is not an</span>
+                            <span class="comment">// important use case and may be removed in future.</span>
                         }
                     }
                     <span class="ident">MdnsEvent::Expired</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> {}
@@ -1014,9 +998,7 @@
                     });
                 }
                 <span class="comment">// Nothing to notify handler</span>
-                <span class="ident">NetworkBehaviourAction::NotifyHandler</span> { <span class="ident">event</span>, .. } <span class="op">=</span><span class="op">&gt;</span> {
-                    <span class="kw">match</span> <span class="ident">event</span> {}
-                }
+                <span class="ident">NetworkBehaviourAction::NotifyHandler</span> { .. } <span class="op">=</span><span class="op">&gt;</span> {}
                 <span class="ident">NetworkBehaviourAction::ReportObservedAddr</span> {
                     <span class="ident">address</span>,
                     <span class="ident">score</span>,

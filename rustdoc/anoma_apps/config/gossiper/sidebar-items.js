@@ -1,1 +1,1 @@
-initSidebarItems({"struct":[["Gossiper",""]]});
+initSidebarItems({"struct":[["Gossiper","ed255519 keypair + hash of public key. The keypair used to encrypted the data send in the libp2p network."]]});

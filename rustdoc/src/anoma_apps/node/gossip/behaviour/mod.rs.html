@@ -340,13 +340,19 @@
 <span id="338">338</span>
 <span id="339">339</span>
 <span id="340">340</span>
+<span id="341">341</span>
+<span id="342">342</span>
+<span id="343">343</span>
+<span id="344">344</span>
+<span id="345">345</span>
+<span id="346">346</span>
+<span id="347">347</span>
+<span id="348">348</span>
 </pre><pre class="rust">
 <span class="kw">mod</span> <span class="ident">discovery</span>;
 <span class="kw">use</span> <span class="ident">std::collections::hash_map::DefaultHasher</span>;
-<span class="kw">use</span> <span class="ident">std::collections::VecDeque</span>;
 <span class="kw">use</span> <span class="ident">std::convert::TryFrom</span>;
 <span class="kw">use</span> <span class="ident">std::hash</span>::{<span class="ident">Hash</span>, <span class="ident">Hasher</span>};
-<span class="kw">use</span> <span class="ident">std::task</span>::{<span class="ident">Context</span>, <span class="ident">Poll</span>};
 <span class="kw">use</span> <span class="ident">std::time::Duration</span>;
 
 <span class="kw">use</span> <span class="ident">anoma::proto</span>::{<span class="self">self</span>, <span class="ident">Intent</span>, <span class="ident">IntentGossipMessage</span>};
@@ -360,9 +366,7 @@
     <span class="ident">ValidationMode</span>,
 };
 <span class="kw">use</span> <span class="ident">libp2p::identity::Keypair</span>;
-<span class="kw">use</span> <span class="ident">libp2p::swarm</span>::{
-    <span class="ident">NetworkBehaviourAction</span>, <span class="ident">NetworkBehaviourEventProcess</span>, <span class="ident">PollParameters</span>,
-};
+<span class="kw">use</span> <span class="ident">libp2p::swarm::NetworkBehaviourEventProcess</span>;
 <span class="kw">use</span> <span class="ident">libp2p</span>::{<span class="ident">NetworkBehaviour</span>, <span class="ident">PeerId</span>};
 <span class="kw">use</span> <span class="ident">thiserror::Error</span>;
 <span class="kw">use</span> <span class="ident">tokio::sync::mpsc::Receiver</span>;
@@ -392,30 +396,44 @@
     <span class="ident">Mdns</span>(<span class="ident">std::io::Error</span>),
 }
 
-<span class="comment">// pub type Result&lt;T&gt; = std::result::Result&lt;T, Error&gt;;</span>
-
 <span class="kw">pub</span> <span class="kw">type</span> <span class="ident">Gossipsub</span> <span class="op">=</span> <span class="ident">libp2p::gossipsub::Gossipsub</span><span class="op">&lt;</span>
     <span class="ident">IdentityTransform</span>,
     <span class="ident">IntentGossipSubscriptionFilter</span>,
 <span class="op">&gt;</span>;
 
 <span class="comment">// TODO merge type of config and this one ? Maybe not a good idea</span>
+<span class="comment">// TODO extends with MaxSubscribionFilter</span>
+<span class="doccomment">/// IntentGossipSubscriptionfilter is a wrapper of TopicSubscriptionFilter to</span>
+<span class="doccomment">/// allows combination of any sort of filter.</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">IntentGossipSubscriptionFilter</span> {
     <span class="ident">RegexFilter</span>(<span class="ident">RegexSubscriptionFilter</span>),
     <span class="ident">WhitelistFilter</span>(<span class="ident">WhitelistSubscriptionFilter</span>),
 }
 
+<span class="doccomment">/// IntentGossipEvent describe events received/sent in the gossipsub network.</span>
+<span class="doccomment">/// All information are extracted from the GossipsubEvent type. This type is</span>
+<span class="doccomment">/// used as a wrapper of GossipsubEvent in order to have only information of</span>
+<span class="doccomment">/// interest and possibly enforce some invariant.</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">IntentGossipEvent</span> {
+    <span class="doccomment">/// The PeerId that initially created this message</span>
     <span class="kw">pub</span> <span class="ident">propagation_source</span>: <span class="ident">PeerId</span>,
+    <span class="doccomment">/// The MessageId of this message. This MessageId allows to discriminate</span>
+    <span class="doccomment">/// already received message</span>
     <span class="kw">pub</span> <span class="ident">message_id</span>: <span class="ident">MessageId</span>,
+    <span class="comment">// TODO maybe remove the Option of this field to make mandatory to have an</span>
+    <span class="comment">// id.</span>
+    <span class="doccomment">/// The peer that transmitted this message to us. It can be anonymous</span>
     <span class="kw">pub</span> <span class="ident">source</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">PeerId</span><span class="op">&gt;</span>,
+    <span class="doccomment">/// The content of the data</span>
     <span class="kw">pub</span> <span class="ident">data</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>,
+    <span class="doccomment">/// The topic from which we received the message</span>
     <span class="kw">pub</span> <span class="ident">topic</span>: <span class="ident">TopicHash</span>,
 }
 
 <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">GossipsubEvent</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">IntentGossipEvent</span> {
-    <span class="comment">// To be used only with Message event</span>
+    <span class="doccomment">/// Transforme a GossipsubEvent into an IntentGossipEvent. This function</span>
+    <span class="doccomment">/// fails if the gossipsubEvent does not contain a GossipsubMessage.</span>
     <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">event</span>: <span class="ident">GossipsubEvent</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="kw">if</span> <span class="kw">let</span> <span class="ident">GossipsubEvent::Message</span> {
             <span class="ident">propagation_source</span>,
@@ -441,7 +459,9 @@
         }
     }
 }
+
 <span class="kw">impl</span> <span class="ident">TopicSubscriptionFilter</span> <span class="kw">for</span> <span class="ident">IntentGossipSubscriptionFilter</span> {
+    <span class="doccomment">/// tcheck that the proposed topic can be subscribed</span>
     <span class="kw">fn</span> <span class="ident">can_subscribe</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">topic_hash</span>: <span class="kw-2">&amp;</span><span class="ident">TopicHash</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
         <span class="kw">match</span> <span class="self">self</span> {
             <span class="ident">IntentGossipSubscriptionFilter::RegexFilter</span>(<span class="ident">filter</span>) <span class="op">=</span><span class="op">&gt;</span> {
@@ -454,30 +474,19 @@
     }
 }
 
+<span class="doccomment">/// Behaviour is composed of a `DiscoveryBehaviour` and an GossipsubBehaviour`.</span>
+<span class="doccomment">/// It automatically connect to newly discovered peer, except specified</span>
+<span class="doccomment">/// otherwise, and propagates intents to other peers.</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">NetworkBehaviour</span>)]</span>
-<span class="attribute">#[<span class="ident">behaviour</span>(<span class="ident">out_event</span> <span class="op">=</span> <span class="string">&quot;AnomaBehaviourEvent&quot;</span>, <span class="ident">poll_method</span> <span class="op">=</span> <span class="string">&quot;poll&quot;</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Behaviour</span> {
-    <span class="kw">pub</span> <span class="ident">intent_gossip_behaviour</span>: <span class="ident">libp2p::gossipsub::Gossipsub</span><span class="op">&lt;</span>
-        <span class="ident">IdentityTransform</span>,
-        <span class="ident">IntentGossipSubscriptionFilter</span>,
-    <span class="op">&gt;</span>,
-    <span class="kw">pub</span> <span class="ident">discovery</span>: <span class="ident">DiscoveryBehaviour</span>,
+    <span class="kw">pub</span> <span class="ident">intent_gossip_behaviour</span>: <span class="ident">Gossipsub</span>,
+    <span class="kw">pub</span> <span class="ident">discover_behaviour</span>: <span class="ident">DiscoveryBehaviour</span>,
     <span class="comment">// TODO add another gossipsub (or floodsub ?) for dkg message propagation ?</span>
     <span class="attribute">#[<span class="ident">behaviour</span>(<span class="ident">ignore</span>)]</span>
     <span class="kw">pub</span> <span class="ident">intent_gossip_app</span>: <span class="ident">intent_gossiper::GossipIntent</span>,
-    <span class="attribute">#[<span class="ident">behaviour</span>(<span class="ident">ignore</span>)]</span>
-    <span class="ident">events</span>: <span class="ident">VecDeque</span><span class="op">&lt;</span><span class="ident">AnomaBehaviourEvent</span><span class="op">&gt;</span>,
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">AnomaBehaviourEvent</span> {
-    <span class="ident">PeerConnected</span>(<span class="ident">PeerId</span>),
-    <span class="ident">PeerDisconnected</span>(<span class="ident">PeerId</span>),
-    <span class="ident">Message</span>(<span class="ident">GossipsubMessage</span>, <span class="ident">PeerId</span>, <span class="ident">MessageId</span>),
-    <span class="ident">Subscribed</span>(<span class="ident">PeerId</span>, <span class="ident">TopicHash</span>),
-    <span class="ident">Unsubscribed</span>(<span class="ident">PeerId</span>, <span class="ident">TopicHash</span>),
-}
-
+<span class="doccomment">/// [message_id] use the hash of the message data as an id</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">message_id</span>(<span class="ident">message</span>: <span class="kw-2">&amp;</span><span class="ident">GossipsubMessage</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">MessageId</span> {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">hasher</span> <span class="op">=</span> <span class="ident">DefaultHasher::new</span>();
     <span class="ident">message</span>.<span class="ident">data</span>.<span class="ident">hash</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">hasher</span>);
@@ -485,26 +494,17 @@
 }
 
 <span class="kw">impl</span> <span class="ident">Behaviour</span> {
-    <span class="kw">fn</span> <span class="ident">poll</span><span class="op">&lt;</span><span class="ident">TBehaviourIn</span><span class="op">&gt;</span>(
-        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
-        <span class="kw">_</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Context</span>,
-        <span class="kw">_</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="kw">impl</span> <span class="ident">PollParameters</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Poll</span><span class="op">&lt;</span><span class="ident">NetworkBehaviourAction</span><span class="op">&lt;</span><span class="ident">TBehaviourIn</span>, <span class="ident">AnomaBehaviourEvent</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-        <span class="kw">if</span> <span class="op">!</span><span class="self">self</span>.<span class="ident">events</span>.<span class="ident">is_empty</span>() {
-            <span class="kw">return</span> <span class="ident">Poll::Ready</span>(<span class="ident">NetworkBehaviourAction::GenerateEvent</span>(
-                <span class="self">self</span>.<span class="ident">events</span>.<span class="ident">pop_front</span>().<span class="ident">unwrap</span>(),
-            ));
-        }
-        <span class="ident">Poll::Pending</span>
-    }
-
+    <span class="doccomment">/// Create a new behaviour based on the config given</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(
         <span class="ident">key</span>: <span class="ident">Keypair</span>,
         <span class="ident">config</span>: <span class="kw-2">&amp;</span><span class="kw">crate</span><span class="ident">::config::IntentGossiper</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> (<span class="self">Self</span>, <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Receiver</span><span class="op">&lt;</span><span class="ident">MatchmakerMessage</span><span class="op">&gt;</span><span class="op">&gt;</span>) {
         <span class="kw">let</span> <span class="ident">peer_id</span> <span class="op">=</span> <span class="ident">PeerId::from_public_key</span>(<span class="ident">key</span>.<span class="ident">public</span>());
 
-        <span class="comment">// Set a custom gossipsub</span>
+        <span class="comment">// TODO remove hardcoded value and add them to the config Except</span>
+        <span class="comment">// validation_mode, protocol_id_prefix, message_id_fn and</span>
+        <span class="comment">// validate_messages</span>
+        <span class="comment">// Set a custom gossipsub for our use case</span>
         <span class="kw">let</span> <span class="ident">gossipsub_config</span> <span class="op">=</span> <span class="ident">gossipsub::GossipsubConfigBuilder::default</span>()
             .<span class="ident">protocol_id_prefix</span>(<span class="string">&quot;intent_gossip&quot;</span>)
             .<span class="ident">heartbeat_interval</span>(<span class="ident">Duration::from_secs</span>(<span class="number">1</span>))
@@ -529,9 +529,8 @@
                     <span class="ident">WhitelistSubscriptionFilter</span>(
                         <span class="ident">topics</span>
                             .<span class="ident">iter</span>()
-                            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">topic</span><span class="op">|</span> {
-                                <span class="ident">TopicHash::from</span>(<span class="ident">IdentTopic::new</span>(<span class="ident">topic</span>))
-                            })
+                            .<span class="ident">map</span>(<span class="ident">IdentTopic::new</span>)
+                            .<span class="ident">map</span>(<span class="ident">TopicHash::from</span>)
                             .<span class="ident">collect</span>(),
                     ),
                 )
@@ -549,6 +548,7 @@
         <span class="kw">let</span> (<span class="ident">intent_gossip_app</span>, <span class="ident">matchmaker_event_receiver</span>) <span class="op">=</span>
             <span class="ident">intent_gossiper::GossipIntent::new</span>(<span class="ident">config</span>).<span class="ident">unwrap</span>();
 
+        <span class="comment">// subscribe to all topic listed in the config.</span>
         <span class="ident">config</span>
             .<span class="ident">topics</span>
             .<span class="ident">iter</span>()
@@ -563,35 +563,37 @@
             })
             .<span class="ident">expect</span>(<span class="string">&quot;failed to subscribe to topic&quot;</span>);
 
-        <span class="comment">// TODO: check silent fail if not bootstrap_peers is not multiaddr</span>
-        <span class="kw">let</span> <span class="ident">discovery_opt</span> <span class="op">=</span> <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">dis_config</span>) <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">config</span>.<span class="ident">discover_peer</span> {
-            <span class="kw">let</span> <span class="ident">discovery_config</span> <span class="op">=</span> <span class="ident">DiscoveryConfigBuilder::default</span>()
-                .<span class="ident">with_user_defined</span>(<span class="ident">dis_config</span>.<span class="ident">bootstrap_peers</span>.<span class="ident">clone</span>())
-                .<span class="ident">discovery_limit</span>(<span class="ident">dis_config</span>.<span class="ident">max_discovery_peers</span>)
-                .<span class="ident">with_kademlia</span>(<span class="ident">dis_config</span>.<span class="ident">kademlia</span>)
-                .<span class="ident">with_mdns</span>(<span class="ident">dis_config</span>.<span class="ident">mdns</span>)
-                .<span class="ident">use_kademlia_disjoint_query_paths</span>(<span class="bool-val">true</span>)
-                .<span class="ident">build</span>()
-                .<span class="ident">unwrap</span>();
-
-            <span class="ident">DiscoveryBehaviour::new</span>(<span class="ident">peer_id</span>, <span class="ident">discovery_config</span>)
-        } <span class="kw">else</span> {
-            <span class="kw">let</span> <span class="ident">discovery_config</span> <span class="op">=</span>
-                <span class="ident">DiscoveryConfigBuilder::default</span>().<span class="ident">build</span>().<span class="ident">unwrap</span>();
-            <span class="ident">DiscoveryBehaviour::new</span>(<span class="ident">peer_id</span>, <span class="ident">discovery_config</span>)
+        <span class="kw">let</span> <span class="ident">discover_behaviour</span> <span class="op">=</span> {
+            <span class="comment">// TODO: check that bootstrap_peers are in multiaddr (otherwise it</span>
+            <span class="comment">// fails silently)</span>
+            <span class="kw">let</span> <span class="ident">discover_config</span> <span class="op">=</span> <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">discover_config</span>) <span class="op">=</span>
+                <span class="kw-2">&amp;</span><span class="ident">config</span>.<span class="ident">discover_peer</span>
+            {
+                <span class="ident">DiscoveryConfigBuilder::default</span>()
+                    .<span class="ident">with_user_defined</span>(<span class="ident">discover_config</span>.<span class="ident">bootstrap_peers</span>.<span class="ident">clone</span>())
+                    .<span class="ident">discovery_limit</span>(<span class="ident">discover_config</span>.<span class="ident">max_discovery_peers</span>)
+                    .<span class="ident">with_kademlia</span>(<span class="ident">discover_config</span>.<span class="ident">kademlia</span>)
+                    .<span class="ident">with_mdns</span>(<span class="ident">discover_config</span>.<span class="ident">mdns</span>)
+                    .<span class="ident">use_kademlia_disjoint_query_paths</span>(<span class="bool-val">true</span>)
+                    .<span class="ident">build</span>()
+                    .<span class="ident">unwrap</span>()
+            } <span class="kw">else</span> {
+                <span class="ident">DiscoveryConfigBuilder::default</span>().<span class="ident">build</span>().<span class="ident">unwrap</span>()
+            };
+            <span class="ident">DiscoveryBehaviour::new</span>(<span class="ident">peer_id</span>, <span class="ident">discover_config</span>).<span class="ident">unwrap</span>()
         };
-
         (
             <span class="self">Self</span> {
                 <span class="ident">intent_gossip_behaviour</span>,
-                <span class="ident">discovery</span>: <span class="ident">discovery_opt</span>.<span class="ident">unwrap</span>(),
+                <span class="ident">discover_behaviour</span>,
                 <span class="ident">intent_gossip_app</span>,
-                <span class="ident">events</span>: <span class="ident">VecDeque::new</span>(),
             },
             <span class="ident">matchmaker_event_receiver</span>,
         )
     }
 
+    <span class="doccomment">/// tries to apply a new intent. Fails if the logic fails or if the intent</span>
+    <span class="doccomment">/// is rejected. If the matchmaker fails the message is only ignore</span>
     <span class="kw">fn</span> <span class="ident">handle_intent</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">intent</span>: <span class="ident">Intent</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">MessageAcceptance</span> {
         <span class="kw">match</span> <span class="self">self</span>.<span class="ident">intent_gossip_app</span>.<span class="ident">apply_intent</span>(<span class="ident">intent</span>) {
             <span class="prelude-val">Ok</span>(<span class="bool-val">true</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">MessageAcceptance::Accept</span>,
@@ -615,6 +617,8 @@
         }
     }
 
+    <span class="doccomment">/// Tries to decoded the arbitrary data in an intent then call</span>
+    <span class="doccomment">/// [handle_intent]. fails if the data does not contains an intent</span>
     <span class="kw">fn</span> <span class="ident">handle_raw_intent</span>(
         <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
         <span class="ident">data</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span>[<span class="ident">u8</span>]<span class="op">&gt;</span>,
@@ -635,14 +639,17 @@
 }
 
 <span class="kw">impl</span> <span class="ident">NetworkBehaviourEventProcess</span><span class="op">&lt;</span><span class="ident">GossipsubEvent</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Behaviour</span> {
+    <span class="doccomment">/// When a new event is generated by the intent gossip behaviour</span>
     <span class="kw">fn</span> <span class="ident">inject_event</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">event</span>: <span class="ident">GossipsubEvent</span>) {
-        <span class="macro">tracing::info!</span>(<span class="string">&quot;received : {:?}&quot;</span>, <span class="ident">event</span>);
+        <span class="macro">tracing::info!</span>(<span class="string">&quot;received a new message : {:?}&quot;</span>, <span class="ident">event</span>);
         <span class="kw">match</span> <span class="ident">event</span> {
             <span class="ident">GossipsubEvent::Message</span> {
                 <span class="ident">message</span>,
                 <span class="ident">propagation_source</span>,
                 <span class="ident">message_id</span>,
             } <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="comment">// validity is the type of response return to the network</span>
+                <span class="comment">// (valid|reject|ignore)</span>
                 <span class="kw">let</span> <span class="ident">validity</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">handle_raw_intent</span>(<span class="ident">message</span>.<span class="ident">data</span>);
                 <span class="self">self</span>.<span class="ident">intent_gossip_behaviour</span>
                     .<span class="ident">report_message_validation_result</span>(
@@ -650,9 +657,12 @@
                         <span class="kw-2">&amp;</span><span class="ident">propagation_source</span>,
                         <span class="ident">validity</span>,
                     )
-                    .<span class="ident">expect</span>(<span class="string">&quot;Failed to validate the message &quot;</span>);
+                    .<span class="ident">expect</span>(<span class="string">&quot;Failed to validate the message&quot;</span>);
             }
+            <span class="comment">// When a peer subscribe to a new topic, this node also tries to</span>
+            <span class="comment">// connect to it using the filter defined in the config</span>
             <span class="ident">GossipsubEvent::Subscribed</span> { <span class="ident">peer_id</span>: <span class="kw">_</span>, <span class="ident">topic</span> } <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="comment">// try to subscribe to the new topic</span>
                 <span class="self">self</span>.<span class="ident">intent_gossip_behaviour</span>
                     .<span class="ident">subscribe</span>(<span class="kw-2">&amp;</span><span class="ident">IdentTopic::new</span>(<span class="ident">topic</span>.<span class="ident">into_string</span>()))
                     .<span class="ident">map_err</span>(<span class="ident">Error::FailedSubscription</span>)
@@ -661,6 +671,10 @@
                         <span class="bool-val">false</span>
                     });
             }
+            <span class="comment">// Nothing to do when you are informed that a peer unsubscribed to a</span>
+            <span class="comment">// topic.</span>
+            <span class="comment">// TODO: It could be interesting to unsubscribe to a topic when the</span>
+            <span class="comment">// node is not connected to anyone else.</span>
             <span class="ident">GossipsubEvent::Unsubscribed</span> {
                 <span class="ident">peer_id</span>: <span class="kw">_</span>,
                 <span class="ident">topic</span>: <span class="kw">_</span>,
@@ -670,14 +684,16 @@
 }
 
 <span class="kw">impl</span> <span class="ident">NetworkBehaviourEventProcess</span><span class="op">&lt;</span><span class="ident">DiscoveryEvent</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Behaviour</span> {
+    <span class="comment">// The logic is part of the DiscoveryBehaviour, nothing to do here.</span>
     <span class="kw">fn</span> <span class="ident">inject_event</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">event</span>: <span class="ident">DiscoveryEvent</span>) {
         <span class="kw">match</span> <span class="ident">event</span> {
-            <span class="ident">DiscoveryEvent::Connected</span>(<span class="ident">peer_id</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>
-                .<span class="ident">events</span>
-                .<span class="ident">push_back</span>(<span class="ident">AnomaBehaviourEvent::PeerConnected</span>(<span class="ident">peer_id</span>)),
-            <span class="ident">DiscoveryEvent::Disconnected</span>(<span class="ident">peer_id</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>
-                .<span class="ident">events</span>
-                .<span class="ident">push_back</span>(<span class="ident">AnomaBehaviourEvent::PeerDisconnected</span>(<span class="ident">peer_id</span>)),
+            <span class="ident">DiscoveryEvent::Connected</span>(<span class="ident">peer</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="macro">tracing::info!</span>(<span class="string">&quot;Connect to a new peer: {:?}&quot;</span>, <span class="ident">peer</span>)
+            }
+            <span class="ident">DiscoveryEvent::Disconnected</span>(<span class="ident">peer</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="macro">tracing::info!</span>(<span class="string">&quot;Peer disconnected: {:?}&quot;</span>, <span class="ident">peer</span>)
+            }
+            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> {}
         }
     }
 }
