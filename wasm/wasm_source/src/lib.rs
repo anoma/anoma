@@ -71,7 +71,7 @@ pub mod tx_unbond {
         let signed =
             key::ed25519::SignedTxData::try_from_slice(&tx_data[..]).unwrap();
         let bond =
-            pos::Bond::try_from_slice(&signed.data.unwrap()[..]).unwrap();
+            pos::Unbond::try_from_slice(&signed.data.unwrap()[..]).unwrap();
 
         // TODO temporary for logging:
         let bond_id = BondId {

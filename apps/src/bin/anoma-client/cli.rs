@@ -29,6 +29,9 @@ pub async fn main() -> Result<()> {
         cmds::AnomaClient::Bond(cmds::Bond(args)) => {
             tx::submit_bond(args).await;
         }
+        cmds::AnomaClient::Unbond(cmds::Unbond(args)) => {
+            tx::submit_unbond(args).await;
+        }
         // Gossip cmds
         cmds::AnomaClient::Intent(cmds::Intent(args)) => {
             gossip_intent(args).await;

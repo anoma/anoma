@@ -126,6 +126,7 @@ pub mod cmds {
         TxTransfer(TxTransfer),
         TxUpdateVp(TxUpdateVp),
         Bond(Bond),
+        Unbond(Unbond),
         // Gossip cmds
         Intent(Intent),
         CraftIntent(CraftIntent),
@@ -137,6 +138,7 @@ pub mod cmds {
                 .subcommand(TxTransfer::def())
                 .subcommand(TxUpdateVp::def())
                 .subcommand(Bond::def())
+                .subcommand(Unbond::def())
                 .subcommand(Intent::def())
                 .subcommand(CraftIntent::def())
                 .subcommand(SubscribeTopic::def())
@@ -147,6 +149,7 @@ pub mod cmds {
             let tx_transfer = SubCmd::parse(matches).map_fst(Self::TxTransfer);
             let tx_update_vp = SubCmd::parse(matches).map_fst(Self::TxUpdateVp);
             let bond = SubCmd::parse(matches).map_fst(Self::Bond);
+            let unbond = SubCmd::parse(matches).map_fst(Self::Unbond);
             let intent = SubCmd::parse(matches).map_fst(Self::Intent);
             let craft_intent =
                 SubCmd::parse(matches).map_fst(Self::CraftIntent);
@@ -156,6 +159,7 @@ pub mod cmds {
                 .or(tx_transfer)
                 .or(tx_update_vp)
                 .or(bond)
+                .or(unbond)
                 .or(intent)
                 .or(craft_intent)
                 .or(subscribe_topic)
@@ -413,6 +417,7 @@ pub mod cmds {
 
     #[derive(Debug)]
     pub struct Bond(pub args::Bond);
+
     impl SubCmd for Bond {
         const CMD: &'static str = "bond";
 
@@ -429,6 +434,28 @@ pub mod cmds {
             App::new(Self::CMD)
                 .about("Bond tokens.")
                 .add_args::<args::Bond>()
+        }
+    }
+
+    #[derive(Debug)]
+    pub struct Unbond(pub args::Unbond);
+
+    impl SubCmd for Unbond {
+        const CMD: &'static str = "unbond";
+
+        fn parse(matches: &ArgMatches) -> Option<(Self, &ArgMatches)>
+        where
+            Self: Sized,
+        {
+            matches
+                .subcommand_matches(Self::CMD)
+                .map(|matches| (Unbond(args::Unbond::parse(matches)), matches))
+        }
+
+        fn def() -> App {
+            App::new(Self::CMD)
+                .about("Unbond tokens.")
+                .add_args::<args::Unbond>()
         }
     }
 
@@ -699,6 +726,7 @@ pub mod args {
         /// also the source.
         pub source: Option<Address>,
     }
+
     impl Args for Bond {
         fn parse(matches: &ArgMatches) -> Self {
             let tx = Tx::parse(matches);
@@ -720,6 +748,50 @@ pub mod args {
                 .arg(SOURCE_OPT.def().about(
                     "Source address for delegations. For self-bonds, the \
                      validator is also the source",
+                ))
+        }
+    }
+
+    /// Unbond arguments
+    #[derive(Debug)]
+    pub struct Unbond {
+        /// Common tx arguments
+        pub tx: Tx,
+        /// Validator address
+        pub validator: Address,
+        /// Amount of tokens to stake in a unbond
+        pub amount: token::Amount,
+        /// Source address for delegations. For self-unbonds, the validator is
+        /// also the source.
+        pub source: Option<Address>,
+    }
+
+    impl Args for Unbond {
+        fn parse(matches: &ArgMatches) -> Self {
+            let tx = Tx::parse(matches);
+            let validator = VALIDATOR.parse(matches);
+            let amount = AMOUNT.parse(matches);
+            let source = SOURCE_OPT.parse(matches);
+            Self {
+                tx,
+                validator,
+                amount,
+                source,
+            }
+        }
+
+        fn def(app: App) -> App {
+            app.add_args::<Tx>()
+                .arg(VALIDATOR.def().about("Validator address."))
+                .arg(
+                    AMOUNT
+                        .def()
+                        .about("Amount of tokens to unbond from a bond."),
+                )
+                .arg(SOURCE_OPT.def().about(
+                    "Source address for unbonding from delegations. For \
+                     unbonding from self-bonds, the validator is also the \
+                     source",
                 ))
         }
     }
