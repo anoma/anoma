@@ -77,10 +77,12 @@ phase requires at least \\( \frac{2}{3}\\) of validators to send a vote
 extension before it can move to the finalization phase.
 
 At this point, the next block proposer can aggregate the messages into a 
-single instance using Ferveo as part of the verify vote extension phase. 
-This is then included in the header of the finalized block along with the
-PVSS transcripts. Once this DKG is on the blockchain, it can be 
-used for encryption of transactions until the next DKG instance is run.
+single instance using Ferveo during its Finalize Block phase (assuming that
+the validator knows it will be the next block proposer) or during its
+Prepare Proposal phase at the beginning of the next round. The result of 
+this is then included in the header of the next block along with the PVSS 
+transcripts. Once this DKG is on the blockchain, it can be used for 
+encryption of transactions until the next DKG instance is run.
 
 When deciding to aggregate the PVSS instances into a single one, we shall 
 consider the instances ranked in terms of their validators as was also used
@@ -104,8 +106,8 @@ needs to be stored by each node
 We first describe each new message type needed for the protocol.
 - `Deal`: This message contains the PVSS transcript from a validator
   acting as a dealer
-- `Aggregate`: Combine the PVSS instances into a single one, thereby
-  producing the final key.
+- `Aggregate`: Add the combined PVSS transcripts as well as each transcript
+  included in the aggregation in the header of a proposed block
 - `Complain`: A message stating that a given validator's PVSS transcript or
   a block proposer's aggregation failed verification. 
 
@@ -115,14 +117,16 @@ each of the above message in the appropriate way. All necessary state
 is persisted by this state machine. We describe the  appropriate action for
 each of the above transactions.
 
- - `Deal`: These need to be verified. The current block proposer checks if 
-   enough valid PVSS transcripts have been reached to meet the security 
-   threshold. If so, it adds a `Aggregate` transaction to the block header. 
-   In either case, it also adds the PVSS transcipts to the block header. 
-   If aggregation was successful, these act as verifications. Otherwise, the
-   next block proposer will need the information to try and complete the
-   protocol in the next block.   For any PVSS transcript that fails verification, a `Complain` message is
-   also included in the header.
+ - `Deal`: These need to be verified. Each validator adds every deal message
+   it receives to the state machine and when the threshold is reached,
+   the state machine automatically performs the aggregation. The subsequent
+   block proposer checks if the aggregation was performed. If so, it adds 
+   the result to the block it is proposing. In either case, it also adds the
+   PVSS transcripts to the block header. If aggregation was successful, these
+   act as verifications. Otherwise, the next block proposer will need the 
+   information to try and complete the  protocol in the next block. For any
+   PVSS transcript that fails verification, a `Complain` message is also 
+   included in the header.
  - `Aggregate`: This simply needs to be verified and the resulting key added
    to the DKG instance along with the input PVSS transcripts. If validation
    of the aggregated key fails, a `Complain` should be issued.
@@ -143,14 +147,14 @@ We list the phase of ABCI++ in which each of the above actions takes place.
  - `Deal`: Validators should verify the weight shares included in the block 
     header. If validation fails, the DKG instance fails.  Otherwise, `Deal` 
     happens during the Vote Extension phase.
- - `Aggregate`: This is done during the Verify Vote Extension and will be 
-   included in the header of the finalized block. The final result should 
-   be verified by validators in the next round. If validation fails, the 
-   now current block proposer can try to aggregate the the PVSS transcripts
-   correctly during the VerifyVoteExtension phase and include the result in
-   the header of the finalized (next) block. Furthermore, `Complains` may 
-   be issued against the validator that incorrectly aggregated the PVSS
-   transcripts
+ - `Aggregate`: This is done during the Prepare Proposal phase (it could be
+   done earlier if validators know they are likely to be the next proposer)
+   and will be  included in the header of the proposed block. The final result 
+   should be verified by validators. If validation fails, the next block 
+   proposer can try to aggregate the the PVSS transcripts correctly and 
+   include the result in the header of the subsequent block. Furthermore, 
+   `Complains` may be issued against the validator that incorrectly
+   aggregated the PVSS transcripts
 
 ## Complaints
 
