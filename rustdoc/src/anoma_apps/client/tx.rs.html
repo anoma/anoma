@@ -136,6 +136,15 @@
 <span id="134">134</span>
 <span id="135">135</span>
 <span id="136">136</span>
+<span id="137">137</span>
+<span id="138">138</span>
+<span id="139">139</span>
+<span id="140">140</span>
+<span id="141">141</span>
+<span id="142">142</span>
+<span id="143">143</span>
+<span id="144">144</span>
+<span id="145">145</span>
 </pre><pre class="rust">
 <span class="kw">use</span> <span class="ident">std::convert::TryFrom</span>;
 
@@ -233,11 +242,14 @@
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">client</span> <span class="op">=</span>
         <span class="ident">TendermintWebsocketClient::open</span>(<span class="ident">WebSocketAddress::try_from</span>(<span class="ident">address</span>)<span class="question-mark">?</span>)<span class="question-mark">?</span>;
     <span class="comment">// It is better to subscribe to the transaction before it is broadcast</span>
-    <span class="kw">let</span> <span class="ident">query</span> <span class="op">=</span> <span class="ident">Query::from</span>(<span class="ident">EventType::Tx</span>)
-        .<span class="ident">and_eq</span>(<span class="string">&quot;tx.hash&quot;</span>, <span class="ident">hash_tx</span>(<span class="kw-2">&amp;</span><span class="ident">tx_bytes</span>).<span class="ident">to_string</span>());
+    <span class="comment">//</span>
+    <span class="comment">// Note that the `applied.hash` key comes from a custom event</span>
+    <span class="comment">// created by the shell</span>
+    <span class="kw">let</span> <span class="ident">query</span> <span class="op">=</span> <span class="ident">Query::from</span>(<span class="ident">EventType::NewBlock</span>)
+        .<span class="ident">and_eq</span>(<span class="string">&quot;applied.hash&quot;</span>, <span class="ident">hash_tx</span>(<span class="kw-2">&amp;</span><span class="ident">tx_bytes</span>).<span class="ident">to_string</span>());
     <span class="ident">client</span>.<span class="ident">subscribe</span>(<span class="ident">query</span>)<span class="question-mark">?</span>;
     <span class="macro">println!</span>(
-        <span class="string">&quot;{:?}&quot;</span>,
+        <span class="string">&quot;Transaction added to mempool: {:?}&quot;</span>,
         <span class="ident">client</span>
             .<span class="ident">broadcast_tx_sync</span>(<span class="ident">tx_bytes</span>.<span class="ident">into</span>())
             .<span class="kw">await</span>
@@ -245,7 +257,7 @@
     );
     <span class="kw">let</span> <span class="ident">parsed</span> <span class="op">=</span> <span class="ident">TxResponse::from</span>(<span class="ident">client</span>.<span class="ident">receive_response</span>()<span class="question-mark">?</span>);
     <span class="macro">println!</span>(
-        <span class="string">&quot;Response {}&quot;</span>,
+        <span class="string">&quot;Transaction applied with result: {}&quot;</span>,
         <span class="ident">serde_json::to_string_pretty</span>(<span class="kw-2">&amp;</span><span class="ident">parsed</span>).<span class="ident">unwrap</span>()
     );
     <span class="ident">client</span>.<span class="ident">unsubscribe</span>()<span class="question-mark">?</span>;
@@ -258,18 +270,24 @@
     <span class="ident">info</span>: <span class="ident">String</span>,
     <span class="ident">height</span>: <span class="ident">String</span>,
     <span class="ident">hash</span>: <span class="ident">String</span>,
+    <span class="ident">code</span>: <span class="ident">String</span>,
+    <span class="ident">gas_used</span>: <span class="ident">String</span>,
 }
 
 <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">serde_json::Value</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">TxResponse</span> {
     <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">json</span>: <span class="ident">serde_json::Value</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">selector</span> <span class="op">=</span> <span class="ident">jsonpath::selector</span>(<span class="kw-2">&amp;</span><span class="ident">json</span>);
-        <span class="kw">let</span> <span class="ident">height</span> <span class="op">=</span> <span class="ident">selector</span>(<span class="string">&quot;$.data.value.TxResult.height&quot;</span>).<span class="ident">unwrap</span>();
-        <span class="kw">let</span> <span class="ident">info</span> <span class="op">=</span> <span class="ident">selector</span>(<span class="string">&quot;$.data.value.TxResult.result.info&quot;</span>).<span class="ident">unwrap</span>();
-        <span class="kw">let</span> <span class="ident">hash</span> <span class="op">=</span> <span class="ident">selector</span>(<span class="string">&quot;$.events.[&#39;tx.hash&#39;][0]&quot;</span>).<span class="ident">unwrap</span>();
+        <span class="kw">let</span> <span class="ident">info</span> <span class="op">=</span> <span class="ident">selector</span>(<span class="string">&quot;$.events.[&#39;applied.info&#39;][0]&quot;</span>).<span class="ident">unwrap</span>();
+        <span class="kw">let</span> <span class="ident">height</span> <span class="op">=</span> <span class="ident">selector</span>(<span class="string">&quot;$.events.[&#39;applied.height&#39;][0]&quot;</span>).<span class="ident">unwrap</span>();
+        <span class="kw">let</span> <span class="ident">hash</span> <span class="op">=</span> <span class="ident">selector</span>(<span class="string">&quot;$.events.[&#39;applied.hash&#39;][0]&quot;</span>).<span class="ident">unwrap</span>();
+        <span class="kw">let</span> <span class="ident">code</span> <span class="op">=</span> <span class="ident">selector</span>(<span class="string">&quot;$.events.[&#39;applied.code&#39;][0]&quot;</span>).<span class="ident">unwrap</span>();
+        <span class="kw">let</span> <span class="ident">gas_used</span> <span class="op">=</span> <span class="ident">selector</span>(<span class="string">&quot;$.events.[&#39;applied.gas_used&#39;][0]&quot;</span>).<span class="ident">unwrap</span>();
         <span class="ident">TxResponse</span> {
             <span class="ident">info</span>: <span class="ident">serde_json::from_value</span>(<span class="ident">info</span>[<span class="number">0</span>].<span class="ident">clone</span>()).<span class="ident">unwrap</span>(),
             <span class="ident">height</span>: <span class="ident">serde_json::from_value</span>(<span class="ident">height</span>[<span class="number">0</span>].<span class="ident">clone</span>()).<span class="ident">unwrap</span>(),
             <span class="ident">hash</span>: <span class="ident">serde_json::from_value</span>(<span class="ident">hash</span>[<span class="number">0</span>].<span class="ident">clone</span>()).<span class="ident">unwrap</span>(),
+            <span class="ident">code</span>: <span class="ident">serde_json::from_value</span>(<span class="ident">code</span>[<span class="number">0</span>].<span class="ident">clone</span>()).<span class="ident">unwrap</span>(),
+            <span class="ident">gas_used</span>: <span class="ident">serde_json::from_value</span>(<span class="ident">gas_used</span>[<span class="number">0</span>].<span class="ident">clone</span>()).<span class="ident">unwrap</span>(),
         }
     }
 }

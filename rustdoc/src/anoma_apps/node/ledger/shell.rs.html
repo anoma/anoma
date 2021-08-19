@@ -440,12 +440,58 @@
 <span id="438">438</span>
 <span id="439">439</span>
 <span id="440">440</span>
+<span id="441">441</span>
+<span id="442">442</span>
+<span id="443">443</span>
+<span id="444">444</span>
+<span id="445">445</span>
+<span id="446">446</span>
+<span id="447">447</span>
+<span id="448">448</span>
+<span id="449">449</span>
+<span id="450">450</span>
+<span id="451">451</span>
+<span id="452">452</span>
+<span id="453">453</span>
+<span id="454">454</span>
+<span id="455">455</span>
+<span id="456">456</span>
+<span id="457">457</span>
+<span id="458">458</span>
+<span id="459">459</span>
+<span id="460">460</span>
+<span id="461">461</span>
+<span id="462">462</span>
+<span id="463">463</span>
+<span id="464">464</span>
+<span id="465">465</span>
+<span id="466">466</span>
+<span id="467">467</span>
+<span id="468">468</span>
+<span id="469">469</span>
+<span id="470">470</span>
+<span id="471">471</span>
+<span id="472">472</span>
+<span id="473">473</span>
+<span id="474">474</span>
+<span id="475">475</span>
+<span id="476">476</span>
+<span id="477">477</span>
+<span id="478">478</span>
+<span id="479">479</span>
+<span id="480">480</span>
+<span id="481">481</span>
+<span id="482">482</span>
+<span id="483">483</span>
+<span id="484">484</span>
+<span id="485">485</span>
+<span id="486">486</span>
 </pre><pre class="rust">
 <span class="kw">use</span> <span class="ident">std::convert</span>::{<span class="ident">TryFrom</span>, <span class="ident">TryInto</span>};
 <span class="kw">use</span> <span class="ident">std::path::Path</span>;
 <span class="kw">use</span> <span class="ident">std::str::FromStr</span>;
 
-<span class="kw">use</span> <span class="ident">anoma::ledger::gas</span>::{<span class="self">self</span>, <span class="ident">BlockGasMeter</span>};
+<span class="kw">use</span> <span class="ident">anoma::ledger::gas::BlockGasMeter</span>;
 <span class="kw">use</span> <span class="ident">anoma::ledger::storage::write_log::WriteLog</span>;
 <span class="kw">use</span> <span class="ident">anoma::ledger</span>::{<span class="ident">ibc</span>, <span class="ident">parameters</span>, <span class="ident">pos</span>};
 <span class="kw">use</span> <span class="ident">anoma::proto</span>::{<span class="self">self</span>, <span class="ident">Tx</span>};
@@ -463,7 +509,9 @@
 
 <span class="kw">use</span> <span class="kw">super</span><span class="ident">::rpc</span>;
 <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::config::genesis</span>;
+<span class="kw">use</span> <span class="kw">crate</span><span class="ident">::node::ledger::events</span>::{<span class="ident">Event</span>, <span class="ident">EventType</span>};
 <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::node::ledger::rpc::PrefixValue</span>;
+<span class="kw">use</span> <span class="kw">crate</span><span class="ident">::node::ledger::shims::abcipp_shim_types::shim</span>;
 <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::node::ledger</span>::{<span class="ident">protocol</span>, <span class="ident">storage</span>, <span class="ident">tendermint_node</span>};
 <span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">config</span>, <span class="ident">wallet</span>};
 
@@ -477,6 +525,8 @@
     <span class="ident">TxDecoding</span>(<span class="ident">proto::Error</span>),
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Error trying to apply a transaction: {0}&quot;</span>)]</span>
     <span class="ident">TxApply</span>(<span class="ident">protocol::Error</span>),
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Gas limit exceeding while applying transactions in block&quot;</span>)]</span>
+    <span class="ident">GasOverflow</span>,
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;{0}&quot;</span>)]</span>
     <span class="ident">Tendermint</span>(<span class="ident">tendermint_node::Error</span>),
 }
@@ -506,7 +556,7 @@
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Shell</span> {
-    <span class="ident">storage</span>: <span class="ident">storage::PersistentStorage</span>,
+    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="ident">storage</span>: <span class="ident">storage::PersistentStorage</span>,
     <span class="ident">gas_meter</span>: <span class="ident">BlockGasMeter</span>,
     <span class="ident">write_log</span>: <span class="ident">WriteLog</span>,
 }
@@ -692,7 +742,7 @@
     }
 
     <span class="doccomment">/// Begin a new block.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">begin_block</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">hash</span>: <span class="ident">BlockHash</span>, <span class="ident">header</span>: <span class="ident">Header</span>) {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">prepare_proposal</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">hash</span>: <span class="ident">BlockHash</span>, <span class="ident">header</span>: <span class="ident">Header</span>) {
         <span class="kw">let</span> <span class="ident">height</span> <span class="op">=</span> <span class="ident">BlockHeight</span>(<span class="ident">header</span>.<span class="ident">height</span>.<span class="ident">into</span>());
         <span class="kw">let</span> <span class="ident">time</span>: <span class="ident">DateTime</span><span class="op">&lt;</span><span class="ident">Utc</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">header</span>.<span class="ident">time</span>.<span class="ident">into</span>();
         <span class="kw">let</span> <span class="ident">time</span>: <span class="ident">DateTimeUtc</span> <span class="op">=</span> <span class="ident">time</span>.<span class="ident">into</span>();
@@ -700,7 +750,7 @@
         <span class="self">self</span>.<span class="ident">gas_meter</span>.<span class="ident">reset</span>();
         <span class="self">self</span>.<span class="ident">storage</span>
             .<span class="ident">begin_block</span>(<span class="ident">hash</span>, <span class="ident">height</span>)
-            .<span class="ident">expect</span>(<span class="string">&quot;BeginBlock shouldn&#39;t fail&quot;</span>);
+            .<span class="ident">expect</span>(<span class="string">&quot;Beginning a block shouldn&#39;t fail&quot;</span>);
         <span class="self">self</span>.<span class="ident">storage</span>
             .<span class="ident">set_header</span>(<span class="ident">header</span>)
             .<span class="ident">expect</span>(<span class="string">&quot;Setting a header shouldn&#39;t fail&quot;</span>);
@@ -709,48 +759,90 @@
             .<span class="ident">expect</span>(<span class="string">&quot;Must be able to update epoch&quot;</span>);
     }
 
-    <span class="doccomment">/// Validate and apply a transaction.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">apply_tx</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">req</span>: <span class="ident">request::DeliverTx</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">response::DeliverTx</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">response</span> <span class="op">=</span> <span class="ident">response::DeliverTx::default</span>();
-        <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">protocol::apply_tx</span>(
-            <span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="ident">req</span>.<span class="ident">tx</span>,
-            <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">gas_meter</span>,
-            <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">write_log</span>,
-            <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">storage</span>,
-        )
-        .<span class="ident">map_err</span>(<span class="ident">Error::TxApply</span>);
-
-        <span class="kw">match</span> <span class="ident">result</span> {
-            <span class="prelude-val">Ok</span>(<span class="ident">result</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="kw">if</span> <span class="ident">result</span>.<span class="ident">is_accepted</span>() {
-                    <span class="macro">tracing::info!</span>(
-                        <span class="string">&quot;all VPs accepted apply_tx storage modification {:#?}&quot;</span>,
-                        <span class="ident">result</span>
-                    );
-                    <span class="self">self</span>.<span class="ident">write_log</span>.<span class="ident">commit_tx</span>();
-                } <span class="kw">else</span> {
-                    <span class="macro">tracing::info!</span>(
-                        <span class="string">&quot;some VPs rejected apply_tx storage modification {:#?}&quot;</span>,
-                        <span class="ident">result</span>.<span class="ident">vps_result</span>.<span class="ident">rejected_vps</span>
-                    );
-                    <span class="self">self</span>.<span class="ident">write_log</span>.<span class="ident">drop_tx</span>();
-                    <span class="ident">response</span>.<span class="ident">code</span> <span class="op">=</span> <span class="number">1</span>;
-                }
-                <span class="ident">response</span>.<span class="ident">gas_used</span> <span class="op">=</span> <span class="ident">gas::as_i64</span>(<span class="ident">result</span>.<span class="ident">gas_used</span>);
-                <span class="ident">response</span>.<span class="ident">info</span> <span class="op">=</span> <span class="ident">result</span>.<span class="ident">to_string</span>();
-            }
-            <span class="prelude-val">Err</span>(<span class="ident">msg</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="ident">response</span>.<span class="ident">gas_used</span> <span class="op">=</span>
-                    <span class="ident">gas::as_i64</span>(<span class="self">self</span>.<span class="ident">gas_meter</span>.<span class="ident">get_current_transaction_gas</span>());
-                <span class="ident">response</span>.<span class="ident">info</span> <span class="op">=</span> <span class="ident">msg</span>.<span class="ident">to_string</span>();
-            }
-        }
-        <span class="ident">response</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">verify_header</span>(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        <span class="ident">_req</span>: <span class="ident">shim::request::VerifyHeader</span>,
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">shim::response::VerifyHeader</span> {
+        <span class="ident">Default::default</span>()
     }
 
-    <span class="doccomment">/// End a block.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">end_block</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">_height</span>: <span class="ident">BlockHeight</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">response::EndBlock</span> {
+    <span class="doccomment">/// Check the fees and signatures of the fee payer for a transaction</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">process_proposal</span>(
+        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
+        <span class="ident">_req</span>: <span class="ident">shim::request::ProcessProposal</span>,
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">shim::response::ProcessProposal</span> {
         <span class="ident">Default::default</span>()
+    }
+
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">revert_proposal</span>(
+        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
+        <span class="ident">_req</span>: <span class="ident">shim::request::RevertProposal</span>,
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">shim::response::RevertProposal</span> {
+        <span class="ident">Default::default</span>()
+    }
+
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">extend_vote</span>(
+        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
+        <span class="ident">_req</span>: <span class="ident">shim::request::ExtendVote</span>,
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">shim::response::ExtendVote</span> {
+        <span class="ident">Default::default</span>()
+    }
+
+    <span class="doccomment">/// Validate and apply transactions.</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">finalize_block</span>(
+        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
+        <span class="ident">req</span>: <span class="ident">shim::request::FinalizeBlock</span>,
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">shim::response::FinalizeBlock</span><span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">response</span> <span class="op">=</span> <span class="ident">shim::response::FinalizeBlock::default</span>();
+        <span class="kw">for</span> <span class="ident">tx</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="ident">req</span>.<span class="ident">txs</span> {
+            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tx_result</span> <span class="op">=</span>
+                <span class="ident">Event::new_tx_event</span>(<span class="ident">EventType::Applied</span>, <span class="ident">tx</span>, <span class="ident">req</span>.<span class="ident">height</span>);
+            <span class="kw">match</span> <span class="ident">protocol::apply_tx</span>(
+                <span class="ident">tx</span>,
+                <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">gas_meter</span>,
+                <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">write_log</span>,
+                <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">storage</span>,
+            )
+            .<span class="ident">map_err</span>(<span class="ident">Error::TxApply</span>)
+            {
+                <span class="prelude-val">Ok</span>(<span class="ident">result</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="kw">if</span> <span class="ident">result</span>.<span class="ident">is_accepted</span>() {
+                        <span class="macro">tracing::info!</span>(
+                            <span class="string">&quot;all VPs accepted apply_tx storage modification \
+                             {:#?}&quot;</span>,
+                            <span class="ident">result</span>
+                        );
+                        <span class="self">self</span>.<span class="ident">write_log</span>.<span class="ident">commit_tx</span>();
+                        <span class="ident">tx_result</span>[<span class="string">&quot;code&quot;</span>] <span class="op">=</span> <span class="string">&quot;0&quot;</span>.<span class="ident">into</span>();
+                    } <span class="kw">else</span> {
+                        <span class="macro">tracing::info!</span>(
+                            <span class="string">&quot;some VPs rejected apply_tx storage modification \
+                             {:#?}&quot;</span>,
+                            <span class="ident">result</span>.<span class="ident">vps_result</span>.<span class="ident">rejected_vps</span>
+                        );
+                        <span class="self">self</span>.<span class="ident">write_log</span>.<span class="ident">drop_tx</span>();
+                        <span class="ident">tx_result</span>[<span class="string">&quot;code&quot;</span>] <span class="op">=</span> <span class="string">&quot;1&quot;</span>.<span class="ident">into</span>();
+                    }
+                    <span class="ident">tx_result</span>[<span class="string">&quot;gas_used&quot;</span>] <span class="op">=</span> <span class="ident">result</span>.<span class="ident">gas_used</span>.<span class="ident">to_string</span>();
+                    <span class="ident">tx_result</span>[<span class="string">&quot;info&quot;</span>] <span class="op">=</span> <span class="ident">result</span>.<span class="ident">to_string</span>();
+                }
+                <span class="prelude-val">Err</span>(<span class="ident">msg</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="ident">tx_result</span>[<span class="string">&quot;gas_used&quot;</span>] <span class="op">=</span> <span class="self">self</span>
+                        .<span class="ident">gas_meter</span>
+                        .<span class="ident">get_current_transaction_gas</span>()
+                        .<span class="ident">to_string</span>();
+                    <span class="ident">tx_result</span>[<span class="string">&quot;info&quot;</span>] <span class="op">=</span> <span class="ident">msg</span>.<span class="ident">to_string</span>();
+                    <span class="ident">tx_result</span>[<span class="string">&quot;code&quot;</span>] <span class="op">=</span> <span class="string">&quot;2&quot;</span>.<span class="ident">into</span>();
+                }
+            }
+            <span class="ident">response</span>.<span class="ident">events</span>.<span class="ident">push</span>(<span class="ident">tx_result</span>.<span class="ident">into</span>());
+        }
+
+        <span class="ident">response</span>.<span class="ident">gas_used</span> <span class="op">=</span> <span class="self">self</span>
+            .<span class="ident">gas_meter</span>
+            .<span class="ident">finalize_transaction</span>()
+            .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">Error::GasOverflow</span>)<span class="question-mark">?</span>;
+        <span class="prelude-val">Ok</span>(<span class="ident">response</span>)
     }
 
     <span class="doccomment">/// Commit a block. Persist the application state and return the Merkle root</span>
