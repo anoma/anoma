@@ -118,6 +118,8 @@ into the proposed block.
    single proposer (wasted effort)
 
 ### Async-decrypt protocol
+*__This protocol assumes that a validator can query the state of the
+proposer after it has processed transactions__*.
 
 As opposed to the above protocol, the current block proposer decrypts the 
 wrapped transactions from the previous block as part of their Process Proposal
