@@ -8,6 +8,7 @@ nightly := $(shell cat ../../rust-nightly-version)
 wasms := tx_bond
 wasms += tx_from_intent
 wasms += tx_transfer
+wasms += tx_unbond
 wasms += tx_update_vp
 wasms += vp_token
 wasms += vp_user
