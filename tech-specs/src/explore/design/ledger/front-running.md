@@ -85,7 +85,7 @@ later from the ciphertext public key and decryption shares from at least
 ## Decrypting a transaction
 
 Wrapped transactions that are included in block `n` shall be decrypted and 
-applied in block `n+1` or `n+2` depending on the chosen decryption protocol.
+applied in block `n+1` depending on the chosen decryption protocol.
 We outline both protocols here.
 
 We first state that in both protocols, during the Vote Extension phase, the
@@ -95,7 +95,7 @@ validators). Validators must collect the decryption shares they receive in
 case they must perform the decryption. The aggregation and validation of 
 decryption shares is handled by Ferveo.
 
-### One block latency protocol
+### Decrypt-ahead protocol
 
 *__This protocol assumes that a validator knows that they are very likely to be
 the next block proposer__*. 
@@ -109,14 +109,15 @@ part of the Prepare Proposal phase, the decrypted payloads are included
 into the proposed block.
 
 #### Pros:
- - Lower latency of txs being applied
+ - No alteration to block after Prepare Proposal phase
+ - Less communication overhead
 #### Cons:
  - Validators need to now in advance that they are likely to be the next proposer
  - Preparing new proposals is blocked until decryption is finished (which can be slow)
  - More than one validator will do decryption even though there will be a
    single proposer (wasted effort)
 
-### Two block latency protocol
+### Async-decrypt protocol
 
 As opposed to the above protocol, the current block proposer decrypts the 
 wrapped transactions from the previous block as part of their Process Proposal
@@ -129,9 +130,8 @@ to update their own state before the block is committed.
 #### Pros:
  - Expensive decryptions are only done by a single party
  - Decryption is done asynchronously
- - Does not require foreknowledge
+ - Does not require foreknowledge of proposers
 #### Cons:
- - Larger latency
  - More messaging overhead
  - Requires querying processed state of a proposer
 
