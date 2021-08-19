@@ -16,7 +16,7 @@
 \DefineVerbatimEnvironment{code}{Verbatim}{fontsize=\small}
 \begin{document}
 
-\title{DKG Spec}
+\title{Spec Diagrams}
 
 \author{Heliax Team}
 
@@ -27,25 +27,52 @@
 
 \section{DKG}
 
-\usetikzlibrary{fit}
+
+% \usetikzlibrary{fit}
+\usetikzlibrary{positioning}
 \begin{tikzpicture}[node distance={14mm}, thick, main/.style = {draw, rectangle}] 
-\node[main] (1) {Ready}; 
-\node[main] (2) [below of=1] {Started}; 
-\node[main] (3) [below of=2] {Announced}; 
-\node[main] (4) [below of=3] {Shared}; 
-\node[main] (5) [below of=4] {Aggregated}; 
-\node[main] (6) [below of=5] {Checked}; 
-\draw[->] (1) -- node[midway, right] {\textbf{start} (by block proposer)} (2); 
-\draw[->, dotted] (3) -- node[midway, right] {\textbf{share\_secret}} (4); 
-\draw[->, dashed] (2) -- node[midway, right] {\textbf{announce} (by > (2/3) of validators)} (3); 
-\draw[->] (4) -- node[midway, right] {\textbf{aggregate} (by block proposer)} (5); 
-\draw[->, dashed] (5) -- node[midway, right] {\textbf{check} (by > (2/3) of validators)} (6); 
+\node[main] (1) {Init}; 
+\node[main] (2) [below of=1] {Dealt}; 
+\node[main] (3) [below of=2] {Shared}; 
+\node[main] (4) [below=18mm of 3] {Aggregated}; 
+\node[main] (5) [below=18mm of 4] {Success}; 
+\node[main] (6) [right=30mm of 4] {Invalid}; 
+% \draw[->] (1) -- node[midway, right] {\textbf{start} (by block proposer)} (2); 
+\draw[->, dashed] (1) -- node[midway, right] {\textbf{deal} (by > (2/3) of validators)} (2); 
+\draw[->, dotted] (2) -- node[midway, right] {\textit{generate\_transcript} (internally)} (3); 
+\draw[->] (3) -- node[midway, right] {\textbf{aggregate} (by block proposer)} (4); 
+\draw[->, dashed] (4) -- node[midway, right] {\textbf{check} (by > (2/3) of validators)} (5);
+\draw[->, dashed] (4) -- node[midway, above] {\textbf{complain}} (6); 
+% \draw[->, dashed] (5) -- node[midway, right] {\textbf{check} (by > (2/3) of validators)} (6); 
 % \draw [->] (4) |- ([shift={(50mm,0mm)}]4.east) -- node[midway, right] {New epoch}  ([shift={(54mm,5mm)}]1.north east) -| node[above=1em, right=2em]{} (1); 
 
 % \node[draw,dotted,fit=(1) (2) (3) (4), label={[xshift=0mm]left:{DKG}}] {};
-\node[draw, dotted, fit=(3) (4), label={[xshift=0mm]left:{Internal}}] {};
+% \node[draw, dotted, fit=(2) (3), label={[xshift=0mm]left:{PVSS}}] {};
 
 \end{tikzpicture} 
+
+% \subsection{Old}
+
+
+% \usetikzlibrary{fit}
+% \begin{tikzpicture}[node distance={14mm}, thick, main/.style = {draw, rectangle}] 
+% \node[main] (1) {Ready}; 
+% \node[main] (2) [below of=1] {Started}; 
+% \node[main] (3) [below of=2] {Announced}; 
+% \node[main] (4) [below of=3] {Shared}; 
+% \node[main] (5) [below of=4] {Aggregated}; 
+% \node[main] (6) [below of=5] {Checked}; 
+% \draw[->] (1) -- node[midway, right] {\textbf{start} (by block proposer)} (2); 
+% \draw[->, dotted] (3) -- node[midway, right] {\textbf{share\_secret}} (4); 
+% \draw[->, dashed] (2) -- node[midway, right] {\textbf{announce} (by > (2/3) of validators)} (3); 
+% \draw[->] (4) -- node[midway, right] {\textbf{aggregate} (by block proposer)} (5); 
+% \draw[->, dashed] (5) -- node[midway, right] {\textbf{check} (by > (2/3) of validators)} (6); 
+% % \draw [->] (4) |- ([shift={(50mm,0mm)}]4.east) -- node[midway, right] {New epoch}  ([shift={(54mm,5mm)}]1.north east) -| node[above=1em, right=2em]{} (1); 
+
+% % \node[draw,dotted,fit=(1) (2) (3) (4), label={[xshift=0mm]left:{DKG}}] {};
+% \node[draw, dotted, fit=(3) (4), label={[xshift=0mm]left:{Internal}}] {};
+
+% \end{tikzpicture} 
 
 \subsection{Start}
 
@@ -102,8 +129,8 @@ Only one node, the block proposer, is necessary in this phase. Validators will c
 
 \node[draw,dotted,fit=(1) (2) (3) (4), label={[xshift=0mm]left:{Tendermint Core}}] {};
 \node[draw,dotted,fit=(1), label={[xshift=0mm]right:{(Block proposer only)}}] {};
-
 \end{tikzpicture} 
+
 
 \section{ABCI++}
 
