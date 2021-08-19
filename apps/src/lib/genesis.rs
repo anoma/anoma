@@ -59,12 +59,12 @@ pub fn genesis() -> Genesis {
         pos_data: GenesisValidator {
             address,
             staking_reward_address,
-            tokens: token::Amount::whole(100_000),
+            tokens: token::Amount::whole(200_000),
             consensus_key: consensus_keypair.public.into(),
             staking_reward_key: staking_reward_keypair.public.into(),
         },
         account_key: account_keypair.public.into(),
-        non_staked_balance: token::Amount::whole(1_000),
+        non_staked_balance: token::Amount::whole(100_000),
     };
     let parameters = Parameters {
         epoch_duration: EpochDuration {
