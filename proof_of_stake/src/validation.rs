@@ -14,8 +14,9 @@ use crate::btree_set::BTreeSetShims;
 use crate::epoched::DynEpochOffset;
 use crate::parameters::PosParams;
 use crate::types::{
-    Bond, BondId, Bonds, Epoch, ValidatorSet, ValidatorSets,
-    ValidatorTotalDeltas, VotingPower, WeightedValidator,
+    BondId, Bonds, Epoch, TotalVotingPowers, ValidatorSets,
+    ValidatorTotalDeltas, ValidatorVotingPowers, VotingPower, VotingPowerDelta,
+    WeightedValidator,
 };
 
 #[allow(missing_docs)]
@@ -117,6 +118,32 @@ where
     InvalidActiveValidator(WeightedValidator<Address>),
     #[error("Invalid inactive validator {0}")]
     InvalidInactiveValidator(WeightedValidator<Address>),
+    #[error("Unexpectedly missing voting power value for validator {0}")]
+    MissingValidatorVotingPower(Address),
+    #[error("Validator {0} has an invalid voting power value {1}")]
+    InvalidValidatorVotingPower(Address, i64),
+    #[error("Validator set should be updated when voting powers change")]
+    ValidatorSetNotUpdated,
+    #[error("Invalid voting power changes")]
+    InvalidVotingPowerChanges,
+    #[error(
+        "Invalid validator {0} voting power changes. Expected {1}, but got \
+         {2:?}"
+    )]
+    InvalidValidatorVotingPowerChange(
+        Address,
+        VotingPower,
+        Option<VotingPower>,
+    ),
+    #[error("Unexpectedly missing total voting power")]
+    MissingTotalVotingPower,
+    #[error("Total voting power should be updated when voting powers change")]
+    TotalVotingPowerNotUpdated,
+    #[error(
+        "Invalid total voting power change in epoch {0}. Expected {1}, but \
+         got {2}"
+    )]
+    InvalidTotalVotingPowerChange(u64, VotingPowerDelta, VotingPowerDelta),
 }
 
 #[derive(Clone, Debug)]
@@ -165,6 +192,7 @@ where
         update: ValidatorUpdate<Address, TokenChange>,
     },
     ValidatorSet(Data<ValidatorSets<Address>>),
+    TotalVotingPower(Data<TotalVotingPowers>),
 }
 
 #[derive(Clone, Debug)]
@@ -185,6 +213,7 @@ where
 {
     StakingRewardAddress(Data<Address>),
     TotalDeltas(Data<ValidatorTotalDeltas<TokenChange>>),
+    VotingPowerUpdate(Data<ValidatorVotingPowers>),
 }
 
 #[derive(Clone, Debug)]
@@ -272,9 +301,29 @@ where
         Epoch,
         HashMap<Address, TokenAmount>,
     > = HashMap::default();
+    // Accumulative validators' voting power calculated from their total deltas
+    let mut expected_voting_power_by_epoch: HashMap<
+        Epoch,
+        HashMap<Address, VotingPower>,
+    > = HashMap::default();
+    // Total voting power delta calculated from validators' total deltas
+    let mut expected_voting_power_delta_by_epoch: HashMap<
+        Epoch,
+        VotingPowerDelta,
+    > = HashMap::default();
+    // Changes of validators' voting power data
+    let mut voting_power_by_epoch: HashMap<
+        Epoch,
+        HashMap<Address, VotingPower>,
+    > = HashMap::default();
 
     let mut validator_set_pre: Option<ValidatorSets<Address>> = None;
     let mut validator_set_post: Option<ValidatorSets<Address>> = None;
+
+    let mut total_voting_power_delta_by_epoch: HashMap<
+        Epoch,
+        VotingPowerDelta,
+    > = HashMap::default();
 
     for change in changes {
         match change {
@@ -310,34 +359,76 @@ where
                             // Changes of all total deltas (up to
                             // `unbonding_epoch`)
                             let mut delta = TokenChange::default();
-                            if let Some(change) = if epoch == post.last_update()
-                            {
-                                // On the first epoch, we have to get the sum of
-                                // all deltas at and before that epoch as the
-                                // `pre` could have been set in an older epoch
-                                pre.get(epoch)
-                            } else {
-                                pre.get_delta_at_epoch(epoch).copied()
+                            let mut pre_delta = TokenChange::default();
+                            // Find the delta in `pre`
+                            if let Some(change) = {
+                                if epoch == post.last_update() {
+                                    // On the first epoch, we have to get the
+                                    // sum of all deltas at and before that
+                                    // epoch as the `pre` could have been set in
+                                    // an older epoch
+                                    pre.get(epoch)
+                                } else {
+                                    pre.get_delta_at_epoch(epoch).copied()
+                                }
                             } {
                                 delta -= change;
+                                pre_delta = change;
                             }
+                            // Find the delta in `post`
                             if let Some(change) = post.get_delta_at_epoch(epoch)
                             {
-                                delta += *change;
-                                post_deltas_sum += *change;
-                                let stake: i128 = Into::into(post_deltas_sum);
-                                match u64::try_from(stake) {
-                                    Ok(stake) => {
-                                        let stake = TokenAmount::from(stake);
+                                let post_delta = *change;
+                                delta += post_delta;
+                                post_deltas_sum += post_delta;
+                                let stake_post: i128 =
+                                    Into::into(post_deltas_sum);
+                                match u64::try_from(stake_post) {
+                                    Ok(stake_post) => {
+                                        let stake_post =
+                                            TokenAmount::from(stake_post);
                                         total_stake_by_epoch
                                             .entry(epoch)
                                             .or_insert_with(HashMap::default)
-                                            .insert(address.clone(), stake);
+                                            .insert(
+                                                address.clone(),
+                                                stake_post,
+                                            );
+                                        // Check if voting power should change
+                                        let delta_pre =
+                                            VotingPowerDelta::from_token_change(
+                                                pre_delta, params,
+                                            ).unwrap_or_default();
+                                        let delta_post =
+                                            VotingPowerDelta::from_token_change(
+                                                post_delta, params,
+                                            ).unwrap_or_default();
+                                        if delta_pre != delta_post {
+                                            // Accumulate expected voting power
+                                            // change
+                                            let voting_power_post =
+                                                VotingPower::from_tokens(
+                                                    stake_post, params,
+                                                );
+                                            expected_voting_power_by_epoch
+                                                .entry(epoch)
+                                                .or_insert_with(
+                                                    HashMap::default,
+                                                )
+                                                .insert(
+                                                    address.clone(),
+                                                    voting_power_post,
+                                                );
+                                            let current_delta = expected_voting_power_delta_by_epoch.entry(epoch)
+                                                .or_insert_with(Default::default);
+                                            *current_delta +=
+                                                delta_post - delta_pre;
+                                        }
                                     }
-                                    Err(_) => errors.push(
+                                    _ => errors.push(
                                         Error::InvalidValidatorTotalDeltas(
                                             address.clone(),
-                                            stake,
+                                            stake_post,
                                         ),
                                     ),
                                 }
@@ -385,9 +476,9 @@ where
                         ) {
                             if let Some(change) = post.get_delta_at_epoch(epoch)
                             {
-                                // A new total delta can only be initialized at
-                                // `pipeline_offset` (from bonds) and
-                                // `unbonding_offset` (from unbonding)
+                                // A new total delta can only be initialized
+                                // at `pipeline_offset` (from bonds) and updated
+                                // at `unbonding_offset` (from unbonding)
                                 if epoch != pipeline_epoch
                                     && epoch != unbonding_epoch
                                 {
@@ -405,6 +496,24 @@ where
                                             .entry(epoch)
                                             .or_insert_with(HashMap::default)
                                             .insert(address.clone(), stake);
+                                        // Accumulate expected voting power
+                                        // change
+                                        let voting_power =
+                                            VotingPower::from_tokens(
+                                                stake, params,
+                                            );
+                                        expected_voting_power_by_epoch
+                                            .entry(epoch)
+                                            .or_insert_with(HashMap::default)
+                                            .insert(
+                                                address.clone(),
+                                                voting_power,
+                                            );
+                                        let voting_power_delta = VotingPowerDelta::from_token_change(
+                                            *change, params).unwrap_or_default();
+                                        let current_delta = expected_voting_power_delta_by_epoch.entry(epoch)
+                                                .or_insert_with(Default::default);
+                                        *current_delta += voting_power_delta;
                                     }
                                     Err(_) => errors.push(
                                         Error::InvalidValidatorTotalDeltas(
@@ -427,6 +536,45 @@ where
                     (Some(_), None) => {
                         errors.push(Error::MissingValidatorTotalDeltas(address))
                     }
+                    (None, None) => continue,
+                },
+                VotingPowerUpdate(data) => match (data.pre, data.post) {
+                    (Some(_), Some(post)) | (None, Some(post)) => {
+                        if post.last_update() != current_epoch {
+                            errors.push(Error::InvalidLastUpdate)
+                        }
+                        let mut voting_power = VotingPowerDelta::default();
+                        // Iter from the first epoch to the last epoch of
+                        // `post`
+                        for epoch in Epoch::iter_range(
+                            current_epoch,
+                            unbonding_offset + 1,
+                        ) {
+                            if let Some(delta) = post.get_delta_at_epoch(epoch)
+                            {
+                                voting_power += *delta;
+                                let vp: i64 = Into::into(voting_power);
+                                match u64::try_from(vp) {
+                                    Ok(vp) => {
+                                        let vp = VotingPower::from(vp);
+                                        voting_power_by_epoch
+                                            .entry(epoch)
+                                            .or_insert_with(HashMap::default)
+                                            .insert(address.clone(), vp);
+                                    }
+                                    Err(_) => errors.push(
+                                        Error::InvalidValidatorVotingPower(
+                                            address.clone(),
+                                            vp,
+                                        ),
+                                    ),
+                                }
+                            }
+                        }
+                    }
+                    (Some(_), None) => errors.push(
+                        Error::MissingValidatorVotingPower(address.clone()),
+                    ),
                     (None, None) => continue,
                 },
             },
@@ -593,8 +741,43 @@ where
                 }
                 _ => errors.push(Error::MissingValidatorSet),
             },
+            TotalVotingPower(data) => match (data.pre, data.post) {
+                (Some(pre), Some(post)) => {
+                    if post.last_update() != current_epoch {
+                        errors.push(Error::InvalidLastUpdate)
+                    }
+                    // Iter from the first epoch to the last epoch of `post`
+                    for epoch in Epoch::iter_range(
+                        post.last_update(),
+                        unbonding_offset + 1,
+                    ) {
+                        // Find the delta in `pre`
+                        let delta_pre = (if epoch == post.last_update() {
+                            // On the first epoch, we have to get the
+                            // sum of all deltas at and before that
+                            // epoch as the `pre` could have been set in
+                            // an older epoch
+                            pre.get(epoch)
+                        } else {
+                            pre.get_delta_at_epoch(epoch).copied()
+                        })
+                        .unwrap_or_default();
+                        // Find the delta in `post`
+                        let delta_post = post
+                            .get_delta_at_epoch(epoch)
+                            .copied()
+                            .unwrap_or_default();
+                        if delta_pre != delta_post {
+                            total_voting_power_delta_by_epoch
+                                .insert(epoch, delta_post - delta_pre);
+                        }
+                    }
+                }
+                _ => errors.push(Error::MissingTotalVotingPower),
+            },
         }
     }
+
     // Check total deltas against bonds and unbonds
     for (validator, total_delta) in total_deltas.iter() {
         let bond_delta =
@@ -624,7 +807,7 @@ where
         }
     }
 
-    // Check validator sets against total deltas.
+    // Check validator sets against validator total stakes.
     // Iter from the first epoch to the last epoch of `validator_set_post`
     if let Some(post) = validator_set_post {
         for epoch in Epoch::iter_range(current_epoch, unbonding_offset + 1) {
@@ -756,6 +939,82 @@ where
                         }
                     }
                     None => errors.push(Error::MissingValidatorSet),
+                }
+            }
+        }
+    } else if !voting_power_by_epoch.is_empty() {
+        errors.push(Error::ValidatorSetNotUpdated)
+    }
+
+    // Check voting power changes against validator total stakes
+    for (epoch, voting_powers) in &voting_power_by_epoch {
+        if let Some(total_stakes) = total_stake_by_epoch.get(epoch) {
+            for (validator, voting_power) in voting_powers {
+                if let Some(stake) = total_stakes.get(&validator) {
+                    let voting_power_from_stake =
+                        VotingPower::from_tokens(*stake, params);
+                    if *voting_power != voting_power_from_stake {
+                        errors.push(Error::InvalidVotingPowerChanges)
+                    }
+                } else {
+                    errors.push(Error::InvalidVotingPowerChanges)
+                }
+            }
+        } else {
+            errors.push(Error::InvalidVotingPowerChanges)
+        }
+    }
+
+    // Check expected voting power changes
+    for (epoch, expected_voting_powers) in expected_voting_power_by_epoch {
+        for (validator, expected_voting_power) in expected_voting_powers {
+            match voting_power_by_epoch.get(&epoch) {
+                Some(actual_voting_powers) => {
+                    match actual_voting_powers.get(&validator) {
+                        Some(actual_voting_power) => {
+                            if *actual_voting_power != expected_voting_power {
+                                errors.push(
+                                    Error::InvalidValidatorVotingPowerChange(
+                                        validator,
+                                        expected_voting_power,
+                                        Some(*actual_voting_power),
+                                    ),
+                                );
+                            }
+                        }
+                        None => errors.push(
+                            Error::InvalidValidatorVotingPowerChange(
+                                validator,
+                                expected_voting_power,
+                                None,
+                            ),
+                        ),
+                    }
+                }
+                None => errors.push(Error::InvalidValidatorVotingPowerChange(
+                    validator,
+                    expected_voting_power,
+                    None,
+                )),
+            }
+        }
+    }
+
+    // Check expected total voting power change
+    for (epoch, expected_delta) in expected_voting_power_delta_by_epoch {
+        match total_voting_power_delta_by_epoch.get(&epoch) {
+            Some(actual_delta) => {
+                if *actual_delta != expected_delta {
+                    errors.push(Error::InvalidTotalVotingPowerChange(
+                        epoch.into(),
+                        expected_delta,
+                        *actual_delta,
+                    ));
+                }
+            }
+            None => {
+                if expected_delta != VotingPowerDelta::default() {
+                    errors.push(Error::TotalVotingPowerNotUpdated)
                 }
             }
         }

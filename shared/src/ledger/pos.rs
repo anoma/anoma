@@ -145,6 +145,17 @@ where
                     address: validator.clone(),
                     update: TotalDeltas(Data { pre, post }),
                 });
+            } else if let Some(validator) = is_validator_voting_power_key(key) {
+                let pre = self.ctx.read_pre(key)?.and_then(|bytes| {
+                    ValidatorVotingPowers::try_from_slice(&bytes[..]).ok()
+                });
+                let post = self.ctx.read_post(key)?.and_then(|bytes| {
+                    ValidatorVotingPowers::try_from_slice(&bytes[..]).ok()
+                });
+                changes.push(Validator {
+                    address: validator.clone(),
+                    update: VotingPowerUpdate(Data { pre, post }),
+                });
             } else if let Some(owner) = token::is_balance_key(
                 &<Self as PoSReadOnly>::staking_token_address(),
                 key,
@@ -172,6 +183,14 @@ where
                     id: bond_id.clone(),
                     data: Data { pre, post },
                 });
+            } else if is_total_voting_power_key(key) {
+                let pre = self.ctx.read_pre(key)?.and_then(|bytes| {
+                    TotalVotingPowers::try_from_slice(&bytes[..]).ok()
+                });
+                let post = self.ctx.read_post(key)?.and_then(|bytes| {
+                    TotalVotingPowers::try_from_slice(&bytes[..]).ok()
+                });
+                changes.push(TotalVotingPower(Data { pre, post }));
             } else {
                 // return Ok(false);
                 // TODO: unknown key changes should be rejected, temporary for
