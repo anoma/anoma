@@ -120,15 +120,11 @@ into the proposed block.
 
 As opposed to the above protocol, the current block proposer decrypts the 
 wrapped transactions from the previous block as part of their Process Proposal
-phase. This means the computation happens asynchronously. The results of the
-decryption will be broadcast and the next block proposer will include them
-when they prepare their block.
+phase and then applies them. This means the computation happens asynchronously.
 
-Furthermore, in order to make this user-friendly, it should be possible
-for users to query the state after the Process Proposal phase to see that 
-their transactions have been accepted. Once they have been processed,
-these transactions will inevitably end up on chain, but with a one-block
-delay.
+However, in order to make this work, it should be possible
+for validators to query the state after the Process Proposal phase to see how
+to update their own state before the block is committed. 
 
 #### Pros:
  - Expensive decryptions are only done by a single party
@@ -137,6 +133,6 @@ delay.
 #### Cons:
  - Larger latency
  - More messaging overhead
- - Requires querying processed state
+ - Requires querying processed state of a proposer
 
 ### Verifying that a transaction could not be decrypted
