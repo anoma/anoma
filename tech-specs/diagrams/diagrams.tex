@@ -82,9 +82,10 @@
 \node[main] (6) [right=30mm of 4] {Invalid}; 
 \draw[->, dashed] (1) -- node[midway, right] {\textbf{deal} (by > (2/3) of validators)} (2); 
 \draw[->, dotted] (2) -- node[midway, right] {\textit{generate\_transcript} (internally)} (3); 
-\draw[->] (3) -- node[midway, right] {\textbf{aggregate} (by block proposer)} (4); 
+\draw[->] (3) -- node[midway, left] {\textbf{aggregate} (by block proposer)} (4); 
 \draw[->, dashed] (4) -- node[midway, right] {\textbf{check} (by > (2/3) of validators)} (5);
 \draw[->] (4) -- node[midway, above] {\textbf{complain}} (6); 
+\draw[->] (3) -- node[right, above=3mm] {\textbf{complain}} (6); 
 
 \end{tikzpicture} 
 
