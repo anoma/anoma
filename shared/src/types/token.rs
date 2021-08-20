@@ -48,15 +48,16 @@ impl Amount {
         self.micro as Change
     }
 
-    /// Spend a given amount
+    /// Spend a given amount.
     /// Panics when given `amount` > `self.micro` amount.
     pub fn spend(&mut self, amount: &Amount) {
-        self.micro -= amount.micro
+        self.micro = self.micro.checked_sub(amount.micro).unwrap();
     }
 
-    /// Receive a given amount
+    /// Receive a given amount.
+    /// Panics on overflow.
     pub fn receive(&mut self, amount: &Amount) {
-        self.micro += amount.micro
+        self.micro = self.micro.checked_add(amount.micro).unwrap();
     }
 
     /// Create a new amount from whole number of tokens
