@@ -504,6 +504,28 @@ where
         );
     }
 
+    /// Add or set the delta value at the given epoch (which must not at an
+    /// offset that is greater than the `Offset` type parameter of self).
+    pub fn add_at_epoch(
+        &mut self,
+        value: Data,
+        current_epoch: impl Into<Epoch>,
+        update_epoch: impl Into<Epoch>,
+        params: &PosParams,
+    ) {
+        let current_epoch = current_epoch.into();
+        let update_epoch = update_epoch.into();
+        self.update_data(current_epoch, params);
+        let offset =
+            (u64::from(update_epoch) - u64::from(current_epoch)) as usize;
+        debug_assert!(offset <= Offset::value(params) as usize);
+
+        self.data[offset] = self.data[offset].as_ref().map_or_else(
+            || Some(value.clone()),
+            |last_delta| Some(last_delta.clone() + value.clone()),
+        );
+    }
+
     /// Update the delta values in reverse order (starting from the future-most
     /// epoch) while the update function returns `true`.
     pub fn rev_update_while(
