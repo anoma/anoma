@@ -890,10 +890,14 @@ where
             errors.push(Error::MissingValidatorTotalDeltas(validator.clone()))
         }
     }
-    // Check that all unbonds also have a total deltas update
-    for validator in unbond_delta.keys() {
-        if !total_deltas.contains_key(validator) {
-            errors.push(Error::MissingValidatorTotalDeltas(validator.clone()))
+    // Check that all positive unbond deltas also have a total deltas update.
+    // Negative unbond delta is from withdrawing, which removes tokens from
+    // unbond, but doesn't affect total deltas.
+    for (validator, delta) in &unbond_delta {
+        if *delta > TokenChange::default()
+            && !total_deltas.contains_key(validator)
+        {
+            errors.push(Error::MissingValidatorTotalDeltas(validator.clone()));
         }
     }
 
