@@ -19,6 +19,7 @@ tx_from_intent = []
 tx_transfer = []
 tx_unbond = []
 tx_update_vp = []
+tx_withdraw = []
 vp_token = []
 vp_user = []
 

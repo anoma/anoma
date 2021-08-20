@@ -10,6 +10,7 @@ wasms += tx_from_intent
 wasms += tx_transfer
 wasms += tx_unbond
 wasms += tx_update_vp
+wasms += tx_withdraw
 wasms += vp_token
 wasms += vp_user
 wasms += mm_filter_token_exch
