@@ -72,20 +72,36 @@
 \section{DKG}
 
 
-\usetikzlibrary{positioning}
+\usetikzlibrary{positioning, shapes}
 \begin{tikzpicture}[node distance={14mm}, thick, main/.style = {draw, rectangle}] 
-\node[main] (1) {Init}; 
-\node[main] (2) [below of=1] {Dealt}; 
-\node[main] (3) [below of=2] {Shared}; 
-\node[main] (4) [below=18mm of 3] {Aggregated}; 
-\node[main] (5) [below=18mm of 4] {Success}; 
-\node[main] (6) [right=30mm of 4] {Invalid}; 
-\draw[->, dashed] (1) -- node[midway, right] {\textbf{deal} (by > (2/3) of validators)} (2); 
-\draw[->, dotted] (2) -- node[midway, right] {\textit{generate\_transcript} (internally)} (3); 
-\draw[->] (3) -- node[midway, left] {\textbf{aggregate} (by block proposer)} (4); 
-\draw[->, dashed] (4) -- node[midway, right] {\textbf{check} (by > (2/3) of validators)} (5);
-\draw[->] (4) -- node[midway, above] {\textbf{complain}} (6); 
-\draw[->] (3) -- node[right, above=3mm] {\textbf{complain}} (6); 
+\node[main, fill=blue!25] (1) {Init}; 
+\node[draw, ellipse] (2) [below of=1] {\textbf{deal}}; 
+\node[main, fill=blue!25] (3) [below of=2] {Dealt}; 
+\node[draw, ellipse] (4) [below of=3] {\textit{generate\_transcript}}; 
+\node[main, fill=blue!25] (5) [below of=4] {Shared}; 
+\node[draw, ellipse] (6) [below of=5] {\textbf{aggregate}}; 
+\node[draw, ellipse] (12) [right=15mm of 6] {\textbf{complain}}; 
+\node[main, fill=blue!25] (7) [below of=6] {Aggregated}; 
+\node[draw, ellipse] (8) [below of=7] {\textbf{check}}; 
+\node[draw, ellipse] (13) [right=15mm of 8] {\textbf{complain}}; 
+\node[main, fill=blue!25] (9) [below of=8] {Success}; 
+\node[main, fill=blue!25] (10) [right=30mm of 7] {Invalid}; 
+\node[main, fill=blue!25] (11) [right=30mm of 9] {Invalid}; 
+\draw[-, dashed] (1) -- node[midway, right] {} (2); 
+\draw[->, dashed] (2) -- node[midway, left] {(when > (2/3) of validators)} (3); 
+\draw[-, dotted] (3) -- node[midway, left] {(internally)} (4); 
+\draw[->, dotted] (4) -- node[midway, right] {} (5); 
+\draw[-] (5) -- node[midway, left] {(by block proposer)} (6); 
+\draw[->] (6) -- node[midway, right] {} (7); 
+\draw[-, dashed] (7) -- node[midway, right] {} (8); 
+\draw[->, dashed] (8) -- node[midway, left] {(when > (2/3) of validators)} (9); 
+\draw[->, dotted] (6) -- node[midway, right] {} (10); 
+\draw[->, dotted] (8) -- node[midway, left] {} (11); 
+\draw[-] (5) -- node[midway, right] {} (12); 
+\draw[->] (12) -- node[midway, right] {} (10); 
+\draw[-] (7) -- node[midway, right] {} (13); 
+\draw[->] (13) -- node[midway, right] {} (11); 
+
 
 \end{tikzpicture} 
 
