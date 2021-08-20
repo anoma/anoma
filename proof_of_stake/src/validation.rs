@@ -52,13 +52,12 @@ where
     InvalidLastUpdate,
     #[error(
         "Invalid staking token balances. Balance Δ {balance_delta}, bonds Δ \
-         {bond_delta}, unbonds Δ {unbond_delta}, withdrawn {withdraw_delta}."
+         {bond_delta}, unbonds Δ {unbond_delta}"
     )]
     InvalidBalances {
         balance_delta: TokenChange,
         bond_delta: TokenChange,
         unbond_delta: TokenChange,
-        withdraw_delta: TokenChange,
     },
     #[error(
         "Data must be set or updated in the correct epoch. Got epoch {got}, \
@@ -293,7 +292,6 @@ where
     let mut bond_delta: HashMap<Address, TokenChange> = HashMap::default();
     // Changes of validators' unbonds
     let mut unbond_delta: HashMap<Address, TokenChange> = HashMap::default();
-    let mut withdraw_delta = TokenChange::default();
 
     // Changes of all validator total deltas (up to `unbonding_epoch`)
     let mut total_deltas: HashMap<Address, TokenChange> = HashMap::default();
@@ -1041,7 +1039,7 @@ where
     // Check voting power changes against validator total stakes
     for (epoch, voting_powers) in &voting_power_by_epoch {
         let mut epoch = *epoch;
-        let mut total_stakes = None;
+        let mut total_stakes;
         // Try to find the stakes for this epoch
         loop {
             total_stakes = total_stake_by_epoch.get(&epoch);
@@ -1053,21 +1051,20 @@ where
                 break;
             }
         }
-        match total_stakes {
-            Some(total_stakes) => {
-                for (validator, voting_power) in voting_powers {
-                    if let Some(stake) = total_stakes.get(&validator) {
-                        let voting_power_from_stake =
-                            VotingPower::from_tokens(*stake, params);
-                        if *voting_power != voting_power_from_stake {
-                            errors.push(Error::InvalidVotingPowerChanges)
-                        }
-                    } else {
+        if let Some(total_stakes) = total_stakes {
+            for (validator, voting_power) in voting_powers {
+                if let Some(stake) = total_stakes.get(&validator) {
+                    let voting_power_from_stake =
+                        VotingPower::from_tokens(*stake, params);
+                    if *voting_power != voting_power_from_stake {
                         errors.push(Error::InvalidVotingPowerChanges)
                     }
+                } else {
+                    errors.push(Error::InvalidVotingPowerChanges)
                 }
             }
-            None => errors.push(Error::InvalidVotingPowerChanges),
+        } else {
+            errors.push(Error::InvalidVotingPowerChanges);
         }
     }
 
@@ -1137,12 +1134,11 @@ where
         .into_iter()
         .fold(TokenChange::default(), |acc, delta| acc + (*delta));
 
-    if balance_delta != bond_delta + unbond_delta - withdraw_delta {
+    if balance_delta != bond_delta + unbond_delta {
         errors.push(Error::InvalidBalances {
             balance_delta,
             bond_delta,
             unbond_delta,
-            withdraw_delta,
         })
     }
 
