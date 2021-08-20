@@ -13,7 +13,9 @@ pub use anoma::ledger::pos::{
 };
 use anoma::types::address::{self, Address, InternalAddress};
 use anoma::types::{key, token};
-pub use anoma_proof_of_stake::{PoS as PosWrite, PoSReadOnly as PosRead};
+pub use anoma_proof_of_stake::{
+    epoched, parameters, types, PoS as PosWrite, PoSReadOnly as PosRead,
+};
 
 use crate::imports::tx;
 
