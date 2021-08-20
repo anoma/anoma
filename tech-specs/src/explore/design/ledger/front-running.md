@@ -118,6 +118,7 @@ into the proposed block.
    single proposer (wasted effort)
 
 ### Async-decrypt protocol
+###TODO: This section doesn't make sense yet, need to figure out the details better
 *__This protocol assumes that a validator can query the state of the
 proposer after it has processed transactions__*.
 
@@ -138,3 +139,42 @@ to update their own state before the block is committed.
  - Requires querying processed state of a proposer
 
 ### Verifying that a transaction could not be decrypted
+
+The verification of each validators decryption shares is performed by the
+VerifyVoteExtension call. Thus, upon block finalization, each validator
+has a set of verified decryption shares from validators whose combined 
+weight exceeds \\(\frac{2}{3}\\) of the total.
+
+These decryption shares should be sufficient to decrypt the wrapped 
+transactions but this can fail if:
+ * The derived key does not decrypt the transaction
+ * The decrypted payload does not agree with the commitment included in the
+   wrapper transaction.
+
+The block proposer must then include a proof that the transactions could not
+be decrypted that other validators can verify. This proof consist of the 
+decryption shares the validator attempted to use to decrypt the payload.
+
+The other validators must check that these decryption shares are valid,
+otherwise the fault lies with the block proposer for accepting them as
+valid vote extensions in the previous round. Validators may then issue
+a complaint against the block proposer.
+
+If the decryption shares are indeed valid, the validators can use these to 
+attempt to decrypt the payload and see that it failed for one of the two
+above reasons. Again, if they produce a valid transaction, a complaint
+may be issued against the block proposer. Otherwise, the proof is accepted
+and the transaction is not applied. Validators do this check as part of their
+Process Proposal phase.
+
+Alternatively, validators could simply try to decrypt the transaction with
+their own decryption shares and if the transaction turns out to be valid,
+the proposer is known to be at fault. This actually requires less computation
+and also removes the need for a proof to added to the block.
+
+__Question / TODO: If the block proposer is at fault, do we try to decrypt
+the tx successfully later? And how? I suppose that other validators should
+vote against the block and the next block proposer gets the job so that it
+just takes more rounds to finalize the block. This means that we may not 
+need complaints for this as the loss of proposer rewards provides
+economic incentive for good behavior already.__
