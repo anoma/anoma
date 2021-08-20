@@ -144,9 +144,7 @@ phase.
 
 We list the phase of ABCI++ in which each of the above actions takes place.
 
- - `Deal`: Validators should verify the weight shares included in the block 
-    header. If validation fails, the DKG instance fails.  Otherwise, `Deal` 
-    happens during the Vote Extension phase.
+ - `Deal`: `Deal` happens during the Vote Extension phase.
  - `Aggregate`: This is done during the Prepare Proposal phase (it could be
    done earlier if validators know they are likely to be the next proposer)
    and will be  included in the header of the proposed block. The final result 
@@ -154,8 +152,27 @@ We list the phase of ABCI++ in which each of the above actions takes place.
    proposer can try to aggregate the the PVSS transcripts correctly and 
    include the result in the header of the subsequent block. Furthermore, 
    `Complains` may be issued against the validator that incorrectly
-   aggregated the PVSS transcripts
+   aggregated the PVSS transcripts. Alternatively, the block could be
+   rejected by other validators and the next round begins immediately.
+   The faulty proposer thus loses out on the propose block rewards.
 
 ## Complaints
 
-TBD
+Complaints are encrypted transactions that validators broadcast when they
+observe misbehavior from other validators during the protocol. The current
+causes for complaint are as follows:
+ * `PVSS_Complaint`: During VerifyVoteExtension, the PVSS transcript from a validator does not
+   pass validation
+ * `Aggregate_Complaint`: The aggregated key in a proposed block is not valid
+ 
+These transactions must include a proofs of malfeasance. The necessary 
+proofs for the above complaints are as follows:
+ * `PVSS_Complaint`: The transcript that failed verification
+ * `Aggregate_Complaint`: The alleged incorrect key and the PVSS transcripts
+    that should have been used to derive it. 
+
+The above proofs can be used to verify that the protocol was not adhered to.
+Checking these proofs will be part of executing the Complaint transaction.
+If the transaction succeeds and is added to the blockchain, a slashing
+penalty will be determined based on the type of infraction, likely by a
+native VP.

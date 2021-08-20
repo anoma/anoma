@@ -138,7 +138,7 @@ to update their own state before the block is committed.
  - More messaging overhead
  - Requires querying processed state of a proposer
 
-### Verifying that a transaction could not be decrypted
+### Verifying transaction decryption
 
 The verification of each validators decryption shares is performed by the
 VerifyVoteExtension call. Thus, upon block finalization, each validator
@@ -167,10 +167,16 @@ may be issued against the block proposer. Otherwise, the proof is accepted
 and the transaction is not applied. Validators do this check as part of their
 Process Proposal phase.
 
+If the block proposer claims that the decryption succeeded, validators must
+check that the decrypted payload agrees with the included commitment, 
+otherwise the proposer has incorrectly decrypted the transaction. In that
+case, a complaint may be issued.
+
 Alternatively, validators could simply try to decrypt the transaction with
-their own decryption shares and if the transaction turns out to be valid,
-the proposer is known to be at fault. This actually requires less computation
-and also removes the need for a proof to added to the block.
+their own decryption shares and if the transaction turns out to be valid or 
+is in any way different from what is reported by the proposer,
+the proposer is known to be at fault. This sometimes requires less 
+computation and also removes the need for a proof to be added to the block.
 
 __Question / TODO: If the block proposer is at fault, do we try to decrypt
 the tx successfully later? And how? I suppose that other validators should
@@ -178,3 +184,28 @@ vote against the block and the next block proposer gets the job so that it
 just takes more rounds to finalize the block. This means that we may not 
 need complaints for this as the loss of proposer rewards provides
 economic incentive for good behavior already.__
+
+
+## Complaints
+
+Complaints are encrypted transactions that validators broadcast when they
+observe misbehavior from other validators during the protocol. The current
+causes for complaint are as follows:
+* `Share_Complaint`: During VerifyVoteExtension, the aggregated decryption
+  shares from a validator does not pass validation
+* `Decrypt_Complaint`: The block proposer incorrectly decrypted a tx or falsely
+   claimed that a transaction could not be decrypted.
+  
+These transactions must include a proofs of malfeasance. The necessary
+ proofs for the above complaints are as follows:
+* `Share_Complaint`: The decryption share that failed verification
+* `Decrypt_Complaint`: The alleged decrypted payload, the original wrapper tx,
+  and the decryption shares that should have been used to derive the 
+  decryption key.
+
+The above proofs can be used to verify that the protocol was not adhered to.
+Checking these proofs will be part of executing the Complaint transaction.
+If the transaction succeeds and is added to the blockchain, a slashing
+penalty will be determined based on the type of infraction, likely by a
+native VP.
+ 
