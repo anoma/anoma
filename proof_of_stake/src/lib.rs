@@ -1335,34 +1335,42 @@ where
         + BorshDeserialize
         + BorshSerialize,
 {
-    // Update validator's voting power. Recalculate it from validator's total
-    // deltas.
-    let total_deltas_at_pipeline = validator_total_deltas
-        .get_at_offset(current_epoch, change_offset, params)
-        .unwrap_or_default();
-    let total_deltas_at_pipeline: i128 = total_deltas_at_pipeline.into();
-    let total_deltas_at_pipeline: u64 =
-        TryFrom::try_from(total_deltas_at_pipeline).unwrap();
-    let voting_power_at_pipeline = validator_voting_power
-        .get_at_offset(current_epoch, change_offset, params)
-        .unwrap_or_default();
-    let voting_power_delta =
-        VotingPowerDelta::try_from_tokens(total_deltas_at_pipeline, params)?
-            - voting_power_at_pipeline;
-    validator_voting_power.add_at_offset(
-        voting_power_delta,
-        current_epoch,
-        change_offset,
-        params,
+    let change_offset = change_offset.value(params);
+    let start_epoch = current_epoch + change_offset;
+    // Update voting powers from the change offset to the the last epoch of
+    // voting powers data (unbonding epoch)
+    let epochs = start_epoch.iter_range(
+        DynEpochOffset::UnbondingLen.value(params) - change_offset + 1,
     );
+    for epoch in epochs {
+        // Recalculate validator's voting power from validator's total deltas
+        let total_deltas_at_pipeline =
+            validator_total_deltas.get(epoch).unwrap_or_default();
+        let total_deltas_at_pipeline: i128 = total_deltas_at_pipeline.into();
+        let total_deltas_at_pipeline: u64 =
+            TryFrom::try_from(total_deltas_at_pipeline).unwrap();
+        let voting_power_at_pipeline =
+            validator_voting_power.get(epoch).unwrap_or_default();
+        let voting_power_delta = VotingPowerDelta::try_from_tokens(
+            total_deltas_at_pipeline,
+            params,
+        )? - voting_power_at_pipeline;
 
-    // Update total voting power
-    total_voting_power.add_at_offset(
-        voting_power_delta,
-        current_epoch,
-        change_offset,
-        params,
-    );
+        validator_voting_power.add_at_epoch(
+            voting_power_delta,
+            current_epoch,
+            epoch,
+            params,
+        );
+
+        // Update total voting power
+        total_voting_power.add_at_epoch(
+            voting_power_delta,
+            current_epoch,
+            epoch,
+            params,
+        );
+    }
     Ok(())
 }
 
