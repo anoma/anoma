@@ -576,6 +576,12 @@ where
     type TokenAmount = token::Amount;
     type TokenChange = token::Change;
 
+    const POS_ADDRESS: Self::Address = Address::Internal(InternalAddress::PoS);
+
+    fn staking_token_address() -> Self::Address {
+        address::xan()
+    }
+
     fn read_validator_set(&self) -> ValidatorSets {
         let (value, _gas) = self.read(&validator_set_key()).unwrap();
         decode(value.unwrap()).unwrap()
@@ -666,6 +672,28 @@ where
         // Write the public key
         let pk_key = key::ed25519::pk_key(address);
         self.write(&pk_key, encode(pk)).unwrap();
+    }
+
+    fn credit_tokens(
+        &mut self,
+        token: &Self::Address,
+        target: &Self::Address,
+        amount: Self::TokenAmount,
+    ) {
+        let key = token::balance_key(token, target);
+        let new_balance = match self
+            .read(&key)
+            .expect("Unable to read token balance for PoS system")
+        {
+            (Some(balance), _gas) => {
+                let balance: Self::TokenAmount =
+                    decode(balance).unwrap_or_default();
+                balance + amount
+            }
+            _ => amount,
+        };
+        self.write(&key, encode(&new_balance))
+            .expect("Unable to write token balance for PoS system");
     }
 }
 

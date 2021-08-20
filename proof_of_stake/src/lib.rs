@@ -424,6 +424,13 @@ pub trait PoSBase {
         + BorshSerialize;
     type PublicKey: 'static + Debug + Clone + BorshDeserialize + BorshSerialize;
 
+    /// Address of the PoS account
+    const POS_ADDRESS: Self::Address;
+    /// Address of the staking token
+    /// TODO: this should be `const`, but in the ledger `address::xan` is not a
+    /// `const fn`
+    fn staking_token_address() -> Self::Address;
+
     fn read_validator_set(&self) -> ValidatorSets<Self::Address>;
     fn read_validator_consensus_key(
         &self,
@@ -468,6 +475,12 @@ pub trait PoSBase {
         address: &Self::Address,
         pk: &Self::PublicKey,
     );
+    fn credit_tokens(
+        &mut self,
+        token: &Self::Address,
+        target: &Self::Address,
+        amount: Self::TokenAmount,
+    );
 
     /// Initialize the PoS system storage data in the genesis block for the
     /// given PoS parameters and initial validator set. The validators'
@@ -493,6 +506,7 @@ pub trait PoSBase {
             validators,
             validator_set,
             total_voting_power,
+            total_bonded_balance,
         } = init_genesis(params, validators, current_epoch)?;
 
         for res in validators {
@@ -522,6 +536,12 @@ pub trait PoSBase {
         }
         self.write_validator_set(&validator_set);
         self.write_total_voting_power(&total_voting_power);
+        // Credit the bonded tokens to the PoS account
+        self.credit_tokens(
+            &Self::staking_token_address(),
+            &Self::POS_ADDRESS,
+            total_bonded_balance,
+        );
         Ok(())
     }
 
@@ -663,6 +683,8 @@ where
     validator_set: ValidatorSets<Address>,
     /// The sum of all active and inactive validators' voting power
     total_voting_power: TotalVotingPowers,
+    /// The sum of all active and inactive validators' bonded tokens
+    total_bonded_balance: TokenAmount,
 }
 struct GenesisValidatorData<Address, TokenAmount, TokenChange, PK>
 where
@@ -732,6 +754,7 @@ where
         + Debug
         + Default
         + Clone
+        + Copy
         + Add<Output = TokenAmount>
         + AddAssign
         + Into<u64>
@@ -749,14 +772,16 @@ where
     // Accumulate the validator set and total voting power
     let mut active: BTreeSet<WeightedValidator<Address>> = BTreeSet::default();
     let mut total_voting_power = VotingPowerDelta::default();
+    let mut total_bonded_balance = TokenAmount::default();
     for GenesisValidator {
         address, tokens, ..
     } in validators.clone()
     {
-        let delta = VotingPowerDelta::try_from_tokens(tokens.clone(), params)
+        total_bonded_balance += *tokens;
+        let delta = VotingPowerDelta::try_from_tokens(*tokens, params)
             .map_err(GenesisError::VotingPowerOverflow)?;
         total_voting_power += delta;
-        let voting_power = VotingPower::from_tokens(tokens.clone(), params);
+        let voting_power = VotingPower::from_tokens(*tokens, params);
         active.insert(WeightedValidator {
             voting_power,
             address: address.clone(),
@@ -795,11 +820,11 @@ where
                 ValidatorState::Candidate,
                 current_epoch,
             );
-            let token_delta = TokenChange::from(tokens.clone());
+            let token_delta = TokenChange::from(*tokens);
             let total_deltas =
                 EpochedDelta::init_at_genesis(token_delta, current_epoch);
             let voting_power =
-                VotingPowerDelta::try_from_tokens(tokens.clone(), params)
+                VotingPowerDelta::try_from_tokens(*tokens, params)
                     .map_err(GenesisError::VotingPowerOverflow)?;
             let voting_power =
                 EpochedDelta::init_at_genesis(voting_power, current_epoch);
@@ -808,7 +833,7 @@ where
                 validator: address.clone(),
             };
             let mut delta = HashMap::default();
-            delta.insert(current_epoch, tokens.clone());
+            delta.insert(current_epoch, *tokens);
             let bond =
                 EpochedDelta::init_at_genesis(Bond { delta }, current_epoch);
             Ok(GenesisValidatorData {
@@ -828,6 +853,7 @@ where
         validators,
         validator_set,
         total_voting_power,
+        total_bonded_balance,
     })
 }
 
