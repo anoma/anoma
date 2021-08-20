@@ -205,10 +205,8 @@ where
                 });
                 changes.push(TotalVotingPower(Data { pre, post }));
             } else {
-                // return Ok(false);
-                // TODO: unknown key changes should be rejected, temporary for
-                // testing:
-                continue;
+                tracing::info!("PoS unrecognized key change {} rejected", key);
+                return Ok(false);
             }
         }
 
