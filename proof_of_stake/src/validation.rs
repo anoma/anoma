@@ -14,7 +14,7 @@ use crate::btree_set::BTreeSetShims;
 use crate::epoched::DynEpochOffset;
 use crate::parameters::PosParams;
 use crate::types::{
-    BondId, Bonds, Epoch, TotalVotingPowers, ValidatorSets,
+    BondId, Bonds, Epoch, TotalVotingPowers, Unbonds, ValidatorSets,
     ValidatorTotalDeltas, ValidatorVotingPowers, VotingPower, VotingPowerDelta,
     WeightedValidator,
 };
@@ -51,9 +51,8 @@ where
     #[error("Last update should be equal to the current epoch")]
     InvalidLastUpdate,
     #[error(
-        "Invalid staking token balances. Balance delta {balance_delta}, \
-         bonded {bond_delta}, unbonded {unbond_delta}, withdrawn \
-         {withdraw_delta}."
+        "Invalid staking token balances. Balance Δ {balance_delta}, bonds Δ \
+         {bond_delta}, unbonds Δ {unbond_delta}, withdrawn {withdraw_delta}."
     )]
     InvalidBalances {
         balance_delta: TokenChange,
@@ -87,14 +86,13 @@ where
         expected: u64,
     },
     #[error(
-        "Invalid validator {address} sum of total deltas. Total delta \
-         {total_delta}, bonded {bond_delta}, unbonded {unbond_delta}."
+        "Invalid validator {address} sum of total deltas. Total Δ \
+         {total_delta}, bonds Δ {bond_delta}"
     )]
     InvalidValidatorTotalDeltasSum {
         address: Address,
         total_delta: TokenChange,
         bond_delta: TokenChange,
-        unbond_delta: TokenChange,
     },
     #[error("Unexpectedly missing validator set value")]
     MissingValidatorSet,
@@ -186,6 +184,10 @@ where
     Bond {
         id: BondId<Address>,
         data: Data<Bonds<TokenAmount>>,
+    },
+    Unbond {
+        id: BondId<Address>,
+        data: Data<Unbonds<TokenAmount>>,
     },
     Validator {
         address: Address,
@@ -349,8 +351,14 @@ where
                         }
                         // Changes of all total deltas (up to `unbonding_epoch`)
                         let mut deltas = TokenChange::default();
+                        // Sum of pre total deltas
+                        let mut pre_deltas_sum = TokenChange::default();
                         // Sum of post total deltas
                         let mut post_deltas_sum = TokenChange::default();
+                        // Track voting power change from the predecessor epoch
+                        // to find change in voting power in the current epoch
+                        let mut last_voting_power_delta =
+                            VotingPowerDelta::default();
                         // Iter from the first epoch to the last epoch of `post`
                         for epoch in Epoch::iter_range(
                             post.last_update(),
@@ -359,7 +367,6 @@ where
                             // Changes of all total deltas (up to
                             // `unbonding_epoch`)
                             let mut delta = TokenChange::default();
-                            let mut pre_delta = TokenChange::default();
                             // Find the delta in `pre`
                             if let Some(change) = {
                                 if epoch == post.last_update() {
@@ -373,18 +380,22 @@ where
                                 }
                             } {
                                 delta -= change;
-                                pre_delta = change;
+                                pre_deltas_sum += change;
                             }
                             // Find the delta in `post`
                             if let Some(change) = post.get_delta_at_epoch(epoch)
                             {
-                                let post_delta = *change;
-                                delta += post_delta;
-                                post_deltas_sum += post_delta;
+                                delta += *change;
+                                post_deltas_sum += *change;
+                                let stake_pre: i128 =
+                                    Into::into(pre_deltas_sum);
                                 let stake_post: i128 =
                                     Into::into(post_deltas_sum);
-                                match u64::try_from(stake_post) {
-                                    Ok(stake_post) => {
+                                match (
+                                    u64::try_from(stake_pre),
+                                    u64::try_from(stake_post),
+                                ) {
+                                    (Ok(stake_pre), Ok(stake_post)) => {
                                         let stake_post =
                                             TokenAmount::from(stake_post);
                                         total_stake_by_epoch
@@ -396,13 +407,15 @@ where
                                             );
                                         // Check if voting power should change
                                         let delta_pre =
-                                            VotingPowerDelta::from_token_change(
-                                                pre_delta, params,
-                                            ).unwrap_or_default();
+                                            VotingPowerDelta::try_from_tokens(
+                                                stake_pre, params,
+                                            )
+                                            .unwrap_or_default();
                                         let delta_post =
-                                            VotingPowerDelta::from_token_change(
-                                                post_delta, params,
-                                            ).unwrap_or_default();
+                                            VotingPowerDelta::try_from_tokens(
+                                                stake_post, params,
+                                            )
+                                            .unwrap_or_default();
                                         if delta_pre != delta_post {
                                             // Accumulate expected voting power
                                             // change
@@ -419,9 +432,17 @@ where
                                                     address.clone(),
                                                     voting_power_post,
                                                 );
-                                            let current_delta = expected_voting_power_delta_by_epoch.entry(epoch)
+                                            let delta = delta_post
+                                                - delta_pre
+                                                - last_voting_power_delta;
+                                            if delta
+                                                != VotingPowerDelta::default()
+                                            {
+                                                let current_delta = expected_voting_power_delta_by_epoch.entry(epoch)
                                                 .or_insert_with(Default::default);
-                                            *current_delta +=
+                                                *current_delta += delta;
+                                            }
+                                            last_voting_power_delta =
                                                 delta_post - delta_pre;
                                         }
                                     }
@@ -455,7 +476,7 @@ where
                                 })
                             }
                         }
-                        if deltas < TokenChange::default() {
+                        if post_deltas_sum < TokenChange::default() {
                             errors.push(Error::NegativeValidatorTotalDeltasSum(
                                 address.clone(),
                             ))
@@ -729,7 +750,81 @@ where
                         }
                     }
                 }
-                _ => continue,
+                (None, None) => continue,
+            },
+            Unbond { id, data } => match (data.pre, data.post) {
+                // Unbond may be updated from newly unbonded tokens
+                (Some(pre), Some(post)) => {
+                    if post.last_update() != current_epoch {
+                        errors.push(Error::InvalidLastUpdate)
+                    }
+
+                    let mut delta_sum = TokenChange::default();
+                    // Iter from the first epoch of `pre` to the last epoch of
+                    // `post`
+                    let pre_offset: u64 =
+                        (current_epoch - pre.last_update()).into();
+                    for epoch in Epoch::iter_range(
+                        pre.last_update(),
+                        pre_offset + unbonding_offset + 1,
+                    ) {
+                        if let Some(unbond) = pre.get_delta_at_epoch(epoch) {
+                            for ((_start_epoch, _end_epoch), delta) in
+                                unbond.deltas.iter()
+                            {
+                                let delta = TokenChange::from(*delta);
+                                delta_sum -= delta;
+                            }
+                        }
+                        if let Some(unbond) = post.get_delta_at_epoch(epoch) {
+                            for ((_start_epoch, _end_epoch), delta) in
+                                unbond.deltas.iter()
+                            {
+                                let delta = TokenChange::from(*delta);
+                                delta_sum += delta;
+                            }
+                        }
+                    }
+                    unbond_delta.insert(id.validator, delta_sum);
+                }
+                // Unbond may be created from a bond
+                (None, Some(post)) => {
+                    if post.last_update() != current_epoch {
+                        errors.push(Error::InvalidLastUpdate)
+                    }
+                    let mut delta_sum = TokenChange::default();
+                    for epoch in
+                        Epoch::iter_range(current_epoch, unbonding_offset + 1)
+                    {
+                        if let Some(unbond) = post.get_delta_at_epoch(epoch) {
+                            for ((_start_epoch, _end_epoch), delta) in
+                                unbond.deltas.iter()
+                            {
+                                let delta = TokenChange::from(*delta);
+                                delta_sum += delta;
+                            }
+                        }
+                    }
+                    unbond_delta.insert(id.validator, delta_sum);
+                }
+                // Unbond may be deleted when all the tokens are withdrawn
+                (Some(pre), None) => {
+                    let mut delta_sum = TokenChange::default();
+                    for epoch in
+                        Epoch::iter_range(current_epoch, pipeline_offset + 1)
+                    {
+                        if let Some(unbond) = pre.get_delta_at_epoch(epoch) {
+                            for ((_start_epoch, _end_epoch), delta) in
+                                unbond.deltas.iter()
+                            {
+                                let delta = TokenChange::from(*delta);
+                                delta_sum -= delta;
+                            }
+                        }
+                    }
+                    unbond_delta.insert(id.validator, delta_sum);
+                }
+                (None, None) => continue,
             },
             ValidatorSet(data) => match (data.pre, data.post) {
                 (Some(pre), Some(post)) => {
@@ -778,19 +873,16 @@ where
         }
     }
 
-    // Check total deltas against bonds and unbonds
+    // Check total deltas against bonds
     for (validator, total_delta) in total_deltas.iter() {
         let bond_delta =
             bond_delta.get(&validator).copied().unwrap_or_default();
-        let unbond_delta =
-            unbond_delta.get(&validator).copied().unwrap_or_default();
         let total_delta = *total_delta;
-        if total_delta != bond_delta - unbond_delta {
+        if total_delta != bond_delta {
             errors.push(Error::InvalidValidatorTotalDeltasSum {
                 address: validator.clone(),
                 total_delta,
                 bond_delta,
-                unbond_delta,
             })
         }
     }
@@ -948,20 +1040,34 @@ where
 
     // Check voting power changes against validator total stakes
     for (epoch, voting_powers) in &voting_power_by_epoch {
-        if let Some(total_stakes) = total_stake_by_epoch.get(epoch) {
-            for (validator, voting_power) in voting_powers {
-                if let Some(stake) = total_stakes.get(&validator) {
-                    let voting_power_from_stake =
-                        VotingPower::from_tokens(*stake, params);
-                    if *voting_power != voting_power_from_stake {
+        let mut epoch = *epoch;
+        let mut total_stakes = None;
+        // Try to find the stakes for this epoch
+        loop {
+            total_stakes = total_stake_by_epoch.get(&epoch);
+            // If there's no stake values in this epoch, it means it hasn't
+            // changed, so we can try to find it from predecessor epochs
+            if total_stakes.is_none() && epoch > current_epoch {
+                epoch = epoch - 1;
+            } else {
+                break;
+            }
+        }
+        match total_stakes {
+            Some(total_stakes) => {
+                for (validator, voting_power) in voting_powers {
+                    if let Some(stake) = total_stakes.get(&validator) {
+                        let voting_power_from_stake =
+                            VotingPower::from_tokens(*stake, params);
+                        if *voting_power != voting_power_from_stake {
+                            errors.push(Error::InvalidVotingPowerChanges)
+                        }
+                    } else {
                         errors.push(Error::InvalidVotingPowerChanges)
                     }
-                } else {
-                    errors.push(Error::InvalidVotingPowerChanges)
                 }
             }
-        } else {
-            errors.push(Error::InvalidVotingPowerChanges)
+            None => errors.push(Error::InvalidVotingPowerChanges),
         }
     }
 
@@ -1031,7 +1137,7 @@ where
         .into_iter()
         .fold(TokenChange::default(), |acc, delta| acc + (*delta));
 
-    if balance_delta != bond_delta - unbond_delta - withdraw_delta {
+    if balance_delta != bond_delta + unbond_delta - withdraw_delta {
         errors.push(Error::InvalidBalances {
             balance_delta,
             bond_delta,

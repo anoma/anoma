@@ -6,7 +6,8 @@ use serde::{Deserialize, Serialize};
 use super::address::Address;
 use super::token;
 
-/// A simple bilateral token transfer
+/// A bond is a validator's self-bond or a delegation from non-validator to a
+/// validator.
 #[derive(
     Debug,
     Clone,
@@ -27,3 +28,6 @@ pub struct Bond {
     /// also the source.
     pub source: Option<Address>,
 }
+
+/// An unbond of a bond.
+pub type Unbond = Bond;

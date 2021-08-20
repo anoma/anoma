@@ -183,6 +183,19 @@ where
                     id: bond_id.clone(),
                     data: Data { pre, post },
                 });
+            } else if let Some(unbond_id) = is_unbond_key(key) {
+                let pre = self
+                    .ctx
+                    .read_pre(key)?
+                    .and_then(|bytes| Unbonds::try_from_slice(&bytes[..]).ok());
+                let post = self
+                    .ctx
+                    .read_post(key)?
+                    .and_then(|bytes| Unbonds::try_from_slice(&bytes[..]).ok());
+                changes.push(Unbond {
+                    id: unbond_id.clone(),
+                    data: Data { pre, post },
+                });
             } else if is_total_voting_power_key(key) {
                 let pre = self.ctx.read_pre(key)?.and_then(|bytes| {
                     TotalVotingPowers::try_from_slice(&bytes[..]).ok()
@@ -222,7 +235,7 @@ const VALIDATOR_STATE_STORAGE_KEY: &str = "state";
 const VALIDATOR_TOTAL_DELTAS_STORAGE_KEY: &str = "total_deltas";
 const VALIDATOR_VOTING_POWER_STORAGE_KEY: &str = "voting_power";
 const BOND_STORAGE_KEY: &str = "bond";
-const UNBOND_STORAGE_KEY: &str = "bond";
+const UNBOND_STORAGE_KEY: &str = "unbond";
 const VALIDATOR_SET_STORAGE_KEY: &str = "validator_set";
 const TOTAL_VOTING_POWER_STORAGE_KEY: &str = "total_voting_power";
 
