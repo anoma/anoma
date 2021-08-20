@@ -297,18 +297,14 @@ pub mod vp_user {
                     let post: token::Amount =
                         read_post(&key).unwrap_or_default();
                     let change = post.change() - pre.change();
+                    // debit has to signed, credit doesn't
+                    let valid = !(change < 0 && !valid_sig && !valid_intent);
                     log_string(format!(
                         "token key: {}, change: {}, valid_sig: {}, \
                          valid_intent: {}, valid modification: {}",
-                        key,
-                        change,
-                        valid_sig,
-                        valid_intent,
-                        (change < 0 && (valid_sig || valid_intent))
-                            || change > 0
+                        key, change, valid_sig, valid_intent, valid
                     ));
-                    // debit has to signed, credit doesn't
-                    (change < 0 && (valid_sig || valid_intent)) || change > 0
+                    valid
                 }
                 KeyType::InvalidIntentSet(owner) if owner == &addr => {
                     let key = key.to_string();
