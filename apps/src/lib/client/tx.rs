@@ -14,6 +14,7 @@ const TX_UPDATE_VP_WASM: &str = "wasm/tx_update_vp.wasm";
 const TX_TRANSFER_WASM: &str = "wasm/tx_transfer.wasm";
 const TX_BOND_WASM: &str = "wasm/tx_bond.wasm";
 const TX_UNBOND_WASM: &str = "wasm/tx_unbond.wasm";
+const TX_WITHDRAW_WASM: &str = "wasm/tx_withdraw.wasm";
 
 pub async fn submit_custom(args: args::TxCustom) {
     let tx_code = std::fs::read(args.code_path)
@@ -91,6 +92,24 @@ pub async fn submit_unbond(args: args::Unbond) {
     };
     tracing::debug!("Unbond data {:?}", unbond);
     let data = unbond
+        .try_to_vec()
+        .expect("Encoding tx data shouldn't fail");
+    let tx = Tx::new(tx_code, Some(data)).sign(&source_key);
+
+    submit_tx(args.tx, tx).await
+}
+
+pub async fn submit_withdraw(args: args::Withdraw) {
+    let source = args.source.as_ref().unwrap_or(&args.validator);
+    let source_key: Keypair = wallet::key_of(source.encode());
+    let tx_code = std::fs::read(TX_WITHDRAW_WASM).unwrap();
+
+    let withdraw = pos::Withdraw {
+        validator: args.validator,
+        source: args.source,
+    };
+    tracing::debug!("Withdraw data {:?}", withdraw);
+    let data = withdraw
         .try_to_vec()
         .expect("Encoding tx data shouldn't fail");
     let tx = Tx::new(tx_code, Some(data)).sign(&source_key);

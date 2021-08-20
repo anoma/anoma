@@ -127,6 +127,7 @@ pub mod cmds {
         TxUpdateVp(TxUpdateVp),
         Bond(Bond),
         Unbond(Unbond),
+        Withdraw(Withdraw),
         // Gossip cmds
         Intent(Intent),
         CraftIntent(CraftIntent),
@@ -139,6 +140,7 @@ pub mod cmds {
                 .subcommand(TxUpdateVp::def())
                 .subcommand(Bond::def())
                 .subcommand(Unbond::def())
+                .subcommand(Withdraw::def())
                 .subcommand(Intent::def())
                 .subcommand(CraftIntent::def())
                 .subcommand(SubscribeTopic::def())
@@ -150,6 +152,7 @@ pub mod cmds {
             let tx_update_vp = SubCmd::parse(matches).map_fst(Self::TxUpdateVp);
             let bond = SubCmd::parse(matches).map_fst(Self::Bond);
             let unbond = SubCmd::parse(matches).map_fst(Self::Unbond);
+            let withdraw = SubCmd::parse(matches).map_fst(Self::Withdraw);
             let intent = SubCmd::parse(matches).map_fst(Self::Intent);
             let craft_intent =
                 SubCmd::parse(matches).map_fst(Self::CraftIntent);
@@ -160,6 +163,7 @@ pub mod cmds {
                 .or(tx_update_vp)
                 .or(bond)
                 .or(unbond)
+                .or(withdraw)
                 .or(intent)
                 .or(craft_intent)
                 .or(subscribe_topic)
@@ -432,7 +436,7 @@ pub mod cmds {
 
         fn def() -> App {
             App::new(Self::CMD)
-                .about("Bond tokens.")
+                .about("Bond tokens in PoS system.")
                 .add_args::<args::Bond>()
         }
     }
@@ -454,8 +458,30 @@ pub mod cmds {
 
         fn def() -> App {
             App::new(Self::CMD)
-                .about("Unbond tokens.")
+                .about("Unbond tokens from a PoS bond.")
                 .add_args::<args::Unbond>()
+        }
+    }
+
+    #[derive(Debug)]
+    pub struct Withdraw(pub args::Withdraw);
+
+    impl SubCmd for Withdraw {
+        const CMD: &'static str = "withdraw";
+
+        fn parse(matches: &ArgMatches) -> Option<(Self, &ArgMatches)>
+        where
+            Self: Sized,
+        {
+            matches.subcommand_matches(Self::CMD).map(|matches| {
+                (Withdraw(args::Withdraw::parse(matches)), matches)
+            })
+        }
+
+        fn def() -> App {
+            App::new(Self::CMD)
+                .about("Withdraw tokens from previously unbonded PoS bond.")
+                .add_args::<args::Withdraw>()
         }
     }
 
@@ -759,10 +785,10 @@ pub mod args {
         pub tx: Tx,
         /// Validator address
         pub validator: Address,
-        /// Amount of tokens to stake in a unbond
+        /// Amount of tokens to unbond from a bond
         pub amount: token::Amount,
-        /// Source address for delegations. For self-unbonds, the validator is
-        /// also the source.
+        /// Source address for unbonding from delegations. For unbonding from
+        /// self-bonds, the validator is also the source
         pub source: Option<Address>,
     }
 
@@ -791,6 +817,41 @@ pub mod args {
                 .arg(SOURCE_OPT.def().about(
                     "Source address for unbonding from delegations. For \
                      unbonding from self-bonds, the validator is also the \
+                     source",
+                ))
+        }
+    }
+
+    /// Withdraw arguments
+    #[derive(Debug)]
+    pub struct Withdraw {
+        /// Common tx arguments
+        pub tx: Tx,
+        /// Validator address
+        pub validator: Address,
+        /// Source address for withdrawing from delegations. For withdrawing
+        /// from self-bonds, the validator is also the source
+        pub source: Option<Address>,
+    }
+
+    impl Args for Withdraw {
+        fn parse(matches: &ArgMatches) -> Self {
+            let tx = Tx::parse(matches);
+            let validator = VALIDATOR.parse(matches);
+            let source = SOURCE_OPT.parse(matches);
+            Self {
+                tx,
+                validator,
+                source,
+            }
+        }
+
+        fn def(app: App) -> App {
+            app.add_args::<Tx>()
+                .arg(VALIDATOR.def().about("Validator address."))
+                .arg(SOURCE_OPT.def().about(
+                    "Source address for withdrawing from delegations. For \
+                     withdrawing from self-bonds, the validator is also the \
                      source",
                 ))
         }

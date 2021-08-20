@@ -31,3 +31,23 @@ pub struct Bond {
 
 /// An unbond of a bond.
 pub type Unbond = Bond;
+
+/// A withdrawal of an unbond.
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    BorshSerialize,
+    BorshDeserialize,
+    Hash,
+    Eq,
+    Serialize,
+    Deserialize,
+)]
+pub struct Withdraw {
+    /// Validator address
+    pub validator: Address,
+    /// Source address for withdrawing from delegations. For withdrawing
+    /// from self-bonds, the validator is also the source
+    pub source: Option<Address>,
+}

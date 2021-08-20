@@ -32,6 +32,9 @@ pub async fn main() -> Result<()> {
         cmds::AnomaClient::Unbond(cmds::Unbond(args)) => {
             tx::submit_unbond(args).await;
         }
+        cmds::AnomaClient::Withdraw(cmds::Withdraw(args)) => {
+            tx::submit_withdraw(args).await;
+        }
         // Gossip cmds
         cmds::AnomaClient::Intent(cmds::Intent(args)) => {
             gossip_intent(args).await;
