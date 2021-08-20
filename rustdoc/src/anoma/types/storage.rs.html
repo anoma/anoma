@@ -647,6 +647,30 @@
 <span id="645">645</span>
 <span id="646">646</span>
 <span id="647">647</span>
+<span id="648">648</span>
+<span id="649">649</span>
+<span id="650">650</span>
+<span id="651">651</span>
+<span id="652">652</span>
+<span id="653">653</span>
+<span id="654">654</span>
+<span id="655">655</span>
+<span id="656">656</span>
+<span id="657">657</span>
+<span id="658">658</span>
+<span id="659">659</span>
+<span id="660">660</span>
+<span id="661">661</span>
+<span id="662">662</span>
+<span id="663">663</span>
+<span id="664">664</span>
+<span id="665">665</span>
+<span id="666">666</span>
+<span id="667">667</span>
+<span id="668">668</span>
+<span id="669">669</span>
+<span id="670">670</span>
+<span id="671">671</span>
 </pre><pre class="rust">
 <span class="doccomment">//! Storage types</span>
 <span class="kw">use</span> <span class="ident">std::convert</span>::{<span class="ident">TryFrom</span>, <span class="ident">TryInto</span>};
@@ -909,7 +933,7 @@
         }
     }
 
-    <span class="doccomment">/// Check if the given key is a key of the connection counter</span>
+    <span class="doccomment">/// Check if the given key is a key of the client counter</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_ibc_client_counter</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
         <span class="kw-2">*</span><span class="self">self</span> <span class="op">=</span><span class="op">=</span> <span class="self">Self</span><span class="ident">::ibc_client_counter</span>()
     }
@@ -917,6 +941,16 @@
     <span class="doccomment">/// Check if the given key is a key of the connection counter</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_ibc_connection_counter</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
         <span class="kw-2">*</span><span class="self">self</span> <span class="op">=</span><span class="op">=</span> <span class="self">Self</span><span class="ident">::ibc_connection_counter</span>()
+    }
+
+    <span class="doccomment">/// Check if the given key is a key of the channel counter</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_ibc_channel_counter</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
+        <span class="kw-2">*</span><span class="self">self</span> <span class="op">=</span><span class="op">=</span> <span class="self">Self</span><span class="ident">::ibc_channel_counter</span>()
+    }
+
+    <span class="doccomment">/// Check if the given key is a key of the capability index</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_ibc_capability_index</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
+        <span class="kw-2">*</span><span class="self">self</span> <span class="op">=</span><span class="op">=</span> <span class="self">Self</span><span class="ident">::ibc_capability_index</span>()
     }
 
     <span class="doccomment">/// Returns a key of the IBC-related data</span>
@@ -940,6 +974,20 @@
         <span class="kw">let</span> <span class="ident">path</span> <span class="op">=</span> <span class="string">&quot;connections/counter&quot;</span>.<span class="ident">to_owned</span>();
         <span class="ident">Key::ibc_key</span>(<span class="ident">path</span>)
             .<span class="ident">expect</span>(<span class="string">&quot;Creating a key for the connection counter shouldn&#39;t fail&quot;</span>)
+    }
+
+    <span class="doccomment">/// Returns a key of the IBC channel counter</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">ibc_channel_counter</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="kw">let</span> <span class="ident">path</span> <span class="op">=</span> <span class="string">&quot;channelEnds/counter&quot;</span>.<span class="ident">to_owned</span>();
+        <span class="ident">Key::ibc_key</span>(<span class="ident">path</span>)
+            .<span class="ident">expect</span>(<span class="string">&quot;Creating a key for the channel counter shouldn&#39;t fail&quot;</span>)
+    }
+
+    <span class="doccomment">/// Returns a key of the IBC capability index</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">ibc_capability_index</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="kw">let</span> <span class="ident">path</span> <span class="op">=</span> <span class="string">&quot;capabilities/index&quot;</span>.<span class="ident">to_owned</span>();
+        <span class="ident">Key::ibc_key</span>(<span class="ident">path</span>)
+            .<span class="ident">expect</span>(<span class="string">&quot;Creating a key for the capability index shouldn&#39;t fail&quot;</span>)
     }
 
     <span class="doccomment">/// Returns a key from the given DB key path that has the height and</span>

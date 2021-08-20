@@ -367,27 +367,6 @@
 <span id="365">365</span>
 <span id="366">366</span>
 <span id="367">367</span>
-<span id="368">368</span>
-<span id="369">369</span>
-<span id="370">370</span>
-<span id="371">371</span>
-<span id="372">372</span>
-<span id="373">373</span>
-<span id="374">374</span>
-<span id="375">375</span>
-<span id="376">376</span>
-<span id="377">377</span>
-<span id="378">378</span>
-<span id="379">379</span>
-<span id="380">380</span>
-<span id="381">381</span>
-<span id="382">382</span>
-<span id="383">383</span>
-<span id="384">384</span>
-<span id="385">385</span>
-<span id="386">386</span>
-<span id="387">387</span>
-<span id="388">388</span>
 </pre><pre class="rust">
 <span class="doccomment">//! IBC validity predicate for client module</span>
 
@@ -653,17 +632,8 @@
 
     <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">client_counter_pre</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Key::ibc_client_counter</span>();
-        <span class="kw">match</span> <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">read_pre</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>) {
-            <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="ident">value</span>)) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">storage::types::decode</span>(<span class="kw-2">&amp;</span><span class="ident">value</span>).<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> {
-                <span class="ident">Error::InvalidClient</span>(<span class="macro">format!</span>(
-                    <span class="string">&quot;Decoding the client counter failed: {}&quot;</span>,
-                    <span class="ident">e</span>
-                ))
-            }),
-            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">Error::InvalidClient</span>(
-                <span class="string">&quot;The client counter doesn&#39;t exist&quot;</span>.<span class="ident">to_owned</span>(),
-            )),
-        }
+        <span class="self">self</span>.<span class="ident">read_counter_pre</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>)
+            .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">Error::InvalidClient</span>(<span class="ident">e</span>.<span class="ident">to_string</span>()))
     }
 
     <span class="kw">fn</span> <span class="ident">consensus_state_pre</span>(
@@ -750,19 +720,7 @@
 
     <span class="kw">fn</span> <span class="ident">client_counter</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u64</span> {
         <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Key::ibc_client_counter</span>();
-        <span class="kw">match</span> <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">read_post</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>) {
-            <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="ident">value</span>)) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="ident">storage::types::decode</span>(<span class="kw-2">&amp;</span><span class="ident">value</span>) {
-                <span class="prelude-val">Ok</span>(<span class="ident">c</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">c</span>,
-                <span class="prelude-val">Err</span>(<span class="ident">e</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                    <span class="macro">tracing::error!</span>(<span class="string">&quot;decoding a client counter failed: {}&quot;</span>, <span class="ident">e</span>);
-                    <span class="ident">u64::MIN</span>
-                }
-            },
-            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="macro">tracing::error!</span>(<span class="string">&quot;client counter doesn&#39;t exist&quot;</span>);
-                <span class="macro">unreachable!</span>();
-            }
-        }
+        <span class="self">self</span>.<span class="ident">read_counter</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>)
     }
 }
 

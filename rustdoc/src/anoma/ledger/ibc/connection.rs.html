@@ -385,30 +385,6 @@
 <span id="383">383</span>
 <span id="384">384</span>
 <span id="385">385</span>
-<span id="386">386</span>
-<span id="387">387</span>
-<span id="388">388</span>
-<span id="389">389</span>
-<span id="390">390</span>
-<span id="391">391</span>
-<span id="392">392</span>
-<span id="393">393</span>
-<span id="394">394</span>
-<span id="395">395</span>
-<span id="396">396</span>
-<span id="397">397</span>
-<span id="398">398</span>
-<span id="399">399</span>
-<span id="400">400</span>
-<span id="401">401</span>
-<span id="402">402</span>
-<span id="403">403</span>
-<span id="404">404</span>
-<span id="405">405</span>
-<span id="406">406</span>
-<span id="407">407</span>
-<span id="408">408</span>
-<span id="409">409</span>
 </pre><pre class="rust">
 <span class="doccomment">//! IBC validity predicate for connection module</span>
 
@@ -519,8 +495,8 @@
         <span class="ident">conn_id</span>: <span class="kw-2">&amp;</span><span class="ident">ConnectionId</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">StateChange</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">path</span> <span class="op">=</span> <span class="ident">Path::Connections</span>(<span class="ident">conn_id</span>.<span class="ident">clone</span>()).<span class="ident">to_string</span>();
-        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Key::ibc_key</span>(<span class="ident">path</span>)
-            .<span class="ident">expect</span>(<span class="string">&quot;Creating a key for a client type failed&quot;</span>);
+        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span>
+            <span class="ident">Key::ibc_key</span>(<span class="ident">path</span>).<span class="ident">expect</span>(<span class="string">&quot;Creating a key for a connection failed&quot;</span>);
         <span class="self">self</span>.<span class="ident">get_state_change</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>)
             .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">Error::InvalidStateChange</span>(<span class="ident">e</span>.<span class="ident">to_string</span>()))
     }
@@ -713,17 +689,8 @@
 
     <span class="kw">fn</span> <span class="ident">connection_counter_pre</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Key::ibc_connection_counter</span>();
-        <span class="kw">match</span> <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">read_pre</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>) {
-            <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="ident">value</span>)) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">storage::types::decode</span>(<span class="kw-2">&amp;</span><span class="ident">value</span>).<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> {
-                <span class="ident">Error::InvalidConnection</span>(<span class="macro">format!</span>(
-                    <span class="string">&quot;Decoding the connection counter failed: {}&quot;</span>,
-                    <span class="ident">e</span>
-                ))
-            }),
-            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">Error::InvalidConnection</span>(
-                <span class="string">&quot;The connection counter should exist&quot;</span>.<span class="ident">to_owned</span>(),
-            )),
-        }
+        <span class="self">self</span>.<span class="ident">read_counter_pre</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>)
+            .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">Error::InvalidConnection</span>(<span class="ident">e</span>.<span class="ident">to_string</span>()))
     }
 }
 
@@ -789,22 +756,7 @@
 
     <span class="kw">fn</span> <span class="ident">connection_counter</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u64</span> {
         <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Key::ibc_connection_counter</span>();
-        <span class="kw">match</span> <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">read_post</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>) {
-            <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="ident">value</span>)) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="ident">storage::types::decode</span>(<span class="kw-2">&amp;</span><span class="ident">value</span>) {
-                <span class="prelude-val">Ok</span>(<span class="ident">c</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">c</span>,
-                <span class="prelude-val">Err</span>(<span class="ident">e</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                    <span class="macro">tracing::error!</span>(
-                        <span class="string">&quot;decoding a connection counter failed: {}&quot;</span>,
-                        <span class="ident">e</span>
-                    );
-                    <span class="ident">u64::MIN</span>
-                }
-            },
-            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="macro">tracing::error!</span>(<span class="string">&quot;connection counter doesn&#39;t exist&quot;</span>);
-                <span class="macro">unreachable!</span>();
-            }
-        }
+        <span class="self">self</span>.<span class="ident">read_counter</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>)
     }
 }
 
