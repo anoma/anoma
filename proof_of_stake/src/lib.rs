@@ -1150,21 +1150,22 @@ where
                 let mut deltas = HashMap::default();
                 let unbond_end =
                     current_epoch + update_offset.value(params) - 1;
-                if to_unbond > bond_amount {
-                    *to_unbond -= *bond_amount;
+                if *to_unbond == 0.into() {
+                    return true;
+                } else if to_unbond > bond_amount {
                     deltas.insert((*bond_start, unbond_end), *bond_amount);
+                    *to_unbond -= *bond_amount;
                     *bond_amount = 0.into();
                 } else {
-                    *to_unbond = 0.into();
                     deltas.insert((*bond_start, unbond_end), *to_unbond);
                     *bond_amount -= *to_unbond;
+                    *to_unbond = 0.into();
                 }
                 // For each decremented bond value write a new unbond
                 unbond.add(Unbond { deltas }, current_epoch, params);
                 // Remove bonds with no tokens left
                 *bond_amount != 0.into()
             });
-
             // Stop the update once all the tokens are unbonded
             *to_unbond != 0.into()
         },
