@@ -31,6 +31,7 @@ pub mod tx_bond {
                     PoS.validator_self_bond(&bond.validator, bond.amount, epoch)
                 {
                     log_string(format!("self-bond failed with {}", err));
+                    panic!()
                 }
                 // TODO temporary for logging:
                 let bond_post = PoS.read_bond(&bond_id);
@@ -83,6 +84,7 @@ pub mod tx_unbond {
         let validator_set_pre = PoS.read_validator_set();
         let total_deltas_pre = PoS.read_validator_total_deltas(&bond.validator);
         let vp_pre = PoS.read_validator_voting_power(&bond.validator);
+        let total_vp_pre = PoS.read_total_voting_power();
 
         let epoch = get_block_epoch();
         match bond.source {
@@ -94,6 +96,7 @@ pub mod tx_unbond {
                     PoS.validator_unbond(&bond.validator, bond.amount, epoch)
                 {
                     log_string(format!("self-bond failed with {}", err));
+                    panic!()
                 }
                 // TODO temporary for logging:
                 let bond_post = PoS.read_bond(&bond_id);
@@ -102,6 +105,7 @@ pub mod tx_unbond {
                 let total_deltas_post =
                     PoS.read_validator_total_deltas(&bond.validator);
                 let vp_post = PoS.read_validator_voting_power(&bond.validator);
+                let total_vp_post = PoS.read_total_voting_power();
                 log_string(format!(
                     "bond pre {:#?}, post {:#?}",
                     bond_pre, bond_post
@@ -121,6 +125,10 @@ pub mod tx_unbond {
                 log_string(format!(
                     "validator voting power pre {:#?}, post {:#?}",
                     vp_pre, vp_post
+                ));
+                log_string(format!(
+                    "total voting power pre {:#?}, post {:#?}",
+                    total_vp_pre, total_vp_post
                 ));
             }
         }
