@@ -535,6 +535,7 @@ where
         params: &PosParams,
     ) {
         let epoch = current_epoch.into();
+        self.update_data(epoch, params);
 
         let offset = Offset::value(params) as usize;
         for ix in (0..offset + 1).rev() {
@@ -545,8 +546,6 @@ where
                 }
             }
         }
-
-        self.update_data(epoch, params);
     }
 
     /// Get the epoch of the last update
