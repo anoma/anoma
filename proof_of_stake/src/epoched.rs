@@ -358,6 +358,22 @@ where
         self.get_at_index(index)
     }
 
+    /// Iterate the delta values set in the data.
+    pub fn iter(&self) -> impl Iterator<Item = &Data> {
+        self.data.iter().filter_map(|value| value.as_ref())
+    }
+
+    /// Iterate the delta values set in the data together with their epoch.
+    pub fn iter_with_epochs(&self) -> impl Iterator<Item = (&Data, Epoch)> {
+        let last_update = self.last_update;
+        self.data
+            .iter()
+            .enumerate()
+            .filter_map(move |(index, value)| {
+                value.as_ref().map(|value| (value, last_update + index))
+            })
+    }
+
     /// Find the value at the given index as the sum of delta values at and
     /// before the index.
     fn get_at_index(&self, offset: usize) -> Option<Data> {
