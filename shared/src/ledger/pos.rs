@@ -30,7 +30,13 @@ pub enum Error {
 /// PoS functions result
 pub type Result<T> = std::result::Result<T, Error>;
 
+/// Address of the PoS account implemented as a native VP
 const ADDRESS: Address = Address::Internal(InternalAddress::PoS);
+
+/// Address of the staking token (XAN)
+pub fn staking_token_address() -> Address {
+    address::xan()
+}
 
 /// Proof-of-Stake VP
 pub struct PoS<'a, DB, H>
@@ -156,10 +162,9 @@ where
                     address: validator.clone(),
                     update: VotingPowerUpdate(Data { pre, post }),
                 });
-            } else if let Some(owner) = token::is_balance_key(
-                &<Self as PoSReadOnly>::staking_token_address(),
-                key,
-            ) {
+            } else if let Some(owner) =
+                token::is_balance_key(&staking_token_address(), key)
+            {
                 if owner != &Address::Internal(Self::ADDR) {
                     continue;
                 }
@@ -370,18 +375,23 @@ pub fn is_validator_voting_power_key(key: &Key) -> Option<&Address> {
     }
 }
 
-/// Storage key prefix for all bonds of the given source address.
-fn bonds_prefix(source: &Address) -> Key {
+/// Storage key prefix for all bonds.
+pub fn bonds_prefix() -> Key {
     Key::from(ADDRESS.to_db_key())
         .push(&BOND_STORAGE_KEY.to_owned())
         .expect("Cannot obtain a storage key")
+}
+
+/// Storage key prefix for all bonds of the given source address.
+pub fn bonds_for_source_prefix(source: &Address) -> Key {
+    bonds_prefix()
         .push(&source.to_db_key())
         .expect("Cannot obtain a storage key")
 }
 
 /// Storage key for a bond with the given ID (source and validator).
 pub fn bond_key(bond_id: &BondId) -> Key {
-    bonds_prefix(&bond_id.source)
+    bonds_for_source_prefix(&bond_id.source)
         .push(&bond_id.validator.to_db_key())
         .expect("Cannot obtain a storage key")
 }
@@ -401,18 +411,23 @@ pub fn is_bond_key(key: &Key) -> Option<BondId> {
     }
 }
 
-/// Storage key prefix for all unbonds of the given source address.
-fn unbonds_prefix(source: &Address) -> Key {
+/// Storage key prefix for all unbonds.
+pub fn unbonds_prefix() -> Key {
     Key::from(ADDRESS.to_db_key())
         .push(&UNBOND_STORAGE_KEY.to_owned())
         .expect("Cannot obtain a storage key")
+}
+
+/// Storage key prefix for all unbonds of the given source address.
+pub fn unbonds_for_source_prefix(source: &Address) -> Key {
+    unbonds_prefix()
         .push(&source.to_db_key())
         .expect("Cannot obtain a storage key")
 }
 
 /// Storage key for an unbond with the given ID (source and validator).
 pub fn unbond_key(bond_id: &BondId) -> Key {
-    unbonds_prefix(&bond_id.source)
+    unbonds_for_source_prefix(&bond_id.source)
         .push(&bond_id.validator.to_db_key())
         .expect("Cannot obtain a storage key")
 }
@@ -483,7 +498,7 @@ where
     const POS_ADDRESS: Self::Address = ADDRESS;
 
     fn staking_token_address() -> Self::Address {
-        address::xan()
+        staking_token_address()
     }
 
     fn read_params(&self) -> PosParams {
@@ -577,7 +592,7 @@ where
     const POS_ADDRESS: Self::Address = Address::Internal(InternalAddress::PoS);
 
     fn staking_token_address() -> Self::Address {
-        address::xan()
+        staking_token_address()
     }
 
     fn read_validator_set(&self) -> ValidatorSets {
@@ -699,6 +714,13 @@ impl From<Epoch> for anoma_proof_of_stake::types::Epoch {
     fn from(epoch: Epoch) -> Self {
         let epoch: u64 = epoch.into();
         anoma_proof_of_stake::types::Epoch::from(epoch)
+    }
+}
+
+impl From<anoma_proof_of_stake::types::Epoch> for Epoch {
+    fn from(epoch: anoma_proof_of_stake::types::Epoch) -> Self {
+        let epoch: u64 = epoch.into();
+        Epoch(epoch)
     }
 }
 
