@@ -379,7 +379,7 @@ pub async fn query_bonds(args: args::QueryBonds) {
                             writeln!(w, "{}:", bond_type).unwrap();
                             let mut current_total: token::Amount = 0.into();
                             for deltas in unbonds.iter() {
-                                for ((epoch_start, epoch_end), delta) in
+                                for ((_epoch_start, epoch_end), delta) in
                                     deltas.deltas.iter().sorted()
                                 {
                                     writeln!(
