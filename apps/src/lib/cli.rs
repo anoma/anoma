@@ -29,7 +29,7 @@ pub mod cmds {
     use super::{args, ArgMatches, CLIENT_CMD, NODE_CMD};
 
     /// Commands for `anoma` binary.
-    #[derive(Debug)]
+    #[derive(Clone, Debug)]
     pub enum Anoma {
         Node(AnomaNode),
         Client(AnomaClient),
@@ -75,7 +75,7 @@ pub mod cmds {
 
     /// Used as top-level commands (`Cmd` instance) in `anoman` binary.
     /// Used as sub-commands (`SubCmd` instance) in `anoma` binary.
-    #[derive(Debug)]
+    #[derive(Clone, Debug)]
     pub enum AnomaNode {
         Ledger(Ledger),
         // Boxed, because it's larger than other variants
@@ -121,7 +121,7 @@ pub mod cmds {
 
     /// Used as top-level commands (`Cmd` instance) in `anomac` binary.
     /// Used as sub-commands (`SubCmd` instance) in `anoma` binary.
-    #[derive(Debug)]
+    #[derive(Clone, Debug)]
     pub enum AnomaClient {
         // Ledger cmds
         TxCustom(TxCustom),
@@ -130,7 +130,9 @@ pub mod cmds {
         Bond(Bond),
         Unbond(Unbond),
         Withdraw(Withdraw),
+        QueryEpoch(QueryEpoch),
         QueryBalance(QueryBalance),
+        QueryBonds(QueryBonds),
         // Gossip cmds
         Intent(Intent),
         CraftIntent(CraftIntent),
@@ -145,7 +147,9 @@ pub mod cmds {
                 .subcommand(Bond::def())
                 .subcommand(Unbond::def())
                 .subcommand(Withdraw::def())
+                .subcommand(QueryEpoch::def())
                 .subcommand(QueryBalance::def())
+                .subcommand(QueryBonds::def())
                 .subcommand(Intent::def())
                 .subcommand(CraftIntent::def())
                 .subcommand(SubscribeTopic::def())
@@ -158,8 +162,10 @@ pub mod cmds {
             let bond = SubCmd::parse(matches).map_fst(Self::Bond);
             let unbond = SubCmd::parse(matches).map_fst(Self::Unbond);
             let withdraw = SubCmd::parse(matches).map_fst(Self::Withdraw);
+            let query_epoch = SubCmd::parse(matches).map_fst(Self::QueryEpoch);
             let query_balance =
                 SubCmd::parse(matches).map_fst(Self::QueryBalance);
+            let query_bond = SubCmd::parse(matches).map_fst(Self::QueryBonds);
             let intent = SubCmd::parse(matches).map_fst(Self::Intent);
             let craft_intent =
                 SubCmd::parse(matches).map_fst(Self::CraftIntent);
@@ -171,7 +177,9 @@ pub mod cmds {
                 .or(bond)
                 .or(unbond)
                 .or(withdraw)
+                .or(query_epoch)
                 .or(query_balance)
+                .or(query_bond)
                 .or(intent)
                 .or(craft_intent)
                 .or(subscribe_topic)
@@ -198,7 +206,7 @@ pub mod cmds {
         }
     }
 
-    #[derive(Debug)]
+    #[derive(Clone, Debug)]
     pub enum Ledger {
         Run(LedgerRun),
         Reset(LedgerReset),
@@ -228,7 +236,7 @@ pub mod cmds {
         }
     }
 
-    #[derive(Debug)]
+    #[derive(Clone, Debug)]
     pub struct LedgerRun;
 
     impl SubCmd for LedgerRun {
@@ -245,7 +253,7 @@ pub mod cmds {
         }
     }
 
-    #[derive(Debug)]
+    #[derive(Clone, Debug)]
     pub struct LedgerReset;
 
     impl SubCmd for LedgerReset {
@@ -265,7 +273,7 @@ pub mod cmds {
         }
     }
 
-    #[derive(Debug)]
+    #[derive(Clone, Debug)]
     pub enum Gossip {
         Run(GossipRun),
     }
@@ -303,7 +311,7 @@ pub mod cmds {
         }
     }
 
-    #[derive(Debug)]
+    #[derive(Clone, Debug)]
     pub struct GossipRun(pub args::GossipRun);
 
     impl SubCmd for GossipRun {
@@ -325,7 +333,7 @@ pub mod cmds {
         }
     }
 
-    #[derive(Debug)]
+    #[derive(Clone, Debug)]
     pub enum Config {
         Gen(ConfigGen),
     }
@@ -351,7 +359,7 @@ pub mod cmds {
         }
     }
 
-    #[derive(Debug)]
+    #[derive(Clone, Debug)]
     pub struct ConfigGen;
 
     impl SubCmd for ConfigGen {
@@ -371,7 +379,7 @@ pub mod cmds {
         }
     }
 
-    #[derive(Debug)]
+    #[derive(Clone, Debug)]
     pub struct TxCustom(pub args::TxCustom);
 
     impl SubCmd for TxCustom {
@@ -390,7 +398,7 @@ pub mod cmds {
         }
     }
 
-    #[derive(Debug)]
+    #[derive(Clone, Debug)]
     pub struct TxTransfer(pub args::TxTransfer);
 
     impl SubCmd for TxTransfer {
@@ -412,7 +420,7 @@ pub mod cmds {
         }
     }
 
-    #[derive(Debug)]
+    #[derive(Clone, Debug)]
     pub struct TxUpdateVp(pub args::TxUpdateVp);
 
     impl SubCmd for TxUpdateVp {
@@ -437,7 +445,7 @@ pub mod cmds {
         }
     }
 
-    #[derive(Debug)]
+    #[derive(Clone, Debug)]
     pub struct Bond(pub args::Bond);
 
     impl SubCmd for Bond {
@@ -459,7 +467,7 @@ pub mod cmds {
         }
     }
 
-    #[derive(Debug)]
+    #[derive(Clone, Debug)]
     pub struct Unbond(pub args::Unbond);
 
     impl SubCmd for Unbond {
@@ -481,7 +489,7 @@ pub mod cmds {
         }
     }
 
-    #[derive(Debug)]
+    #[derive(Clone, Debug)]
     pub struct Withdraw(pub args::Withdraw);
 
     impl SubCmd for Withdraw {
@@ -503,7 +511,29 @@ pub mod cmds {
         }
     }
 
-    #[derive(Debug)]
+    #[derive(Clone, Debug)]
+    pub struct QueryEpoch(pub args::Query);
+
+    impl SubCmd for QueryEpoch {
+        const CMD: &'static str = "epoch";
+
+        fn parse(matches: &ArgMatches) -> Option<(Self, &ArgMatches)>
+        where
+            Self: Sized,
+        {
+            matches.subcommand_matches(Self::CMD).map(|matches| {
+                (QueryEpoch(args::Query::parse(matches)), matches)
+            })
+        }
+
+        fn def() -> App {
+            App::new(Self::CMD)
+                .about("Query the epoch of the last committed block")
+                .add_args::<args::Query>()
+        }
+    }
+
+    #[derive(Clone, Debug)]
     pub struct QueryBalance(pub args::QueryBalance);
 
     impl SubCmd for QueryBalance {
@@ -525,7 +555,29 @@ pub mod cmds {
         }
     }
 
-    #[derive(Debug)]
+    #[derive(Clone, Debug)]
+    pub struct QueryBonds(pub args::QueryBonds);
+
+    impl SubCmd for QueryBonds {
+        const CMD: &'static str = "bonds";
+
+        fn parse(matches: &ArgMatches) -> Option<(Self, &ArgMatches)>
+        where
+            Self: Sized,
+        {
+            matches.subcommand_matches(Self::CMD).map(|matches| {
+                (QueryBonds(args::QueryBonds::parse(matches)), matches)
+            })
+        }
+
+        fn def() -> App {
+            App::new(Self::CMD)
+                .about("Query PoS bond(s)")
+                .add_args::<args::QueryBonds>()
+        }
+    }
+
+    #[derive(Clone, Debug)]
     pub struct Intent(pub args::Intent);
 
     impl SubCmd for Intent {
@@ -547,7 +599,7 @@ pub mod cmds {
         }
     }
 
-    #[derive(Debug)]
+    #[derive(Clone, Debug)]
     pub struct CraftIntent(pub args::CraftIntent);
 
     impl SubCmd for CraftIntent {
@@ -569,7 +621,7 @@ pub mod cmds {
         }
     }
 
-    #[derive(Debug)]
+    #[derive(Clone, Debug)]
     pub struct SubscribeTopic(pub args::SubscribeTopic);
 
     impl SubCmd for SubscribeTopic {
@@ -650,9 +702,10 @@ pub mod args {
     const TOKEN: Arg<Address> = arg("token");
     const TX_CODE_PATH: ArgOpt<PathBuf> = arg_opt("tx-code-path");
     const VALIDATOR: Arg<Address> = arg("validator");
+    const VALIDATOR_OPT: ArgOpt<Address> = VALIDATOR.opt();
 
     /// Global command arguments
-    #[derive(Debug)]
+    #[derive(Clone, Debug)]
     pub struct Global {
         pub base_dir: PathBuf,
     }
@@ -672,7 +725,7 @@ pub mod args {
     }
 
     /// Custom transaction arguments
-    #[derive(Debug)]
+    #[derive(Clone, Debug)]
     pub struct TxCustom {
         /// Common tx arguments
         pub tx: Tx,
@@ -710,7 +763,7 @@ pub mod args {
     }
 
     /// Transfer transaction arguments
-    #[derive(Debug)]
+    #[derive(Clone, Debug)]
     pub struct TxTransfer {
         /// Common tx arguments
         pub tx: Tx,
@@ -753,7 +806,7 @@ pub mod args {
     }
 
     /// Transaction to update a VP arguments
-    #[derive(Debug)]
+    #[derive(Clone, Debug)]
     pub struct TxUpdateVp {
         /// Common tx arguments
         pub tx: Tx,
@@ -790,7 +843,7 @@ pub mod args {
     }
 
     /// Bond arguments
-    #[derive(Debug)]
+    #[derive(Clone, Debug)]
     pub struct Bond {
         /// Common tx arguments
         pub tx: Tx,
@@ -829,7 +882,7 @@ pub mod args {
     }
 
     /// Unbond arguments
-    #[derive(Debug)]
+    #[derive(Clone, Debug)]
     pub struct Unbond {
         /// Common tx arguments
         pub tx: Tx,
@@ -873,7 +926,7 @@ pub mod args {
     }
 
     /// Withdraw arguments
-    #[derive(Debug)]
+    #[derive(Clone, Debug)]
     pub struct Withdraw {
         /// Common tx arguments
         pub tx: Tx,
@@ -908,7 +961,7 @@ pub mod args {
     }
 
     /// Query token balance(s)
-    #[derive(Debug)]
+    #[derive(Clone, Debug)]
     pub struct QueryBalance {
         /// Common query args
         pub query: Query,
@@ -945,8 +998,46 @@ pub mod args {
         }
     }
 
+    /// Query PoS bond(s)
+    #[derive(Clone, Debug)]
+    pub struct QueryBonds {
+        /// Common query args
+        pub query: Query,
+        /// Address of the owner
+        pub owner: Option<Address>,
+        /// Address of the validator
+        pub validator: Option<Address>,
+    }
+
+    impl Args for QueryBonds {
+        fn parse(matches: &ArgMatches) -> Self {
+            let query = Query::parse(matches);
+            let owner = OWNER.parse(matches);
+            let validator = VALIDATOR_OPT.parse(matches);
+            Self {
+                query,
+                owner,
+                validator,
+            }
+        }
+
+        fn def(app: App) -> App {
+            app.add_args::<Query>()
+                .arg(
+                    OWNER.def().about(
+                        "The owner account address whose bonds to query",
+                    ),
+                )
+                .arg(
+                    VALIDATOR_OPT
+                        .def()
+                        .about("The validator's address whose bonds to query"),
+                )
+        }
+    }
+
     /// Intent arguments
-    #[derive(Debug)]
+    #[derive(Clone, Debug)]
     pub struct Intent {
         /// Gossip node address
         pub node_addr: String,
@@ -983,7 +1074,7 @@ pub mod args {
     }
 
     /// Craft intent for token exchange arguments
-    #[derive(Debug)]
+    #[derive(Clone, Debug)]
     pub struct CraftIntent {
         /// Signing key
         pub key: Address,
@@ -1020,7 +1111,7 @@ pub mod args {
     }
 
     /// Subscribe intent topic arguments
-    #[derive(Debug)]
+    #[derive(Clone, Debug)]
     pub struct SubscribeTopic {
         /// Gossip node address
         pub node_addr: String,
@@ -1044,7 +1135,7 @@ pub mod args {
         }
     }
 
-    #[derive(Debug)]
+    #[derive(Clone, Debug)]
     pub struct GossipRun {
         pub addr: Option<Multiaddr>,
         pub peers: Vec<String>,
@@ -1107,7 +1198,7 @@ pub mod args {
     }
 
     /// Common transaction arguments
-    #[derive(Debug)]
+    #[derive(Clone, Debug)]
     pub struct Tx {
         /// Simulate applying the transaction
         pub dry_run: bool,
@@ -1136,7 +1227,7 @@ pub mod args {
     }
 
     /// Common query arguments
-    #[derive(Debug)]
+    #[derive(Clone, Debug)]
     pub struct Query {
         /// The address of the ledger node as host:port
         pub ledger_address: tendermint::net::Address,

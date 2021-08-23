@@ -289,6 +289,14 @@ impl Shell {
         match Path::from_str(&query.path) {
             Ok(path) => match path {
                 Path::DryRunTx => self.dry_run_tx(&query.data),
+                Path::Epoch => {
+                    let (epoch, _gas) = self.storage.get_last_epoch();
+                    let value = anoma::ledger::storage::types::encode(&epoch);
+                    response::Query {
+                        value,
+                        ..Default::default()
+                    }
+                }
                 Path::Value(storage_key) => {
                     self.read_storage_value(&storage_key)
                 }

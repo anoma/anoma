@@ -36,8 +36,14 @@ pub async fn main() -> Result<()> {
         cmds::AnomaClient::Withdraw(cmds::Withdraw(args)) => {
             tx::submit_withdraw(args).await;
         }
+        cmds::AnomaClient::QueryEpoch(cmds::QueryEpoch(args)) => {
+            rpc::query_epoch(args).await;
+        }
         cmds::AnomaClient::QueryBalance(cmds::QueryBalance(args)) => {
             rpc::query_balance(args).await;
+        }
+        cmds::AnomaClient::QueryBonds(cmds::QueryBonds(args)) => {
+            rpc::query_bonds(args).await;
         }
         // Gossip cmds
         cmds::AnomaClient::Intent(cmds::Intent(args)) => {
