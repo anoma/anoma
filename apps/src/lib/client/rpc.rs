@@ -1,9 +1,11 @@
 //! Client RPC queries
 
 use std::borrow::Cow;
+use std::convert::TryInto;
 use std::io::{self, Write};
 
 use anoma::ledger::pos;
+use anoma::ledger::pos::types::{VotingPower, WeightedValidator};
 use anoma::types::storage::Epoch;
 use anoma::types::{address, storage, token};
 use borsh::BorshDeserialize;
@@ -222,7 +224,8 @@ pub async fn query_bonds(args: args::QueryBonds) {
                     writeln!(
                         w,
                         "No delegations found for {} to validator {}",
-                        owner, validator
+                        owner,
+                        validator.encode()
                     )
                     .unwrap();
                 }
@@ -306,7 +309,7 @@ pub async fn query_bonds(args: args::QueryBonds) {
                     writeln!(
                         w,
                         "No self-bonds found for validator {}",
-                        validator
+                        validator.encode()
                     )
                     .unwrap();
                 }
@@ -461,11 +464,12 @@ pub async fn query_bonds(args: args::QueryBonds) {
                     match pos::is_bond_key(&key) {
                         Some(pos::BondId { source, validator }) => {
                             let bond_type = if source == validator {
-                                format!("Self-bonds for {}", validator)
+                                format!("Self-bonds for {}", validator.encode())
                             } else {
                                 format!(
                                     "Delegations from {} to validator {}",
-                                    source, validator
+                                    source,
+                                    validator.encode()
                                 )
                             };
                             writeln!(w, "{}:", bond_type).unwrap();
@@ -510,12 +514,16 @@ pub async fn query_bonds(args: args::QueryBonds) {
                     match pos::is_unbond_key(&key) {
                         Some(pos::BondId { source, validator }) => {
                             let bond_type = if source == validator {
-                                format!("Unbonded self-bonds for {}", validator)
+                                format!(
+                                    "Unbonded self-bonds for {}",
+                                    validator.encode()
+                                )
                             } else {
                                 format!(
                                     "Unbonded delegations from {} to \
                                      validator {}",
-                                    source, validator
+                                    source,
+                                    validator.encode()
                                 )
                             };
                             writeln!(w, "{}:", bond_type).unwrap();
@@ -557,6 +565,112 @@ pub async fn query_bonds(args: args::QueryBonds) {
                 writeln!(w, "Unbonded total: {}", total).unwrap();
             }
         }
+    }
+}
+
+/// Query PoS voting power
+pub async fn query_voting_power(args: args::QueryVotingPower) {
+    let epoch = match args.epoch {
+        Some(_) => args.epoch,
+        None => query_epoch(args.query.clone()).await,
+    };
+    if let Some(epoch) = epoch {
+        let client = HttpClient::new(args.query.ledger_address).unwrap();
+
+        // Find the validator set
+        let validator_set_key = pos::validator_set_key();
+        let validator_sets = query_storage_value::<pos::ValidatorSets>(
+            client.clone(),
+            validator_set_key,
+        )
+        .await
+        .expect("Validator set should always be set");
+        let validator_set = validator_sets
+            .get(epoch)
+            .expect("Validator set should be always set in the current epoch");
+        match args.validator {
+            Some(validator) => {
+                // Find voting power for the given validator
+                let voting_power_key =
+                    pos::validator_voting_power_key(&validator);
+                let voting_powers = query_storage_value::<
+                    pos::ValidatorVotingPowers,
+                >(
+                    client.clone(), voting_power_key
+                )
+                .await;
+                match voting_powers.and_then(|data| data.get(epoch)) {
+                    Some(voting_power_delta) => {
+                        let voting_power: VotingPower =
+                            voting_power_delta.try_into().expect(
+                                "The sum voting power deltas shouldn't be \
+                                 negative",
+                            );
+                        let weighted = WeightedValidator {
+                            address: validator.clone(),
+                            voting_power,
+                        };
+                        let is_active =
+                            validator_set.active.contains(&weighted);
+                        if !is_active {
+                            debug_assert!(
+                                validator_set.inactive.contains(&weighted)
+                            );
+                        }
+                        println!(
+                            "Validator {} is {}, voting power: {}",
+                            validator.encode(),
+                            if is_active { "active" } else { "inactive" },
+                            voting_power
+                        )
+                    }
+                    None => println!(
+                        "No voting power found for {}",
+                        validator.encode()
+                    ),
+                }
+            }
+            None => {
+                // Iterate all validators
+                let stdout = io::stdout();
+                let mut w = stdout.lock();
+
+                writeln!(w, "Active validators:").unwrap();
+                for active in &validator_set.active {
+                    writeln!(
+                        w,
+                        "  {}: {}",
+                        active.address.encode(),
+                        active.voting_power
+                    )
+                    .unwrap();
+                }
+                if !validator_set.inactive.is_empty() {
+                    writeln!(w, "Inactive validators:").unwrap();
+                    for inactive in &validator_set.inactive {
+                        writeln!(
+                            w,
+                            "  {}: {}",
+                            inactive.address.encode(),
+                            inactive.voting_power
+                        )
+                        .unwrap();
+                    }
+                }
+            }
+        }
+        let total_voting_power_key = pos::total_voting_power_key();
+        let total_voting_powers =
+            query_storage_value::<pos::TotalVotingPowers>(
+                client,
+                total_voting_power_key,
+            )
+            .await
+            .expect("Total voting power should always be set");
+        let total_voting_power = total_voting_powers.get(epoch).expect(
+            "Total voting power should be always set in the current epoch",
+        );
+        println!("Total voting power: {}", total_voting_power);
     }
 }
 

@@ -275,6 +275,15 @@ impl TryFrom<VotingPower> for VotingPowerDelta {
     }
 }
 
+impl TryFrom<VotingPowerDelta> for VotingPower {
+    type Error = TryFromIntError;
+
+    fn try_from(value: VotingPowerDelta) -> Result<Self, Self::Error> {
+        let vp: u64 = TryFrom::try_from(value.0)?;
+        Ok(Self(vp))
+    }
+}
+
 impl Display for VotingPower {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self.0)

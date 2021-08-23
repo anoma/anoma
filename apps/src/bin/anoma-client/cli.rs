@@ -45,6 +45,9 @@ pub async fn main() -> Result<()> {
         cmds::AnomaClient::QueryBonds(cmds::QueryBonds(args)) => {
             rpc::query_bonds(args).await;
         }
+        cmds::AnomaClient::QueryVotingPower(cmds::QueryVotingPower(args)) => {
+            rpc::query_voting_power(args).await;
+        }
         // Gossip cmds
         cmds::AnomaClient::Intent(cmds::Intent(args)) => {
             gossip_intent(args).await;

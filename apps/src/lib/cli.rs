@@ -133,6 +133,7 @@ pub mod cmds {
         QueryEpoch(QueryEpoch),
         QueryBalance(QueryBalance),
         QueryBonds(QueryBonds),
+        QueryVotingPower(QueryVotingPower),
         // Gossip cmds
         Intent(Intent),
         CraftIntent(CraftIntent),
@@ -150,6 +151,7 @@ pub mod cmds {
                 .subcommand(QueryEpoch::def())
                 .subcommand(QueryBalance::def())
                 .subcommand(QueryBonds::def())
+                .subcommand(QueryVotingPower::def())
                 .subcommand(Intent::def())
                 .subcommand(CraftIntent::def())
                 .subcommand(SubscribeTopic::def())
@@ -165,7 +167,9 @@ pub mod cmds {
             let query_epoch = SubCmd::parse(matches).map_fst(Self::QueryEpoch);
             let query_balance =
                 SubCmd::parse(matches).map_fst(Self::QueryBalance);
-            let query_bond = SubCmd::parse(matches).map_fst(Self::QueryBonds);
+            let query_bonds = SubCmd::parse(matches).map_fst(Self::QueryBonds);
+            let query_voting_power =
+                SubCmd::parse(matches).map_fst(Self::QueryVotingPower);
             let intent = SubCmd::parse(matches).map_fst(Self::Intent);
             let craft_intent =
                 SubCmd::parse(matches).map_fst(Self::CraftIntent);
@@ -179,7 +183,8 @@ pub mod cmds {
                 .or(withdraw)
                 .or(query_epoch)
                 .or(query_balance)
-                .or(query_bond)
+                .or(query_bonds)
+                .or(query_voting_power)
                 .or(intent)
                 .or(craft_intent)
                 .or(subscribe_topic)
@@ -578,6 +583,31 @@ pub mod cmds {
     }
 
     #[derive(Clone, Debug)]
+    pub struct QueryVotingPower(pub args::QueryVotingPower);
+
+    impl SubCmd for QueryVotingPower {
+        const CMD: &'static str = "voting-power";
+
+        fn parse(matches: &ArgMatches) -> Option<(Self, &ArgMatches)>
+        where
+            Self: Sized,
+        {
+            matches.subcommand_matches(Self::CMD).map(|matches| {
+                (
+                    QueryVotingPower(args::QueryVotingPower::parse(matches)),
+                    matches,
+                )
+            })
+        }
+
+        fn def() -> App {
+            App::new(Self::CMD)
+                .about("Query PoS voting power")
+                .add_args::<args::QueryVotingPower>()
+        }
+    }
+
+    #[derive(Clone, Debug)]
     pub struct Intent(pub args::Intent);
 
     impl SubCmd for Intent {
@@ -655,6 +685,7 @@ pub mod args {
 
     use anoma::types::address::Address;
     use anoma::types::intent::Exchange;
+    use anoma::types::storage::Epoch;
     use anoma::types::token;
     use libp2p::Multiaddr;
 
@@ -669,6 +700,10 @@ pub mod args {
     const DATA_PATH_OPT: ArgOpt<PathBuf> = arg_opt("data-path");
     const DATA_PATH: Arg<PathBuf> = arg("data-path");
     const DRY_RUN_TX: ArgFlag = flag("dry-run");
+    const EPOCH: ArgOpt<Epoch> = arg_opt("epoch");
+    const FILE_PATH_INPUT: Arg<String> = arg("file-path-input");
+    const FILE_PATH_OUTPUT: ArgDefault<String> =
+        arg_default("file-path-output", DefaultFn(|| "intent.data".into()));
     const FILTER_PATH: ArgOpt<PathBuf> = arg_opt("filter-path");
     const LEDGER_ADDRESS_ABOUT: &str =
         "Address of a ledger node as \"{scheme}://{host}:{port}\". If the \
@@ -680,29 +715,26 @@ pub mod args {
         }));
     const LEDGER_ADDRESS_OPT: ArgOpt<tendermint::net::Address> =
         LEDGER_ADDRESS.opt();
-    const PEERS: ArgMulti<String> = arg_multi("peers");
-    const TOPIC: Arg<String> = arg("topic");
-    const TOPICS: ArgMulti<String> = TOPIC.multi();
-    // TODO: once we have a wallet, we should also allow to use a key alias
-    // <https://github.com/anoma/anoma/issues/167>
-    const SIGNING_KEY: Arg<Address> = arg("key");
-    const RPC_SOCKET_ADDR: ArgOpt<SocketAddr> = arg_opt("rpc");
     const LEDGER_ADDRESS: Arg<tendermint::net::Address> = arg("ledger-address");
     const MATCHMAKER_PATH: ArgOpt<PathBuf> = arg_opt("matchmaker-path");
     const MULTIADDR_OPT: ArgOpt<Multiaddr> = arg_opt("address");
     const NODE: Arg<String> = arg("node");
-    const FILE_PATH_OUTPUT: ArgDefault<String> =
-        arg_default("file-path-output", DefaultFn(|| "intent.data".into()));
-    const FILE_PATH_INPUT: Arg<String> = arg("file-path-input");
     const OWNER: ArgOpt<Address> = arg_opt("owner");
-    const SOURCE: Arg<Address> = arg("source");
+    const PEERS: ArgMulti<String> = arg_multi("peers");
+    const RPC_SOCKET_ADDR: ArgOpt<SocketAddr> = arg_opt("rpc");
+    // <https://github.com/anoma/anoma/issues/167>
+    // TODO: once we have a wallet, we should also allow to use a key alias
+    const SIGNING_KEY: Arg<Address> = arg("key");
     const SOURCE_OPT: ArgOpt<Address> = SOURCE.opt();
+    const SOURCE: Arg<Address> = arg("source");
     const TARGET: Arg<Address> = arg("target");
     const TOKEN_OPT: ArgOpt<Address> = TOKEN.opt();
     const TOKEN: Arg<Address> = arg("token");
+    const TOPIC: Arg<String> = arg("topic");
+    const TOPICS: ArgMulti<String> = TOPIC.multi();
     const TX_CODE_PATH: ArgOpt<PathBuf> = arg_opt("tx-code-path");
-    const VALIDATOR: Arg<Address> = arg("validator");
     const VALIDATOR_OPT: ArgOpt<Address> = VALIDATOR.opt();
+    const VALIDATOR: Arg<Address> = arg("validator");
 
     /// Global command arguments
     #[derive(Clone, Debug)]
@@ -965,9 +997,9 @@ pub mod args {
     pub struct QueryBalance {
         /// Common query args
         pub query: Query,
-        /// Address of the owner
+        /// Address of an owner
         pub owner: Option<Address>,
-        /// Address of the token
+        /// Address of a token
         pub token: Option<Address>,
     }
 
@@ -1003,9 +1035,9 @@ pub mod args {
     pub struct QueryBonds {
         /// Common query args
         pub query: Query,
-        /// Address of the owner
+        /// Address of an owner
         pub owner: Option<Address>,
-        /// Address of the validator
+        /// Address of a validator
         pub validator: Option<Address>,
     }
 
@@ -1033,6 +1065,41 @@ pub mod args {
                         .def()
                         .about("The validator's address whose bonds to query"),
                 )
+        }
+    }
+
+    /// Query PoS voting power
+    #[derive(Clone, Debug)]
+    pub struct QueryVotingPower {
+        /// Common query args
+        pub query: Query,
+        /// Address of a validator
+        pub validator: Option<Address>,
+        /// Epoch in which to find voting power
+        pub epoch: Option<Epoch>,
+    }
+
+    impl Args for QueryVotingPower {
+        fn parse(matches: &ArgMatches) -> Self {
+            let query = Query::parse(matches);
+            let validator = VALIDATOR_OPT.parse(matches);
+            let epoch = EPOCH.parse(matches);
+            Self {
+                query,
+                validator,
+                epoch,
+            }
+        }
+
+        fn def(app: App) -> App {
+            app.add_args::<Query>()
+                .arg(VALIDATOR_OPT.def().about(
+                    "The validator's address whose voting power to query",
+                ))
+                .arg(EPOCH.def().about(
+                    "The epoch at which to query (last committed, if not \
+                     specified)",
+                ))
         }
     }
 
