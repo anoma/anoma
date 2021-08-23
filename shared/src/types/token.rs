@@ -189,7 +189,8 @@ impl FromStr for Amount {
 impl Display for Amount {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let decimal =
-            rust_decimal::Decimal::new(self.micro as i64, MAX_DECIMAL_PLACES);
+            rust_decimal::Decimal::new(self.micro as i64, MAX_DECIMAL_PLACES)
+                .normalize();
         write!(f, "{}", decimal)
     }
 }
