@@ -367,6 +367,12 @@ impl Sub<Epoch> for Epoch {
     }
 }
 
+impl Display for Epoch {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.0)
+    }
+}
+
 impl<Address> Display for BondId<Address>
 where
     Address: Display + Debug + Clone + PartialEq + Eq + PartialOrd + Ord + Hash,
