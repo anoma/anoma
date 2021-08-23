@@ -91,18 +91,26 @@ cargo run --bin anoma -- gossip --rpc "127.0.0.1:39111"
 # run gossip node with intent gossip system, matchmaker and rpc (use default config)
 cargo run --bin anoman -- gossip --rpc "127.0.0.1:39111" --matchmaker-path wasm/mm_token_exch.wasm --tx-code-path wasm/tx_from_intent.wasm --ledger-address "127.0.0.1:26657"
 
-# craft intents
-cargo run --bin anomac -- craft-intent --address $ALBERT    --token-buy $ETH --amount-buy 10 --token-sell $BTC --amount-sell 20 --file-path intent_A.data
-cargo run --bin anomac -- craft-intent --address $BERTHA   --token-buy $BTC --amount-buy 20 --token-sell $XAN --amount-sell 30 --file-path intent_B.data
-cargo run --bin anomac -- craft-intent --address $CHRISTEL --token-buy $XAN --amount-buy 30 --token-sell $ETH --amount-sell 10 --file-path intent_C.data
+# make intents
+# 1) create file containing the json rapresentation of the intent
+echo '[{"addr":"a1qq5qqqqqxv6yydz9xc6ry33589q5x33eggcnjs2xx9znydj9xuens3phxppnwvzpg4rrqdpswve4n9","key":"a1qq5qqqqqxv6yydz9xc6ry33589q5x33eggcnjs2xx9znydj9xuens3phxppnwvzpg4rrqdpswve4n9","max_sell":70,"min_buy":100,"min_rate":2,"token_buy":"a1qq5qqqqqxuc5gvz9gycryv3sgye5v3j9gvurjv34g9prsd6x8qu5xs2ygdzrzsf38q6rss33xf42f3","token_sell":"a1qq5qqqqq8q6yy3p4xyurys3n8qerz3zxxeryyv6rg4pnxdf3x3pyv32rx3zrgwzpxu6ny32r3laduc"}]' > intent.A.data
+
+echo '[{"addr":"a1qq5qqqqqxsuygd2x8pq5yw2ygdryxs6xgsmrsdzx8pryxv34gfrrssfjgccyg3zpxezrqd2y2s3g5s","key":"a1qq5qqqqqxsuygd2x8pq5yw2ygdryxs6xgsmrsdzx8pryxv34gfrrssfjgccyg3zpxezrqd2y2s3g5s","max_sell":200,"min_buy":20,"min_rate":0.5,"token_buy":"a1qq5qqqqqx3z5xd3ngdqnzwzrgfpnxd3hgsuyx3phgfry2s3kxsc5xves8qe5x33sgdprzvjptzfry9","token_sell":"a1qq5qqqqqxuc5gvz9gycryv3sgye5v3j9gvurjv34g9prsd6x8qu5xs2ygdzrzsf38q6rss33xf42f3"}]' > intent.B.data
+
+echo '[{"addr":"a1qq5qqqqqg4znssfsgcurjsfhgfpy2vjyxy6yg3z98pp5zvp5xgersvfjxvcnx3f4xycrzdfkak0xhx","key":"a1qq5qqqqqg4znssfsgcurjsfhgfpy2vjyxy6yg3z98pp5zvp5xgersvfjxvcnx3f4xycrzdfkak0xhx","max_sell":300,"min_buy":50,"min_rate":0.7,"token_buy":"a1qq5qqqqq8q6yy3p4xyurys3n8qerz3zxxeryyv6rg4pnxdf3x3pyv32rx3zrgwzpxu6ny32r3laduc","token_sell":"a1qq5qqqqqx3z5xd3ngdqnzwzrgfpnxd3hgsuyx3phgfry2s3kxsc5xves8qe5x33sgdprzvjptzfry9"}]' > intent.C.data
+
+# 2) craft intents
+cargo run --bin anomac -- craft-intent --key $BERTHA --file-path-input intent.A.data --file-path-output intent.A
+cargo run --bin anomac -- craft-intent --key $ALBERT --file-path-input intent.B.data --file-path-output intent.B
+cargo run --bin anomac -- craft-intent --key $CHRISTEL --file-path-input intent.C.data --file-path-output intent.C
 
 # Subscribe to new network
 cargo run --bin anomac -- subscribe-topic --node "http://127.0.0.1:39111" --topic "asset_v1"
 
 # Submit the intents (need a rpc server)
-cargo run --bin anomac -- intent --node "http://127.0.0.1:39111" --data-path intent_A.data --topic "asset_v1"
-cargo run --bin anomac -- intent --node "http://127.0.0.1:39111" --data-path intent_B.data --topic "asset_v1"
-cargo run --bin anomac -- intent --node "http://127.0.0.1:39111" --data-path intent_C.data --topic "asset_v1"
+cargo run --bin anomac -- intent --node "http://127.0.0.1:39111" --data-path intent_A --topic "asset_v1"
+cargo run --bin anomac -- intent --node "http://127.0.0.1:39111" --data-path intent_B --topic "asset_v1"
+cargo run --bin anomac -- intent --node "http://127.0.0.1:39111" --data-path intent_C --topic "asset_v1"
 
 # Format the code
 make fmt

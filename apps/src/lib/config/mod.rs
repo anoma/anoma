@@ -1,4 +1,8 @@
 //! Node and client configuration
+
+pub mod genesis;
+pub mod gossiper;
+
 use std::collections::HashSet;
 use std::fmt::Display;
 use std::fs::{create_dir_all, File};
@@ -7,6 +11,7 @@ use std::net::{IpAddr, Ipv4Addr, SocketAddr};
 use std::path::{Path, PathBuf};
 use std::str::FromStr;
 
+use gossiper::Gossiper;
 use libp2p::multiaddr::{Multiaddr, Protocol};
 use libp2p::multihash::Multihash;
 use libp2p::PeerId;
@@ -14,8 +19,6 @@ use regex::Regex;
 use serde::{de, Deserialize, Serialize};
 use tendermint::net;
 use thiserror::Error;
-
-use crate::gossiper::Gossiper;
 
 #[derive(Error, Debug)]
 pub enum Error {
@@ -140,6 +143,8 @@ pub enum SubscriptionFilter {
     RegexFilter(#[serde(with = "serde_regex")] Regex),
     WhitelistFilter(Vec<String>),
 }
+
+// TODO peer_id can be part of Multiaddr, mayby this splitting is not useful ?
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Clone)]
 pub struct PeerAddress {
     pub address: Multiaddr,
@@ -186,16 +191,21 @@ impl<'de> Deserialize<'de> for PeerAddress {
     }
 }
 
+// TODO add reserved_peers: explicit peers for gossipsub network, to not be
+// added to kademlia
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct DiscoverPeer {
     pub max_discovery_peers: u64,
     pub kademlia: bool,
     pub mdns: bool,
-    pub bootstrap_peers: HashSet<PeerAddress>, /* TODO add reserved_peers(explicit peers for gossipsub network, to not
-                                                * be added to kademlia) */
+    pub bootstrap_peers: HashSet<PeerAddress>,
 }
 
 impl Default for DiscoverPeer {
+    /// default configuration for discovering peer.
+    /// max_discovery_peers: 16,
+    /// kademlia: true,
+    /// mdns: true,
     fn default() -> Self {
         Self {
             max_discovery_peers: 16,
@@ -244,7 +254,6 @@ impl Default for Config {
     fn default() -> Self {
         Self {
             ledger: Some(Ledger::default()),
-            // TODO Should it be None by default
             intent_gossiper: Some(IntentGossiper::default()),
         }
     }
@@ -302,6 +311,8 @@ impl IntentGossiper {
         peers_info: Vec<(String, u32, PeerId)>,
         mdns: bool,
         kademlia: bool,
+        matchmaker: bool,
+        rpc: bool,
     ) -> Self {
         let mut gossiper_config = IntentGossiper::default();
         let mut discover_config = DiscoverPeer::default();
@@ -309,6 +320,19 @@ impl IntentGossiper {
         gossiper_config.address =
             Multiaddr::from_str(format!("/ip4/{}/tcp/{}", ip, port).as_str())
                 .unwrap();
+
+        if matchmaker {
+            gossiper_config.matchmaker = Some(Matchmaker {
+                matchmaker: "../wasm/mm_token_exch.wasm".parse().unwrap(),
+                tx_code: "../wasm/tx_from_intent.wasm".parse().unwrap(),
+                ledger_address: "0.0.0.0:26657".parse().unwrap(),
+                filter: None,
+            })
+        }
+
+        if rpc {
+            gossiper_config.rpc = Some(RpcServer::default())
+        }
 
         let bootstrap_peers: HashSet<PeerAddress> = peers_info
             .iter()

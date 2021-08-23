@@ -49,17 +49,31 @@ pub enum DiscoveryEvent {
     /// Event that notifies that we disconnected with the node with the given
     /// peer id.
     Disconnected(PeerId),
+
+    /// This case is only use to clean the code in the poll fct
+    KademliaEvent(KademliaEvent),
 }
 
 /// `DiscoveryBehaviour` configuration.
 #[derive(Clone)]
 pub struct DiscoveryConfig {
+    /// user defined peer that are given to kad in order to connect to the
+    /// network
     user_defined: Vec<PeerAddress>,
+    /// maximum number of peer to connect to
     discovery_max: u64,
+    /// enable kademlia to find new peer
     enable_kademlia: bool,
+    /// look for new peer over local network.
+    // TODO: it seems that kademlia must activated where it should not be
+    // mandatory
     enable_mdns: bool,
+    // TODO: should this be optional? if not explain why
+    /// use the option from kademlia. Prevent some type of attacks against
+    /// kademlia.
     kademlia_disjoint_query_paths: bool,
 }
+
 impl Default for DiscoveryConfig {
     fn default() -> Self {
         Self {
@@ -93,6 +107,7 @@ impl DiscoveryConfigBuilder {
         self
     }
 
+    /// Configures if disjoint query path is enabled
     pub fn use_kademlia_disjoint_query_paths(
         &mut self,
         value: bool,
@@ -113,6 +128,7 @@ impl DiscoveryConfigBuilder {
         self
     }
 
+    /// Build the discovery config
     pub fn build(&self) -> Result<DiscoveryConfig> {
         Ok(self.config.clone())
     }
@@ -143,13 +159,21 @@ pub struct DiscoveryBehaviour {
     /// Number of active connections to pause discovery on.
     discovery_max: u64,
 }
+
 impl Display for DiscoveryBehaviour {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.write_str(
             format!(
-                "user_defined {:?}, kademlia: {:?}, mdns: {:?}, \
-                 next_kad_random_query: {:?}, duration_to_next_kad {:?}, \
-                 num_connection: {:?}, peers: {:?}, discovery_max: {:?}",
+                "{{
+    user_defined {:?},
+    kademlia: {:?},
+    mdns: {:?},
+    next_kad_random_query: {:?},
+    duration_to_next_kad {:?},
+    num_connection: {:?},
+    peers: {:?},
+    discovery_max: {:?}
+}}",
                 self.user_defined,
                 self.kademlia.is_enabled(),
                 self.mdns.is_enabled(),
@@ -180,15 +204,14 @@ impl DiscoveryBehaviour {
 
         let mut peers = HashSet::new();
 
+        // Kademlia config
         let kademlia_opt = if enable_kademlia {
-            // Kademlia config
             let store = MemoryStore::new(local_peer_id.to_owned());
             let mut kad_config = KademliaConfig::default();
             kad_config.disjoint_query_paths(kademlia_disjoint_query_paths);
+            // TODO: choose a better protocol name
             kad_config.set_protocol_name(
-                format!("/anoma/kad/{}/kad/1.0.0", "anoma")
-                    .as_bytes()
-                    .to_vec(),
+                "/anoma/kad/anoma/kad/1.0.0".as_bytes().to_vec(),
             );
 
             let mut kademlia =
@@ -197,10 +220,12 @@ impl DiscoveryBehaviour {
             user_defined
                 .iter()
                 .for_each(|PeerAddress { address, peer_id }| {
-                    kademlia.add_address(&peer_id, address.clone());
+                    kademlia.add_address(peer_id, address.clone());
                     peers.insert(*peer_id);
                 });
 
+            // TODO: For production should node fail when kad failed to
+            // bootstrap?
             if let Err(err) = kademlia.bootstrap() {
                 tracing::error!("failed to bootstrap kad : {:?}", err);
             };
@@ -210,6 +235,10 @@ impl DiscoveryBehaviour {
         };
 
         let mdns_opt = if enable_mdns {
+            // Because the mdns config needs to be created in an async way we
+            // need a runtime.
+            // TODO: Maybe do an MR upstream to add the possibility of a sync
+            // way
             let rt = tokio::runtime::Runtime::new().unwrap();
             Some(
                 rt.block_on(Mdns::new(MdnsConfig::default()))
@@ -233,6 +262,7 @@ impl DiscoveryBehaviour {
     }
 }
 
+// Most function here are a wrapper around kad behaviour,
 impl NetworkBehaviour for DiscoveryBehaviour {
     type OutEvent = DiscoveryEvent;
     type ProtocolsHandler =
@@ -242,6 +272,9 @@ impl NetworkBehaviour for DiscoveryBehaviour {
         self.kademlia.new_handler()
     }
 
+    /// Look for the address of a peer first in the user defined list then in
+    /// kademlia then lastly in the local network. Sum all possible address and
+    /// returns.
     fn addresses_of_peer(&mut self, peer_id: &PeerId) -> Vec<Multiaddr> {
         let mut list = self
             .user_defined
@@ -363,6 +396,8 @@ impl NetworkBehaviour for DiscoveryBehaviour {
         self.kademlia.inject_new_external_addr(addr)
     }
 
+    // This poll function is called by libp2p to fetch/generate new event. First
+    // in the local queue then in kademlia and lastly in Mdns.
     #[allow(clippy::type_complexity)]
     fn poll(
 	&mut self,
@@ -379,58 +414,18 @@ impl NetworkBehaviour for DiscoveryBehaviour {
             return Poll::Ready(NetworkBehaviourAction::GenerateEvent(ev));
         }
 
-        // Poll Kademlia.
+        // Poll Kademlia return every other event except kad event
         while let Poll::Ready(ev) = self.kademlia.poll(cx, params) {
-            match ev {
-                NetworkBehaviourAction::GenerateEvent(ev) => match ev {
-                    // Adding to Kademlia buckets is automatic with our config,
-                    // no need to do manually.
-                    KademliaEvent::RoutingUpdated { .. } => {}
-                    KademliaEvent::UnroutablePeer { .. } => {}
-                    KademliaEvent::RoutablePeer { .. } => {}
-                    KademliaEvent::QueryResult { .. } => {}
-                    KademliaEvent::PendingRoutablePeer { .. } => {}
-                },
-                NetworkBehaviourAction::DialAddress { address } => {
-                    return Poll::Ready(NetworkBehaviourAction::DialAddress {
-                        address,
-                    });
-                }
-                NetworkBehaviourAction::DialPeer { peer_id, condition } => {
-                    return Poll::Ready(NetworkBehaviourAction::DialPeer {
-                        peer_id,
-                        condition,
-                    });
-                }
-                NetworkBehaviourAction::NotifyHandler {
-                    peer_id,
-                    handler,
-                    event,
-                } => {
-                    return Poll::Ready(
-                        NetworkBehaviourAction::NotifyHandler {
-                            peer_id,
-                            handler,
-                            event,
-                        },
-                    );
-                }
-                NetworkBehaviourAction::ReportObservedAddr {
-                    address,
-                    score,
-                } => {
-                    return Poll::Ready(
-                        NetworkBehaviourAction::ReportObservedAddr {
-                            address,
-                            score,
-                        },
-                    );
-                }
+            if let NetworkBehaviourAction::GenerateEvent(_kad_ev) = ev {
+            } else {
+                return Poll::Ready(ev.map_out(DiscoveryEvent::KademliaEvent));
             }
         }
 
         // Poll the stream that fires when we need to start a random Kademlia
-        // query.
+        // query. When the stream provides a new value then it tries to look for
+        // a node and connect to it.
+        // TODO: explain a bit more the logic happening here
         if let Some(next_kad_random_query) = self.next_kad_random_query.as_mut()
         {
             while next_kad_random_query.poll_next_unpin(cx).is_ready() {
@@ -454,31 +449,29 @@ impl NetworkBehaviour for DiscoveryBehaviour {
             }
         }
 
-        // Poll mdns.
+        // Poll mdns. If mdns generated new Discovered event then connect to it
+        // TODO: refactor this function, it can't be done as the kad done
         while let Poll::Ready(ev) = self.mdns.poll(cx, params) {
             match ev {
                 NetworkBehaviourAction::GenerateEvent(event) => match event {
                     MdnsEvent::Discovered(list) => {
-                        if self.num_connections >= self.discovery_max {
+                        if self.num_connections < self.discovery_max {
+                            // Add any discovered peers to Kademlia
+                            for (peer_id, multiaddr) in list {
+                                if let Some(kad) = self.kademlia.as_mut() {
+                                    kad.add_address(&peer_id, multiaddr);
+                                }
+                            }
+                        } else {
                             tracing::info!(
                                 "max reached {:?}, {:?}",
                                 self.num_connections,
                                 self.discovery_max
                             );
                             // Already over discovery max, don't add discovered
-                            // peers.
-                            // We could potentially buffer these addresses to be
-                            // added later, but mdns
-                            // is not an important use case and may be removed
-                            // in future.
-                            continue;
-                        }
-
-                        // Add any discovered peers to Kademlia
-                        for (peer_id, multiaddr) in list {
-                            if let Some(kad) = self.kademlia.as_mut() {
-                                kad.add_address(&peer_id, multiaddr);
-                            }
+                            // peers. We could potentially buffer these
+                            // addresses to be added later, but mdns is not an
+                            // important use case and may be removed in future.
                         }
                     }
                     MdnsEvent::Expired(_) => {}
@@ -495,9 +488,7 @@ impl NetworkBehaviour for DiscoveryBehaviour {
                     });
                 }
                 // Nothing to notify handler
-                NetworkBehaviourAction::NotifyHandler { event, .. } => {
-                    match event {}
-                }
+                NetworkBehaviourAction::NotifyHandler { .. } => {}
                 NetworkBehaviourAction::ReportObservedAddr {
                     address,
                     score,

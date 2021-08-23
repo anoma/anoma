@@ -9,5 +9,5 @@ pub trait MmHost {
     /// Inject a transaction with the given data
     fn inject_tx(&self, tx_data: Vec<u8>);
     /// Update the state of the matchmaker
-    fn update_data(&self, data: Vec<u8>);
+    fn update_state(&self, data: Vec<u8>);
 }

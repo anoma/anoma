@@ -1,12 +1,13 @@
 //! Anoma client CLI.
 
+use std::collections::HashSet;
 use std::fs::File;
 use std::io::Write;
 
-use anoma::types::intent::Intent;
+use anoma::types::intent::{Exchange, FungibleTokenIntent};
 use anoma::types::key::ed25519::Signed;
 use anoma_apps::cli::{args, cmds};
-use anoma_apps::client::tx;
+use anoma_apps::client::{rpc, tx};
 use anoma_apps::proto::services::rpc_service_client::RpcServiceClient;
 use anoma_apps::proto::{services, RpcMessage};
 use anoma_apps::{cli, wallet};
@@ -34,6 +35,9 @@ pub async fn main() -> Result<()> {
         }
         cmds::AnomaClient::Withdraw(cmds::Withdraw(args)) => {
             tx::submit_withdraw(args).await;
+        }
+        cmds::AnomaClient::QueryBalance(cmds::QueryBalance(args)) => {
+            rpc::query_balance(args).await;
         }
         // Gossip cmds
         cmds::AnomaClient::Intent(cmds::Intent(args)) => {
@@ -82,25 +86,27 @@ async fn subscribe_topic(
 
 fn craft_intent(
     args::CraftIntent {
-        addr,
-        token_sell,
-        amount_sell,
-        token_buy,
-        amount_buy,
+        key,
+        exchanges,
         file_path,
     }: args::CraftIntent,
 ) {
-    let source_keypair = wallet::key_of(&addr.encode());
+    let signed_exchanges: HashSet<Signed<Exchange>> = exchanges
+        .iter()
+        .map(|exchange| {
+            let source_keypair = wallet::key_of(exchange.addr.encode());
+            Signed::new(&source_keypair, exchange.clone())
+        })
+        .collect();
 
-    let intent = Intent {
-        addr,
-        token_sell,
-        amount_sell,
-        token_buy,
-        amount_buy,
-    };
-    let signed: Signed<Intent> = Signed::new(&source_keypair, intent);
-    let data_bytes = signed.try_to_vec().unwrap();
+    let signing_key = wallet::key_of(key.encode());
+    let signed_ft: Signed<FungibleTokenIntent> = Signed::new(
+        &signing_key,
+        FungibleTokenIntent {
+            exchange: signed_exchanges,
+        },
+    );
+    let data_bytes = signed_ft.try_to_vec().unwrap();
 
     let mut file = File::create(file_path).unwrap();
     file.write_all(&data_bytes).unwrap();

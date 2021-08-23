@@ -394,7 +394,7 @@ where
         intent_data_ptr,
         intent_data_len,
     }: memory::MatchmakerCallInput =
-        memory::write_matchmaker_inputs(&memory, data, intent_id, intent_data)
+        memory::write_matchmaker_inputs(memory, data, intent_id, intent_data)
             .map_err(Error::MemoryError)?;
     let apply_matchmaker = instance
         .exports
@@ -448,7 +448,7 @@ pub fn matchmaker_filter(
         intent_data_ptr,
         intent_data_len,
     }: memory::FilterCallInput =
-        memory::write_filter_inputs(&memory, intent_data)
+        memory::write_filter_inputs(memory, intent_data)
             .map_err(Error::MemoryError)?;
     let apply_filter = instance
         .exports

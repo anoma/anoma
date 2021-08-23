@@ -13,7 +13,7 @@ crate-type = ["cdylib"]
 # Newly added wasms should also be added into the Makefile `$(wasms)` list.
 [features]
 mm_filter_token_exch = []
-mm_token_exch = ["petgraph", "serde", "serde_json"]
+mm_token_exch = ["petgraph", "serde", "serde_json", "good_lp", "rust_decimal"]
 tx_bond = []
 tx_from_intent = []
 tx_transfer = []
@@ -21,7 +21,7 @@ tx_unbond = []
 tx_update_vp = []
 tx_withdraw = []
 vp_token = []
-vp_user = []
+vp_user = ["rust_decimal"]
 
 [dependencies]
 anoma_vm_env = {path = "../../vm_env"}
@@ -30,12 +30,16 @@ petgraph = {version = "0.5.1", features = ["serde-1"], optional = true}
 serde = {version = "1.0.125", optional = true}
 serde_json = {version = "1.0.64", optional = true}
 wee_alloc = "0.4.5"
+rust_decimal = { version = "1.14.3", optional = true }
+good_lp = { version = "*", features = ["minilp"], default-features = false, optional = true }
 
 [dev-dependencies]
 anoma_tests = {path = "../../tests"}
 
 [profile.release]
-# smaller and faster wasm https://rustwasm.github.io/book/reference/code-size.html#compiling-with-link-time-optimizations-lto
+# smaller and faster wasm (https://rustwasm.github.io/book/reference/code-size.html#compiling-with-link-time-optimizations-lto)
 lto = true
 # simply terminate on panics, no unwinding
 panic = "abort"
+# tell llvm to optimize for size (https://rustwasm.github.io/book/reference/code-size.html#tell-llvm-to-optimize-for-size-instead-of-speed)
+opt-level = 'z'

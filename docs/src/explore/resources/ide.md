@@ -1,7 +1,10 @@
-# VsCode
+# IDE
+
+## VsCode
 
 Some handy extensions (output of `code --list-extensions`):
-```
+
+```shell
 aaron-bond.better-comments
 be5invis.toml
 bodil.file-browser
@@ -28,7 +31,7 @@ Add these to your settings.json to get rustfmt and clippy with the nightly versi
 ```json
 "rust-analyzer.checkOnSave.overrideCommand": [
     "cargo",
-    "+nightly-2021-03-09",
+    "+nightly-2021-08-04",
     "clippy",
     "--workspace",
     "--message-format=json",
@@ -37,7 +40,7 @@ Add these to your settings.json to get rustfmt and clippy with the nightly versi
 "rust-analyzer.rustfmt.overrideCommand": [
     "rustup",
     "run",
-    "nightly-2021-03-09",
+    "nightly-2021-08-04",
     "--",
     "rustfmt",
     "--edition",
@@ -46,19 +49,20 @@ Add these to your settings.json to get rustfmt and clippy with the nightly versi
 ],
 ```
 
+When editing the wasms source (i.e. `wasm/wasm_source/src/..`), open the `wasm/wasm_source` as a workspace to get rust-analyzer working (because the crate is excluded from the root cargo workspace) and then active `--all-features` for it in the preferences.
 
-# Emacs
+## Emacs
 
 two main mode:
+
 - [rust-mode](https://github.com/rust-lang/rust-mode)
   official mode supported by rust dev
 - [rustic-mode](https://github.com/brotzeit/rustic)
   forked with more option and better integration/default value
 
-
 ## config example with rustic and use-package
 
-```
+```elisp
     ;; all flycheck not mandatory not mandatory
   (use-package flycheck
     :commands flycheck-mode

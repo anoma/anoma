@@ -20,6 +20,9 @@ ISSUE_TITLE = 'Cargo Udeps'
 ISSUE_LABEL = 'udeps'
 
 
+def get_nightly_from_file() -> str:
+    return open("rust-nightly-version", "r").read().strip()
+
 # 0 - not exist,2 already exist, else issue number
 def check_issue_status(body: str) -> int:
     params = {'labels': ISSUE_LABEL,'state':'open'}
@@ -58,7 +61,7 @@ def create_issue(body: str):
 
 
 def format_manifest_path(path: str) -> str:
-    base_path_index = path.split('/').index('anoma-prototype')
+    base_path_index = path.split('/').index('anoma')
     return '/'.join(path.split('/')[base_path_index:])
 
 issue_template = '# Unused dependencies \n{}'
@@ -67,13 +70,14 @@ table_row = '|{}|{}|{}|{}|'
 
 table = [table_header]
 
-command = ['cargo', '+nightly-2021-03-09', 'udeps', '--all-features', '--locked', '--output', 'json']
+nightly_version = get_nightly_from_file()
+command = ['cargo', '+{}'.format(nightly_version), 'udeps', '--all-features', '--locked', '--output', 'json']
 p = subprocess.Popen(command, stdout=subprocess.PIPE)
 output = p.stdout.read()
 retcode = p.wait()
 
 unused_deps = json.loads(output)
-if unused_deps['success'] == 'true':
+if unused_deps['success'] == True:
     print("No unused dependencies found.")
     exit(0)
 

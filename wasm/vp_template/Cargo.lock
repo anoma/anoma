@@ -24,14 +24,13 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "739f4a8db6605981345c5654f3a85b056ce52f37a39d34da03f25bf2151ea16e"
 
 [[package]]
-name = "anoma_shared"
+name = "anoma"
 version = "0.1.0"
 dependencies = [
  "bech32",
  "borsh",
  "chrono",
  "ed25519-dalek",
- "hex",
  "itertools",
  "loupe",
  "parity-wasm",
@@ -61,9 +60,10 @@ dependencies = [
 name = "anoma_tests"
 version = "0.1.0"
 dependencies = [
- "anoma_shared",
+ "anoma",
  "anoma_vm_env",
  "concat-idents",
+ "serde_json",
  "test-env-log",
  "tracing",
  "tracing-subscriber",
@@ -73,7 +73,7 @@ dependencies = [
 name = "anoma_vm_env"
 version = "0.1.0"
 dependencies = [
- "anoma_shared",
+ "anoma",
  "anoma_vm_macro",
  "borsh",
 ]
@@ -722,12 +722,6 @@ checksum = "62b467343b94ba476dcb2500d242dadbb39557df889310ac77c5d99100aaac33"
 dependencies = [
  "libc",
 ]
-
-[[package]]
-name = "hex"
-version = "0.4.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7f24254aa9a54b5c858eaee2f5bccdb46aaf0e486a595ed5fd8f86ba55232a70"
 
 [[package]]
 name = "ident_case"
@@ -1479,9 +1473,9 @@ dependencies = [
 
 [[package]]
 name = "serde_json"
-version = "1.0.64"
+version = "1.0.66"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "799e97dc9fdae36a5c8b8f2cae9ce2ee9fdce2058c57a93e6099d919fd982f79"
+checksum = "336b10da19a12ad094b59d870ebde26a45402e5b470add4b5fd03c5048a32127"
 dependencies = [
  "itoa",
  "ryu",

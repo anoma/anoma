@@ -50,16 +50,15 @@ pub async fn rpc_server(
         rpc_message::Message,
         oneshot::Sender<RpcResponse>,
     )>,
-) -> Result<(), Box<dyn std::error::Error>> {
+) -> Result<(), tonic::transport::Error> {
     let rpc = Rpc { inject_message };
-
     let svc = RpcServiceServer::new(rpc);
-
-    Server::builder().add_service(svc).serve(addr).await?;
-
-    Ok(())
+    Server::builder().add_service(svc).serve(addr).await
 }
 
+/// Start a rpc server in it's own thread. The used address to listen is in the
+/// `config` argument. All received event by the rpc are send to the channel
+/// return by this function.
 pub fn start_rpc_server(
     config: &RpcServer,
 ) -> mpsc::Receiver<(

@@ -65,7 +65,7 @@ pub fn is_pk_key(key: &Key) -> Option<&Address> {
 
 /// Sign the data with a key.
 pub fn sign(keypair: &Keypair, data: impl AsRef<[u8]>) -> Signature {
-    Signature(keypair.sign(&data.as_ref()))
+    Signature(keypair.sign(data.as_ref()))
 }
 
 #[allow(missing_docs)]
@@ -154,6 +154,39 @@ pub struct Signed<T: BorshSerialize + BorshDeserialize> {
     pub data: T,
     /// The signature of the data
     pub sig: Signature,
+}
+
+impl<T> PartialEq for Signed<T>
+where
+    T: BorshSerialize + BorshDeserialize + PartialEq,
+{
+    fn eq(&self, other: &Self) -> bool {
+        self.data == other.data && self.sig == other.sig
+    }
+}
+
+impl<T> Eq for Signed<T> where
+    T: BorshSerialize + BorshDeserialize + Eq + PartialEq
+{
+}
+
+impl<T> Hash for Signed<T>
+where
+    T: BorshSerialize + BorshDeserialize + Hash,
+{
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.data.hash(state);
+        self.sig.hash(state);
+    }
+}
+
+impl<T> PartialOrd for Signed<T>
+where
+    T: BorshSerialize + BorshDeserialize + PartialOrd,
+{
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        self.data.partial_cmp(&other.data)
+    }
 }
 
 impl<T> Signed<T>

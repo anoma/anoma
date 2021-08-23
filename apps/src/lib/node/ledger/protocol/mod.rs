@@ -144,10 +144,10 @@ fn check_vps(
         .iter()
         .map(|(addr, keys)| {
             let vp = match addr {
-                Address::Internal(addr) => Vp::Native(&addr),
+                Address::Internal(addr) => Vp::Native(addr),
                 Address::Established(_) | Address::Implicit(_) => {
                     let (vp, gas) = storage
-                        .validity_predicate(&addr)
+                        .validity_predicate(addr)
                         .map_err(Error::StorageError)?;
                     gas_meter.add(gas).map_err(Error::GasError)?;
                     let vp =
@@ -245,11 +245,10 @@ fn execute_vps(
                 Ok(accepted) => {
                     if !accepted {
                         result.rejected_vps.insert(addr.clone());
-                        Ok(result)
                     } else {
                         result.accepted_vps.insert(addr.clone());
-                        Ok(result)
                     }
+                    Ok(result)
                 }
                 Err(err) => match err {
                     Error::GasError(_) => Err(err),

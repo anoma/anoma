@@ -1,6 +1,7 @@
 //! Implements transparent addresses as described in [Accounts
 //! Addresses](docs/src/explore/design/ledger/accounts.md#addresses).
 
+use std::collections::HashMap;
 use std::fmt::{Debug, Display};
 use std::hash::Hash;
 use std::str::FromStr;
@@ -60,8 +61,6 @@ pub type Result<T> = std::result::Result<T, Error>;
     PartialOrd,
     Ord,
     Hash,
-    Serialize,
-    Deserialize,
 )]
 pub enum Address {
     /// An established address is generated on-chain
@@ -144,6 +143,30 @@ impl Address {
                 write!(f, "Internal {}: {}", kind, self.encode())
             }
         }
+    }
+}
+
+impl serde::Serialize for Address {
+    fn serialize<S>(
+        &self,
+        serializer: S,
+    ) -> std::result::Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        let encoded = self.encode();
+        serde::Serialize::serialize(&encoded, serializer)
+    }
+}
+
+impl<'de> serde::Deserialize<'de> for Address {
+    fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        use serde::de::Error;
+        let encoded: String = serde::Deserialize::deserialize(deserializer)?;
+        Self::decode(encoded).map_err(D::Error::custom)
     }
 }
 
@@ -310,6 +333,22 @@ pub fn kartoffel() -> Address {
     Address::decode("a1qq5qqqqqxs6yvsekxuuyy3pjxsmrgd2rxuungdzpgsmyydjrxsenjdp5xaqn233sgccnjs3eak5wwh").expect("The token address decoding shouldn't fail")
 }
 
+/// Temporary helper for testing, a hash map of tokens addresses with their
+/// informal currency codes.
+pub fn tokens() -> HashMap<Address, &'static str> {
+    vec![
+        (xan(), "XAN"),
+        (btc(), "BTC"),
+        (eth(), "ETH"),
+        (dot(), "DOT"),
+        (schnitzel(), "Schnitzel"),
+        (apfel(), "Apfel"),
+        (kartoffel(), "Kartoffel"),
+    ]
+    .into_iter()
+    .collect()
+}
+
 /// Temporary helper for testing
 pub fn matchmaker() -> Address {
     Address::decode("a1qq5qqqqqxu6rvdzpxymnqwfkxfznvsjxggunyd3jg5erg3p3geqnvv35gep5yvzxx5m5x3fsfje8td").expect("The token address decoding shouldn't fail")
@@ -333,6 +372,19 @@ pub mod tests {
         let bytes = addr.try_to_vec().unwrap();
         assert_eq!(bytes.len(), RAW_ADDRESS_LEN);
         assert_eq!(addr.encode().len(), ADDRESS_LEN);
+    }
+
+    #[test]
+    fn test_address_serde_serialize() {
+        let original_address = Address::decode("a1qq5qqqqqgcmyxd35xguy2wp5xsu5vs6pxqcy232pgvm5zs6yggunssfs89znv33h8q6rjde4cjc3dr").unwrap();
+        let expect =
+            "\"a1qq5qqqqqgcmyxd35xguy2wp5xsu5vs6pxqcy232pgvm5zs6yggunssfs89znv33h8q6rjde4cjc3dr\"";
+        let decoded_address: Address =
+            serde_json::from_str(expect).expect("could not read JSON");
+        assert_eq!(original_address, decoded_address);
+
+        let encoded_address = serde_json::to_string(&original_address).unwrap();
+        assert_eq!(encoded_address, expect);
     }
 }
 

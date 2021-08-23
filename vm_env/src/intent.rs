@@ -8,7 +8,7 @@ pub mod tx {
     pub use anoma::types::intent::*;
 
     use super::*;
-    pub fn invalidate_intent(intent: &Signed<Intent>) {
+    pub fn invalidate_exchange(intent: &Signed<Exchange>) {
         use crate::imports::tx;
         let key = intent::invalid_intent_key(&intent.data.addr);
         let mut invalid_intent: HashSet<Signature> =
@@ -24,7 +24,7 @@ pub mod vp {
 
     use super::*;
 
-    pub fn vp(intent: &Signed<Intent>) -> bool {
+    pub fn vp_exchange(intent: &Signed<Exchange>) -> bool {
         use crate::imports::vp;
         let key = intent::invalid_intent_key(&intent.data.addr);
 

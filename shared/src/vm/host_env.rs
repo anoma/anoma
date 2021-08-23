@@ -1499,7 +1499,7 @@ pub fn mm_remove_intents<MEM, MM>(
     mm.remove_intents(intents_id);
 }
 
-/// Inject a transaction from matchmaker's matched intents to the ledger
+/// Injupdate_stateaction from matchmaker's matched intents to the ledger
 pub fn mm_send_match<MEM, MM>(
     env: &MatchmakerEnv<MEM, MM>,
     data_ptr: u64,
@@ -1518,21 +1518,21 @@ pub fn mm_send_match<MEM, MM>(
 }
 
 /// Update matchmaker's state data
-pub fn mm_update_data<MEM, MM>(
+pub fn mm_update_state<MEM, MM>(
     env: &MatchmakerEnv<MEM, MM>,
-    data_ptr: u64,
-    data_len: u64,
+    state_ptr: u64,
+    state_len: u64,
 ) where
     MEM: VmMemory,
     MM: MmHost,
 {
     let (data, _gas) = env
         .memory
-        .read_bytes(data_ptr, data_len as _)
+        .read_bytes(state_ptr, state_len as _)
         .expect("TODO: handle runtime errors");
 
     let mm = env.mm.lock().unwrap();
-    mm.update_data(data);
+    mm.update_state(data);
 }
 
 /// Log a string from exposed to the wasm VM matchmaker environment. The message

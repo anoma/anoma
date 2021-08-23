@@ -18,7 +18,9 @@ wee_alloc = "0.4.5"
 anoma_tests = {path = "../../tests"}
 
 [profile.release]
-# smaller and faster wasm https://rustwasm.github.io/book/reference/code-size.html#compiling-with-link-time-optimizations-lto
+# smaller and faster wasm (https://rustwasm.github.io/book/reference/code-size.html#compiling-with-link-time-optimizations-lto)
 lto = true
 # simply terminate on panics, no unwinding
 panic = "abort"
+# tell llvm to optimize for size (https://rustwasm.github.io/book/reference/code-size.html#tell-llvm-to-optimize-for-size-instead-of-speed)
+opt-level = 'z'

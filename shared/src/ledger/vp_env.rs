@@ -52,8 +52,7 @@ where
     DB: storage::DB + for<'iter> storage::DBIter<'iter>,
     H: StorageHasher,
 {
-    let (value, gas) =
-        storage.read(&key).map_err(RuntimeError::StorageError)?;
+    let (value, gas) = storage.read(key).map_err(RuntimeError::StorageError)?;
     add_gas(gas_meter, gas)?;
     Ok(value)
 }
@@ -71,7 +70,7 @@ where
     H: StorageHasher,
 {
     // Try to read from the write log first
-    let (log_val, gas) = write_log.read(&key);
+    let (log_val, gas) = write_log.read(key);
     add_gas(gas_meter, gas)?;
     match log_val {
         Some(&write_log::StorageModification::Write { ref value }) => {
@@ -90,7 +89,7 @@ where
         None => {
             // When not found in write log, try to read from the storage
             let (value, gas) =
-                storage.read(&key).map_err(RuntimeError::StorageError)?;
+                storage.read(key).map_err(RuntimeError::StorageError)?;
             add_gas(gas_meter, gas)?;
             Ok(value)
         }
@@ -127,7 +126,7 @@ where
     H: StorageHasher,
 {
     // Try to read from the write log first
-    let (log_val, gas) = write_log.read(&key);
+    let (log_val, gas) = write_log.read(key);
     add_gas(gas_meter, gas)?;
     match log_val {
         Some(&write_log::StorageModification::Write { .. }) => Ok(true),
@@ -139,7 +138,7 @@ where
         None => {
             // When not found in write log, try to check the storage
             let (present, gas) =
-                storage.has_key(&key).map_err(RuntimeError::StorageError)?;
+                storage.has_key(key).map_err(RuntimeError::StorageError)?;
             add_gas(gas_meter, gas)?;
             Ok(present)
         }

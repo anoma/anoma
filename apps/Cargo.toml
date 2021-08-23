@@ -43,12 +43,12 @@ testing = []
 [dependencies]
 anoma = {path = "../shared", features = ["ibc-vp", "wasm-runtime"]}
 async-std = {version = "1.9.0", features = ["unstable"]}
+async-trait = "0.1.51"
 base64 = "0.13.0"
 bech32 = "0.8.0"
 blake2b-rs = "0.2.0"
 borsh = "0.9.0"
 byteorder = "1.4.2"
-bytesize = "1.0.1"
 # https://github.com/clap-rs/clap/issues/1037
 clap = {git = "https://github.com/clap-rs/clap/", tag = "v3.0.0-beta.2", default-features = false, features = ["std", "suggestions", "color"]}
 color-eyre = "0.5.10"
@@ -58,6 +58,7 @@ ed25519-dalek = {version = "1.0.1", default-features = false, features = ["rand"
 eyre = "0.6.5"
 futures = "0.3"
 itertools = "0.10.1"
+jsonpath_lib = "0.3.0"
 libc = "0.2.97"
 libp2p = "0.38.0"
 prost = "0.8.0"
@@ -77,9 +78,8 @@ signal-hook = "0.3.9"
 sparse-merkle-tree = {git = "https://github.com/heliaxdev/sparse-merkle-tree", branch = "tomas/encoding-0.9.0b", features = ["borsh"]}
 # temporarily using fork work-around for https://github.com/informalsystems/tendermint-rs/issues/916
 tendermint = {git = "https://github.com/heliaxdev/tendermint-rs", branch = "tomas/update-genesis-new-prost"}
-tendermint-abci = {git = "https://github.com/heliaxdev/tendermint-rs", branch = "tomas/update-genesis-new-prost"}
 tendermint-proto = {git = "https://github.com/heliaxdev/tendermint-rs", branch = "tomas/update-genesis-new-prost"}
-tendermint-rpc = {git = "https://github.com/heliaxdev/tendermint-rs", branch = "tomas/update-genesis-new-prost", features = ["http-client"]}
+tendermint-rpc = {git = "https://github.com/heliaxdev/tendermint-rs", branch = "tomas/update-genesis-new-prost", features = ["http-client", "websocket-client"]}
 thiserror = "1.0.24"
 tokio = {version = "1.8.2", features = ["full"]}
 toml = "0.5.8"
@@ -89,12 +89,14 @@ tower-abci = {git = "https://github.com/heliaxdev/tower-abci", branch = "tomas/u
 tracing = "0.1.26"
 tracing-log = "0.1.2"
 tracing-subscriber = "0.2.18"
+websocket = "0.26.2"
 
 [dev-dependencies]
 anoma = {path = "../shared", features = ["testing", "wasm-runtime"]}
 cargo-watch = "7.5.0"
 proptest = "1.0.0"
 tempfile = "3.2.0"
+tokio-test = "0.4.2"
 
 [build-dependencies]
 tonic-build = "0.5.0"

@@ -538,8 +538,8 @@ pub mod matchmaker {
 
     /// Update the matchmaker state. This state will be pass on the next run of
     /// the matchmaker.
-    pub fn update_data(data: Vec<u8>) {
-        unsafe { anoma_mm_update_data(data.as_ptr() as _, data.len() as _) };
+    pub fn update_state(state: Vec<u8>) {
+        unsafe { anoma_mm_update_state(state.as_ptr() as _, state.len() as _) };
     }
 
     /// Remove the intents from the matchmaker intent mempool, to call when they
@@ -568,7 +568,7 @@ pub mod matchmaker {
         // Inject a transaction from matchmaker's matched intents to the ledger
         fn anoma_mm_send_match(data_ptr: u64, data_len: u64);
 
-        fn anoma_mm_update_data(data_ptr: u64, data_len: u64);
+        fn anoma_mm_update_state(state_ptr: u64, state_len: u64);
 
         fn anoma_mm_remove_intents(intents_id_ptr: u64, intents_id_len: u64);
 
