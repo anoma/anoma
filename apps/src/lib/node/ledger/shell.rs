@@ -243,7 +243,7 @@ impl Shell {
         }
 
         // PoS system depends on epoch being initialized
-        let (current_epoch, _gas) = self.storage.get_block_epoch();
+        let (current_epoch, _gas) = self.storage.get_current_epoch();
         pos::init_genesis_storage(
             &mut self.storage,
             &genesis.pos_params,
@@ -412,7 +412,7 @@ impl Shell {
 
         // Apply validator set update on a new epoch
         if self.new_epoch {
-            let (current_epoch, _gas) = self.storage.get_block_epoch();
+            let (current_epoch, _gas) = self.storage.get_current_epoch();
             // TODO ABCI validator updates on block H affects the validator set
             // on block H+2, do we need to update a block earlier?
             self.storage.validator_set_update(current_epoch, |update| {

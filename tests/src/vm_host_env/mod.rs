@@ -205,7 +205,7 @@ mod tests {
         );
         assert_eq!(
             tx_host_env::get_block_epoch(),
-            env.storage.get_block_epoch().0
+            env.storage.get_current_epoch().0
         );
     }
 
@@ -418,7 +418,7 @@ mod tests {
         );
         assert_eq!(
             vp_host_env::get_block_epoch(),
-            env.storage.get_block_epoch().0
+            env.storage.get_current_epoch().0
         );
     }
 

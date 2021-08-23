@@ -327,7 +327,7 @@ where
     }
 
     fn host_current_height(&self) -> Height {
-        let epoch = self.ctx.storage.get_block_epoch().0.0;
+        let epoch = self.ctx.storage.get_current_epoch().0.0;
         let height = self.ctx.storage.get_block_height().0.0;
         Height::new(epoch, height)
     }

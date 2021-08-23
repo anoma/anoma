@@ -1282,7 +1282,7 @@ where
     H: StorageHasher,
 {
     let storage = unsafe { env.ctx.storage.get() };
-    let (epoch, gas) = storage.get_block_epoch();
+    let (epoch, gas) = storage.get_current_epoch();
     tx_add_gas(env, gas)?;
     Ok(epoch.0)
 }

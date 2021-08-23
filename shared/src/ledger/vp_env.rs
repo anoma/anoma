@@ -199,7 +199,7 @@ where
     DB: storage::DB + for<'iter> storage::DBIter<'iter>,
     H: StorageHasher,
 {
-    let (epoch, gas) = storage.get_block_epoch();
+    let (epoch, gas) = storage.get_current_epoch();
     add_gas(gas_meter, gas)?;
     Ok(epoch)
 }

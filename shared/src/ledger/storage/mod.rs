@@ -45,8 +45,8 @@ where
     pub header: Option<Header>,
     /// The height of the committed block
     pub last_height: BlockHeight,
-    /// The epoch of the current block
-    pub current_epoch: Epoch,
+    /// The epoch of the committed block
+    pub last_epoch: Epoch,
     /// Minimum block height at which the next epoch may start
     pub next_epoch_min_start_height: BlockHeight,
     /// Minimum block time at which the next epoch may start
@@ -172,7 +172,7 @@ where
             self.block.epoch = epoch;
             self.block.subspaces = subspaces;
             self.last_height = height;
-            self.current_epoch = epoch;
+            self.last_epoch = epoch;
             self.next_epoch_min_start_height = next_epoch_min_start_height;
             self.next_epoch_min_start_time = next_epoch_min_start_time;
             self.address_gen = address_gen;
@@ -376,8 +376,13 @@ where
     }
 
     /// Get the current (yet to be committed) block epoch
-    pub fn get_block_epoch(&self) -> (Epoch, u64) {
-        (self.current_epoch, MIN_STORAGE_GAS)
+    pub fn get_current_epoch(&self) -> (Epoch, u64) {
+        (self.block.epoch, MIN_STORAGE_GAS)
+    }
+
+    /// Get the epoch of the last committed block
+    pub fn get_last_epoch(&self) -> (Epoch, u64) {
+        (self.last_epoch, MIN_STORAGE_GAS)
     }
 
     /// Initialize the first epoch. The first epoch begins at genesis time.
@@ -418,8 +423,8 @@ where
         if new_epoch {
             // Begin a new epoch
             self.block.epoch = self.block.epoch.next();
-            self.current_epoch = self.current_epoch.next();
-            debug_assert_eq!(self.block.epoch, self.current_epoch);
+            self.last_epoch = self.last_epoch.next();
+            debug_assert_eq!(self.block.epoch, self.last_epoch);
             let EpochDuration {
                 min_num_of_blocks,
                 min_duration,
@@ -454,7 +459,7 @@ where
             H::hash_key(&Key {
                 segments: vec![DbKeySeg::StringSeg("current_epoch".into())],
             }),
-            H::hash_value(&types::encode(&self.current_epoch)),
+            H::hash_value(&types::encode(&self.last_epoch)),
         )
     }
 }
@@ -545,7 +550,7 @@ pub mod testing {
                 block,
                 header: None,
                 last_height: BlockHeight(0),
-                current_epoch: Epoch::default(),
+                last_epoch: Epoch::default(),
                 next_epoch_min_start_height: BlockHeight::default(),
                 next_epoch_min_start_time: DateTimeUtc::now(),
                 address_gen: EstablishedAddressGen::new(
@@ -627,7 +632,7 @@ mod tests {
             };
             parameters::init_genesis_storage(&mut storage, &parameters);
 
-            let epoch_before = storage.current_epoch;
+            let epoch_before = storage.last_epoch;
             assert_eq!(epoch_before, storage.block.epoch);
 
             // Try to apply the epoch update
@@ -643,14 +648,14 @@ mod tests {
                 )
             {
                 assert_eq!(storage.block.epoch, epoch_before.next());
-                assert_eq!(storage.current_epoch, epoch_before.next());
+                assert_eq!(storage.last_epoch, epoch_before.next());
                 assert_eq!(storage.next_epoch_min_start_height,
                     block_height + epoch_duration.min_num_of_blocks);
                 assert_eq!(storage.next_epoch_min_start_time,
                     block_time + epoch_duration.min_duration);
             } else {
                 assert_eq!(storage.block.epoch, epoch_before);
-                assert_eq!(storage.current_epoch, epoch_before);
+                assert_eq!(storage.last_epoch, epoch_before);
             }
 
             // Update the epoch duration parameters
@@ -662,7 +667,7 @@ mod tests {
             parameters::update(&mut storage, &parameters).unwrap();
 
             // Test for 2.
-            let epoch_before = storage.current_epoch;
+            let epoch_before = storage.last_epoch;
             let height_of_update = storage.next_epoch_min_start_height.0 ;
             let time_of_update = storage.next_epoch_min_start_time;
             let height_before_update = BlockHeight(height_of_update - 1);
@@ -673,18 +678,18 @@ mod tests {
             // satisfied
             storage.update_epoch(height_before_update, time_before_update).unwrap();
             assert_eq!(storage.block.epoch, epoch_before);
-            assert_eq!(storage.current_epoch, epoch_before);
+            assert_eq!(storage.last_epoch, epoch_before);
             storage.update_epoch(height_of_update, time_before_update).unwrap();
             assert_eq!(storage.block.epoch, epoch_before);
-            assert_eq!(storage.current_epoch, epoch_before);
+            assert_eq!(storage.last_epoch, epoch_before);
             storage.update_epoch(height_before_update, time_of_update).unwrap();
             assert_eq!(storage.block.epoch, epoch_before);
-            assert_eq!(storage.current_epoch, epoch_before);
+            assert_eq!(storage.last_epoch, epoch_before);
 
             // Update should happen at this or after this height and time
             storage.update_epoch(height_of_update, time_of_update).unwrap();
             assert_eq!(storage.block.epoch, epoch_before.next());
-            assert_eq!(storage.current_epoch, epoch_before.next());
+            assert_eq!(storage.last_epoch, epoch_before.next());
             // The next epoch's minimum duration should change
             assert_eq!(storage.next_epoch_min_start_height,
                 height_of_update + parameters.epoch_duration.min_num_of_blocks);
