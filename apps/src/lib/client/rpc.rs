@@ -307,9 +307,11 @@ pub async fn query_bonds(args: args::QueryBonds) {
                 .await;
                 // Find owner's unbonds to any validator
                 let unbonds_prefix = pos::unbonds_for_source_prefix(owner);
-                let unbonds =
-                    query_storage_prefix::<pos::Bonds>(client, unbonds_prefix)
-                        .await;
+                let unbonds = query_storage_prefix::<pos::Unbonds>(
+                    client,
+                    unbonds_prefix,
+                )
+                .await;
 
                 let stdout = io::stdout();
                 let mut w = stdout.lock();
@@ -364,7 +366,7 @@ pub async fn query_bonds(args: args::QueryBonds) {
 
                 let mut total: token::Amount = 0.into();
                 let mut total_withdrawable: token::Amount = 0.into();
-                for (key, bonds) in unbonds {
+                for (key, unbonds) in unbonds {
                     match pos::is_unbond_key(&key) {
                         Some(pos::BondId { source, validator }) => {
                             any_bonds = true;
@@ -376,21 +378,20 @@ pub async fn query_bonds(args: args::QueryBonds) {
                             };
                             writeln!(w, "{}:", bond_type).unwrap();
                             let mut current_total: token::Amount = 0.into();
-                            for deltas in bonds.iter() {
-                                for (epoch_start, delta) in
-                                    deltas.delta.iter().sorted()
+                            for deltas in unbonds.iter() {
+                                for ((epoch_start, epoch_end), delta) in
+                                    deltas.deltas.iter().sorted()
                                 {
                                     writeln!(
                                         w,
                                         "  Withdrawable from epoch {}: Δ {}",
-                                        epoch_start, delta
+                                        epoch_end, delta
                                     )
                                     .unwrap();
                                     current_total += *delta;
                                     total += *delta;
-                                    let epoch_start: Epoch =
-                                        (*epoch_start).into();
-                                    if epoch >= epoch_start {
+                                    let epoch_end: Epoch = (*epoch_end).into();
+                                    if epoch >= epoch_end {
                                         total_withdrawable += *delta;
                                     }
                                 }
