@@ -550,8 +550,7 @@ pub async fn query_bonds(args: args::QueryBonds) {
                         None => panic!("Unexpected storage key {}", key),
                     }
                 }
-                if total_withdrawable != 0.into() && total_withdrawable != total
-                {
+                if total_withdrawable != 0.into() {
                     writeln!(w, "Withdrawable total: {}", total_withdrawable)
                         .unwrap();
                 }
