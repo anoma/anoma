@@ -153,7 +153,12 @@ pub async fn query_bonds(args: args::QueryBonds) {
                 let mut w = stdout.lock();
 
                 if let Some(bonds) = &bonds {
-                    writeln!(w, "Delegations:").unwrap();
+                    let bond_type = if owner == validator {
+                        "Self-bonds"
+                    } else {
+                        "Delegations"
+                    };
+                    writeln!(w, "{}:", bond_type).unwrap();
                     let mut total: token::Amount = 0.into();
                     let mut total_active: token::Amount = 0.into();
                     for deltas in bonds.iter() {
@@ -180,22 +185,29 @@ pub async fn query_bonds(args: args::QueryBonds) {
                 }
 
                 if let Some(unbonds) = &unbonds {
-                    writeln!(w, "Unbonded delegations:").unwrap();
+                    let bond_type = if owner == validator {
+                        "Unbonded self-bonds"
+                    } else {
+                        "Unbonded delegations"
+                    };
+                    writeln!(w, "{}:", bond_type).unwrap();
                     let mut total: token::Amount = 0.into();
                     let mut withdrawable: token::Amount = 0.into();
                     for deltas in unbonds.iter() {
                         for ((epoch_start, epoch_end), delta) in
                             deltas.deltas.iter().sorted()
                         {
+                            let withdraw_epoch = *epoch_end + 1_u64;
                             writeln!(
                                 w,
-                                "  Active from epoch {} to {}: Δ {}",
-                                epoch_start, epoch_end, delta
+                                "  Withdrawable from epoch {} (active from \
+                                 {}): Δ {}",
+                                withdraw_epoch, epoch_start, delta
                             )
                             .unwrap();
                             total += *delta;
                             let epoch_end: Epoch = (*epoch_end).into();
-                            if epoch >= epoch_end {
+                            if epoch > epoch_end {
                                 withdrawable += *delta;
                             }
                         }
@@ -268,15 +280,17 @@ pub async fn query_bonds(args: args::QueryBonds) {
                         for ((epoch_start, epoch_end), delta) in
                             deltas.deltas.iter().sorted()
                         {
+                            let withdraw_epoch = *epoch_end + 1_u64;
                             writeln!(
                                 w,
-                                "  Active from epoch {} to {}: Δ {}",
-                                epoch_start, epoch_end, delta
+                                "  Withdrawable from epoch {} (active from \
+                                 {}): Δ {}",
+                                withdraw_epoch, epoch_start, delta
                             )
                             .unwrap();
                             total += *delta;
                             let epoch_end: Epoch = (*epoch_end).into();
-                            if epoch >= epoch_end {
+                            if epoch > epoch_end {
                                 withdrawable += *delta;
                             }
                         }
@@ -379,19 +393,21 @@ pub async fn query_bonds(args: args::QueryBonds) {
                             writeln!(w, "{}:", bond_type).unwrap();
                             let mut current_total: token::Amount = 0.into();
                             for deltas in unbonds.iter() {
-                                for ((_epoch_start, epoch_end), delta) in
+                                for ((epoch_start, epoch_end), delta) in
                                     deltas.deltas.iter().sorted()
                                 {
+                                    let withdraw_epoch = *epoch_end + 1_u64;
                                     writeln!(
                                         w,
-                                        "  Withdrawable from epoch {}: Δ {}",
-                                        epoch_end, delta
+                                        "  Withdrawable from epoch {} (active \
+                                         from {}): Δ {}",
+                                        withdraw_epoch, epoch_start, delta
                                     )
                                     .unwrap();
                                     current_total += *delta;
                                     total += *delta;
                                     let epoch_end: Epoch = (*epoch_end).into();
-                                    if epoch >= epoch_end {
+                                    if epoch > epoch_end {
                                         total_withdrawable += *delta;
                                     }
                                 }
@@ -508,16 +524,18 @@ pub async fn query_bonds(args: args::QueryBonds) {
                                 for ((epoch_start, epoch_end), delta) in
                                     deltas.deltas.iter().sorted()
                                 {
+                                    let withdraw_epoch = *epoch_end + 1_u64;
                                     writeln!(
                                         w,
-                                        "  Withdrawable from epoch {}: Δ {}",
-                                        epoch_start, delta
+                                        "  Withdrawable from epoch {} (active \
+                                         from {}): Δ {}",
+                                        withdraw_epoch, epoch_start, delta
                                     )
                                     .unwrap();
                                     current_total += *delta;
                                     total += *delta;
                                     let epoch_end: Epoch = (*epoch_end).into();
-                                    if epoch >= epoch_end {
+                                    if epoch > epoch_end {
                                         total_withdrawable += *delta;
                                     }
                                 }
