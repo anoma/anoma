@@ -10,7 +10,7 @@ use std::path::Path;
 use anoma::ledger::storage::types::MerkleTree;
 use anoma::ledger::storage::{types, BlockStorage, Storage, StorageHasher};
 use anoma::types::address::EstablishedAddressGen;
-use anoma::types::storage::{BlockHash, BlockHeight, Epoch, Key};
+use anoma::types::storage::{BlockHash, BlockHeight, Epoch, Epochs, Key};
 use anoma::types::time::DateTimeUtc;
 use blake2b_rs::{Blake2b, Blake2bBuilder};
 use sparse_merkle_tree::blake2b::Blake2bHasher;
@@ -29,6 +29,7 @@ pub fn open(db_path: impl AsRef<Path>, chain_id: String) -> PersistentStorage {
         hash: BlockHash::default(),
         height: BlockHeight::default(),
         epoch: Epoch::default(),
+        pred_epochs: Epochs::default(),
         subspaces: HashMap::default(),
     };
     PersistentStorage {

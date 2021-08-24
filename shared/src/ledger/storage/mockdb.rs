@@ -24,17 +24,30 @@ impl DB for MockDB {
     }
 
     fn write_block(&mut self, state: BlockState) -> Result<()> {
+        let BlockState {
+            root,
+            store,
+            hash,
+            height,
+            epoch,
+            pred_epochs,
+            next_epoch_min_start_height,
+            next_epoch_min_start_time,
+            subspaces,
+            address_gen,
+        }: BlockState = state;
+
         // Epoch start height and time
         self.0.insert(
             "next_epoch_min_start_height".into(),
-            types::encode(&state.next_epoch_min_start_height),
+            types::encode(&next_epoch_min_start_height),
         );
         self.0.insert(
             "next_epoch_min_start_time".into(),
-            types::encode(&state.next_epoch_min_start_time),
+            types::encode(&next_epoch_min_start_time),
         );
 
-        let prefix_key = Key::from(state.height.to_db_key());
+        let prefix_key = Key::from(height.to_db_key());
         // Merkle tree
         {
             let prefix_key = prefix_key
@@ -45,16 +58,14 @@ impl DB for MockDB {
                 let key = prefix_key
                     .push(&"root".to_owned())
                     .map_err(Error::KeyError)?;
-                let value = &state.root;
-                self.0.insert(key.to_string(), types::encode(value));
+                self.0.insert(key.to_string(), types::encode(&root));
             }
             // Tree's store
             {
                 let key = prefix_key
                     .push(&"store".to_owned())
                     .map_err(Error::KeyError)?;
-                let value = &state.store;
-                self.0.insert(key.to_string(), types::encode(value));
+                self.0.insert(key.to_string(), types::encode(&store));
             }
         }
         // Block hash
@@ -62,23 +73,28 @@ impl DB for MockDB {
             let key = prefix_key
                 .push(&"hash".to_owned())
                 .map_err(Error::KeyError)?;
-            let value = &state.hash;
-            self.0.insert(key.to_string(), types::encode(value));
+            self.0.insert(key.to_string(), types::encode(&hash));
         }
         // Block epoch
         {
             let key = prefix_key
                 .push(&"epoch".to_owned())
                 .map_err(Error::KeyError)?;
-            let value = &state.epoch;
-            self.0.insert(key.to_string(), types::encode(value));
+            self.0.insert(key.to_string(), types::encode(&epoch));
+        }
+        // Predecessor block epochs
+        {
+            let key = prefix_key
+                .push(&"pred_epochs".to_owned())
+                .map_err(Error::KeyError)?;
+            self.0.insert(key.to_string(), types::encode(&pred_epochs));
         }
         // SubSpace
         {
             let subspace_prefix = prefix_key
                 .push(&"subspace".to_owned())
                 .map_err(Error::KeyError)?;
-            state.subspaces.iter().for_each(|(key, value)| {
+            subspaces.iter().for_each(|(key, value)| {
                 let key = subspace_prefix.join(key);
                 self.0.insert(key.to_string(), value.clone());
             });
@@ -88,11 +104,10 @@ impl DB for MockDB {
             let key = prefix_key
                 .push(&"address_gen".to_owned())
                 .map_err(Error::KeyError)?;
-            let value = &state.address_gen;
+            let value = &address_gen;
             self.0.insert(key.to_string(), types::encode(value));
         }
-        self.0
-            .insert("height".to_owned(), types::encode(&state.height));
+        self.0.insert("height".to_owned(), types::encode(&height));
         Ok(())
     }
 
@@ -140,6 +155,7 @@ impl DB for MockDB {
         let mut store = None;
         let mut hash = None;
         let mut epoch = None;
+        let mut pred_epochs = None;
         let mut address_gen = None;
         let mut subspaces: HashMap<Key, Vec<u8>> = HashMap::new();
         for (path, bytes) in
@@ -177,6 +193,11 @@ impl DB for MockDB {
                             types::decode(bytes).map_err(Error::CodingError)?,
                         )
                     }
+                    "pred_epochs" => {
+                        pred_epochs = Some(
+                            types::decode(bytes).map_err(Error::CodingError)?,
+                        )
+                    }
                     "subspace" => {
                         let key = Key::parse_db_key(path).map_err(|e| {
                             Error::Temporary {
@@ -195,12 +216,13 @@ impl DB for MockDB {
                 None => unknown_key_error(path)?,
             }
         }
-        match (root, store, hash, epoch, address_gen) {
+        match (root, store, hash, epoch, pred_epochs, address_gen) {
             (
                 Some(root),
                 Some(store),
                 Some(hash),
                 Some(epoch),
+                Some(pred_epochs),
                 Some(address_gen),
             ) => Ok(Some(BlockState {
                 root,
@@ -208,6 +230,7 @@ impl DB for MockDB {
                 hash,
                 height,
                 epoch,
+                pred_epochs,
                 next_epoch_min_start_height,
                 next_epoch_min_start_time,
                 subspaces,

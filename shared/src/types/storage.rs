@@ -55,6 +55,7 @@ pub const RESERVED_VP_KEY: &str = "?";
     Eq,
     PartialOrd,
     Ord,
+    Hash,
     Debug,
     Serialize,
     Deserialize,
@@ -84,6 +85,7 @@ impl Add<u64> for BlockHeight {
     Eq,
     PartialOrd,
     Ord,
+    Hash,
     Serialize,
     Deserialize,
 )]
@@ -561,6 +563,86 @@ impl From<Epoch> for u64 {
     }
 }
 
+/// Predecessor block epochs
+#[derive(
+    Clone,
+    Debug,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    BorshSerialize,
+    BorshDeserialize,
+)]
+pub struct Epochs {
+    /// The oldest epoch we can look-up.
+    first_known_epoch: Epoch,
+    /// The block heights of the first block of each known epoch.
+    /// Invariant: the values must be sorted in ascending order.
+    first_block_heights: Vec<BlockHeight>,
+}
+
+impl Default for Epochs {
+    /// Initialize predecessor epochs, assuming starting on the epoch 0 and
+    /// block height 0.
+    fn default() -> Self {
+        Self {
+            first_known_epoch: Epoch::default(),
+            first_block_heights: vec![BlockHeight::default()],
+        }
+    }
+}
+
+impl Epochs {
+    /// Record start of a new epoch at the given block height and trim any
+    /// epochs that ended more than `max_age_num_blocks` ago.
+    pub fn new_epoch(
+        &mut self,
+        block_height: BlockHeight,
+        max_age_num_blocks: u64,
+    ) {
+        let min_block_height_to_keep = (block_height.0 + 1)
+            .checked_sub(max_age_num_blocks)
+            .unwrap_or_default();
+        // trim off any epochs whose last block is before the limit
+        while let Some((_first_known_epoch_height, rest)) =
+            self.first_block_heights.split_first()
+        {
+            if let Some(second_known_epoch_height) = rest.first() {
+                if second_known_epoch_height.0 < min_block_height_to_keep {
+                    self.first_known_epoch = self.first_known_epoch.next();
+                    self.first_block_heights = rest.to_vec();
+                    continue;
+                }
+            }
+            break;
+        }
+        self.first_block_heights.push(block_height);
+    }
+
+    /// Look-up the epoch of a given block height.
+    pub fn get_epoch(&self, block_height: BlockHeight) -> Option<Epoch> {
+        if let Some((first_known_epoch_height, rest)) =
+            self.first_block_heights.split_first()
+        {
+            if block_height < *first_known_epoch_height {
+                return None;
+            }
+            let mut epoch = self.first_known_epoch;
+            for next_block_height in rest {
+                if block_height < *next_block_height {
+                    return Some(epoch);
+                } else {
+                    epoch = epoch.next();
+                }
+            }
+            return Some(epoch);
+        }
+        None
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use proptest::prelude::*;
@@ -654,6 +736,89 @@ mod tests {
             Error::InvalidKeySeg(s) => assert_eq!(s, "?"),
             _ => panic!("unexpected error happens"),
         }
+    }
+
+    #[test]
+    fn test_predecessor_epochs() {
+        let mut epochs = Epochs::default();
+        assert_eq!(epochs.get_epoch(BlockHeight(0)), Some(Epoch(0)));
+        let mut max_age_num_blocks = 100;
+
+        // epoch 1
+        epochs.new_epoch(BlockHeight(10), max_age_num_blocks);
+        println!("epochs {:#?}", epochs);
+        assert_eq!(epochs.get_epoch(BlockHeight(0)), Some(Epoch(0)));
+        assert_eq!(epochs.get_epoch(BlockHeight(9)), Some(Epoch(0)));
+        assert_eq!(epochs.get_epoch(BlockHeight(10)), Some(Epoch(1)));
+        assert_eq!(epochs.get_epoch(BlockHeight(11)), Some(Epoch(1)));
+        assert_eq!(epochs.get_epoch(BlockHeight(100)), Some(Epoch(1)));
+
+        // epoch 2
+        epochs.new_epoch(BlockHeight(20), max_age_num_blocks);
+        println!("epochs {:#?}", epochs);
+        assert_eq!(epochs.get_epoch(BlockHeight(0)), Some(Epoch(0)));
+        assert_eq!(epochs.get_epoch(BlockHeight(9)), Some(Epoch(0)));
+        assert_eq!(epochs.get_epoch(BlockHeight(10)), Some(Epoch(1)));
+        assert_eq!(epochs.get_epoch(BlockHeight(11)), Some(Epoch(1)));
+        assert_eq!(epochs.get_epoch(BlockHeight(20)), Some(Epoch(2)));
+        assert_eq!(epochs.get_epoch(BlockHeight(100)), Some(Epoch(2)));
+
+        // epoch 3, epoch 0 and 1 should be trimmed
+        epochs.new_epoch(BlockHeight(200), max_age_num_blocks);
+        println!("epochs {:#?}", epochs);
+        assert_eq!(epochs.get_epoch(BlockHeight(0)), None);
+        assert_eq!(epochs.get_epoch(BlockHeight(9)), None);
+        assert_eq!(epochs.get_epoch(BlockHeight(10)), None);
+        assert_eq!(epochs.get_epoch(BlockHeight(11)), None);
+        assert_eq!(epochs.get_epoch(BlockHeight(20)), Some(Epoch(2)));
+        assert_eq!(epochs.get_epoch(BlockHeight(100)), Some(Epoch(2)));
+        assert_eq!(epochs.get_epoch(BlockHeight(200)), Some(Epoch(3)));
+
+        // increase the limit
+        max_age_num_blocks = 200;
+
+        // epoch 4
+        epochs.new_epoch(BlockHeight(300), max_age_num_blocks);
+        println!("epochs {:#?}", epochs);
+        assert_eq!(epochs.get_epoch(BlockHeight(20)), Some(Epoch(2)));
+        assert_eq!(epochs.get_epoch(BlockHeight(100)), Some(Epoch(2)));
+        assert_eq!(epochs.get_epoch(BlockHeight(200)), Some(Epoch(3)));
+        assert_eq!(epochs.get_epoch(BlockHeight(300)), Some(Epoch(4)));
+
+        // epoch 5, epoch 2 should be trimmed
+        epochs.new_epoch(BlockHeight(499), max_age_num_blocks);
+        println!("epochs {:#?}", epochs);
+        assert_eq!(epochs.get_epoch(BlockHeight(20)), None);
+        assert_eq!(epochs.get_epoch(BlockHeight(100)), None);
+        assert_eq!(epochs.get_epoch(BlockHeight(200)), Some(Epoch(3)));
+        assert_eq!(epochs.get_epoch(BlockHeight(300)), Some(Epoch(4)));
+        assert_eq!(epochs.get_epoch(BlockHeight(499)), Some(Epoch(5)));
+
+        // epoch 6, epoch 3 should be trimmed
+        epochs.new_epoch(BlockHeight(500), max_age_num_blocks);
+        println!("epochs {:#?}", epochs);
+        assert_eq!(epochs.get_epoch(BlockHeight(200)), None);
+        assert_eq!(epochs.get_epoch(BlockHeight(300)), Some(Epoch(4)));
+        assert_eq!(epochs.get_epoch(BlockHeight(499)), Some(Epoch(5)));
+        assert_eq!(epochs.get_epoch(BlockHeight(500)), Some(Epoch(6)));
+
+        // decrease the limit
+        max_age_num_blocks = 50;
+
+        // epoch 7, epoch 4 and 5 should be trimmed
+        epochs.new_epoch(BlockHeight(550), max_age_num_blocks);
+        println!("epochs {:#?}", epochs);
+        assert_eq!(epochs.get_epoch(BlockHeight(300)), None);
+        assert_eq!(epochs.get_epoch(BlockHeight(499)), None);
+        assert_eq!(epochs.get_epoch(BlockHeight(500)), Some(Epoch(6)));
+        assert_eq!(epochs.get_epoch(BlockHeight(550)), Some(Epoch(7)));
+
+        // epoch 8, epoch 6 should be trimmed
+        epochs.new_epoch(BlockHeight(600), max_age_num_blocks);
+        println!("epochs {:#?}", epochs);
+        assert_eq!(epochs.get_epoch(BlockHeight(500)), None);
+        assert_eq!(epochs.get_epoch(BlockHeight(550)), Some(Epoch(7)));
+        assert_eq!(epochs.get_epoch(BlockHeight(600)), Some(Epoch(8)));
     }
 }
 
