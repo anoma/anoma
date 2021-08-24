@@ -99,16 +99,23 @@ pub async fn query_balance(args: args::QueryBalance) {
             let key = token::balance_prefix(token);
             let balances =
                 query_storage_prefix::<token::Amount>(client, key).await;
-            let currency_code = tokens
-                .get(token)
-                .map(|c| Cow::Borrowed(*c))
-                .unwrap_or_else(|| Cow::Owned(token.to_string()));
-            let stdout = io::stdout();
-            let mut w = stdout.lock();
-            writeln!(w, "Token {}:", currency_code).unwrap();
-            for (key, balance) in balances {
-                let owner = token::is_any_token_balance_key(&key).unwrap();
-                writeln!(w, "  {}, owned by {}", balance, owner).unwrap();
+            match balances {
+                Some(balances) => {
+                    let currency_code = tokens
+                        .get(token)
+                        .map(|c| Cow::Borrowed(*c))
+                        .unwrap_or_else(|| Cow::Owned(token.to_string()));
+                    let stdout = io::stdout();
+                    let mut w = stdout.lock();
+                    writeln!(w, "Token {}:", currency_code).unwrap();
+                    for (key, balance) in balances {
+                        let owner =
+                            token::is_any_token_balance_key(&key).unwrap();
+                        writeln!(w, "  {}, owned by {}", balance, owner)
+                            .unwrap();
+                    }
+                }
+                None => println!("No balances for token {}", token.encode()),
             }
         }
         (None, None) => {
@@ -119,10 +126,19 @@ pub async fn query_balance(args: args::QueryBalance) {
                 let balances =
                     query_storage_prefix::<token::Amount>(client.clone(), key)
                         .await;
-                writeln!(w, "Token {}:", currency_code).unwrap();
-                for (key, balance) in balances {
-                    let owner = token::is_any_token_balance_key(&key).unwrap();
-                    writeln!(w, "  {}, owned by {}", balance, owner).unwrap();
+                match balances {
+                    Some(balances) => {
+                        writeln!(w, "Token {}:", currency_code).unwrap();
+                        for (key, balance) in balances {
+                            let owner =
+                                token::is_any_token_balance_key(&key).unwrap();
+                            writeln!(w, "  {}, owned by {}", balance, owner)
+                                .unwrap();
+                        }
+                    }
+                    None => {
+                        println!("No balances for token {}", token.encode())
+                    }
                 }
             }
         }
@@ -336,44 +352,48 @@ pub async fn query_bonds(args: args::QueryBonds) {
                 let mut total: token::Amount = 0.into();
                 let mut total_active: token::Amount = 0.into();
                 let mut any_bonds = false;
-                for (key, bonds) in bonds {
-                    match pos::is_bond_key(&key) {
-                        Some(pos::BondId { source, validator }) => {
-                            any_bonds = true;
-                            let bond_type: Cow<str> = if source == validator {
-                                "Self-bonds".into()
-                            } else {
-                                format!("Delegations from {}", source).into()
-                            };
-                            writeln!(w, "{}:", bond_type).unwrap();
-                            let mut current_total: token::Amount = 0.into();
-                            for deltas in bonds.iter() {
-                                for (epoch_start, delta) in
-                                    deltas.delta.iter().sorted()
+                if let Some(bonds) = bonds {
+                    for (key, bonds) in bonds {
+                        match pos::is_bond_key(&key) {
+                            Some(pos::BondId { source, validator }) => {
+                                any_bonds = true;
+                                let bond_type: Cow<str> = if source == validator
                                 {
-                                    writeln!(
-                                        w,
-                                        "  Active from epoch {}: Δ {}",
-                                        epoch_start, delta
-                                    )
-                                    .unwrap();
-                                    current_total += *delta;
-                                    total += *delta;
-                                    let epoch_start: Epoch =
-                                        (*epoch_start).into();
-                                    if epoch >= epoch_start {
-                                        total_active += *delta;
+                                    "Self-bonds".into()
+                                } else {
+                                    format!("Delegations from {}", source)
+                                        .into()
+                                };
+                                writeln!(w, "{}:", bond_type).unwrap();
+                                let mut current_total: token::Amount = 0.into();
+                                for deltas in bonds.iter() {
+                                    for (epoch_start, delta) in
+                                        deltas.delta.iter().sorted()
+                                    {
+                                        writeln!(
+                                            w,
+                                            "  Active from epoch {}: Δ {}",
+                                            epoch_start, delta
+                                        )
+                                        .unwrap();
+                                        current_total += *delta;
+                                        total += *delta;
+                                        let epoch_start: Epoch =
+                                            (*epoch_start).into();
+                                        if epoch >= epoch_start {
+                                            total_active += *delta;
+                                        }
                                     }
                                 }
+                                writeln!(
+                                    w,
+                                    "  Bonded total from {}: {}",
+                                    source, current_total
+                                )
+                                .unwrap();
                             }
-                            writeln!(
-                                w,
-                                "  Bonded total from {}: {}",
-                                source, current_total
-                            )
-                            .unwrap();
+                            None => panic!("Unexpected storage key {}", key),
                         }
-                        None => panic!("Unexpected storage key {}", key),
                     }
                 }
                 if total_active != 0.into() && total_active != total {
@@ -383,46 +403,53 @@ pub async fn query_bonds(args: args::QueryBonds) {
 
                 let mut total: token::Amount = 0.into();
                 let mut total_withdrawable: token::Amount = 0.into();
-                for (key, unbonds) in unbonds {
-                    match pos::is_unbond_key(&key) {
-                        Some(pos::BondId { source, validator }) => {
-                            any_bonds = true;
-                            let bond_type: Cow<str> = if source == validator {
-                                "Unbonded self-bonds".into()
-                            } else {
-                                format!("Unbonded delegations from {}", source)
-                                    .into()
-                            };
-                            writeln!(w, "{}:", bond_type).unwrap();
-                            let mut current_total: token::Amount = 0.into();
-                            for deltas in unbonds.iter() {
-                                for ((epoch_start, epoch_end), delta) in
-                                    deltas.deltas.iter().sorted()
+                if let Some(unbonds) = unbonds {
+                    for (key, unbonds) in unbonds {
+                        match pos::is_unbond_key(&key) {
+                            Some(pos::BondId { source, validator }) => {
+                                any_bonds = true;
+                                let bond_type: Cow<str> = if source == validator
                                 {
-                                    let withdraw_epoch = *epoch_end + 1_u64;
-                                    writeln!(
-                                        w,
-                                        "  Withdrawable from epoch {} (active \
-                                         from {}): Δ {}",
-                                        withdraw_epoch, epoch_start, delta
+                                    "Unbonded self-bonds".into()
+                                } else {
+                                    format!(
+                                        "Unbonded delegations from {}",
+                                        source
                                     )
-                                    .unwrap();
-                                    current_total += *delta;
-                                    total += *delta;
-                                    let epoch_end: Epoch = (*epoch_end).into();
-                                    if epoch > epoch_end {
-                                        total_withdrawable += *delta;
+                                    .into()
+                                };
+                                writeln!(w, "{}:", bond_type).unwrap();
+                                let mut current_total: token::Amount = 0.into();
+                                for deltas in unbonds.iter() {
+                                    for ((epoch_start, epoch_end), delta) in
+                                        deltas.deltas.iter().sorted()
+                                    {
+                                        let withdraw_epoch = *epoch_end + 1_u64;
+                                        writeln!(
+                                            w,
+                                            "  Withdrawable from epoch {} \
+                                             (active from {}): Δ {}",
+                                            withdraw_epoch, epoch_start, delta
+                                        )
+                                        .unwrap();
+                                        current_total += *delta;
+                                        total += *delta;
+                                        let epoch_end: Epoch =
+                                            (*epoch_end).into();
+                                        if epoch > epoch_end {
+                                            total_withdrawable += *delta;
+                                        }
                                     }
                                 }
+                                writeln!(
+                                    w,
+                                    "  Unbonded total from {}: {}",
+                                    source, current_total
+                                )
+                                .unwrap();
                             }
-                            writeln!(
-                                w,
-                                "  Unbonded total from {}: {}",
-                                source, current_total
-                            )
-                            .unwrap();
+                            None => panic!("Unexpected storage key {}", key),
                         }
-                        None => panic!("Unexpected storage key {}", key),
                     }
                 }
                 if total_withdrawable != 0.into() {
@@ -460,47 +487,52 @@ pub async fn query_bonds(args: args::QueryBonds) {
 
                 let mut total: token::Amount = 0.into();
                 let mut total_active: token::Amount = 0.into();
-                for (key, bonds) in bonds {
-                    match pos::is_bond_key(&key) {
-                        Some(pos::BondId { source, validator }) => {
-                            let bond_type = if source == validator {
-                                format!("Self-bonds for {}", validator.encode())
-                            } else {
-                                format!(
-                                    "Delegations from {} to validator {}",
-                                    source,
-                                    validator.encode()
-                                )
-                            };
-                            writeln!(w, "{}:", bond_type).unwrap();
-                            let mut current_total: token::Amount = 0.into();
-                            for deltas in bonds.iter() {
-                                for (epoch_start, delta) in
-                                    deltas.delta.iter().sorted()
-                                {
-                                    writeln!(
-                                        w,
-                                        "  Active from epoch {}: Δ {}",
-                                        epoch_start, delta
+                if let Some(bonds) = bonds {
+                    for (key, bonds) in bonds {
+                        match pos::is_bond_key(&key) {
+                            Some(pos::BondId { source, validator }) => {
+                                let bond_type = if source == validator {
+                                    format!(
+                                        "Self-bonds for {}",
+                                        validator.encode()
                                     )
-                                    .unwrap();
-                                    current_total += *delta;
-                                    total += *delta;
-                                    let epoch_start: Epoch =
-                                        (*epoch_start).into();
-                                    if epoch >= epoch_start {
-                                        total_active += *delta;
+                                } else {
+                                    format!(
+                                        "Delegations from {} to validator {}",
+                                        source,
+                                        validator.encode()
+                                    )
+                                };
+                                writeln!(w, "{}:", bond_type).unwrap();
+                                let mut current_total: token::Amount = 0.into();
+                                for deltas in bonds.iter() {
+                                    for (epoch_start, delta) in
+                                        deltas.delta.iter().sorted()
+                                    {
+                                        writeln!(
+                                            w,
+                                            "  Active from epoch {}: Δ {}",
+                                            epoch_start, delta
+                                        )
+                                        .unwrap();
+                                        current_total += *delta;
+                                        total += *delta;
+                                        let epoch_start: Epoch =
+                                            (*epoch_start).into();
+                                        if epoch >= epoch_start {
+                                            total_active += *delta;
+                                        }
                                     }
                                 }
+                                writeln!(
+                                    w,
+                                    "  Bond total from {}: {}",
+                                    source, current_total
+                                )
+                                .unwrap();
                             }
-                            writeln!(
-                                w,
-                                "  Bond total from {}: {}",
-                                source, current_total
-                            )
-                            .unwrap();
+                            None => panic!("Unexpected storage key {}", key),
                         }
-                        None => panic!("Unexpected storage key {}", key),
                     }
                 }
                 if total_active != 0.into() && total_active != total {
@@ -510,52 +542,55 @@ pub async fn query_bonds(args: args::QueryBonds) {
 
                 let mut total: token::Amount = 0.into();
                 let mut total_withdrawable: token::Amount = 0.into();
-                for (key, unbonds) in unbonds {
-                    match pos::is_unbond_key(&key) {
-                        Some(pos::BondId { source, validator }) => {
-                            let bond_type = if source == validator {
-                                format!(
-                                    "Unbonded self-bonds for {}",
-                                    validator.encode()
-                                )
-                            } else {
-                                format!(
-                                    "Unbonded delegations from {} to \
-                                     validator {}",
-                                    source,
-                                    validator.encode()
-                                )
-                            };
-                            writeln!(w, "{}:", bond_type).unwrap();
-                            let mut current_total: token::Amount = 0.into();
-                            for deltas in unbonds.iter() {
-                                for ((epoch_start, epoch_end), delta) in
-                                    deltas.deltas.iter().sorted()
-                                {
-                                    let withdraw_epoch = *epoch_end + 1_u64;
-                                    writeln!(
-                                        w,
-                                        "  Withdrawable from epoch {} (active \
-                                         from {}): Δ {}",
-                                        withdraw_epoch, epoch_start, delta
+                if let Some(unbonds) = unbonds {
+                    for (key, unbonds) in unbonds {
+                        match pos::is_unbond_key(&key) {
+                            Some(pos::BondId { source, validator }) => {
+                                let bond_type = if source == validator {
+                                    format!(
+                                        "Unbonded self-bonds for {}",
+                                        validator.encode()
                                     )
-                                    .unwrap();
-                                    current_total += *delta;
-                                    total += *delta;
-                                    let epoch_end: Epoch = (*epoch_end).into();
-                                    if epoch > epoch_end {
-                                        total_withdrawable += *delta;
+                                } else {
+                                    format!(
+                                        "Unbonded delegations from {} to \
+                                         validator {}",
+                                        source,
+                                        validator.encode()
+                                    )
+                                };
+                                writeln!(w, "{}:", bond_type).unwrap();
+                                let mut current_total: token::Amount = 0.into();
+                                for deltas in unbonds.iter() {
+                                    for ((epoch_start, epoch_end), delta) in
+                                        deltas.deltas.iter().sorted()
+                                    {
+                                        let withdraw_epoch = *epoch_end + 1_u64;
+                                        writeln!(
+                                            w,
+                                            "  Withdrawable from epoch {} \
+                                             (active from {}): Δ {}",
+                                            withdraw_epoch, epoch_start, delta
+                                        )
+                                        .unwrap();
+                                        current_total += *delta;
+                                        total += *delta;
+                                        let epoch_end: Epoch =
+                                            (*epoch_end).into();
+                                        if epoch > epoch_end {
+                                            total_withdrawable += *delta;
+                                        }
                                     }
                                 }
+                                writeln!(
+                                    w,
+                                    "  Unbonded total from {}: {}",
+                                    source, current_total
+                                )
+                                .unwrap();
                             }
-                            writeln!(
-                                w,
-                                "  Unbonded total from {}: {}",
-                                source, current_total
-                            )
-                            .unwrap();
+                            None => panic!("Unexpected storage key {}", key),
                         }
-                        None => panic!("Unexpected storage key {}", key),
                     }
                 }
                 if total_withdrawable != 0.into() {
@@ -715,7 +750,7 @@ where
 async fn query_storage_prefix<T>(
     client: HttpClient,
     key: storage::Key,
-) -> impl Iterator<Item = (storage::Key, T)>
+) -> Option<impl Iterator<Item = (storage::Key, T)>>
 where
     T: BorshDeserialize,
 {
@@ -742,15 +777,21 @@ where
                             Ok(value) => Some((key, value)),
                         }
                     };
-                    return values.into_iter().filter_map(decode);
+                    return Some(values.into_iter().filter_map(decode));
                 }
                 Err(err) => eprintln!("Error decoding the values: {}", err),
             }
         }
-        tendermint::abci::Code::Err(err) => eprintln!(
-            "Error in the query {} (error code {})",
-            response.info, err
-        ),
+        tendermint::abci::Code::Err(err) => {
+            if err == 1 {
+                return None;
+            } else {
+                eprintln!(
+                    "Error in the query {} (error code {})",
+                    response.info, err
+                )
+            }
+        }
     }
     std::process::exit(1);
 }
