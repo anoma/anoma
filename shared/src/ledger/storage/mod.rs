@@ -438,6 +438,12 @@ where
             } = parameters.epoch_duration;
             self.next_epoch_min_start_height = height + min_num_of_blocks;
             self.next_epoch_min_start_time = time + min_duration;
+            // TODO put this into PoS parameters and pass it to tendermint
+            // `consensus_params` on `InitChain` and `EndBlock`
+            let evidence_max_age_num_blocks: u64 = 100000;
+            self.block
+                .pred_epochs
+                .new_epoch(height, evidence_max_age_num_blocks);
             tracing::info!("Began a new epoch {}", self.block.epoch);
         }
         self.update_epoch_in_merkle_tree()?;
@@ -661,9 +667,11 @@ mod tests {
                     block_height + epoch_duration.min_num_of_blocks);
                 assert_eq!(storage.next_epoch_min_start_time,
                     block_time + epoch_duration.min_duration);
+                assert_eq!(storage.block.pred_epochs.get_epoch(block_height), Some(epoch_before.next()));
             } else {
                 assert_eq!(storage.block.epoch, epoch_before);
                 assert_eq!(storage.last_epoch, epoch_before);
+                assert_eq!(storage.block.pred_epochs.get_epoch(block_height), Some(epoch_before));
             }
 
             // Update the epoch duration parameters
