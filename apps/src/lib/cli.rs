@@ -142,19 +142,24 @@ pub mod cmds {
 
     impl Cmd for AnomaClient {
         fn add_sub(app: App) -> App {
-            app.subcommand(TxCustom::def())
-                .subcommand(TxTransfer::def())
-                .subcommand(TxUpdateVp::def())
-                .subcommand(Bond::def())
-                .subcommand(Unbond::def())
-                .subcommand(Withdraw::def())
-                .subcommand(QueryEpoch::def())
-                .subcommand(QueryBalance::def())
-                .subcommand(QueryBonds::def())
-                .subcommand(QueryVotingPower::def())
-                .subcommand(Intent::def())
-                .subcommand(CraftIntent::def())
-                .subcommand(SubscribeTopic::def())
+            app
+                // Simple transactions
+                .subcommand(TxCustom::def().display_order(1))
+                .subcommand(TxTransfer::def().display_order(1))
+                .subcommand(TxUpdateVp::def().display_order(1))
+                // PoS transactions
+                .subcommand(Bond::def().display_order(2))
+                .subcommand(Unbond::def().display_order(2))
+                .subcommand(Withdraw::def().display_order(2))
+                // Queries
+                .subcommand(QueryEpoch::def().display_order(3))
+                .subcommand(QueryBalance::def().display_order(3))
+                .subcommand(QueryBonds::def().display_order(3))
+                .subcommand(QueryVotingPower::def().display_order(3))
+                // Intents
+                .subcommand(Intent::def().display_order(4))
+                .subcommand(CraftIntent::def().display_order(4))
+                .subcommand(SubscribeTopic::def().display_order(4))
         }
 
         fn parse(matches: &ArgMatches) -> Option<(Self, &ArgMatches)> {
