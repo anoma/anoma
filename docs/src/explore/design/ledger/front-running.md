@@ -26,7 +26,7 @@ A wrapper transaction contains an encrypted payload that will be another
 transaction upon decryption. In addition to this payload, the wrapper 
 transaction will contain the following data:
  * fee: the price of including the block onto the chain
- * fee payer: the account paying the above fee
+ * fee payer: an implicit account paying the above fee
  * fee payer signature: the above account's signature for verification
  * gas limit: A limit on the amount of gas the encrypted transaction can
    consume when it is applied.
@@ -44,7 +44,6 @@ For a wrapped transaction to be included in a block proposal, the following
 conditions must be met:
  * The fee payers signature must be checked
  * The fee payer must have sufficient balance to pay the fee
- * The fee payer must have sufficient balance to pay
  * The sum of all gas limits of transactions to be included cannot exceed
    the total gas limit of the block
  * The ciphertext public key must be checked for validity (handled by Ferveo)
@@ -73,7 +72,7 @@ their transaction exceeds the gas limit, the application of the transaction
 is halted.
 
 ### Encrypting a transaction
-The key used to encrypt transactions for the current is created from the
+The key used to encrypt transactions for the current epoch is created from the
 result of a protocol run by the validators during the previous epoch and posted onto the blockchain. The
 process for doing this is described in the chapter on [Distributed key generation](../dkg.md).
 
@@ -85,11 +84,11 @@ later from the ciphertext public key and decryption shares from at least
 ## Decrypting a transaction
 
 Wrapped transactions that are included in block `n` shall be decrypted and 
-applied in block `n+1`. During the Vote Extension phase, the
-aggregated decryption shares needed to decrypt the transactions in the 
-currently proposed block must be submitted from each validator (and be 
-verified by other validators via the VerifyVoteExtension method). If an 
-invalid decryption share is received, it is ignored.
+applied in block `n+1`. During the [Vote Extension](https://github.com/tendermint/spec/blob/master/rfc/004-abci%2B%2B.md#vote-extensions)
+phase, the aggregated decryption shares needed to decrypt the transactions 
+in the currently proposed block must be submitted from each validator (and be 
+verified by other validators via the [VerifyVoteExtension](https://github.com/tendermint/spec/blob/master/rfc/004-abci%2B%2B.md#vote-extensions)
+method). If an invalid decryption share is received, it is ignored.
 
 Validators must collect the decryption shares they receive in case they 
 are chosen as the next block proposer and must perform the decryption. The 
@@ -97,15 +96,15 @@ aggregation and validation of decryption shares is handled by Ferveo.
 
 Since choosing the next block proposer is deterministic, validators can
 know with reasonable certainty that  they are likely to be chosen next as
-block proposer for block `n+1`. As such, when the finalize a block `n`, 
+block proposer for block `n+1`. As such, when they finalize a block `n`, 
 they know the transactions to be decrypted and should have the necessary 
 decryption shares.
 
 They may then begin the decryption and after this is finished may continue 
-with their Prepare Proposal phase. One expects that in the majority of cases
-that the decryption is completed before the next round begins. As part of 
-their Prepare Proposal phase, the decrypted payloads are included into the 
-proposed block. 
+with their [Prepare Proposal](https://github.com/tendermint/spec/blob/master/rfc/004-abci%2B%2B.md#prepare-proposal)
+phase. One expects that in the majority of cases that the decryption is 
+completed before the next round begins. As part of their [Prepare Proposal](https://github.com/tendermint/spec/blob/master/rfc/004-abci%2B%2B.md#prepare-proposal)
+phase, the decrypted payloads are included into the proposed block. 
 
 If the decryption was not successful, the block proposer includes a proof 
 that the wrapped transaction could not be decrypted. If the proof is 
@@ -116,7 +115,8 @@ slash the proposer.
 ### Verifying transaction decryption
 
 The verification of each validators decryption shares is performed by the
-VerifyVoteExtension call. Thus, upon block finalization, each validator
+[VerifyVoteExtension](https://github.com/tendermint/spec/blob/master/rfc/004-abci%2B%2B.md#vote-extensions)
+call. Thus, upon block finalization, each validator
 has a set of verified decryption shares from validators whose combined 
 weight exceeds \\(\frac{2}{3}\\) of the total.
 
