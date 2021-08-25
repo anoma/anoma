@@ -85,58 +85,33 @@ later from the ciphertext public key and decryption shares from at least
 ## Decrypting a transaction
 
 Wrapped transactions that are included in block `n` shall be decrypted and 
-applied in block `n+1` depending on the chosen decryption protocol.
-We outline both protocols here.
+applied in block `n+1`. During the Vote Extension phase, the
+aggregated decryption shares needed to decrypt the transactions in the 
+currently proposed block must be submitted from each validator (and be 
+verified by other validators via the VerifyVoteExtension method). If an 
+invalid decryption share is received, it is ignored.
 
-We first state that in both protocols, during the Vote Extension phase, the
-aggregated decryption shares needed to decrypt the transactions in the currently proposed
-block must be submitted from each validator (and be verified by other 
-validators). Validators must collect the decryption shares they receive in
-case they must perform the decryption. The aggregation and validation of 
-decryption shares is handled by Ferveo.
+Validators must collect the decryption shares they receive in case they 
+are chosen as the next block proposer and must perform the decryption. The 
+aggregation and validation of decryption shares is handled by Ferveo.
 
-### Decrypt-ahead protocol
+Since choosing the next block proposer is deterministic, validators can
+know with reasonable certainty that  they are likely to be chosen next as
+block proposer for block `n+1`. As such, when the finalize a block `n`, 
+they know the transactions to be decrypted and should have the necessary 
+decryption shares.
 
-*__This protocol assumes that a validator knows that they are very likely to be
-the next block proposer__*. 
+They may then begin the decryption and after this is finished may continue 
+with their Prepare Proposal phase. One expects that in the majority of cases
+that the decryption is completed before the next round begins. As part of 
+their Prepare Proposal phase, the decrypted payloads are included into the 
+proposed block. 
 
-
-After a validator who knows they are likely to be chosen next as block proposer
-finalizes a block, they know the transactions to be decrypted and should
-have the necessary decryption shares. They may then begin the decryption
-and after this is finished may begin their Prepare Proposal phase. As
-part of the Prepare Proposal phase, the decrypted payloads are included
-into the proposed block.
-
-#### Pros:
- - No alteration to block after Prepare Proposal phase
- - Less communication overhead
-#### Cons:
- - Validators need to now in advance that they are likely to be the next proposer
- - Preparing new proposals is blocked until decryption is finished (which can be slow)
- - More than one validator will do decryption even though there will be a
-   single proposer (wasted effort)
-
-### Async-decrypt protocol
-###TODO: This section doesn't make sense yet, need to figure out the details better
-*__This protocol assumes that a validator can query the state of the
-proposer after it has processed transactions__*.
-
-As opposed to the above protocol, the current block proposer decrypts the 
-wrapped transactions from the previous block as part of their Process Proposal
-phase and then applies them. This means the computation happens asynchronously.
-
-However, in order to make this work, it should be possible
-for validators to query the state after the Process Proposal phase to see how
-to update their own state before the block is committed. 
-
-#### Pros:
- - Expensive decryptions are only done by a single party
- - Decryption is done asynchronously
- - Does not require foreknowledge of proposers
-#### Cons:
- - More messaging overhead
- - Requires querying processed state of a proposer
+If the decryption was not successful, the block proposer includes a proof 
+that the wrapped transaction could not be decrypted. If the proof is 
+accepted by the other validators, that transaction is rejected. If the proof
+is not accepted, the other validators reject the proposal and may choose to
+slash the proposer.
 
 ### Verifying transaction decryption
 
@@ -152,60 +127,22 @@ transactions but this can fail if:
    wrapper transaction.
 
 The block proposer must then include a proof that the transactions could not
-be decrypted that other validators can verify. This proof consist of the 
+be decrypted that other validators can verify. This proof consists of the 
 decryption shares the validator attempted to use to decrypt the payload.
 
 The other validators must check that these decryption shares are valid,
 otherwise the fault lies with the block proposer for accepting them as
-valid vote extensions in the previous round. Validators may then issue
-a complaint against the block proposer.
+valid vote extensions in the previous round. Validators will reject the 
+proposal and may choose to slash the block proposer.
 
 If the decryption shares are indeed valid, the validators can use these to 
 attempt to decrypt the payload and see that it failed for one of the two
-above reasons. Again, if they produce a valid transaction, a complaint
-may be issued against the block proposer. Otherwise, the proof is accepted
-and the transaction is not applied. Validators do this check as part of their
-Process Proposal phase.
+above reasons. Again, if they produce a valid transaction, the block is 
+rejected and the block proposer may be slashed. Otherwise, the proof is 
+accepted and the transaction is not applied. Validators do this check as 
+part of their Process Proposal phase.
 
 If the block proposer claims that the decryption succeeded, validators must
 check that the decrypted payload agrees with the included commitment, 
 otherwise the proposer has incorrectly decrypted the transaction. In that
-case, a complaint may be issued.
-
-Alternatively, validators could simply try to decrypt the transaction with
-their own decryption shares and if the transaction turns out to be valid or 
-is in any way different from what is reported by the proposer,
-the proposer is known to be at fault. This sometimes requires less 
-computation and also removes the need for a proof to be added to the block.
-
-__Question / TODO: If the block proposer is at fault, do we try to decrypt
-the tx successfully later? And how? I suppose that other validators should
-vote against the block and the next block proposer gets the job so that it
-just takes more rounds to finalize the block. This means that we may not 
-need complaints for this as the loss of proposer rewards provides
-economic incentive for good behavior already.__
-
-
-## Complaints
-
-Complaints are encrypted transactions that validators broadcast when they
-observe misbehavior from other validators during the protocol. The current
-causes for complaint are as follows:
-* `Share_Complaint`: During VerifyVoteExtension, the aggregated decryption
-  shares from a validator does not pass validation
-* `Decrypt_Complaint`: The block proposer incorrectly decrypted a tx or falsely
-   claimed that a transaction could not be decrypted.
-  
-These transactions must include a proofs of malfeasance. The necessary
- proofs for the above complaints are as follows:
-* `Share_Complaint`: The decryption share that failed verification
-* `Decrypt_Complaint`: The alleged decrypted payload, the original wrapper tx,
-  and the decryption shares that should have been used to derive the 
-  decryption key.
-
-The above proofs can be used to verify that the protocol was not adhered to.
-Checking these proofs will be part of executing the Complaint transaction.
-If the transaction succeeds and is added to the blockchain, a slashing
-penalty will be determined based on the type of infraction, likely by a
-native VP.
- 
+case, the proposal must be rejected and the block proposer may be slashed.
