@@ -432,6 +432,10 @@ pub trait PoSBase {
     fn staking_token_address() -> Self::Address;
 
     fn read_params(&self) -> PosParams;
+    fn read_validator_address_raw_hash(
+        &self,
+        raw_hash: impl AsRef<str>,
+    ) -> Option<Self::Address>;
     fn read_validator_set(&self) -> ValidatorSets<Self::Address>;
     fn read_validator_consensus_key(
         &self,
@@ -439,6 +443,7 @@ pub trait PoSBase {
     ) -> Option<ValidatorConsensusKeys<Self::PublicKey>>;
 
     fn write_params(&mut self, params: &PosParams);
+    fn write_validator_address_raw_hash(&mut self, address: &Self::Address);
     fn write_validator_staking_reward_address(
         &mut self,
         key: &Self::Address,
@@ -521,6 +526,7 @@ pub trait PoSBase {
                 voting_power,
                 bond: (bond_id, bond),
             } = res?;
+            self.write_validator_address_raw_hash(address);
             self.write_validator_staking_reward_address(
                 address,
                 &staking_reward_address,

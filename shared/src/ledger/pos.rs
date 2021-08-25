@@ -231,6 +231,7 @@ where
 
 const PARAMS_STORAGE_KEY: &str = "params";
 const VALIDATOR_STORAGE_PREFIX: &str = "validator";
+const VALIDATOR_ADDRESS_RAW_HASH: &str = "address_raw_hash";
 const VALIDATOR_STAKING_REWARD_ADDRESS_STORAGE_KEY: &str =
     "staking_reward_address";
 const VALIDATOR_CONSENSUS_KEY_STORAGE_KEY: &str = "consensus_key";
@@ -267,6 +268,17 @@ fn validator_prefix(validator: &Address) -> Key {
         .push(&VALIDATOR_STORAGE_PREFIX.to_owned())
         .expect("Cannot obtain a storage key")
         .push(&validator.to_db_key())
+        .expect("Cannot obtain a storage key")
+}
+
+/// Storage key for validator's address raw hash for look-up from raw hash of an
+/// address to address.
+pub fn validator_address_raw_hash_key(raw_hash: impl AsRef<str>) -> Key {
+    let raw_hash = raw_hash.as_ref().to_owned();
+    Key::from(ADDRESS.to_db_key())
+        .push(&VALIDATOR_ADDRESS_RAW_HASH.to_owned())
+        .expect("Cannot obtain a storage key")
+        .push(&raw_hash)
         .expect("Cannot obtain a storage key")
 }
 
@@ -600,6 +612,15 @@ where
         decode(value.unwrap()).unwrap()
     }
 
+    fn read_validator_address_raw_hash(
+        &self,
+        raw_hash: impl AsRef<str>,
+    ) -> Option<Self::Address> {
+        let key = validator_address_raw_hash_key(raw_hash);
+        let (value, _gas) = self.read(&params_key()).unwrap();
+        value.map(|value| decode(value).unwrap())
+    }
+
     fn read_validator_set(&self) -> ValidatorSets {
         let (value, _gas) = self.read(&validator_set_key()).unwrap();
         decode(value.unwrap()).unwrap()
@@ -616,6 +637,12 @@ where
 
     fn write_params(&mut self, params: &PosParams) {
         self.write(&params_key(), encode(params)).unwrap();
+    }
+
+    fn write_validator_address_raw_hash(&mut self, address: &Self::Address) {
+        let raw_hash = address.raw_hash().unwrap();
+        self.write(&validator_address_raw_hash_key(raw_hash), encode(address))
+            .unwrap();
     }
 
     fn write_validator_staking_reward_address(
