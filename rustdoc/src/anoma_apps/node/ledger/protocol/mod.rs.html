@@ -346,6 +346,18 @@
 <span id="344">344</span>
 <span id="345">345</span>
 <span id="346">346</span>
+<span id="347">347</span>
+<span id="348">348</span>
+<span id="349">349</span>
+<span id="350">350</span>
+<span id="351">351</span>
+<span id="352">352</span>
+<span id="353">353</span>
+<span id="354">354</span>
+<span id="355">355</span>
+<span id="356">356</span>
+<span id="357">357</span>
+<span id="358">358</span>
 </pre><pre class="rust">
 <span class="doccomment">//! The ledger&#39;s protocol</span>
 
@@ -567,19 +579,30 @@
                     <span class="kw">let</span> <span class="ident">accepted</span>: <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">internal_addr</span> {
                         <span class="ident">InternalAddress::PoS</span> <span class="op">=</span><span class="op">&gt;</span> {
                             <span class="kw">let</span> <span class="ident">pos</span> <span class="op">=</span> <span class="ident">PoS</span> { <span class="ident">ctx</span> };
-                            <span class="ident">pos</span>.<span class="ident">validate_tx</span>(<span class="ident">tx_data</span>, <span class="ident">keys</span>, <span class="kw-2">&amp;</span><span class="ident">verifiers_addr</span>)
-                                .<span class="ident">map_err</span>(<span class="ident">Error::PosNativeVpError</span>)
+                            <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">pos</span>
+                                .<span class="ident">validate_tx</span>(<span class="ident">tx_data</span>, <span class="ident">keys</span>, <span class="kw-2">&amp;</span><span class="ident">verifiers_addr</span>)
+                                .<span class="ident">map_err</span>(<span class="ident">Error::PosNativeVpError</span>);
+                            <span class="comment">// Take the gas meter back out of the context</span>
+                            <span class="ident">gas_meter</span> <span class="op">=</span> <span class="ident">pos</span>.<span class="ident">ctx</span>.<span class="ident">gas_meter</span>.<span class="ident">into_inner</span>();
+                            <span class="ident">result</span>
                         }
                         <span class="ident">InternalAddress::Ibc</span> <span class="op">=</span><span class="op">&gt;</span> {
                             <span class="kw">let</span> <span class="ident">ibc</span> <span class="op">=</span> <span class="ident">Ibc</span> { <span class="ident">ctx</span> };
-                            <span class="ident">ibc</span>.<span class="ident">validate_tx</span>(<span class="ident">tx_data</span>, <span class="ident">keys</span>, <span class="kw-2">&amp;</span><span class="ident">verifiers_addr</span>)
-                                .<span class="ident">map_err</span>(<span class="ident">Error::IbcNativeVpError</span>)
+                            <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">ibc</span>
+                                .<span class="ident">validate_tx</span>(<span class="ident">tx_data</span>, <span class="ident">keys</span>, <span class="kw-2">&amp;</span><span class="ident">verifiers_addr</span>)
+                                .<span class="ident">map_err</span>(<span class="ident">Error::IbcNativeVpError</span>);
+                            <span class="comment">// Take the gas meter back out of the context</span>
+                            <span class="ident">gas_meter</span> <span class="op">=</span> <span class="ident">ibc</span>.<span class="ident">ctx</span>.<span class="ident">gas_meter</span>.<span class="ident">into_inner</span>();
+                            <span class="ident">result</span>
                         }
                         <span class="ident">InternalAddress::Parameters</span> <span class="op">=</span><span class="op">&gt;</span> {
                             <span class="kw">let</span> <span class="ident">parameters</span> <span class="op">=</span> <span class="ident">ParametersVp</span> { <span class="ident">ctx</span> };
-                            <span class="ident">parameters</span>
+                            <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">parameters</span>
                                 .<span class="ident">validate_tx</span>(<span class="ident">tx_data</span>, <span class="ident">keys</span>, <span class="kw-2">&amp;</span><span class="ident">verifiers_addr</span>)
-                                .<span class="ident">map_err</span>(<span class="ident">Error::ParametersNativeVpError</span>)
+                                .<span class="ident">map_err</span>(<span class="ident">Error::ParametersNativeVpError</span>);
+                            <span class="comment">// Take the gas meter back out of the context</span>
+                            <span class="ident">gas_meter</span> <span class="op">=</span> <span class="ident">parameters</span>.<span class="ident">ctx</span>.<span class="ident">gas_meter</span>.<span class="ident">into_inner</span>();
+                            <span class="ident">result</span>
                         }
                     };
 
@@ -590,6 +613,7 @@
             <span class="comment">// Returning error from here will short-circuit the VP parallel</span>
             <span class="comment">// execution. It&#39;s important that we only short-circuit gas</span>
             <span class="comment">// errors to get deterministic gas costs</span>
+            <span class="ident">result</span>.<span class="ident">gas_used</span>.<span class="ident">set</span>(<span class="kw-2">&amp;</span><span class="ident">gas_meter</span>).<span class="ident">map_err</span>(<span class="ident">Error::GasError</span>)<span class="question-mark">?</span>;
             <span class="kw">match</span> <span class="ident">accept</span> {
                 <span class="prelude-val">Ok</span>(<span class="ident">accepted</span>) <span class="op">=</span><span class="op">&gt;</span> {
                     <span class="kw">if</span> <span class="op">!</span><span class="ident">accepted</span> {

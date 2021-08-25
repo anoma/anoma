@@ -641,6 +641,12 @@
 <span id="639">639</span>
 <span id="640">640</span>
 <span id="641">641</span>
+<span id="642">642</span>
+<span id="643">643</span>
+<span id="644">644</span>
+<span id="645">645</span>
+<span id="646">646</span>
+<span id="647">647</span>
 </pre><pre class="rust">
 <span class="doccomment">//! IBC validity predicate for channel module</span>
 
@@ -718,9 +724,15 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">Key</span>,
         <span class="ident">tx_data</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>],
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span> {
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="kw">if</span> <span class="ident">key</span>.<span class="ident">is_ibc_channel_counter</span>() {
-            <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="self">self</span>.<span class="ident">channel_counter_pre</span>()<span class="question-mark">?</span> <span class="op">&lt;</span> <span class="self">self</span>.<span class="ident">channel_counter</span>());
+            <span class="kw">if</span> <span class="self">self</span>.<span class="ident">channel_counter_pre</span>()<span class="question-mark">?</span> <span class="op">&lt;</span> <span class="self">self</span>.<span class="ident">channel_counter</span>() {
+                <span class="kw">return</span> <span class="prelude-val">Ok</span>(());
+            } <span class="kw">else</span> {
+                <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error::InvalidChannel</span>(
+                    <span class="string">&quot;The channel counter is invalid&quot;</span>.<span class="ident">to_owned</span>(),
+                ));
+            }
         }
 
         <span class="kw">let</span> <span class="ident">port_id</span> <span class="op">=</span> <span class="self">Self</span><span class="ident">::get_port_id</span>(<span class="ident">key</span>)
@@ -753,7 +765,7 @@
 
         <span class="kw">match</span> <span class="self">self</span>.<span class="ident">get_channel_state_change</span>(<span class="ident">port_channel_id</span>.<span class="ident">clone</span>())<span class="question-mark">?</span> {
             <span class="ident">StateChange::Created</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="ident">channel</span>.<span class="ident">state</span>() {
-                <span class="ident">State::Init</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="bool-val">true</span>),
+                <span class="ident">State::Init</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(()),
                 <span class="ident">State::TryOpen</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">verify_channel_try_proof</span>(
                     <span class="ident">port_channel_id</span>,
                     <span class="kw-2">&amp;</span><span class="ident">channel</span>,
@@ -843,7 +855,7 @@
         <span class="ident">port_channel_id</span>: (<span class="ident">PortId</span>, <span class="ident">ChannelId</span>),
         <span class="ident">channel</span>: <span class="kw-2">&amp;</span><span class="ident">ChannelEnd</span>,
         <span class="ident">tx_data</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>],
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span> {
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">prev_channel</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">channel_end_pre</span>(<span class="ident">port_channel_id</span>.<span class="ident">clone</span>())<span class="question-mark">?</span>;
         <span class="kw">match</span> <span class="ident">channel</span>.<span class="ident">state</span>() {
             <span class="ident">State::Open</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="ident">prev_channel</span>.<span class="ident">state</span>() {
@@ -872,7 +884,7 @@
                     )));
                 }
                 <span class="kw">match</span> <span class="ident">ChannelCloseInitData::try_from_slice</span>(<span class="ident">tx_data</span>) {
-                    <span class="prelude-val">Ok</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="bool-val">true</span>),
+                    <span class="prelude-val">Ok</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(()),
                     <span class="prelude-val">Err</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">verify_channel_close_proof</span>(
                         <span class="ident">port_channel_id</span>,
                         <span class="ident">channel</span>,
@@ -893,7 +905,7 @@
         <span class="ident">port_channel_id</span>: (<span class="ident">PortId</span>, <span class="ident">ChannelId</span>),
         <span class="ident">channel</span>: <span class="kw-2">&amp;</span><span class="ident">ChannelEnd</span>,
         <span class="ident">tx_data</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>],
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span> {
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="ident">ChannelOpenTryData::try_from_slice</span>(<span class="ident">tx_data</span>)<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">expected_my_side</span> <span class="op">=</span> <span class="ident">Counterparty::new</span>(<span class="ident">port_channel_id</span>.<span class="number">0</span>, <span class="prelude-val">None</span>);
 
@@ -910,7 +922,7 @@
         <span class="ident">port_channel_id</span>: (<span class="ident">PortId</span>, <span class="ident">ChannelId</span>),
         <span class="ident">channel</span>: <span class="kw-2">&amp;</span><span class="ident">ChannelEnd</span>,
         <span class="ident">tx_data</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>],
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span> {
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="ident">ChannelOpenAckData::try_from_slice</span>(<span class="ident">tx_data</span>)<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">expected_my_side</span> <span class="op">=</span>
             <span class="ident">Counterparty::new</span>(<span class="ident">port_channel_id</span>.<span class="number">0</span>, <span class="prelude-val">Some</span>(<span class="ident">port_channel_id</span>.<span class="number">1</span>));
@@ -928,7 +940,7 @@
         <span class="ident">port_channel_id</span>: (<span class="ident">PortId</span>, <span class="ident">ChannelId</span>),
         <span class="ident">channel</span>: <span class="kw-2">&amp;</span><span class="ident">ChannelEnd</span>,
         <span class="ident">tx_data</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>],
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span> {
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="ident">ChannelOpenConfirmData::try_from_slice</span>(<span class="ident">tx_data</span>)<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">expected_my_side</span> <span class="op">=</span>
             <span class="ident">Counterparty::new</span>(<span class="ident">port_channel_id</span>.<span class="number">0</span>, <span class="prelude-val">Some</span>(<span class="ident">port_channel_id</span>.<span class="number">1</span>));
@@ -946,7 +958,7 @@
         <span class="ident">port_channel_id</span>: (<span class="ident">PortId</span>, <span class="ident">ChannelId</span>),
         <span class="ident">channel</span>: <span class="kw-2">&amp;</span><span class="ident">ChannelEnd</span>,
         <span class="ident">tx_data</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>],
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span> {
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="ident">ChannelCloseConfirmData::try_from_slice</span>(<span class="ident">tx_data</span>)<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">expected_my_side</span> <span class="op">=</span>
             <span class="ident">Counterparty::new</span>(<span class="ident">port_channel_id</span>.<span class="number">0</span>, <span class="prelude-val">Some</span>(<span class="ident">port_channel_id</span>.<span class="number">1</span>));
@@ -965,7 +977,7 @@
         <span class="ident">expected_my_side</span>: <span class="ident">Counterparty</span>,
         <span class="ident">expected_state</span>: <span class="ident">State</span>,
         <span class="ident">proofs</span>: <span class="ident">Proofs</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span> {
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">connection</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">connection_from_channel</span>(<span class="ident">channel</span>)<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">counterpart_conn_id</span> <span class="op">=</span>
             <span class="kw">match</span> <span class="ident">connection</span>.<span class="ident">counterparty</span>().<span class="ident">connection_id</span>() {
@@ -993,7 +1005,7 @@
             <span class="kw-2">&amp;</span><span class="ident">expected_channel</span>,
             <span class="kw-2">&amp;</span><span class="ident">proofs</span>,
         ) {
-            <span class="prelude-val">Ok</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="bool-val">true</span>),
+            <span class="prelude-val">Ok</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(()),
             <span class="prelude-val">Err</span>(<span class="ident">e</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">Error::ProofVerificationFailure</span>(<span class="ident">e</span>)),
         }
     }

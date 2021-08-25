@@ -1054,6 +1054,7 @@
 <span id="1052">1052</span>
 <span id="1053">1053</span>
 <span id="1054">1054</span>
+<span id="1055">1055</span>
 </pre><pre class="rust">
 <span class="doccomment">//! IBC integration as a native validity predicate</span>
 
@@ -1161,10 +1162,14 @@
                 <span class="kw">continue</span>;
             }
 
-            <span class="kw">let</span> <span class="ident">accepted</span> <span class="op">=</span> <span class="kw">match</span> <span class="self">Self</span><span class="ident">::get_ibc_prefix</span>(<span class="ident">key</span>) {
+            <span class="kw">match</span> <span class="self">Self</span><span class="ident">::get_ibc_prefix</span>(<span class="ident">key</span>) {
                 <span class="ident">IbcPrefix::Client</span> <span class="op">=</span><span class="op">&gt;</span> {
                     <span class="kw">if</span> <span class="ident">key</span>.<span class="ident">is_ibc_client_counter</span>() {
-                        <span class="self">self</span>.<span class="ident">client_counter_pre</span>()<span class="question-mark">?</span> <span class="op">&lt;</span> <span class="self">self</span>.<span class="ident">client_counter</span>()
+                        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">client_counter_pre</span>()<span class="question-mark">?</span> <span class="op">&gt;</span><span class="op">=</span> <span class="self">self</span>.<span class="ident">client_counter</span>() {
+                            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error::CounterError</span>(
+                                <span class="string">&quot;The client counter is invalid&quot;</span>.<span class="ident">to_owned</span>(),
+                            ));
+                        }
                     } <span class="kw">else</span> {
                         <span class="kw">let</span> <span class="ident">client_id</span> <span class="op">=</span> <span class="self">Self</span><span class="ident">::get_client_id</span>(<span class="ident">key</span>)<span class="question-mark">?</span>;
                         <span class="kw">if</span> <span class="op">!</span><span class="ident">clients</span>.<span class="ident">insert</span>(<span class="ident">client_id</span>.<span class="ident">clone</span>()) {
@@ -1181,12 +1186,12 @@
                 <span class="ident">IbcPrefix::Port</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">validate_port</span>(<span class="ident">key</span>)<span class="question-mark">?</span>,
                 <span class="ident">IbcPrefix::Capability</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">validate_capability</span>(<span class="ident">key</span>)<span class="question-mark">?</span>,
                 <span class="comment">// TODO implement validations for modules</span>
-                <span class="ident">IbcPrefix::SeqSend</span> <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">false</span>,
-                <span class="ident">IbcPrefix::SeqRecv</span> <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">false</span>,
-                <span class="ident">IbcPrefix::SeqAck</span> <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">false</span>,
-                <span class="ident">IbcPrefix::Commitment</span> <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">false</span>,
-                <span class="ident">IbcPrefix::Receipt</span> <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">false</span>,
-                <span class="ident">IbcPrefix::Ack</span> <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">false</span>,
+                <span class="ident">IbcPrefix::SeqSend</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">continue</span>,
+                <span class="ident">IbcPrefix::SeqRecv</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">continue</span>,
+                <span class="ident">IbcPrefix::SeqAck</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">continue</span>,
+                <span class="ident">IbcPrefix::Commitment</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">continue</span>,
+                <span class="ident">IbcPrefix::Receipt</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">continue</span>,
+                <span class="ident">IbcPrefix::Ack</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">continue</span>,
                 <span class="ident">IbcPrefix::Unknown</span> <span class="op">=</span><span class="op">&gt;</span> {
                     <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error::KeyError</span>(<span class="macro">format!</span>(
                         <span class="string">&quot;Invalid IBC-related key: {}&quot;</span>,
@@ -1194,9 +1199,6 @@
                     )));
                 }
             };
-            <span class="kw">if</span> <span class="op">!</span><span class="ident">accepted</span> {
-                <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="bool-val">false</span>);
-            }
         }
 
         <span class="prelude-val">Ok</span>(<span class="bool-val">true</span>)

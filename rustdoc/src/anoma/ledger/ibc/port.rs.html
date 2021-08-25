@@ -185,6 +185,16 @@
 <span id="183">183</span>
 <span id="184">184</span>
 <span id="185">185</span>
+<span id="186">186</span>
+<span id="187">187</span>
+<span id="188">188</span>
+<span id="189">189</span>
+<span id="190">190</span>
+<span id="191">191</span>
+<span id="192">192</span>
+<span id="193">193</span>
+<span id="194">194</span>
+<span id="195">195</span>
 </pre><pre class="rust">
 <span class="doccomment">//! IBC validity predicate for port module</span>
 
@@ -222,12 +232,12 @@
     <span class="ident">DB</span>: <span class="lifetime">&#39;static</span> <span class="op">+</span> <span class="ident">storage::DB</span> <span class="op">+</span> <span class="kw">for</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span> <span class="ident">storage::DBIter</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span>,
     <span class="ident">H</span>: <span class="lifetime">&#39;static</span> <span class="op">+</span> <span class="ident">StorageHasher</span>,
 {
-    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">validate_port</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">Key</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">validate_port</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">Key</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">port_id</span> <span class="op">=</span> <span class="self">Self</span><span class="ident">::get_port_id_for_capability</span>(<span class="ident">key</span>)<span class="question-mark">?</span>;
         <span class="kw">match</span> <span class="self">self</span>.<span class="ident">get_port_state_change</span>(<span class="kw-2">&amp;</span><span class="ident">port_id</span>)<span class="question-mark">?</span> {
             <span class="ident">StateChange::Created</span> <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">match</span> <span class="self">self</span>.<span class="ident">authenticated_capability</span>(<span class="kw-2">&amp;</span><span class="ident">port_id</span>) {
-                    <span class="prelude-val">Ok</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="bool-val">true</span>),
+                    <span class="prelude-val">Ok</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(()),
                     <span class="prelude-val">Err</span>(<span class="ident">e</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">Error::InvalidPort</span>(<span class="macro">format!</span>(
                         <span class="string">&quot;The port is not authenticated: ID {}, {}&quot;</span>,
                         <span class="ident">port_id</span>, <span class="ident">e</span>
@@ -261,9 +271,15 @@
             .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">Error::InvalidStateChange</span>(<span class="ident">e</span>.<span class="ident">to_string</span>()))
     }
 
-    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">validate_capability</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">Key</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">validate_capability</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">Key</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="kw">if</span> <span class="ident">key</span>.<span class="ident">is_ibc_capability_index</span>() {
-            <span class="prelude-val">Ok</span>(<span class="self">self</span>.<span class="ident">capability_index_pre</span>()<span class="question-mark">?</span> <span class="op">&lt;</span> <span class="self">self</span>.<span class="ident">capability_index</span>()<span class="question-mark">?</span>)
+            <span class="kw">if</span> <span class="self">self</span>.<span class="ident">capability_index_pre</span>()<span class="question-mark">?</span> <span class="op">&lt;</span> <span class="self">self</span>.<span class="ident">capability_index</span>()<span class="question-mark">?</span> {
+                <span class="prelude-val">Ok</span>(())
+            } <span class="kw">else</span> {
+                <span class="prelude-val">Err</span>(<span class="ident">Error::InvalidPort</span>(
+                    <span class="string">&quot;The capability index is invalid&quot;</span>.<span class="ident">to_owned</span>(),
+                ))
+            }
         } <span class="kw">else</span> {
             <span class="kw">match</span> <span class="self">self</span>
                 .<span class="ident">get_state_change</span>(<span class="ident">key</span>)
@@ -273,7 +289,11 @@
                     <span class="kw">let</span> <span class="ident">cap</span> <span class="op">=</span> <span class="self">Self</span><span class="ident">::get_capability</span>(<span class="ident">key</span>)<span class="question-mark">?</span>;
                     <span class="kw">let</span> <span class="ident">port_id</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">get_port_by_capability</span>(<span class="kw-2">&amp;</span><span class="ident">cap</span>)<span class="question-mark">?</span>;
                     <span class="kw">match</span> <span class="self">self</span>.<span class="ident">lookup_module_by_port</span>(<span class="kw-2">&amp;</span><span class="ident">port_id</span>) {
-                        <span class="prelude-val">Some</span>(<span class="ident">c</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="ident">c</span> <span class="op">=</span><span class="op">=</span> <span class="ident">cap</span>),
+                        <span class="prelude-val">Some</span>(<span class="ident">c</span>) <span class="kw">if</span> <span class="ident">c</span> <span class="op">=</span><span class="op">=</span> <span class="ident">cap</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(()),
+                        <span class="prelude-val">Some</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">Error::InvalidPort</span>(<span class="macro">format!</span>(
+                            <span class="string">&quot;The port is invalid: ID {}&quot;</span>,
+                            <span class="ident">port_id</span>
+                        ))),
                         <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">Error::NoCapability</span>(<span class="macro">format!</span>(
                             <span class="string">&quot;The capability is not mapped: Index {}, Port {}&quot;</span>,
                             <span class="ident">cap</span>.<span class="ident">index</span>(),
