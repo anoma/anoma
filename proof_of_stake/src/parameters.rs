@@ -1,8 +1,8 @@
 //! PoS system parameters
 
-use std::ops::Mul;
-
 use borsh::{BorshDeserialize, BorshSerialize};
+
+use crate::types::BasisPoints;
 
 #[derive(Debug, Clone, BorshDeserialize, BorshSerialize)]
 pub struct PosParams {
@@ -23,35 +23,6 @@ pub struct PosParams {
     /// Amount of tokens rewarded to each validator that voted on a block
     /// proposal
     pub block_vote_reward: u64,
-}
-
-/// ‱ (Parts per then thousand). This can be multiplied by any type that
-/// implements [`Into<u64>`].
-#[derive(Debug, Clone, Copy, BorshDeserialize, BorshSerialize)]
-pub struct BasisPoints(u64);
-
-impl BasisPoints {
-    pub fn new(value: u64) -> Self {
-        Self(value)
-    }
-}
-
-impl Mul<u64> for BasisPoints {
-    type Output = u64;
-
-    fn mul(self, rhs: u64) -> Self::Output {
-        // TODO checked arithmetics
-        rhs * self.0 / 10_000
-    }
-}
-
-impl Mul<i128> for BasisPoints {
-    type Output = i128;
-
-    fn mul(self, rhs: i128) -> Self::Output {
-        // TODO checked arithmetics
-        rhs * self.0 as i128 / 10_000
-    }
 }
 
 impl Default for PosParams {

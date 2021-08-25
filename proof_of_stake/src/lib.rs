@@ -27,10 +27,10 @@ use epoched::{
 use parameters::PosParams;
 use thiserror::Error;
 use types::{
-    ActiveValidator, Bonds, Epoch, GenesisValidator, TotalVotingPowers, Unbond,
-    Unbonds, ValidatorConsensusKeys, ValidatorSet, ValidatorSetUpdate,
-    ValidatorSets, ValidatorState, ValidatorStates, ValidatorTotalDeltas,
-    ValidatorVotingPowers, VotingPower, VotingPowerDelta,
+    ActiveValidator, Bonds, Epoch, GenesisValidator, Slash, SlashType,
+    TotalVotingPowers, Unbond, Unbonds, ValidatorConsensusKeys, ValidatorSet,
+    ValidatorSetUpdate, ValidatorSets, ValidatorState, ValidatorStates,
+    ValidatorTotalDeltas, ValidatorVotingPowers, VotingPower, VotingPowerDelta,
 };
 
 use crate::btree_set::BTreeSetShims;
@@ -431,6 +431,7 @@ pub trait PoSBase {
     /// `const fn`
     fn staking_token_address() -> Self::Address;
 
+    fn read_params(&self) -> PosParams;
     fn read_validator_set(&self) -> ValidatorSets<Self::Address>;
     fn read_validator_consensus_key(
         &self,
@@ -588,6 +589,16 @@ pub trait PoSBase {
             },
         );
         active_validators.chain(inactive_validators).for_each(f)
+    }
+
+    fn slash(
+        &mut self,
+        epoch: impl Into<Epoch>,
+        slash_type: SlashType,
+        validator: &Self::Address,
+        params: &PosParams,
+    ) {
+        todo!()
     }
 }
 

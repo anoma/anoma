@@ -595,6 +595,11 @@ where
         staking_token_address()
     }
 
+    fn read_params(&self) -> PosParams {
+        let (value, _gas) = self.read(&params_key()).unwrap();
+        decode(value.unwrap()).unwrap()
+    }
+
     fn read_validator_set(&self) -> ValidatorSets {
         let (value, _gas) = self.read(&validator_set_key()).unwrap();
         decode(value.unwrap()).unwrap()

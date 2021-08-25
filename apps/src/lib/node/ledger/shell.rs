@@ -19,7 +19,7 @@ use anoma::types::{address, key, token};
 use borsh::BorshSerialize;
 use itertools::Itertools;
 use tendermint::block::Header;
-use tendermint_proto::abci::ValidatorUpdate;
+use tendermint_proto::abci::{self, Evidence, ValidatorUpdate};
 use thiserror::Error;
 use tower_abci::{request, response};
 
@@ -313,7 +313,12 @@ impl Shell {
     }
 
     /// Begin a new block.
-    pub fn prepare_proposal(&mut self, hash: BlockHash, header: Header) {
+    pub fn prepare_proposal(
+        &mut self,
+        hash: BlockHash,
+        header: Header,
+        byzantine_validators: Vec<Evidence>,
+    ) {
         let height = BlockHeight(header.height.into());
         let time: DateTime<Utc> = header.time.into();
         let time: DateTimeUtc = time.into();
@@ -329,6 +334,69 @@ impl Shell {
             .storage
             .update_epoch(height, time)
             .expect("Must be able to update epoch");
+
+        // Apply PoS slashes from the evidence
+        if !byzantine_validators.is_empty() {
+            let pos_params = self.storage.read_params();
+            for evidence in byzantine_validators {
+                let height = match u64::try_from(evidence.height) {
+                    Ok(height) => height,
+                    Err(err) => {
+                        tracing::error!("Unexpected block height {}", err);
+                        continue;
+                    }
+                };
+                let epoch = match self
+                    .storage
+                    .block
+                    .pred_epochs
+                    .get_epoch(BlockHeight(height))
+                {
+                    Some(epoch) => epoch,
+                    None => {
+                        tracing::error!(
+                            "Couldn't find epoch for block height {}",
+                            height
+                        );
+                        continue;
+                    }
+                };
+                let slash_type =
+                    match abci::EvidenceType::from_i32(evidence.r#type) {
+                        Some(r#type) => match r#type {
+                            abci::EvidenceType::DuplicateVote => {
+                                pos::types::SlashType::DuplicateVote
+                            }
+                            abci::EvidenceType::LightClientAttack => {
+                                pos::types::SlashType::LightClientAttack
+                            }
+                            abci::EvidenceType::Unknown => {
+                                tracing::error!(
+                                    "Unknown evidence: {:#?}",
+                                    evidence
+                                );
+                                continue;
+                            }
+                        },
+                        None => {
+                            tracing::error!(
+                                "Unexpected evidence type {}",
+                                evidence.r#type
+                            );
+                            continue;
+                        }
+                    };
+                let validator = todo!("look-up from pkh");
+                tracing::info!(
+                    "Slashing {} for {} in epoch {}",
+                    epoch,
+                    slash_type,
+                    validator
+                );
+                self.storage
+                    .slash(epoch, slash_type, validator, &pos_params);
+            }
+        }
     }
 
     pub fn verify_header(

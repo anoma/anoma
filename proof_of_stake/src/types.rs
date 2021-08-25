@@ -4,7 +4,7 @@ use std::convert::TryFrom;
 use std::fmt::Display;
 use std::hash::Hash;
 use std::num::TryFromIntError;
-use std::ops::{Add, AddAssign, Sub};
+use std::ops::{Add, AddAssign, Mul, Sub};
 
 use borsh::{BorshDeserialize, BorshSerialize};
 
@@ -238,6 +238,26 @@ pub struct Unbond<Token: Default> {
     /// check.
     pub deltas: HashMap<(Epoch, Epoch), Token>,
 }
+
+/// A slash applied to validator, to punish byzantine behavior by removing
+/// their staked tokens at and before the epoch of the slash.
+#[derive(Debug, Clone, BorshDeserialize, BorshSerialize)]
+pub struct Slash {
+    pub epoch: Epoch,
+    pub r#type: SlashType,
+    pub rate: BasisPoints,
+}
+
+#[derive(Debug, Clone, BorshDeserialize, BorshSerialize)]
+pub enum SlashType {
+    DuplicateVote,
+    LightClientAttack,
+}
+
+/// ‱ (Parts per then thousand). This can be multiplied by any type that
+/// implements [`Into<u64>`] or [`Into<i128>`].
+#[derive(Debug, Clone, Copy, BorshDeserialize, BorshSerialize)]
+pub struct BasisPoints(u64);
 
 impl VotingPower {
     pub fn from_tokens(tokens: impl Into<u64>, params: &PosParams) -> Self {
@@ -552,6 +572,39 @@ where
     /// Calculate validator's voting power
     pub fn voting_power(&self, params: &PosParams) -> VotingPower {
         VotingPower::from_tokens(self.tokens, params)
+    }
+}
+
+impl Display for SlashType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            SlashType::DuplicateVote => writeln!(f, "Duplicate vote"),
+            SlashType::LightClientAttack => writeln!(f, "Light client attack"),
+        }
+    }
+}
+
+impl BasisPoints {
+    pub fn new(value: u64) -> Self {
+        Self(value)
+    }
+}
+
+impl Mul<u64> for BasisPoints {
+    type Output = u64;
+
+    fn mul(self, rhs: u64) -> Self::Output {
+        // TODO checked arithmetics
+        rhs * self.0 / 10_000
+    }
+}
+
+impl Mul<i128> for BasisPoints {
+    type Output = i128;
+
+    fn mul(self, rhs: i128) -> Self::Output {
+        // TODO checked arithmetics
+        rhs * self.0 as i128 / 10_000
     }
 }
 

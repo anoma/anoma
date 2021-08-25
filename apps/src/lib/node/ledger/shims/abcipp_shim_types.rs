@@ -154,12 +154,13 @@ pub mod shim {
 
     /// Custom types for request payloads
     pub mod request {
-        use tendermint_proto::abci::RequestBeginBlock;
+        use tendermint_proto::abci::{Evidence, RequestBeginBlock};
         use tendermint_proto::types::Header;
 
         pub struct PrepareProposal {
             pub hash: Vec<u8>,
             pub header: Option<Header>,
+            pub byzantine_validators: Vec<Evidence>,
         }
 
         impl From<RequestBeginBlock> for PrepareProposal {
@@ -167,6 +168,7 @@ pub mod shim {
                 PrepareProposal {
                     hash: block.hash,
                     header: block.header,
+                    byzantine_validators: block.byzantine_validators,
                 }
             }
         }

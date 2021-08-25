@@ -94,7 +94,11 @@ impl Shell {
                     block.header.expect("missing block's header").try_into(),
                 ) {
                     (Ok(hash), Ok(header)) => {
-                        let _ = self.prepare_proposal(hash, header);
+                        let _ = self.prepare_proposal(
+                            hash,
+                            header,
+                            block.byzantine_validators,
+                        );
                     }
                     (Ok(_), Err(msg)) => {
                         tracing::error!("Unexpected block header {}", msg);
