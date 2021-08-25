@@ -1842,8 +1842,8 @@
     <span class="ident">counterparty_version</span>: <span class="ident">String</span>,
     <span class="doccomment">/// The height of the proof</span>
     <span class="ident">proof_height</span>: (<span class="ident">u64</span>, <span class="ident">u64</span>),
-    <span class="doccomment">/// The proof of the connection</span>
-    <span class="ident">proof_connection</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>,
+    <span class="doccomment">/// The proof of the channel</span>
+    <span class="ident">proof_channel</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>,
     <span class="doccomment">/// The proof of the client state</span>
     <span class="ident">proof_client</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>,
     <span class="doccomment">/// The proof of the consensus state</span>
@@ -1861,7 +1861,7 @@
         <span class="ident">version</span>: <span class="ident">String</span>,
         <span class="ident">counterparty_version</span>: <span class="ident">String</span>,
         <span class="ident">proof_height</span>: <span class="ident">Height</span>,
-        <span class="ident">proof_connection</span>: <span class="ident">CommitmentProofBytes</span>,
+        <span class="ident">proof_channel</span>: <span class="ident">CommitmentProofBytes</span>,
         <span class="ident">proof_client</span>: <span class="ident">CommitmentProofBytes</span>,
         <span class="ident">proof_consensus</span>: <span class="ident">CommitmentProofBytes</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
@@ -1883,7 +1883,7 @@
                 <span class="ident">proof_height</span>.<span class="ident">revision_number</span>,
                 <span class="ident">proof_height</span>.<span class="ident">revision_height</span>,
             ),
-            <span class="ident">proof_connection</span>: <span class="ident">proof_connection</span>.<span class="ident">into</span>(),
+            <span class="ident">proof_channel</span>: <span class="ident">proof_channel</span>.<span class="ident">into</span>(),
             <span class="ident">proof_client</span>: <span class="ident">proof_client</span>.<span class="ident">into</span>(),
             <span class="ident">proof_consensus</span>: <span class="ident">proof_consensus</span>.<span class="ident">into</span>(),
         }
@@ -1933,9 +1933,9 @@
         <span class="ident">Height::new</span>(<span class="self">self</span>.<span class="ident">proof_height</span>.<span class="number">0</span>, <span class="self">self</span>.<span class="ident">proof_height</span>.<span class="number">1</span>)
     }
 
-    <span class="doccomment">/// Returns the proof for connection</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">proof_connection</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">CommitmentProofBytes</span> {
-        <span class="self">self</span>.<span class="ident">proof_connection</span>.<span class="ident">clone</span>().<span class="ident">into</span>()
+    <span class="doccomment">/// Returns the proof for the channel</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">proof_channel</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">CommitmentProofBytes</span> {
+        <span class="self">self</span>.<span class="ident">proof_channel</span>.<span class="ident">clone</span>().<span class="ident">into</span>()
     }
 
     <span class="doccomment">/// Returns the proof for client state</span>
@@ -1955,7 +1955,7 @@
             <span class="ident">ConsensusProof::new</span>(<span class="self">self</span>.<span class="ident">proof_consensus</span>(), <span class="ident">height</span>)
                 .<span class="ident">map_err</span>(<span class="ident">Error::DecodingError</span>)<span class="question-mark">?</span>;
         <span class="ident">Proofs::new</span>(
-            <span class="self">self</span>.<span class="ident">proof_connection</span>(),
+            <span class="self">self</span>.<span class="ident">proof_channel</span>(),
             <span class="prelude-val">Some</span>(<span class="self">self</span>.<span class="ident">proof_client</span>()),
             <span class="prelude-val">Some</span>(<span class="ident">consensus_proof</span>),
             <span class="prelude-val">None</span>,
@@ -1978,8 +1978,8 @@
     <span class="ident">counterparty_version</span>: <span class="ident">String</span>,
     <span class="doccomment">/// The height of the proof</span>
     <span class="ident">proof_height</span>: (<span class="ident">u64</span>, <span class="ident">u64</span>),
-    <span class="doccomment">/// The proof of the connection</span>
-    <span class="ident">proof_connection</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>,
+    <span class="doccomment">/// The proof of the channel</span>
+    <span class="ident">proof_channel</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>,
     <span class="doccomment">/// The proof of the client state</span>
     <span class="ident">proof_client</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>,
     <span class="doccomment">/// The proof of the consensus state</span>
@@ -1995,7 +1995,7 @@
         <span class="ident">counterpart_channel_id</span>: <span class="ident">ChannelId</span>,
         <span class="ident">counterparty_version</span>: <span class="ident">String</span>,
         <span class="ident">proof_height</span>: <span class="ident">Height</span>,
-        <span class="ident">proof_connection</span>: <span class="ident">CommitmentProofBytes</span>,
+        <span class="ident">proof_channel</span>: <span class="ident">CommitmentProofBytes</span>,
         <span class="ident">proof_client</span>: <span class="ident">CommitmentProofBytes</span>,
         <span class="ident">proof_consensus</span>: <span class="ident">CommitmentProofBytes</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
@@ -2011,7 +2011,7 @@
                 <span class="ident">proof_height</span>.<span class="ident">revision_number</span>,
                 <span class="ident">proof_height</span>.<span class="ident">revision_height</span>,
             ),
-            <span class="ident">proof_connection</span>: <span class="ident">proof_connection</span>.<span class="ident">into</span>(),
+            <span class="ident">proof_channel</span>: <span class="ident">proof_channel</span>.<span class="ident">into</span>(),
             <span class="ident">proof_client</span>: <span class="ident">proof_client</span>.<span class="ident">into</span>(),
             <span class="ident">proof_consensus</span>: <span class="ident">proof_consensus</span>.<span class="ident">into</span>(),
         }
@@ -2045,9 +2045,9 @@
         <span class="ident">Height::new</span>(<span class="self">self</span>.<span class="ident">proof_height</span>.<span class="number">0</span>, <span class="self">self</span>.<span class="ident">proof_height</span>.<span class="number">1</span>)
     }
 
-    <span class="doccomment">/// Returns the proof for connection</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">proof_connection</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">CommitmentProofBytes</span> {
-        <span class="self">self</span>.<span class="ident">proof_connection</span>.<span class="ident">clone</span>().<span class="ident">into</span>()
+    <span class="doccomment">/// Returns the proof for the channel</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">proof_channel</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">CommitmentProofBytes</span> {
+        <span class="self">self</span>.<span class="ident">proof_channel</span>.<span class="ident">clone</span>().<span class="ident">into</span>()
     }
 
     <span class="doccomment">/// Returns the proof for client state</span>
@@ -2067,7 +2067,7 @@
             <span class="ident">ConsensusProof::new</span>(<span class="self">self</span>.<span class="ident">proof_consensus</span>(), <span class="ident">height</span>)
                 .<span class="ident">map_err</span>(<span class="ident">Error::DecodingError</span>)<span class="question-mark">?</span>;
         <span class="ident">Proofs::new</span>(
-            <span class="self">self</span>.<span class="ident">proof_connection</span>(),
+            <span class="self">self</span>.<span class="ident">proof_channel</span>(),
             <span class="prelude-val">Some</span>(<span class="self">self</span>.<span class="ident">proof_client</span>()),
             <span class="prelude-val">Some</span>(<span class="ident">consensus_proof</span>),
             <span class="prelude-val">None</span>,
@@ -2086,8 +2086,8 @@
     <span class="ident">channel_id</span>: <span class="ident">String</span>,
     <span class="doccomment">/// The height of the proof</span>
     <span class="ident">proof_height</span>: (<span class="ident">u64</span>, <span class="ident">u64</span>),
-    <span class="doccomment">/// The proof of the connection</span>
-    <span class="ident">proof_connection</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>,
+    <span class="doccomment">/// The proof of the channel</span>
+    <span class="ident">proof_channel</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>,
     <span class="doccomment">/// The proof of the client state</span>
     <span class="ident">proof_client</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>,
     <span class="doccomment">/// The proof of the consensus state</span>
@@ -2100,7 +2100,7 @@
         <span class="ident">port_id</span>: <span class="ident">PortId</span>,
         <span class="ident">channel_id</span>: <span class="ident">ChannelId</span>,
         <span class="ident">proof_height</span>: <span class="ident">Height</span>,
-        <span class="ident">proof_connection</span>: <span class="ident">CommitmentProofBytes</span>,
+        <span class="ident">proof_channel</span>: <span class="ident">CommitmentProofBytes</span>,
         <span class="ident">proof_client</span>: <span class="ident">CommitmentProofBytes</span>,
         <span class="ident">proof_consensus</span>: <span class="ident">CommitmentProofBytes</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
@@ -2113,7 +2113,7 @@
                 <span class="ident">proof_height</span>.<span class="ident">revision_number</span>,
                 <span class="ident">proof_height</span>.<span class="ident">revision_height</span>,
             ),
-            <span class="ident">proof_connection</span>: <span class="ident">proof_connection</span>.<span class="ident">into</span>(),
+            <span class="ident">proof_channel</span>: <span class="ident">proof_channel</span>.<span class="ident">into</span>(),
             <span class="ident">proof_client</span>: <span class="ident">proof_client</span>.<span class="ident">into</span>(),
             <span class="ident">proof_consensus</span>: <span class="ident">proof_consensus</span>.<span class="ident">into</span>(),
         }
@@ -2137,8 +2137,8 @@
     }
 
     <span class="doccomment">/// Returns the proof for connection</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">proof_connection</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">CommitmentProofBytes</span> {
-        <span class="self">self</span>.<span class="ident">proof_connection</span>.<span class="ident">clone</span>().<span class="ident">into</span>()
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">proof_channel</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">CommitmentProofBytes</span> {
+        <span class="self">self</span>.<span class="ident">proof_channel</span>.<span class="ident">clone</span>().<span class="ident">into</span>()
     }
 
     <span class="doccomment">/// Returns the proof for client state</span>
@@ -2158,7 +2158,7 @@
             <span class="ident">ConsensusProof::new</span>(<span class="self">self</span>.<span class="ident">proof_consensus</span>(), <span class="ident">height</span>)
                 .<span class="ident">map_err</span>(<span class="ident">Error::DecodingError</span>)<span class="question-mark">?</span>;
         <span class="ident">Proofs::new</span>(
-            <span class="self">self</span>.<span class="ident">proof_connection</span>(),
+            <span class="self">self</span>.<span class="ident">proof_channel</span>(),
             <span class="prelude-val">Some</span>(<span class="self">self</span>.<span class="ident">proof_client</span>()),
             <span class="prelude-val">Some</span>(<span class="ident">consensus_proof</span>),
             <span class="prelude-val">None</span>,

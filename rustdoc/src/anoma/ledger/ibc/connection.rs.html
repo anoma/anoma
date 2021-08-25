@@ -596,7 +596,7 @@
         <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="ident">ConnectionOpenAckData::try_from_slice</span>(<span class="ident">tx_data</span>)<span class="question-mark">?</span>;
 
         <span class="comment">// version check</span>
-        <span class="kw">if</span> <span class="ident">conn</span>.<span class="ident">versions</span>().<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">data</span>.<span class="ident">version</span>()<span class="question-mark">?</span>) {
+        <span class="kw">if</span> <span class="op">!</span><span class="ident">conn</span>.<span class="ident">versions</span>().<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">data</span>.<span class="ident">version</span>()<span class="question-mark">?</span>) {
             <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error::InvalidVersion</span>(
                 <span class="string">&quot;The version is unsupported&quot;</span>.<span class="ident">to_owned</span>(),
             ));
