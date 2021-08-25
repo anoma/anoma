@@ -335,7 +335,11 @@ impl Shell {
             .update_epoch(height, time)
             .expect("Must be able to update epoch");
 
-        // Apply PoS slashes from the evidence
+        self.slash(byzantine_validators);
+    }
+
+    /// Apply PoS slashes from the evidence
+    fn slash(&mut self, byzantine_validators: Vec<Evidence>) {
         if !byzantine_validators.is_empty() {
             let pos_params = self.storage.read_params();
             for evidence in byzantine_validators {
@@ -386,7 +390,41 @@ impl Shell {
                             continue;
                         }
                     };
-                let validator = todo!("look-up from pkh");
+                let validator_raw_hash = match evidence.validator {
+                    Some(validator) => {
+                        match String::from_utf8(validator.address) {
+                            Ok(raw_hash) => raw_hash,
+                            Err(err) => {
+                                tracing::error!(
+                                    "Evidence failed to decode validator \
+                                     address from utf-8 with {}",
+                                    err
+                                );
+                                continue;
+                            }
+                        }
+                    }
+                    None => {
+                        tracing::error!(
+                            "Evidence without a validator {:#?}",
+                            evidence
+                        );
+                        continue;
+                    }
+                };
+                let validator = match self
+                    .storage
+                    .read_validator_address_raw_hash(&validator_raw_hash)
+                {
+                    Some(validator) => validator,
+                    None => {
+                        tracing::error!(
+                            "Cannot find validator's address from raw hash {}",
+                            validator_raw_hash
+                        );
+                        continue;
+                    }
+                };
                 tracing::info!(
                     "Slashing {} for {} in epoch {}",
                     epoch,
@@ -394,7 +432,7 @@ impl Shell {
                     validator
                 );
                 self.storage
-                    .slash(epoch, slash_type, validator, &pos_params);
+                    .slash(epoch, slash_type, &validator, &pos_params);
             }
         }
     }
