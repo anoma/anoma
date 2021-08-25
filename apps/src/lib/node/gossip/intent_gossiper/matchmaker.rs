@@ -1,8 +1,8 @@
 use std::sync::{Arc, Mutex};
 
-use anoma_shared::gossip::mm::MmHost;
-use anoma_shared::proto::{Intent, IntentId, Tx};
-use anoma_shared::vm::wasm;
+use anoma::gossip::mm::MmHost;
+use anoma::proto::{Intent, IntentId, Tx};
+use anoma::vm::wasm;
 use tendermint::net;
 use tendermint_rpc::{Client, HttpClient};
 use thiserror::Error;
@@ -13,14 +13,20 @@ use super::mempool::{self, IntentMempool};
 use crate::types::MatchmakerMessage;
 use crate::{config, wallet};
 
+/// A matchmaker receive intents and tries to find a match with previously
+/// received intent.
 #[derive(Debug)]
 pub struct Matchmaker {
+    /// All valid and received intent are saved in this mempool
     mempool: IntentMempool,
+    /// Possible filter that filter any received intent.
     filter: Option<Filter>,
     matchmaker_code: Vec<u8>,
+    /// The code of the transaction that is going to be send to a ledger.
     tx_code: Vec<u8>,
-    // the matchmaker's state as arbitrary bytes
-    data: Vec<u8>,
+    /// the matchmaker's state as arbitrary bytes
+    state: Vec<u8>,
+    /// The ledger address to send any crafted transaction to
     ledger_address: net::Address,
     // TODO this doesn't have to be a mutex as it's just a Sender which is
     // thread-safe
@@ -47,29 +53,35 @@ pub enum Error {
 type Result<T> = std::result::Result<T, Error>;
 
 impl MmHost for WasmHost {
+    /// Send a message from the guest program to remove value from the mempool
     fn remove_intents(&self, intents_id: std::collections::HashSet<Vec<u8>>) {
         self.0
             .try_send(MatchmakerMessage::RemoveIntents(intents_id))
             .expect("Sending matchmaker message")
     }
 
+    /// Send a message from the guest program to inject a new transaction to the
+    /// ledger
     fn inject_tx(&self, tx_data: Vec<u8>) {
         self.0
             .try_send(MatchmakerMessage::InjectTx(tx_data))
             .expect("Sending matchmaker message")
     }
 
-    fn update_data(&self, data: Vec<u8>) {
+    /// Send a message from the guest program to update the matchmaker state
+    fn update_state(&self, state: Vec<u8>) {
         self.0
-            .try_send(MatchmakerMessage::UpdateData(data))
+            .try_send(MatchmakerMessage::UpdateState(state))
             .expect("Sending matchmaker message")
     }
 }
 
 impl Matchmaker {
+    /// Create a new matchmaker based on the parameter config.
     pub fn new(
         config: &config::Matchmaker,
     ) -> Result<(Self, Receiver<MatchmakerMessage>)> {
+        // TODO: find a good number or maybe unlimited channel ?
         let (inject_mm_message, receiver_mm_message) = channel(100);
         let matchmaker_code =
             std::fs::read(&config.matchmaker).map_err(Error::FileFailed)?;
@@ -88,7 +100,7 @@ impl Matchmaker {
                 filter,
                 matchmaker_code,
                 tx_code,
-                data: Vec::new(),
+                state: Vec::new(),
                 ledger_address: config.ledger_address.clone(),
                 wasm_host: Arc::new(Mutex::new(WasmHost(inject_mm_message))),
             },
@@ -96,7 +108,7 @@ impl Matchmaker {
         ))
     }
 
-    // returns true if no filter is define for that matchmaker
+    /// Tries to apply the filter or returns true if no filter is define
     fn apply_filter(&self, intent: &Intent) -> Result<bool> {
         self.filter
             .as_ref()
@@ -106,8 +118,8 @@ impl Matchmaker {
             .map_err(Error::Filter)
     }
 
-    // add the intent to the matchmaker mempool and tries to find a match for
-    // that intent
+    /// add the intent to the matchmaker mempool and tries to find a match for
+    /// that intent
     pub fn try_match_intent(&mut self, intent: &Intent) -> Result<bool> {
         if self.apply_filter(intent)? {
             self.mempool
@@ -115,7 +127,7 @@ impl Matchmaker {
                 .map_err(Error::MempoolFailed)?;
             Ok(wasm::run::matchmaker(
                 &self.matchmaker_code.clone(),
-                &self.data,
+                &self.state,
                 &intent.id().0,
                 &intent.data,
                 self.wasm_host.clone(),
@@ -146,8 +158,8 @@ impl Matchmaker {
                     self.mempool.remove(&IntentId::from(intent_id));
                 });
             }
-            MatchmakerMessage::UpdateData(mm_data) => {
-                self.data = mm_data;
+            MatchmakerMessage::UpdateState(mm_data) => {
+                self.state = mm_data;
             }
         }
     }

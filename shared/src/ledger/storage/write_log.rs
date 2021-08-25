@@ -71,9 +71,9 @@ impl WriteLog {
     /// returns [`None`] if the key is not present in the write log
     pub fn read(&self, key: &Key) -> (Option<&StorageModification>, u64) {
         // try to read from tx write log first
-        match self.tx_write_log.get(&key).or_else(|| {
+        match self.tx_write_log.get(key).or_else(|| {
             // if not found, then try to read from block write log
-            self.block_write_log.get(&key)
+            self.block_write_log.get(key)
         }) {
             Some(v) => {
                 let gas = match v {
@@ -267,7 +267,7 @@ impl WriteLog {
                     // included in the key.
                     continue;
                 }
-                match verifiers.get_mut(&addr) {
+                match verifiers.get_mut(addr) {
                     Some(keys) => {
                         keys.insert(key.clone());
                     }

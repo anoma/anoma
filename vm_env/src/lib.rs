@@ -10,8 +10,8 @@ pub mod key;
 pub mod token;
 
 pub mod tx_prelude {
-    pub use anoma_shared::types::address::Address;
-    pub use anoma_shared::types::*;
+    pub use anoma::types::address::Address;
+    pub use anoma::types::*;
     pub use anoma_vm_macro::transaction;
 
     pub use super::imports::tx::*;
@@ -23,8 +23,8 @@ pub mod vp_prelude {
     // used in the VP input
     pub use std::collections::HashSet;
 
-    pub use anoma_shared::types::address::Address;
-    pub use anoma_shared::types::*;
+    pub use anoma::types::address::Address;
+    pub use anoma::types::*;
     pub use anoma_vm_macro::validity_predicate;
 
     pub use crate::imports::vp::*;
@@ -36,16 +36,16 @@ pub mod vp_prelude {
 }
 
 pub mod matchmaker_prelude {
-    pub use anoma_shared::types::address::Address;
-    pub use anoma_shared::types::*;
+    pub use anoma::types::address::Address;
+    pub use anoma::types::*;
     pub use anoma_vm_macro::matchmaker;
 
     pub use crate::imports::matchmaker::*;
 }
 
 pub mod filter_prelude {
-    pub use anoma_shared::types::address::Address;
-    pub use anoma_shared::types::*;
+    pub use anoma::types::address::Address;
+    pub use anoma::types::*;
     pub use anoma_vm_macro::filter;
 
     pub use super::imports::filter::*;

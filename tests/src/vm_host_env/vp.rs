@@ -1,14 +1,14 @@
 use std::collections::HashSet;
 
-use anoma_shared::ledger::gas::VpGasMeter;
-use anoma_shared::ledger::storage::mockdb::MockDB;
-use anoma_shared::ledger::storage::testing::TestStorage;
-use anoma_shared::ledger::storage::write_log::WriteLog;
-use anoma_shared::proto::Tx;
-use anoma_shared::types::address::{self, Address};
-use anoma_shared::types::storage::{self, Key};
-use anoma_shared::vm;
-use anoma_shared::vm::prefix_iter::PrefixIterators;
+use anoma::ledger::gas::VpGasMeter;
+use anoma::ledger::storage::mockdb::MockDB;
+use anoma::ledger::storage::testing::TestStorage;
+use anoma::ledger::storage::write_log::WriteLog;
+use anoma::proto::Tx;
+use anoma::types::address::{self, Address};
+use anoma::types::storage::{self, Key};
+use anoma::vm;
+use anoma::vm::prefix_iter::PrefixIterators;
 
 use crate::tx::{init_tx_env, TestTxEnv};
 
@@ -39,7 +39,7 @@ pub struct TestVpEnv {
 impl Default for TestVpEnv {
     fn default() -> Self {
         #[cfg(feature = "wasm-runtime")]
-        let eval_runner = anoma_shared::vm::wasm::run::VpEvalWasm::default();
+        let eval_runner = anoma::vm::wasm::run::VpEvalWasm::default();
         #[cfg(not(feature = "wasm-runtime"))]
         let eval_runner = native_vp_host_env::VpEval;
 
@@ -144,17 +144,16 @@ mod native_vp_host_env {
 
     use std::cell::RefCell;
 
-    use anoma_shared::ledger::storage::testing::Sha256Hasher;
-    use anoma_shared::vm::host_env::*;
-    use anoma_shared::vm::memory::testing::NativeMemory;
+    use anoma::ledger::storage::testing::Sha256Hasher;
+    use anoma::vm::host_env::*;
+    use anoma::vm::memory::testing::NativeMemory;
     // TODO replace with `std::concat_idents` once stabilized (https://github.com/rust-lang/rust/issues/29599)
     use concat_idents::concat_idents;
 
     use super::*;
 
     #[cfg(feature = "wasm-runtime")]
-    pub type VpEval =
-        anoma_shared::vm::wasm::run::VpEvalWasm<MockDB, Sha256Hasher>;
+    pub type VpEval = anoma::vm::wasm::run::VpEvalWasm<MockDB, Sha256Hasher>;
     #[cfg(not(feature = "wasm-runtime"))]
     pub struct VpEval;
 
@@ -173,7 +172,7 @@ mod native_vp_host_env {
             _ctx: VpCtx<'static, Self::Db, Self::H, Self::Eval>,
             _vp_code: Vec<u8>,
             _input_data: Vec<u8>,
-        ) -> anoma_shared::types::internal::HostEnvResult {
+        ) -> anoma::types::internal::HostEnvResult {
             unimplemented!(
                 "The \"wasm-runtime\" feature must be enabled to test with \
                  the `eval` function."

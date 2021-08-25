@@ -1,5 +1,6 @@
 //! This module is currently unused and not included in the module tree.
-//! It implements named addresses as described in [Archived page](tech-specs/src/archive/domain-name-addresses.md).
+//! It implements named addresses as described in [Archived
+//! page](docs/src/archive/domain-name-addresses.md).
 
 use std::collections::HashSet;
 use std::fmt::{Debug, Display};

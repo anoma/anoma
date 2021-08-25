@@ -194,16 +194,16 @@
         {
             "type": "lldb",
             "request": "launch",
-            "name": "Debug unit tests in library 'anoma_shared'",
+            "name": "Debug unit tests in library 'anoma'",
             "cargo": {
                 "args": [
                     "test",
                     "--no-run",
                     "--lib",
-                    "--package=anoma_shared"
+                    "--package=anoma"
                 ],
                 "filter": {
-                    "name": "anoma_shared",
+                    "name": "anoma",
                     "kind": "lib"
                 }
             },

@@ -1,13 +1,13 @@
 use std::collections::HashSet;
 
-use anoma_shared::ledger::gas::BlockGasMeter;
-use anoma_shared::ledger::storage::mockdb::MockDB;
-use anoma_shared::ledger::storage::testing::TestStorage;
-use anoma_shared::ledger::storage::write_log::WriteLog;
-use anoma_shared::types::address::Address;
-use anoma_shared::types::storage::Key;
-use anoma_shared::vm;
-use anoma_shared::vm::prefix_iter::PrefixIterators;
+use anoma::ledger::gas::BlockGasMeter;
+use anoma::ledger::storage::mockdb::MockDB;
+use anoma::ledger::storage::testing::TestStorage;
+use anoma::ledger::storage::write_log::WriteLog;
+use anoma::types::address::Address;
+use anoma::types::storage::Key;
+use anoma::vm;
+use anoma::vm::prefix_iter::PrefixIterators;
 
 /// This module combines the native host function implementations from
 /// `native_tx_host_env` with the functions exposed to the tx wasm
@@ -82,9 +82,9 @@ mod native_tx_host_env {
 
     use std::cell::RefCell;
 
-    use anoma_shared::ledger::storage::testing::Sha256Hasher;
-    use anoma_shared::vm::host_env::*;
-    use anoma_shared::vm::memory::testing::NativeMemory;
+    use anoma::ledger::storage::testing::Sha256Hasher;
+    use anoma::vm::host_env::*;
+    use anoma::vm::memory::testing::NativeMemory;
     // TODO replace with `std::concat_idents` once stabilized (https://github.com/rust-lang/rust/issues/29599)
     use concat_idents::concat_idents;
 

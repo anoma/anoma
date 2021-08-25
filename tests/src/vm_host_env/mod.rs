@@ -15,10 +15,10 @@ pub mod vp;
 
 #[cfg(test)]
 mod tests {
-    use anoma_shared::proto::Tx;
-    use anoma_shared::types::key::ed25519::SignedTxData;
-    use anoma_shared::types::storage::{Key, KeySeg};
-    use anoma_shared::types::{address, key};
+    use anoma::proto::Tx;
+    use anoma::types::key::ed25519::SignedTxData;
+    use anoma::types::storage::{Key, KeySeg};
+    use anoma::types::{address, key};
     use anoma_vm_env::tx_prelude::{
         BorshDeserialize, BorshSerialize, KeyValIterator,
     };

@@ -1,7 +1,7 @@
 use std::convert::TryFrom;
 use std::time::Duration;
 
-use anoma_shared::proto::IntentGossipMessage;
+use anoma::proto::IntentGossipMessage;
 use libp2p::core::connection::ConnectionLimits;
 use libp2p::core::muxing::StreamMuxerBox;
 use libp2p::core::transport::Boxed;
@@ -25,7 +25,7 @@ pub type Swarm = libp2p::Swarm<Behaviour>;
 #[derive(Error, Debug)]
 pub enum Error {
     #[error("Failed initializing the transport: {0}")]
-    TransportError(std::io::Error),
+    Transport(std::io::Error),
     #[error("Error with the network behavior: {0}")]
     Behavior(super::behaviour::Error),
     #[error("Error while dialing: {0}")]
@@ -37,62 +37,71 @@ pub enum Error {
 }
 type Result<T> = std::result::Result<T, Error>;
 
-pub struct P2P {
-    pub swarm: Swarm,
-}
+pub struct P2P(pub Swarm);
 
 impl P2P {
+    /// Create a new peer based on the configuration given. Used transport is
+    /// tcp. A peer participate in the intent gossip system and helps the
+    /// propagation of intents.
     pub fn new(
         config: &crate::config::IntentGossiper,
     ) -> Result<(Self, Option<Receiver<MatchmakerMessage>>)> {
         let peer_key = Keypair::Ed25519(config.gossiper.key.clone());
+
+        // Id of the node on the libp2p network derived from the public key
         let peer_id = PeerId::from(peer_key.public());
 
         tracing::info!("Peer id: {:?}", peer_id.clone());
 
+        // TODO remove async runtime here and hide it in `build_transport`
         let transport = {
             let rt = tokio::runtime::Runtime::new().unwrap();
             rt.block_on(build_transport(peer_key.clone()))
         };
 
-        let (gossipsub, matchmaker_event_receiver) =
+        // create intent gossip specific behaviour
+        let (intent_gossip_behaviour, matchmaker_event_receiver) =
             Behaviour::new(peer_key, config);
 
         let connection_limits = build_p2p_connections_limit();
 
-        let mut swarm = SwarmBuilder::new(transport, gossipsub, peer_id)
-            .connection_limits(connection_limits)
-            .notify_handler_buffer_size(
-                std::num::NonZeroUsize::new(20).expect("Not zero"),
-            )
-            .connection_event_buffer_size(64)
-            .build();
+        // Swarm is
+        let mut swarm =
+            SwarmBuilder::new(transport, intent_gossip_behaviour, peer_id)
+                .connection_limits(connection_limits)
+                .notify_handler_buffer_size(
+                    std::num::NonZeroUsize::new(20).expect("Not zero"),
+                )
+                .connection_event_buffer_size(64)
+                .build();
 
         swarm
             .listen_on(config.address.clone())
             .map_err(Error::Listening)?;
 
-        Ok((Self { swarm }, matchmaker_event_receiver))
+        Ok((Self(swarm), matchmaker_event_receiver))
     }
 
     pub async fn handle_mm_message(&mut self, mm_message: MatchmakerMessage) {
-        self.swarm
+        self.0
             .behaviour_mut()
             .intent_gossip_app
             .handle_mm_message(mm_message)
             .await
     }
 
+    // TODO move logic to rpc module + split function
     pub async fn handle_rpc_event(
         &mut self,
         event: rpc_message::Message,
     ) -> RpcResponse {
         match event {
             rpc_message::Message::Intent(message) => {
+                // TODO match
                 match IntentMessage::try_from(message) {
                     Ok(message) => {
                         match self
-                            .swarm
+                            .0
                             .behaviour_mut()
                             .intent_gossip_app
                             .apply_intent(message.intent.clone())
@@ -103,7 +112,7 @@ impl P2P {
                                 );
                                 let intent_bytes = gossip_message.to_bytes();
                                 match self
-                                    .swarm
+                                    .0
                                     .behaviour_mut()
                                     .intent_gossip_behaviour
                                     .publish(
@@ -165,23 +174,16 @@ impl P2P {
                 }
             }
             rpc_message::Message::Dkg(dkg_msg) => {
-                tracing::debug!(
-                    "dkg not yet
-        implemented {:?}",
-                    dkg_msg
-                );
+                tracing::debug!("dkg not yet implemented {:?}", dkg_msg);
                 RpcResponse {
-                    result: String::from(
-                        "DKG
-        application not yet implemented",
-                    ),
+                    result: String::from("DKG application not yet implemented"),
                 }
             }
             rpc_message::Message::Topic(topic_message) => {
                 let topic = SubscribeTopicMessage::from(topic_message);
                 let topic = IdentTopic::new(&topic.topic);
                 match self
-                    .swarm
+                    .0
                     .behaviour_mut()
                     .intent_gossip_behaviour
                     .subscribe(&topic)
@@ -211,6 +213,10 @@ impl P2P {
     }
 }
 
+// TODO explain a bit the choice made here
+/// Create transport used by libp2p. see
+/// https://docs.libp2p.io/concepts/transport/ for more information on libp2p
+/// transport
 pub async fn build_transport(
     peer_key: Keypair,
 ) -> Boxed<(PeerId, StreamMuxerBox)> {
@@ -252,6 +258,8 @@ pub async fn build_transport(
         .boxed()
 }
 
+// TODO document choice made here
+// TODO inject it in the configuration instead of hard-coding it ?
 pub fn build_p2p_connections_limit() -> ConnectionLimits {
     ConnectionLimits::default()
         .with_max_pending_incoming(Some(10))

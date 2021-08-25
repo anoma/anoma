@@ -24,9 +24,11 @@ files_to_check = [
     'wasm/tx_template/Makefile',
     'wasm/mm_template/Makefile',
     'wasm/mm_filter_template/Makefile',
-    'tech-specs/Makefile',
+    'docs/Makefile',
     'scripts/ci/update-wasm.sh',
-    'scripts/ci/pre-run.sh'
+    'scripts/ci/pre-run.sh',
+    'scripts/ci/audit.py',
+    'scripts/ci/udeps.py',
 ]
 
 scripts_to_run = [

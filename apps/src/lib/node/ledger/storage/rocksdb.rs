@@ -18,14 +18,10 @@ use std::cmp::Ordering;
 use std::collections::HashMap;
 use std::path::Path;
 
-use anoma_shared::ledger::storage::types::PrefixIterator;
-use anoma_shared::ledger::storage::{
-    types, BlockState, DBIter, Error, Result, DB,
-};
-use anoma_shared::types::storage::{
-    BlockHeight, Key, KeySeg, KEY_SEGMENT_SEPARATOR,
-};
-use anoma_shared::types::time::DateTimeUtc;
+use anoma::ledger::storage::types::PrefixIterator;
+use anoma::ledger::storage::{types, BlockState, DBIter, Error, Result, DB};
+use anoma::types::storage::{BlockHeight, Key, KeySeg, KEY_SEGMENT_SEPARATOR};
+use anoma::types::time::DateTimeUtc;
 use rocksdb::{
     BlockBasedOptions, Direction, FlushOptions, IteratorMode, Options,
     ReadOptions, SliceTransform, WriteBatch, WriteOptions,
@@ -57,7 +53,7 @@ pub fn open(path: impl AsRef<Path>) -> Result<RocksDB> {
     cf_opts.create_missing_column_families(true);
     cf_opts.create_if_missing(true);
 
-    cf_opts.set_comparator(&"key_comparator", key_comparator);
+    cf_opts.set_comparator("key_comparator", key_comparator);
     let extractor = SliceTransform::create_fixed_prefix(20);
     cf_opts.set_prefix_extractor(extractor);
     // TODO use column families
@@ -66,6 +62,9 @@ pub fn open(path: impl AsRef<Path>) -> Result<RocksDB> {
         .map_err(|e| Error::DBError(e.into_string()))
 }
 
+/// A custom key comparator is used to sort keys by the height. In
+/// lexicographical order, the height aren't ordered. For example, "11" is
+/// before "2".
 fn key_comparator(a: &[u8], b: &[u8]) -> Ordering {
     let a_str = &String::from_utf8(a.to_vec()).unwrap();
     let b_str = &String::from_utf8(b.to_vec()).unwrap();

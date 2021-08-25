@@ -1,9 +1,9 @@
-use anoma_shared::types::address::Address;
-use anoma_shared::types::key::ed25519;
+use anoma::types::address::Address;
+use anoma::types::key::ed25519;
 
 /// Vp imports and functions.
 pub mod vp {
-    pub use anoma_shared::types::key::ed25519::*;
+    pub use anoma::types::key::ed25519::*;
 
     use super::*;
     use crate::imports::vp;

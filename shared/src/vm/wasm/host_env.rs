@@ -157,7 +157,7 @@ where
         "env" => {
             "memory" => initial_memory,
             "anoma_mm_send_match" => Function::new_native_with_env(wasm_store, env.clone(), host_env::mm_send_match),
-            "anoma_mm_update_data" => Function::new_native_with_env(wasm_store, env.clone(), host_env::mm_update_data),
+            "anoma_mm_update_state" => Function::new_native_with_env(wasm_store, env.clone(), host_env::mm_update_state),
             "anoma_mm_remove_intents" => Function::new_native_with_env(wasm_store, env.clone(), host_env::mm_remove_intents),
             "anoma_mm_log_string" => Function::new_native_with_env(wasm_store, env, host_env::mm_log_string),
         },

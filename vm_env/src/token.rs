@@ -1,12 +1,12 @@
 use std::collections::HashSet;
 
-use anoma_shared::types::address::Address;
-use anoma_shared::types::storage::Key;
-use anoma_shared::types::token;
+use anoma::types::address::Address;
+use anoma::types::storage::Key;
+use anoma::types::token;
 
 /// Vp imports and functions.
 pub mod vp {
-    pub use anoma_shared::types::token::*;
+    pub use anoma::types::token::*;
 
     use super::*;
     use crate::imports::vp;
@@ -45,7 +45,7 @@ pub mod vp {
 
 /// Tx imports and functions.
 pub mod tx {
-    pub use anoma_shared::types::token::*;
+    pub use anoma::types::token::*;
 
     use super::*;
     use crate::imports::tx;

@@ -2,7 +2,7 @@
 pub struct IntentMessage {
     #[prost(message, optional, tag = "1")]
     pub intent:
-        ::core::option::Option<::anoma_shared::proto::generated::types::Intent>,
+        ::core::option::Option<::anoma::proto::generated::types::Intent>,
     #[prost(string, tag = "2")]
     pub topic: ::prost::alloc::string::String,
 }
@@ -25,7 +25,7 @@ pub mod rpc_message {
         #[prost(message, tag = "2")]
         Topic(super::SubscribeTopicMessage),
         #[prost(message, tag = "3")]
-        Dkg(::anoma_shared::proto::generated::types::Dkg),
+        Dkg(::anoma::proto::generated::types::Dkg),
     }
 }
 #[derive(Clone, PartialEq, ::prost::Message)]

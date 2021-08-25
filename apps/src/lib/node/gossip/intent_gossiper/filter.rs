@@ -1,7 +1,7 @@
 use std::path::Path;
 
-use anoma_shared::proto::Intent;
-use anoma_shared::vm::wasm;
+use anoma::proto::Intent;
+use anoma::vm::wasm;
 use thiserror::Error;
 
 #[derive(Error, Debug)]

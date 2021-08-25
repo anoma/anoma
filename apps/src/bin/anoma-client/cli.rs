@@ -1,15 +1,16 @@
 //! Anoma client CLI.
 
+use std::collections::HashSet;
 use std::fs::File;
 use std::io::Write;
 
-use anoma::cli::{args, cmds};
-use anoma::client::tx;
-use anoma::proto::services::rpc_service_client::RpcServiceClient;
-use anoma::proto::{services, RpcMessage};
-use anoma::{cli, wallet};
-use anoma_shared::types::intent::Intent;
-use anoma_shared::types::key::ed25519::Signed;
+use anoma::types::intent::{Exchange, FungibleTokenIntent};
+use anoma::types::key::ed25519::Signed;
+use anoma_apps::cli::{args, cmds};
+use anoma_apps::client::{rpc, tx};
+use anoma_apps::proto::services::rpc_service_client::RpcServiceClient;
+use anoma_apps::proto::{services, RpcMessage};
+use anoma_apps::{cli, wallet};
 use borsh::BorshSerialize;
 use color_eyre::eyre::Result;
 
@@ -24,6 +25,9 @@ pub async fn main() -> Result<()> {
         }
         cmds::AnomaClient::TxUpdateVp(cmds::TxUpdateVp(args)) => {
             tx::submit_update_vp(args).await;
+        }
+        cmds::AnomaClient::QueryBalance(cmds::QueryBalance(args)) => {
+            rpc::query_balance(args).await;
         }
         cmds::AnomaClient::Intent(cmds::Intent(args)) => {
             gossip_intent(args).await;
@@ -47,7 +51,7 @@ async fn gossip_intent(
 ) {
     let mut client = RpcServiceClient::connect(node_addr).await.unwrap();
     let data = std::fs::read(data_path).expect("data file IO error");
-    let intent = anoma_shared::proto::Intent::new(data);
+    let intent = anoma::proto::Intent::new(data);
     let message: services::RpcMessage =
         RpcMessage::new_intent(intent, topic).into();
     let response = client
@@ -71,25 +75,27 @@ async fn subscribe_topic(
 
 fn craft_intent(
     args::CraftIntent {
-        addr,
-        token_sell,
-        amount_sell,
-        token_buy,
-        amount_buy,
+        key,
+        exchanges,
         file_path,
     }: args::CraftIntent,
 ) {
-    let source_keypair = wallet::key_of(&addr.encode());
+    let signed_exchanges: HashSet<Signed<Exchange>> = exchanges
+        .iter()
+        .map(|exchange| {
+            let source_keypair = wallet::key_of(exchange.addr.encode());
+            Signed::new(&source_keypair, exchange.clone())
+        })
+        .collect();
 
-    let intent = Intent {
-        addr,
-        token_sell,
-        amount_sell,
-        token_buy,
-        amount_buy,
-    };
-    let signed: Signed<Intent> = Signed::new(&source_keypair, intent);
-    let data_bytes = signed.try_to_vec().unwrap();
+    let signing_key = wallet::key_of(key.encode());
+    let signed_ft: Signed<FungibleTokenIntent> = Signed::new(
+        &signing_key,
+        FungibleTokenIntent {
+            exchange: signed_exchanges,
+        },
+    );
+    let data_bytes = signed_ft.try_to_vec().unwrap();
 
     let mut file = File::create(file_path).unwrap();
     file.write_all(&data_bytes).unwrap();

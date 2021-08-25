@@ -3,9 +3,9 @@
 #[cfg(feature = "dev")]
 use std::path::Path;
 
-use anoma::config::Config;
-use anoma::node::{gossip, ledger};
-use anoma::{cli, config};
+use anoma_apps::config::Config;
+use anoma_apps::node::{gossip, ledger};
+use anoma_apps::{cli, config};
 use eyre::{Context, Result};
 
 pub fn main() -> Result<()> {

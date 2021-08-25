@@ -6,6 +6,7 @@ package types;
 
 message Tx {
   bytes code = 1;
+  // TODO this optional is useless because it's default on proto3
   optional bytes data = 2;
   google.protobuf.Timestamp timestamp = 3;
 }
@@ -16,6 +17,7 @@ message Intent {
 }
 
 message IntentGossipMessage{
+  // TODO remove oneof because it's not used so far
   oneof msg {
     Intent intent = 1;
   }

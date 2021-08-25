@@ -12,16 +12,10 @@ wasms := wasm/wasm_source
 # Paths for all the wasm templates
 wasm_templates := wasm/tx_template wasm/vp_template wasm/mm_template wasm/mm_filter_template
 
-# Transitive dependency of wasmer. It's safe to ignore as we don't use cranelift compiler. It should disseaper once the wasmer library updates its dependencies
-audit-ignores := RUSTSEC-2021-0067
-# Transitive dependency warning from tendermint-rpc
-audit-ignores += RUSTSEC-2021-0064
 # Transitive dependency warning from tendermint-rpc
 audit-ignores += RUSTSEC-2020-0016
-# tokio issue affecting many deps
-audit-ignores += RUSTSEC-2021-0072
 # Transitive dependency warning from tendermint-rs and ibc-rs
-# TODO https://github.com/anomanetwork/anoma/issues/340
+# TODO https://github.com/anoma/anoma/issues/340
 audit-ignores += RUSTSEC-2021-0073
 # TODO upgrade libp2p
 audit-ignores += RUSTSEC-2021-0076
@@ -46,6 +40,9 @@ clippy:
 	$(cargo) +$(nightly) clippy --all-targets -- -D warnings && \
 	make -C $(wasms) clippy && \
 	$(foreach wasm,$(wasm_templates),$(clippy-wasm) && ) true
+
+clippy-fix:
+	$(cargo) +$(nightly) clippy --fix -Z unstable-options --all-targets --allow-dirty --allow-staged
 
 install:
 	# Warning: built in debug mode for now
@@ -107,18 +104,23 @@ clean:
 
 build-doc:
 	$(cargo) doc --no-deps
-	make -C tech-specs build
+	make -C docs build
 
 doc:
 	# build and opens the docs in browser
 	$(cargo) doc --open
 
 build-wasm-scripts-docker:
-	docker run --rm -v ${PWD}:/usr/local/rust/project anoma-wasm make build-wasm-scripts
+	docker run --rm -v ${PWD}:/usr/local/rust/wasm anoma-wasm make build-wasm-scripts
 
 # Build the validity predicate, transactions, matchmaker and matchmaker filter wasm
 build-wasm-scripts:
 	make -C $(wasms)
+	make opt-wasm
+
+# this command needs wasm-opt installed
+opt-wasm:
+	@for file in $(shell ls wasm/*.wasm); do wasm-opt -Oz -o $${file} $${file}; done
 
 clean-wasm-scripts:
 	make -C $(wasms) clean

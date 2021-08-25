@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use anoma_shared::proto::{Intent, IntentId};
+use anoma::proto::{Intent, IntentId};
 use thiserror::Error;
 
 #[derive(Error, Debug)]

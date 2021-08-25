@@ -2,6 +2,7 @@
 pub struct Tx {
     #[prost(bytes = "vec", tag = "1")]
     pub code: ::prost::alloc::vec::Vec<u8>,
+    /// TODO this optional is useless because it's default on proto3
     #[prost(bytes = "vec", optional, tag = "2")]
     pub data: ::core::option::Option<::prost::alloc::vec::Vec<u8>>,
     #[prost(message, optional, tag = "3")]
@@ -16,11 +17,13 @@ pub struct Intent {
 }
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct IntentGossipMessage {
+    /// TODO remove oneof because it's not used so far
     #[prost(oneof = "intent_gossip_message::Msg", tags = "1")]
     pub msg: ::core::option::Option<intent_gossip_message::Msg>,
 }
 /// Nested message and enum types in `IntentGossipMessage`.
 pub mod intent_gossip_message {
+    /// TODO remove oneof because it's not used so far
     #[derive(Clone, PartialEq, ::prost::Oneof)]
     pub enum Msg {
         #[prost(message, tag = "1")]

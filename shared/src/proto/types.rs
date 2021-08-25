@@ -2,13 +2,12 @@ use std::collections::hash_map::DefaultHasher;
 use std::convert::{TryFrom, TryInto};
 use std::hash::{Hash, Hasher};
 
-use chrono::{DateTime, Utc};
 use prost::Message;
-use prost_types::Timestamp;
 use thiserror::Error;
 
 use super::generated::types;
 use crate::types::key::ed25519::{self, Keypair};
+use crate::types::time::DateTimeUtc;
 
 #[derive(Error, Debug)]
 pub enum Error {
@@ -24,6 +23,8 @@ pub enum Error {
     NoDkgError,
     #[error("Timestamp is empty")]
     NoTimestampError,
+    #[error("Timestamp is invalid: {0}")]
+    InvalidTimestamp(prost_types::TimestampOutOfSystemRangeError),
 }
 
 pub type Result<T> = std::result::Result<T, Error>;
@@ -32,7 +33,7 @@ pub type Result<T> = std::result::Result<T, Error>;
 pub struct Tx {
     pub code: Vec<u8>,
     pub data: Option<Vec<u8>>,
-    pub timestamp: String,
+    pub timestamp: DateTimeUtc,
 }
 
 impl TryFrom<&[u8]> for Tx {
@@ -41,12 +42,7 @@ impl TryFrom<&[u8]> for Tx {
     fn try_from(tx_bytes: &[u8]) -> Result<Self> {
         let tx = types::Tx::decode(tx_bytes).map_err(Error::TxDecodingError)?;
         let timestamp = match tx.timestamp {
-            Some(t) => {
-                let t: std::time::SystemTime =
-                    t.try_into().expect("Timestamp shouldn't be out of range");
-                let dt: DateTime<Utc> = t.into();
-                dt.to_rfc3339()
-            }
+            Some(t) => t.try_into().map_err(Error::InvalidTimestamp)?,
             None => return Err(Error::NoTimestampError),
         };
         Ok(Tx {
@@ -59,13 +55,11 @@ impl TryFrom<&[u8]> for Tx {
 
 impl From<Tx> for types::Tx {
     fn from(tx: Tx) -> Self {
-        let dt = DateTime::parse_from_rfc3339(&tx.timestamp)
-            .expect("conversion shouldn't fail");
-        let st: std::time::SystemTime = dt.into();
+        let timestamp = Some(tx.timestamp.into());
         types::Tx {
             code: tx.code,
             data: tx.data,
-            timestamp: Some(st.into()),
+            timestamp,
         }
     }
 }
@@ -75,7 +69,7 @@ impl Tx {
         Tx {
             code,
             data,
-            timestamp: Utc::now().to_rfc3339(),
+            timestamp: DateTimeUtc::now(),
         }
     }
 
@@ -188,10 +182,10 @@ impl DkgGossipMessage {
     }
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Hash, Eq)]
 pub struct Intent {
     pub data: Vec<u8>,
-    pub timestamp: Timestamp,
+    pub timestamp: DateTimeUtc,
 }
 
 impl TryFrom<types::Intent> for Intent {
@@ -199,7 +193,7 @@ impl TryFrom<types::Intent> for Intent {
 
     fn try_from(intent: types::Intent) -> Result<Self> {
         let timestamp = match intent.timestamp {
-            Some(t) => t,
+            Some(t) => t.try_into().map_err(Error::InvalidTimestamp)?,
             None => return Err(Error::NoTimestampError),
         };
         Ok(Intent {
@@ -211,9 +205,10 @@ impl TryFrom<types::Intent> for Intent {
 
 impl From<Intent> for types::Intent {
     fn from(intent: Intent) -> Self {
+        let timestamp = Some(intent.timestamp.into());
         types::Intent {
             data: intent.data,
-            timestamp: Some(intent.timestamp),
+            timestamp,
         }
     }
 }
@@ -222,7 +217,7 @@ impl Intent {
     pub fn new(data: Vec<u8>) -> Self {
         Intent {
             data,
-            timestamp: std::time::SystemTime::now().into(),
+            timestamp: DateTimeUtc::now(),
         }
     }
 
@@ -230,19 +225,6 @@ impl Intent {
         let mut hasher = DefaultHasher::new();
         self.hash(&mut hasher);
         IntentId::from(hasher.finish().to_string())
-    }
-}
-
-#[allow(clippy::derive_hash_xor_eq)]
-impl Hash for Intent {
-    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
-        self.data.hash(state);
-        let timestamp: std::time::SystemTime = self
-            .timestamp
-            .clone()
-            .try_into()
-            .expect("Timestamp shouldn't be out of range");
-        timestamp.hash(state);
     }
 }
 

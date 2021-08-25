@@ -35,7 +35,7 @@ fn main() {
     tonic_build::configure()
         .out_dir("src/lib/proto/generated")
         .format(true)
-        .extern_path(".types", "::anoma_shared::proto::generated::types")
+        .extern_path(".types", "::anoma::proto::generated::types")
         // This warning appears in tonic generated code
         .server_mod_attribute(".", "#[allow(clippy::unit_arg)]")
         // TODO try to add json encoding to simplify use for user

@@ -259,13 +259,68 @@ impl Key {
         }
     }
 
+    /// Check if the given key is a key of the client counter
+    pub fn is_ibc_client_counter(&self) -> bool {
+        *self == Self::ibc_client_counter()
+    }
+
+    /// Check if the given key is a key of the connection counter
+    pub fn is_ibc_connection_counter(&self) -> bool {
+        *self == Self::ibc_connection_counter()
+    }
+
+    /// Check if the given key is a key of the channel counter
+    pub fn is_ibc_channel_counter(&self) -> bool {
+        *self == Self::ibc_channel_counter()
+    }
+
+    /// Check if the given key is a key of the capability index
+    pub fn is_ibc_capability_index(&self) -> bool {
+        *self == Self::ibc_capability_index()
+    }
+
     /// Returns a key of the IBC-related data
-    /// Only this function can push "^" segment for IBC
+    /// Only this function can push `InternalAddress::Ibc` segment
     pub fn ibc_key(path: impl AsRef<str>) -> Result<Self> {
         let path = Self::parse(path)?;
         let addr = Address::Internal(InternalAddress::Ibc);
         let key = Self::from(addr.to_db_key());
         Ok(key.join(&path))
+    }
+
+    /// Returns a key of the IBC client counter
+    pub fn ibc_client_counter() -> Self {
+        let path = "clients/counter".to_owned();
+        Key::ibc_key(path)
+            .expect("Creating a key for the client counter shouldn't fail")
+    }
+
+    /// Returns a key of the IBC connection counter
+    pub fn ibc_connection_counter() -> Self {
+        let path = "connections/counter".to_owned();
+        Key::ibc_key(path)
+            .expect("Creating a key for the connection counter shouldn't fail")
+    }
+
+    /// Returns a key of the IBC channel counter
+    pub fn ibc_channel_counter() -> Self {
+        let path = "channelEnds/counter".to_owned();
+        Key::ibc_key(path)
+            .expect("Creating a key for the channel counter shouldn't fail")
+    }
+
+    /// Returns a key of the IBC capability index
+    pub fn ibc_capability_index() -> Self {
+        let path = "capabilities/index".to_owned();
+        Key::ibc_key(path)
+            .expect("Creating a key for the capability index shouldn't fail")
+    }
+
+    /// Returns a key of the reversed map for IBC capabilities
+    pub fn ibc_capability(index: u64) -> Self {
+        let path = format!("capabilities/{}", index);
+        Key::ibc_key(path)
+            .expect("Creating a key for a capability shouldn't fail")
     }
 
     /// Returns a key from the given DB key path that has the height and

@@ -2,7 +2,7 @@
 authors = ["Heliax AG <hello@heliax.dev>"]
 edition = "2018"
 license = "GPL-3.0"
-name = "anoma_shared"
+name = "anoma"
 resolver = "2"
 version = "0.1.0"
 
@@ -37,7 +37,6 @@ bech32 = "0.8.0"
 borsh = "0.9.0"
 chrono = "0.4.19"
 ed25519-dalek = {version = "1.0.1", default-features = false, features = ["rand", "u64_backend", "serde"]}
-hex = "0.4.2"
 # TODO temp fork for https://github.com/informalsystems/ibc-rs/issues/1161
 ibc = {git = "https://github.com/heliaxdev/ibc-rs", branch = "tomas/update-prost-0.8.0", features = ["mocks"], optional = true}
 ibc-proto = {git = "https://github.com/heliaxdev/ibc-rs", branch = "tomas/update-prost-0.8.0", optional = true}
@@ -70,8 +69,10 @@ wasmparser = "0.79.0"
 
 [dev-dependencies]
 assert_matches = "1.5.0"
+hex = "0.4.3"
 pretty_assertions = "0.7.2"
 proptest = "1.0.0"
+serde_json = "1.0.62"
 test-env-log = {version = "0.2.7", default-features = false, features = ["trace"]}
 tracing-subscriber = {version = "0.2.18", default-features = false, features = ["env-filter", "fmt"]}
 
