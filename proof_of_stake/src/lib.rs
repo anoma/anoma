@@ -295,6 +295,7 @@ pub trait PoS: PoSReadOnly {
             self.read_validator_voting_power(address).ok_or_else(|| {
                 UnbondError::ValidatorHasNoVotingPower(address.clone())
             })?;
+        let slashes = self.read_validator_slashes(address);
         let mut total_voting_power = self.read_total_voting_power();
         let mut validator_set = self.read_validator_set();
 
@@ -304,6 +305,7 @@ pub trait PoS: PoSReadOnly {
             &mut bond,
             unbond,
             amount,
+            slashes,
             &mut validator_total_deltas,
             &mut validator_voting_power,
             &mut total_voting_power,
@@ -335,12 +337,12 @@ pub trait PoS: PoSReadOnly {
     }
 
     /// Withdraw tokens from validator's unbonds of self-bonds back into its
-    /// account address.
+    /// account address. On success, returns slashed amount (may be 0).
     fn validator_withdraw_unbonds(
         &mut self,
         address: &Self::Address,
         current_epoch: impl Into<Epoch>,
-    ) -> Result<(), WithdrawError<Self::Address>> {
+    ) -> Result<Self::TokenAmount, WithdrawError<Self::Address>> {
         let current_epoch = current_epoch.into();
         let params = self.read_pos_params();
         let bond_id = BondId {
@@ -349,11 +351,19 @@ pub trait PoS: PoSReadOnly {
         };
 
         let unbond = self.read_unbond(&bond_id);
+        let slashes = self.read_validator_slashes(&bond_id.validator);
 
         let WithdrawData {
             unbond,
-            withdrawn_amount,
-        } = withdraw_unbonds(&params, &bond_id, unbond, current_epoch)?;
+            withdrawn,
+            slashed,
+        } = withdraw_unbonds(
+            &params,
+            &bond_id,
+            unbond,
+            slashes,
+            current_epoch,
+        )?;
 
         let total_unbonds = unbond.get_at_offset(
             current_epoch,
@@ -373,12 +383,12 @@ pub trait PoS: PoSReadOnly {
         // Transfer the tokens from PoS to the validator
         self.transfer(
             &Self::staking_token_address(),
-            withdrawn_amount,
+            withdrawn,
             &Self::POS_ADDRESS,
             address,
         );
 
-        Ok(())
+        Ok(slashed)
     }
 }
 
@@ -654,6 +664,7 @@ pub trait PoSBase {
             self.read_validator_total_deltas(validator).ok_or_else(|| {
                 SlashError::ValidatorHasNoTotalDeltas(validator.clone())
             })?;
+        println!("total_deltas pre {:#?}", total_deltas);
         let mut voting_power =
             self.read_validator_voting_power(validator).ok_or_else(|| {
                 SlashError::ValidatorHasNoVotingPower(validator.clone())
@@ -675,6 +686,8 @@ pub trait PoSBase {
         let slashed_amount = u64::try_from(slashed_change)
             .map_err(|_err| SlashError::InvalidSlashChange(slashed_change))?;
         let slashed_amount = Self::TokenAmount::from(slashed_amount);
+        println!("total_deltas post {:#?}", total_deltas);
+        println!("slashed amount {}", slashed_amount);
 
         self.write_validator_total_deltas(validator, &total_deltas);
         self.write_validator_voting_power(validator, &voting_power);
@@ -1304,6 +1317,7 @@ fn unbond_tokens<Address, TokenAmount, TokenChange>(
     bond: &mut Bonds<TokenAmount>,
     unbond: Option<Unbonds<TokenAmount>>,
     amount: TokenAmount,
+    slashes: Slashes,
     validator_total_deltas: &mut ValidatorTotalDeltas<TokenChange>,
     validator_voting_power: &mut ValidatorVotingPowers,
     total_voting_power: &mut TotalVotingPowers,
@@ -1353,7 +1367,7 @@ where
     // We can unbond tokens that are bonded for a future epoch (not yet
     // active), hence we check the total at the pipeline offset
     let unbondable_amount = bond
-        .get_at_offset(current_epoch, DynEpochOffset::PipelineLen, &params)
+        .get_at_offset(current_epoch, DynEpochOffset::PipelineLen, params)
         .unwrap_or_default()
         .sum();
     if amount > unbondable_amount {
@@ -1371,29 +1385,51 @@ where
     let update_offset = DynEpochOffset::UnbondingLen;
     let mut to_unbond = amount;
     let to_unbond = &mut to_unbond;
+    let mut slashed_amount = TokenAmount::default();
     // Decrement the bond deltas starting from the rightmost value (a bond in a
     // future-most epoch) until whole amount is decremented
     bond.rev_update_while(
         |bonds, _epoch| {
-            bonds.delta.retain(|bond_start, bond_amount| {
-                let mut deltas = HashMap::default();
-                let unbond_end =
-                    current_epoch + update_offset.value(params) - 1;
+            bonds.delta.retain(|epoch_start, bond_delta| {
                 if *to_unbond == 0.into() {
                     return true;
-                } else if to_unbond > bond_amount {
-                    deltas.insert((*bond_start, unbond_end), *bond_amount);
-                    *to_unbond -= *bond_amount;
-                    *bond_amount = 0.into();
-                } else {
-                    deltas.insert((*bond_start, unbond_end), *to_unbond);
-                    *bond_amount -= *to_unbond;
-                    *to_unbond = 0.into();
                 }
+                let mut unbonded = HashMap::default();
+                let unbond_end =
+                    current_epoch + update_offset.value(params) - 1;
+                // We need to accumulate the slashed delta for multiple slashes
+                // applicable to a bond, where each slash should be
+                // calculated from the delta reduced by the previous slash.
+                let applied_delta = if to_unbond > bond_delta {
+                    unbonded.insert((*epoch_start, unbond_end), *bond_delta);
+                    *to_unbond -= *bond_delta;
+                    let applied_delta = *bond_delta;
+                    *bond_delta = 0.into();
+                    applied_delta
+                } else {
+                    unbonded.insert((*epoch_start, unbond_end), *to_unbond);
+                    *bond_delta -= *to_unbond;
+                    let applied_delta = *to_unbond;
+                    *to_unbond = 0.into();
+                    applied_delta
+                };
+                // Calculate how much the bond delta would be after slashing
+                let mut slashed_bond_delta = applied_delta;
+                for slash in &slashes {
+                    if slash.epoch >= *epoch_start {
+                        let raw_delta: u64 = slashed_bond_delta.into();
+                        let raw_slashed_delta = slash.rate * raw_delta;
+                        let slashed_delta =
+                            TokenAmount::from(raw_slashed_delta);
+                        slashed_bond_delta -= slashed_delta;
+                    }
+                }
+                slashed_amount += slashed_bond_delta;
+
                 // For each decremented bond value write a new unbond
-                unbond.add(Unbond { deltas }, current_epoch, params);
+                unbond.add(Unbond { deltas: unbonded }, current_epoch, params);
                 // Remove bonds with no tokens left
-                *bond_amount != 0.into()
+                *bond_delta != 0.into()
             });
             // Stop the update once all the tokens are unbonded
             *to_unbond != 0.into()
@@ -1405,7 +1441,7 @@ where
     // Update validator set. This has to be done before we update the
     // `validator_total_deltas`, because we need to look-up the validator with
     // its voting power before the change.
-    let token_change = -TokenChange::from(amount);
+    let token_change = -TokenChange::from(slashed_amount);
     update_validator_set(
         params,
         &bond_id.validator,
@@ -1417,8 +1453,7 @@ where
     );
 
     // Update validator's total deltas
-    let delta = -TokenChange::from(amount);
-    validator_total_deltas.add(delta, current_epoch, params);
+    validator_total_deltas.add(token_change, current_epoch, params);
 
     // Update the validator's and the total voting power.
     update_voting_powers(
@@ -1615,7 +1650,8 @@ where
         + BorshSerialize,
 {
     pub unbond: Unbonds<TokenAmount>,
-    pub withdrawn_amount: TokenAmount,
+    pub withdrawn: TokenAmount,
+    pub slashed: TokenAmount,
 }
 
 /// Withdraw tokens from unbonds of self-bonds or delegations.
@@ -1623,6 +1659,7 @@ fn withdraw_unbonds<Address, TokenAmount>(
     params: &PosParams,
     bond_id: &BondId<Address>,
     unbond: Option<Unbonds<TokenAmount>>,
+    slashes: Vec<Slash>,
     current_epoch: Epoch,
 ) -> Result<WithdrawData<TokenAmount>, WithdrawError<Address>>
 where
@@ -1655,16 +1692,28 @@ where
     let withdrawable_unbond = unbond
         .get(current_epoch)
         .ok_or_else(|| WithdrawError::NoWithdrawableUnbond(bond_id.clone()))?;
+    let mut slashed = TokenAmount::default();
     let withdrawn_amount = withdrawable_unbond.deltas.iter().fold(
         TokenAmount::default(),
-        |sum, ((_epoch_start, _epoch_end), amount)| {
-            // TODO check slashes
-            sum + *amount
+        |sum, ((epoch_start, epoch_end), delta)| {
+            let mut delta = *delta;
+            // Check and apply slashes, if any
+            for slash in &slashes {
+                if slash.epoch >= *epoch_start && slash.epoch <= *epoch_end {
+                    let raw_delta: u64 = delta.into();
+                    let current_slashed =
+                        TokenAmount::from(slash.rate * raw_delta);
+                    slashed += current_slashed;
+                    delta -= current_slashed;
+                }
+            }
+            sum + delta
         },
     );
-    unbond.delete_current(current_epoch, &params);
+    unbond.delete_current(current_epoch, params);
     Ok(WithdrawData {
         unbond,
-        withdrawn_amount,
+        withdrawn: withdrawn_amount,
+        slashed,
     })
 }

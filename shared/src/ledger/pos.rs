@@ -185,9 +185,16 @@ where
                     .ctx
                     .read_post(key)?
                     .and_then(|bytes| Bonds::try_from_slice(&bytes[..]).ok());
+                // For bonds, we need to look-up slashes
+                let slashes = self
+                    .ctx
+                    .read_pre(&validator_slashes_key(&bond_id.validator))?
+                    .and_then(|bytes| Slashes::try_from_slice(&bytes[..]).ok())
+                    .unwrap_or_default();
                 changes.push(Bond {
                     id: bond_id.clone(),
                     data: Data { pre, post },
+                    slashes,
                 });
             } else if let Some(unbond_id) = is_unbond_key(key) {
                 let pre = self
@@ -198,9 +205,16 @@ where
                     .ctx
                     .read_post(key)?
                     .and_then(|bytes| Unbonds::try_from_slice(&bytes[..]).ok());
+                // For unbonds, we need to look-up slashes
+                let slashes = self
+                    .ctx
+                    .read_pre(&validator_slashes_key(&unbond_id.validator))?
+                    .and_then(|bytes| Slashes::try_from_slice(&bytes[..]).ok())
+                    .unwrap_or_default();
                 changes.push(Unbond {
                     id: unbond_id.clone(),
                     data: Data { pre, post },
+                    slashes,
                 });
             } else if is_total_voting_power_key(key) {
                 let pre = self.ctx.read_pre(key)?.and_then(|bytes| {

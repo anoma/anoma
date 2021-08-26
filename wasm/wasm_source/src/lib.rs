@@ -36,7 +36,7 @@ pub mod tx_bond {
                 if let Err(err) =
                     PoS.validator_self_bond(&bond.validator, bond.amount, epoch)
                 {
-                    log_string(format!("self-bond failed with {}", err));
+                    log_string(format!("Self-bond failed with: {}", err));
                     panic!()
                 }
                 // TODO temporary for logging:
@@ -104,7 +104,7 @@ pub mod tx_unbond {
                     unbond.amount,
                     epoch,
                 ) {
-                    log_string(format!("self-bond failed with {}", err));
+                    log_string(format!("Unbonding failed with: {}", err));
                     panic!()
                 }
                 // TODO temporary for logging:
@@ -172,11 +172,18 @@ pub mod tx_withdraw {
                 todo!("withdraw from delegation")
             }
             None => {
-                if let Err(err) =
-                    PoS.validator_withdraw_unbonds(&withdraw.validator, epoch)
+                match PoS.validator_withdraw_unbonds(&withdraw.validator, epoch)
                 {
-                    log_string(format!("withdrawal failed with {}", err));
-                    panic!()
+                    Ok(slashed) => {
+                        log_string(format!(
+                            "Withdrawal slashed for {}",
+                            slashed
+                        ));
+                    }
+                    Err(err) => {
+                        log_string(format!("Withdrawal failed with: {}", err));
+                        panic!()
+                    }
                 }
                 // TODO temporary for logging:
                 let unbond_post = PoS.read_unbond(&bond_id);
