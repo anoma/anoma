@@ -9,8 +9,7 @@ DKG scheme. It does not cover encryption, decryption, or validation of transacti
 
 The protocol to generate a new key is scheduled to begin at specific 
 block heights, in practice this will be at the beginning of every epoch.
-In  addition to starting at the pre-determined blocks heights, if the protocol 
-fails, all validators know to immediately start a new round of the protocol.
+
 
 It is important to note that the key being generated will be used to encrypt
 transactions in the epoch following the current one. This means that the 
