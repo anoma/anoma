@@ -79,7 +79,7 @@ process for doing this is described in the chapter on [Distributed key generatio
 A user uses the public information as well as randomly generated salt to create
 a key for a symmetric-key cipher (e.g. ChaCha20).  This key can be recovered
 later from the ciphertext public key and decryption shares from at least 
-\\( \frac{2}{3} \\) of validators by staking weight.
+\\( \frac{2}{3} \\) of validators by voting power.
 
 ## Decrypting a transaction
 
@@ -118,7 +118,7 @@ The verification of each validators decryption shares is performed by the
 [VerifyVoteExtension](https://github.com/tendermint/spec/blob/master/rfc/004-abci%2B%2B.md#vote-extensions)
 call. Thus, upon block finalization, each validator
 has a set of verified decryption shares from validators whose combined 
-weight exceeds \\(\frac{2}{3}\\) of the total.
+voting power exceeds \\(\frac{2}{3}\\) of the total.
 
 These decryption shares should be sufficient to decrypt the wrapped 
 transactions but this can fail if:

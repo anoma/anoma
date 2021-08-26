@@ -12,42 +12,40 @@ block heights, in practice this will be at the beginning of every epoch.
 In  addition to starting at the pre-determined blocks heights, if the protocol 
 fails, all validators know to immediately start a new round of the protocol.
 
-It is important to note that the key that is being generated is to be used
-to encrypt transactions in the epoch following the current one. This means
-that the secrets needed to reconstruct the decryption key for epoch `n` were
-only issued to validators who participated in epoch `n-1`.
-
-However, this relies on the assumption that validator set for epoch `n` 
-contains a subset of validators  who participated in epoch `n-1` and 
-whose weight shares from that epoch exceeds \\(\frac{2}{3}\\) of the total 
-weight of epoch `n-1`. Otherwise, it will be impossible to decrypt
-transactions and a new key will need to be generated. 
-Until the new key is generated, transactions will not be accepted.
+It is important to note that the key being generated will be used to encrypt
+transactions in the epoch following the current one. This means that the 
+validator set of epoch `n+1` must participate in the DKG protocol
+during epoch `n` using the voting powers they will have during epoch `n+1`.
+Because of the pipelining of validator set changes, the validator sets
+and their voting powers for epoch `n+1` will be known at the beginning of
+epoch `n`.
 
 ##  Computing weight shares
 
 The DKG protocol requires the contribution of \\(\frac{2}{3} \\) of the 
-total staked weight among validators, mirroring the proof of stake
+total voting power among validators, mirroring the proof of stake
 requirements. The proof of stake system maintains a list of validators and 
 their voting powers in storage. This can be queried by each validator to 
 get the set of validators, their associated address, and voting power (or 
 weight).
 
-The corresponding weight will be scaled down to a fixed parameter 
-\\( W\\) (and fractional weights rounded appropriately to achieve integral
-values). After this procedure, each validator has a corresponding number of
-weight shares. 
+The corresponding voting power will be scaled down to a fixed parameter 
+\\( W\\) (and fractional results rounded appropriately to achieve integral
+values). After this procedure, the scaled voting power represents the number of
+__*weight shares*__ possessed by a validator. Ferveo uses an index for
+each weight share, so a __partition__ of these indices must be computed
+to know which weight share belongs to which validator.
 
-The DKG protocol requires a canonical ordering of validators so that 
-computations done by individual validators offline (and thus do not use the
-consensus layer) produce deterministic results. The
-ordering will be chosen by ordering validators in terms of decreasing voting
-power. If there is a tie, it is broken by considering the lexicographic
-ordering on their associated addresses. 
+The partition of the weight shares requires a canonical ordering of 
+validators. This ordering is so that computations done by individual 
+validators offline (and thus do not use the consensus layer) produce
+deterministic results. The ordering will be chosen by ordering validators 
+in terms of decreasing voting power. If there is a tie, it is broken by 
+considering the lexicographic ordering on their associated addresses. 
 
-This allows each validator to independently compute the partition of weight
-shares of all validators which will be needed for the following steps of the
-DKG protocol. This partitioning is computed by Ferveo.
+This allows each validator to independently compute a canonical partition
+of the weight shares of all validators which will be needed for the following 
+steps of the DKG protocol. This partition is computed by Ferveo.
 
 ## Dealers
 In a single DKG instance, a subset of validators holding at least
@@ -62,23 +60,33 @@ for performance reasons, these transcripts will not be verified at this stage.
 Rather, the verification will be performed when an aggregation is attempted
 (discussed next). This verification is provided by the Ferveo library.
 
+However, not all PVSS transcripts necessary to complete the protocol will be
+posted in a single block due to the size of the transcripts. A parameter,
+`PVSS_PER_BLOCK`, will specify at most how many transcripts will be added to
+each block during the protocol. 
+
+Using the ordering of the weight shares computed by Ferveo, we schedule the block at which a 
+PVSS transcript should be added. For the PVSS transcript corresponding to 
+weight share with index \\(i\\), it is scheduled in block 
+
+\\[ B(i) := s + \bigg\lfloor \frac{i}{\text{PVSS_PER_BLOCK}}\bigg\rfloor \\]
+
+where \\(s\\) is the block for which which the protocol started. The dealing
+phase of the protocol is thus expected to end at block \\(B(W)\\).
+
 ## Aggregation
 
-At the end of the [Vote Extension](https://github.com/tendermint/spec/blob/master/rfc/004-abci%2B%2B.md#vote-extensions),
-enough validators(meaning their combined weight  shares exceeds \\( \frac{2}{3}\\)
-of the total) *should* have shared their PVSS to the current proposer and 
-hopefully enough of these transcripts are valid. This is because the
-[Vote Extension](https://github.com/tendermint/spec/blob/master/rfc/004-abci%2B%2B.md#vote-extensions) 
-phase requires at least \\( \frac{2}{3}\\) of validators to send a vote
-extension before it can move to the [Finalization](https://github.com/tendermint/spec/blob/master/rfc/004-abci%2B%2B.md#rename-beginblock-delivertx-endblock-to-finalizeblock)
-phase.
+During the dealing phase of the DKG protocol, PVSS transcripts recieved
+are continuously stored by each validator. Once a block proposer detects
+that they have enough PVSS transcripts ( at least \\(\frac{2}{3}W\\)), they
+should attempt to aggregate them.
 
-At this point, the next block proposer can aggregate the messages into a 
+The block proposer aggregates the messages into a 
 single instance using Ferveo during its [Prepare Proposal](https://github.com/tendermint/spec/blob/master/rfc/004-abci%2B%2B.md#prepare-proposal)
-phase at the beginning of the next round. If the aggregation succeeds, the 
-result of this is included in the header of the proposed block along with
-the PVSS transcripts. Once this is on the blockchain, it can be used for
-encryption of transactions until the next DKG instance is run.
+phase. If the aggregation succeeds, the result of this is included in the 
+header of the proposed block along with the PVSS transcripts. Once this is
+on the blockchain, it can be used for encryption of transactions until the
+next epoch.
 
 When deciding to aggregate the PVSS instances into a single one, we shall
 consider the instances ranked in terms of their validators as was also used
@@ -106,7 +114,9 @@ needs to be stored by each node
  - A session keypair for the current DKG session. Used for encrypting
    PVSS transcripts and signing DKG protocol messages.
  - A list of session ids from the last completed DKG instance up until the
-   latest started (we may prune ids for failed instances however) 
+   latest started (we may prune ids for failed instances however)
+ - The current round of the dealing phase (for scheduling the submission
+   of their PVSS transcripts)
  - The DKG state machine associated to each of these session ids.
 
 ##  The DKG state machine
