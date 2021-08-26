@@ -69,7 +69,7 @@ pub trait PoSReadOnly {
         + Clone
         + Copy
         + Add<Output = Self::TokenChange>
-        + Sub
+        + Sub<Output = Self::TokenChange>
         + From<Self::TokenAmount>
         + Into<i128>
         + Neg<Output = Self::TokenChange>
@@ -84,7 +84,7 @@ pub trait PoSReadOnly {
     /// `const fn`
     fn staking_token_address() -> Self::Address;
 
-    fn read_params(&self) -> PosParams;
+    fn read_pos_params(&self) -> PosParams;
     fn read_validator_staking_reward_address(
         &self,
         key: &Self::Address,
@@ -105,6 +105,7 @@ pub trait PoSReadOnly {
         &self,
         key: &Self::Address,
     ) -> Option<ValidatorVotingPowers>;
+    fn read_validator_slashes(&self, key: &Self::Address) -> Vec<Slash>;
     fn read_bond(
         &self,
         key: &BondId<Self::Address>,
@@ -120,7 +121,8 @@ pub trait PoSReadOnly {
 /// PoS system trait to be implemented in integration that can read and write
 /// PoS data.
 pub trait PoS: PoSReadOnly {
-    fn write_params(&mut self, params: &PosParams);
+    fn write_pos_params(&mut self, params: &PosParams);
+    fn write_validator_address_raw_hash(&mut self, address: &Self::Address);
     fn write_validator_staking_reward_address(
         &mut self,
         key: &Self::Address,
@@ -179,7 +181,7 @@ pub trait PoS: PoSReadOnly {
         current_epoch: impl Into<Epoch>,
     ) -> Result<(), BecomeValidatorError<Self::Address>> {
         let current_epoch = current_epoch.into();
-        let params = self.read_params();
+        let params = self.read_pos_params();
         let mut validator_set = self.read_validator_set();
         if self.is_validator(address).is_some() {
             return Err(BecomeValidatorError::AlreadyValidator(
@@ -203,6 +205,7 @@ pub trait PoS: PoSReadOnly {
         self.write_validator_consensus_key(address, consensus_key);
         self.write_validator_state(address, state);
         self.write_validator_set(validator_set);
+        self.write_validator_address_raw_hash(address);
         Ok(())
     }
 
@@ -223,7 +226,7 @@ pub trait PoS: PoSReadOnly {
         current_epoch: impl Into<Epoch>,
     ) -> Result<(), BondError<Self::Address>> {
         let current_epoch = current_epoch.into();
-        let params = self.read_params();
+        let params = self.read_pos_params();
         let validator_state = self.is_validator(address);
         let bond_id = BondId {
             source: address.clone(),
@@ -277,7 +280,7 @@ pub trait PoS: PoSReadOnly {
         current_epoch: impl Into<Epoch>,
     ) -> Result<(), UnbondError<Self::Address, Self::TokenAmount>> {
         let current_epoch = current_epoch.into();
-        let params = self.read_params();
+        let params = self.read_pos_params();
         let bond_id = BondId {
             source: address.clone(),
             validator: address.clone(),
@@ -339,7 +342,7 @@ pub trait PoS: PoSReadOnly {
         current_epoch: impl Into<Epoch>,
     ) -> Result<(), WithdrawError<Self::Address>> {
         let current_epoch = current_epoch.into();
-        let params = self.read_params();
+        let params = self.read_pos_params();
         let bond_id = BondId {
             source: address.clone(),
             validator: address.clone(),
@@ -415,9 +418,11 @@ pub trait PoSBase {
         + Default
         + Clone
         + Copy
+        + PartialOrd
         + Add<Output = Self::TokenChange>
-        + Sub
+        + Sub<Output = Self::TokenChange>
         + From<Self::TokenAmount>
+        + From<i128>
         + Into<i128>
         + Neg<Output = Self::TokenChange>
         + BorshDeserialize
@@ -430,19 +435,31 @@ pub trait PoSBase {
     /// TODO: this should be `const`, but in the ledger `address::xan` is not a
     /// `const fn`
     fn staking_token_address() -> Self::Address;
+    /// Address of the slash pool, into which slashed tokens are transferred.
+    const POS_SLASH_POOL_ADDRESS: Self::Address;
 
-    fn read_params(&self) -> PosParams;
+    fn read_pos_params(&self) -> PosParams;
     fn read_validator_address_raw_hash(
         &self,
         raw_hash: impl AsRef<str>,
     ) -> Option<Self::Address>;
-    fn read_validator_set(&self) -> ValidatorSets<Self::Address>;
     fn read_validator_consensus_key(
         &self,
         key: &Self::Address,
     ) -> Option<ValidatorConsensusKeys<Self::PublicKey>>;
+    fn read_validator_total_deltas(
+        &self,
+        key: &Self::Address,
+    ) -> Option<ValidatorTotalDeltas<Self::TokenChange>>;
+    fn read_validator_voting_power(
+        &self,
+        key: &Self::Address,
+    ) -> Option<ValidatorVotingPowers>;
+    fn read_validator_slashes(&self, key: &Self::Address) -> Vec<Slash>;
+    fn read_validator_set(&self) -> ValidatorSets<Self::Address>;
+    fn read_total_voting_power(&self) -> TotalVotingPowers;
 
-    fn write_params(&mut self, params: &PosParams);
+    fn write_pos_params(&mut self, params: &PosParams);
     fn write_validator_address_raw_hash(&mut self, address: &Self::Address);
     fn write_validator_staking_reward_address(
         &mut self,
@@ -469,6 +486,11 @@ pub trait PoSBase {
         key: &Self::Address,
         value: &ValidatorVotingPowers,
     );
+    fn write_validator_slash(
+        &mut self,
+        validator: &Self::Address,
+        value: Slash,
+    );
     fn write_bond(
         &mut self,
         key: &BondId<Self::Address>,
@@ -487,11 +509,18 @@ pub trait PoSBase {
         target: &Self::Address,
         amount: Self::TokenAmount,
     );
+    fn transfer(
+        &mut self,
+        token: &Self::Address,
+        amount: Self::TokenAmount,
+        src: &Self::Address,
+        dest: &Self::Address,
+    );
 
     /// Initialize the PoS system storage data in the genesis block for the
     /// given PoS parameters and initial validator set. The validators'
     /// tokens will be put into self-bonds. The given PoS parameters are written
-    /// with the [`Pos::write_params`] method.
+    /// with the [`PoSBase::write_pos_params`] method.
     fn init_genesis<'a>(
         &mut self,
         params: &'a PosParams,
@@ -506,7 +535,7 @@ pub trait PoSBase {
         current_epoch: impl Into<Epoch>,
     ) -> Result<(), GenesisError> {
         let current_epoch = current_epoch.into();
-        self.write_params(params);
+        self.write_pos_params(params);
 
         let GenesisData {
             validators,
@@ -599,12 +628,65 @@ pub trait PoSBase {
 
     fn slash(
         &mut self,
-        epoch: impl Into<Epoch>,
+        params: &PosParams,
+        current_epoch: impl Into<Epoch>,
+        evidence_epoch: impl Into<Epoch>,
         slash_type: SlashType,
         validator: &Self::Address,
-        params: &PosParams,
-    ) {
-        todo!()
+    ) -> Result<(), SlashError<Self::Address>> {
+        let current_epoch = current_epoch.into();
+        let evidence_epoch = evidence_epoch.into();
+        let rate = match &slash_type {
+            SlashType::DuplicateVote => params.duplicate_vote_slash_rate,
+            SlashType::LightClientAttack => {
+                params.light_client_attack_slash_rate
+            }
+        };
+        let validator_slash = Slash {
+            epoch: evidence_epoch,
+            r#type: slash_type,
+            rate,
+        };
+
+        let mut total_deltas =
+            self.read_validator_total_deltas(validator).ok_or_else(|| {
+                SlashError::ValidatorHasNoTotalDeltas(validator.clone())
+            })?;
+        let mut voting_power =
+            self.read_validator_voting_power(validator).ok_or_else(|| {
+                SlashError::ValidatorHasNoVotingPower(validator.clone())
+            })?;
+        let mut validator_set = self.read_validator_set();
+        let mut total_voting_power = self.read_total_voting_power();
+
+        let slashed_change = slash(
+            params,
+            current_epoch,
+            validator,
+            &validator_slash,
+            &mut total_deltas,
+            &mut voting_power,
+            &mut validator_set,
+            &mut total_voting_power,
+        )?;
+        let slashed_change: i128 = slashed_change.into();
+        let slashed_amount = u64::try_from(slashed_change)
+            .map_err(|_err| SlashError::InvalidSlashChange(slashed_change))?;
+        let slashed_amount = Self::TokenAmount::from(slashed_amount);
+
+        self.write_validator_total_deltas(validator, &total_deltas);
+        self.write_validator_voting_power(validator, &voting_power);
+        self.write_validator_slash(validator, validator_slash);
+        self.write_validator_set(&validator_set);
+        self.write_total_voting_power(&total_voting_power);
+        // Transfer the slashed tokens to the PoS slash pool
+        self.transfer(
+            &Self::staking_token_address(),
+            slashed_amount,
+            &Self::POS_ADDRESS,
+            &Self::POS_SLASH_POOL_ADDRESS,
+        );
+        Ok(())
     }
 }
 
@@ -664,6 +746,24 @@ where
     NoUnbondFound(BondId<Address>),
     #[error("No unbond may be withdrawn yet for {0}")]
     NoWithdrawableUnbond(BondId<Address>),
+}
+
+#[allow(missing_docs)]
+#[derive(Error, Debug)]
+pub enum SlashError<Address>
+where
+    Address: Display + Debug + Clone + PartialOrd + Ord + Hash,
+{
+    #[error("The validator {0} has no total deltas value")]
+    ValidatorHasNoTotalDeltas(Address),
+    #[error("The validator {0} has no voting power")]
+    ValidatorHasNoVotingPower(Address),
+    #[error("Unexpected slash token change")]
+    InvalidSlashChange(i128),
+    #[error("Voting power overflow: {0}")]
+    VotingPowerOverflow(TryFromIntError),
+    #[error("Unexpected negative stake {0} for validator {1}")]
+    NegativeStake(i128, Address),
 }
 
 struct GenesisData<Validators, Address, TokenAmount, TokenChange, PK>
@@ -874,6 +974,89 @@ where
     })
 }
 
+/// A function to apply a slash to byzantine validator.
+#[allow(clippy::too_many_arguments)]
+fn slash<Address, TokenChange>(
+    params: &PosParams,
+    current_epoch: Epoch,
+    validator: &Address,
+    slash: &Slash,
+    total_deltas: &mut ValidatorTotalDeltas<TokenChange>,
+    voting_power: &mut ValidatorVotingPowers,
+    validator_set: &mut ValidatorSets<Address>,
+    total_voting_power: &mut TotalVotingPowers,
+) -> Result<TokenChange, SlashError<Address>>
+where
+    Address: Display
+        + Debug
+        + Clone
+        + Ord
+        + Hash
+        + BorshDeserialize
+        + BorshSerialize,
+    TokenChange: Display
+        + Debug
+        + Copy
+        + Default
+        + Neg<Output = TokenChange>
+        + Add<Output = TokenChange>
+        + Sub<Output = TokenChange>
+        + From<i128>
+        + Into<i128>
+        + PartialOrd
+        + BorshDeserialize
+        + BorshSerialize,
+{
+    let current_stake: TokenChange =
+        total_deltas.get(current_epoch).unwrap_or_default();
+    if current_stake < TokenChange::default() {
+        return Err(SlashError::NegativeStake(
+            current_stake.into(),
+            validator.clone(),
+        ));
+    }
+    let raw_current_stake: i128 = current_stake.into();
+    let slashed_amount: TokenChange = (slash.rate * raw_current_stake).into();
+    let token_change = -slashed_amount;
+
+    // Apply slash at pipeline offset
+    let update_offset = DynEpochOffset::PipelineLen;
+
+    // Update validator set. This has to be done before we update the
+    // `validator_total_deltas`, because we need to look-up the validator with
+    // its voting power before the change.
+    update_validator_set(
+        params,
+        validator,
+        token_change,
+        update_offset,
+        validator_set,
+        Some(total_deltas),
+        current_epoch,
+    );
+
+    // Update validator's total deltas
+    total_deltas.add_at_offset(
+        token_change,
+        current_epoch,
+        update_offset,
+        params,
+    );
+
+    // Update the validator's and the total voting power.
+    update_voting_powers(
+        params,
+        update_offset,
+        total_deltas,
+        voting_power,
+        total_voting_power,
+        current_epoch,
+    )
+    .map_err(SlashError::VotingPowerOverflow)?;
+
+    Ok(slashed_amount)
+}
+
 struct BecomeValidatorData<PK>
 where
     PK: Debug + Clone + BorshDeserialize + BorshSerialize,
@@ -986,6 +1169,7 @@ where
         + Default
         + Clone
         + Copy
+        + Neg
         + Add<Output = TokenChange>
         + Sub
         + From<TokenAmount>

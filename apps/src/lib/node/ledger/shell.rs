@@ -1,12 +1,15 @@
+use std::cmp::max;
 use std::convert::{TryFrom, TryInto};
 use std::path::Path;
 use std::str::FromStr;
 
 use anoma::ledger::gas::BlockGasMeter;
+use anoma::ledger::parameters::Parameters;
 use anoma::ledger::pos::anoma_proof_of_stake::types::{
     ActiveValidator, ValidatorSetUpdate,
 };
 use anoma::ledger::pos::anoma_proof_of_stake::PoSBase;
+use anoma::ledger::pos::PosParams;
 use anoma::ledger::storage::write_log::WriteLog;
 use anoma::ledger::{ibc, parameters, pos};
 use anoma::proto::{self, Tx};
@@ -19,7 +22,10 @@ use anoma::types::{address, key, token};
 use borsh::BorshSerialize;
 use itertools::Itertools;
 use tendermint::block::Header;
-use tendermint_proto::abci::{self, Evidence, ValidatorUpdate};
+use tendermint_proto::abci::{
+    self, ConsensusParams, Evidence, ValidatorUpdate,
+};
+use tendermint_proto::types::EvidenceParams;
 use thiserror::Error;
 use tower_abci::{request, response};
 
@@ -107,7 +113,7 @@ impl Shell {
         &mut self,
         init: request::InitChain,
     ) -> Result<response::InitChain> {
-        let response = response::InitChain::default();
+        let mut response = response::InitChain::default();
         let (current_chain_id, _) = self.storage.get_chain_id();
         if current_chain_id != init.chain_id {
             return Err(Error::ChainId(format!(
@@ -203,7 +209,11 @@ impl Shell {
         );
         // Depends on parameters being initialized
         self.storage
-            .init_genesis_epoch(initial_height, genesis_time)
+            .init_genesis_epoch(
+                initial_height,
+                genesis_time,
+                &genesis.parameters,
+            )
             .expect("Initializing genesis epoch must not fail");
 
         #[cfg(feature = "dev")]
@@ -252,6 +262,12 @@ impl Shell {
         );
         ibc::init_genesis_storage(&mut self.storage);
 
+        let evidence_params =
+            self.get_evidence_params(&genesis.parameters, &genesis.pos_params);
+        response.consensus_params = Some(ConsensusParams {
+            evidence: Some(evidence_params),
+            ..response.consensus_params.unwrap_or_default()
+        });
         Ok(response)
     }
 
@@ -341,7 +357,8 @@ impl Shell {
     /// Apply PoS slashes from the evidence
     fn slash(&mut self, byzantine_validators: Vec<Evidence>) {
         if !byzantine_validators.is_empty() {
-            let pos_params = self.storage.read_params();
+            let pos_params = self.storage.read_pos_params();
+            let current_epoch = self.storage.block.epoch;
             for evidence in byzantine_validators {
                 let height = match u64::try_from(evidence.height) {
                     Ok(height) => height,
@@ -350,7 +367,7 @@ impl Shell {
                         continue;
                     }
                 };
-                let epoch = match self
+                let evidence_epoch = match self
                     .storage
                     .block
                     .pred_epochs
@@ -427,12 +444,19 @@ impl Shell {
                 };
                 tracing::info!(
                     "Slashing {} for {} in epoch {}",
-                    epoch,
+                    evidence_epoch,
                     slash_type,
                     validator
                 );
-                self.storage
-                    .slash(epoch, slash_type, &validator, &pos_params);
+                if let Err(err) = self.storage.slash(
+                    &pos_params,
+                    current_epoch,
+                    evidence_epoch,
+                    slash_type,
+                    &validator,
+                ) {
+                    tracing::error!("Error in slashing: {}", err);
+                }
             }
         }
     }
@@ -516,8 +540,8 @@ impl Shell {
             response.events.push(tx_result.into());
         }
 
-        // Apply validator set update on a new epoch
         if self.new_epoch {
+            // Apply validator set update
             let (current_epoch, _gas) = self.storage.get_current_epoch();
             // TODO ABCI validator updates on block H affects the validator set
             // on block H+2, do we need to update a block earlier?
@@ -553,6 +577,17 @@ impl Shell {
                 let pub_key = Some(pub_key);
                 let update = ValidatorUpdate { pub_key, power };
                 response.validator_updates.push(update);
+            });
+
+            // Update evidence parameters
+            let (parameters, _gas) = parameters::read(&self.storage)
+                .expect("Couldn't read protocol parameters");
+            let pos_params = self.storage.read_pos_params();
+            let evidence_params =
+                self.get_evidence_params(&parameters, &pos_params);
+            response.consensus_param_updates = Some(ConsensusParams {
+                evidence: Some(evidence_params),
+                ..response.consensus_param_updates.unwrap_or_default()
             });
         }
 
@@ -691,6 +726,31 @@ impl Shell {
                     ..Default::default()
                 },
             }
+        }
+    }
+
+    fn get_evidence_params(
+        &self,
+        protocol_params: &Parameters,
+        pos_params: &PosParams,
+    ) -> EvidenceParams {
+        // Minimum number of epochs before tokens are unbonded and can be
+        // withdrawn
+        let len_before_unbonded = max(pos_params.unbonding_len as i64 - 1, 0);
+        let max_age_num_blocks: i64 =
+            protocol_params.epoch_duration.min_num_of_blocks as i64
+                * len_before_unbonded;
+        let min_duration_secs =
+            protocol_params.epoch_duration.min_duration.0 as i64;
+        let max_age_duration =
+            Some(tendermint_proto::google::protobuf::Duration {
+                seconds: min_duration_secs * len_before_unbonded,
+                nanos: 0,
+            });
+        EvidenceParams {
+            max_age_num_blocks,
+            max_age_duration,
+            ..EvidenceParams::default()
         }
     }
 }

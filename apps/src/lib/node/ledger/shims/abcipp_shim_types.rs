@@ -187,7 +187,7 @@ pub mod shim {
 
     /// Custom types for response payloads
     pub mod response {
-        use tendermint_proto::abci::{Event, ValidatorUpdate};
+        use tendermint_proto::abci::{ConsensusParams, Event, ValidatorUpdate};
         use tower_abci::response;
 
         #[derive(Debug, Default)]
@@ -225,6 +225,7 @@ pub mod shim {
             pub events: Vec<Event>,
             pub gas_used: u64,
             pub validator_updates: Vec<ValidatorUpdate>,
+            pub consensus_param_updates: Option<ConsensusParams>,
         }
 
         impl From<FinalizeBlock> for response::EndBlock {
@@ -232,7 +233,7 @@ pub mod shim {
                 Self {
                     events: resp.events,
                     validator_updates: resp.validator_updates,
-                    ..Default::default()
+                    consensus_param_updates: resp.consensus_param_updates,
                 }
             }
         }

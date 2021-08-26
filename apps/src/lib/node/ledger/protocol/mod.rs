@@ -39,6 +39,8 @@ pub enum Error {
     PosNativeVpError(pos::Error),
     #[error("Parameters native VP: {0}")]
     ParametersNativeVpError(parameters::Error),
+    #[error("Access to an internal address {0} is forbidden")]
+    AccessForbidden(InternalAddress),
 }
 
 pub type Result<T> = std::result::Result<T, Error>;
@@ -232,6 +234,9 @@ fn execute_vps(
                                 .validate_tx(tx_data, keys, &verifiers_addr)
                                 .map_err(Error::ParametersNativeVpError)
                         }
+                        InternalAddress::PosSlashPool => Err(
+                            Error::AccessForbidden((*internal_addr).clone()),
+                        ),
                     };
 
                     accepted

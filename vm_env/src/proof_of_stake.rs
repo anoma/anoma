@@ -1,8 +1,10 @@
 //! Proof of Stake system integration with functions for transactions
 
+use anoma::ledger::pos::types::Slash;
 use anoma::ledger::pos::{
     anoma_proof_of_stake, bond_key, params_key, total_voting_power_key,
-    unbond_key, validator_consensus_key_key, validator_set_key,
+    unbond_key, validator_address_raw_hash_key, validator_consensus_key_key,
+    validator_set_key, validator_slash_key,
     validator_staking_reward_address_key, validator_state_key,
     validator_total_deltas_key, validator_voting_power_key,
 };
@@ -34,7 +36,7 @@ impl anoma_proof_of_stake::PoSReadOnly for PoS {
         address::xan()
     }
 
-    fn read_params(&self) -> PosParams {
+    fn read_pos_params(&self) -> PosParams {
         tx::read(params_key().to_string()).unwrap()
     }
 
@@ -73,6 +75,10 @@ impl anoma_proof_of_stake::PoSReadOnly for PoS {
         tx::read(validator_voting_power_key(key).to_string())
     }
 
+    fn read_validator_slashes(&self, key: &Self::Address) -> Vec<Slash> {
+        tx::read(validator_slash_key(key).to_string()).unwrap_or_default()
+    }
+
     fn read_bond(&self, key: &BondId) -> Option<Bonds> {
         tx::read(bond_key(key).to_string())
     }
@@ -91,8 +97,16 @@ impl anoma_proof_of_stake::PoSReadOnly for PoS {
 }
 
 impl anoma_proof_of_stake::PoS for PoS {
-    fn write_params(&mut self, params: &PosParams) {
+    fn write_pos_params(&mut self, params: &PosParams) {
         tx::write(params_key().to_string(), params)
+    }
+
+    fn write_validator_address_raw_hash(&mut self, address: &Self::Address) {
+        let raw_hash = address.raw_hash().unwrap().to_owned();
+        tx::write(
+            validator_address_raw_hash_key(raw_hash).to_string(),
+            address,
+        )
     }
 
     fn write_validator_staking_reward_address(

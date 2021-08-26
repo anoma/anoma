@@ -278,6 +278,8 @@ pub enum ImplicitAddress {
 pub enum InternalAddress {
     /// Proof-of-stake
     PoS,
+    /// Proof-of-stake slash pool contains slashed tokens
+    PosSlashPool,
     /// Inter-blockchain communication
     Ibc,
     /// Protocol parameters
@@ -291,6 +293,7 @@ impl Display for InternalAddress {
             "{}",
             match self {
                 Self::PoS => "PoS",
+                Self::PosSlashPool => "PosSlashPool",
                 Self::Ibc => "IBC",
                 Self::Parameters => "Parameters",
             }

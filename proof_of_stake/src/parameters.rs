@@ -23,6 +23,12 @@ pub struct PosParams {
     /// Amount of tokens rewarded to each validator that voted on a block
     /// proposal
     pub block_vote_reward: u64,
+    /// Portion of validator's stake that should be slashed on a duplicate
+    /// vote. Given in basis points (slashed amount per ten thousand tokens).
+    pub duplicate_vote_slash_rate: BasisPoints,
+    /// Portion of validator's stake that should be slashed on a light client
+    /// attack. Given in basis points (slashed amount per ten thousand tokens).
+    pub light_client_attack_slash_rate: BasisPoints,
 }
 
 impl Default for PosParams {
@@ -35,6 +41,10 @@ impl Default for PosParams {
             votes_per_token: BasisPoints::new(10),
             block_proposer_reward: 100,
             block_vote_reward: 1,
+            // slash 5%
+            duplicate_vote_slash_rate: BasisPoints::new(500),
+            // slash 5%
+            light_client_attack_slash_rate: BasisPoints::new(500),
         }
     }
 }

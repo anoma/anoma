@@ -215,7 +215,7 @@ where
             }
         }
 
-        let params = self.read_params();
+        let params = self.read_pos_params();
         let errors = validate(&params, changes, current_epoch);
         Ok(if errors.is_empty() {
             true
@@ -238,6 +238,7 @@ const VALIDATOR_CONSENSUS_KEY_STORAGE_KEY: &str = "consensus_key";
 const VALIDATOR_STATE_STORAGE_KEY: &str = "state";
 const VALIDATOR_TOTAL_DELTAS_STORAGE_KEY: &str = "total_deltas";
 const VALIDATOR_VOTING_POWER_STORAGE_KEY: &str = "voting_power";
+const VALIDATOR_SLASH_KEY: &str = "slash";
 const BOND_STORAGE_KEY: &str = "bond";
 const UNBOND_STORAGE_KEY: &str = "unbond";
 const VALIDATOR_SET_STORAGE_KEY: &str = "validator_set";
@@ -387,6 +388,13 @@ pub fn is_validator_voting_power_key(key: &Key) -> Option<&Address> {
     }
 }
 
+/// Storage key for validator's slashes.
+pub fn validator_slash_key(validator: &Address) -> Key {
+    validator_prefix(validator)
+        .push(&VALIDATOR_SLASH_KEY.to_owned())
+        .expect("Cannot obtain a storage key")
+}
+
 /// Storage key prefix for all bonds.
 pub fn bonds_prefix() -> Key {
     Key::from(ADDRESS.to_db_key())
@@ -513,7 +521,7 @@ where
         staking_token_address()
     }
 
-    fn read_params(&self) -> PosParams {
+    fn read_pos_params(&self) -> PosParams {
         let value = self.ctx.read_pre(&params_key()).unwrap().unwrap();
         decode(value).unwrap()
     }
@@ -566,6 +574,13 @@ where
         value.map(|value| decode(value).unwrap())
     }
 
+    fn read_validator_slashes(&self, key: &Self::Address) -> Vec<types::Slash> {
+        let value = self.ctx.read_pre(&validator_slash_key(key)).unwrap();
+        value
+            .map(|value| decode(value).unwrap())
+            .unwrap_or_default()
+    }
+
     fn read_bond(&self, key: &BondId) -> Option<Bonds> {
         let value = self.ctx.read_pre(&bond_key(key)).unwrap();
         value.map(|value| decode(value).unwrap())
@@ -602,12 +617,14 @@ where
     type TokenChange = token::Change;
 
     const POS_ADDRESS: Self::Address = Address::Internal(InternalAddress::PoS);
+    const POS_SLASH_POOL_ADDRESS: Self::Address =
+        Address::Internal(InternalAddress::PosSlashPool);
 
     fn staking_token_address() -> Self::Address {
         staking_token_address()
     }
 
-    fn read_params(&self) -> PosParams {
+    fn read_pos_params(&self) -> PosParams {
         let (value, _gas) = self.read(&params_key()).unwrap();
         decode(value.unwrap()).unwrap()
     }
@@ -616,14 +633,10 @@ where
         &self,
         raw_hash: impl AsRef<str>,
     ) -> Option<Self::Address> {
-        let key = validator_address_raw_hash_key(raw_hash);
-        let (value, _gas) = self.read(&params_key()).unwrap();
+        let (value, _gas) = self
+            .read(&validator_address_raw_hash_key(raw_hash))
+            .unwrap();
         value.map(|value| decode(value).unwrap())
-    }
-
-    fn read_validator_set(&self) -> ValidatorSets {
-        let (value, _gas) = self.read(&validator_set_key()).unwrap();
-        decode(value.unwrap()).unwrap()
     }
 
     fn read_validator_consensus_key(
@@ -635,7 +648,42 @@ where
         value.map(|value| decode(value).unwrap())
     }
 
-    fn write_params(&mut self, params: &PosParams) {
+    fn read_validator_total_deltas(
+        &self,
+        key: &Self::Address,
+    ) -> Option<types::ValidatorTotalDeltas<Self::TokenChange>> {
+        let (value, _gas) =
+            self.read(&validator_total_deltas_key(key)).unwrap();
+        value.map(|value| decode(value).unwrap())
+    }
+
+    fn read_validator_voting_power(
+        &self,
+        key: &Self::Address,
+    ) -> Option<ValidatorVotingPowers> {
+        let (value, _gas) =
+            self.read(&validator_voting_power_key(key)).unwrap();
+        value.map(|value| decode(value).unwrap())
+    }
+
+    fn read_validator_slashes(&self, key: &Self::Address) -> Vec<types::Slash> {
+        let (value, _gas) = self.read(&validator_slash_key(key)).unwrap();
+        value
+            .map(|value| decode(value).unwrap())
+            .unwrap_or_default()
+    }
+
+    fn read_validator_set(&self) -> ValidatorSets {
+        let (value, _gas) = self.read(&validator_set_key()).unwrap();
+        decode(value.unwrap()).unwrap()
+    }
+
+    fn read_total_voting_power(&self) -> TotalVotingPowers {
+        let (value, _gas) = self.read(&total_voting_power_key()).unwrap();
+        decode(value.unwrap()).unwrap()
+    }
+
+    fn write_pos_params(&mut self, params: &PosParams) {
         self.write(&params_key(), encode(params)).unwrap();
     }
 
@@ -690,6 +738,17 @@ where
             .unwrap();
     }
 
+    fn write_validator_slash(
+        &mut self,
+        validator: &Self::Address,
+        value: types::Slash,
+    ) {
+        let mut slashes = self.read_validator_slashes(validator);
+        slashes.push(value);
+        self.write(&validator_slash_key(validator), encode(&slashes))
+            .unwrap();
+    }
+
     fn write_bond(&mut self, key: &BondId, value: &Bonds) {
         self.write(&bond_key(key), encode(value)).unwrap();
     }
@@ -739,6 +798,47 @@ where
         };
         self.write(&key, encode(&new_balance))
             .expect("Unable to write token balance for PoS system");
+    }
+
+    fn transfer(
+        &mut self,
+        token: &Self::Address,
+        amount: Self::TokenAmount,
+        src: &Self::Address,
+        dest: &Self::Address,
+    ) {
+        let src_key = token::balance_key(token, src);
+        let dest_key = token::balance_key(token, dest);
+        if let (Some(src_balance), _gas) = self
+            .read(&src_key)
+            .expect("Unable to read token balance for PoS system")
+        {
+            let mut src_balance: Self::TokenAmount =
+                decode(src_balance).unwrap_or_default();
+            if src_balance < amount {
+                tracing::error!(
+                    "PoS system transfer error, the source doesn't have \
+                     sufficient balance. It has {}, but {} is required",
+                    src_balance,
+                    amount
+                );
+                return;
+            }
+            src_balance.spend(&amount);
+            let (dest_balance, _gas) = self.read(&dest_key).unwrap_or_default();
+            let mut dest_balance: Self::TokenAmount = dest_balance
+                .and_then(|b| decode(b).ok())
+                .unwrap_or_default();
+            dest_balance.receive(&amount);
+            self.write(&src_key, encode(&src_balance))
+                .expect("Unable to write token balance for PoS system");
+            self.write(&dest_key, encode(&dest_balance))
+                .expect("Unable to write token balance for PoS system");
+        } else {
+            tracing::error!(
+                "PoS system transfer error, the source has no balance"
+            );
+        }
     }
 }
 

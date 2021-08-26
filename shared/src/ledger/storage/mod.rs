@@ -15,6 +15,7 @@ use tendermint::block::Header;
 use thiserror::Error;
 use types::MerkleTree;
 
+use super::parameters::Parameters;
 use crate::bytes::ByteBuf;
 use crate::ledger::gas::MIN_STORAGE_GAS;
 use crate::ledger::parameters::{self, EpochDuration};
@@ -397,9 +398,8 @@ where
         &mut self,
         initial_height: BlockHeight,
         genesis_time: DateTimeUtc,
+        parameters: &Parameters,
     ) -> Result<()> {
-        let (parameters, _gas) =
-            parameters::read(self).expect("Couldn't read protocol parameters");
         let EpochDuration {
             min_num_of_blocks,
             min_duration,

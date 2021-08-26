@@ -254,7 +254,7 @@ pub enum SlashType {
     LightClientAttack,
 }
 
-/// ‱ (Parts per then thousand). This can be multiplied by any type that
+/// ‱ (Parts per ten thousand). This can be multiplied by any type that
 /// implements [`Into<u64>`] or [`Into<i128>`].
 #[derive(Debug, Clone, Copy, BorshDeserialize, BorshSerialize)]
 pub struct BasisPoints(u64);
