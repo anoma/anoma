@@ -292,6 +292,29 @@
 <span id="290">290</span>
 <span id="291">291</span>
 <span id="292">292</span>
+<span id="293">293</span>
+<span id="294">294</span>
+<span id="295">295</span>
+<span id="296">296</span>
+<span id="297">297</span>
+<span id="298">298</span>
+<span id="299">299</span>
+<span id="300">300</span>
+<span id="301">301</span>
+<span id="302">302</span>
+<span id="303">303</span>
+<span id="304">304</span>
+<span id="305">305</span>
+<span id="306">306</span>
+<span id="307">307</span>
+<span id="308">308</span>
+<span id="309">309</span>
+<span id="310">310</span>
+<span id="311">311</span>
+<span id="312">312</span>
+<span id="313">313</span>
+<span id="314">314</span>
+<span id="315">315</span>
 </pre><pre class="rust">
 <span class="doccomment">//! DB mock for testing</span>
 
@@ -319,17 +342,30 @@
     }
 
     <span class="kw">fn</span> <span class="ident">write_block</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">state</span>: <span class="ident">BlockState</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="ident">BlockState</span> {
+            <span class="ident">root</span>,
+            <span class="ident">store</span>,
+            <span class="ident">hash</span>,
+            <span class="ident">height</span>,
+            <span class="ident">epoch</span>,
+            <span class="ident">pred_epochs</span>,
+            <span class="ident">next_epoch_min_start_height</span>,
+            <span class="ident">next_epoch_min_start_time</span>,
+            <span class="ident">subspaces</span>,
+            <span class="ident">address_gen</span>,
+        }: <span class="ident">BlockState</span> <span class="op">=</span> <span class="ident">state</span>;
+
         <span class="comment">// Epoch start height and time</span>
         <span class="self">self</span>.<span class="number">0</span>.<span class="ident">insert</span>(
             <span class="string">&quot;next_epoch_min_start_height&quot;</span>.<span class="ident">into</span>(),
-            <span class="ident">types::encode</span>(<span class="kw-2">&amp;</span><span class="ident">state</span>.<span class="ident">next_epoch_min_start_height</span>),
+            <span class="ident">types::encode</span>(<span class="kw-2">&amp;</span><span class="ident">next_epoch_min_start_height</span>),
         );
         <span class="self">self</span>.<span class="number">0</span>.<span class="ident">insert</span>(
             <span class="string">&quot;next_epoch_min_start_time&quot;</span>.<span class="ident">into</span>(),
-            <span class="ident">types::encode</span>(<span class="kw-2">&amp;</span><span class="ident">state</span>.<span class="ident">next_epoch_min_start_time</span>),
+            <span class="ident">types::encode</span>(<span class="kw-2">&amp;</span><span class="ident">next_epoch_min_start_time</span>),
         );
 
-        <span class="kw">let</span> <span class="ident">prefix_key</span> <span class="op">=</span> <span class="ident">Key::from</span>(<span class="ident">state</span>.<span class="ident">height</span>.<span class="ident">to_db_key</span>());
+        <span class="kw">let</span> <span class="ident">prefix_key</span> <span class="op">=</span> <span class="ident">Key::from</span>(<span class="ident">height</span>.<span class="ident">to_db_key</span>());
         <span class="comment">// Merkle tree</span>
         {
             <span class="kw">let</span> <span class="ident">prefix_key</span> <span class="op">=</span> <span class="ident">prefix_key</span>
@@ -340,16 +376,14 @@
                 <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">prefix_key</span>
                     .<span class="ident">push</span>(<span class="kw-2">&amp;</span><span class="string">&quot;root&quot;</span>.<span class="ident">to_owned</span>())
                     .<span class="ident">map_err</span>(<span class="ident">Error::KeyError</span>)<span class="question-mark">?</span>;
-                <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">state</span>.<span class="ident">root</span>;
-                <span class="self">self</span>.<span class="number">0</span>.<span class="ident">insert</span>(<span class="ident">key</span>.<span class="ident">to_string</span>(), <span class="ident">types::encode</span>(<span class="ident">value</span>));
+                <span class="self">self</span>.<span class="number">0</span>.<span class="ident">insert</span>(<span class="ident">key</span>.<span class="ident">to_string</span>(), <span class="ident">types::encode</span>(<span class="kw-2">&amp;</span><span class="ident">root</span>));
             }
             <span class="comment">// Tree&#39;s store</span>
             {
                 <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">prefix_key</span>
                     .<span class="ident">push</span>(<span class="kw-2">&amp;</span><span class="string">&quot;store&quot;</span>.<span class="ident">to_owned</span>())
                     .<span class="ident">map_err</span>(<span class="ident">Error::KeyError</span>)<span class="question-mark">?</span>;
-                <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">state</span>.<span class="ident">store</span>;
-                <span class="self">self</span>.<span class="number">0</span>.<span class="ident">insert</span>(<span class="ident">key</span>.<span class="ident">to_string</span>(), <span class="ident">types::encode</span>(<span class="ident">value</span>));
+                <span class="self">self</span>.<span class="number">0</span>.<span class="ident">insert</span>(<span class="ident">key</span>.<span class="ident">to_string</span>(), <span class="ident">types::encode</span>(<span class="kw-2">&amp;</span><span class="ident">store</span>));
             }
         }
         <span class="comment">// Block hash</span>
@@ -357,23 +391,28 @@
             <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">prefix_key</span>
                 .<span class="ident">push</span>(<span class="kw-2">&amp;</span><span class="string">&quot;hash&quot;</span>.<span class="ident">to_owned</span>())
                 .<span class="ident">map_err</span>(<span class="ident">Error::KeyError</span>)<span class="question-mark">?</span>;
-            <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">state</span>.<span class="ident">hash</span>;
-            <span class="self">self</span>.<span class="number">0</span>.<span class="ident">insert</span>(<span class="ident">key</span>.<span class="ident">to_string</span>(), <span class="ident">types::encode</span>(<span class="ident">value</span>));
+            <span class="self">self</span>.<span class="number">0</span>.<span class="ident">insert</span>(<span class="ident">key</span>.<span class="ident">to_string</span>(), <span class="ident">types::encode</span>(<span class="kw-2">&amp;</span><span class="ident">hash</span>));
         }
         <span class="comment">// Block epoch</span>
         {
             <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">prefix_key</span>
                 .<span class="ident">push</span>(<span class="kw-2">&amp;</span><span class="string">&quot;epoch&quot;</span>.<span class="ident">to_owned</span>())
                 .<span class="ident">map_err</span>(<span class="ident">Error::KeyError</span>)<span class="question-mark">?</span>;
-            <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">state</span>.<span class="ident">epoch</span>;
-            <span class="self">self</span>.<span class="number">0</span>.<span class="ident">insert</span>(<span class="ident">key</span>.<span class="ident">to_string</span>(), <span class="ident">types::encode</span>(<span class="ident">value</span>));
+            <span class="self">self</span>.<span class="number">0</span>.<span class="ident">insert</span>(<span class="ident">key</span>.<span class="ident">to_string</span>(), <span class="ident">types::encode</span>(<span class="kw-2">&amp;</span><span class="ident">epoch</span>));
+        }
+        <span class="comment">// Predecessor block epochs</span>
+        {
+            <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">prefix_key</span>
+                .<span class="ident">push</span>(<span class="kw-2">&amp;</span><span class="string">&quot;pred_epochs&quot;</span>.<span class="ident">to_owned</span>())
+                .<span class="ident">map_err</span>(<span class="ident">Error::KeyError</span>)<span class="question-mark">?</span>;
+            <span class="self">self</span>.<span class="number">0</span>.<span class="ident">insert</span>(<span class="ident">key</span>.<span class="ident">to_string</span>(), <span class="ident">types::encode</span>(<span class="kw-2">&amp;</span><span class="ident">pred_epochs</span>));
         }
         <span class="comment">// SubSpace</span>
         {
             <span class="kw">let</span> <span class="ident">subspace_prefix</span> <span class="op">=</span> <span class="ident">prefix_key</span>
                 .<span class="ident">push</span>(<span class="kw-2">&amp;</span><span class="string">&quot;subspace&quot;</span>.<span class="ident">to_owned</span>())
                 .<span class="ident">map_err</span>(<span class="ident">Error::KeyError</span>)<span class="question-mark">?</span>;
-            <span class="ident">state</span>.<span class="ident">subspaces</span>.<span class="ident">iter</span>().<span class="ident">for_each</span>(<span class="op">|</span>(<span class="ident">key</span>, <span class="ident">value</span>)<span class="op">|</span> {
+            <span class="ident">subspaces</span>.<span class="ident">iter</span>().<span class="ident">for_each</span>(<span class="op">|</span>(<span class="ident">key</span>, <span class="ident">value</span>)<span class="op">|</span> {
                 <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">subspace_prefix</span>.<span class="ident">join</span>(<span class="ident">key</span>);
                 <span class="self">self</span>.<span class="number">0</span>.<span class="ident">insert</span>(<span class="ident">key</span>.<span class="ident">to_string</span>(), <span class="ident">value</span>.<span class="ident">clone</span>());
             });
@@ -383,11 +422,10 @@
             <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">prefix_key</span>
                 .<span class="ident">push</span>(<span class="kw-2">&amp;</span><span class="string">&quot;address_gen&quot;</span>.<span class="ident">to_owned</span>())
                 .<span class="ident">map_err</span>(<span class="ident">Error::KeyError</span>)<span class="question-mark">?</span>;
-            <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">state</span>.<span class="ident">address_gen</span>;
+            <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">address_gen</span>;
             <span class="self">self</span>.<span class="number">0</span>.<span class="ident">insert</span>(<span class="ident">key</span>.<span class="ident">to_string</span>(), <span class="ident">types::encode</span>(<span class="ident">value</span>));
         }
-        <span class="self">self</span>.<span class="number">0</span>
-            .<span class="ident">insert</span>(<span class="string">&quot;height&quot;</span>.<span class="ident">to_owned</span>(), <span class="ident">types::encode</span>(<span class="kw-2">&amp;</span><span class="ident">state</span>.<span class="ident">height</span>));
+        <span class="self">self</span>.<span class="number">0</span>.<span class="ident">insert</span>(<span class="string">&quot;height&quot;</span>.<span class="ident">to_owned</span>(), <span class="ident">types::encode</span>(<span class="kw-2">&amp;</span><span class="ident">height</span>));
         <span class="prelude-val">Ok</span>(())
     }
 
@@ -435,6 +473,7 @@
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">store</span> <span class="op">=</span> <span class="prelude-val">None</span>;
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">hash</span> <span class="op">=</span> <span class="prelude-val">None</span>;
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">epoch</span> <span class="op">=</span> <span class="prelude-val">None</span>;
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">pred_epochs</span> <span class="op">=</span> <span class="prelude-val">None</span>;
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">address_gen</span> <span class="op">=</span> <span class="prelude-val">None</span>;
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">subspaces</span>: <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">Key</span>, <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">HashMap::new</span>();
         <span class="kw">for</span> (<span class="ident">path</span>, <span class="ident">bytes</span>) <span class="kw">in</span>
@@ -472,6 +511,11 @@
                             <span class="ident">types::decode</span>(<span class="ident">bytes</span>).<span class="ident">map_err</span>(<span class="ident">Error::CodingError</span>)<span class="question-mark">?</span>,
                         )
                     }
+                    <span class="string">&quot;pred_epochs&quot;</span> <span class="op">=</span><span class="op">&gt;</span> {
+                        <span class="ident">pred_epochs</span> <span class="op">=</span> <span class="prelude-val">Some</span>(
+                            <span class="ident">types::decode</span>(<span class="ident">bytes</span>).<span class="ident">map_err</span>(<span class="ident">Error::CodingError</span>)<span class="question-mark">?</span>,
+                        )
+                    }
                     <span class="string">&quot;subspace&quot;</span> <span class="op">=</span><span class="op">&gt;</span> {
                         <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Key::parse_db_key</span>(<span class="ident">path</span>).<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> {
                             <span class="ident">Error::Temporary</span> {
@@ -490,12 +534,13 @@
                 <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">unknown_key_error</span>(<span class="ident">path</span>)<span class="question-mark">?</span>,
             }
         }
-        <span class="kw">match</span> (<span class="ident">root</span>, <span class="ident">store</span>, <span class="ident">hash</span>, <span class="ident">epoch</span>, <span class="ident">address_gen</span>) {
+        <span class="kw">match</span> (<span class="ident">root</span>, <span class="ident">store</span>, <span class="ident">hash</span>, <span class="ident">epoch</span>, <span class="ident">pred_epochs</span>, <span class="ident">address_gen</span>) {
             (
                 <span class="prelude-val">Some</span>(<span class="ident">root</span>),
                 <span class="prelude-val">Some</span>(<span class="ident">store</span>),
                 <span class="prelude-val">Some</span>(<span class="ident">hash</span>),
                 <span class="prelude-val">Some</span>(<span class="ident">epoch</span>),
+                <span class="prelude-val">Some</span>(<span class="ident">pred_epochs</span>),
                 <span class="prelude-val">Some</span>(<span class="ident">address_gen</span>),
             ) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="ident">BlockState</span> {
                 <span class="ident">root</span>,
@@ -503,6 +548,7 @@
                 <span class="ident">hash</span>,
                 <span class="ident">height</span>,
                 <span class="ident">epoch</span>,
+                <span class="ident">pred_epochs</span>,
                 <span class="ident">next_epoch_min_start_height</span>,
                 <span class="ident">next_epoch_min_start_time</span>,
                 <span class="ident">subspaces</span>,

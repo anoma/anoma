@@ -252,6 +252,7 @@
 <span id="250">250</span>
 <span id="251">251</span>
 <span id="252">252</span>
+<span id="253">253</span>
 </pre><pre class="rust">
 <span class="doccomment">//! The storage module handles both the current state in-memory and the stored</span>
 <span class="doccomment">//! state in DB.</span>
@@ -265,7 +266,7 @@
 <span class="kw">use</span> <span class="ident">anoma::ledger::storage::types::MerkleTree</span>;
 <span class="kw">use</span> <span class="ident">anoma::ledger::storage</span>::{<span class="ident">types</span>, <span class="ident">BlockStorage</span>, <span class="ident">Storage</span>, <span class="ident">StorageHasher</span>};
 <span class="kw">use</span> <span class="ident">anoma::types::address::EstablishedAddressGen</span>;
-<span class="kw">use</span> <span class="ident">anoma::types::storage</span>::{<span class="ident">BlockHash</span>, <span class="ident">BlockHeight</span>, <span class="ident">Epoch</span>, <span class="ident">Key</span>};
+<span class="kw">use</span> <span class="ident">anoma::types::storage</span>::{<span class="ident">BlockHash</span>, <span class="ident">BlockHeight</span>, <span class="ident">Epoch</span>, <span class="ident">Epochs</span>, <span class="ident">Key</span>};
 <span class="kw">use</span> <span class="ident">anoma::types::time::DateTimeUtc</span>;
 <span class="kw">use</span> <span class="ident">blake2b_rs</span>::{<span class="ident">Blake2b</span>, <span class="ident">Blake2bBuilder</span>};
 <span class="kw">use</span> <span class="ident">sparse_merkle_tree::blake2b::Blake2bHasher</span>;
@@ -284,6 +285,7 @@
         <span class="ident">hash</span>: <span class="ident">BlockHash::default</span>(),
         <span class="ident">height</span>: <span class="ident">BlockHeight::default</span>(),
         <span class="ident">epoch</span>: <span class="ident">Epoch::default</span>(),
+        <span class="ident">pred_epochs</span>: <span class="ident">Epochs::default</span>(),
         <span class="ident">subspaces</span>: <span class="ident">HashMap::default</span>(),
     };
     <span class="ident">PersistentStorage</span> {

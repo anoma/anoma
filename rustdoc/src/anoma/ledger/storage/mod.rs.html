@@ -693,6 +693,22 @@
 <span id="691">691</span>
 <span id="692">692</span>
 <span id="693">693</span>
+<span id="694">694</span>
+<span id="695">695</span>
+<span id="696">696</span>
+<span id="697">697</span>
+<span id="698">698</span>
+<span id="699">699</span>
+<span id="700">700</span>
+<span id="701">701</span>
+<span id="702">702</span>
+<span id="703">703</span>
+<span id="704">704</span>
+<span id="705">705</span>
+<span id="706">706</span>
+<span id="707">707</span>
+<span id="708">708</span>
+<span id="709">709</span>
 </pre><pre class="rust">
 <span class="doccomment">//! Ledger&#39;s state storage with key-value backed store and a merkle tree</span>
 
@@ -716,7 +732,7 @@
 <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::ledger::parameters</span>::{<span class="self">self</span>, <span class="ident">EpochDuration</span>};
 <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::types::address</span>::{<span class="ident">Address</span>, <span class="ident">EstablishedAddressGen</span>};
 <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::types::storage</span>::{
-    <span class="ident">BlockHash</span>, <span class="ident">BlockHeight</span>, <span class="ident">DbKeySeg</span>, <span class="ident">Epoch</span>, <span class="ident">Key</span>, <span class="ident">BLOCK_HASH_LENGTH</span>,
+    <span class="ident">BlockHash</span>, <span class="ident">BlockHeight</span>, <span class="ident">DbKeySeg</span>, <span class="ident">Epoch</span>, <span class="ident">Epochs</span>, <span class="ident">Key</span>, <span class="ident">BLOCK_HASH_LENGTH</span>,
     <span class="ident">CHAIN_ID_LENGTH</span>,
 };
 <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::types::time::DateTimeUtc</span>;
@@ -762,6 +778,8 @@
     <span class="kw">pub</span> <span class="ident">height</span>: <span class="ident">BlockHeight</span>,
     <span class="doccomment">/// Epoch of the block</span>
     <span class="kw">pub</span> <span class="ident">epoch</span>: <span class="ident">Epoch</span>,
+    <span class="doccomment">/// Predecessor block epochs</span>
+    <span class="kw">pub</span> <span class="ident">pred_epochs</span>: <span class="ident">Epochs</span>,
     <span class="doccomment">/// Accounts&#39; subspaces storage for arbitrary key-values</span>
     <span class="kw">pub</span> <span class="ident">subspaces</span>: <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">Key</span>, <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span>,
 }
@@ -795,6 +813,8 @@
     <span class="kw">pub</span> <span class="ident">height</span>: <span class="ident">BlockHeight</span>,
     <span class="doccomment">/// Epoch of the block</span>
     <span class="kw">pub</span> <span class="ident">epoch</span>: <span class="ident">Epoch</span>,
+    <span class="doccomment">/// Predecessor block epochs</span>
+    <span class="kw">pub</span> <span class="ident">pred_epochs</span>: <span class="ident">Epochs</span>,
     <span class="doccomment">/// Minimum block height at which the next epoch may start</span>
     <span class="kw">pub</span> <span class="ident">next_epoch_min_start_height</span>: <span class="ident">BlockHeight</span>,
     <span class="doccomment">/// Minimum block time at which the next epoch may start</span>
@@ -856,6 +876,7 @@
             <span class="ident">hash</span>,
             <span class="ident">height</span>,
             <span class="ident">epoch</span>,
+            <span class="ident">pred_epochs</span>,
             <span class="ident">next_epoch_min_start_height</span>,
             <span class="ident">next_epoch_min_start_time</span>,
             <span class="ident">subspaces</span>,
@@ -866,6 +887,7 @@
             <span class="self">self</span>.<span class="ident">block</span>.<span class="ident">hash</span> <span class="op">=</span> <span class="ident">hash</span>;
             <span class="self">self</span>.<span class="ident">block</span>.<span class="ident">height</span> <span class="op">=</span> <span class="ident">height</span>;
             <span class="self">self</span>.<span class="ident">block</span>.<span class="ident">epoch</span> <span class="op">=</span> <span class="ident">epoch</span>;
+            <span class="self">self</span>.<span class="ident">block</span>.<span class="ident">pred_epochs</span> <span class="op">=</span> <span class="ident">pred_epochs</span>;
             <span class="self">self</span>.<span class="ident">block</span>.<span class="ident">subspaces</span> <span class="op">=</span> <span class="ident">subspaces</span>;
             <span class="self">self</span>.<span class="ident">last_height</span> <span class="op">=</span> <span class="ident">height</span>;
             <span class="self">self</span>.<span class="ident">current_epoch</span> <span class="op">=</span> <span class="ident">epoch</span>;
@@ -900,6 +922,7 @@
             <span class="ident">hash</span>: <span class="self">self</span>.<span class="ident">block</span>.<span class="ident">hash</span>.<span class="ident">clone</span>(),
             <span class="ident">height</span>: <span class="self">self</span>.<span class="ident">block</span>.<span class="ident">height</span>,
             <span class="ident">epoch</span>: <span class="self">self</span>.<span class="ident">block</span>.<span class="ident">epoch</span>,
+            <span class="ident">pred_epochs</span>: <span class="self">self</span>.<span class="ident">block</span>.<span class="ident">pred_epochs</span>.<span class="ident">clone</span>(),
             <span class="ident">next_epoch_min_start_height</span>: <span class="self">self</span>.<span class="ident">next_epoch_min_start_height</span>,
             <span class="ident">next_epoch_min_start_time</span>: <span class="self">self</span>.<span class="ident">next_epoch_min_start_time</span>,
             <span class="ident">subspaces</span>: <span class="self">self</span>.<span class="ident">block</span>.<span class="ident">subspaces</span>.<span class="ident">clone</span>(),
@@ -1121,6 +1144,12 @@
             } <span class="op">=</span> <span class="ident">parameters</span>.<span class="ident">epoch_duration</span>;
             <span class="self">self</span>.<span class="ident">next_epoch_min_start_height</span> <span class="op">=</span> <span class="ident">height</span> <span class="op">+</span> <span class="ident">min_num_of_blocks</span>;
             <span class="self">self</span>.<span class="ident">next_epoch_min_start_time</span> <span class="op">=</span> <span class="ident">time</span> <span class="op">+</span> <span class="ident">min_duration</span>;
+            <span class="comment">// TODO put this into PoS parameters and pass it to tendermint</span>
+            <span class="comment">// `consensus_params` on `InitChain` and `EndBlock`</span>
+            <span class="kw">let</span> <span class="ident">evidence_max_age_num_blocks</span>: <span class="ident">u64</span> <span class="op">=</span> <span class="number">100000</span>;
+            <span class="self">self</span>.<span class="ident">block</span>
+                .<span class="ident">pred_epochs</span>
+                .<span class="ident">new_epoch</span>(<span class="ident">height</span>, <span class="ident">evidence_max_age_num_blocks</span>);
             <span class="macro">tracing::info!</span>(<span class="string">&quot;Began a new epoch {}&quot;</span>, <span class="self">self</span>.<span class="ident">block</span>.<span class="ident">epoch</span>);
         }
         <span class="self">self</span>.<span class="ident">update_epoch_in_merkle_tree</span>()
@@ -1231,6 +1260,7 @@
                 <span class="ident">hash</span>: <span class="ident">BlockHash::default</span>(),
                 <span class="ident">height</span>: <span class="ident">BlockHeight::default</span>(),
                 <span class="ident">epoch</span>: <span class="ident">Epoch::default</span>(),
+                <span class="ident">pred_epochs</span>: <span class="ident">Epochs::default</span>(),
                 <span class="ident">subspaces</span>,
             };
             <span class="self">Self</span> {
@@ -1342,9 +1372,11 @@
                     <span class="ident">block_height</span> <span class="op">+</span> <span class="ident">epoch_duration</span>.<span class="ident">min_num_of_blocks</span>);
                 <span class="macro">assert_eq!</span>(<span class="ident">storage</span>.<span class="ident">next_epoch_min_start_time</span>,
                     <span class="ident">block_time</span> <span class="op">+</span> <span class="ident">epoch_duration</span>.<span class="ident">min_duration</span>);
+                <span class="macro">assert_eq!</span>(<span class="ident">storage</span>.<span class="ident">block</span>.<span class="ident">pred_epochs</span>.<span class="ident">get_epoch</span>(<span class="ident">block_height</span>), <span class="prelude-val">Some</span>(<span class="ident">epoch_before</span>.<span class="ident">next</span>()));
             } <span class="kw">else</span> {
                 <span class="macro">assert_eq!</span>(<span class="ident">storage</span>.<span class="ident">block</span>.<span class="ident">epoch</span>, <span class="ident">epoch_before</span>);
                 <span class="macro">assert_eq!</span>(<span class="ident">storage</span>.<span class="ident">current_epoch</span>, <span class="ident">epoch_before</span>);
+                <span class="macro">assert_eq!</span>(<span class="ident">storage</span>.<span class="ident">block</span>.<span class="ident">pred_epochs</span>.<span class="ident">get_epoch</span>(<span class="ident">block_height</span>), <span class="prelude-val">Some</span>(<span class="ident">epoch_before</span>));
             }
 
             <span class="comment">// Update the epoch duration parameters</span>
