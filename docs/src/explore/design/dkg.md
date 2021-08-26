@@ -14,10 +14,16 @@ block heights, in practice this will be at the beginning of every epoch.
 It is important to note that the key being generated will be used to encrypt
 transactions in the epoch following the current one. This means that the 
 validator set of epoch `n+1` must participate in the DKG protocol
-during epoch `n` using the voting powers they will have during epoch `n+1`.
-Because of the pipelining of validator set changes, the validator sets
+during epoch `n` use the voting powers they will have during epoch `n+1` in 
+their computations. Because of the pipelining of validator set changes, the validator sets
 and their voting powers for epoch `n+1` will be known at the beginning of
-epoch `n`.
+epoch `n`. 
+
+For validators who start for the first time at epoch `n+1`, they
+must participate in the [Vote Extensions](https://github.com/tendermint/spec/blob/master/rfc/004-abci%2B%2B.md#vote-extensions)
+in epoch `n`. So internally, they will be validators but with 0 voting power.
+The job of using the consensus layer to validate the DKG protocol will be 
+done by the current validator set with their current voting powers.
 
 ##  Computing weight shares
 
@@ -78,7 +84,14 @@ phase of the protocol is thus expected to end at block \\(B(W)\\).
 During the dealing phase of the DKG protocol, PVSS transcripts recieved
 are continuously stored by each validator. Once a block proposer detects
 that they have enough PVSS transcripts ( at least \\(\frac{2}{3}W\\)), they
-should attempt to aggregate them.
+should attempt to aggregate them. 
+
+If aggregation cannot happen and the next epoch begins, the protocol is 
+restarted from scratch. Furthermore, since a new key was not created, 
+no new transactions can be accepted until a new key is generated. The 
+inability to include transactions represents a lost opportunity cost (in
+ terms of transaction fees if chosen as block proposer) and should incentivize
+correct and timely reporting of PVSS transcripts in the previous epoch.
 
 The block proposer aggregates the messages into a 
 single instance using Ferveo during its [Prepare Proposal](https://github.com/tendermint/spec/blob/master/rfc/004-abci%2B%2B.md#prepare-proposal)
