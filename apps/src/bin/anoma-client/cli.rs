@@ -48,6 +48,9 @@ pub async fn main() -> Result<()> {
         cmds::AnomaClient::QueryVotingPower(cmds::QueryVotingPower(args)) => {
             rpc::query_voting_power(args).await;
         }
+        cmds::AnomaClient::QuerySlashes(cmds::QuerySlashes(args)) => {
+            rpc::query_slashes(args).await;
+        }
         // Gossip cmds
         cmds::AnomaClient::Intent(cmds::Intent(args)) => {
             gossip_intent(args).await;

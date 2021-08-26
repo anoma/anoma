@@ -5,7 +5,8 @@ use std::collections::HashSet;
 pub use anoma_proof_of_stake;
 pub use anoma_proof_of_stake::parameters::PosParams;
 pub use anoma_proof_of_stake::types::{
-    self, TotalVotingPowers, ValidatorStates, ValidatorVotingPowers,
+    self, Slash, Slashes, TotalVotingPowers, ValidatorStates,
+    ValidatorVotingPowers,
 };
 use anoma_proof_of_stake::validation::validate;
 use anoma_proof_of_stake::{validation, PoSBase, PoSReadOnly};
@@ -238,7 +239,7 @@ const VALIDATOR_CONSENSUS_KEY_STORAGE_KEY: &str = "consensus_key";
 const VALIDATOR_STATE_STORAGE_KEY: &str = "state";
 const VALIDATOR_TOTAL_DELTAS_STORAGE_KEY: &str = "total_deltas";
 const VALIDATOR_VOTING_POWER_STORAGE_KEY: &str = "voting_power";
-const VALIDATOR_SLASH_KEY: &str = "slash";
+const SLASHES_PREFIX: &str = "slash";
 const BOND_STORAGE_KEY: &str = "bond";
 const UNBOND_STORAGE_KEY: &str = "unbond";
 const VALIDATOR_SET_STORAGE_KEY: &str = "validator_set";
@@ -388,11 +389,30 @@ pub fn is_validator_voting_power_key(key: &Key) -> Option<&Address> {
     }
 }
 
-/// Storage key for validator's slashes.
-pub fn validator_slash_key(validator: &Address) -> Key {
-    validator_prefix(validator)
-        .push(&VALIDATOR_SLASH_KEY.to_owned())
+/// Storage prefix for slashes.
+pub fn slashes_prefix() -> Key {
+    Key::from(ADDRESS.to_db_key())
+        .push(&SLASHES_PREFIX.to_owned())
         .expect("Cannot obtain a storage key")
+}
+
+/// Storage key for validator's slashes.
+pub fn validator_slashes_key(validator: &Address) -> Key {
+    slashes_prefix()
+        .push(&validator.to_db_key())
+        .expect("Cannot obtain a storage key")
+}
+
+/// Is storage key for validator's slashes?
+pub fn is_validator_slashes_key(key: &Key) -> Option<&Address> {
+    match &key.segments[..] {
+        [DbKeySeg::AddressSeg(addr), DbKeySeg::StringSeg(prefix), DbKeySeg::AddressSeg(validator)]
+            if addr == &ADDRESS && prefix == SLASHES_PREFIX =>
+        {
+            Some(validator)
+        }
+        _ => None,
+    }
 }
 
 /// Storage key prefix for all bonds.
@@ -575,7 +595,7 @@ where
     }
 
     fn read_validator_slashes(&self, key: &Self::Address) -> Vec<types::Slash> {
-        let value = self.ctx.read_pre(&validator_slash_key(key)).unwrap();
+        let value = self.ctx.read_pre(&validator_slashes_key(key)).unwrap();
         value
             .map(|value| decode(value).unwrap())
             .unwrap_or_default()
@@ -666,8 +686,8 @@ where
         value.map(|value| decode(value).unwrap())
     }
 
-    fn read_validator_slashes(&self, key: &Self::Address) -> Vec<types::Slash> {
-        let (value, _gas) = self.read(&validator_slash_key(key)).unwrap();
+    fn read_validator_slashes(&self, key: &Self::Address) -> types::Slashes {
+        let (value, _gas) = self.read(&validator_slashes_key(key)).unwrap();
         value
             .map(|value| decode(value).unwrap())
             .unwrap_or_default()
@@ -745,7 +765,7 @@ where
     ) {
         let mut slashes = self.read_validator_slashes(validator);
         slashes.push(value);
-        self.write(&validator_slash_key(validator), encode(&slashes))
+        self.write(&validator_slashes_key(validator), encode(&slashes))
             .unwrap();
     }
 

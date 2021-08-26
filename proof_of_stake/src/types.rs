@@ -244,9 +244,14 @@ pub struct Unbond<Token: Default> {
 #[derive(Debug, Clone, BorshDeserialize, BorshSerialize)]
 pub struct Slash {
     pub epoch: Epoch,
+    pub block_height: u64,
     pub r#type: SlashType,
     pub rate: BasisPoints,
 }
+
+/// Slashes applied to validator, to punish byzantine behavior by removing
+/// their staked tokens at and before the epoch of the slash.
+pub type Slashes = Vec<Slash>;
 
 #[derive(Debug, Clone, BorshDeserialize, BorshSerialize)]
 pub enum SlashType {
@@ -578,8 +583,8 @@ where
 impl Display for SlashType {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            SlashType::DuplicateVote => writeln!(f, "Duplicate vote"),
-            SlashType::LightClientAttack => writeln!(f, "Light client attack"),
+            SlashType::DuplicateVote => write!(f, "Duplicate vote"),
+            SlashType::LightClientAttack => write!(f, "Light client attack"),
         }
     }
 }
@@ -587,6 +592,12 @@ impl Display for SlashType {
 impl BasisPoints {
     pub fn new(value: u64) -> Self {
         Self(value)
+    }
+}
+
+impl Display for BasisPoints {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}‱", self.0)
     }
 }
 

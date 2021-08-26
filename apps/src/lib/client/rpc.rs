@@ -4,8 +4,8 @@ use std::borrow::Cow;
 use std::convert::TryInto;
 use std::io::{self, Write};
 
-use anoma::ledger::pos;
 use anoma::ledger::pos::types::{VotingPower, WeightedValidator};
+use anoma::ledger::pos::{self, is_validator_slashes_key};
 use anoma::types::storage::Epoch;
 use anoma::types::{address, storage, token};
 use borsh::BorshDeserialize;
@@ -163,9 +163,17 @@ pub async fn query_bonds(args: args::QueryBonds) {
                         .await;
                 // Find owner's unbonded delegations from the given validator
                 let unbond_key = pos::unbond_key(&bond_id);
-                let unbonds =
-                    query_storage_value::<pos::Unbonds>(client, unbond_key)
-                        .await;
+                let unbonds = query_storage_value::<pos::Unbonds>(
+                    client.clone(),
+                    unbond_key,
+                )
+                .await;
+                // Find validator's slashes, if any
+                let slashes_key = pos::validator_slashes_key(validator);
+                let slashes =
+                    query_storage_value::<pos::Slashes>(client, slashes_key)
+                        .await
+                        .unwrap_or_default();
 
                 let stdout = io::stdout();
                 let mut w = stdout.lock();
@@ -182,16 +190,44 @@ pub async fn query_bonds(args: args::QueryBonds) {
                     for deltas in bonds.iter() {
                         for (epoch_start, delta) in deltas.delta.iter().sorted()
                         {
+                            let mut delta = *delta;
                             writeln!(
                                 w,
                                 "  Active from epoch {}: Δ {}",
                                 epoch_start, delta
                             )
                             .unwrap();
-                            total += *delta;
+                            let mut slashed = token::Amount::default();
+                            for slash in &slashes {
+                                if slash.epoch >= *epoch_start {
+                                    writeln!(
+                                        w,
+                                        "    ⚠ Slash: {} from epoch {}",
+                                        slash.rate, slash.epoch
+                                    )
+                                    .unwrap();
+                                    let raw_delta: u64 = delta.into();
+                                    let current_slashed = token::Amount::from(
+                                        slash.rate * raw_delta,
+                                    );
+                                    slashed += current_slashed;
+                                    delta -= current_slashed;
+                                }
+                            }
+                            if slashed != 0.into() {
+                                writeln!(w, "    ⚠ Slash total: {}", slashed)
+                                    .unwrap();
+                                writeln!(
+                                    w,
+                                    "    ⚠ After slashing: Δ {}",
+                                    delta
+                                )
+                                .unwrap();
+                            }
+                            total += delta;
                             let epoch_start: Epoch = (*epoch_start).into();
                             if epoch >= epoch_start {
-                                total_active += *delta;
+                                total_active += delta;
                             }
                         }
                     }
@@ -215,6 +251,7 @@ pub async fn query_bonds(args: args::QueryBonds) {
                         for ((epoch_start, epoch_end), delta) in
                             deltas.deltas.iter().sorted()
                         {
+                            let mut delta = *delta;
                             let withdraw_epoch = *epoch_end + 1_u64;
                             writeln!(
                                 w,
@@ -223,10 +260,39 @@ pub async fn query_bonds(args: args::QueryBonds) {
                                 withdraw_epoch, epoch_start, delta
                             )
                             .unwrap();
-                            total += *delta;
+                            let mut slashed = token::Amount::default();
+                            for slash in &slashes {
+                                if slash.epoch >= *epoch_start
+                                    && slash.epoch < withdraw_epoch
+                                {
+                                    writeln!(
+                                        w,
+                                        "    ⚠ Slash: {} from epoch {}",
+                                        slash.rate, slash.epoch
+                                    )
+                                    .unwrap();
+                                    let raw_delta: u64 = delta.into();
+                                    let current_slashed = token::Amount::from(
+                                        slash.rate * raw_delta,
+                                    );
+                                    slashed += current_slashed;
+                                    delta -= current_slashed;
+                                }
+                            }
+                            if slashed != 0.into() {
+                                writeln!(w, "    ⚠ Slash total: {}", slashed)
+                                    .unwrap();
+                                writeln!(
+                                    w,
+                                    "    ⚠ After slashing: Δ {}",
+                                    delta
+                                )
+                                .unwrap();
+                            }
+                            total += delta;
                             let epoch_end: Epoch = (*epoch_end).into();
                             if epoch > epoch_end {
-                                withdrawable += *delta;
+                                withdrawable += delta;
                             }
                         }
                     }
@@ -258,9 +324,17 @@ pub async fn query_bonds(args: args::QueryBonds) {
                         .await;
                 // Find validator's unbonded self-bonds
                 let unbond_key = pos::unbond_key(&bond_id);
-                let unbonds =
-                    query_storage_value::<pos::Unbonds>(client, unbond_key)
-                        .await;
+                let unbonds = query_storage_value::<pos::Unbonds>(
+                    client.clone(),
+                    unbond_key,
+                )
+                .await;
+                // Find validator's slashes, if any
+                let slashes_key = pos::validator_slashes_key(validator);
+                let slashes =
+                    query_storage_value::<pos::Slashes>(client, slashes_key)
+                        .await
+                        .unwrap_or_default();
 
                 let stdout = io::stdout();
                 let mut w = stdout.lock();
@@ -272,16 +346,44 @@ pub async fn query_bonds(args: args::QueryBonds) {
                     for deltas in bonds.iter() {
                         for (epoch_start, delta) in deltas.delta.iter().sorted()
                         {
+                            let mut delta = *delta;
                             writeln!(
                                 w,
                                 "  Active from epoch {}: Δ {}",
                                 epoch_start, delta
                             )
                             .unwrap();
-                            total += *delta;
+                            let mut slashed = token::Amount::default();
+                            for slash in &slashes {
+                                if slash.epoch >= *epoch_start {
+                                    writeln!(
+                                        w,
+                                        "    ⚠ Slash: {} from epoch {}",
+                                        slash.rate, slash.epoch
+                                    )
+                                    .unwrap();
+                                    let raw_delta: u64 = delta.into();
+                                    let current_slashed = token::Amount::from(
+                                        slash.rate * raw_delta,
+                                    );
+                                    slashed += current_slashed;
+                                    delta -= current_slashed;
+                                }
+                            }
+                            if slashed != 0.into() {
+                                writeln!(w, "    ⚠ Slash total: {}", slashed)
+                                    .unwrap();
+                                writeln!(
+                                    w,
+                                    "    ⚠ After slashing: Δ {}",
+                                    delta
+                                )
+                                .unwrap();
+                            }
+                            total += delta;
                             let epoch_start: Epoch = (*epoch_start).into();
                             if epoch >= epoch_start {
-                                total_active += *delta;
+                                total_active += delta;
                             }
                         }
                     }
@@ -299,6 +401,7 @@ pub async fn query_bonds(args: args::QueryBonds) {
                         for ((epoch_start, epoch_end), delta) in
                             deltas.deltas.iter().sorted()
                         {
+                            let mut delta = *delta;
                             let withdraw_epoch = *epoch_end + 1_u64;
                             writeln!(
                                 w,
@@ -307,10 +410,39 @@ pub async fn query_bonds(args: args::QueryBonds) {
                                 withdraw_epoch, epoch_start, delta
                             )
                             .unwrap();
-                            total += *delta;
+                            let mut slashed = token::Amount::default();
+                            for slash in &slashes {
+                                if slash.epoch >= *epoch_start
+                                    && slash.epoch < withdraw_epoch
+                                {
+                                    writeln!(
+                                        w,
+                                        "    ⚠ Slash: {} from epoch {}",
+                                        slash.rate, slash.epoch
+                                    )
+                                    .unwrap();
+                                    let raw_delta: u64 = delta.into();
+                                    let current_slashed = token::Amount::from(
+                                        slash.rate * raw_delta,
+                                    );
+                                    slashed += current_slashed;
+                                    delta -= current_slashed;
+                                }
+                            }
+                            if slashed != 0.into() {
+                                writeln!(w, "    ⚠ Slash total: {}", slashed)
+                                    .unwrap();
+                                writeln!(
+                                    w,
+                                    "    ⚠ After slashing: Δ {}",
+                                    delta
+                                )
+                                .unwrap();
+                            }
+                            total += delta;
                             let epoch_end: Epoch = (*epoch_end).into();
                             if epoch > epoch_end {
-                                withdrawable += *delta;
+                                withdrawable += delta;
                             }
                         }
                     }
@@ -341,13 +473,10 @@ pub async fn query_bonds(args: args::QueryBonds) {
                 // Find owner's unbonds to any validator
                 let unbonds_prefix = pos::unbonds_for_source_prefix(owner);
                 let unbonds = query_storage_prefix::<pos::Unbonds>(
-                    client,
+                    client.clone(),
                     unbonds_prefix,
                 )
                 .await;
-
-                let stdout = io::stdout();
-                let mut w = stdout.lock();
 
                 let mut total: token::Amount = 0.into();
                 let mut total_active: token::Amount = 0.into();
@@ -356,6 +485,19 @@ pub async fn query_bonds(args: args::QueryBonds) {
                     for (key, bonds) in bonds {
                         match pos::is_bond_key(&key) {
                             Some(pos::BondId { source, validator }) => {
+                                // Find validator's slashes, if any
+                                let slashes_key =
+                                    pos::validator_slashes_key(&validator);
+                                let slashes =
+                                    query_storage_value::<pos::Slashes>(
+                                        client.clone(),
+                                        slashes_key,
+                                    )
+                                    .await
+                                    .unwrap_or_default();
+
+                                let stdout = io::stdout();
+                                let mut w = stdout.lock();
                                 any_bonds = true;
                                 let bond_type: Cow<str> = if source == validator
                                 {
@@ -370,18 +512,54 @@ pub async fn query_bonds(args: args::QueryBonds) {
                                     for (epoch_start, delta) in
                                         deltas.delta.iter().sorted()
                                     {
+                                        let mut delta = *delta;
                                         writeln!(
                                             w,
                                             "  Active from epoch {}: Δ {}",
                                             epoch_start, delta
                                         )
                                         .unwrap();
-                                        current_total += *delta;
-                                        total += *delta;
+                                        let mut slashed =
+                                            token::Amount::default();
+                                        for slash in &slashes {
+                                            if slash.epoch >= *epoch_start {
+                                                writeln!(
+                                                    w,
+                                                    "    ⚠ Slash: {} from \
+                                                     epoch {}",
+                                                    slash.rate, slash.epoch
+                                                )
+                                                .unwrap();
+                                                let raw_delta: u64 =
+                                                    delta.into();
+                                                let current_slashed =
+                                                    token::Amount::from(
+                                                        slash.rate * raw_delta,
+                                                    );
+                                                slashed += current_slashed;
+                                                delta -= current_slashed;
+                                            }
+                                        }
+                                        if slashed != 0.into() {
+                                            writeln!(
+                                                w,
+                                                "    ⚠ Slash total: {}",
+                                                slashed
+                                            )
+                                            .unwrap();
+                                            writeln!(
+                                                w,
+                                                "    ⚠ After slashing: Δ {}",
+                                                delta
+                                            )
+                                            .unwrap();
+                                        }
+                                        current_total += delta;
+                                        total += delta;
                                         let epoch_start: Epoch =
                                             (*epoch_start).into();
                                         if epoch >= epoch_start {
-                                            total_active += *delta;
+                                            total_active += delta;
                                         }
                                     }
                                 }
@@ -397,8 +575,7 @@ pub async fn query_bonds(args: args::QueryBonds) {
                     }
                 }
                 if total_active != 0.into() && total_active != total {
-                    writeln!(w, "Active bonds total: {}", total_active)
-                        .unwrap();
+                    println!("Active bonds total: {}", total_active);
                 }
 
                 let mut total: token::Amount = 0.into();
@@ -407,6 +584,19 @@ pub async fn query_bonds(args: args::QueryBonds) {
                     for (key, unbonds) in unbonds {
                         match pos::is_unbond_key(&key) {
                             Some(pos::BondId { source, validator }) => {
+                                // Find validator's slashes, if any
+                                let slashes_key =
+                                    pos::validator_slashes_key(&validator);
+                                let slashes =
+                                    query_storage_value::<pos::Slashes>(
+                                        client.clone(),
+                                        slashes_key,
+                                    )
+                                    .await
+                                    .unwrap_or_default();
+
+                                let stdout = io::stdout();
+                                let mut w = stdout.lock();
                                 any_bonds = true;
                                 let bond_type: Cow<str> = if source == validator
                                 {
@@ -424,6 +614,7 @@ pub async fn query_bonds(args: args::QueryBonds) {
                                     for ((epoch_start, epoch_end), delta) in
                                         deltas.deltas.iter().sorted()
                                     {
+                                        let mut delta = *delta;
                                         let withdraw_epoch = *epoch_end + 1_u64;
                                         writeln!(
                                             w,
@@ -432,12 +623,49 @@ pub async fn query_bonds(args: args::QueryBonds) {
                                             withdraw_epoch, epoch_start, delta
                                         )
                                         .unwrap();
-                                        current_total += *delta;
-                                        total += *delta;
+                                        let mut slashed =
+                                            token::Amount::default();
+                                        for slash in &slashes {
+                                            if slash.epoch >= *epoch_start
+                                                && slash.epoch < withdraw_epoch
+                                            {
+                                                writeln!(
+                                                    w,
+                                                    "    ⚠ Slash: {} from \
+                                                     epoch {}",
+                                                    slash.rate, slash.epoch
+                                                )
+                                                .unwrap();
+                                                let raw_delta: u64 =
+                                                    delta.into();
+                                                let current_slashed =
+                                                    token::Amount::from(
+                                                        slash.rate * raw_delta,
+                                                    );
+                                                slashed += current_slashed;
+                                                delta -= current_slashed;
+                                            }
+                                        }
+                                        if slashed != 0.into() {
+                                            writeln!(
+                                                w,
+                                                "    ⚠ Slash total: {}",
+                                                slashed
+                                            )
+                                            .unwrap();
+                                            writeln!(
+                                                w,
+                                                "    ⚠ After slashing: Δ {}",
+                                                delta
+                                            )
+                                            .unwrap();
+                                        }
+                                        current_total += delta;
+                                        total += delta;
                                         let epoch_end: Epoch =
                                             (*epoch_end).into();
                                         if epoch > epoch_end {
-                                            total_withdrawable += *delta;
+                                            total_withdrawable += delta;
                                         }
                                     }
                                 }
@@ -453,17 +681,14 @@ pub async fn query_bonds(args: args::QueryBonds) {
                     }
                 }
                 if total_withdrawable != 0.into() {
-                    writeln!(w, "Withdrawable total: {}", total_withdrawable)
-                        .unwrap();
+                    println!("Withdrawable total: {}", total_withdrawable);
                 }
 
                 if !any_bonds {
-                    writeln!(
-                        w,
+                    println!(
                         "No self-bonds or delegations found for {}",
                         owner
-                    )
-                    .unwrap();
+                    );
                 }
             }
             (None, None) => {
@@ -477,13 +702,10 @@ pub async fn query_bonds(args: args::QueryBonds) {
                 // Find all the unbonds
                 let unbonds_prefix = pos::unbonds_prefix();
                 let unbonds = query_storage_prefix::<pos::Unbonds>(
-                    client,
+                    client.clone(),
                     unbonds_prefix,
                 )
                 .await;
-
-                let stdout = io::stdout();
-                let mut w = stdout.lock();
 
                 let mut total: token::Amount = 0.into();
                 let mut total_active: token::Amount = 0.into();
@@ -491,6 +713,19 @@ pub async fn query_bonds(args: args::QueryBonds) {
                     for (key, bonds) in bonds {
                         match pos::is_bond_key(&key) {
                             Some(pos::BondId { source, validator }) => {
+                                // Find validator's slashes, if any
+                                let slashes_key =
+                                    pos::validator_slashes_key(&validator);
+                                let slashes =
+                                    query_storage_value::<pos::Slashes>(
+                                        client.clone(),
+                                        slashes_key,
+                                    )
+                                    .await
+                                    .unwrap_or_default();
+
+                                let stdout = io::stdout();
+                                let mut w = stdout.lock();
                                 let bond_type = if source == validator {
                                     format!(
                                         "Self-bonds for {}",
@@ -509,18 +744,54 @@ pub async fn query_bonds(args: args::QueryBonds) {
                                     for (epoch_start, delta) in
                                         deltas.delta.iter().sorted()
                                     {
+                                        let mut delta = *delta;
                                         writeln!(
                                             w,
                                             "  Active from epoch {}: Δ {}",
                                             epoch_start, delta
                                         )
                                         .unwrap();
-                                        current_total += *delta;
-                                        total += *delta;
+                                        let mut slashed =
+                                            token::Amount::default();
+                                        for slash in &slashes {
+                                            if slash.epoch >= *epoch_start {
+                                                writeln!(
+                                                    w,
+                                                    "    ⚠ Slash: {} from \
+                                                     epoch {}",
+                                                    slash.rate, slash.epoch
+                                                )
+                                                .unwrap();
+                                                let raw_delta: u64 =
+                                                    delta.into();
+                                                let current_slashed =
+                                                    token::Amount::from(
+                                                        slash.rate * raw_delta,
+                                                    );
+                                                slashed += current_slashed;
+                                                delta -= current_slashed;
+                                            }
+                                        }
+                                        if slashed != 0.into() {
+                                            writeln!(
+                                                w,
+                                                "    ⚠ Slash total: {}",
+                                                slashed
+                                            )
+                                            .unwrap();
+                                            writeln!(
+                                                w,
+                                                "    ⚠ After slashing: Δ {}",
+                                                delta
+                                            )
+                                            .unwrap();
+                                        }
+                                        current_total += delta;
+                                        total += delta;
                                         let epoch_start: Epoch =
                                             (*epoch_start).into();
                                         if epoch >= epoch_start {
-                                            total_active += *delta;
+                                            total_active += delta;
                                         }
                                     }
                                 }
@@ -536,9 +807,9 @@ pub async fn query_bonds(args: args::QueryBonds) {
                     }
                 }
                 if total_active != 0.into() && total_active != total {
-                    writeln!(w, "Bond total active: {}", total_active).unwrap();
+                    println!("Bond total active: {}", total_active);
                 }
-                writeln!(w, "Bond total: {}", total).unwrap();
+                println!("Bond total: {}", total);
 
                 let mut total: token::Amount = 0.into();
                 let mut total_withdrawable: token::Amount = 0.into();
@@ -546,6 +817,19 @@ pub async fn query_bonds(args: args::QueryBonds) {
                     for (key, unbonds) in unbonds {
                         match pos::is_unbond_key(&key) {
                             Some(pos::BondId { source, validator }) => {
+                                // Find validator's slashes, if any
+                                let slashes_key =
+                                    pos::validator_slashes_key(&validator);
+                                let slashes =
+                                    query_storage_value::<pos::Slashes>(
+                                        client.clone(),
+                                        slashes_key,
+                                    )
+                                    .await
+                                    .unwrap_or_default();
+
+                                let stdout = io::stdout();
+                                let mut w = stdout.lock();
                                 let bond_type = if source == validator {
                                     format!(
                                         "Unbonded self-bonds for {}",
@@ -565,6 +849,7 @@ pub async fn query_bonds(args: args::QueryBonds) {
                                     for ((epoch_start, epoch_end), delta) in
                                         deltas.deltas.iter().sorted()
                                     {
+                                        let mut delta = *delta;
                                         let withdraw_epoch = *epoch_end + 1_u64;
                                         writeln!(
                                             w,
@@ -573,12 +858,49 @@ pub async fn query_bonds(args: args::QueryBonds) {
                                             withdraw_epoch, epoch_start, delta
                                         )
                                         .unwrap();
-                                        current_total += *delta;
-                                        total += *delta;
+                                        let mut slashed =
+                                            token::Amount::default();
+                                        for slash in &slashes {
+                                            if slash.epoch >= *epoch_start
+                                                && slash.epoch < withdraw_epoch
+                                            {
+                                                writeln!(
+                                                    w,
+                                                    "    ⚠ Slash: {} from \
+                                                     epoch {}",
+                                                    slash.rate, slash.epoch
+                                                )
+                                                .unwrap();
+                                                let raw_delta: u64 =
+                                                    delta.into();
+                                                let current_slashed =
+                                                    token::Amount::from(
+                                                        slash.rate * raw_delta,
+                                                    );
+                                                slashed += current_slashed;
+                                                delta -= current_slashed;
+                                            }
+                                        }
+                                        if slashed != 0.into() {
+                                            writeln!(
+                                                w,
+                                                "    ⚠ Slash total: {}",
+                                                slashed
+                                            )
+                                            .unwrap();
+                                            writeln!(
+                                                w,
+                                                "    ⚠ After slashing: Δ {}",
+                                                delta
+                                            )
+                                            .unwrap();
+                                        }
+                                        current_total += delta;
+                                        total += delta;
                                         let epoch_end: Epoch =
                                             (*epoch_end).into();
                                         if epoch > epoch_end {
-                                            total_withdrawable += *delta;
+                                            total_withdrawable += delta;
                                         }
                                     }
                                 }
@@ -594,10 +916,9 @@ pub async fn query_bonds(args: args::QueryBonds) {
                     }
                 }
                 if total_withdrawable != 0.into() {
-                    writeln!(w, "Withdrawable total: {}", total_withdrawable)
-                        .unwrap();
+                    println!("Withdrawable total: {}", total_withdrawable);
                 }
-                writeln!(w, "Unbonded total: {}", total).unwrap();
+                println!("Unbonded total: {}", total);
             }
         }
     }
@@ -706,6 +1027,79 @@ pub async fn query_voting_power(args: args::QueryVotingPower) {
             "Total voting power should be always set in the current epoch",
         );
         println!("Total voting power: {}", total_voting_power);
+    }
+}
+
+/// Query PoS slashes
+pub async fn query_slashes(args: args::QuerySlashes) {
+    let client = HttpClient::new(args.query.ledger_address).unwrap();
+    match args.validator {
+        Some(validator) => {
+            // Find slashes for the given validator
+            let slashes_key = pos::validator_slashes_key(&validator);
+            let slashes = query_storage_value::<pos::Slashes>(
+                client.clone(),
+                slashes_key,
+            )
+            .await;
+            match slashes {
+                Some(slashes) => {
+                    let stdout = io::stdout();
+                    let mut w = stdout.lock();
+                    for slash in slashes {
+                        writeln!(
+                            w,
+                            "Slash epoch {}, rate {}, type {}",
+                            slash.epoch, slash.rate, slash.r#type
+                        )
+                        .unwrap();
+                    }
+                }
+                None => {
+                    println!("No slashes found for {}", validator.encode())
+                }
+            }
+        }
+        None => {
+            // Iterate slashes for all validators
+            let slashes_prefix = pos::slashes_prefix();
+            let slashes = query_storage_prefix::<pos::Slashes>(
+                client.clone(),
+                slashes_prefix,
+            )
+            .await;
+
+            match slashes {
+                Some(slashes) => {
+                    let stdout = io::stdout();
+                    let mut w = stdout.lock();
+                    for (slashes_key, slashes) in slashes {
+                        if let Some(validator) =
+                            is_validator_slashes_key(&slashes_key)
+                        {
+                            for slash in slashes {
+                                writeln!(
+                                    w,
+                                    "Slash epoch {}, block height {}, rate \
+                                     {}, type {}, validator {}",
+                                    slash.epoch,
+                                    slash.block_height,
+                                    slash.rate,
+                                    slash.r#type,
+                                    validator,
+                                )
+                                .unwrap();
+                            }
+                        } else {
+                            eprintln!("Unexpected slashes key {}", slashes_key);
+                        }
+                    }
+                }
+                None => {
+                    println!("No slashes found")
+                }
+            }
+        }
     }
 }
 

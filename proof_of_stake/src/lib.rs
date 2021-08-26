@@ -27,7 +27,7 @@ use epoched::{
 use parameters::PosParams;
 use thiserror::Error;
 use types::{
-    ActiveValidator, Bonds, Epoch, GenesisValidator, Slash, SlashType,
+    ActiveValidator, Bonds, Epoch, GenesisValidator, Slash, SlashType, Slashes,
     TotalVotingPowers, Unbond, Unbonds, ValidatorConsensusKeys, ValidatorSet,
     ValidatorSetUpdate, ValidatorSets, ValidatorState, ValidatorStates,
     ValidatorTotalDeltas, ValidatorVotingPowers, VotingPower, VotingPowerDelta,
@@ -455,7 +455,7 @@ pub trait PoSBase {
         &self,
         key: &Self::Address,
     ) -> Option<ValidatorVotingPowers>;
-    fn read_validator_slashes(&self, key: &Self::Address) -> Vec<Slash>;
+    fn read_validator_slashes(&self, key: &Self::Address) -> Slashes;
     fn read_validator_set(&self) -> ValidatorSets<Self::Address>;
     fn read_total_voting_power(&self) -> TotalVotingPowers;
 
@@ -631,6 +631,7 @@ pub trait PoSBase {
         params: &PosParams,
         current_epoch: impl Into<Epoch>,
         evidence_epoch: impl Into<Epoch>,
+        evidence_block_height: impl Into<u64>,
         slash_type: SlashType,
         validator: &Self::Address,
     ) -> Result<(), SlashError<Self::Address>> {
@@ -646,6 +647,7 @@ pub trait PoSBase {
             epoch: evidence_epoch,
             r#type: slash_type,
             rate,
+            block_height: evidence_block_height.into(),
         };
 
         let mut total_deltas =

@@ -76,6 +76,12 @@ impl Add<u64> for BlockHeight {
     }
 }
 
+impl From<BlockHeight> for u64 {
+    fn from(height: BlockHeight) -> Self {
+        height.0
+    }
+}
+
 /// Hash of a block as fixed-size byte array
 #[derive(
     Clone,

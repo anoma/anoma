@@ -4,7 +4,7 @@ use anoma::ledger::pos::types::Slash;
 use anoma::ledger::pos::{
     anoma_proof_of_stake, bond_key, params_key, total_voting_power_key,
     unbond_key, validator_address_raw_hash_key, validator_consensus_key_key,
-    validator_set_key, validator_slash_key,
+    validator_set_key, validator_slashes_key,
     validator_staking_reward_address_key, validator_state_key,
     validator_total_deltas_key, validator_voting_power_key,
 };
@@ -76,7 +76,7 @@ impl anoma_proof_of_stake::PoSReadOnly for PoS {
     }
 
     fn read_validator_slashes(&self, key: &Self::Address) -> Vec<Slash> {
-        tx::read(validator_slash_key(key).to_string()).unwrap_or_default()
+        tx::read(validator_slashes_key(key).to_string()).unwrap_or_default()
     }
 
     fn read_bond(&self, key: &BondId) -> Option<Bonds> {

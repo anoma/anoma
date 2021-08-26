@@ -134,6 +134,7 @@ pub mod cmds {
         QueryBalance(QueryBalance),
         QueryBonds(QueryBonds),
         QueryVotingPower(QueryVotingPower),
+        QuerySlashes(QuerySlashes),
         // Gossip cmds
         Intent(Intent),
         CraftIntent(CraftIntent),
@@ -156,6 +157,7 @@ pub mod cmds {
                 .subcommand(QueryBalance::def().display_order(3))
                 .subcommand(QueryBonds::def().display_order(3))
                 .subcommand(QueryVotingPower::def().display_order(3))
+                .subcommand(QuerySlashes::def().display_order(3))
                 // Intents
                 .subcommand(Intent::def().display_order(4))
                 .subcommand(CraftIntent::def().display_order(4))
@@ -175,6 +177,8 @@ pub mod cmds {
             let query_bonds = SubCmd::parse(matches).map_fst(Self::QueryBonds);
             let query_voting_power =
                 SubCmd::parse(matches).map_fst(Self::QueryVotingPower);
+            let query_slashes =
+                SubCmd::parse(matches).map_fst(Self::QuerySlashes);
             let intent = SubCmd::parse(matches).map_fst(Self::Intent);
             let craft_intent =
                 SubCmd::parse(matches).map_fst(Self::CraftIntent);
@@ -190,6 +194,7 @@ pub mod cmds {
                 .or(query_balance)
                 .or(query_bonds)
                 .or(query_voting_power)
+                .or(query_slashes)
                 .or(intent)
                 .or(craft_intent)
                 .or(subscribe_topic)
@@ -609,6 +614,28 @@ pub mod cmds {
             App::new(Self::CMD)
                 .about("Query PoS voting power")
                 .add_args::<args::QueryVotingPower>()
+        }
+    }
+
+    #[derive(Clone, Debug)]
+    pub struct QuerySlashes(pub args::QuerySlashes);
+
+    impl SubCmd for QuerySlashes {
+        const CMD: &'static str = "slashes";
+
+        fn parse(matches: &ArgMatches) -> Option<(Self, &ArgMatches)>
+        where
+            Self: Sized,
+        {
+            matches.subcommand_matches(Self::CMD).map(|matches| {
+                (QuerySlashes(args::QuerySlashes::parse(matches)), matches)
+            })
+        }
+
+        fn def() -> App {
+            App::new(Self::CMD)
+                .about("Query PoS voting power")
+                .add_args::<args::QuerySlashes>()
         }
     }
 
@@ -1105,6 +1132,31 @@ pub mod args {
                     "The epoch at which to query (last committed, if not \
                      specified)",
                 ))
+        }
+    }
+
+    /// Query PoS slashes
+    #[derive(Clone, Debug)]
+    pub struct QuerySlashes {
+        /// Common query args
+        pub query: Query,
+        /// Address of a validator
+        pub validator: Option<Address>,
+    }
+
+    impl Args for QuerySlashes {
+        fn parse(matches: &ArgMatches) -> Self {
+            let query = Query::parse(matches);
+            let validator = VALIDATOR_OPT.parse(matches);
+            Self { query, validator }
+        }
+
+        fn def(app: App) -> App {
+            app.add_args::<Query>().arg(
+                VALIDATOR_OPT
+                    .def()
+                    .about("The validator's address whose slashes to query"),
+            )
         }
     }
 

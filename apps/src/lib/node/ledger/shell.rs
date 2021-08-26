@@ -360,10 +360,13 @@ impl Shell {
             let pos_params = self.storage.read_pos_params();
             let current_epoch = self.storage.block.epoch;
             for evidence in byzantine_validators {
-                let height = match u64::try_from(evidence.height) {
+                let evidence_height = match u64::try_from(evidence.height) {
                     Ok(height) => height,
                     Err(err) => {
-                        tracing::error!("Unexpected block height {}", err);
+                        tracing::error!(
+                            "Unexpected evidence block height {}",
+                            err
+                        );
                         continue;
                     }
                 };
@@ -371,13 +374,13 @@ impl Shell {
                     .storage
                     .block
                     .pred_epochs
-                    .get_epoch(BlockHeight(height))
+                    .get_epoch(BlockHeight(evidence_height))
                 {
                     Some(epoch) => epoch,
                     None => {
                         tracing::error!(
-                            "Couldn't find epoch for block height {}",
-                            height
+                            "Couldn't find epoch for evidence block height {}",
+                            evidence_height
                         );
                         continue;
                     }
@@ -443,15 +446,17 @@ impl Shell {
                     }
                 };
                 tracing::info!(
-                    "Slashing {} for {} in epoch {}",
+                    "Slashing {} for {} in epoch {}, block height {}",
                     evidence_epoch,
                     slash_type,
-                    validator
+                    validator,
+                    evidence_height
                 );
                 if let Err(err) = self.storage.slash(
                     &pos_params,
                     current_epoch,
                     evidence_epoch,
+                    evidence_height,
                     slash_type,
                     &validator,
                 ) {
