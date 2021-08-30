@@ -13,6 +13,7 @@ crate-type = ["cdylib"]
 # Newly added wasms should also be added into the Makefile `$(wasms)` list.
 [features]
 tx_memory_limit = []
+tx_mint_tokens = []
 tx_no_op = []
 tx_read_storage_key = []
 vp_always_false = []
