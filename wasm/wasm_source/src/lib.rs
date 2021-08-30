@@ -146,38 +146,36 @@ pub mod tx_withdraw {
 
         // TODO temporary for logging:
         let bond_id = BondId {
-            source: withdraw.validator.clone(),
+            source: withdraw
+                .source
+                .as_ref()
+                .unwrap_or(&withdraw.validator)
+                .clone(),
             validator: withdraw.validator.clone(),
         };
         let unbond_pre = PoS.read_unbond(&bond_id);
 
         let epoch = get_block_epoch();
-        match withdraw.source {
-            Some(_source) => {
-                todo!("withdraw from delegation")
+        match PoS.withdraw_tokens(
+            withdraw.source.as_ref(),
+            &withdraw.validator,
+            epoch,
+        ) {
+            Ok(slashed) => {
+                log_string(format!("Withdrawal slashed for {}", slashed));
             }
-            None => {
-                match PoS.validator_withdraw_unbonds(&withdraw.validator, epoch)
-                {
-                    Ok(slashed) => {
-                        log_string(format!(
-                            "Withdrawal slashed for {}",
-                            slashed
-                        ));
-                    }
-                    Err(err) => {
-                        log_string(format!("Withdrawal failed with: {}", err));
-                        panic!()
-                    }
-                }
-                // TODO temporary for logging:
-                let unbond_post = PoS.read_unbond(&bond_id);
-                log_string(format!(
-                    "unbond pre {:#?}, post {:#?}",
-                    unbond_pre, unbond_post
-                ));
+            Err(err) => {
+                log_string(format!("Withdrawal failed with: {}", err));
+                panic!()
             }
         }
+
+        // TODO temporary for logging:
+        let unbond_post = PoS.read_unbond(&bond_id);
+        log_string(format!(
+            "unbond pre {:#?}, post {:#?}",
+            unbond_pre, unbond_post
+        ));
     }
 }
 

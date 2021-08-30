@@ -356,18 +356,21 @@ pub trait PoS: PoSReadOnly {
         Ok(())
     }
 
-    /// Withdraw tokens from validator's unbonds of self-bonds back into its
-    /// account address. On success, returns slashed amount (may be 0).
-    fn validator_withdraw_unbonds(
+    /// Withdraw unbonded tokens from a self-bond to a validator when `source`
+    /// is `None` or equal to the `validator` address, or withdraw unbonded
+    /// tokens delegated to the `validator` to the `source`.
+    fn withdraw_tokens(
         &mut self,
-        address: &Self::Address,
+        source: Option<&Self::Address>,
+        validator: &Self::Address,
         current_epoch: impl Into<Epoch>,
     ) -> Result<Self::TokenAmount, WithdrawError<Self::Address>> {
         let current_epoch = current_epoch.into();
         let params = self.read_pos_params();
+        let source = source.unwrap_or(validator);
         let bond_id = BondId {
-            source: address.clone(),
-            validator: address.clone(),
+            source: source.clone(),
+            validator: validator.clone(),
         };
 
         let unbond = self.read_unbond(&bond_id);
@@ -400,12 +403,12 @@ pub trait PoS: PoSReadOnly {
             }
         }
 
-        // Transfer the tokens from PoS to the validator
+        // Transfer the tokens from PoS back to the source
         self.transfer(
             &Self::staking_token_address(),
             withdrawn,
             &Self::POS_ADDRESS,
-            address,
+            source,
         );
 
         Ok(slashed)
