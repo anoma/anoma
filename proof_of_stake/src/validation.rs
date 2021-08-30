@@ -711,9 +711,9 @@ where
                         }
                     }
                     // Check slashes
-                    for (epoch_start, delta) in slashed_deltas.iter_mut() {
+                    for (start_epoch, delta) in slashed_deltas.iter_mut() {
                         for slash in &slashes {
-                            if slash.epoch >= *epoch_start {
+                            if slash.epoch >= *start_epoch {
                                 let raw_delta: i128 = (*delta).into();
                                 let current_slashed =
                                     TokenChange::from(slash.rate * raw_delta);
@@ -780,6 +780,7 @@ where
                 }
                 // Bond may be deleted when all the tokens are unbonded
                 (Some(pre), None) => {
+                    let mut total_delta = TokenChange::default();
                     for index in 0..pipeline_offset + 1 {
                         let index = index as usize;
                         let epoch = pre.last_update() + index;
@@ -797,10 +798,11 @@ where
                                     }
                                 }
                                 let delta = TokenChange::from(delta);
-                                bond_delta.insert(id.validator.clone(), -delta);
+                                total_delta -= delta
                             }
                         }
                     }
+                    bond_delta.insert(id.validator, total_delta);
                 }
                 (None, None) => continue,
             },
@@ -826,20 +828,20 @@ where
                         pre_offset + unbonding_offset + 1,
                     ) {
                         if let Some(unbond) = pre.get_delta_at_epoch(epoch) {
-                            for ((epoch_start, epoch_end), delta) in
+                            for ((start_epoch, end_epoch), delta) in
                                 unbond.deltas.iter()
                             {
                                 let delta = TokenChange::from(*delta);
                                 slashed_deltas
-                                    .insert((*epoch_start, *epoch_end), -delta);
+                                    .insert((*start_epoch, *end_epoch), -delta);
                             }
                         }
                         if let Some(unbond) = post.get_delta_at_epoch(epoch) {
-                            for ((epoch_start, epoch_end), delta) in
+                            for ((start_epoch, end_epoch), delta) in
                                 unbond.deltas.iter()
                             {
                                 let delta = TokenChange::from(*delta);
-                                let key = (*epoch_start, *epoch_end);
+                                let key = (*start_epoch, *end_epoch);
                                 match slashed_deltas.get_mut(&key) {
                                     Some(pre_delta) => {
                                         if *pre_delta + delta == 0_i128.into() {
@@ -856,12 +858,12 @@ where
                         }
                     }
                     // Check slashes
-                    for ((epoch_start, epoch_end), delta) in
+                    for ((start_epoch, end_epoch), delta) in
                         slashed_deltas.iter_mut()
                     {
                         for slash in &slashes {
-                            if slash.epoch >= *epoch_start
-                                && slash.epoch <= *epoch_end
+                            if slash.epoch >= *start_epoch
+                                && slash.epoch <= *end_epoch
                             {
                                 let raw_delta: i128 = (*delta).into();
                                 let current_slashed =
@@ -884,20 +886,20 @@ where
                     if post.last_update() != current_epoch {
                         errors.push(Error::InvalidLastUpdate)
                     }
-                    let mut delta_sum = TokenChange::default();
+                    let mut total_delta = TokenChange::default();
                     for epoch in Epoch::iter_range(
                         post.last_update(),
                         unbonding_offset + 1,
                     ) {
                         if let Some(unbond) = post.get_delta_at_epoch(epoch) {
-                            for ((epoch_start, epoch_end), delta) in
+                            for ((start_epoch, end_epoch), delta) in
                                 unbond.deltas.iter()
                             {
                                 let mut delta = *delta;
                                 // Check and apply slashes, if any
                                 for slash in &slashes {
-                                    if slash.epoch >= *epoch_start
-                                        && slash.epoch <= *epoch_end
+                                    if slash.epoch >= *start_epoch
+                                        && slash.epoch <= *end_epoch
                                     {
                                         let raw_delta: u64 = delta.into();
                                         let current_slashed = TokenAmount::from(
@@ -907,28 +909,28 @@ where
                                     }
                                 }
                                 let delta = TokenChange::from(delta);
-                                delta_sum += delta;
+                                total_delta += delta;
                             }
                         }
                     }
-                    unbond_delta.insert(id.validator, delta_sum);
+                    unbond_delta.insert(id.validator, total_delta);
                 }
                 // Unbond may be deleted when all the tokens are withdrawn
                 (Some(pre), None) => {
-                    let mut delta_sum = TokenChange::default();
+                    let mut total_delta = TokenChange::default();
                     for epoch in Epoch::iter_range(
                         pre.last_update(),
                         unbonding_offset + 1,
                     ) {
                         if let Some(unbond) = pre.get_delta_at_epoch(epoch) {
-                            for ((epoch_start, epoch_end), delta) in
+                            for ((start_epoch, end_epoch), delta) in
                                 unbond.deltas.iter()
                             {
                                 let mut delta = *delta;
                                 // Check and apply slashes, if any
                                 for slash in &slashes {
-                                    if slash.epoch >= *epoch_start
-                                        && slash.epoch <= *epoch_end
+                                    if slash.epoch >= *start_epoch
+                                        && slash.epoch <= *end_epoch
                                     {
                                         let raw_delta: u64 = delta.into();
                                         let current_slashed = TokenAmount::from(
@@ -938,11 +940,11 @@ where
                                     }
                                 }
                                 let delta = TokenChange::from(delta);
-                                delta_sum -= delta;
+                                total_delta -= delta;
                             }
                         }
                     }
-                    unbond_delta.insert(id.validator, delta_sum);
+                    unbond_delta.insert(id.validator, total_delta);
                 }
                 (None, None) => continue,
             },
