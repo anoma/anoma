@@ -1,17 +1,13 @@
 //! Proof of Stake system integration with functions for transactions
 
 use anoma::ledger::pos::types::Slash;
+pub use anoma::ledger::pos::*;
 use anoma::ledger::pos::{
     anoma_proof_of_stake, bond_key, params_key, total_voting_power_key,
     unbond_key, validator_address_raw_hash_key, validator_consensus_key_key,
     validator_set_key, validator_slashes_key,
     validator_staking_reward_address_key, validator_state_key,
     validator_total_deltas_key, validator_voting_power_key,
-};
-pub use anoma::ledger::pos::{
-    BondId, Bonds, PosParams, TotalVotingPowers, Unbonds,
-    ValidatorConsensusKeys, ValidatorSets, ValidatorStates,
-    ValidatorTotalDeltas, ValidatorVotingPowers,
 };
 use anoma::types::address::{self, Address, InternalAddress};
 use anoma::types::{key, token};

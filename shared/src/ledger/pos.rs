@@ -259,6 +259,14 @@ const UNBOND_STORAGE_KEY: &str = "unbond";
 const VALIDATOR_SET_STORAGE_KEY: &str = "validator_set";
 const TOTAL_VOTING_POWER_STORAGE_KEY: &str = "total_voting_power";
 
+/// Is the given key a PoS storage key?
+pub fn is_pos_key(key: &Key) -> bool {
+    match &key.segments.get(0) {
+        Some(DbKeySeg::AddressSeg(addr)) => addr == &ADDRESS,
+        _ => false,
+    }
+}
+
 /// Storage key for PoS parameters.
 pub fn params_key() -> Key {
     Key::from(ADDRESS.to_db_key())

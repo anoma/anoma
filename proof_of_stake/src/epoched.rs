@@ -580,8 +580,8 @@ mod tests {
     use proptest::state_machine::{AbstractStateMachine, StateMachineTest};
 
     use super::*;
-    use crate::parameters::BasisPoints;
     use crate::types::tests::arb_epoch;
+    use crate::types::BasisPoints;
 
     prop_state_machine! {
         #[test]
@@ -966,7 +966,7 @@ mod tests {
         }
 
         fn invariants((params, data): &Self::ConcreteState) {
-            let offset = Offset::value(&params);
+            let offset = Offset::value(params);
             assert!(data.data.len() <= (offset + 1) as usize);
         }
     }
@@ -1195,7 +1195,7 @@ mod tests {
         }
 
         fn invariants((params, data): &Self::ConcreteState) {
-            let offset = Offset::value(&params);
+            let offset = Offset::value(params);
             assert!(data.data.len() <= (offset + 1) as usize);
         }
     }
@@ -1207,6 +1207,8 @@ mod tests {
             1..10_000_u64,
             1..1_000_u64,
             1..1_000_u64,
+            1..10_000_u64,
+            1..10_000_u64,
         )
             .prop_flat_map(
                 |(
@@ -1215,6 +1217,8 @@ mod tests {
                     votes_per_token,
                     block_proposer_reward,
                     block_vote_reward,
+                    duplicate_vote_slash_rate,
+                    light_client_attack_slash_rate,
                 )| {
                     (pipeline_len + 1..pipeline_len + 10).prop_map(
                         move |unbonding_len| PosParams {
@@ -1224,6 +1228,12 @@ mod tests {
                             votes_per_token: BasisPoints::new(votes_per_token),
                             block_proposer_reward,
                             block_vote_reward,
+                            duplicate_vote_slash_rate: BasisPoints::new(
+                                duplicate_vote_slash_rate,
+                            ),
+                            light_client_attack_slash_rate: BasisPoints::new(
+                                light_client_attack_slash_rate,
+                            ),
                         },
                     )
                 },

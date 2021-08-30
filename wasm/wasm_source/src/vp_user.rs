@@ -12,6 +12,7 @@ use rust_decimal::prelude::*;
 enum KeyType<'a> {
     Token(&'a Address),
     InvalidIntentSet(&'a Address),
+    PoS,
     Unknown,
 }
 
@@ -21,6 +22,8 @@ impl<'a> From<&'a storage::Key> for KeyType<'a> {
             Self::Token(address)
         } else if let Some(address) = intent::is_invalid_intent_key(key) {
             Self::InvalidIntentSet(address)
+        } else if proof_of_stake::is_pos_key(key) {
+            Self::PoS
         } else {
             Self::Unknown
         }
@@ -59,7 +62,7 @@ fn validate_tx(
     // VP?
     let valid_intent = check_intent_transfers(&addr, &tx_data[..]);
 
-    log_string(format!("valid transfer {}", valid_intent));
+    log_string(format!("valid intent transfer {}", valid_intent));
 
     for key in keys_changed.iter() {
         let is_valid = match KeyType::from(key) {
@@ -104,6 +107,11 @@ fn validate_tx(
                     key, valid_sig, _owner, addr
                 ));
                 valid_sig
+            }
+            KeyType::PoS => {
+                // Allow the account to be used in PoS
+                log_string(format!("PoS key {}", key,));
+                true
             }
             KeyType::Unknown => {
                 log_string(format!(
