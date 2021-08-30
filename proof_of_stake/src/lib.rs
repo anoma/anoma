@@ -218,23 +218,38 @@ pub trait PoS: PoSReadOnly {
         self.read_validator_state(address)
     }
 
-    /// Self-bond tokens to a validator.
-    fn validator_self_bond(
+    /// Self-bond tokens to a validator when `source` is `None` or equal to
+    /// the `validator` address, or delegate tokens from the `source` to the
+    /// `validator`.
+    fn bond_tokens(
         &mut self,
-        address: &Self::Address,
+        source: Option<&Self::Address>,
+        validator: &Self::Address,
         amount: Self::TokenAmount,
         current_epoch: impl Into<Epoch>,
     ) -> Result<(), BondError<Self::Address>> {
         let current_epoch = current_epoch.into();
+        if let Some(source) = source {
+            if source != validator {
+                if let Some(_state) = self.is_validator(source) {
+                    return Err(BondError::SourceMustNotBeAValidator(
+                        source.clone(),
+                    ));
+                }
+            }
+        }
         let params = self.read_pos_params();
-        let validator_state = self.is_validator(address);
+        let validator_state = self.is_validator(validator);
+        let source = source.unwrap_or(validator);
         let bond_id = BondId {
-            source: address.clone(),
-            validator: address.clone(),
+            source: source.clone(),
+            validator: validator.clone(),
         };
         let bond = self.read_bond(&bond_id);
-        let validator_total_deltas = self.read_validator_total_deltas(address);
-        let validator_voting_power = self.read_validator_voting_power(address);
+        let validator_total_deltas =
+            self.read_validator_total_deltas(validator);
+        let validator_voting_power =
+            self.read_validator_voting_power(validator);
         let mut total_voting_power = self.read_total_voting_power();
         let mut validator_set = self.read_validator_set();
 
@@ -256,16 +271,16 @@ pub trait PoS: PoSReadOnly {
         )?;
 
         self.write_bond(&bond_id, bond);
-        self.write_validator_total_deltas(address, validator_total_deltas);
-        self.write_validator_voting_power(address, validator_voting_power);
+        self.write_validator_total_deltas(validator, validator_total_deltas);
+        self.write_validator_voting_power(validator, validator_voting_power);
         self.write_total_voting_power(total_voting_power);
         self.write_validator_set(validator_set);
 
-        // Transfer the bonded tokens from the validator to PoS
+        // Transfer the bonded tokens from the source to PoS
         self.transfer(
             &Self::staking_token_address(),
             amount,
-            address,
+            source,
             &Self::POS_ADDRESS,
         );
 
@@ -724,6 +739,11 @@ pub enum BecomeValidatorError<Address: Display + Debug> {
 pub enum BondError<Address: Display + Debug> {
     #[error("The given address {0} is not a validator address")]
     NotAValidator(Address),
+    #[error(
+        "The given source address {0} is a validator address. Validators may \
+         not delegate."
+    )]
+    SourceMustNotBeAValidator(Address),
     #[error("The given validator address {0} is inactive")]
     InactiveValidator(Address),
     #[error("Voting power overflow: {0}")]

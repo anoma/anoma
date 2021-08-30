@@ -19,7 +19,7 @@ pub mod tx_bond {
 
         // TODO temporary for logging:
         let bond_id = BondId {
-            source: bond.validator.clone(),
+            source: bond.source.as_ref().unwrap_or(&bond.validator).clone(),
             validator: bond.validator.clone(),
         };
         let bond_pre = PoS.read_bond(&bond_id);
@@ -28,41 +28,34 @@ pub mod tx_bond {
         let vp_pre = PoS.read_validator_voting_power(&bond.validator);
 
         let epoch = get_block_epoch();
-        match bond.source {
-            Some(_source) => {
-                todo!("delegation")
-            }
-            None => {
-                if let Err(err) =
-                    PoS.validator_self_bond(&bond.validator, bond.amount, epoch)
-                {
-                    log_string(format!("Self-bond failed with: {}", err));
-                    panic!()
-                }
-                // TODO temporary for logging:
-                let bond_post = PoS.read_bond(&bond_id);
-                let validator_set_post = PoS.read_validator_set();
-                let total_deltas_post =
-                    PoS.read_validator_total_deltas(&bond.validator);
-                let vp_post = PoS.read_validator_voting_power(&bond.validator);
-                log_string(format!(
-                    "bond pre {:#?}, post {:#?}",
-                    bond_pre, bond_post
-                ));
-                log_string(format!(
-                    "validator set pre {:#?}, post {:#?}",
-                    validator_set_pre, validator_set_post
-                ));
-                log_string(format!(
-                    "validator total deltas pre {:#?}, post {:#?}",
-                    total_deltas_pre, total_deltas_post
-                ));
-                log_string(format!(
-                    "validator voting power pre {:#?}, post {:#?}",
-                    vp_pre, vp_post
-                ));
-            }
+        if let Err(err) = PoS.bond_tokens(
+            bond.source.as_ref(),
+            &bond.validator,
+            bond.amount,
+            epoch,
+        ) {
+            log_string(format!("Bond failed with: {}", err));
+            panic!()
         }
+        // TODO temporary for logging:
+        let bond_post = PoS.read_bond(&bond_id);
+        let validator_set_post = PoS.read_validator_set();
+        let total_deltas_post =
+            PoS.read_validator_total_deltas(&bond.validator);
+        let vp_post = PoS.read_validator_voting_power(&bond.validator);
+        log_string(format!("bond pre {:#?}, post {:#?}", bond_pre, bond_post));
+        log_string(format!(
+            "validator set pre {:#?}, post {:#?}",
+            validator_set_pre, validator_set_post
+        ));
+        log_string(format!(
+            "validator total deltas pre {:#?}, post {:#?}",
+            total_deltas_pre, total_deltas_post
+        ));
+        log_string(format!(
+            "validator voting power pre {:#?}, post {:#?}",
+            vp_pre, vp_post
+        ));
     }
 }
 
