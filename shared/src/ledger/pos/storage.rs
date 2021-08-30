@@ -1,248 +1,20 @@
-//! Proof-of-Stake integration as a native validity predicate
+//! Proof-of-Stake storage keys and storage integration via [`PosBase`] trait.
 
-use std::collections::HashSet;
-
-pub use anoma_proof_of_stake;
-pub use anoma_proof_of_stake::parameters::PosParams;
-pub use anoma_proof_of_stake::types::{
-    self, Slash, Slashes, TotalVotingPowers, ValidatorStates,
-    ValidatorVotingPowers,
+use anoma_proof_of_stake::parameters::PosParams;
+use anoma_proof_of_stake::types::{
+    TotalVotingPowers, ValidatorStates, ValidatorVotingPowers,
 };
-use anoma_proof_of_stake::validation::validate;
-use anoma_proof_of_stake::{validation, PoSBase, PoSReadOnly};
-use borsh::BorshDeserialize;
-use itertools::Itertools;
-use thiserror::Error;
+use anoma_proof_of_stake::{types, PosBase};
 
-use super::storage::types::{decode, encode};
-use crate::ledger::native_vp::{self, Ctx, NativeVp};
+use super::{
+    BondId, Bonds, ValidatorConsensusKeys, ValidatorSets, ValidatorTotalDeltas,
+    ADDRESS,
+};
+use crate::ledger::storage::types::{decode, encode};
 use crate::ledger::storage::{self, Storage, StorageHasher};
-use crate::types::address::{self, Address, InternalAddress};
-use crate::types::storage::{DbKeySeg, Epoch, Key, KeySeg};
+use crate::types::address::{Address, InternalAddress};
+use crate::types::storage::{DbKeySeg, Key, KeySeg};
 use crate::types::{key, token};
-
-#[allow(missing_docs)]
-#[derive(Error, Debug)]
-pub enum Error {
-    #[error("Native VP error: {0}")]
-    NativeVpError(native_vp::Error),
-}
-
-/// PoS functions result
-pub type Result<T> = std::result::Result<T, Error>;
-
-/// Address of the PoS account implemented as a native VP
-const ADDRESS: Address = Address::Internal(InternalAddress::PoS);
-
-/// Address of the staking token (XAN)
-pub fn staking_token_address() -> Address {
-    address::xan()
-}
-
-/// Proof-of-Stake VP
-pub struct PoS<'a, DB, H>
-where
-    DB: storage::DB + for<'iter> storage::DBIter<'iter>,
-    H: StorageHasher,
-{
-    /// Context to interact with the host structures.
-    pub ctx: Ctx<'a, DB, H>,
-}
-
-/// Initialize storage in the genesis block.
-pub fn init_genesis_storage<'a, DB, H>(
-    storage: &mut Storage<DB, H>,
-    params: &'a PosParams,
-    validators: impl Iterator<Item = &'a GenesisValidator> + Clone + 'a,
-    current_epoch: Epoch,
-) where
-    DB: storage::DB + for<'iter> storage::DBIter<'iter>,
-    H: StorageHasher,
-{
-    storage
-        .init_genesis(params, validators, current_epoch)
-        .expect("Initialize PoS genesis storage")
-}
-
-/// Alias for a PoS type with the same name with concrete type parameters
-pub type ValidatorConsensusKeys =
-    anoma_proof_of_stake::types::ValidatorConsensusKeys<
-        key::ed25519::PublicKey,
-    >;
-
-/// Alias for a PoS type with the same name with concrete type parameters
-pub type ValidatorTotalDeltas =
-    anoma_proof_of_stake::types::ValidatorTotalDeltas<token::Change>;
-
-/// Alias for a PoS type with the same name with concrete type parameters
-pub type Bonds = anoma_proof_of_stake::types::Bonds<token::Amount>;
-
-/// Alias for a PoS type with the same name with concrete type parameters
-pub type Unbonds = anoma_proof_of_stake::types::Unbonds<token::Amount>;
-
-/// Alias for a PoS type with the same name with concrete type parameters
-pub type ValidatorSets = anoma_proof_of_stake::types::ValidatorSets<Address>;
-
-/// Alias for a PoS type with the same name with concrete type parameters
-pub type BondId = anoma_proof_of_stake::types::BondId<Address>;
-
-/// Alias for a PoS type with the same name with concrete type parameters
-pub type GenesisValidator = anoma_proof_of_stake::types::GenesisValidator<
-    Address,
-    token::Amount,
-    key::ed25519::PublicKey,
->;
-
-impl<'a, DB, H> NativeVp for PoS<'a, DB, H>
-where
-    DB: 'static + storage::DB + for<'iter> storage::DBIter<'iter>,
-    H: 'static + StorageHasher,
-{
-    type Error = Error;
-
-    const ADDR: InternalAddress = InternalAddress::PoS;
-
-    fn validate_tx(
-        &self,
-        _tx_data: &[u8],
-        keys_changed: &HashSet<Key>,
-        _verifiers: &HashSet<Address>,
-    ) -> Result<bool> {
-        use validation::Data;
-        use validation::DataUpdate::{self, *};
-        use validation::ValidatorUpdate::*;
-
-        let mut changes: Vec<DataUpdate<_, _, _>> = vec![];
-        let current_epoch = self.ctx.get_block_epoch()?;
-        for key in keys_changed {
-            if is_params_key(key) {
-                // TODO parameters changes are not yet implemented
-                return Ok(false);
-            } else if is_validator_set_key(key) {
-                let pre = self.ctx.read_pre(key)?.and_then(|bytes| {
-                    ValidatorSets::try_from_slice(&bytes[..]).ok()
-                });
-                let post = self.ctx.read_post(key)?.and_then(|bytes| {
-                    ValidatorSets::try_from_slice(&bytes[..]).ok()
-                });
-                changes.push(ValidatorSet(Data { pre, post }));
-            } else if let Some(validator) =
-                is_validator_staking_reward_address_key(key)
-            {
-                let pre = self
-                    .ctx
-                    .read_pre(key)?
-                    .and_then(|bytes| Address::try_from_slice(&bytes[..]).ok());
-                let post = self
-                    .ctx
-                    .read_post(key)?
-                    .and_then(|bytes| Address::try_from_slice(&bytes[..]).ok());
-                changes.push(Validator {
-                    address: validator.clone(),
-                    update: StakingRewardAddress(Data { pre, post }),
-                });
-            } else if let Some(validator) = is_validator_total_deltas_key(key) {
-                let pre = self.ctx.read_pre(key)?.and_then(|bytes| {
-                    ValidatorTotalDeltas::try_from_slice(&bytes[..]).ok()
-                });
-                let post = self.ctx.read_post(key)?.and_then(|bytes| {
-                    ValidatorTotalDeltas::try_from_slice(&bytes[..]).ok()
-                });
-                changes.push(Validator {
-                    address: validator.clone(),
-                    update: TotalDeltas(Data { pre, post }),
-                });
-            } else if let Some(validator) = is_validator_voting_power_key(key) {
-                let pre = self.ctx.read_pre(key)?.and_then(|bytes| {
-                    ValidatorVotingPowers::try_from_slice(&bytes[..]).ok()
-                });
-                let post = self.ctx.read_post(key)?.and_then(|bytes| {
-                    ValidatorVotingPowers::try_from_slice(&bytes[..]).ok()
-                });
-                changes.push(Validator {
-                    address: validator.clone(),
-                    update: VotingPowerUpdate(Data { pre, post }),
-                });
-            } else if let Some(owner) =
-                token::is_balance_key(&staking_token_address(), key)
-            {
-                if owner != &Address::Internal(Self::ADDR) {
-                    continue;
-                }
-                let pre = self.ctx.read_pre(key)?.and_then(|bytes| {
-                    token::Amount::try_from_slice(&bytes[..]).ok()
-                });
-                let post = self.ctx.read_post(key)?.and_then(|bytes| {
-                    token::Amount::try_from_slice(&bytes[..]).ok()
-                });
-                changes.push(Balance(Data { pre, post }));
-            } else if let Some(bond_id) = is_bond_key(key) {
-                let pre = self
-                    .ctx
-                    .read_pre(key)?
-                    .and_then(|bytes| Bonds::try_from_slice(&bytes[..]).ok());
-                let post = self
-                    .ctx
-                    .read_post(key)?
-                    .and_then(|bytes| Bonds::try_from_slice(&bytes[..]).ok());
-                // For bonds, we need to look-up slashes
-                let slashes = self
-                    .ctx
-                    .read_pre(&validator_slashes_key(&bond_id.validator))?
-                    .and_then(|bytes| Slashes::try_from_slice(&bytes[..]).ok())
-                    .unwrap_or_default();
-                changes.push(Bond {
-                    id: bond_id.clone(),
-                    data: Data { pre, post },
-                    slashes,
-                });
-            } else if let Some(unbond_id) = is_unbond_key(key) {
-                let pre = self
-                    .ctx
-                    .read_pre(key)?
-                    .and_then(|bytes| Unbonds::try_from_slice(&bytes[..]).ok());
-                let post = self
-                    .ctx
-                    .read_post(key)?
-                    .and_then(|bytes| Unbonds::try_from_slice(&bytes[..]).ok());
-                // For unbonds, we need to look-up slashes
-                let slashes = self
-                    .ctx
-                    .read_pre(&validator_slashes_key(&unbond_id.validator))?
-                    .and_then(|bytes| Slashes::try_from_slice(&bytes[..]).ok())
-                    .unwrap_or_default();
-                changes.push(Unbond {
-                    id: unbond_id.clone(),
-                    data: Data { pre, post },
-                    slashes,
-                });
-            } else if is_total_voting_power_key(key) {
-                let pre = self.ctx.read_pre(key)?.and_then(|bytes| {
-                    TotalVotingPowers::try_from_slice(&bytes[..]).ok()
-                });
-                let post = self.ctx.read_post(key)?.and_then(|bytes| {
-                    TotalVotingPowers::try_from_slice(&bytes[..]).ok()
-                });
-                changes.push(TotalVotingPower(Data { pre, post }));
-            } else {
-                tracing::info!("PoS unrecognized key change {} rejected", key);
-                return Ok(false);
-            }
-        }
-
-        let params = self.read_pos_params();
-        let errors = validate(&params, changes, current_epoch);
-        Ok(if errors.is_empty() {
-            true
-        } else {
-            tracing::info!(
-                "PoS validation errors:\n - {}",
-                errors.iter().format("\n - ")
-            );
-            false
-        })
-    }
-}
 
 const PARAMS_STORAGE_KEY: &str = "params";
 const VALIDATOR_STORAGE_PREFIX: &str = "validator";
@@ -547,108 +319,7 @@ pub fn is_total_voting_power_key(key: &Key) -> bool {
     }
 }
 
-impl<D, H> PoSReadOnly for PoS<'_, D, H>
-where
-    D: 'static + storage::DB + for<'iter> storage::DBIter<'iter>,
-    H: 'static + StorageHasher,
-{
-    type Address = Address;
-    type PublicKey = key::ed25519::PublicKey;
-    type TokenAmount = token::Amount;
-    type TokenChange = token::Change;
-
-    const POS_ADDRESS: Self::Address = ADDRESS;
-
-    fn staking_token_address() -> Self::Address {
-        staking_token_address()
-    }
-
-    fn read_pos_params(&self) -> PosParams {
-        let value = self.ctx.read_pre(&params_key()).unwrap().unwrap();
-        decode(value).unwrap()
-    }
-
-    fn read_validator_staking_reward_address(
-        &self,
-        key: &Self::Address,
-    ) -> Option<Self::Address> {
-        let value = self
-            .ctx
-            .read_pre(&validator_staking_reward_address_key(key))
-            .unwrap();
-        value.map(|value| decode(value).unwrap())
-    }
-
-    fn read_validator_consensus_key(
-        &self,
-        key: &Self::Address,
-    ) -> Option<ValidatorConsensusKeys> {
-        let value = self
-            .ctx
-            .read_pre(&validator_consensus_key_key(key))
-            .unwrap();
-        value.map(|value| decode(value).unwrap())
-    }
-
-    fn read_validator_state(
-        &self,
-        key: &Self::Address,
-    ) -> Option<ValidatorStates> {
-        let value = self.ctx.read_pre(&validator_state_key(key)).unwrap();
-        value.map(|value| decode(value).unwrap())
-    }
-
-    fn read_validator_total_deltas(
-        &self,
-        key: &Self::Address,
-    ) -> Option<ValidatorTotalDeltas> {
-        let value =
-            self.ctx.read_pre(&validator_total_deltas_key(key)).unwrap();
-        value.map(|value| decode(value).unwrap())
-    }
-
-    fn read_validator_voting_power(
-        &self,
-        key: &Self::Address,
-    ) -> Option<ValidatorVotingPowers> {
-        let value =
-            self.ctx.read_pre(&validator_voting_power_key(key)).unwrap();
-        value.map(|value| decode(value).unwrap())
-    }
-
-    fn read_validator_slashes(&self, key: &Self::Address) -> Vec<types::Slash> {
-        let value = self.ctx.read_pre(&validator_slashes_key(key)).unwrap();
-        value
-            .map(|value| decode(value).unwrap())
-            .unwrap_or_default()
-    }
-
-    fn read_bond(&self, key: &BondId) -> Option<Bonds> {
-        let value = self.ctx.read_pre(&bond_key(key)).unwrap();
-        value.map(|value| decode(value).unwrap())
-    }
-
-    fn read_unbond(&self, key: &BondId) -> Option<Unbonds> {
-        let value = self.ctx.read_pre(&unbond_key(key)).unwrap();
-        value.map(|value| decode(value).unwrap())
-    }
-
-    fn read_validator_set(&self) -> ValidatorSets {
-        let value = self.ctx.read_pre(&validator_set_key()).unwrap().unwrap();
-        decode(value).unwrap()
-    }
-
-    fn read_total_voting_power(&self) -> TotalVotingPowers {
-        let value = self
-            .ctx
-            .read_pre(&total_voting_power_key())
-            .unwrap()
-            .unwrap();
-        decode(value).unwrap()
-    }
-}
-
-impl<D, H> PoSBase for Storage<D, H>
+impl<D, H> PosBase for Storage<D, H>
 where
     D: storage::DB + for<'iter> storage::DBIter<'iter>,
     H: StorageHasher,
@@ -663,7 +334,7 @@ where
         Address::Internal(InternalAddress::PosSlashPool);
 
     fn staking_token_address() -> Self::Address {
-        staking_token_address()
+        super::staking_token_address()
     }
 
     fn read_pos_params(&self) -> PosParams {
@@ -881,25 +552,5 @@ where
                 "PoS system transfer error, the source has no balance"
             );
         }
-    }
-}
-
-impl From<Epoch> for anoma_proof_of_stake::types::Epoch {
-    fn from(epoch: Epoch) -> Self {
-        let epoch: u64 = epoch.into();
-        anoma_proof_of_stake::types::Epoch::from(epoch)
-    }
-}
-
-impl From<anoma_proof_of_stake::types::Epoch> for Epoch {
-    fn from(epoch: anoma_proof_of_stake::types::Epoch) -> Self {
-        let epoch: u64 = epoch.into();
-        Epoch(epoch)
-    }
-}
-
-impl From<native_vp::Error> for Error {
-    fn from(err: native_vp::Error) -> Self {
-        Self::NativeVpError(err)
     }
 }

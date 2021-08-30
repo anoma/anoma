@@ -12,7 +12,7 @@ use anoma::ledger::pos::{
 use anoma::types::address::{self, Address, InternalAddress};
 use anoma::types::{key, token};
 pub use anoma_proof_of_stake::{
-    epoched, parameters, types, PoS as PosWrite, PoSReadOnly as PosRead,
+    epoched, parameters, types, PosActions as PosWrite, PosReadOnly as PosRead,
 };
 
 use crate::imports::tx;
@@ -20,7 +20,7 @@ use crate::imports::tx;
 /// Proof of Stake system
 pub struct PoS;
 
-impl anoma_proof_of_stake::PoSReadOnly for PoS {
+impl anoma_proof_of_stake::PosReadOnly for PoS {
     type Address = Address;
     type PublicKey = key::ed25519::PublicKey;
     type TokenAmount = token::Amount;
@@ -92,7 +92,7 @@ impl anoma_proof_of_stake::PoSReadOnly for PoS {
     }
 }
 
-impl anoma_proof_of_stake::PoS for PoS {
+impl anoma_proof_of_stake::PosActions for PoS {
     fn write_pos_params(&mut self, params: &PosParams) {
         tx::write(params_key().to_string(), params)
     }

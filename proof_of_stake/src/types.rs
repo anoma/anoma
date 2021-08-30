@@ -1,3 +1,5 @@
+//! Proof of Stake data types
+
 use core::fmt::Debug;
 use std::collections::{BTreeSet, HashMap};
 use std::convert::TryFrom;

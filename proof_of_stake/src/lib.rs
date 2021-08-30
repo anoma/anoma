@@ -37,7 +37,7 @@ use crate::btree_set::BTreeSetShims;
 use crate::types::{Bond, BondId, WeightedValidator};
 
 /// Read-only part of the PoS system
-pub trait PoSReadOnly {
+pub trait PosReadOnly {
     type Address: Display
         + Debug
         + Clone
@@ -120,7 +120,7 @@ pub trait PoSReadOnly {
 
 /// PoS system trait to be implemented in integration that can read and write
 /// PoS data.
-pub trait PoS: PoSReadOnly {
+pub trait PosActions: PosReadOnly {
     fn write_pos_params(&mut self, params: &PosParams);
     fn write_validator_address_raw_hash(&mut self, address: &Self::Address);
     fn write_validator_staking_reward_address(
@@ -417,7 +417,7 @@ pub trait PoS: PoSReadOnly {
 
 /// PoS system base trait for system initialization on genesis block, updating
 /// the validator on a new epoch and applying slashes.
-pub trait PoSBase {
+pub trait PosBase {
     type Address: 'static
         + Display
         + Debug
@@ -687,7 +687,6 @@ pub trait PoSBase {
             self.read_validator_total_deltas(validator).ok_or_else(|| {
                 SlashError::ValidatorHasNoTotalDeltas(validator.clone())
             })?;
-        println!("total_deltas pre {:#?}", total_deltas);
         let mut voting_power =
             self.read_validator_voting_power(validator).ok_or_else(|| {
                 SlashError::ValidatorHasNoVotingPower(validator.clone())
@@ -709,8 +708,6 @@ pub trait PoSBase {
         let slashed_amount = u64::try_from(slashed_change)
             .map_err(|_err| SlashError::InvalidSlashChange(slashed_change))?;
         let slashed_amount = Self::TokenAmount::from(slashed_amount);
-        println!("total_deltas post {:#?}", total_deltas);
-        println!("slashed amount {}", slashed_amount);
 
         self.write_validator_total_deltas(validator, &total_deltas);
         self.write_validator_voting_power(validator, &voting_power);

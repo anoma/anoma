@@ -8,7 +8,7 @@ use anoma::ledger::parameters::Parameters;
 use anoma::ledger::pos::anoma_proof_of_stake::types::{
     ActiveValidator, ValidatorSetUpdate,
 };
-use anoma::ledger::pos::anoma_proof_of_stake::PoSBase;
+use anoma::ledger::pos::anoma_proof_of_stake::PosBase;
 use anoma::ledger::pos::PosParams;
 use anoma::ledger::storage::write_log::WriteLog;
 use anoma::ledger::{ibc, parameters, pos};
