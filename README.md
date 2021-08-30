@@ -74,6 +74,8 @@ export KARTOFFEL=a1qq5qqqqqxs6yvsekxuuyy3pjxsmrgd2rxuungdzpgsmyydjrxsenjdp5xaqn2
 
 # Proof of Stake native address
 export POS=a1qgqqw6qw7f
+# Proof of Stake native address for slashed tokens
+export POS_SLASH_POOL=a1qgqsmmgkt6
 ```
 
 ## Interacting with Anoma
@@ -82,11 +84,14 @@ export POS=a1qgqqw6qw7f
 # Submit a token transfer
 cargo run --bin anomac -- transfer --source $BERTHA --target $ALBERT --token $XAN --amount 10.1
 
+# Query token balances (various options are available, see the command's `--help`)
+cargo run --bin anomac -- balance --token $XAN
+
+# Query the current epoch
+cargo run --bin anomac -- epoch
+
 # Submit a transaction to update an account's validity predicate
 cargo run --bin anomac -- update --address $BERTHA --code-path wasm/vp_user.wasm
-
-# Submit a self-bond of tokens for a validator
-cargo run --bin anomac -- bond --validator $VALIDATOR --amount 3.3
 
 # run gossip node with intent gossip system and rpc server (use default config)
 cargo run --bin anoma -- gossip --rpc "127.0.0.1:39111"
@@ -114,12 +119,45 @@ cargo run --bin anomac -- subscribe-topic --node "http://127.0.0.1:39111" --topi
 cargo run --bin anomac -- intent --node "http://127.0.0.1:39111" --data-path intent_A --topic "asset_v1"
 cargo run --bin anomac -- intent --node "http://127.0.0.1:39111" --data-path intent_B --topic "asset_v1"
 cargo run --bin anomac -- intent --node "http://127.0.0.1:39111" --data-path intent_C --topic "asset_v1"
+```
 
+### Interacting with the PoS system
+
+The PoS system is using the `XAN` token.
+
+```shell
+# Submit a self-bond of tokens for a validator
+cargo run --bin anomac -- bond --validator $VALIDATOR --amount 3.3
+
+# Submit a delegation of tokens for a source address to the validator
+cargo run --bin anomac -- bond --source $BERTHA --validator $VALIDATOR --amount 3.3
+
+# Submit an unbonding of a self-bond of tokens from a validator
+cargo run --bin anomac -- unbond --validator $VALIDATOR --amount 3.3
+
+# Submit an unbonding of a delegation of tokens from a source address to the validator
+cargo run --bin anomac -- unbond --source $BERTHA --validator $VALIDATOR --amount 3.3
+
+# Submit a withdrawal of tokens of unbonded self-bond back to its validator validator
+cargo run --bin anomac -- withdraw --validator $VALIDATOR
+
+# Submit a withdrawal of unbonded delegation of tokens back to its source address
+cargo run --bin anomac -- withdraw --source $BERTHA --validator $VALIDATOR
+
+# Queries (various options are available, see the commands' `--help`)
+cargo run --bin anomac -- bonds
+cargo run --bin anomac -- slashes
+cargo run --bin anomac -- voting-power
+```
+
+## Development
+
+```shell
 # Format the code
 make fmt
 
 # Lint the code
-make clippy-check
+make clippy
 ```
 
 ## Logging
