@@ -670,7 +670,7 @@ mod tests {
                 assert_eq!(storage.block.pred_epochs.get_epoch(block_height), Some(epoch_before.next()));
             } else {
                 assert_eq!(storage.block.epoch, epoch_before);
-                assert_eq!(storage.current_epoch, epoch_before);
+                assert_eq!(storage.last_epoch, epoch_before);
                 assert_eq!(storage.block.pred_epochs.get_epoch(block_height), Some(epoch_before));
             }
 
