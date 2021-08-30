@@ -287,30 +287,35 @@ pub trait PoS: PoSReadOnly {
         Ok(())
     }
 
-    /// Unbond self-bonded tokens from a validator.
-    fn validator_unbond(
+    /// Unbond self-bonded tokens from a validator when `source` is `None` or
+    /// equal to the `validator` address, or unbond delegated tokens from
+    /// the `source` to the `validator`.
+    fn unbond_tokens(
         &mut self,
-        address: &Self::Address,
+        source: Option<&Self::Address>,
+        validator: &Self::Address,
         amount: Self::TokenAmount,
         current_epoch: impl Into<Epoch>,
     ) -> Result<(), UnbondError<Self::Address, Self::TokenAmount>> {
         let current_epoch = current_epoch.into();
         let params = self.read_pos_params();
+        let source = source.unwrap_or(validator);
         let bond_id = BondId {
-            source: address.clone(),
-            validator: address.clone(),
+            source: source.clone(),
+            validator: validator.clone(),
         };
         let mut bond =
             self.read_bond(&bond_id).ok_or(UnbondError::NoBondFound)?;
         let unbond = self.read_unbond(&bond_id);
-        let mut validator_total_deltas = self
-            .read_validator_total_deltas(address)
-            .ok_or_else(|| UnbondError::ValidatorHasNoBonds(address.clone()))?;
-        let mut validator_voting_power =
-            self.read_validator_voting_power(address).ok_or_else(|| {
-                UnbondError::ValidatorHasNoVotingPower(address.clone())
+        let mut validator_total_deltas =
+            self.read_validator_total_deltas(validator).ok_or_else(|| {
+                UnbondError::ValidatorHasNoBonds(validator.clone())
             })?;
-        let slashes = self.read_validator_slashes(address);
+        let mut validator_voting_power =
+            self.read_validator_voting_power(validator).ok_or_else(|| {
+                UnbondError::ValidatorHasNoVotingPower(validator.clone())
+            })?;
+        let slashes = self.read_validator_slashes(validator);
         let mut total_voting_power = self.read_total_voting_power();
         let mut validator_set = self.read_validator_set();
 
@@ -343,8 +348,8 @@ pub trait PoS: PoSReadOnly {
             }
         }
         self.write_unbond(&bond_id, unbond);
-        self.write_validator_total_deltas(address, validator_total_deltas);
-        self.write_validator_voting_power(address, validator_voting_power);
+        self.write_validator_total_deltas(validator, validator_total_deltas);
+        self.write_validator_voting_power(validator, validator_voting_power);
         self.write_total_voting_power(total_voting_power);
         self.write_validator_set(validator_set);
 

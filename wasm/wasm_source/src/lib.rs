@@ -37,6 +37,7 @@ pub mod tx_bond {
             log_string(format!("Bond failed with: {}", err));
             panic!()
         }
+
         // TODO temporary for logging:
         let bond_post = PoS.read_bond(&bond_id);
         let validator_set_post = PoS.read_validator_set();
@@ -75,7 +76,7 @@ pub mod tx_unbond {
 
         // TODO temporary for logging:
         let bond_id = BondId {
-            source: unbond.validator.clone(),
+            source: unbond.source.as_ref().unwrap_or(&unbond.validator).clone(),
             validator: unbond.validator.clone(),
         };
         let bond_pre = PoS.read_bond(&bond_id);
@@ -87,54 +88,45 @@ pub mod tx_unbond {
         let total_vp_pre = PoS.read_total_voting_power();
 
         let epoch = get_block_epoch();
-        match unbond.source {
-            Some(_source) => {
-                todo!("unbond from delegation")
-            }
-            None => {
-                if let Err(err) = PoS.validator_unbond(
-                    &unbond.validator,
-                    unbond.amount,
-                    epoch,
-                ) {
-                    log_string(format!("Unbonding failed with: {}", err));
-                    panic!()
-                }
-                // TODO temporary for logging:
-                let bond_post = PoS.read_bond(&bond_id);
-                let unbond_post = PoS.read_unbond(&bond_id);
-                let validator_set_post = PoS.read_validator_set();
-                let total_deltas_post =
-                    PoS.read_validator_total_deltas(&unbond.validator);
-                let vp_post =
-                    PoS.read_validator_voting_power(&unbond.validator);
-                let total_vp_post = PoS.read_total_voting_power();
-                log_string(format!(
-                    "bond pre {:#?}, post {:#?}",
-                    bond_pre, bond_post
-                ));
-                log_string(format!(
-                    "unbond pre {:#?}, post {:#?}",
-                    unbond_pre, unbond_post
-                ));
-                log_string(format!(
-                    "validator set pre {:#?}, post {:#?}",
-                    validator_set_pre, validator_set_post
-                ));
-                log_string(format!(
-                    "validator total deltas pre {:#?}, post {:#?}",
-                    total_deltas_pre, total_deltas_post
-                ));
-                log_string(format!(
-                    "validator voting power pre {:#?}, post {:#?}",
-                    vp_pre, vp_post
-                ));
-                log_string(format!(
-                    "total voting power pre {:#?}, post {:#?}",
-                    total_vp_pre, total_vp_post
-                ));
-            }
+        if let Err(err) = PoS.unbond_tokens(
+            unbond.source.as_ref(),
+            &unbond.validator,
+            unbond.amount,
+            epoch,
+        ) {
+            log_string(format!("Unbonding failed with: {}", err));
+            panic!()
         }
+
+        // TODO temporary for logging:
+        let bond_post = PoS.read_bond(&bond_id);
+        let unbond_post = PoS.read_unbond(&bond_id);
+        let validator_set_post = PoS.read_validator_set();
+        let total_deltas_post =
+            PoS.read_validator_total_deltas(&unbond.validator);
+        let vp_post = PoS.read_validator_voting_power(&unbond.validator);
+        let total_vp_post = PoS.read_total_voting_power();
+        log_string(format!("bond pre {:#?}, post {:#?}", bond_pre, bond_post));
+        log_string(format!(
+            "unbond pre {:#?}, post {:#?}",
+            unbond_pre, unbond_post
+        ));
+        log_string(format!(
+            "validator set pre {:#?}, post {:#?}",
+            validator_set_pre, validator_set_post
+        ));
+        log_string(format!(
+            "validator total deltas pre {:#?}, post {:#?}",
+            total_deltas_pre, total_deltas_post
+        ));
+        log_string(format!(
+            "validator voting power pre {:#?}, post {:#?}",
+            vp_pre, vp_post
+        ));
+        log_string(format!(
+            "total voting power pre {:#?}, post {:#?}",
+            total_vp_pre, total_vp_post
+        ));
     }
 }
 
