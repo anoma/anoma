@@ -472,7 +472,7 @@ where
             H::hash_key(&Key {
                 segments: vec![DbKeySeg::StringSeg("current_epoch".into())],
             }),
-            H::hash_value(&types::encode(&self.last_epoch)),
+            H::hash_value(&types::encode(&self.block.epoch)),
         )
     }
 }
@@ -670,7 +670,7 @@ mod tests {
                 assert_eq!(storage.block.pred_epochs.get_epoch(block_height), Some(epoch_before.next()));
             } else {
                 assert_eq!(storage.block.epoch, epoch_before);
-                assert_eq!(storage.last_epoch, epoch_before);
+                assert_eq!(storage.current_epoch, epoch_before);
                 assert_eq!(storage.block.pred_epochs.get_epoch(block_height), Some(epoch_before));
             }
 

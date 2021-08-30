@@ -220,19 +220,30 @@ fn execute_vps(
                     let accepted: Result<bool> = match internal_addr {
                         InternalAddress::PoS => {
                             let pos = PoS { ctx };
-                            pos.validate_tx(tx_data, keys, &verifiers_addr)
-                                .map_err(Error::PosNativeVpError)
+                            let result = pos
+                                .validate_tx(tx_data, keys, &verifiers_addr)
+                                .map_err(Error::PosNativeVpError);
+                            // Take the gas meter back out of the context
+                            gas_meter = pos.ctx.gas_meter.into_inner();
+                            result
                         }
                         InternalAddress::Ibc => {
                             let ibc = Ibc { ctx };
-                            ibc.validate_tx(tx_data, keys, &verifiers_addr)
-                                .map_err(Error::IbcNativeVpError)
+                            let result = ibc
+                                .validate_tx(tx_data, keys, &verifiers_addr)
+                                .map_err(Error::IbcNativeVpError);
+                            // Take the gas meter back out of the context
+                            gas_meter = ibc.ctx.gas_meter.into_inner();
+                            result
                         }
                         InternalAddress::Parameters => {
                             let parameters = ParametersVp { ctx };
-                            parameters
+                            let result = parameters
                                 .validate_tx(tx_data, keys, &verifiers_addr)
-                                .map_err(Error::ParametersNativeVpError)
+                                .map_err(Error::ParametersNativeVpError);
+                            // Take the gas meter back out of the context
+                            gas_meter = parameters.ctx.gas_meter.into_inner();
+                            result
                         }
                         InternalAddress::PosSlashPool => Err(
                             Error::AccessForbidden((*internal_addr).clone()),
@@ -246,6 +257,7 @@ fn execute_vps(
             // Returning error from here will short-circuit the VP parallel
             // execution. It's important that we only short-circuit gas
             // errors to get deterministic gas costs
+            result.gas_used.set(&gas_meter).map_err(Error::GasError)?;
             match accept {
                 Ok(accepted) => {
                     if !accepted {

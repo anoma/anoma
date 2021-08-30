@@ -326,6 +326,13 @@ impl Key {
             .expect("Creating a key for the capability index shouldn't fail")
     }
 
+    /// Returns a key of the reversed map for IBC capabilities
+    pub fn ibc_capability(index: u64) -> Self {
+        let path = format!("capabilities/{}", index);
+        Key::ibc_key(path)
+            .expect("Creating a key for a capability shouldn't fail")
+    }
+
     /// Returns a key from the given DB key path that has the height and
     /// the space type
     pub fn parse_db_key(db_key: &str) -> Result<Self> {

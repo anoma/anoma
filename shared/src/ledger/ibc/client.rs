@@ -52,7 +52,7 @@ where
         &self,
         client_id: &ClientId,
         tx_data: &[u8],
-    ) -> Result<bool> {
+    ) -> Result<()> {
         match self.get_client_state_change(client_id)? {
             StateChange::Created => self.validate_created_client(client_id),
             StateChange::Updated => {
@@ -88,7 +88,7 @@ where
             .map_err(|e| Error::InvalidStateChange(e.to_string()))
     }
 
-    fn validate_created_client(&self, client_id: &ClientId) -> Result<bool> {
+    fn validate_created_client(&self, client_id: &ClientId) -> Result<()> {
         let client_type = self.client_type(client_id).ok_or_else(|| {
             Error::InvalidClient(format!(
                 "The client type doesn't exist: ID {}",
@@ -110,15 +110,22 @@ where
                     client_id, height
                 ))
             })?;
-        Ok(client_type == client_state.client_type()
-            && client_type == consensus_state.client_type())
+        if client_type == client_state.client_type()
+            && client_type == consensus_state.client_type()
+        {
+            Ok(())
+        } else {
+            Err(Error::InvalidClient(
+                "The client type is mismatched".to_owned(),
+            ))
+        }
     }
 
     fn validate_updated_client(
         &self,
         client_id: &ClientId,
         tx_data: &[u8],
-    ) -> Result<bool> {
+    ) -> Result<()> {
         // check the type of data in tx_data
         match ClientUpdateData::try_from_slice(tx_data) {
             Ok(data) => {
@@ -137,7 +144,7 @@ where
         &self,
         client_id: &ClientId,
         data: ClientUpdateData,
-    ) -> Result<bool> {
+    ) -> Result<()> {
         let id = data.client_id()?;
         if id != *client_id {
             return Err(Error::InvalidClient(format!(
@@ -181,9 +188,19 @@ where
             },
         );
         match updated {
-            Ok((new_client_state, new_consensus_state)) => Ok(new_client_state
-                == client_state
-                && new_consensus_state == consensus_state),
+            Ok((new_client_state, new_consensus_state)) => {
+                if new_client_state == client_state
+                    && new_consensus_state == consensus_state
+                {
+                    Ok(())
+                } else {
+                    Err(Error::InvalidClient(
+                        "The updated client state or consensus state is \
+                         unexpected"
+                            .to_owned(),
+                    ))
+                }
+            }
             Err(e) => Err(Error::InvalidHeader(format!(
                 "The header is invalid: ID {}, {}",
                 client_id, e,
@@ -195,7 +212,7 @@ where
         &self,
         client_id: &ClientId,
         data: ClientUpgradeData,
-    ) -> Result<bool> {
+    ) -> Result<()> {
         let id = data.client_id()?;
         if id != *client_id {
             return Err(Error::InvalidClient(format!(
@@ -233,9 +250,19 @@ where
             client_proof,
             consensus_proof,
         ) {
-            Ok((new_client_state, new_consensus_state)) => Ok(new_client_state
-                == client_state
-                && new_consensus_state == consensus_state),
+            Ok((new_client_state, new_consensus_state)) => {
+                if new_client_state == client_state
+                    && new_consensus_state == consensus_state
+                {
+                    Ok(())
+                } else {
+                    Err(Error::InvalidClient(
+                        "The updated client state or consensus state is \
+                         unexpected"
+                            .to_owned(),
+                    ))
+                }
+            }
             Err(e) => Err(Error::ProofVerificationFailure(e.to_string())),
         }
     }

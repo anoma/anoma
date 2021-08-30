@@ -694,8 +694,8 @@ pub struct ChannelOpenTryData {
     counterparty_version: String,
     /// The height of the proof
     proof_height: (u64, u64),
-    /// The proof of the connection
-    proof_connection: Vec<u8>,
+    /// The proof of the channel
+    proof_channel: Vec<u8>,
     /// The proof of the client state
     proof_client: Vec<u8>,
     /// The proof of the consensus state
@@ -713,7 +713,7 @@ impl ChannelOpenTryData {
         version: String,
         counterparty_version: String,
         proof_height: Height,
-        proof_connection: CommitmentProofBytes,
+        proof_channel: CommitmentProofBytes,
         proof_client: CommitmentProofBytes,
         proof_consensus: CommitmentProofBytes,
     ) -> Self {
@@ -735,7 +735,7 @@ impl ChannelOpenTryData {
                 proof_height.revision_number,
                 proof_height.revision_height,
             ),
-            proof_connection: proof_connection.into(),
+            proof_channel: proof_channel.into(),
             proof_client: proof_client.into(),
             proof_consensus: proof_consensus.into(),
         }
@@ -785,9 +785,9 @@ impl ChannelOpenTryData {
         Height::new(self.proof_height.0, self.proof_height.1)
     }
 
-    /// Returns the proof for connection
-    pub fn proof_connection(&self) -> CommitmentProofBytes {
-        self.proof_connection.clone().into()
+    /// Returns the proof for the channel
+    pub fn proof_channel(&self) -> CommitmentProofBytes {
+        self.proof_channel.clone().into()
     }
 
     /// Returns the proof for client state
@@ -807,7 +807,7 @@ impl ChannelOpenTryData {
             ConsensusProof::new(self.proof_consensus(), height)
                 .map_err(Error::DecodingError)?;
         Proofs::new(
-            self.proof_connection(),
+            self.proof_channel(),
             Some(self.proof_client()),
             Some(consensus_proof),
             None,
@@ -830,8 +830,8 @@ pub struct ChannelOpenAckData {
     counterparty_version: String,
     /// The height of the proof
     proof_height: (u64, u64),
-    /// The proof of the connection
-    proof_connection: Vec<u8>,
+    /// The proof of the channel
+    proof_channel: Vec<u8>,
     /// The proof of the client state
     proof_client: Vec<u8>,
     /// The proof of the consensus state
@@ -847,7 +847,7 @@ impl ChannelOpenAckData {
         counterpart_channel_id: ChannelId,
         counterparty_version: String,
         proof_height: Height,
-        proof_connection: CommitmentProofBytes,
+        proof_channel: CommitmentProofBytes,
         proof_client: CommitmentProofBytes,
         proof_consensus: CommitmentProofBytes,
     ) -> Self {
@@ -863,7 +863,7 @@ impl ChannelOpenAckData {
                 proof_height.revision_number,
                 proof_height.revision_height,
             ),
-            proof_connection: proof_connection.into(),
+            proof_channel: proof_channel.into(),
             proof_client: proof_client.into(),
             proof_consensus: proof_consensus.into(),
         }
@@ -897,9 +897,9 @@ impl ChannelOpenAckData {
         Height::new(self.proof_height.0, self.proof_height.1)
     }
 
-    /// Returns the proof for connection
-    pub fn proof_connection(&self) -> CommitmentProofBytes {
-        self.proof_connection.clone().into()
+    /// Returns the proof for the channel
+    pub fn proof_channel(&self) -> CommitmentProofBytes {
+        self.proof_channel.clone().into()
     }
 
     /// Returns the proof for client state
@@ -919,7 +919,7 @@ impl ChannelOpenAckData {
             ConsensusProof::new(self.proof_consensus(), height)
                 .map_err(Error::DecodingError)?;
         Proofs::new(
-            self.proof_connection(),
+            self.proof_channel(),
             Some(self.proof_client()),
             Some(consensus_proof),
             None,
@@ -938,8 +938,8 @@ pub struct ChannelOpenConfirmData {
     channel_id: String,
     /// The height of the proof
     proof_height: (u64, u64),
-    /// The proof of the connection
-    proof_connection: Vec<u8>,
+    /// The proof of the channel
+    proof_channel: Vec<u8>,
     /// The proof of the client state
     proof_client: Vec<u8>,
     /// The proof of the consensus state
@@ -952,7 +952,7 @@ impl ChannelOpenConfirmData {
         port_id: PortId,
         channel_id: ChannelId,
         proof_height: Height,
-        proof_connection: CommitmentProofBytes,
+        proof_channel: CommitmentProofBytes,
         proof_client: CommitmentProofBytes,
         proof_consensus: CommitmentProofBytes,
     ) -> Self {
@@ -965,7 +965,7 @@ impl ChannelOpenConfirmData {
                 proof_height.revision_number,
                 proof_height.revision_height,
             ),
-            proof_connection: proof_connection.into(),
+            proof_channel: proof_channel.into(),
             proof_client: proof_client.into(),
             proof_consensus: proof_consensus.into(),
         }
@@ -989,8 +989,8 @@ impl ChannelOpenConfirmData {
     }
 
     /// Returns the proof for connection
-    pub fn proof_connection(&self) -> CommitmentProofBytes {
-        self.proof_connection.clone().into()
+    pub fn proof_channel(&self) -> CommitmentProofBytes {
+        self.proof_channel.clone().into()
     }
 
     /// Returns the proof for client state
@@ -1010,7 +1010,7 @@ impl ChannelOpenConfirmData {
             ConsensusProof::new(self.proof_consensus(), height)
                 .map_err(Error::DecodingError)?;
         Proofs::new(
-            self.proof_connection(),
+            self.proof_channel(),
             Some(self.proof_client()),
             Some(consensus_proof),
             None,

@@ -104,10 +104,14 @@ where
                 continue;
             }
 
-            let accepted = match Self::get_ibc_prefix(key) {
+            match Self::get_ibc_prefix(key) {
                 IbcPrefix::Client => {
                     if key.is_ibc_client_counter() {
-                        self.client_counter_pre()? < self.client_counter()
+                        if self.client_counter_pre()? >= self.client_counter() {
+                            return Err(Error::CounterError(
+                                "The client counter is invalid".to_owned(),
+                            ));
+                        }
                     } else {
                         let client_id = Self::get_client_id(key)?;
                         if !clients.insert(client_id.clone()) {
@@ -124,12 +128,12 @@ where
                 IbcPrefix::Port => self.validate_port(key)?,
                 IbcPrefix::Capability => self.validate_capability(key)?,
                 // TODO implement validations for modules
-                IbcPrefix::SeqSend => false,
-                IbcPrefix::SeqRecv => false,
-                IbcPrefix::SeqAck => false,
-                IbcPrefix::Commitment => false,
-                IbcPrefix::Receipt => false,
-                IbcPrefix::Ack => false,
+                IbcPrefix::SeqSend => continue,
+                IbcPrefix::SeqRecv => continue,
+                IbcPrefix::SeqAck => continue,
+                IbcPrefix::Commitment => continue,
+                IbcPrefix::Receipt => continue,
+                IbcPrefix::Ack => continue,
                 IbcPrefix::Unknown => {
                     return Err(Error::KeyError(format!(
                         "Invalid IBC-related key: {}",
@@ -137,9 +141,6 @@ where
                     )));
                 }
             };
-            if !accepted {
-                return Ok(false);
-            }
         }
 
         Ok(true)
@@ -271,6 +272,7 @@ impl From<port::Error> for Error {
 
 #[cfg(test)]
 mod tests {
+    use std::convert::TryFrom;
     use std::str::FromStr;
     use std::time::Duration;
 
@@ -296,6 +298,12 @@ mod tests {
     use ibc::mock::client_state::{MockClientState, MockConsensusState};
     use ibc::mock::header::MockHeader;
     use ibc::Height;
+    use tendermint::account::Id as TmAccountId;
+    use tendermint::block::header::{Header as TmHeader, Version as TmVersion};
+    use tendermint::block::Height as TmHeight;
+    use tendermint::chain::Id as TmChainId;
+    use tendermint::hash::{AppHash, Hash as TmHash};
+    use tendermint::time::Time as TmTime;
     use tendermint_proto::Protobuf;
 
     use super::*;
@@ -303,7 +311,11 @@ mod tests {
     use crate::ledger::storage::testing::TestStorage;
     use crate::ledger::storage::write_log::WriteLog;
     use crate::proto::Tx;
-    use crate::types::ibc::{ClientUpdateData, ConnectionOpenTryData};
+    use crate::types::ibc::{
+        ChannelOpenAckData, ChannelOpenConfirmData, ChannelOpenTryData,
+        ClientUpdateData, ConnectionOpenAckData, ConnectionOpenConfirmData,
+        ConnectionOpenTryData,
+    };
 
     fn get_client_id() -> ClientId {
         ClientId::from_str("test_client").expect("Creating a client ID failed")
@@ -332,7 +344,17 @@ mod tests {
             .expect("Creating a key for a consensus state shouldn't fail")
     }
 
-    fn insert_init_states(write_log: &mut WriteLog) {
+    fn insert_init_states() -> (TestStorage, WriteLog) {
+        let mut storage = TestStorage::default();
+        let mut write_log = WriteLog::default();
+
+        // initialize the storage
+        init_genesis_storage(&mut storage);
+        // set a dummy header
+        storage
+            .set_header(get_dummy_header())
+            .expect("Setting a dummy header shouldn't fail");
+
         // insert a mock client type
         let client_type_key = get_client_type_key();
         let client_type = ClientType::Mock.as_str().to_owned();
@@ -350,12 +372,37 @@ mod tests {
             .expect("write failed");
         // insert a mock consensus state
         let consensus_key = get_consensus_state_key(height);
-        let consensus_state = MockConsensusState(header).wrap_any();
+        let consensus_state = MockConsensusState::new(header).wrap_any();
         let bytes = consensus_state.encode_vec().expect("encoding failed");
         write_log
             .write(&consensus_key, bytes)
             .expect("write failed");
         write_log.commit_tx();
+
+        (storage, write_log)
+    }
+
+    fn get_dummy_header() -> TmHeader {
+        TmHeader {
+            version: TmVersion { block: 10, app: 0 },
+            chain_id: TmChainId::try_from("test_chain".to_owned())
+                .expect("Creating an TmChainId shouldn't fail"),
+            height: TmHeight::try_from(10_u64)
+                .expect("Creating a height shouldn't fail"),
+            time: TmTime::now(),
+            last_block_id: None,
+            last_commit_hash: None,
+            data_hash: None,
+            validators_hash: TmHash::None,
+            next_validators_hash: TmHash::None,
+            consensus_hash: TmHash::None,
+            app_hash: AppHash::try_from(vec![0])
+                .expect("Creating an AppHash shouldn't fail"),
+            last_results_hash: None,
+            evidence_hash: None,
+            proposer_address: TmAccountId::try_from(vec![0u8; 20])
+                .expect("Creating an AccountId shouldn't fail"),
+        }
     }
 
     fn get_connection_id() -> ConnectionId {
@@ -400,11 +447,65 @@ mod tests {
         Key::ibc_key(path).expect("Creating a key for a channel failed")
     }
 
+    fn get_connection(conn_state: ConnState) -> ConnectionEnd {
+        ConnectionEnd::new(
+            conn_state,
+            get_client_id(),
+            get_conn_counterparty(),
+            vec![Version::default()],
+            Duration::new(100, 0),
+        )
+    }
+
+    fn get_conn_counterparty() -> ConnCounterparty {
+        let counterpart_client_id =
+            ClientId::from_str("counterpart_test_client")
+                .expect("Creating a client ID failed");
+        let counterpart_conn_id =
+            ConnectionId::from_str("counterpart_test_connection")
+                .expect("Creating a connection ID failed");
+        ConnCounterparty::new(
+            counterpart_client_id,
+            Some(counterpart_conn_id),
+            get_commitment_prefix(),
+        )
+    }
+
+    fn get_channel(channel_state: ChanState, order: Order) -> ChannelEnd {
+        ChannelEnd::new(
+            channel_state,
+            order,
+            get_channel_counterparty(),
+            vec![get_connection_id()],
+            order.to_string(),
+        )
+    }
+
+    fn get_channel_counterparty() -> ChanCounterparty {
+        let counterpart_port_id = PortId::from_str("counterpart_test_port")
+            .expect("Creating a port ID failed");
+        let counterpart_channel_id =
+            ChannelId::from_str("counterpart_test_channel")
+                .expect("Creating a channel ID failed");
+        ChanCounterparty::new(counterpart_port_id, Some(counterpart_channel_id))
+    }
+
+    fn set_port(index: u64, write_log: &mut WriteLog) {
+        let port_key = get_port_key();
+        write_log
+            .write(&port_key, storage::types::encode(&index))
+            .expect("write failed");
+        // insert to the reverse map
+        let cap_key = Key::ibc_capability(index);
+        let port_id = get_port_id().as_str().to_owned();
+        write_log
+            .write(&cap_key, storage::types::encode(&port_id))
+            .expect("write failed");
+    }
+
     #[test]
     fn test_create_client() {
-        let storage = TestStorage::default();
-        let mut write_log = WriteLog::default();
-        insert_init_states(&mut write_log);
+        let (storage, write_log) = insert_init_states();
 
         let tx_code = vec![];
         let tx_data = vec![];
@@ -453,9 +554,7 @@ mod tests {
 
     #[test]
     fn test_update_client() {
-        let mut storage = TestStorage::default();
-        let mut write_log = WriteLog::default();
-        insert_init_states(&mut write_log);
+        let (mut storage, mut write_log) = insert_init_states();
         write_log.commit_block(&mut storage).expect("commit failed");
 
         // update the client
@@ -469,7 +568,7 @@ mod tests {
             .write(&client_state_key, bytes)
             .expect("write failed");
         let consensus_key = get_consensus_state_key(height);
-        let consensus_state = MockConsensusState(header).wrap_any();
+        let consensus_state = MockConsensusState::new(header).wrap_any();
         let bytes = consensus_state.encode_vec().expect("encoding failed");
         write_log
             .write(&consensus_key, bytes)
@@ -500,21 +599,12 @@ mod tests {
 
     #[test]
     fn test_init_connection() {
-        let mut storage = TestStorage::default();
-        let mut write_log = WriteLog::default();
-        insert_init_states(&mut write_log);
+        let (mut storage, mut write_log) = insert_init_states();
         write_log.commit_block(&mut storage).expect("commit failed");
 
-        // insert a initial connection
-        let client_id = get_client_id();
+        // insert an INIT connection
         let conn_key = get_connection_key();
-        let conn = ConnectionEnd::new(
-            ConnState::Init,
-            client_id,
-            ConnCounterparty::default(),
-            vec![Version::default()],
-            Duration::new(100, 0),
-        );
+        let conn = get_connection(ConnState::Init);
         let bytes = conn.encode_vec().expect("encoding failed");
         write_log.write(&conn_key, bytes).expect("write failed");
         write_log.commit_tx();
@@ -543,16 +633,9 @@ mod tests {
         let storage = TestStorage::default();
         let mut write_log = WriteLog::default();
 
-        // insert a initial connection
-        let client_id = get_client_id();
+        // insert an Init connection
         let conn_key = get_connection_key();
-        let conn = ConnectionEnd::new(
-            ConnState::Init,
-            client_id,
-            ConnCounterparty::default(),
-            vec![Version::default()],
-            Duration::new(100, 0),
-        );
+        let conn = get_connection(ConnState::Init);
         let bytes = conn.encode_vec().expect("encoding failed");
         write_log.write(&conn_key, bytes).expect("write failed");
         write_log.commit_tx();
@@ -579,26 +662,14 @@ mod tests {
         );
     }
 
-    // TODO check after implementing MockConsensusState and verification
-    // functions in ibc-rs
     #[test]
-    #[ignore]
     fn test_try_connection() {
-        let mut storage = TestStorage::default();
-        let mut write_log = WriteLog::default();
-        insert_init_states(&mut write_log);
+        let (mut storage, mut write_log) = insert_init_states();
         write_log.commit_block(&mut storage).expect("commit failed");
 
-        // insert a initial connection
-        let client_id = get_client_id();
+        // insert a TryOpen connection
         let conn_key = get_connection_key();
-        let conn = ConnectionEnd::new(
-            ConnState::TryOpen,
-            client_id.clone(),
-            ConnCounterparty::default(),
-            vec![Version::default()],
-            Duration::new(100, 0),
-        );
+        let conn = get_connection(ConnState::TryOpen);
         let bytes = conn.encode_vec().expect("encoding failed");
         write_log.write(&conn_key, bytes).expect("write failed");
         write_log.commit_tx();
@@ -606,26 +677,14 @@ mod tests {
         let height = Height::new(1, 10);
         let header = MockHeader::new(height);
         let client_state = MockClientState(header).wrap_any();
-        let counterpart_client_id =
-            ClientId::from_str("counterpart_test_client")
-                .expect("Creating a client ID failed");
-        let counterpart_conn_id =
-            ConnectionId::from_str("counterpart_test_connection")
-                .expect("Creating a connection ID failed");
-        let counterparty = ConnCounterparty::new(
-            counterpart_client_id,
-            Some(counterpart_conn_id),
-            get_commitment_prefix(),
-        );
-
         let proof_conn = CommitmentProofBytes::from(vec![0]);
         let proof_client = CommitmentProofBytes::from(vec![0]);
         let proof_consensus = CommitmentProofBytes::from(vec![0]);
         let tx_code = vec![];
         let data = ConnectionOpenTryData::new(
-            client_id,
+            get_client_id(),
             client_state,
-            counterparty,
+            get_conn_counterparty(),
             vec![Version::default()],
             height,
             proof_conn,
@@ -652,49 +711,115 @@ mod tests {
     }
 
     #[test]
-    fn test_init_channel() {
-        let mut storage = TestStorage::default();
-        let mut write_log = WriteLog::default();
-        insert_init_states(&mut write_log);
-        write_log.commit_block(&mut storage).expect("commit failed");
-
-        // insert a initial connection
-        let client_id = get_client_id();
+    fn test_ack_connection() {
+        let (mut storage, mut write_log) = insert_init_states();
+        // insert an Init connection
         let conn_key = get_connection_key();
-        let conn = ConnectionEnd::new(
-            ConnState::Open,
-            client_id,
-            ConnCounterparty::default(),
-            vec![Version::default()],
-            Duration::new(100, 0),
-        );
+        let conn = get_connection(ConnState::Init);
         let bytes = conn.encode_vec().expect("encoding failed");
         write_log.write(&conn_key, bytes).expect("write failed");
+        write_log.commit_tx();
+        write_log.commit_block(&mut storage).expect("commit failed");
+        // update the connection to Open
+        let conn = get_connection(ConnState::Open);
+        let bytes = conn.encode_vec().expect("encoding failed");
+        write_log.write(&conn_key, bytes).expect("write failed");
+        write_log.commit_tx();
 
-        // insert a port
-        let port_key = get_port_key();
-        let index = 0u64;
-        write_log
-            .write(&port_key, storage::types::encode(&index))
-            .expect("write failed");
-        // insert to the reverse map
-        let path = format!("capabilities/{}", index);
-        let index_key =
-            Key::ibc_key(path).expect("Creating a key for a capability failed");
-        let port_id = get_port_id().as_str().to_owned();
-        write_log
-            .write(&index_key, storage::types::encode(&port_id))
-            .expect("write failed");
-
-        // insert a initial channel
-        let channel_key = get_channel_key();
-        let channel = ChannelEnd::new(
-            ChanState::Init,
-            Order::default(),
-            ChanCounterparty::default(),
-            vec![get_connection_id()],
-            "ORDER_ORDERED".to_string(),
+        let height = Height::new(1, 10);
+        let header = MockHeader::new(height);
+        let client_state = MockClientState(header).wrap_any();
+        let counterparty = get_conn_counterparty();
+        let proof_conn = CommitmentProofBytes::from(vec![0]);
+        let proof_client = CommitmentProofBytes::from(vec![0]);
+        let proof_consensus = CommitmentProofBytes::from(vec![0]);
+        let tx_code = vec![];
+        let data = ConnectionOpenAckData::new(
+            get_connection_id(),
+            counterparty.connection_id().unwrap().clone(),
+            client_state,
+            height,
+            proof_conn,
+            proof_client,
+            proof_consensus,
+            Version::default(),
         );
+        let tx_data = data.try_to_vec().expect("encoding failed");
+        let tx = Tx::new(tx_code, Some(tx_data.clone()));
+        let gas_meter = VpGasMeter::new(0);
+        let ctx = Ctx::new(&storage, &write_log, &tx, gas_meter);
+
+        let mut keys_changed = HashSet::new();
+        keys_changed.insert(get_connection_key());
+
+        let verifiers = HashSet::new();
+
+        let ibc = Ibc { ctx };
+        assert!(
+            ibc.validate_tx(&tx_data, &keys_changed, &verifiers)
+                .expect("validation failed")
+        );
+    }
+
+    #[test]
+    fn test_confirm_connection() {
+        let (mut storage, mut write_log) = insert_init_states();
+        // insert a TryOpen connection
+        let conn_key = get_connection_key();
+        let conn = get_connection(ConnState::TryOpen);
+        let bytes = conn.encode_vec().expect("encoding failed");
+        write_log.write(&conn_key, bytes).expect("write failed");
+        write_log.commit_tx();
+        write_log.commit_block(&mut storage).expect("commit failed");
+        // update the connection to Open
+        let conn = get_connection(ConnState::Open);
+        let bytes = conn.encode_vec().expect("encoding failed");
+        write_log.write(&conn_key, bytes).expect("write failed");
+        write_log.commit_tx();
+
+        let height = Height::new(1, 10);
+        let proof_conn = CommitmentProofBytes::from(vec![0]);
+        let proof_client = CommitmentProofBytes::from(vec![0]);
+        let proof_consensus = CommitmentProofBytes::from(vec![0]);
+        let tx_code = vec![];
+        let data = ConnectionOpenConfirmData::new(
+            get_connection_id(),
+            height,
+            proof_conn,
+            proof_client,
+            proof_consensus,
+        );
+        let tx_data = data.try_to_vec().expect("encoding failed");
+        let tx = Tx::new(tx_code, Some(tx_data.clone()));
+        let gas_meter = VpGasMeter::new(0);
+        let ctx = Ctx::new(&storage, &write_log, &tx, gas_meter);
+
+        let mut keys_changed = HashSet::new();
+        keys_changed.insert(get_connection_key());
+
+        let verifiers = HashSet::new();
+
+        let ibc = Ibc { ctx };
+        assert!(
+            ibc.validate_tx(&tx_data, &keys_changed, &verifiers)
+                .expect("validation failed")
+        );
+    }
+
+    #[test]
+    fn test_init_channel() {
+        let (mut storage, mut write_log) = insert_init_states();
+        // insert an opened connection
+        let conn_key = get_connection_key();
+        let conn = get_connection(ConnState::Open);
+        let bytes = conn.encode_vec().expect("encoding failed");
+        write_log.write(&conn_key, bytes).expect("write failed");
+        write_log.commit_block(&mut storage).expect("commit failed");
+
+        // insert an Init channel
+        set_port(0, &mut write_log);
+        let channel_key = get_channel_key();
+        let channel = get_channel(ChanState::Init, Order::Ordered);
         let bytes = channel.encode_vec().expect("encoding failed");
         write_log.write(&channel_key, bytes).expect("write failed");
         write_log.commit_tx();
@@ -706,8 +831,218 @@ mod tests {
         let ctx = Ctx::new(&storage, &write_log, &tx, gas_meter);
 
         let mut keys_changed = HashSet::new();
-        keys_changed.insert(get_port_key());
         keys_changed.insert(get_channel_key());
+
+        let verifiers = HashSet::new();
+
+        let ibc = Ibc { ctx };
+        assert!(
+            ibc.validate_tx(&tx_data, &keys_changed, &verifiers)
+                .expect("validation failed")
+        );
+    }
+
+    #[test]
+    fn test_try_channel() {
+        let (mut storage, mut write_log) = insert_init_states();
+        // insert an opend connection
+        let conn_key = get_connection_key();
+        let conn = get_connection(ConnState::Open);
+        let bytes = conn.encode_vec().expect("encoding failed");
+        write_log.write(&conn_key, bytes).expect("write failed");
+        write_log.commit_block(&mut storage).expect("commit failed");
+
+        // insert a TryOpen channel
+        set_port(0, &mut write_log);
+        let channel_key = get_channel_key();
+        let channel = get_channel(ChanState::TryOpen, Order::Ordered);
+        let bytes = channel.encode_vec().expect("encoding failed");
+        write_log.write(&channel_key, bytes).expect("write failed");
+        write_log.commit_tx();
+
+        let proof_channel = CommitmentProofBytes::from(vec![0]);
+        let proof_client = CommitmentProofBytes::from(vec![0]);
+        let proof_consensus = CommitmentProofBytes::from(vec![0]);
+        let tx_code = vec![];
+        let data = ChannelOpenTryData::new(
+            get_port_id(),
+            Order::Ordered,
+            get_channel_counterparty(),
+            vec![get_connection_id()],
+            Order::Ordered.to_string(),
+            Order::Ordered.to_string(),
+            Height::new(1, 10),
+            proof_channel,
+            proof_client,
+            proof_consensus,
+        );
+        let tx_data = data.try_to_vec().expect("encoding failed");
+        let tx = Tx::new(tx_code, Some(tx_data.clone()));
+        let gas_meter = VpGasMeter::new(0);
+        let ctx = Ctx::new(&storage, &write_log, &tx, gas_meter);
+
+        let mut keys_changed = HashSet::new();
+        keys_changed.insert(get_channel_key());
+
+        let verifiers = HashSet::new();
+
+        let ibc = Ibc { ctx };
+        assert!(
+            ibc.validate_tx(&tx_data, &keys_changed, &verifiers)
+                .expect("validation failed")
+        );
+    }
+
+    #[test]
+    fn test_ack_channel() {
+        let (mut storage, mut write_log) = insert_init_states();
+        // insert an opend connection
+        let conn_key = get_connection_key();
+        let conn = get_connection(ConnState::Open);
+        let bytes = conn.encode_vec().expect("encoding failed");
+        write_log.write(&conn_key, bytes).expect("write failed");
+        // insert an Init channel
+        set_port(0, &mut write_log);
+        let channel_key = get_channel_key();
+        let channel = get_channel(ChanState::Init, Order::Ordered);
+        let bytes = channel.encode_vec().expect("encoding failed");
+        write_log.write(&channel_key, bytes).expect("write failed");
+        write_log.commit_tx();
+        write_log.commit_block(&mut storage).expect("commit failed");
+
+        // update the channel to Open
+        let channel_key = get_channel_key();
+        let channel = get_channel(ChanState::Open, Order::Ordered);
+        let bytes = channel.encode_vec().expect("encoding failed");
+        write_log.write(&channel_key, bytes).expect("write failed");
+        write_log.commit_tx();
+
+        let proof_channel = CommitmentProofBytes::from(vec![0]);
+        let proof_client = CommitmentProofBytes::from(vec![0]);
+        let proof_consensus = CommitmentProofBytes::from(vec![0]);
+        let tx_code = vec![];
+        let data = ChannelOpenAckData::new(
+            get_port_id(),
+            get_channel_id(),
+            get_channel_counterparty().channel_id().unwrap().clone(),
+            Order::Ordered.to_string(),
+            Height::new(1, 10),
+            proof_channel,
+            proof_client,
+            proof_consensus,
+        );
+        let tx_data = data.try_to_vec().expect("encoding failed");
+        let tx = Tx::new(tx_code, Some(tx_data.clone()));
+        let gas_meter = VpGasMeter::new(0);
+        let ctx = Ctx::new(&storage, &write_log, &tx, gas_meter);
+
+        let mut keys_changed = HashSet::new();
+        keys_changed.insert(get_channel_key());
+
+        let verifiers = HashSet::new();
+
+        let ibc = Ibc { ctx };
+        assert!(
+            ibc.validate_tx(&tx_data, &keys_changed, &verifiers)
+                .expect("validation failed")
+        );
+    }
+
+    #[test]
+    fn test_confirm_channel() {
+        let (mut storage, mut write_log) = insert_init_states();
+        // insert an opend connection
+        let conn_key = get_connection_key();
+        let conn = get_connection(ConnState::Open);
+        let bytes = conn.encode_vec().expect("encoding failed");
+        write_log.write(&conn_key, bytes).expect("write failed");
+        // insert a TryOpen channel
+        set_port(0, &mut write_log);
+        let channel_key = get_channel_key();
+        let channel = get_channel(ChanState::TryOpen, Order::Ordered);
+        let bytes = channel.encode_vec().expect("encoding failed");
+        write_log.write(&channel_key, bytes).expect("write failed");
+        write_log.commit_tx();
+        write_log.commit_block(&mut storage).expect("commit failed");
+
+        // update the channel to Open
+        let channel_key = get_channel_key();
+        let channel = get_channel(ChanState::Open, Order::Ordered);
+        let bytes = channel.encode_vec().expect("encoding failed");
+        write_log.write(&channel_key, bytes).expect("write failed");
+        write_log.commit_tx();
+
+        let proof_channel = CommitmentProofBytes::from(vec![0]);
+        let proof_client = CommitmentProofBytes::from(vec![0]);
+        let proof_consensus = CommitmentProofBytes::from(vec![0]);
+        let tx_code = vec![];
+        let data = ChannelOpenConfirmData::new(
+            get_port_id(),
+            get_channel_id(),
+            Height::new(1, 10),
+            proof_channel,
+            proof_client,
+            proof_consensus,
+        );
+        let tx_data = data.try_to_vec().expect("encoding failed");
+        let tx = Tx::new(tx_code, Some(tx_data.clone()));
+        let gas_meter = VpGasMeter::new(0);
+        let ctx = Ctx::new(&storage, &write_log, &tx, gas_meter);
+
+        let mut keys_changed = HashSet::new();
+        keys_changed.insert(get_channel_key());
+
+        let verifiers = HashSet::new();
+
+        let ibc = Ibc { ctx };
+        assert!(
+            ibc.validate_tx(&tx_data, &keys_changed, &verifiers)
+                .expect("validation failed")
+        );
+    }
+
+    #[test]
+    fn test_validate_port() {
+        let (storage, mut write_log) = insert_init_states();
+        // insert a port
+        set_port(0, &mut write_log);
+        write_log.commit_tx();
+
+        let tx_code = vec![];
+        let tx_data = vec![];
+        let tx = Tx::new(tx_code, Some(tx_data.clone()));
+        let gas_meter = VpGasMeter::new(0);
+        let ctx = Ctx::new(&storage, &write_log, &tx, gas_meter);
+
+        let mut keys_changed = HashSet::new();
+        keys_changed.insert(get_port_key());
+
+        let verifiers = HashSet::new();
+
+        let ibc = Ibc { ctx };
+        assert!(
+            ibc.validate_tx(&tx_data, &keys_changed, &verifiers)
+                .expect("validation failed")
+        );
+    }
+
+    #[test]
+    fn test_validate_capability() {
+        let (storage, mut write_log) = insert_init_states();
+        // insert a port
+        let index = 0;
+        set_port(index, &mut write_log);
+        write_log.commit_tx();
+
+        let tx_code = vec![];
+        let tx_data = vec![];
+        let tx = Tx::new(tx_code, Some(tx_data.clone()));
+        let gas_meter = VpGasMeter::new(0);
+        let ctx = Ctx::new(&storage, &write_log, &tx, gas_meter);
+
+        let mut keys_changed = HashSet::new();
+        let cap_key = Key::ibc_capability(index);
+        keys_changed.insert(cap_key);
 
         let verifiers = HashSet::new();
 

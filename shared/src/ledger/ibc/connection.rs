@@ -60,12 +60,16 @@ where
         &self,
         key: &Key,
         tx_data: &[u8],
-    ) -> Result<bool> {
+    ) -> Result<()> {
         if key.is_ibc_connection_counter() {
             // the counter should be increased
-            return Ok(
-                self.connection_counter_pre()? < self.connection_counter()
-            );
+            if self.connection_counter_pre()? < self.connection_counter() {
+                return Ok(());
+            } else {
+                return Err(Error::InvalidConnection(
+                    "The connection counter is invalid".to_owned(),
+                ));
+            }
         }
 
         let conn_id = Self::get_connection_id(key)?;
@@ -118,12 +122,12 @@ where
         conn_id: &ConnectionId,
         conn: ConnectionEnd,
         tx_data: &[u8],
-    ) -> Result<bool> {
+    ) -> Result<()> {
         match conn.state() {
             State::Init => {
                 let client_id = conn.client_id();
                 match ConnectionReader::client_state(self, client_id) {
-                    Some(_) => Ok(true),
+                    Some(_) => Ok(()),
                     None => Err(Error::InvalidClient(format!(
                         "The client state for the connection doesn't exist: \
                          ID {}",
@@ -144,7 +148,7 @@ where
         conn_id: &ConnectionId,
         conn: ConnectionEnd,
         tx_data: &[u8],
-    ) -> Result<bool> {
+    ) -> Result<()> {
         match conn.state() {
             State::Open => {
                 let prev_conn = self.connection_end_pre(conn_id)?;
@@ -172,7 +176,7 @@ where
         &self,
         conn: ConnectionEnd,
         tx_data: &[u8],
-    ) -> Result<bool> {
+    ) -> Result<()> {
         let data = ConnectionOpenTryData::try_from_slice(tx_data)?;
 
         let client_id = conn.client_id().clone();
@@ -194,7 +198,7 @@ where
             &expected_conn,
             &proofs,
         ) {
-            Ok(_) => Ok(true),
+            Ok(_) => Ok(()),
             Err(e) => Err(Error::ProofVerificationFailure(e)),
         }
     }
@@ -204,11 +208,11 @@ where
         conn_id: &ConnectionId,
         conn: ConnectionEnd,
         tx_data: &[u8],
-    ) -> Result<bool> {
+    ) -> Result<()> {
         let data = ConnectionOpenAckData::try_from_slice(tx_data)?;
 
         // version check
-        if conn.versions().contains(&data.version()?) {
+        if !conn.versions().contains(&data.version()?) {
             return Err(Error::InvalidVersion(
                 "The version is unsupported".to_owned(),
             ));
@@ -245,7 +249,7 @@ where
             &expected_conn,
             &proofs,
         ) {
-            Ok(_) => Ok(true),
+            Ok(_) => Ok(()),
             Err(e) => Err(Error::ProofVerificationFailure(e)),
         }
     }
@@ -255,7 +259,7 @@ where
         conn_id: &ConnectionId,
         conn: ConnectionEnd,
         tx_data: &[u8],
-    ) -> Result<bool> {
+    ) -> Result<()> {
         let data = ConnectionOpenConfirmData::try_from_slice(tx_data)?;
 
         // expected counterpart connection
@@ -273,7 +277,7 @@ where
 
         let proofs = data.proofs()?;
         match verify_proofs(self, None, &conn, &expected_conn, &proofs) {
-            Ok(_) => Ok(true),
+            Ok(_) => Ok(()),
             Err(e) => Err(Error::ProofVerificationFailure(e)),
         }
     }

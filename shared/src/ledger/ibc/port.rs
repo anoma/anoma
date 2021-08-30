@@ -34,12 +34,12 @@ where
     DB: 'static + storage::DB + for<'iter> storage::DBIter<'iter>,
     H: 'static + StorageHasher,
 {
-    pub(super) fn validate_port(&self, key: &Key) -> Result<bool> {
+    pub(super) fn validate_port(&self, key: &Key) -> Result<()> {
         let port_id = Self::get_port_id_for_capability(key)?;
         match self.get_port_state_change(&port_id)? {
             StateChange::Created => {
                 match self.authenticated_capability(&port_id) {
-                    Ok(_) => Ok(true),
+                    Ok(_) => Ok(()),
                     Err(e) => Err(Error::InvalidPort(format!(
                         "The port is not authenticated: ID {}, {}",
                         port_id, e
@@ -73,9 +73,15 @@ where
             .map_err(|e| Error::InvalidStateChange(e.to_string()))
     }
 
-    pub(super) fn validate_capability(&self, key: &Key) -> Result<bool> {
+    pub(super) fn validate_capability(&self, key: &Key) -> Result<()> {
         if key.is_ibc_capability_index() {
-            Ok(self.capability_index_pre()? < self.capability_index()?)
+            if self.capability_index_pre()? < self.capability_index()? {
+                Ok(())
+            } else {
+                Err(Error::InvalidPort(
+                    "The capability index is invalid".to_owned(),
+                ))
+            }
         } else {
             match self
                 .get_state_change(key)
@@ -85,7 +91,11 @@ where
                     let cap = Self::get_capability(key)?;
                     let port_id = self.get_port_by_capability(&cap)?;
                     match self.lookup_module_by_port(&port_id) {
-                        Some(c) => Ok(c == cap),
+                        Some(c) if c == cap => Ok(()),
+                        Some(_) => Err(Error::InvalidPort(format!(
+                            "The port is invalid: ID {}",
+                            port_id
+                        ))),
                         None => Err(Error::NoCapability(format!(
                             "The capability is not mapped: Index {}, Port {}",
                             cap.index(),
@@ -132,9 +142,7 @@ where
     }
 
     fn get_port_by_capability(&self, cap: &Capability) -> Result<PortId> {
-        let path = format!("capabilities/{}", cap.index());
-        let key =
-            Key::ibc_key(path).expect("Creating a key for a capability failed");
+        let key = Key::ibc_capability(cap.index());
         match self.ctx.read_post(&key) {
             Ok(Some(value)) => {
                 let id: String =

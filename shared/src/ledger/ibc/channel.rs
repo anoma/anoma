@@ -74,9 +74,15 @@ where
         &self,
         key: &Key,
         tx_data: &[u8],
-    ) -> Result<bool> {
+    ) -> Result<()> {
         if key.is_ibc_channel_counter() {
-            return Ok(self.channel_counter_pre()? < self.channel_counter());
+            if self.channel_counter_pre()? < self.channel_counter() {
+                return Ok(());
+            } else {
+                return Err(Error::InvalidChannel(
+                    "The channel counter is invalid".to_owned(),
+                ));
+            }
         }
 
         let port_id = Self::get_port_id(key)
@@ -109,7 +115,7 @@ where
 
         match self.get_channel_state_change(port_channel_id.clone())? {
             StateChange::Created => match channel.state() {
-                State::Init => Ok(true),
+                State::Init => Ok(()),
                 State::TryOpen => self.verify_channel_try_proof(
                     port_channel_id,
                     &channel,
@@ -199,7 +205,7 @@ where
         port_channel_id: (PortId, ChannelId),
         channel: &ChannelEnd,
         tx_data: &[u8],
-    ) -> Result<bool> {
+    ) -> Result<()> {
         let prev_channel = self.channel_end_pre(port_channel_id.clone())?;
         match channel.state() {
             State::Open => match prev_channel.state() {
@@ -228,7 +234,7 @@ where
                     )));
                 }
                 match ChannelCloseInitData::try_from_slice(tx_data) {
-                    Ok(_) => Ok(true),
+                    Ok(_) => Ok(()),
                     Err(_) => self.verify_channel_close_proof(
                         port_channel_id,
                         channel,
@@ -249,7 +255,7 @@ where
         port_channel_id: (PortId, ChannelId),
         channel: &ChannelEnd,
         tx_data: &[u8],
-    ) -> Result<bool> {
+    ) -> Result<()> {
         let data = ChannelOpenTryData::try_from_slice(tx_data)?;
         let expected_my_side = Counterparty::new(port_channel_id.0, None);
 
@@ -266,7 +272,7 @@ where
         port_channel_id: (PortId, ChannelId),
         channel: &ChannelEnd,
         tx_data: &[u8],
-    ) -> Result<bool> {
+    ) -> Result<()> {
         let data = ChannelOpenAckData::try_from_slice(tx_data)?;
         let expected_my_side =
             Counterparty::new(port_channel_id.0, Some(port_channel_id.1));
@@ -284,7 +290,7 @@ where
         port_channel_id: (PortId, ChannelId),
         channel: &ChannelEnd,
         tx_data: &[u8],
-    ) -> Result<bool> {
+    ) -> Result<()> {
         let data = ChannelOpenConfirmData::try_from_slice(tx_data)?;
         let expected_my_side =
             Counterparty::new(port_channel_id.0, Some(port_channel_id.1));
@@ -302,7 +308,7 @@ where
         port_channel_id: (PortId, ChannelId),
         channel: &ChannelEnd,
         tx_data: &[u8],
-    ) -> Result<bool> {
+    ) -> Result<()> {
         let data = ChannelCloseConfirmData::try_from_slice(tx_data)?;
         let expected_my_side =
             Counterparty::new(port_channel_id.0, Some(port_channel_id.1));
@@ -321,7 +327,7 @@ where
         expected_my_side: Counterparty,
         expected_state: State,
         proofs: Proofs,
-    ) -> Result<bool> {
+    ) -> Result<()> {
         let connection = self.connection_from_channel(channel)?;
         let counterpart_conn_id =
             match connection.counterparty().connection_id() {
@@ -349,7 +355,7 @@ where
             &expected_channel,
             &proofs,
         ) {
-            Ok(_) => Ok(true),
+            Ok(_) => Ok(()),
             Err(e) => Err(Error::ProofVerificationFailure(e)),
         }
     }

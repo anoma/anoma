@@ -2256,7 +2256,7 @@ dependencies = [
 [[package]]
 name = "ibc"
 version = "0.6.0"
-source = "git+https://github.com/heliaxdev/ibc-rs?branch=tomas/update-prost-0.8.0#a5ca232316390b32be2048b23215d2c1abdba126"
+source = "git+https://github.com/heliaxdev/ibc-rs?branch=tomas/update-prost-0.8.0#ddad1d2b294ae2a5e27b39bc0d4f171855cae782"
 dependencies = [
  "anomaly",
  "bytes 1.0.1",
@@ -2282,7 +2282,7 @@ dependencies = [
 [[package]]
 name = "ibc-proto"
 version = "0.8.2"
-source = "git+https://github.com/heliaxdev/ibc-rs?branch=tomas/update-prost-0.8.0#a5ca232316390b32be2048b23215d2c1abdba126"
+source = "git+https://github.com/heliaxdev/ibc-rs?branch=tomas/update-prost-0.8.0#ddad1d2b294ae2a5e27b39bc0d4f171855cae782"
 dependencies = [
  "anomaly",
  "bytes 1.0.1",
