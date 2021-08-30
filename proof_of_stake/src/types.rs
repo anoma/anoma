@@ -15,19 +15,27 @@ use crate::epoched::{
 };
 use crate::parameters::PosParams;
 
+/// Epoched validator's consensus key.
 pub type ValidatorConsensusKeys<PublicKey> =
     Epoched<PublicKey, OffsetPipelineLen>;
+/// Epoched validator's state.
 pub type ValidatorStates = Epoched<ValidatorState, OffsetPipelineLen>;
+/// Epoched validator's total deltas.
 pub type ValidatorTotalDeltas<TokenChange> =
     EpochedDelta<TokenChange, OffsetUnboundingLen>;
+/// Epoched validator's voting power.
 pub type ValidatorVotingPowers =
     EpochedDelta<VotingPowerDelta, OffsetUnboundingLen>;
+/// Epoched bond.
 pub type Bonds<TokenAmount> =
     EpochedDelta<Bond<TokenAmount>, OffsetPipelineLen>;
+/// Epoched unbond.
 pub type Unbonds<TokenAmount> =
     EpochedDelta<Unbond<TokenAmount>, OffsetUnboundingLen>;
+/// Epoched validator set.
 pub type ValidatorSets<Address> =
     Epoched<ValidatorSet<Address>, OffsetUnboundingLen>;
+/// Epoched total voting power.
 pub type TotalVotingPowers =
     EpochedDelta<VotingPowerDelta, OffsetUnboundingLen>;
 
@@ -67,6 +75,7 @@ pub struct Epoch(u64);
 )]
 pub struct VotingPower(u64);
 
+/// A change of voting power.
 #[derive(
     Debug,
     Default,
@@ -82,8 +91,10 @@ pub struct VotingPower(u64);
 )]
 pub struct VotingPowerDelta(i64);
 
+/// A genesis validator definition.
 #[derive(Debug, Clone)]
 pub struct GenesisValidator<Address, Token, PK> {
+    /// Validator's address
     pub address: Address,
     /// An address to which any staking rewards will be credited, must be
     /// different from the `address`
@@ -96,6 +107,7 @@ pub struct GenesisValidator<Address, Token, PK> {
     pub staking_reward_key: PK,
 }
 
+/// An update of the active and inactive validator set.
 #[derive(Debug, Clone)]
 pub enum ValidatorSetUpdate<PK> {
     /// A validator is active
@@ -104,6 +116,7 @@ pub enum ValidatorSetUpdate<PK> {
     Deactivated(PK),
 }
 
+/// Active validator's consensus key and its voting power.
 #[derive(Debug, Clone)]
 pub struct ActiveValidator<PK> {
     /// A public key used for signing validator's consensus actions
@@ -112,6 +125,7 @@ pub struct ActiveValidator<PK> {
     pub voting_power: VotingPower,
 }
 
+/// ID of a bond and/or an unbond.
 #[derive(
     Debug,
     Clone,
@@ -127,7 +141,9 @@ pub struct BondId<Address>
 where
     Address: Display + Debug + Clone + PartialEq + Eq + PartialOrd + Ord + Hash,
 {
+    /// (Un)bond's source address is the owner of the bonded tokens.
     pub source: Address,
+    /// (Un)bond's validator address.
     pub validator: Address,
 }
 
@@ -159,6 +175,7 @@ where
     /// `ValidatorSet` the `WeighedValidator`s these need to be sorted by
     /// the `voting_power`.
     pub voting_power: VotingPower,
+    /// Validator's address
     pub address: Address,
 }
 
@@ -184,6 +201,7 @@ where
     }
 }
 
+/// Active and inactive validator sets.
 #[derive(
     Debug,
     Clone,
@@ -213,14 +231,21 @@ where
     pub inactive: BTreeSet<WeightedValidator<Address>>,
 }
 
+/// Validator's state.
 #[derive(Debug, Clone, Copy, BorshDeserialize, BorshSerialize)]
 pub enum ValidatorState {
+    /// Inactive validator may not participate in the consensus.
     Inactive,
+    /// A `Pending` validator will become `Candidate` in a future epoch.
     Pending,
+    /// A `Candidate` validator may participate in the consensus. It is either
+    /// in the active or inactive validator set.
     Candidate,
     // TODO consider adding `Jailed`
 }
 
+/// A bond is validator's self-bond or a delegation from a regular account to a
+/// validator.
 #[derive(Debug, Clone, Default, BorshDeserialize, BorshSerialize)]
 pub struct Bond<Token: Default> {
     /// A key is a the epoch set for the bond. This is used in unbonding, where
@@ -233,6 +258,8 @@ pub struct Bond<Token: Default> {
     pub delta: HashMap<Epoch, Token>,
 }
 
+/// An unbond contains unbonded tokens from a validator's self-bond or a
+/// delegation from a regular account to a validator.
 #[derive(Debug, Clone, Default, BorshDeserialize, BorshSerialize)]
 pub struct Unbond<Token: Default> {
     /// A key is a pair of the epoch of the bond from which a unbond was
@@ -245,9 +272,13 @@ pub struct Unbond<Token: Default> {
 /// their staked tokens at and before the epoch of the slash.
 #[derive(Debug, Clone, BorshDeserialize, BorshSerialize)]
 pub struct Slash {
+    /// Epoch at which the slashable event occurred.
     pub epoch: Epoch,
+    /// Block height at which the slashable event occurred.
     pub block_height: u64,
+    /// A type of slashsable event.
     pub r#type: SlashType,
+    /// A rate is the portion of staked tokens that are slashed.
     pub rate: BasisPoints,
 }
 
@@ -255,9 +286,12 @@ pub struct Slash {
 /// their staked tokens at and before the epoch of the slash.
 pub type Slashes = Vec<Slash>;
 
+/// A type of slashsable event.
 #[derive(Debug, Clone, BorshDeserialize, BorshSerialize)]
 pub enum SlashType {
+    /// Duplicate block vote.
     DuplicateVote,
+    /// Light client attack.
     LightClientAttack,
 }
 
@@ -267,13 +301,15 @@ pub enum SlashType {
 pub struct BasisPoints(u64);
 
 impl VotingPower {
+    /// Convert token amount into a voting power.
     pub fn from_tokens(tokens: impl Into<u64>, params: &PosParams) -> Self {
         Self(params.votes_per_token * tokens.into() / 1_000_000)
     }
 }
 
 impl VotingPowerDelta {
-    pub fn from_token_change(
+    /// Try to convert token change into a voting power change.
+    pub fn try_from_token_change(
         change: impl Into<i128>,
         params: &PosParams,
     ) -> Result<Self, TryFromIntError> {
@@ -282,6 +318,7 @@ impl VotingPowerDelta {
         Ok(Self(delta))
     }
 
+    /// Try to convert token amount into a voting power change.
     pub fn try_from_tokens(
         tokens: impl Into<u64>,
         params: &PosParams,
@@ -592,6 +629,7 @@ impl Display for SlashType {
 }
 
 impl BasisPoints {
+    /// Initialize basis points from an integer.
     pub fn new(value: u64) -> Self {
         Self(value)
     }

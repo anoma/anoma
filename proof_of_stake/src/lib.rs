@@ -6,6 +6,10 @@
 //! voting on a protocol parameter changes, upgrades, default VP changes) we
 //! should use the total validator set voting power.
 
+#![warn(missing_docs)]
+#![deny(rustdoc::broken_intra_doc_links)]
+#![deny(rustdoc::private_intra_doc_links)]
+
 mod btree_set;
 pub mod epoched;
 pub mod parameters;
@@ -38,6 +42,7 @@ use crate::types::{Bond, BondId, WeightedValidator};
 
 /// Read-only part of the PoS system
 pub trait PosReadOnly {
+    /// Address type
     type Address: Display
         + Debug
         + Clone
@@ -48,6 +53,7 @@ pub trait PosReadOnly {
         + Hash
         + BorshDeserialize
         + BorshSerialize;
+    /// Token amount type
     type TokenAmount: Display
         + Debug
         + Default
@@ -63,6 +69,7 @@ pub trait PosReadOnly {
         + SubAssign
         + BorshDeserialize
         + BorshSerialize;
+    /// Token change type
     type TokenChange: Display
         + Debug
         + Default
@@ -75,6 +82,7 @@ pub trait PosReadOnly {
         + Neg<Output = Self::TokenChange>
         + BorshDeserialize
         + BorshSerialize;
+    /// Cryptographic public key type
     type PublicKey: Debug + Clone + BorshDeserialize + BorshSerialize;
 
     /// Address of the PoS account
@@ -84,86 +92,117 @@ pub trait PosReadOnly {
     /// `const fn`
     fn staking_token_address() -> Self::Address;
 
+    /// Read PoS parameters.
     fn read_pos_params(&self) -> PosParams;
+    /// Read PoS validator's staking reward address.
     fn read_validator_staking_reward_address(
         &self,
         key: &Self::Address,
     ) -> Option<Self::Address>;
+    /// Read PoS validator's consensus key (used for signing block votes).
     fn read_validator_consensus_key(
         &self,
         key: &Self::Address,
     ) -> Option<ValidatorConsensusKeys<Self::PublicKey>>;
+    /// Read PoS validator's state.
     fn read_validator_state(
         &self,
         key: &Self::Address,
     ) -> Option<ValidatorStates>;
+    /// Read PoS validator's total deltas of their bonds (validator self-bonds
+    /// and delegations).
     fn read_validator_total_deltas(
         &self,
         key: &Self::Address,
     ) -> Option<ValidatorTotalDeltas<Self::TokenChange>>;
+    /// Read PoS validator's voting power.
     fn read_validator_voting_power(
         &self,
         key: &Self::Address,
     ) -> Option<ValidatorVotingPowers>;
+    /// Read PoS slashes applied to a validator.
     fn read_validator_slashes(&self, key: &Self::Address) -> Vec<Slash>;
+    /// Read PoS bond (validator self-bond or a delegation).
     fn read_bond(
         &self,
         key: &BondId<Self::Address>,
     ) -> Option<Bonds<Self::TokenAmount>>;
+    /// Read PoS unbond (unbonded tokens from validator self-bond or a
+    /// delegation).
     fn read_unbond(
         &self,
         key: &BondId<Self::Address>,
     ) -> Option<Unbonds<Self::TokenAmount>>;
+    /// Read PoS validator set (active and inactive).
     fn read_validator_set(&self) -> ValidatorSets<Self::Address>;
+    /// Read PoS total voting power of all validators (active and inactive).
     fn read_total_voting_power(&self) -> TotalVotingPowers;
 }
 
 /// PoS system trait to be implemented in integration that can read and write
 /// PoS data.
 pub trait PosActions: PosReadOnly {
+    /// Write PoS parameters.
     fn write_pos_params(&mut self, params: &PosParams);
+    /// Write PoS validator's raw hash its address.
     fn write_validator_address_raw_hash(&mut self, address: &Self::Address);
+    /// Write PoS validator's staking reward address, into which staking rewards
+    /// will be credited.
     fn write_validator_staking_reward_address(
         &mut self,
         key: &Self::Address,
         value: Self::Address,
     );
+    /// Write PoS validator's consensus key (used for signing block votes).
     fn write_validator_consensus_key(
         &mut self,
         key: &Self::Address,
         value: ValidatorConsensusKeys<Self::PublicKey>,
     );
+    /// Write PoS validator's state.
     fn write_validator_state(
         &mut self,
         key: &Self::Address,
         value: ValidatorStates,
     );
+    /// Write PoS validator's total deltas of their bonds (validator self-bonds
+    /// and delegations).
     fn write_validator_total_deltas(
         &mut self,
         key: &Self::Address,
         value: ValidatorTotalDeltas<Self::TokenChange>,
     );
+    /// Write PoS validator's voting power.
     fn write_validator_voting_power(
         &mut self,
         key: &Self::Address,
         value: ValidatorVotingPowers,
     );
+    /// Write PoS bond (validator self-bond or a delegation).
     fn write_bond(
         &mut self,
         key: &BondId<Self::Address>,
         value: Bonds<Self::TokenAmount>,
     );
+    /// Write PoS unbond (unbonded tokens from validator self-bond or a
+    /// delegation).
     fn write_unbond(
         &mut self,
         key: &BondId<Self::Address>,
         value: Unbonds<Self::TokenAmount>,
     );
+    /// Write PoS validator set (active and inactive).
     fn write_validator_set(&mut self, value: ValidatorSets<Self::Address>);
+    /// Write PoS total voting power of all validators (active and inactive).
     fn write_total_voting_power(&mut self, value: TotalVotingPowers);
 
+    /// Delete an emptied PoS bond (validator self-bond or a delegation).
     fn delete_bond(&mut self, key: &BondId<Self::Address>);
+    /// Delete an emptied PoS unbond (unbonded tokens from validator self-bond
+    /// or a delegation).
     fn delete_unbond(&mut self, key: &BondId<Self::Address>);
 
+    /// Transfer tokens from the `src` to the `dest`.
     fn transfer(
         &mut self,
         token: &Self::Address,
@@ -418,6 +457,7 @@ pub trait PosActions: PosReadOnly {
 /// PoS system base trait for system initialization on genesis block, updating
 /// the validator on a new epoch and applying slashes.
 pub trait PosBase {
+    /// Address type
     type Address: 'static
         + Display
         + Debug
@@ -429,6 +469,7 @@ pub trait PosBase {
         + Hash
         + BorshDeserialize
         + BorshSerialize;
+    /// Token amount type
     type TokenAmount: 'static
         + Display
         + Debug
@@ -445,6 +486,7 @@ pub trait PosBase {
         + SubAssign
         + BorshDeserialize
         + BorshSerialize;
+    /// Token change type
     type TokenChange: 'static
         + Display
         + Debug
@@ -460,6 +502,7 @@ pub trait PosBase {
         + Neg<Output = Self::TokenChange>
         + BorshDeserialize
         + BorshSerialize;
+    /// Cryptographic public key type
     type PublicKey: 'static + Debug + Clone + BorshDeserialize + BorshSerialize;
 
     /// Address of the PoS account
@@ -471,77 +514,103 @@ pub trait PosBase {
     /// Address of the slash pool, into which slashed tokens are transferred.
     const POS_SLASH_POOL_ADDRESS: Self::Address;
 
+    /// Read PoS parameters.
     fn read_pos_params(&self) -> PosParams;
+    /// Read PoS raw hash of validator's address.
     fn read_validator_address_raw_hash(
         &self,
         raw_hash: impl AsRef<str>,
     ) -> Option<Self::Address>;
+    /// Read PoS validator's consensus key (used for signing block votes).
     fn read_validator_consensus_key(
         &self,
         key: &Self::Address,
     ) -> Option<ValidatorConsensusKeys<Self::PublicKey>>;
+    /// Read PoS validator's total deltas of their bonds (validator self-bonds
+    /// and delegations).
     fn read_validator_total_deltas(
         &self,
         key: &Self::Address,
     ) -> Option<ValidatorTotalDeltas<Self::TokenChange>>;
+    /// Read PoS validator's voting power.
     fn read_validator_voting_power(
         &self,
         key: &Self::Address,
     ) -> Option<ValidatorVotingPowers>;
+    /// Read PoS slashes applied to a validator.
     fn read_validator_slashes(&self, key: &Self::Address) -> Slashes;
+    /// Read PoS validator set (active and inactive).
     fn read_validator_set(&self) -> ValidatorSets<Self::Address>;
+    /// Read PoS total voting power of all validators (active and inactive).
     fn read_total_voting_power(&self) -> TotalVotingPowers;
 
+    /// Write PoS parameters.
     fn write_pos_params(&mut self, params: &PosParams);
+    /// Write PoS validator's raw hash its address.
     fn write_validator_address_raw_hash(&mut self, address: &Self::Address);
+    /// Write PoS validator's staking reward address, into which staking rewards
+    /// will be credited.
     fn write_validator_staking_reward_address(
         &mut self,
         key: &Self::Address,
         value: &Self::Address,
     );
+    /// Write PoS validator's consensus key (used for signing block votes).
     fn write_validator_consensus_key(
         &mut self,
         key: &Self::Address,
         value: &ValidatorConsensusKeys<Self::PublicKey>,
     );
+    /// Write PoS validator's state.
     fn write_validator_state(
         &mut self,
         key: &Self::Address,
         value: &ValidatorStates,
     );
+    /// Write PoS validator's total deltas of their bonds (validator self-bonds
+    /// and delegations).
     fn write_validator_total_deltas(
         &mut self,
         key: &Self::Address,
         value: &ValidatorTotalDeltas<Self::TokenChange>,
     );
+    /// Write PoS validator's voting power.
     fn write_validator_voting_power(
         &mut self,
         key: &Self::Address,
         value: &ValidatorVotingPowers,
     );
+    /// Write (append) PoS slash applied to a validator.
     fn write_validator_slash(
         &mut self,
         validator: &Self::Address,
         value: Slash,
     );
+    /// Write PoS bond (validator self-bond or a delegation).
     fn write_bond(
         &mut self,
         key: &BondId<Self::Address>,
         value: &Bonds<Self::TokenAmount>,
     );
+    /// Write PoS validator set (active and inactive).
     fn write_validator_set(&mut self, value: &ValidatorSets<Self::Address>);
+    /// Read PoS total voting power of all validators (active and inactive).
     fn write_total_voting_power(&mut self, value: &TotalVotingPowers);
+    /// Initialize staking reward account with the given public key.
     fn init_staking_reward_account(
         &mut self,
         address: &Self::Address,
         pk: &Self::PublicKey,
     );
+    /// Credit tokens to the `target` account. This should only be used at
+    /// genesis.
     fn credit_tokens(
         &mut self,
         token: &Self::Address,
         target: &Self::Address,
         amount: Self::TokenAmount,
     );
+    /// Transfer tokens from the `src` to the `dest`.
     fn transfer(
         &mut self,
         token: &Self::Address,
@@ -553,7 +622,7 @@ pub trait PosBase {
     /// Initialize the PoS system storage data in the genesis block for the
     /// given PoS parameters and initial validator set. The validators'
     /// tokens will be put into self-bonds. The given PoS parameters are written
-    /// with the [`PoSBase::write_pos_params`] method.
+    /// with the [`PosBase::write_pos_params`] method.
     fn init_genesis<'a>(
         &mut self,
         params: &'a PosParams,
@@ -659,6 +728,7 @@ pub trait PosBase {
         active_validators.chain(inactive_validators).for_each(f)
     }
 
+    /// Apply a slash to a byzantine validator for the given evidence.
     fn slash(
         &mut self,
         params: &PosParams,

@@ -9,6 +9,8 @@ use borsh::{BorshDeserialize, BorshSerialize};
 use crate::types::Epoch;
 use crate::PosParams;
 
+/// Data that may have values set for future epochs, up to an epoch at offset as
+/// set via the `Offset` type parameter.
 #[derive(Debug, Clone, BorshDeserialize, BorshSerialize)]
 pub struct Epoched<Data, Offset>
 where
@@ -21,6 +23,9 @@ where
     offset: PhantomData<Offset>,
 }
 
+/// Data that may have delta values (a difference from the predecessor epoch)
+/// set for future epochs, up to an epoch at offset as set via the `Offset` type
+/// parameter.
 #[derive(Debug, Clone, BorshDeserialize, BorshSerialize)]
 pub struct EpochedDelta<Data, Offset>
 where
@@ -43,6 +48,8 @@ pub trait EpochOffset:
     /// Convert to [`DynEpochOffset`]
     fn dyn_offset() -> DynEpochOffset;
 }
+
+/// Offset at pipeline length.
 #[derive(Debug, Clone, BorshDeserialize, BorshSerialize)]
 pub struct OffsetPipelineLen;
 impl EpochOffset for OffsetPipelineLen {
@@ -54,6 +61,8 @@ impl EpochOffset for OffsetPipelineLen {
         DynEpochOffset::PipelineLen
     }
 }
+
+/// Offset at unbonding length.
 #[derive(Debug, Clone, BorshDeserialize, BorshSerialize)]
 pub struct OffsetUnboundingLen;
 impl EpochOffset for OffsetUnboundingLen {
@@ -66,12 +75,16 @@ impl EpochOffset for OffsetUnboundingLen {
     }
 }
 
+/// Offset length dynamic choice.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum DynEpochOffset {
+    /// Offset at pipeline length.
     PipelineLen,
+    /// Offset at unbonding length.
     UnbondingLen,
 }
 impl DynEpochOffset {
+    /// Find the value of a given offset from PoS parameters.
     pub fn value(&self, params: &PosParams) -> u64 {
         match self {
             DynEpochOffset::PipelineLen => params.pipeline_len,

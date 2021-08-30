@@ -143,6 +143,7 @@ where
     InvalidTotalVotingPowerChange(u64, VotingPowerDelta, VotingPowerDelta),
 }
 
+/// An update of PoS data.
 #[derive(Clone, Debug)]
 pub enum DataUpdate<Address, TokenAmount, TokenChange>
 where
@@ -179,25 +180,40 @@ where
         + BorshDeserialize
         + BorshSerialize,
 {
+    /// PoS account's balance update
     Balance(Data<TokenAmount>),
+    /// Bond update
     Bond {
+        /// Bond ID
         id: BondId<Address>,
+        /// Bond prior and posterior state
         data: Data<Bonds<TokenAmount>>,
+        /// List of slashes applied to the bond's validator
         slashes: Slashes,
     },
+    /// Unbond update
     Unbond {
+        /// Unbond ID
         id: BondId<Address>,
+        /// Unbond prior and posterior state
         data: Data<Unbonds<TokenAmount>>,
+        /// List of slashes applied to the bond's validator
         slashes: Slashes,
     },
+    /// A validator update
     Validator {
+        /// Validator's address
         address: Address,
+        /// Validator's data update
         update: ValidatorUpdate<Address, TokenChange>,
     },
+    /// Validator set update
     ValidatorSet(Data<ValidatorSets<Address>>),
+    /// Total voting power update
     TotalVotingPower(Data<TotalVotingPowers>),
 }
 
+/// An update of a validator's data.
 #[derive(Clone, Debug)]
 pub enum ValidatorUpdate<Address, TokenChange>
 where
@@ -214,11 +230,15 @@ where
         + BorshDeserialize
         + BorshSerialize,
 {
+    /// Staking reward address update
     StakingRewardAddress(Data<Address>),
+    /// Total deltas update
     TotalDeltas(Data<ValidatorTotalDeltas<TokenChange>>),
+    /// Voting power update
     VotingPowerUpdate(Data<ValidatorVotingPowers>),
 }
 
+/// Data update with prior and posterior state.
 #[derive(Clone, Debug)]
 pub struct Data<T>
 where
@@ -230,6 +250,8 @@ where
     pub post: Option<T>,
 }
 
+/// Validate the given list of PoS data `changes`. Returns empty list, if all
+/// the changes are valid.
 pub fn validate<Address, TokenAmount, TokenChange>(
     params: &PosParams,
     changes: Vec<DataUpdate<Address, TokenAmount, TokenChange>>,
@@ -531,7 +553,7 @@ where
                                                 address.clone(),
                                                 voting_power,
                                             );
-                                        let voting_power_delta = VotingPowerDelta::from_token_change(
+                                        let voting_power_delta = VotingPowerDelta::try_from_token_change(
                                             *change, params).unwrap_or_default();
                                         let current_delta = expected_voting_power_delta_by_epoch.entry(epoch)
                                                 .or_insert_with(Default::default);

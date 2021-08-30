@@ -1,9 +1,10 @@
-//! PoS system parameters
+//! Proof-of-Stake system parameters
 
 use borsh::{BorshDeserialize, BorshSerialize};
 
 use crate::types::BasisPoints;
 
+/// Proof-of-Stake system parameters
 #[derive(Debug, Clone, BorshDeserialize, BorshSerialize)]
 pub struct PosParams {
     /// A maximum number of active validators
