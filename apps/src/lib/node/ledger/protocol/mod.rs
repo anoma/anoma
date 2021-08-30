@@ -245,9 +245,13 @@ fn execute_vps(
                             gas_meter = parameters.ctx.gas_meter.into_inner();
                             result
                         }
-                        InternalAddress::PosSlashPool => Err(
-                            Error::AccessForbidden((*internal_addr).clone()),
-                        ),
+                        InternalAddress::PosSlashPool => {
+                            // Take the gas meter back out of the context
+                            gas_meter = ctx.gas_meter.into_inner();
+                            Err(Error::AccessForbidden(
+                                (*internal_addr).clone(),
+                            ))
+                        }
                     };
 
                     accepted
