@@ -1,6 +1,7 @@
 //! Proof-of-Stake native validity predicate.
 
 use std::collections::HashSet;
+use std::panic::{RefUnwindSafe, UnwindSafe};
 
 pub use anoma_proof_of_stake;
 pub use anoma_proof_of_stake::parameters::PosParams;
@@ -50,6 +51,28 @@ where
 {
     /// Context to interact with the host structures.
     pub ctx: Ctx<'a, DB, H>,
+}
+
+// TODO this is temporarily to run PoS native VP in a new thread to avoid
+// crashing the ledger (in apps/src/lib/node/ledger/protocol/mod.rs). The
+// RefCells contained within PosVP are not thread-safe, but each thread has its
+// own instances.
+impl<DB, H> UnwindSafe for PosVP<'_, DB, H>
+where
+    DB: 'static + ledger_storage::DB + for<'iter> ledger_storage::DBIter<'iter>,
+    H: 'static + StorageHasher,
+{
+}
+
+// TODO this is temporarily to run PoS native VP in a new thread to avoid
+// crashing the ledger (in apps/src/lib/node/ledger/protocol/mod.rs). The
+// RefCells contained within PosVP are not thread-safe, but each thread has its
+// own instances.
+impl<DB, H> RefUnwindSafe for PosVP<'_, DB, H>
+where
+    DB: 'static + ledger_storage::DB + for<'iter> ledger_storage::DBIter<'iter>,
+    H: 'static + StorageHasher,
+{
 }
 
 impl<'a, DB, H> NativeVp for PosVP<'a, DB, H>
