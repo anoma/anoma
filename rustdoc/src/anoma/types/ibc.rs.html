@@ -1145,6 +1145,137 @@
 <span id="1143">1143</span>
 <span id="1144">1144</span>
 <span id="1145">1145</span>
+<span id="1146">1146</span>
+<span id="1147">1147</span>
+<span id="1148">1148</span>
+<span id="1149">1149</span>
+<span id="1150">1150</span>
+<span id="1151">1151</span>
+<span id="1152">1152</span>
+<span id="1153">1153</span>
+<span id="1154">1154</span>
+<span id="1155">1155</span>
+<span id="1156">1156</span>
+<span id="1157">1157</span>
+<span id="1158">1158</span>
+<span id="1159">1159</span>
+<span id="1160">1160</span>
+<span id="1161">1161</span>
+<span id="1162">1162</span>
+<span id="1163">1163</span>
+<span id="1164">1164</span>
+<span id="1165">1165</span>
+<span id="1166">1166</span>
+<span id="1167">1167</span>
+<span id="1168">1168</span>
+<span id="1169">1169</span>
+<span id="1170">1170</span>
+<span id="1171">1171</span>
+<span id="1172">1172</span>
+<span id="1173">1173</span>
+<span id="1174">1174</span>
+<span id="1175">1175</span>
+<span id="1176">1176</span>
+<span id="1177">1177</span>
+<span id="1178">1178</span>
+<span id="1179">1179</span>
+<span id="1180">1180</span>
+<span id="1181">1181</span>
+<span id="1182">1182</span>
+<span id="1183">1183</span>
+<span id="1184">1184</span>
+<span id="1185">1185</span>
+<span id="1186">1186</span>
+<span id="1187">1187</span>
+<span id="1188">1188</span>
+<span id="1189">1189</span>
+<span id="1190">1190</span>
+<span id="1191">1191</span>
+<span id="1192">1192</span>
+<span id="1193">1193</span>
+<span id="1194">1194</span>
+<span id="1195">1195</span>
+<span id="1196">1196</span>
+<span id="1197">1197</span>
+<span id="1198">1198</span>
+<span id="1199">1199</span>
+<span id="1200">1200</span>
+<span id="1201">1201</span>
+<span id="1202">1202</span>
+<span id="1203">1203</span>
+<span id="1204">1204</span>
+<span id="1205">1205</span>
+<span id="1206">1206</span>
+<span id="1207">1207</span>
+<span id="1208">1208</span>
+<span id="1209">1209</span>
+<span id="1210">1210</span>
+<span id="1211">1211</span>
+<span id="1212">1212</span>
+<span id="1213">1213</span>
+<span id="1214">1214</span>
+<span id="1215">1215</span>
+<span id="1216">1216</span>
+<span id="1217">1217</span>
+<span id="1218">1218</span>
+<span id="1219">1219</span>
+<span id="1220">1220</span>
+<span id="1221">1221</span>
+<span id="1222">1222</span>
+<span id="1223">1223</span>
+<span id="1224">1224</span>
+<span id="1225">1225</span>
+<span id="1226">1226</span>
+<span id="1227">1227</span>
+<span id="1228">1228</span>
+<span id="1229">1229</span>
+<span id="1230">1230</span>
+<span id="1231">1231</span>
+<span id="1232">1232</span>
+<span id="1233">1233</span>
+<span id="1234">1234</span>
+<span id="1235">1235</span>
+<span id="1236">1236</span>
+<span id="1237">1237</span>
+<span id="1238">1238</span>
+<span id="1239">1239</span>
+<span id="1240">1240</span>
+<span id="1241">1241</span>
+<span id="1242">1242</span>
+<span id="1243">1243</span>
+<span id="1244">1244</span>
+<span id="1245">1245</span>
+<span id="1246">1246</span>
+<span id="1247">1247</span>
+<span id="1248">1248</span>
+<span id="1249">1249</span>
+<span id="1250">1250</span>
+<span id="1251">1251</span>
+<span id="1252">1252</span>
+<span id="1253">1253</span>
+<span id="1254">1254</span>
+<span id="1255">1255</span>
+<span id="1256">1256</span>
+<span id="1257">1257</span>
+<span id="1258">1258</span>
+<span id="1259">1259</span>
+<span id="1260">1260</span>
+<span id="1261">1261</span>
+<span id="1262">1262</span>
+<span id="1263">1263</span>
+<span id="1264">1264</span>
+<span id="1265">1265</span>
+<span id="1266">1266</span>
+<span id="1267">1267</span>
+<span id="1268">1268</span>
+<span id="1269">1269</span>
+<span id="1270">1270</span>
+<span id="1271">1271</span>
+<span id="1272">1272</span>
+<span id="1273">1273</span>
+<span id="1274">1274</span>
+<span id="1275">1275</span>
+<span id="1276">1276</span>
 </pre><pre class="rust">
 <span class="doccomment">//! IBC-related data definitions and transaction and validity-predicate helpers.</span>
 
@@ -1160,9 +1291,11 @@
 <span class="kw">use</span> <span class="ident">ibc::ics03_connection::connection::Counterparty</span> <span class="kw">as</span> <span class="ident">ConnCounterparty</span>;
 <span class="kw">use</span> <span class="ident">ibc::ics03_connection::version::Version</span>;
 <span class="kw">use</span> <span class="ident">ibc::ics04_channel::channel</span>::{<span class="ident">Counterparty</span> <span class="kw">as</span> <span class="ident">ChanCounterparty</span>, <span class="ident">Order</span>};
+<span class="kw">use</span> <span class="ident">ibc::ics04_channel::packet::Packet</span>;
 <span class="kw">use</span> <span class="ident">ibc::ics23_commitment::commitment::CommitmentProofBytes</span>;
 <span class="kw">use</span> <span class="ident">ibc::ics24_host::identifier</span>::{<span class="ident">ChannelId</span>, <span class="ident">ClientId</span>, <span class="ident">ConnectionId</span>, <span class="ident">PortId</span>};
 <span class="kw">use</span> <span class="ident">ibc::proofs</span>::{<span class="ident">ConsensusProof</span>, <span class="ident">Proofs</span>};
+<span class="kw">use</span> <span class="ident">ibc_proto::ibc::core::channel::v1::Packet</span> <span class="kw">as</span> <span class="ident">RawPacket</span>;
 <span class="kw">use</span> <span class="ident">ibc_proto::ibc::core::commitment::v1::MerkleProof</span>;
 <span class="kw">use</span> <span class="ident">ibc_proto::ibc::core::connection::v1::Counterparty</span> <span class="kw">as</span> <span class="ident">RawCounterparty</span>;
 <span class="kw">use</span> <span class="ident">prost::Message</span>;
@@ -2289,6 +2422,135 @@
             <span class="ident">height</span>,
         )
         .<span class="ident">map_err</span>(<span class="ident">Error::DecodingError</span>)
+    }
+}
+
+<span class="doccomment">/// Returns the encoded packet</span>
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">encode_packet</span>(<span class="ident">packet</span>: <span class="kw-2">&amp;</span><span class="ident">Packet</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span> {
+    <span class="kw">let</span> <span class="ident">raw_packet</span> <span class="op">=</span> <span class="ident">RawPacket::from</span>(<span class="ident">packet</span>.<span class="ident">clone</span>());
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="macro">vec!</span>[];
+    <span class="ident">raw_packet</span>
+        .<span class="ident">encode</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">bytes</span>)
+        .<span class="ident">expect</span>(<span class="string">&quot;Encoding a packet shouldn&#39;t fail&quot;</span>);
+    <span class="ident">bytes</span>
+}
+
+<span class="doccomment">/// Returns the packet</span>
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">decode_packet</span>(<span class="ident">bytes</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span>[<span class="ident">u8</span>]<span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Packet</span><span class="op">&gt;</span> {
+    <span class="kw">let</span> <span class="ident">raw_packet</span> <span class="op">=</span> <span class="ident">RawPacket::decode</span>(<span class="ident">bytes</span>.<span class="ident">as_ref</span>())
+        .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">Error::DecodingError</span>(<span class="ident">e</span>.<span class="ident">to_string</span>()))<span class="question-mark">?</span>;
+    <span class="ident">Packet::try_from</span>(<span class="ident">raw_packet</span>)
+        .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">Error::DecodingError</span>(<span class="ident">e</span>.<span class="ident">to_string</span>()))
+}
+
+<span class="doccomment">/// Data for receiving a packet</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">BorshSerialize</span>, <span class="ident">BorshDeserialize</span>)]</span>
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">PacketReceiptData</span> {
+    <span class="doccomment">/// The packet</span>
+    <span class="ident">packet</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>,
+    <span class="doccomment">/// The height of the proof</span>
+    <span class="ident">proof_height</span>: (<span class="ident">u64</span>, <span class="ident">u64</span>),
+    <span class="doccomment">/// The proof of the packet</span>
+    <span class="ident">proof_packets</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>,
+}
+
+<span class="kw">impl</span> <span class="ident">PacketReceiptData</span> {
+    <span class="doccomment">/// Create data for receiving packet</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(
+        <span class="ident">packet</span>: <span class="ident">Packet</span>,
+        <span class="ident">proof_height</span>: <span class="ident">Height</span>,
+        <span class="ident">proof_packets</span>: <span class="ident">CommitmentProofBytes</span>,
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="ident">encode_packet</span>(<span class="kw-2">&amp;</span><span class="ident">packet</span>);
+        <span class="self">Self</span> {
+            <span class="ident">packet</span>: <span class="ident">bytes</span>,
+            <span class="ident">proof_height</span>: (
+                <span class="ident">proof_height</span>.<span class="ident">revision_number</span>,
+                <span class="ident">proof_height</span>.<span class="ident">revision_height</span>,
+            ),
+            <span class="ident">proof_packets</span>: <span class="ident">proof_packets</span>.<span class="ident">into</span>(),
+        }
+    }
+
+    <span class="doccomment">/// Returns the packet</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">packet</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Packet</span><span class="op">&gt;</span> {
+        <span class="ident">decode_packet</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">packet</span>)
+    }
+
+    <span class="doccomment">/// Returns the height of the proof</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">proof_height</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Height</span> {
+        <span class="ident">Height::new</span>(<span class="self">self</span>.<span class="ident">proof_height</span>.<span class="number">0</span>, <span class="self">self</span>.<span class="ident">proof_height</span>.<span class="number">1</span>)
+    }
+
+    <span class="doccomment">/// Returns the proof of the packet</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">proof_packet</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">CommitmentProofBytes</span> {
+        <span class="self">self</span>.<span class="ident">proof_packets</span>.<span class="ident">clone</span>().<span class="ident">into</span>()
+    }
+
+    <span class="doccomment">/// Returns the proofs for verification</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">proofs</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Proofs</span><span class="op">&gt;</span> {
+        <span class="ident">Proofs::new</span>(<span class="self">self</span>.<span class="ident">proof_packet</span>(), <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="self">self</span>.<span class="ident">proof_height</span>())
+            .<span class="ident">map_err</span>(<span class="ident">Error::DecodingError</span>)
+    }
+}
+
+<span class="doccomment">/// Data for packet acknowledgement</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">BorshSerialize</span>, <span class="ident">BorshDeserialize</span>)]</span>
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">PacketAckData</span> {
+    <span class="doccomment">/// The packet</span>
+    <span class="ident">packet</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>,
+    <span class="doccomment">/// The acknowledgement</span>
+    <span class="ident">ack</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>,
+    <span class="doccomment">/// The height of the proof</span>
+    <span class="ident">proof_height</span>: (<span class="ident">u64</span>, <span class="ident">u64</span>),
+    <span class="doccomment">/// The proof of the packet</span>
+    <span class="ident">proof_packets</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>,
+}
+
+<span class="kw">impl</span> <span class="ident">PacketAckData</span> {
+    <span class="doccomment">/// Create data for packet acknowledgement</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(
+        <span class="ident">packet</span>: <span class="ident">Packet</span>,
+        <span class="ident">ack</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>,
+        <span class="ident">proof_height</span>: <span class="ident">Height</span>,
+        <span class="ident">proof_packets</span>: <span class="ident">CommitmentProofBytes</span>,
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="ident">encode_packet</span>(<span class="kw-2">&amp;</span><span class="ident">packet</span>);
+        <span class="self">Self</span> {
+            <span class="ident">packet</span>: <span class="ident">bytes</span>,
+            <span class="ident">ack</span>,
+            <span class="ident">proof_height</span>: (
+                <span class="ident">proof_height</span>.<span class="ident">revision_number</span>,
+                <span class="ident">proof_height</span>.<span class="ident">revision_height</span>,
+            ),
+            <span class="ident">proof_packets</span>: <span class="ident">proof_packets</span>.<span class="ident">into</span>(),
+        }
+    }
+
+    <span class="doccomment">/// Returns the packet</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">packet</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Packet</span><span class="op">&gt;</span> {
+        <span class="ident">decode_packet</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">packet</span>)
+    }
+
+    <span class="doccomment">/// Returns the acknowledgement</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">ack</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span> {
+        <span class="self">self</span>.<span class="ident">ack</span>.<span class="ident">clone</span>()
+    }
+
+    <span class="doccomment">/// Returns the height of the proof</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">proof_height</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Height</span> {
+        <span class="ident">Height::new</span>(<span class="self">self</span>.<span class="ident">proof_height</span>.<span class="number">0</span>, <span class="self">self</span>.<span class="ident">proof_height</span>.<span class="number">1</span>)
+    }
+
+    <span class="doccomment">/// Returns the proof of the packet</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">proof_packet</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">CommitmentProofBytes</span> {
+        <span class="self">self</span>.<span class="ident">proof_packets</span>.<span class="ident">clone</span>().<span class="ident">into</span>()
+    }
+
+    <span class="doccomment">/// Returns the proofs for verification</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">proofs</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Proofs</span><span class="op">&gt;</span> {
+        <span class="ident">Proofs::new</span>(<span class="self">self</span>.<span class="ident">proof_packet</span>(), <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="self">self</span>.<span class="ident">proof_height</span>())
+            .<span class="ident">map_err</span>(<span class="ident">Error::DecodingError</span>)
     }
 }
 </pre></div>
