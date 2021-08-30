@@ -8,9 +8,14 @@ mod tests {
     use std::process::Command;
     use std::{fs, thread};
 
+    use anoma::proto::Tx;
+    use anoma::types::address::Address;
+    use anoma::types::token;
     use anoma_apps::config::{Config, IntentGossiper};
+    use anoma_apps::wallet;
     use assert_cmd::assert::OutputAssertExt;
     use assert_cmd::cargo::CommandCargoExt;
+    use borsh::BorshSerialize;
     use color_eyre::eyre::Result;
     use constants::*;
     use eyre::eyre;
@@ -453,18 +458,16 @@ mod tests {
     /// 5. Submit and invalid transactions (malformed)
     #[test]
     fn invalid_transactions() -> Result<()> {
-        let dir = setup();
+        let working_dir = setup();
 
         let base_dir = tempdir().unwrap();
         let base_dir_arg = &base_dir.path().to_string_lossy();
 
         // 1. Run the ledger node
         let mut cmd = Command::cargo_bin("anoman")?;
-        cmd.current_dir(&dir).env("ANOMA_LOG", "debug").args(&[
-            "--base-dir",
-            base_dir_arg,
-            "ledger",
-        ]);
+        cmd.current_dir(&working_dir)
+            .env("ANOMA_LOG", "debug")
+            .args(&["--base-dir", base_dir_arg, "ledger"]);
         println!("Running {:?}", cmd);
         let mut session = spawn_command(cmd, Some(20_000))
             .map_err(|e| eyre!(format!("{}", e)))?;
@@ -476,21 +479,38 @@ mod tests {
             .exp_string("Started node")
             .map_err(|e| eyre!(format!("{}", e)))?;
 
-        // 2. Submit a an invalid transaction (amount > source's balance)
+        // 2. Submit a an invalid transaction (trying to mint tokens should fail
+        // in the token's VP)
+        let tx_data_path = base_dir.path().join("tx.data");
+        let transfer = token::Transfer {
+            source: Address::decode(BERTHA).unwrap(),
+            target: Address::decode(ALBERT).unwrap(),
+            token: Address::decode(XAN).unwrap(),
+            amount: token::Amount::whole(1),
+        };
+        let data = transfer
+            .try_to_vec()
+            .expect("Encoding unsigned transfer shouldn't fail");
+        let source_key = wallet::key_of(BERTHA);
+        let tx_wasm_path = TX_MINT_TOKENS_WASM;
+        let tx_wasm_path_abs = working_dir.join(&tx_wasm_path);
+        println!("Reading tx wasm for test from {:?}", tx_wasm_path_abs);
+        let tx_code = fs::read(tx_wasm_path_abs).unwrap();
+        let tx = Tx::new(tx_code, Some(data)).sign(&source_key);
+
+        let tx_data = tx.data.unwrap();
+        std::fs::write(&tx_data_path, tx_data).unwrap();
+        let tx_data_path = tx_data_path.to_string_lossy();
         let tx_args = vec![
-            "transfer",
-            "--source",
-            BERTHA,
-            "--target",
-            ALBERT,
-            "--token",
-            XAN,
-            "--amount",
-            "1_000_000.1",
+            "tx",
+            "--code-path",
+            tx_wasm_path,
+            "--data-path",
+            &tx_data_path,
         ];
 
         let mut cmd = Command::cargo_bin("anomac")?;
-        cmd.current_dir(&dir)
+        cmd.current_dir(&working_dir)
             .env("ANOMA_LOG", "debug")
             .args(&["--base-dir", base_dir_arg])
             .args(tx_args);
@@ -537,11 +557,9 @@ mod tests {
 
         // 4. Restart the ledger
         let mut cmd = Command::cargo_bin("anoma")?;
-        cmd.current_dir(&dir).env("ANOMA_LOG", "debug").args(&[
-            "--base-dir",
-            base_dir_arg,
-            "ledger",
-        ]);
+        cmd.current_dir(&working_dir)
+            .env("ANOMA_LOG", "debug")
+            .args(&["--base-dir", base_dir_arg, "ledger"]);
         println!("Running {:?}", cmd);
         let mut session = spawn_command(cmd, Some(20_000))
             .map_err(|e| eyre!(format!("{}", e)))?;
@@ -555,6 +573,7 @@ mod tests {
             .exp_string("Last state root hash:")
             .map_err(|e| eyre!(format!("{}", e)))?;
 
+        // 5. Submit and invalid transactions (invalid token address)
         let tx_args = vec![
             "transfer",
             "--source",
@@ -567,7 +586,7 @@ mod tests {
             "1_000_000.1",
         ];
         let mut cmd = Command::cargo_bin("anomac")?;
-        cmd.current_dir(&dir)
+        cmd.current_dir(&working_dir)
             .env("ANOMA_LOG", "debug")
             .args(&["--base-dir", base_dir_arg])
             .args(tx_args);
@@ -931,5 +950,7 @@ mod tests {
         pub const TX_TRANSFER_WASM: &str = "wasm/tx_transfer.wasm";
         pub const VP_USER_WASM: &str = "wasm/vp_user.wasm";
         pub const TX_NO_OP_WASM: &str = "wasm_for_tests/tx_no_op.wasm";
+        pub const TX_MINT_TOKENS_WASM: &str =
+            "wasm_for_tests/tx_mint_tokens.wasm";
     }
 }

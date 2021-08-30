@@ -194,6 +194,7 @@ dependencies = [
  "anoma_apps",
  "anoma_vm_env",
  "assert_cmd",
+ "borsh",
  "color-eyre",
  "concat-idents",
  "eyre",
