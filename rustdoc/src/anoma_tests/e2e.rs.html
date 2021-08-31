@@ -894,47 +894,6 @@
 <span id="892">892</span>
 <span id="893">893</span>
 <span id="894">894</span>
-<span id="895">895</span>
-<span id="896">896</span>
-<span id="897">897</span>
-<span id="898">898</span>
-<span id="899">899</span>
-<span id="900">900</span>
-<span id="901">901</span>
-<span id="902">902</span>
-<span id="903">903</span>
-<span id="904">904</span>
-<span id="905">905</span>
-<span id="906">906</span>
-<span id="907">907</span>
-<span id="908">908</span>
-<span id="909">909</span>
-<span id="910">910</span>
-<span id="911">911</span>
-<span id="912">912</span>
-<span id="913">913</span>
-<span id="914">914</span>
-<span id="915">915</span>
-<span id="916">916</span>
-<span id="917">917</span>
-<span id="918">918</span>
-<span id="919">919</span>
-<span id="920">920</span>
-<span id="921">921</span>
-<span id="922">922</span>
-<span id="923">923</span>
-<span id="924">924</span>
-<span id="925">925</span>
-<span id="926">926</span>
-<span id="927">927</span>
-<span id="928">928</span>
-<span id="929">929</span>
-<span id="930">930</span>
-<span id="931">931</span>
-<span id="932">932</span>
-<span id="933">933</span>
-<span id="934">934</span>
-<span id="935">935</span>
 </pre><pre class="rust">
 <span class="doccomment">//! End-to-end tests for Anoma binaries</span>
 
@@ -1612,53 +1571,6 @@
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">base_node_ledger</span> <span class="op">=</span> <span class="ident">Command::cargo_bin</span>(<span class="string">&quot;anoman&quot;</span>)<span class="question-mark">?</span>;
         <span class="ident">base_node_ledger</span>.<span class="ident">args</span>(<span class="kw-2">&amp;</span>[<span class="string">&quot;--base-dir&quot;</span>, <span class="ident">first_node_dir</span>, <span class="string">&quot;ledger&quot;</span>]);
 
-        <span class="comment">// Craft intents</span>
-        <span class="comment">// cargo run --bin anomac -- craft-intent --key $BERTHA</span>
-        <span class="comment">// --file-path-input intent.A.data --file-path-output intent.A</span>
-
-        <span class="kw">let</span> <span class="ident">tx_a</span> <span class="op">=</span> <span class="macro">vec!</span>[
-            <span class="string">&quot;craft-intent&quot;</span>,
-            <span class="string">&quot;--key&quot;</span>,
-            <span class="ident">BERTHA</span>,
-            <span class="string">&quot;--file-path-output&quot;</span>,
-            <span class="ident">intent_a_path</span>.<span class="ident">to_str</span>().<span class="ident">unwrap</span>(),
-            <span class="string">&quot;--file-path-input&quot;</span>,
-            <span class="ident">intent_a_path_input</span>.<span class="ident">to_str</span>().<span class="ident">unwrap</span>(),
-        ];
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">craft_intent_a</span> <span class="op">=</span> <span class="ident">Command::cargo_bin</span>(<span class="string">&quot;anomac&quot;</span>)<span class="question-mark">?</span>;
-        <span class="ident">craft_intent_a</span>.<span class="ident">args</span>(<span class="ident">tx_a</span>);
-        <span class="ident">craft_intent_a</span>.<span class="ident">spawn</span>().<span class="ident">expect</span>(<span class="string">&quot;Should create the intent&quot;</span>);
-
-        <span class="comment">// cargo run --bin anomac -- craft-intent --key $ALBERT</span>
-        <span class="comment">// --file-path-input intent.B.data --file-path-output intent.B</span>
-        <span class="kw">let</span> <span class="ident">tx_b</span> <span class="op">=</span> <span class="macro">vec!</span>[
-            <span class="string">&quot;craft-intent&quot;</span>,
-            <span class="string">&quot;--key&quot;</span>,
-            <span class="ident">ALBERT</span>,
-            <span class="string">&quot;--file-path-output&quot;</span>,
-            <span class="ident">intent_b_path</span>.<span class="ident">to_str</span>().<span class="ident">unwrap</span>(),
-            <span class="string">&quot;--file-path-input&quot;</span>,
-            <span class="ident">intent_b_path_input</span>.<span class="ident">to_str</span>().<span class="ident">unwrap</span>(),
-        ];
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">craft_intent_b</span> <span class="op">=</span> <span class="ident">Command::cargo_bin</span>(<span class="string">&quot;anomac&quot;</span>)<span class="question-mark">?</span>;
-        <span class="ident">craft_intent_b</span>.<span class="ident">args</span>(<span class="ident">tx_b</span>);
-        <span class="ident">craft_intent_b</span>.<span class="ident">spawn</span>().<span class="ident">expect</span>(<span class="string">&quot;Should create the intent&quot;</span>);
-
-        <span class="comment">// cargo run --bin anomac -- craft-intent --key $CHRISTEL</span>
-        <span class="comment">// --file-path-input intent.C.data --file-path-output intent.C</span>
-        <span class="kw">let</span> <span class="ident">tx_c</span> <span class="op">=</span> <span class="macro">vec!</span>[
-            <span class="string">&quot;craft-intent&quot;</span>,
-            <span class="string">&quot;--key&quot;</span>,
-            <span class="ident">CHRISTEL</span>,
-            <span class="string">&quot;--file-path-output&quot;</span>,
-            <span class="ident">intent_c_path</span>.<span class="ident">to_str</span>().<span class="ident">unwrap</span>(),
-            <span class="string">&quot;--file-path-input&quot;</span>,
-            <span class="ident">intent_c_path_input</span>.<span class="ident">to_str</span>().<span class="ident">unwrap</span>(),
-        ];
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">craft_intent_c</span> <span class="op">=</span> <span class="ident">Command::cargo_bin</span>(<span class="string">&quot;anomac&quot;</span>)<span class="question-mark">?</span>;
-        <span class="ident">craft_intent_c</span>.<span class="ident">args</span>(<span class="ident">tx_c</span>);
-        <span class="ident">craft_intent_c</span>.<span class="ident">spawn</span>().<span class="ident">expect</span>(<span class="string">&quot;Should create the intent&quot;</span>);
-
         <span class="comment">//  Start gossip</span>
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">session_gossip</span> <span class="op">=</span> <span class="ident">spawn_command</span>(<span class="ident">base_node_gossip</span>, <span class="prelude-val">Some</span>(<span class="number">40_000</span>))
             .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="macro">eyre!</span>(<span class="macro">format!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">e</span>)))<span class="question-mark">?</span>;
@@ -1685,9 +1597,11 @@
             <span class="string">&quot;--node&quot;</span>,
             <span class="string">&quot;http://127.0.0.1:39111&quot;</span>,
             <span class="string">&quot;--data-path&quot;</span>,
-            <span class="ident">intent_a_path</span>.<span class="ident">to_str</span>().<span class="ident">unwrap</span>(),
+            <span class="ident">intent_a_path_input</span>.<span class="ident">to_str</span>().<span class="ident">unwrap</span>(),
             <span class="string">&quot;--topic&quot;</span>,
             <span class="string">&quot;asset_v1&quot;</span>,
+            <span class="string">&quot;--key&quot;</span>,
+            <span class="ident">BERTHA</span>,
         ]);
 
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">session_send_intent_a</span> <span class="op">=</span>
@@ -1712,9 +1626,11 @@
             <span class="string">&quot;--node&quot;</span>,
             <span class="string">&quot;http://127.0.0.1:39111&quot;</span>,
             <span class="string">&quot;--data-path&quot;</span>,
-            <span class="ident">intent_b_path</span>.<span class="ident">to_str</span>().<span class="ident">unwrap</span>(),
+            <span class="ident">intent_b_path_input</span>.<span class="ident">to_str</span>().<span class="ident">unwrap</span>(),
             <span class="string">&quot;--topic&quot;</span>,
             <span class="string">&quot;asset_v1&quot;</span>,
+            <span class="string">&quot;--key&quot;</span>,
+            <span class="ident">ALBERT</span>,
         ]);
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">session_send_intent_b</span> <span class="op">=</span>
             <span class="ident">spawn_command</span>(<span class="ident">send_intent_b</span>, <span class="prelude-val">Some</span>(<span class="number">20_000</span>))
@@ -1738,9 +1654,11 @@
             <span class="string">&quot;--node&quot;</span>,
             <span class="string">&quot;http://127.0.0.1:39111&quot;</span>,
             <span class="string">&quot;--data-path&quot;</span>,
-            <span class="ident">intent_c_path</span>.<span class="ident">to_str</span>().<span class="ident">unwrap</span>(),
+            <span class="ident">intent_c_path_input</span>.<span class="ident">to_str</span>().<span class="ident">unwrap</span>(),
             <span class="string">&quot;--topic&quot;</span>,
             <span class="string">&quot;asset_v1&quot;</span>,
+            <span class="string">&quot;--key&quot;</span>,
+            <span class="ident">CHRISTEL</span>,
         ]);
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">session_send_intent_c</span> <span class="op">=</span>
             <span class="ident">spawn_command</span>(<span class="ident">send_intent_c</span>, <span class="prelude-val">Some</span>(<span class="number">40_000</span>))

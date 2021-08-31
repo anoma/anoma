@@ -1019,53 +1019,6 @@
 <span id="1017">1017</span>
 <span id="1018">1018</span>
 <span id="1019">1019</span>
-<span id="1020">1020</span>
-<span id="1021">1021</span>
-<span id="1022">1022</span>
-<span id="1023">1023</span>
-<span id="1024">1024</span>
-<span id="1025">1025</span>
-<span id="1026">1026</span>
-<span id="1027">1027</span>
-<span id="1028">1028</span>
-<span id="1029">1029</span>
-<span id="1030">1030</span>
-<span id="1031">1031</span>
-<span id="1032">1032</span>
-<span id="1033">1033</span>
-<span id="1034">1034</span>
-<span id="1035">1035</span>
-<span id="1036">1036</span>
-<span id="1037">1037</span>
-<span id="1038">1038</span>
-<span id="1039">1039</span>
-<span id="1040">1040</span>
-<span id="1041">1041</span>
-<span id="1042">1042</span>
-<span id="1043">1043</span>
-<span id="1044">1044</span>
-<span id="1045">1045</span>
-<span id="1046">1046</span>
-<span id="1047">1047</span>
-<span id="1048">1048</span>
-<span id="1049">1049</span>
-<span id="1050">1050</span>
-<span id="1051">1051</span>
-<span id="1052">1052</span>
-<span id="1053">1053</span>
-<span id="1054">1054</span>
-<span id="1055">1055</span>
-<span id="1056">1056</span>
-<span id="1057">1057</span>
-<span id="1058">1058</span>
-<span id="1059">1059</span>
-<span id="1060">1060</span>
-<span id="1061">1061</span>
-<span id="1062">1062</span>
-<span id="1063">1063</span>
-<span id="1064">1064</span>
-<span id="1065">1065</span>
-<span id="1066">1066</span>
 </pre><pre class="rust">
 <span class="doccomment">//! The CLI commands that are re-used between the executables `anoma`,</span>
 <span class="doccomment">//! `anoma-node` and `anoma-client`.</span>
@@ -1197,7 +1150,6 @@
         <span class="ident">TxUpdateVp</span>(<span class="ident">TxUpdateVp</span>),
         <span class="ident">QueryBalance</span>(<span class="ident">QueryBalance</span>),
         <span class="ident">Intent</span>(<span class="ident">Intent</span>),
-        <span class="ident">CraftIntent</span>(<span class="ident">CraftIntent</span>),
         <span class="ident">SubscribeTopic</span>(<span class="ident">SubscribeTopic</span>),
     }
 
@@ -1208,7 +1160,6 @@
                 .<span class="ident">subcommand</span>(<span class="ident">TxUpdateVp::def</span>())
                 .<span class="ident">subcommand</span>(<span class="ident">QueryBalance::def</span>())
                 .<span class="ident">subcommand</span>(<span class="ident">Intent::def</span>())
-                .<span class="ident">subcommand</span>(<span class="ident">CraftIntent::def</span>())
                 .<span class="ident">subcommand</span>(<span class="ident">SubscribeTopic::def</span>())
         }
 
@@ -1219,8 +1170,6 @@
             <span class="kw">let</span> <span class="ident">query_balance</span> <span class="op">=</span>
                 <span class="ident">SubCmd::parse</span>(<span class="ident">matches</span>).<span class="ident">map_fst</span>(<span class="self">Self</span><span class="ident">::QueryBalance</span>);
             <span class="kw">let</span> <span class="ident">intent</span> <span class="op">=</span> <span class="ident">SubCmd::parse</span>(<span class="ident">matches</span>).<span class="ident">map_fst</span>(<span class="self">Self</span><span class="ident">::Intent</span>);
-            <span class="kw">let</span> <span class="ident">craft_intent</span> <span class="op">=</span>
-                <span class="ident">SubCmd::parse</span>(<span class="ident">matches</span>).<span class="ident">map_fst</span>(<span class="self">Self</span><span class="ident">::CraftIntent</span>);
             <span class="kw">let</span> <span class="ident">subscribe_topic</span> <span class="op">=</span>
                 <span class="ident">SubCmd::parse</span>(<span class="ident">matches</span>).<span class="ident">map_fst</span>(<span class="self">Self</span><span class="ident">::SubscribeTopic</span>);
             <span class="ident">tx_custom</span>
@@ -1228,7 +1177,6 @@
                 .<span class="ident">or</span>(<span class="ident">tx_update_vp</span>)
                 .<span class="ident">or</span>(<span class="ident">query_balance</span>)
                 .<span class="ident">or</span>(<span class="ident">intent</span>)
-                .<span class="ident">or</span>(<span class="ident">craft_intent</span>)
                 .<span class="ident">or</span>(<span class="ident">subscribe_topic</span>)
         }
     }
@@ -1537,28 +1485,6 @@
     }
 
     <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
-    <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">CraftIntent</span>(<span class="kw">pub</span> <span class="ident">args::CraftIntent</span>);
-
-    <span class="kw">impl</span> <span class="ident">SubCmd</span> <span class="kw">for</span> <span class="ident">CraftIntent</span> {
-        <span class="kw">const</span> <span class="ident">CMD</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;craft-intent&quot;</span>;
-
-        <span class="kw">fn</span> <span class="ident">parse</span>(<span class="ident">matches</span>: <span class="kw-2">&amp;</span><span class="ident">ArgMatches</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span>(<span class="self">Self</span>, <span class="kw-2">&amp;</span><span class="ident">ArgMatches</span>)<span class="op">&gt;</span>
-        <span class="kw">where</span>
-            <span class="self">Self</span>: <span class="ident">Sized</span>,
-        {
-            <span class="ident">matches</span>.<span class="ident">subcommand_matches</span>(<span class="self">Self</span><span class="ident">::CMD</span>).<span class="ident">map</span>(<span class="op">|</span><span class="ident">matches</span><span class="op">|</span> {
-                (<span class="ident">CraftIntent</span>(<span class="ident">args::CraftIntent::parse</span>(<span class="ident">matches</span>)), <span class="ident">matches</span>)
-            })
-        }
-
-        <span class="kw">fn</span> <span class="ident">def</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">App</span> {
-            <span class="ident">App::new</span>(<span class="self">Self</span><span class="ident">::CMD</span>)
-                .<span class="ident">about</span>(<span class="string">&quot;Craft an intent.&quot;</span>)
-                .<span class="ident">add_args</span>::<span class="op">&lt;</span><span class="ident">args::CraftIntent</span><span class="op">&gt;</span>()
-        }
-    }
-
-    <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
     <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">SubscribeTopic</span>(<span class="kw">pub</span> <span class="ident">args::SubscribeTopic</span>);
 
     <span class="kw">impl</span> <span class="ident">SubCmd</span> <span class="kw">for</span> <span class="ident">SubscribeTopic</span> {
@@ -1628,9 +1554,7 @@
     <span class="kw">const</span> <span class="ident">MATCHMAKER_PATH</span>: <span class="ident">ArgOpt</span><span class="op">&lt;</span><span class="ident">PathBuf</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">arg_opt</span>(<span class="string">&quot;matchmaker-path&quot;</span>);
     <span class="kw">const</span> <span class="ident">MULTIADDR_OPT</span>: <span class="ident">ArgOpt</span><span class="op">&lt;</span><span class="ident">Multiaddr</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">arg_opt</span>(<span class="string">&quot;address&quot;</span>);
     <span class="kw">const</span> <span class="ident">NODE</span>: <span class="ident">Arg</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">arg</span>(<span class="string">&quot;node&quot;</span>);
-    <span class="kw">const</span> <span class="ident">FILE_PATH_OUTPUT</span>: <span class="ident">ArgDefault</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> <span class="op">=</span>
-        <span class="ident">arg_default</span>(<span class="string">&quot;file-path-output&quot;</span>, <span class="ident">DefaultFn</span>(<span class="op">|</span><span class="op">|</span> <span class="string">&quot;intent.data&quot;</span>.<span class="ident">into</span>()));
-    <span class="kw">const</span> <span class="ident">FILE_PATH_INPUT</span>: <span class="ident">Arg</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">arg</span>(<span class="string">&quot;file-path-input&quot;</span>);
+    <span class="kw">const</span> <span class="ident">TO_STDOUT</span>: <span class="ident">ArgFlag</span> <span class="op">=</span> <span class="ident">flag</span>(<span class="string">&quot;stdout&quot;</span>);
     <span class="kw">const</span> <span class="ident">OWNER</span>: <span class="ident">ArgOpt</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">arg_opt</span>(<span class="string">&quot;owner&quot;</span>);
     <span class="kw">const</span> <span class="ident">SOURCE</span>: <span class="ident">Arg</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">arg</span>(<span class="string">&quot;source&quot;</span>);
     <span class="kw">const</span> <span class="ident">TARGET</span>: <span class="ident">Arg</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">arg</span>(<span class="string">&quot;target&quot;</span>);
@@ -1819,72 +1743,54 @@
     <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Intent</span> {
         <span class="doccomment">/// Gossip node address</span>
         <span class="kw">pub</span> <span class="ident">node_addr</span>: <span class="ident">String</span>,
-        <span class="doccomment">/// Path to the intent file</span>
-        <span class="kw">pub</span> <span class="ident">data_path</span>: <span class="ident">PathBuf</span>,
         <span class="doccomment">/// Intent topic</span>
         <span class="kw">pub</span> <span class="ident">topic</span>: <span class="ident">String</span>,
+        <span class="doccomment">/// Signing key</span>
+        <span class="kw">pub</span> <span class="ident">key</span>: <span class="ident">Address</span>,
+        <span class="doccomment">/// Exchanges description</span>
+        <span class="kw">pub</span> <span class="ident">exchanges</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Exchange</span><span class="op">&gt;</span>,
+        <span class="doccomment">/// Print output to stdout</span>
+        <span class="kw">pub</span> <span class="ident">to_stdout</span>: <span class="ident">bool</span>,
     }
 
     <span class="kw">impl</span> <span class="ident">Args</span> <span class="kw">for</span> <span class="ident">Intent</span> {
         <span class="kw">fn</span> <span class="ident">parse</span>(<span class="ident">matches</span>: <span class="kw-2">&amp;</span><span class="ident">ArgMatches</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+            <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">SIGNING_KEY</span>.<span class="ident">parse</span>(<span class="ident">matches</span>);
             <span class="kw">let</span> <span class="ident">node_addr</span> <span class="op">=</span> <span class="ident">NODE</span>.<span class="ident">parse</span>(<span class="ident">matches</span>);
             <span class="kw">let</span> <span class="ident">data_path</span> <span class="op">=</span> <span class="ident">DATA_PATH</span>.<span class="ident">parse</span>(<span class="ident">matches</span>);
+            <span class="kw">let</span> <span class="ident">to_stdout</span> <span class="op">=</span> <span class="ident">TO_STDOUT</span>.<span class="ident">parse</span>(<span class="ident">matches</span>);
             <span class="kw">let</span> <span class="ident">topic</span> <span class="op">=</span> <span class="ident">TOPIC</span>.<span class="ident">parse</span>(<span class="ident">matches</span>);
+
+            <span class="kw">let</span> <span class="ident">file</span> <span class="op">=</span> <span class="ident">File::open</span>(<span class="kw-2">&amp;</span><span class="ident">data_path</span>).<span class="ident">expect</span>(<span class="string">&quot;File must exist.&quot;</span>);
+            <span class="kw">let</span> <span class="ident">exchanges</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Exchange</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">serde_json::from_reader</span>(<span class="ident">file</span>)
+                .<span class="ident">expect</span>(<span class="string">&quot;JSON was not well-formatted&quot;</span>);
+
             <span class="self">Self</span> {
                 <span class="ident">node_addr</span>,
-                <span class="ident">data_path</span>,
                 <span class="ident">topic</span>,
+                <span class="ident">key</span>,
+                <span class="ident">exchanges</span>,
+                <span class="ident">to_stdout</span>,
             }
         }
 
         <span class="kw">fn</span> <span class="ident">def</span>(<span class="ident">app</span>: <span class="ident">App</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">App</span> {
             <span class="ident">app</span>.<span class="ident">arg</span>(<span class="ident">NODE</span>.<span class="ident">def</span>().<span class="ident">about</span>(<span class="string">&quot;The gossip node address.&quot;</span>))
+                .<span class="ident">arg</span>(<span class="ident">SIGNING_KEY</span>.<span class="ident">def</span>().<span class="ident">about</span>(<span class="string">&quot;The key to sign the intent.&quot;</span>))
                 .<span class="ident">arg</span>(<span class="ident">DATA_PATH</span>.<span class="ident">def</span>().<span class="ident">about</span>(
                     <span class="string">&quot;The data of the intent, that contains all value \
                      necessary for the matchmaker.&quot;</span>,
+                ))
+                .<span class="ident">arg</span>(<span class="ident">TO_STDOUT</span>.<span class="ident">def</span>().<span class="ident">about</span>(
+                    <span class="string">&quot;Echo the serialized intent to stdout. Note that with \
+                     this option, the intent won&#39;t be submitted to the intent \
+                     gossiper RPC.&quot;</span>,
                 ))
                 .<span class="ident">arg</span>(
                     <span class="ident">TOPIC</span>.<span class="ident">def</span>().<span class="ident">about</span>(
                         <span class="string">&quot;The subnetwork where the intent should be sent to&quot;</span>,
                     ),
                 )
-        }
-    }
-
-    <span class="doccomment">/// Craft intent for token exchange arguments</span>
-    <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
-    <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">CraftIntent</span> {
-        <span class="doccomment">/// Signing key</span>
-        <span class="kw">pub</span> <span class="ident">key</span>: <span class="ident">Address</span>,
-        <span class="doccomment">/// Exchange description</span>
-        <span class="kw">pub</span> <span class="ident">exchanges</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Exchange</span><span class="op">&gt;</span>,
-        <span class="doccomment">/// Target file path</span>
-        <span class="kw">pub</span> <span class="ident">file_path</span>: <span class="ident">String</span>,
-    }
-
-    <span class="kw">impl</span> <span class="ident">Args</span> <span class="kw">for</span> <span class="ident">CraftIntent</span> {
-        <span class="kw">fn</span> <span class="ident">parse</span>(<span class="ident">matches</span>: <span class="kw-2">&amp;</span><span class="ident">ArgMatches</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
-            <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">SIGNING_KEY</span>.<span class="ident">parse</span>(<span class="ident">matches</span>);
-            <span class="kw">let</span> <span class="ident">file_path_output</span> <span class="op">=</span> <span class="ident">FILE_PATH_OUTPUT</span>.<span class="ident">parse</span>(<span class="ident">matches</span>);
-            <span class="kw">let</span> <span class="ident">file_path_input</span> <span class="op">=</span> <span class="ident">FILE_PATH_INPUT</span>.<span class="ident">parse</span>(<span class="ident">matches</span>);
-            <span class="kw">let</span> <span class="ident">file</span> <span class="op">=</span> <span class="ident">File::open</span>(<span class="kw-2">&amp;</span><span class="ident">file_path_input</span>).<span class="ident">expect</span>(<span class="string">&quot;File must exist.&quot;</span>);
-
-            <span class="kw">let</span> <span class="ident">exchanges</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Exchange</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">serde_json::from_reader</span>(<span class="ident">file</span>)
-                .<span class="ident">expect</span>(<span class="string">&quot;JSON was not well-formatted&quot;</span>);
-
-            <span class="self">Self</span> {
-                <span class="ident">key</span>,
-                <span class="ident">exchanges</span>,
-                <span class="ident">file_path</span>: <span class="ident">file_path_output</span>,
-            }
-        }
-
-        <span class="kw">fn</span> <span class="ident">def</span>(<span class="ident">app</span>: <span class="ident">App</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">App</span> {
-            <span class="ident">app</span>.<span class="ident">arg</span>(<span class="ident">SIGNING_KEY</span>.<span class="ident">def</span>().<span class="ident">about</span>(
-                <span class="string">&quot;Address of the account with key used to sign the intent.&quot;</span>,
-            ))
-            .<span class="ident">arg</span>(<span class="ident">FILE_PATH_OUTPUT</span>.<span class="ident">def</span>().<span class="ident">about</span>(<span class="string">&quot;The output file&quot;</span>))
-            .<span class="ident">arg</span>(<span class="ident">FILE_PATH_INPUT</span>.<span class="ident">def</span>().<span class="ident">about</span>(<span class="string">&quot;The input file&quot;</span>))
         }
     }
 
