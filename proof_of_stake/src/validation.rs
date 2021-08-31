@@ -333,7 +333,7 @@ where
         HashMap<Address, VotingPower>,
     > = HashMap::default();
     // Total voting power delta calculated from validators' total deltas
-    let mut expected_voting_power_delta_by_epoch: HashMap<
+    let mut expected_total_voting_power_delta_by_epoch: HashMap<
         Epoch,
         VotingPowerDelta,
     > = HashMap::default();
@@ -462,7 +462,7 @@ where
                                             if delta
                                                 != VotingPowerDelta::default()
                                             {
-                                                let current_delta = expected_voting_power_delta_by_epoch.entry(epoch)
+                                                let current_delta = expected_total_voting_power_delta_by_epoch.entry(epoch)
                                                 .or_insert_with(Default::default);
                                                 *current_delta += delta;
                                             }
@@ -555,7 +555,7 @@ where
                                             );
                                         let voting_power_delta = VotingPowerDelta::try_from_token_change(
                                             *change, params).unwrap_or_default();
-                                        let current_delta = expected_voting_power_delta_by_epoch.entry(epoch)
+                                        let current_delta = expected_total_voting_power_delta_by_epoch.entry(epoch)
                                                 .or_insert_with(Default::default);
                                         *current_delta += voting_power_delta;
                                     }
@@ -1253,7 +1253,7 @@ where
     }
 
     // Check expected total voting power change
-    for (epoch, expected_delta) in expected_voting_power_delta_by_epoch {
+    for (epoch, expected_delta) in expected_total_voting_power_delta_by_epoch {
         match total_voting_power_delta_by_epoch.get(&epoch) {
             Some(actual_delta) => {
                 if *actual_delta != expected_delta {
