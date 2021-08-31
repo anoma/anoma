@@ -11,8 +11,8 @@ use rust_decimal::prelude::*;
 
 enum KeyType<'a> {
     Token(&'a Address),
-    InvalidIntentSet(&'a Address),
     PoS,
+    InvalidIntentSet(&'a Address),
     Unknown,
 }
 
@@ -20,10 +20,10 @@ impl<'a> From<&'a storage::Key> for KeyType<'a> {
     fn from(key: &'a storage::Key) -> KeyType<'a> {
         if let Some(address) = token::is_any_token_balance_key(key) {
             Self::Token(address)
-        } else if let Some(address) = intent::is_invalid_intent_key(key) {
-            Self::InvalidIntentSet(address)
         } else if proof_of_stake::is_pos_key(key) {
             Self::PoS
+        } else if let Some(address) = intent::is_invalid_intent_key(key) {
+            Self::InvalidIntentSet(address)
         } else {
             Self::Unknown
         }
@@ -66,17 +66,50 @@ fn validate_tx(
 
     for key in keys_changed.iter() {
         let is_valid = match KeyType::from(key) {
-            KeyType::Token(owner) if owner == &addr => {
-                let key = key.to_string();
-                let pre: token::Amount = read_pre(&key).unwrap_or_default();
-                let post: token::Amount = read_post(&key).unwrap_or_default();
-                let change = post.change() - pre.change();
-                // debit has to signed, credit doesn't
-                let valid = !(change < 0 && !valid_sig && !valid_intent);
+            KeyType::Token(owner) => {
+                if owner == &addr {
+                    let key = key.to_string();
+                    let pre: token::Amount = read_pre(&key).unwrap_or_default();
+                    let post: token::Amount =
+                        read_post(&key).unwrap_or_default();
+                    let change = post.change() - pre.change();
+                    // debit has to signed, credit doesn't
+                    let valid = !(change < 0 && !valid_sig && !valid_intent);
+                    log_string(format!(
+                        "token key: {}, change: {}, transfer_valid_sig: {}, \
+                         valid_intent: {}, valid modification: {}",
+                        key, change, valid_sig, valid_intent, valid
+                    ));
+                    valid
+                } else {
+                    log_string(format!(
+                        "Token: key {} is not of owner, transfer_valid_sig \
+                         {}, owner: {}, address: {}",
+                        key, valid_sig, owner, addr
+                    ));
+                    valid_sig
+                }
+            }
+            KeyType::PoS => {
+                // Allow the account to be used in PoS
+                let bond_id = proof_of_stake::is_bond_key(key)
+                    .or_else(|| proof_of_stake::is_unbond_key(key));
+                let valid = match bond_id {
+                    Some(bond_id) => {
+                        // Bonds and unbonds changes for this address
+                        // must be signed
+                        (bond_id.source == addr && valid_sig)
+                            || bond_id.source != addr
+                    }
+                    None => {
+                        // Any other PoS changes are allowed without signature
+                        true
+                    }
+                };
                 log_string(format!(
-                    "token key: {}, change: {}, transfer_valid_sig: {}, \
-                     valid_intent: {}, valid modification: {}",
-                    key, change, valid_sig, valid_intent, valid
+                    "PoS key {} {}",
+                    key,
+                    if valid { "accepted" } else { "rejected" }
                 ));
                 valid
             }
@@ -99,19 +132,6 @@ fn validate_tx(
                     key, valid_sig, _owner, addr
                 ));
                 valid_sig
-            }
-            KeyType::Token(_owner) => {
-                log_string(format!(
-                    "Token: key {} is not of owner, transfer_valid_sig {}, \
-                     owner: {}, address: {}",
-                    key, valid_sig, _owner, addr
-                ));
-                valid_sig
-            }
-            KeyType::PoS => {
-                // Allow the account to be used in PoS
-                log_string(format!("PoS key {}", key,));
-                true
             }
             KeyType::Unknown => {
                 log_string(format!(
