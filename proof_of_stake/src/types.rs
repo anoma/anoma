@@ -255,7 +255,7 @@ pub struct Bond<Token: Default> {
     /// We only need to keep the start `Epoch` for the Epoched head element
     /// (i.e. the current epoch data), the rest of the array can be calculated
     /// from the offset from the head
-    pub delta: HashMap<Epoch, Token>,
+    pub deltas: HashMap<Epoch, Token>,
 }
 
 /// An unbond contains unbonded tokens from a validator's self-bond or a
@@ -465,7 +465,7 @@ where
 {
     /// Find the sum of all the bonds amounts.
     pub fn sum(&self) -> Token {
-        self.delta
+        self.deltas
             .iter()
             .fold(Default::default(), |acc, (_epoch, amount)| acc + *amount)
     }
@@ -480,19 +480,19 @@ where
     fn add(mut self, rhs: Self) -> Self::Output {
         // This is almost the same as `self.delta.extend(rhs.delta);`, except
         // that we add values where a key is present on both sides.
-        let iter = rhs.delta.into_iter();
-        let reserve = if self.delta.is_empty() {
+        let iter = rhs.deltas.into_iter();
+        let reserve = if self.deltas.is_empty() {
             iter.size_hint().0
         } else {
             (iter.size_hint().0 + 1) / 2
         };
-        self.delta.reserve(reserve);
+        self.deltas.reserve(reserve);
         iter.for_each(|(k, v)| {
             // Add or insert
-            match self.delta.get_mut(&k) {
+            match self.deltas.get_mut(&k) {
                 Some(value) => *value += v,
                 None => {
-                    self.delta.insert(k, v);
+                    self.deltas.insert(k, v);
                 }
             }
         });

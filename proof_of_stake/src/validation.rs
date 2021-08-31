@@ -653,14 +653,14 @@ where
                         pre_offset + pipeline_offset + 1,
                     ) {
                         if let Some(bond) = pre.get_delta_at_epoch(epoch) {
-                            for (start_epoch, delta) in bond.delta.iter() {
+                            for (start_epoch, delta) in bond.deltas.iter() {
                                 let delta = TokenChange::from(*delta);
                                 slashed_deltas.insert(*start_epoch, -delta);
                                 pre_bonds.insert(*start_epoch, delta);
                             }
                         }
                         if let Some(bond) = post.get_delta_at_epoch(epoch) {
-                            for (start_epoch, delta) in bond.delta.iter() {
+                            for (start_epoch, delta) in bond.deltas.iter() {
                                 // An empty bond must be deleted
                                 if *delta == TokenAmount::default() {
                                     errors.push(Error::EmptyBond(id.clone()))
@@ -770,7 +770,7 @@ where
                                     expected: vec![pipeline_epoch.into()],
                                 })
                             }
-                            for (start_epoch, delta) in bond.delta.iter() {
+                            for (start_epoch, delta) in bond.deltas.iter() {
                                 if *start_epoch != epoch {
                                     errors.push(Error::InvalidBondStartEpoch {
                                         id: id.clone(),
@@ -807,7 +807,7 @@ where
                         let index = index as usize;
                         let epoch = pre.last_update() + index;
                         if let Some(bond) = pre.get_delta_at_epoch(epoch) {
-                            for (start_epoch, delta) in &bond.delta {
+                            for (start_epoch, delta) in &bond.deltas {
                                 let mut delta = *delta;
                                 // Check slashes
                                 for slash in &slashes {

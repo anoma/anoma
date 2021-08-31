@@ -1059,10 +1059,10 @@ where
                 source: address.clone(),
                 validator: address.clone(),
             };
-            let mut delta = HashMap::default();
-            delta.insert(current_epoch, *tokens);
+            let mut deltas = HashMap::default();
+            deltas.insert(current_epoch, *tokens);
             let bond =
-                EpochedDelta::init_at_genesis(Bond { delta }, current_epoch);
+                EpochedDelta::init_at_genesis(Bond { deltas }, current_epoch);
             Ok(GenesisValidatorData {
                 address: address.clone(),
                 staking_reward_address: staking_reward_address.clone(),
@@ -1316,10 +1316,10 @@ where
 
     // Update or create the bond
     let mut value = Bond {
-        delta: HashMap::default(),
+        deltas: HashMap::default(),
     };
     value
-        .delta
+        .deltas
         .insert(current_epoch + update_offset.value(params), amount);
     let bond = match current_bond {
         None => EpochedDelta::init(value, current_epoch, params),
@@ -1485,7 +1485,7 @@ where
     // future-most epoch) until whole amount is decremented
     bond.rev_update_while(
         |bonds, _epoch| {
-            bonds.delta.retain(|epoch_start, bond_delta| {
+            bonds.deltas.retain(|epoch_start, bond_delta| {
                 if *to_unbond == 0.into() {
                     return true;
                 }

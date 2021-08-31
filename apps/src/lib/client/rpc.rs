@@ -187,8 +187,8 @@ pub async fn query_bonds(args: args::QueryBonds) {
                     writeln!(w, "{}:", bond_type).unwrap();
                     let mut total: token::Amount = 0.into();
                     let mut total_active: token::Amount = 0.into();
-                    for deltas in bonds.iter() {
-                        for (epoch_start, delta) in deltas.delta.iter().sorted()
+                    for bond in bonds.iter() {
+                        for (epoch_start, delta) in bond.deltas.iter().sorted()
                         {
                             let mut delta = *delta;
                             writeln!(
@@ -343,8 +343,8 @@ pub async fn query_bonds(args: args::QueryBonds) {
                     writeln!(w, "Self-bonds:").unwrap();
                     let mut total: token::Amount = 0.into();
                     let mut total_active: token::Amount = 0.into();
-                    for deltas in bonds.iter() {
-                        for (epoch_start, delta) in deltas.delta.iter().sorted()
+                    for bond in bonds.iter() {
+                        for (epoch_start, delta) in bond.deltas.iter().sorted()
                         {
                             let mut delta = *delta;
                             writeln!(
@@ -508,9 +508,9 @@ pub async fn query_bonds(args: args::QueryBonds) {
                                 };
                                 writeln!(w, "{}:", bond_type).unwrap();
                                 let mut current_total: token::Amount = 0.into();
-                                for deltas in bonds.iter() {
+                                for bond in bonds.iter() {
                                     for (epoch_start, delta) in
-                                        deltas.delta.iter().sorted()
+                                        bond.deltas.iter().sorted()
                                     {
                                         let mut delta = *delta;
                                         writeln!(
@@ -740,9 +740,9 @@ pub async fn query_bonds(args: args::QueryBonds) {
                                 };
                                 writeln!(w, "{}:", bond_type).unwrap();
                                 let mut current_total: token::Amount = 0.into();
-                                for deltas in bonds.iter() {
+                                for bond in bonds.iter() {
                                     for (epoch_start, delta) in
-                                        deltas.delta.iter().sorted()
+                                        bond.deltas.iter().sorted()
                                     {
                                         let mut delta = *delta;
                                         writeln!(
