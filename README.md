@@ -59,6 +59,7 @@ make reset-ledger
 export ALBERT=a1qq5qqqqqg4znssfsgcurjsfhgfpy2vjyxy6yg3z98pp5zvp5xgersvfjxvcnx3f4xycrzdfkak0xhx
 export BERTHA=a1qq5qqqqqxv6yydz9xc6ry33589q5x33eggcnjs2xx9znydj9xuens3phxppnwvzpg4rrqdpswve4n9
 export CHRISTEL=a1qq5qqqqqxsuygd2x8pq5yw2ygdryxs6xgsmrsdzx8pryxv34gfrrssfjgccyg3zpxezrqd2y2s3g5s
+export VALIDATOR=a1qq5qqqqqgfqnsd6pxse5zdj9g5crzsf5x4zyzv6yxerr2d2rxpryzwp5g5m5zvfjxv6ygsekjmraj0
 
 # Fungible token addresses
 export XAN=a1qq5qqqqqxuc5gvz9gycryv3sgye5v3j9gvurjv34g9prsd6x8qu5xs2ygdzrzsf38q6rss33xf42f3
@@ -70,6 +71,11 @@ export DOT=a1qq5qqqqqxq652v3sxap523fs8pznjse5g3pyydf3xqurws6ygvc5gdfcxyuy2deegge
 export SCHNITZEL=a1qq5qqqqq8prrzv6xxcury3p4xucygdp5gfprzdfex9prz3jyg56rxv69gvenvsj9g5enswpcl8npyz
 export APFEL=a1qq5qqqqqgfp52de4x56nqd3ex56y2wph8pznssjzx5ersw2pxfznsd3jxeqnjd3cxapnqsjz2fyt3j
 export KARTOFFEL=a1qq5qqqqqxs6yvsekxuuyy3pjxsmrgd2rxuungdzpgsmyydjrxsenjdp5xaqn233sgccnjs3eak5wwh
+
+# Proof of Stake native address
+export POS=a1qgqqw6qw7f
+# Proof of Stake native address for slashed tokens
+export POS_SLASH_POOL=a1qgqsmmgkt6
 ```
 
 ## Interacting with Anoma
@@ -77,6 +83,12 @@ export KARTOFFEL=a1qq5qqqqqxs6yvsekxuuyy3pjxsmrgd2rxuungdzpgsmyydjrxsenjdp5xaqn2
 ```shell
 # Submit a token transfer
 cargo run --bin anomac -- transfer --source $BERTHA --target $ALBERT --token $XAN --amount 10.1
+
+# Query token balances (various options are available, see the command's `--help`)
+cargo run --bin anomac -- balance --token $XAN
+
+# Query the current epoch
+cargo run --bin anomac -- epoch
 
 # Submit a transaction to update an account's validity predicate
 cargo run --bin anomac -- update --address $BERTHA --code-path wasm/vp_user.wasm
@@ -102,17 +114,51 @@ cargo run --bin anomac -- subscribe-topic --node "http://127.0.0.1:39111" --topi
 cargo run --bin anomac -- intent --node "http://127.0.0.1:39111" --data-path intent.A.data --topic "asset_v1" --key $ALBERT
 cargo run --bin anomac -- intent --node "http://127.0.0.1:39111" --data-path intent.B.data --topic "asset_v1" --key $BERTHA
 cargo run --bin anomac -- intent --node "http://127.0.0.1:39111" --data-path intent.C.data --topic "asset_v1" --key $CHRISTEL
+```
 
+### Interacting with the PoS system
+
+The PoS system is using the `XAN` token.
+
+```shell
+# Submit a self-bond of tokens for a validator
+cargo run --bin anomac -- bond --validator $VALIDATOR --amount 3.3
+
+# Submit a delegation of tokens for a source address to the validator
+cargo run --bin anomac -- bond --source $BERTHA --validator $VALIDATOR --amount 3.3
+
+# Submit an unbonding of a self-bond of tokens from a validator
+cargo run --bin anomac -- unbond --validator $VALIDATOR --amount 3.3
+
+# Submit an unbonding of a delegation of tokens from a source address to the validator
+cargo run --bin anomac -- unbond --source $BERTHA --validator $VALIDATOR --amount 3.3
+
+# Submit a withdrawal of tokens of unbonded self-bond back to its validator validator
+cargo run --bin anomac -- withdraw --validator $VALIDATOR
+
+# Submit a withdrawal of unbonded delegation of tokens back to its source address
+cargo run --bin anomac -- withdraw --source $BERTHA --validator $VALIDATOR
+
+# Queries (various options are available, see the commands' `--help`)
+cargo run --bin anomac -- bonds
+cargo run --bin anomac -- slashes
+cargo run --bin anomac -- voting-power
+```
+
+## Development
+
+```shell
 # Format the code
 make fmt
 
 # Lint the code
-make clippy-check
+make clippy
 ```
 
 ## Logging
 
 To change the log level, set `ANOMA_LOG` environment variable to one of:
+
 - `error`
 - `warn`
 - `info`
