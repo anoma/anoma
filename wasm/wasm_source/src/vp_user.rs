@@ -12,6 +12,7 @@ use rust_decimal::prelude::*;
 
 enum KeyType<'a> {
     Token(&'a Address),
+    PoS,
     InvalidIntentSet(&'a Address),
     Unknown,
 }
@@ -20,6 +21,8 @@ impl<'a> From<&'a storage::Key> for KeyType<'a> {
     fn from(key: &'a storage::Key) -> KeyType<'a> {
         if let Some(address) = token::is_any_token_balance_key(key) {
             Self::Token(address)
+        } else if proof_of_stake::is_pos_key(key) {
+            Self::PoS
         } else if let Some(address) = intent::is_invalid_intent_key(key) {
             Self::InvalidIntentSet(address)
         } else {
@@ -36,8 +39,8 @@ fn validate_tx(
     verifiers: HashSet<Address>,
 ) -> bool {
     log_string(format!(
-        "validate_tx called with user addr: {}, key_changed: {:#?}, \
-         verifiers: {:?}",
+        "validate_tx called with user addr: {}, key_changed: {:?}, verifiers: \
+         {:?}",
         addr, keys_changed, verifiers
     ));
 
@@ -86,6 +89,28 @@ fn validate_tx(
                     // If this is not the owner, allow any change
                     true
                 }
+            }
+            KeyType::PoS => {
+                // Allow the account to be used in PoS
+                let bond_id = proof_of_stake::is_bond_key(key)
+                    .or_else(|| proof_of_stake::is_unbond_key(key));
+                let valid = match bond_id {
+                    Some(bond_id) => {
+                        // Bonds and unbonds changes for this address
+                        // must be signed
+                        bond_id.source != addr || *valid_sig
+                    }
+                    None => {
+                        // Any other PoS changes are allowed without signature
+                        true
+                    }
+                };
+                log_string(format!(
+                    "PoS key {} {}",
+                    key,
+                    if valid { "accepted" } else { "rejected" }
+                ));
+                valid
             }
             KeyType::InvalidIntentSet(owner) => {
                 if owner == &addr {
