@@ -16,6 +16,7 @@ use color_eyre::eyre::Result;
 pub async fn main() -> Result<()> {
     let (cmd, _global_args) = cli::anoma_client_cli();
     match cmd {
+        // Ledger cmds
         cmds::AnomaClient::TxCustom(cmds::TxCustom(args)) => {
             tx::submit_custom(args).await;
         }
@@ -28,9 +29,31 @@ pub async fn main() -> Result<()> {
         cmds::AnomaClient::TxInitAccount(cmds::TxInitAccount(args)) => {
             tx::submit_init_account(args).await;
         }
+        cmds::AnomaClient::Bond(cmds::Bond(args)) => {
+            tx::submit_bond(args).await;
+        }
+        cmds::AnomaClient::Unbond(cmds::Unbond(args)) => {
+            tx::submit_unbond(args).await;
+        }
+        cmds::AnomaClient::Withdraw(cmds::Withdraw(args)) => {
+            tx::submit_withdraw(args).await;
+        }
+        cmds::AnomaClient::QueryEpoch(cmds::QueryEpoch(args)) => {
+            rpc::query_epoch(args).await;
+        }
         cmds::AnomaClient::QueryBalance(cmds::QueryBalance(args)) => {
             rpc::query_balance(args).await;
         }
+        cmds::AnomaClient::QueryBonds(cmds::QueryBonds(args)) => {
+            rpc::query_bonds(args).await;
+        }
+        cmds::AnomaClient::QueryVotingPower(cmds::QueryVotingPower(args)) => {
+            rpc::query_voting_power(args).await;
+        }
+        cmds::AnomaClient::QuerySlashes(cmds::QuerySlashes(args)) => {
+            rpc::query_slashes(args).await;
+        }
+        // Gossip cmds
         cmds::AnomaClient::Intent(cmds::Intent(args)) => {
             gossip_intent(args).await;
         }

@@ -29,8 +29,8 @@ pub mod cmds {
     use super::{args, ArgMatches, CLIENT_CMD, NODE_CMD};
 
     /// Commands for `anoma` binary.
-    #[derive(Debug)]
     #[allow(clippy::large_enum_variant)]
+    #[derive(Clone, Debug)]
     pub enum Anoma {
         Node(AnomaNode),
         Client(AnomaClient),
@@ -76,7 +76,7 @@ pub mod cmds {
 
     /// Used as top-level commands (`Cmd` instance) in `anoman` binary.
     /// Used as sub-commands (`SubCmd` instance) in `anoma` binary.
-    #[derive(Debug)]
+    #[derive(Clone, Debug)]
     pub enum AnomaNode {
         Ledger(Ledger),
         // Boxed, because it's larger than other variants
@@ -122,26 +122,47 @@ pub mod cmds {
 
     /// Used as top-level commands (`Cmd` instance) in `anomac` binary.
     /// Used as sub-commands (`SubCmd` instance) in `anoma` binary.
-    #[derive(Debug)]
+    #[derive(Clone, Debug)]
     pub enum AnomaClient {
+        // Ledger cmds
         TxCustom(TxCustom),
         TxTransfer(TxTransfer),
         TxUpdateVp(TxUpdateVp),
         TxInitAccount(TxInitAccount),
+        Bond(Bond),
+        Unbond(Unbond),
+        Withdraw(Withdraw),
+        QueryEpoch(QueryEpoch),
         QueryBalance(QueryBalance),
+        QueryBonds(QueryBonds),
+        QueryVotingPower(QueryVotingPower),
+        QuerySlashes(QuerySlashes),
+        // Gossip cmds
         Intent(Intent),
         SubscribeTopic(SubscribeTopic),
     }
 
     impl Cmd for AnomaClient {
         fn add_sub(app: App) -> App {
-            app.subcommand(TxCustom::def())
-                .subcommand(TxTransfer::def())
-                .subcommand(TxUpdateVp::def())
-                .subcommand(TxInitAccount::def())
-                .subcommand(QueryBalance::def())
-                .subcommand(Intent::def())
-                .subcommand(SubscribeTopic::def())
+            app
+                // Simple transactions
+                .subcommand(TxCustom::def().display_order(1))
+                .subcommand(TxTransfer::def().display_order(1))
+                .subcommand(TxUpdateVp::def().display_order(1))
+                .subcommand(TxInitAccount::def().display_order(1))
+                // PoS transactions
+                .subcommand(Bond::def().display_order(2))
+                .subcommand(Unbond::def().display_order(2))
+                .subcommand(Withdraw::def().display_order(2))
+                // Queries
+                .subcommand(QueryEpoch::def().display_order(3))
+                .subcommand(QueryBalance::def().display_order(3))
+                .subcommand(QueryBonds::def().display_order(3))
+                .subcommand(QueryVotingPower::def().display_order(3))
+                .subcommand(QuerySlashes::def().display_order(3))
+                // Intents
+                .subcommand(Intent::def().display_order(4))
+                .subcommand(SubscribeTopic::def().display_order(4))
         }
 
         fn parse(matches: &ArgMatches) -> Option<(Self, &ArgMatches)> {
@@ -150,8 +171,17 @@ pub mod cmds {
             let tx_update_vp = SubCmd::parse(matches).map_fst(Self::TxUpdateVp);
             let tx_init_account =
                 SubCmd::parse(matches).map_fst(Self::TxInitAccount);
+            let bond = SubCmd::parse(matches).map_fst(Self::Bond);
+            let unbond = SubCmd::parse(matches).map_fst(Self::Unbond);
+            let withdraw = SubCmd::parse(matches).map_fst(Self::Withdraw);
+            let query_epoch = SubCmd::parse(matches).map_fst(Self::QueryEpoch);
             let query_balance =
                 SubCmd::parse(matches).map_fst(Self::QueryBalance);
+            let query_bonds = SubCmd::parse(matches).map_fst(Self::QueryBonds);
+            let query_voting_power =
+                SubCmd::parse(matches).map_fst(Self::QueryVotingPower);
+            let query_slashes =
+                SubCmd::parse(matches).map_fst(Self::QuerySlashes);
             let intent = SubCmd::parse(matches).map_fst(Self::Intent);
             let subscribe_topic =
                 SubCmd::parse(matches).map_fst(Self::SubscribeTopic);
@@ -159,7 +189,14 @@ pub mod cmds {
                 .or(tx_transfer)
                 .or(tx_update_vp)
                 .or(tx_init_account)
+                .or(bond)
+                .or(unbond)
+                .or(withdraw)
+                .or(query_epoch)
                 .or(query_balance)
+                .or(query_bonds)
+                .or(query_voting_power)
+                .or(query_slashes)
                 .or(intent)
                 .or(subscribe_topic)
         }
@@ -185,7 +222,7 @@ pub mod cmds {
         }
     }
 
-    #[derive(Debug)]
+    #[derive(Clone, Debug)]
     pub enum Ledger {
         Run(LedgerRun),
         Reset(LedgerReset),
@@ -215,7 +252,7 @@ pub mod cmds {
         }
     }
 
-    #[derive(Debug)]
+    #[derive(Clone, Debug)]
     pub struct LedgerRun;
 
     impl SubCmd for LedgerRun {
@@ -232,7 +269,7 @@ pub mod cmds {
         }
     }
 
-    #[derive(Debug)]
+    #[derive(Clone, Debug)]
     pub struct LedgerReset;
 
     impl SubCmd for LedgerReset {
@@ -252,7 +289,7 @@ pub mod cmds {
         }
     }
 
-    #[derive(Debug)]
+    #[derive(Clone, Debug)]
     pub enum Gossip {
         Run(GossipRun),
     }
@@ -290,7 +327,7 @@ pub mod cmds {
         }
     }
 
-    #[derive(Debug)]
+    #[derive(Clone, Debug)]
     pub struct GossipRun(pub args::GossipRun);
 
     impl SubCmd for GossipRun {
@@ -312,7 +349,7 @@ pub mod cmds {
         }
     }
 
-    #[derive(Debug)]
+    #[derive(Clone, Debug)]
     pub enum Config {
         Gen(ConfigGen),
     }
@@ -338,7 +375,7 @@ pub mod cmds {
         }
     }
 
-    #[derive(Debug)]
+    #[derive(Clone, Debug)]
     pub struct ConfigGen;
 
     impl SubCmd for ConfigGen {
@@ -358,7 +395,7 @@ pub mod cmds {
         }
     }
 
-    #[derive(Debug)]
+    #[derive(Clone, Debug)]
     pub struct TxCustom(pub args::TxCustom);
 
     impl SubCmd for TxCustom {
@@ -377,7 +414,7 @@ pub mod cmds {
         }
     }
 
-    #[derive(Debug)]
+    #[derive(Clone, Debug)]
     pub struct TxTransfer(pub args::TxTransfer);
 
     impl SubCmd for TxTransfer {
@@ -399,7 +436,7 @@ pub mod cmds {
         }
     }
 
-    #[derive(Debug)]
+    #[derive(Clone, Debug)]
     pub struct TxUpdateVp(pub args::TxUpdateVp);
 
     impl SubCmd for TxUpdateVp {
@@ -424,7 +461,7 @@ pub mod cmds {
         }
     }
 
-    #[derive(Debug)]
+    #[derive(Clone, Debug)]
     pub struct TxInitAccount(pub args::TxInitAccount);
 
     impl SubCmd for TxInitAccount {
@@ -449,7 +486,95 @@ pub mod cmds {
         }
     }
 
-    #[derive(Debug)]
+    #[derive(Clone, Debug)]
+    pub struct Bond(pub args::Bond);
+
+    impl SubCmd for Bond {
+        const CMD: &'static str = "bond";
+
+        fn parse(matches: &ArgMatches) -> Option<(Self, &ArgMatches)>
+        where
+            Self: Sized,
+        {
+            matches
+                .subcommand_matches(Self::CMD)
+                .map(|matches| (Bond(args::Bond::parse(matches)), matches))
+        }
+
+        fn def() -> App {
+            App::new(Self::CMD)
+                .about("Bond tokens in PoS system.")
+                .add_args::<args::Bond>()
+        }
+    }
+
+    #[derive(Clone, Debug)]
+    pub struct Unbond(pub args::Unbond);
+
+    impl SubCmd for Unbond {
+        const CMD: &'static str = "unbond";
+
+        fn parse(matches: &ArgMatches) -> Option<(Self, &ArgMatches)>
+        where
+            Self: Sized,
+        {
+            matches
+                .subcommand_matches(Self::CMD)
+                .map(|matches| (Unbond(args::Unbond::parse(matches)), matches))
+        }
+
+        fn def() -> App {
+            App::new(Self::CMD)
+                .about("Unbond tokens from a PoS bond.")
+                .add_args::<args::Unbond>()
+        }
+    }
+
+    #[derive(Clone, Debug)]
+    pub struct Withdraw(pub args::Withdraw);
+
+    impl SubCmd for Withdraw {
+        const CMD: &'static str = "withdraw";
+
+        fn parse(matches: &ArgMatches) -> Option<(Self, &ArgMatches)>
+        where
+            Self: Sized,
+        {
+            matches.subcommand_matches(Self::CMD).map(|matches| {
+                (Withdraw(args::Withdraw::parse(matches)), matches)
+            })
+        }
+
+        fn def() -> App {
+            App::new(Self::CMD)
+                .about("Withdraw tokens from previously unbonded PoS bond.")
+                .add_args::<args::Withdraw>()
+        }
+    }
+
+    #[derive(Clone, Debug)]
+    pub struct QueryEpoch(pub args::Query);
+
+    impl SubCmd for QueryEpoch {
+        const CMD: &'static str = "epoch";
+
+        fn parse(matches: &ArgMatches) -> Option<(Self, &ArgMatches)>
+        where
+            Self: Sized,
+        {
+            matches.subcommand_matches(Self::CMD).map(|matches| {
+                (QueryEpoch(args::Query::parse(matches)), matches)
+            })
+        }
+
+        fn def() -> App {
+            App::new(Self::CMD)
+                .about("Query the epoch of the last committed block")
+                .add_args::<args::Query>()
+        }
+    }
+
+    #[derive(Clone, Debug)]
     pub struct QueryBalance(pub args::QueryBalance);
 
     impl SubCmd for QueryBalance {
@@ -471,7 +596,76 @@ pub mod cmds {
         }
     }
 
-    #[derive(Debug)]
+    #[derive(Clone, Debug)]
+    pub struct QueryBonds(pub args::QueryBonds);
+
+    impl SubCmd for QueryBonds {
+        const CMD: &'static str = "bonds";
+
+        fn parse(matches: &ArgMatches) -> Option<(Self, &ArgMatches)>
+        where
+            Self: Sized,
+        {
+            matches.subcommand_matches(Self::CMD).map(|matches| {
+                (QueryBonds(args::QueryBonds::parse(matches)), matches)
+            })
+        }
+
+        fn def() -> App {
+            App::new(Self::CMD)
+                .about("Query PoS bond(s)")
+                .add_args::<args::QueryBonds>()
+        }
+    }
+
+    #[derive(Clone, Debug)]
+    pub struct QueryVotingPower(pub args::QueryVotingPower);
+
+    impl SubCmd for QueryVotingPower {
+        const CMD: &'static str = "voting-power";
+
+        fn parse(matches: &ArgMatches) -> Option<(Self, &ArgMatches)>
+        where
+            Self: Sized,
+        {
+            matches.subcommand_matches(Self::CMD).map(|matches| {
+                (
+                    QueryVotingPower(args::QueryVotingPower::parse(matches)),
+                    matches,
+                )
+            })
+        }
+
+        fn def() -> App {
+            App::new(Self::CMD)
+                .about("Query PoS voting power")
+                .add_args::<args::QueryVotingPower>()
+        }
+    }
+
+    #[derive(Clone, Debug)]
+    pub struct QuerySlashes(pub args::QuerySlashes);
+
+    impl SubCmd for QuerySlashes {
+        const CMD: &'static str = "slashes";
+
+        fn parse(matches: &ArgMatches) -> Option<(Self, &ArgMatches)>
+        where
+            Self: Sized,
+        {
+            matches.subcommand_matches(Self::CMD).map(|matches| {
+                (QuerySlashes(args::QuerySlashes::parse(matches)), matches)
+            })
+        }
+
+        fn def() -> App {
+            App::new(Self::CMD)
+                .about("Query PoS voting power")
+                .add_args::<args::QuerySlashes>()
+        }
+    }
+
+    #[derive(Clone, Debug)]
     pub struct Intent(pub args::Intent);
 
     impl SubCmd for Intent {
@@ -493,7 +687,7 @@ pub mod cmds {
         }
     }
 
-    #[derive(Debug)]
+    #[derive(Clone, Debug)]
     pub struct SubscribeTopic(pub args::SubscribeTopic);
 
     impl SubCmd for SubscribeTopic {
@@ -530,6 +724,7 @@ pub mod args {
     use anoma::types::address::Address;
     use anoma::types::intent::{DecimalWrapper, Exchange};
     use anoma::types::key::ed25519::PublicKey;
+    use anoma::types::storage::Epoch;
     use anoma::types::token;
     use libp2p::Multiaddr;
     use serde::Deserialize;
@@ -546,6 +741,7 @@ pub mod args {
     const DATA_PATH_OPT: ArgOpt<PathBuf> = arg_opt("data-path");
     const DATA_PATH: Arg<PathBuf> = arg("data-path");
     const DRY_RUN_TX: ArgFlag = flag("dry-run");
+    const EPOCH: ArgOpt<Epoch> = arg_opt("epoch");
     const FILTER_PATH: ArgOpt<PathBuf> = arg_opt("filter-path");
     const LEDGER_ADDRESS_ABOUT: &str =
         "Address of a ledger node as \"{scheme}://{host}:{port}\". If the \
@@ -557,32 +753,35 @@ pub mod args {
         }));
     const LEDGER_ADDRESS_OPT: ArgOpt<tendermint::net::Address> =
         LEDGER_ADDRESS.opt();
-    const PEERS: ArgMulti<String> = arg_multi("peers");
-    const TOPIC: Arg<String> = arg("topic");
-    const TOPIC_OPT: ArgOpt<String> = arg_opt("topic");
-    const TOPICS: ArgMulti<String> = TOPIC.multi();
-    // TODO: once we have a wallet, we should also allow to use a key alias
-    // <https://github.com/anoma/anoma/issues/167>
-    const SIGNING_KEY: Arg<Address> = arg("key");
-    const RPC_SOCKET_ADDR: ArgOpt<SocketAddr> = arg_opt("rpc");
     const LEDGER_ADDRESS: Arg<tendermint::net::Address> = arg("ledger-address");
     const MATCHMAKER_PATH: ArgOpt<PathBuf> = arg_opt("matchmaker-path");
     const MULTIADDR_OPT: ArgOpt<Multiaddr> = arg_opt("address");
-    const NODE: Arg<String> = arg("node");
     const NODE_OPT: ArgOpt<String> = arg_opt("node");
-    const TO_STDOUT: ArgFlag = flag("stdout");
+    const NODE: Arg<String> = arg("node");
     const OWNER: ArgOpt<Address> = arg_opt("owner");
+    const PEERS: ArgMulti<String> = arg_multi("peers");
     // TODO: once we have a wallet, we should also allow to use a key alias
     // <https://github.com/anoma/anoma/issues/167>
     const PUBLIC_KEY: Arg<PublicKey> = arg("public-key");
+    const RPC_SOCKET_ADDR: ArgOpt<SocketAddr> = arg_opt("rpc");
+    // <https://github.com/anoma/anoma/issues/167>
+    // TODO: once we have a wallet, we should also allow to use a key alias
+    const SIGNING_KEY: Arg<Address> = arg("key");
+    const SOURCE_OPT: ArgOpt<Address> = SOURCE.opt();
     const SOURCE: Arg<Address> = arg("source");
     const TARGET: Arg<Address> = arg("target");
-    const TOKEN: Arg<Address> = arg("token");
+    const TO_STDOUT: ArgFlag = flag("stdout");
     const TOKEN_OPT: ArgOpt<Address> = TOKEN.opt();
+    const TOKEN: Arg<Address> = arg("token");
+    const TOPIC_OPT: ArgOpt<String> = arg_opt("topic");
+    const TOPIC: Arg<String> = arg("topic");
+    const TOPICS: ArgMulti<String> = TOPIC.multi();
     const TX_CODE_PATH: ArgOpt<PathBuf> = arg_opt("tx-code-path");
+    const VALIDATOR_OPT: ArgOpt<Address> = VALIDATOR.opt();
+    const VALIDATOR: Arg<Address> = arg("validator");
 
     /// Global command arguments
-    #[derive(Debug)]
+    #[derive(Clone, Debug)]
     pub struct Global {
         pub base_dir: PathBuf,
     }
@@ -602,7 +801,7 @@ pub mod args {
     }
 
     /// Custom transaction arguments
-    #[derive(Debug)]
+    #[derive(Clone, Debug)]
     pub struct TxCustom {
         /// Common tx arguments
         pub tx: Tx,
@@ -640,7 +839,7 @@ pub mod args {
     }
 
     /// Transfer transaction arguments
-    #[derive(Debug)]
+    #[derive(Clone, Debug)]
     pub struct TxTransfer {
         /// Common tx arguments
         pub tx: Tx,
@@ -683,7 +882,7 @@ pub mod args {
     }
 
     /// Transaction to initialize a new account
-    #[derive(Debug)]
+    #[derive(Clone, Debug)]
     pub struct TxInitAccount {
         /// Common tx arguments
         pub tx: Tx,
@@ -727,7 +926,7 @@ pub mod args {
     }
 
     /// Transaction to update a VP arguments
-    #[derive(Debug)]
+    #[derive(Clone, Debug)]
     pub struct TxUpdateVp {
         /// Common tx arguments
         pub tx: Tx,
@@ -763,14 +962,132 @@ pub mod args {
         }
     }
 
+    /// Bond arguments
+    #[derive(Clone, Debug)]
+    pub struct Bond {
+        /// Common tx arguments
+        pub tx: Tx,
+        /// Validator address
+        pub validator: Address,
+        /// Amount of tokens to stake in a bond
+        pub amount: token::Amount,
+        /// Source address for delegations. For self-bonds, the validator is
+        /// also the source.
+        pub source: Option<Address>,
+    }
+
+    impl Args for Bond {
+        fn parse(matches: &ArgMatches) -> Self {
+            let tx = Tx::parse(matches);
+            let validator = VALIDATOR.parse(matches);
+            let amount = AMOUNT.parse(matches);
+            let source = SOURCE_OPT.parse(matches);
+            Self {
+                tx,
+                validator,
+                amount,
+                source,
+            }
+        }
+
+        fn def(app: App) -> App {
+            app.add_args::<Tx>()
+                .arg(VALIDATOR.def().about("Validator address."))
+                .arg(AMOUNT.def().about("Amount of tokens to stake in a bond."))
+                .arg(SOURCE_OPT.def().about(
+                    "Source address for delegations. For self-bonds, the \
+                     validator is also the source",
+                ))
+        }
+    }
+
+    /// Unbond arguments
+    #[derive(Clone, Debug)]
+    pub struct Unbond {
+        /// Common tx arguments
+        pub tx: Tx,
+        /// Validator address
+        pub validator: Address,
+        /// Amount of tokens to unbond from a bond
+        pub amount: token::Amount,
+        /// Source address for unbonding from delegations. For unbonding from
+        /// self-bonds, the validator is also the source
+        pub source: Option<Address>,
+    }
+
+    impl Args for Unbond {
+        fn parse(matches: &ArgMatches) -> Self {
+            let tx = Tx::parse(matches);
+            let validator = VALIDATOR.parse(matches);
+            let amount = AMOUNT.parse(matches);
+            let source = SOURCE_OPT.parse(matches);
+            Self {
+                tx,
+                validator,
+                amount,
+                source,
+            }
+        }
+
+        fn def(app: App) -> App {
+            app.add_args::<Tx>()
+                .arg(VALIDATOR.def().about("Validator address."))
+                .arg(
+                    AMOUNT
+                        .def()
+                        .about("Amount of tokens to unbond from a bond."),
+                )
+                .arg(SOURCE_OPT.def().about(
+                    "Source address for unbonding from delegations. For \
+                     unbonding from self-bonds, the validator is also the \
+                     source",
+                ))
+        }
+    }
+
+    /// Withdraw arguments
+    #[derive(Clone, Debug)]
+    pub struct Withdraw {
+        /// Common tx arguments
+        pub tx: Tx,
+        /// Validator address
+        pub validator: Address,
+        /// Source address for withdrawing from delegations. For withdrawing
+        /// from self-bonds, the validator is also the source
+        pub source: Option<Address>,
+    }
+
+    impl Args for Withdraw {
+        fn parse(matches: &ArgMatches) -> Self {
+            let tx = Tx::parse(matches);
+            let validator = VALIDATOR.parse(matches);
+            let source = SOURCE_OPT.parse(matches);
+            Self {
+                tx,
+                validator,
+                source,
+            }
+        }
+
+        fn def(app: App) -> App {
+            app.add_args::<Tx>()
+                .arg(VALIDATOR.def().about("Validator address."))
+                .arg(SOURCE_OPT.def().about(
+                    "Source address for withdrawing from delegations. For \
+                     withdrawing from self-bonds, the validator is also the \
+                     source",
+                ))
+        }
+    }
+
     /// Query token balance(s)
-    #[derive(Debug)]
+    #[derive(Clone, Debug)]
     pub struct QueryBalance {
         /// Common query args
         pub query: Query,
-        /// Address of the owner
+        /// Address of an owner
         pub owner: Option<Address>,
-        /// Address of the token
+        /// Address of a token
         pub token: Option<Address>,
     }
 
@@ -862,8 +1179,106 @@ pub mod args {
         }
     }
 
+    /// Query PoS bond(s)
+    #[derive(Clone, Debug)]
+    pub struct QueryBonds {
+        /// Common query args
+        pub query: Query,
+        /// Address of an owner
+        pub owner: Option<Address>,
+        /// Address of a validator
+        pub validator: Option<Address>,
+    }
+
+    impl Args for QueryBonds {
+        fn parse(matches: &ArgMatches) -> Self {
+            let query = Query::parse(matches);
+            let owner = OWNER.parse(matches);
+            let validator = VALIDATOR_OPT.parse(matches);
+            Self {
+                query,
+                owner,
+                validator,
+            }
+        }
+
+        fn def(app: App) -> App {
+            app.add_args::<Query>()
+                .arg(
+                    OWNER.def().about(
+                        "The owner account address whose bonds to query",
+                    ),
+                )
+                .arg(
+                    VALIDATOR_OPT
+                        .def()
+                        .about("The validator's address whose bonds to query"),
+                )
+        }
+    }
+
+    /// Query PoS voting power
+    #[derive(Clone, Debug)]
+    pub struct QueryVotingPower {
+        /// Common query args
+        pub query: Query,
+        /// Address of a validator
+        pub validator: Option<Address>,
+        /// Epoch in which to find voting power
+        pub epoch: Option<Epoch>,
+    }
+
+    impl Args for QueryVotingPower {
+        fn parse(matches: &ArgMatches) -> Self {
+            let query = Query::parse(matches);
+            let validator = VALIDATOR_OPT.parse(matches);
+            let epoch = EPOCH.parse(matches);
+            Self {
+                query,
+                validator,
+                epoch,
+            }
+        }
+
+        fn def(app: App) -> App {
+            app.add_args::<Query>()
+                .arg(VALIDATOR_OPT.def().about(
+                    "The validator's address whose voting power to query",
+                ))
+                .arg(EPOCH.def().about(
+                    "The epoch at which to query (last committed, if not \
+                     specified)",
+                ))
+        }
+    }
+
+    /// Query PoS slashes
+    #[derive(Clone, Debug)]
+    pub struct QuerySlashes {
+        /// Common query args
+        pub query: Query,
+        /// Address of a validator
+        pub validator: Option<Address>,
+    }
+
+    impl Args for QuerySlashes {
+        fn parse(matches: &ArgMatches) -> Self {
+            let query = Query::parse(matches);
+            let validator = VALIDATOR_OPT.parse(matches);
+            Self { query, validator }
+        }
+
+        fn def(app: App) -> App {
+            app.add_args::<Query>().arg(
+                VALIDATOR_OPT
+                    .def()
+                    .about("The validator's address whose slashes to query"),
+            )
+        }
+    }
+
     /// Intent arguments
-    #[derive(Debug)]
+    #[derive(Clone, Debug)]
     pub struct Intent {
         /// Gossip node address
         pub node_addr: Option<String>,
@@ -940,7 +1355,7 @@ pub mod args {
     }
 
     /// Subscribe intent topic arguments
-    #[derive(Debug)]
+    #[derive(Clone, Debug)]
     pub struct SubscribeTopic {
         /// Gossip node address
         pub node_addr: String,
@@ -964,7 +1379,7 @@ pub mod args {
         }
     }
 
-    #[derive(Debug)]
+    #[derive(Clone, Debug)]
     pub struct GossipRun {
         pub addr: Option<Multiaddr>,
         pub peers: Vec<String>,
@@ -1027,7 +1442,7 @@ pub mod args {
     }
 
     /// Common transaction arguments
-    #[derive(Debug)]
+    #[derive(Clone, Debug)]
     pub struct Tx {
         /// Simulate applying the transaction
         pub dry_run: bool,
@@ -1056,7 +1471,7 @@ pub mod args {
     }
 
     /// Common query arguments
-    #[derive(Debug)]
+    #[derive(Clone, Debug)]
     pub struct Query {
         /// The address of the ledger node as host:port
         pub ledger_address: tendermint::net::Address,
