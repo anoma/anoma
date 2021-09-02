@@ -145,13 +145,66 @@
 <span id="143">143</span>
 <span id="144">144</span>
 <span id="145">145</span>
+<span id="146">146</span>
+<span id="147">147</span>
+<span id="148">148</span>
+<span id="149">149</span>
+<span id="150">150</span>
+<span id="151">151</span>
+<span id="152">152</span>
+<span id="153">153</span>
+<span id="154">154</span>
+<span id="155">155</span>
+<span id="156">156</span>
+<span id="157">157</span>
+<span id="158">158</span>
+<span id="159">159</span>
+<span id="160">160</span>
+<span id="161">161</span>
+<span id="162">162</span>
+<span id="163">163</span>
+<span id="164">164</span>
+<span id="165">165</span>
+<span id="166">166</span>
+<span id="167">167</span>
+<span id="168">168</span>
+<span id="169">169</span>
+<span id="170">170</span>
+<span id="171">171</span>
+<span id="172">172</span>
+<span id="173">173</span>
+<span id="174">174</span>
+<span id="175">175</span>
+<span id="176">176</span>
+<span id="177">177</span>
+<span id="178">178</span>
+<span id="179">179</span>
+<span id="180">180</span>
+<span id="181">181</span>
+<span id="182">182</span>
+<span id="183">183</span>
+<span id="184">184</span>
+<span id="185">185</span>
+<span id="186">186</span>
+<span id="187">187</span>
+<span id="188">188</span>
+<span id="189">189</span>
+<span id="190">190</span>
+<span id="191">191</span>
+<span id="192">192</span>
+<span id="193">193</span>
+<span id="194">194</span>
+<span id="195">195</span>
+<span id="196">196</span>
+<span id="197">197</span>
 </pre><pre class="rust">
 <span class="kw">use</span> <span class="ident">std::convert::TryFrom</span>;
 
 <span class="kw">use</span> <span class="ident">anoma::proto::Tx</span>;
+<span class="kw">use</span> <span class="ident">anoma::types::address::Address</span>;
 <span class="kw">use</span> <span class="ident">anoma::types::key::ed25519::Keypair</span>;
 <span class="kw">use</span> <span class="ident">anoma::types::token</span>;
-<span class="kw">use</span> <span class="ident">anoma::types::transaction::UpdateVp</span>;
+<span class="kw">use</span> <span class="ident">anoma::types::transaction</span>::{<span class="ident">InitAccount</span>, <span class="ident">UpdateVp</span>};
 <span class="kw">use</span> <span class="ident">borsh::BorshSerialize</span>;
 <span class="kw">use</span> <span class="ident">jsonpath_lib</span> <span class="kw">as</span> <span class="ident">jsonpath</span>;
 <span class="kw">use</span> <span class="ident">serde::Serialize</span>;
@@ -165,8 +218,10 @@
 };
 <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::wallet</span>;
 
+<span class="kw">const</span> <span class="ident">TX_INIT_ACCOUNT_WASM</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;wasm/tx_init_account.wasm&quot;</span>;
 <span class="kw">const</span> <span class="ident">TX_UPDATE_VP_WASM</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;wasm/tx_update_vp.wasm&quot;</span>;
 <span class="kw">const</span> <span class="ident">TX_TRANSFER_WASM</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;wasm/tx_transfer.wasm&quot;</span>;
+<span class="kw">const</span> <span class="ident">VP_USER_WASM</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;wasm/vp_user.wasm&quot;</span>;
 
 <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">submit_custom</span>(<span class="ident">args</span>: <span class="ident">args::TxCustom</span>) {
     <span class="kw">let</span> <span class="ident">tx_code</span> <span class="op">=</span> <span class="ident">std::fs::read</span>(<span class="ident">args</span>.<span class="ident">code_path</span>)
@@ -189,7 +244,34 @@
 
     <span class="kw">let</span> <span class="ident">update_vp</span> <span class="op">=</span> <span class="ident">UpdateVp</span> { <span class="ident">addr</span>, <span class="ident">vp_code</span> };
     <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="ident">update_vp</span>.<span class="ident">try_to_vec</span>().<span class="ident">expect</span>(
-        <span class="string">&quot;Encoding transfer data to update a validity predicate shouldn&#39;t  fail&quot;</span>,
+        <span class="string">&quot;Encoding transfer data to update a validity predicate shouldn&#39;t fail&quot;</span>,
+    );
+    <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx::new</span>(<span class="ident">tx_code</span>, <span class="prelude-val">Some</span>(<span class="ident">data</span>)).<span class="ident">sign</span>(<span class="kw-2">&amp;</span><span class="ident">source_key</span>);
+
+    <span class="ident">submit_tx</span>(<span class="ident">args</span>.<span class="ident">tx</span>, <span class="ident">tx</span>).<span class="kw">await</span>
+}
+
+<span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">submit_init_account</span>(<span class="ident">args</span>: <span class="ident">args::TxInitAccount</span>) {
+    <span class="kw">let</span> <span class="ident">source_key</span>: <span class="ident">Keypair</span> <span class="op">=</span> <span class="ident">wallet::key_of</span>(<span class="ident">args</span>.<span class="ident">source</span>.<span class="ident">encode</span>());
+    <span class="kw">let</span> <span class="ident">public_key</span> <span class="op">=</span> <span class="ident">args</span>.<span class="ident">public_key</span>;
+    <span class="kw">let</span> <span class="ident">vp_code</span> <span class="op">=</span> <span class="ident">args</span>
+        .<span class="ident">vp_code_path</span>
+        .<span class="ident">map</span>(<span class="op">|</span><span class="ident">path</span><span class="op">|</span> {
+            <span class="ident">std::fs::read</span>(<span class="ident">path</span>).<span class="ident">expect</span>(<span class="string">&quot;Expected a file at given code path&quot;</span>)
+        })
+        .<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="op">|</span> {
+            <span class="ident">std::fs::read</span>(<span class="ident">VP_USER_WASM</span>)
+                .<span class="ident">expect</span>(<span class="string">&quot;Expected a file at given code path&quot;</span>)
+        });
+    <span class="kw">let</span> <span class="ident">tx_code</span> <span class="op">=</span> <span class="ident">std::fs::read</span>(<span class="ident">TX_INIT_ACCOUNT_WASM</span>)
+        .<span class="ident">expect</span>(<span class="string">&quot;Expected a file at given code path&quot;</span>);
+
+    <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="ident">InitAccount</span> {
+        <span class="ident">public_key</span>,
+        <span class="ident">vp_code</span>,
+    };
+    <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="ident">data</span>.<span class="ident">try_to_vec</span>().<span class="ident">expect</span>(
+        <span class="string">&quot;Encoding transfer data to initialize a new account shouldn&#39;t fail&quot;</span>,
     );
     <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx::new</span>(<span class="ident">tx_code</span>, <span class="prelude-val">Some</span>(<span class="ident">data</span>)).<span class="ident">sign</span>(<span class="kw-2">&amp;</span><span class="ident">source_key</span>);
 
@@ -272,6 +354,7 @@
     <span class="ident">hash</span>: <span class="ident">String</span>,
     <span class="ident">code</span>: <span class="ident">String</span>,
     <span class="ident">gas_used</span>: <span class="ident">String</span>,
+    <span class="ident">initialized_accounts</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span>,
 }
 
 <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">serde_json::Value</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">TxResponse</span> {
@@ -282,12 +365,33 @@
         <span class="kw">let</span> <span class="ident">hash</span> <span class="op">=</span> <span class="ident">selector</span>(<span class="string">&quot;$.events.[&#39;applied.hash&#39;][0]&quot;</span>).<span class="ident">unwrap</span>();
         <span class="kw">let</span> <span class="ident">code</span> <span class="op">=</span> <span class="ident">selector</span>(<span class="string">&quot;$.events.[&#39;applied.code&#39;][0]&quot;</span>).<span class="ident">unwrap</span>();
         <span class="kw">let</span> <span class="ident">gas_used</span> <span class="op">=</span> <span class="ident">selector</span>(<span class="string">&quot;$.events.[&#39;applied.gas_used&#39;][0]&quot;</span>).<span class="ident">unwrap</span>();
+        <span class="kw">let</span> <span class="ident">initialized_accounts</span> <span class="op">=</span>
+            <span class="ident">selector</span>(<span class="string">&quot;$.events.[&#39;applied.initialized_accounts&#39;][0]&quot;</span>);
+        <span class="kw">let</span> <span class="ident">initialized_accounts</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">initialized_accounts</span> {
+            <span class="prelude-val">Ok</span>(<span class="ident">values</span>) <span class="kw">if</span> <span class="op">!</span><span class="ident">values</span>.<span class="ident">is_empty</span>() <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="comment">// In a response, the initialized accounts are encoded as e.g.:</span>
+                <span class="comment">// ```</span>
+                <span class="comment">// &quot;applied.initialized_accounts&quot;: Array([</span>
+                <span class="comment">//   String(</span>
+                <span class="comment">//     &quot;[\&quot;a1qq5qqqqq8qerqv3sxyuyz3zzxgcyxvecgerry333xce5z3fkg4pnj3zxgfqnzd69gsu5gwzr9wpjpe\&quot;]&quot;,</span>
+                <span class="comment">//   ),</span>
+                <span class="comment">// ]),</span>
+                <span class="comment">// ...</span>
+                <span class="comment">// So we need to decode the inner string first ...</span>
+                <span class="kw">let</span> <span class="ident">raw</span>: <span class="ident">String</span> <span class="op">=</span>
+                    <span class="ident">serde_json::from_value</span>(<span class="ident">values</span>[<span class="number">0</span>].<span class="ident">clone</span>()).<span class="ident">unwrap</span>();
+                <span class="comment">// ... and then decode the vec from the array inside the string</span>
+                <span class="ident">serde_json::from_str</span>(<span class="kw-2">&amp;</span><span class="ident">raw</span>).<span class="ident">unwrap</span>()
+            }
+            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">vec!</span>[],
+        };
         <span class="ident">TxResponse</span> {
             <span class="ident">info</span>: <span class="ident">serde_json::from_value</span>(<span class="ident">info</span>[<span class="number">0</span>].<span class="ident">clone</span>()).<span class="ident">unwrap</span>(),
             <span class="ident">height</span>: <span class="ident">serde_json::from_value</span>(<span class="ident">height</span>[<span class="number">0</span>].<span class="ident">clone</span>()).<span class="ident">unwrap</span>(),
             <span class="ident">hash</span>: <span class="ident">serde_json::from_value</span>(<span class="ident">hash</span>[<span class="number">0</span>].<span class="ident">clone</span>()).<span class="ident">unwrap</span>(),
             <span class="ident">code</span>: <span class="ident">serde_json::from_value</span>(<span class="ident">code</span>[<span class="number">0</span>].<span class="ident">clone</span>()).<span class="ident">unwrap</span>(),
             <span class="ident">gas_used</span>: <span class="ident">serde_json::from_value</span>(<span class="ident">gas_used</span>[<span class="number">0</span>].<span class="ident">clone</span>()).<span class="ident">unwrap</span>(),
+            <span class="ident">initialized_accounts</span>,
         }
     }
 }

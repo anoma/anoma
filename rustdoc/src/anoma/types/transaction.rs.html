@@ -23,12 +23,33 @@
 <span id="21">21</span>
 <span id="22">22</span>
 <span id="23">23</span>
+<span id="24">24</span>
+<span id="25">25</span>
+<span id="26">26</span>
+<span id="27">27</span>
+<span id="28">28</span>
+<span id="29">29</span>
+<span id="30">30</span>
+<span id="31">31</span>
+<span id="32">32</span>
+<span id="33">33</span>
+<span id="34">34</span>
+<span id="35">35</span>
+<span id="36">36</span>
+<span id="37">37</span>
+<span id="38">38</span>
+<span id="39">39</span>
+<span id="40">40</span>
+<span id="41">41</span>
+<span id="42">42</span>
+<span id="43">43</span>
 </pre><pre class="rust">
 <span class="doccomment">//! Types that are used in transactions.</span>
 
 <span class="kw">use</span> <span class="ident">borsh</span>::{<span class="ident">BorshDeserialize</span>, <span class="ident">BorshSerialize</span>};
 <span class="kw">use</span> <span class="ident">serde</span>::{<span class="ident">Deserialize</span>, <span class="ident">Serialize</span>};
 
+<span class="kw">use</span> <span class="kw">super</span><span class="ident">::key::ed25519::PublicKey</span>;
 <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::types::address::Address</span>;
 
 <span class="doccomment">/// A tx data type to update an account&#39;s validity predicate</span>
@@ -45,6 +66,25 @@
     <span class="doccomment">/// An address of the account</span>
     <span class="kw">pub</span> <span class="ident">addr</span>: <span class="ident">Address</span>,
     <span class="doccomment">/// The new VP code</span>
+    <span class="kw">pub</span> <span class="ident">vp_code</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>,
+}
+
+<span class="doccomment">/// A tx data type to initialize a new established account</span>
+<span class="attribute">#[<span class="ident">derive</span>(
+    <span class="ident">Debug</span>,
+    <span class="ident">Clone</span>,
+    <span class="ident">PartialEq</span>,
+    <span class="ident">BorshSerialize</span>,
+    <span class="ident">BorshDeserialize</span>,
+    <span class="ident">Serialize</span>,
+    <span class="ident">Deserialize</span>,
+)]</span>
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">InitAccount</span> {
+    <span class="doccomment">/// Public key to be written into the account&#39;s storage. This can be used</span>
+    <span class="doccomment">/// for signature verification of transactions for the newly created</span>
+    <span class="doccomment">/// account.</span>
+    <span class="kw">pub</span> <span class="ident">public_key</span>: <span class="ident">PublicKey</span>,
+    <span class="doccomment">/// The VP code</span>
     <span class="kw">pub</span> <span class="ident">vp_code</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>,
 }
 </pre></div>

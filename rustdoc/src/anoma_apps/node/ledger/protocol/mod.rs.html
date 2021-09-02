@@ -358,6 +358,9 @@
 <span id="356">356</span>
 <span id="357">357</span>
 <span id="358">358</span>
+<span id="359">359</span>
+<span id="360">360</span>
+<span id="361">361</span>
 </pre><pre class="rust">
 <span class="doccomment">//! The ledger&#39;s protocol</span>
 
@@ -410,6 +413,7 @@
     <span class="kw">pub</span> <span class="ident">gas_used</span>: <span class="ident">u64</span>,
     <span class="kw">pub</span> <span class="ident">changed_keys</span>: <span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">Key</span><span class="op">&gt;</span>,
     <span class="kw">pub</span> <span class="ident">vps_result</span>: <span class="ident">VpsResult</span>,
+    <span class="kw">pub</span> <span class="ident">initialized_accounts</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span>,
 }
 
 <span class="kw">impl</span> <span class="ident">TxResult</span> {
@@ -459,12 +463,14 @@
     <span class="kw">let</span> <span class="ident">gas_used</span> <span class="op">=</span> <span class="ident">block_gas_meter</span>
         .<span class="ident">finalize_transaction</span>()
         .<span class="ident">map_err</span>(<span class="ident">Error::GasError</span>)<span class="question-mark">?</span>;
+    <span class="kw">let</span> <span class="ident">initialized_accounts</span> <span class="op">=</span> <span class="ident">write_log</span>.<span class="ident">get_initialized_accounts</span>();
     <span class="kw">let</span> <span class="ident">changed_keys</span> <span class="op">=</span> <span class="ident">write_log</span>.<span class="ident">get_keys</span>();
 
     <span class="prelude-val">Ok</span>(<span class="ident">TxResult</span> {
         <span class="ident">gas_used</span>,
         <span class="ident">changed_keys</span>,
         <span class="ident">vps_result</span>,
+        <span class="ident">initialized_accounts</span>,
     })
 }
 

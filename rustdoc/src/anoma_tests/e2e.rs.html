@@ -894,6 +894,18 @@
 <span id="892">892</span>
 <span id="893">893</span>
 <span id="894">894</span>
+<span id="895">895</span>
+<span id="896">896</span>
+<span id="897">897</span>
+<span id="898">898</span>
+<span id="899">899</span>
+<span id="900">900</span>
+<span id="901">901</span>
+<span id="902">902</span>
+<span id="903">903</span>
+<span id="904">904</span>
+<span id="905">905</span>
+<span id="906">906</span>
 </pre><pre class="rust">
 <span class="doccomment">//! End-to-end tests for Anoma binaries</span>
 
@@ -1130,7 +1142,8 @@
     <span class="doccomment">/// 2. Submit a token transfer tx</span>
     <span class="doccomment">/// 3. Submit a transaction to update an account&#39;s validity predicate</span>
     <span class="doccomment">/// 4. Submit a custom tx</span>
-    <span class="doccomment">/// 5. Query token balance</span>
+    <span class="doccomment">/// 5. Submit a tx to initialize a new account</span>
+    <span class="doccomment">/// 6. Query token balance</span>
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="kw">fn</span> <span class="ident">ledger_txs_and_queries</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">dir</span> <span class="op">=</span> <span class="ident">setup</span>();
@@ -1172,6 +1185,17 @@
                 <span class="ident">TX_NO_OP_WASM</span>,
                 <span class="string">&quot;--data-path&quot;</span>,
                 <span class="string">&quot;README.md&quot;</span>,
+            ],
+            <span class="comment">// 5. Submit a tx to initialize a new account</span>
+            <span class="macro">vec!</span>[
+                <span class="string">&quot;init-account&quot;</span>, 
+                <span class="string">&quot;--source&quot;</span>, 
+                <span class="ident">BERTHA</span>,
+                <span class="string">&quot;--public-key&quot;</span>, 
+                <span class="comment">// Value obtained from `anoma::types::key::ed25519::tests::gen_keypair`</span>
+                <span class="string">&quot;200000001be519a321e29020fa3cbfbfd01bd5e92db134305609270b71dace25b5a21168&quot;</span>,
+                <span class="string">&quot;--code-path&quot;</span>,
+                <span class="ident">VP_USER_WASM</span>
             ],
         ];
         <span class="kw">for</span> <span class="ident">tx_args</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="ident">txs_args</span> {
@@ -1216,7 +1240,7 @@
         }
 
         <span class="kw">let</span> <span class="ident">query_args_and_expected_response</span> <span class="op">=</span> <span class="macro">vec!</span>[
-            <span class="comment">// 5. Query token balance</span>
+            <span class="comment">// 6. Query token balance</span>
             (
                 <span class="macro">vec!</span>[<span class="string">&quot;balance&quot;</span>, <span class="string">&quot;--owner&quot;</span>, <span class="ident">BERTHA</span>, <span class="string">&quot;--token&quot;</span>, <span class="ident">XAN</span>],
                 <span class="comment">// expect a decimal</span>

@@ -562,6 +562,77 @@
 <span id="560">560</span>
 <span id="561">561</span>
 <span id="562">562</span>
+<span id="563">563</span>
+<span id="564">564</span>
+<span id="565">565</span>
+<span id="566">566</span>
+<span id="567">567</span>
+<span id="568">568</span>
+<span id="569">569</span>
+<span id="570">570</span>
+<span id="571">571</span>
+<span id="572">572</span>
+<span id="573">573</span>
+<span id="574">574</span>
+<span id="575">575</span>
+<span id="576">576</span>
+<span id="577">577</span>
+<span id="578">578</span>
+<span id="579">579</span>
+<span id="580">580</span>
+<span id="581">581</span>
+<span id="582">582</span>
+<span id="583">583</span>
+<span id="584">584</span>
+<span id="585">585</span>
+<span id="586">586</span>
+<span id="587">587</span>
+<span id="588">588</span>
+<span id="589">589</span>
+<span id="590">590</span>
+<span id="591">591</span>
+<span id="592">592</span>
+<span id="593">593</span>
+<span id="594">594</span>
+<span id="595">595</span>
+<span id="596">596</span>
+<span id="597">597</span>
+<span id="598">598</span>
+<span id="599">599</span>
+<span id="600">600</span>
+<span id="601">601</span>
+<span id="602">602</span>
+<span id="603">603</span>
+<span id="604">604</span>
+<span id="605">605</span>
+<span id="606">606</span>
+<span id="607">607</span>
+<span id="608">608</span>
+<span id="609">609</span>
+<span id="610">610</span>
+<span id="611">611</span>
+<span id="612">612</span>
+<span id="613">613</span>
+<span id="614">614</span>
+<span id="615">615</span>
+<span id="616">616</span>
+<span id="617">617</span>
+<span id="618">618</span>
+<span id="619">619</span>
+<span id="620">620</span>
+<span id="621">621</span>
+<span id="622">622</span>
+<span id="623">623</span>
+<span id="624">624</span>
+<span id="625">625</span>
+<span id="626">626</span>
+<span id="627">627</span>
+<span id="628">628</span>
+<span id="629">629</span>
+<span id="630">630</span>
+<span id="631">631</span>
+<span id="632">632</span>
+<span id="633">633</span>
 </pre><pre class="rust">
 <span class="doccomment">//! Write log is temporary storage for modifications performed by a transaction.</span>
 <span class="doccomment">//! before they are committed to the ledger&#39;s storage.</span>
@@ -602,7 +673,8 @@
     <span class="doccomment">/// Delete an existing key-value</span>
     <span class="ident">Delete</span>,
     <span class="doccomment">/// Initialize a new account with established address and a given validity</span>
-    <span class="doccomment">/// predicate</span>
+    <span class="doccomment">/// predicate. The key for `InitAccount` inside the [`WriteLog`] must point</span>
+    <span class="doccomment">/// to its validity predicate.</span>
     <span class="ident">InitAccount</span> {
         <span class="doccomment">/// Validity predicate bytes</span>
         <span class="ident">vp</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>,
@@ -687,7 +759,7 @@
     <span class="doccomment">/// Fails with [`Error::DeleteVp`] for a validity predicate key, which are</span>
     <span class="doccomment">/// not possible to delete.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">delete</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">Key</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="ident">u64</span>, <span class="ident">i64</span>)<span class="op">&gt;</span> {
-        <span class="kw">if</span> <span class="ident">key</span>.<span class="ident">is_validity_predicate</span>() {
+        <span class="kw">if</span> <span class="ident">key</span>.<span class="ident">is_validity_predicate</span>().<span class="ident">is_some</span>() {
             <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error::DeleteVp</span>);
         }
         <span class="kw">let</span> <span class="ident">size_diff</span> <span class="op">=</span> <span class="kw">match</span> <span class="self">self</span>
@@ -736,19 +808,36 @@
     }
 
     <span class="doccomment">/// Get the storage keys changed in the current transaction (left) and</span>
-    <span class="doccomment">/// the keys to the accounts initialized in the current transaction (right).</span>
-    <span class="doccomment">/// The first vector excludes keys of validity predicates of newly</span>
-    <span class="doccomment">/// initialized accounts, but may include keys of other data written</span>
-    <span class="doccomment">/// into newly initialized accounts. The accounts keys point to the validity</span>
-    <span class="doccomment">/// predicates of the newly created accounts.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_partitioned_keys</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> (<span class="ident">HashSet</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">Key</span><span class="op">&gt;</span>, <span class="ident">HashSet</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">Key</span><span class="op">&gt;</span>) {
+    <span class="doccomment">/// the addresses of accounts initialized in the current transaction</span>
+    <span class="doccomment">/// (right). The first vector excludes keys of validity predicates of</span>
+    <span class="doccomment">/// newly initialized accounts, but may include keys of other data</span>
+    <span class="doccomment">/// written into newly initialized accounts.</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_partitioned_keys</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> (<span class="ident">HashSet</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">Key</span><span class="op">&gt;</span>, <span class="ident">HashSet</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">Address</span><span class="op">&gt;</span>) {
         <span class="kw">use</span> <span class="ident">itertools</span>::{<span class="ident">Either</span>, <span class="ident">Itertools</span>};
+        <span class="self">self</span>.<span class="ident">tx_write_log</span>.<span class="ident">iter</span>().<span class="ident">partition_map</span>(<span class="op">|</span>(<span class="ident">key</span>, <span class="ident">value</span>)<span class="op">|</span> {
+            <span class="kw">match</span> (<span class="ident">key</span>.<span class="ident">is_validity_predicate</span>(), <span class="ident">value</span>) {
+                (<span class="prelude-val">Some</span>(<span class="ident">address</span>), <span class="ident">StorageModification::InitAccount</span> { .. }) <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="ident">Either::Right</span>(<span class="ident">address</span>)
+                }
+                <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Either::Left</span>(<span class="ident">key</span>),
+            }
+        })
+    }
+
+    <span class="doccomment">/// Get the addresses of accounts initialized in the current transaction.</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_initialized_accounts</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">tx_write_log</span>
             .<span class="ident">iter</span>()
-            .<span class="ident">partition_map</span>(<span class="op">|</span>(<span class="ident">key</span>, <span class="ident">value</span>)<span class="op">|</span> <span class="kw">match</span> <span class="ident">value</span> {
-                <span class="ident">StorageModification::InitAccount</span> { .. } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Either::Right</span>(<span class="ident">key</span>),
-                <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Either::Left</span>(<span class="ident">key</span>),
+            .<span class="ident">filter_map</span>(<span class="op">|</span>(<span class="ident">key</span>, <span class="ident">value</span>)<span class="op">|</span> {
+                <span class="kw">match</span> (<span class="ident">key</span>.<span class="ident">is_validity_predicate</span>(), <span class="ident">value</span>) {
+                    (
+                        <span class="prelude-val">Some</span>(<span class="ident">address</span>),
+                        <span class="ident">StorageModification::InitAccount</span> { .. },
+                    ) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="ident">address</span>.<span class="ident">clone</span>()),
+                    <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">None</span>,
+                }
             })
+            .<span class="ident">collect</span>()
     }
 
     <span class="doccomment">/// Commit the current transaction&#39;s write log to the block when it&#39;s</span>
@@ -825,29 +914,38 @@
         <span class="comment">// get changed keys grouped by the address</span>
         <span class="kw">for</span> <span class="ident">key</span> <span class="kw">in</span> <span class="ident">changed_keys</span> {
             <span class="kw">for</span> <span class="ident">addr</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="ident">key</span>.<span class="ident">find_addresses</span>() {
-                <span class="kw">if</span> <span class="ident">verifiers_from_tx</span>.<span class="ident">contains</span>(<span class="ident">addr</span>) {
-                    <span class="comment">// We can skip this, because it&#39;s been added from the Tx</span>
-                    <span class="comment">// above, which associates with this address all the</span>
+                <span class="kw">if</span> <span class="ident">verifiers_from_tx</span>.<span class="ident">contains</span>(<span class="ident">addr</span>)
+                    <span class="op">|</span><span class="op">|</span> <span class="ident">initialized_accounts</span>.<span class="ident">contains</span>(<span class="ident">addr</span>)
+                {
+                    <span class="comment">// We can skip this when the address has been added from the</span>
+                    <span class="comment">// Tx above, which associates with this address all the</span>
                     <span class="comment">// changed storage keys, even if their address is not</span>
                     <span class="comment">// included in the key.</span>
+                    <span class="comment">// Also skip if it&#39;s an address of a newly initialized</span>
+                    <span class="comment">// account, because anything can be written into an</span>
+                    <span class="comment">// account&#39;s storage in the same tx in which it&#39;s</span>
+                    <span class="comment">// initialized.</span>
                     <span class="kw">continue</span>;
                 }
+                <span class="comment">// Add the address as a verifier</span>
                 <span class="kw">match</span> <span class="ident">verifiers</span>.<span class="ident">get_mut</span>(<span class="ident">addr</span>) {
                     <span class="prelude-val">Some</span>(<span class="ident">keys</span>) <span class="op">=</span><span class="op">&gt;</span> {
                         <span class="ident">keys</span>.<span class="ident">insert</span>(<span class="ident">key</span>.<span class="ident">clone</span>());
                     }
                     <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> {
                         <span class="kw">let</span> <span class="ident">keys</span>: <span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">Key</span><span class="op">&gt;</span> <span class="op">=</span>
-                            [<span class="ident">key</span>].<span class="ident">iter</span>().<span class="ident">map</span>(<span class="op">|</span><span class="kw-2">&amp;</span><span class="ident">key</span><span class="op">|</span> <span class="ident">key</span>.<span class="ident">clone</span>()).<span class="ident">collect</span>();
+                            <span class="macro">vec!</span>[<span class="ident">key</span>.<span class="ident">clone</span>()].<span class="ident">into_iter</span>().<span class="ident">collect</span>();
                         <span class="ident">verifiers</span>.<span class="ident">insert</span>(<span class="ident">addr</span>.<span class="ident">clone</span>(), <span class="ident">keys</span>);
                     }
                 }
             }
         }
         <span class="comment">// The new accounts should be validated by every verifier&#39;s VP</span>
-        <span class="kw">for</span> <span class="ident">key</span> <span class="kw">in</span> <span class="ident">initialized_accounts</span> {
+        <span class="kw">for</span> <span class="ident">initialized_account</span> <span class="kw">in</span> <span class="ident">initialized_accounts</span> {
             <span class="kw">for</span> (<span class="ident">_verifier</span>, <span class="ident">keys</span>) <span class="kw">in</span> <span class="ident">verifiers</span>.<span class="ident">iter_mut</span>() {
-                <span class="ident">keys</span>.<span class="ident">insert</span>(<span class="ident">key</span>.<span class="ident">clone</span>());
+                <span class="comment">// The key for an initialized account points to its VP</span>
+                <span class="kw">let</span> <span class="ident">vp_key</span> <span class="op">=</span> <span class="ident">Key::validity_predicate</span>(<span class="ident">initialized_account</span>);
+                <span class="ident">keys</span>.<span class="ident">insert</span>(<span class="ident">vp_key</span>);
             }
         }
         <span class="ident">verifiers</span>
@@ -945,9 +1043,9 @@
         <span class="macro">assert_eq!</span>(<span class="ident">gas</span>, (<span class="ident">vp_key</span>.<span class="ident">len</span>() <span class="op">+</span> <span class="ident">init_vp</span>.<span class="ident">len</span>()) <span class="kw">as</span> <span class="ident">u64</span>);
 
         <span class="comment">// get all</span>
-        <span class="kw">let</span> (<span class="ident">_changed_keys</span>, <span class="ident">accounts</span>) <span class="op">=</span> <span class="ident">write_log</span>.<span class="ident">get_partitioned_keys</span>();
-        <span class="macro">assert!</span>(<span class="ident">accounts</span>.<span class="ident">contains</span>(<span class="op">&amp;&amp;</span><span class="ident">vp_key</span>));
-        <span class="macro">assert_eq!</span>(<span class="ident">accounts</span>.<span class="ident">len</span>(), <span class="number">1</span>);
+        <span class="kw">let</span> (<span class="ident">_changed_keys</span>, <span class="ident">init_accounts</span>) <span class="op">=</span> <span class="ident">write_log</span>.<span class="ident">get_partitioned_keys</span>();
+        <span class="macro">assert!</span>(<span class="ident">init_accounts</span>.<span class="ident">contains</span>(<span class="op">&amp;&amp;</span><span class="ident">addr</span>));
+        <span class="macro">assert_eq!</span>(<span class="ident">init_accounts</span>.<span class="ident">len</span>(), <span class="number">1</span>);
     }
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
@@ -1043,37 +1141,51 @@
         <span class="macro">assert_eq!</span>(<span class="ident">value</span>.<span class="ident">expect</span>(<span class="string">&quot;no read value&quot;</span>), <span class="ident">val3</span>);
     }
 
+    <span class="macro">prop_compose!</span> {
+        <span class="kw">fn</span> <span class="ident">arb_verifiers_changed_key_tx_all_key</span>()
+            (<span class="ident">verifiers_from_tx</span> <span class="kw">in</span> <span class="ident">testing::arb_verifiers_from_tx</span>())
+            (<span class="ident">tx_write_log</span> <span class="kw">in</span> <span class="ident">testing::arb_tx_write_log</span>(<span class="ident">verifiers_from_tx</span>.<span class="ident">clone</span>()),
+                <span class="ident">verifiers_from_tx</span> <span class="kw">in</span> <span class="ident">Just</span>(<span class="ident">verifiers_from_tx</span>))
+        <span class="op">-</span><span class="op">&gt;</span> (<span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span>, <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">Key</span>, <span class="ident">StorageModification</span><span class="op">&gt;</span>) {
+            (<span class="ident">verifiers_from_tx</span>, <span class="ident">tx_write_log</span>)
+        }
+    }
+
     <span class="macro">proptest!</span> {
         <span class="doccomment">/// Test [`WriteLog::verifiers_changed_keys`] that:</span>
         <span class="doccomment">/// 1. Every address from `verifiers_from_tx` is associated with all the</span>
         <span class="doccomment">///    changed storage keys.</span>
-        <span class="doccomment">/// 2. Every changed storage key except for keys to initialized accounts</span>
-        <span class="doccomment">///    is associated with all the addresses included in the key.</span>
-        <span class="doccomment">/// 3. Every address is associated with all the newly initialized</span>
-        <span class="doccomment">///    accounts.</span>
+        <span class="doccomment">/// 2. Every changed storage key is associated with all the addresses</span>
+        <span class="doccomment">///    included in the key except for the addresses of newly</span>
+        <span class="doccomment">///    initialized accounts.</span>
+        <span class="doccomment">/// 3. Addresses of newly initialized accounts are not verifiers, so</span>
+        <span class="doccomment">///    that anything can be written into an account&#39;s storage in the</span>
+        <span class="doccomment">///    same tx in which it&#39;s initialized.</span>
+        <span class="doccomment">/// 4. Every address is associated with all the newly initialized</span>
+        <span class="doccomment">///    accounts keys to their validity predicates.</span>
         <span class="attribute">#[<span class="ident">test</span>]</span>
         <span class="kw">fn</span> <span class="ident">verifiers_changed_key_tx_all_key</span>(
-            <span class="ident">verifiers_from_tx</span> <span class="kw">in</span> <span class="ident">testing::arb_verifiers_from_tx</span>(),
-            <span class="ident">tx_write_log</span> <span class="kw">in</span> <span class="ident">testing::arb_tx_write_log</span>(),
+            (<span class="ident">verifiers_from_tx</span>, <span class="ident">tx_write_log</span>) <span class="kw">in</span> <span class="ident">arb_verifiers_changed_key_tx_all_key</span>(),
         ) {
             <span class="kw">let</span> <span class="ident">write_log</span> <span class="op">=</span> <span class="ident">WriteLog</span> { <span class="ident">tx_write_log</span>, ..<span class="ident">WriteLog::default</span>() };
             <span class="kw">let</span> <span class="ident">all_keys</span> <span class="op">=</span> <span class="ident">write_log</span>.<span class="ident">get_keys</span>();
 
-            <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">write_log</span>.<span class="ident">verifiers_changed_keys</span>(<span class="kw-2">&amp;</span><span class="ident">verifiers_from_tx</span>);
+            <span class="kw">let</span> <span class="ident">verifiers_changed_keys</span> <span class="op">=</span> <span class="ident">write_log</span>.<span class="ident">verifiers_changed_keys</span>(<span class="kw-2">&amp;</span><span class="ident">verifiers_from_tx</span>);
 
+            <span class="macro">println!</span>(<span class="string">&quot;verifiers_from_tx {:#?}&quot;</span>, <span class="ident">verifiers_from_tx</span>);
             <span class="kw">for</span> <span class="ident">verifier_from_tx</span> <span class="kw">in</span> <span class="ident">verifiers_from_tx</span> {
-                <span class="macro">assert!</span>(<span class="ident">result</span>.<span class="ident">contains_key</span>(<span class="kw-2">&amp;</span><span class="ident">verifier_from_tx</span>));
-                <span class="kw">let</span> <span class="ident">keys</span> <span class="op">=</span> <span class="ident">result</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">verifier_from_tx</span>).<span class="ident">unwrap</span>().<span class="ident">clone</span>();
+                <span class="macro">assert!</span>(<span class="ident">verifiers_changed_keys</span>.<span class="ident">contains_key</span>(<span class="kw-2">&amp;</span><span class="ident">verifier_from_tx</span>));
+                <span class="kw">let</span> <span class="ident">keys</span> <span class="op">=</span> <span class="ident">verifiers_changed_keys</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">verifier_from_tx</span>).<span class="ident">unwrap</span>().<span class="ident">clone</span>();
                 <span class="comment">// Test for 1.</span>
                 <span class="macro">assert_eq!</span>(<span class="kw-2">&amp;</span><span class="ident">keys</span>, <span class="kw-2">&amp;</span><span class="ident">all_keys</span>);
             }
 
             <span class="kw">let</span> (<span class="ident">_changed_keys</span>, <span class="ident">initialized_accounts</span>) <span class="op">=</span> <span class="ident">write_log</span>.<span class="ident">get_partitioned_keys</span>();
-            <span class="kw">for</span> (<span class="ident">_addr</span>, <span class="ident">keys</span>) <span class="kw">in</span> <span class="ident">result</span>.<span class="ident">iter</span>() {
+            <span class="kw">for</span> (<span class="ident">_verifier_addr</span>, <span class="ident">keys</span>) <span class="kw">in</span> <span class="ident">verifiers_changed_keys</span>.<span class="ident">iter</span>() {
                 <span class="kw">for</span> <span class="ident">key</span> <span class="kw">in</span> <span class="ident">keys</span> {
-                    <span class="kw">if</span> <span class="op">!</span><span class="ident">initialized_accounts</span>.<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>) {
-                        <span class="kw">for</span> <span class="ident">addr</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="ident">key</span>.<span class="ident">find_addresses</span>() {
-                            <span class="kw">let</span> <span class="ident">keys</span> <span class="op">=</span> <span class="ident">result</span>.<span class="ident">get</span>(<span class="ident">addr</span>).<span class="ident">unwrap</span>();
+                    <span class="kw">for</span> <span class="ident">addr_from_key</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="ident">key</span>.<span class="ident">find_addresses</span>() {
+                        <span class="kw">if</span> <span class="op">!</span><span class="ident">initialized_accounts</span>.<span class="ident">contains</span>(<span class="ident">addr_from_key</span>) {
+                            <span class="kw">let</span> <span class="ident">keys</span> <span class="op">=</span> <span class="ident">verifiers_changed_keys</span>.<span class="ident">get</span>(<span class="ident">addr_from_key</span>).<span class="ident">unwrap</span>();
                             <span class="comment">// Test for 2.</span>
                             <span class="macro">assert!</span>(<span class="ident">keys</span>.<span class="ident">contains</span>(<span class="ident">key</span>));
                         }
@@ -1081,10 +1193,15 @@
                 }
             }
 
+            <span class="macro">println!</span>(<span class="string">&quot;verifiers_changed_keys {:#?}&quot;</span>, <span class="ident">verifiers_changed_keys</span>);
+            <span class="macro">println!</span>(<span class="string">&quot;initialized_accounts {:#?}&quot;</span>, <span class="ident">initialized_accounts</span>);
             <span class="kw">for</span> <span class="ident">initialized_account</span> <span class="kw">in</span> <span class="ident">initialized_accounts</span> {
-                <span class="kw">for</span> (<span class="ident">_addr</span>, <span class="ident">keys</span>) <span class="kw">in</span> <span class="ident">result</span>.<span class="ident">iter</span>() {
-                    <span class="comment">// Test for 3.</span>
-                    <span class="macro">assert!</span>(<span class="ident">keys</span>.<span class="ident">contains</span>(<span class="ident">initialized_account</span>));
+                <span class="comment">// Test for 3.</span>
+                <span class="macro">assert!</span>(<span class="op">!</span><span class="ident">verifiers_changed_keys</span>.<span class="ident">contains_key</span>(<span class="ident">initialized_account</span>));
+                <span class="kw">for</span> (<span class="ident">_verifier_addr</span>, <span class="ident">keys</span>) <span class="kw">in</span> <span class="ident">verifiers_changed_keys</span>.<span class="ident">iter</span>() {
+                    <span class="comment">// Test for 4.</span>
+                    <span class="kw">let</span> <span class="ident">vp_key</span> <span class="op">=</span> <span class="ident">Key::validity_predicate</span>(<span class="ident">initialized_account</span>);
+                    <span class="macro">assert!</span>(<span class="ident">keys</span>.<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">vp_key</span>));
                 }
             }
         }
@@ -1103,9 +1220,23 @@
 
     <span class="doccomment">/// Generate an arbitrary tx write log of [`HashMap&lt;Key,</span>
     <span class="doccomment">/// StorageModification&gt;`].</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">arb_tx_write_log</span>()
-    <span class="op">-</span><span class="op">&gt;</span> <span class="kw">impl</span> <span class="ident">Strategy</span><span class="op">&lt;</span><span class="ident">Value</span> <span class="op">=</span> <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">Key</span>, <span class="ident">StorageModification</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-        <span class="ident">collection::hash_map</span>(<span class="ident">arb_key</span>(), <span class="ident">arb_storage_modification</span>(), <span class="number">0</span>..<span class="number">100</span>)
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">arb_tx_write_log</span>(
+        <span class="ident">verifiers_from_tx</span>: <span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span>,
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">impl</span> <span class="ident">Strategy</span><span class="op">&lt;</span><span class="ident">Value</span> <span class="op">=</span> <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">Key</span>, <span class="ident">StorageModification</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>
+    {
+        <span class="ident">arb_key</span>().<span class="ident">prop_flat_map</span>(<span class="kw">move</span> <span class="op">|</span><span class="ident">key</span><span class="op">|</span> {
+            <span class="comment">// If the key is a validity predicate key and its owner is in the</span>
+            <span class="comment">// verifier set, we must not generate `InitAccount` for it.</span>
+            <span class="kw">let</span> <span class="ident">can_init_account</span> <span class="op">=</span> <span class="ident">key</span>
+                .<span class="ident">is_validity_predicate</span>()
+                .<span class="ident">map</span>(<span class="op">|</span><span class="ident">owner</span><span class="op">|</span> <span class="op">!</span><span class="ident">verifiers_from_tx</span>.<span class="ident">contains</span>(<span class="ident">owner</span>))
+                .<span class="ident">unwrap_or_default</span>();
+            <span class="ident">collection::hash_map</span>(
+                <span class="ident">Just</span>(<span class="ident">key</span>),
+                <span class="ident">arb_storage_modification</span>(<span class="ident">can_init_account</span>),
+                <span class="number">0</span>..<span class="number">100</span>,
+            )
+        })
     }
 
     <span class="doccomment">/// Generate arbitrary verifiers from tx of [`HashSet&lt;Address&gt;`].</span>
@@ -1114,15 +1245,26 @@
     }
 
     <span class="doccomment">/// Generate an arbitrary [`StorageModification`].</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">arb_storage_modification</span>()
-    <span class="op">-</span><span class="op">&gt;</span> <span class="kw">impl</span> <span class="ident">Strategy</span><span class="op">&lt;</span><span class="ident">Value</span> <span class="op">=</span> <span class="ident">StorageModification</span><span class="op">&gt;</span> {
-        <span class="macro">prop_oneof!</span>[
-            <span class="ident">any</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span>()
-                .<span class="ident">prop_map</span>(<span class="op">|</span><span class="ident">value</span><span class="op">|</span> <span class="ident">StorageModification::Write</span> { <span class="ident">value</span> }),
-            <span class="ident">Just</span>(<span class="ident">StorageModification::Delete</span>),
-            <span class="ident">any</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span>()
-                .<span class="ident">prop_map</span>(<span class="op">|</span><span class="ident">vp</span><span class="op">|</span> <span class="ident">StorageModification::InitAccount</span> { <span class="ident">vp</span> }),
-        ]
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">arb_storage_modification</span>(
+        <span class="ident">can_init_account</span>: <span class="ident">bool</span>,
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">impl</span> <span class="ident">Strategy</span><span class="op">&lt;</span><span class="ident">Value</span> <span class="op">=</span> <span class="ident">StorageModification</span><span class="op">&gt;</span> {
+        <span class="kw">if</span> <span class="ident">can_init_account</span> {
+            <span class="macro">prop_oneof!</span>[
+                <span class="ident">any</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span>()
+                    .<span class="ident">prop_map</span>(<span class="op">|</span><span class="ident">value</span><span class="op">|</span> <span class="ident">StorageModification::Write</span> { <span class="ident">value</span> }),
+                <span class="ident">Just</span>(<span class="ident">StorageModification::Delete</span>),
+                <span class="ident">any</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span>()
+                    .<span class="ident">prop_map</span>(<span class="op">|</span><span class="ident">vp</span><span class="op">|</span> <span class="ident">StorageModification::InitAccount</span> { <span class="ident">vp</span> }),
+            ]
+            .<span class="ident">boxed</span>()
+        } <span class="kw">else</span> {
+            <span class="macro">prop_oneof!</span>[
+                <span class="ident">any</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span>()
+                    .<span class="ident">prop_map</span>(<span class="op">|</span><span class="ident">value</span><span class="op">|</span> <span class="ident">StorageModification::Write</span> { <span class="ident">value</span> }),
+                <span class="ident">Just</span>(<span class="ident">StorageModification::Delete</span>),
+            ]
+            .<span class="ident">boxed</span>()
+        }
     }
 }
 </pre></div>
