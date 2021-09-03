@@ -164,8 +164,6 @@
 <span id="162">162</span>
 <span id="163">163</span>
 <span id="164">164</span>
-<span id="165">165</span>
-<span id="166">166</span>
 </pre><pre class="rust">
 <span class="kw">use</span> <span class="ident">std::sync</span>::{<span class="ident">Arc</span>, <span class="ident">Mutex</span>};
 
@@ -173,12 +171,12 @@
 <span class="kw">use</span> <span class="ident">anoma::proto</span>::{<span class="ident">Intent</span>, <span class="ident">IntentId</span>, <span class="ident">Tx</span>};
 <span class="kw">use</span> <span class="ident">anoma::vm::wasm</span>;
 <span class="kw">use</span> <span class="ident">tendermint::net</span>;
-<span class="kw">use</span> <span class="ident">tendermint_rpc</span>::{<span class="ident">Client</span>, <span class="ident">HttpClient</span>};
 <span class="kw">use</span> <span class="ident">thiserror::Error</span>;
 <span class="kw">use</span> <span class="ident">tokio::sync::mpsc</span>::{<span class="ident">channel</span>, <span class="ident">Receiver</span>, <span class="ident">Sender</span>};
 
 <span class="kw">use</span> <span class="kw">super</span><span class="ident">::filter::Filter</span>;
 <span class="kw">use</span> <span class="kw">super</span><span class="ident">::mempool</span>::{<span class="self">self</span>, <span class="ident">IntentMempool</span>};
+<span class="kw">use</span> <span class="kw">crate</span><span class="ident">::client::tx::broadcast_tx</span>;
 <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::types::MatchmakerMessage</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">config</span>, <span class="ident">wallet</span>};
 
@@ -316,10 +314,8 @@
                 <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx::new</span>(<span class="ident">tx_code</span>, <span class="prelude-val">Some</span>(<span class="ident">tx_data</span>)).<span class="ident">sign</span>(<span class="kw-2">&amp;</span><span class="ident">keypair</span>);
                 <span class="kw">let</span> <span class="ident">tx_bytes</span> <span class="op">=</span> <span class="ident">tx</span>.<span class="ident">to_bytes</span>();
 
-                <span class="kw">let</span> <span class="ident">client</span> <span class="op">=</span>
-                    <span class="ident">HttpClient::new</span>(<span class="self">self</span>.<span class="ident">ledger_address</span>.<span class="ident">clone</span>()).<span class="ident">unwrap</span>();
                 <span class="kw">let</span> <span class="ident">response</span> <span class="op">=</span>
-                    <span class="ident">client</span>.<span class="ident">broadcast_tx_commit</span>(<span class="ident">tx_bytes</span>.<span class="ident">into</span>()).<span class="kw">await</span>;
+                    <span class="ident">broadcast_tx</span>(<span class="self">self</span>.<span class="ident">ledger_address</span>.<span class="ident">clone</span>(), <span class="ident">tx_bytes</span>).<span class="kw">await</span>;
                 <span class="macro">println!</span>(<span class="string">&quot;{:#?}&quot;</span>, <span class="ident">response</span>);
             }
             <span class="ident">MatchmakerMessage::RemoveIntents</span>(<span class="ident">intents_id</span>) <span class="op">=</span><span class="op">&gt;</span> {

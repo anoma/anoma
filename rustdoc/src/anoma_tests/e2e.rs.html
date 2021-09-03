@@ -906,6 +906,20 @@
 <span id="904">904</span>
 <span id="905">905</span>
 <span id="906">906</span>
+<span id="907">907</span>
+<span id="908">908</span>
+<span id="909">909</span>
+<span id="910">910</span>
+<span id="911">911</span>
+<span id="912">912</span>
+<span id="913">913</span>
+<span id="914">914</span>
+<span id="915">915</span>
+<span id="916">916</span>
+<span id="917">917</span>
+<span id="918">918</span>
+<span id="919">919</span>
+<span id="920">920</span>
 </pre><pre class="rust">
 <span class="doccomment">//! End-to-end tests for Anoma binaries</span>
 
@@ -917,7 +931,7 @@
     <span class="kw">use</span> <span class="ident">std::process::Command</span>;
     <span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">fs</span>, <span class="ident">thread</span>};
 
-    <span class="kw">use</span> <span class="ident">anoma_apps::config</span>::{<span class="ident">Config</span>, <span class="ident">IntentGossiper</span>};
+    <span class="kw">use</span> <span class="ident">anoma_apps::config</span>::{<span class="ident">Config</span>, <span class="ident">IntentGossiper</span>, <span class="ident">Ledger</span>};
     <span class="kw">use</span> <span class="ident">assert_cmd::assert::OutputAssertExt</span>;
     <span class="kw">use</span> <span class="ident">assert_cmd::cargo::CommandCargoExt</span>;
     <span class="kw">use</span> <span class="ident">color_eyre::eyre::Result</span>;
@@ -1524,7 +1538,7 @@
     <span class="doccomment">/// a transfer transaction with the 3 intents.</span>
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="kw">fn</span> <span class="ident">match_intent</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="ident">setup</span>();
+        <span class="kw">let</span> <span class="ident">working_dir</span> <span class="op">=</span> <span class="ident">setup</span>();
 
         <span class="kw">let</span> <span class="ident">base_dir</span> <span class="op">=</span> <span class="ident">tempdir</span>().<span class="ident">unwrap</span>();
         <span class="kw">let</span> <span class="ident">node_dirs</span> <span class="op">=</span> <span class="ident">generate_network_of</span>(
@@ -1535,9 +1549,11 @@
             <span class="bool-val">true</span>,
         );
 
-        <span class="kw">let</span> <span class="ident">intent_a_path</span> <span class="op">=</span> <span class="ident">base_dir</span>.<span class="ident">path</span>().<span class="ident">to_path_buf</span>().<span class="ident">join</span>(<span class="string">&quot;intent.A&quot;</span>);
-        <span class="kw">let</span> <span class="ident">intent_b_path</span> <span class="op">=</span> <span class="ident">base_dir</span>.<span class="ident">path</span>().<span class="ident">to_path_buf</span>().<span class="ident">join</span>(<span class="string">&quot;intent.B&quot;</span>);
-        <span class="kw">let</span> <span class="ident">intent_c_path</span> <span class="op">=</span> <span class="ident">base_dir</span>.<span class="ident">path</span>().<span class="ident">to_path_buf</span>().<span class="ident">join</span>(<span class="string">&quot;intent.C&quot;</span>);
+        <span class="macro">println!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">base_dir</span>.<span class="ident">path</span>().<span class="ident">to_path_buf</span>().<span class="ident">to_string_lossy</span>());
+
+        <span class="kw">let</span> <span class="ident">_intent_a_path</span> <span class="op">=</span> <span class="ident">base_dir</span>.<span class="ident">path</span>().<span class="ident">to_path_buf</span>().<span class="ident">join</span>(<span class="string">&quot;intent.A&quot;</span>);
+        <span class="kw">let</span> <span class="ident">_intent_b_path</span> <span class="op">=</span> <span class="ident">base_dir</span>.<span class="ident">path</span>().<span class="ident">to_path_buf</span>().<span class="ident">join</span>(<span class="string">&quot;intent.B&quot;</span>);
+        <span class="kw">let</span> <span class="ident">_intent_c_path</span> <span class="op">=</span> <span class="ident">base_dir</span>.<span class="ident">path</span>().<span class="ident">to_path_buf</span>().<span class="ident">join</span>(<span class="string">&quot;intent.C&quot;</span>);
 
         <span class="kw">let</span> <span class="ident">intent_a_path_input</span> <span class="op">=</span>
             <span class="ident">base_dir</span>.<span class="ident">path</span>().<span class="ident">to_path_buf</span>().<span class="ident">join</span>(<span class="string">&quot;intent.A.data&quot;</span>);
@@ -1545,10 +1561,6 @@
             <span class="ident">base_dir</span>.<span class="ident">path</span>().<span class="ident">to_path_buf</span>().<span class="ident">join</span>(<span class="string">&quot;intent.B.data&quot;</span>);
         <span class="kw">let</span> <span class="ident">intent_c_path_input</span> <span class="op">=</span>
             <span class="ident">base_dir</span>.<span class="ident">path</span>().<span class="ident">to_path_buf</span>().<span class="ident">join</span>(<span class="string">&quot;intent.C.data&quot;</span>);
-
-        <span class="macro">println!</span>(<span class="string">&quot;{:?}, {:?}&quot;</span>, <span class="ident">intent_a_path</span>, <span class="ident">intent_a_path_input</span>);
-        <span class="macro">println!</span>(<span class="string">&quot;{:?}, {:?}&quot;</span>, <span class="ident">intent_b_path</span>, <span class="ident">intent_b_path_input</span>);
-        <span class="macro">println!</span>(<span class="string">&quot;{:?}, {:?}&quot;</span>, <span class="ident">intent_c_path</span>, <span class="ident">intent_c_path_input</span>);
 
         <span class="kw">let</span> <span class="ident">intent_a_json</span> <span class="op">=</span> <span class="macro">json!</span>([
             {
@@ -1558,9 +1570,11 @@
                 <span class="string">&quot;max_sell&quot;</span>: <span class="string">&quot;70&quot;</span>,
                 <span class="string">&quot;token_buy&quot;</span>: <span class="ident">XAN</span>,
                 <span class="string">&quot;token_sell&quot;</span>: <span class="ident">BTC</span>,
-                <span class="string">&quot;rate_min&quot;</span>: <span class="number">2</span>
+                <span class="string">&quot;rate_min&quot;</span>: <span class="string">&quot;2&quot;</span>,
+                <span class="string">&quot;vp_path&quot;</span>: <span class="ident">working_dir</span>.<span class="ident">join</span>(<span class="ident">VP_ALWAYS_TRUE_WASM</span>).<span class="ident">to_string_lossy</span>().<span class="ident">into_owned</span>(),
             }
         ]);
+
         <span class="kw">let</span> <span class="ident">intent_b_json</span> <span class="op">=</span> <span class="macro">json!</span>([
             {
                 <span class="string">&quot;key&quot;</span>: <span class="ident">ALBERT</span>,
@@ -1569,7 +1583,7 @@
                 <span class="string">&quot;max_sell&quot;</span>: <span class="string">&quot;300&quot;</span>,
                 <span class="string">&quot;token_buy&quot;</span>: <span class="ident">BTC</span>,
                 <span class="string">&quot;token_sell&quot;</span>: <span class="ident">ETH</span>,
-                <span class="string">&quot;rate_min&quot;</span>: <span class="number">0.7</span>
+                <span class="string">&quot;rate_min&quot;</span>: <span class="string">&quot;0.7&quot;</span>
             }
         ]);
         <span class="kw">let</span> <span class="ident">intent_c_json</span> <span class="op">=</span> <span class="macro">json!</span>([
@@ -1580,7 +1594,7 @@
                 <span class="string">&quot;max_sell&quot;</span>: <span class="string">&quot;200&quot;</span>,
                 <span class="string">&quot;token_buy&quot;</span>: <span class="ident">ETH</span>,
                 <span class="string">&quot;token_sell&quot;</span>: <span class="ident">XAN</span>,
-                <span class="string">&quot;rate_min&quot;</span>: <span class="number">0.5</span>
+                <span class="string">&quot;rate_min&quot;</span>: <span class="string">&quot;0.5&quot;</span>
             }
         ]);
         <span class="ident">generate_intent_json</span>(<span class="ident">intent_a_path_input</span>.<span class="ident">clone</span>(), <span class="ident">intent_a_json</span>);
@@ -1593,22 +1607,25 @@
         <span class="ident">base_node_gossip</span>.<span class="ident">args</span>(<span class="kw-2">&amp;</span>[<span class="string">&quot;--base-dir&quot;</span>, <span class="ident">first_node_dir</span>, <span class="string">&quot;gossip&quot;</span>]);
 
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">base_node_ledger</span> <span class="op">=</span> <span class="ident">Command::cargo_bin</span>(<span class="string">&quot;anoman&quot;</span>)<span class="question-mark">?</span>;
-        <span class="ident">base_node_ledger</span>.<span class="ident">args</span>(<span class="kw-2">&amp;</span>[<span class="string">&quot;--base-dir&quot;</span>, <span class="ident">first_node_dir</span>, <span class="string">&quot;ledger&quot;</span>]);
+        <span class="ident">base_node_ledger</span>.<span class="ident">current_dir</span>(<span class="kw-2">&amp;</span><span class="ident">working_dir</span>).<span class="ident">args</span>(<span class="kw-2">&amp;</span>[
+            <span class="string">&quot;--base-dir&quot;</span>,
+            <span class="ident">first_node_dir</span>,
+            <span class="string">&quot;ledger&quot;</span>,
+        ]);
 
         <span class="comment">//  Start gossip</span>
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">session_gossip</span> <span class="op">=</span> <span class="ident">spawn_command</span>(<span class="ident">base_node_gossip</span>, <span class="prelude-val">Some</span>(<span class="number">40_000</span>))
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">session_gossip</span> <span class="op">=</span> <span class="ident">spawn_command</span>(<span class="ident">base_node_gossip</span>, <span class="prelude-val">Some</span>(<span class="number">60_000</span>))
             .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="macro">eyre!</span>(<span class="macro">format!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">e</span>)))<span class="question-mark">?</span>;
 
         <span class="comment">//  Start ledger</span>
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">session_ledger</span> <span class="op">=</span> <span class="ident">spawn_command</span>(<span class="ident">base_node_ledger</span>, <span class="prelude-val">Some</span>(<span class="number">40_000</span>))
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">session_ledger</span> <span class="op">=</span> <span class="ident">spawn_command</span>(<span class="ident">base_node_ledger</span>, <span class="prelude-val">Some</span>(<span class="number">60_000</span>))
             .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="macro">eyre!</span>(<span class="macro">format!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">e</span>)))<span class="question-mark">?</span>;
 
         <span class="ident">session_ledger</span>
             .<span class="ident">exp_string</span>(<span class="string">&quot;No state could be found&quot;</span>)
             .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="macro">eyre!</span>(<span class="macro">format!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">e</span>)))<span class="question-mark">?</span>;
-        <span class="ident">drop</span>(<span class="ident">session_ledger</span>);
 
-        <span class="comment">// Wait for ledger and gossip to start</span>
+        <span class="comment">// Wait gossip to start</span>
         <span class="ident">sleep</span>(<span class="number">3</span>);
 
         <span class="comment">// cargo run --bin anomac -- intent --node &quot;http://127.0.0.1:39111&quot; --data-path intent.A --topic &quot;asset_v1&quot;</span>
@@ -1685,7 +1702,7 @@
             <span class="ident">CHRISTEL</span>,
         ]);
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">session_send_intent_c</span> <span class="op">=</span>
-            <span class="ident">spawn_command</span>(<span class="ident">send_intent_c</span>, <span class="prelude-val">Some</span>(<span class="number">40_000</span>))
+            <span class="ident">spawn_command</span>(<span class="ident">send_intent_c</span>, <span class="prelude-val">Some</span>(<span class="number">20_000</span>))
                 .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="macro">eyre!</span>(<span class="macro">format!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">e</span>)))<span class="question-mark">?</span>;
 
         <span class="comment">// means it sent it correctly but not able to gossip it (which is</span>
@@ -1694,11 +1711,6 @@
             .<span class="ident">exp_string</span>(<span class="string">&quot;Failed to publish_intent InsufficientPeers&quot;</span>)
             .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="macro">eyre!</span>(<span class="macro">format!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">e</span>)))<span class="question-mark">?</span>;
         <span class="ident">drop</span>(<span class="ident">session_send_intent_c</span>);
-
-        <span class="comment">// check that the amount matched are correct</span>
-        <span class="ident">session_gossip</span>
-            .<span class="ident">exp_string</span>(<span class="string">&quot;amounts: 100, 70, 200&quot;</span>)
-            .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="macro">eyre!</span>(<span class="macro">format!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">e</span>)))<span class="question-mark">?</span>;
 
         <span class="comment">// check that the transfers transactions are correct</span>
         <span class="ident">session_gossip</span>
@@ -1711,6 +1723,11 @@
 
         <span class="ident">session_gossip</span>
             .<span class="ident">exp_string</span>(<span class="string">&quot;crafting transfer: Established: a1qq5qqqqqg4znssfsgcurjsfhgfpy2vjyxy6yg3z98pp5zvp5xgersvfjxvcnx3f4xycrzdfkak0xhx, Established: a1qq5qqqqqxsuygd2x8pq5yw2ygdryxs6xgsmrsdzx8pryxv34gfrrssfjgccyg3zpxezrqd2y2s3g5s, 100&quot;</span>)
+            .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="macro">eyre!</span>(<span class="macro">format!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">e</span>)))<span class="question-mark">?</span>;
+
+        <span class="comment">// check that the intent vp passes evaluation</span>
+        <span class="ident">session_ledger</span>
+            .<span class="ident">exp_string</span>(<span class="string">&quot;eval result: true&quot;</span>)
             .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="macro">eyre!</span>(<span class="macro">format!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">e</span>)))<span class="question-mark">?</span>;
 
         <span class="prelude-val">Ok</span>(())
@@ -1744,6 +1761,13 @@
             <span class="kw">let</span> <span class="ident">node_path</span> <span class="op">=</span> <span class="ident">path</span>.<span class="ident">join</span>(<span class="macro">format!</span>(<span class="string">&quot;anoma-{}&quot;</span>, <span class="ident">index</span>));
 
             <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">config</span> <span class="op">=</span> <span class="ident">Config::default</span>();
+
+            <span class="kw">let</span> <span class="ident">_ledger_config</span> <span class="op">=</span> <span class="ident">Ledger</span> {
+                <span class="ident">tendermint</span>: <span class="ident">node_path</span>.<span class="ident">join</span>(<span class="string">&quot;tendermint&quot;</span>).<span class="ident">to_path_buf</span>(),
+                <span class="ident">db</span>: <span class="ident">node_path</span>.<span class="ident">join</span>(<span class="string">&quot;db&quot;</span>).<span class="ident">to_path_buf</span>(),
+                ..<span class="ident">Default::default</span>()
+            };
+
             <span class="kw">let</span> <span class="ident">info</span> <span class="op">=</span> <span class="ident">build_peers</span>(<span class="ident">index</span>, <span class="ident">node_dirs</span>.<span class="ident">clone</span>());
 
             <span class="kw">let</span> <span class="ident">gossiper_config</span> <span class="op">=</span> <span class="ident">IntentGossiper::default_with_address</span>(
@@ -1811,6 +1835,10 @@
         <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">TX_TRANSFER_WASM</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;wasm/tx_transfer.wasm&quot;</span>;
         <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">VP_USER_WASM</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;wasm/vp_user.wasm&quot;</span>;
         <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">TX_NO_OP_WASM</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;wasm_for_tests/tx_no_op.wasm&quot;</span>;
+        <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">VP_ALWAYS_TRUE_WASM</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span>
+            <span class="string">&quot;wasm_for_tests/vp_always_true.wasm&quot;</span>;
+        <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">VP_ALWAYS_FALSE_WASM</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span>
+            <span class="string">&quot;wasm_for_tests/vp_always_false.wasm&quot;</span>;
     }
 }
 </pre></div>

@@ -348,6 +348,7 @@
 <span id="346">346</span>
 <span id="347">347</span>
 <span id="348">348</span>
+<span id="349">349</span>
 </pre><pre class="rust">
 <span class="kw">mod</span> <span class="ident">discovery</span>;
 <span class="kw">use</span> <span class="ident">std::collections::hash_map::DefaultHasher</span>;
@@ -510,6 +511,7 @@
             .<span class="ident">heartbeat_interval</span>(<span class="ident">Duration::from_secs</span>(<span class="number">1</span>))
             .<span class="ident">validation_mode</span>(<span class="ident">ValidationMode::Strict</span>)
             .<span class="ident">message_id_fn</span>(<span class="ident">message_id</span>)
+            .<span class="ident">max_transmit_size</span>(<span class="number">16</span> <span class="op">*</span> <span class="number">1024</span> <span class="op">*</span> <span class="number">1024</span>)
             .<span class="ident">validate_messages</span>()
             .<span class="ident">mesh_outbound_min</span>(<span class="number">1</span>)
             .<span class="ident">mesh_n_low</span>(<span class="number">2</span>)
