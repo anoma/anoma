@@ -37,6 +37,9 @@ pub async fn main() -> Result<()> {
         cmds::AnomaClient::SubscribeTopic(cmds::SubscribeTopic(args)) => {
             subscribe_topic(args).await;
         }
+        cmds::AnomaClient::NftCreate(cmds::NftCreate(args)) => {
+            println!("{:?}", args);
+        }
     }
     Ok(())
 }

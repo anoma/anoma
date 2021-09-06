@@ -41,6 +41,8 @@ pub mod cmds {
         TxTransfer(TxTransfer),
         TxUpdateVp(TxUpdateVp),
         Intent(Intent),
+        TxInitAccount(TxInitAccount),
+        NftCreate(NftCreate),
     }
 
     impl Cmd for Anoma {
@@ -53,6 +55,8 @@ pub mod cmds {
                 .subcommand(TxTransfer::def())
                 .subcommand(TxUpdateVp::def())
                 .subcommand(Intent::def())
+                .subcommand(TxInitAccount::def())
+                .subcommand(NftCreate::def())
         }
 
         fn parse(matches: &ArgMatches) -> Option<(Self, &ArgMatches)> {
@@ -64,6 +68,9 @@ pub mod cmds {
             let tx_transfer = SubCmd::parse(matches).map_fst(Self::TxTransfer);
             let tx_update_vp = SubCmd::parse(matches).map_fst(Self::TxUpdateVp);
             let intent = SubCmd::parse(matches).map_fst(Self::Intent);
+            let tx_init_account =
+                SubCmd::parse(matches).map_fst(Self::TxInitAccount);
+            let nft_create = SubCmd::parse(matches).map_fst(Self::NftCreate);
             node.or(client)
                 .or(ledger)
                 .or(gossip)
@@ -71,6 +78,8 @@ pub mod cmds {
                 .or(tx_transfer)
                 .or(tx_update_vp)
                 .or(intent)
+                .or(nft_create)
+                .or(tx_init_account)
         }
     }
 
@@ -131,6 +140,7 @@ pub mod cmds {
         QueryBalance(QueryBalance),
         Intent(Intent),
         SubscribeTopic(SubscribeTopic),
+        NftCreate(NftCreate),
     }
 
     impl Cmd for AnomaClient {
@@ -142,6 +152,7 @@ pub mod cmds {
                 .subcommand(QueryBalance::def())
                 .subcommand(Intent::def())
                 .subcommand(SubscribeTopic::def())
+                .subcommand(NftCreate::def())
         }
 
         fn parse(matches: &ArgMatches) -> Option<(Self, &ArgMatches)> {
@@ -155,6 +166,7 @@ pub mod cmds {
             let intent = SubCmd::parse(matches).map_fst(Self::Intent);
             let subscribe_topic =
                 SubCmd::parse(matches).map_fst(Self::SubscribeTopic);
+            let nft_create = SubCmd::parse(matches).map_fst(Self::NftCreate);
             tx_custom
                 .or(tx_transfer)
                 .or(tx_update_vp)
@@ -162,6 +174,7 @@ pub mod cmds {
                 .or(query_balance)
                 .or(intent)
                 .or(subscribe_topic)
+                .or(nft_create)
         }
     }
     impl SubCmd for AnomaClient {
@@ -494,6 +507,28 @@ pub mod cmds {
     }
 
     #[derive(Debug)]
+    pub struct NftCreate(pub args::NftCreate);
+
+    impl SubCmd for NftCreate {
+        const CMD: &'static str = "nft-create";
+
+        fn parse(matches: &ArgMatches) -> Option<(Self, &ArgMatches)>
+        where
+            Self: Sized,
+        {
+            matches.subcommand_matches(Self::CMD).map(|matches| {
+                (NftCreate(args::NftCreate::parse(matches)), matches)
+            })
+        }
+
+        fn def() -> App {
+            App::new(Self::CMD)
+                .about("Create a new NFT.")
+                .add_args::<args::NftCreate>()
+        }
+    }
+
+    #[derive(Debug)]
     pub struct SubscribeTopic(pub args::SubscribeTopic);
 
     impl SubCmd for SubscribeTopic {
@@ -530,6 +565,7 @@ pub mod args {
     use anoma::types::address::Address;
     use anoma::types::intent::{DecimalWrapper, Exchange};
     use anoma::types::key::ed25519::PublicKey;
+    use anoma::types::nft::{Nft, NftToken};
     use anoma::types::token;
     use libp2p::Multiaddr;
     use serde::Deserialize;
@@ -936,6 +972,97 @@ pub mod args {
                     .def()
                     .about("The subnetwork where the intent should be sent to"),
             )
+        }
+    }
+
+    /// Helper struct for generating intents
+    #[derive(Debug, Clone, Deserialize)]
+    pub struct NftDefinition {
+        /// The source address
+        pub owner: String,
+        /// The token to be sold
+        pub vp_path: Option<String>,
+        /// The minimum rate
+        pub tokens: Vec<NftToken>,
+    }
+
+    // Intent arguments
+    #[derive(Debug)]
+    pub struct NftCreate {
+        /// Common tx arguments
+        pub tx: Tx,
+        /// Path to the VP WASM code file
+        pub nfts: Vec<Nft>,
+        /// Print output to stdout
+        pub to_stdout: bool,
+    }
+
+    impl TryFrom<NftDefinition> for Nft {
+        type Error = &'static str;
+
+        fn try_from(value: NftDefinition) -> Result<Nft, Self::Error> {
+            let vp = if let Some(path) = value.vp_path {
+                if let Ok(wasm) = std::fs::read(path.clone()) {
+                    Some(wasm)
+                } else {
+                    eprintln!("File {} was not found.", path);
+                    None
+                }
+            } else {
+                None
+            };
+
+            let owner = Address::decode(value.owner)
+                .expect("Addr should be a valid address");
+
+            Ok(Nft {
+                owner,
+                vp,
+                tokens: value.tokens,
+            })
+        }
+    }
+
+    impl Args for NftCreate {
+        fn parse(matches: &ArgMatches) -> Self {
+            let tx = Tx::parse(matches);
+            let data_path = DATA_PATH.parse(matches);
+            let to_stdout = TO_STDOUT.parse(matches);
+
+            let file = File::open(&data_path).expect("File must exist.");
+            let nft_definitions: Vec<NftDefinition> =
+                serde_json::from_reader(file)
+                    .expect("JSON was not well-formatted");
+
+            let nfts: Vec<Nft> = nft_definitions
+                .iter()
+                .map(|item| {
+                    Nft::try_from(item.clone()).expect(
+                        "Conversion from NftDefinition to Nft \
+                        should not fail.",
+                    )
+                })
+                .collect();
+
+            Self {
+                tx,
+                nfts,
+                to_stdout,
+            }
+        }
+
+        fn def(app: App) -> App {
+            app.add_args::<Tx>()
+                .arg(
+                    DATA_PATH
+                        .def()
+                        .about("The data path file that describes the nft."),
+                )
+                .arg(TO_STDOUT.def().about(
+                    "Echo the serialized intent to stdout. Note that with \
+                         this option, the intent won't be submitted to the \
+                         intent gossiper RPC.",
+                ))
         }
     }
 
