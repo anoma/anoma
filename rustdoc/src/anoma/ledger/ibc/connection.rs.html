@@ -407,7 +407,6 @@
 <span class="kw">use</span> <span class="ident">ibc::ics23_commitment::commitment::CommitmentPrefix</span>;
 <span class="kw">use</span> <span class="ident">ibc::ics24_host::identifier</span>::{<span class="ident">ClientId</span>, <span class="ident">ConnectionId</span>};
 <span class="kw">use</span> <span class="ident">ibc::ics24_host::Path</span>;
-<span class="kw">use</span> <span class="ident">tendermint_proto::Protobuf</span>;
 <span class="kw">use</span> <span class="ident">thiserror::Error</span>;
 
 <span class="kw">use</span> <span class="kw">super</span>::{<span class="ident">Ibc</span>, <span class="ident">StateChange</span>};
@@ -437,7 +436,7 @@
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Decoding TX data error: {0}&quot;</span>)]</span>
     <span class="ident">DecodingTxData</span>(<span class="ident">std::io::Error</span>),
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;IBC data error: {0}&quot;</span>)]</span>
-    <span class="ident">DecodingIbcData</span>(<span class="ident">IbcDataError</span>),
+    <span class="ident">InvalidIbcData</span>(<span class="ident">IbcDataError</span>),
 }
 
 <span class="doccomment">/// IBC connection functions result</span>
@@ -585,7 +584,7 @@
         <span class="kw">let</span> <span class="ident">proofs</span> <span class="op">=</span> <span class="ident">data</span>.<span class="ident">proofs</span>()<span class="question-mark">?</span>;
         <span class="kw">match</span> <span class="ident">verify_proofs</span>(
             <span class="self">self</span>,
-            <span class="prelude-val">Some</span>(<span class="ident">data</span>.<span class="ident">client_state</span>()<span class="question-mark">?</span>),
+            <span class="prelude-val">Some</span>(<span class="ident">data</span>.<span class="ident">client_state</span>),
             <span class="kw-2">&amp;</span><span class="ident">conn</span>,
             <span class="kw-2">&amp;</span><span class="ident">expected_conn</span>,
             <span class="kw-2">&amp;</span><span class="ident">proofs</span>,
@@ -604,7 +603,7 @@
         <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="ident">ConnectionOpenAckData::try_from_slice</span>(<span class="ident">tx_data</span>)<span class="question-mark">?</span>;
 
         <span class="comment">// version check</span>
-        <span class="kw">if</span> <span class="op">!</span><span class="ident">conn</span>.<span class="ident">versions</span>().<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">data</span>.<span class="ident">version</span>()<span class="question-mark">?</span>) {
+        <span class="kw">if</span> <span class="op">!</span><span class="ident">conn</span>.<span class="ident">versions</span>().<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">data</span>.<span class="ident">version</span>) {
             <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error::InvalidVersion</span>(
                 <span class="string">&quot;The version is unsupported&quot;</span>.<span class="ident">to_owned</span>(),
             ));
@@ -612,7 +611,7 @@
 
         <span class="comment">// counterpart connection ID check</span>
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">counterpart_conn_id</span>) <span class="op">=</span> <span class="ident">conn</span>.<span class="ident">counterparty</span>().<span class="ident">connection_id</span>() {
-            <span class="kw">if</span> <span class="kw-2">*</span><span class="ident">counterpart_conn_id</span> <span class="op">!</span><span class="op">=</span> <span class="ident">data</span>.<span class="ident">counterpart_connection_id</span>()<span class="question-mark">?</span> {
+            <span class="kw">if</span> <span class="kw-2">*</span><span class="ident">counterpart_conn_id</span> <span class="op">!</span><span class="op">=</span> <span class="ident">data</span>.<span class="ident">counterpart_conn_id</span> {
                 <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error::InvalidConnection</span>(<span class="macro">format!</span>(
                     <span class="string">&quot;The counterpart connection ID mismatched: ID {}&quot;</span>,
                     <span class="ident">counterpart_conn_id</span>
@@ -636,7 +635,7 @@
         <span class="kw">let</span> <span class="ident">proofs</span> <span class="op">=</span> <span class="ident">data</span>.<span class="ident">proofs</span>()<span class="question-mark">?</span>;
         <span class="kw">match</span> <span class="ident">verify_proofs</span>(
             <span class="self">self</span>,
-            <span class="prelude-val">Some</span>(<span class="ident">data</span>.<span class="ident">client_state</span>()<span class="question-mark">?</span>),
+            <span class="prelude-val">Some</span>(<span class="ident">data</span>.<span class="ident">client_state</span>),
             <span class="kw-2">&amp;</span><span class="ident">conn</span>,
             <span class="kw-2">&amp;</span><span class="ident">expected_conn</span>,
             <span class="kw-2">&amp;</span><span class="ident">proofs</span>,
@@ -682,12 +681,13 @@
         <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Key::ibc_key</span>(<span class="ident">path</span>)
             .<span class="ident">expect</span>(<span class="string">&quot;Creating a key for a connection end failed&quot;</span>);
         <span class="kw">match</span> <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">read_pre</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>) {
-            <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="ident">value</span>)) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ConnectionEnd::decode_vec</span>(<span class="kw-2">&amp;</span><span class="ident">value</span>).<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> {
-                <span class="ident">Error::InvalidConnection</span>(<span class="macro">format!</span>(
-                    <span class="string">&quot;Decoding the connection failed: {}&quot;</span>,
-                    <span class="ident">e</span>
-                ))
-            }),
+            <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="ident">value</span>)) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ConnectionEnd::try_from_slice</span>(<span class="kw-2">&amp;</span><span class="ident">value</span>[..])
+                .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> {
+                    <span class="ident">Error::InvalidConnection</span>(<span class="macro">format!</span>(
+                        <span class="string">&quot;Decoding the connection failed: {}&quot;</span>,
+                        <span class="ident">e</span>
+                    ))
+                }),
             <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">Error::InvalidConnection</span>(<span class="macro">format!</span>(
                 <span class="string">&quot;Unable to get the previous connection: ID {}&quot;</span>,
                 <span class="ident">conn_id</span>
@@ -712,7 +712,7 @@
         <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Key::ibc_key</span>(<span class="ident">path</span>)
             .<span class="ident">expect</span>(<span class="string">&quot;Creating a key for a connection end failed&quot;</span>);
         <span class="kw">match</span> <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">read_post</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>) {
-            <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="ident">value</span>)) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ConnectionEnd::decode_vec</span>(<span class="kw-2">&amp;</span><span class="ident">value</span>).<span class="ident">ok</span>(),
+            <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="ident">value</span>)) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ConnectionEnd::try_from_slice</span>(<span class="kw-2">&amp;</span><span class="ident">value</span>[..]).<span class="ident">ok</span>(),
             <span class="comment">// returns None even if DB read fails</span>
             <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">None</span>,
         }
@@ -770,7 +770,7 @@
 
 <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">IbcDataError</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Error</span> {
     <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">err</span>: <span class="ident">IbcDataError</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
-        <span class="self">Self</span><span class="ident">::DecodingIbcData</span>(<span class="ident">err</span>)
+        <span class="self">Self</span><span class="ident">::InvalidIbcData</span>(<span class="ident">err</span>)
     }
 }
 

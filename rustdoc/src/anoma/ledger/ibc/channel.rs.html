@@ -722,6 +722,7 @@
 <span id="720">720</span>
 <span id="721">721</span>
 <span id="722">722</span>
+<span id="723">723</span>
 </pre><pre class="rust">
 <span class="doccomment">//! IBC validity predicate for channel module</span>
 
@@ -746,7 +747,6 @@
 <span class="kw">use</span> <span class="ident">ibc::proofs::Proofs</span>;
 <span class="kw">use</span> <span class="ident">ibc::timestamp::Timestamp</span>;
 <span class="kw">use</span> <span class="ident">sha2::Digest</span>;
-<span class="kw">use</span> <span class="ident">tendermint_proto::Protobuf</span>;
 <span class="kw">use</span> <span class="ident">thiserror::Error</span>;
 
 <span class="kw">use</span> <span class="kw">super</span>::{<span class="ident">Ibc</span>, <span class="ident">StateChange</span>};
@@ -1190,12 +1190,14 @@
         <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span>
             <span class="ident">Key::ibc_key</span>(<span class="ident">path</span>).<span class="ident">expect</span>(<span class="string">&quot;Creating a key for a channel failed&quot;</span>);
         <span class="kw">match</span> <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">read_pre</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>) {
-            <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="ident">value</span>)) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ChannelEnd::decode_vec</span>(<span class="kw-2">&amp;</span><span class="ident">value</span>).<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> {
-                <span class="ident">Error::InvalidChannel</span>(<span class="macro">format!</span>(
-                    <span class="string">&quot;Decoding the channel failed: Port {}, Channel {}, {}&quot;</span>,
-                    <span class="ident">port_channel_id</span>.<span class="number">0</span>, <span class="ident">port_channel_id</span>.<span class="number">1</span>, <span class="ident">e</span>
-                ))
-            }),
+            <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="ident">value</span>)) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">ChannelEnd::try_from_slice</span>(<span class="kw-2">&amp;</span><span class="ident">value</span>[..]).<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> {
+                    <span class="ident">Error::InvalidChannel</span>(<span class="macro">format!</span>(
+                        <span class="string">&quot;Decoding the channel failed: Port {}, Channel {}, {}&quot;</span>,
+                        <span class="ident">port_channel_id</span>.<span class="number">0</span>, <span class="ident">port_channel_id</span>.<span class="number">1</span>, <span class="ident">e</span>
+                    ))
+                })
+            }
             <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">Error::InvalidChannel</span>(<span class="macro">format!</span>(
                 <span class="string">&quot;The prior channel doesn&#39;t exist: Port {}, Channel {}&quot;</span>,
                 <span class="ident">port_channel_id</span>.<span class="number">0</span>, <span class="ident">port_channel_id</span>.<span class="number">1</span>
@@ -1269,7 +1271,7 @@
         <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span>
             <span class="ident">Key::ibc_key</span>(<span class="ident">path</span>).<span class="ident">expect</span>(<span class="string">&quot;Creating a key for a channel failed&quot;</span>);
         <span class="kw">match</span> <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">read_post</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>) {
-            <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="ident">value</span>)) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ChannelEnd::decode_vec</span>(<span class="kw-2">&amp;</span><span class="ident">value</span>).<span class="ident">ok</span>(),
+            <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="ident">value</span>)) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ChannelEnd::try_from_slice</span>(<span class="kw-2">&amp;</span><span class="ident">value</span>[..]).<span class="ident">ok</span>(),
             <span class="comment">// returns None even if DB read fails</span>
             <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">None</span>,
         }
@@ -1290,7 +1292,7 @@
         <span class="kw">loop</span> {
             <span class="kw">let</span> <span class="ident">next</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">iter_post_next</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">iter</span>).<span class="ident">ok</span>()<span class="question-mark">?</span>;
             <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>((<span class="ident">key</span>, <span class="ident">value</span>)) <span class="op">=</span> <span class="ident">next</span> {
-                <span class="kw">let</span> <span class="ident">channel</span> <span class="op">=</span> <span class="ident">ChannelEnd::decode_vec</span>(<span class="kw-2">&amp;</span><span class="ident">value</span>).<span class="ident">ok</span>()<span class="question-mark">?</span>;
+                <span class="kw">let</span> <span class="ident">channel</span> <span class="op">=</span> <span class="ident">ChannelEnd::try_from_slice</span>(<span class="kw-2">&amp;</span><span class="ident">value</span>[..]).<span class="ident">ok</span>()<span class="question-mark">?</span>;
                 <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">id</span>) <span class="op">=</span> <span class="ident">channel</span>.<span class="ident">connection_hops</span>().<span class="ident">get</span>(<span class="number">0</span>) {
                     <span class="kw">if</span> <span class="ident">id</span> <span class="op">=</span><span class="op">=</span> <span class="ident">conn_id</span> {
                         <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Key::parse</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>).<span class="ident">ok</span>()<span class="question-mark">?</span>;

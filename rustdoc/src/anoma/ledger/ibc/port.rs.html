@@ -193,13 +193,12 @@
 <span id="191">191</span>
 <span id="192">192</span>
 <span id="193">193</span>
-<span id="194">194</span>
-<span id="195">195</span>
 </pre><pre class="rust">
 <span class="doccomment">//! IBC validity predicate for port module</span>
 
 <span class="kw">use</span> <span class="ident">std::str::FromStr</span>;
 
+<span class="kw">use</span> <span class="ident">borsh::BorshDeserialize</span>;
 <span class="kw">use</span> <span class="ident">ibc::ics04_channel::context::ChannelReader</span>;
 <span class="kw">use</span> <span class="ident">ibc::ics05_port::capabilities::Capability</span>;
 <span class="kw">use</span> <span class="ident">ibc::ics05_port::context::PortReader</span>;
@@ -343,15 +342,12 @@
         <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Key::ibc_capability</span>(<span class="ident">cap</span>.<span class="ident">index</span>());
         <span class="kw">match</span> <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">read_post</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>) {
             <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="ident">value</span>)) <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="kw">let</span> <span class="ident">id</span>: <span class="ident">String</span> <span class="op">=</span>
-                    <span class="ident">storage::types::decode</span>(<span class="kw-2">&amp;</span><span class="ident">value</span>).<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> {
-                        <span class="ident">Error::InvalidPort</span>(<span class="macro">format!</span>(
-                            <span class="string">&quot;Decoding the port ID failed: {}&quot;</span>,
-                            <span class="ident">e</span>
-                        ))
-                    })<span class="question-mark">?</span>;
-                <span class="ident">PortId::from_str</span>(<span class="kw-2">&amp;</span><span class="ident">id</span>)
-                    .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">Error::InvalidPort</span>(<span class="ident">e</span>.<span class="ident">to_string</span>()))
+                <span class="ident">PortId::try_from_slice</span>(<span class="kw-2">&amp;</span><span class="ident">value</span>[..]).<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> {
+                    <span class="ident">Error::InvalidPort</span>(<span class="macro">format!</span>(
+                        <span class="string">&quot;Decoding the port ID failed: {}&quot;</span>,
+                        <span class="ident">e</span>
+                    ))
+                })
             }
             <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">Error::InvalidPort</span>(
                 <span class="string">&quot;The capability is not mapped to any port&quot;</span>.<span class="ident">to_owned</span>(),

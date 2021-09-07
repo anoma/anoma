@@ -336,7 +336,7 @@
 
 <span class="kw">use</span> <span class="kw">super</span>::{<span class="ident">Ibc</span>, <span class="ident">StateChange</span>};
 <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::ledger::storage</span>::{<span class="self">self</span>, <span class="ident">StorageHasher</span>};
-<span class="kw">use</span> <span class="kw">crate</span><span class="ident">::types::ibc</span>::{<span class="self">self</span> <span class="kw">as</span> <span class="ident">types</span>, <span class="ident">Error</span> <span class="kw">as</span> <span class="ident">IbcDataError</span>, <span class="ident">TimeoutData</span>};
+<span class="kw">use</span> <span class="kw">crate</span><span class="ident">::types::ibc</span>::{<span class="ident">Error</span> <span class="kw">as</span> <span class="ident">IbcDataError</span>, <span class="ident">TimeoutData</span>};
 <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::types::storage</span>::{<span class="ident">Key</span>, <span class="ident">KeySeg</span>};
 
 <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">missing_docs</span>)]</span>
@@ -361,7 +361,7 @@
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Decoding TX data error: {0}&quot;</span>)]</span>
     <span class="ident">DecodingTxData</span>(<span class="ident">std::io::Error</span>),
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;IBC data error: {0}&quot;</span>)]</span>
-    <span class="ident">DecodingIbcData</span>(<span class="ident">IbcDataError</span>),
+    <span class="ident">InvalidIbcData</span>(<span class="ident">IbcDataError</span>),
 }
 
 <span class="doccomment">/// IBC packet functions result</span>
@@ -390,7 +390,7 @@
         {
             <span class="ident">StateChange::Created</span> <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="comment">// sending a packet</span>
-                <span class="kw">let</span> <span class="ident">packet</span> <span class="op">=</span> <span class="ident">types::decode_packet</span>(<span class="ident">tx_data</span>)<span class="question-mark">?</span>;
+                <span class="kw">let</span> <span class="ident">packet</span> <span class="op">=</span> <span class="ident">Packet::try_from_slice</span>(<span class="ident">tx_data</span>)<span class="question-mark">?</span>;
                 <span class="kw">let</span> <span class="ident">commitment</span> <span class="op">=</span> <span class="self">self</span>
                     .<span class="ident">get_packet_commitment</span>(<span class="kw-2">&amp;</span><span class="ident">commitment_key</span>)
                     .<span class="ident">ok_or_else</span>(<span class="op">|</span><span class="op">|</span> {
@@ -458,7 +458,7 @@
         <span class="ident">tx_data</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>],
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="ident">TimeoutData::try_from_slice</span>(<span class="ident">tx_data</span>)<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">packet</span> <span class="op">=</span> <span class="ident">data</span>.<span class="ident">packet</span>()<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">packet</span> <span class="op">=</span> <span class="ident">data</span>.<span class="ident">packet</span>.<span class="ident">clone</span>();
         <span class="kw">let</span> <span class="ident">commitment</span> <span class="op">=</span>
             <span class="self">self</span>.<span class="ident">get_packet_commitment</span>(<span class="ident">commitment_key</span>).<span class="ident">ok_or_else</span>(<span class="op">|</span><span class="op">|</span> {
                 <span class="ident">Error::InvalidPacket</span>(<span class="macro">format!</span>(
@@ -505,7 +505,7 @@
             (<span class="ident">State::Open</span>, <span class="ident">State::Closed</span>) <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="comment">// &quot;Timeout&quot;</span>
                 <span class="kw">if</span> <span class="self">self</span>
-                    .<span class="ident">check_timeout</span>(<span class="kw-2">&amp;</span><span class="ident">client_id</span>, <span class="ident">data</span>.<span class="ident">proof_height</span>(), <span class="kw-2">&amp;</span><span class="ident">packet</span>)
+                    .<span class="ident">check_timeout</span>(<span class="kw-2">&amp;</span><span class="ident">client_id</span>, <span class="ident">data</span>.<span class="ident">proof_height</span>, <span class="kw-2">&amp;</span><span class="ident">packet</span>)
                     .<span class="ident">is_ok</span>()
                 {
                     <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error::InvalidPacket</span>(
@@ -549,7 +549,7 @@
         }
 
         <span class="kw">if</span> <span class="ident">channel</span>.<span class="ident">order_matches</span>(<span class="kw-2">&amp;</span><span class="ident">Order::Ordered</span>) {
-            <span class="kw">if</span> <span class="ident">packet</span>.<span class="ident">sequence</span> <span class="op">&lt;</span> <span class="ident">data</span>.<span class="ident">sequence</span>() {
+            <span class="kw">if</span> <span class="ident">packet</span>.<span class="ident">sequence</span> <span class="op">&lt;</span> <span class="ident">data</span>.<span class="ident">sequence</span> {
                 <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error::InvalidPacket</span>(
                     <span class="string">&quot;The sequence is invalid&quot;</span>.<span class="ident">to_owned</span>(),
                 ));
@@ -558,7 +558,7 @@
                 <span class="self">self</span>,
                 <span class="ident">client_id</span>,
                 <span class="ident">packet</span>,
-                <span class="ident">data</span>.<span class="ident">sequence</span>(),
+                <span class="ident">data</span>.<span class="ident">sequence</span>,
                 <span class="kw-2">&amp;</span><span class="ident">data</span>.<span class="ident">proofs</span>()<span class="question-mark">?</span>,
             ) {
                 <span class="prelude-val">Ok</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(()),
@@ -622,7 +622,7 @@
 
 <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">IbcDataError</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Error</span> {
     <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">err</span>: <span class="ident">IbcDataError</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
-        <span class="self">Self</span><span class="ident">::DecodingIbcData</span>(<span class="ident">err</span>)
+        <span class="self">Self</span><span class="ident">::InvalidIbcData</span>(<span class="ident">err</span>)
     }
 }
 

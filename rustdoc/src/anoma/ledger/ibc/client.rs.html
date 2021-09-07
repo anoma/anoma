@@ -387,13 +387,6 @@
 <span id="385">385</span>
 <span id="386">386</span>
 <span id="387">387</span>
-<span id="388">388</span>
-<span id="389">389</span>
-<span id="390">390</span>
-<span id="391">391</span>
-<span id="392">392</span>
-<span id="393">393</span>
-<span id="394">394</span>
 </pre><pre class="rust">
 <span class="doccomment">//! IBC validity predicate for client module</span>
 
@@ -408,7 +401,6 @@
 <span class="kw">use</span> <span class="ident">ibc::ics02_client::height::Height</span>;
 <span class="kw">use</span> <span class="ident">ibc::ics24_host::identifier::ClientId</span>;
 <span class="kw">use</span> <span class="ident">ibc::ics24_host::Path</span>;
-<span class="kw">use</span> <span class="ident">tendermint_proto::Protobuf</span>;
 <span class="kw">use</span> <span class="ident">thiserror::Error</span>;
 
 <span class="kw">use</span> <span class="kw">super</span>::{<span class="ident">Ibc</span>, <span class="ident">StateChange</span>};
@@ -434,7 +426,7 @@
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Decoding TX data error: {0}&quot;</span>)]</span>
     <span class="ident">DecodingTxData</span>(<span class="ident">std::io::Error</span>),
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;IBC data error: {0}&quot;</span>)]</span>
-    <span class="ident">DecodingIbcData</span>(<span class="ident">IbcDataError</span>),
+    <span class="ident">InvalidIbcData</span>(<span class="ident">IbcDataError</span>),
 }
 
 <span class="doccomment">/// IBC client functions result</span>
@@ -542,11 +534,10 @@
         <span class="ident">client_id</span>: <span class="kw-2">&amp;</span><span class="ident">ClientId</span>,
         <span class="ident">data</span>: <span class="ident">ClientUpdateData</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="ident">data</span>.<span class="ident">client_id</span>()<span class="question-mark">?</span>;
-        <span class="kw">if</span> <span class="ident">id</span> <span class="op">!</span><span class="op">=</span> <span class="kw-2">*</span><span class="ident">client_id</span> {
+        <span class="kw">if</span> <span class="ident">data</span>.<span class="ident">client_id</span> <span class="op">!</span><span class="op">=</span> <span class="kw-2">*</span><span class="ident">client_id</span> {
             <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error::InvalidClient</span>(<span class="macro">format!</span>(
                 <span class="string">&quot;The client ID is mismatched: {} in the tx data, {} in the key&quot;</span>,
-                <span class="ident">id</span>, <span class="ident">client_id</span>,
+                <span class="ident">data</span>.<span class="ident">client_id</span>, <span class="ident">client_id</span>,
             )));
         }
 
@@ -574,8 +565,7 @@
         )<span class="question-mark">?</span>;
 
         <span class="kw">let</span> <span class="ident">client</span> <span class="op">=</span> <span class="ident">AnyClient::from_client_type</span>(<span class="ident">client_state</span>.<span class="ident">client_type</span>());
-        <span class="kw">let</span> <span class="ident">headers</span> <span class="op">=</span> <span class="ident">data</span>.<span class="ident">headers</span>()<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">updated</span> <span class="op">=</span> <span class="ident">headers</span>.<span class="ident">iter</span>().<span class="ident">try_fold</span>(
+        <span class="kw">let</span> <span class="ident">updated</span> <span class="op">=</span> <span class="ident">data</span>.<span class="ident">headers</span>.<span class="ident">iter</span>().<span class="ident">try_fold</span>(
             (<span class="ident">prev_client_state</span>, <span class="ident">prev_consensus_state</span>),
             <span class="op">|</span>(<span class="ident">new_client_state</span>, <span class="kw">_</span>), <span class="ident">header</span><span class="op">|</span> {
                 <span class="ident">client</span>.<span class="ident">check_header_and_update_state</span>(
@@ -610,11 +600,10 @@
         <span class="ident">client_id</span>: <span class="kw-2">&amp;</span><span class="ident">ClientId</span>,
         <span class="ident">data</span>: <span class="ident">ClientUpgradeData</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="ident">data</span>.<span class="ident">client_id</span>()<span class="question-mark">?</span>;
-        <span class="kw">if</span> <span class="ident">id</span> <span class="op">!</span><span class="op">=</span> <span class="kw-2">*</span><span class="ident">client_id</span> {
+        <span class="kw">if</span> <span class="ident">data</span>.<span class="ident">client_id</span> <span class="op">!</span><span class="op">=</span> <span class="kw-2">*</span><span class="ident">client_id</span> {
             <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error::InvalidClient</span>(<span class="macro">format!</span>(
                 <span class="string">&quot;The client ID is mismatched: {} in the tx data, {} in the key&quot;</span>,
-                <span class="ident">id</span>, <span class="ident">client_id</span>,
+                <span class="ident">data</span>.<span class="ident">client_id</span>, <span class="ident">client_id</span>,
             )));
         }
 
@@ -669,14 +658,13 @@
         <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Key::ibc_key</span>(<span class="ident">path</span>)
             .<span class="ident">expect</span>(<span class="string">&quot;Creating a key for a client state shouldn&#39;t fail&quot;</span>);
         <span class="kw">match</span> <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">read_pre</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>) {
-            <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="ident">value</span>)) <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="ident">AnyClientState::decode_vec</span>(<span class="kw-2">&amp;</span><span class="ident">value</span>).<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> {
+            <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="ident">value</span>)) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">AnyClientState::try_from_slice</span>(<span class="kw-2">&amp;</span><span class="ident">value</span>[..])
+                .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> {
                     <span class="ident">Error::InvalidClient</span>(<span class="macro">format!</span>(
                         <span class="string">&quot;Decoding the client state failed: ID {}, {}&quot;</span>,
                         <span class="ident">client_id</span>, <span class="ident">e</span>
                     ))
-                })
-            }
+                }),
             <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">Error::InvalidClient</span>(<span class="macro">format!</span>(
                 <span class="string">&quot;The prior client state doesn&#39;t exist: ID {}&quot;</span>,
                 <span class="ident">client_id</span>
@@ -704,15 +692,14 @@
         <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Key::ibc_key</span>(<span class="ident">path</span>)
             .<span class="ident">expect</span>(<span class="string">&quot;Creating a key for a consensus state shouldn&#39;t fail&quot;</span>);
         <span class="kw">match</span> <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">read_pre</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>) {
-            <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="ident">value</span>)) <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="ident">AnyConsensusState::decode_vec</span>(<span class="kw-2">&amp;</span><span class="ident">value</span>).<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> {
+            <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="ident">value</span>)) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">AnyConsensusState::try_from_slice</span>(<span class="kw-2">&amp;</span><span class="ident">value</span>[..])
+                .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> {
                     <span class="ident">Error::InvalidClient</span>(<span class="macro">format!</span>(
                         <span class="string">&quot;Decoding the consensus state failed: ID {}, Height \
                          {}, {}&quot;</span>,
                         <span class="ident">client_id</span>, <span class="ident">height</span>, <span class="ident">e</span>
                     ))
-                })
-            }
+                }),
             <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">Error::InvalidClient</span>(<span class="macro">format!</span>(
                 <span class="string">&quot;The prior consensus state doesn&#39;t exist: ID {}, Height {}&quot;</span>,
                 <span class="ident">client_id</span>, <span class="ident">height</span>
@@ -732,10 +719,7 @@
         <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Key::ibc_key</span>(<span class="ident">path</span>)
             .<span class="ident">expect</span>(<span class="string">&quot;Creating a key for a client type shouldn&#39;t fail&quot;</span>);
         <span class="kw">match</span> <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">read_post</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>) {
-            <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="ident">value</span>)) <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="kw">let</span> <span class="ident">s</span>: <span class="ident">String</span> <span class="op">=</span> <span class="ident">storage::types::decode</span>(<span class="kw-2">&amp;</span><span class="ident">value</span>).<span class="ident">ok</span>()<span class="question-mark">?</span>;
-                <span class="prelude-val">Some</span>(<span class="ident">ClientType::from_str</span>(<span class="kw-2">&amp;</span><span class="ident">s</span>).<span class="ident">ok</span>()<span class="question-mark">?</span>)
-            }
+            <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="ident">value</span>)) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ClientType::try_from_slice</span>(<span class="kw-2">&amp;</span><span class="ident">value</span>[..]).<span class="ident">ok</span>(),
             <span class="comment">// returns None even if DB read fails</span>
             <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">None</span>,
         }
@@ -746,7 +730,7 @@
         <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Key::ibc_key</span>(<span class="ident">path</span>)
             .<span class="ident">expect</span>(<span class="string">&quot;Creating a key for a client state shouldn&#39;t fail&quot;</span>);
         <span class="kw">match</span> <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">read_post</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>) {
-            <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="ident">value</span>)) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">AnyClientState::decode_vec</span>(<span class="kw-2">&amp;</span><span class="ident">value</span>).<span class="ident">ok</span>(),
+            <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="ident">value</span>)) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">AnyClientState::try_from_slice</span>(<span class="kw-2">&amp;</span><span class="ident">value</span>[..]).<span class="ident">ok</span>(),
             <span class="comment">// returns None even if DB read fails</span>
             <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">None</span>,
         }
@@ -766,7 +750,9 @@
         <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Key::ibc_key</span>(<span class="ident">path</span>)
             .<span class="ident">expect</span>(<span class="string">&quot;Creating a key for a consensus state shouldn&#39;t fail&quot;</span>);
         <span class="kw">match</span> <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">read_post</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>) {
-            <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="ident">value</span>)) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">AnyConsensusState::decode_vec</span>(<span class="kw-2">&amp;</span><span class="ident">value</span>).<span class="ident">ok</span>(),
+            <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="ident">value</span>)) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">AnyConsensusState::try_from_slice</span>(<span class="kw-2">&amp;</span><span class="ident">value</span>[..]).<span class="ident">ok</span>()
+            }
             <span class="comment">// returns None even if DB read fails</span>
             <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">None</span>,
         }
@@ -780,7 +766,7 @@
 
 <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">IbcDataError</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Error</span> {
     <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">err</span>: <span class="ident">IbcDataError</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
-        <span class="self">Self</span><span class="ident">::DecodingIbcData</span>(<span class="ident">err</span>)
+        <span class="self">Self</span><span class="ident">::InvalidIbcData</span>(<span class="ident">err</span>)
     }
 }
 
