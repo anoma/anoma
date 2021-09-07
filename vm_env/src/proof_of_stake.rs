@@ -1,5 +1,8 @@
 //! Proof of Stake system integration with functions for transactions
 
+use anoma::ledger::pos::anoma_proof_of_stake::{
+    BondError, UnbondError, WithdrawError,
+};
 use anoma::ledger::pos::types::Slash;
 pub use anoma::ledger::pos::*;
 use anoma::ledger::pos::{
@@ -17,7 +20,43 @@ pub use anoma_proof_of_stake::{
 
 use crate::imports::tx;
 
-/// Proof of Stake system
+/// Self-bond tokens to a validator when `source` is `None` or equal to
+/// the `validator` address, or delegate tokens from the `source` to the
+/// `validator`.
+pub fn bond_tokens(
+    source: Option<&Address>,
+    validator: &Address,
+    amount: token::Amount,
+) -> Result<(), BondError<Address>> {
+    let current_epoch = tx::get_block_epoch();
+    PoS.bond_tokens(source, validator, amount, current_epoch)
+}
+
+/// Unbond self-bonded tokens from a validator when `source` is `None` or
+/// equal to the `validator` address, or unbond delegated tokens from
+/// the `source` to the `validator`.
+pub fn unbond_tokens(
+    source: Option<&Address>,
+    validator: &Address,
+    amount: token::Amount,
+) -> Result<(), UnbondError<Address, token::Amount>> {
+    let current_epoch = tx::get_block_epoch();
+    PoS.unbond_tokens(source, validator, amount, current_epoch)
+}
+
+/// Withdraw unbonded tokens from a self-bond to a validator when `source`
+/// is `None` or equal to the `validator` address, or withdraw unbonded
+/// tokens delegated to the `validator` to the `source`.
+pub fn withdraw_tokens(
+    source: Option<&Address>,
+    validator: &Address,
+) -> Result<token::Amount, WithdrawError<Address>> {
+    let current_epoch = tx::get_block_epoch();
+    PoS.withdraw_tokens(source, validator, current_epoch)
+}
+
+/// Proof of Stake system. This struct integrates and gives access to
+/// lower-level PoS functions.
 pub struct PoS;
 
 impl anoma_proof_of_stake::PosReadOnly for PoS {

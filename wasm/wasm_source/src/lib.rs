@@ -30,7 +30,7 @@ pub mod tx_init_account {
 /// A tx for a PoS bond that stakes tokens via a self-bond or delegation.
 #[cfg(feature = "tx_bond")]
 pub mod tx_bond {
-    use anoma_vm_env::tx_prelude::proof_of_stake::BondId;
+    use anoma_vm_env::tx_prelude::proof_of_stake::{bond_tokens, BondId};
     use anoma_vm_env::tx_prelude::*;
 
     #[transaction]
@@ -50,13 +50,9 @@ pub mod tx_bond {
         let total_deltas_pre = PoS.read_validator_total_deltas(&bond.validator);
         let vp_pre = PoS.read_validator_voting_power(&bond.validator);
 
-        let epoch = get_block_epoch();
-        if let Err(err) = PoS.bond_tokens(
-            bond.source.as_ref(),
-            &bond.validator,
-            bond.amount,
-            epoch,
-        ) {
+        if let Err(err) =
+            bond_tokens(bond.source.as_ref(), &bond.validator, bond.amount)
+        {
             log_string(format!("Bond failed with: {}", err));
             panic!()
         }
@@ -87,7 +83,7 @@ pub mod tx_bond {
 /// delegation to be withdrawn in or after unbonding epoch.
 #[cfg(feature = "tx_unbond")]
 pub mod tx_unbond {
-    use anoma_vm_env::tx_prelude::proof_of_stake::BondId;
+    use anoma_vm_env::tx_prelude::proof_of_stake::{unbond_tokens, BondId};
     use anoma_vm_env::tx_prelude::*;
 
     #[transaction]
@@ -110,12 +106,10 @@ pub mod tx_unbond {
         let vp_pre = PoS.read_validator_voting_power(&unbond.validator);
         let total_vp_pre = PoS.read_total_voting_power();
 
-        let epoch = get_block_epoch();
-        if let Err(err) = PoS.unbond_tokens(
+        if let Err(err) = unbond_tokens(
             unbond.source.as_ref(),
             &unbond.validator,
             unbond.amount,
-            epoch,
         ) {
             log_string(format!("Unbonding failed with: {}", err));
             panic!()
@@ -157,7 +151,7 @@ pub mod tx_unbond {
 /// delegation to be withdrawn in or after unbonding epoch.
 #[cfg(feature = "tx_withdraw")]
 pub mod tx_withdraw {
-    use anoma_vm_env::tx_prelude::proof_of_stake::BondId;
+    use anoma_vm_env::tx_prelude::proof_of_stake::{withdraw_tokens, BondId};
     use anoma_vm_env::tx_prelude::*;
 
     #[transaction]
@@ -178,12 +172,7 @@ pub mod tx_withdraw {
         };
         let unbond_pre = PoS.read_unbond(&bond_id);
 
-        let epoch = get_block_epoch();
-        match PoS.withdraw_tokens(
-            withdraw.source.as_ref(),
-            &withdraw.validator,
-            epoch,
-        ) {
+        match withdraw_tokens(withdraw.source.as_ref(), &withdraw.validator) {
             Ok(slashed) => {
                 log_string(format!("Withdrawal slashed for {}", slashed));
             }
