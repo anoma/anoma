@@ -908,7 +908,7 @@ pub mod args {
         /// Signing key
         pub key: Address,
         /// Exchanges description
-        pub exchanges: Vec<Exchange>,
+        pub exchanges_definition: PathBuf,
         /// Print output to stdout
         pub to_stdout: bool,
     }
@@ -921,26 +921,11 @@ pub mod args {
             let to_stdout = TO_STDOUT.parse(matches);
             let topic = TOPIC_OPT.parse(matches);
 
-            let file = File::open(&data_path).expect("File must exist.");
-            let exchange_definitions: Vec<ExchangeDefinition> =
-                serde_json::from_reader(file)
-                    .expect("JSON was not well-formatted");
-
-            let exchanges: Vec<Exchange> = exchange_definitions
-                .iter()
-                .map(|item| {
-                    Exchange::try_from(item.clone()).expect(
-                        "Conversion from ExchangeDefinition to Exchange \
-                         should not fail.",
-                    )
-                })
-                .collect();
-
             Self {
                 node_addr,
                 topic,
                 key,
-                exchanges,
+                exchanges_definition: data_path,
                 to_stdout,
             }
         }
@@ -975,79 +960,27 @@ pub mod args {
         }
     }
 
-    /// Helper struct for generating intents
-    #[derive(Debug, Clone, Deserialize)]
-    pub struct NftDefinition {
-        /// The source address
-        pub owner: String,
-        /// The token to be sold
-        pub vp_path: Option<String>,
-        /// The minimum rate
-        pub tokens: Vec<NftToken>,
-    }
-
     // Intent arguments
     #[derive(Debug)]
     pub struct NftCreate {
         /// Common tx arguments
         pub tx: Tx,
-        /// Path to the VP WASM code file
-        pub nfts: Vec<Nft>,
-        /// Print output to stdout
-        pub to_stdout: bool,
-    }
-
-    impl TryFrom<NftDefinition> for Nft {
-        type Error = &'static str;
-
-        fn try_from(value: NftDefinition) -> Result<Nft, Self::Error> {
-            let vp = if let Some(path) = value.vp_path {
-                if let Ok(wasm) = std::fs::read(path.clone()) {
-                    Some(wasm)
-                } else {
-                    eprintln!("File {} was not found.", path);
-                    None
-                }
-            } else {
-                None
-            };
-
-            let owner = Address::decode(value.owner)
-                .expect("Addr should be a valid address");
-
-            Ok(Nft {
-                owner,
-                vp,
-                tokens: value.tokens,
-            })
-        }
+        /// Signing key
+        pub key: Address,
+        /// Path to the nft file description
+        pub nft_data: PathBuf,
     }
 
     impl Args for NftCreate {
         fn parse(matches: &ArgMatches) -> Self {
             let tx = Tx::parse(matches);
             let data_path = DATA_PATH.parse(matches);
-            let to_stdout = TO_STDOUT.parse(matches);
-
-            let file = File::open(&data_path).expect("File must exist.");
-            let nft_definitions: Vec<NftDefinition> =
-                serde_json::from_reader(file)
-                    .expect("JSON was not well-formatted");
-
-            let nfts: Vec<Nft> = nft_definitions
-                .iter()
-                .map(|item| {
-                    Nft::try_from(item.clone()).expect(
-                        "Conversion from NftDefinition to Nft \
-                        should not fail.",
-                    )
-                })
-                .collect();
+            let key = SIGNING_KEY.parse(matches);
 
             Self {
                 tx,
-                nfts,
-                to_stdout,
+                key,
+                nft_data: data_path,
             }
         }
 
@@ -1063,6 +996,7 @@ pub mod args {
                          this option, the intent won't be submitted to the \
                          intent gossiper RPC.",
                 ))
+                .arg(SIGNING_KEY.def().about("The key to sign the tx."))
         }
     }
 

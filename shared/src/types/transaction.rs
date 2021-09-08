@@ -3,7 +3,7 @@
 use borsh::{BorshDeserialize, BorshSerialize};
 use serde::{Deserialize, Serialize};
 
-use super::key::ed25519::PublicKey;
+use super::{key::ed25519::PublicKey, nft::NftToken};
 use crate::types::address::Address;
 
 /// A tx data type to update an account's validity predicate
@@ -40,4 +40,23 @@ pub struct InitAccount {
     pub public_key: PublicKey,
     /// The VP code
     pub vp_code: Vec<u8>,
+}
+
+/// A tx data type to create a new NFT
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    BorshSerialize,
+    BorshDeserialize,
+    Serialize,
+    Deserialize,
+)]
+pub struct CreateNft {
+    /// The source address
+    pub owner: Address,
+    /// The token to be sold
+    pub vp_code: Vec<u8>,
+    /// The nft tokens
+    pub tokens: Vec<NftToken>,
 }

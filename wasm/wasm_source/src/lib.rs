@@ -27,6 +27,24 @@ pub mod tx_init_account {
     }
 }
 
+/// A tx to create a new NFT.
+#[cfg(feature = "tx_create_nft")]
+pub mod tx_create_nft {
+    use anoma_vm_env::tx_prelude::*;
+
+    #[transaction]
+    fn apply_tx(tx_data: Vec<u8>) {
+        let signed =
+            key::ed25519::SignedTxData::try_from_slice(&tx_data[..]).unwrap();
+        let tx_data =
+            transaction::CreateNft::try_from_slice(&signed.data.unwrap()[..])
+                .unwrap();
+        log_string("apply_tx called to create a new NFT".to_string());
+
+        let address = nft::init_nft(tx_data);
+    }
+}
+
 /// A tx for a token transfer crafted by matchmaker from intents.
 /// This tx uses `intent::IntentTransfers` wrapped inside
 /// `key::ed25519::SignedTxData` as its input as declared in `shared` crate.

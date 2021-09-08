@@ -1,12 +1,19 @@
-use std::convert::TryFrom;
+use std::collections::HashSet;
+use std::convert::{TryFrom, TryInto};
+use std::fs::File;
+use std::io::Write;
 
-use anoma::proto::Tx;
+use anoma::proto::{Intent, Tx};
 use anoma::types::address::Address;
-use anoma::types::key::ed25519::Keypair;
-use anoma::types::token;
-use anoma::types::transaction::{InitAccount, UpdateVp};
+use anoma::types::intent::{DecimalWrapper, Exchange, FungibleTokenIntent};
+use anoma::types::key::ed25519::{Keypair, Signed};
+use anoma::types::nft::NftToken;
+use anoma::types::time::DateTimeUtc;
+use anoma::types::token::{self, Amount};
+use anoma::types::transaction::{CreateNft, InitAccount, UpdateVp};
 use borsh::BorshSerialize;
 use jsonpath_lib as jsonpath;
+use serde::Deserialize;
 use serde::Serialize;
 use tendermint_rpc::query::{EventType, Query};
 use tendermint_rpc::Client;
@@ -16,12 +23,70 @@ use crate::cli::args;
 use crate::client::tendermint_websocket_client::{
     hash_tx, Error, TendermintWebsocketClient, WebSocketAddress,
 };
+use crate::proto::services::rpc_service_client::RpcServiceClient;
+use crate::proto::{services, RpcMessage};
 use crate::wallet;
 
 const TX_INIT_ACCOUNT_WASM: &str = "wasm/tx_init_account.wasm";
+const TX_CREATE_NFT: &str = "wasm/tx_create_nft.wasm";
 const TX_UPDATE_VP_WASM: &str = "wasm/tx_update_vp.wasm";
 const TX_TRANSFER_WASM: &str = "wasm/tx_transfer.wasm";
 const VP_USER_WASM: &str = "wasm/vp_user.wasm";
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct NftDefinition {
+    /// The source address
+    pub owner: Address,
+    /// The path to the vp code
+    pub vp_path: Option<String>,
+    /// the nft tokens
+    pub tokens: Vec<NftToken>,
+}
+
+#[derive(Debug, Clone, Deserialize, BorshSerialize)]
+pub struct ExchangeDefinition {
+    /// The source address
+    pub addr: Address,
+    /// The token to be sold
+    pub token_sell: Address,
+    /// The minimum rate
+    pub rate_min: DecimalWrapper,
+    /// The maximum amount of token to be sold
+    pub max_sell: Amount,
+    /// The token to be bought
+    pub token_buy: Address,
+    /// The amount of token to be bought
+    pub min_buy: Amount,
+    // The path to the wasm vp code
+    pub vp_path: Option<String>,
+}
+
+impl TryInto<Exchange> for ExchangeDefinition {
+    type Error = &'static str;
+
+    fn try_into(self) -> Result<Exchange, Self::Error> {
+        let exchange_vp_code = self
+            .vp_path
+            .as_ref()
+            .map(|path| {
+                Some(
+                    std::fs::read(path)
+                        .expect("Expected a file at given code path"),
+                )
+            })
+            .unwrap_or_else(|| None);
+
+        Ok(Exchange {
+            addr: self.addr,
+            token_sell: self.token_sell,
+            rate_min: self.rate_min,
+            max_sell: self.max_sell,
+            token_buy: self.token_buy,
+            min_buy: self.min_buy,
+            vp: exchange_vp_code,
+        })
+    }
+}
 
 pub async fn submit_custom(args: args::TxCustom) {
     let tx_code = std::fs::read(args.code_path)
@@ -76,6 +141,117 @@ pub async fn submit_init_account(args: args::TxInitAccount) {
     let tx = Tx::new(tx_code, Some(data)).sign(&source_key);
 
     submit_tx(args.tx, tx).await
+}
+
+pub async fn create_nft(args: args::NftCreate) {
+    let source_key: Keypair = wallet::key_of(args.key.encode());
+
+    let file = File::open(&args.nft_data).expect("File must exist.");
+    let nft_definition: NftDefinition =
+        serde_json::from_reader(file).expect("JSON was not well-formatted");
+
+    let nft_vp_code = nft_definition
+        .vp_path
+        .map(|path| {
+            std::fs::read(path).expect("Expected a file at given code path")
+        })
+        .unwrap_or_else(|| {
+            // TODO: change with nft vp
+            std::fs::read(VP_USER_WASM)
+                .expect("Expected a file at given code path")
+        });
+
+    let data = CreateNft {
+        owner: nft_definition.owner,
+        vp_code: nft_vp_code,
+        tokens: nft_definition.tokens,
+    };
+    let data = data.try_to_vec().expect(
+        "Encoding transfer data to initialize a new account shouldn't fail",
+    );
+
+    let tx_code = std::fs::read(TX_CREATE_NFT)
+        .expect("Expected a file at given code path");
+
+    let tx = Tx::new(tx_code, Some(data)).sign(&source_key);
+
+    submit_tx(args.tx, tx).await
+}
+
+pub async fn gossip_intent(
+    args::Intent {
+        node_addr,
+        topic,
+        key,
+        exchanges_definition,
+        to_stdout,
+    }: args::Intent,
+) {
+    let signing_key = wallet::key_of(key.encode());
+
+    let file = File::open(exchanges_definition).expect("File must exist.");
+    let exchanges_definitions: Vec<ExchangeDefinition> =
+        serde_json::from_reader(file).expect("JSON was not well-formatted");
+
+    let signed_exchanges: HashSet<Signed<Exchange>> = exchanges_definitions
+        .iter()
+        .map(|exchange_def| {
+            let source_keypair = wallet::key_of(exchange_def.addr.encode());
+            let exchange: Exchange = ExchangeDefinition::try_into(
+                exchange_def.to_owned(),
+            )
+            .expect(
+                "Conversion from ExchangeDefinition to Exchange should fail.",
+            );
+            Signed::new(&source_keypair, exchange)
+        })
+        .collect();
+
+    let signed_ft: Signed<FungibleTokenIntent> = Signed::new(
+        &signing_key,
+        FungibleTokenIntent {
+            exchange: signed_exchanges,
+        },
+    );
+    let data_bytes = signed_ft.try_to_vec().unwrap();
+
+    if to_stdout {
+        let mut out = std::io::stdout();
+        out.write_all(&data_bytes).unwrap();
+        out.flush().unwrap();
+    } else {
+        let node_addr = node_addr.expect(
+            "Gossip node address must be defined to submit the intent to it.",
+        );
+        let topic = topic.expect(
+            "The topic must be defined to submit the intent to a gossip node.",
+        );
+        let mut client = RpcServiceClient::connect(node_addr).await.unwrap();
+
+        let intent = Intent {
+            data: data_bytes,
+            timestamp: DateTimeUtc::now(),
+        };
+        let message: services::RpcMessage =
+            RpcMessage::new_intent(intent, topic).into();
+        let response = client
+            .send_message(message)
+            .await
+            .expect("failed to send message and/or receive rpc response");
+        println!("{:#?}", response);
+    }
+}
+
+pub async fn subscribe_topic(
+    args::SubscribeTopic { node_addr, topic }: args::SubscribeTopic,
+) {
+    let mut client = RpcServiceClient::connect(node_addr).await.unwrap();
+    let message: services::RpcMessage = RpcMessage::new_topic(topic).into();
+    let response = client
+        .send_message(message)
+        .await
+        .expect("failed to send message and/or receive rpc response");
+    println!("{:#?}", response);
 }
 
 pub async fn submit_transfer(args: args::TxTransfer) {

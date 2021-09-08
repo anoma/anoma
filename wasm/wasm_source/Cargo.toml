@@ -14,8 +14,9 @@ crate-type = ["cdylib"]
 [features]
 mm_filter_token_exch = []
 mm_token_exch = ["petgraph", "serde", "serde_json", "good_lp", "rust_decimal"]
-tx_init_account = []
+tx_create_nft = []
 tx_from_intent = []
+tx_init_account = []
 tx_transfer = []
 tx_update_vp = []
 vp_token = []
@@ -24,12 +25,12 @@ vp_user = ["rust_decimal"]
 [dependencies]
 anoma_vm_env = {path = "../../vm_env"}
 borsh = "0.9.0"
+good_lp = {version = "*", features = ["minilp"], default-features = false, optional = true}
 petgraph = {version = "0.5.1", features = ["serde-1"], optional = true}
+rust_decimal = {version = "1.14.3", optional = true}
 serde = {version = "1.0.125", optional = true}
 serde_json = {version = "1.0.64", optional = true}
 wee_alloc = "0.4.5"
-rust_decimal = { version = "1.14.3", optional = true }
-good_lp = { version = "*", features = ["minilp"], default-features = false, optional = true }
 
 [dev-dependencies]
 anoma_tests = {path = "../../tests"}
