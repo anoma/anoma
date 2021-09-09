@@ -33,6 +33,9 @@ pub async fn main() -> Result<()> {
         cmds::AnomaClient::NftCreate(cmds::NftCreate(args)) => {
             tx::create_nft(args).await;
         }
+        cmds::AnomaClient::NftMint(cmds::NftMint(args)) => {
+            tx::mint_nft(args).await;
+        }
     }
     Ok(())
 }

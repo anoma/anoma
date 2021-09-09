@@ -41,7 +41,25 @@ pub mod tx_create_nft {
                 .unwrap();
         log_string("apply_tx called to create a new NFT".to_string());
 
-        let address = nft::init_nft(tx_data);
+        nft::init_nft(tx_data);
+    }
+}
+
+/// A tx to mint new nft tokens.
+#[cfg(feature = "tx_mint_nft_tokens")]
+pub mod tx_create_nft {
+    use anoma_vm_env::tx_prelude::*;
+
+    #[transaction]
+    fn apply_tx(tx_data: Vec<u8>) {
+        let signed =
+            key::ed25519::SignedTxData::try_from_slice(&tx_data[..]).unwrap();
+        let tx_data =
+            transaction::CreateNft::try_from_slice(&signed.data.unwrap()[..])
+                .unwrap();
+        log_string("apply_tx called to create a new NFT".to_string());
+
+        nft::init_nft(tx_data);
     }
 }
 

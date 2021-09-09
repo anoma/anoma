@@ -10,7 +10,7 @@ use anoma::types::key::ed25519::{Keypair, Signed};
 use anoma::types::nft::NftToken;
 use anoma::types::time::DateTimeUtc;
 use anoma::types::token::{self, Amount};
-use anoma::types::transaction::{CreateNft, InitAccount, UpdateVp};
+use anoma::types::transaction::{CreateNft, InitAccount, MintNft, UpdateVp};
 use borsh::BorshSerialize;
 use jsonpath_lib as jsonpath;
 use serde::Deserialize;
@@ -32,6 +32,7 @@ const TX_CREATE_NFT: &str = "wasm/tx_create_nft.wasm";
 const TX_UPDATE_VP_WASM: &str = "wasm/tx_update_vp.wasm";
 const TX_TRANSFER_WASM: &str = "wasm/tx_transfer.wasm";
 const VP_USER_WASM: &str = "wasm/vp_user.wasm";
+const TX_MINT_NFT_TOKEN: &str = "wasm/mint_nft_tokens.wasm";
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct NftDefinition {
@@ -138,6 +139,30 @@ pub async fn submit_init_account(args: args::TxInitAccount) {
     let data = data.try_to_vec().expect(
         "Encoding transfer data to initialize a new account shouldn't fail",
     );
+    let tx = Tx::new(tx_code, Some(data)).sign(&source_key);
+
+    submit_tx(args.tx, tx).await
+}
+
+pub async fn mint_nft(args: args::NftMint) {
+    let source_key: Keypair = wallet::key_of(args.key.encode());
+
+    let file = File::open(&args.nft_data).expect("File must exist.");
+    let nft_tokens: Vec<NftToken> =
+        serde_json::from_reader(file).expect("JSON was not well-formatted");
+
+    let data = MintNft {
+        owner: args.key,
+        address: args.nft_address,
+        tokens: nft_tokens,
+    };
+    let data = data.try_to_vec().expect(
+        "Encoding transfer data to initialize a new account shouldn't fail",
+    );
+
+    let tx_code = std::fs::read(TX_MINT_NFT_TOKEN)
+        .expect("Expected a file at given code path");
+
     let tx = Tx::new(tx_code, Some(data)).sign(&source_key);
 
     submit_tx(args.tx, tx).await

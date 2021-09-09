@@ -45,6 +45,7 @@ fn handle_command(cmd: cli::cmds::Anoma, raw_sub_cmd: String) -> Result<()> {
         | cli::cmds::Anoma::TxUpdateVp(_)
         | cli::cmds::Anoma::TxInitAccount(_)
         | cli::cmds::Anoma::NftCreate(_)
+        | cli::cmds::Anoma::NftMint(_)
         | cli::cmds::Anoma::Intent(_) => handle_subcommand("anomac", sub_args),
     }
 }

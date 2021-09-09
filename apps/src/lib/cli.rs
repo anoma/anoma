@@ -43,6 +43,7 @@ pub mod cmds {
         Intent(Intent),
         TxInitAccount(TxInitAccount),
         NftCreate(NftCreate),
+        NftMint(NftMint),
     }
 
     impl Cmd for Anoma {
@@ -57,6 +58,7 @@ pub mod cmds {
                 .subcommand(Intent::def())
                 .subcommand(TxInitAccount::def())
                 .subcommand(NftCreate::def())
+                .subcommand(NftMint::def())
         }
 
         fn parse(matches: &ArgMatches) -> Option<(Self, &ArgMatches)> {
@@ -71,6 +73,7 @@ pub mod cmds {
             let tx_init_account =
                 SubCmd::parse(matches).map_fst(Self::TxInitAccount);
             let nft_create = SubCmd::parse(matches).map_fst(Self::NftCreate);
+            let nft_mint = SubCmd::parse(matches).map_fst(Self::NftMint);
             node.or(client)
                 .or(ledger)
                 .or(gossip)
@@ -80,6 +83,7 @@ pub mod cmds {
                 .or(intent)
                 .or(nft_create)
                 .or(tx_init_account)
+                .or(nft_mint)
         }
     }
 
@@ -141,6 +145,7 @@ pub mod cmds {
         Intent(Intent),
         SubscribeTopic(SubscribeTopic),
         NftCreate(NftCreate),
+        NftMint(NftMint),
     }
 
     impl Cmd for AnomaClient {
@@ -153,6 +158,7 @@ pub mod cmds {
                 .subcommand(Intent::def())
                 .subcommand(SubscribeTopic::def())
                 .subcommand(NftCreate::def())
+                .subcommand(NftMint::def())
         }
 
         fn parse(matches: &ArgMatches) -> Option<(Self, &ArgMatches)> {
@@ -167,6 +173,7 @@ pub mod cmds {
             let subscribe_topic =
                 SubCmd::parse(matches).map_fst(Self::SubscribeTopic);
             let nft_create = SubCmd::parse(matches).map_fst(Self::NftCreate);
+            let nft_mint = SubCmd::parse(matches).map_fst(Self::NftMint);
             tx_custom
                 .or(tx_transfer)
                 .or(tx_update_vp)
@@ -175,6 +182,7 @@ pub mod cmds {
                 .or(intent)
                 .or(subscribe_topic)
                 .or(nft_create)
+                .or(nft_mint)
         }
     }
     impl SubCmd for AnomaClient {
@@ -529,6 +537,28 @@ pub mod cmds {
     }
 
     #[derive(Debug)]
+    pub struct NftMint(pub args::NftMint);
+
+    impl SubCmd for NftMint {
+        const CMD: &'static str = "nft-mint";
+
+        fn parse(matches: &ArgMatches) -> Option<(Self, &ArgMatches)>
+        where
+            Self: Sized,
+        {
+            matches.subcommand_matches(Self::CMD).map(|matches| {
+                (NftMint(args::NftMint::parse(matches)), matches)
+            })
+        }
+
+        fn def() -> App {
+            App::new(Self::CMD)
+                .about("Mint new NFT tokens.")
+                .add_args::<args::NftMint>()
+        }
+    }
+
+    #[derive(Debug)]
     pub struct SubscribeTopic(pub args::SubscribeTopic);
 
     impl SubCmd for SubscribeTopic {
@@ -557,7 +587,6 @@ pub mod cmds {
 pub mod args {
 
     use std::convert::TryFrom;
-    use std::fs::File;
     use std::net::SocketAddr;
     use std::path::PathBuf;
     use std::str::FromStr;
@@ -565,7 +594,6 @@ pub mod args {
     use anoma::types::address::Address;
     use anoma::types::intent::{DecimalWrapper, Exchange};
     use anoma::types::key::ed25519::PublicKey;
-    use anoma::types::nft::{Nft, NftToken};
     use anoma::types::token;
     use libp2p::Multiaddr;
     use serde::Deserialize;
@@ -616,6 +644,8 @@ pub mod args {
     const TOKEN: Arg<Address> = arg("token");
     const TOKEN_OPT: ArgOpt<Address> = TOKEN.opt();
     const TX_CODE_PATH: ArgOpt<PathBuf> = arg_opt("tx-code-path");
+    const NFT_ADDRESS: Arg<Address> = arg("nft-address");
+    const NFT_CREATOR_ADDRESS: Arg<Address> = arg("nft-creator-address");
 
     /// Global command arguments
     #[derive(Debug)]
@@ -991,11 +1021,45 @@ pub mod args {
                         .def()
                         .about("The data path file that describes the nft."),
                 )
-                .arg(TO_STDOUT.def().about(
-                    "Echo the serialized intent to stdout. Note that with \
-                         this option, the intent won't be submitted to the \
-                         intent gossiper RPC.",
-                ))
+                .arg(SIGNING_KEY.def().about("The key to sign the tx."))
+        }
+    }
+
+    #[derive(Debug)]
+    pub struct NftMint {
+        /// Common tx arguments
+        pub tx: Tx,
+        /// Signing key
+        pub key: Address,
+        /// The nft address
+        pub nft_address: Address,
+        /// The nft owner address
+        pub nft_data: PathBuf,
+    }
+
+    impl Args for NftMint {
+        fn parse(matches: &ArgMatches) -> Self {
+            let tx = Tx::parse(matches);
+            let nft_address = NFT_ADDRESS.parse(matches);
+            let data_path = DATA_PATH.parse(matches);
+            let key = SIGNING_KEY.parse(matches);
+
+            Self {
+                tx,
+                key,
+                nft_address,
+                nft_data: data_path,
+            }
+        }
+
+        fn def(app: App) -> App {
+            app.add_args::<Tx>()
+                .arg(
+                    DATA_PATH.def().about(
+                        "The data path file that describes the nft tokens.",
+                    ),
+                )
+                .arg(NFT_ADDRESS.def().about("The nft address."))
                 .arg(SIGNING_KEY.def().about("The key to sign the tx."))
         }
     }

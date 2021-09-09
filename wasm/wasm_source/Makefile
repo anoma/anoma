@@ -9,6 +9,7 @@ wasms := mm_filter_token_exch
 wasms += mm_token_exch
 wasms += tx_init_account
 wasms += tx_create_nft
+wasms += tx_mint_nft_tokens
 wasms += tx_from_intent
 wasms += tx_transfer
 wasms += tx_update_vp

@@ -60,3 +60,22 @@ pub struct CreateNft {
     /// The nft tokens
     pub tokens: Vec<NftToken>,
 }
+
+/// A tx data type to mint new nft tokens
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    BorshSerialize,
+    BorshDeserialize,
+    Serialize,
+    Deserialize,
+)]
+pub struct MintNft {
+    /// The nft owner address
+    pub owner: Address,
+    /// The nft address
+    pub address: Address,
+    /// The nft tokens
+    pub tokens: Vec<NftToken>,
+}
