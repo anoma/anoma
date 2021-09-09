@@ -240,17 +240,7 @@ impl NativeVp for Ibc {
 
                     // Use ChannelReader functions to load the posterior state of modules
 
-                    // Assert that the packet metadata matches the channel and connection information
-                    //   - the port is owend
-                    //   - the channel exists
-                    //   - the counterparty information is valid
-                    //   - the connection exists
-
-                    // Assert that the connection and channel are open
-
-                    // Assert that the packet sequence is the next sequence that the channel expects
-
-                    // Assert that the timeout height and timestamp have not passed on the destination ledger
+                    // Assert that the packet sequence is the next sequence that the channel expects (Ordered channel)
 
                     // Assert that the commitment has been stored
                 }
@@ -258,22 +248,12 @@ impl NativeVp for Ibc {
                 "nextSequenceRecv" => {
                     // "RecvPacket"
                     let packet = get_packet(key, tx_data)?;
-                    let proofs = get_proofs(key, tx_data)?;
 
                     // Use ChannelReader functions to load the posterior state of modules
 
-                    // Assert that the packet metadata matches the channel and connection information
-
-                    // Assert that the connection and channel are open
-
                     // Assert that the packet sequence is the next sequence that the channel expects (Ordered channel)
 
-                    // Assert that the timeout height and timestamp have not passed on the destination ledger
-
-                    // Assert that the receipt and acknowledgement have been stored
-
-                    // Verify the proofs that the counterpart ledger has stored the commitment
-                    //   - Use `ibc-rs::ics04_connection::handler::verify::verify_packet_recv_proofs()`
+                    // Assert that the receipt and the ack have been stored
                 }
 
                 "nextSequenceAck" => {
@@ -283,19 +263,9 @@ impl NativeVp for Ibc {
 
                     // Use ChannelReader functions to load the posterior state of modules
 
-                    // Assert that the packet metadata matches the channel and connection information
-
-                    // Assert that the connection and channel are open
-
                     // Assert that the packet sequence is the next sequence that the channel expects (Ordered channel)
 
                     // Assert that the commitment has been deleted
-
-                    // Verify that the packet was actually sent on this channel
-                    //   - Get the stored commitment and compare it with a commitment made from the packet
-
-                    // Verify the proofs to check the acknowledgement has been written on the counterpart ledger
-                    //   - Use `ibc-rs::ics04_connection::handler::verify::verify_packet_acknowledgement_proofs()`
                 }
 
                 "commitments" => {
@@ -304,37 +274,52 @@ impl NativeVp for Ibc {
 
                     // Use ChannelReader functions to load the posterior state of modules
 
-                    // check if the commitment is deleted
+                    // check if the commitment is stored or deleted
                     match check_commitment_state(key) {
                         StateChange::Deleted => {
                             // Assert that the packet was actually sent on this channel
                             //   - Get the stored commitment and compare it with a commitment made from the packet
 
                             // Check the channel state change
-                            match check_channel_state(channel_id) {
-                                StateChange::Closed => {
-                                    // "Timeout"
+                            match get_channel_state(channel_id) {
+                                ChannelState::Open => {
+                                    // "AcknowledgementPacket"
+                                    // Assert that the packet metadata matches the channel and connection information
+
                                     // Assert that the connection and channel are open
 
-                                    // Assert that the counterpart ledger has exceeded the timeout height or timestamp
+                                    // Verify that the packet was actually sent on this channel
+                                    //   - Get the stored commitment and compare it with a commitment made from the packet
 
-                                    // Assert that the packet sequence is the next sequence that the channel expects (Ordered channel)
+                                    // Verify the proofs to check the acknowledgement has been written on the counterpart ledger
+                                    //   - Use `ibc-rs::ics04_connection::handler::verify::verify_packet_acknowledgement_proofs()`
                                 }
-                                _ => {
-                                    // "TimeoutOnClose"
-                                    // Assert that the packet sequence is the next sequence that the channel expects (Ordered channel)
-
-                                    // Verify the proofs to check the counterpart ledger's state is expected
-                                    //   - The channel state on the counterpart ledger should be CLOSED
-                                    //   - Use `ibc-rs::ics04_connection::handler::verify::verify_channel_proofs()`
+                                ChannelState::Closed => {
+                                    // Check the packet timeout
+                                    if !is_timeout(packet) {
+                                        // "TimeoutOnClose"
+                                        // Verify the proofs to check the counterpart ledger's state is expected
+                                        //   - The channel state on the counterpart ledger should be CLOSED
+                                        //   - Use `ibc-rs::ics04_connection::handler::verify::verify_channel_proofs()`
+                                    }
+                                    // Verify the proofs to check the packet has not been confirmed on the counterpart ledger yet
+                                    //   - For ordering channels, use `ibc-rs::ics04_connection::handler::verify::verify_next_sequence_recv()`
+                                    //   - For not-ordering channels, use `ibc-rs::ics04_connection::handler::verify::verify_packet_receipt_absence()`
                                 }
-                                // Verify the proofs to check the packet has not been confirmed on the counterpart ledger
-                                //   - For ordering channels, use `ibc-rs::ics04_connection::handler::verify::verify_next_sequence_recv()`
-                                //   - For not-ordering channels, use `ibc-rs::ics04_connection::handler::verify::verify_packet_receipt_absence()`
+                                _ => return Err(Error::InvalidChannel("Invalid channel state")),
                             }
                         }
-                        StateChange::Created | StateChange::Updated => {
-                            // Assert that the commitment is valid
+                        StateChange::Created => {
+                            // "SendPacket"
+                            // Assert that the packet metadata matches the channel and connection information
+                            //   - the port is owend
+                            //   - the channel exists
+                            //   - the counterparty information is valid
+                            //   - the connection exists
+
+                            // Assert that the connection and channel are open
+
+                            // Assert that the timeout height and timestamp have not passed on the destination ledger
                         }
                         _ => return Err(Error::InvalidStateChange("Invalid state change happened")),
                     }
@@ -356,7 +341,20 @@ impl NativeVp for Ibc {
 
                     match check_state(key) {
                         StateChange::Created => {
+                            let packet = get_packet(key, tx_data)?;
+                            let proofs = get_proofs(key, tx_data)?;
                             // Assert that the receipt is valid
+
+                            // Assert that the packet metadata matches the channel and connection information
+
+                            // Assert that the connection and channel are open
+
+                            // Assert that the timeout height and timestamp have not passed on the destination ledger
+
+                            // Assert that the receipt and ack have been stored
+
+                            // Verify the proofs that the counterpart ledger has stored the commitment
+                            //   - Use `ibc-rs::ics04_connection::handler::verify::verify_packet_recv_proofs()`
                         }
                         _ => return Err(Error::InvalidStateChange("Invalid state change happened")),
                     }
@@ -365,9 +363,11 @@ impl NativeVp for Ibc {
                 "acks" => {
                     // Use ChannelReader functions to load the posterior state of modules
 
-                    match check_port_state(key) {
+                    match check_state(key) {
                         StateChange::Created => {
                             // Assert that the ack is valid
+
+                            // Assert that the receipt and ack have been stored
                         }
                         _ => return Err(Error::InvalidStateChange("Invalid state change happened")),
                     }
