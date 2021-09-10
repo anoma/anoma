@@ -387,6 +387,11 @@
 <span id="385">385</span>
 <span id="386">386</span>
 <span id="387">387</span>
+<span id="388">388</span>
+<span id="389">389</span>
+<span id="390">390</span>
+<span id="391">391</span>
+<span id="392">392</span>
 </pre><pre class="rust">
 <span class="doccomment">//! IBC validity predicate for client module</span>
 
@@ -405,10 +410,11 @@
 
 <span class="kw">use</span> <span class="kw">super</span>::{<span class="ident">Ibc</span>, <span class="ident">StateChange</span>};
 <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::ledger::storage</span>::{<span class="self">self</span>, <span class="ident">StorageHasher</span>};
+<span class="kw">use</span> <span class="kw">crate</span><span class="ident">::types::address</span>::{<span class="ident">Address</span>, <span class="ident">InternalAddress</span>};
 <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::types::ibc</span>::{
     <span class="ident">ClientUpdateData</span>, <span class="ident">ClientUpgradeData</span>, <span class="ident">Error</span> <span class="kw">as</span> <span class="ident">IbcDataError</span>,
 };
-<span class="kw">use</span> <span class="kw">crate</span><span class="ident">::types::storage</span>::{<span class="ident">Key</span>, <span class="ident">KeySeg</span>};
+<span class="kw">use</span> <span class="kw">crate</span><span class="ident">::types::storage</span>::{<span class="ident">DbKeySeg</span>, <span class="ident">Key</span>, <span class="ident">KeySeg</span>};
 
 <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">missing_docs</span>)]</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Error</span>, <span class="ident">Debug</span>)]</span>
@@ -454,12 +460,16 @@
         }
     }
 
-    <span class="doccomment">/// Returns the client ID after #IBC/clients</span>
     <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">get_client_id</span>(<span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">Key</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ClientId</span><span class="op">&gt;</span> {
-        <span class="kw">match</span> <span class="ident">key</span>.<span class="ident">segments</span>.<span class="ident">get</span>(<span class="number">2</span>) {
-            <span class="prelude-val">Some</span>(<span class="ident">id</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ClientId::from_str</span>(<span class="kw-2">&amp;</span><span class="ident">id</span>.<span class="ident">raw</span>())
-                .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">Error::InvalidKey</span>(<span class="ident">e</span>.<span class="ident">to_string</span>())),
-            <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">Error::InvalidKey</span>(<span class="macro">format!</span>(
+        <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="ident">key</span>.<span class="ident">segments</span>[..] {
+            [<span class="ident">DbKeySeg::AddressSeg</span>(<span class="ident">addr</span>), <span class="ident">DbKeySeg::StringSeg</span>(<span class="ident">prefix</span>), <span class="ident">DbKeySeg::StringSeg</span>(<span class="ident">client_id</span>), ..]
+                <span class="kw">if</span> <span class="ident">addr</span> <span class="op">=</span><span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">Address::Internal</span>(<span class="ident">InternalAddress::Ibc</span>)
+                    <span class="op">&amp;&amp;</span> <span class="ident">prefix</span> <span class="op">=</span><span class="op">=</span> <span class="string">&quot;clients&quot;</span> <span class="op">=</span><span class="op">&gt;</span>
+            {
+                <span class="ident">ClientId::from_str</span>(<span class="kw-2">&amp;</span><span class="ident">client_id</span>.<span class="ident">raw</span>())
+                    .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">Error::InvalidKey</span>(<span class="ident">e</span>.<span class="ident">to_string</span>()))
+            }
+            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">Error::InvalidKey</span>(<span class="macro">format!</span>(
                 <span class="string">&quot;The key doesn&#39;t have a client ID: {}&quot;</span>,
                 <span class="ident">key</span>
             ))),

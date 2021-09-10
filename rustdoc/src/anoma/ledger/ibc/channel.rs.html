@@ -752,11 +752,12 @@
 <span class="kw">use</span> <span class="kw">super</span>::{<span class="ident">Ibc</span>, <span class="ident">StateChange</span>};
 <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::ledger::native_vp::Error</span> <span class="kw">as</span> <span class="ident">NativeVpError</span>;
 <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::ledger::storage</span>::{<span class="self">self</span>, <span class="ident">StorageHasher</span>};
+<span class="kw">use</span> <span class="kw">crate</span><span class="ident">::types::address</span>::{<span class="ident">Address</span>, <span class="ident">InternalAddress</span>};
 <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::types::ibc</span>::{
     <span class="ident">ChannelCloseConfirmData</span>, <span class="ident">ChannelCloseInitData</span>, <span class="ident">ChannelOpenAckData</span>,
     <span class="ident">ChannelOpenConfirmData</span>, <span class="ident">ChannelOpenTryData</span>, <span class="ident">Error</span> <span class="kw">as</span> <span class="ident">IbcDataError</span>,
 };
-<span class="kw">use</span> <span class="kw">crate</span><span class="ident">::types::storage</span>::{<span class="ident">Key</span>, <span class="ident">KeySeg</span>};
+<span class="kw">use</span> <span class="kw">crate</span><span class="ident">::types::storage</span>::{<span class="ident">DbKeySeg</span>, <span class="ident">Key</span>, <span class="ident">KeySeg</span>};
 
 <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">missing_docs</span>)]</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Error</span>, <span class="ident">Debug</span>)]</span>
@@ -810,18 +811,15 @@
             }
         }
 
-        <span class="kw">let</span> <span class="ident">port_id</span> <span class="op">=</span> <span class="self">Self</span><span class="ident">::get_port_id</span>(<span class="ident">key</span>)
-            .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">Error::InvalidKey</span>(<span class="ident">e</span>.<span class="ident">to_string</span>()))<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">channel_id</span> <span class="op">=</span> <span class="self">Self</span><span class="ident">::get_channel_id</span>(<span class="ident">key</span>)<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">port_channel_id</span> <span class="op">=</span> <span class="self">Self</span><span class="ident">::get_port_channel_id</span>(<span class="ident">key</span>)<span class="question-mark">?</span>;
+        <span class="self">self</span>.<span class="ident">authenticated_capability</span>(<span class="kw-2">&amp;</span><span class="ident">port_channel_id</span>.<span class="number">0</span>)
+            .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> {
+                <span class="ident">Error::InvalidPort</span>(<span class="macro">format!</span>(
+                    <span class="string">&quot;The port is not authenticated: ID {}, {}&quot;</span>,
+                    <span class="ident">port_channel_id</span>.<span class="number">0</span>, <span class="ident">e</span>
+                ))
+            })<span class="question-mark">?</span>;
 
-        <span class="self">self</span>.<span class="ident">authenticated_capability</span>(<span class="kw-2">&amp;</span><span class="ident">port_id</span>).<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> {
-            <span class="ident">Error::InvalidPort</span>(<span class="macro">format!</span>(
-                <span class="string">&quot;The port is not authenticated: ID {}, {}&quot;</span>,
-                <span class="ident">port_id</span>, <span class="ident">e</span>
-            ))
-        })<span class="question-mark">?</span>;
-
-        <span class="kw">let</span> <span class="ident">port_channel_id</span> <span class="op">=</span> (<span class="ident">port_id</span>, <span class="ident">channel_id</span>);
         <span class="kw">let</span> <span class="ident">channel</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">channel_end</span>(<span class="kw-2">&amp;</span><span class="ident">port_channel_id</span>).<span class="ident">ok_or_else</span>(<span class="op">|</span><span class="op">|</span> {
             <span class="ident">Error::InvalidChannel</span>(<span class="macro">format!</span>(
                 <span class="string">&quot;The channel doesn&#39;t exist: Port {}, Channel {}&quot;</span>,
@@ -866,25 +864,27 @@
         }
     }
 
-    <span class="doccomment">/// Returns the port ID after #IBC/channelEnds/ports</span>
-    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">get_port_id</span>(<span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">Key</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">PortId</span><span class="op">&gt;</span> {
-        <span class="kw">match</span> <span class="ident">key</span>.<span class="ident">segments</span>.<span class="ident">get</span>(<span class="number">3</span>) {
-            <span class="prelude-val">Some</span>(<span class="ident">id</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">PortId::from_str</span>(<span class="kw-2">&amp;</span><span class="ident">id</span>.<span class="ident">raw</span>())
-                .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">Error::InvalidKey</span>(<span class="ident">e</span>.<span class="ident">to_string</span>())),
-            <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">Error::InvalidKey</span>(<span class="macro">format!</span>(
-                <span class="string">&quot;The key doesn&#39;t have a port ID: Key {}&quot;</span>,
-                <span class="ident">key</span>
-            ))),
-        }
-    }
-
-    <span class="doccomment">/// Returns the channel ID after #IBC/channelEnds/ports/{port_id}/channels</span>
-    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">get_channel_id</span>(<span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">Key</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ChannelId</span><span class="op">&gt;</span> {
-        <span class="kw">match</span> <span class="ident">key</span>.<span class="ident">segments</span>.<span class="ident">get</span>(<span class="number">5</span>) {
-            <span class="prelude-val">Some</span>(<span class="ident">id</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ChannelId::from_str</span>(<span class="kw-2">&amp;</span><span class="ident">id</span>.<span class="ident">raw</span>())
-                .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">Error::InvalidKey</span>(<span class="ident">e</span>.<span class="ident">to_string</span>())),
-            <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">Error::InvalidKey</span>(<span class="macro">format!</span>(
-                <span class="string">&quot;The key doesn&#39;t have a channel ID: {}&quot;</span>,
+    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">get_port_channel_id</span>(
+        <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">Key</span>,
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="ident">PortId</span>, <span class="ident">ChannelId</span>)<span class="op">&gt;</span> {
+        <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="ident">key</span>.<span class="ident">segments</span>[..] {
+            [<span class="ident">DbKeySeg::AddressSeg</span>(<span class="ident">addr</span>), <span class="ident">DbKeySeg::StringSeg</span>(<span class="ident">prefix</span>), <span class="ident">DbKeySeg::StringSeg</span>(<span class="ident">module0</span>), <span class="ident">DbKeySeg::StringSeg</span>(<span class="ident">port_id</span>), <span class="ident">DbKeySeg::StringSeg</span>(<span class="ident">module1</span>), <span class="ident">DbKeySeg::StringSeg</span>(<span class="ident">channel_id</span>)]
+                <span class="kw">if</span> <span class="ident">addr</span> <span class="op">=</span><span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">Address::Internal</span>(<span class="ident">InternalAddress::Ibc</span>)
+                    <span class="op">&amp;&amp;</span> (<span class="ident">prefix</span> <span class="op">=</span><span class="op">=</span> <span class="string">&quot;channelEnds&quot;</span>
+                        <span class="op">|</span><span class="op">|</span> <span class="ident">prefix</span> <span class="op">=</span><span class="op">=</span> <span class="string">&quot;nextSequenceSend&quot;</span>
+                        <span class="op">|</span><span class="op">|</span> <span class="ident">prefix</span> <span class="op">=</span><span class="op">=</span> <span class="string">&quot;nextSequenceRecv&quot;</span>
+                        <span class="op">|</span><span class="op">|</span> <span class="ident">prefix</span> <span class="op">=</span><span class="op">=</span> <span class="string">&quot;nextSequenceAck&quot;</span>)
+                    <span class="op">&amp;&amp;</span> <span class="ident">module0</span> <span class="op">=</span><span class="op">=</span> <span class="string">&quot;ports&quot;</span>
+                    <span class="op">&amp;&amp;</span> <span class="ident">module1</span> <span class="op">=</span><span class="op">=</span> <span class="string">&quot;channels&quot;</span> <span class="op">=</span><span class="op">&gt;</span>
+            {
+                <span class="kw">let</span> <span class="ident">port_id</span> <span class="op">=</span> <span class="ident">PortId::from_str</span>(<span class="kw-2">&amp;</span><span class="ident">port_id</span>.<span class="ident">raw</span>())
+                    .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">Error::InvalidKey</span>(<span class="ident">e</span>.<span class="ident">to_string</span>()))<span class="question-mark">?</span>;
+                <span class="kw">let</span> <span class="ident">channel_id</span> <span class="op">=</span> <span class="ident">ChannelId::from_str</span>(<span class="kw-2">&amp;</span><span class="ident">channel_id</span>.<span class="ident">raw</span>())
+                    .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">Error::InvalidKey</span>(<span class="ident">e</span>.<span class="ident">to_string</span>()))<span class="question-mark">?</span>;
+                <span class="prelude-val">Ok</span>((<span class="ident">port_id</span>, <span class="ident">channel_id</span>))
+            }
+            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">Error::InvalidKey</span>(<span class="macro">format!</span>(
+                <span class="string">&quot;The key doesn&#39;t have port ID and channel ID: Key {}&quot;</span>,
                 <span class="ident">key</span>
             ))),
         }
@@ -1296,9 +1296,9 @@
                 <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">id</span>) <span class="op">=</span> <span class="ident">channel</span>.<span class="ident">connection_hops</span>().<span class="ident">get</span>(<span class="number">0</span>) {
                     <span class="kw">if</span> <span class="ident">id</span> <span class="op">=</span><span class="op">=</span> <span class="ident">conn_id</span> {
                         <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Key::parse</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>).<span class="ident">ok</span>()<span class="question-mark">?</span>;
-                        <span class="kw">let</span> <span class="ident">port_id</span> <span class="op">=</span> <span class="self">Self</span><span class="ident">::get_port_id</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>).<span class="ident">ok</span>()<span class="question-mark">?</span>;
-                        <span class="kw">let</span> <span class="ident">channel_id</span> <span class="op">=</span> <span class="self">Self</span><span class="ident">::get_channel_id</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>).<span class="ident">ok</span>()<span class="question-mark">?</span>;
-                        <span class="ident">channels</span>.<span class="ident">push</span>((<span class="ident">port_id</span>, <span class="ident">channel_id</span>));
+                        <span class="kw">let</span> <span class="ident">port_channel_id</span> <span class="op">=</span>
+                            <span class="self">Self</span><span class="ident">::get_port_channel_id</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>).<span class="ident">ok</span>()<span class="question-mark">?</span>;
+                        <span class="ident">channels</span>.<span class="ident">push</span>(<span class="ident">port_channel_id</span>);
                     }
                 }
             } <span class="kw">else</span> {
