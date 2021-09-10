@@ -531,6 +531,12 @@
 <span id="529">529</span>
 <span id="530">530</span>
 <span id="531">531</span>
+<span id="532">532</span>
+<span id="533">533</span>
+<span id="534">534</span>
+<span id="535">535</span>
+<span id="536">536</span>
+<span id="537">537</span>
 </pre><pre class="rust">
 <span class="doccomment">//! Ed25519 keys and related functionality</span>
 
@@ -614,6 +620,8 @@
     <span class="ident">SigError</span>(<span class="ident">SignatureError</span>),
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Signature verification failed to encode the data: {0}&quot;</span>)]</span>
     <span class="ident">EncodingError</span>(<span class="ident">std::io::Error</span>),
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Transaction doesn&#39;t have any data with a signature.&quot;</span>)]</span>
+    <span class="ident">MissingData</span>,
 }
 
 <span class="doccomment">/// Check that the public key matches the signature on the given data.</span>
@@ -674,14 +682,18 @@
     <span class="ident">tx</span>: <span class="kw-2">&amp;</span><span class="ident">Tx</span>,
     <span class="ident">sig</span>: <span class="kw-2">&amp;</span><span class="ident">Signature</span>,
 ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">VerifySigError</span><span class="op">&gt;</span> {
-    <span class="comment">// revert the transaction data</span>
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">tx</span>.<span class="ident">clone</span>();
-    <span class="kw">let</span> <span class="ident">tx_data</span> <span class="op">=</span> <span class="ident">tx</span>.<span class="ident">data</span>.<span class="ident">expect</span>(<span class="string">&quot;signed data should exist&quot;</span>);
+    <span class="comment">// Try to get the transaction data from decoded `SignedTxData`</span>
+    <span class="kw">let</span> <span class="ident">tx_data</span> <span class="op">=</span> <span class="ident">tx</span>.<span class="ident">data</span>.<span class="ident">clone</span>().<span class="ident">ok_or</span>(<span class="ident">VerifySigError::MissingData</span>)<span class="question-mark">?</span>;
     <span class="kw">let</span> <span class="ident">signed_tx_data</span> <span class="op">=</span> <span class="ident">SignedTxData::try_from_slice</span>(<span class="kw-2">&amp;</span><span class="ident">tx_data</span>[..])
         .<span class="ident">expect</span>(<span class="string">&quot;Decoding transaction data shouldn&#39;t fail&quot;</span>);
-    <span class="ident">tx</span>.<span class="ident">data</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">signed_tx_data</span>.<span class="ident">data</span>.<span class="ident">expect</span>(<span class="string">&quot;data should exist&quot;</span>));
-    <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="ident">tx</span>.<span class="ident">to_bytes</span>();
-    <span class="ident">verify_signature_raw</span>(<span class="ident">pk</span>, <span class="kw-2">&amp;</span><span class="ident">data</span>, <span class="ident">sig</span>)
+    <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="ident">signed_tx_data</span>.<span class="ident">data</span>;
+    <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx</span> {
+        <span class="ident">code</span>: <span class="ident">tx</span>.<span class="ident">code</span>.<span class="ident">clone</span>(),
+        <span class="ident">data</span>,
+        <span class="ident">timestamp</span>: <span class="ident">tx</span>.<span class="ident">timestamp</span>,
+    };
+    <span class="kw">let</span> <span class="ident">signed_data</span> <span class="op">=</span> <span class="ident">tx</span>.<span class="ident">to_bytes</span>();
+    <span class="ident">verify_signature_raw</span>(<span class="ident">pk</span>, <span class="kw-2">&amp;</span><span class="ident">signed_data</span>, <span class="ident">sig</span>)
 }
 
 <span class="doccomment">/// A generic signed data wrapper for Borsh encode-able data.</span>

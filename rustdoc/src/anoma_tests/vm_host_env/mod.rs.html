@@ -452,6 +452,11 @@
 <span id="450">450</span>
 <span id="451">451</span>
 <span id="452">452</span>
+<span id="453">453</span>
+<span id="454">454</span>
+<span id="455">455</span>
+<span id="456">456</span>
+<span id="457">457</span>
 </pre><pre class="rust">
 <span class="doccomment">//! VM host environment integration tests.</span>
 <span class="doccomment">//!</span>
@@ -833,27 +838,32 @@
 
         <span class="comment">// Use some arbitrary bytes for tx code</span>
         <span class="kw">let</span> <span class="ident">code</span> <span class="op">=</span> <span class="macro">vec!</span>[<span class="number">4</span>, <span class="number">3</span>, <span class="number">2</span>, <span class="number">1</span>, <span class="number">0</span>];
-        <span class="comment">// Use some arbitrary data</span>
-        <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="macro">vec!</span>[<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>].<span class="ident">repeat</span>(<span class="number">10</span>);
+        <span class="kw">for</span> <span class="ident">data</span> <span class="kw">in</span> <span class="kw-2">&amp;</span>[
+            <span class="comment">// Tx with some arbitrary data</span>
+            <span class="prelude-val">Some</span>(<span class="macro">vec!</span>[<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>].<span class="ident">repeat</span>(<span class="number">10</span>)),
+            <span class="comment">// Tx without any data</span>
+            <span class="prelude-val">None</span>,
+        ] {
+            <span class="ident">env</span>.<span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx::new</span>(<span class="ident">code</span>.<span class="ident">clone</span>(), <span class="ident">data</span>.<span class="ident">clone</span>()).<span class="ident">sign</span>(<span class="kw-2">&amp;</span><span class="ident">keypair</span>);
+            <span class="comment">// Initialize the environment</span>
+            <span class="ident">init_vp_env</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">env</span>);
 
-        <span class="ident">env</span>.<span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx::new</span>(<span class="ident">code</span>, <span class="prelude-val">Some</span>(<span class="ident">data</span>.<span class="ident">clone</span>())).<span class="ident">sign</span>(<span class="kw-2">&amp;</span><span class="ident">keypair</span>);
-        <span class="comment">// Initialize the environment</span>
-        <span class="ident">init_vp_env</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">env</span>);
+            <span class="kw">let</span> <span class="ident">tx_data</span> <span class="op">=</span> <span class="ident">env</span>.<span class="ident">tx</span>.<span class="ident">data</span>.<span class="ident">expect</span>(<span class="string">&quot;data should exist&quot;</span>);
+            <span class="kw">let</span> <span class="ident">signed_tx_data</span> <span class="op">=</span>
+                <span class="kw">match</span> <span class="ident">SignedTxData::try_from_slice</span>(<span class="kw-2">&amp;</span><span class="ident">tx_data</span>[..]) {
+                    <span class="prelude-val">Ok</span>(<span class="ident">data</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">data</span>,
+                    <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">panic!</span>(<span class="string">&quot;decoding failed&quot;</span>),
+                };
+            <span class="macro">assert_eq!</span>(<span class="kw-2">&amp;</span><span class="ident">signed_tx_data</span>.<span class="ident">data</span>, <span class="ident">data</span>);
+            <span class="macro">assert!</span>(<span class="ident">vp_host_env::verify_tx_signature</span>(<span class="kw-2">&amp;</span><span class="ident">pk</span>, <span class="kw-2">&amp;</span><span class="ident">signed_tx_data</span>.<span class="ident">sig</span>));
 
-        <span class="kw">let</span> <span class="ident">tx_data</span> <span class="op">=</span> <span class="ident">env</span>.<span class="ident">tx</span>.<span class="ident">data</span>.<span class="ident">expect</span>(<span class="string">&quot;data should exist&quot;</span>);
-        <span class="kw">let</span> <span class="ident">signed_tx_data</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">SignedTxData::try_from_slice</span>(<span class="kw-2">&amp;</span><span class="ident">tx_data</span>[..]) {
-            <span class="prelude-val">Ok</span>(<span class="ident">data</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">data</span>,
-            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">panic!</span>(<span class="string">&quot;decoding failed&quot;</span>),
-        };
-        <span class="macro">assert_eq!</span>(<span class="ident">signed_tx_data</span>.<span class="ident">data</span>, <span class="prelude-val">Some</span>(<span class="ident">data</span>));
-        <span class="macro">assert!</span>(<span class="ident">vp_host_env::verify_tx_signature</span>(<span class="kw-2">&amp;</span><span class="ident">pk</span>, <span class="kw-2">&amp;</span><span class="ident">signed_tx_data</span>.<span class="ident">sig</span>));
-
-        <span class="kw">let</span> <span class="ident">other_keypair</span> <span class="op">=</span> <span class="ident">key::ed25519::testing::keypair_2</span>();
-        <span class="kw">let</span> <span class="ident">other_pk</span> <span class="op">=</span> <span class="ident">key::ed25519::PublicKey::from</span>(<span class="ident">other_keypair</span>.<span class="ident">public</span>);
-        <span class="macro">assert!</span>(<span class="op">!</span><span class="ident">vp_host_env::verify_tx_signature</span>(
-            <span class="kw-2">&amp;</span><span class="ident">other_pk</span>,
-            <span class="kw-2">&amp;</span><span class="ident">signed_tx_data</span>.<span class="ident">sig</span>
-        ));
+            <span class="kw">let</span> <span class="ident">other_keypair</span> <span class="op">=</span> <span class="ident">key::ed25519::testing::keypair_2</span>();
+            <span class="kw">let</span> <span class="ident">other_pk</span> <span class="op">=</span> <span class="ident">key::ed25519::PublicKey::from</span>(<span class="ident">other_keypair</span>.<span class="ident">public</span>);
+            <span class="macro">assert!</span>(<span class="op">!</span><span class="ident">vp_host_env::verify_tx_signature</span>(
+                <span class="kw-2">&amp;</span><span class="ident">other_pk</span>,
+                <span class="kw-2">&amp;</span><span class="ident">signed_tx_data</span>.<span class="ident">sig</span>
+            ));
+        }
     }
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
