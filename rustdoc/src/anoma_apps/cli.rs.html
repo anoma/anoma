@@ -2301,9 +2301,9 @@
 
 <span class="kw">fn</span> <span class="ident">anoma_node_app</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">App</span> {
     <span class="kw">let</span> <span class="ident">app</span> <span class="op">=</span> <span class="ident">App::new</span>(<span class="ident">APP_NAME</span>)
-        .<span class="ident">version</span>(<span class="ident">CLIENT_VERSION</span>)
+        .<span class="ident">version</span>(<span class="ident">NODE_VERSION</span>)
         .<span class="ident">author</span>(<span class="ident">AUTHOR</span>)
-        .<span class="ident">about</span>(<span class="string">&quot;Anoma client command line interface.&quot;</span>)
+        .<span class="ident">about</span>(<span class="string">&quot;Anoma node command line interface.&quot;</span>)
         .<span class="ident">setting</span>(<span class="ident">AppSettings::SubcommandRequiredElseHelp</span>)
         .<span class="ident">add_args</span>::<span class="op">&lt;</span><span class="ident">args::Global</span><span class="op">&gt;</span>();
     <span class="ident">cmds::AnomaNode::add_sub</span>(<span class="ident">app</span>)
@@ -2311,9 +2311,9 @@
 
 <span class="kw">fn</span> <span class="ident">anoma_client_app</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">App</span> {
     <span class="kw">let</span> <span class="ident">app</span> <span class="op">=</span> <span class="ident">App::new</span>(<span class="ident">APP_NAME</span>)
-        .<span class="ident">version</span>(<span class="ident">NODE_VERSION</span>)
+        .<span class="ident">version</span>(<span class="ident">CLIENT_VERSION</span>)
         .<span class="ident">author</span>(<span class="ident">AUTHOR</span>)
-        .<span class="ident">about</span>(<span class="string">&quot;Anoma node command line interface.&quot;</span>)
+        .<span class="ident">about</span>(<span class="string">&quot;Anoma client command line interface.&quot;</span>)
         .<span class="ident">setting</span>(<span class="ident">AppSettings::SubcommandRequiredElseHelp</span>)
         .<span class="ident">add_args</span>::<span class="op">&lt;</span><span class="ident">args::Global</span><span class="op">&gt;</span>();
     <span class="ident">cmds::AnomaClient::add_sub</span>(<span class="ident">app</span>)
