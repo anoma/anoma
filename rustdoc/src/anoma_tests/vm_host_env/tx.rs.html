@@ -167,7 +167,52 @@
 <span id="165">165</span>
 <span id="166">166</span>
 <span id="167">167</span>
+<span id="168">168</span>
+<span id="169">169</span>
+<span id="170">170</span>
+<span id="171">171</span>
+<span id="172">172</span>
+<span id="173">173</span>
+<span id="174">174</span>
+<span id="175">175</span>
+<span id="176">176</span>
+<span id="177">177</span>
+<span id="178">178</span>
+<span id="179">179</span>
+<span id="180">180</span>
+<span id="181">181</span>
+<span id="182">182</span>
+<span id="183">183</span>
+<span id="184">184</span>
+<span id="185">185</span>
+<span id="186">186</span>
+<span id="187">187</span>
+<span id="188">188</span>
+<span id="189">189</span>
+<span id="190">190</span>
+<span id="191">191</span>
+<span id="192">192</span>
+<span id="193">193</span>
+<span id="194">194</span>
+<span id="195">195</span>
+<span id="196">196</span>
+<span id="197">197</span>
+<span id="198">198</span>
+<span id="199">199</span>
+<span id="200">200</span>
+<span id="201">201</span>
+<span id="202">202</span>
+<span id="203">203</span>
+<span id="204">204</span>
+<span id="205">205</span>
+<span id="206">206</span>
+<span id="207">207</span>
+<span id="208">208</span>
+<span id="209">209</span>
+<span id="210">210</span>
+<span id="211">211</span>
 </pre><pre class="rust">
+<span class="kw">use</span> <span class="ident">std::borrow::Borrow</span>;
 <span class="kw">use</span> <span class="ident">std::collections::HashSet</span>;
 
 <span class="kw">use</span> <span class="ident">anoma::ledger::gas::BlockGasMeter</span>;
@@ -176,15 +221,17 @@
 <span class="kw">use</span> <span class="ident">anoma::ledger::storage::write_log::WriteLog</span>;
 <span class="kw">use</span> <span class="ident">anoma::types::address::Address</span>;
 <span class="kw">use</span> <span class="ident">anoma::types::storage::Key</span>;
+<span class="kw">use</span> <span class="ident">anoma::types</span>::{<span class="ident">key</span>, <span class="ident">token</span>};
 <span class="kw">use</span> <span class="ident">anoma::vm</span>;
 <span class="kw">use</span> <span class="ident">anoma::vm::prefix_iter::PrefixIterators</span>;
+<span class="kw">use</span> <span class="ident">anoma_vm_env::tx_prelude::BorshSerialize</span>;
 
 <span class="doccomment">/// This module combines the native host function implementations from</span>
 <span class="doccomment">/// `native_tx_host_env` with the functions exposed to the tx wasm</span>
 <span class="doccomment">/// that will call to the native functions, instead of interfacing via a</span>
 <span class="doccomment">/// wasm runtime. It can be used for host environment integration tests.</span>
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">tx_host_env</span> {
-    <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">anoma_vm_env::imports::tx</span>::<span class="kw-2">*</span>;
+    <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">anoma_vm_env::tx_prelude</span>::<span class="kw-2">*</span>;
 
     <span class="kw">pub</span> <span class="kw">use</span> <span class="kw">super</span><span class="ident">::native_tx_host_env</span>::<span class="kw-2">*</span>;
 }
@@ -215,6 +262,47 @@
 <span class="kw">impl</span> <span class="ident">TestTxEnv</span> {
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">all_touched_storage_keys</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">Key</span><span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">write_log</span>.<span class="ident">get_keys</span>()
+    }
+
+    <span class="doccomment">/// Fake accounts existence by initializating their VP storage.</span>
+    <span class="doccomment">/// This is needed for accounts that are being modified by a tx test to be</span>
+    <span class="doccomment">/// pass account existence check in `tx_write` function.</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">spawn_accounts</span>(
+        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
+        <span class="ident">addresses</span>: <span class="kw">impl</span> <span class="ident">IntoIterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> <span class="kw">impl</span> <span class="ident">Borrow</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    ) {
+        <span class="kw">for</span> <span class="ident">address</span> <span class="kw">in</span> <span class="ident">addresses</span> {
+            <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Key::validity_predicate</span>(<span class="ident">address</span>.<span class="ident">borrow</span>());
+            <span class="kw">let</span> <span class="ident">vp_code</span> <span class="op">=</span> <span class="macro">vec!</span>[];
+            <span class="self">self</span>.<span class="ident">storage</span>
+                .<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>, <span class="ident">vp_code</span>)
+                .<span class="ident">expect</span>(<span class="string">&quot;Unable to write VP&quot;</span>);
+        }
+    }
+
+    <span class="doccomment">/// Credit tokens to the target account.</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">credit_tokens</span>(
+        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
+        <span class="ident">target</span>: <span class="kw-2">&amp;</span><span class="ident">Address</span>,
+        <span class="ident">token</span>: <span class="kw-2">&amp;</span><span class="ident">Address</span>,
+        <span class="ident">amount</span>: <span class="ident">token::Amount</span>,
+    ) {
+        <span class="kw">let</span> <span class="ident">storage_key</span> <span class="op">=</span> <span class="ident">token::balance_key</span>(<span class="ident">token</span>, <span class="ident">target</span>);
+        <span class="self">self</span>.<span class="ident">storage</span>
+            .<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="ident">storage_key</span>, <span class="ident">amount</span>.<span class="ident">try_to_vec</span>().<span class="ident">unwrap</span>())
+            .<span class="ident">unwrap</span>();
+    }
+
+    <span class="doccomment">/// Set public key for the address.</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">write_public_key</span>(
+        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
+        <span class="ident">address</span>: <span class="kw-2">&amp;</span><span class="ident">Address</span>,
+        <span class="ident">public_key</span>: <span class="kw-2">&amp;</span><span class="ident">key::ed25519::PublicKey</span>,
+    ) {
+        <span class="kw">let</span> <span class="ident">storage_key</span> <span class="op">=</span> <span class="ident">key::ed25519::pk_key</span>(<span class="ident">address</span>);
+        <span class="self">self</span>.<span class="ident">storage</span>
+            .<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="ident">storage_key</span>, <span class="ident">public_key</span>.<span class="ident">try_to_vec</span>().<span class="ident">unwrap</span>())
+            .<span class="ident">unwrap</span>();
     }
 }
 

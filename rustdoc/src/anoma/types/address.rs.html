@@ -444,6 +444,16 @@
 <span id="442">442</span>
 <span id="443">443</span>
 <span id="444">444</span>
+<span id="445">445</span>
+<span id="446">446</span>
+<span id="447">447</span>
+<span id="448">448</span>
+<span id="449">449</span>
+<span id="450">450</span>
+<span id="451">451</span>
+<span id="452">452</span>
+<span id="453">453</span>
+<span id="454">454</span>
 </pre><pre class="rust">
 <span class="doccomment">//! Implements transparent addresses as described in [Accounts</span>
 <span class="doccomment">//! Addresses](docs/src/explore/design/ledger/accounts.md#addresses).</span>
@@ -855,7 +865,17 @@
         <span class="ident">Address::decode</span>(<span class="string">&quot;a1qq5qqqqqgcuyxv2pxgcrzdecx4prq3pexccr2vj9xse5gvf3gvmnv3f3xqcyyvjyxv6yvv34e393x7&quot;</span>).<span class="ident">expect</span>(<span class="string">&quot;The token address decoding shouldn&#39;t fail&quot;</span>)
     }
 
-    <span class="doccomment">/// Generate an arbitrary [`Address`].</span>
+    <span class="doccomment">/// A sampled established address for tests</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">established_address_3</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Address</span> {
+        <span class="ident">Address::decode</span>(<span class="string">&quot;a1qq5qqqqq8pp52dfjxserjwf3g9znzveng9zy2wfcx5cnxs6zxq6nydek8qcrqdjrxucrws3jcq9z7a&quot;</span>).<span class="ident">expect</span>(<span class="string">&quot;The token address decoding shouldn&#39;t fail&quot;</span>)
+    }
+
+    <span class="doccomment">/// A sampled established address for tests</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">established_address_4</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Address</span> {
+        <span class="ident">Address::decode</span>(<span class="string">&quot;a1qq5qqqqqg56yxdpeg5er2d69g4rrxv2rxdryxdes8yenwvejxpzrvd6r8qcnjsjpxg6nww2r3zt5ax&quot;</span>).<span class="ident">expect</span>(<span class="string">&quot;The token address decoding shouldn&#39;t fail&quot;</span>)
+    }
+
+    <span class="doccomment">/// Generate an arbitrary [`Address`] (established or implicit).</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">arb_address</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="kw">impl</span> <span class="ident">Strategy</span><span class="op">&lt;</span><span class="ident">Value</span> <span class="op">=</span> <span class="ident">Address</span><span class="op">&gt;</span> {
         <span class="macro">prop_oneof!</span>[
             <span class="ident">arb_established_address</span>().<span class="ident">prop_map</span>(<span class="ident">Address::Established</span>),

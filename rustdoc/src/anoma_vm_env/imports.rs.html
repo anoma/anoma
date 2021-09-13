@@ -733,13 +733,13 @@
     <span class="doccomment">/// Validity predicates of each verifier addresses inserted in the</span>
     <span class="doccomment">/// transaction will validate the transaction and will receive all the</span>
     <span class="doccomment">/// changed storage keys and initialized accounts in their inputs.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">insert_verifier</span>(<span class="ident">addr</span>: <span class="ident">Address</span>) {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">insert_verifier</span>(<span class="ident">addr</span>: <span class="kw-2">&amp;</span><span class="ident">Address</span>) {
         <span class="kw">let</span> <span class="ident">addr</span> <span class="op">=</span> <span class="ident">addr</span>.<span class="ident">encode</span>();
         <span class="kw">unsafe</span> { <span class="ident">anoma_tx_insert_verifier</span>(<span class="ident">addr</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="kw">_</span>, <span class="ident">addr</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="kw">_</span>) }
     }
 
     <span class="doccomment">/// Update a validity predicate</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">update_validity_predicate</span>(<span class="ident">addr</span>: <span class="ident">Address</span>, <span class="ident">code</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span>[<span class="ident">u8</span>]<span class="op">&gt;</span>) {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">update_validity_predicate</span>(<span class="ident">addr</span>: <span class="kw-2">&amp;</span><span class="ident">Address</span>, <span class="ident">code</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span>[<span class="ident">u8</span>]<span class="op">&gt;</span>) {
         <span class="kw">let</span> <span class="ident">addr</span> <span class="op">=</span> <span class="ident">addr</span>.<span class="ident">encode</span>();
         <span class="kw">let</span> <span class="ident">code</span> <span class="op">=</span> <span class="ident">code</span>.<span class="ident">as_ref</span>();
         <span class="kw">unsafe</span> {

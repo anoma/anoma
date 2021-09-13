@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["InitAccount","A tx data type to initialize a new established account"],["UpdateVp","A tx data type to update an account’s validity predicate"]]});

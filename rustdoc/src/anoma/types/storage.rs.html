@@ -831,6 +831,36 @@
 <span id="829">829</span>
 <span id="830">830</span>
 <span id="831">831</span>
+<span id="832">832</span>
+<span id="833">833</span>
+<span id="834">834</span>
+<span id="835">835</span>
+<span id="836">836</span>
+<span id="837">837</span>
+<span id="838">838</span>
+<span id="839">839</span>
+<span id="840">840</span>
+<span id="841">841</span>
+<span id="842">842</span>
+<span id="843">843</span>
+<span id="844">844</span>
+<span id="845">845</span>
+<span id="846">846</span>
+<span id="847">847</span>
+<span id="848">848</span>
+<span id="849">849</span>
+<span id="850">850</span>
+<span id="851">851</span>
+<span id="852">852</span>
+<span id="853">853</span>
+<span id="854">854</span>
+<span id="855">855</span>
+<span id="856">856</span>
+<span id="857">857</span>
+<span id="858">858</span>
+<span id="859">859</span>
+<span id="860">860</span>
+<span id="861">861</span>
 </pre><pre class="rust">
 <span class="doccomment">//! Storage types</span>
 <span class="kw">use</span> <span class="ident">std::convert</span>::{<span class="ident">TryFrom</span>, <span class="ident">TryInto</span>};
@@ -1649,9 +1679,39 @@
             <span class="comment">// a key for a validity predicate</span>
             <span class="ident">arb_address</span>().<span class="ident">prop_map</span>(<span class="op">|</span><span class="ident">addr</span><span class="op">|</span> <span class="ident">Key::validity_predicate</span>(<span class="kw-2">&amp;</span><span class="ident">addr</span>)),
             <span class="comment">// a key from key segments</span>
-            <span class="ident">collection::vec</span>(<span class="ident">arb_key_seg</span>(), <span class="number">1</span>..<span class="number">5</span>)
-                .<span class="ident">prop_map</span>(<span class="op">|</span><span class="ident">segments</span><span class="op">|</span> { <span class="ident">Key</span> { <span class="ident">segments</span> } }),
+            <span class="ident">arb_key_no_vp</span>(),
         ]
+    }
+
+    <span class="doccomment">/// Generate an arbitrary [`Key`] other than a validity predicate key.</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">arb_key_no_vp</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="kw">impl</span> <span class="ident">Strategy</span><span class="op">&lt;</span><span class="ident">Value</span> <span class="op">=</span> <span class="ident">Key</span><span class="op">&gt;</span> {
+        <span class="comment">// a key from key segments</span>
+        <span class="ident">collection::vec</span>(<span class="ident">arb_key_seg</span>(), <span class="number">1</span>..<span class="number">5</span>)
+            .<span class="ident">prop_map</span>(<span class="op">|</span><span class="ident">segments</span><span class="op">|</span> <span class="ident">Key</span> { <span class="ident">segments</span> })
+    }
+
+    <span class="doccomment">/// Generate an arbitrary [`Key`] for a given address storage sub-space.</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">arb_account_storage_key</span>(
+        <span class="ident">address</span>: <span class="ident">Address</span>,
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">impl</span> <span class="ident">Strategy</span><span class="op">&lt;</span><span class="ident">Value</span> <span class="op">=</span> <span class="ident">Key</span><span class="op">&gt;</span> {
+        <span class="macro">prop_oneof!</span>[
+            <span class="comment">// a key for a validity predicate</span>
+            <span class="ident">Just</span>(<span class="ident">Key::validity_predicate</span>(<span class="kw-2">&amp;</span><span class="ident">address</span>)),
+            <span class="comment">// a key from key segments</span>
+            <span class="ident">arb_account_storage_key_no_vp</span>(<span class="ident">address</span>),
+        ]
+    }
+
+    <span class="doccomment">/// Generate an arbitrary [`Key`] other than a validity predicate key for a</span>
+    <span class="doccomment">/// given address storage sub-space.</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">arb_account_storage_key_no_vp</span>(
+        <span class="ident">address</span>: <span class="ident">Address</span>,
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">impl</span> <span class="ident">Strategy</span><span class="op">&lt;</span><span class="ident">Value</span> <span class="op">=</span> <span class="ident">Key</span><span class="op">&gt;</span> {
+        <span class="ident">collection::vec</span>(<span class="ident">arb_key_seg</span>(), <span class="number">1</span>..<span class="number">5</span>).<span class="ident">prop_map</span>(<span class="kw">move</span> <span class="op">|</span><span class="ident">arb_segments</span><span class="op">|</span> {
+            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">segments</span> <span class="op">=</span> <span class="macro">vec!</span>[<span class="ident">address</span>.<span class="ident">to_db_key</span>()];
+            <span class="ident">segments</span>.<span class="ident">extend</span>(<span class="ident">arb_segments</span>);
+            <span class="ident">Key</span> { <span class="ident">segments</span> }
+        })
     }
 
     <span class="doccomment">/// Generate an arbitrary [`DbKeySeg`].</span>
