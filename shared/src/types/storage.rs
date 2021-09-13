@@ -199,6 +199,13 @@ impl Key {
         Ok(Key { segments })
     }
 
+    /// Return a new key without the last KeySeg
+    pub fn pop(&self) -> Result<Self> {
+        let mut segments = self.segments.clone();
+        segments.pop();
+        Ok(Key { segments })
+    }
+
     /// Returns a new key with segments of `Self` and the given key
     pub fn join(&self, other: &Key) -> Self {
         let mut segments = self.segments.clone();
