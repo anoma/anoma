@@ -1,1 +1,1 @@
-initSidebarItems({"fn":[["genesis",""]],"struct":[["Genesis",""],["Validator",""]]});
+initSidebarItems({"fn":[["genesis",""]],"struct":[["Genesis",""],["Validator","Genesis validator definition"]]});

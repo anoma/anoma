@@ -665,7 +665,7 @@
         );
         <span class="macro">assert_eq!</span>(
             <span class="ident">tx_host_env::get_block_epoch</span>(),
-            <span class="ident">env</span>.<span class="ident">storage</span>.<span class="ident">get_block_epoch</span>().<span class="number">0</span>
+            <span class="ident">env</span>.<span class="ident">storage</span>.<span class="ident">get_current_epoch</span>().<span class="number">0</span>
         );
     }
 
@@ -883,7 +883,7 @@
         );
         <span class="macro">assert_eq!</span>(
             <span class="ident">vp_host_env::get_block_epoch</span>(),
-            <span class="ident">env</span>.<span class="ident">storage</span>.<span class="ident">get_block_epoch</span>().<span class="number">0</span>
+            <span class="ident">env</span>.<span class="ident">storage</span>.<span class="ident">get_current_epoch</span>().<span class="number">0</span>
         );
     }
 

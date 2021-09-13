@@ -261,6 +261,13 @@
 <span id="259">259</span>
 <span id="260">260</span>
 <span id="261">261</span>
+<span id="262">262</span>
+<span id="263">263</span>
+<span id="264">264</span>
+<span id="265">265</span>
+<span id="266">266</span>
+<span id="267">267</span>
+<span id="268">268</span>
 </pre><pre class="rust">
 <span class="doccomment">//! Native validity predicate interface associated with internal accounts such</span>
 <span class="doccomment">//! as the PoS and IBC modules.</span>
@@ -275,7 +282,7 @@
 <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::ledger</span>::{<span class="ident">storage</span>, <span class="ident">vp_env</span>};
 <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::proto::Tx</span>;
 <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::types::address</span>::{<span class="ident">Address</span>, <span class="ident">InternalAddress</span>};
-<span class="kw">use</span> <span class="kw">crate</span><span class="ident">::types::storage</span>::{<span class="ident">BlockHash</span>, <span class="ident">BlockHeight</span>, <span class="ident">Key</span>};
+<span class="kw">use</span> <span class="kw">crate</span><span class="ident">::types::storage</span>::{<span class="ident">BlockHash</span>, <span class="ident">BlockHeight</span>, <span class="ident">Epoch</span>, <span class="ident">Key</span>};
 <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::vm::prefix_iter::PrefixIterators</span>;
 
 <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">missing_docs</span>)]</span>
@@ -418,6 +425,13 @@
     <span class="doccomment">/// current transaction is being applied.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_block_hash</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">BlockHash</span><span class="op">&gt;</span> {
         <span class="ident">vp_env::get_block_hash</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="kw-2">*</span><span class="self">self</span>.<span class="ident">gas_meter</span>.<span class="ident">borrow_mut</span>(), <span class="self">self</span>.<span class="ident">storage</span>)
+            .<span class="ident">map_err</span>(<span class="ident">Error::ContextError</span>)
+    }
+
+    <span class="doccomment">/// Getting the block epoch. The epoch is that of the block to which the</span>
+    <span class="doccomment">/// current transaction is being applied.</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_block_epoch</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Epoch</span><span class="op">&gt;</span> {
+        <span class="ident">vp_env::get_block_epoch</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="kw-2">*</span><span class="self">self</span>.<span class="ident">gas_meter</span>.<span class="ident">borrow_mut</span>(), <span class="self">self</span>.<span class="ident">storage</span>)
             .<span class="ident">map_err</span>(<span class="ident">Error::ContextError</span>)
     }
 

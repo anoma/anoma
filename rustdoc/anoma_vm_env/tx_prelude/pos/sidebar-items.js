@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["Bond","A bond is a validator’s self-bond or a delegation from non-validator to a validator."],["Withdraw","A withdrawal of an unbond."]],"type":[["Unbond","An unbond of a bond."]]});

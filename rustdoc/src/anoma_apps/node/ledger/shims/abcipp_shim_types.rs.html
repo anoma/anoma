@@ -236,6 +236,11 @@
 <span id="234">234</span>
 <span id="235">235</span>
 <span id="236">236</span>
+<span id="237">237</span>
+<span id="238">238</span>
+<span id="239">239</span>
+<span id="240">240</span>
+<span id="241">241</span>
 </pre><pre class="rust">
 <span class="kw">use</span> <span class="ident">tower_abci</span>::{<span class="ident">Request</span>, <span class="ident">Response</span>};
 
@@ -393,12 +398,13 @@
 
     <span class="doccomment">/// Custom types for request payloads</span>
     <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">request</span> {
-        <span class="kw">use</span> <span class="ident">tendermint_proto::abci::RequestBeginBlock</span>;
+        <span class="kw">use</span> <span class="ident">tendermint_proto::abci</span>::{<span class="ident">Evidence</span>, <span class="ident">RequestBeginBlock</span>};
         <span class="kw">use</span> <span class="ident">tendermint_proto::types::Header</span>;
 
         <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">PrepareProposal</span> {
             <span class="kw">pub</span> <span class="ident">hash</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>,
             <span class="kw">pub</span> <span class="ident">header</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Header</span><span class="op">&gt;</span>,
+            <span class="kw">pub</span> <span class="ident">byzantine_validators</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Evidence</span><span class="op">&gt;</span>,
         }
 
         <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">RequestBeginBlock</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">PrepareProposal</span> {
@@ -406,6 +412,7 @@
                 <span class="ident">PrepareProposal</span> {
                     <span class="ident">hash</span>: <span class="ident">block</span>.<span class="ident">hash</span>,
                     <span class="ident">header</span>: <span class="ident">block</span>.<span class="ident">header</span>,
+                    <span class="ident">byzantine_validators</span>: <span class="ident">block</span>.<span class="ident">byzantine_validators</span>,
                 }
             }
         }
@@ -424,7 +431,7 @@
 
     <span class="doccomment">/// Custom types for response payloads</span>
     <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">response</span> {
-        <span class="kw">use</span> <span class="ident">tendermint_proto::abci::Event</span>;
+        <span class="kw">use</span> <span class="ident">tendermint_proto::abci</span>::{<span class="ident">ConsensusParams</span>, <span class="ident">Event</span>, <span class="ident">ValidatorUpdate</span>};
         <span class="kw">use</span> <span class="ident">tower_abci::response</span>;
 
         <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Default</span>)]</span>
@@ -461,13 +468,16 @@
         <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">FinalizeBlock</span> {
             <span class="kw">pub</span> <span class="ident">events</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Event</span><span class="op">&gt;</span>,
             <span class="kw">pub</span> <span class="ident">gas_used</span>: <span class="ident">u64</span>,
+            <span class="kw">pub</span> <span class="ident">validator_updates</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">ValidatorUpdate</span><span class="op">&gt;</span>,
+            <span class="kw">pub</span> <span class="ident">consensus_param_updates</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">ConsensusParams</span><span class="op">&gt;</span>,
         }
 
         <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">FinalizeBlock</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">response::EndBlock</span> {
             <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">resp</span>: <span class="ident">FinalizeBlock</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
                 <span class="self">Self</span> {
                     <span class="ident">events</span>: <span class="ident">resp</span>.<span class="ident">events</span>,
-                    ..<span class="ident">Default::default</span>()
+                    <span class="ident">validator_updates</span>: <span class="ident">resp</span>.<span class="ident">validator_updates</span>,
+                    <span class="ident">consensus_param_updates</span>: <span class="ident">resp</span>.<span class="ident">consensus_param_updates</span>,
                 }
             }
         }

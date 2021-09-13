@@ -2922,7 +2922,7 @@
     <span class="ident">H</span>: <span class="ident">StorageHasher</span>,
 {
     <span class="kw">let</span> <span class="ident">storage</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">env</span>.<span class="ident">ctx</span>.<span class="ident">storage</span>.<span class="ident">get</span>() };
-    <span class="kw">let</span> (<span class="ident">epoch</span>, <span class="ident">gas</span>) <span class="op">=</span> <span class="ident">storage</span>.<span class="ident">get_block_epoch</span>();
+    <span class="kw">let</span> (<span class="ident">epoch</span>, <span class="ident">gas</span>) <span class="op">=</span> <span class="ident">storage</span>.<span class="ident">get_current_epoch</span>();
     <span class="ident">tx_add_gas</span>(<span class="ident">env</span>, <span class="ident">gas</span>)<span class="question-mark">?</span>;
     <span class="prelude-val">Ok</span>(<span class="ident">epoch</span>.<span class="number">0</span>)
 }

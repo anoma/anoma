@@ -223,6 +223,20 @@
 <span id="221">221</span>
 <span id="222">222</span>
 <span id="223">223</span>
+<span id="224">224</span>
+<span id="225">225</span>
+<span id="226">226</span>
+<span id="227">227</span>
+<span id="228">228</span>
+<span id="229">229</span>
+<span id="230">230</span>
+<span id="231">231</span>
+<span id="232">232</span>
+<span id="233">233</span>
+<span id="234">234</span>
+<span id="235">235</span>
+<span id="236">236</span>
+<span id="237">237</span>
 </pre><pre class="rust">
 <span class="kw">use</span> <span class="ident">std::fs</span>::{<span class="self">self</span>, <span class="ident">File</span>, <span class="ident">OpenOptions</span>};
 <span class="kw">use</span> <span class="ident">std::io</span>::{<span class="ident">BufReader</span>, <span class="ident">Write</span>};
@@ -232,6 +246,8 @@
 <span class="kw">use</span> <span class="ident">std::sync::mpsc::Receiver</span>;
 <span class="kw">use</span> <span class="ident">std::time::Duration</span>;
 
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;dev&quot;</span>)]</span>
+<span class="kw">use</span> <span class="ident">anoma::types::key::ed25519::Keypair</span>;
 <span class="kw">use</span> <span class="ident">serde_json::json</span>;
 <span class="kw">use</span> <span class="ident">signal_hook::consts::TERM_SIGNALS</span>;
 <span class="kw">use</span> <span class="ident">signal_hook::iterator::Signals</span>;
@@ -279,8 +295,13 @@
     }
 
     <span class="kw">if</span> <span class="macro">cfg!</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;dev&quot;</span>) {
+        <span class="kw">let</span> <span class="ident">genesis</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">genesis::genesis</span>();
         <span class="comment">// override the validator key file</span>
-        <span class="ident">write_validator_key</span>(<span class="kw-2">&amp;</span><span class="ident">home_dir</span>, <span class="kw-2">&amp;</span><span class="ident">genesis::genesis</span>().<span class="ident">validator</span>);
+        <span class="ident">write_validator_key</span>(
+            <span class="kw-2">&amp;</span><span class="ident">home_dir</span>,
+            <span class="kw-2">&amp;</span><span class="ident">genesis</span>.<span class="ident">validator</span>,
+            <span class="kw-2">&amp;</span><span class="ident">genesis</span>.<span class="ident">validator_consensus_key</span>,
+        );
         <span class="ident">write_chain_id</span>(<span class="kw-2">&amp;</span><span class="ident">home_dir</span>, <span class="ident">config::DEFAULT_CHAIN_ID</span>);
     }
 
@@ -396,15 +417,22 @@
 }
 
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;dev&quot;</span>)]</span>
-<span class="kw">fn</span> <span class="ident">write_validator_key</span>(<span class="ident">home_dir</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span><span class="ident">Path</span><span class="op">&gt;</span>, <span class="ident">account</span>: <span class="kw-2">&amp;</span><span class="ident">Validator</span>) {
+<span class="kw">fn</span> <span class="ident">write_validator_key</span>(
+    <span class="ident">home_dir</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span><span class="ident">Path</span><span class="op">&gt;</span>,
+    <span class="ident">validator</span>: <span class="kw-2">&amp;</span><span class="ident">Validator</span>,
+    <span class="ident">validator_key</span>: <span class="kw-2">&amp;</span><span class="ident">Keypair</span>,
+) {
     <span class="kw">let</span> <span class="ident">home_dir</span> <span class="op">=</span> <span class="ident">home_dir</span>.<span class="ident">as_ref</span>();
     <span class="kw">let</span> <span class="ident">path</span> <span class="op">=</span> <span class="ident">home_dir</span>.<span class="ident">join</span>(<span class="string">&quot;config&quot;</span>).<span class="ident">join</span>(<span class="string">&quot;priv_validator_key.json&quot;</span>);
     <span class="kw">let</span> <span class="ident">file</span> <span class="op">=</span>
         <span class="ident">File::create</span>(<span class="ident">path</span>).<span class="ident">expect</span>(<span class="string">&quot;Couldn&#39;t create private validator key file&quot;</span>);
-    <span class="kw">let</span> <span class="ident">pk</span> <span class="op">=</span> <span class="ident">base64::encode</span>(<span class="ident">account</span>.<span class="ident">keypair</span>.<span class="ident">public</span>.<span class="ident">as_bytes</span>());
-    <span class="kw">let</span> <span class="ident">sk</span> <span class="op">=</span> <span class="ident">base64::encode</span>(<span class="ident">account</span>.<span class="ident">keypair</span>.<span class="ident">to_bytes</span>());
+    <span class="kw">let</span> <span class="ident">pk</span>: <span class="ident">ed25519_dalek::PublicKey</span> <span class="op">=</span>
+        <span class="ident">validator</span>.<span class="ident">pos_data</span>.<span class="ident">consensus_key</span>.<span class="ident">clone</span>().<span class="ident">into</span>();
+    <span class="kw">let</span> <span class="ident">pk</span> <span class="op">=</span> <span class="ident">base64::encode</span>(<span class="ident">pk</span>.<span class="ident">as_bytes</span>());
+    <span class="kw">let</span> <span class="ident">sk</span> <span class="op">=</span> <span class="ident">base64::encode</span>(<span class="ident">validator_key</span>.<span class="ident">to_bytes</span>());
+    <span class="kw">let</span> <span class="ident">address</span> <span class="op">=</span> <span class="ident">validator</span>.<span class="ident">pos_data</span>.<span class="ident">address</span>.<span class="ident">raw_hash</span>().<span class="ident">unwrap</span>();
     <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="macro">json!</span>({
-       <span class="string">&quot;address&quot;</span>: <span class="ident">account</span>.<span class="ident">address</span>,
+       <span class="string">&quot;address&quot;</span>: <span class="ident">address</span>,
        <span class="string">&quot;pub_key&quot;</span>: {
          <span class="string">&quot;type&quot;</span>: <span class="string">&quot;tendermint/PubKeyEd25519&quot;</span>,
          <span class="string">&quot;value&quot;</span>: <span class="ident">pk</span>,

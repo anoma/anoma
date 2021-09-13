@@ -361,18 +361,50 @@
 <span id="359">359</span>
 <span id="360">360</span>
 <span id="361">361</span>
+<span id="362">362</span>
+<span id="363">363</span>
+<span id="364">364</span>
+<span id="365">365</span>
+<span id="366">366</span>
+<span id="367">367</span>
+<span id="368">368</span>
+<span id="369">369</span>
+<span id="370">370</span>
+<span id="371">371</span>
+<span id="372">372</span>
+<span id="373">373</span>
+<span id="374">374</span>
+<span id="375">375</span>
+<span id="376">376</span>
+<span id="377">377</span>
+<span id="378">378</span>
+<span id="379">379</span>
+<span id="380">380</span>
+<span id="381">381</span>
+<span id="382">382</span>
+<span id="383">383</span>
+<span id="384">384</span>
+<span id="385">385</span>
+<span id="386">386</span>
+<span id="387">387</span>
+<span id="388">388</span>
+<span id="389">389</span>
+<span id="390">390</span>
+<span id="391">391</span>
+<span id="392">392</span>
+<span id="393">393</span>
 </pre><pre class="rust">
 <span class="doccomment">//! The ledger&#39;s protocol</span>
 
 <span class="kw">use</span> <span class="ident">std::collections::HashSet</span>;
 <span class="kw">use</span> <span class="ident">std::convert::TryFrom</span>;
-<span class="kw">use</span> <span class="ident">std::fmt</span>;
+<span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">fmt</span>, <span class="ident">panic</span>};
 
 <span class="kw">use</span> <span class="ident">anoma::ledger::gas</span>::{<span class="self">self</span>, <span class="ident">BlockGasMeter</span>, <span class="ident">VpGasMeter</span>, <span class="ident">VpsGas</span>};
 <span class="kw">use</span> <span class="ident">anoma::ledger::ibc</span>::{<span class="self">self</span>, <span class="ident">Ibc</span>};
 <span class="kw">use</span> <span class="ident">anoma::ledger::native_vp</span>::{<span class="self">self</span>, <span class="ident">NativeVp</span>};
 <span class="kw">use</span> <span class="ident">anoma::ledger::parameters</span>::{<span class="self">self</span>, <span class="ident">ParametersVp</span>};
-<span class="kw">use</span> <span class="ident">anoma::ledger::pos</span>::{<span class="self">self</span>, <span class="ident">PoS</span>};
+<span class="kw">use</span> <span class="ident">anoma::ledger::pos</span>::{<span class="self">self</span>, <span class="ident">PosVP</span>};
 <span class="kw">use</span> <span class="ident">anoma::ledger::storage::write_log::WriteLog</span>;
 <span class="kw">use</span> <span class="ident">anoma::proto</span>::{<span class="self">self</span>, <span class="ident">Tx</span>};
 <span class="kw">use</span> <span class="ident">anoma::types::address</span>::{<span class="ident">Address</span>, <span class="ident">InternalAddress</span>};
@@ -400,9 +432,13 @@
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;IBC native VP: {0}&quot;</span>)]</span>
     <span class="ident">IbcNativeVpError</span>(<span class="ident">ibc::Error</span>),
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;PoS native VP: {0}&quot;</span>)]</span>
-    <span class="ident">PosNativeVpError</span>(<span class="ident">pos::Error</span>),
+    <span class="ident">PosNativeVpError</span>(<span class="ident">pos::vp::Error</span>),
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;PoS native VP panicked&quot;</span>)]</span>
+    <span class="ident">PosNativeVpRuntime</span>,
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Parameters native VP: {0}&quot;</span>)]</span>
     <span class="ident">ParametersNativeVpError</span>(<span class="ident">parameters::Error</span>),
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Access to an internal address {0} is forbidden&quot;</span>)]</span>
+    <span class="ident">AccessForbidden</span>(<span class="ident">InternalAddress</span>),
 }
 
 <span class="kw">pub</span> <span class="kw">type</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">std::result::Result</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">Error</span><span class="op">&gt;</span>;
@@ -584,10 +620,31 @@
 
                     <span class="kw">let</span> <span class="ident">accepted</span>: <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">internal_addr</span> {
                         <span class="ident">InternalAddress::PoS</span> <span class="op">=</span><span class="op">&gt;</span> {
-                            <span class="kw">let</span> <span class="ident">pos</span> <span class="op">=</span> <span class="ident">PoS</span> { <span class="ident">ctx</span> };
-                            <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">pos</span>
-                                .<span class="ident">validate_tx</span>(<span class="ident">tx_data</span>, <span class="ident">keys</span>, <span class="kw-2">&amp;</span><span class="ident">verifiers_addr</span>)
-                                .<span class="ident">map_err</span>(<span class="ident">Error::PosNativeVpError</span>);
+                            <span class="kw">let</span> <span class="ident">pos</span> <span class="op">=</span> <span class="ident">PosVP</span> { <span class="ident">ctx</span> };
+                            <span class="kw">let</span> <span class="ident">verifiers_addr_ref</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">verifiers_addr</span>;
+                            <span class="kw">let</span> <span class="ident">pos_ref</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">pos</span>;
+                            <span class="comment">// TODO this is temporarily ran in a new thread to</span>
+                            <span class="comment">// avoid crashing the ledger (required `UnwindSafe`</span>
+                            <span class="comment">// and `RefUnwindSafe` in</span>
+                            <span class="comment">// shared/src/ledger/pos/vp.rs)</span>
+                            <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">panic::catch_unwind</span>(<span class="kw">move</span> <span class="op">|</span><span class="op">|</span> {
+                                <span class="ident">pos_ref</span>
+                                    .<span class="ident">validate_tx</span>(
+                                        <span class="ident">tx_data</span>,
+                                        <span class="ident">keys</span>,
+                                        <span class="ident">verifiers_addr_ref</span>,
+                                    )
+                                    .<span class="ident">map_err</span>(<span class="ident">Error::PosNativeVpError</span>)
+                            }) {
+                                <span class="prelude-val">Ok</span>(<span class="ident">result</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">result</span>,
+                                <span class="prelude-val">Err</span>(<span class="ident">err</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                                    <span class="macro">tracing::error!</span>(
+                                        <span class="string">&quot;PoS native VP failed with {:#?}&quot;</span>,
+                                        <span class="ident">err</span>
+                                    );
+                                    <span class="prelude-val">Err</span>(<span class="ident">Error::PosNativeVpRuntime</span>)
+                                }
+                            };
                             <span class="comment">// Take the gas meter back out of the context</span>
                             <span class="ident">gas_meter</span> <span class="op">=</span> <span class="ident">pos</span>.<span class="ident">ctx</span>.<span class="ident">gas_meter</span>.<span class="ident">into_inner</span>();
                             <span class="ident">result</span>
@@ -609,6 +666,13 @@
                             <span class="comment">// Take the gas meter back out of the context</span>
                             <span class="ident">gas_meter</span> <span class="op">=</span> <span class="ident">parameters</span>.<span class="ident">ctx</span>.<span class="ident">gas_meter</span>.<span class="ident">into_inner</span>();
                             <span class="ident">result</span>
+                        }
+                        <span class="ident">InternalAddress::PosSlashPool</span> <span class="op">=</span><span class="op">&gt;</span> {
+                            <span class="comment">// Take the gas meter back out of the context</span>
+                            <span class="ident">gas_meter</span> <span class="op">=</span> <span class="ident">ctx</span>.<span class="ident">gas_meter</span>.<span class="ident">into_inner</span>();
+                            <span class="prelude-val">Err</span>(<span class="ident">Error::AccessForbidden</span>(
+                                (<span class="kw-2">*</span><span class="ident">internal_addr</span>).<span class="ident">clone</span>(),
+                            ))
                         }
                     };
 
