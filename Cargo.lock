@@ -82,6 +82,7 @@ dependencies = [
 name = "anoma"
 version = "0.1.0"
 dependencies = [
+ "anoma_proof_of_stake",
  "assert_matches",
  "bech32",
  "borsh",
@@ -94,7 +95,7 @@ dependencies = [
  "loupe",
  "parity-wasm",
  "pretty_assertions",
- "proptest",
+ "proptest 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "prost 0.8.0",
  "prost-types 0.8.0",
  "pwasm-utils",
@@ -143,7 +144,7 @@ dependencies = [
  "jsonpath_lib",
  "libc",
  "libp2p",
- "proptest",
+ "proptest 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "prost 0.8.0",
  "prost-types 0.8.0",
  "rand 0.7.3",
@@ -177,6 +178,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "anoma_proof_of_stake"
+version = "0.1.0"
+dependencies = [
+ "borsh",
+ "proptest 1.0.0 (git+https://github.com/heliaxdev/proptest?branch=tomas/state-machine)",
+ "thiserror",
+]
+
+[[package]]
 name = "anoma_tests"
 version = "0.1.0"
 dependencies = [
@@ -184,6 +194,7 @@ dependencies = [
  "anoma_apps",
  "anoma_vm_env",
  "assert_cmd",
+ "borsh",
  "color-eyre",
  "concat-idents",
  "eyre",
@@ -2246,9 +2257,10 @@ dependencies = [
 [[package]]
 name = "ibc"
 version = "0.6.0"
-source = "git+https://github.com/heliaxdev/ibc-rs?branch=tomas/update-prost-0.8.0#ddad1d2b294ae2a5e27b39bc0d4f171855cae782"
+source = "git+https://github.com/heliaxdev/ibc-rs?branch=yuji/borsh_ibc_data#626983b62d0f86c0a01c9a8acc5742261c74e83e"
 dependencies = [
  "anomaly",
+ "borsh",
  "bytes 1.0.1",
  "chrono",
  "dyn-clonable",
@@ -2272,7 +2284,7 @@ dependencies = [
 [[package]]
 name = "ibc-proto"
 version = "0.8.2"
-source = "git+https://github.com/heliaxdev/ibc-rs?branch=tomas/update-prost-0.8.0#ddad1d2b294ae2a5e27b39bc0d4f171855cae782"
+source = "git+https://github.com/heliaxdev/ibc-rs?branch=yuji/borsh_ibc_data#626983b62d0f86c0a01c9a8acc5742261c74e83e"
 dependencies = [
  "anomaly",
  "bytes 1.0.1",
@@ -3965,6 +3977,25 @@ name = "proptest"
 version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1e0d9cc07f18492d879586c92b485def06bc850da3118075cd45d50e9c95b0e5"
+dependencies = [
+ "bit-set",
+ "bitflags",
+ "byteorder",
+ "lazy_static 1.4.0",
+ "num-traits 0.2.14",
+ "quick-error 2.0.1",
+ "rand 0.8.4",
+ "rand_chacha 0.3.1",
+ "rand_xorshift 0.3.0",
+ "regex-syntax",
+ "rusty-fork",
+ "tempfile",
+]
+
+[[package]]
+name = "proptest"
+version = "1.0.0"
+source = "git+https://github.com/heliaxdev/proptest?branch=tomas/state-machine#121b0544cc0b4f01132965adc3db2f538498c4cb"
 dependencies = [
  "bit-set",
  "bitflags",

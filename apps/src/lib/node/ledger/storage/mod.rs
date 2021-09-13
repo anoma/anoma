@@ -38,7 +38,7 @@ pub fn open(db_path: impl AsRef<Path>, chain_id: String) -> PersistentStorage {
         block,
         header: None,
         last_height: BlockHeight(0),
-        current_epoch: Epoch::default(),
+        last_epoch: Epoch::default(),
         next_epoch_min_start_height: BlockHeight::default(),
         next_epoch_min_start_time: DateTimeUtc::now(),
         address_gen: EstablishedAddressGen::new(

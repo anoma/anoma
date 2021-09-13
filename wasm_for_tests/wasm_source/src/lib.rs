@@ -36,6 +36,34 @@ pub mod main {
     }
 }
 
+/// A tx that attempts to mint tokens in the transfer's target without debiting
+/// the tokens from the source. This tx is expected to be rejected by the
+/// token's VP.
+#[cfg(feature = "tx_mint_tokens")]
+pub mod main {
+    use anoma_vm_env::tx_prelude::*;
+
+    #[transaction]
+    fn apply_tx(tx_data: Vec<u8>) {
+        let signed =
+            key::ed25519::SignedTxData::try_from_slice(&tx_data[..]).unwrap();
+        let transfer =
+            token::Transfer::try_from_slice(&signed.data.unwrap()[..]).unwrap();
+        log_string(format!("apply_tx called to mint tokens: {:#?}", transfer));
+        let token::Transfer {
+            source: _,
+            target,
+            token,
+            amount,
+        } = transfer;
+        let target_key = token::balance_key(&token, &target);
+        let mut target_bal: token::Amount =
+            read(&target_key.to_string()).unwrap_or_default();
+        target_bal.receive(&amount);
+        write(&target_key.to_string(), target_bal);
+    }
+}
+
 /// A VP that always returns `true`.
 #[cfg(feature = "vp_always_true")]
 pub mod main {

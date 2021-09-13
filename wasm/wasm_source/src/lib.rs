@@ -81,7 +81,7 @@ pub mod tx_from_intent {
         let tx_data = tx_data.unwrap();
 
         // make sure that the matchmaker has to validate this tx
-        insert_verifier(address::matchmaker());
+        insert_verifier(&address::matchmaker());
 
         for token::Transfer {
             source,
@@ -140,7 +140,7 @@ pub mod tx_update_vp {
             transaction::UpdateVp::try_from_slice(&signed.data.unwrap()[..])
                 .unwrap();
         log_string(format!("update VP for: {:#?}", update_vp.addr));
-        update_validity_predicate(update_vp.addr, update_vp.vp_code)
+        update_validity_predicate(&update_vp.addr, update_vp.vp_code)
     }
 }
 

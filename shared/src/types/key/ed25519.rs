@@ -80,6 +80,8 @@ pub enum VerifySigError {
     SigError(SignatureError),
     #[error("Signature verification failed to encode the data: {0}")]
     EncodingError(std::io::Error),
+    #[error("Transaction doesn't have any data with a signature.")]
+    MissingData,
 }
 
 /// Check that the public key matches the signature on the given data.
@@ -140,14 +142,18 @@ pub fn verify_tx_sig(
     tx: &Tx,
     sig: &Signature,
 ) -> Result<(), VerifySigError> {
-    // revert the transaction data
-    let mut tx = tx.clone();
-    let tx_data = tx.data.expect("signed data should exist");
+    // Try to get the transaction data from decoded `SignedTxData`
+    let tx_data = tx.data.clone().ok_or(VerifySigError::MissingData)?;
     let signed_tx_data = SignedTxData::try_from_slice(&tx_data[..])
         .expect("Decoding transaction data shouldn't fail");
-    tx.data = Some(signed_tx_data.data.expect("data should exist"));
-    let data = tx.to_bytes();
-    verify_signature_raw(pk, &data, sig)
+    let data = signed_tx_data.data;
+    let tx = Tx {
+        code: tx.code.clone(),
+        data,
+        timestamp: tx.timestamp,
+    };
+    let signed_data = tx.to_bytes();
+    verify_signature_raw(pk, &signed_data, sig)
 }
 
 /// A generic signed data wrapper for Borsh encode-able data.
@@ -451,6 +457,12 @@ impl From<ed25519_dalek::SecretKey> for SecretKey {
 impl From<SecretKey> for ed25519_dalek::SecretKey {
     fn from(sk: SecretKey) -> Self {
         sk.0
+    }
+}
+
+impl Display for PublicKeyHash {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.0)
     }
 }
 

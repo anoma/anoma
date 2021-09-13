@@ -31,6 +31,7 @@ dependencies = [
  "borsh",
  "chrono",
  "ed25519-dalek",
+ "hex",
  "itertools",
  "loupe",
  "parity-wasm",
@@ -722,6 +723,12 @@ checksum = "62b467343b94ba476dcb2500d242dadbb39557df889310ac77c5d99100aaac33"
 dependencies = [
  "libc",
 ]
+
+[[package]]
+name = "hex"
+version = "0.4.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7f24254aa9a54b5c858eaee2f5bccdb46aaf0e486a595ed5fd8f86ba55232a70"
 
 [[package]]
 name = "ident_case"

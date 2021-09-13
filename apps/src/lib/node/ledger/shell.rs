@@ -1,8 +1,24 @@
+//! The ledger shell connects the ABCI++ interface with the Anoma ledger app.
+//!
+//! Any changes applied before [`Shell::finalize_block`] might have to be
+//! reverted, so any changes applied in the methods [`Shell::prepare_proposal`],
+//! [`Shell::process_proposal`] must be also reverted (unless we can simply
+//! overwrite them in the next block).
+//! More info in <https://github.com/anoma/anoma/issues/362>.
+
+use std::cmp::max;
 use std::convert::{TryFrom, TryInto};
+use std::mem;
 use std::path::Path;
 use std::str::FromStr;
 
 use anoma::ledger::gas::BlockGasMeter;
+use anoma::ledger::parameters::Parameters;
+use anoma::ledger::pos::anoma_proof_of_stake::types::{
+    ActiveValidator, ValidatorSetUpdate,
+};
+use anoma::ledger::pos::anoma_proof_of_stake::PosBase;
+use anoma::ledger::pos::PosParams;
 use anoma::ledger::storage::write_log::WriteLog;
 use anoma::ledger::{ibc, parameters, pos};
 use anoma::proto::{self, Tx};
@@ -15,6 +31,10 @@ use anoma::types::{address, key, token};
 use borsh::BorshSerialize;
 use itertools::Itertools;
 use tendermint::block::Header;
+use tendermint_proto::abci::{
+    self, ConsensusParams, Evidence, ValidatorUpdate,
+};
+use tendermint_proto::types::EvidenceParams;
 use thiserror::Error;
 use tower_abci::{request, response};
 
@@ -67,9 +87,15 @@ pub enum MempoolTxType {
 
 #[derive(Debug)]
 pub struct Shell {
+    /// The persistent storage
     pub(super) storage: storage::PersistentStorage,
+    /// Gas meter for the current block
     gas_meter: BlockGasMeter,
+    /// Write log for the current block
     write_log: WriteLog,
+    /// Byzantine validators given from ABCI++ `prepare_proposal` are stored in
+    /// this field. They will be slashed when we finalize the block.
+    byzantine_validators: Vec<Evidence>,
 }
 
 impl Shell {
@@ -88,6 +114,7 @@ impl Shell {
             storage,
             gas_meter: BlockGasMeter::default(),
             write_log: WriteLog::default(),
+            byzantine_validators: vec![],
         }
     }
 
@@ -99,7 +126,7 @@ impl Shell {
         &mut self,
         init: request::InitChain,
     ) -> Result<response::InitChain> {
-        let response = response::InitChain::default();
+        let mut response = response::InitChain::default();
         let (current_chain_id, _) = self.storage.get_chain_id();
         if current_chain_id != init.chain_id {
             return Err(Error::ChainId(format!(
@@ -179,13 +206,6 @@ impl Shell {
             .write(&Key::validity_predicate(&matchmaker), user_vp.to_vec())
             .expect("Unable to write matchmaker VP");
 
-        pos::init_genesis_storage(&mut self.storage);
-        ibc::init_genesis_storage(&mut self.storage);
-        parameters::init_genesis_storage(
-            &mut self.storage,
-            &genesis.parameters,
-        );
-
         let ts: tendermint_proto::google::protobuf::Timestamp =
             init.time.expect("Missing genesis time");
         let initial_height = init
@@ -196,10 +216,71 @@ impl Shell {
         let genesis_time: DateTimeUtc =
             (Utc.timestamp(ts.seconds, ts.nanos as u32)).into();
 
+        parameters::init_genesis_storage(
+            &mut self.storage,
+            &genesis.parameters,
+        );
+        // Depends on parameters being initialized
         self.storage
-            .init_genesis_epoch(initial_height, genesis_time)
+            .init_genesis_epoch(
+                initial_height,
+                genesis_time,
+                &genesis.parameters,
+            )
             .expect("Initializing genesis epoch must not fail");
 
+        #[cfg(feature = "dev")]
+        let validators = vec![genesis.validator];
+        #[cfg(not(feature = "dev"))]
+        let validators = genesis.validators;
+
+        // Write validators' VPs and non-staked tokens amount
+        for validator in &validators {
+            let addr = &validator.pos_data.address;
+            // Write the VP
+            // TODO replace with https://github.com/anoma/anoma/issues/25)
+            self.storage
+                .write(&Key::validity_predicate(addr), user_vp.to_vec())
+                .expect("Unable to write user VP");
+            // Validator account key
+            let pk_key = key::ed25519::pk_key(addr);
+            self.storage
+                .write(
+                    &pk_key,
+                    validator
+                        .account_key
+                        .try_to_vec()
+                        .expect("encode public key"),
+                )
+                .expect("Unable to set genesis user public key");
+            // Account balance (tokens no staked in PoS)
+            self.storage
+                .write(
+                    &token::balance_key(&address::xan(), addr),
+                    validator
+                        .non_staked_balance
+                        .try_to_vec()
+                        .expect("encode token amount"),
+                )
+                .expect("Unable to set genesis balance");
+        }
+
+        // PoS system depends on epoch being initialized
+        let (current_epoch, _gas) = self.storage.get_current_epoch();
+        pos::init_genesis_storage(
+            &mut self.storage,
+            &genesis.pos_params,
+            validators.iter().map(|validator| &validator.pos_data),
+            current_epoch,
+        );
+        ibc::init_genesis_storage(&mut self.storage);
+
+        let evidence_params =
+            self.get_evidence_params(&genesis.parameters, &genesis.pos_params);
+        response.consensus_params = Some(ConsensusParams {
+            evidence: Some(evidence_params),
+            ..response.consensus_params.unwrap_or_default()
+        });
         Ok(response)
     }
 
@@ -232,11 +313,20 @@ impl Shell {
     /// Uses `path` in the query to forward the request to the
     /// right query method and returns the result (which may be
     /// the default if `path` is not a supported string.
+    /// INVARIANT: This method must be stateless.
     pub fn query(&self, query: request::Query) -> response::Query {
         use rpc::Path;
         match Path::from_str(&query.path) {
             Ok(path) => match path {
                 Path::DryRunTx => self.dry_run_tx(&query.data),
+                Path::Epoch => {
+                    let (epoch, _gas) = self.storage.get_last_epoch();
+                    let value = anoma::ledger::storage::types::encode(&epoch);
+                    response::Query {
+                        value,
+                        ..Default::default()
+                    }
+                }
                 Path::Value(storage_key) => {
                     self.read_storage_value(&storage_key)
                 }
@@ -253,23 +343,151 @@ impl Shell {
     }
 
     /// Begin a new block.
-    pub fn prepare_proposal(&mut self, hash: BlockHash, header: Header) {
+    ///
+    /// INVARIANT: Any changes applied in this method must be reverted if the
+    /// proposal is rejected (unless we can simply overwrite them in the
+    /// next block).
+    pub fn prepare_proposal(
+        &mut self,
+        hash: BlockHash,
+        header: Header,
+        byzantine_validators: Vec<Evidence>,
+    ) {
         let height = BlockHeight(header.height.into());
-        let time: DateTime<Utc> = header.time.into();
-        let time: DateTimeUtc = time.into();
 
+        // We can safely reset meter, because if the block is rejected, we'll
+        // reset again on the next proposal, until the proposal is accepted
         self.gas_meter.reset();
+
+        // The values set will be overwritten if this proposal is rejected.
         self.storage
             .begin_block(hash, height)
             .expect("Beginning a block shouldn't fail");
+
+        // The value set will be overwritten if this proposal is rejected.
         self.storage
             .set_header(header)
             .expect("Setting a header shouldn't fail");
-        self.storage
-            .update_epoch(height, time)
-            .expect("Must be able to update epoch");
+
+        // The value set will be overwritten if this proposal is rejected.
+        self.byzantine_validators = byzantine_validators;
     }
 
+    /// Apply PoS slashes from the evidence
+    fn slash(&mut self) {
+        if !self.byzantine_validators.is_empty() {
+            let byzantine_validators =
+                mem::take(&mut self.byzantine_validators);
+            let pos_params = self.storage.read_pos_params();
+            let current_epoch = self.storage.block.epoch;
+            for evidence in byzantine_validators {
+                let evidence_height = match u64::try_from(evidence.height) {
+                    Ok(height) => height,
+                    Err(err) => {
+                        tracing::error!(
+                            "Unexpected evidence block height {}",
+                            err
+                        );
+                        continue;
+                    }
+                };
+                let evidence_epoch = match self
+                    .storage
+                    .block
+                    .pred_epochs
+                    .get_epoch(BlockHeight(evidence_height))
+                {
+                    Some(epoch) => epoch,
+                    None => {
+                        tracing::error!(
+                            "Couldn't find epoch for evidence block height {}",
+                            evidence_height
+                        );
+                        continue;
+                    }
+                };
+                let slash_type =
+                    match abci::EvidenceType::from_i32(evidence.r#type) {
+                        Some(r#type) => match r#type {
+                            abci::EvidenceType::DuplicateVote => {
+                                pos::types::SlashType::DuplicateVote
+                            }
+                            abci::EvidenceType::LightClientAttack => {
+                                pos::types::SlashType::LightClientAttack
+                            }
+                            abci::EvidenceType::Unknown => {
+                                tracing::error!(
+                                    "Unknown evidence: {:#?}",
+                                    evidence
+                                );
+                                continue;
+                            }
+                        },
+                        None => {
+                            tracing::error!(
+                                "Unexpected evidence type {}",
+                                evidence.r#type
+                            );
+                            continue;
+                        }
+                    };
+                let validator_raw_hash = match evidence.validator {
+                    Some(validator) => {
+                        match String::from_utf8(validator.address) {
+                            Ok(raw_hash) => raw_hash,
+                            Err(err) => {
+                                tracing::error!(
+                                    "Evidence failed to decode validator \
+                                     address from utf-8 with {}",
+                                    err
+                                );
+                                continue;
+                            }
+                        }
+                    }
+                    None => {
+                        tracing::error!(
+                            "Evidence without a validator {:#?}",
+                            evidence
+                        );
+                        continue;
+                    }
+                };
+                let validator = match self
+                    .storage
+                    .read_validator_address_raw_hash(&validator_raw_hash)
+                {
+                    Some(validator) => validator,
+                    None => {
+                        tracing::error!(
+                            "Cannot find validator's address from raw hash {}",
+                            validator_raw_hash
+                        );
+                        continue;
+                    }
+                };
+                tracing::info!(
+                    "Slashing {} for {} in epoch {}, block height {}",
+                    evidence_epoch,
+                    slash_type,
+                    validator,
+                    evidence_height
+                );
+                if let Err(err) = self.storage.slash(
+                    &pos_params,
+                    current_epoch,
+                    evidence_epoch,
+                    evidence_height,
+                    slash_type,
+                    &validator,
+                ) {
+                    tracing::error!("Error in slashing: {}", err);
+                }
+            }
+        }
+    }
+
+    /// INVARIANT: This method must be stateless.
     pub fn verify_header(
         &self,
         _req: shim::request::VerifyHeader,
@@ -278,6 +496,10 @@ impl Shell {
     }
 
     /// Check the fees and signatures of the fee payer for a transaction
+    ///
+    /// INVARIANT: Any changes applied in this method must be reverted if the
+    /// proposal is rejected (unless we can simply overwrite them in the
+    /// next block).
     pub fn process_proposal(
         &mut self,
         _req: shim::request::ProcessProposal,
@@ -292,8 +514,9 @@ impl Shell {
         Default::default()
     }
 
+    /// INVARIANT: This method must be stateless.
     pub fn extend_vote(
-        &mut self,
+        &self,
         _req: shim::request::ExtendVote,
     ) -> shim::response::ExtendVote {
         Default::default()
@@ -304,6 +527,21 @@ impl Shell {
         &mut self,
         req: shim::request::FinalizeBlock,
     ) -> Result<shim::response::FinalizeBlock> {
+        let header = self
+            .storage
+            .header
+            .as_ref()
+            .expect("Header must have been set in prepare_proposal.");
+        let height = BlockHeight(header.height.into());
+        let time: DateTime<Utc> = header.time.into();
+        let time: DateTimeUtc = time.into();
+        let new_epoch = self
+            .storage
+            .update_epoch(height, time)
+            .expect("Must be able to update epoch");
+
+        self.slash();
+
         let mut response = shim::response::FinalizeBlock::default();
         for tx in &req.txs {
             let mut tx_result =
@@ -364,6 +602,57 @@ impl Shell {
             response.events.push(tx_result.into());
         }
 
+        if new_epoch {
+            // Apply validator set update
+            let (current_epoch, _gas) = self.storage.get_current_epoch();
+            // TODO ABCI validator updates on block H affects the validator set
+            // on block H+2, do we need to update a block earlier?
+            self.storage.validator_set_update(current_epoch, |update| {
+                let (consensus_key, power) = match update {
+                    ValidatorSetUpdate::Active(ActiveValidator {
+                        consensus_key,
+                        voting_power,
+                    }) => {
+                        let power: u64 = voting_power.into();
+                        let power: i64 = power
+                            .try_into()
+                            .expect("unexpected validator's voting power");
+                        (consensus_key, power)
+                    }
+                    ValidatorSetUpdate::Deactivated(consensus_key) => {
+                        // Any validators that have become inactive must
+                        // have voting power set to 0 to remove them from
+                        // the active set
+                        let power = 0_i64;
+                        (consensus_key, power)
+                    }
+                };
+                let consensus_key: ed25519_dalek::PublicKey =
+                    consensus_key.into();
+                let pub_key = tendermint_proto::crypto::PublicKey {
+                    sum: Some(
+                        tendermint_proto::crypto::public_key::Sum::Ed25519(
+                            consensus_key.to_bytes().to_vec(),
+                        ),
+                    ),
+                };
+                let pub_key = Some(pub_key);
+                let update = ValidatorUpdate { pub_key, power };
+                response.validator_updates.push(update);
+            });
+
+            // Update evidence parameters
+            let (parameters, _gas) = parameters::read(&self.storage)
+                .expect("Couldn't read protocol parameters");
+            let pos_params = self.storage.read_pos_params();
+            let evidence_params =
+                self.get_evidence_params(&parameters, &pos_params);
+            response.consensus_param_updates = Some(ConsensusParams {
+                evidence: Some(evidence_params),
+                ..response.consensus_param_updates.unwrap_or_default()
+            });
+        }
+
         response.gas_used = self
             .gas_meter
             .finalize_transaction()
@@ -386,6 +675,7 @@ impl Shell {
                 e
             )
         });
+
         let root = self.storage.merkle_root();
         tracing::info!(
             "Committed block hash: {}, height: {}",
@@ -496,6 +786,31 @@ impl Shell {
                     ..Default::default()
                 },
             }
+        }
+    }
+
+    fn get_evidence_params(
+        &self,
+        protocol_params: &Parameters,
+        pos_params: &PosParams,
+    ) -> EvidenceParams {
+        // Minimum number of epochs before tokens are unbonded and can be
+        // withdrawn
+        let len_before_unbonded = max(pos_params.unbonding_len as i64 - 1, 0);
+        let max_age_num_blocks: i64 =
+            protocol_params.epoch_duration.min_num_of_blocks as i64
+                * len_before_unbonded;
+        let min_duration_secs =
+            protocol_params.epoch_duration.min_duration.0 as i64;
+        let max_age_duration =
+            Some(tendermint_proto::google::protobuf::Duration {
+                seconds: min_duration_secs * len_before_unbonded,
+                nanos: 0,
+            });
+        EvidenceParams {
+            max_age_num_blocks,
+            max_age_duration,
+            ..EvidenceParams::default()
         }
     }
 }

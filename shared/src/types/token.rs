@@ -1,6 +1,7 @@
 //! A basic fungible token
 
 use std::fmt::Display;
+use std::ops::{Add, AddAssign, Sub, SubAssign};
 use std::str::FromStr;
 
 use borsh::{BorshDeserialize, BorshSerialize};
@@ -44,15 +45,16 @@ impl Amount {
         self.micro as Change
     }
 
-    /// Spend a given amount
+    /// Spend a given amount.
     /// Panics when given `amount` > `self.micro` amount.
     pub fn spend(&mut self, amount: &Amount) {
-        self.micro -= amount.micro
+        self.micro = self.micro.checked_sub(amount.micro).unwrap();
     }
 
-    /// Receive a given amount
+    /// Receive a given amount.
+    /// Panics on overflow.
     pub fn receive(&mut self, amount: &Amount) {
-        self.micro += amount.micro
+        self.micro = self.micro.checked_add(amount.micro).unwrap();
     }
 
     /// Create a new amount from whole number of tokens
@@ -106,23 +108,45 @@ impl From<f64> for Amount {
     }
 }
 
-impl From<Amount> for u64 {
-    fn from(amount: Amount) -> Self {
-        amount.micro as u64
-    }
-}
-
 impl From<u64> for Amount {
     fn from(micro: u64) -> Self {
         Self { micro }
     }
 }
 
-impl Display for Amount {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let decimal =
-            rust_decimal::Decimal::new(self.micro as i64, 6).normalize();
-        write!(f, "{}", decimal)
+impl From<Amount> for u64 {
+    fn from(amount: Amount) -> Self {
+        amount.micro
+    }
+}
+
+impl Add for Amount {
+    type Output = Amount;
+
+    fn add(mut self, rhs: Self) -> Self::Output {
+        self.micro += rhs.micro;
+        self
+    }
+}
+
+impl AddAssign for Amount {
+    fn add_assign(&mut self, rhs: Self) {
+        self.micro += rhs.micro
+    }
+}
+
+impl Sub for Amount {
+    type Output = Amount;
+
+    fn sub(mut self, rhs: Self) -> Self::Output {
+        self.micro -= rhs.micro;
+        self
+    }
+}
+
+impl SubAssign for Amount {
+    fn sub_assign(&mut self, rhs: Self) {
+        self.micro -= rhs.micro
     }
 }
 
@@ -159,6 +183,21 @@ impl FromStr for Amount {
             }
             Err(err) => Err(AmountParseError::InvalidDecimal(err)),
         }
+    }
+}
+
+impl Display for Amount {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let decimal =
+            rust_decimal::Decimal::new(self.micro as i64, MAX_DECIMAL_PLACES)
+                .normalize();
+        write!(f, "{}", decimal)
+    }
+}
+
+impl From<Amount> for Change {
+    fn from(amount: Amount) -> Self {
+        amount.micro as i128
     }
 }
 

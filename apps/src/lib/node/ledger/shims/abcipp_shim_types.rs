@@ -154,12 +154,13 @@ pub mod shim {
 
     /// Custom types for request payloads
     pub mod request {
-        use tendermint_proto::abci::RequestBeginBlock;
+        use tendermint_proto::abci::{Evidence, RequestBeginBlock};
         use tendermint_proto::types::Header;
 
         pub struct PrepareProposal {
             pub hash: Vec<u8>,
             pub header: Option<Header>,
+            pub byzantine_validators: Vec<Evidence>,
         }
 
         impl From<RequestBeginBlock> for PrepareProposal {
@@ -167,6 +168,7 @@ pub mod shim {
                 PrepareProposal {
                     hash: block.hash,
                     header: block.header,
+                    byzantine_validators: block.byzantine_validators,
                 }
             }
         }
@@ -185,7 +187,7 @@ pub mod shim {
 
     /// Custom types for response payloads
     pub mod response {
-        use tendermint_proto::abci::Event;
+        use tendermint_proto::abci::{ConsensusParams, Event, ValidatorUpdate};
         use tower_abci::response;
 
         #[derive(Debug, Default)]
@@ -222,13 +224,16 @@ pub mod shim {
         pub struct FinalizeBlock {
             pub events: Vec<Event>,
             pub gas_used: u64,
+            pub validator_updates: Vec<ValidatorUpdate>,
+            pub consensus_param_updates: Option<ConsensusParams>,
         }
 
         impl From<FinalizeBlock> for response::EndBlock {
             fn from(resp: FinalizeBlock) -> Self {
                 Self {
                     events: resp.events,
-                    ..Default::default()
+                    validator_updates: resp.validator_updates,
+                    consensus_param_updates: resp.consensus_param_updates,
                 }
             }
         }

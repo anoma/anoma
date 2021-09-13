@@ -23,6 +23,7 @@ serde_json = { version = "1.0.65" }
 [dev-dependencies]
 anoma_apps = {path = "../apps", features = ["testing"]}
 assert_cmd = "1.0.7"
+borsh = "0.9.1"
 color-eyre = "0.5.11"
 eyre = "0.6.5"
 itertools = "0.10.0"

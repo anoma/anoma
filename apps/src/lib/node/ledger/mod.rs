@@ -60,15 +60,24 @@ impl Shell {
                         let genesis = genesis::genesis();
                         let mut abci_validator =
                             tendermint_proto::abci::ValidatorUpdate::default();
+                        let consensus_key: ed25519_dalek::PublicKey = genesis
+                            .validator
+                            .pos_data
+                            .consensus_key
+                            .clone()
+                            .into();
                         let pub_key = tendermint_proto::crypto::PublicKey {
                             sum: Some(tendermint_proto::crypto::public_key::Sum::Ed25519(
-                                genesis.validator.keypair.public.to_bytes().to_vec(),
+                                consensus_key.to_bytes().to_vec(),
                             )),
                         };
                         abci_validator.pub_key = Some(pub_key);
-                        abci_validator.power = genesis
+                        let power: u64 = genesis
                             .validator
-                            .voting_power
+                            .pos_data
+                            .voting_power(&genesis.pos_params)
+                            .into();
+                        abci_validator.power = power
                             .try_into()
                             .expect("unexpected validator's voting power");
                         resp.validators.push(abci_validator);
@@ -85,7 +94,11 @@ impl Shell {
                     block.header.expect("missing block's header").try_into(),
                 ) {
                     (Ok(hash), Ok(header)) => {
-                        let _ = self.prepare_proposal(hash, header);
+                        let _ = self.prepare_proposal(
+                            hash,
+                            header,
+                            block.byzantine_validators,
+                        );
                     }
                     (Ok(_), Err(msg)) => {
                         tracing::error!("Unexpected block header {}", msg);

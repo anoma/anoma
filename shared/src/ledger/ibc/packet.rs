@@ -18,8 +18,9 @@ use thiserror::Error;
 
 use super::{Ibc, StateChange};
 use crate::ledger::storage::{self, StorageHasher};
-use crate::types::ibc::{self as types, Error as IbcDataError, TimeoutData};
-use crate::types::storage::{Key, KeySeg};
+use crate::types::address::{Address, InternalAddress};
+use crate::types::ibc::{Error as IbcDataError, TimeoutData};
+use crate::types::storage::{DbKeySeg, Key, KeySeg};
 
 #[allow(missing_docs)]
 #[derive(Error, Debug)]
@@ -43,7 +44,7 @@ pub enum Error {
     #[error("Decoding TX data error: {0}")]
     DecodingTxData(std::io::Error),
     #[error("IBC data error: {0}")]
-    DecodingIbcData(IbcDataError),
+    InvalidIbcData(IbcDataError),
 }
 
 /// IBC packet functions result
@@ -59,20 +60,14 @@ where
         key: &Key,
         tx_data: &[u8],
     ) -> Result<()> {
-        let commitment_key = (
-            Self::get_port_id(key)
-                .map_err(|e| Error::InvalidKey(e.to_string()))?,
-            Self::get_channel_id(key)
-                .map_err(|e| Error::InvalidKey(e.to_string()))?,
-            Self::get_sequence_from_key(key)?,
-        );
+        let commitment_key = Self::get_port_channel_sequence_id(key)?;
         match self
             .get_state_change(key)
             .map_err(|e| Error::InvalidStateChange(e.to_string()))?
         {
             StateChange::Created => {
                 // sending a packet
-                let packet = types::decode_packet(tx_data)?;
+                let packet = Packet::try_from_slice(tx_data)?;
                 let commitment = self
                     .get_packet_commitment(&commitment_key)
                     .ok_or_else(|| {
@@ -121,14 +116,30 @@ where
         }
     }
 
-    /// Returns the sequence after
-    /// #IBC/channelEnds/ports/{port_id}/channels/{channel_id}/packets
-    fn get_sequence_from_key(key: &Key) -> Result<Sequence> {
-        match key.segments.get(7) {
-            Some(seq) => Sequence::from_str(&seq.raw())
-                .map_err(|e| Error::InvalidKey(e.to_string())),
-            None => Err(Error::InvalidKey(format!(
-                "The key doesn't have a sequence number: Key {}",
+    fn get_port_channel_sequence_id(
+        key: &Key,
+    ) -> Result<(PortId, ChannelId, Sequence)> {
+        match &key.segments[..] {
+            [DbKeySeg::AddressSeg(addr), DbKeySeg::StringSeg(prefix), DbKeySeg::StringSeg(module0), DbKeySeg::StringSeg(port_id), DbKeySeg::StringSeg(module1), DbKeySeg::StringSeg(channel_id), DbKeySeg::StringSeg(module2), DbKeySeg::StringSeg(seq_index)]
+                if addr == &Address::Internal(InternalAddress::Ibc)
+                    && (prefix == "commitments"
+                        || prefix == "receipts"
+                        || prefix == "acks")
+                    && module0 == "ports"
+                    && module1 == "channels"
+                    && module2 == "sequences" =>
+            {
+                let port_id = PortId::from_str(&port_id.raw())
+                    .map_err(|e| Error::InvalidKey(e.to_string()))?;
+                let channel_id = ChannelId::from_str(&channel_id.raw())
+                    .map_err(|e| Error::InvalidKey(e.to_string()))?;
+                let seq = Sequence::from_str(&seq_index.raw())
+                    .map_err(|e| Error::InvalidKey(e.to_string()))?;
+                Ok((port_id, channel_id, seq))
+            }
+            _ => Err(Error::InvalidKey(format!(
+                "The key doesn't have port ID, channel ID and sequence \
+                 number: Key {}",
                 key
             ))),
         }
@@ -140,7 +151,7 @@ where
         tx_data: &[u8],
     ) -> Result<()> {
         let data = TimeoutData::try_from_slice(tx_data)?;
-        let packet = data.packet()?;
+        let packet = data.packet.clone();
         let commitment =
             self.get_packet_commitment(commitment_key).ok_or_else(|| {
                 Error::InvalidPacket(format!(
@@ -187,7 +198,7 @@ where
             (State::Open, State::Closed) => {
                 // "Timeout"
                 if self
-                    .check_timeout(&client_id, data.proof_height(), &packet)
+                    .check_timeout(&client_id, data.proof_height, &packet)
                     .is_ok()
                 {
                     return Err(Error::InvalidPacket(
@@ -231,7 +242,7 @@ where
         }
 
         if channel.order_matches(&Order::Ordered) {
-            if packet.sequence < data.sequence() {
+            if packet.sequence < data.sequence {
                 return Err(Error::InvalidPacket(
                     "The sequence is invalid".to_owned(),
                 ));
@@ -240,7 +251,7 @@ where
                 self,
                 client_id,
                 packet,
-                data.sequence(),
+                data.sequence,
                 &data.proofs()?,
             ) {
                 Ok(_) => Ok(()),
@@ -304,7 +315,7 @@ where
 
 impl From<IbcDataError> for Error {
     fn from(err: IbcDataError) -> Self {
-        Self::DecodingIbcData(err)
+        Self::InvalidIbcData(err)
     }
 }
 

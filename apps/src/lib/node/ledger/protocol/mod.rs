@@ -2,13 +2,13 @@
 
 use std::collections::HashSet;
 use std::convert::TryFrom;
-use std::fmt;
+use std::{fmt, panic};
 
 use anoma::ledger::gas::{self, BlockGasMeter, VpGasMeter, VpsGas};
 use anoma::ledger::ibc::{self, Ibc};
 use anoma::ledger::native_vp::{self, NativeVp};
 use anoma::ledger::parameters::{self, ParametersVp};
-use anoma::ledger::pos::{self, PoS};
+use anoma::ledger::pos::{self, PosVP};
 use anoma::ledger::storage::write_log::WriteLog;
 use anoma::proto::{self, Tx};
 use anoma::types::address::{Address, InternalAddress};
@@ -36,9 +36,13 @@ pub enum Error {
     #[error("IBC native VP: {0}")]
     IbcNativeVpError(ibc::Error),
     #[error("PoS native VP: {0}")]
-    PosNativeVpError(pos::Error),
+    PosNativeVpError(pos::vp::Error),
+    #[error("PoS native VP panicked")]
+    PosNativeVpRuntime,
     #[error("Parameters native VP: {0}")]
     ParametersNativeVpError(parameters::Error),
+    #[error("Access to an internal address {0} is forbidden")]
+    AccessForbidden(InternalAddress),
 }
 
 pub type Result<T> = std::result::Result<T, Error>;
@@ -220,10 +224,31 @@ fn execute_vps(
 
                     let accepted: Result<bool> = match internal_addr {
                         InternalAddress::PoS => {
-                            let pos = PoS { ctx };
-                            let result = pos
-                                .validate_tx(tx_data, keys, &verifiers_addr)
-                                .map_err(Error::PosNativeVpError);
+                            let pos = PosVP { ctx };
+                            let verifiers_addr_ref = &verifiers_addr;
+                            let pos_ref = &pos;
+                            // TODO this is temporarily ran in a new thread to
+                            // avoid crashing the ledger (required `UnwindSafe`
+                            // and `RefUnwindSafe` in
+                            // shared/src/ledger/pos/vp.rs)
+                            let result = match panic::catch_unwind(move || {
+                                pos_ref
+                                    .validate_tx(
+                                        tx_data,
+                                        keys,
+                                        verifiers_addr_ref,
+                                    )
+                                    .map_err(Error::PosNativeVpError)
+                            }) {
+                                Ok(result) => result,
+                                Err(err) => {
+                                    tracing::error!(
+                                        "PoS native VP failed with {:#?}",
+                                        err
+                                    );
+                                    Err(Error::PosNativeVpRuntime)
+                                }
+                            };
                             // Take the gas meter back out of the context
                             gas_meter = pos.ctx.gas_meter.into_inner();
                             result
@@ -245,6 +270,13 @@ fn execute_vps(
                             // Take the gas meter back out of the context
                             gas_meter = parameters.ctx.gas_meter.into_inner();
                             result
+                        }
+                        InternalAddress::PosSlashPool => {
+                            // Take the gas meter back out of the context
+                            gas_meter = ctx.gas_meter.into_inner();
+                            Err(Error::AccessForbidden(
+                                (*internal_addr).clone(),
+                            ))
                         }
                     };
 

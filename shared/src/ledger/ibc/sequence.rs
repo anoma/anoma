@@ -1,7 +1,5 @@
 //! IBC validity predicate for sequences
 
-use std::str::FromStr;
-
 use borsh::BorshDeserialize;
 use ibc::ics04_channel::channel::{Counterparty, Order};
 use ibc::ics04_channel::context::ChannelReader;
@@ -17,9 +15,9 @@ use thiserror::Error;
 use super::Ibc;
 use crate::ledger::storage::{self, StorageHasher};
 use crate::types::ibc::{
-    self as types, Error as IbcDataError, PacketAckData, PacketReceiptData,
+    Error as IbcDataError, PacketAckData, PacketReceiptData,
 };
-use crate::types::storage::{Key, KeySeg};
+use crate::types::storage::Key;
 
 #[allow(missing_docs)]
 #[derive(Error, Debug)]
@@ -65,8 +63,9 @@ where
         key: &Key,
         tx_data: &[u8],
     ) -> Result<()> {
-        let port_channel_id = Self::get_port_channel_id(key)?;
-        let packet = types::decode_packet(tx_data)?;
+        let port_channel_id = Self::get_port_channel_id(key)
+            .map_err(|e| Error::InvalidKey(e.to_string()))?;
+        let packet = Packet::try_from_slice(tx_data)?;
         let next_seq_pre = self
             .get_next_sequence_send_pre(&port_channel_id)
             .map_err(|e| Error::InvalidSequence(e.to_string()))?;
@@ -97,9 +96,10 @@ where
         key: &Key,
         tx_data: &[u8],
     ) -> Result<()> {
-        let port_channel_id = Self::get_port_channel_id(key)?;
+        let port_channel_id = Self::get_port_channel_id(key)
+            .map_err(|e| Error::InvalidKey(e.to_string()))?;
         let data = PacketReceiptData::try_from_slice(tx_data)?;
-        let packet = data.packet()?;
+        let packet = &data.packet;
         let next_seq_pre = self
             .get_next_sequence_recv_pre(&port_channel_id)
             .map_err(|e| Error::InvalidSequence(e.to_string()))?;
@@ -126,9 +126,9 @@ where
             ));
         }
 
-        self.validate_recv_packet(&port_channel_id, &packet)?;
+        self.validate_recv_packet(&port_channel_id, packet)?;
 
-        self.verify_recv_proof(&port_channel_id, &packet, &data.proofs()?)
+        self.verify_recv_proof(&port_channel_id, packet, &data.proofs()?)
     }
 
     pub(super) fn validate_sequence_ack(
@@ -136,9 +136,10 @@ where
         key: &Key,
         tx_data: &[u8],
     ) -> Result<()> {
-        let port_channel_id = Self::get_port_channel_id(key)?;
+        let port_channel_id = Self::get_port_channel_id(key)
+            .map_err(|e| Error::InvalidKey(e.to_string()))?;
         let data = PacketAckData::try_from_slice(tx_data)?;
-        let packet = data.packet()?;
+        let packet = &data.packet;
         let next_seq_pre = self
             .get_next_sequence_ack_pre(&port_channel_id)
             .map_err(|e| Error::InvalidSequence(e.to_string()))?;
@@ -165,12 +166,12 @@ where
             ));
         }
 
-        self.validate_ack_packet(&port_channel_id, &packet)?;
+        self.validate_ack_packet(&port_channel_id, packet)?;
 
         self.verify_ack_proof(
             &port_channel_id,
-            &packet,
-            data.ack(),
+            packet,
+            data.ack.clone(),
             &data.proofs()?,
         )
     }
@@ -324,30 +325,6 @@ where
             Ok(_) => Ok(()),
             Err(e) => Err(Error::ProofVerificationFailure(e.to_string())),
         }
-    }
-
-    fn get_port_channel_id(key: &Key) -> Result<(PortId, ChannelId)> {
-        let port_id = match key.segments.get(3) {
-            Some(id) => PortId::from_str(&id.raw())
-                .map_err(|e| Error::InvalidKey(e.to_string()))?,
-            None => {
-                return Err(Error::InvalidKey(format!(
-                    "The key doesn't have a port ID: {}",
-                    key
-                )));
-            }
-        };
-        let channel_id = match key.segments.get(5) {
-            Some(id) => ChannelId::from_str(&id.raw())
-                .map_err(|e| Error::InvalidKey(e.to_string()))?,
-            None => {
-                return Err(Error::InvalidKey(format!(
-                    "The key doesn't have a channel ID: {}",
-                    key
-                )));
-            }
-        };
-        Ok((port_id, channel_id))
     }
 
     pub(super) fn is_ordered_channel(
