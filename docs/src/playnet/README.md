@@ -105,12 +105,12 @@ The ledger is pre-configured to connect to them.
 
 To run a local ledger node:
 ```shell
-anoma run-ledger
+anoma ledger
 ```
 
 To run the intent gossip with the matchmaker that can submit transactions to the local ledger:
 ```shell
-anoma run-gossip --rpc "127.0.0.1:20202" \
+anoma gossip --rpc "127.0.0.1:20202" \
   --matchmaker-path matchmaker_template/matchmaker.wasm \
   --tx-code-path txs/tx_from_intent/tx.wasm \
   --ledger-address "127.0.0.1:26657"
@@ -118,7 +118,7 @@ anoma run-gossip --rpc "127.0.0.1:20202" \
 
 If you don't have a local ledger running, the matchmaker can also submit transactions to a remote validator ledger, with e.g.:
 ```shell
-anoma run-gossip --rpc "127.0.0.1:20202" \
+anoma gossip --rpc "127.0.0.1:20202" \
   --matchmaker-path matchmaker_template/matchmaker.wasm \
   --tx-code-path txs/tx_from_intent/tx.wasm \
   --ledger-address "52.210.23.30:26657"
