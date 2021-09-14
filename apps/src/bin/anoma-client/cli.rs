@@ -3,7 +3,6 @@
 use anoma_apps::cli;
 use anoma_apps::cli::cmds;
 use anoma_apps::client::{rpc, tx};
-
 use color_eyre::eyre::Result;
 
 pub async fn main() -> Result<()> {

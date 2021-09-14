@@ -5,10 +5,10 @@ use anoma::types::key::ed25519::{Signature, Signed};
 
 /// Tx imports and functions.
 pub mod tx {
-    use crate::imports::tx;
     pub use anoma::types::intent::*;
 
     use super::*;
+    use crate::imports::tx;
     pub fn invalidate_exchange(intent: &Signed<Exchange>) {
         let key = intent::invalid_intent_key(&intent.data.addr);
         let mut invalid_intent: HashSet<Signature> =
@@ -20,10 +20,10 @@ pub mod tx {
 
 /// Vp imports and functions.
 pub mod vp {
-    use crate::imports::vp;
     pub use anoma::types::intent::*;
 
     use super::*;
+    use crate::imports::vp;
 
     pub fn vp_exchange(intent: &Signed<Exchange>) -> bool {
         let key = intent::invalid_intent_key(&intent.data.addr);

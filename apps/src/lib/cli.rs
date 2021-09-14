@@ -645,7 +645,6 @@ pub mod args {
     const TOKEN_OPT: ArgOpt<Address> = TOKEN.opt();
     const TX_CODE_PATH: ArgOpt<PathBuf> = arg_opt("tx-code-path");
     const NFT_ADDRESS: Arg<Address> = arg("nft-address");
-    const NFT_CREATOR_ADDRESS: Arg<Address> = arg("nft-creator-address");
 
     /// Global command arguments
     #[derive(Debug)]

@@ -3,7 +3,8 @@
 use borsh::{BorshDeserialize, BorshSerialize};
 use serde::{Deserialize, Serialize};
 
-use super::{key::ed25519::PublicKey, nft::NftToken};
+use super::key::ed25519::PublicKey;
+use super::nft::NftToken;
 use crate::types::address::Address;
 
 /// A tx data type to update an account's validity predicate

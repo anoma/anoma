@@ -13,8 +13,7 @@ use anoma::types::token::{self, Amount};
 use anoma::types::transaction::{CreateNft, InitAccount, MintNft, UpdateVp};
 use borsh::BorshSerialize;
 use jsonpath_lib as jsonpath;
-use serde::Deserialize;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use tendermint_rpc::query::{EventType, Query};
 use tendermint_rpc::Client;
 
@@ -222,12 +221,11 @@ pub async fn gossip_intent(
         .iter()
         .map(|exchange_def| {
             let source_keypair = wallet::key_of(exchange_def.addr.encode());
-            let exchange: Exchange = ExchangeDefinition::try_into(
-                exchange_def.to_owned(),
-            )
-            .expect(
-                "Conversion from ExchangeDefinition to Exchange should fail.",
-            );
+            let exchange: Exchange =
+                ExchangeDefinition::try_into(exchange_def.to_owned()).expect(
+                    "Conversion from ExchangeDefinition to Exchange should \
+                     fail.",
+                );
             Signed::new(&source_keypair, exchange)
         })
         .collect();

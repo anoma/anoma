@@ -1,10 +1,10 @@
+//! Types that are used in nft transactions.
+
 use borsh::{BorshDeserialize, BorshSerialize};
 use serde::{Deserialize, Serialize};
 
-use super::{
-    address::Address,
-    storage::{DbKeySeg, Key, KeySeg},
-};
+use super::address::Address;
+use super::storage::{DbKeySeg, Key, KeySeg};
 
 const NFT_KEY: &str = "nft";
 const CREATOR_KEY: &str = "creator";
@@ -158,7 +158,7 @@ pub fn is_nft_approval_key(
     token_id: &str,
 ) -> bool {
     match &key.segments[..] {
-        [DbKeySeg::AddressSeg(nft_addr), DbKeySeg::StringSeg(prefix), DbKeySeg::StringSeg(ids_key), DbKeySeg::StringSeg(token_id_key), DbKeySeg::StringSeg(approval_key), DbKeySeg::AddressSeg(approval_address_key)]
+        [DbKeySeg::AddressSeg(nft_addr), DbKeySeg::StringSeg(prefix), DbKeySeg::StringSeg(ids_key), DbKeySeg::StringSeg(token_id_key), DbKeySeg::StringSeg(approval_key), DbKeySeg::AddressSeg(_approval_address_key)]
             if nft_addr == address
                 && prefix == NFT_KEY
                 && ids_key == IDS_KEY
@@ -231,4 +231,5 @@ pub fn is_nft_past_owners_key(
     }
 }
 
-// loop using iter_prefix -> /Users/fraccaman/Heliax/anoma-prototype/shared/src/ledger/ibc/channel.rs
+// loop using iter_prefix ->
+// /Users/fraccaman/Heliax/anoma-prototype/shared/src/ledger/ibc/channel.rs
