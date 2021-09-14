@@ -326,6 +326,14 @@
 <span id="324">324</span>
 <span id="325">325</span>
 <span id="326">326</span>
+<span id="327">327</span>
+<span id="328">328</span>
+<span id="329">329</span>
+<span id="330">330</span>
+<span id="331">331</span>
+<span id="332">332</span>
+<span id="333">333</span>
+<span id="334">334</span>
 </pre><pre class="rust">
 <span class="doccomment">//! IBC validity predicate for packets</span>
 
@@ -348,7 +356,7 @@
 <span class="kw">use</span> <span class="kw">super</span>::{<span class="ident">Ibc</span>, <span class="ident">StateChange</span>};
 <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::ledger::storage</span>::{<span class="self">self</span>, <span class="ident">StorageHasher</span>};
 <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::types::address</span>::{<span class="ident">Address</span>, <span class="ident">InternalAddress</span>};
-<span class="kw">use</span> <span class="kw">crate</span><span class="ident">::types::ibc</span>::{<span class="ident">Error</span> <span class="kw">as</span> <span class="ident">IbcDataError</span>, <span class="ident">TimeoutData</span>};
+<span class="kw">use</span> <span class="kw">crate</span><span class="ident">::types::ibc</span>::{<span class="ident">Error</span> <span class="kw">as</span> <span class="ident">IbcDataError</span>, <span class="ident">PacketSendData</span>, <span class="ident">TimeoutData</span>};
 <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::types::storage</span>::{<span class="ident">DbKeySeg</span>, <span class="ident">Key</span>, <span class="ident">KeySeg</span>};
 
 <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">missing_docs</span>)]</span>
@@ -366,6 +374,8 @@
     <span class="ident">InvalidChannel</span>(<span class="ident">String</span>),
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Port error: {0}&quot;</span>)]</span>
     <span class="ident">InvalidPort</span>(<span class="ident">String</span>),
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Sequence error: {0}&quot;</span>)]</span>
+    <span class="ident">InvalidSequence</span>(<span class="ident">String</span>),
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Packet error: {0}&quot;</span>)]</span>
     <span class="ident">InvalidPacket</span>(<span class="ident">String</span>),
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Proof verification error: {0}&quot;</span>)]</span>
@@ -396,7 +406,13 @@
         {
             <span class="ident">StateChange::Created</span> <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="comment">// sending a packet</span>
-                <span class="kw">let</span> <span class="ident">packet</span> <span class="op">=</span> <span class="ident">Packet::try_from_slice</span>(<span class="ident">tx_data</span>)<span class="question-mark">?</span>;
+                <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="ident">PacketSendData::try_from_slice</span>(<span class="ident">tx_data</span>)<span class="question-mark">?</span>;
+                <span class="kw">let</span> <span class="ident">port_channel_id</span> <span class="op">=</span>
+                    (<span class="ident">commitment_key</span>.<span class="number">0</span>.<span class="ident">clone</span>(), <span class="ident">commitment_key</span>.<span class="number">1</span>.<span class="ident">clone</span>());
+                <span class="kw">let</span> <span class="ident">seq</span> <span class="op">=</span> <span class="self">self</span>
+                    .<span class="ident">get_next_sequence_send_pre</span>(<span class="kw-2">&amp;</span><span class="ident">port_channel_id</span>)
+                    .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">Error::InvalidSequence</span>(<span class="ident">e</span>.<span class="ident">to_string</span>()))<span class="question-mark">?</span>;
+                <span class="kw">let</span> <span class="ident">packet</span> <span class="op">=</span> <span class="ident">data</span>.<span class="ident">packet</span>(<span class="ident">seq</span>);
                 <span class="kw">let</span> <span class="ident">commitment</span> <span class="op">=</span> <span class="self">self</span>
                     .<span class="ident">get_packet_commitment</span>(<span class="kw-2">&amp;</span><span class="ident">commitment_key</span>)
                     .<span class="ident">ok_or_else</span>(<span class="op">|</span><span class="op">|</span> {

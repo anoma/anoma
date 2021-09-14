@@ -805,6 +805,69 @@
 <span id="803">803</span>
 <span id="804">804</span>
 <span id="805">805</span>
+<span id="806">806</span>
+<span id="807">807</span>
+<span id="808">808</span>
+<span id="809">809</span>
+<span id="810">810</span>
+<span id="811">811</span>
+<span id="812">812</span>
+<span id="813">813</span>
+<span id="814">814</span>
+<span id="815">815</span>
+<span id="816">816</span>
+<span id="817">817</span>
+<span id="818">818</span>
+<span id="819">819</span>
+<span id="820">820</span>
+<span id="821">821</span>
+<span id="822">822</span>
+<span id="823">823</span>
+<span id="824">824</span>
+<span id="825">825</span>
+<span id="826">826</span>
+<span id="827">827</span>
+<span id="828">828</span>
+<span id="829">829</span>
+<span id="830">830</span>
+<span id="831">831</span>
+<span id="832">832</span>
+<span id="833">833</span>
+<span id="834">834</span>
+<span id="835">835</span>
+<span id="836">836</span>
+<span id="837">837</span>
+<span id="838">838</span>
+<span id="839">839</span>
+<span id="840">840</span>
+<span id="841">841</span>
+<span id="842">842</span>
+<span id="843">843</span>
+<span id="844">844</span>
+<span id="845">845</span>
+<span id="846">846</span>
+<span id="847">847</span>
+<span id="848">848</span>
+<span id="849">849</span>
+<span id="850">850</span>
+<span id="851">851</span>
+<span id="852">852</span>
+<span id="853">853</span>
+<span id="854">854</span>
+<span id="855">855</span>
+<span id="856">856</span>
+<span id="857">857</span>
+<span id="858">858</span>
+<span id="859">859</span>
+<span id="860">860</span>
+<span id="861">861</span>
+<span id="862">862</span>
+<span id="863">863</span>
+<span id="864">864</span>
+<span id="865">865</span>
+<span id="866">866</span>
+<span id="867">867</span>
+<span id="868">868</span>
 </pre><pre class="rust">
 <span class="doccomment">//! IBC-related data definitions and transaction and validity-predicate helpers.</span>
 
@@ -826,11 +889,12 @@
 <span class="kw">use</span> <span class="ident">ibc::ics23_commitment::commitment::CommitmentProofBytes</span>;
 <span class="kw">use</span> <span class="ident">ibc::ics24_host::identifier</span>::{<span class="ident">ChannelId</span>, <span class="ident">ClientId</span>, <span class="ident">ConnectionId</span>, <span class="ident">PortId</span>};
 <span class="kw">use</span> <span class="ident">ibc::proofs</span>::{<span class="ident">ConsensusProof</span>, <span class="ident">Proofs</span>};
+<span class="kw">use</span> <span class="ident">ibc::timestamp::Timestamp</span>;
 <span class="kw">use</span> <span class="ident">ibc_proto::ibc::core::commitment::v1::MerkleProof</span>;
 <span class="kw">use</span> <span class="ident">prost::Message</span>;
 <span class="kw">use</span> <span class="ident">thiserror::Error</span>;
 
-<span class="kw">use</span> <span class="kw">crate</span><span class="ident">::types::time::DurationNanos</span>;
+<span class="kw">use</span> <span class="kw">crate</span><span class="ident">::types::time</span>::{<span class="ident">DateTimeUtc</span>, <span class="ident">DurationNanos</span>};
 
 <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">missing_docs</span>)]</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Error</span>, <span class="ident">Debug</span>)]</span>
@@ -1487,6 +1551,68 @@
             <span class="self">self</span>.<span class="ident">proof_height</span>,
         )
         .<span class="ident">map_err</span>(<span class="ident">Error::InvalidProof</span>)
+    }
+}
+
+<span class="doccomment">/// Data for sending a packet</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">BorshSerialize</span>, <span class="ident">BorshDeserialize</span>)]</span>
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">PacketSendData</span> {
+    <span class="doccomment">/// The source port</span>
+    <span class="kw">pub</span> <span class="ident">source_port</span>: <span class="ident">PortId</span>,
+    <span class="doccomment">/// The source channel</span>
+    <span class="kw">pub</span> <span class="ident">source_channel</span>: <span class="ident">ChannelId</span>,
+    <span class="doccomment">/// The destination port</span>
+    <span class="kw">pub</span> <span class="ident">destination_port</span>: <span class="ident">PortId</span>,
+    <span class="doccomment">/// The destination channel</span>
+    <span class="kw">pub</span> <span class="ident">destination_channel</span>: <span class="ident">ChannelId</span>,
+    <span class="doccomment">/// The data of packet</span>
+    <span class="kw">pub</span> <span class="ident">packet_data</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>,
+    <span class="doccomment">/// The timeout height</span>
+    <span class="kw">pub</span> <span class="ident">timeout_height</span>: <span class="ident">Height</span>,
+    <span class="doccomment">/// The timeout timestamp</span>
+    <span class="kw">pub</span> <span class="ident">timeout_timestamp</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">DateTimeUtc</span><span class="op">&gt;</span>,
+}
+
+<span class="kw">impl</span> <span class="ident">PacketSendData</span> {
+    <span class="doccomment">/// Create data for sending a packet</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(
+        <span class="ident">source_port</span>: <span class="ident">PortId</span>,
+        <span class="ident">source_channel</span>: <span class="ident">ChannelId</span>,
+        <span class="ident">destination_port</span>: <span class="ident">PortId</span>,
+        <span class="ident">destination_channel</span>: <span class="ident">ChannelId</span>,
+        <span class="ident">packet_data</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>,
+        <span class="ident">timeout_height</span>: <span class="ident">Height</span>,
+        <span class="ident">timeout_timestamp</span>: <span class="ident">Timestamp</span>,
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="kw">let</span> <span class="ident">timeout_timestamp</span> <span class="op">=</span>
+            <span class="ident">timeout_timestamp</span>.<span class="ident">as_datetime</span>().<span class="ident">map</span>(<span class="ident">DateTimeUtc</span>);
+        <span class="self">Self</span> {
+            <span class="ident">source_port</span>,
+            <span class="ident">source_channel</span>,
+            <span class="ident">destination_port</span>,
+            <span class="ident">destination_channel</span>,
+            <span class="ident">packet_data</span>,
+            <span class="ident">timeout_height</span>,
+            <span class="ident">timeout_timestamp</span>,
+        }
+    }
+
+    <span class="doccomment">/// Returns a packet</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">packet</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">sequence</span>: <span class="ident">Sequence</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Packet</span> {
+        <span class="kw">let</span> <span class="ident">timeout_timestamp</span> <span class="op">=</span> <span class="kw">match</span> <span class="self">self</span>.<span class="ident">timeout_timestamp</span> {
+            <span class="prelude-val">Some</span>(<span class="ident">timestamp</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Timestamp::from_datetime</span>(<span class="ident">timestamp</span>.<span class="number">0</span>),
+            <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Timestamp::none</span>(),
+        };
+        <span class="ident">Packet</span> {
+            <span class="ident">sequence</span>,
+            <span class="ident">source_port</span>: <span class="self">self</span>.<span class="ident">source_port</span>.<span class="ident">clone</span>(),
+            <span class="ident">source_channel</span>: <span class="self">self</span>.<span class="ident">source_channel</span>.<span class="ident">clone</span>(),
+            <span class="ident">destination_port</span>: <span class="self">self</span>.<span class="ident">destination_port</span>.<span class="ident">clone</span>(),
+            <span class="ident">destination_channel</span>: <span class="self">self</span>.<span class="ident">destination_channel</span>.<span class="ident">clone</span>(),
+            <span class="ident">data</span>: <span class="self">self</span>.<span class="ident">packet_data</span>.<span class="ident">clone</span>(),
+            <span class="ident">timeout_height</span>: <span class="self">self</span>.<span class="ident">timeout_height</span>,
+            <span class="ident">timeout_timestamp</span>,
+        }
     }
 }
 
