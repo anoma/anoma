@@ -20,6 +20,7 @@ tx_init_account = []
 tx_mint_nft_tokens = []
 tx_transfer = []
 tx_update_vp = []
+vp_nft = []
 vp_token = []
 vp_user = ["once_cell", "rust_decimal"]
 

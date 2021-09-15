@@ -13,6 +13,7 @@ wasms += tx_mint_nft_tokens
 wasms += tx_from_intent
 wasms += tx_transfer
 wasms += tx_update_vp
+wasms += vp_nft
 wasms += vp_token
 wasms += vp_user
 

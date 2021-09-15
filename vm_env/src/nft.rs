@@ -80,14 +80,12 @@ pub mod tx {
 /// A Nft validity predicate
 pub mod vp {
     use std::collections::HashSet;
-    
 
     use anoma::types::address::Address;
     pub use anoma::types::nft::*;
     use anoma::types::storage::Key;
 
     use crate::imports::vp::{self};
-    
 
     enum KeyType {
         Metadata,
@@ -97,14 +95,15 @@ pub mod vp {
         Unknown,
     }
 
+    // TODO: add vector of errors
     pub fn vp(
         nft_address: &Address,
-        nft_creator: &Address,
-        nft_token_id: &str,
         keys_changed: &HashSet<Key>,
         verifiers: &HashSet<Address>,
     ) -> bool {
+        let nft_creator: &Address = todo!();
         keys_changed.iter().all(|key| {
+            let nft_token_id: &str = todo!();
             match get_key_type(key, nft_address, nft_creator, nft_token_id) {
                 KeyType::Creator => {
                     let key = key.to_string();
@@ -115,7 +114,9 @@ pub mod vp {
                     } else if vp::has_key_pre(&key) && !vp::has_key_post(&key) {
                         true
                     // created new nft
-                    } else { !vp::has_key_pre(&key) && vp::has_key_post(&key) }
+                    } else {
+                        !vp::has_key_pre(&key) && vp::has_key_post(&key)
+                    }
                 }
                 KeyType::Metadata => verifiers.contains(nft_creator),
                 KeyType::Approval => {
@@ -160,6 +161,7 @@ pub mod vp {
                 }
                 KeyType::Unknown => todo!(),
             }
+            // execute the NFT VP
         })
     }
 

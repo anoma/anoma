@@ -166,6 +166,28 @@ pub mod vp_token {
     }
 }
 
+/// A VP for a nft.
+#[cfg(feature = "vp_nft")]
+pub mod vp_nft {
+    use anoma_vm_env::vp_prelude::*;
+
+    #[validity_predicate]
+    fn validate_tx(
+        _tx_data: Vec<u8>,
+        addr: Address,
+        keys_changed: HashSet<storage::Key>,
+        verifiers: HashSet<Address>,
+    ) -> bool {
+        log_string(format!(
+            "validate_tx called with token addr: {}, key_changed: {:#?}, \
+             verifiers: {:?}",
+            addr, keys_changed, verifiers
+        ));
+
+        nft::vp(&addr, &keys_changed, &verifiers)
+    }
+}
+
 /// Matchmaker filter for token exchange
 #[cfg(feature = "mm_filter_token_exch")]
 pub mod mm_filter_token_exch {
