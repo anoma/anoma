@@ -197,6 +197,63 @@
 <span id="195">195</span>
 <span id="196">196</span>
 <span id="197">197</span>
+<span id="198">198</span>
+<span id="199">199</span>
+<span id="200">200</span>
+<span id="201">201</span>
+<span id="202">202</span>
+<span id="203">203</span>
+<span id="204">204</span>
+<span id="205">205</span>
+<span id="206">206</span>
+<span id="207">207</span>
+<span id="208">208</span>
+<span id="209">209</span>
+<span id="210">210</span>
+<span id="211">211</span>
+<span id="212">212</span>
+<span id="213">213</span>
+<span id="214">214</span>
+<span id="215">215</span>
+<span id="216">216</span>
+<span id="217">217</span>
+<span id="218">218</span>
+<span id="219">219</span>
+<span id="220">220</span>
+<span id="221">221</span>
+<span id="222">222</span>
+<span id="223">223</span>
+<span id="224">224</span>
+<span id="225">225</span>
+<span id="226">226</span>
+<span id="227">227</span>
+<span id="228">228</span>
+<span id="229">229</span>
+<span id="230">230</span>
+<span id="231">231</span>
+<span id="232">232</span>
+<span id="233">233</span>
+<span id="234">234</span>
+<span id="235">235</span>
+<span id="236">236</span>
+<span id="237">237</span>
+<span id="238">238</span>
+<span id="239">239</span>
+<span id="240">240</span>
+<span id="241">241</span>
+<span id="242">242</span>
+<span id="243">243</span>
+<span id="244">244</span>
+<span id="245">245</span>
+<span id="246">246</span>
+<span id="247">247</span>
+<span id="248">248</span>
+<span id="249">249</span>
+<span id="250">250</span>
+<span id="251">251</span>
+<span id="252">252</span>
+<span id="253">253</span>
+<span id="254">254</span>
 </pre><pre class="rust">
 <span class="kw">use</span> <span class="ident">std::convert::TryFrom</span>;
 
@@ -204,7 +261,7 @@
 <span class="kw">use</span> <span class="ident">anoma::types::address::Address</span>;
 <span class="kw">use</span> <span class="ident">anoma::types::key::ed25519::Keypair</span>;
 <span class="kw">use</span> <span class="ident">anoma::types::token</span>;
-<span class="kw">use</span> <span class="ident">anoma::types::transaction</span>::{<span class="ident">InitAccount</span>, <span class="ident">UpdateVp</span>};
+<span class="kw">use</span> <span class="ident">anoma::types::transaction</span>::{<span class="ident">pos</span>, <span class="ident">InitAccount</span>, <span class="ident">UpdateVp</span>};
 <span class="kw">use</span> <span class="ident">borsh::BorshSerialize</span>;
 <span class="kw">use</span> <span class="ident">jsonpath_lib</span> <span class="kw">as</span> <span class="ident">jsonpath</span>;
 <span class="kw">use</span> <span class="ident">serde::Serialize</span>;
@@ -222,6 +279,9 @@
 <span class="kw">const</span> <span class="ident">TX_UPDATE_VP_WASM</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;wasm/tx_update_vp.wasm&quot;</span>;
 <span class="kw">const</span> <span class="ident">TX_TRANSFER_WASM</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;wasm/tx_transfer.wasm&quot;</span>;
 <span class="kw">const</span> <span class="ident">VP_USER_WASM</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;wasm/vp_user.wasm&quot;</span>;
+<span class="kw">const</span> <span class="ident">TX_BOND_WASM</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;wasm/tx_bond.wasm&quot;</span>;
+<span class="kw">const</span> <span class="ident">TX_UNBOND_WASM</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;wasm/tx_unbond.wasm&quot;</span>;
+<span class="kw">const</span> <span class="ident">TX_WITHDRAW_WASM</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;wasm/tx_withdraw.wasm&quot;</span>;
 
 <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">submit_custom</span>(<span class="ident">args</span>: <span class="ident">args::TxCustom</span>) {
     <span class="kw">let</span> <span class="ident">tx_code</span> <span class="op">=</span> <span class="ident">std::fs::read</span>(<span class="ident">args</span>.<span class="ident">code_path</span>)
@@ -292,6 +352,60 @@
     <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="ident">transfer</span>
         .<span class="ident">try_to_vec</span>()
         .<span class="ident">expect</span>(<span class="string">&quot;Encoding unsigned transfer shouldn&#39;t fail&quot;</span>);
+    <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx::new</span>(<span class="ident">tx_code</span>, <span class="prelude-val">Some</span>(<span class="ident">data</span>)).<span class="ident">sign</span>(<span class="kw-2">&amp;</span><span class="ident">source_key</span>);
+
+    <span class="ident">submit_tx</span>(<span class="ident">args</span>.<span class="ident">tx</span>, <span class="ident">tx</span>).<span class="kw">await</span>
+}
+
+<span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">submit_bond</span>(<span class="ident">args</span>: <span class="ident">args::Bond</span>) {
+    <span class="kw">let</span> <span class="ident">source</span> <span class="op">=</span> <span class="ident">args</span>.<span class="ident">source</span>.<span class="ident">as_ref</span>().<span class="ident">unwrap_or</span>(<span class="kw-2">&amp;</span><span class="ident">args</span>.<span class="ident">validator</span>);
+    <span class="kw">let</span> <span class="ident">source_key</span>: <span class="ident">Keypair</span> <span class="op">=</span> <span class="ident">wallet::key_of</span>(<span class="ident">source</span>.<span class="ident">encode</span>());
+    <span class="kw">let</span> <span class="ident">tx_code</span> <span class="op">=</span> <span class="ident">std::fs::read</span>(<span class="ident">TX_BOND_WASM</span>).<span class="ident">unwrap</span>();
+
+    <span class="kw">let</span> <span class="ident">bond</span> <span class="op">=</span> <span class="ident">pos::Bond</span> {
+        <span class="ident">validator</span>: <span class="ident">args</span>.<span class="ident">validator</span>,
+        <span class="ident">amount</span>: <span class="ident">args</span>.<span class="ident">amount</span>,
+        <span class="ident">source</span>: <span class="ident">args</span>.<span class="ident">source</span>,
+    };
+    <span class="macro">tracing::debug!</span>(<span class="string">&quot;Bond data {:?}&quot;</span>, <span class="ident">bond</span>);
+    <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="ident">bond</span>.<span class="ident">try_to_vec</span>().<span class="ident">expect</span>(<span class="string">&quot;Encoding tx data shouldn&#39;t fail&quot;</span>);
+    <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx::new</span>(<span class="ident">tx_code</span>, <span class="prelude-val">Some</span>(<span class="ident">data</span>)).<span class="ident">sign</span>(<span class="kw-2">&amp;</span><span class="ident">source_key</span>);
+
+    <span class="ident">submit_tx</span>(<span class="ident">args</span>.<span class="ident">tx</span>, <span class="ident">tx</span>).<span class="kw">await</span>
+}
+
+<span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">submit_unbond</span>(<span class="ident">args</span>: <span class="ident">args::Unbond</span>) {
+    <span class="kw">let</span> <span class="ident">source</span> <span class="op">=</span> <span class="ident">args</span>.<span class="ident">source</span>.<span class="ident">as_ref</span>().<span class="ident">unwrap_or</span>(<span class="kw-2">&amp;</span><span class="ident">args</span>.<span class="ident">validator</span>);
+    <span class="kw">let</span> <span class="ident">source_key</span>: <span class="ident">Keypair</span> <span class="op">=</span> <span class="ident">wallet::key_of</span>(<span class="ident">source</span>.<span class="ident">encode</span>());
+    <span class="kw">let</span> <span class="ident">tx_code</span> <span class="op">=</span> <span class="ident">std::fs::read</span>(<span class="ident">TX_UNBOND_WASM</span>).<span class="ident">unwrap</span>();
+
+    <span class="kw">let</span> <span class="ident">unbond</span> <span class="op">=</span> <span class="ident">pos::Unbond</span> {
+        <span class="ident">validator</span>: <span class="ident">args</span>.<span class="ident">validator</span>,
+        <span class="ident">amount</span>: <span class="ident">args</span>.<span class="ident">amount</span>,
+        <span class="ident">source</span>: <span class="ident">args</span>.<span class="ident">source</span>,
+    };
+    <span class="macro">tracing::debug!</span>(<span class="string">&quot;Unbond data {:?}&quot;</span>, <span class="ident">unbond</span>);
+    <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="ident">unbond</span>
+        .<span class="ident">try_to_vec</span>()
+        .<span class="ident">expect</span>(<span class="string">&quot;Encoding tx data shouldn&#39;t fail&quot;</span>);
+    <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx::new</span>(<span class="ident">tx_code</span>, <span class="prelude-val">Some</span>(<span class="ident">data</span>)).<span class="ident">sign</span>(<span class="kw-2">&amp;</span><span class="ident">source_key</span>);
+
+    <span class="ident">submit_tx</span>(<span class="ident">args</span>.<span class="ident">tx</span>, <span class="ident">tx</span>).<span class="kw">await</span>
+}
+
+<span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">submit_withdraw</span>(<span class="ident">args</span>: <span class="ident">args::Withdraw</span>) {
+    <span class="kw">let</span> <span class="ident">source</span> <span class="op">=</span> <span class="ident">args</span>.<span class="ident">source</span>.<span class="ident">as_ref</span>().<span class="ident">unwrap_or</span>(<span class="kw-2">&amp;</span><span class="ident">args</span>.<span class="ident">validator</span>);
+    <span class="kw">let</span> <span class="ident">source_key</span>: <span class="ident">Keypair</span> <span class="op">=</span> <span class="ident">wallet::key_of</span>(<span class="ident">source</span>.<span class="ident">encode</span>());
+    <span class="kw">let</span> <span class="ident">tx_code</span> <span class="op">=</span> <span class="ident">std::fs::read</span>(<span class="ident">TX_WITHDRAW_WASM</span>).<span class="ident">unwrap</span>();
+
+    <span class="kw">let</span> <span class="ident">withdraw</span> <span class="op">=</span> <span class="ident">pos::Withdraw</span> {
+        <span class="ident">validator</span>: <span class="ident">args</span>.<span class="ident">validator</span>,
+        <span class="ident">source</span>: <span class="ident">args</span>.<span class="ident">source</span>,
+    };
+    <span class="macro">tracing::debug!</span>(<span class="string">&quot;Withdraw data {:?}&quot;</span>, <span class="ident">withdraw</span>);
+    <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="ident">withdraw</span>
+        .<span class="ident">try_to_vec</span>()
+        .<span class="ident">expect</span>(<span class="string">&quot;Encoding tx data shouldn&#39;t fail&quot;</span>);
     <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx::new</span>(<span class="ident">tx_code</span>, <span class="prelude-val">Some</span>(<span class="ident">data</span>)).<span class="ident">sign</span>(<span class="kw-2">&amp;</span><span class="ident">source_key</span>);
 
     <span class="ident">submit_tx</span>(<span class="ident">args</span>.<span class="ident">tx</span>, <span class="ident">tx</span>).<span class="kw">await</span>

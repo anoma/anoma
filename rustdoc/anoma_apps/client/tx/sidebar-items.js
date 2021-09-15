@@ -1,1 +1,1 @@
-initSidebarItems({"fn":[["broadcast_tx",""],["submit_custom",""],["submit_init_account",""],["submit_transfer",""],["submit_update_vp",""]]});
+initSidebarItems({"fn":[["broadcast_tx",""],["submit_bond",""],["submit_custom",""],["submit_init_account",""],["submit_transfer",""],["submit_unbond",""],["submit_update_vp",""],["submit_withdraw",""]]});
