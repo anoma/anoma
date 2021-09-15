@@ -52,6 +52,10 @@
 <span id="50">50</span>
 <span id="51">51</span>
 <span id="52">52</span>
+<span id="53">53</span>
+<span id="54">54</span>
+<span id="55">55</span>
+<span id="56">56</span>
 </pre><pre class="rust">
 <span class="doccomment">//! This crate contains library code for wasm. Some of the code is re-exported</span>
 <span class="doccomment">//! from the `shared` crate.</span>
@@ -62,6 +66,7 @@
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">imports</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">intent</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">key</span>;
+<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">proof_of_stake</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">token</span>;
 
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">tx_prelude</span> {
@@ -69,8 +74,9 @@
     <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">anoma::types</span>::<span class="kw-2">*</span>;
     <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">anoma_vm_macro::transaction</span>;
 
-    <span class="kw">pub</span> <span class="kw">use</span> <span class="kw">super</span><span class="ident">::imports::tx</span>::<span class="kw-2">*</span>;
+    <span class="kw">pub</span> <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::imports::tx</span>::<span class="kw-2">*</span>;
     <span class="kw">pub</span> <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::intent::tx</span> <span class="kw">as</span> <span class="ident">intent</span>;
+    <span class="kw">pub</span> <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::proof_of_stake</span>::{<span class="self">self</span>, <span class="ident">PoS</span>, <span class="ident">PosRead</span>, <span class="ident">PosWrite</span>};
     <span class="kw">pub</span> <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::token::tx</span> <span class="kw">as</span> <span class="ident">token</span>;
 }
 
@@ -87,6 +93,8 @@
     <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">key</span> {
         <span class="kw">pub</span> <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::key::ed25519::vp</span> <span class="kw">as</span> <span class="ident">ed25519</span>;
     }
+    <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">anoma::ledger::pos</span> <span class="kw">as</span> <span class="ident">proof_of_stake</span>;
+
     <span class="kw">pub</span> <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::token::vp</span> <span class="kw">as</span> <span class="ident">token</span>;
 }
 

@@ -11,19 +11,24 @@ Addresses</a>.</p>
 </td></tr><tr class="module-item"><td><a class="mod" href="intent/index.html" title="anoma_tests::tx::tx_host_env::intent mod">intent</a></td><td class="docblock-short"><p>Tx imports and functions.</p>
 </td></tr><tr class="module-item"><td><a class="mod" href="internal/index.html" title="anoma_tests::tx::tx_host_env::internal mod">internal</a></td><td class="docblock-short"><p>Shared internal types between the host env and guest (wasm).</p>
 </td></tr><tr class="module-item"><td><a class="mod" href="key/index.html" title="anoma_tests::tx::tx_host_env::key mod">key</a></td><td class="docblock-short"><p>Cryptographic keys</p>
-</td></tr><tr class="module-item"><td><a class="mod" href="pos/index.html" title="anoma_tests::tx::tx_host_env::pos mod">pos</a></td><td class="docblock-short"><p>Types used for PoS system interactions</p>
+</td></tr><tr class="module-item"><td><a class="mod" href="proof_of_stake/index.html" title="anoma_tests::tx::tx_host_env::proof_of_stake mod">proof_of_stake</a></td><td class="docblock-short"><p>Proof of Stake system integration with functions for transactions</p>
 </td></tr><tr class="module-item"><td><a class="mod" href="storage/index.html" title="anoma_tests::tx::tx_host_env::storage mod">storage</a></td><td class="docblock-short"><p>Storage types</p>
 </td></tr><tr class="module-item"><td><a class="mod" href="time/index.html" title="anoma_tests::tx::tx_host_env::time mod">time</a></td><td class="docblock-short"><p>Types for dealing with time and durations.</p>
 </td></tr><tr class="module-item"><td><a class="mod" href="token/index.html" title="anoma_tests::tx::tx_host_env::token mod">token</a></td><td class="docblock-short"><p>Tx imports and functions.</p>
 </td></tr><tr class="module-item"><td><a class="mod" href="transaction/index.html" title="anoma_tests::tx::tx_host_env::transaction mod">transaction</a></td><td class="docblock-short"><p>Types that are used in transactions.</p>
 </td></tr><tr class="module-item"><td><a class="mod" href="validity_predicate/index.html" title="anoma_tests::tx::tx_host_env::validity_predicate mod">validity_predicate</a></td><td class="docblock-short"><p>Types that are used in validity predicates.</p>
 </td></tr></table><h2 id="structs" class="section-header"><a href="#structs">Structs</a></h2>
-<table><tr class="module-item"><td><a class="struct" href="struct.KeyValIterator.html" title="anoma_tests::tx::tx_host_env::KeyValIterator struct">KeyValIterator</a></td><td class="docblock-short"></td></tr></table><h2 id="enums" class="section-header"><a href="#enums">Enums</a></h2>
+<table><tr class="module-item"><td><a class="struct" href="struct.KeyValIterator.html" title="anoma_tests::tx::tx_host_env::KeyValIterator struct">KeyValIterator</a></td><td class="docblock-short"></td></tr><tr class="module-item"><td><a class="struct" href="struct.PoS.html" title="anoma_tests::tx::tx_host_env::PoS struct">PoS</a></td><td class="docblock-short"><p>Proof of Stake system. This struct integrates and gives access to
+lower-level PoS functions.</p>
+</td></tr></table><h2 id="enums" class="section-header"><a href="#enums">Enums</a></h2>
 <table><tr class="module-item"><td><a class="enum" href="enum.Address.html" title="anoma_tests::tx::tx_host_env::Address enum">Address</a></td><td class="docblock-short"><p>An account’s address</p>
 </td></tr></table><h2 id="constants" class="section-header"><a href="#constants">Constants</a></h2>
 <table><tr class="module-item"><td><a class="constant" href="constant.ENV.html" title="anoma_tests::tx::tx_host_env::ENV constant">ENV</a></td><td class="docblock-short"></td></tr></table><h2 id="traits" class="section-header"><a href="#traits">Traits</a></h2>
 <table><tr class="module-item"><td><a class="trait" href="trait.BorshDeserialize.html" title="anoma_tests::tx::tx_host_env::BorshDeserialize trait">BorshDeserialize</a></td><td class="docblock-short"><p>A data-structure that can be de-serialized from binary format by NBOR.</p>
 </td></tr><tr class="module-item"><td><a class="trait" href="trait.BorshSerialize.html" title="anoma_tests::tx::tx_host_env::BorshSerialize trait">BorshSerialize</a></td><td class="docblock-short"><p>A data-structure that can be serialized into binary format by NBOR.</p>
+</td></tr><tr class="module-item"><td><a class="trait" href="trait.PosRead.html" title="anoma_tests::tx::tx_host_env::PosRead trait">PosRead</a></td><td class="docblock-short"><p>Read-only part of the PoS system</p>
+</td></tr><tr class="module-item"><td><a class="trait" href="trait.PosWrite.html" title="anoma_tests::tx::tx_host_env::PosWrite trait">PosWrite</a></td><td class="docblock-short"><p>PoS system trait to be implemented in integration that can read and write
+PoS data.</p>
 </td></tr></table><h2 id="functions" class="section-header"><a href="#functions">Functions</a></h2>
 <table><tr class="module-item"><td><a class="fn" href="fn.delete.html" title="anoma_tests::tx::tx_host_env::delete fn">delete</a></td><td class="docblock-short"><p>Delete a value at the given key from storage.</p>
 </td></tr><tr class="module-item"><td><a class="fn" href="fn.get_block_epoch.html" title="anoma_tests::tx::tx_host_env::get_block_epoch fn">get_block_epoch</a></td><td class="docblock-short"><p>Get epoch of the current block</p>
