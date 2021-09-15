@@ -85,7 +85,10 @@ pub mod vp {
     pub use anoma::types::nft::*;
     use anoma::types::storage::Key;
 
-    use crate::imports::vp::{self};
+    use crate::imports::{
+        tx,
+        vp::{self},
+    };
 
     enum KeyType {
         Metadata(String),
@@ -104,6 +107,10 @@ pub mod vp {
         keys_changed.iter().all(|key| {
             match get_key_type(key, nft_address) {
                 KeyType::Creator(_creator_addr) => {
+                    tx::log_string(format!(
+                        "nft vp, checking creator: {}",
+                        _creator_addr
+                    ));
                     let key = key.to_string();
                     // creator has changed
                     if vp::has_key_pre(&key) && vp::has_key_post(&key) {
@@ -117,6 +124,10 @@ pub mod vp {
                     }
                 }
                 KeyType::Metadata(_token_id) => {
+                    tx::log_string(format!(
+                        "nft vp, checking metadata with token id: {}",
+                        _token_id
+                    ));
                     for verifier in verifiers {
                         let creator_key =
                             get_creator_key(nft_address, verifier);
@@ -127,9 +138,17 @@ pub mod vp {
                     false
                 }
                 KeyType::Approval(token_id) => {
+                    tx::log_string(format!(
+                        "nft vp, checking approvals with token id: {}",
+                        token_id
+                    ));
                     is_approved(nft_address, token_id.as_ref(), verifiers)
                 }
                 KeyType::CurrentOwner(token_id) => {
+                    tx::log_string(format!(
+                        "nft vp, checking current_owner with token id: {}",
+                        token_id
+                    ));
                     let key = key.to_string();
                     let past_owners_key = get_token_past_owners_key(
                         nft_address,
@@ -170,7 +189,6 @@ pub mod vp {
                 }
                 KeyType::Unknown => true,
             }
-            // execute the NFT VP
         })
     }
 
