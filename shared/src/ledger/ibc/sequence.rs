@@ -15,7 +15,7 @@ use thiserror::Error;
 use super::Ibc;
 use crate::ledger::storage::{self, StorageHasher};
 use crate::types::ibc::{
-    Error as IbcDataError, PacketAckData, PacketReceiptData,
+    Error as IbcDataError, PacketAckData, PacketReceiptData, PacketSendData,
 };
 use crate::types::storage::Key;
 
@@ -65,10 +65,11 @@ where
     ) -> Result<()> {
         let port_channel_id = Self::get_port_channel_id(key)
             .map_err(|e| Error::InvalidKey(e.to_string()))?;
-        let packet = Packet::try_from_slice(tx_data)?;
+        let data = PacketSendData::try_from_slice(tx_data)?;
         let next_seq_pre = self
             .get_next_sequence_send_pre(&port_channel_id)
             .map_err(|e| Error::InvalidSequence(e.to_string()))?;
+        let packet = data.packet(next_seq_pre);
         let next_seq = match self.get_next_sequence_send(&port_channel_id) {
             Some(s) => s,
             None => {

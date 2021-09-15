@@ -63,10 +63,7 @@ reset-ledger:
 audit:
 	$(cargo) audit $(foreach ignore,$(audit-ignores), --ignore $(ignore))
 
-test:
-	make test-unit && \
-	make test-e2e && \
-	make test-wasm
+test: test-unit test-e2e test-wasm
 
 test-e2e:
 	$(cargo) test e2e -- --test-threads=1

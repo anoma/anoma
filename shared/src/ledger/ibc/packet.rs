@@ -19,7 +19,7 @@ use thiserror::Error;
 use super::{Ibc, StateChange};
 use crate::ledger::storage::{self, StorageHasher};
 use crate::types::address::{Address, InternalAddress};
-use crate::types::ibc::{Error as IbcDataError, TimeoutData};
+use crate::types::ibc::{Error as IbcDataError, PacketSendData, TimeoutData};
 use crate::types::storage::{DbKeySeg, Key, KeySeg};
 
 #[allow(missing_docs)]
@@ -37,6 +37,8 @@ pub enum Error {
     InvalidChannel(String),
     #[error("Port error: {0}")]
     InvalidPort(String),
+    #[error("Sequence error: {0}")]
+    InvalidSequence(String),
     #[error("Packet error: {0}")]
     InvalidPacket(String),
     #[error("Proof verification error: {0}")]
@@ -67,7 +69,13 @@ where
         {
             StateChange::Created => {
                 // sending a packet
-                let packet = Packet::try_from_slice(tx_data)?;
+                let data = PacketSendData::try_from_slice(tx_data)?;
+                let port_channel_id =
+                    (commitment_key.0.clone(), commitment_key.1.clone());
+                let seq = self
+                    .get_next_sequence_send_pre(&port_channel_id)
+                    .map_err(|e| Error::InvalidSequence(e.to_string()))?;
+                let packet = data.packet(seq);
                 let commitment = self
                     .get_packet_commitment(&commitment_key)
                     .ok_or_else(|| {

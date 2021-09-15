@@ -4,7 +4,7 @@ kind: pipeline
 name: anoma-ci-build-pr
 node: {project: anoma}
 steps:
-- commands: [echo "bfc3ef1d1ab3da3192b33ee305686691fd609baf16d5dca82691f647b3520c7a  Makefile"
+- commands: [echo "23b892f57324bc5d3ca100e95e8581dbb26132a0e7a7c756790fd401fd45e5f0  Makefile"
       | sha256sum -c -, echo "d1a970c93d10c7542f0f1b99cc7f3ec73fb67e84d8f011b71f06972b3de4b714  wasm/wasm_source/Makefile"
       | sha256sum -c -, echo "52d59575c0767b4738ea9b4c07844c761dce6f54a59b3429e75fb5f4410cdc7e  wasm/vp_template/Makefile"
       | sha256sum -c -, echo "52d59575c0767b4738ea9b4c07844c761dce6f54a59b3429e75fb5f4410cdc7e  wasm/tx_template/Makefile"
@@ -108,7 +108,7 @@ kind: pipeline
 name: anoma-ci-checks-pr
 node: {project: anoma}
 steps:
-- commands: [echo "bfc3ef1d1ab3da3192b33ee305686691fd609baf16d5dca82691f647b3520c7a  Makefile"
+- commands: [echo "23b892f57324bc5d3ca100e95e8581dbb26132a0e7a7c756790fd401fd45e5f0  Makefile"
       | sha256sum -c -, echo "d1a970c93d10c7542f0f1b99cc7f3ec73fb67e84d8f011b71f06972b3de4b714  wasm/wasm_source/Makefile"
       | sha256sum -c -, echo "52d59575c0767b4738ea9b4c07844c761dce6f54a59b3429e75fb5f4410cdc7e  wasm/vp_template/Makefile"
       | sha256sum -c -, echo "52d59575c0767b4738ea9b4c07844c761dce6f54a59b3429e75fb5f4410cdc7e  wasm/tx_template/Makefile"
@@ -193,7 +193,7 @@ kind: pipeline
 name: anoma-ci-wasm-pr
 node: {project: anoma}
 steps:
-- commands: [echo "bfc3ef1d1ab3da3192b33ee305686691fd609baf16d5dca82691f647b3520c7a  Makefile"
+- commands: [echo "23b892f57324bc5d3ca100e95e8581dbb26132a0e7a7c756790fd401fd45e5f0  Makefile"
       | sha256sum -c -, echo "d1a970c93d10c7542f0f1b99cc7f3ec73fb67e84d8f011b71f06972b3de4b714  wasm/wasm_source/Makefile"
       | sha256sum -c -, echo "52d59575c0767b4738ea9b4c07844c761dce6f54a59b3429e75fb5f4410cdc7e  wasm/vp_template/Makefile"
       | sha256sum -c -, echo "52d59575c0767b4738ea9b4c07844c761dce6f54a59b3429e75fb5f4410cdc7e  wasm/tx_template/Makefile"
@@ -279,7 +279,7 @@ kind: pipeline
 name: anoma-ci-cron
 node: {project: anoma}
 steps:
-- commands: [echo "bfc3ef1d1ab3da3192b33ee305686691fd609baf16d5dca82691f647b3520c7a  Makefile"
+- commands: [echo "23b892f57324bc5d3ca100e95e8581dbb26132a0e7a7c756790fd401fd45e5f0  Makefile"
       | sha256sum -c -, echo "d1a970c93d10c7542f0f1b99cc7f3ec73fb67e84d8f011b71f06972b3de4b714  wasm/wasm_source/Makefile"
       | sha256sum -c -, echo "52d59575c0767b4738ea9b4c07844c761dce6f54a59b3429e75fb5f4410cdc7e  wasm/vp_template/Makefile"
       | sha256sum -c -, echo "52d59575c0767b4738ea9b4c07844c761dce6f54a59b3429e75fb5f4410cdc7e  wasm/tx_template/Makefile"
@@ -353,7 +353,7 @@ kind: pipeline
 name: anoma-ci-miri-pr
 node: {project: anoma}
 steps:
-- commands: [echo "bfc3ef1d1ab3da3192b33ee305686691fd609baf16d5dca82691f647b3520c7a  Makefile"
+- commands: [echo "23b892f57324bc5d3ca100e95e8581dbb26132a0e7a7c756790fd401fd45e5f0  Makefile"
       | sha256sum -c -, echo "d1a970c93d10c7542f0f1b99cc7f3ec73fb67e84d8f011b71f06972b3de4b714  wasm/wasm_source/Makefile"
       | sha256sum -c -, echo "52d59575c0767b4738ea9b4c07844c761dce6f54a59b3429e75fb5f4410cdc7e  wasm/vp_template/Makefile"
       | sha256sum -c -, echo "52d59575c0767b4738ea9b4c07844c761dce6f54a59b3429e75fb5f4410cdc7e  wasm/tx_template/Makefile"
@@ -424,7 +424,7 @@ kind: pipeline
 name: anoma-ci-docs-master
 node: {project: anoma}
 steps:
-- commands: [echo "bfc3ef1d1ab3da3192b33ee305686691fd609baf16d5dca82691f647b3520c7a  Makefile"
+- commands: [echo "23b892f57324bc5d3ca100e95e8581dbb26132a0e7a7c756790fd401fd45e5f0  Makefile"
       | sha256sum -c -, echo "d1a970c93d10c7542f0f1b99cc7f3ec73fb67e84d8f011b71f06972b3de4b714  wasm/wasm_source/Makefile"
       | sha256sum -c -, echo "52d59575c0767b4738ea9b4c07844c761dce6f54a59b3429e75fb5f4410cdc7e  wasm/vp_template/Makefile"
       | sha256sum -c -, echo "52d59575c0767b4738ea9b4c07844c761dce6f54a59b3429e75fb5f4410cdc7e  wasm/tx_template/Makefile"
@@ -503,7 +503,7 @@ kind: pipeline
 name: anoma-ci-build-master
 node: {project: anoma}
 steps:
-- commands: [echo "bfc3ef1d1ab3da3192b33ee305686691fd609baf16d5dca82691f647b3520c7a  Makefile"
+- commands: [echo "23b892f57324bc5d3ca100e95e8581dbb26132a0e7a7c756790fd401fd45e5f0  Makefile"
       | sha256sum -c -, echo "d1a970c93d10c7542f0f1b99cc7f3ec73fb67e84d8f011b71f06972b3de4b714  wasm/wasm_source/Makefile"
       | sha256sum -c -, echo "52d59575c0767b4738ea9b4c07844c761dce6f54a59b3429e75fb5f4410cdc7e  wasm/vp_template/Makefile"
       | sha256sum -c -, echo "52d59575c0767b4738ea9b4c07844c761dce6f54a59b3429e75fb5f4410cdc7e  wasm/tx_template/Makefile"
@@ -608,7 +608,7 @@ kind: pipeline
 name: anoma-ci-wasm-master
 node: {project: anoma}
 steps:
-- commands: [echo "bfc3ef1d1ab3da3192b33ee305686691fd609baf16d5dca82691f647b3520c7a  Makefile"
+- commands: [echo "23b892f57324bc5d3ca100e95e8581dbb26132a0e7a7c756790fd401fd45e5f0  Makefile"
       | sha256sum -c -, echo "d1a970c93d10c7542f0f1b99cc7f3ec73fb67e84d8f011b71f06972b3de4b714  wasm/wasm_source/Makefile"
       | sha256sum -c -, echo "52d59575c0767b4738ea9b4c07844c761dce6f54a59b3429e75fb5f4410cdc7e  wasm/vp_template/Makefile"
       | sha256sum -c -, echo "52d59575c0767b4738ea9b4c07844c761dce6f54a59b3429e75fb5f4410cdc7e  wasm/tx_template/Makefile"
@@ -682,6 +682,6 @@ type: docker
 workspace: {path: /usr/local/rust/project}
 ---
 kind: signature
-hmac: 7c51981f08e4f26ed6b23f4e47c4beb11fe3bea74851b7efc1fa788bf4b1216a
+hmac: b3c8d4d32a7a98a6027816999325cf90c807427772e8abb23a5580f0fdf89f05
 
 ...

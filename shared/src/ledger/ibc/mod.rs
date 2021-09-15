@@ -343,6 +343,7 @@ mod tests {
         ChannelOpenTryData, ClientUpdateData, ConnectionOpenAckData,
         ConnectionOpenConfirmData, ConnectionOpenInitData,
         ConnectionOpenTryData, PacketAckData, PacketReceiptData,
+        PacketSendData,
     };
 
     fn get_client_id() -> ClientId {
@@ -1178,25 +1179,26 @@ mod tests {
         write_log.commit_tx();
         write_log.commit_block(&mut storage).expect("commit failed");
 
+        // prepare data
+        let counterparty = get_channel_counterparty();
+        let timestamp = Utc::now() + chrono::Duration::seconds(100);
+        let timeout_timestamp = Timestamp::from_datetime(timestamp);
+        let data = PacketSendData::new(
+            get_port_id(),
+            get_channel_id(),
+            counterparty.port_id().clone(),
+            counterparty.channel_id().unwrap().clone(),
+            vec![0],
+            Height::new(1, 100),
+            timeout_timestamp,
+        );
+
         // get and increment the nextSequenceSend
         let seq_path = Path::SeqSends(get_port_id(), get_channel_id());
         let sequence = get_next_seq(&storage, seq_path.clone());
         increment_seq(&mut write_log, seq_path.clone(), sequence);
         // make a packet
-        let counterparty = get_channel_counterparty();
-        let timestamp = Utc::now() + chrono::Duration::seconds(100);
-        let timeout_timestamp = Timestamp::from_datetime(timestamp);
-        let packet = Packet {
-            sequence,
-            source_port: get_port_id(),
-            source_channel: get_channel_id(),
-            destination_port: counterparty.port_id().clone(),
-            destination_channel: counterparty.channel_id().unwrap().clone(),
-            data: vec![0],
-            timeout_height: Height::new(1, 100),
-            timeout_timestamp,
-        };
-
+        let packet = data.packet(sequence);
         // insert a commitment
         let commitment = hash(&packet);
         let path = Path::Commitments {
@@ -1212,7 +1214,7 @@ mod tests {
         write_log.commit_tx();
 
         let tx_code = vec![];
-        let tx_data = packet.try_to_vec().expect("encoding failed");
+        let tx_data = data.try_to_vec().expect("encoding failed");
         let tx = Tx::new(tx_code, Some(tx_data.clone()));
         let gas_meter = VpGasMeter::new(0);
         let ctx = Ctx::new(&storage, &write_log, &tx, gas_meter);
@@ -1399,23 +1401,28 @@ mod tests {
         let counterparty = get_channel_counterparty();
         let timestamp = Utc::now() + chrono::Duration::seconds(100);
         let timeout_timestamp = Timestamp::from_datetime(timestamp);
-        let packet = Packet {
-            sequence: Sequence::from(1),
-            source_port: get_port_id(),
-            source_channel: get_channel_id(),
-            destination_port: counterparty.port_id().clone(),
-            destination_channel: counterparty.channel_id().unwrap().clone(),
-            data: vec![0],
-            timeout_height: Height::new(1, 100),
+        let data = PacketSendData::new(
+            get_port_id(),
+            get_channel_id(),
+            counterparty.port_id().clone(),
+            counterparty.channel_id().unwrap().clone(),
+            vec![0],
+            Height::new(1, 100),
             timeout_timestamp,
-        };
+        );
 
+        // get and increment the nextSequenceSend
+        let seq_path = Path::SeqSends(get_port_id(), get_channel_id());
+        let sequence = get_next_seq(&storage, seq_path.clone());
+        increment_seq(&mut write_log, seq_path, sequence);
+        // make a packet
+        let packet = data.packet(sequence);
         // insert a commitment
         let commitment = hash(&packet);
         let path = Path::Commitments {
             port_id: get_port_id(),
             channel_id: get_channel_id(),
-            sequence: packet.sequence,
+            sequence,
         };
         let commitment_key = Key::ibc_key(path.to_string())
             .expect("Creating a key for a commitment shouldn't fail");
@@ -1425,7 +1432,7 @@ mod tests {
         write_log.commit_tx();
 
         let tx_code = vec![];
-        let tx_data = packet.try_to_vec().expect("encoding failed");
+        let tx_data = data.try_to_vec().expect("encoding failed");
         let tx = Tx::new(tx_code, Some(tx_data.clone()));
         let gas_meter = VpGasMeter::new(0);
         let ctx = Ctx::new(&storage, &write_log, &tx, gas_meter);

@@ -18,11 +18,12 @@ use ibc::ics04_channel::packet::{Packet, Sequence};
 use ibc::ics23_commitment::commitment::CommitmentProofBytes;
 use ibc::ics24_host::identifier::{ChannelId, ClientId, ConnectionId, PortId};
 use ibc::proofs::{ConsensusProof, Proofs};
+use ibc::timestamp::Timestamp;
 use ibc_proto::ibc::core::commitment::v1::MerkleProof;
 use prost::Message;
 use thiserror::Error;
 
-use crate::types::time::DurationNanos;
+use crate::types::time::{DateTimeUtc, DurationNanos};
 
 #[allow(missing_docs)]
 #[derive(Error, Debug)]
@@ -679,6 +680,68 @@ impl ChannelCloseConfirmData {
             self.proof_height,
         )
         .map_err(Error::InvalidProof)
+    }
+}
+
+/// Data for sending a packet
+#[derive(Debug, Clone, BorshSerialize, BorshDeserialize)]
+pub struct PacketSendData {
+    /// The source port
+    pub source_port: PortId,
+    /// The source channel
+    pub source_channel: ChannelId,
+    /// The destination port
+    pub destination_port: PortId,
+    /// The destination channel
+    pub destination_channel: ChannelId,
+    /// The data of packet
+    pub packet_data: Vec<u8>,
+    /// The timeout height
+    pub timeout_height: Height,
+    /// The timeout timestamp
+    pub timeout_timestamp: Option<DateTimeUtc>,
+}
+
+impl PacketSendData {
+    /// Create data for sending a packet
+    pub fn new(
+        source_port: PortId,
+        source_channel: ChannelId,
+        destination_port: PortId,
+        destination_channel: ChannelId,
+        packet_data: Vec<u8>,
+        timeout_height: Height,
+        timeout_timestamp: Timestamp,
+    ) -> Self {
+        let timeout_timestamp =
+            timeout_timestamp.as_datetime().map(DateTimeUtc);
+        Self {
+            source_port,
+            source_channel,
+            destination_port,
+            destination_channel,
+            packet_data,
+            timeout_height,
+            timeout_timestamp,
+        }
+    }
+
+    /// Returns a packet
+    pub fn packet(&self, sequence: Sequence) -> Packet {
+        let timeout_timestamp = match self.timeout_timestamp {
+            Some(timestamp) => Timestamp::from_datetime(timestamp.0),
+            None => Timestamp::none(),
+        };
+        Packet {
+            sequence,
+            source_port: self.source_port.clone(),
+            source_channel: self.source_channel.clone(),
+            destination_port: self.destination_port.clone(),
+            destination_channel: self.destination_channel.clone(),
+            data: self.packet_data.clone(),
+            timeout_height: self.timeout_height,
+            timeout_timestamp,
+        }
     }
 }
 
