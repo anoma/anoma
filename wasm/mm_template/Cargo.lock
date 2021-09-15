@@ -27,6 +27,7 @@ checksum = "739f4a8db6605981345c5654f3a85b056ce52f37a39d34da03f25bf2151ea16e"
 name = "anoma"
 version = "0.1.0"
 dependencies = [
+ "anoma_proof_of_stake",
  "bech32",
  "borsh",
  "chrono",
@@ -44,6 +45,14 @@ dependencies = [
  "tonic-build",
  "tracing",
  "wasmparser",
+]
+
+[[package]]
+name = "anoma_proof_of_stake"
+version = "0.1.0"
+dependencies = [
+ "borsh",
+ "thiserror",
 ]
 
 [[package]]
