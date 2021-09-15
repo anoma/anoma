@@ -88,10 +88,10 @@ pub mod vp {
     use crate::imports::vp::{self};
 
     enum KeyType {
-        Metadata,
-        Approval,
-        CurrentOwner,
-        Creator,
+        Metadata(String),
+        Approval(String),
+        CurrentOwner(String),
+        Creator(Address),
         Unknown,
     }
 
@@ -101,11 +101,9 @@ pub mod vp {
         keys_changed: &HashSet<Key>,
         verifiers: &HashSet<Address>,
     ) -> bool {
-        let nft_creator: &Address = todo!();
         keys_changed.iter().all(|key| {
-            let nft_token_id: &str = todo!();
-            match get_key_type(key, nft_address, nft_creator, nft_token_id) {
-                KeyType::Creator => {
+            match get_key_type(key, nft_address) {
+                KeyType::Creator(_creator_addr) => {
                     let key = key.to_string();
                     // creator has changed
                     if vp::has_key_pre(&key) && vp::has_key_post(&key) {
@@ -118,15 +116,26 @@ pub mod vp {
                         !vp::has_key_pre(&key) && vp::has_key_post(&key)
                     }
                 }
-                KeyType::Metadata => verifiers.contains(nft_creator),
-                KeyType::Approval => {
-                    is_approved(nft_address, nft_token_id, verifiers)
+                KeyType::Metadata(_token_id) => {
+                    for verifier in verifiers {
+                        let creator_key =
+                            get_creator_key(nft_address, verifier);
+                        if vp::has_key_pre(&creator_key.to_string()) {
+                            return true;
+                        }
+                    }
+                    false
                 }
-                KeyType::CurrentOwner => {
+                KeyType::Approval(token_id) => {
+                    is_approved(nft_address, token_id.as_ref(), verifiers)
+                }
+                KeyType::CurrentOwner(token_id) => {
                     let key = key.to_string();
-                    let past_owners_key =
-                        get_token_past_owners_key(nft_address, nft_token_id)
-                            .to_string();
+                    let past_owners_key = get_token_past_owners_key(
+                        nft_address,
+                        token_id.as_ref(),
+                    )
+                    .to_string();
 
                     let prev_past_owners: Vec<Address> =
                         vp::read_pre(&past_owners_key).unwrap_or_default();
@@ -145,7 +154,7 @@ pub mod vp {
                             if !prev_past_owners.contains(&owner) {
                                 let pre_owner_key = get_token_current_owner_key(
                                     nft_address,
-                                    nft_token_id,
+                                    token_id.as_ref(),
                                     &owner,
                                 );
                                 return vp::has_key_pre(
@@ -155,11 +164,11 @@ pub mod vp {
                         }
                         false
                     } else {
-                        is_approved(nft_address, nft_token_id, verifiers)
+                        is_approved(nft_address, token_id.as_ref(), verifiers)
                             && post_past_owners.is_empty()
                     }
                 }
-                KeyType::Unknown => todo!(),
+                KeyType::Unknown => true,
             }
             // execute the NFT VP
         })
@@ -181,22 +190,23 @@ pub mod vp {
         false
     }
 
-    fn get_key_type(
-        key: &Key,
-        nft_address: &Address,
-        nft_creator: &Address,
-        nft_token_id: &str,
-    ) -> KeyType {
-        if is_nft_creator_key(key, nft_address, nft_creator) {
-            KeyType::Creator
-        } else if is_nft_metadata_key(key, nft_address, nft_token_id) {
-            KeyType::Metadata
-        } else if is_nft_approval_key(key, nft_address, nft_token_id) {
-            KeyType::Approval
-        } else if is_nft_current_owner_key(key, nft_address, nft_token_id) {
-            KeyType::CurrentOwner
-        } else {
-            KeyType::Unknown
+    fn get_key_type(key: &Key, nft_address: &Address) -> KeyType {
+        let is_creator_key = is_nft_creator_key(key, nft_address);
+        let is_metadata_key = is_nft_metadata_key(key, nft_address);
+        let is_approval_key = is_nft_approval_key(key, nft_address);
+        let is_current_owner_key = is_nft_current_owner_key(key, nft_address);
+        if let Some(addr) = is_creator_key {
+            return KeyType::Creator(addr);
         }
+        if let Some(token_id) = is_metadata_key {
+            return KeyType::Metadata(token_id);
+        }
+        if let Some(token_id) = is_approval_key {
+            return KeyType::Approval(token_id);
+        }
+        if let Some(token_id) = is_current_owner_key {
+            return KeyType::CurrentOwner(token_id);
+        }
+        KeyType::Unknown
     }
 }

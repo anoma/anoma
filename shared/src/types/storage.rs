@@ -207,6 +207,14 @@ impl Key {
         Ok(Key { segments })
     }
 
+    /// Returns the last segmenet without popping it
+    pub fn peek(&self) -> Option<&DbKeySeg> {
+        match self.segments.len() {
+            0 => None,
+            n => Some(&self.segments[n - 1]),
+        }
+    }
+
     /// Return a new key without the last KeySeg
     pub fn pop(&self) -> Result<Self> {
         let mut segments = self.segments.clone();

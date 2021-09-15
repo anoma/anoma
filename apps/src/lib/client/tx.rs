@@ -32,6 +32,7 @@ const TX_UPDATE_VP_WASM: &str = "wasm/tx_update_vp.wasm";
 const TX_TRANSFER_WASM: &str = "wasm/tx_transfer.wasm";
 const VP_USER_WASM: &str = "wasm/vp_user.wasm";
 const TX_MINT_NFT_TOKEN: &str = "wasm/mint_nft_tokens.wasm";
+const VP_NFT: &str = "wasm/vp_nft.wasm";
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct NftDefinition {
@@ -180,9 +181,7 @@ pub async fn create_nft(args: args::NftCreate) {
             std::fs::read(path).expect("Expected a file at given code path")
         })
         .unwrap_or_else(|| {
-            // TODO: change with nft vp
-            std::fs::read(VP_USER_WASM)
-                .expect("Expected a file at given code path")
+            std::fs::read(VP_NFT).expect("Expected a file at given code path")
         });
 
     let data = CreateNft {

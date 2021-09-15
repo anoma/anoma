@@ -133,61 +133,48 @@ pub fn get_token_approval_key(
 }
 
 /// Check that a particular nft is created by a particular creator address
-pub fn is_nft_creator_key(
-    key: &Key,
-    address: &Address,
-    creator: &Address,
-) -> bool {
+pub fn is_nft_creator_key(key: &Key, address: &Address) -> Option<Address> {
     match &key.segments[..] {
         [DbKeySeg::AddressSeg(nft_addr), DbKeySeg::StringSeg(prefix), DbKeySeg::StringSeg(creator_key), DbKeySeg::AddressSeg(creator_addr)]
             if nft_addr == address
                 && prefix == NFT_KEY
-                && creator_key == CREATOR_KEY
-                && creator_addr == creator =>
+                && creator_key == CREATOR_KEY =>
+                // && creator_addr == creator =>
         {
-            true
+            Some(creator_addr.to_owned())
         }
-        _ => false,
+        _ => None,
     }
 }
 
 /// Check that a particular key is a approval storage key
-pub fn is_nft_approval_key(
-    key: &Key,
-    address: &Address,
-    token_id: &str,
-) -> bool {
+pub fn is_nft_approval_key(key: &Key, address: &Address) -> Option<String> {
     match &key.segments[..] {
         [DbKeySeg::AddressSeg(nft_addr), DbKeySeg::StringSeg(prefix), DbKeySeg::StringSeg(ids_key), DbKeySeg::StringSeg(token_id_key), DbKeySeg::StringSeg(approval_key), DbKeySeg::AddressSeg(_approval_address_key)]
             if nft_addr == address
                 && prefix == NFT_KEY
                 && ids_key == IDS_KEY
-                && token_id_key == token_id
                 && approval_key == APPROVALS_KEY =>
         {
-            true
+            Some(token_id_key.to_owned())
         }
-        _ => false,
+        _ => None,
     }
 }
 
 /// Check that a particular key is a metadata storage key
-pub fn is_nft_metadata_key(
-    key: &Key,
-    address: &Address,
-    token_id: &str,
-) -> bool {
+pub fn is_nft_metadata_key(key: &Key, address: &Address) -> Option<String> {
     match &key.segments[..] {
         [DbKeySeg::AddressSeg(nft_addr), DbKeySeg::StringSeg(prefix), DbKeySeg::StringSeg(ids_key), DbKeySeg::StringSeg(token_id_key), DbKeySeg::StringSeg(metadata_key)]
             if nft_addr == address
                 && prefix == NFT_KEY
                 && ids_key == IDS_KEY
-                && token_id_key == token_id
+                // && token_id_key == token_id
                 && metadata_key == METADATA_KEY =>
         {
-            true
+            Some(token_id_key.to_owned())
         }
-        _ => false,
+        _ => None,
     }
 }
 
@@ -195,19 +182,17 @@ pub fn is_nft_metadata_key(
 pub fn is_nft_current_owner_key(
     key: &Key,
     address: &Address,
-    token_id: &str,
-) -> bool {
+) -> Option<String> {
     match &key.segments[..] {
         [DbKeySeg::AddressSeg(nft_addr), DbKeySeg::StringSeg(prefix), DbKeySeg::StringSeg(ids_key), DbKeySeg::StringSeg(token_id_key), DbKeySeg::StringSeg(current_owner_key), DbKeySeg::AddressSeg(_)]
             if nft_addr == address
                 && prefix == NFT_KEY
                 && ids_key == IDS_KEY
-                && token_id_key == token_id
                 && current_owner_key == CURRENT_OWNER_KEY =>
         {
-            true
+            Some(token_id_key.to_owned())
         }
-        _ => false,
+        _ => None,
     }
 }
 
