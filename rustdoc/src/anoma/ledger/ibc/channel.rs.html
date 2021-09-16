@@ -723,6 +723,36 @@
 <span id="721">721</span>
 <span id="722">722</span>
 <span id="723">723</span>
+<span id="724">724</span>
+<span id="725">725</span>
+<span id="726">726</span>
+<span id="727">727</span>
+<span id="728">728</span>
+<span id="729">729</span>
+<span id="730">730</span>
+<span id="731">731</span>
+<span id="732">732</span>
+<span id="733">733</span>
+<span id="734">734</span>
+<span id="735">735</span>
+<span id="736">736</span>
+<span id="737">737</span>
+<span id="738">738</span>
+<span id="739">739</span>
+<span id="740">740</span>
+<span id="741">741</span>
+<span id="742">742</span>
+<span id="743">743</span>
+<span id="744">744</span>
+<span id="745">745</span>
+<span id="746">746</span>
+<span id="747">747</span>
+<span id="748">748</span>
+<span id="749">749</span>
+<span id="750">750</span>
+<span id="751">751</span>
+<span id="752">752</span>
+<span id="753">753</span>
 </pre><pre class="rust">
 <span class="doccomment">//! IBC validity predicate for channel module</span>
 
@@ -756,6 +786,7 @@
 <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::types::ibc</span>::{
     <span class="ident">ChannelCloseConfirmData</span>, <span class="ident">ChannelCloseInitData</span>, <span class="ident">ChannelOpenAckData</span>,
     <span class="ident">ChannelOpenConfirmData</span>, <span class="ident">ChannelOpenTryData</span>, <span class="ident">Error</span> <span class="kw">as</span> <span class="ident">IbcDataError</span>,
+    <span class="ident">TimeoutData</span>,
 };
 <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::types::storage</span>::{<span class="ident">DbKeySeg</span>, <span class="ident">Key</span>, <span class="ident">KeySeg</span>};
 
@@ -931,7 +962,7 @@
         <span class="ident">channel</span>: <span class="kw-2">&amp;</span><span class="ident">ChannelEnd</span>,
         <span class="ident">tx_data</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>],
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">prev_channel</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">channel_end_pre</span>(<span class="ident">port_channel_id</span>.<span class="ident">clone</span>())<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">prev_channel</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">channel_end_pre</span>(<span class="kw-2">&amp;</span><span class="ident">port_channel_id</span>)<span class="question-mark">?</span>;
         <span class="kw">match</span> <span class="ident">channel</span>.<span class="ident">state</span>() {
             <span class="ident">State::Open</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="ident">prev_channel</span>.<span class="ident">state</span>() {
                 <span class="ident">State::Init</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">verify_channel_ack_proof</span>(
@@ -958,19 +989,48 @@
                         <span class="ident">port_channel_id</span>.<span class="number">0</span>, <span class="ident">port_channel_id</span>.<span class="number">1</span>,
                     )));
                 }
-                <span class="kw">match</span> <span class="ident">ChannelCloseInitData::try_from_slice</span>(<span class="ident">tx_data</span>) {
-                    <span class="prelude-val">Ok</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(()),
-                    <span class="prelude-val">Err</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">verify_channel_close_proof</span>(
-                        <span class="ident">port_channel_id</span>,
-                        <span class="ident">channel</span>,
-                        <span class="ident">tx_data</span>,
-                    ),
+                <span class="kw">match</span> <span class="ident">TimeoutData::try_from_slice</span>(<span class="ident">tx_data</span>) {
+                    <span class="prelude-val">Ok</span>(<span class="ident">data</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">validate_commitment_absence</span>(<span class="ident">data</span>),
+                    <span class="prelude-val">Err</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                        <span class="kw">match</span> <span class="ident">ChannelCloseInitData::try_from_slice</span>(<span class="ident">tx_data</span>) {
+                            <span class="prelude-val">Ok</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(()),
+                            <span class="prelude-val">Err</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">verify_channel_close_proof</span>(
+                                <span class="ident">port_channel_id</span>,
+                                <span class="ident">channel</span>,
+                                <span class="ident">tx_data</span>,
+                            ),
+                        }
+                    }
                 }
             }
             <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">Error::InvalidStateChange</span>(<span class="macro">format!</span>(
                 <span class="string">&quot;The state change of the channel is invalid: Port {}, Channel \
                  {}&quot;</span>,
                 <span class="ident">port_channel_id</span>.<span class="number">0</span>, <span class="ident">port_channel_id</span>.<span class="number">1</span>
+            ))),
+        }
+    }
+
+    <span class="kw">fn</span> <span class="ident">validate_commitment_absence</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">data</span>: <span class="ident">TimeoutData</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+        <span class="comment">// check if the commitment has been deleted</span>
+        <span class="kw">let</span> <span class="ident">packet</span> <span class="op">=</span> <span class="ident">data</span>.<span class="ident">packet</span>;
+        <span class="kw">let</span> <span class="ident">commitment_key</span> <span class="op">=</span> <span class="ident">Path::Commitments</span> {
+            <span class="ident">port_id</span>: <span class="ident">packet</span>.<span class="ident">source_port</span>.<span class="ident">clone</span>(),
+            <span class="ident">channel_id</span>: <span class="ident">packet</span>.<span class="ident">source_channel</span>.<span class="ident">clone</span>(),
+            <span class="ident">sequence</span>: <span class="ident">packet</span>.<span class="ident">sequence</span>,
+        };
+        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Key::ibc_key</span>(<span class="ident">commitment_key</span>.<span class="ident">to_string</span>())
+            .<span class="ident">expect</span>(<span class="string">&quot;Creating a key for a channel failed&quot;</span>);
+        <span class="kw">let</span> <span class="ident">state_change</span> <span class="op">=</span> <span class="self">self</span>
+            .<span class="ident">get_state_change</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>)
+            .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">Error::InvalidStateChange</span>(<span class="ident">e</span>.<span class="ident">to_string</span>()))<span class="question-mark">?</span>;
+        <span class="kw">match</span> <span class="ident">state_change</span> {
+            <span class="comment">// the deleted commitment is validated in validate_commitment()</span>
+            <span class="ident">StateChange::Deleted</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(()),
+            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">Error::InvalidStateChange</span>(<span class="macro">format!</span>(
+                <span class="string">&quot;The commitment hasn&#39;t been deleted yet: Port {}, Channel {}, \
+                 Sequence {}&quot;</span>,
+                <span class="ident">packet</span>.<span class="ident">source_port</span>, <span class="ident">packet</span>.<span class="ident">source_channel</span>, <span class="ident">packet</span>.<span class="ident">sequence</span>
             ))),
         }
     }
@@ -1180,7 +1240,7 @@
 
     <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">channel_end_pre</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">port_channel_id</span>: (<span class="ident">PortId</span>, <span class="ident">ChannelId</span>),
+        <span class="ident">port_channel_id</span>: <span class="kw-2">&amp;</span>(<span class="ident">PortId</span>, <span class="ident">ChannelId</span>),
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ChannelEnd</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">path</span> <span class="op">=</span> <span class="ident">Path::ChannelEnds</span>(
             <span class="ident">port_channel_id</span>.<span class="number">0</span>.<span class="ident">clone</span>(),
