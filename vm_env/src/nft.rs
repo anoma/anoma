@@ -10,7 +10,7 @@ pub mod tx {
     use crate::imports::tx;
     pub fn init_nft(nft: CreateNft) -> Address {
         let address = tx::init_account(&nft.vp_code);
-        let owner_key = nft::get_creator_key(&nft.owner, &nft.owner);
+        let owner_key = nft::get_creator_key(&address, &nft.owner);
         // write creator
         tx::write(&owner_key.to_string(), ());
 
@@ -50,9 +50,12 @@ pub mod tx {
             }
 
             // write token metadata
-            let metadata_key =
-                nft::get_token_metadata_key(nft_address, &token.id.to_string());
-            tx::write(&metadata_key.to_string(), token.metadata);
+            let metadata_key = nft::get_token_metadata_key(
+                nft_address,
+                &token.id.to_string(),
+                &token.metadata.to_string(),
+            );
+            tx::write(&metadata_key.to_string(), ());
             // write creator into approval
             let owner_approval_key = nft::get_token_approval_key(
                 nft_address,
@@ -85,10 +88,7 @@ pub mod vp {
     pub use anoma::types::nft::*;
     use anoma::types::storage::Key;
 
-    use crate::imports::{
-        tx,
-        vp::{self},
-    };
+    use crate::imports::{tx, vp};
 
     enum KeyType {
         Metadata(String),
@@ -107,34 +107,7 @@ pub mod vp {
         keys_changed.iter().all(|key| {
             match get_key_type(key, nft_address) {
                 KeyType::Creator(_creator_addr) => {
-                    tx::log_string(format!(
-                        "nft vp, checking creator: {}",
-                        _creator_addr
-                    ));
-                    let key = key.to_string();
-                    // creator has changed
-                    if vp::has_key_pre(&key) && vp::has_key_post(&key) {
-                        false
-                    // creator has not changed
-                    } else if vp::has_key_pre(&key) && !vp::has_key_post(&key) {
-                        true
-                    // created new nft
-                    } else {
-                        !vp::has_key_pre(&key) && vp::has_key_post(&key)
-                    }
-                }
-                KeyType::Metadata(_token_id) => {
-                    tx::log_string(format!(
-                        "nft vp, checking metadata with token id: {}",
-                        _token_id
-                    ));
-                    for verifier in verifiers {
-                        let creator_key =
-                            get_creator_key(nft_address, verifier);
-                        if vp::has_key_pre(&creator_key.to_string()) {
-                            return true;
-                        }
-                    }
+                    tx::log_string("creator cannot be changed.".to_string());
                     false
                 }
                 KeyType::Approval(token_id) => {
@@ -142,7 +115,15 @@ pub mod vp {
                         "nft vp, checking approvals with token id: {}",
                         token_id
                     ));
+
                     is_approved(nft_address, token_id.as_ref(), verifiers)
+                }
+                KeyType::Metadata(token_id) => {
+                    tx::log_string(format!(
+                        "nft vp, checking if metadata changed: {}",
+                        token_id
+                    ));
+                    is_creator(nft_address, verifiers)
                 }
                 KeyType::CurrentOwner(token_id) => {
                     tx::log_string(format!(
@@ -163,7 +144,7 @@ pub mod vp {
 
                     // if there was a previous owner
                     if vp::has_key_pre(key) {
-                        // past owners should be -1 current
+                        // past owners should be current - 1
                         if prev_past_owners.len() != post_past_owners.len() - 1
                         {
                             return false;
@@ -187,7 +168,7 @@ pub mod vp {
                             && post_past_owners.is_empty()
                     }
                 }
-                KeyType::Unknown => true,
+                _ => true,
             }
         })
     }
@@ -202,6 +183,17 @@ pub mod vp {
                 get_token_approval_key(nft_address, nft_token_id, verifier)
                     .to_string();
             if vp::has_key_pre(approval_key) {
+                return true;
+            }
+        }
+        false
+    }
+
+    fn is_creator(nft_address: &Address, verifiers: &HashSet<Address>) -> bool {
+        for verifier in verifiers {
+            let creator_key =
+                get_creator_key(nft_address, verifier).to_string();
+            if vp::has_key_pre(creator_key) {
                 return true;
             }
         }

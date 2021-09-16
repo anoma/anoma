@@ -13,6 +13,8 @@ use rust_decimal::prelude::*;
 enum KeyType<'a> {
     Token(&'a Address),
     InvalidIntentSet(&'a Address),
+    Nft(&'a Address),
+    Vp(&'a Address),
     Unknown,
 }
 
@@ -22,6 +24,10 @@ impl<'a> From<&'a storage::Key> for KeyType<'a> {
             Self::Token(address)
         } else if let Some(address) = intent::is_invalid_intent_key(key) {
             Self::InvalidIntentSet(address)
+        } else if let Some(address) = nft::is_nft_key(key) {
+            Self::Nft(address)
+        } else if let Some(address) = key.is_validity_predicate() {
+            Self::Vp(address)
         } else {
             Self::Unknown
         }
@@ -110,10 +116,22 @@ fn validate_tx(
                     true
                 }
             }
+            KeyType::Nft(addr) => {
+                log_string(format!("Nft key {}, address {}", key, addr));
+                // TODO: to be changed when impl. transfer
+                true
+            }
+            KeyType::Vp(owner) => {
+                log_string(format!("Vp key {}, address {}", key, addr));
+                if owner == &addr {
+                    return *valid_sig;
+                }
+                return true;
+            }
             KeyType::Unknown => {
                 log_string(format!(
-                    "Unknown key modified, valid sig {}",
-                    *valid_sig
+                    "Unknown key modified {}, valid sig {}, addr {:?}",
+                    key, *valid_sig, addr
                 ));
                 // Allow any change if authorized by a signature
                 *valid_sig

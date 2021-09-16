@@ -86,9 +86,15 @@ pub fn get_creator_key(address: &Address, creator_address: &Address) -> Key {
 }
 
 /// Get the nft metadata storage key
-pub fn get_token_metadata_key(address: &Address, nft_id: &str) -> Key {
+pub fn get_token_metadata_key(
+    address: &Address,
+    nft_id: &str,
+    metadata: &str,
+) -> Key {
     nft_token_prefix(address, nft_id)
         .push(&METADATA_KEY.to_owned())
+        .expect("Cannot obtain a storage key")
+        .push(&metadata.to_owned())
         .expect("Cannot obtain a storage key")
 }
 
@@ -169,7 +175,6 @@ pub fn is_nft_metadata_key(key: &Key, address: &Address) -> Option<String> {
             if nft_addr == address
                 && prefix == NFT_KEY
                 && ids_key == IDS_KEY
-                // && token_id_key == token_id
                 && metadata_key == METADATA_KEY =>
         {
             Some(token_id_key.to_owned())
@@ -216,5 +221,16 @@ pub fn is_nft_past_owners_key(
     }
 }
 
+/// Check that a key points to a nft storage key
+pub fn is_nft_key(key: &Key) -> Option<&Address> {
+    match &key.segments[..] {
+        [DbKeySeg::AddressSeg(nft_addr), DbKeySeg::StringSeg(prefix), ..]
+            if prefix == NFT_KEY =>
+        {
+            Some(nft_addr)
+        }
+        _ => None,
+    }
+}
 // loop using iter_prefix ->
 // /Users/fraccaman/Heliax/anoma-prototype/shared/src/ledger/ibc/channel.rs
