@@ -473,6 +473,10 @@
 <span id="471">471</span>
 <span id="472">472</span>
 <span id="473">473</span>
+<span id="474">474</span>
+<span id="475">475</span>
+<span id="476">476</span>
+<span id="477">477</span>
 </pre><pre class="rust">
 <span class="doccomment">//! Implements transparent addresses as described in [Accounts</span>
 <span class="doccomment">//! Addresses](docs/src/explore/design/ledger/accounts.md#addresses).</span>
@@ -830,7 +834,12 @@
 
 <span class="doccomment">/// Temporary helper for testing</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">matchmaker</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Address</span> {
-    <span class="ident">Address::decode</span>(<span class="string">&quot;a1qq5qqqqqxu6rvdzpxymnqwfkxfznvsjxggunyd3jg5erg3p3geqnvv35gep5yvzxx5m5x3fsfje8td&quot;</span>).<span class="ident">expect</span>(<span class="string">&quot;The token address decoding shouldn&#39;t fail&quot;</span>)
+    <span class="ident">Address::decode</span>(<span class="string">&quot;a1qq5qqqqqxu6rvdzpxymnqwfkxfznvsjxggunyd3jg5erg3p3geqnvv35gep5yvzxx5m5x3fsfje8td&quot;</span>).<span class="ident">expect</span>(<span class="string">&quot;The address decoding shouldn&#39;t fail&quot;</span>)
+}
+
+<span class="doccomment">/// Validator address for development and testing</span>
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">validator</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Address</span> {
+    <span class="ident">Address::decode</span>(<span class="string">&quot;a1qq5qqqqqgfqnsd6pxse5zdj9g5crzsf5x4zyzv6yxerr2d2rxpryzwp5g5m5zvfjxv6ygsekjmraj0&quot;</span>).<span class="ident">expect</span>(<span class="string">&quot;The address decoding shouldn&#39;t fail&quot;</span>)
 }
 
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
@@ -941,8 +950,7 @@
     <span class="doccomment">/// Generate an arbitrary [`ImplicitAddress`].</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">arb_implicit_address</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="kw">impl</span> <span class="ident">Strategy</span><span class="op">&lt;</span><span class="ident">Value</span> <span class="op">=</span> <span class="ident">ImplicitAddress</span><span class="op">&gt;</span> {
         <span class="ident">ed25519::testing::arb_keypair</span>().<span class="ident">prop_map</span>(<span class="op">|</span><span class="ident">keypair</span><span class="op">|</span> {
-            <span class="kw">let</span> <span class="ident">pk</span> <span class="op">=</span> <span class="ident">ed25519::PublicKey::from</span>(<span class="ident">keypair</span>.<span class="ident">public</span>);
-            <span class="kw">let</span> <span class="ident">pkh</span> <span class="op">=</span> <span class="ident">ed25519::PublicKeyHash::from</span>(<span class="ident">pk</span>);
+            <span class="kw">let</span> <span class="ident">pkh</span> <span class="op">=</span> <span class="ident">ed25519::PublicKeyHash::from</span>(<span class="ident">keypair</span>.<span class="ident">public</span>);
             <span class="ident">ImplicitAddress::Ed25519</span>(<span class="ident">pkh</span>)
         })
     }

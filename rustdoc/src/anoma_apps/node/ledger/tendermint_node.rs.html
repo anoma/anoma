@@ -236,7 +236,6 @@
 <span id="234">234</span>
 <span id="235">235</span>
 <span id="236">236</span>
-<span id="237">237</span>
 </pre><pre class="rust">
 <span class="kw">use</span> <span class="ident">std::fs</span>::{<span class="self">self</span>, <span class="ident">File</span>, <span class="ident">OpenOptions</span>};
 <span class="kw">use</span> <span class="ident">std::io</span>::{<span class="ident">BufReader</span>, <span class="ident">Write</span>};
@@ -411,8 +410,7 @@
         .<span class="ident">map_err</span>(<span class="ident">Error::OpenWriteConfig</span>)<span class="question-mark">?</span>;
     <span class="kw">let</span> <span class="ident">config_str</span> <span class="op">=</span>
         <span class="ident">toml::to_string</span>(<span class="kw-2">&amp;</span><span class="ident">config</span>).<span class="ident">map_err</span>(<span class="ident">Error::ConfigSerializeToml</span>)<span class="question-mark">?</span>;
-    <span class="ident">file</span>.<span class="ident">write</span>(<span class="ident">config_str</span>.<span class="ident">as_bytes</span>())
-        .<span class="ident">map</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> ())
+    <span class="ident">file</span>.<span class="ident">write_all</span>(<span class="ident">config_str</span>.<span class="ident">as_bytes</span>())
         .<span class="ident">map_err</span>(<span class="ident">Error::WriteConfig</span>)
 }
 

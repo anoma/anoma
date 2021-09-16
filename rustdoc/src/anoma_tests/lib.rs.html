@@ -13,12 +13,14 @@
 <span id="11">11</span>
 <span id="12">12</span>
 <span id="13">13</span>
+<span id="14">14</span>
 </pre><pre class="rust">
 <span class="attribute">#![<span class="ident">deny</span>(<span class="ident">rustdoc::broken_intra_doc_links</span>)]</span>
 <span class="attribute">#![<span class="ident">deny</span>(<span class="ident">rustdoc::private_intra_doc_links</span>)]</span>
 
 <span class="kw">mod</span> <span class="ident">vm_host_env</span>;
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">vm_host_env</span>::{<span class="ident">tx</span>, <span class="ident">vp</span>};
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
 <span class="kw">mod</span> <span class="ident">e2e</span>;
 
 <span class="doccomment">/// Using this import requires `tracing` and `tracing-subscriber` dependencies.</span>

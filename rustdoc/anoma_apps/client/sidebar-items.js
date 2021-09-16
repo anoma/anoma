@@ -1,1 +1,1 @@
-initSidebarItems({"mod":[["rpc","Client RPC queries"],["tx",""]]});
+initSidebarItems({"mod":[["rpc","Client RPC queries"],["signing","Helpers for making digital signatures using cryptographic keys from the wallet."],["tx",""]]});

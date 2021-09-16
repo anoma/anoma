@@ -107,6 +107,8 @@
 <span id="105">105</span>
 <span id="106">106</span>
 <span id="107">107</span>
+<span id="108">108</span>
+<span id="109">109</span>
 </pre><pre class="rust">
 <span class="doccomment">//! The parameters used for the chain&#39;s genesis</span>
 
@@ -149,13 +151,15 @@
 
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;dev&quot;</span>)]</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">genesis</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Genesis</span> {
+    <span class="kw">use</span> <span class="ident">anoma::types::address</span>;
+
     <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::wallet</span>;
 
     <span class="comment">// NOTE When the validator&#39;s key changes, tendermint must be reset with</span>
     <span class="comment">// `anoma reset` command. To generate a new validator, use the</span>
     <span class="comment">// `tests::gen_genesis_validator` below.</span>
-    <span class="kw">let</span> <span class="ident">consensus_keypair</span> <span class="op">=</span> <span class="ident">wallet::validator_keypair</span>();
-    <span class="kw">let</span> <span class="ident">account_keypair</span> <span class="op">=</span> <span class="ident">wallet::validator_keypair</span>();
+    <span class="kw">let</span> <span class="ident">consensus_keypair</span> <span class="op">=</span> <span class="ident">wallet::defaults::validator_keypair</span>();
+    <span class="kw">let</span> <span class="ident">account_keypair</span> <span class="op">=</span> <span class="ident">wallet::defaults::validator_keypair</span>();
     <span class="kw">let</span> <span class="ident">staking_reward_keypair</span> <span class="op">=</span> <span class="ident">Keypair::from_bytes</span>(<span class="kw-2">&amp;</span>[
         <span class="number">61</span>, <span class="number">198</span>, <span class="number">87</span>, <span class="number">204</span>, <span class="number">44</span>, <span class="number">94</span>, <span class="number">234</span>, <span class="number">228</span>, <span class="number">217</span>, <span class="number">72</span>, <span class="number">245</span>, <span class="number">27</span>, <span class="number">40</span>, <span class="number">2</span>, <span class="number">151</span>, <span class="number">174</span>,
         <span class="number">24</span>, <span class="number">247</span>, <span class="number">69</span>, <span class="number">6</span>, <span class="number">9</span>, <span class="number">30</span>, <span class="number">44</span>, <span class="number">16</span>, <span class="number">88</span>, <span class="number">238</span>, <span class="number">77</span>, <span class="number">162</span>, <span class="number">243</span>, <span class="number">125</span>, <span class="number">240</span>, <span class="number">206</span>,
@@ -163,17 +167,17 @@
         <span class="number">1</span>, <span class="number">132</span>, <span class="number">143</span>, <span class="number">67</span>, <span class="number">162</span>, <span class="number">121</span>, <span class="number">136</span>, <span class="number">247</span>, <span class="number">20</span>, <span class="number">67</span>, <span class="number">4</span>, <span class="number">27</span>, <span class="number">226</span>, <span class="number">63</span>, <span class="number">47</span>, <span class="number">57</span>,
     ])
     .<span class="ident">unwrap</span>();
-    <span class="kw">let</span> <span class="ident">address</span> <span class="op">=</span> <span class="ident">Address::decode</span>(<span class="string">&quot;a1qq5qqqqqgfqnsd6pxse5zdj9g5crzsf5x4zyzv6yxerr2d2rxpryzwp5g5m5zvfjxv6ygsekjmraj0&quot;</span>).<span class="ident">unwrap</span>();
+    <span class="kw">let</span> <span class="ident">address</span> <span class="op">=</span> <span class="ident">address::validator</span>();
     <span class="kw">let</span> <span class="ident">staking_reward_address</span> <span class="op">=</span> <span class="ident">Address::decode</span>(<span class="string">&quot;a1qq5qqqqqxaz5vven8yu5gdpng9zrys6ygvurwv3sgsmrvd6xgdzrys6yg4pnwd6z89rrqv2xvjcy9t&quot;</span>).<span class="ident">unwrap</span>();
     <span class="kw">let</span> <span class="ident">validator</span> <span class="op">=</span> <span class="ident">Validator</span> {
         <span class="ident">pos_data</span>: <span class="ident">GenesisValidator</span> {
             <span class="ident">address</span>,
             <span class="ident">staking_reward_address</span>,
             <span class="ident">tokens</span>: <span class="ident">token::Amount::whole</span>(<span class="number">200_000</span>),
-            <span class="ident">consensus_key</span>: <span class="ident">consensus_keypair</span>.<span class="ident">public</span>.<span class="ident">into</span>(),
-            <span class="ident">staking_reward_key</span>: <span class="ident">staking_reward_keypair</span>.<span class="ident">public</span>.<span class="ident">into</span>(),
+            <span class="ident">consensus_key</span>: <span class="ident">consensus_keypair</span>.<span class="ident">public</span>.<span class="ident">clone</span>(),
+            <span class="ident">staking_reward_key</span>: <span class="ident">staking_reward_keypair</span>.<span class="ident">public</span>,
         },
-        <span class="ident">account_key</span>: <span class="ident">account_keypair</span>.<span class="ident">public</span>.<span class="ident">into</span>(),
+        <span class="ident">account_key</span>: <span class="ident">account_keypair</span>.<span class="ident">public</span>,
         <span class="ident">non_staked_balance</span>: <span class="ident">token::Amount::whole</span>(<span class="number">100_000</span>),
     };
     <span class="kw">let</span> <span class="ident">parameters</span> <span class="op">=</span> <span class="ident">Parameters</span> {

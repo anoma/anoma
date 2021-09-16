@@ -85,6 +85,10 @@
 <span id="83">83</span>
 <span id="84">84</span>
 <span id="85">85</span>
+<span id="86">86</span>
+<span id="87">87</span>
+<span id="88">88</span>
+<span id="89">89</span>
 </pre><pre class="rust">
 <span class="doccomment">//! Proof-of-Stake integration as a native validity predicate</span>
 
@@ -108,6 +112,10 @@
 
 <span class="doccomment">/// Address of the PoS account implemented as a native VP</span>
 <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">ADDRESS</span>: <span class="ident">Address</span> <span class="op">=</span> <span class="ident">Address::Internal</span>(<span class="ident">InternalAddress::PoS</span>);
+
+<span class="doccomment">/// Address of the PoS slash pool account</span>
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">SLASH_POOL_ADDRESS</span>: <span class="ident">Address</span> <span class="op">=</span>
+    <span class="ident">Address::Internal</span>(<span class="ident">InternalAddress::PosSlashPool</span>);
 
 <span class="doccomment">/// Address of the staking token (XAN)</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">staking_token_address</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Address</span> {
