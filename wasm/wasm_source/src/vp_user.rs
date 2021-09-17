@@ -12,6 +12,7 @@ use rust_decimal::prelude::*;
 
 enum KeyType<'a> {
     Token(&'a Address),
+    PoS,
     InvalidIntentSet(&'a Address),
     Nft(&'a Address),
     Vp(&'a Address),
@@ -22,6 +23,8 @@ impl<'a> From<&'a storage::Key> for KeyType<'a> {
     fn from(key: &'a storage::Key) -> KeyType<'a> {
         if let Some(address) = token::is_any_token_balance_key(key) {
             Self::Token(address)
+        } else if proof_of_stake::is_pos_key(key) {
+            Self::PoS
         } else if let Some(address) = intent::is_invalid_intent_key(key) {
             Self::InvalidIntentSet(address)
         } else if let Some(address) = nft::is_nft_key(key) {
@@ -42,8 +45,8 @@ fn validate_tx(
     verifiers: HashSet<Address>,
 ) -> bool {
     log_string(format!(
-        "validate_tx called with user addr: {}, key_changed: {:#?}, \
-         verifiers: {:?}",
+        "validate_tx called with user addr: {}, key_changed: {:?}, verifiers: \
+         {:?}",
         addr, keys_changed, verifiers
     ));
 
@@ -92,6 +95,28 @@ fn validate_tx(
                     // If this is not the owner, allow any change
                     true
                 }
+            }
+            KeyType::PoS => {
+                // Allow the account to be used in PoS
+                let bond_id = proof_of_stake::is_bond_key(key)
+                    .or_else(|| proof_of_stake::is_unbond_key(key));
+                let valid = match bond_id {
+                    Some(bond_id) => {
+                        // Bonds and unbonds changes for this address
+                        // must be signed
+                        bond_id.source != addr || *valid_sig
+                    }
+                    None => {
+                        // Any other PoS changes are allowed without signature
+                        true
+                    }
+                };
+                log_string(format!(
+                    "PoS key {} {}",
+                    key,
+                    if valid { "accepted" } else { "rejected" }
+                ));
+                valid
             }
             KeyType::InvalidIntentSet(owner) => {
                 if owner == &addr {
@@ -381,7 +406,7 @@ mod tests {
 
         let vp_owner = address::testing::established_address_1();
         let keypair = key::ed25519::testing::keypair_1();
-        let public_key: key::ed25519::PublicKey = keypair.public.into();
+        let public_key = &keypair.public;
         let target = address::testing::established_address_2();
         let token = address::xan();
         let amount = token::Amount::from(10_098_123);
@@ -393,7 +418,7 @@ mod tests {
         // be able to transfer from it
         tx_env.credit_tokens(&vp_owner, &token, amount);
 
-        tx_env.write_public_key(&vp_owner, &public_key);
+        tx_env.write_public_key(&vp_owner, public_key);
 
         // Initialize VP environment from a transaction
         let mut vp_env =
@@ -510,14 +535,14 @@ mod tests {
             let mut tx_env = TestTxEnv::default();
 
             let keypair = key::ed25519::testing::keypair_1();
-            let public_key: key::ed25519::PublicKey = keypair.public.into();
+            let public_key = &keypair.public;
 
             // Spawn all the accounts in the storage key to be able to modify
             // their storage
             let storage_key_addresses = storage_key.find_addresses();
             tx_env.spawn_accounts(storage_key_addresses);
 
-            tx_env.write_public_key(&vp_owner, &public_key);
+            tx_env.write_public_key(&vp_owner, public_key);
 
             // Initialize VP environment from a transaction
             let mut vp_env =
@@ -577,14 +602,14 @@ mod tests {
 
         let vp_owner = address::testing::established_address_1();
         let keypair = key::ed25519::testing::keypair_1();
-        let public_key: key::ed25519::PublicKey = keypair.public.into();
+        let public_key = &keypair.public;
         let vp_code =
             std::fs::read(VP_ALWAYS_TRUE_WASM).expect("cannot load wasm");
 
         // Spawn the accounts to be able to modify their storage
         tx_env.spawn_accounts([&vp_owner]);
 
-        tx_env.write_public_key(&vp_owner, &public_key);
+        tx_env.write_public_key(&vp_owner, public_key);
 
         // Initialize VP environment from a transaction
         let mut vp_env =

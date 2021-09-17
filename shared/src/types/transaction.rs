@@ -1,5 +1,7 @@
 //! Types that are used in transactions.
 
+pub mod pos;
+
 use borsh::{BorshDeserialize, BorshSerialize};
 use serde::{Deserialize, Serialize};
 
@@ -73,10 +75,10 @@ pub struct CreateNft {
     Deserialize,
 )]
 pub struct MintNft {
-    /// The nft owner address
-    pub owner: Address,
     /// The nft address
     pub address: Address,
+    /// The nft owner
+    pub owner: Address,
     /// The nft tokens
     pub tokens: Vec<NftToken>,
 }

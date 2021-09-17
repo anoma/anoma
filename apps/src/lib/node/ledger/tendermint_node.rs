@@ -171,8 +171,7 @@ fn update_tendermint_config(home_dir: impl AsRef<Path>) -> Result<()> {
         .map_err(Error::OpenWriteConfig)?;
     let config_str =
         toml::to_string(&config).map_err(Error::ConfigSerializeToml)?;
-    file.write(config_str.as_bytes())
-        .map(|_| ())
+    file.write_all(config_str.as_bytes())
         .map_err(Error::WriteConfig)
 }
 

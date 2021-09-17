@@ -39,13 +39,15 @@ pub struct Validator {
 
 #[cfg(feature = "dev")]
 pub fn genesis() -> Genesis {
+    use anoma::types::address;
+
     use crate::wallet;
 
     // NOTE When the validator's key changes, tendermint must be reset with
     // `anoma reset` command. To generate a new validator, use the
     // `tests::gen_genesis_validator` below.
-    let consensus_keypair = wallet::validator_keypair();
-    let account_keypair = wallet::validator_keypair();
+    let consensus_keypair = wallet::defaults::validator_keypair();
+    let account_keypair = wallet::defaults::validator_keypair();
     let staking_reward_keypair = Keypair::from_bytes(&[
         61, 198, 87, 204, 44, 94, 234, 228, 217, 72, 245, 27, 40, 2, 151, 174,
         24, 247, 69, 6, 9, 30, 44, 16, 88, 238, 77, 162, 243, 125, 240, 206,
@@ -53,17 +55,17 @@ pub fn genesis() -> Genesis {
         1, 132, 143, 67, 162, 121, 136, 247, 20, 67, 4, 27, 226, 63, 47, 57,
     ])
     .unwrap();
-    let address = Address::decode("a1qq5qqqqqgfqnsd6pxse5zdj9g5crzsf5x4zyzv6yxerr2d2rxpryzwp5g5m5zvfjxv6ygsekjmraj0").unwrap();
+    let address = address::validator();
     let staking_reward_address = Address::decode("a1qq5qqqqqxaz5vven8yu5gdpng9zrys6ygvurwv3sgsmrvd6xgdzrys6yg4pnwd6z89rrqv2xvjcy9t").unwrap();
     let validator = Validator {
         pos_data: GenesisValidator {
             address,
             staking_reward_address,
             tokens: token::Amount::whole(200_000),
-            consensus_key: consensus_keypair.public.into(),
-            staking_reward_key: staking_reward_keypair.public.into(),
+            consensus_key: consensus_keypair.public.clone(),
+            staking_reward_key: staking_reward_keypair.public,
         },
-        account_key: account_keypair.public.into(),
+        account_key: account_keypair.public,
         non_staked_balance: token::Amount::whole(100_000),
     };
     let parameters = Parameters {

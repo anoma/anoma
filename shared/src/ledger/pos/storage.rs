@@ -12,7 +12,7 @@ use super::{
 };
 use crate::ledger::storage::types::{decode, encode};
 use crate::ledger::storage::{self, Storage, StorageHasher};
-use crate::types::address::{Address, InternalAddress};
+use crate::types::address::Address;
 use crate::types::storage::{DbKeySeg, Key, KeySeg};
 use crate::types::{key, token};
 
@@ -329,9 +329,8 @@ where
     type TokenAmount = token::Amount;
     type TokenChange = token::Change;
 
-    const POS_ADDRESS: Self::Address = Address::Internal(InternalAddress::PoS);
-    const POS_SLASH_POOL_ADDRESS: Self::Address =
-        Address::Internal(InternalAddress::PosSlashPool);
+    const POS_ADDRESS: Self::Address = super::ADDRESS;
+    const POS_SLASH_POOL_ADDRESS: Self::Address = super::SLASH_POOL_ADDRESS;
 
     fn staking_token_address() -> Self::Address {
         super::staking_token_address()

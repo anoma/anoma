@@ -1,6 +1,45 @@
-//! Temporary helper until we have a proper wallet.
+//! Default addresses and keys.
 
-use anoma::types::key::ed25519::{Keypair, PublicKey};
+use anoma::ledger::pos;
+use anoma::types::address::{self, Address};
+use anoma::types::key::ed25519::Keypair;
+
+use super::store::Alias;
+
+/// The default keys with their aliases.
+pub fn keys() -> Vec<(Alias, Keypair)> {
+    vec![
+        ("Albert".into(), albert_keypair()),
+        ("Bertha".into(), bertha_keypair()),
+        ("Christel".into(), christel_keypair()),
+        ("matchmaker".into(), matchmaker_keypair()),
+        ("validator".into(), validator_keypair()),
+    ]
+}
+
+/// The default addresses with their aliases.
+pub fn addresses() -> Vec<(Alias, Address)> {
+    let albert = Address::decode("a1qq5qqqqqg4znssfsgcurjsfhgfpy2vjyxy6yg3z98pp5zvp5xgersvfjxvcnx3f4xycrzdfkak0xhx")
+            .expect("The genesis address shouldn't fail decoding");
+    let bertha = Address::decode("a1qq5qqqqqxv6yydz9xc6ry33589q5x33eggcnjs2xx9znydj9xuens3phxppnwvzpg4rrqdpswve4n9")
+            .expect("The genesis address shouldn't fail decoding");
+    let christel = Address::decode("a1qq5qqqqqxsuygd2x8pq5yw2ygdryxs6xgsmrsdzx8pryxv34gfrrssfjgccyg3zpxezrqd2y2s3g5s")
+            .expect("The genesis address shouldn't fail decoding");
+    let mut addresses: Vec<(Alias, Address)> = vec![
+        ("Albert".into(), albert),
+        ("Bertha".into(), bertha),
+        ("Christel".into(), christel),
+        ("matchmaker".into(), address::matchmaker()),
+        ("validator".into(), address::validator()),
+        ("PoS".into(), pos::ADDRESS),
+        ("PosSlashPool".into(), pos::SLASH_POOL_ADDRESS),
+    ];
+    let token_addresses = address::tokens()
+        .into_iter()
+        .map(|(addr, alias)| (alias.to_owned(), addr));
+    addresses.extend(token_addresses);
+    addresses
+}
 
 #[cfg(feature = "dev")]
 pub fn validator_keypair() -> Keypair {
@@ -16,7 +55,7 @@ pub fn validator_keypair() -> Keypair {
     Keypair::from_bytes(&bytes).unwrap()
 }
 
-pub fn alberto_keypair() -> Keypair {
+pub fn albert_keypair() -> Keypair {
     // generated from
     // [`anoma::types::key::ed25519::gen_keypair`]
     let bytes = [
@@ -68,25 +107,9 @@ pub fn matchmaker_keypair() -> Keypair {
     Keypair::from_bytes(&bytes).unwrap()
 }
 
-pub fn alberto_pk() -> PublicKey {
-    PublicKey::from(alberto_keypair().public)
-}
-
-pub fn bertha_pk() -> PublicKey {
-    PublicKey::from(bertha_keypair().public)
-}
-
-pub fn christel_pk() -> PublicKey {
-    PublicKey::from(christel_keypair().public)
-}
-
-pub fn matchmaker_pk() -> PublicKey {
-    PublicKey::from(matchmaker_keypair().public)
-}
-
 pub fn key_of(name: impl AsRef<str>) -> Keypair {
     match name.as_ref() {
-        "a1qq5qqqqqg4znssfsgcurjsfhgfpy2vjyxy6yg3z98pp5zvp5xgersvfjxvcnx3f4xycrzdfkak0xhx" => alberto_keypair(),
+        "a1qq5qqqqqg4znssfsgcurjsfhgfpy2vjyxy6yg3z98pp5zvp5xgersvfjxvcnx3f4xycrzdfkak0xhx" => albert_keypair(),
         "a1qq5qqqqqxv6yydz9xc6ry33589q5x33eggcnjs2xx9znydj9xuens3phxppnwvzpg4rrqdpswve4n9" => bertha_keypair(),
         "a1qq5qqqqqxsuygd2x8pq5yw2ygdryxs6xgsmrsdzx8pryxv34gfrrssfjgccyg3zpxezrqd2y2s3g5s" => christel_keypair(),
         "a1qq5qqqqqxu6rvdzpxymnqwfkxfznvsjxggunyd3jg5erg3p3geqnvv35gep5yvzxx5m5x3fsfje8td" => matchmaker_keypair(),

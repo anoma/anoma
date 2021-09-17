@@ -199,57 +199,49 @@ where
             .map_err(|e| Error::InvalidConnection(e.to_string()))?;
         let client_id = connection.client_id().clone();
 
-        let prev_channel = self
-            .channel_end_pre(port_channel_id)
-            .map_err(|e| Error::InvalidChannel(e.to_string()))?;
-        match (prev_channel.state(), channel.state()) {
-            (State::Open, State::Closed) => {
-                // "Timeout"
-                if self
-                    .check_timeout(&client_id, data.proof_height, &packet)
-                    .is_ok()
-                {
-                    return Err(Error::InvalidPacket(
-                        "The timestamp has not passed yet".to_owned(),
-                    ));
-                }
-            }
-            _ => {
-                // "TimeoutOnClose"
-                // check that the counterpart channel has been closed
-                let expected_my_side = Counterparty::new(
-                    packet.source_port.clone(),
-                    Some(packet.source_channel.clone()),
-                );
-                let counterparty = connection.counterparty();
-                let conn_id =
-                    counterparty.connection_id().ok_or_else(|| {
-                        Error::InvalidConnection(
-                            "The counterparty doesn't have a connection ID"
-                                .to_owned(),
-                        )
-                    })?;
-                let expected_conn_hops = vec![conn_id.clone()];
-                let expected_channel = ChannelEnd::new(
-                    State::Closed,
-                    *channel.ordering(),
-                    expected_my_side,
-                    expected_conn_hops,
-                    channel.version(),
-                );
-
-                verify_channel_proofs(
-                    self,
-                    &channel,
-                    &connection,
-                    &expected_channel,
-                    &data.proofs()?,
+        // check if the packet actually timed out
+        if self
+            .check_timeout(&client_id, data.proof_height, &packet)
+            .is_ok()
+        {
+            // "TimedoutOnClose" because the packet didn't time out
+            // check that the counterpart channel has been closed
+            let expected_my_side = Counterparty::new(
+                packet.source_port.clone(),
+                Some(packet.source_channel.clone()),
+            );
+            let counterparty = connection.counterparty();
+            let conn_id = counterparty.connection_id().ok_or_else(|| {
+                Error::InvalidConnection(
+                    "The counterparty doesn't have a connection ID".to_owned(),
                 )
-                .map_err(Error::ProofVerificationFailure)?;
-            }
+            })?;
+            let expected_conn_hops = vec![conn_id.clone()];
+            let expected_channel = ChannelEnd::new(
+                State::Closed,
+                *channel.ordering(),
+                expected_my_side,
+                expected_conn_hops,
+                channel.version(),
+            );
+
+            verify_channel_proofs(
+                self,
+                &channel,
+                &connection,
+                &expected_channel,
+                &data.proofs()?,
+            )
+            .map_err(Error::ProofVerificationFailure)?;
         }
 
         if channel.order_matches(&Order::Ordered) {
+            if !channel.state_matches(&State::Closed) {
+                return Err(Error::InvalidChannel(format!(
+                    "The channel hasn't been closed yet: Port {}, Channel {}",
+                    port_channel_id.0, port_channel_id.1
+                )));
+            }
             if packet.sequence < data.sequence {
                 return Err(Error::InvalidPacket(
                     "The sequence is invalid".to_owned(),

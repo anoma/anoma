@@ -32,6 +32,12 @@ doc = false
 name = "anomac"
 path = "src/bin/anoma-client/main.rs"
 
+# Anoma wallet
+[[bin]]
+doc = false
+name = "anomaw"
+path = "src/bin/anoma-wallet/main.rs"
+
 [features]
 default = ["std", "dev"]
 # NOTE "dev" features that shouldn't be used in live networks are enabled by default for now
@@ -57,10 +63,12 @@ config = "0.11.0"
 ed25519-dalek = {version = "1.0.1", default-features = false, features = ["rand", "u64_backend", "serde"]}
 eyre = "0.6.5"
 futures = "0.3"
+hex = "0.4.3"
 itertools = "0.10.1"
 jsonpath_lib = "0.3.0"
 libc = "0.2.97"
 libp2p = "0.38.0"
+orion = "0.16.0"
 prost = "0.8.0"
 prost-types = "0.8.0"
 # TODO the older versions of rand and rand_core are currently required to avoid mismatching version issue (https://github.com/dalek-cryptography/ed25519-dalek/pull/159)
@@ -69,6 +77,7 @@ rand_core = {version = "0.5", default-features = false}
 rayon = "1.5.0"
 regex = "1.4.5"
 rocksdb = "0.16.0"
+rpassword = "5.0.1"
 serde = {version = "1.0.125", features = ["derive"]}
 serde_bytes = "0.11.5"
 serde_json = "1.0.62"

@@ -1,8 +1,9 @@
 //! Anoma CLI.
 //!
 //! This CLI groups together the most commonly used commands inlined from the
-//! node and the client. The other commands for the node or the client can be
-//! dispatched via `anoma node ...` or `anoma client ...`, respectively.
+//! node and the client. The other commands for the node, client and wallet can
+//! be dispatched via `anoma node ...`, `anoma client ...` or `anoma wallet
+//! ...`, respectively.
 
 use std::env;
 use std::process::Command;
@@ -20,13 +21,17 @@ pub fn main() -> Result<()> {
 fn handle_command(cmd: cli::cmds::Anoma, raw_sub_cmd: String) -> Result<()> {
     let args = env::args();
 
-    let is_node_or_client =
-        matches!(cmd, cli::cmds::Anoma::Node(_) | cli::cmds::Anoma::Client(_));
+    let is_bin_sub_cmd = matches!(
+        cmd,
+        cli::cmds::Anoma::Node(_)
+            | cli::cmds::Anoma::Client(_)
+            | cli::cmds::Anoma::Wallet(_)
+    );
 
     // Skip the first arg, which is the name of the binary
     let mut sub_args: Vec<String> = args.skip(1).collect();
 
-    if is_node_or_client {
+    if is_bin_sub_cmd {
         // Because there may be global args before the `cmd`, we have to find it
         // before removing it.
         sub_args
@@ -47,6 +52,7 @@ fn handle_command(cmd: cli::cmds::Anoma, raw_sub_cmd: String) -> Result<()> {
         | cli::cmds::Anoma::NftCreate(_)
         | cli::cmds::Anoma::NftMint(_)
         | cli::cmds::Anoma::Intent(_) => handle_subcommand("anomac", sub_args),
+        cli::cmds::Anoma::Wallet(_) => handle_subcommand("anomaw", sub_args),
     }
 }
 

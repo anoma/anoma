@@ -9,8 +9,8 @@ use anoma_apps::{cli, config};
 use eyre::{Context, Result};
 
 pub fn main() -> Result<()> {
-    let (cmd, global_args) = cli::anoma_node_cli();
-    let base_dir = &global_args.base_dir;
+    let (cmd, ctx) = cli::anoma_node_cli();
+    let base_dir = &ctx.global_args.base_dir;
     match cmd {
         cli::cmds::AnomaNode::Ledger(sub) => match sub {
             cli::cmds::Ledger::Run(_) => {
@@ -25,7 +25,7 @@ pub fn main() -> Result<()> {
                     .wrap_err("Failed to reset Anoma node")?;
             }
         },
-        cli::cmds::AnomaNode::Gossip(sub) => match *sub {
+        cli::cmds::AnomaNode::Gossip(sub) => match sub {
             cli::cmds::Gossip::Run(cli::cmds::GossipRun(args)) => {
                 let config = get_cfg(base_dir);
                 let mut gossip_cfg = config.intent_gossiper.unwrap_or_default();

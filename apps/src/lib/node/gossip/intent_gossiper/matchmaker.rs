@@ -143,7 +143,7 @@ impl Matchmaker {
         match mm_message {
             MatchmakerMessage::InjectTx(tx_data) => {
                 let tx_code = self.tx_code.clone();
-                let keypair = wallet::matchmaker_keypair();
+                let keypair = wallet::defaults::matchmaker_keypair();
                 let tx = Tx::new(tx_code, Some(tx_data)).sign(&keypair);
                 let tx_bytes = tx.to_bytes();
 

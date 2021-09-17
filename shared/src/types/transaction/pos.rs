@@ -1,10 +1,10 @@
-//! Types used for PoS system interactions
+//! Types used for PoS system transactions
 
 use borsh::{BorshDeserialize, BorshSerialize};
 use serde::{Deserialize, Serialize};
 
-use super::address::Address;
-use super::token;
+use crate::types::address::Address;
+use crate::types::token;
 
 /// A bond is a validator's self-bond or a delegation from non-validator to a
 /// validator.

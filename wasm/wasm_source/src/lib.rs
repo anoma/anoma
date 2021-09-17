@@ -27,39 +27,171 @@ pub mod tx_init_account {
     }
 }
 
-/// A tx to create a new NFT.
-#[cfg(feature = "tx_create_nft")]
-pub mod tx_create_nft {
+/// A tx for a PoS bond that stakes tokens via a self-bond or delegation.
+#[cfg(feature = "tx_bond")]
+pub mod tx_bond {
+    use anoma_vm_env::tx_prelude::proof_of_stake::{bond_tokens, BondId};
     use anoma_vm_env::tx_prelude::*;
 
     #[transaction]
     fn apply_tx(tx_data: Vec<u8>) {
         let signed =
             key::ed25519::SignedTxData::try_from_slice(&tx_data[..]).unwrap();
-        let tx_data =
-            transaction::CreateNft::try_from_slice(&signed.data.unwrap()[..])
+        let bond =
+            transaction::pos::Bond::try_from_slice(&signed.data.unwrap()[..])
                 .unwrap();
-        log_string("apply_tx called to create a new NFT".to_string());
 
-        nft::init_nft(tx_data);
+        // TODO temporary for logging:
+        let bond_id = BondId {
+            source: bond.source.as_ref().unwrap_or(&bond.validator).clone(),
+            validator: bond.validator.clone(),
+        };
+        let bond_pre = PoS.read_bond(&bond_id);
+        let validator_set_pre = PoS.read_validator_set();
+        let total_deltas_pre = PoS.read_validator_total_deltas(&bond.validator);
+        let vp_pre = PoS.read_validator_voting_power(&bond.validator);
+
+        if let Err(err) =
+            bond_tokens(bond.source.as_ref(), &bond.validator, bond.amount)
+        {
+            log_string(format!("Bond failed with: {}", err));
+            panic!()
+        }
+
+        // TODO temporary for logging:
+        let bond_post = PoS.read_bond(&bond_id);
+        let validator_set_post = PoS.read_validator_set();
+        let total_deltas_post =
+            PoS.read_validator_total_deltas(&bond.validator);
+        let vp_post = PoS.read_validator_voting_power(&bond.validator);
+        log_string(format!("bond pre {:#?}, post {:#?}", bond_pre, bond_post));
+        log_string(format!(
+            "validator set pre {:#?}, post {:#?}",
+            validator_set_pre, validator_set_post
+        ));
+        log_string(format!(
+            "validator total deltas pre {:#?}, post {:#?}",
+            total_deltas_pre, total_deltas_post
+        ));
+        log_string(format!(
+            "validator voting power pre {:#?}, post {:#?}",
+            vp_pre, vp_post
+        ));
     }
 }
 
-/// A tx to mint new nft tokens.
-#[cfg(feature = "tx_mint_nft_tokens")]
-pub mod tx_mint_nft {
+/// A tx for a PoS unbond that removes staked tokens from a self-bond or a
+/// delegation to be withdrawn in or after unbonding epoch.
+#[cfg(feature = "tx_unbond")]
+pub mod tx_unbond {
+    use anoma_vm_env::tx_prelude::proof_of_stake::{unbond_tokens, BondId};
     use anoma_vm_env::tx_prelude::*;
 
     #[transaction]
     fn apply_tx(tx_data: Vec<u8>) {
         let signed =
             key::ed25519::SignedTxData::try_from_slice(&tx_data[..]).unwrap();
-        let tx_data =
-            transaction::MintNft::try_from_slice(&signed.data.unwrap()[..])
+        let unbond =
+            transaction::pos::Unbond::try_from_slice(&signed.data.unwrap()[..])
                 .unwrap();
-        log_string("apply_tx called to mint a new NFT tokens".to_string());
 
-        nft::mint_tokens(tx_data);
+        // TODO temporary for logging:
+        let bond_id = BondId {
+            source: unbond.source.as_ref().unwrap_or(&unbond.validator).clone(),
+            validator: unbond.validator.clone(),
+        };
+        let bond_pre = PoS.read_bond(&bond_id);
+        let unbond_pre = PoS.read_unbond(&bond_id);
+        let validator_set_pre = PoS.read_validator_set();
+        let total_deltas_pre =
+            PoS.read_validator_total_deltas(&unbond.validator);
+        let vp_pre = PoS.read_validator_voting_power(&unbond.validator);
+        let total_vp_pre = PoS.read_total_voting_power();
+
+        if let Err(err) = unbond_tokens(
+            unbond.source.as_ref(),
+            &unbond.validator,
+            unbond.amount,
+        ) {
+            log_string(format!("Unbonding failed with: {}", err));
+            panic!()
+        }
+
+        // TODO temporary for logging:
+        let bond_post = PoS.read_bond(&bond_id);
+        let unbond_post = PoS.read_unbond(&bond_id);
+        let validator_set_post = PoS.read_validator_set();
+        let total_deltas_post =
+            PoS.read_validator_total_deltas(&unbond.validator);
+        let vp_post = PoS.read_validator_voting_power(&unbond.validator);
+        let total_vp_post = PoS.read_total_voting_power();
+        log_string(format!("bond pre {:#?}, post {:#?}", bond_pre, bond_post));
+        log_string(format!(
+            "unbond pre {:#?}, post {:#?}",
+            unbond_pre, unbond_post
+        ));
+        log_string(format!(
+            "validator set pre {:#?}, post {:#?}",
+            validator_set_pre, validator_set_post
+        ));
+        log_string(format!(
+            "validator total deltas pre {:#?}, post {:#?}",
+            total_deltas_pre, total_deltas_post
+        ));
+        log_string(format!(
+            "validator voting power pre {:#?}, post {:#?}",
+            vp_pre, vp_post
+        ));
+        log_string(format!(
+            "total voting power pre {:#?}, post {:#?}",
+            total_vp_pre, total_vp_post
+        ));
+    }
+}
+
+/// A tx for a PoS unbond that removes staked tokens from a self-bond or a
+/// delegation to be withdrawn in or after unbonding epoch.
+#[cfg(feature = "tx_withdraw")]
+pub mod tx_withdraw {
+    use anoma_vm_env::tx_prelude::proof_of_stake::{withdraw_tokens, BondId};
+    use anoma_vm_env::tx_prelude::*;
+
+    #[transaction]
+    fn apply_tx(tx_data: Vec<u8>) {
+        let signed =
+            key::ed25519::SignedTxData::try_from_slice(&tx_data[..]).unwrap();
+        let withdraw = transaction::pos::Withdraw::try_from_slice(
+            &signed.data.unwrap()[..],
+        )
+        .unwrap();
+
+        // TODO temporary for logging:
+        let bond_id = BondId {
+            source: withdraw
+                .source
+                .as_ref()
+                .unwrap_or(&withdraw.validator)
+                .clone(),
+            validator: withdraw.validator.clone(),
+        };
+        let unbond_pre = PoS.read_unbond(&bond_id);
+
+        match withdraw_tokens(withdraw.source.as_ref(), &withdraw.validator) {
+            Ok(slashed) => {
+                log_string(format!("Withdrawal slashed for {}", slashed));
+            }
+            Err(err) => {
+                log_string(format!("Withdrawal failed with: {}", err));
+                panic!()
+            }
+        }
+
+        // TODO temporary for logging:
+        let unbond_post = PoS.read_unbond(&bond_id);
+        log_string(format!(
+            "unbond pre {:#?}, post {:#?}",
+            unbond_pre, unbond_post
+        ));
     }
 }
 
@@ -144,6 +276,42 @@ pub mod tx_update_vp {
     }
 }
 
+/// A tx to create a new NFT.
+#[cfg(feature = "tx_create_nft")]
+pub mod tx_create_nft {
+    use anoma_vm_env::tx_prelude::*;
+
+    #[transaction]
+    fn apply_tx(tx_data: Vec<u8>) {
+        let signed =
+            key::ed25519::SignedTxData::try_from_slice(&tx_data[..]).unwrap();
+        let tx_data =
+            transaction::CreateNft::try_from_slice(&signed.data.unwrap()[..])
+                .unwrap();
+        log_string("apply_tx called to create a new NFT".to_string());
+
+        nft::init_nft(tx_data);
+    }
+}
+
+/// A tx to mint new nft tokens.
+#[cfg(feature = "tx_mint_nft_tokens")]
+pub mod tx_mint_nft {
+    use anoma_vm_env::tx_prelude::*;
+
+    #[transaction]
+    fn apply_tx(tx_data: Vec<u8>) {
+        let signed =
+            key::ed25519::SignedTxData::try_from_slice(&tx_data[..]).unwrap();
+        let tx_data =
+            transaction::MintNft::try_from_slice(&signed.data.unwrap()[..])
+                .unwrap();
+        log_string("apply_tx called to mint a new NFT tokens".to_string());
+
+        nft::mint_tokens(tx_data);
+    }
+}
+
 /// A VP for a token.
 #[cfg(feature = "vp_token")]
 pub mod vp_token {
@@ -157,7 +325,7 @@ pub mod vp_token {
         verifiers: HashSet<Address>,
     ) -> bool {
         log_string(format!(
-            "validate_tx called with token addr: {}, key_changed: {:#?}, \
+            "validate_tx called with token addr: {}, key_changed: {:?}, \
              verifiers: {:?}",
             addr, keys_changed, verifiers
         ));

@@ -8,6 +8,7 @@ pub mod imports;
 pub mod intent;
 pub mod key;
 pub mod nft;
+pub mod proof_of_stake;
 pub mod token;
 
 pub mod tx_prelude {
@@ -15,9 +16,10 @@ pub mod tx_prelude {
     pub use anoma::types::*;
     pub use anoma_vm_macro::transaction;
 
-    pub use super::imports::tx::*;
+    pub use crate::imports::tx::*;
     pub use crate::intent::tx as intent;
     pub use crate::nft::tx as nft;
+    pub use crate::proof_of_stake::{self, PoS, PosRead, PosWrite};
     pub use crate::token::tx as token;
 }
 
@@ -34,6 +36,8 @@ pub mod vp_prelude {
     pub mod key {
         pub use crate::key::ed25519::vp as ed25519;
     }
+    pub use anoma::ledger::pos as proof_of_stake;
+
     pub use crate::nft::vp as nft;
     pub use crate::token::vp as token;
 }

@@ -30,6 +30,7 @@ use crate::types::address::{Address, InternalAddress};
 use crate::types::ibc::{
     ChannelCloseConfirmData, ChannelCloseInitData, ChannelOpenAckData,
     ChannelOpenConfirmData, ChannelOpenTryData, Error as IbcDataError,
+    TimeoutData,
 };
 use crate::types::storage::{DbKeySeg, Key, KeySeg};
 
@@ -205,7 +206,7 @@ where
         channel: &ChannelEnd,
         tx_data: &[u8],
     ) -> Result<()> {
-        let prev_channel = self.channel_end_pre(port_channel_id.clone())?;
+        let prev_channel = self.channel_end_pre(&port_channel_id)?;
         match channel.state() {
             State::Open => match prev_channel.state() {
                 State::Init => self.verify_channel_ack_proof(
@@ -232,19 +233,48 @@ where
                         port_channel_id.0, port_channel_id.1,
                     )));
                 }
-                match ChannelCloseInitData::try_from_slice(tx_data) {
-                    Ok(_) => Ok(()),
-                    Err(_) => self.verify_channel_close_proof(
-                        port_channel_id,
-                        channel,
-                        tx_data,
-                    ),
+                match TimeoutData::try_from_slice(tx_data) {
+                    Ok(data) => self.validate_commitment_absence(data),
+                    Err(_) => {
+                        match ChannelCloseInitData::try_from_slice(tx_data) {
+                            Ok(_) => Ok(()),
+                            Err(_) => self.verify_channel_close_proof(
+                                port_channel_id,
+                                channel,
+                                tx_data,
+                            ),
+                        }
+                    }
                 }
             }
             _ => Err(Error::InvalidStateChange(format!(
                 "The state change of the channel is invalid: Port {}, Channel \
                  {}",
                 port_channel_id.0, port_channel_id.1
+            ))),
+        }
+    }
+
+    fn validate_commitment_absence(&self, data: TimeoutData) -> Result<()> {
+        // check if the commitment has been deleted
+        let packet = data.packet;
+        let commitment_key = Path::Commitments {
+            port_id: packet.source_port.clone(),
+            channel_id: packet.source_channel.clone(),
+            sequence: packet.sequence,
+        };
+        let key = Key::ibc_key(commitment_key.to_string())
+            .expect("Creating a key for a channel failed");
+        let state_change = self
+            .get_state_change(&key)
+            .map_err(|e| Error::InvalidStateChange(e.to_string()))?;
+        match state_change {
+            // the deleted commitment is validated in validate_commitment()
+            StateChange::Deleted => Ok(()),
+            _ => Err(Error::InvalidStateChange(format!(
+                "The commitment hasn't been deleted yet: Port {}, Channel {}, \
+                 Sequence {}",
+                packet.source_port, packet.source_channel, packet.sequence
             ))),
         }
     }
@@ -454,7 +484,7 @@ where
 
     pub(super) fn channel_end_pre(
         &self,
-        port_channel_id: (PortId, ChannelId),
+        port_channel_id: &(PortId, ChannelId),
     ) -> Result<ChannelEnd> {
         let path = Path::ChannelEnds(
             port_channel_id.0.clone(),
