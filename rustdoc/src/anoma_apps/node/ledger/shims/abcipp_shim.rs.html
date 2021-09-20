@@ -105,7 +105,6 @@
 <span id="103">103</span>
 <span id="104">104</span>
 <span id="105">105</span>
-<span id="106">106</span>
 </pre><pre class="rust">
 <span class="kw">use</span> <span class="ident">std::convert::TryFrom</span>;
 <span class="kw">use</span> <span class="ident">std::future::Future</span>;
@@ -158,7 +157,6 @@
     }
 
     <span class="kw">fn</span> <span class="ident">call</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">req</span>: <span class="ident">Req</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span><span class="ident">::Future</span> {
-        <span class="macro">tracing::debug!</span>(<span class="question-mark">?</span><span class="ident">req</span>);
         <span class="kw">let</span> <span class="ident">rsp</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">req</span> {
             <span class="ident">Req::BeginBlock</span>(<span class="ident">block</span>) <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="comment">// we simply forward BeginBlock request to the PrepareProposal</span>
