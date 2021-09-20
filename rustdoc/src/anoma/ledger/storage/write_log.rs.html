@@ -1212,7 +1212,7 @@
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">test</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;testing&quot;</span>))]</span>
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">testing</span> {
     <span class="kw">use</span> <span class="ident">proptest::collection</span>;
-    <span class="kw">use</span> <span class="ident">proptest::prelude</span>::<span class="kw-2">*</span>;
+    <span class="kw">use</span> <span class="ident">proptest::prelude</span>::{<span class="ident">any</span>, <span class="ident">prop_oneof</span>, <span class="ident">Just</span>, <span class="ident">Strategy</span>};
 
     <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
     <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::types::address::testing::arb_address</span>;

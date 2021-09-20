@@ -17,9 +17,9 @@ within a virtual machine.</p>
 <table><tr class="module-item"><td><a class="trait" href="trait.VpEvaluator.html" title="anoma::vm::host_env::VpEvaluator trait">VpEvaluator</a></td><td class="docblock-short"><p>A Validity predicate runner for calls from the <a href="fn.vp_eval.html" title="vp_eval"><code>vp_eval</code></a> function.</p>
 </td></tr></table><h2 id="functions" class="section-header"><a href="#functions">Functions</a></h2>
 <table><tr class="module-item"><td><a class="fn" href="fn.mm_filter_log_string.html" title="anoma::vm::host_env::mm_filter_log_string fn">mm_filter_log_string</a></td><td class="docblock-short"><p>Log a string from exposed to the wasm VM filter environment. The message
-will be printed at the <a href="https://docs.rs/tracing-core/0.1.19/tracing_core/metadata/struct.Level.html#associatedconstant.INFO" title="tracing::Level::INFO"><code>tracing::Level::INFO</code></a>.</p>
+will be printed at the <a href="https://docs.rs/tracing-core/0.1.20/tracing_core/metadata/struct.Level.html#associatedconstant.INFO" title="tracing::Level::INFO"><code>tracing::Level::INFO</code></a>.</p>
 </td></tr><tr class="module-item"><td><a class="fn" href="fn.mm_log_string.html" title="anoma::vm::host_env::mm_log_string fn">mm_log_string</a></td><td class="docblock-short"><p>Log a string from exposed to the wasm VM matchmaker environment. The message
-will be printed at the <a href="https://docs.rs/tracing-core/0.1.19/tracing_core/metadata/struct.Level.html#associatedconstant.INFO" title="tracing::Level::INFO"><code>tracing::Level::INFO</code></a>. This function is for
+will be printed at the <a href="https://docs.rs/tracing-core/0.1.20/tracing_core/metadata/struct.Level.html#associatedconstant.INFO" title="tracing::Level::INFO"><code>tracing::Level::INFO</code></a>. This function is for
 development only.</p>
 </td></tr><tr class="module-item"><td><a class="fn" href="fn.mm_remove_intents.html" title="anoma::vm::host_env::mm_remove_intents fn">mm_remove_intents</a></td><td class="docblock-short"><p>Remove given intents from the matchmaker’s mempool</p>
 </td></tr><tr class="module-item"><td><a class="fn" href="fn.mm_send_match.html" title="anoma::vm::host_env::mm_send_match fn">mm_send_match</a></td><td class="docblock-short"><p>Injupdate_stateaction from matchmaker’s matched intents to the ledger</p>
@@ -48,7 +48,7 @@ the storage.</p>
 It will try to get an iterator from the storage and return the corresponding
 ID of the iterator.</p>
 </td></tr><tr class="module-item"><td><a class="fn" href="fn.tx_log_string.html" title="anoma::vm::host_env::tx_log_string fn">tx_log_string</a></td><td class="docblock-short"><p>Log a string from exposed to the wasm VM Tx environment. The message will be
-printed at the <a href="https://docs.rs/tracing-core/0.1.19/tracing_core/metadata/struct.Level.html#associatedconstant.INFO" title="tracing::Level::INFO"><code>tracing::Level::INFO</code></a>. This function is for development
+printed at the <a href="https://docs.rs/tracing-core/0.1.20/tracing_core/metadata/struct.Level.html#associatedconstant.INFO" title="tracing::Level::INFO"><code>tracing::Level::INFO</code></a>. This function is for development
 only.</p>
 </td></tr><tr class="module-item"><td><a class="fn" href="fn.tx_read.html" title="anoma::vm::host_env::tx_read fn">tx_read</a></td><td class="docblock-short"><p>Storage read function exposed to the wasm VM Tx environment. It will try to
 read from the write log first and if no entry found then from the storage.</p>
@@ -82,7 +82,7 @@ exposed to the wasm VM VP environment. It will try to read from the storage.</p>
 It will try to get an iterator from the storage and return the corresponding
 ID of the iterator.</p>
 </td></tr><tr class="module-item"><td><a class="fn" href="fn.vp_log_string.html" title="anoma::vm::host_env::vp_log_string fn">vp_log_string</a></td><td class="docblock-short"><p>Log a string from exposed to the wasm VM VP environment. The message will be
-printed at the <a href="https://docs.rs/tracing-core/0.1.19/tracing_core/metadata/struct.Level.html#associatedconstant.INFO" title="tracing::Level::INFO"><code>tracing::Level::INFO</code></a>. This function is for development
+printed at the <a href="https://docs.rs/tracing-core/0.1.20/tracing_core/metadata/struct.Level.html#associatedconstant.INFO" title="tracing::Level::INFO"><code>tracing::Level::INFO</code></a>. This function is for development
 only.</p>
 </td></tr><tr class="module-item"><td><a class="fn" href="fn.vp_read_post.html" title="anoma::vm::host_env::vp_read_post fn">vp_read_post</a></td><td class="docblock-short"><p>Storage read posterior state (after tx execution) function exposed to the
 wasm VM VP environment. It will try to read from the write log first and if

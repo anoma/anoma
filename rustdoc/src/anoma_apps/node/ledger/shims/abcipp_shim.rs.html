@@ -105,6 +105,16 @@
 <span id="103">103</span>
 <span id="104">104</span>
 <span id="105">105</span>
+<span id="106">106</span>
+<span id="107">107</span>
+<span id="108">108</span>
+<span id="109">109</span>
+<span id="110">110</span>
+<span id="111">111</span>
+<span id="112">112</span>
+<span id="113">113</span>
+<span id="114">114</span>
+<span id="115">115</span>
 </pre><pre class="rust">
 <span class="kw">use</span> <span class="ident">std::convert::TryFrom</span>;
 <span class="kw">use</span> <span class="ident">std::future::Future</span>;
@@ -158,6 +168,16 @@
 
     <span class="kw">fn</span> <span class="ident">call</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">req</span>: <span class="ident">Req</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span><span class="ident">::Future</span> {
         <span class="kw">let</span> <span class="ident">rsp</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">req</span> {
+            <span class="ident">Req::CheckTx</span>(<span class="ident">tx_request</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>
+                .<span class="ident">service</span>
+                .<span class="ident">call</span>(<span class="ident">Request::ProcessProposal</span>(<span class="ident">tx_request</span>.<span class="ident">tx</span>.<span class="ident">into</span>()))
+                .<span class="ident">map_err</span>(<span class="ident">Error::from</span>)
+                .<span class="ident">and_then</span>(<span class="op">|</span><span class="ident">res</span><span class="op">|</span> <span class="kw">match</span> <span class="ident">res</span> {
+                    <span class="ident">Response::ProcessProposal</span>(<span class="ident">resp</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                        <span class="prelude-val">Ok</span>(<span class="ident">Resp::CheckTx</span>(<span class="ident">resp</span>.<span class="ident">into</span>()))
+                    }
+                    <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">Error::ConvertResp</span>(<span class="ident">res</span>)),
+                }),
             <span class="ident">Req::BeginBlock</span>(<span class="ident">block</span>) <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="comment">// we simply forward BeginBlock request to the PrepareProposal</span>
                 <span class="comment">// request</span>

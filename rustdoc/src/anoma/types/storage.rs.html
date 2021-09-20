@@ -885,6 +885,8 @@
 <span id="883">883</span>
 <span id="884">884</span>
 <span id="885">885</span>
+<span id="886">886</span>
+<span id="887">887</span>
 </pre><pre class="rust">
 <span class="doccomment">//! Storage types</span>
 <span class="kw">use</span> <span class="ident">std::convert</span>::{<span class="ident">TryFrom</span>, <span class="ident">TryInto</span>};
@@ -1414,6 +1416,8 @@
     <span class="ident">Hash</span>,
     <span class="ident">BorshSerialize</span>,
     <span class="ident">BorshDeserialize</span>,
+    <span class="ident">Serialize</span>,
+    <span class="ident">Deserialize</span>,
 )]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Epoch</span>(<span class="kw">pub</span> <span class="ident">u64</span>);
 

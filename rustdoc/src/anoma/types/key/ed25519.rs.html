@@ -726,6 +726,8 @@
 <span id="724">724</span>
 <span id="725">725</span>
 <span id="726">726</span>
+<span id="727">727</span>
+<span id="728">728</span>
 </pre><pre class="rust">
 <span class="doccomment">//! Ed25519 keys and related functionality</span>
 
@@ -1388,7 +1390,7 @@
     <span class="kw">use</span> <span class="ident">rand::thread_rng</span>;
 
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">rng</span>: <span class="ident">ThreadRng</span> <span class="op">=</span> <span class="ident">thread_rng</span>();
-    <span class="kw">let</span> <span class="ident">keypair</span> <span class="op">=</span> <span class="ident">ed25519_dalek::Keypair::generate</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">rng</span>);
+    <span class="kw">let</span> <span class="ident">keypair</span> <span class="op">=</span> <span class="ident">Keypair::generate</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">rng</span>);
     <span class="macro">println!</span>(<span class="string">&quot;keypair {:?}&quot;</span>, <span class="ident">keypair</span>.<span class="ident">to_bytes</span>());
 }
 
@@ -1449,8 +1451,10 @@
     <span class="kw">fn</span> <span class="ident">gen_keypair</span>() {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">rng</span>: <span class="ident">ThreadRng</span> <span class="op">=</span> <span class="ident">thread_rng</span>();
         <span class="kw">let</span> <span class="ident">keypair</span> <span class="op">=</span> <span class="ident">Keypair::generate</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">rng</span>);
-        <span class="macro">println!</span>(<span class="string">&quot;Public key: {}&quot;</span>, <span class="ident">keypair</span>.<span class="ident">public</span>);
-        <span class="macro">println!</span>(<span class="string">&quot;Secret key: {}&quot;</span>, <span class="ident">keypair</span>.<span class="ident">secret</span>);
+        <span class="kw">let</span> <span class="ident">public_key</span>: <span class="ident">PublicKey</span> <span class="op">=</span> <span class="ident">keypair</span>.<span class="ident">public</span>;
+        <span class="kw">let</span> <span class="ident">secret_key</span>: <span class="ident">SecretKey</span> <span class="op">=</span> <span class="ident">keypair</span>.<span class="ident">secret</span>;
+        <span class="macro">println!</span>(<span class="string">&quot;Public key: {}&quot;</span>, <span class="ident">public_key</span>);
+        <span class="macro">println!</span>(<span class="string">&quot;Secret key: {}&quot;</span>, <span class="ident">secret_key</span>);
     }
 }
 </pre></div>

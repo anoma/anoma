@@ -477,6 +477,18 @@
 <span id="475">475</span>
 <span id="476">476</span>
 <span id="477">477</span>
+<span id="478">478</span>
+<span id="479">479</span>
+<span id="480">480</span>
+<span id="481">481</span>
+<span id="482">482</span>
+<span id="483">483</span>
+<span id="484">484</span>
+<span id="485">485</span>
+<span id="486">486</span>
+<span id="487">487</span>
+<span id="488">488</span>
+<span id="489">489</span>
 </pre><pre class="rust">
 <span class="doccomment">//! Implements transparent addresses as described in [Accounts</span>
 <span class="doccomment">//! Addresses](docs/src/explore/design/ledger/accounts.md#addresses).</span>
@@ -739,6 +751,18 @@
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">ImplicitAddress</span> {
     <span class="doccomment">/// Address derived from [`key::ed25519::PublicKeyHash`]</span>
     <span class="ident">Ed25519</span>(<span class="ident">key::ed25519::PublicKeyHash</span>),
+}
+
+<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">key::ed25519::PublicKey</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">ImplicitAddress</span> {
+    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">pk</span>: <span class="kw-2">&amp;</span><span class="ident">key::ed25519::PublicKey</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="ident">ImplicitAddress::Ed25519</span>(<span class="ident">pk</span>.<span class="ident">into</span>())
+    }
+}
+
+<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">key::ed25519::PublicKey</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Address</span> {
+    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">pk</span>: <span class="kw-2">&amp;</span><span class="ident">key::ed25519::PublicKey</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="self">Self</span><span class="ident">::Implicit</span>(<span class="ident">pk</span>.<span class="ident">into</span>())
+    }
 }
 
 <span class="doccomment">/// An internal address represents a module with a native VP</span>

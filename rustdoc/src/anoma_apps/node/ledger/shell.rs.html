@@ -816,6 +816,115 @@
 <span id="814">814</span>
 <span id="815">815</span>
 <span id="816">816</span>
+<span id="817">817</span>
+<span id="818">818</span>
+<span id="819">819</span>
+<span id="820">820</span>
+<span id="821">821</span>
+<span id="822">822</span>
+<span id="823">823</span>
+<span id="824">824</span>
+<span id="825">825</span>
+<span id="826">826</span>
+<span id="827">827</span>
+<span id="828">828</span>
+<span id="829">829</span>
+<span id="830">830</span>
+<span id="831">831</span>
+<span id="832">832</span>
+<span id="833">833</span>
+<span id="834">834</span>
+<span id="835">835</span>
+<span id="836">836</span>
+<span id="837">837</span>
+<span id="838">838</span>
+<span id="839">839</span>
+<span id="840">840</span>
+<span id="841">841</span>
+<span id="842">842</span>
+<span id="843">843</span>
+<span id="844">844</span>
+<span id="845">845</span>
+<span id="846">846</span>
+<span id="847">847</span>
+<span id="848">848</span>
+<span id="849">849</span>
+<span id="850">850</span>
+<span id="851">851</span>
+<span id="852">852</span>
+<span id="853">853</span>
+<span id="854">854</span>
+<span id="855">855</span>
+<span id="856">856</span>
+<span id="857">857</span>
+<span id="858">858</span>
+<span id="859">859</span>
+<span id="860">860</span>
+<span id="861">861</span>
+<span id="862">862</span>
+<span id="863">863</span>
+<span id="864">864</span>
+<span id="865">865</span>
+<span id="866">866</span>
+<span id="867">867</span>
+<span id="868">868</span>
+<span id="869">869</span>
+<span id="870">870</span>
+<span id="871">871</span>
+<span id="872">872</span>
+<span id="873">873</span>
+<span id="874">874</span>
+<span id="875">875</span>
+<span id="876">876</span>
+<span id="877">877</span>
+<span id="878">878</span>
+<span id="879">879</span>
+<span id="880">880</span>
+<span id="881">881</span>
+<span id="882">882</span>
+<span id="883">883</span>
+<span id="884">884</span>
+<span id="885">885</span>
+<span id="886">886</span>
+<span id="887">887</span>
+<span id="888">888</span>
+<span id="889">889</span>
+<span id="890">890</span>
+<span id="891">891</span>
+<span id="892">892</span>
+<span id="893">893</span>
+<span id="894">894</span>
+<span id="895">895</span>
+<span id="896">896</span>
+<span id="897">897</span>
+<span id="898">898</span>
+<span id="899">899</span>
+<span id="900">900</span>
+<span id="901">901</span>
+<span id="902">902</span>
+<span id="903">903</span>
+<span id="904">904</span>
+<span id="905">905</span>
+<span id="906">906</span>
+<span id="907">907</span>
+<span id="908">908</span>
+<span id="909">909</span>
+<span id="910">910</span>
+<span id="911">911</span>
+<span id="912">912</span>
+<span id="913">913</span>
+<span id="914">914</span>
+<span id="915">915</span>
+<span id="916">916</span>
+<span id="917">917</span>
+<span id="918">918</span>
+<span id="919">919</span>
+<span id="920">920</span>
+<span id="921">921</span>
+<span id="922">922</span>
+<span id="923">923</span>
+<span id="924">924</span>
+<span id="925">925</span>
 </pre><pre class="rust">
 <span class="doccomment">//! The ledger shell connects the ABCI++ interface with the Anoma ledger app.</span>
 <span class="doccomment">//!</span>
@@ -845,8 +954,9 @@
 <span class="kw">use</span> <span class="ident">anoma::types::storage</span>::{<span class="ident">BlockHash</span>, <span class="ident">BlockHeight</span>, <span class="ident">Key</span>};
 <span class="kw">use</span> <span class="ident">anoma::types::time</span>::{<span class="ident">DateTime</span>, <span class="ident">DateTimeUtc</span>, <span class="ident">TimeZone</span>, <span class="ident">Utc</span>};
 <span class="kw">use</span> <span class="ident">anoma::types::token::Amount</span>;
+<span class="kw">use</span> <span class="ident">anoma::types::transaction</span>::{<span class="ident">process_tx</span>, <span class="ident">TxType</span>, <span class="ident">WrapperTx</span>};
 <span class="kw">use</span> <span class="ident">anoma::types</span>::{<span class="ident">address</span>, <span class="ident">key</span>, <span class="ident">token</span>};
-<span class="kw">use</span> <span class="ident">borsh::BorshSerialize</span>;
+<span class="kw">use</span> <span class="ident">borsh</span>::{<span class="ident">BorshDeserialize</span>, <span class="ident">BorshSerialize</span>};
 <span class="kw">use</span> <span class="ident">itertools::Itertools</span>;
 <span class="kw">use</span> <span class="ident">tendermint::block::Header</span>;
 <span class="kw">use</span> <span class="ident">tendermint_proto::abci</span>::{
@@ -861,6 +971,7 @@
 <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::node::ledger::events</span>::{<span class="ident">Event</span>, <span class="ident">EventType</span>};
 <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::node::ledger::rpc::PrefixValue</span>;
 <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::node::ledger::shims::abcipp_shim_types::shim</span>;
+<span class="kw">use</span> <span class="kw">crate</span><span class="ident">::node::ledger::shims::abcipp_shim_types::shim::response::TxResult</span>;
 <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::node::ledger</span>::{<span class="ident">protocol</span>, <span class="ident">storage</span>, <span class="ident">tendermint_node</span>};
 <span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">config</span>, <span class="ident">wallet</span>};
 
@@ -1003,6 +1114,16 @@
             <span class="self">self</span>.<span class="ident">storage</span>
                 .<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="ident">pk_key</span>, <span class="ident">pk</span>.<span class="ident">try_to_vec</span>().<span class="ident">expect</span>(<span class="string">&quot;encode public key&quot;</span>))
                 .<span class="ident">expect</span>(<span class="string">&quot;Unable to set genesis user public key&quot;</span>);
+
+            <span class="comment">// default user&#39;s  tokens (in their implicit accounts) for testing</span>
+            <span class="self">self</span>.<span class="ident">storage</span>
+                .<span class="ident">write</span>(
+                    <span class="kw-2">&amp;</span><span class="ident">token::balance_key</span>(<span class="ident">token</span>, <span class="kw-2">&amp;</span><span class="ident">Address::from</span>(<span class="kw-2">&amp;</span><span class="ident">pk</span>)),
+                    <span class="ident">Amount::whole</span>(<span class="number">1_000_000</span>)
+                        .<span class="ident">try_to_vec</span>()
+                        .<span class="ident">expect</span>(<span class="string">&quot;encode token amount&quot;</span>),
+                )
+                .<span class="ident">expect</span>(<span class="string">&quot;Unable to set genesis balance&quot;</span>);
         }
 
         <span class="comment">// Temporary for testing, we have a fixed matchmaker account.  This</span>
@@ -1314,16 +1435,113 @@
         <span class="ident">Default::default</span>()
     }
 
-    <span class="doccomment">/// Check the fees and signatures of the fee payer for a transaction</span>
+    <span class="doccomment">/// Validate a transaction request. On success, the transaction will</span>
+    <span class="doccomment">/// included in the mempool and propagated to peers, otherwise it will be</span>
+    <span class="doccomment">/// rejected.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// Checks if the Tx can be deserialized from bytes. Checks the fees and</span>
+    <span class="doccomment">/// signatures of the fee payer for a transaction if it is a wrapper tx.</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// INVARIANT: Any changes applied in this method must be reverted if the</span>
     <span class="doccomment">/// proposal is rejected (unless we can simply overwrite them in the</span>
     <span class="doccomment">/// next block).</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">process_proposal</span>(
         <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
-        <span class="ident">_req</span>: <span class="ident">shim::request::ProcessProposal</span>,
+        <span class="ident">req</span>: <span class="ident">shim::request::ProcessProposal</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">shim::response::ProcessProposal</span> {
-        <span class="ident">Default::default</span>()
+        <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx::try_from</span>(<span class="ident">req</span>.<span class="ident">tx</span>.<span class="ident">as_ref</span>()).<span class="ident">map_err</span>(<span class="ident">Error::TxDecoding</span>);
+        <span class="comment">// If we could not deserialize the Tx, return an error response</span>
+        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Err</span>(<span class="ident">err</span>) <span class="op">=</span> <span class="ident">tx</span> {
+            <span class="kw">return</span> <span class="ident">shim::response::ProcessProposal</span> {
+                <span class="ident">result</span>: <span class="ident">err</span>.<span class="ident">into</span>(),
+                <span class="ident">tx</span>: <span class="ident">req</span>.<span class="ident">tx</span>,
+            };
+        }
+
+        <span class="kw">let</span> (<span class="ident">result</span>, <span class="ident">processed_tx</span>) <span class="op">=</span> <span class="kw">match</span> <span class="ident">process_tx</span>(<span class="ident">tx</span>.<span class="ident">unwrap</span>()) {
+            <span class="comment">// This occurs if the wrapper tx signature is invalid</span>
+            <span class="prelude-val">Err</span>(<span class="ident">err</span>) <span class="op">=</span><span class="op">&gt;</span> (<span class="ident">TxResult::from</span>(<span class="ident">err</span>), <span class="prelude-val">None</span>),
+            <span class="prelude-val">Ok</span>(<span class="ident">result</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="ident">result</span> {
+                <span class="comment">// If it is a raw transaction, we do no further validation</span>
+                <span class="ident">TxType::Raw</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> (
+                    <span class="ident">TxResult</span> {
+                        <span class="ident">code</span>: <span class="number">0</span>,
+                        <span class="ident">info</span>: <span class="string">&quot;Process proposal accepted this transaction&quot;</span>
+                            .<span class="ident">into</span>(),
+                    },
+                    <span class="prelude-val">None</span>,
+                ),
+                <span class="ident">TxType::Wrapper</span>(<span class="ident">tx</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="kw">let</span> <span class="ident">wrapper</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">WrapperTx::try_from</span>(<span class="kw-2">&amp;</span><span class="ident">tx</span>).<span class="ident">unwrap</span>();
+                    <span class="comment">// validate the ciphertext via Ferveo</span>
+                    <span class="kw">if</span> <span class="op">!</span><span class="ident">wrapper</span>.<span class="ident">validate_ciphertext</span>() {
+                        (
+                            <span class="ident">shim::response::TxResult</span> {
+                                <span class="ident">code</span>: <span class="number">1</span>,
+                                <span class="ident">info</span>: <span class="string">&quot;The ciphertext of the wrapped tx is \
+                                       invalid&quot;</span>
+                                    .<span class="ident">into</span>(),
+                            },
+                            <span class="prelude-val">None</span>,
+                        )
+                    } <span class="kw">else</span> {
+                        <span class="comment">// check that the fee payer has sufficient balance</span>
+                        <span class="kw">match</span> <span class="self">self</span>.<span class="ident">get_balance</span>(
+                            <span class="kw-2">&amp;</span><span class="ident">wrapper</span>.<span class="ident">fee</span>.<span class="ident">token</span>,
+                            <span class="kw-2">&amp;</span><span class="ident">wrapper</span>.<span class="ident">fee_payer</span>(),
+                        ) {
+                            <span class="prelude-val">Ok</span>(<span class="ident">balance</span>) <span class="kw">if</span> <span class="ident">wrapper</span>.<span class="ident">fee</span>.<span class="ident">amount</span> <span class="op">&lt;</span><span class="op">=</span> <span class="ident">balance</span> <span class="op">=</span><span class="op">&gt;</span> (
+                                <span class="ident">shim::response::TxResult</span> {
+                                    <span class="ident">code</span>: <span class="number">0</span>,
+                                    <span class="ident">info</span>: <span class="string">&quot;Process proposal accepted this \
+                                           transaction&quot;</span>
+                                        .<span class="ident">into</span>(),
+                                },
+                                <span class="prelude-val">Some</span>(<span class="ident">tx</span>),
+                            ),
+                            <span class="prelude-val">Ok</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> (
+                                <span class="ident">shim::response::TxResult</span> {
+                                    <span class="ident">code</span>: <span class="number">1</span>,
+                                    <span class="ident">info</span>: <span class="string">&quot;The address given does not have \
+                                           sufficient balance to pay fee&quot;</span>
+                                        .<span class="ident">into</span>(),
+                                },
+                                <span class="prelude-val">None</span>,
+                            ),
+                            <span class="prelude-val">Err</span>(<span class="ident">err</span>) <span class="op">=</span><span class="op">&gt;</span> (
+                                <span class="ident">shim::response::TxResult</span> { <span class="ident">code</span>: <span class="number">1</span>, <span class="ident">info</span>: <span class="ident">err</span> },
+                                <span class="prelude-val">None</span>,
+                            ),
+                        }
+                    }
+                }
+            },
+        };
+        <span class="ident">shim::response::ProcessProposal</span> {
+            <span class="ident">result</span>,
+            <span class="ident">tx</span>: <span class="ident">processed_tx</span>.<span class="ident">map</span>(<span class="op">|</span><span class="ident">tx</span><span class="op">|</span> <span class="ident">tx</span>.<span class="ident">to_bytes</span>()).<span class="ident">unwrap_or</span>(<span class="ident">req</span>.<span class="ident">tx</span>),
+        }
+    }
+
+    <span class="doccomment">/// Simple helper function for the ledger to get balances</span>
+    <span class="doccomment">/// of the specified token at the specified address</span>
+    <span class="kw">fn</span> <span class="ident">get_balance</span>(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        <span class="ident">token</span>: <span class="kw-2">&amp;</span><span class="ident">Address</span>,
+        <span class="ident">owner</span>: <span class="kw-2">&amp;</span><span class="ident">Address</span>,
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">std::result::Result</span><span class="op">&lt;</span><span class="ident">Amount</span>, <span class="ident">String</span><span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="ident">query_resp</span> <span class="op">=</span>
+            <span class="self">self</span>.<span class="ident">read_storage_value</span>(<span class="kw-2">&amp;</span><span class="ident">token::balance_key</span>(<span class="ident">token</span>, <span class="ident">owner</span>));
+        <span class="kw">if</span> <span class="ident">query_resp</span>.<span class="ident">code</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
+            <span class="prelude-val">Err</span>(<span class="string">&quot;Unable to read balance of the given address&quot;</span>.<span class="ident">into</span>())
+        } <span class="kw">else</span> {
+            <span class="ident">BorshDeserialize::try_from_slice</span>(<span class="kw-2">&amp;</span><span class="ident">query_resp</span>.<span class="ident">value</span>[..]).<span class="ident">map_err</span>(
+                <span class="op">|</span><span class="kw">_</span><span class="op">|</span> {
+                    <span class="string">&quot;Unable to deserialize the balance of the given address&quot;</span>
+                        .<span class="ident">into</span>()
+                },
+            )
+        }
     }
 
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">revert_proposal</span>(

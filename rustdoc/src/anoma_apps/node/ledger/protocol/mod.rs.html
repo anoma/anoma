@@ -393,9 +393,27 @@
 <span id="391">391</span>
 <span id="392">392</span>
 <span id="393">393</span>
+<span id="394">394</span>
+<span id="395">395</span>
+<span id="396">396</span>
+<span id="397">397</span>
+<span id="398">398</span>
+<span id="399">399</span>
+<span id="400">400</span>
+<span id="401">401</span>
+<span id="402">402</span>
+<span id="403">403</span>
+<span id="404">404</span>
+<span id="405">405</span>
+<span id="406">406</span>
+<span id="407">407</span>
+<span id="408">408</span>
+<span id="409">409</span>
+<span id="410">410</span>
+<span id="411">411</span>
+<span id="412">412</span>
 </pre><pre class="rust">
 <span class="doccomment">//! The ledger&#39;s protocol</span>
-
 <span class="kw">use</span> <span class="ident">std::collections::HashSet</span>;
 <span class="kw">use</span> <span class="ident">std::convert::TryFrom</span>;
 <span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">fmt</span>, <span class="ident">panic</span>};
@@ -409,6 +427,7 @@
 <span class="kw">use</span> <span class="ident">anoma::proto</span>::{<span class="self">self</span>, <span class="ident">Tx</span>};
 <span class="kw">use</span> <span class="ident">anoma::types::address</span>::{<span class="ident">Address</span>, <span class="ident">InternalAddress</span>};
 <span class="kw">use</span> <span class="ident">anoma::types::storage::Key</span>;
+<span class="kw">use</span> <span class="ident">anoma::types::transaction</span>::{<span class="ident">process_tx</span>, <span class="ident">TxType</span>};
 <span class="kw">use</span> <span class="ident">anoma::vm</span>::{<span class="self">self</span>, <span class="ident">wasm</span>};
 <span class="kw">use</span> <span class="ident">rayon::iter</span>::{<span class="ident">IntoParallelRefIterator</span>, <span class="ident">ParallelIterator</span>};
 <span class="kw">use</span> <span class="ident">thiserror::Error</span>;
@@ -444,7 +463,7 @@
 <span class="kw">pub</span> <span class="kw">type</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">std::result::Result</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">Error</span><span class="op">&gt;</span>;
 
 <span class="doccomment">/// Transaction application result</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">Default</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">TxResult</span> {
     <span class="kw">pub</span> <span class="ident">gas_used</span>: <span class="ident">u64</span>,
     <span class="kw">pub</span> <span class="ident">changed_keys</span>: <span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">Key</span><span class="op">&gt;</span>,
@@ -491,23 +510,42 @@
 
     <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx::try_from</span>(<span class="ident">tx_bytes</span>).<span class="ident">map_err</span>(<span class="ident">Error::TxDecodingError</span>)<span class="question-mark">?</span>;
 
-    <span class="kw">let</span> <span class="ident">verifiers</span> <span class="op">=</span> <span class="ident">execute_tx</span>(<span class="kw-2">&amp;</span><span class="ident">tx</span>, <span class="ident">storage</span>, <span class="ident">block_gas_meter</span>, <span class="ident">write_log</span>)<span class="question-mark">?</span>;
+    <span class="kw">match</span> <span class="ident">process_tx</span>(<span class="ident">tx</span>).<span class="ident">unwrap</span>() {
+        <span class="ident">TxType::Raw</span>(<span class="ident">tx</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="kw">let</span> <span class="ident">verifiers</span> <span class="op">=</span>
+                <span class="ident">execute_tx</span>(<span class="kw-2">&amp;</span><span class="ident">tx</span>, <span class="ident">storage</span>, <span class="ident">block_gas_meter</span>, <span class="ident">write_log</span>)<span class="question-mark">?</span>;
 
-    <span class="kw">let</span> <span class="ident">vps_result</span> <span class="op">=</span>
-        <span class="ident">check_vps</span>(<span class="kw-2">&amp;</span><span class="ident">tx</span>, <span class="ident">storage</span>, <span class="ident">block_gas_meter</span>, <span class="ident">write_log</span>, <span class="kw-2">&amp;</span><span class="ident">verifiers</span>)<span class="question-mark">?</span>;
+            <span class="kw">let</span> <span class="ident">vps_result</span> <span class="op">=</span> <span class="ident">check_vps</span>(
+                <span class="kw-2">&amp;</span><span class="ident">tx</span>,
+                <span class="ident">storage</span>,
+                <span class="ident">block_gas_meter</span>,
+                <span class="ident">write_log</span>,
+                <span class="kw-2">&amp;</span><span class="ident">verifiers</span>,
+            )<span class="question-mark">?</span>;
 
-    <span class="kw">let</span> <span class="ident">gas_used</span> <span class="op">=</span> <span class="ident">block_gas_meter</span>
-        .<span class="ident">finalize_transaction</span>()
-        .<span class="ident">map_err</span>(<span class="ident">Error::GasError</span>)<span class="question-mark">?</span>;
-    <span class="kw">let</span> <span class="ident">initialized_accounts</span> <span class="op">=</span> <span class="ident">write_log</span>.<span class="ident">get_initialized_accounts</span>();
-    <span class="kw">let</span> <span class="ident">changed_keys</span> <span class="op">=</span> <span class="ident">write_log</span>.<span class="ident">get_keys</span>();
+            <span class="kw">let</span> <span class="ident">gas_used</span> <span class="op">=</span> <span class="ident">block_gas_meter</span>
+                .<span class="ident">finalize_transaction</span>()
+                .<span class="ident">map_err</span>(<span class="ident">Error::GasError</span>)<span class="question-mark">?</span>;
+            <span class="kw">let</span> <span class="ident">initialized_accounts</span> <span class="op">=</span> <span class="ident">write_log</span>.<span class="ident">get_initialized_accounts</span>();
+            <span class="kw">let</span> <span class="ident">changed_keys</span> <span class="op">=</span> <span class="ident">write_log</span>.<span class="ident">get_keys</span>();
 
-    <span class="prelude-val">Ok</span>(<span class="ident">TxResult</span> {
-        <span class="ident">gas_used</span>,
-        <span class="ident">changed_keys</span>,
-        <span class="ident">vps_result</span>,
-        <span class="ident">initialized_accounts</span>,
-    })
+            <span class="prelude-val">Ok</span>(<span class="ident">TxResult</span> {
+                <span class="ident">gas_used</span>,
+                <span class="ident">changed_keys</span>,
+                <span class="ident">vps_result</span>,
+                <span class="ident">initialized_accounts</span>,
+            })
+        }
+        <span class="ident">TxType::Wrapper</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="kw">let</span> <span class="ident">gas_used</span> <span class="op">=</span> <span class="ident">block_gas_meter</span>
+                .<span class="ident">finalize_transaction</span>()
+                .<span class="ident">map_err</span>(<span class="ident">Error::GasError</span>)<span class="question-mark">?</span>;
+            <span class="prelude-val">Ok</span>(<span class="ident">TxResult</span> {
+                <span class="ident">gas_used</span>,
+                ..<span class="ident">Default::default</span>()
+            })
+        }
+    }
 }
 
 <span class="doccomment">/// Execute a transaction code. Returns verifiers requested by the transaction.</span>

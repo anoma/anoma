@@ -388,6 +388,10 @@
 <span id="386">386</span>
 <span id="387">387</span>
 <span id="388">388</span>
+<span id="389">389</span>
+<span id="390">390</span>
+<span id="391">391</span>
+<span id="392">392</span>
 </pre><pre class="rust">
 <span class="kw">use</span> <span class="ident">std::borrow::Cow</span>;
 <span class="kw">use</span> <span class="ident">std::convert::TryFrom</span>;
@@ -712,21 +716,25 @@
     <span class="kw">let</span> <span class="ident">query</span> <span class="op">=</span> <span class="ident">Query::from</span>(<span class="ident">EventType::NewBlock</span>)
         .<span class="ident">and_eq</span>(<span class="string">&quot;applied.hash&quot;</span>, <span class="ident">hash_tx</span>(<span class="kw-2">&amp;</span><span class="ident">tx_bytes</span>).<span class="ident">to_string</span>());
     <span class="ident">client</span>.<span class="ident">subscribe</span>(<span class="ident">query</span>)<span class="question-mark">?</span>;
-    <span class="macro">println!</span>(
-        <span class="string">&quot;Transaction added to mempool: {:?}&quot;</span>,
-        <span class="ident">client</span>
-            .<span class="ident">broadcast_tx_sync</span>(<span class="ident">tx_bytes</span>.<span class="ident">into</span>())
-            .<span class="kw">await</span>
-            .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">err</span><span class="op">|</span> <span class="ident">Error::Response</span>(<span class="macro">format!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="ident">err</span>)))<span class="question-mark">?</span>
-    );
-    <span class="kw">let</span> <span class="ident">parsed</span> <span class="op">=</span> <span class="ident">TxResponse::from</span>(<span class="ident">client</span>.<span class="ident">receive_response</span>()<span class="question-mark">?</span>);
-    <span class="macro">println!</span>(
-        <span class="string">&quot;Transaction applied with result: {}&quot;</span>,
-        <span class="ident">serde_json::to_string_pretty</span>(<span class="kw-2">&amp;</span><span class="ident">parsed</span>).<span class="ident">unwrap</span>()
-    );
+    <span class="kw">let</span> <span class="ident">response</span> <span class="op">=</span> <span class="ident">client</span>
+        .<span class="ident">broadcast_tx_sync</span>(<span class="ident">tx_bytes</span>.<span class="ident">into</span>())
+        .<span class="kw">await</span>
+        .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">err</span><span class="op">|</span> <span class="ident">Error::Response</span>(<span class="macro">format!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="ident">err</span>)))<span class="question-mark">?</span>;
+
+    <span class="kw">let</span> <span class="ident">parsed</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">response</span>.<span class="ident">code</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span>.<span class="ident">into</span>() {
+        <span class="macro">println!</span>(<span class="string">&quot;Transaction added to mempool: {:?}&quot;</span>, <span class="ident">response</span>);
+        <span class="kw">let</span> <span class="ident">parsed</span> <span class="op">=</span> <span class="ident">TxResponse::from</span>(<span class="ident">client</span>.<span class="ident">receive_response</span>()<span class="question-mark">?</span>);
+        <span class="macro">println!</span>(
+            <span class="string">&quot;Transaction applied with result: {}&quot;</span>,
+            <span class="ident">serde_json::to_string_pretty</span>(<span class="kw-2">&amp;</span><span class="ident">parsed</span>).<span class="ident">unwrap</span>()
+        );
+        <span class="prelude-val">Ok</span>(<span class="ident">parsed</span>)
+    } <span class="kw">else</span> {
+        <span class="prelude-val">Err</span>(<span class="ident">Error::Response</span>(<span class="ident">response</span>.<span class="ident">log</span>.<span class="ident">to_string</span>()))
+    };
     <span class="ident">client</span>.<span class="ident">unsubscribe</span>()<span class="question-mark">?</span>;
     <span class="ident">client</span>.<span class="ident">close</span>();
-    <span class="prelude-val">Ok</span>(<span class="ident">parsed</span>)
+    <span class="ident">parsed</span>
 }
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Serialize</span>)]</span>
