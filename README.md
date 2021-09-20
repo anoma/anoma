@@ -41,7 +41,14 @@ make build-wasm-scripts-docker
 
 # Build Anoma
 make
+```
 
+### Using Nix
+
+```shell
+nix-shell -p crate2nix --command "crate2nix generate"
+nix-build -A apps
+nix-env -i ./result
 ```
 
 ## Running an Anoma node

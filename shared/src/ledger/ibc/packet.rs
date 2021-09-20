@@ -9,17 +9,22 @@ use ibc::ics04_channel::context::ChannelReader;
 use ibc::ics04_channel::error::Error as Ics04Error;
 use ibc::ics04_channel::handler::verify::{
     verify_channel_proofs, verify_next_sequence_recv,
-    verify_packet_receipt_absence,
+    verify_packet_acknowledgement_proofs, verify_packet_receipt_absence,
+    verify_packet_recv_proofs,
 };
 use ibc::ics04_channel::packet::{Packet, Sequence};
 use ibc::ics24_host::identifier::{ChannelId, ClientId, PortId};
+use ibc::proofs::Proofs;
 use ibc::timestamp::Expiry;
 use thiserror::Error;
 
 use super::{Ibc, StateChange};
 use crate::ledger::storage::{self, StorageHasher};
 use crate::types::address::{Address, InternalAddress};
-use crate::types::ibc::{Error as IbcDataError, PacketSendData, TimeoutData};
+use crate::types::ibc::{
+    Error as IbcDataError, PacketAckData, PacketReceiptData, PacketSendData,
+    TimeoutData,
+};
 use crate::types::storage::{DbKeySeg, Key, KeySeg};
 
 #[allow(missing_docs)]
@@ -37,8 +42,6 @@ pub enum Error {
     InvalidChannel(String),
     #[error("Port error: {0}")]
     InvalidPort(String),
-    #[error("Sequence error: {0}")]
-    InvalidSequence(String),
     #[error("Packet error: {0}")]
     InvalidPacket(String),
     #[error("Proof verification error: {0}")]
@@ -51,6 +54,12 @@ pub enum Error {
 
 /// IBC packet functions result
 pub type Result<T> = std::result::Result<T, Error>;
+
+enum Phase {
+    Send,
+    Recv,
+    Ack,
+}
 
 impl<'a, DB, H> Ibc<'a, DB, H>
 where
@@ -70,12 +79,7 @@ where
             StateChange::Created => {
                 // sending a packet
                 let data = PacketSendData::try_from_slice(tx_data)?;
-                let port_channel_id =
-                    (commitment_key.0.clone(), commitment_key.1.clone());
-                let seq = self
-                    .get_next_sequence_send_pre(&port_channel_id)
-                    .map_err(|e| Error::InvalidSequence(e.to_string()))?;
-                let packet = data.packet(seq);
+                let packet = data.packet(commitment_key.2);
                 let commitment = self
                     .get_packet_commitment(&commitment_key)
                     .ok_or_else(|| {
@@ -88,10 +92,54 @@ where
                         ))
                     })?;
                 self.validate_packet_commitment(&packet, commitment)
-                    .map_err(|e| Error::InvalidPacket(e.to_string()))
+                    .map_err(|e| Error::InvalidPacket(e.to_string()))?;
+
+                self.validate_send_packet(&commitment_key, &packet)
             }
             StateChange::Deleted => {
-                self.validate_timeout(&commitment_key, tx_data)
+                // check the channel state
+                let channel = self
+                    .channel_end(&(
+                        commitment_key.0.clone(),
+                        commitment_key.1.clone(),
+                    ))
+                    .ok_or_else(|| {
+                        Error::InvalidChannel(format!(
+                            "The channel doesn't exist: Port {}, Channel {}",
+                            commitment_key.0, commitment_key.1,
+                        ))
+                    })?;
+                match channel.state() {
+                    State::Open => {
+                        // "PacketAcknowledgement"
+                        let data = PacketAckData::try_from_slice(tx_data)?;
+                        let commitment_pre = self
+                            .get_packet_commitment_pre(&commitment_key)
+                            .map_err(|e| Error::InvalidPacket(e.to_string()))?;
+                        self.validate_packet_commitment(
+                            &data.packet,
+                            commitment_pre,
+                        )
+                        .map_err(|e| Error::InvalidPacket(e.to_string()))?;
+                        self.validate_ack_packet(
+                            &commitment_key,
+                            &data.packet,
+                        )?;
+                        self.verify_ack_proof(
+                            &(commitment_key.0, commitment_key.1),
+                            &data.packet,
+                            data.ack.clone(),
+                            &data.proofs()?,
+                        )
+                    }
+                    State::Closed => {
+                        self.validate_timeout(&commitment_key, tx_data)
+                    }
+                    _ => Err(Error::InvalidChannel(format!(
+                        "The channel state is invalid: Port {}, Channel {}",
+                        commitment_key.0, commitment_key.1
+                    ))),
+                }
             }
             _ => Err(Error::InvalidStateChange(format!(
                 "The state change of the commitment is invalid: Key {}",
@@ -100,12 +148,26 @@ where
         }
     }
 
-    pub(super) fn validate_receipt(&self, key: &Key) -> Result<()> {
+    pub(super) fn validate_receipt(
+        &self,
+        key: &Key,
+        tx_data: &[u8],
+    ) -> Result<()> {
         match self
             .get_state_change(key)
             .map_err(|e| Error::InvalidStateChange(e.to_string()))?
         {
-            StateChange::Created => Ok(()),
+            StateChange::Created => {
+                let receipt_key = Self::get_port_channel_sequence_id(key)?;
+                let data = PacketReceiptData::try_from_slice(tx_data)?;
+                let packet = &data.packet;
+                self.validate_recv_packet(&receipt_key, packet)?;
+                self.verify_recv_proof(
+                    &(receipt_key.0, receipt_key.1),
+                    packet,
+                    &data.proofs()?,
+                )
+            }
             _ => Err(Error::InvalidStateChange(
                 "The state change of the receipt is invalid".to_owned(),
             )),
@@ -117,7 +179,26 @@ where
             .get_state_change(key)
             .map_err(|e| Error::InvalidStateChange(e.to_string()))?
         {
-            StateChange::Created => Ok(()),
+            StateChange::Created => {
+                let ack_key = Self::get_port_channel_sequence_id(key)?;
+                // The receipt should have been stored
+                if self
+                    .get_packet_receipt(&(
+                        ack_key.0.clone(),
+                        ack_key.1.clone(),
+                        ack_key.2,
+                    ))
+                    .is_none()
+                {
+                    return Err(Error::InvalidPacket(format!(
+                        "The receipt doesn't exist: Port {}, Channel {}, \
+                         Sequence {}",
+                        ack_key.0, ack_key.1, ack_key.2,
+                    )));
+                }
+                // The packet is validated in the receipt validation
+                Ok(())
+            }
             _ => Err(Error::InvalidStateChange(
                 "The state change of the acknowledgment is invalid".to_owned(),
             )),
@@ -148,9 +229,276 @@ where
             _ => Err(Error::InvalidKey(format!(
                 "The key doesn't have port ID, channel ID and sequence \
                  number: Key {}",
-                key
+                key,
             ))),
         }
+    }
+
+    fn validate_send_packet(
+        &self,
+        port_channel_seq_id: &(PortId, ChannelId, Sequence),
+        packet: &Packet,
+    ) -> Result<()> {
+        self.validate_packet(port_channel_seq_id, packet, Phase::Send)?;
+
+        if self.get_packet_commitment(port_channel_seq_id).is_none() {
+            return Err(Error::InvalidPacket(format!(
+                "The commitment doesn't exist: Port {}, Channel {}, Sequence \
+                 {}",
+                port_channel_seq_id.0,
+                port_channel_seq_id.1,
+                port_channel_seq_id.2
+            )));
+        }
+
+        Ok(())
+    }
+
+    fn validate_recv_packet(
+        &self,
+        port_channel_seq_id: &(PortId, ChannelId, Sequence),
+        packet: &Packet,
+    ) -> Result<()> {
+        self.validate_packet(port_channel_seq_id, packet, Phase::Recv)?;
+
+        if self.get_packet_receipt(port_channel_seq_id).is_none() {
+            return Err(Error::InvalidPacket(format!(
+                "The receipt doesn't exist: Port {}, Channel {}, Sequence {}",
+                port_channel_seq_id.0,
+                port_channel_seq_id.1,
+                port_channel_seq_id.2
+            )));
+        }
+        if self
+            .get_packet_acknowledgement(port_channel_seq_id)
+            .is_none()
+        {
+            return Err(Error::InvalidPacket(format!(
+                "The acknowledgement doesn't exist: Port {}, Channel {}, \
+                 Sequence {}",
+                port_channel_seq_id.0,
+                port_channel_seq_id.1,
+                port_channel_seq_id.2
+            )));
+        }
+
+        Ok(())
+    }
+
+    fn validate_ack_packet(
+        &self,
+        port_channel_seq_id: &(PortId, ChannelId, Sequence),
+        packet: &Packet,
+    ) -> Result<()> {
+        self.validate_packet(port_channel_seq_id, packet, Phase::Ack)?;
+
+        let prev_commitment = self
+            .get_packet_commitment_pre(port_channel_seq_id)
+            .map_err(|e| Error::InvalidPacket(e.to_string()))?;
+        self.validate_packet_commitment(packet, prev_commitment)?;
+
+        if self.get_packet_commitment(port_channel_seq_id).is_some() {
+            return Err(Error::InvalidPacket(
+                "The commitment hasn't been deleted yet".to_owned(),
+            ));
+        }
+
+        Ok(())
+    }
+
+    fn validate_packet(
+        &self,
+        port_channel_seq_id: &(PortId, ChannelId, Sequence),
+        packet: &Packet,
+        phase: Phase,
+    ) -> Result<()> {
+        let (port_id, channel_id, sequence) = port_channel_seq_id;
+        let port_channel_id = match phase {
+            Phase::Send | Phase::Ack => {
+                if *port_id != packet.source_port
+                    || *channel_id != packet.source_channel
+                    || *sequence != packet.sequence
+                {
+                    return Err(Error::InvalidPacket(
+                        "The packet info invalid".to_owned(),
+                    ));
+                }
+                (packet.source_port.clone(), packet.source_channel.clone())
+            }
+            Phase::Recv => {
+                if *port_id != packet.destination_port
+                    || *channel_id != packet.destination_channel
+                    || *sequence != packet.sequence
+                {
+                    return Err(Error::InvalidPacket(
+                        "The packet info invalid".to_owned(),
+                    ));
+                }
+                (
+                    packet.destination_port.clone(),
+                    packet.destination_channel.clone(),
+                )
+            }
+        };
+
+        // port authentication
+        self.authenticated_capability(&port_channel_id.0)
+            .map_err(|e| {
+                Error::InvalidPort(format!(
+                    "The port is not owned: Port {}, {}",
+                    port_channel_id.0, e
+                ))
+            })?;
+
+        let channel = match self.channel_end(&port_channel_id) {
+            Some(c) => c,
+            None => {
+                return Err(Error::InvalidChannel(format!(
+                    "The channel doesn't exist: Port {}, Channel {}",
+                    port_channel_id.0, port_channel_id.1,
+                )));
+            }
+        };
+        if !channel.is_open() {
+            return Err(Error::InvalidChannel(format!(
+                "The channel isn't open: Port {}, Channel {}",
+                port_channel_id.0, port_channel_id.1
+            )));
+        }
+
+        let connection = self
+            .connection_from_channel(&channel)
+            .map_err(|e| Error::InvalidConnection(e.to_string()))?;
+        if !connection.is_open() {
+            return Err(Error::InvalidConnection(
+                "The connection isn't open".to_owned(),
+            ));
+        }
+
+        // counterparty consistency
+        let counterparty = match phase {
+            Phase::Send | Phase::Ack => Counterparty::new(
+                packet.destination_port.clone(),
+                Some(packet.destination_channel.clone()),
+            ),
+            Phase::Recv => Counterparty::new(
+                packet.source_port.clone(),
+                Some(packet.source_channel.clone()),
+            ),
+        };
+        if !channel.counterparty_matches(&counterparty) {
+            return Err(Error::InvalidPacket(
+                "The counterpart port or channel is mismatched".to_owned(),
+            ));
+        }
+
+        // check timeout
+        match phase {
+            Phase::Send => {
+                let client_id = connection.client_id();
+                let height = match self.client_state(client_id) {
+                    Some(s) => s.latest_height(),
+                    None => {
+                        return Err(Error::InvalidClient(format!(
+                            "The client state doesn't exist: ID {}",
+                            client_id
+                        )));
+                    }
+                };
+                self.check_timeout(client_id, height, packet)
+                    .map_err(|e| Error::InvalidPacket(e.to_string()))?;
+            }
+            Phase::Recv => {
+                // check timeout height
+                if packet.timeout_height <= self.host_height() {
+                    return Err(Error::InvalidPacket(
+                        "The packet has timed out".to_owned(),
+                    ));
+                }
+                // check timeout timestamp
+                if self
+                    .host_timestamp()
+                    .check_expiry(&packet.timeout_timestamp)
+                    != Expiry::NotExpired
+                {
+                    return Err(Error::InvalidPacket(
+                        "The packet has timed out".to_owned(),
+                    ));
+                }
+            }
+            Phase::Ack => (),
+        }
+
+        Ok(())
+    }
+
+    fn validate_packet_commitment(
+        &self,
+        packet: &Packet,
+        commitment: String,
+    ) -> Result<()> {
+        let input = format!(
+            "{:?},{:?},{:?}",
+            packet.timeout_timestamp, packet.timeout_height, packet.data,
+        );
+        if commitment == self.hash(input) {
+            Ok(())
+        } else {
+            Err(Error::InvalidPacket(
+                "The commitment and the packet are mismatched".to_owned(),
+            ))
+        }
+    }
+
+    fn verify_recv_proof(
+        &self,
+        port_channel_id: &(PortId, ChannelId),
+        packet: &Packet,
+        proofs: &Proofs,
+    ) -> Result<()> {
+        let channel = match self.channel_end(port_channel_id) {
+            Some(c) => c,
+            None => {
+                return Err(Error::InvalidChannel(format!(
+                    "The channel doesn't exist: Port {}, Channel {}",
+                    port_channel_id.0, port_channel_id.1,
+                )));
+            }
+        };
+        let connection = self
+            .connection_from_channel(&channel)
+            .map_err(|e| Error::InvalidConnection(e.to_string()))?;
+        let client_id = connection.client_id().clone();
+
+        verify_packet_recv_proofs(self, packet, client_id, proofs)
+            .map_err(Error::ProofVerificationFailure)
+    }
+
+    fn verify_ack_proof(
+        &self,
+        port_channel_id: &(PortId, ChannelId),
+        packet: &Packet,
+        ack: Vec<u8>,
+        proofs: &Proofs,
+    ) -> Result<()> {
+        let channel = match self.channel_end(port_channel_id) {
+            Some(c) => c,
+            None => {
+                return Err(Error::InvalidChannel(format!(
+                    "The channel doesn't exist: Port {}, Channel {}",
+                    port_channel_id.0, port_channel_id.1,
+                )));
+            }
+        };
+        let connection = self
+            .connection_from_channel(&channel)
+            .map_err(|e| Error::InvalidConnection(e.to_string()))?;
+        let client_id = connection.client_id().clone();
+
+        verify_packet_acknowledgement_proofs(
+            self, packet, ack, client_id, proofs,
+        )
+        .map_err(Error::ProofVerificationFailure)
     }
 
     fn validate_timeout(
@@ -160,14 +508,9 @@ where
     ) -> Result<()> {
         let data = TimeoutData::try_from_slice(tx_data)?;
         let packet = data.packet.clone();
-        let commitment =
-            self.get_packet_commitment(commitment_key).ok_or_else(|| {
-                Error::InvalidPacket(format!(
-                    "The commitement doesn't exist: Port {}, Channel {}, \
-                     Sequence {}",
-                    commitment_key.0, commitment_key.1, commitment_key.2,
-                ))
-            })?;
+        let commitment = self
+            .get_packet_commitment_pre(commitment_key)
+            .map_err(|e| Error::InvalidPacket(e.to_string()))?;
         self.validate_packet_commitment(&packet, commitment)
             .map_err(|e| Error::InvalidPacket(e.to_string()))?;
 

@@ -141,7 +141,7 @@ where
                 IbcPrefix::Commitment => {
                     self.validate_commitment(key, tx_data)?
                 }
-                IbcPrefix::Receipt => self.validate_receipt(key)?,
+                IbcPrefix::Receipt => self.validate_receipt(key, tx_data)?,
                 IbcPrefix::Ack => self.validate_ack(key)?,
                 IbcPrefix::Unknown => {
                     return Err(Error::KeyError(format!(
@@ -1395,9 +1395,22 @@ mod tests {
 
     #[test]
     fn test_validate_commitment() {
-        let (storage, mut write_log) = insert_init_states();
+        let (mut storage, mut write_log) = insert_init_states();
+        // insert an opened connection
+        let conn_key = get_connection_key();
+        let conn = get_connection(ConnState::Open);
+        let bytes = conn.try_to_vec().expect("encoding failed");
+        write_log.write(&conn_key, bytes).expect("write failed");
+        // insert an opened channel
+        set_port(&mut write_log, 0);
+        let channel_key = get_channel_key();
+        let channel = get_channel(ChanState::Open, Order::Ordered);
+        let bytes = channel.try_to_vec().expect("encoding failed");
+        write_log.write(&channel_key, bytes).expect("write failed");
+        write_log.commit_tx();
+        write_log.commit_block(&mut storage).expect("commit failed");
 
-        // make a packet
+        // prepare data
         let counterparty = get_channel_counterparty();
         let timestamp = Utc::now() + chrono::Duration::seconds(100);
         let timeout_timestamp = Timestamp::from_datetime(timestamp);
@@ -1411,11 +1424,9 @@ mod tests {
             timeout_timestamp,
         );
 
-        // get and increment the nextSequenceSend
-        let seq_path = Path::SeqSends(get_port_id(), get_channel_id());
-        let sequence = get_next_seq(&storage, seq_path.clone());
-        increment_seq(&mut write_log, seq_path, sequence);
         // make a packet
+        let seq_path = Path::SeqSends(get_port_id(), get_channel_id());
+        let sequence = get_next_seq(&storage, seq_path);
         let packet = data.packet(sequence);
         // insert a commitment
         let commitment = hash(&packet);
@@ -1451,23 +1462,64 @@ mod tests {
 
     #[test]
     fn test_validate_receipt() {
-        let (storage, mut write_log) = insert_init_states();
+        let (mut storage, mut write_log) = insert_init_states();
+        // insert an opened connection
+        let conn_key = get_connection_key();
+        let conn = get_connection(ConnState::Open);
+        let bytes = conn.try_to_vec().expect("encoding failed");
+        write_log.write(&conn_key, bytes).expect("write failed");
+        // insert an opened channel
+        set_port(&mut write_log, 0);
+        let channel_key = get_channel_key();
+        let channel = get_channel(ChanState::Open, Order::Ordered);
+        let bytes = channel.try_to_vec().expect("encoding failed");
+        write_log.write(&channel_key, bytes).expect("write failed");
+        write_log.commit_tx();
+        write_log.commit_block(&mut storage).expect("commit failed");
 
-        // insert a receipt
+        // make a packet and data
+        let counterparty = get_channel_counterparty();
+        let timestamp = Utc::now() + chrono::Duration::seconds(100);
+        let timeout_timestamp = Timestamp::from_datetime(timestamp);
+        let packet = Packet {
+            sequence: Sequence::from(1),
+            source_port: counterparty.port_id().clone(),
+            source_channel: counterparty.channel_id().unwrap().clone(),
+            destination_port: get_port_id(),
+            destination_channel: get_channel_id(),
+            data: vec![0],
+            timeout_height: Height::new(1, 100),
+            timeout_timestamp,
+        };
+        let proof_packet = CommitmentProofBytes::from(vec![0]);
+        let data =
+            PacketReceiptData::new(packet, Height::new(1, 10), proof_packet);
+
+        // insert a receipt and an ack
         let path = Path::Receipts {
             port_id: get_port_id(),
             channel_id: get_channel_id(),
-            sequence: Sequence::from(1),
+            sequence: data.packet.sequence,
         };
         let receipt_key = Key::ibc_key(path.to_string())
             .expect("Creating a key for a commitment shouldn't fail");
         write_log
             .write(&receipt_key, storage::types::encode(&0))
             .expect("write failed");
+        let path = Path::Acks {
+            port_id: get_port_id(),
+            channel_id: get_channel_id(),
+            sequence: data.packet.sequence,
+        };
+        let key = Key::ibc_key(path.to_string())
+            .expect("Creating a key for an ack shouldn't fail");
+        write_log
+            .write(&key, storage::types::encode(&"test_ack".to_owned()))
+            .expect("write failed");
         write_log.commit_tx();
 
         let tx_code = vec![];
-        let tx_data = vec![];
+        let tx_data = data.try_to_vec().expect("encoding failed");
         let tx = Tx::new(tx_code, Some(tx_data.clone()));
         let gas_meter = VpGasMeter::new(0);
         let ctx = Ctx::new(&storage, &write_log, &tx, gas_meter);
@@ -1488,7 +1540,17 @@ mod tests {
     fn test_validate_ack() {
         let (storage, mut write_log) = insert_init_states();
 
-        // insert a receipt
+        // insert a receipt and an ack
+        let path = Path::Receipts {
+            port_id: get_port_id(),
+            channel_id: get_channel_id(),
+            sequence: Sequence::from(1),
+        };
+        let ack_key = Key::ibc_key(path.to_string())
+            .expect("Creating a key for a commitment shouldn't fail");
+        write_log
+            .write(&ack_key, storage::types::encode(&0))
+            .expect("write failed");
         let path = Path::Acks {
             port_id: get_port_id(),
             channel_id: get_channel_id(),
