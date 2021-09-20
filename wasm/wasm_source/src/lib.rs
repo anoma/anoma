@@ -341,7 +341,7 @@ pub mod vp_nft {
 
     #[validity_predicate]
     fn validate_tx(
-        _tx_data: Vec<u8>,
+        tx_data: Vec<u8>,
         addr: Address,
         keys_changed: HashSet<storage::Key>,
         verifiers: HashSet<Address>,
@@ -352,7 +352,7 @@ pub mod vp_nft {
             addr, keys_changed, verifiers
         ));
 
-        nft::vp(&addr, &keys_changed, &verifiers)
+        nft::vp(tx_data, &addr, &keys_changed, &verifiers)
     }
 }
 

@@ -1753,6 +1753,7 @@ pub mod args {
                     ),
                 )
                 .arg(NFT_ADDRESS.def().about("The nft address."))
+                .arg(NFT_ADDRESS_OWNER.def().about("The owner nft address."))
                 .arg(SIGNING_KEY.def().about("The key to sign the tx."))
         }
     }

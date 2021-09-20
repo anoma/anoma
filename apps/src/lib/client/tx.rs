@@ -35,7 +35,7 @@ const TX_CREATE_NFT: &str = "wasm/tx_create_nft.wasm";
 const TX_UPDATE_VP_WASM: &str = "wasm/tx_update_vp.wasm";
 const TX_TRANSFER_WASM: &str = "wasm/tx_transfer.wasm";
 const VP_USER_WASM: &str = "wasm/vp_user.wasm";
-const TX_MINT_NFT_TOKEN: &str = "wasm/mint_nft_tokens.wasm";
+const TX_MINT_NFT_TOKEN: &str = "wasm/tx_mint_nft_tokens.wasm";
 const VP_NFT: &str = "wasm/vp_nft.wasm";
 
 #[derive(Debug, Clone, Deserialize)]

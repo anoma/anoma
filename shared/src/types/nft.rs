@@ -202,22 +202,17 @@ pub fn is_nft_current_owner_key(
 }
 
 /// Check that a particular key is a past_owners storage key
-pub fn is_nft_past_owners_key(
-    key: &Key,
-    address: &Address,
-    token_id: &str,
-) -> bool {
+pub fn is_nft_past_owners_key(key: &Key, address: &Address) -> Option<String> {
     match &key.segments[..] {
         [DbKeySeg::AddressSeg(nft_addr), DbKeySeg::StringSeg(prefix), DbKeySeg::StringSeg(ids_key), DbKeySeg::StringSeg(token_id_key), DbKeySeg::StringSeg(past_owners_key), DbKeySeg::AddressSeg(_)]
             if nft_addr == address
                 && prefix == NFT_KEY
                 && ids_key == IDS_KEY
-                && token_id_key == token_id
                 && past_owners_key == PAST_OWNERS_KEY =>
         {
-            true
+            Some(token_id_key.to_owned())
         }
-        _ => false,
+        _ => None,
     }
 }
 
