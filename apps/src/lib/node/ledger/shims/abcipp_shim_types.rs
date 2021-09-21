@@ -154,12 +154,13 @@ pub mod shim {
 
     /// Custom types for request payloads
     pub mod request {
-        use tendermint_proto::abci::RequestBeginBlock;
+        use tendermint_proto::abci::{Evidence, RequestBeginBlock};
         use tendermint_proto::types::Header;
 
         pub struct PrepareProposal {
             pub hash: Vec<u8>,
             pub header: Option<Header>,
+            pub byzantine_validators: Vec<Evidence>,
         }
 
         impl From<RequestBeginBlock> for PrepareProposal {
@@ -167,12 +168,23 @@ pub mod shim {
                 PrepareProposal {
                     hash: block.hash,
                     header: block.header,
+                    byzantine_validators: block.byzantine_validators,
                 }
             }
         }
 
         pub struct VerifyHeader;
-        pub struct ProcessProposal;
+
+        pub struct ProcessProposal {
+            pub tx: super::TxBytes,
+        }
+
+        impl From<super::TxBytes> for ProcessProposal {
+            fn from(tx: super::TxBytes) -> Self {
+                Self { tx }
+            }
+        }
+
         pub struct RevertProposal;
         pub struct ExtendVote;
         pub struct VerifyVoteExtension;
@@ -185,7 +197,7 @@ pub mod shim {
 
     /// Custom types for response payloads
     pub mod response {
-        use tendermint_proto::abci::Event;
+        use tendermint_proto::abci::{ConsensusParams, Event, ValidatorUpdate};
         use tower_abci::response;
 
         #[derive(Debug, Default)]
@@ -201,7 +213,38 @@ pub mod shim {
         pub struct VerifyHeader;
 
         #[derive(Debug, Default)]
-        pub struct ProcessProposal;
+        pub struct TxResult {
+            pub code: u32,
+            pub info: String,
+        }
+
+        impl<T> From<T> for TxResult
+        where
+            T: std::error::Error,
+        {
+            fn from(err: T) -> Self {
+                TxResult {
+                    code: 1,
+                    info: err.to_string(),
+                }
+            }
+        }
+
+        #[derive(Debug, Default)]
+        pub struct ProcessProposal {
+            pub result: TxResult,
+            pub tx: super::TxBytes,
+        }
+
+        impl From<ProcessProposal> for response::CheckTx {
+            fn from(resp: ProcessProposal) -> Self {
+                Self {
+                    code: resp.result.code,
+                    log: resp.result.info,
+                    ..Default::default()
+                }
+            }
+        }
 
         #[derive(Debug, Default)]
         pub struct RevertProposal;
@@ -213,22 +256,19 @@ pub mod shim {
         pub struct VerifyVoteExtension;
 
         #[derive(Debug, Default)]
-        pub struct TxResult {
-            pub code: u32,
-            pub info: String,
-        }
-
-        #[derive(Debug, Default)]
         pub struct FinalizeBlock {
             pub events: Vec<Event>,
             pub gas_used: u64,
+            pub validator_updates: Vec<ValidatorUpdate>,
+            pub consensus_param_updates: Option<ConsensusParams>,
         }
 
         impl From<FinalizeBlock> for response::EndBlock {
             fn from(resp: FinalizeBlock) -> Self {
                 Self {
                     events: resp.events,
-                    ..Default::default()
+                    validator_updates: resp.validator_updates,
+                    consensus_param_updates: resp.consensus_param_updates,
                 }
             }
         }

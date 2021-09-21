@@ -6,6 +6,8 @@ use std::str::FromStr;
 use std::sync::mpsc::Receiver;
 use std::time::Duration;
 
+#[cfg(feature = "dev")]
+use anoma::types::key::ed25519::Keypair;
 use serde_json::json;
 use signal_hook::consts::TERM_SIGNALS;
 use signal_hook::iterator::Signals;
@@ -53,8 +55,13 @@ pub fn run(
     }
 
     if cfg!(feature = "dev") {
+        let genesis = &genesis::genesis();
         // override the validator key file
-        write_validator_key(&home_dir, &genesis::genesis().validator);
+        write_validator_key(
+            &home_dir,
+            &genesis.validator,
+            &genesis.validator_consensus_key,
+        );
         write_chain_id(&home_dir, config::DEFAULT_CHAIN_ID);
     }
 
@@ -164,21 +171,27 @@ fn update_tendermint_config(home_dir: impl AsRef<Path>) -> Result<()> {
         .map_err(Error::OpenWriteConfig)?;
     let config_str =
         toml::to_string(&config).map_err(Error::ConfigSerializeToml)?;
-    file.write(config_str.as_bytes())
-        .map(|_| ())
+    file.write_all(config_str.as_bytes())
         .map_err(Error::WriteConfig)
 }
 
 #[cfg(feature = "dev")]
-fn write_validator_key(home_dir: impl AsRef<Path>, account: &Validator) {
+fn write_validator_key(
+    home_dir: impl AsRef<Path>,
+    validator: &Validator,
+    validator_key: &Keypair,
+) {
     let home_dir = home_dir.as_ref();
     let path = home_dir.join("config").join("priv_validator_key.json");
     let file =
         File::create(path).expect("Couldn't create private validator key file");
-    let pk = base64::encode(account.keypair.public.as_bytes());
-    let sk = base64::encode(account.keypair.to_bytes());
+    let pk: ed25519_dalek::PublicKey =
+        validator.pos_data.consensus_key.clone().into();
+    let pk = base64::encode(pk.as_bytes());
+    let sk = base64::encode(validator_key.to_bytes());
+    let address = validator.pos_data.address.raw_hash().unwrap();
     let key = json!({
-       "address": account.address,
+       "address": address,
        "pub_key": {
          "type": "tendermint/PubKeyEd25519",
          "value": pk,

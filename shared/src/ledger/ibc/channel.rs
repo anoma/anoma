@@ -21,17 +21,18 @@ use ibc::ics24_host::Path;
 use ibc::proofs::Proofs;
 use ibc::timestamp::Timestamp;
 use sha2::Digest;
-use tendermint_proto::Protobuf;
 use thiserror::Error;
 
 use super::{Ibc, StateChange};
 use crate::ledger::native_vp::Error as NativeVpError;
 use crate::ledger::storage::{self, StorageHasher};
+use crate::types::address::{Address, InternalAddress};
 use crate::types::ibc::{
     ChannelCloseConfirmData, ChannelCloseInitData, ChannelOpenAckData,
     ChannelOpenConfirmData, ChannelOpenTryData, Error as IbcDataError,
+    TimeoutData,
 };
-use crate::types::storage::{Key, KeySeg};
+use crate::types::storage::{DbKeySeg, Key, KeySeg};
 
 #[allow(missing_docs)]
 #[derive(Error, Debug)]
@@ -85,18 +86,15 @@ where
             }
         }
 
-        let port_id = Self::get_port_id(key)
-            .map_err(|e| Error::InvalidKey(e.to_string()))?;
-        let channel_id = Self::get_channel_id(key)?;
+        let port_channel_id = Self::get_port_channel_id(key)?;
+        self.authenticated_capability(&port_channel_id.0)
+            .map_err(|e| {
+                Error::InvalidPort(format!(
+                    "The port is not authenticated: ID {}, {}",
+                    port_channel_id.0, e
+                ))
+            })?;
 
-        self.authenticated_capability(&port_id).map_err(|e| {
-            Error::InvalidPort(format!(
-                "The port is not authenticated: ID {}, {}",
-                port_id, e
-            ))
-        })?;
-
-        let port_channel_id = (port_id, channel_id);
         let channel = self.channel_end(&port_channel_id).ok_or_else(|| {
             Error::InvalidChannel(format!(
                 "The channel doesn't exist: Port {}, Channel {}",
@@ -141,25 +139,27 @@ where
         }
     }
 
-    /// Returns the port ID after #IBC/channelEnds/ports
-    fn get_port_id(key: &Key) -> Result<PortId> {
-        match key.segments.get(3) {
-            Some(id) => PortId::from_str(&id.raw())
-                .map_err(|e| Error::InvalidKey(e.to_string())),
-            None => Err(Error::InvalidKey(format!(
-                "The key doesn't have a port ID: Key {}",
-                key
-            ))),
-        }
-    }
-
-    /// Returns the channel ID after #IBC/channelEnds/ports/{port_id}/channels
-    fn get_channel_id(key: &Key) -> Result<ChannelId> {
-        match key.segments.get(5) {
-            Some(id) => ChannelId::from_str(&id.raw())
-                .map_err(|e| Error::InvalidKey(e.to_string())),
-            None => Err(Error::InvalidKey(format!(
-                "The key doesn't have a channel ID: {}",
+    pub(super) fn get_port_channel_id(
+        key: &Key,
+    ) -> Result<(PortId, ChannelId)> {
+        match &key.segments[..] {
+            [DbKeySeg::AddressSeg(addr), DbKeySeg::StringSeg(prefix), DbKeySeg::StringSeg(module0), DbKeySeg::StringSeg(port_id), DbKeySeg::StringSeg(module1), DbKeySeg::StringSeg(channel_id)]
+                if addr == &Address::Internal(InternalAddress::Ibc)
+                    && (prefix == "channelEnds"
+                        || prefix == "nextSequenceSend"
+                        || prefix == "nextSequenceRecv"
+                        || prefix == "nextSequenceAck")
+                    && module0 == "ports"
+                    && module1 == "channels" =>
+            {
+                let port_id = PortId::from_str(&port_id.raw())
+                    .map_err(|e| Error::InvalidKey(e.to_string()))?;
+                let channel_id = ChannelId::from_str(&channel_id.raw())
+                    .map_err(|e| Error::InvalidKey(e.to_string()))?;
+                Ok((port_id, channel_id))
+            }
+            _ => Err(Error::InvalidKey(format!(
+                "The key doesn't have port ID and channel ID: Key {}",
                 key
             ))),
         }
@@ -206,7 +206,7 @@ where
         channel: &ChannelEnd,
         tx_data: &[u8],
     ) -> Result<()> {
-        let prev_channel = self.channel_end_pre(port_channel_id.clone())?;
+        let prev_channel = self.channel_end_pre(&port_channel_id)?;
         match channel.state() {
             State::Open => match prev_channel.state() {
                 State::Init => self.verify_channel_ack_proof(
@@ -233,19 +233,48 @@ where
                         port_channel_id.0, port_channel_id.1,
                     )));
                 }
-                match ChannelCloseInitData::try_from_slice(tx_data) {
-                    Ok(_) => Ok(()),
-                    Err(_) => self.verify_channel_close_proof(
-                        port_channel_id,
-                        channel,
-                        tx_data,
-                    ),
+                match TimeoutData::try_from_slice(tx_data) {
+                    Ok(data) => self.validate_commitment_absence(data),
+                    Err(_) => {
+                        match ChannelCloseInitData::try_from_slice(tx_data) {
+                            Ok(_) => Ok(()),
+                            Err(_) => self.verify_channel_close_proof(
+                                port_channel_id,
+                                channel,
+                                tx_data,
+                            ),
+                        }
+                    }
                 }
             }
             _ => Err(Error::InvalidStateChange(format!(
                 "The state change of the channel is invalid: Port {}, Channel \
                  {}",
                 port_channel_id.0, port_channel_id.1
+            ))),
+        }
+    }
+
+    fn validate_commitment_absence(&self, data: TimeoutData) -> Result<()> {
+        // check if the commitment has been deleted
+        let packet = data.packet;
+        let commitment_key = Path::Commitments {
+            port_id: packet.source_port.clone(),
+            channel_id: packet.source_channel.clone(),
+            sequence: packet.sequence,
+        };
+        let key = Key::ibc_key(commitment_key.to_string())
+            .expect("Creating a key for a channel failed");
+        let state_change = self
+            .get_state_change(&key)
+            .map_err(|e| Error::InvalidStateChange(e.to_string()))?;
+        match state_change {
+            // the deleted commitment is validated in validate_commitment()
+            StateChange::Deleted => Ok(()),
+            _ => Err(Error::InvalidStateChange(format!(
+                "The commitment hasn't been deleted yet: Port {}, Channel {}, \
+                 Sequence {}",
+                packet.source_port, packet.source_channel, packet.sequence
             ))),
         }
     }
@@ -360,6 +389,26 @@ where
         }
     }
 
+    fn get_sequence_pre(&self, path: Path) -> Result<Sequence> {
+        let key = Key::ibc_key(path.to_string())
+            .expect("Creating a key for a sequence shouldn't fail");
+        match self.ctx.read_pre(&key)? {
+            Some(value) => {
+                let index: u64 =
+                    storage::types::decode(value).map_err(|e| {
+                        Error::InvalidSequence(format!(
+                            "Decoding a prior sequece index failed: {}",
+                            e
+                        ))
+                    })?;
+                Ok(Sequence::from(index))
+            }
+            // The sequence is updated for the first time. The previous sequence
+            // is the initial number.
+            None => Ok(Sequence::from(1)),
+        }
+    }
+
     fn get_sequence(&self, path: Path) -> Result<Sequence> {
         let key = Key::ibc_key(path.to_string())
             .expect("Creating a key for a sequence shouldn't fail");
@@ -374,8 +423,23 @@ where
                     })?;
                 Ok(Sequence::from(index))
             }
-            None => Err(Error::InvalidSequence(format!(
-                "The sequence doesn't exist: Path {}",
+            // The sequence has not been used yet
+            None => Ok(Sequence::from(1)),
+        }
+    }
+
+    fn get_packet_info_pre(&self, path: Path) -> Result<String> {
+        let key = Key::ibc_key(path.to_string())
+            .expect("Creating a key for a packet info shouldn't fail");
+        match self.ctx.read_pre(&key)? {
+            Some(value) => storage::types::decode(value).map_err(|e| {
+                Error::InvalidPacketInfo(format!(
+                    "Decoding the prior packet info failed: {}",
+                    e
+                ))
+            }),
+            None => Err(Error::InvalidPacketInfo(format!(
+                "The prior packet info doesn't exist: Path {}",
                 path
             ))),
         }
@@ -385,7 +449,7 @@ where
         let key = Key::ibc_key(path.to_string())
             .expect("Creating a key for a packet info shouldn't fail");
         match self.ctx.read_post(&key)? {
-            Some(value) => String::from_utf8(value.to_vec()).map_err(|e| {
+            Some(value) => storage::types::decode(value).map_err(|e| {
                 Error::InvalidPacketInfo(format!(
                     "Decoding the packet info failed: {}",
                     e
@@ -398,7 +462,7 @@ where
         }
     }
 
-    fn connection_from_channel(
+    pub(super) fn connection_from_channel(
         &self,
         channel: &ChannelEnd,
     ) -> Result<ConnectionEnd> {
@@ -418,9 +482,9 @@ where
         }
     }
 
-    fn channel_end_pre(
+    pub(super) fn channel_end_pre(
         &self,
-        port_channel_id: (PortId, ChannelId),
+        port_channel_id: &(PortId, ChannelId),
     ) -> Result<ChannelEnd> {
         let path = Path::ChannelEnds(
             port_channel_id.0.clone(),
@@ -430,12 +494,14 @@ where
         let key =
             Key::ibc_key(path).expect("Creating a key for a channel failed");
         match self.ctx.read_pre(&key) {
-            Ok(Some(value)) => ChannelEnd::decode_vec(&value).map_err(|e| {
-                Error::InvalidChannel(format!(
-                    "Decoding the channel failed: Port {}, Channel {}, {}",
-                    port_channel_id.0, port_channel_id.1, e
-                ))
-            }),
+            Ok(Some(value)) => {
+                ChannelEnd::try_from_slice(&value[..]).map_err(|e| {
+                    Error::InvalidChannel(format!(
+                        "Decoding the channel failed: Port {}, Channel {}, {}",
+                        port_channel_id.0, port_channel_id.1, e
+                    ))
+                })
+            }
             Ok(None) => Err(Error::InvalidChannel(format!(
                 "The prior channel doesn't exist: Port {}, Channel {}",
                 port_channel_id.0, port_channel_id.1
@@ -445,6 +511,46 @@ where
                 e
             ))),
         }
+    }
+
+    pub(super) fn get_next_sequence_send_pre(
+        &self,
+        port_channel_id: &(PortId, ChannelId),
+    ) -> Result<Sequence> {
+        let port_channel_id = port_channel_id.clone();
+        let path = Path::SeqSends(port_channel_id.0, port_channel_id.1);
+        self.get_sequence_pre(path)
+    }
+
+    pub(super) fn get_next_sequence_recv_pre(
+        &self,
+        port_channel_id: &(PortId, ChannelId),
+    ) -> Result<Sequence> {
+        let port_channel_id = port_channel_id.clone();
+        let path = Path::SeqRecvs(port_channel_id.0, port_channel_id.1);
+        self.get_sequence_pre(path)
+    }
+
+    pub(super) fn get_next_sequence_ack_pre(
+        &self,
+        port_channel_id: &(PortId, ChannelId),
+    ) -> Result<Sequence> {
+        let port_channel_id = port_channel_id.clone();
+        let path = Path::SeqAcks(port_channel_id.0, port_channel_id.1);
+        self.get_sequence_pre(path)
+    }
+
+    pub(super) fn get_packet_commitment_pre(
+        &self,
+        key: &(PortId, ChannelId, Sequence),
+    ) -> Result<String> {
+        let key = key.clone();
+        let path = Path::Commitments {
+            port_id: key.0,
+            channel_id: key.1,
+            sequence: key.2,
+        };
+        self.get_packet_info_pre(path)
     }
 
     fn channel_counter_pre(&self) -> Result<u64> {
@@ -469,7 +575,7 @@ where
         let key =
             Key::ibc_key(path).expect("Creating a key for a channel failed");
         match self.ctx.read_post(&key) {
-            Ok(Some(value)) => ChannelEnd::decode_vec(&value).ok(),
+            Ok(Some(value)) => ChannelEnd::try_from_slice(&value[..]).ok(),
             // returns None even if DB read fails
             _ => None,
         }
@@ -490,13 +596,13 @@ where
         loop {
             let next = self.ctx.iter_post_next(&mut iter).ok()?;
             if let Some((key, value)) = next {
-                let channel = ChannelEnd::decode_vec(&value).ok()?;
+                let channel = ChannelEnd::try_from_slice(&value[..]).ok()?;
                 if let Some(id) = channel.connection_hops().get(0) {
                     if id == conn_id {
                         let key = Key::parse(&key).ok()?;
-                        let port_id = Self::get_port_id(&key).ok()?;
-                        let channel_id = Self::get_channel_id(&key).ok()?;
-                        channels.push((port_id, channel_id));
+                        let port_channel_id =
+                            Self::get_port_channel_id(&key).ok()?;
+                        channels.push(port_channel_id);
                     }
                 }
             } else {

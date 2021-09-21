@@ -13,6 +13,8 @@ use thiserror::Error;
 pub enum Path {
     /// Dry run a transaction
     DryRunTx,
+    /// Epoch of the last committed block
+    Epoch,
     /// Read a storage value with exact storage key
     Value(storage::Key),
     /// Read a range of storage values with a matching key prefix
@@ -33,6 +35,7 @@ pub struct BalanceQuery {
 }
 
 const DRY_RUN_TX_PATH: &str = "dry_run_tx";
+const EPOCH_PATH: &str = "epoch";
 const VALUE_PREFIX: &str = "value";
 const PREFIX_PREFIX: &str = "prefix";
 
@@ -40,6 +43,7 @@ impl Display for Path {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Path::DryRunTx => write!(f, "{}", DRY_RUN_TX_PATH),
+            Path::Epoch => write!(f, "{}", EPOCH_PATH),
             Path::Value(storage_key) => {
                 write!(f, "{}/{}", VALUE_PREFIX, storage_key)
             }
@@ -57,6 +61,7 @@ impl FromStr for Path {
         let path = s.to_lowercase();
         match path.as_str() {
             DRY_RUN_TX_PATH => Ok(Self::DryRunTx),
+            EPOCH_PATH => Ok(Self::Epoch),
             _ => match path.split_once("/") {
                 Some((VALUE_PREFIX, storage_key)) => {
                     let key = storage::Key::parse(storage_key)

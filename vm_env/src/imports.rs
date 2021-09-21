@@ -132,13 +132,13 @@ pub mod tx {
     /// Validity predicates of each verifier addresses inserted in the
     /// transaction will validate the transaction and will receive all the
     /// changed storage keys and initialized accounts in their inputs.
-    pub fn insert_verifier(addr: Address) {
+    pub fn insert_verifier(addr: &Address) {
         let addr = addr.encode();
         unsafe { anoma_tx_insert_verifier(addr.as_ptr() as _, addr.len() as _) }
     }
 
     /// Update a validity predicate
-    pub fn update_validity_predicate(addr: Address, code: impl AsRef<[u8]>) {
+    pub fn update_validity_predicate(addr: &Address, code: impl AsRef<[u8]>) {
         let addr = addr.encode();
         let code = code.as_ref();
         unsafe {

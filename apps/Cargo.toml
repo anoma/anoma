@@ -32,6 +32,12 @@ doc = false
 name = "anomac"
 path = "src/bin/anoma-client/main.rs"
 
+# Anoma wallet
+[[bin]]
+doc = false
+name = "anomaw"
+path = "src/bin/anoma-wallet/main.rs"
+
 [features]
 default = ["std", "dev"]
 # NOTE "dev" features that shouldn't be used in live networks are enabled by default for now
@@ -41,7 +47,7 @@ std = ["ed25519-dalek/std", "rand/std", "rand_core/std"]
 testing = []
 
 [dependencies]
-anoma = {path = "../shared", features = ["ibc-vp", "wasm-runtime"]}
+anoma = {path = "../shared", features = ["ibc-vp", "wasm-runtime", "ferveo-tpke"]}
 async-std = {version = "1.9.0", features = ["unstable"]}
 async-trait = "0.1.51"
 base64 = "0.13.0"
@@ -57,18 +63,21 @@ config = "0.11.0"
 ed25519-dalek = {version = "1.0.1", default-features = false, features = ["rand", "u64_backend", "serde"]}
 eyre = "0.6.5"
 futures = "0.3"
+hex = "0.4.3"
 itertools = "0.10.1"
 jsonpath_lib = "0.3.0"
 libc = "0.2.97"
 libp2p = "0.38.0"
+orion = "0.16.0"
 prost = "0.8.0"
 prost-types = "0.8.0"
 # TODO the older versions of rand and rand_core are currently required to avoid mismatching version issue (https://github.com/dalek-cryptography/ed25519-dalek/pull/159)
 rand = {version = "0.7", default-features = false}
 rand_core = {version = "0.5", default-features = false}
-rayon = "1.5.0"
+rayon = "=1.5.0"
 regex = "1.4.5"
 rocksdb = "0.16.0"
+rpassword = "5.0.1"
 serde = {version = "1.0.125", features = ["derive"]}
 serde_bytes = "0.11.5"
 serde_json = "1.0.62"
@@ -77,15 +86,17 @@ sha2 = "0.9.3"
 signal-hook = "0.3.9"
 sparse-merkle-tree = {git = "https://github.com/heliaxdev/sparse-merkle-tree", branch = "tomas/encoding-0.9.0b", features = ["borsh"]}
 # temporarily using fork work-around for https://github.com/informalsystems/tendermint-rs/issues/916
-tendermint = {git = "https://github.com/heliaxdev/tendermint-rs", branch = "tomas/update-genesis-new-prost"}
-tendermint-proto = {git = "https://github.com/heliaxdev/tendermint-rs", branch = "tomas/update-genesis-new-prost"}
-tendermint-rpc = {git = "https://github.com/heliaxdev/tendermint-rs", branch = "tomas/update-genesis-new-prost", features = ["http-client", "websocket-client"]}
+# and https://github.com/anoma/anoma/issues/445
+tendermint = {git = "https://github.com/heliaxdev/tendermint-rs", branch = "tomas/lowercase-node-id"}
+tendermint-proto = {git = "https://github.com/heliaxdev/tendermint-rs", branch = "tomas/lowercase-node-id"}
+tendermint-rpc = {git = "https://github.com/heliaxdev/tendermint-rs", branch = "tomas/lowercase-node-id", features = ["http-client", "websocket-client"]}
 thiserror = "1.0.24"
 tokio = {version = "1.8.2", features = ["full"]}
 toml = "0.5.8"
 tonic = "0.5.0"
 tower = "0.4"
-tower-abci = {git = "https://github.com/heliaxdev/tower-abci", branch = "tomas/update-prost"}
+# Also, using the same version of tendermint-rs as we do here.
+tower-abci = {git = "https://github.com/heliaxdev/tower-abci", branch = "tomas/tm-lowercase-node-id"}
 tracing = "0.1.26"
 tracing-log = "0.1.2"
 tracing-subscriber = "0.2.18"

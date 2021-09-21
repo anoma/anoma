@@ -1,3 +1,4 @@
+use std::borrow::Borrow;
 use std::collections::HashSet;
 
 use anoma::ledger::gas::BlockGasMeter;
@@ -6,15 +7,17 @@ use anoma::ledger::storage::testing::TestStorage;
 use anoma::ledger::storage::write_log::WriteLog;
 use anoma::types::address::Address;
 use anoma::types::storage::Key;
+use anoma::types::{key, token};
 use anoma::vm;
 use anoma::vm::prefix_iter::PrefixIterators;
+use anoma_vm_env::tx_prelude::BorshSerialize;
 
 /// This module combines the native host function implementations from
 /// `native_tx_host_env` with the functions exposed to the tx wasm
 /// that will call to the native functions, instead of interfacing via a
 /// wasm runtime. It can be used for host environment integration tests.
 pub mod tx_host_env {
-    pub use anoma_vm_env::imports::tx::*;
+    pub use anoma_vm_env::tx_prelude::*;
 
     pub use super::native_tx_host_env::*;
 }
@@ -45,6 +48,47 @@ impl Default for TestTxEnv {
 impl TestTxEnv {
     pub fn all_touched_storage_keys(&self) -> HashSet<Key> {
         self.write_log.get_keys()
+    }
+
+    /// Fake accounts existence by initializating their VP storage.
+    /// This is needed for accounts that are being modified by a tx test to be
+    /// pass account existence check in `tx_write` function.
+    pub fn spawn_accounts(
+        &mut self,
+        addresses: impl IntoIterator<Item = impl Borrow<Address>>,
+    ) {
+        for address in addresses {
+            let key = Key::validity_predicate(address.borrow());
+            let vp_code = vec![];
+            self.storage
+                .write(&key, vp_code)
+                .expect("Unable to write VP");
+        }
+    }
+
+    /// Credit tokens to the target account.
+    pub fn credit_tokens(
+        &mut self,
+        target: &Address,
+        token: &Address,
+        amount: token::Amount,
+    ) {
+        let storage_key = token::balance_key(token, target);
+        self.storage
+            .write(&storage_key, amount.try_to_vec().unwrap())
+            .unwrap();
+    }
+
+    /// Set public key for the address.
+    pub fn write_public_key(
+        &mut self,
+        address: &Address,
+        public_key: &key::ed25519::PublicKey,
+    ) {
+        let storage_key = key::ed25519::pk_key(address);
+        self.storage
+            .write(&storage_key, public_key.try_to_vec().unwrap())
+            .unwrap();
     }
 }
 

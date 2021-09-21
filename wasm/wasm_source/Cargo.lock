@@ -27,10 +27,12 @@ checksum = "739f4a8db6605981345c5654f3a85b056ce52f37a39d34da03f25bf2151ea16e"
 name = "anoma"
 version = "0.1.0"
 dependencies = [
+ "anoma_proof_of_stake",
  "bech32",
  "borsh",
  "chrono",
  "ed25519-dalek",
+ "hex",
  "itertools",
  "loupe",
  "parity-wasm",
@@ -54,6 +56,14 @@ dependencies = [
  "wasmer-engine-universal",
  "wasmer-vm",
  "wasmparser 0.79.0",
+]
+
+[[package]]
+name = "anoma_proof_of_stake"
+version = "0.1.0"
+dependencies = [
+ "borsh",
+ "thiserror",
 ]
 
 [[package]]
@@ -94,10 +104,14 @@ dependencies = [
  "anoma_vm_env",
  "borsh",
  "good_lp",
+ "once_cell",
  "petgraph",
+ "proptest",
  "rust_decimal",
  "serde",
  "serde_json",
+ "tracing",
+ "tracing-subscriber",
  "wee_alloc",
 ]
 
@@ -124,9 +138,9 @@ checksum = "23b62fc65de8e4e7f52534fb52b0f3ed04746ae267519eef2a83941e8085068b"
 
 [[package]]
 name = "async-trait"
-version = "0.1.50"
+version = "0.1.51"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0b98e84bbb4cbcdd97da190ba0c58a1bb0de2c1fdf67d159e192ed766aeca722"
+checksum = "44318e776df68115a881de9a8fd1b9e53368d7a4a5ce4cc48517da3393233a5e"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -192,9 +206,9 @@ dependencies = [
 
 [[package]]
 name = "borsh"
-version = "0.9.0"
+version = "0.9.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4fcabb02816fdadf90866dc9a7824491ccb63d69f55375a266dc03509ac68d36"
+checksum = "18dda7dc709193c0d86a1a51050a926dc3df1cf262ec46a23a25dba421ea1924"
 dependencies = [
  "borsh-derive",
  "hashbrown 0.9.1",
@@ -202,9 +216,9 @@ dependencies = [
 
 [[package]]
 name = "borsh-derive"
-version = "0.9.0"
+version = "0.9.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4bd16f0729b89f0a212b0e2e1d19cc6593df63f771161a11863967780e2d033d"
+checksum = "684155372435f578c0fa1acd13ebbb182cc19d6b38b64ae7901da4393217d264"
 dependencies = [
  "borsh-derive-internal",
  "borsh-schema-derive-internal",
@@ -215,9 +229,9 @@ dependencies = [
 
 [[package]]
 name = "borsh-derive-internal"
-version = "0.9.0"
+version = "0.9.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1e321a130a3ac4b88eb59a6d670bde11eec9721a397b77e0f2079060e2a1b785"
+checksum = "2102f62f8b6d3edeab871830782285b64cc1830168094db05c8e458f209bc5c3"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -226,9 +240,9 @@ dependencies = [
 
 [[package]]
 name = "borsh-schema-derive-internal"
-version = "0.9.0"
+version = "0.9.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "15151a485164b319cc7a5160fe4316dc469a27993f71b73d7617dc9032ff0fd7"
+checksum = "196c978c4c9b0b142d446ef3240690bf5a8a33497074a113ff9a337ccb750483"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -755,6 +769,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "hex"
+version = "0.4.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7f24254aa9a54b5c858eaee2f5bccdb46aaf0e486a595ed5fd8f86ba55232a70"
+
+[[package]]
 name = "ident_case"
 version = "1.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -811,9 +831,9 @@ checksum = "3576a87f2ba00f6f106fdfcd16db1d698d648a26ad8e0573cad8537c3c362d2a"
 
 [[package]]
 name = "libc"
-version = "0.2.97"
+version = "0.2.102"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "12b8adadd720df158f4d70dfe7ccc6adb0472d7c55ca83445f6a5ab3e36f8fb6"
+checksum = "a2a5ac8f984bfcf3a823267e5fde638acc3325f6496633a5da6bb6eb2171e103"
 
 [[package]]
 name = "libloading"
@@ -1362,9 +1382,9 @@ checksum = "60a357793950651c4ed0f3f52338f53b2f809f32d83a07f72909fa13e4c6c1e3"
 
 [[package]]
 name = "rayon"
-version = "1.5.1"
+version = "1.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c06aca804d41dbc8ba42dfd964f0d01334eceb64314b9ecf7c5fad5188a06d90"
+checksum = "8b0d8e0819fadc20c74ea8373106ead0600e3a67ef1fe8da56e39b9ae7275674"
 dependencies = [
  "autocfg",
  "crossbeam-deque",
@@ -1716,7 +1736,7 @@ dependencies = [
 [[package]]
 name = "tendermint"
 version = "0.20.0"
-source = "git+https://github.com/heliaxdev/tendermint-rs?branch=tomas/update-genesis-new-prost#bc2d7c43a773da617fe7daaf518a52c041052427"
+source = "git+https://github.com/heliaxdev/tendermint-rs?branch=tomas/lowercase-node-id#ca0bffdde9a3f1597aea3e0faf518de453b72518"
 dependencies = [
  "anomaly",
  "async-trait",
@@ -1747,7 +1767,7 @@ dependencies = [
 [[package]]
 name = "tendermint-proto"
 version = "0.20.0"
-source = "git+https://github.com/heliaxdev/tendermint-rs?branch=tomas/update-genesis-new-prost#bc2d7c43a773da617fe7daaf518a52c041052427"
+source = "git+https://github.com/heliaxdev/tendermint-rs?branch=tomas/lowercase-node-id#ca0bffdde9a3f1597aea3e0faf518de453b72518"
 dependencies = [
  "anomaly",
  "bytes",

@@ -1,0 +1,9 @@
+allow-branch               = ["master"]
+consolidate-commits        = true
+disable-push               = true
+disable-publish            = true
+disable-tag                = true
+no-dev-version             = true
+pre-release-commit-message = "Anoma {{version}}"
+shared-version             = true
+sign-tag                   = true

@@ -17,7 +17,7 @@ use crate::tx::{init_tx_env, TestTxEnv};
 /// that will call to the native functions, instead of interfacing via a
 /// wasm runtime. It can be used for host environment integration tests.
 pub mod vp_host_env {
-    pub use anoma_vm_env::imports::vp::*;
+    pub use anoma_vm_env::vp_prelude::*;
 
     pub use super::native_vp_host_env::*;
 }
@@ -58,18 +58,21 @@ impl Default for TestVpEnv {
     }
 }
 
+impl TestVpEnv {
+    pub fn all_touched_storage_keys(&self) -> HashSet<Key> {
+        self.write_log.get_keys()
+    }
+}
+
 /// Initialize the host environment inside the [`vp_host_env`] module by running
-/// a transaction. The transaction is expected to modify the given address
-/// `addr` or to add it to the set of verifiers using
+/// a transaction. The transaction is expected to modify the storage sub-space
+/// of the given address `addr` or to add it to the set of verifiers using
 /// [`super::tx::tx_host_env::insert_verifier`].
-pub fn init_vp_env_from_tx<F>(
+pub fn init_vp_env_from_tx(
     addr: Address,
     mut tx_env: TestTxEnv,
-    mut apply_tx: F,
-) -> TestVpEnv
-where
-    F: FnMut(&Address),
-{
+    mut apply_tx: impl FnMut(&Address),
+) -> TestVpEnv {
     // Write an empty validity predicate for the address, because it's used to
     // check if the address exists when we write into its storage
     let vp_key = Key::validity_predicate(&addr);

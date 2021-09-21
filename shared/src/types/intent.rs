@@ -56,11 +56,19 @@ pub struct Exchange {
     pub token_buy: Address,
     /// The amount of token to be bought
     pub min_buy: token::Amount,
+    /// The vp code
+    pub vp: Option<Vec<u8>>,
 }
 
 /// These are transfers crafted from matched [`Exchange`]s.
 #[derive(
-    Debug, Clone, BorshSerialize, BorshDeserialize, Serialize, Deserialize,
+    Debug,
+    Clone,
+    BorshSerialize,
+    BorshDeserialize,
+    Serialize,
+    Deserialize,
+    PartialEq,
 )]
 pub struct IntentTransfers {
     /// Transfers crafted from the matched intents
@@ -199,5 +207,222 @@ pub fn is_invalid_intent_key(key: &Key) -> Option<&Address> {
             Some(owner)
         }
         _ => None,
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use std::array::IntoIter;
+    use std::env;
+    use std::iter::FromIterator;
+
+    use constants::*;
+
+    use super::*;
+    use crate::ledger::storage::types::{decode, encode};
+    use crate::types::key::ed25519;
+
+    #[test]
+    fn test_encode_decode_intent_transfer_without_vp() {
+        let bertha_addr = Address::from_str(BERTHA).unwrap();
+        let albert_addr = Address::from_str(ALBERT).unwrap();
+
+        let bertha_keypair = ed25519::testing::keypair_1();
+        let albert_keypair = ed25519::testing::keypair_2();
+
+        let exchange_one = Exchange {
+            addr: Address::from_str(BERTHA).unwrap(),
+            token_buy: Address::from_str(XAN).unwrap(),
+            token_sell: Address::from_str(BTC).unwrap(),
+            max_sell: token::Amount::from(100),
+            min_buy: token::Amount::from(1),
+            rate_min: DecimalWrapper::from_str("0.1").unwrap(),
+            vp: None,
+        };
+        let exchange_two = Exchange {
+            addr: Address::from_str(ALBERT).unwrap(),
+            token_buy: Address::from_str(BTC).unwrap(),
+            token_sell: Address::from_str(XAN).unwrap(),
+            max_sell: token::Amount::from(1),
+            min_buy: token::Amount::from(100),
+            rate_min: DecimalWrapper::from_str("10").unwrap(),
+            vp: None,
+        };
+
+        let signed_exchange_one = Signed::new(&bertha_keypair, exchange_one);
+        let signed_exchange_two = Signed::new(&bertha_keypair, exchange_two);
+
+        let mut it = IntentTransfers::empty();
+        it.exchanges = HashMap::<_, _>::from_iter(IntoIter::new([
+            (bertha_addr.clone(), signed_exchange_one.clone()),
+            (albert_addr.clone(), signed_exchange_two.clone()),
+        ]));
+
+        it.intents = HashMap::<_, _>::from_iter(IntoIter::new([
+            (
+                bertha_addr.clone(),
+                Signed::new(
+                    &bertha_keypair,
+                    FungibleTokenIntent {
+                        exchange: HashSet::from_iter(vec![signed_exchange_one]),
+                    },
+                ),
+            ),
+            (
+                albert_addr.clone(),
+                Signed::new(
+                    &albert_keypair,
+                    FungibleTokenIntent {
+                        exchange: HashSet::from_iter(vec![signed_exchange_two]),
+                    },
+                ),
+            ),
+        ]));
+
+        it.transfers = HashSet::<_>::from_iter(IntoIter::new([
+            token::Transfer {
+                source: bertha_addr.clone(),
+                target: albert_addr.clone(),
+                token: Address::from_str(BTC).unwrap(),
+                amount: token::Amount::from(100),
+            },
+            token::Transfer {
+                source: albert_addr,
+                target: bertha_addr,
+                token: Address::from_str(XAN).unwrap(),
+                amount: token::Amount::from(1),
+            },
+        ]));
+
+        let encoded_intent_transfer = encode(&it);
+        let decoded_intent_transfer: IntentTransfers =
+            decode(encoded_intent_transfer).unwrap();
+
+        assert!(decoded_intent_transfer == it);
+    }
+
+    #[test]
+    fn test_encode_decode_intent_transfer_with_vp() {
+        let bertha_addr = Address::from_str(BERTHA).unwrap();
+        let albert_addr = Address::from_str(ALBERT).unwrap();
+
+        let bertha_keypair = ed25519::testing::keypair_1();
+        let albert_keypair = ed25519::testing::keypair_2();
+
+        let working_dir = env::current_dir().unwrap();
+
+        let exchange_one = Exchange {
+            addr: Address::from_str(BERTHA).unwrap(),
+            token_buy: Address::from_str(XAN).unwrap(),
+            token_sell: Address::from_str(BTC).unwrap(),
+            max_sell: token::Amount::from(100),
+            min_buy: token::Amount::from(1),
+            rate_min: DecimalWrapper::from_str("0.1").unwrap(),
+            vp: Some(
+                std::fs::read(format!(
+                    "{}/../{}",
+                    working_dir.to_string_lossy(),
+                    VP_ALWAYS_FALSE_WASM
+                ))
+                .unwrap(),
+            ),
+        };
+        let exchange_two = Exchange {
+            addr: Address::from_str(ALBERT).unwrap(),
+            token_buy: Address::from_str(BTC).unwrap(),
+            token_sell: Address::from_str(XAN).unwrap(),
+            max_sell: token::Amount::from(1),
+            min_buy: token::Amount::from(100),
+            rate_min: DecimalWrapper::from_str("10").unwrap(),
+            vp: Some(
+                std::fs::read(format!(
+                    "{}/../{}",
+                    working_dir.to_string_lossy(),
+                    VP_ALWAYS_TRUE_WASM
+                ))
+                .unwrap(),
+            ),
+        };
+
+        let signed_exchange_one = Signed::new(&bertha_keypair, exchange_one);
+        let signed_exchange_two = Signed::new(&bertha_keypair, exchange_two);
+
+        let mut it = IntentTransfers::empty();
+        it.exchanges = HashMap::<_, _>::from_iter(IntoIter::new([
+            (bertha_addr.clone(), signed_exchange_one.clone()),
+            (albert_addr.clone(), signed_exchange_two.clone()),
+        ]));
+
+        it.intents = HashMap::<_, _>::from_iter(IntoIter::new([
+            (
+                bertha_addr.clone(),
+                Signed::new(
+                    &bertha_keypair,
+                    FungibleTokenIntent {
+                        exchange: HashSet::from_iter(vec![signed_exchange_one]),
+                    },
+                ),
+            ),
+            (
+                albert_addr.clone(),
+                Signed::new(
+                    &albert_keypair,
+                    FungibleTokenIntent {
+                        exchange: HashSet::from_iter(vec![signed_exchange_two]),
+                    },
+                ),
+            ),
+        ]));
+
+        it.transfers = HashSet::<_>::from_iter(IntoIter::new([
+            token::Transfer {
+                source: bertha_addr.clone(),
+                target: albert_addr.clone(),
+                token: Address::from_str(BTC).unwrap(),
+                amount: token::Amount::from(100),
+            },
+            token::Transfer {
+                source: albert_addr,
+                target: bertha_addr,
+                token: Address::from_str(XAN).unwrap(),
+                amount: token::Amount::from(1),
+            },
+        ]));
+
+        let encoded_intent_transfer = encode(&it);
+        let decoded_intent_transfer: IntentTransfers =
+            decode(encoded_intent_transfer).unwrap();
+
+        assert!(decoded_intent_transfer == it);
+    }
+
+    #[cfg(test)]
+    #[allow(dead_code)]
+    mod constants {
+
+        // User addresses
+        pub const ALBERT: &str = "a1qq5qqqqqg4znssfsgcurjsfhgfpy2vjyxy6yg3z98pp5zvp5xgersvfjxvcnx3f4xycrzdfkak0xhx";
+        pub const BERTHA: &str = "a1qq5qqqqqxv6yydz9xc6ry33589q5x33eggcnjs2xx9znydj9xuens3phxppnwvzpg4rrqdpswve4n9";
+        pub const CHRISTEL: &str = "a1qq5qqqqqxsuygd2x8pq5yw2ygdryxs6xgsmrsdzx8pryxv34gfrrssfjgccyg3zpxezrqd2y2s3g5s";
+
+        // Fungible token addresses
+        pub const XAN: &str = "a1qq5qqqqqxuc5gvz9gycryv3sgye5v3j9gvurjv34g9prsd6x8qu5xs2ygdzrzsf38q6rss33xf42f3";
+        pub const BTC: &str = "a1qq5qqqqq8q6yy3p4xyurys3n8qerz3zxxeryyv6rg4pnxdf3x3pyv32rx3zrgwzpxu6ny32r3laduc";
+        pub const ETH: &str = "a1qq5qqqqqx3z5xd3ngdqnzwzrgfpnxd3hgsuyx3phgfry2s3kxsc5xves8qe5x33sgdprzvjptzfry9";
+        pub const DOT: &str = "a1qq5qqqqqxq652v3sxap523fs8pznjse5g3pyydf3xqurws6ygvc5gdfcxyuy2deeggenjsjrjrl2ph";
+
+        // Bite-sized tokens
+        pub const SCHNITZEL: &str = "a1qq5qqqqq8prrzv6xxcury3p4xucygdp5gfprzdfex9prz3jyg56rxv69gvenvsj9g5enswpcl8npyz";
+        pub const APFEL: &str = "a1qq5qqqqqgfp52de4x56nqd3ex56y2wph8pznssjzx5ersw2pxfznsd3jxeqnjd3cxapnqsjz2fyt3j";
+        pub const KARTOFFEL: &str = "a1qq5qqqqqxs6yvsekxuuyy3pjxsmrgd2rxuungdzpgsmyydjrxsenjdp5xaqn233sgccnjs3eak5wwh";
+
+        // Paths to the WASMs used for tests
+        pub const TX_TRANSFER_WASM: &str = "wasm/tx_transfer.wasm";
+        pub const VP_USER_WASM: &str = "wasm/vp_user.wasm";
+        pub const TX_NO_OP_WASM: &str = "wasm_for_tests/tx_no_op.wasm";
+        pub const VP_ALWAYS_TRUE_WASM: &str =
+            "wasm_for_tests/vp_always_true.wasm";
+        pub const VP_ALWAYS_FALSE_WASM: &str =
+            "wasm_for_tests/vp_always_false.wasm";
     }
 }

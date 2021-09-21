@@ -37,7 +37,8 @@ pub enum StorageModification {
     /// Delete an existing key-value
     Delete,
     /// Initialize a new account with established address and a given validity
-    /// predicate
+    /// predicate. The key for `InitAccount` inside the [`WriteLog`] must point
+    /// to its validity predicate.
     InitAccount {
         /// Validity predicate bytes
         vp: Vec<u8>,
@@ -122,7 +123,7 @@ impl WriteLog {
     /// Fails with [`Error::DeleteVp`] for a validity predicate key, which are
     /// not possible to delete.
     pub fn delete(&mut self, key: &Key) -> Result<(u64, i64)> {
-        if key.is_validity_predicate() {
+        if key.is_validity_predicate().is_some() {
             return Err(Error::DeleteVp);
         }
         let size_diff = match self
@@ -171,19 +172,36 @@ impl WriteLog {
     }
 
     /// Get the storage keys changed in the current transaction (left) and
-    /// the keys to the accounts initialized in the current transaction (right).
-    /// The first vector excludes keys of validity predicates of newly
-    /// initialized accounts, but may include keys of other data written
-    /// into newly initialized accounts. The accounts keys point to the validity
-    /// predicates of the newly created accounts.
-    pub fn get_partitioned_keys(&self) -> (HashSet<&Key>, HashSet<&Key>) {
+    /// the addresses of accounts initialized in the current transaction
+    /// (right). The first vector excludes keys of validity predicates of
+    /// newly initialized accounts, but may include keys of other data
+    /// written into newly initialized accounts.
+    pub fn get_partitioned_keys(&self) -> (HashSet<&Key>, HashSet<&Address>) {
         use itertools::{Either, Itertools};
+        self.tx_write_log.iter().partition_map(|(key, value)| {
+            match (key.is_validity_predicate(), value) {
+                (Some(address), StorageModification::InitAccount { .. }) => {
+                    Either::Right(address)
+                }
+                _ => Either::Left(key),
+            }
+        })
+    }
+
+    /// Get the addresses of accounts initialized in the current transaction.
+    pub fn get_initialized_accounts(&self) -> Vec<Address> {
         self.tx_write_log
             .iter()
-            .partition_map(|(key, value)| match value {
-                StorageModification::InitAccount { .. } => Either::Right(key),
-                _ => Either::Left(key),
+            .filter_map(|(key, value)| {
+                match (key.is_validity_predicate(), value) {
+                    (
+                        Some(address),
+                        StorageModification::InitAccount { .. },
+                    ) => Some(address.clone()),
+                    _ => None,
+                }
             })
+            .collect()
     }
 
     /// Commit the current transaction's write log to the block when it's
@@ -260,29 +278,38 @@ impl WriteLog {
         // get changed keys grouped by the address
         for key in changed_keys {
             for addr in &key.find_addresses() {
-                if verifiers_from_tx.contains(addr) {
-                    // We can skip this, because it's been added from the Tx
-                    // above, which associates with this address all the
+                if verifiers_from_tx.contains(addr)
+                    || initialized_accounts.contains(addr)
+                {
+                    // We can skip this when the address has been added from the
+                    // Tx above, which associates with this address all the
                     // changed storage keys, even if their address is not
                     // included in the key.
+                    // Also skip if it's an address of a newly initialized
+                    // account, because anything can be written into an
+                    // account's storage in the same tx in which it's
+                    // initialized.
                     continue;
                 }
+                // Add the address as a verifier
                 match verifiers.get_mut(addr) {
                     Some(keys) => {
                         keys.insert(key.clone());
                     }
                     None => {
                         let keys: HashSet<Key> =
-                            [key].iter().map(|&key| key.clone()).collect();
+                            vec![key.clone()].into_iter().collect();
                         verifiers.insert(addr.clone(), keys);
                     }
                 }
             }
         }
         // The new accounts should be validated by every verifier's VP
-        for key in initialized_accounts {
+        for initialized_account in initialized_accounts {
             for (_verifier, keys) in verifiers.iter_mut() {
-                keys.insert(key.clone());
+                // The key for an initialized account points to its VP
+                let vp_key = Key::validity_predicate(initialized_account);
+                keys.insert(vp_key);
             }
         }
         verifiers
@@ -380,9 +407,9 @@ mod tests {
         assert_eq!(gas, (vp_key.len() + init_vp.len()) as u64);
 
         // get all
-        let (_changed_keys, accounts) = write_log.get_partitioned_keys();
-        assert!(accounts.contains(&&vp_key));
-        assert_eq!(accounts.len(), 1);
+        let (_changed_keys, init_accounts) = write_log.get_partitioned_keys();
+        assert!(init_accounts.contains(&&addr));
+        assert_eq!(init_accounts.len(), 1);
     }
 
     #[test]
@@ -478,37 +505,51 @@ mod tests {
         assert_eq!(value.expect("no read value"), val3);
     }
 
+    prop_compose! {
+        fn arb_verifiers_changed_key_tx_all_key()
+            (verifiers_from_tx in testing::arb_verifiers_from_tx())
+            (tx_write_log in testing::arb_tx_write_log(verifiers_from_tx.clone()),
+                verifiers_from_tx in Just(verifiers_from_tx))
+        -> (HashSet<Address>, HashMap<Key, StorageModification>) {
+            (verifiers_from_tx, tx_write_log)
+        }
+    }
+
     proptest! {
         /// Test [`WriteLog::verifiers_changed_keys`] that:
         /// 1. Every address from `verifiers_from_tx` is associated with all the
         ///    changed storage keys.
-        /// 2. Every changed storage key except for keys to initialized accounts
-        ///    is associated with all the addresses included in the key.
-        /// 3. Every address is associated with all the newly initialized
-        ///    accounts.
+        /// 2. Every changed storage key is associated with all the addresses
+        ///    included in the key except for the addresses of newly
+        ///    initialized accounts.
+        /// 3. Addresses of newly initialized accounts are not verifiers, so
+        ///    that anything can be written into an account's storage in the
+        ///    same tx in which it's initialized.
+        /// 4. Every address is associated with all the newly initialized
+        ///    accounts keys to their validity predicates.
         #[test]
         fn verifiers_changed_key_tx_all_key(
-            verifiers_from_tx in testing::arb_verifiers_from_tx(),
-            tx_write_log in testing::arb_tx_write_log(),
+            (verifiers_from_tx, tx_write_log) in arb_verifiers_changed_key_tx_all_key(),
         ) {
             let write_log = WriteLog { tx_write_log, ..WriteLog::default() };
             let all_keys = write_log.get_keys();
 
-            let result = write_log.verifiers_changed_keys(&verifiers_from_tx);
+            let verifiers_changed_keys = write_log.verifiers_changed_keys(&verifiers_from_tx);
 
+            println!("verifiers_from_tx {:#?}", verifiers_from_tx);
             for verifier_from_tx in verifiers_from_tx {
-                assert!(result.contains_key(&verifier_from_tx));
-                let keys = result.get(&verifier_from_tx).unwrap().clone();
+                assert!(verifiers_changed_keys.contains_key(&verifier_from_tx));
+                let keys = verifiers_changed_keys.get(&verifier_from_tx).unwrap().clone();
                 // Test for 1.
                 assert_eq!(&keys, &all_keys);
             }
 
             let (_changed_keys, initialized_accounts) = write_log.get_partitioned_keys();
-            for (_addr, keys) in result.iter() {
+            for (_verifier_addr, keys) in verifiers_changed_keys.iter() {
                 for key in keys {
-                    if !initialized_accounts.contains(&key) {
-                        for addr in &key.find_addresses() {
-                            let keys = result.get(addr).unwrap();
+                    for addr_from_key in &key.find_addresses() {
+                        if !initialized_accounts.contains(addr_from_key) {
+                            let keys = verifiers_changed_keys.get(addr_from_key).unwrap();
                             // Test for 2.
                             assert!(keys.contains(key));
                         }
@@ -516,10 +557,15 @@ mod tests {
                 }
             }
 
+            println!("verifiers_changed_keys {:#?}", verifiers_changed_keys);
+            println!("initialized_accounts {:#?}", initialized_accounts);
             for initialized_account in initialized_accounts {
-                for (_addr, keys) in result.iter() {
-                    // Test for 3.
-                    assert!(keys.contains(initialized_account));
+                // Test for 3.
+                assert!(!verifiers_changed_keys.contains_key(initialized_account));
+                for (_verifier_addr, keys) in verifiers_changed_keys.iter() {
+                    // Test for 4.
+                    let vp_key = Key::validity_predicate(initialized_account);
+                    assert!(keys.contains(&vp_key));
                 }
             }
         }
@@ -530,7 +576,7 @@ mod tests {
 #[cfg(any(test, feature = "testing"))]
 pub mod testing {
     use proptest::collection;
-    use proptest::prelude::*;
+    use proptest::prelude::{any, prop_oneof, Just, Strategy};
 
     use super::*;
     use crate::types::address::testing::arb_address;
@@ -538,9 +584,23 @@ pub mod testing {
 
     /// Generate an arbitrary tx write log of [`HashMap<Key,
     /// StorageModification>`].
-    pub fn arb_tx_write_log()
-    -> impl Strategy<Value = HashMap<Key, StorageModification>> {
-        collection::hash_map(arb_key(), arb_storage_modification(), 0..100)
+    pub fn arb_tx_write_log(
+        verifiers_from_tx: HashSet<Address>,
+    ) -> impl Strategy<Value = HashMap<Key, StorageModification>> + 'static
+    {
+        arb_key().prop_flat_map(move |key| {
+            // If the key is a validity predicate key and its owner is in the
+            // verifier set, we must not generate `InitAccount` for it.
+            let can_init_account = key
+                .is_validity_predicate()
+                .map(|owner| !verifiers_from_tx.contains(owner))
+                .unwrap_or_default();
+            collection::hash_map(
+                Just(key),
+                arb_storage_modification(can_init_account),
+                0..100,
+            )
+        })
     }
 
     /// Generate arbitrary verifiers from tx of [`HashSet<Address>`].
@@ -549,14 +609,25 @@ pub mod testing {
     }
 
     /// Generate an arbitrary [`StorageModification`].
-    pub fn arb_storage_modification()
-    -> impl Strategy<Value = StorageModification> {
-        prop_oneof![
-            any::<Vec<u8>>()
-                .prop_map(|value| StorageModification::Write { value }),
-            Just(StorageModification::Delete),
-            any::<Vec<u8>>()
-                .prop_map(|vp| StorageModification::InitAccount { vp }),
-        ]
+    pub fn arb_storage_modification(
+        can_init_account: bool,
+    ) -> impl Strategy<Value = StorageModification> {
+        if can_init_account {
+            prop_oneof![
+                any::<Vec<u8>>()
+                    .prop_map(|value| StorageModification::Write { value }),
+                Just(StorageModification::Delete),
+                any::<Vec<u8>>()
+                    .prop_map(|vp| StorageModification::InitAccount { vp }),
+            ]
+            .boxed()
+        } else {
+            prop_oneof![
+                any::<Vec<u8>>()
+                    .prop_map(|value| StorageModification::Write { value }),
+                Just(StorageModification::Delete),
+            ]
+            .boxed()
+        }
     }
 }

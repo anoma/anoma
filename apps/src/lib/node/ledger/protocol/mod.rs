@@ -1,18 +1,18 @@
 //! The ledger's protocol
-
 use std::collections::HashSet;
 use std::convert::TryFrom;
-use std::fmt;
+use std::{fmt, panic};
 
 use anoma::ledger::gas::{self, BlockGasMeter, VpGasMeter, VpsGas};
 use anoma::ledger::ibc::{self, Ibc};
 use anoma::ledger::native_vp::{self, NativeVp};
 use anoma::ledger::parameters::{self, ParametersVp};
-use anoma::ledger::pos::{self, PoS};
+use anoma::ledger::pos::{self, PosVP};
 use anoma::ledger::storage::write_log::WriteLog;
 use anoma::proto::{self, Tx};
 use anoma::types::address::{Address, InternalAddress};
 use anoma::types::storage::Key;
+use anoma::types::transaction::{process_tx, TxType};
 use anoma::vm::{self, wasm};
 use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
 use thiserror::Error;
@@ -36,19 +36,24 @@ pub enum Error {
     #[error("IBC native VP: {0}")]
     IbcNativeVpError(ibc::Error),
     #[error("PoS native VP: {0}")]
-    PosNativeVpError(pos::Error),
+    PosNativeVpError(pos::vp::Error),
+    #[error("PoS native VP panicked")]
+    PosNativeVpRuntime,
     #[error("Parameters native VP: {0}")]
     ParametersNativeVpError(parameters::Error),
+    #[error("Access to an internal address {0} is forbidden")]
+    AccessForbidden(InternalAddress),
 }
 
 pub type Result<T> = std::result::Result<T, Error>;
 
 /// Transaction application result
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Default)]
 pub struct TxResult {
     pub gas_used: u64,
     pub changed_keys: HashSet<Key>,
     pub vps_result: VpsResult,
+    pub initialized_accounts: Vec<Address>,
 }
 
 impl TxResult {
@@ -90,21 +95,42 @@ pub fn apply_tx(
 
     let tx = Tx::try_from(tx_bytes).map_err(Error::TxDecodingError)?;
 
-    let verifiers = execute_tx(&tx, storage, block_gas_meter, write_log)?;
+    match process_tx(tx).unwrap() {
+        TxType::Raw(tx) => {
+            let verifiers =
+                execute_tx(&tx, storage, block_gas_meter, write_log)?;
 
-    let vps_result =
-        check_vps(&tx, storage, block_gas_meter, write_log, &verifiers)?;
+            let vps_result = check_vps(
+                &tx,
+                storage,
+                block_gas_meter,
+                write_log,
+                &verifiers,
+            )?;
 
-    let gas_used = block_gas_meter
-        .finalize_transaction()
-        .map_err(Error::GasError)?;
-    let changed_keys = write_log.get_keys();
+            let gas_used = block_gas_meter
+                .finalize_transaction()
+                .map_err(Error::GasError)?;
+            let initialized_accounts = write_log.get_initialized_accounts();
+            let changed_keys = write_log.get_keys();
 
-    Ok(TxResult {
-        gas_used,
-        changed_keys,
-        vps_result,
-    })
+            Ok(TxResult {
+                gas_used,
+                changed_keys,
+                vps_result,
+                initialized_accounts,
+            })
+        }
+        TxType::Wrapper(_) => {
+            let gas_used = block_gas_meter
+                .finalize_transaction()
+                .map_err(Error::GasError)?;
+            Ok(TxResult {
+                gas_used,
+                ..Default::default()
+            })
+        }
+    }
 }
 
 /// Execute a transaction code. Returns verifiers requested by the transaction.
@@ -217,20 +243,59 @@ fn execute_vps(
 
                     let accepted: Result<bool> = match internal_addr {
                         InternalAddress::PoS => {
-                            let pos = PoS { ctx };
-                            pos.validate_tx(tx_data, keys, &verifiers_addr)
-                                .map_err(Error::PosNativeVpError)
+                            let pos = PosVP { ctx };
+                            let verifiers_addr_ref = &verifiers_addr;
+                            let pos_ref = &pos;
+                            // TODO this is temporarily ran in a new thread to
+                            // avoid crashing the ledger (required `UnwindSafe`
+                            // and `RefUnwindSafe` in
+                            // shared/src/ledger/pos/vp.rs)
+                            let result = match panic::catch_unwind(move || {
+                                pos_ref
+                                    .validate_tx(
+                                        tx_data,
+                                        keys,
+                                        verifiers_addr_ref,
+                                    )
+                                    .map_err(Error::PosNativeVpError)
+                            }) {
+                                Ok(result) => result,
+                                Err(err) => {
+                                    tracing::error!(
+                                        "PoS native VP failed with {:#?}",
+                                        err
+                                    );
+                                    Err(Error::PosNativeVpRuntime)
+                                }
+                            };
+                            // Take the gas meter back out of the context
+                            gas_meter = pos.ctx.gas_meter.into_inner();
+                            result
                         }
                         InternalAddress::Ibc => {
                             let ibc = Ibc { ctx };
-                            ibc.validate_tx(tx_data, keys, &verifiers_addr)
-                                .map_err(Error::IbcNativeVpError)
+                            let result = ibc
+                                .validate_tx(tx_data, keys, &verifiers_addr)
+                                .map_err(Error::IbcNativeVpError);
+                            // Take the gas meter back out of the context
+                            gas_meter = ibc.ctx.gas_meter.into_inner();
+                            result
                         }
                         InternalAddress::Parameters => {
                             let parameters = ParametersVp { ctx };
-                            parameters
+                            let result = parameters
                                 .validate_tx(tx_data, keys, &verifiers_addr)
-                                .map_err(Error::ParametersNativeVpError)
+                                .map_err(Error::ParametersNativeVpError);
+                            // Take the gas meter back out of the context
+                            gas_meter = parameters.ctx.gas_meter.into_inner();
+                            result
+                        }
+                        InternalAddress::PosSlashPool => {
+                            // Take the gas meter back out of the context
+                            gas_meter = ctx.gas_meter.into_inner();
+                            Err(Error::AccessForbidden(
+                                (*internal_addr).clone(),
+                            ))
                         }
                     };
 
@@ -241,6 +306,7 @@ fn execute_vps(
             // Returning error from here will short-circuit the VP parallel
             // execution. It's important that we only short-circuit gas
             // errors to get deterministic gas costs
+            result.gas_used.set(&gas_meter).map_err(Error::GasError)?;
             match accept {
                 Ok(accepted) => {
                     if !accepted {

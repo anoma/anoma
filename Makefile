@@ -1,4 +1,9 @@
 package = anoma
+version = $(shell git describe --always --dirty --broken)
+platform = $(shell uname -s)-$(shell uname -m)
+package-name = anoma-$(version)-$(platform)
+
+bin = anoma anomac anoman anomaw
 
 cargo := $(env) cargo
 rustup := $(env) rustup
@@ -28,6 +33,14 @@ build-test:
 
 build-release:
 	$(cargo) build --release
+
+package: build-release
+	mkdir -p $(package-name)/wasm && \
+	cd target/release && ln $(bin) ../../$(package-name) && \
+	cd ../.. && \
+	ln wasm/*.wasm $(package-name)/wasm && \
+	tar -c -z -f $(package-name).tar.gz $(package-name) && \
+	rm -rf $(package-name)
 
 check-wasm = $(cargo) check --target wasm32-unknown-unknown --manifest-path $(wasm)/Cargo.toml
 check:
@@ -63,10 +76,7 @@ reset-ledger:
 audit:
 	$(cargo) audit $(foreach ignore,$(audit-ignores), --ignore $(ignore))
 
-test:
-	make test-unit && \
-	make test-e2e && \
-	make test-wasm
+test: test-unit test-e2e test-wasm
 
 test-e2e:
 	$(cargo) test e2e -- --test-threads=1

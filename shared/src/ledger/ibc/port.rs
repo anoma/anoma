@@ -2,6 +2,7 @@
 
 use std::str::FromStr;
 
+use borsh::BorshDeserialize;
 use ibc::ics04_channel::context::ChannelReader;
 use ibc::ics05_port::capabilities::Capability;
 use ibc::ics05_port::context::PortReader;
@@ -11,7 +12,8 @@ use thiserror::Error;
 
 use super::{Ibc, StateChange};
 use crate::ledger::storage::{self, StorageHasher};
-use crate::types::storage::{Key, KeySeg};
+use crate::types::address::{Address, InternalAddress};
+use crate::types::storage::{DbKeySeg, Key, KeySeg};
 
 #[allow(missing_docs)]
 #[derive(Error, Debug)]
@@ -53,12 +55,16 @@ where
         }
     }
 
-    /// Returns the port ID after #IBC/ports
     fn get_port_id_for_capability(key: &Key) -> Result<PortId> {
-        match key.segments.get(2) {
-            Some(id) => PortId::from_str(&id.raw())
-                .map_err(|e| Error::InvalidKey(e.to_string())),
-            None => Err(Error::InvalidKey(format!(
+        match &key.segments[..] {
+            [DbKeySeg::AddressSeg(addr), DbKeySeg::StringSeg(prefix), DbKeySeg::StringSeg(port_id), ..]
+                if addr == &Address::Internal(InternalAddress::Ibc)
+                    && prefix == "ports" =>
+            {
+                PortId::from_str(&port_id.raw())
+                    .map_err(|e| Error::InvalidKey(e.to_string()))
+            }
+            _ => Err(Error::InvalidKey(format!(
                 "The key doesn't have a port ID: Key {}",
                 key
             ))),
@@ -123,10 +129,12 @@ where
     }
 
     fn get_capability(key: &Key) -> Result<Capability> {
-        // the capability index after #IBC/capabilities
-        match key.segments.get(2) {
-            Some(i) => {
-                let index: u64 = i.raw().parse().map_err(|e| {
+        match &key.segments[..] {
+            [DbKeySeg::AddressSeg(addr), DbKeySeg::StringSeg(prefix), DbKeySeg::StringSeg(index), ..]
+                if addr == &Address::Internal(InternalAddress::Ibc)
+                    && prefix == "capabilities" =>
+            {
+                let index: u64 = index.raw().parse().map_err(|e| {
                     Error::NoCapability(format!(
                         "The key has a non-number index: Key {}, {}",
                         key, e
@@ -134,7 +142,7 @@ where
                 })?;
                 Ok(Capability::from(index))
             }
-            None => Err(Error::NoCapability(format!(
+            _ => Err(Error::NoCapability(format!(
                 "The key doesn't have a capability index: Key {}",
                 key
             ))),
@@ -145,15 +153,12 @@ where
         let key = Key::ibc_capability(cap.index());
         match self.ctx.read_post(&key) {
             Ok(Some(value)) => {
-                let id: String =
-                    storage::types::decode(&value).map_err(|e| {
-                        Error::InvalidPort(format!(
-                            "Decoding the port ID failed: {}",
-                            e
-                        ))
-                    })?;
-                PortId::from_str(&id)
-                    .map_err(|e| Error::InvalidPort(e.to_string()))
+                PortId::try_from_slice(&value[..]).map_err(|e| {
+                    Error::InvalidPort(format!(
+                        "Decoding the port ID failed: {}",
+                        e
+                    ))
+                })
             }
             Ok(None) => Err(Error::InvalidPort(
                 "The capability is not mapped to any port".to_owned(),

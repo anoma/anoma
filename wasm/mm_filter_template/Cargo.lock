@@ -27,10 +27,12 @@ checksum = "739f4a8db6605981345c5654f3a85b056ce52f37a39d34da03f25bf2151ea16e"
 name = "anoma"
 version = "0.1.0"
 dependencies = [
+ "anoma_proof_of_stake",
  "bech32",
  "borsh",
  "chrono",
  "ed25519-dalek",
+ "hex",
  "itertools",
  "prost",
  "prost-types",
@@ -43,6 +45,14 @@ dependencies = [
  "tonic-build",
  "tracing",
  "wasmparser",
+]
+
+[[package]]
+name = "anoma_proof_of_stake"
+version = "0.1.0"
+dependencies = [
+ "borsh",
+ "thiserror",
 ]
 
 [[package]]
@@ -469,6 +479,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "hex"
+version = "0.4.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7f24254aa9a54b5c858eaee2f5bccdb46aaf0e486a595ed5fd8f86ba55232a70"
+
+[[package]]
 name = "idna"
 version = "0.2.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -512,9 +528,9 @@ checksum = "e2abad23fbc42b3700f2f279844dc832adb2b2eb069b2df918f455c4e18cc646"
 
 [[package]]
 name = "libc"
-version = "0.2.98"
+version = "0.2.101"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "320cfe77175da3a483efed4bc0adc1968ca050b098ce4f2f1c13a56626128790"
+checksum = "3cb00336871be5ed2c8ed44b60ae9959dc5b9f08539422ed43f09e34ecaeba21"
 
 [[package]]
 name = "log"
@@ -996,7 +1012,7 @@ dependencies = [
 [[package]]
 name = "tendermint"
 version = "0.20.0"
-source = "git+https://github.com/heliaxdev/tendermint-rs?branch=tomas/update-genesis-new-prost#bc2d7c43a773da617fe7daaf518a52c041052427"
+source = "git+https://github.com/heliaxdev/tendermint-rs?branch=tomas/lowercase-node-id#ca0bffdde9a3f1597aea3e0faf518de453b72518"
 dependencies = [
  "anomaly",
  "async-trait",
@@ -1027,7 +1043,7 @@ dependencies = [
 [[package]]
 name = "tendermint-proto"
 version = "0.20.0"
-source = "git+https://github.com/heliaxdev/tendermint-rs?branch=tomas/update-genesis-new-prost#bc2d7c43a773da617fe7daaf518a52c041052427"
+source = "git+https://github.com/heliaxdev/tendermint-rs?branch=tomas/lowercase-node-id#ca0bffdde9a3f1597aea3e0faf518de453b72518"
 dependencies = [
  "anomaly",
  "bytes",

@@ -32,6 +32,7 @@ impl PartialEq for ExchangeNode {
 fn add_intent(graph_bytes: Vec<u8>, id: Vec<u8>, data: Vec<u8>) -> bool {
     let intent = decode_intent_data(&data);
     let exchanges = intent.data.exchange.clone();
+
     let mut graph = decode_graph(graph_bytes);
     log_string("trying to match new intent".to_string());
     exchanges.into_iter().for_each(|exchange| {

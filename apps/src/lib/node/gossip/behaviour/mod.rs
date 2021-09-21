@@ -159,6 +159,7 @@ impl Behaviour {
             .heartbeat_interval(Duration::from_secs(1))
             .validation_mode(ValidationMode::Strict)
             .message_id_fn(message_id)
+            .max_transmit_size(16 * 1024 * 1024)
             .validate_messages()
             .mesh_outbound_min(1)
             .mesh_n_low(2)
