@@ -13,18 +13,11 @@ The transaction can modify the ledger state by writing not only data specified i
   fn apply_tx(tx_data: Vec<u8>) {
       let signed =
           key::ed25519::SignedTxData::try_from_slice(&tx_data[..]).unwrap();
-      let states: CreateClientStates =
-          prost::Message::decode(&signed.data[..]).unwrap();
+      let data  = ClientCreationData::try_from_slice(&signed.data[..]).unwrap();
 
-      let result = create_client(&states.client_state, &states.consensus_state);
-
-      match &result {
-          Ok(output) => emit_event(output.events),
-          Err(e) => {
-              tx::log_string(format!("Creating an IBC client faild: {}", e));
-              unreachable!()
-          }
-      }
+      // handle IBC modules
+      // write the client type, the client state, and the consensus state
+      ibc::create_client(&data);
   }
   ```
 
@@ -34,19 +27,10 @@ The transaction can modify the ledger state by writing not only data specified i
   fn apply_tx(tx_data: Vec<u8>) {
       let signed =
           key::ed25519::SignedTxData::try_from_slice(&tx_data[..]).unwrap();
-      let data: FungibleTokenPacketData =
-          prost::Message::decode(&signed.data[..]).unwrap();
+      let data = PacketSendData::try_from_slice(&signed.data[..]).unwrap();
 
-      // escrow the token and make a packet
-      let result = ibc_transfer(data);
-
-      match &result {
-          Ok(output) => emit_event(output.events),
-          Err(e) => {
-              tx::log_string(format!("IBC transfer faild: {}", e));
-              unreachable!();
-          }
-      }
+      // escrow the token, make a packet, and handle IBC modules
+      ibc::transfer_send(&data);
   }
   ```
 
@@ -54,50 +38,197 @@ The transaction can modify the ledger state by writing not only data specified i
 The IBC-related transaction can write IBC-related data to check the state or to be proved by other ledgers according to IBC protocol. Its storage key should be prefixed with `InternalAddress::Ibc` to protect them from other storage operations. The paths(keys) for Tendermint client are defined by [ICS 24](https://github.com/cosmos/ibc/blob/master/spec/core/ics-024-host-requirements/README.md#path-space). For example, a client state will be stored with a key `#IBC_encoded_addr/clients/{client_id}/clientState`.
 
 ### Emit IBC event
-The ledger should set an IBC event to `events` in the ABCI response to allow relayers to get the events. The transaction execution should return `TxResult` including an event. IBC relayer can subscribe the ledger with Tendermint RPC and get the event. The [events](https://github.com/informalsystems/ibc-rs/blob/5cf3b6790c45539c5aaadeef6e1af1f51a5f437f/modules/src/events.rs#L39) are defined in `ibc-rs`.
+The ledger should set an IBC event to `events` in the ABCI response to allow relayers to get the events. We could add `IbcEvent` to `TxResult`. `IbcEvent` should have the IBC event type and necessary data according to the IBC operation. If the `IbcEvent` is set, the ledger sets an IBC event to the response of the transaction. `IbcEvent` should be given to `TxEnv` and a transaction should be able to set the data.
 
-### Handle IBC modules
-IBC-related transactions should call functions to handle IBC modules. These functions are defined in [ibc-rs](https://github.com/informalsystems/ibc-rs) in traits (e.g. [`ClientReader`](https://github.com/informalsystems/ibc-rs/blob/d41e7253b997024e9f5852735450e1049176ed3a/modules/src/ics02_client/context.rs#L14)). But we can implement IBC-related operations (e.g. `create_client()`) without these traits because Anoma WASM transaction accesses the storage through the host environment functions.
+IBC relayer can subscribe to the ledger with Tendermint RPC or get the response when the relayer submits a transaction, then get the event. It is parsed in the relayer by [`from_tx_response_event()`](https://github.com/informalsystems/ibc-rs/blob/26087d575c620d1ec57b3343d1aaf5afd1db72d5/modules/src/events.rs#L167-L181).
 
 ```rust
-/* shared/src/types/storage.rs */
+/* apps/src/lib/node/ledger/protocol/mod.rs */
 
-impl Key {
+pub struct TxResult {
+    pub gas_used: u64,
+    pub changed_keys: HashSet<Key>,
+    pub vps_result: VpsResult,
+    pub initialized_accounts: Vec<Address>,
+    pub ibc_event: IbcEvent,
+}
+```
+
+```rust
+/* shared/src/ledger/ibc/event.rs */
+
+pub enum IbcEventType {
+    NotIbcEvent,
+    CreateClient,
+    UpdateClient,
+    SendPacket,
     ...
+}
 
-    /// Check if the given key is a key to IBC-related data
-    pub fn is_ibc_key() -> bool {
-        // check if the key has the reserved prefix
+impl fmt::Display for IbcEvent {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        match self {
+            IbcEventType::NotIbcEvent => write!(f, "not_ibc_event"),
+            IbcEventType::CreateClient => write!(f, "create_client"),
+            ...
+        }
+    }
+}
+
+pub struct IbcEvent {
+    pub event_type: IbcEventType,
+    pub attributes: HashMap<String, String>,
+}
+
+impl IbcEvent {
+    pub fn new() -> Self {
+        IbcEvent {
+            event_type: IbcEventType::NotIbcEvent,
+            attributes: HashMap::new(),
+        }
     }
 
-    /// Returns a key of the IBC-related data
-    /// Only this function can push the reserved prefix
-    pub fn ibc_key(path: impl AsRef<str>) -> Result<Self> {
-        // make a Key for IBC-related data with the reserved prefix
+    pub fn set_event_type(&mut self, event_type: IbcEventType) {
+        self.event_type = event_type;
+    }
+
+    pub fn insert(&mut self, key: String, value: String) {
+        self.attributes.insert(key, value);
     }
 }
 ```
 
 ```rust
+/* shared/src/vm/host_env.rs */
+
+pub struct TxCtx<'a, DB, H>
+where
+    DB: storage::DB + for<'iter> storage::DBIter<'iter>,
+    H: StorageHasher,
+{
+    /// Read-only access to the storage.
+    pub storage: HostRef<'a, &'a Storage<DB, H>>,
+    /// Read/write access to the write log.
+    pub write_log: MutHostRef<'a, &'a WriteLog>,
+    /// Storage prefix iterators.
+    pub iterators: MutHostRef<'a, &'a PrefixIterators<'a, DB>>,
+    /// Transaction gas meter.
+    pub gas_meter: MutHostRef<'a, &'a BlockGasMeter>,
+    /// The verifiers whose validity predicates should be triggered.
+    pub verifiers: MutHostRef<'a, &'a HashSet<Address>>,
+    /// IBC related data to be set to the tx event
+    pub ibc_event: MutHostRef<'a, &'a IbvEvent>,
+    /// Cache for 2-step reads from host environment.
+    pub result_buffer: MutHostRef<'a, &'a Option<Vec<u8>>>,
+}
+
+...
+
+/// IBC event type insertion function exposed to the wasm VM Tx environment.
+pub fn tx_set_ibc_event_type<MEM, DB, H>(
+    env: &TxEnv<MEM, DB, H>,
+    val_ptr: u64,
+    val_len: u64,
+) -> TxResult<()>
+where
+    MEM: VmMemory,
+    DB: storage::DB + for<'iter> storage::DBIter<'iter>,
+    H: StorageHasher,
+{
+    let (event_type, gas) = env
+        .memory
+        .read_string(val_ptr, val_len as _)
+        .map_err(|e| TxRuntimeError::MemoryError(Box::new(e)))?;
+    tx_add_gas(env, gas)?;
+
+    let event = unsafe { env.ctx.ibc_event.get() };
+    event.set_event_type(event_type);
+}
+
+/// IBC data insertion function exposed to the wasm VM Tx environment.
+pub fn tx_insert_ibc_attribute<MEM, DB, H>(
+    env: &TxEnv<MEM, DB, H>,
+    key_ptr: u64,
+    key_len: u64,
+    val_ptr: u64,
+    val_len: u64,
+) -> TxResult<()>
+where
+    MEM: VmMemory,
+    DB: storage::DB + for<'iter> storage::DBIter<'iter>,
+    H: StorageHasher,
+{
+    let (key, gas) = env
+        .memory
+        .read_string(key_ptr, key_len as _)
+        .map_err(|e| TxRuntimeError::MemoryError(Box::new(e)))?;
+    tx_add_gas(env, gas)?;
+    let (value, gas) = env
+        .memory
+        .read_string(val_ptr, val_len as _)
+        .map_err(|e| TxRuntimeError::MemoryError(Box::new(e)))?;
+    tx_add_gas(env, gas)?;
+
+    let event = unsafe { env.ctx.ibc_event.get() };
+    event.insert(key, value);
+}
+```
+
+### Handle IBC modules
+IBC-related transactions should call functions to handle IBC modules. These functions are defined in [ibc-rs](https://github.com/informalsystems/ibc-rs) in traits (e.g. [`ClientReader`](https://github.com/informalsystems/ibc-rs/blob/d41e7253b997024e9f5852735450e1049176ed3a/modules/src/ics02_client/context.rs#L14)). But we can implement IBC-related operations (e.g. `create_client()`) without these traits because Anoma WASM transaction accesses the storage through the host environment functions.
+
+```rust
+/* shared/src/ledger/ibc/storage.rs */
+
+/// Returns a key of the IBC-related data
+pub fn ibc_key(path: impl AsRef<str>) -> Result<Self> {
+    let path = Key::parse(path).map_err(Error::StorageKey)?;
+    let addr = Address::Internal(InternalAddress::Ibc);
+    let key = Key::from(addr.to_db_key());
+    Ok(key.join(&path))
+}
+
+/// Returns a key for the client state
+pub fn client_state_key(client_id: &ClientId) -> Key {
+    let path = Path::ClientState(client_id.clone());
+    ibc_key(path.to_string())
+        .expect("Creating a key for the client state shouldn't fail")
+}
+
+...
+```
+
+```rust
 /* vm_env/src/ibc.rs */
 
-pub fn create_client(client_state: &ClientState, consensus_state: &AnyConsensusState) -> HandlerResult<ClientResult> {
-    use crate::imports::tx;
+/// This struct integrates and gives access to lower-level IBC functions.
+pub struct Ibc;
 
-    ...
-    let key = Key::ibc_key(client_counter_key);
-    let id_counter = tx::read(key).unwrap_or_default();
-    let client_id = ClientId::new(client_state.client_type(), id_counter).expect("cannot get an IBC client ID");
-    tx::write(key, id_counter + 1);
+impl Ibc {
+    pub fn create_client(data: &ClientCreationData) {
+        let counter_key = client_counter_key().to_string();
+        let counter = Self::get_and_inc_counter(&counter_key);
+        let client_id = data.client_id(counter).expect("invalid client ID");
+        // client type
+        let client_type_key = client_type_key(&client_id).to_string();
+        let client_type = data.client_state.client_type();
+        tx::write(&client_type_key, client_type.clone());
+        // client state
+        let client_state_key = client_state_key(&client_id).to_string();
+        tx::write(&client_state_key, data.client_state.clone());
+        // consensus state
+        let height = data.client_state.latest_height();
+        let consensus_state_key =
+            consensus_state_key(&client_id, height).to_string();
+        tx::write(&consensus_state_key, data.consensus_state);
 
-    let key = Key::ibc_key(client_type_key);
-    tx::write(key, client_state.client_type());
-    let key = Key::ibc_key(client_state_key);
-    tx::write(key, client_state);
-    let key = Key::ibc_key(consensus_state_key);
-    tx::write(key, consensus_state);
-
-    // make a result
+        // set the event type
+        tx::set_ibc_event_type(ibc::CREATE_CLIENT_EVENT.to_owned());
+        // set attributes
+        tx::insert_ibc_attribute(CLIENT_ID.to_owned(), client_id.to_string());
+        tx::insert_ibc_attribute(CLIENT_TYPE.to_owned(), client_type.to_string());
+        tx::insert_ibc_attribute(CONSENSUS_HEIGHT.to_owned(), height.to_string());
+    }
     ...
 }
 ```
@@ -431,13 +562,17 @@ where
 ```
 
 ## Relayer (ICS 18)
-IBC relayer monitors the ledger, gets the status, state and proofs on the ledger, and requests transactions to the ledger via Tendermint RPC according to IBC protocol. For relayers, the ledger has to make a packet, emits an IBC event and stores proofs if needed. And, a relayer has to support Anoma ledger to query and validate the ledger state. It means that `Chain` in IBC Relayer of [ibc-rs](https://github.com/informalsystems/ibc-rs) should be implemented for Anoma like [that of CosmosSDK](https://github.com/informalsystems/ibc-rs/blob/master/relayer/src/chain/cosmos.rs).
+IBC relayer monitors the ledger, gets the status, state and proofs on the ledger, and requests transactions to the ledger via Tendermint RPC according to IBC protocol. For relayers, the ledger has to make a packet, emits an IBC event and stores proofs if needed. And, a relayer has to support Anoma ledger to query and validate the ledger state. It means that `ChainEndpoint` in IBC Relayer of [ibc-rs](https://github.com/informalsystems/ibc-rs) should be implemented for Anoma like [that of CosmosSDK](https://github.com/informalsystems/ibc-rs/blob/master/relayer/src/chain/cosmos.rs). As those of Cosmos, these querys can request ABCI query to Anoma.
 
 ```rust
-impl Chain for Anoma {
+impl ChainEndpoint for Anoma {
     ...
 }
 ```
+
+### Proof
+If a proven IBC-related data is needed, the response of a query should have the proof of the data. It is used to verify if the key value pair exists or doesn't exist on the counterpart ledger in an IBC operation executed in a transaction. The proof is `tendermint::merkle::proof::Proof`, which consists of a vector of `tendermint::merkle::proof::ProofOp`. `ProofOp` should have `data`, which is encoded to `Vec<u8>` from `ibc_proto::ics23::CommitmentProof`. The relayer getting the proof converts the proof to `ibc::ics23_commitment::commitment::CommitmentProofBytes` and set it to the request data of
+ an IBC operation.
 
 ## Transfer (ICS 20)
 ![transfer](./ibc/transfer.svg  "transfer")
