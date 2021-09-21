@@ -479,16 +479,6 @@
 <span id="477">477</span>
 <span id="478">478</span>
 <span id="479">479</span>
-<span id="480">480</span>
-<span id="481">481</span>
-<span id="482">482</span>
-<span id="483">483</span>
-<span id="484">484</span>
-<span id="485">485</span>
-<span id="486">486</span>
-<span id="487">487</span>
-<span id="488">488</span>
-<span id="489">489</span>
 </pre><pre class="rust">
 <span class="doccomment">//! Implements transparent addresses as described in [Accounts</span>
 <span class="doccomment">//! Addresses](docs/src/explore/design/ledger/accounts.md#addresses).</span>
@@ -854,16 +844,6 @@
     ]
     .<span class="ident">into_iter</span>()
     .<span class="ident">collect</span>()
-}
-
-<span class="doccomment">/// Temporary helper for testing</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">matchmaker</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Address</span> {
-    <span class="ident">Address::decode</span>(<span class="string">&quot;a1qq5qqqqqxu6rvdzpxymnqwfkxfznvsjxggunyd3jg5erg3p3geqnvv35gep5yvzxx5m5x3fsfje8td&quot;</span>).<span class="ident">expect</span>(<span class="string">&quot;The address decoding shouldn&#39;t fail&quot;</span>)
-}
-
-<span class="doccomment">/// Validator address for development and testing</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">validator</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Address</span> {
-    <span class="ident">Address::decode</span>(<span class="string">&quot;a1qq5qqqqqgfqnsd6pxse5zdj9g5crzsf5x4zyzv6yxerr2d2rxpryzwp5g5m5zvfjxv6ygsekjmraj0&quot;</span>).<span class="ident">expect</span>(<span class="string">&quot;The address decoding shouldn&#39;t fail&quot;</span>)
 }
 
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>

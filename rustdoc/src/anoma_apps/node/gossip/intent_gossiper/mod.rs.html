@@ -80,15 +80,34 @@
 <span id="78">78</span>
 <span id="79">79</span>
 <span id="80">80</span>
+<span id="81">81</span>
+<span id="82">82</span>
+<span id="83">83</span>
+<span id="84">84</span>
+<span id="85">85</span>
+<span id="86">86</span>
+<span id="87">87</span>
+<span id="88">88</span>
+<span id="89">89</span>
+<span id="90">90</span>
+<span id="91">91</span>
+<span id="92">92</span>
+<span id="93">93</span>
+<span id="94">94</span>
+<span id="95">95</span>
 </pre><pre class="rust">
 <span class="kw">mod</span> <span class="ident">filter</span>;
 <span class="kw">mod</span> <span class="ident">matchmaker</span>;
 <span class="kw">mod</span> <span class="ident">mempool</span>;
 
+<span class="kw">use</span> <span class="ident">std::rc::Rc</span>;
+
 <span class="kw">use</span> <span class="ident">anoma::proto::Intent</span>;
+<span class="kw">use</span> <span class="ident">anoma::types::address::Address</span>;
+<span class="kw">use</span> <span class="ident">anoma::types::key::ed25519::Keypair</span>;
 <span class="kw">use</span> <span class="ident">matchmaker::Matchmaker</span>;
 <span class="kw">use</span> <span class="ident">thiserror::Error</span>;
-<span class="kw">use</span> <span class="ident">tokio::sync::mpsc::Receiver</span>;
+<span class="kw">use</span> <span class="ident">tokio::sync::mpsc</span>::{<span class="ident">Receiver</span>, <span class="ident">Sender</span>};
 
 <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::types::MatchmakerMessage</span>;
 
@@ -108,26 +127,37 @@
 
 <span class="doccomment">/// The gossip intent app is mainly useful for the moment when the matchmaker is</span>
 <span class="doccomment">/// activated</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Default</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">GossipIntent</span> {
     <span class="kw">pub</span> <span class="ident">matchmaker</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Matchmaker</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span> <span class="ident">mm_sender</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Sender</span><span class="op">&lt;</span><span class="ident">MatchmakerMessage</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span> <span class="ident">mm_receiver</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Receiver</span><span class="op">&lt;</span><span class="ident">MatchmakerMessage</span><span class="op">&gt;</span><span class="op">&gt;</span>,
 }
 
 <span class="kw">impl</span> <span class="ident">GossipIntent</span> {
-    <span class="doccomment">/// Create a new gossip intent app based on the config given in parameter.</span>
+    <span class="doccomment">/// Create a new gossip intent app with a matchmaker, if enabled.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(
         <span class="ident">config</span>: <span class="kw-2">&amp;</span><span class="kw">crate</span><span class="ident">::config::IntentGossiper</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="self">Self</span>, <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Receiver</span><span class="op">&lt;</span><span class="ident">MatchmakerMessage</span><span class="op">&gt;</span><span class="op">&gt;</span>)<span class="op">&gt;</span> {
-        <span class="kw">let</span> (<span class="ident">matchmaker</span>, <span class="ident">matchmaker_event_receiver</span>) <span class="op">=</span> <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">matchmaker</span>) <span class="op">=</span>
-            <span class="kw-2">&amp;</span><span class="ident">config</span>.<span class="ident">matchmaker</span>
+        <span class="ident">tx_source_address</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span>,
+        <span class="ident">tx_signing_key</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Rc</span><span class="op">&lt;</span><span class="ident">Keypair</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
+        <span class="kw">if</span> <span class="kw">let</span> (
+            <span class="prelude-val">Some</span>(<span class="ident">matchmaker</span>),
+            <span class="prelude-val">Some</span>(<span class="ident">tx_source_address</span>),
+            <span class="prelude-val">Some</span>(<span class="ident">tx_signing_key</span>),
+        ) <span class="op">=</span> (<span class="kw-2">&amp;</span><span class="ident">config</span>.<span class="ident">matchmaker</span>, <span class="ident">tx_source_address</span>, <span class="ident">tx_signing_key</span>)
         {
-            <span class="kw">let</span> (<span class="ident">matchmaker</span>, <span class="ident">matchmaker_event_receiver</span>) <span class="op">=</span>
-                <span class="ident">Matchmaker::new</span>(<span class="ident">matchmaker</span>).<span class="ident">map_err</span>(<span class="ident">Error::MatchmakerInit</span>)<span class="question-mark">?</span>;
-            (<span class="prelude-val">Some</span>(<span class="ident">matchmaker</span>), <span class="prelude-val">Some</span>(<span class="ident">matchmaker_event_receiver</span>))
+            <span class="kw">let</span> (<span class="ident">mm</span>, <span class="ident">mm_sender</span>, <span class="ident">mm_receiver</span>) <span class="op">=</span>
+                <span class="ident">Matchmaker::new</span>(<span class="ident">matchmaker</span>, <span class="ident">tx_source_address</span>, <span class="ident">tx_signing_key</span>)
+                    .<span class="ident">map_err</span>(<span class="ident">Error::MatchmakerInit</span>)<span class="question-mark">?</span>;
+            <span class="prelude-val">Ok</span>(<span class="self">Self</span> {
+                <span class="ident">matchmaker</span>: <span class="prelude-val">Some</span>(<span class="ident">mm</span>),
+                <span class="ident">mm_sender</span>: <span class="prelude-val">Some</span>(<span class="ident">mm_sender</span>),
+                <span class="ident">mm_receiver</span>: <span class="prelude-val">Some</span>(<span class="ident">mm_receiver</span>),
+            })
         } <span class="kw">else</span> {
-            (<span class="prelude-val">None</span>, <span class="prelude-val">None</span>)
-        };
-        <span class="prelude-val">Ok</span>((<span class="self">Self</span> { <span class="ident">matchmaker</span> }, <span class="ident">matchmaker_event_receiver</span>))
+            <span class="prelude-val">Ok</span>(<span class="self">Self</span><span class="ident">::default</span>())
+        }
     }
 
     <span class="doccomment">/// Apply the matchmaker logic on a new intent. Return Some(Ok(True)) if a</span>

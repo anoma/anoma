@@ -2034,28 +2034,6 @@
 <span id="2032">2032</span>
 <span id="2033">2033</span>
 <span id="2034">2034</span>
-<span id="2035">2035</span>
-<span id="2036">2036</span>
-<span id="2037">2037</span>
-<span id="2038">2038</span>
-<span id="2039">2039</span>
-<span id="2040">2040</span>
-<span id="2041">2041</span>
-<span id="2042">2042</span>
-<span id="2043">2043</span>
-<span id="2044">2044</span>
-<span id="2045">2045</span>
-<span id="2046">2046</span>
-<span id="2047">2047</span>
-<span id="2048">2048</span>
-<span id="2049">2049</span>
-<span id="2050">2050</span>
-<span id="2051">2051</span>
-<span id="2052">2052</span>
-<span id="2053">2053</span>
-<span id="2054">2054</span>
-<span id="2055">2055</span>
-<span id="2056">2056</span>
 </pre><pre class="rust">
 <span class="doccomment">//! The CLI commands that are re-used between the executables `anoma`,</span>
 <span class="doccomment">//! `anoma-node` and `anoma-client`.</span>
@@ -2073,7 +2051,6 @@
 <span class="kw">use</span> <span class="ident">utils</span>::<span class="kw-2">*</span>;
 
 <span class="kw">pub</span> <span class="kw">use</span> <span class="self">self</span><span class="ident">::context::Context</span>;
-<span class="kw">use</span> <span class="kw">super</span><span class="ident">::config</span>;
 
 <span class="kw">const</span> <span class="ident">AUTHOR</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;Heliax AG &lt;hello@heliax.dev&gt;&quot;</span>;
 <span class="kw">const</span> <span class="ident">APP_NAME</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;Anoma&quot;</span>;
@@ -3591,8 +3568,10 @@
         <span class="kw">pub</span> <span class="ident">node_addr</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>,
         <span class="doccomment">/// Intent topic</span>
         <span class="kw">pub</span> <span class="ident">topic</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>,
+        <span class="doccomment">/// Source address</span>
+        <span class="kw">pub</span> <span class="ident">source</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">WalletAddress</span><span class="op">&gt;</span>,
         <span class="doccomment">/// Signing key</span>
-        <span class="kw">pub</span> <span class="ident">signing_key</span>: <span class="ident">WalletKeypair</span>,
+        <span class="kw">pub</span> <span class="ident">signing_key</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">WalletKeypair</span><span class="op">&gt;</span>,
         <span class="doccomment">/// Exchanges description</span>
         <span class="kw">pub</span> <span class="ident">exchanges</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Exchange</span><span class="op">&gt;</span>,
         <span class="doccomment">/// The address of the ledger node as host:port</span>
@@ -3603,9 +3582,10 @@
 
     <span class="kw">impl</span> <span class="ident">Args</span> <span class="kw">for</span> <span class="ident">Intent</span> {
         <span class="kw">fn</span> <span class="ident">parse</span>(<span class="ident">matches</span>: <span class="kw-2">&amp;</span><span class="ident">ArgMatches</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
-            <span class="kw">let</span> <span class="ident">signing_key</span> <span class="op">=</span> <span class="ident">SIGNING_KEY</span>.<span class="ident">parse</span>(<span class="ident">matches</span>);
             <span class="kw">let</span> <span class="ident">node_addr</span> <span class="op">=</span> <span class="ident">NODE_OPT</span>.<span class="ident">parse</span>(<span class="ident">matches</span>);
             <span class="kw">let</span> <span class="ident">data_path</span> <span class="op">=</span> <span class="ident">DATA_PATH</span>.<span class="ident">parse</span>(<span class="ident">matches</span>);
+            <span class="kw">let</span> <span class="ident">source</span> <span class="op">=</span> <span class="ident">SOURCE_OPT</span>.<span class="ident">parse</span>(<span class="ident">matches</span>);
+            <span class="kw">let</span> <span class="ident">signing_key</span> <span class="op">=</span> <span class="ident">SIGNING_KEY_OPT</span>.<span class="ident">parse</span>(<span class="ident">matches</span>);
             <span class="kw">let</span> <span class="ident">to_stdout</span> <span class="op">=</span> <span class="ident">TO_STDOUT</span>.<span class="ident">parse</span>(<span class="ident">matches</span>);
             <span class="kw">let</span> <span class="ident">topic</span> <span class="op">=</span> <span class="ident">TOPIC_OPT</span>.<span class="ident">parse</span>(<span class="ident">matches</span>);
 
@@ -3628,6 +3608,7 @@
             <span class="self">Self</span> {
                 <span class="ident">node_addr</span>,
                 <span class="ident">topic</span>,
+                <span class="ident">source</span>,
                 <span class="ident">signing_key</span>,
                 <span class="ident">exchanges</span>,
                 <span class="ident">ledger_address</span>,
@@ -3642,14 +3623,28 @@
                     .<span class="ident">about</span>(<span class="string">&quot;The gossip node address.&quot;</span>)
                     .<span class="ident">conflicts_with</span>(<span class="ident">TO_STDOUT</span>.<span class="ident">name</span>),
             )
-            .<span class="ident">arg</span>(<span class="ident">SIGNING_KEY</span>.<span class="ident">def</span>().<span class="ident">about</span>(
-                <span class="string">&quot;Sign the intent with the key for the given public key, \
-                 public key hash or alias from your wallet.&quot;</span>,
-            ))
             .<span class="ident">arg</span>(<span class="ident">DATA_PATH</span>.<span class="ident">def</span>().<span class="ident">about</span>(
                 <span class="string">&quot;The data of the intent, that contains all value necessary \
                  for the matchmaker.&quot;</span>,
             ))
+            .<span class="ident">arg</span>(
+                <span class="ident">SOURCE_OPT</span>
+                    .<span class="ident">def</span>()
+                    .<span class="ident">about</span>(
+                        <span class="string">&quot;Sign the intent with the key of a given address or \
+                         address alias from your wallet.&quot;</span>,
+                    )
+                    .<span class="ident">conflicts_with</span>(<span class="ident">SIGNING_KEY_OPT</span>.<span class="ident">name</span>),
+            )
+            .<span class="ident">arg</span>(
+                <span class="ident">SIGNING_KEY_OPT</span>
+                    .<span class="ident">def</span>()
+                    .<span class="ident">about</span>(
+                        <span class="string">&quot;Sign the intent with the key for the given public \
+                         key, public key hash or alias from your wallet.&quot;</span>,
+                    )
+                    .<span class="ident">conflicts_with</span>(<span class="ident">SOURCE_OPT</span>.<span class="ident">name</span>),
+            )
             .<span class="ident">arg</span>(<span class="ident">LEDGER_ADDRESS_DEFAULT</span>.<span class="ident">def</span>().<span class="ident">about</span>(<span class="ident">LEDGER_ADDRESS_ABOUT</span>))
             .<span class="ident">arg</span>(
                 <span class="ident">TOPIC_OPT</span>
@@ -3705,6 +3700,8 @@
         <span class="kw">pub</span> <span class="ident">tx_code_path</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">PathBuf</span><span class="op">&gt;</span>,
         <span class="kw">pub</span> <span class="ident">ledger_addr</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">tendermint::net::Address</span><span class="op">&gt;</span>,
         <span class="kw">pub</span> <span class="ident">filter_path</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">PathBuf</span><span class="op">&gt;</span>,
+        <span class="kw">pub</span> <span class="ident">tx_signing_key</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">WalletKeypair</span><span class="op">&gt;</span>,
+        <span class="kw">pub</span> <span class="ident">tx_source_address</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">WalletAddress</span><span class="op">&gt;</span>,
     }
 
     <span class="kw">impl</span> <span class="ident">Args</span> <span class="kw">for</span> <span class="ident">GossipRun</span> {
@@ -3717,6 +3714,8 @@
             <span class="kw">let</span> <span class="ident">tx_code_path</span> <span class="op">=</span> <span class="ident">TX_CODE_PATH</span>.<span class="ident">parse</span>(<span class="ident">matches</span>);
             <span class="kw">let</span> <span class="ident">ledger_addr</span> <span class="op">=</span> <span class="ident">LEDGER_ADDRESS_OPT</span>.<span class="ident">parse</span>(<span class="ident">matches</span>);
             <span class="kw">let</span> <span class="ident">filter_path</span> <span class="op">=</span> <span class="ident">FILTER_PATH</span>.<span class="ident">parse</span>(<span class="ident">matches</span>);
+            <span class="kw">let</span> <span class="ident">tx_signing_key</span> <span class="op">=</span> <span class="ident">SIGNING_KEY_OPT</span>.<span class="ident">parse</span>(<span class="ident">matches</span>);
+            <span class="kw">let</span> <span class="ident">tx_source_address</span> <span class="op">=</span> <span class="ident">SOURCE_OPT</span>.<span class="ident">parse</span>(<span class="ident">matches</span>);
             <span class="self">Self</span> {
                 <span class="ident">addr</span>,
                 <span class="ident">peers</span>,
@@ -3726,6 +3725,8 @@
                 <span class="ident">tx_code_path</span>,
                 <span class="ident">ledger_addr</span>,
                 <span class="ident">filter_path</span>,
+                <span class="ident">tx_signing_key</span>,
+                <span class="ident">tx_source_address</span>,
             }
         }
 
@@ -3754,6 +3755,16 @@
                     .<span class="ident">def</span>()
                     .<span class="ident">about</span>(<span class="string">&quot;The private filter for the matchmaker&quot;</span>),
             )
+            .<span class="ident">arg</span>(<span class="ident">SIGNING_KEY_OPT</span>.<span class="ident">def</span>().<span class="ident">about</span>(
+                <span class="string">&quot;Sign the transactions created by the matchmaker (if enabled) \
+                 with the key for the given public key, public key hash or \
+                 alias from your wallet.&quot;</span>,
+            ))
+            .<span class="ident">arg</span>(<span class="ident">SOURCE_OPT</span>.<span class="ident">def</span>().<span class="ident">about</span>(
+                <span class="string">&quot;Source address or alias of an address of the transactions \
+                 created by the matchmaker (if enabled). This must be \
+                 matching the signing key.&quot;</span>,
+            ))
         }
     }
 
@@ -4057,61 +4068,6 @@
         .<span class="ident">about</span>(<span class="string">&quot;Anoma wallet command line interface.&quot;</span>)
         .<span class="ident">setting</span>(<span class="ident">AppSettings::SubcommandRequiredElseHelp</span>);
     <span class="ident">cmds::AnomaWallet::add_sub</span>(<span class="ident">args::Global::def</span>(<span class="ident">app</span>))
-}
-
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">update_gossip_config</span>(
-    <span class="ident">args</span>: <span class="ident">args::GossipRun</span>,
-    <span class="ident">config</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">config::IntentGossiper</span>,
-) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">std::error::Error</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-    <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">addr</span>) <span class="op">=</span> <span class="ident">args</span>.<span class="ident">addr</span> {
-        <span class="ident">config</span>.<span class="ident">address</span> <span class="op">=</span> <span class="ident">addr</span>
-    }
-
-    <span class="kw">let</span> <span class="ident">matchmaker_arg</span> <span class="op">=</span> <span class="ident">args</span>.<span class="ident">matchmaker_path</span>;
-    <span class="kw">let</span> <span class="ident">tx_code_arg</span> <span class="op">=</span> <span class="ident">args</span>.<span class="ident">tx_code_path</span>;
-    <span class="kw">let</span> <span class="ident">ledger_address_arg</span> <span class="op">=</span> <span class="ident">args</span>.<span class="ident">ledger_addr</span>;
-    <span class="kw">let</span> <span class="ident">filter_arg</span> <span class="op">=</span> <span class="ident">args</span>.<span class="ident">filter_path</span>;
-    <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="kw-2">mut</span> <span class="ident">matchmaker_cfg</span>) <span class="op">=</span> <span class="ident">config</span>.<span class="ident">matchmaker</span>.<span class="ident">as_mut</span>() {
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">matchmaker</span>) <span class="op">=</span> <span class="ident">matchmaker_arg</span> {
-            <span class="ident">matchmaker_cfg</span>.<span class="ident">matchmaker</span> <span class="op">=</span> <span class="ident">matchmaker</span>
-        }
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">tx_code</span>) <span class="op">=</span> <span class="ident">tx_code_arg</span> {
-            <span class="ident">matchmaker_cfg</span>.<span class="ident">tx_code</span> <span class="op">=</span> <span class="ident">tx_code</span>
-        }
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">ledger_address</span>) <span class="op">=</span> <span class="ident">ledger_address_arg</span> {
-            <span class="ident">matchmaker_cfg</span>.<span class="ident">ledger_address</span> <span class="op">=</span> <span class="ident">ledger_address</span>
-        }
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">filter</span>) <span class="op">=</span> <span class="ident">filter_arg</span> {
-            <span class="ident">matchmaker_cfg</span>.<span class="ident">filter</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">filter</span>)
-        }
-    } <span class="kw">else</span> <span class="kw">if</span> <span class="kw">let</span> (<span class="prelude-val">Some</span>(<span class="ident">matchmaker</span>), <span class="prelude-val">Some</span>(<span class="ident">tx_code</span>), <span class="prelude-val">Some</span>(<span class="ident">ledger_address</span>)) <span class="op">=</span> (
-        <span class="ident">matchmaker_arg</span>.<span class="ident">as_ref</span>(),
-        <span class="ident">tx_code_arg</span>.<span class="ident">as_ref</span>(),
-        <span class="ident">ledger_address_arg</span>.<span class="ident">as_ref</span>(),
-    ) {
-        <span class="kw">let</span> <span class="ident">matchmaker_cfg</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">config::Matchmaker</span> {
-            <span class="ident">matchmaker</span>: <span class="ident">matchmaker</span>.<span class="ident">clone</span>(),
-            <span class="ident">tx_code</span>: <span class="ident">tx_code</span>.<span class="ident">clone</span>(),
-            <span class="ident">ledger_address</span>: <span class="ident">ledger_address</span>.<span class="ident">clone</span>(),
-            <span class="ident">filter</span>: <span class="ident">filter_arg</span>,
-        });
-        <span class="ident">config</span>.<span class="ident">matchmaker</span> <span class="op">=</span> <span class="ident">matchmaker_cfg</span>
-    } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">matchmaker_arg</span>.<span class="ident">is_some</span>()
-        <span class="op">|</span><span class="op">|</span> <span class="ident">tx_code_arg</span>.<span class="ident">is_some</span>()
-        <span class="op">|</span><span class="op">|</span> <span class="ident">ledger_address_arg</span>.<span class="ident">is_some</span>()
-    <span class="comment">// if at least one argument is not none then fail</span>
-    {
-        <span class="macro">panic!</span>(
-            <span class="string">&quot;No complete matchmaker configuration found (matchmaker code \
-             path, tx code path, and ledger address). Please update the \
-             configuration with default value or use all cli argument to use \
-             the matchmaker&quot;</span>
-        );
-    }
-    <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">address</span>) <span class="op">=</span> <span class="ident">args</span>.<span class="ident">rpc</span> {
-        <span class="ident">config</span>.<span class="ident">rpc</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">config::RpcServer</span> { <span class="ident">address</span> });
-    }
-    <span class="prelude-val">Ok</span>(())
 }
 </pre></div>
 </section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../" data-current-crate="anoma_apps" data-search-index-js="../../search-index.js" data-search-js="../../search.js"></div><script src="../../main.js"></script><script src="../../source-script.js"></script><script src="../../source-files.js"></script></body></html>

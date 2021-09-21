@@ -1045,13 +1045,11 @@
 <span id="1043">1043</span>
 <span id="1044">1044</span>
 <span id="1045">1045</span>
-<span id="1046">1046</span>
 </pre><pre class="rust">
 <span class="doccomment">//! Wasm runners</span>
 
 <span class="kw">use</span> <span class="ident">std::collections::HashSet</span>;
 <span class="kw">use</span> <span class="ident">std::marker::PhantomData</span>;
-<span class="kw">use</span> <span class="ident">std::sync</span>::{<span class="ident">Arc</span>, <span class="ident">Mutex</span>};
 
 <span class="kw">use</span> <span class="ident">parity_wasm::elements</span>;
 <span class="kw">use</span> <span class="ident">pwasm_utils</span>::{<span class="self">self</span>, <span class="ident">rules</span>};
@@ -1410,7 +1408,7 @@
     <span class="ident">data</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span>[<span class="ident">u8</span>]<span class="op">&gt;</span>,
     <span class="ident">intent_id</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span>[<span class="ident">u8</span>]<span class="op">&gt;</span>,
     <span class="ident">intent_data</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span>[<span class="ident">u8</span>]<span class="op">&gt;</span>,
-    <span class="ident">mm</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">Mutex</span><span class="op">&lt;</span><span class="ident">MM</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="ident">mm</span>: <span class="ident">MM</span>,
 ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span>
 <span class="kw">where</span>
     <span class="ident">MM</span>: <span class="lifetime">&#39;static</span> <span class="op">+</span> <span class="ident">MmHost</span>,

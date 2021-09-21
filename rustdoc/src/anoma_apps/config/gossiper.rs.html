@@ -64,7 +64,6 @@
 <span id="62">62</span>
 <span id="63">63</span>
 <span id="64">64</span>
-<span id="65">65</span>
 </pre><pre class="rust">
 <span class="kw">use</span> <span class="ident">libp2p::identity::ed25519::Keypair</span>;
 <span class="kw">use</span> <span class="ident">serde</span>::{<span class="ident">Deserialize</span>, <span class="ident">Serialize</span>};
@@ -88,7 +87,6 @@
 
 <span class="comment">// TODO this is needed because libp2p does not export ed255519 serde</span>
 <span class="comment">// feature maybe a MR for libp2p to export theses functions ?</span>
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;dev&quot;</span>)]</span>
 <span class="kw">mod</span> <span class="ident">keypair_serde</span> {
     <span class="kw">use</span> <span class="ident">libp2p::identity::ed25519::Keypair</span>;
     <span class="kw">use</span> <span class="ident">serde::de::Error</span>;

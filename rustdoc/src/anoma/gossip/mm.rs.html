@@ -19,7 +19,7 @@
 <span class="kw">use</span> <span class="ident">std::collections::HashSet</span>;
 
 <span class="doccomment">/// The matchmaker&#39;s host, used to communicate back from the VM</span>
-<span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">MmHost</span> {
+<span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">MmHost</span>: <span class="ident">Clone</span> {
     <span class="doccomment">/// Remove intents with the given IDs from the mempool</span>
     <span class="kw">fn</span> <span class="ident">remove_intents</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">intents_id</span>: <span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span>);
     <span class="doccomment">/// Inject a transaction with the given data</span>

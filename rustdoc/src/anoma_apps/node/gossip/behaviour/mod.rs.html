@@ -349,6 +349,9 @@
 <span id="347">347</span>
 <span id="348">348</span>
 <span id="349">349</span>
+<span id="350">350</span>
+<span id="351">351</span>
+<span id="352">352</span>
 </pre><pre class="rust">
 <span class="kw">mod</span> <span class="ident">discovery</span>;
 <span class="kw">use</span> <span class="ident">std::collections::hash_map::DefaultHasher</span>;
@@ -370,7 +373,8 @@
 <span class="kw">use</span> <span class="ident">libp2p::swarm::NetworkBehaviourEventProcess</span>;
 <span class="kw">use</span> <span class="ident">libp2p</span>::{<span class="ident">NetworkBehaviour</span>, <span class="ident">PeerId</span>};
 <span class="kw">use</span> <span class="ident">thiserror::Error</span>;
-<span class="kw">use</span> <span class="ident">tokio::sync::mpsc::Receiver</span>;
+<span class="kw">use</span> <span class="ident">tokio::sync::mpsc::Sender</span>;
+<span class="kw">use</span> <span class="ident">tokio::sync::oneshot::channel</span>;
 
 <span class="kw">use</span> <span class="self">self</span><span class="ident">::discovery::DiscoveryEvent</span>;
 <span class="kw">use</span> <span class="kw">super</span><span class="ident">::intent_gossiper</span>;
@@ -482,9 +486,8 @@
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Behaviour</span> {
     <span class="kw">pub</span> <span class="ident">intent_gossip_behaviour</span>: <span class="ident">Gossipsub</span>,
     <span class="kw">pub</span> <span class="ident">discover_behaviour</span>: <span class="ident">DiscoveryBehaviour</span>,
-    <span class="comment">// TODO add another gossipsub (or floodsub ?) for dkg message propagation ?</span>
     <span class="attribute">#[<span class="ident">behaviour</span>(<span class="ident">ignore</span>)]</span>
-    <span class="kw">pub</span> <span class="ident">intent_gossip_app</span>: <span class="ident">intent_gossiper::GossipIntent</span>,
+    <span class="kw">pub</span> <span class="ident">mm_sender</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Sender</span><span class="op">&lt;</span><span class="ident">MatchmakerMessage</span><span class="op">&gt;</span><span class="op">&gt;</span>,
 }
 
 <span class="doccomment">/// [message_id] use the hash of the message data as an id</span>
@@ -499,7 +502,8 @@
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(
         <span class="ident">key</span>: <span class="ident">Keypair</span>,
         <span class="ident">config</span>: <span class="kw-2">&amp;</span><span class="kw">crate</span><span class="ident">::config::IntentGossiper</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> (<span class="self">Self</span>, <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Receiver</span><span class="op">&lt;</span><span class="ident">MatchmakerMessage</span><span class="op">&gt;</span><span class="op">&gt;</span>) {
+        <span class="ident">mm_sender</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Sender</span><span class="op">&lt;</span><span class="ident">MatchmakerMessage</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="kw">let</span> <span class="ident">peer_id</span> <span class="op">=</span> <span class="ident">PeerId::from_public_key</span>(<span class="ident">key</span>.<span class="ident">public</span>());
 
         <span class="comment">// TODO remove hardcoded value and add them to the config Except</span>
@@ -547,9 +551,6 @@
             )
             .<span class="ident">unwrap</span>();
 
-        <span class="kw">let</span> (<span class="ident">intent_gossip_app</span>, <span class="ident">matchmaker_event_receiver</span>) <span class="op">=</span>
-            <span class="ident">intent_gossiper::GossipIntent::new</span>(<span class="ident">config</span>).<span class="ident">unwrap</span>();
-
         <span class="comment">// subscribe to all topic listed in the config.</span>
         <span class="ident">config</span>
             .<span class="ident">topics</span>
@@ -584,39 +585,44 @@
             };
             <span class="ident">DiscoveryBehaviour::new</span>(<span class="ident">peer_id</span>, <span class="ident">discover_config</span>).<span class="ident">unwrap</span>()
         };
-        (
-            <span class="self">Self</span> {
-                <span class="ident">intent_gossip_behaviour</span>,
-                <span class="ident">discover_behaviour</span>,
-                <span class="ident">intent_gossip_app</span>,
-            },
-            <span class="ident">matchmaker_event_receiver</span>,
-        )
+        <span class="self">Self</span> {
+            <span class="ident">intent_gossip_behaviour</span>,
+            <span class="ident">discover_behaviour</span>,
+            <span class="ident">mm_sender</span>,
+        }
     }
 
     <span class="doccomment">/// tries to apply a new intent. Fails if the logic fails or if the intent</span>
     <span class="doccomment">/// is rejected. If the matchmaker fails the message is only ignore</span>
     <span class="kw">fn</span> <span class="ident">handle_intent</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">intent</span>: <span class="ident">Intent</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">MessageAcceptance</span> {
-        <span class="kw">match</span> <span class="self">self</span>.<span class="ident">intent_gossip_app</span>.<span class="ident">apply_intent</span>(<span class="ident">intent</span>) {
-            <span class="prelude-val">Ok</span>(<span class="bool-val">true</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">MessageAcceptance::Accept</span>,
-            <span class="prelude-val">Ok</span>(<span class="bool-val">false</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">MessageAcceptance::Reject</span>,
-            <span class="prelude-val">Err</span>(<span class="ident">e</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="macro">tracing::error!</span>(<span class="string">&quot;Error while trying to apply an intent: {}&quot;</span>, <span class="ident">e</span>);
-                <span class="kw">match</span> <span class="ident">e</span> {
-                    <span class="ident">intent_gossiper::Error::Decode</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                        <span class="macro">panic!</span>(<span class="string">&quot;can&#39;t happens, because intent already decoded&quot;</span>)
-                    }
-                    <span class="ident">intent_gossiper::Error::MatchmakerInit</span>(<span class="ident">err</span>)
-                    <span class="op">|</span> <span class="ident">intent_gossiper::Error::Matchmaker</span>(<span class="ident">err</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                        <span class="macro">tracing::info!</span>(
-                            <span class="string">&quot;error while running the matchmaker: {:?}&quot;</span>,
-                            <span class="ident">err</span>
-                        );
-                        <span class="ident">MessageAcceptance::Ignore</span>
-                    }
+        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">sender</span>) <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">mm_sender</span> {
+            <span class="kw">let</span> (<span class="ident">response_sender</span>, <span class="kw-2">mut</span> <span class="ident">response_receiver</span>) <span class="op">=</span> <span class="ident">channel</span>::<span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span>();
+            <span class="ident">sender</span>
+                .<span class="ident">try_send</span>(<span class="ident">MatchmakerMessage::ApplyIntent</span>(
+                    <span class="ident">intent</span>,
+                    <span class="ident">response_sender</span>,
+                ))
+                .<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="ident">err</span><span class="op">|</span> {
+                    <span class="macro">tracing::error!</span>(
+                        <span class="string">&quot;Error sending intent to the matchmaker: {}&quot;</span>,
+                        <span class="ident">err</span>
+                    );
+                });
+            <span class="kw">return</span> <span class="kw">match</span> <span class="ident">response_receiver</span>.<span class="ident">try_recv</span>() {
+                <span class="prelude-val">Ok</span>(<span class="bool-val">true</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">MessageAcceptance::Accept</span>,
+                <span class="prelude-val">Ok</span>(<span class="bool-val">false</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">MessageAcceptance::Reject</span>,
+                <span class="prelude-val">Err</span>(<span class="ident">err</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="macro">tracing::error!</span>(
+                        <span class="string">&quot;Ignoring intent because error while trying to apply \
+                         an intent in matchmaker: {}&quot;</span>,
+                        <span class="ident">err</span>
+                    );
+                    <span class="ident">MessageAcceptance::Ignore</span>
                 }
-            }
+            };
         }
+        <span class="comment">// When no is matchmaker running, accept any intent</span>
+        <span class="ident">MessageAcceptance::Accept</span>
     }
 
     <span class="doccomment">/// Tries to decoded the arbitrary data in an intent then call</span>

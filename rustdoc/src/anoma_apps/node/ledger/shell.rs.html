@@ -925,6 +925,28 @@
 <span id="923">923</span>
 <span id="924">924</span>
 <span id="925">925</span>
+<span id="926">926</span>
+<span id="927">927</span>
+<span id="928">928</span>
+<span id="929">929</span>
+<span id="930">930</span>
+<span id="931">931</span>
+<span id="932">932</span>
+<span id="933">933</span>
+<span id="934">934</span>
+<span id="935">935</span>
+<span id="936">936</span>
+<span id="937">937</span>
+<span id="938">938</span>
+<span id="939">939</span>
+<span id="940">940</span>
+<span id="941">941</span>
+<span id="942">942</span>
+<span id="943">943</span>
+<span id="944">944</span>
+<span id="945">945</span>
+<span id="946">946</span>
+<span id="947">947</span>
 </pre><pre class="rust">
 <span class="doccomment">//! The ledger shell connects the ABCI++ interface with the Anoma ledger app.</span>
 <span class="doccomment">//!</span>
@@ -935,7 +957,9 @@
 <span class="doccomment">//! More info in &lt;https://github.com/anoma/anoma/issues/362&gt;.</span>
 
 <span class="kw">use</span> <span class="ident">std::cmp::max</span>;
+<span class="kw">use</span> <span class="ident">std::collections::HashMap</span>;
 <span class="kw">use</span> <span class="ident">std::convert</span>::{<span class="ident">TryFrom</span>, <span class="ident">TryInto</span>};
+<span class="kw">use</span> <span class="ident">std::hash::Hash</span>;
 <span class="kw">use</span> <span class="ident">std::mem</span>;
 <span class="kw">use</span> <span class="ident">std::path::Path</span>;
 <span class="kw">use</span> <span class="ident">std::str::FromStr</span>;
@@ -953,11 +977,9 @@
 <span class="kw">use</span> <span class="ident">anoma::types::address::Address</span>;
 <span class="kw">use</span> <span class="ident">anoma::types::storage</span>::{<span class="ident">BlockHash</span>, <span class="ident">BlockHeight</span>, <span class="ident">Key</span>};
 <span class="kw">use</span> <span class="ident">anoma::types::time</span>::{<span class="ident">DateTime</span>, <span class="ident">DateTimeUtc</span>, <span class="ident">TimeZone</span>, <span class="ident">Utc</span>};
-<span class="kw">use</span> <span class="ident">anoma::types::token::Amount</span>;
 <span class="kw">use</span> <span class="ident">anoma::types::transaction</span>::{<span class="ident">process_tx</span>, <span class="ident">TxType</span>, <span class="ident">WrapperTx</span>};
 <span class="kw">use</span> <span class="ident">anoma::types</span>::{<span class="ident">address</span>, <span class="ident">key</span>, <span class="ident">token</span>};
 <span class="kw">use</span> <span class="ident">borsh</span>::{<span class="ident">BorshDeserialize</span>, <span class="ident">BorshSerialize</span>};
-<span class="kw">use</span> <span class="ident">itertools::Itertools</span>;
 <span class="kw">use</span> <span class="ident">tendermint::block::Header</span>;
 <span class="kw">use</span> <span class="ident">tendermint_proto::abci</span>::{
     <span class="self">self</span>, <span class="ident">ConsensusParams</span>, <span class="ident">Evidence</span>, <span class="ident">ValidatorUpdate</span>,
@@ -967,13 +989,13 @@
 <span class="kw">use</span> <span class="ident">tower_abci</span>::{<span class="ident">request</span>, <span class="ident">response</span>};
 
 <span class="kw">use</span> <span class="kw">super</span><span class="ident">::rpc</span>;
+<span class="kw">use</span> <span class="kw">crate</span><span class="ident">::config</span>;
 <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::config::genesis</span>;
 <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::node::ledger::events</span>::{<span class="ident">Event</span>, <span class="ident">EventType</span>};
 <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::node::ledger::rpc::PrefixValue</span>;
 <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::node::ledger::shims::abcipp_shim_types::shim</span>;
 <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::node::ledger::shims::abcipp_shim_types::shim::response::TxResult</span>;
 <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::node::ledger</span>::{<span class="ident">protocol</span>, <span class="ident">storage</span>, <span class="ident">tendermint_node</span>};
-<span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">config</span>, <span class="ident">wallet</span>};
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Error</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">Error</span> {
@@ -1065,87 +1087,6 @@
         }
         <span class="kw">let</span> <span class="ident">genesis</span> <span class="op">=</span> <span class="ident">genesis::genesis</span>();
 
-        <span class="comment">// Initialize because there is no block</span>
-        <span class="kw">let</span> <span class="ident">token_vp</span> <span class="op">=</span>
-            <span class="ident">std::fs::read</span>(<span class="string">&quot;wasm/vp_token.wasm&quot;</span>).<span class="ident">expect</span>(<span class="string">&quot;cannot load token VP&quot;</span>);
-        <span class="kw">let</span> <span class="ident">user_vp</span> <span class="op">=</span>
-            <span class="ident">std::fs::read</span>(<span class="string">&quot;wasm/vp_user.wasm&quot;</span>).<span class="ident">expect</span>(<span class="string">&quot;cannot load user VP&quot;</span>);
-
-        <span class="comment">// TODO load initial accounts from genesis</span>
-
-        <span class="comment">// temporary account addresses for testing, generated by the</span>
-        <span class="comment">// address.rs module</span>
-        <span class="kw">let</span> <span class="ident">albert</span> <span class="op">=</span> <span class="ident">Address::decode</span>(<span class="string">&quot;a1qq5qqqqqg4znssfsgcurjsfhgfpy2vjyxy6yg3z98pp5zvp5xgersvfjxvcnx3f4xycrzdfkak0xhx&quot;</span>)
-            .<span class="ident">expect</span>(<span class="string">&quot;The genesis address shouldn&#39;t fail decoding&quot;</span>);
-        <span class="kw">let</span> <span class="ident">bertha</span> <span class="op">=</span> <span class="ident">Address::decode</span>(<span class="string">&quot;a1qq5qqqqqxv6yydz9xc6ry33589q5x33eggcnjs2xx9znydj9xuens3phxppnwvzpg4rrqdpswve4n9&quot;</span>)
-            .<span class="ident">expect</span>(<span class="string">&quot;The genesis address shouldn&#39;t fail decoding&quot;</span>);
-        <span class="kw">let</span> <span class="ident">christel</span> <span class="op">=</span> <span class="ident">Address::decode</span>(<span class="string">&quot;a1qq5qqqqqxsuygd2x8pq5yw2ygdryxs6xgsmrsdzx8pryxv34gfrrssfjgccyg3zpxezrqd2y2s3g5s&quot;</span>)
-            .<span class="ident">expect</span>(<span class="string">&quot;The genesis address shouldn&#39;t fail decoding&quot;</span>);
-        <span class="kw">let</span> <span class="ident">users</span> <span class="op">=</span> <span class="macro">vec!</span>[<span class="ident">albert</span>, <span class="ident">bertha</span>, <span class="ident">christel</span>];
-
-        <span class="kw">let</span> <span class="ident">tokens</span> <span class="op">=</span> <span class="ident">address::tokens</span>();
-        <span class="kw">for</span> <span class="ident">token</span> <span class="kw">in</span> <span class="ident">tokens</span>.<span class="ident">keys</span>() {
-            <span class="comment">// default tokens VPs for testing</span>
-            <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Key::validity_predicate</span>(<span class="ident">token</span>);
-            <span class="self">self</span>.<span class="ident">storage</span>
-                .<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>, <span class="ident">token_vp</span>.<span class="ident">to_vec</span>())
-                .<span class="ident">expect</span>(<span class="string">&quot;Unable to write token VP&quot;</span>);
-        }
-
-        <span class="kw">for</span> (<span class="ident">user</span>, <span class="ident">token</span>) <span class="kw">in</span> <span class="ident">users</span>.<span class="ident">iter</span>().<span class="ident">cartesian_product</span>(<span class="ident">tokens</span>.<span class="ident">keys</span>()) {
-            <span class="comment">// default user VPs for testing</span>
-            <span class="self">self</span>.<span class="ident">storage</span>
-                .<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="ident">Key::validity_predicate</span>(<span class="ident">user</span>), <span class="ident">user_vp</span>.<span class="ident">to_vec</span>())
-                .<span class="ident">expect</span>(<span class="string">&quot;Unable to write user VP&quot;</span>);
-
-            <span class="comment">// default user&#39;s tokens for testing</span>
-            <span class="self">self</span>.<span class="ident">storage</span>
-                .<span class="ident">write</span>(
-                    <span class="kw-2">&amp;</span><span class="ident">token::balance_key</span>(<span class="ident">token</span>, <span class="ident">user</span>),
-                    <span class="ident">Amount::whole</span>(<span class="number">1_000_000</span>)
-                        .<span class="ident">try_to_vec</span>()
-                        .<span class="ident">expect</span>(<span class="string">&quot;encode token amount&quot;</span>),
-                )
-                .<span class="ident">expect</span>(<span class="string">&quot;Unable to set genesis balance&quot;</span>);
-
-            <span class="comment">// default user&#39;s public keys for testing</span>
-            <span class="kw">let</span> <span class="ident">pk_key</span> <span class="op">=</span> <span class="ident">key::ed25519::pk_key</span>(<span class="ident">user</span>);
-            <span class="kw">let</span> <span class="ident">pk</span> <span class="op">=</span> <span class="ident">wallet::defaults::key_of</span>(<span class="ident">user</span>.<span class="ident">encode</span>()).<span class="ident">public</span>;
-            <span class="self">self</span>.<span class="ident">storage</span>
-                .<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="ident">pk_key</span>, <span class="ident">pk</span>.<span class="ident">try_to_vec</span>().<span class="ident">expect</span>(<span class="string">&quot;encode public key&quot;</span>))
-                .<span class="ident">expect</span>(<span class="string">&quot;Unable to set genesis user public key&quot;</span>);
-
-            <span class="comment">// default user&#39;s  tokens (in their implicit accounts) for testing</span>
-            <span class="self">self</span>.<span class="ident">storage</span>
-                .<span class="ident">write</span>(
-                    <span class="kw-2">&amp;</span><span class="ident">token::balance_key</span>(<span class="ident">token</span>, <span class="kw-2">&amp;</span><span class="ident">Address::from</span>(<span class="kw-2">&amp;</span><span class="ident">pk</span>)),
-                    <span class="ident">Amount::whole</span>(<span class="number">1_000_000</span>)
-                        .<span class="ident">try_to_vec</span>()
-                        .<span class="ident">expect</span>(<span class="string">&quot;encode token amount&quot;</span>),
-                )
-                .<span class="ident">expect</span>(<span class="string">&quot;Unable to set genesis balance&quot;</span>);
-        }
-
-        <span class="comment">// Temporary for testing, we have a fixed matchmaker account.  This</span>
-        <span class="comment">// account has a public key for signing matchmaker txs and verifying</span>
-        <span class="comment">// their signatures in its VP. The VP is the same as the user&#39;s VP,</span>
-        <span class="comment">// which simply checks the signature. We could consider using the</span>
-        <span class="comment">// same key as the intent gossip&#39;s p2p key.</span>
-        <span class="kw">let</span> <span class="ident">matchmaker</span> <span class="op">=</span> <span class="ident">address::matchmaker</span>();
-        <span class="kw">let</span> <span class="ident">matchmaker_pk</span> <span class="op">=</span> <span class="ident">key::ed25519::pk_key</span>(<span class="kw-2">&amp;</span><span class="ident">matchmaker</span>);
-        <span class="self">self</span>.<span class="ident">storage</span>
-            .<span class="ident">write</span>(
-                <span class="kw-2">&amp;</span><span class="ident">matchmaker_pk</span>,
-                <span class="ident">wallet::defaults::matchmaker_keypair</span>()
-                    .<span class="ident">public</span>
-                    .<span class="ident">try_to_vec</span>()
-                    .<span class="ident">expect</span>(<span class="string">&quot;encode public key&quot;</span>),
-            )
-            .<span class="ident">expect</span>(<span class="string">&quot;Unable to set genesis user public key&quot;</span>);
-        <span class="self">self</span>.<span class="ident">storage</span>
-            .<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="ident">Key::validity_predicate</span>(<span class="kw-2">&amp;</span><span class="ident">matchmaker</span>), <span class="ident">user_vp</span>.<span class="ident">to_vec</span>())
-            .<span class="ident">expect</span>(<span class="string">&quot;Unable to write matchmaker VP&quot;</span>);
-
         <span class="kw">let</span> <span class="ident">ts</span>: <span class="ident">tendermint_proto::google::protobuf::Timestamp</span> <span class="op">=</span>
             <span class="ident">init</span>.<span class="ident">time</span>.<span class="ident">expect</span>(<span class="string">&quot;Missing genesis time&quot;</span>);
         <span class="kw">let</span> <span class="ident">initial_height</span> <span class="op">=</span> <span class="ident">init</span>
@@ -1169,18 +1110,94 @@
             )
             .<span class="ident">expect</span>(<span class="string">&quot;Initializing genesis epoch must not fail&quot;</span>);
 
-        <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;dev&quot;</span>)]</span>
-        <span class="kw">let</span> <span class="ident">validators</span> <span class="op">=</span> <span class="macro">vec!</span>[<span class="ident">genesis</span>.<span class="ident">validator</span>];
-        <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;dev&quot;</span>))]</span>
-        <span class="kw">let</span> <span class="ident">validators</span> <span class="op">=</span> <span class="ident">genesis</span>.<span class="ident">validators</span>;
+        <span class="comment">// Loaded VP code cache to avoid loading the same files multiple times</span>
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">vp_code_cache</span>: <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">String</span>, <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">HashMap::default</span>();
 
-        <span class="comment">// Write validators&#39; VPs and non-staked tokens amount</span>
-        <span class="kw">for</span> <span class="ident">validator</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="ident">validators</span> {
-            <span class="kw">let</span> <span class="ident">addr</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">validator</span>.<span class="ident">pos_data</span>.<span class="ident">address</span>;
-            <span class="comment">// Write the VP</span>
-            <span class="comment">// TODO replace with https://github.com/anoma/anoma/issues/25)</span>
+        <span class="comment">// Initialize genesis established accounts</span>
+        <span class="kw">for</span> <span class="ident">genesis::EstablishedAccount</span> {
+            <span class="ident">address</span>,
+            <span class="ident">vp_code_path</span>,
+            <span class="ident">public_key</span>,
+            <span class="ident">storage</span>,
+        } <span class="kw">in</span> <span class="ident">genesis</span>.<span class="ident">established_accounts</span>
+        {
+            <span class="kw">let</span> <span class="ident">vp_code</span> <span class="op">=</span>
+                <span class="ident">vp_code_cache</span>.<span class="ident">get_or_insert_with</span>(<span class="ident">vp_code_path</span>.<span class="ident">clone</span>(), <span class="op">|</span><span class="op">|</span> {
+                    <span class="ident">std::fs::read</span>(<span class="kw-2">&amp;</span><span class="ident">vp_code_path</span>).<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> {
+                        <span class="macro">panic!</span>(<span class="string">&quot;cannot load genesis VP {}.&quot;</span>, <span class="ident">vp_code_path</span>)
+                    })
+                });
             <span class="self">self</span>.<span class="ident">storage</span>
-                .<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="ident">Key::validity_predicate</span>(<span class="ident">addr</span>), <span class="ident">user_vp</span>.<span class="ident">to_vec</span>())
+                .<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="ident">Key::validity_predicate</span>(<span class="kw-2">&amp;</span><span class="ident">address</span>), <span class="ident">vp_code</span>)
+                .<span class="ident">unwrap</span>();
+
+            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">pk</span>) <span class="op">=</span> <span class="ident">public_key</span> {
+                <span class="kw">let</span> <span class="ident">pk_storage_key</span> <span class="op">=</span> <span class="ident">key::ed25519::pk_key</span>(<span class="kw-2">&amp;</span><span class="ident">address</span>);
+                <span class="self">self</span>.<span class="ident">storage</span>
+                    .<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="ident">pk_storage_key</span>, <span class="ident">pk</span>.<span class="ident">try_to_vec</span>().<span class="ident">unwrap</span>())
+                    .<span class="ident">unwrap</span>();
+            }
+
+            <span class="kw">for</span> (<span class="ident">key</span>, <span class="ident">value</span>) <span class="kw">in</span> <span class="ident">storage</span> {
+                <span class="self">self</span>.<span class="ident">storage</span>.<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>, <span class="ident">value</span>).<span class="ident">unwrap</span>();
+            }
+        }
+
+        <span class="comment">// Initialize genesis implicit</span>
+        <span class="kw">for</span> <span class="ident">genesis::ImplicitAccount</span> { <span class="ident">public_key</span> } <span class="kw">in</span> <span class="ident">genesis</span>.<span class="ident">implicit_accounts</span>
+        {
+            <span class="kw">let</span> <span class="ident">address</span>: <span class="ident">address::Address</span> <span class="op">=</span> (<span class="kw-2">&amp;</span><span class="ident">public_key</span>).<span class="ident">into</span>();
+            <span class="kw">let</span> <span class="ident">pk_storage_key</span> <span class="op">=</span> <span class="ident">key::ed25519::pk_key</span>(<span class="kw-2">&amp;</span><span class="ident">address</span>);
+            <span class="self">self</span>.<span class="ident">storage</span>
+                .<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="ident">pk_storage_key</span>, <span class="ident">public_key</span>.<span class="ident">try_to_vec</span>().<span class="ident">unwrap</span>())
+                .<span class="ident">unwrap</span>();
+        }
+
+        <span class="comment">// Initialize genesis token accounts</span>
+        <span class="kw">for</span> <span class="ident">genesis::TokenAccount</span> {
+            <span class="ident">address</span>,
+            <span class="ident">vp_code_path</span>,
+            <span class="ident">balances</span>,
+        } <span class="kw">in</span> <span class="ident">genesis</span>.<span class="ident">token_accounts</span>
+        {
+            <span class="kw">let</span> <span class="ident">vp_code</span> <span class="op">=</span>
+                <span class="ident">vp_code_cache</span>.<span class="ident">get_or_insert_with</span>(<span class="ident">vp_code_path</span>.<span class="ident">clone</span>(), <span class="op">|</span><span class="op">|</span> {
+                    <span class="ident">std::fs::read</span>(<span class="kw-2">&amp;</span><span class="ident">vp_code_path</span>).<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> {
+                        <span class="macro">panic!</span>(<span class="string">&quot;cannot load genesis VP {}.&quot;</span>, <span class="ident">vp_code_path</span>)
+                    })
+                });
+            <span class="self">self</span>.<span class="ident">storage</span>
+                .<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="ident">Key::validity_predicate</span>(<span class="kw-2">&amp;</span><span class="ident">address</span>), <span class="ident">vp_code</span>)
+                .<span class="ident">unwrap</span>();
+
+            <span class="kw">for</span> (<span class="ident">owner</span>, <span class="ident">amount</span>) <span class="kw">in</span> <span class="ident">balances</span> {
+                <span class="self">self</span>.<span class="ident">storage</span>
+                    .<span class="ident">write</span>(
+                        <span class="kw-2">&amp;</span><span class="ident">token::balance_key</span>(<span class="kw-2">&amp;</span><span class="ident">address</span>, <span class="kw-2">&amp;</span><span class="ident">owner</span>),
+                        <span class="ident">amount</span>.<span class="ident">try_to_vec</span>().<span class="ident">unwrap</span>(),
+                    )
+                    .<span class="ident">unwrap</span>();
+            }
+        }
+
+        <span class="comment">// Initialize genesis validator accounts</span>
+        <span class="kw">for</span> <span class="ident">validator</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="ident">genesis</span>.<span class="ident">validators</span> {
+            <span class="kw">let</span> <span class="ident">vp_code</span> <span class="op">=</span> <span class="ident">vp_code_cache</span>.<span class="ident">get_or_insert_with</span>(
+                <span class="ident">validator</span>.<span class="ident">vp_code_path</span>.<span class="ident">clone</span>(),
+                <span class="op">|</span><span class="op">|</span> {
+                    <span class="ident">std::fs::read</span>(<span class="kw-2">&amp;</span><span class="ident">validator</span>.<span class="ident">vp_code_path</span>).<span class="ident">unwrap_or_else</span>(
+                        <span class="op">|</span><span class="kw">_</span><span class="op">|</span> {
+                            <span class="macro">panic!</span>(
+                                <span class="string">&quot;cannot load genesis VP {}.&quot;</span>,
+                                <span class="ident">validator</span>.<span class="ident">vp_code_path</span>
+                            )
+                        },
+                    )
+                },
+            );
+            <span class="kw">let</span> <span class="ident">addr</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">validator</span>.<span class="ident">pos_data</span>.<span class="ident">address</span>;
+            <span class="self">self</span>.<span class="ident">storage</span>
+                .<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="ident">Key::validity_predicate</span>(<span class="ident">addr</span>), <span class="ident">vp_code</span>)
                 .<span class="ident">expect</span>(<span class="string">&quot;Unable to write user VP&quot;</span>);
             <span class="comment">// Validator account key</span>
             <span class="kw">let</span> <span class="ident">pk_key</span> <span class="op">=</span> <span class="ident">key::ed25519::pk_key</span>(<span class="ident">addr</span>);
@@ -1210,7 +1227,10 @@
         <span class="ident">pos::init_genesis_storage</span>(
             <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">storage</span>,
             <span class="kw-2">&amp;</span><span class="ident">genesis</span>.<span class="ident">pos_params</span>,
-            <span class="ident">validators</span>.<span class="ident">iter</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">validator</span><span class="op">|</span> <span class="kw-2">&amp;</span><span class="ident">validator</span>.<span class="ident">pos_data</span>),
+            <span class="ident">genesis</span>
+                .<span class="ident">validators</span>
+                .<span class="ident">iter</span>()
+                .<span class="ident">map</span>(<span class="op">|</span><span class="ident">validator</span><span class="op">|</span> <span class="kw-2">&amp;</span><span class="ident">validator</span>.<span class="ident">pos_data</span>),
             <span class="ident">current_epoch</span>,
         );
         <span class="ident">ibc::init_genesis_storage</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">storage</span>);
@@ -1529,7 +1549,7 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">token</span>: <span class="kw-2">&amp;</span><span class="ident">Address</span>,
         <span class="ident">owner</span>: <span class="kw-2">&amp;</span><span class="ident">Address</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">std::result::Result</span><span class="op">&lt;</span><span class="ident">Amount</span>, <span class="ident">String</span><span class="op">&gt;</span> {
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">std::result::Result</span><span class="op">&lt;</span><span class="ident">token::Amount</span>, <span class="ident">String</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">query_resp</span> <span class="op">=</span>
             <span class="self">self</span>.<span class="ident">read_storage_value</span>(<span class="kw-2">&amp;</span><span class="ident">token::balance_key</span>(<span class="ident">token</span>, <span class="ident">owner</span>));
         <span class="kw">if</span> <span class="ident">query_resp</span>.<span class="ident">code</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
@@ -1848,6 +1868,30 @@
             <span class="ident">max_age_num_blocks</span>,
             <span class="ident">max_age_duration</span>,
             ..<span class="ident">EvidenceParams::default</span>()
+        }
+    }
+}
+
+<span class="kw">trait</span> <span class="ident">HashMapExt</span><span class="op">&lt;</span><span class="ident">K</span>, <span class="ident">V</span><span class="op">&gt;</span>
+<span class="kw">where</span>
+    <span class="ident">K</span>: <span class="ident">Eq</span> <span class="op">+</span> <span class="ident">Hash</span>,
+    <span class="ident">V</span>: <span class="ident">Clone</span>,
+{
+    <span class="doccomment">/// Inserts a value computed from `f` into the map if the given `key` is not</span>
+    <span class="doccomment">/// present, then returns a clone of the value from the map.</span>
+    <span class="kw">fn</span> <span class="ident">get_or_insert_with</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">key</span>: <span class="ident">K</span>, <span class="ident">f</span>: <span class="kw">impl</span> <span class="ident">FnOnce</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">V</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">V</span>;
+}
+
+<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">K</span>, <span class="ident">V</span><span class="op">&gt;</span> <span class="ident">HashMapExt</span><span class="op">&lt;</span><span class="ident">K</span>, <span class="ident">V</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">K</span>, <span class="ident">V</span><span class="op">&gt;</span>
+<span class="kw">where</span>
+    <span class="ident">K</span>: <span class="ident">Eq</span> <span class="op">+</span> <span class="ident">Hash</span>,
+    <span class="ident">V</span>: <span class="ident">Clone</span>,
+{
+    <span class="kw">fn</span> <span class="ident">get_or_insert_with</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">key</span>: <span class="ident">K</span>, <span class="ident">f</span>: <span class="kw">impl</span> <span class="ident">FnOnce</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">V</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">V</span> {
+        <span class="kw">use</span> <span class="ident">std::collections::hash_map::Entry</span>;
+        <span class="kw">match</span> <span class="self">self</span>.<span class="ident">entry</span>(<span class="ident">key</span>) {
+            <span class="ident">Entry::Occupied</span>(<span class="ident">o</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">o</span>.<span class="ident">get</span>().<span class="ident">clone</span>(),
+            <span class="ident">Entry::Vacant</span>(<span class="ident">v</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">v</span>.<span class="ident">insert</span>(<span class="ident">f</span>()).<span class="ident">clone</span>(),
         }
     }
 }

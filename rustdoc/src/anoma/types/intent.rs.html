@@ -428,6 +428,25 @@
 <span id="426">426</span>
 <span id="427">427</span>
 <span id="428">428</span>
+<span id="429">429</span>
+<span id="430">430</span>
+<span id="431">431</span>
+<span id="432">432</span>
+<span id="433">433</span>
+<span id="434">434</span>
+<span id="435">435</span>
+<span id="436">436</span>
+<span id="437">437</span>
+<span id="438">438</span>
+<span id="439">439</span>
+<span id="440">440</span>
+<span id="441">441</span>
+<span id="442">442</span>
+<span id="443">443</span>
+<span id="444">444</span>
+<span id="445">445</span>
+<span id="446">446</span>
+<span id="447">447</span>
 </pre><pre class="rust">
 <span class="doccomment">//! Intent data definitions and transaction and validity-predicate helpers.</span>
 
@@ -491,7 +510,8 @@
     <span class="kw">pub</span> <span class="ident">vp</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span>,
 }
 
-<span class="doccomment">/// These are transfers crafted from matched [`Exchange`]s.</span>
+<span class="doccomment">/// These are transfers crafted from matched [`Exchange`]s created by a</span>
+<span class="doccomment">/// matchmaker program.</span>
 <span class="attribute">#[<span class="ident">derive</span>(
     <span class="ident">Debug</span>,
     <span class="ident">Clone</span>,
@@ -501,7 +521,7 @@
     <span class="ident">Deserialize</span>,
     <span class="ident">PartialEq</span>,
 )]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">IntentTransfers</span> {
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">MatchedExchanges</span> {
     <span class="doccomment">/// Transfers crafted from the matched intents</span>
     <span class="kw">pub</span> <span class="ident">transfers</span>: <span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">token::Transfer</span><span class="op">&gt;</span>,
     <span class="comment">// TODO benchmark between an map or a set, see which is less costly</span>
@@ -512,6 +532,24 @@
     <span class="comment">// `exchanges` hashmap are already contained in the FungibleTokenIntents</span>
     <span class="comment">// belows</span>
     <span class="kw">pub</span> <span class="ident">intents</span>: <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">Address</span>, <span class="ident">Signed</span><span class="op">&lt;</span><span class="ident">FungibleTokenIntent</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+}
+
+<span class="doccomment">/// These are transfers crafted from matched [`Exchange`]s with a source address</span>
+<span class="doccomment">/// that is expected to sign this data.</span>
+<span class="attribute">#[<span class="ident">derive</span>(
+    <span class="ident">Debug</span>,
+    <span class="ident">Clone</span>,
+    <span class="ident">BorshSerialize</span>,
+    <span class="ident">BorshDeserialize</span>,
+    <span class="ident">Serialize</span>,
+    <span class="ident">Deserialize</span>,
+    <span class="ident">PartialEq</span>,
+)]</span>
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">IntentTransfers</span> {
+    <span class="doccomment">/// Matched exchanges</span>
+    <span class="kw">pub</span> <span class="ident">matches</span>: <span class="ident">MatchedExchanges</span>,
+    <span class="doccomment">/// Source address that should sign this data</span>
+    <span class="kw">pub</span> <span class="ident">source</span>: <span class="ident">Address</span>,
 }
 
 <span class="doccomment">/// Struct holding a safe rapresentation of a float</span>
@@ -608,8 +646,8 @@
     }
 }
 
-<span class="kw">impl</span> <span class="ident">IntentTransfers</span> {
-    <span class="doccomment">/// Create an empty [`IntentTransfers`].</span>
+<span class="kw">impl</span> <span class="ident">MatchedExchanges</span> {
+    <span class="doccomment">/// Create an empty [`MatchedExchanges`].</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">empty</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="self">Self</span> {
             <span class="ident">transfers</span>: <span class="ident">HashSet::new</span>(),
@@ -683,7 +721,7 @@
         <span class="kw">let</span> <span class="ident">signed_exchange_one</span> <span class="op">=</span> <span class="ident">Signed::new</span>(<span class="kw-2">&amp;</span><span class="ident">bertha_keypair</span>, <span class="ident">exchange_one</span>);
         <span class="kw">let</span> <span class="ident">signed_exchange_two</span> <span class="op">=</span> <span class="ident">Signed::new</span>(<span class="kw-2">&amp;</span><span class="ident">bertha_keypair</span>, <span class="ident">exchange_two</span>);
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">it</span> <span class="op">=</span> <span class="ident">IntentTransfers::empty</span>();
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">it</span> <span class="op">=</span> <span class="ident">MatchedExchanges::empty</span>();
         <span class="ident">it</span>.<span class="ident">exchanges</span> <span class="op">=</span> <span class="ident">HashMap</span>::<span class="op">&lt;</span><span class="kw">_</span>, <span class="kw">_</span><span class="op">&gt;</span><span class="ident">::from_iter</span>(<span class="ident">IntoIter::new</span>([
             (<span class="ident">bertha_addr</span>.<span class="ident">clone</span>(), <span class="ident">signed_exchange_one</span>.<span class="ident">clone</span>()),
             (<span class="ident">albert_addr</span>.<span class="ident">clone</span>(), <span class="ident">signed_exchange_two</span>.<span class="ident">clone</span>()),
@@ -726,7 +764,7 @@
         ]));
 
         <span class="kw">let</span> <span class="ident">encoded_intent_transfer</span> <span class="op">=</span> <span class="ident">encode</span>(<span class="kw-2">&amp;</span><span class="ident">it</span>);
-        <span class="kw">let</span> <span class="ident">decoded_intent_transfer</span>: <span class="ident">IntentTransfers</span> <span class="op">=</span>
+        <span class="kw">let</span> <span class="ident">decoded_intent_transfer</span>: <span class="ident">MatchedExchanges</span> <span class="op">=</span>
             <span class="ident">decode</span>(<span class="ident">encoded_intent_transfer</span>).<span class="ident">unwrap</span>();
 
         <span class="macro">assert!</span>(<span class="ident">decoded_intent_transfer</span> <span class="op">=</span><span class="op">=</span> <span class="ident">it</span>);
@@ -778,7 +816,7 @@
         <span class="kw">let</span> <span class="ident">signed_exchange_one</span> <span class="op">=</span> <span class="ident">Signed::new</span>(<span class="kw-2">&amp;</span><span class="ident">bertha_keypair</span>, <span class="ident">exchange_one</span>);
         <span class="kw">let</span> <span class="ident">signed_exchange_two</span> <span class="op">=</span> <span class="ident">Signed::new</span>(<span class="kw-2">&amp;</span><span class="ident">bertha_keypair</span>, <span class="ident">exchange_two</span>);
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">it</span> <span class="op">=</span> <span class="ident">IntentTransfers::empty</span>();
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">it</span> <span class="op">=</span> <span class="ident">MatchedExchanges::empty</span>();
         <span class="ident">it</span>.<span class="ident">exchanges</span> <span class="op">=</span> <span class="ident">HashMap</span>::<span class="op">&lt;</span><span class="kw">_</span>, <span class="kw">_</span><span class="op">&gt;</span><span class="ident">::from_iter</span>(<span class="ident">IntoIter::new</span>([
             (<span class="ident">bertha_addr</span>.<span class="ident">clone</span>(), <span class="ident">signed_exchange_one</span>.<span class="ident">clone</span>()),
             (<span class="ident">albert_addr</span>.<span class="ident">clone</span>(), <span class="ident">signed_exchange_two</span>.<span class="ident">clone</span>()),
@@ -821,7 +859,7 @@
         ]));
 
         <span class="kw">let</span> <span class="ident">encoded_intent_transfer</span> <span class="op">=</span> <span class="ident">encode</span>(<span class="kw-2">&amp;</span><span class="ident">it</span>);
-        <span class="kw">let</span> <span class="ident">decoded_intent_transfer</span>: <span class="ident">IntentTransfers</span> <span class="op">=</span>
+        <span class="kw">let</span> <span class="ident">decoded_intent_transfer</span>: <span class="ident">MatchedExchanges</span> <span class="op">=</span>
             <span class="ident">decode</span>(<span class="ident">encoded_intent_transfer</span>).<span class="ident">unwrap</span>();
 
         <span class="macro">assert!</span>(<span class="ident">decoded_intent_transfer</span> <span class="op">=</span><span class="op">=</span> <span class="ident">it</span>);

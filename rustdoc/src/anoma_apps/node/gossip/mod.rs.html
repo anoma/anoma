@@ -100,19 +100,59 @@
 <span id="98"> 98</span>
 <span id="99"> 99</span>
 <span id="100">100</span>
+<span id="101">101</span>
+<span id="102">102</span>
+<span id="103">103</span>
+<span id="104">104</span>
+<span id="105">105</span>
+<span id="106">106</span>
+<span id="107">107</span>
+<span id="108">108</span>
+<span id="109">109</span>
+<span id="110">110</span>
+<span id="111">111</span>
+<span id="112">112</span>
+<span id="113">113</span>
+<span id="114">114</span>
+<span id="115">115</span>
+<span id="116">116</span>
+<span id="117">117</span>
+<span id="118">118</span>
+<span id="119">119</span>
+<span id="120">120</span>
+<span id="121">121</span>
+<span id="122">122</span>
+<span id="123">123</span>
+<span id="124">124</span>
+<span id="125">125</span>
+<span id="126">126</span>
+<span id="127">127</span>
+<span id="128">128</span>
+<span id="129">129</span>
+<span id="130">130</span>
+<span id="131">131</span>
+<span id="132">132</span>
+<span id="133">133</span>
+<span id="134">134</span>
+<span id="135">135</span>
 </pre><pre class="rust">
 <span class="kw">mod</span> <span class="ident">behaviour</span>;
 <span class="kw">mod</span> <span class="ident">intent_gossiper</span>;
 <span class="kw">mod</span> <span class="ident">p2p</span>;
 <span class="kw">mod</span> <span class="ident">rpc</span>;
 
+<span class="kw">use</span> <span class="ident">std::borrow::Cow</span>;
+<span class="kw">use</span> <span class="ident">std::rc::Rc</span>;
+
+<span class="kw">use</span> <span class="ident">anoma::types::address::Address</span>;
+<span class="kw">use</span> <span class="ident">anoma::types::key::ed25519::Keypair</span>;
 <span class="kw">use</span> <span class="ident">thiserror::Error</span>;
 <span class="kw">use</span> <span class="ident">tokio::sync</span>::{<span class="ident">mpsc</span>, <span class="ident">oneshot</span>};
 
+<span class="kw">use</span> <span class="self">self</span><span class="ident">::intent_gossiper::GossipIntent</span>;
 <span class="kw">use</span> <span class="self">self</span><span class="ident">::p2p::P2P</span>;
 <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::config::IntentGossiper</span>;
 <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::proto::services</span>::{<span class="ident">rpc_message</span>, <span class="ident">RpcResponse</span>};
-<span class="kw">use</span> <span class="kw">crate</span><span class="ident">::types::MatchmakerMessage</span>;
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Error</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">Error</span> {
@@ -122,15 +162,29 @@
 
 <span class="kw">type</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">std::result::Result</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">Error</span><span class="op">&gt;</span>;
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">run</span>(<span class="ident">config</span>: <span class="ident">IntentGossiper</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-    <span class="comment">// if enabled in the config start the rpc socket</span>
-    <span class="kw">let</span> <span class="ident">rpc_event_receiver</span> <span class="op">=</span> <span class="ident">config</span>.<span class="ident">rpc</span>.<span class="ident">as_ref</span>().<span class="ident">map</span>(<span class="ident">rpc::start_rpc_server</span>);
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">run</span>(
+    <span class="ident">config</span>: <span class="ident">IntentGossiper</span>,
+    <span class="ident">tx_source_address</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span>,
+    <span class="ident">tx_signing_key</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Rc</span><span class="op">&lt;</span><span class="ident">Keypair</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+    <span class="comment">// Start intent gossiper with matchmaker, if enabled.</span>
+    <span class="kw">let</span> <span class="ident">intent_gossip_app</span> <span class="op">=</span> <span class="ident">intent_gossiper::GossipIntent::new</span>(
+        <span class="kw-2">&amp;</span><span class="ident">config</span>,
+        <span class="ident">tx_source_address</span>,
+        <span class="ident">tx_signing_key</span>,
+    )
+    .<span class="ident">unwrap</span>();
 
-    <span class="comment">// create the gossip and possibly the matchmaker</span>
-    <span class="kw">let</span> (<span class="ident">gossip</span>, <span class="ident">matchmaker_event_receiver</span>) <span class="op">=</span>
-        <span class="ident">p2p::P2P::new</span>(<span class="kw-2">&amp;</span><span class="ident">config</span>).<span class="ident">map_err</span>(<span class="ident">Error::P2pInit</span>)<span class="question-mark">?</span>;
+    <span class="comment">// Create the P2P gossip network, which can send messages directly to the</span>
+    <span class="comment">// matchmaker, if any</span>
+    <span class="kw">let</span> <span class="ident">gossip</span> <span class="op">=</span> <span class="ident">p2p::P2P::new</span>(<span class="kw-2">&amp;</span><span class="ident">config</span>, <span class="ident">intent_gossip_app</span>.<span class="ident">mm_sender</span>.<span class="ident">clone</span>())
+        .<span class="ident">map_err</span>(<span class="ident">Error::P2pInit</span>)<span class="question-mark">?</span>;
 
-    <span class="ident">dispatcher</span>(<span class="ident">gossip</span>, <span class="ident">rpc_event_receiver</span>, <span class="ident">matchmaker_event_receiver</span>)
+    <span class="comment">// Start the rpc socket, if enabled in the config</span>
+    <span class="kw">let</span> <span class="ident">rpc_event_receiver</span> <span class="op">=</span>
+        <span class="ident">config</span>.<span class="ident">rpc</span>.<span class="ident">as_ref</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">rpc</span><span class="op">|</span> <span class="ident">rpc::start_rpc_server</span>(<span class="ident">rpc</span>));
+
+    <span class="ident">dispatcher</span>(<span class="ident">gossip</span>, <span class="ident">intent_gossip_app</span>, <span class="ident">rpc_event_receiver</span>)
 }
 
 <span class="comment">// loop over all possible event. The event can be from the rpc, a matchmaker</span>
@@ -140,24 +194,39 @@
 <span class="attribute">#[<span class="ident">tokio::main</span>]</span>
 <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">dispatcher</span>(
     <span class="kw-2">mut</span> <span class="ident">gossip</span>: <span class="ident">P2P</span>,
-    <span class="ident">rpc_event_receiver</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span>
+    <span class="kw-2">mut</span> <span class="ident">intent_gossip_app</span>: <span class="ident">GossipIntent</span>,
+    <span class="ident">rpc_receiver</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span>
         <span class="ident">mpsc::Receiver</span><span class="op">&lt;</span>(<span class="ident">rpc_message::Message</span>, <span class="ident">oneshot::Sender</span><span class="op">&lt;</span><span class="ident">RpcResponse</span><span class="op">&gt;</span>)<span class="op">&gt;</span>,
     <span class="op">&gt;</span>,
-    <span class="ident">matchmaker_event_receiver</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">mpsc::Receiver</span><span class="op">&lt;</span><span class="ident">MatchmakerMessage</span><span class="op">&gt;</span><span class="op">&gt;</span>,
 ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
     <span class="comment">// TODO find a nice way to refactor here</span>
-    <span class="kw">match</span> (<span class="ident">rpc_event_receiver</span>, <span class="ident">matchmaker_event_receiver</span>) {
-        (<span class="prelude-val">Some</span>(<span class="kw-2">mut</span> <span class="ident">rpc_event_receiver</span>), <span class="prelude-val">Some</span>(<span class="kw-2">mut</span> <span class="ident">matchmaker_event_receiver</span>)) <span class="op">=</span><span class="op">&gt;</span> {
+    <span class="kw">match</span> (<span class="ident">rpc_receiver</span>, <span class="ident">intent_gossip_app</span>.<span class="ident">mm_receiver</span>.<span class="ident">take</span>()) {
+        (<span class="prelude-val">Some</span>(<span class="kw-2">mut</span> <span class="ident">rpc_receiver</span>), <span class="prelude-val">Some</span>(<span class="kw-2">mut</span> <span class="ident">mm_receiver</span>)) <span class="op">=</span><span class="op">&gt;</span> {
             <span class="kw">loop</span> {
                 <span class="macro">tokio::select!</span> {
-                    <span class="prelude-val">Some</span>(<span class="ident">message</span>) <span class="op">=</span> <span class="ident">matchmaker_event_receiver</span>.<span class="ident">recv</span>() <span class="op">=</span><span class="op">&gt;</span>
+                    <span class="prelude-val">Some</span>(<span class="ident">message</span>) <span class="op">=</span> <span class="ident">mm_receiver</span>.<span class="ident">recv</span>() <span class="op">=</span><span class="op">&gt;</span>
                     {
-                        <span class="ident">gossip</span>.<span class="ident">handle_mm_message</span>(<span class="ident">message</span>).<span class="kw">await</span>
+                        <span class="ident">intent_gossip_app</span>.<span class="ident">handle_mm_message</span>(<span class="ident">message</span>).<span class="kw">await</span>
                     },
-                    <span class="prelude-val">Some</span>((<span class="ident">event</span>, <span class="ident">inject_response</span>)) <span class="op">=</span> <span class="ident">rpc_event_receiver</span>.<span class="ident">recv</span>() <span class="op">=</span><span class="op">&gt;</span>
+                    <span class="prelude-val">Some</span>((<span class="ident">event</span>, <span class="ident">inject_response</span>)) <span class="op">=</span> <span class="ident">rpc_receiver</span>.<span class="ident">recv</span>() <span class="op">=</span><span class="op">&gt;</span>
                     {
-                        <span class="kw">let</span> <span class="ident">response</span> <span class="op">=</span> <span class="ident">gossip</span>.<span class="ident">handle_rpc_event</span>(<span class="ident">event</span>).<span class="kw">await</span>;
-                        <span class="ident">inject_response</span>.<span class="ident">send</span>(<span class="ident">response</span>).<span class="ident">expect</span>(<span class="string">&quot;failed to send response to rpc server&quot;</span>)
+                        <span class="kw">let</span> <span class="ident">gossip_sub</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">gossip</span>.<span class="number">0</span>.<span class="ident">behaviour_mut</span>().<span class="ident">intent_gossip_behaviour</span>;
+                        <span class="kw">let</span> (<span class="ident">response</span>, <span class="ident">maybe_intent</span>) <span class="op">=</span> <span class="ident">rpc::handle_rpc_event</span>(<span class="ident">event</span>, <span class="ident">gossip_sub</span>).<span class="kw">await</span>;
+                        <span class="ident">inject_response</span>.<span class="ident">send</span>(<span class="ident">response</span>).<span class="ident">expect</span>(<span class="string">&quot;failed to send response to rpc server&quot;</span>);
+
+                        <span class="comment">// apply intents in matchmaker</span>
+                        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">intent</span>) <span class="op">=</span> <span class="ident">maybe_intent</span> {
+                            <span class="kw">let</span> <span class="ident">mm_result</span>: <span class="ident">Cow</span><span class="op">&lt;</span><span class="ident">str</span><span class="op">&gt;</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">intent_gossip_app</span>.<span class="ident">apply_intent</span>(<span class="ident">intent</span>) {
+                                <span class="prelude-val">Ok</span>(<span class="bool-val">true</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;Accepted intent&quot;</span>.<span class="ident">into</span>(),
+                                <span class="prelude-val">Ok</span>(<span class="bool-val">false</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;Rejected intent&quot;</span>.<span class="ident">into</span>(),
+                                <span class="prelude-val">Err</span>(<span class="ident">err</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="macro">format!</span>(
+                                    <span class="string">&quot;Error getting intent response from the matchmaker: {}&quot;</span>,
+                                    <span class="ident">err</span>
+                                )
+                                .<span class="ident">into</span>(),
+                            };
+                            <span class="macro">tracing::info!</span>(<span class="string">&quot;matchmaker intent result: {}&quot;</span>, <span class="ident">mm_result</span>);
+                        }
                     },
                     <span class="ident">swarm_event</span> <span class="op">=</span> <span class="ident">gossip</span>.<span class="number">0</span>.<span class="ident">next</span>() <span class="op">=</span><span class="op">&gt;</span> {
                         <span class="comment">// Never occurs, but call for the event must exists.</span>
@@ -166,11 +235,12 @@
                 };
             }
         }
-        (<span class="prelude-val">Some</span>(<span class="kw-2">mut</span> <span class="ident">rpc_event_receiver</span>), <span class="prelude-val">None</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">loop</span> {
+        (<span class="prelude-val">Some</span>(<span class="kw-2">mut</span> <span class="ident">rpc_receiver</span>), <span class="prelude-val">None</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">loop</span> {
             <span class="macro">tokio::select!</span> {
-                <span class="prelude-val">Some</span>((<span class="ident">event</span>, <span class="ident">inject_response</span>)) <span class="op">=</span> <span class="ident">rpc_event_receiver</span>.<span class="ident">recv</span>() <span class="op">=</span><span class="op">&gt;</span>
+                <span class="prelude-val">Some</span>((<span class="ident">event</span>, <span class="ident">inject_response</span>)) <span class="op">=</span> <span class="ident">rpc_receiver</span>.<span class="ident">recv</span>() <span class="op">=</span><span class="op">&gt;</span>
                 {
-                    <span class="kw">let</span> <span class="ident">response</span> <span class="op">=</span> <span class="ident">gossip</span>.<span class="ident">handle_rpc_event</span>(<span class="ident">event</span>).<span class="kw">await</span>;
+                    <span class="kw">let</span> <span class="ident">gossip_sub</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">gossip</span>.<span class="number">0</span>.<span class="ident">behaviour_mut</span>().<span class="ident">intent_gossip_behaviour</span>;
+                    <span class="kw">let</span> (<span class="ident">response</span>, <span class="ident">_maybe_intent</span>) <span class="op">=</span> <span class="ident">rpc::handle_rpc_event</span>(<span class="ident">event</span>, <span class="ident">gossip_sub</span>).<span class="kw">await</span>;
                     <span class="ident">inject_response</span>.<span class="ident">send</span>(<span class="ident">response</span>).<span class="ident">expect</span>(<span class="string">&quot;failed to send response to rpc server&quot;</span>)
                 },
                 <span class="ident">swarm_event</span> <span class="op">=</span> <span class="ident">gossip</span>.<span class="number">0</span>.<span class="ident">next</span>() <span class="op">=</span><span class="op">&gt;</span> {
@@ -179,11 +249,11 @@
                 },
             };
         },
-        (<span class="prelude-val">None</span>, <span class="prelude-val">Some</span>(<span class="kw-2">mut</span> <span class="ident">matchmaker_event_receiver</span>)) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">loop</span> {
+        (<span class="prelude-val">None</span>, <span class="prelude-val">Some</span>(<span class="kw-2">mut</span> <span class="ident">mm_receiver</span>)) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">loop</span> {
             <span class="macro">tokio::select!</span> {
-                <span class="prelude-val">Some</span>(<span class="ident">message</span>) <span class="op">=</span> <span class="ident">matchmaker_event_receiver</span>.<span class="ident">recv</span>() <span class="op">=</span><span class="op">&gt;</span>
+                <span class="prelude-val">Some</span>(<span class="ident">message</span>) <span class="op">=</span> <span class="ident">mm_receiver</span>.<span class="ident">recv</span>() <span class="op">=</span><span class="op">&gt;</span>
                 {
-                    <span class="ident">gossip</span>.<span class="ident">handle_mm_message</span>(<span class="ident">message</span>).<span class="kw">await</span>
+                    <span class="ident">intent_gossip_app</span>.<span class="ident">handle_mm_message</span>(<span class="ident">message</span>).<span class="kw">await</span>
                 },
                 <span class="ident">swarm_event</span> <span class="op">=</span> <span class="ident">gossip</span>.<span class="number">0</span>.<span class="ident">next</span>() <span class="op">=</span><span class="op">&gt;</span> {
                     <span class="comment">// Never occurs, but call for the event must exists.</span>

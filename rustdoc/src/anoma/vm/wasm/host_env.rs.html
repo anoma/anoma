@@ -181,15 +181,11 @@
 <span id="179">179</span>
 <span id="180">180</span>
 <span id="181">181</span>
-<span id="182">182</span>
-<span id="183">183</span>
 </pre><pre class="rust">
 <span class="doccomment">//! The wasm host environment.</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//! Here, we expose the host functions into wasm&#39;s</span>
 <span class="doccomment">//! imports, so they can be called from inside the wasm.</span>
-
-<span class="kw">use</span> <span class="ident">std::sync</span>::{<span class="ident">Arc</span>, <span class="ident">Mutex</span>};
 
 <span class="kw">use</span> <span class="ident">wasmer</span>::{
     <span class="ident">Function</span>, <span class="ident">HostEnvInitError</span>, <span class="ident">ImportObject</span>, <span class="ident">Instance</span>, <span class="ident">Memory</span>, <span class="ident">Store</span>,
@@ -329,7 +325,7 @@
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">mm_imports</span><span class="op">&lt;</span><span class="ident">MM</span><span class="op">&gt;</span>(
     <span class="ident">wasm_store</span>: <span class="kw-2">&amp;</span><span class="ident">Store</span>,
     <span class="ident">initial_memory</span>: <span class="ident">Memory</span>,
-    <span class="ident">mm</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">Mutex</span><span class="op">&lt;</span><span class="ident">MM</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="ident">mm</span>: <span class="ident">MM</span>,
 ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">ImportObject</span>
 <span class="kw">where</span>
     <span class="ident">MM</span>: <span class="lifetime">&#39;static</span> <span class="op">+</span> <span class="ident">MmHost</span>,
