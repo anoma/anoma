@@ -378,25 +378,8 @@
 <span id="376">376</span>
 <span id="377">377</span>
 <span id="378">378</span>
-<span id="379">379</span>
-<span id="380">380</span>
-<span id="381">381</span>
-<span id="382">382</span>
-<span id="383">383</span>
-<span id="384">384</span>
-<span id="385">385</span>
-<span id="386">386</span>
-<span id="387">387</span>
-<span id="388">388</span>
-<span id="389">389</span>
-<span id="390">390</span>
-<span id="391">391</span>
-<span id="392">392</span>
-<span id="393">393</span>
 </pre><pre class="rust">
 <span class="doccomment">//! IBC validity predicate for connection module</span>
-
-<span class="kw">use</span> <span class="ident">std::str::FromStr</span>;
 
 <span class="kw">use</span> <span class="ident">borsh</span>::{<span class="ident">BorshDeserialize</span>, <span class="ident">BorshSerialize</span>};
 <span class="kw">use</span> <span class="ident">ibc::ics02_client::client_consensus</span>::{<span class="ident">AnyConsensusState</span>, <span class="ident">ConsensusState</span>};
@@ -410,9 +393,12 @@
 <span class="kw">use</span> <span class="ident">ibc::ics07_tendermint::consensus_state::ConsensusState</span> <span class="kw">as</span> <span class="ident">TendermintConsensusState</span>;
 <span class="kw">use</span> <span class="ident">ibc::ics23_commitment::commitment::CommitmentPrefix</span>;
 <span class="kw">use</span> <span class="ident">ibc::ics24_host::identifier</span>::{<span class="ident">ClientId</span>, <span class="ident">ConnectionId</span>};
-<span class="kw">use</span> <span class="ident">ibc::ics24_host::Path</span>;
 <span class="kw">use</span> <span class="ident">thiserror::Error</span>;
 
+<span class="kw">use</span> <span class="kw">super</span><span class="ident">::storage</span>::{
+    <span class="ident">connection_counter_key</span>, <span class="ident">connection_id</span>, <span class="ident">connection_key</span>,
+    <span class="ident">is_connection_counter_key</span>, <span class="ident">Error</span> <span class="kw">as</span> <span class="ident">IbcStorageError</span>,
+};
 <span class="kw">use</span> <span class="kw">super</span>::{<span class="ident">Ibc</span>, <span class="ident">StateChange</span>};
 <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::ledger::storage</span>::{<span class="self">self</span>, <span class="ident">StorageHasher</span>};
 <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::types::address</span>::{<span class="ident">Address</span>, <span class="ident">InternalAddress</span>};
@@ -420,13 +406,11 @@
     <span class="ident">ConnectionOpenAckData</span>, <span class="ident">ConnectionOpenConfirmData</span>, <span class="ident">ConnectionOpenTryData</span>,
     <span class="ident">Error</span> <span class="kw">as</span> <span class="ident">IbcDataError</span>,
 };
-<span class="kw">use</span> <span class="kw">crate</span><span class="ident">::types::storage</span>::{<span class="ident">BlockHeight</span>, <span class="ident">DbKeySeg</span>, <span class="ident">Epoch</span>, <span class="ident">Key</span>, <span class="ident">KeySeg</span>};
+<span class="kw">use</span> <span class="kw">crate</span><span class="ident">::types::storage</span>::{<span class="ident">BlockHeight</span>, <span class="ident">Epoch</span>, <span class="ident">Key</span>, <span class="ident">KeySeg</span>};
 
 <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">missing_docs</span>)]</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Error</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">Error</span> {
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Key error: {0}&quot;</span>)]</span>
-    <span class="ident">InvalidKey</span>(<span class="ident">String</span>),
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;State change error: {0}&quot;</span>)]</span>
     <span class="ident">InvalidStateChange</span>(<span class="ident">String</span>),
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Client error: {0}&quot;</span>)]</span>
@@ -441,6 +425,8 @@
     <span class="ident">DecodingTxData</span>(<span class="ident">std::io::Error</span>),
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;IBC data error: {0}&quot;</span>)]</span>
     <span class="ident">InvalidIbcData</span>(<span class="ident">IbcDataError</span>),
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;IBC storage error: {0}&quot;</span>)]</span>
+    <span class="ident">IbcStorage</span>(<span class="ident">IbcStorageError</span>),
 }
 
 <span class="doccomment">/// IBC connection functions result</span>
@@ -456,7 +442,7 @@
         <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">Key</span>,
         <span class="ident">tx_data</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>],
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="kw">if</span> <span class="ident">key</span>.<span class="ident">is_ibc_connection_counter</span>() {
+        <span class="kw">if</span> <span class="ident">is_connection_counter_key</span>(<span class="ident">key</span>) {
             <span class="comment">// the counter should be increased</span>
             <span class="kw">if</span> <span class="self">self</span>.<span class="ident">connection_counter_pre</span>()<span class="question-mark">?</span> <span class="op">&lt;</span> <span class="self">self</span>.<span class="ident">connection_counter</span>() {
                 <span class="kw">return</span> <span class="prelude-val">Ok</span>(());
@@ -467,7 +453,7 @@
             }
         }
 
-        <span class="kw">let</span> <span class="ident">conn_id</span> <span class="op">=</span> <span class="self">Self</span><span class="ident">::get_connection_id</span>(<span class="ident">key</span>)<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">conn_id</span> <span class="op">=</span> <span class="ident">connection_id</span>(<span class="ident">key</span>)<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">conn</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">connection_end</span>(<span class="kw-2">&amp;</span><span class="ident">conn_id</span>).<span class="ident">ok_or_else</span>(<span class="op">|</span><span class="op">|</span> {
             <span class="ident">Error::InvalidConnection</span>(<span class="macro">format!</span>(
                 <span class="string">&quot;The connection doesn&#39;t exist: ID {}&quot;</span>,
@@ -489,29 +475,11 @@
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">get_connection_id</span>(<span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">Key</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ConnectionId</span><span class="op">&gt;</span> {
-        <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="ident">key</span>.<span class="ident">segments</span>[..] {
-            [<span class="ident">DbKeySeg::AddressSeg</span>(<span class="ident">addr</span>), <span class="ident">DbKeySeg::StringSeg</span>(<span class="ident">prefix</span>), <span class="ident">DbKeySeg::StringSeg</span>(<span class="ident">conn_id</span>)]
-                <span class="kw">if</span> <span class="ident">addr</span> <span class="op">=</span><span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">Address::Internal</span>(<span class="ident">InternalAddress::Ibc</span>)
-                    <span class="op">&amp;&amp;</span> <span class="ident">prefix</span> <span class="op">=</span><span class="op">=</span> <span class="string">&quot;connections&quot;</span> <span class="op">=</span><span class="op">&gt;</span>
-            {
-                <span class="ident">ConnectionId::from_str</span>(<span class="kw-2">&amp;</span><span class="ident">conn_id</span>.<span class="ident">raw</span>())
-                    .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">Error::InvalidKey</span>(<span class="ident">e</span>.<span class="ident">to_string</span>()))
-            }
-            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">Error::InvalidKey</span>(<span class="macro">format!</span>(
-                <span class="string">&quot;The key doesn&#39;t have a connection ID: {}&quot;</span>,
-                <span class="ident">key</span>
-            ))),
-        }
-    }
-
     <span class="kw">fn</span> <span class="ident">get_connection_state_change</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">conn_id</span>: <span class="kw-2">&amp;</span><span class="ident">ConnectionId</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">StateChange</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">path</span> <span class="op">=</span> <span class="ident">Path::Connections</span>(<span class="ident">conn_id</span>.<span class="ident">clone</span>()).<span class="ident">to_string</span>();
-        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span>
-            <span class="ident">Key::ibc_key</span>(<span class="ident">path</span>).<span class="ident">expect</span>(<span class="string">&quot;Creating a key for a connection failed&quot;</span>);
+        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">connection_key</span>(<span class="ident">conn_id</span>);
         <span class="self">self</span>.<span class="ident">get_state_change</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>)
             .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">Error::InvalidStateChange</span>(<span class="ident">e</span>.<span class="ident">to_string</span>()))
     }
@@ -685,9 +653,7 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">conn_id</span>: <span class="kw-2">&amp;</span><span class="ident">ConnectionId</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ConnectionEnd</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">path</span> <span class="op">=</span> <span class="ident">Path::Connections</span>(<span class="ident">conn_id</span>.<span class="ident">clone</span>()).<span class="ident">to_string</span>();
-        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Key::ibc_key</span>(<span class="ident">path</span>)
-            .<span class="ident">expect</span>(<span class="string">&quot;Creating a key for a connection end failed&quot;</span>);
+        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">connection_key</span>(<span class="ident">conn_id</span>);
         <span class="kw">match</span> <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">read_pre</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>) {
             <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="ident">value</span>)) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ConnectionEnd::try_from_slice</span>(<span class="kw-2">&amp;</span><span class="ident">value</span>[..])
                 .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> {
@@ -704,7 +670,7 @@
     }
 
     <span class="kw">fn</span> <span class="ident">connection_counter_pre</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Key::ibc_connection_counter</span>();
+        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">connection_counter_key</span>();
         <span class="self">self</span>.<span class="ident">read_counter_pre</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>)
             .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">Error::InvalidConnection</span>(<span class="ident">e</span>.<span class="ident">to_string</span>()))
     }
@@ -716,9 +682,7 @@
     <span class="ident">H</span>: <span class="lifetime">&#39;static</span> <span class="op">+</span> <span class="ident">StorageHasher</span>,
 {
     <span class="kw">fn</span> <span class="ident">connection_end</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">conn_id</span>: <span class="kw-2">&amp;</span><span class="ident">ConnectionId</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">ConnectionEnd</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">path</span> <span class="op">=</span> <span class="ident">Path::Connections</span>(<span class="ident">conn_id</span>.<span class="ident">clone</span>()).<span class="ident">to_string</span>();
-        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Key::ibc_key</span>(<span class="ident">path</span>)
-            .<span class="ident">expect</span>(<span class="string">&quot;Creating a key for a connection end failed&quot;</span>);
+        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">connection_key</span>(<span class="ident">conn_id</span>);
         <span class="kw">match</span> <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">read_post</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>) {
             <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="ident">value</span>)) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ConnectionEnd::try_from_slice</span>(<span class="kw-2">&amp;</span><span class="ident">value</span>[..]).<span class="ident">ok</span>(),
             <span class="comment">// returns None even if DB read fails</span>
@@ -771,8 +735,14 @@
     }
 
     <span class="kw">fn</span> <span class="ident">connection_counter</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u64</span> {
-        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Key::ibc_connection_counter</span>();
+        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">connection_counter_key</span>();
         <span class="self">self</span>.<span class="ident">read_counter</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>)
+    }
+}
+
+<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">IbcStorageError</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Error</span> {
+    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">err</span>: <span class="ident">IbcStorageError</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="self">Self</span><span class="ident">::IbcStorage</span>(<span class="ident">err</span>)
     }
 }
 

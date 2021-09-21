@@ -1480,109 +1480,6 @@
 <span id="1478">1478</span>
 <span id="1479">1479</span>
 <span id="1480">1480</span>
-<span id="1481">1481</span>
-<span id="1482">1482</span>
-<span id="1483">1483</span>
-<span id="1484">1484</span>
-<span id="1485">1485</span>
-<span id="1486">1486</span>
-<span id="1487">1487</span>
-<span id="1488">1488</span>
-<span id="1489">1489</span>
-<span id="1490">1490</span>
-<span id="1491">1491</span>
-<span id="1492">1492</span>
-<span id="1493">1493</span>
-<span id="1494">1494</span>
-<span id="1495">1495</span>
-<span id="1496">1496</span>
-<span id="1497">1497</span>
-<span id="1498">1498</span>
-<span id="1499">1499</span>
-<span id="1500">1500</span>
-<span id="1501">1501</span>
-<span id="1502">1502</span>
-<span id="1503">1503</span>
-<span id="1504">1504</span>
-<span id="1505">1505</span>
-<span id="1506">1506</span>
-<span id="1507">1507</span>
-<span id="1508">1508</span>
-<span id="1509">1509</span>
-<span id="1510">1510</span>
-<span id="1511">1511</span>
-<span id="1512">1512</span>
-<span id="1513">1513</span>
-<span id="1514">1514</span>
-<span id="1515">1515</span>
-<span id="1516">1516</span>
-<span id="1517">1517</span>
-<span id="1518">1518</span>
-<span id="1519">1519</span>
-<span id="1520">1520</span>
-<span id="1521">1521</span>
-<span id="1522">1522</span>
-<span id="1523">1523</span>
-<span id="1524">1524</span>
-<span id="1525">1525</span>
-<span id="1526">1526</span>
-<span id="1527">1527</span>
-<span id="1528">1528</span>
-<span id="1529">1529</span>
-<span id="1530">1530</span>
-<span id="1531">1531</span>
-<span id="1532">1532</span>
-<span id="1533">1533</span>
-<span id="1534">1534</span>
-<span id="1535">1535</span>
-<span id="1536">1536</span>
-<span id="1537">1537</span>
-<span id="1538">1538</span>
-<span id="1539">1539</span>
-<span id="1540">1540</span>
-<span id="1541">1541</span>
-<span id="1542">1542</span>
-<span id="1543">1543</span>
-<span id="1544">1544</span>
-<span id="1545">1545</span>
-<span id="1546">1546</span>
-<span id="1547">1547</span>
-<span id="1548">1548</span>
-<span id="1549">1549</span>
-<span id="1550">1550</span>
-<span id="1551">1551</span>
-<span id="1552">1552</span>
-<span id="1553">1553</span>
-<span id="1554">1554</span>
-<span id="1555">1555</span>
-<span id="1556">1556</span>
-<span id="1557">1557</span>
-<span id="1558">1558</span>
-<span id="1559">1559</span>
-<span id="1560">1560</span>
-<span id="1561">1561</span>
-<span id="1562">1562</span>
-<span id="1563">1563</span>
-<span id="1564">1564</span>
-<span id="1565">1565</span>
-<span id="1566">1566</span>
-<span id="1567">1567</span>
-<span id="1568">1568</span>
-<span id="1569">1569</span>
-<span id="1570">1570</span>
-<span id="1571">1571</span>
-<span id="1572">1572</span>
-<span id="1573">1573</span>
-<span id="1574">1574</span>
-<span id="1575">1575</span>
-<span id="1576">1576</span>
-<span id="1577">1577</span>
-<span id="1578">1578</span>
-<span id="1579">1579</span>
-<span id="1580">1580</span>
-<span id="1581">1581</span>
-<span id="1582">1582</span>
-<span id="1583">1583</span>
 </pre><pre class="rust">
 <span class="doccomment">//! IBC integration as a native validity predicate</span>
 
@@ -1592,16 +1489,22 @@
 <span class="kw">mod</span> <span class="ident">packet</span>;
 <span class="kw">mod</span> <span class="ident">port</span>;
 <span class="kw">mod</span> <span class="ident">sequence</span>;
+<span class="kw">mod</span> <span class="ident">storage</span>;
 
 <span class="kw">use</span> <span class="ident">std::collections::HashSet</span>;
 
+<span class="kw">use</span> <span class="ident">borsh</span>::{<span class="ident">BorshDeserialize</span>, <span class="ident">BorshSerialize</span>};
 <span class="kw">use</span> <span class="ident">ibc::ics02_client::context::ClientReader</span>;
+<span class="kw">use</span> <span class="ident">storage</span>::{
+    <span class="ident">capability_index_key</span>, <span class="ident">channel_counter_key</span>, <span class="ident">client_counter_key</span>, <span class="ident">client_id</span>,
+    <span class="ident">connection_counter_key</span>, <span class="ident">ibc_prefix</span>, <span class="ident">is_client_counter_key</span>, <span class="ident">IbcPrefix</span>,
+};
 <span class="kw">use</span> <span class="ident">thiserror::Error</span>;
 
 <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::ledger::native_vp</span>::{<span class="self">self</span>, <span class="ident">Ctx</span>, <span class="ident">NativeVp</span>};
-<span class="kw">use</span> <span class="kw">crate</span><span class="ident">::ledger::storage</span>::{<span class="self">self</span>, <span class="ident">Storage</span>, <span class="ident">StorageHasher</span>};
+<span class="kw">use</span> <span class="kw">crate</span><span class="ident">::ledger::storage</span>::{<span class="self">self</span> <span class="kw">as</span> <span class="ident">ledger_storage</span>, <span class="ident">Storage</span>, <span class="ident">StorageHasher</span>};
 <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::types::address</span>::{<span class="ident">Address</span>, <span class="ident">InternalAddress</span>};
-<span class="kw">use</span> <span class="kw">crate</span><span class="ident">::types::storage</span>::{<span class="ident">DbKeySeg</span>, <span class="ident">Key</span>, <span class="ident">KeySeg</span>};
+<span class="kw">use</span> <span class="kw">crate</span><span class="ident">::types::storage::Key</span>;
 
 <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">missing_docs</span>)]</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Error</span>, <span class="ident">Debug</span>)]</span>
@@ -1632,7 +1535,7 @@
 <span class="doccomment">/// IBC VP</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Ibc</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">DB</span>, <span class="ident">H</span><span class="op">&gt;</span>
 <span class="kw">where</span>
-    <span class="ident">DB</span>: <span class="ident">storage::DB</span> <span class="op">+</span> <span class="kw">for</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span> <span class="ident">storage::DBIter</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span>,
+    <span class="ident">DB</span>: <span class="ident">ledger_storage::DB</span> <span class="op">+</span> <span class="kw">for</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span> <span class="ident">ledger_storage::DBIter</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span>,
     <span class="ident">H</span>: <span class="ident">StorageHasher</span>,
 {
     <span class="doccomment">/// Context to interact with the host structures.</span>
@@ -1642,33 +1545,33 @@
 <span class="doccomment">/// Initialize storage in the genesis block.</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">init_genesis_storage</span><span class="op">&lt;</span><span class="ident">DB</span>, <span class="ident">H</span><span class="op">&gt;</span>(<span class="ident">storage</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Storage</span><span class="op">&lt;</span><span class="ident">DB</span>, <span class="ident">H</span><span class="op">&gt;</span>)
 <span class="kw">where</span>
-    <span class="ident">DB</span>: <span class="ident">storage::DB</span> <span class="op">+</span> <span class="kw">for</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span> <span class="ident">storage::DBIter</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span>,
+    <span class="ident">DB</span>: <span class="ident">ledger_storage::DB</span> <span class="op">+</span> <span class="kw">for</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span> <span class="ident">ledger_storage::DBIter</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span>,
     <span class="ident">H</span>: <span class="ident">StorageHasher</span>,
 {
     <span class="comment">// the client counter</span>
-    <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Key::ibc_client_counter</span>();
-    <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">storage::types::encode</span>(<span class="kw-2">&amp;</span><span class="number">0</span>);
+    <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">client_counter_key</span>();
+    <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="number">0_u64</span>.<span class="ident">try_to_vec</span>().<span class="ident">unwrap</span>();
     <span class="ident">storage</span>
         .<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>, <span class="ident">value</span>)
         .<span class="ident">expect</span>(<span class="string">&quot;Unable to write the initial client counter&quot;</span>);
 
     <span class="comment">// the connection counter</span>
-    <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Key::ibc_connection_counter</span>();
-    <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">storage::types::encode</span>(<span class="kw-2">&amp;</span><span class="number">0</span>);
+    <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">connection_counter_key</span>();
+    <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="number">0_u64</span>.<span class="ident">try_to_vec</span>().<span class="ident">unwrap</span>();
     <span class="ident">storage</span>
         .<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>, <span class="ident">value</span>)
         .<span class="ident">expect</span>(<span class="string">&quot;Unable to write the initial connection counter&quot;</span>);
 
     <span class="comment">// the channel counter</span>
-    <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Key::ibc_channel_counter</span>();
-    <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">storage::types::encode</span>(<span class="kw-2">&amp;</span><span class="number">0</span>);
+    <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">channel_counter_key</span>();
+    <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="number">0_u64</span>.<span class="ident">try_to_vec</span>().<span class="ident">unwrap</span>();
     <span class="ident">storage</span>
         .<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>, <span class="ident">value</span>)
         .<span class="ident">expect</span>(<span class="string">&quot;Unable to write the initial channel counter&quot;</span>);
 
     <span class="comment">// the capability index</span>
-    <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Key::ibc_capability_index</span>();
-    <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">storage::types::encode</span>(<span class="kw-2">&amp;</span><span class="number">0</span>);
+    <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">capability_index_key</span>();
+    <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="number">0_u64</span>.<span class="ident">try_to_vec</span>().<span class="ident">unwrap</span>();
     <span class="ident">storage</span>
         .<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>, <span class="ident">value</span>)
         .<span class="ident">expect</span>(<span class="string">&quot;Unable to write the initial capability index&quot;</span>);
@@ -1676,7 +1579,7 @@
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">DB</span>, <span class="ident">H</span><span class="op">&gt;</span> <span class="ident">NativeVp</span> <span class="kw">for</span> <span class="ident">Ibc</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">DB</span>, <span class="ident">H</span><span class="op">&gt;</span>
 <span class="kw">where</span>
-    <span class="ident">DB</span>: <span class="lifetime">&#39;static</span> <span class="op">+</span> <span class="ident">storage::DB</span> <span class="op">+</span> <span class="kw">for</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span> <span class="ident">storage::DBIter</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span>,
+    <span class="ident">DB</span>: <span class="lifetime">&#39;static</span> <span class="op">+</span> <span class="ident">ledger_storage::DB</span> <span class="op">+</span> <span class="kw">for</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span> <span class="ident">ledger_storage::DBIter</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span>,
     <span class="ident">H</span>: <span class="lifetime">&#39;static</span> <span class="op">+</span> <span class="ident">StorageHasher</span>,
 {
     <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">Error</span>;
@@ -1692,16 +1595,17 @@
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">clients</span> <span class="op">=</span> <span class="ident">HashSet::new</span>();
 
         <span class="kw">for</span> <span class="ident">key</span> <span class="kw">in</span> <span class="ident">keys_changed</span> {
-            <span class="kw">match</span> <span class="self">Self</span><span class="ident">::get_ibc_prefix</span>(<span class="ident">key</span>) {
+            <span class="kw">match</span> <span class="ident">ibc_prefix</span>(<span class="ident">key</span>) {
                 <span class="ident">IbcPrefix::Client</span> <span class="op">=</span><span class="op">&gt;</span> {
-                    <span class="kw">if</span> <span class="ident">key</span>.<span class="ident">is_ibc_client_counter</span>() {
+                    <span class="kw">if</span> <span class="ident">is_client_counter_key</span>(<span class="ident">key</span>) {
                         <span class="kw">if</span> <span class="self">self</span>.<span class="ident">client_counter_pre</span>()<span class="question-mark">?</span> <span class="op">&gt;</span><span class="op">=</span> <span class="self">self</span>.<span class="ident">client_counter</span>() {
                             <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error::CounterError</span>(
                                 <span class="string">&quot;The client counter is invalid&quot;</span>.<span class="ident">to_owned</span>(),
                             ));
                         }
                     } <span class="kw">else</span> {
-                        <span class="kw">let</span> <span class="ident">client_id</span> <span class="op">=</span> <span class="self">Self</span><span class="ident">::get_client_id</span>(<span class="ident">key</span>)<span class="question-mark">?</span>;
+                        <span class="kw">let</span> <span class="ident">client_id</span> <span class="op">=</span> <span class="ident">client_id</span>(<span class="ident">key</span>)
+                            .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">Error::KeyError</span>(<span class="ident">e</span>.<span class="ident">to_string</span>()))<span class="question-mark">?</span>;
                         <span class="kw">if</span> <span class="op">!</span><span class="ident">clients</span>.<span class="ident">insert</span>(<span class="ident">client_id</span>.<span class="ident">clone</span>()) {
                             <span class="comment">// this client has been checked</span>
                             <span class="kw">continue</span>;
@@ -1749,50 +1653,11 @@
     <span class="ident">NotExists</span>,
 }
 
-<span class="kw">enum</span> <span class="ident">IbcPrefix</span> {
-    <span class="ident">Client</span>,
-    <span class="ident">Connection</span>,
-    <span class="ident">Channel</span>,
-    <span class="ident">Port</span>,
-    <span class="ident">Capability</span>,
-    <span class="ident">SeqSend</span>,
-    <span class="ident">SeqRecv</span>,
-    <span class="ident">SeqAck</span>,
-    <span class="ident">Commitment</span>,
-    <span class="ident">Receipt</span>,
-    <span class="ident">Ack</span>,
-    <span class="ident">Unknown</span>,
-}
-
 <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">DB</span>, <span class="ident">H</span><span class="op">&gt;</span> <span class="ident">Ibc</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">DB</span>, <span class="ident">H</span><span class="op">&gt;</span>
 <span class="kw">where</span>
-    <span class="ident">DB</span>: <span class="lifetime">&#39;static</span> <span class="op">+</span> <span class="ident">storage::DB</span> <span class="op">+</span> <span class="kw">for</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span> <span class="ident">storage::DBIter</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span>,
+    <span class="ident">DB</span>: <span class="lifetime">&#39;static</span> <span class="op">+</span> <span class="ident">ledger_storage::DB</span> <span class="op">+</span> <span class="kw">for</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span> <span class="ident">ledger_storage::DBIter</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span>,
     <span class="ident">H</span>: <span class="lifetime">&#39;static</span> <span class="op">+</span> <span class="ident">StorageHasher</span>,
 {
-    <span class="kw">fn</span> <span class="ident">get_ibc_prefix</span>(<span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">Key</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">IbcPrefix</span> {
-        <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="ident">key</span>.<span class="ident">segments</span>[..] {
-            [<span class="ident">DbKeySeg::AddressSeg</span>(<span class="ident">addr</span>), <span class="ident">DbKeySeg::StringSeg</span>(<span class="ident">prefix</span>), ..]
-                <span class="kw">if</span> <span class="ident">addr</span> <span class="op">=</span><span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">Address::Internal</span>(<span class="ident">InternalAddress::Ibc</span>) <span class="op">=</span><span class="op">&gt;</span>
-            {
-                <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="ident">prefix</span>.<span class="ident">raw</span>() {
-                    <span class="string">&quot;clients&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">IbcPrefix::Client</span>,
-                    <span class="string">&quot;connections&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">IbcPrefix::Connection</span>,
-                    <span class="string">&quot;channelEnds&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">IbcPrefix::Channel</span>,
-                    <span class="string">&quot;ports&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">IbcPrefix::Port</span>,
-                    <span class="string">&quot;capabilities&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">IbcPrefix::Capability</span>,
-                    <span class="string">&quot;nextSequenceSend&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">IbcPrefix::SeqSend</span>,
-                    <span class="string">&quot;nextSequenceRecv&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">IbcPrefix::SeqRecv</span>,
-                    <span class="string">&quot;nextSequenceAck&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">IbcPrefix::SeqAck</span>,
-                    <span class="string">&quot;commitments&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">IbcPrefix::Commitment</span>,
-                    <span class="string">&quot;receipts&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">IbcPrefix::Receipt</span>,
-                    <span class="string">&quot;acks&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">IbcPrefix::Ack</span>,
-                    <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">IbcPrefix::Unknown</span>,
-                }
-            }
-            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">IbcPrefix::Unknown</span>,
-        }
-    }
-
     <span class="kw">fn</span> <span class="ident">get_state_change</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">Key</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">StateChange</span><span class="op">&gt;</span> {
         <span class="kw">if</span> <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">has_key_pre</span>(<span class="ident">key</span>)<span class="question-mark">?</span> {
             <span class="kw">if</span> <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">has_key_post</span>(<span class="ident">key</span>)<span class="question-mark">?</span> {
@@ -1809,7 +1674,7 @@
 
     <span class="kw">fn</span> <span class="ident">read_counter_pre</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">Key</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span> {
         <span class="kw">match</span> <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">read_pre</span>(<span class="ident">key</span>) {
-            <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="ident">value</span>)) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">storage::types::decode</span>(<span class="kw-2">&amp;</span><span class="ident">value</span>).<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> {
+            <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="ident">value</span>)) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">u64::try_from_slice</span>(<span class="kw-2">&amp;</span><span class="ident">value</span>[..]).<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> {
                 <span class="ident">Error::CounterError</span>(<span class="macro">format!</span>(
                     <span class="string">&quot;Decoding the client counter failed: {}&quot;</span>,
                     <span class="ident">e</span>
@@ -1823,7 +1688,7 @@
 
     <span class="kw">fn</span> <span class="ident">read_counter</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">Key</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u64</span> {
         <span class="kw">match</span> <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">read_post</span>(<span class="ident">key</span>) {
-            <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="ident">value</span>)) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="ident">storage::types::decode</span>(<span class="kw-2">&amp;</span><span class="ident">value</span>) {
+            <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="ident">value</span>)) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="ident">u64::try_from_slice</span>(<span class="kw-2">&amp;</span><span class="ident">value</span>[..]) {
                 <span class="prelude-val">Ok</span>(<span class="ident">c</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">c</span>,
                 <span class="prelude-val">Err</span>(<span class="ident">e</span>) <span class="op">=</span><span class="op">&gt;</span> {
                     <span class="macro">tracing::error!</span>(<span class="string">&quot;decoding a counter failed: {}&quot;</span>, <span class="ident">e</span>);
@@ -1904,14 +1769,19 @@
         <span class="ident">CommitmentPrefix</span>, <span class="ident">CommitmentProofBytes</span>,
     };
     <span class="kw">use</span> <span class="ident">ibc::ics24_host::identifier</span>::{
-        <span class="ident">ChannelId</span>, <span class="ident">ClientId</span>, <span class="ident">ConnectionId</span>, <span class="ident">PortId</span>,
+        <span class="ident">ChannelId</span>, <span class="ident">ClientId</span>, <span class="ident">ConnectionId</span>, <span class="ident">PortChannelId</span>, <span class="ident">PortId</span>,
     };
-    <span class="kw">use</span> <span class="ident">ibc::ics24_host::Path</span>;
     <span class="kw">use</span> <span class="ident">ibc::mock::client_state</span>::{<span class="ident">MockClientState</span>, <span class="ident">MockConsensusState</span>};
     <span class="kw">use</span> <span class="ident">ibc::mock::header::MockHeader</span>;
     <span class="kw">use</span> <span class="ident">ibc::timestamp::Timestamp</span>;
     <span class="kw">use</span> <span class="ident">ibc::Height</span>;
     <span class="kw">use</span> <span class="ident">sha2::Digest</span>;
+    <span class="kw">use</span> <span class="ident">storage</span>::{
+        <span class="ident">ack_key</span>, <span class="ident">capability_key</span>, <span class="ident">channel_key</span>, <span class="ident">client_state_key</span>,
+        <span class="ident">client_type_key</span>, <span class="ident">commitment_key</span>, <span class="ident">connection_key</span>, <span class="ident">consensus_state_key</span>,
+        <span class="ident">next_sequence_ack_key</span>, <span class="ident">next_sequence_recv_key</span>, <span class="ident">next_sequence_send_key</span>,
+        <span class="ident">port_key</span>, <span class="ident">receipt_key</span>,
+    };
     <span class="kw">use</span> <span class="ident">tendermint::account::Id</span> <span class="kw">as</span> <span class="ident">TmAccountId</span>;
     <span class="kw">use</span> <span class="ident">tendermint::block::header</span>::{<span class="ident">Header</span> <span class="kw">as</span> <span class="ident">TmHeader</span>, <span class="ident">Version</span> <span class="kw">as</span> <span class="ident">TmVersion</span>};
     <span class="kw">use</span> <span class="ident">tendermint::block::Height</span> <span class="kw">as</span> <span class="ident">TmHeight</span>;
@@ -1931,32 +1801,10 @@
         <span class="ident">ConnectionOpenTryData</span>, <span class="ident">PacketAckData</span>, <span class="ident">PacketReceiptData</span>,
         <span class="ident">PacketSendData</span>,
     };
+    <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::types::storage::KeySeg</span>;
 
     <span class="kw">fn</span> <span class="ident">get_client_id</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">ClientId</span> {
         <span class="ident">ClientId::from_str</span>(<span class="string">&quot;test_client&quot;</span>).<span class="ident">expect</span>(<span class="string">&quot;Creating a client ID failed&quot;</span>)
-    }
-
-    <span class="kw">fn</span> <span class="ident">get_client_type_key</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Key</span> {
-        <span class="kw">let</span> <span class="ident">client_id</span> <span class="op">=</span> <span class="ident">get_client_id</span>();
-        <span class="kw">let</span> <span class="ident">path</span> <span class="op">=</span> <span class="ident">Path::ClientType</span>(<span class="ident">client_id</span>).<span class="ident">to_string</span>();
-        <span class="ident">Key::ibc_key</span>(<span class="ident">path</span>).<span class="ident">expect</span>(<span class="string">&quot;Creating a key for a client type failed&quot;</span>)
-    }
-
-    <span class="kw">fn</span> <span class="ident">get_client_state_key</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Key</span> {
-        <span class="kw">let</span> <span class="ident">client_id</span> <span class="op">=</span> <span class="ident">get_client_id</span>();
-        <span class="kw">let</span> <span class="ident">path</span> <span class="op">=</span> <span class="ident">Path::ClientState</span>(<span class="ident">client_id</span>).<span class="ident">to_string</span>();
-        <span class="ident">Key::ibc_key</span>(<span class="ident">path</span>).<span class="ident">expect</span>(<span class="string">&quot;Creating a key for a client state failed&quot;</span>)
-    }
-
-    <span class="kw">fn</span> <span class="ident">get_consensus_state_key</span>(<span class="ident">height</span>: <span class="ident">Height</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Key</span> {
-        <span class="kw">let</span> <span class="ident">path</span> <span class="op">=</span> <span class="ident">Path::ClientConsensusState</span> {
-            <span class="ident">client_id</span>: <span class="ident">get_client_id</span>(),
-            <span class="ident">epoch</span>: <span class="ident">height</span>.<span class="ident">revision_number</span>,
-            <span class="ident">height</span>: <span class="ident">height</span>.<span class="ident">revision_height</span>,
-        }
-        .<span class="ident">to_string</span>();
-        <span class="ident">Key::ibc_key</span>(<span class="ident">path</span>)
-            .<span class="ident">expect</span>(<span class="string">&quot;Creating a key for a consensus state shouldn&#39;t fail&quot;</span>)
     }
 
     <span class="kw">fn</span> <span class="ident">insert_init_states</span>() <span class="op">-</span><span class="op">&gt;</span> (<span class="ident">TestStorage</span>, <span class="ident">WriteLog</span>) {
@@ -1971,14 +1819,15 @@
             .<span class="ident">expect</span>(<span class="string">&quot;Setting a dummy header shouldn&#39;t fail&quot;</span>);
 
         <span class="comment">// insert a mock client type</span>
-        <span class="kw">let</span> <span class="ident">client_type_key</span> <span class="op">=</span> <span class="ident">get_client_type_key</span>();
+        <span class="kw">let</span> <span class="ident">client_id</span> <span class="op">=</span> <span class="ident">get_client_id</span>();
+        <span class="kw">let</span> <span class="ident">client_type_key</span> <span class="op">=</span> <span class="ident">client_type_key</span>(<span class="kw-2">&amp;</span><span class="ident">client_id</span>);
         <span class="kw">let</span> <span class="ident">client_type</span> <span class="op">=</span>
             <span class="ident">ClientType::Mock</span>.<span class="ident">try_to_vec</span>().<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
         <span class="ident">write_log</span>
             .<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="ident">client_type_key</span>, <span class="ident">client_type</span>)
             .<span class="ident">expect</span>(<span class="string">&quot;write failed&quot;</span>);
         <span class="comment">// insert a mock client state</span>
-        <span class="kw">let</span> <span class="ident">client_state_key</span> <span class="op">=</span> <span class="ident">get_client_state_key</span>();
+        <span class="kw">let</span> <span class="ident">client_state_key</span> <span class="op">=</span> <span class="ident">client_state_key</span>(<span class="kw-2">&amp;</span><span class="ident">get_client_id</span>());
         <span class="kw">let</span> <span class="ident">height</span> <span class="op">=</span> <span class="ident">Height::new</span>(<span class="number">1</span>, <span class="number">10</span>);
         <span class="kw">let</span> <span class="ident">header</span> <span class="op">=</span> <span class="ident">MockHeader</span> {
             <span class="ident">height</span>,
@@ -1990,7 +1839,7 @@
             .<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="ident">client_state_key</span>, <span class="ident">bytes</span>)
             .<span class="ident">expect</span>(<span class="string">&quot;write failed&quot;</span>);
         <span class="comment">// insert a mock consensus state</span>
-        <span class="kw">let</span> <span class="ident">consensus_key</span> <span class="op">=</span> <span class="ident">get_consensus_state_key</span>(<span class="ident">height</span>);
+        <span class="kw">let</span> <span class="ident">consensus_key</span> <span class="op">=</span> <span class="ident">consensus_state_key</span>(<span class="kw-2">&amp;</span><span class="ident">client_id</span>, <span class="ident">height</span>);
         <span class="kw">let</span> <span class="ident">consensus_state</span> <span class="op">=</span> <span class="ident">MockConsensusState::new</span>(<span class="ident">header</span>).<span class="ident">wrap_any</span>();
         <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="ident">consensus_state</span>.<span class="ident">try_to_vec</span>().<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
         <span class="ident">write_log</span>
@@ -2025,14 +1874,7 @@
     }
 
     <span class="kw">fn</span> <span class="ident">get_connection_id</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">ConnectionId</span> {
-        <span class="ident">ConnectionId::from_str</span>(<span class="string">&quot;test_connection&quot;</span>)
-            .<span class="ident">expect</span>(<span class="string">&quot;Creating a connection ID failed&quot;</span>)
-    }
-
-    <span class="kw">fn</span> <span class="ident">get_connection_key</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Key</span> {
-        <span class="kw">let</span> <span class="ident">conn_id</span> <span class="op">=</span> <span class="ident">get_connection_id</span>();
-        <span class="kw">let</span> <span class="ident">path</span> <span class="op">=</span> <span class="ident">Path::Connections</span>(<span class="ident">conn_id</span>).<span class="ident">to_string</span>();
-        <span class="ident">Key::ibc_key</span>(<span class="ident">path</span>).<span class="ident">expect</span>(<span class="string">&quot;Creating a key for a connection failed&quot;</span>)
+        <span class="ident">ConnectionId::new</span>(<span class="number">0</span>)
     }
 
     <span class="kw">fn</span> <span class="ident">get_commitment_prefix</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">CommitmentPrefix</span> {
@@ -2044,26 +1886,19 @@
         <span class="ident">CommitmentPrefix::from</span>(<span class="ident">bytes</span>)
     }
 
-    <span class="kw">fn</span> <span class="ident">get_port_id</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">PortId</span> {
-        <span class="ident">PortId::from_str</span>(<span class="string">&quot;test_port&quot;</span>).<span class="ident">expect</span>(<span class="string">&quot;Creating a port ID failed&quot;</span>)
+    <span class="kw">fn</span> <span class="ident">get_port_channel_id</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">PortChannelId</span> {
+        <span class="ident">PortChannelId</span> {
+            <span class="ident">port_id</span>: <span class="ident">get_port_id</span>(),
+            <span class="ident">channel_id</span>: <span class="ident">get_channel_id</span>(),
+        }
     }
 
-    <span class="kw">fn</span> <span class="ident">get_port_key</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Key</span> {
-        <span class="kw">let</span> <span class="ident">port_id</span> <span class="op">=</span> <span class="ident">get_port_id</span>();
-        <span class="kw">let</span> <span class="ident">path</span> <span class="op">=</span> <span class="ident">Path::Ports</span>(<span class="ident">port_id</span>).<span class="ident">to_string</span>();
-        <span class="ident">Key::ibc_key</span>(<span class="ident">path</span>).<span class="ident">expect</span>(<span class="string">&quot;Creating a key for a port failed&quot;</span>)
+    <span class="kw">fn</span> <span class="ident">get_port_id</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">PortId</span> {
+        <span class="ident">PortId::from_str</span>(<span class="string">&quot;test_port&quot;</span>).<span class="ident">unwrap</span>()
     }
 
     <span class="kw">fn</span> <span class="ident">get_channel_id</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">ChannelId</span> {
-        <span class="ident">ChannelId::from_str</span>(<span class="string">&quot;test_channel&quot;</span>)
-            .<span class="ident">expect</span>(<span class="string">&quot;Creating a channel ID failed&quot;</span>)
-    }
-
-    <span class="kw">fn</span> <span class="ident">get_channel_key</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Key</span> {
-        <span class="kw">let</span> <span class="ident">port_id</span> <span class="op">=</span> <span class="ident">get_port_id</span>();
-        <span class="kw">let</span> <span class="ident">channel_id</span> <span class="op">=</span> <span class="ident">get_channel_id</span>();
-        <span class="kw">let</span> <span class="ident">path</span> <span class="op">=</span> <span class="ident">Path::ChannelEnds</span>(<span class="ident">port_id</span>, <span class="ident">channel_id</span>).<span class="ident">to_string</span>();
-        <span class="ident">Key::ibc_key</span>(<span class="ident">path</span>).<span class="ident">expect</span>(<span class="string">&quot;Creating a key for a channel failed&quot;</span>)
+        <span class="ident">ChannelId::from_str</span>(<span class="string">&quot;test_channel&quot;</span>).<span class="ident">unwrap</span>()
     }
 
     <span class="kw">fn</span> <span class="ident">get_connection</span>(<span class="ident">conn_state</span>: <span class="ident">ConnState</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">ConnectionEnd</span> {
@@ -2110,25 +1945,23 @@
     }
 
     <span class="kw">fn</span> <span class="ident">set_port</span>(<span class="ident">write_log</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">WriteLog</span>, <span class="ident">index</span>: <span class="ident">u64</span>) {
-        <span class="kw">let</span> <span class="ident">port_key</span> <span class="op">=</span> <span class="ident">get_port_key</span>();
+        <span class="kw">let</span> <span class="ident">port_key</span> <span class="op">=</span> <span class="ident">port_key</span>(<span class="kw-2">&amp;</span><span class="ident">get_port_id</span>());
         <span class="ident">write_log</span>
-            .<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="ident">port_key</span>, <span class="ident">storage::types::encode</span>(<span class="kw-2">&amp;</span><span class="ident">index</span>))
+            .<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="ident">port_key</span>, <span class="ident">index</span>.<span class="ident">try_to_vec</span>().<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>))
             .<span class="ident">expect</span>(<span class="string">&quot;write failed&quot;</span>);
         <span class="comment">// insert to the reverse map</span>
-        <span class="kw">let</span> <span class="ident">cap_key</span> <span class="op">=</span> <span class="ident">Key::ibc_capability</span>(<span class="ident">index</span>);
+        <span class="kw">let</span> <span class="ident">cap_key</span> <span class="op">=</span> <span class="ident">capability_key</span>(<span class="ident">index</span>);
         <span class="kw">let</span> <span class="ident">port_id</span> <span class="op">=</span> <span class="ident">get_port_id</span>();
         <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="ident">port_id</span>.<span class="ident">try_to_vec</span>().<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
         <span class="ident">write_log</span>.<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="ident">cap_key</span>, <span class="ident">bytes</span>).<span class="ident">expect</span>(<span class="string">&quot;write failed&quot;</span>);
     }
 
-    <span class="kw">fn</span> <span class="ident">get_next_seq</span>(<span class="ident">storage</span>: <span class="kw-2">&amp;</span><span class="ident">TestStorage</span>, <span class="ident">path</span>: <span class="ident">Path</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Sequence</span> {
-        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Key::ibc_key</span>(<span class="ident">path</span>.<span class="ident">to_string</span>())
-            .<span class="ident">expect</span>(<span class="string">&quot;Creating a key for a sequence shouldn&#39;t fail&quot;</span>);
-        <span class="kw">let</span> (<span class="ident">val</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">storage</span>.<span class="ident">read</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>).<span class="ident">expect</span>(<span class="string">&quot;read failed&quot;</span>);
+    <span class="kw">fn</span> <span class="ident">get_next_seq</span>(<span class="ident">storage</span>: <span class="kw-2">&amp;</span><span class="ident">TestStorage</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">Key</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Sequence</span> {
+        <span class="kw">let</span> (<span class="ident">val</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">storage</span>.<span class="ident">read</span>(<span class="ident">key</span>).<span class="ident">expect</span>(<span class="string">&quot;read failed&quot;</span>);
         <span class="kw">match</span> <span class="ident">val</span> {
             <span class="prelude-val">Some</span>(<span class="ident">v</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="kw">let</span> <span class="ident">index</span>: <span class="ident">u64</span> <span class="op">=</span>
-                    <span class="ident">storage::types::decode</span>(<span class="ident">v</span>).<span class="ident">expect</span>(<span class="string">&quot;decoding failed&quot;</span>);
+                <span class="kw">let</span> <span class="ident">index</span> <span class="op">=</span>
+                    <span class="ident">u64::try_from_slice</span>(<span class="kw-2">&amp;</span><span class="ident">v</span>[..]).<span class="ident">expect</span>(<span class="string">&quot;decoding failed&quot;</span>);
                 <span class="ident">Sequence::from</span>(<span class="ident">index</span>)
             }
             <span class="comment">// The sequence has not been used yet</span>
@@ -2136,11 +1969,11 @@
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">increment_seq</span>(<span class="ident">write_log</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">WriteLog</span>, <span class="ident">path</span>: <span class="ident">Path</span>, <span class="ident">seq</span>: <span class="ident">Sequence</span>) {
-        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Key::ibc_key</span>(<span class="ident">path</span>.<span class="ident">to_string</span>())
-            .<span class="ident">expect</span>(<span class="string">&quot;Creating a key for a sequence shouldn&#39;t fail&quot;</span>);
-        <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">storage::types::encode</span>(<span class="kw-2">&amp;</span><span class="ident">u64::from</span>(<span class="ident">seq</span>.<span class="ident">increment</span>()));
-        <span class="ident">write_log</span>.<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>, <span class="ident">value</span>).<span class="ident">expect</span>(<span class="string">&quot;write failed&quot;</span>);
+    <span class="kw">fn</span> <span class="ident">increment_seq</span>(<span class="ident">write_log</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">WriteLog</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">Key</span>, <span class="ident">seq</span>: <span class="ident">Sequence</span>) {
+        <span class="kw">let</span> <span class="ident">seq_num</span> <span class="op">=</span> <span class="ident">u64::from</span>(<span class="ident">seq</span>.<span class="ident">increment</span>());
+        <span class="ident">write_log</span>
+            .<span class="ident">write</span>(<span class="ident">key</span>, <span class="ident">seq_num</span>.<span class="ident">try_to_vec</span>().<span class="ident">unwrap</span>())
+            .<span class="ident">expect</span>(<span class="string">&quot;write failed&quot;</span>);
     }
 
     <span class="kw">fn</span> <span class="ident">hash</span>(<span class="ident">packet</span>: <span class="kw-2">&amp;</span><span class="ident">Packet</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">String</span> {
@@ -2163,7 +1996,8 @@
         <span class="kw">let</span> <span class="ident">ctx</span> <span class="op">=</span> <span class="ident">Ctx::new</span>(<span class="kw-2">&amp;</span><span class="ident">storage</span>, <span class="kw-2">&amp;</span><span class="ident">write_log</span>, <span class="kw-2">&amp;</span><span class="ident">tx</span>, <span class="ident">gas_meter</span>);
 
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">keys_changed</span> <span class="op">=</span> <span class="ident">HashSet::new</span>();
-        <span class="ident">keys_changed</span>.<span class="ident">insert</span>(<span class="ident">get_client_state_key</span>());
+        <span class="kw">let</span> <span class="ident">client_state_key</span> <span class="op">=</span> <span class="ident">client_state_key</span>(<span class="kw-2">&amp;</span><span class="ident">get_client_id</span>());
+        <span class="ident">keys_changed</span>.<span class="ident">insert</span>(<span class="ident">client_state_key</span>);
 
         <span class="kw">let</span> <span class="ident">verifiers</span> <span class="op">=</span> <span class="ident">HashSet::new</span>();
 
@@ -2186,7 +2020,8 @@
         <span class="kw">let</span> <span class="ident">ctx</span> <span class="op">=</span> <span class="ident">Ctx::new</span>(<span class="kw-2">&amp;</span><span class="ident">storage</span>, <span class="kw-2">&amp;</span><span class="ident">write_log</span>, <span class="kw-2">&amp;</span><span class="ident">tx</span>, <span class="ident">gas_meter</span>);
 
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">keys_changed</span> <span class="op">=</span> <span class="ident">HashSet::new</span>();
-        <span class="ident">keys_changed</span>.<span class="ident">insert</span>(<span class="ident">get_client_state_key</span>());
+        <span class="kw">let</span> <span class="ident">client_state_key</span> <span class="op">=</span> <span class="ident">client_state_key</span>(<span class="kw-2">&amp;</span><span class="ident">get_client_id</span>());
+        <span class="ident">keys_changed</span>.<span class="ident">insert</span>(<span class="ident">client_state_key</span>);
 
         <span class="kw">let</span> <span class="ident">verifiers</span> <span class="op">=</span> <span class="ident">HashSet::new</span>();
 
@@ -2208,7 +2043,7 @@
 
         <span class="comment">// update the client</span>
         <span class="kw">let</span> <span class="ident">client_id</span> <span class="op">=</span> <span class="ident">get_client_id</span>();
-        <span class="kw">let</span> <span class="ident">client_state_key</span> <span class="op">=</span> <span class="ident">get_client_state_key</span>();
+        <span class="kw">let</span> <span class="ident">client_state_key</span> <span class="op">=</span> <span class="ident">client_state_key</span>(<span class="kw-2">&amp;</span><span class="ident">get_client_id</span>());
         <span class="kw">let</span> <span class="ident">height</span> <span class="op">=</span> <span class="ident">Height::new</span>(<span class="number">1</span>, <span class="number">11</span>);
         <span class="kw">let</span> <span class="ident">header</span> <span class="op">=</span> <span class="ident">MockHeader</span> {
             <span class="ident">height</span>,
@@ -2219,7 +2054,7 @@
         <span class="ident">write_log</span>
             .<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="ident">client_state_key</span>, <span class="ident">bytes</span>)
             .<span class="ident">expect</span>(<span class="string">&quot;write failed&quot;</span>);
-        <span class="kw">let</span> <span class="ident">consensus_key</span> <span class="op">=</span> <span class="ident">get_consensus_state_key</span>(<span class="ident">height</span>);
+        <span class="kw">let</span> <span class="ident">consensus_key</span> <span class="op">=</span> <span class="ident">consensus_state_key</span>(<span class="kw-2">&amp;</span><span class="ident">client_id</span>, <span class="ident">height</span>);
         <span class="kw">let</span> <span class="ident">consensus_state</span> <span class="op">=</span> <span class="ident">MockConsensusState::new</span>(<span class="ident">header</span>).<span class="ident">wrap_any</span>();
         <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="ident">consensus_state</span>.<span class="ident">try_to_vec</span>().<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
         <span class="ident">write_log</span>
@@ -2237,7 +2072,7 @@
         <span class="kw">let</span> <span class="ident">ctx</span> <span class="op">=</span> <span class="ident">Ctx::new</span>(<span class="kw-2">&amp;</span><span class="ident">storage</span>, <span class="kw-2">&amp;</span><span class="ident">write_log</span>, <span class="kw-2">&amp;</span><span class="ident">tx</span>, <span class="ident">gas_meter</span>);
 
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">keys_changed</span> <span class="op">=</span> <span class="ident">HashSet::new</span>();
-        <span class="ident">keys_changed</span>.<span class="ident">insert</span>(<span class="ident">get_client_state_key</span>());
+        <span class="ident">keys_changed</span>.<span class="ident">insert</span>(<span class="ident">client_state_key</span>);
 
         <span class="kw">let</span> <span class="ident">verifiers</span> <span class="op">=</span> <span class="ident">HashSet::new</span>();
 
@@ -2263,7 +2098,7 @@
         );
 
         <span class="comment">// insert an INIT connection</span>
-        <span class="kw">let</span> <span class="ident">conn_key</span> <span class="op">=</span> <span class="ident">get_connection_key</span>();
+        <span class="kw">let</span> <span class="ident">conn_key</span> <span class="op">=</span> <span class="ident">connection_key</span>(<span class="kw-2">&amp;</span><span class="ident">get_connection_id</span>());
         <span class="kw">let</span> <span class="ident">conn</span> <span class="op">=</span> <span class="ident">data</span>.<span class="ident">connection</span>();
         <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="ident">conn</span>.<span class="ident">try_to_vec</span>().<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
         <span class="ident">write_log</span>.<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="ident">conn_key</span>, <span class="ident">bytes</span>).<span class="ident">expect</span>(<span class="string">&quot;write failed&quot;</span>);
@@ -2276,7 +2111,7 @@
         <span class="kw">let</span> <span class="ident">ctx</span> <span class="op">=</span> <span class="ident">Ctx::new</span>(<span class="kw-2">&amp;</span><span class="ident">storage</span>, <span class="kw-2">&amp;</span><span class="ident">write_log</span>, <span class="kw-2">&amp;</span><span class="ident">tx</span>, <span class="ident">gas_meter</span>);
 
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">keys_changed</span> <span class="op">=</span> <span class="ident">HashSet::new</span>();
-        <span class="ident">keys_changed</span>.<span class="ident">insert</span>(<span class="ident">get_connection_key</span>());
+        <span class="ident">keys_changed</span>.<span class="ident">insert</span>(<span class="ident">conn_key</span>);
 
         <span class="kw">let</span> <span class="ident">verifiers</span> <span class="op">=</span> <span class="ident">HashSet::new</span>();
 
@@ -2302,7 +2137,7 @@
         );
 
         <span class="comment">// insert an Init connection</span>
-        <span class="kw">let</span> <span class="ident">conn_key</span> <span class="op">=</span> <span class="ident">get_connection_key</span>();
+        <span class="kw">let</span> <span class="ident">conn_key</span> <span class="op">=</span> <span class="ident">connection_key</span>(<span class="kw-2">&amp;</span><span class="ident">get_connection_id</span>());
         <span class="kw">let</span> <span class="ident">conn</span> <span class="op">=</span> <span class="ident">data</span>.<span class="ident">connection</span>();
         <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="ident">conn</span>.<span class="ident">try_to_vec</span>().<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
         <span class="ident">write_log</span>.<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="ident">conn_key</span>, <span class="ident">bytes</span>).<span class="ident">expect</span>(<span class="string">&quot;write failed&quot;</span>);
@@ -2315,7 +2150,7 @@
         <span class="kw">let</span> <span class="ident">ctx</span> <span class="op">=</span> <span class="ident">Ctx::new</span>(<span class="kw-2">&amp;</span><span class="ident">storage</span>, <span class="kw-2">&amp;</span><span class="ident">write_log</span>, <span class="kw-2">&amp;</span><span class="ident">tx</span>, <span class="ident">gas_meter</span>);
 
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">keys_changed</span> <span class="op">=</span> <span class="ident">HashSet::new</span>();
-        <span class="ident">keys_changed</span>.<span class="ident">insert</span>(<span class="ident">get_connection_key</span>());
+        <span class="ident">keys_changed</span>.<span class="ident">insert</span>(<span class="ident">conn_key</span>);
 
         <span class="kw">let</span> <span class="ident">verifiers</span> <span class="op">=</span> <span class="ident">HashSet::new</span>();
 
@@ -2358,7 +2193,7 @@
         );
 
         <span class="comment">// insert a TryOpen connection</span>
-        <span class="kw">let</span> <span class="ident">conn_key</span> <span class="op">=</span> <span class="ident">get_connection_key</span>();
+        <span class="kw">let</span> <span class="ident">conn_key</span> <span class="op">=</span> <span class="ident">connection_key</span>(<span class="kw-2">&amp;</span><span class="ident">get_connection_id</span>());
         <span class="kw">let</span> <span class="ident">conn</span> <span class="op">=</span> <span class="ident">data</span>.<span class="ident">connection</span>();
         <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="ident">conn</span>.<span class="ident">try_to_vec</span>().<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
         <span class="ident">write_log</span>.<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="ident">conn_key</span>, <span class="ident">bytes</span>).<span class="ident">expect</span>(<span class="string">&quot;write failed&quot;</span>);
@@ -2371,7 +2206,7 @@
         <span class="kw">let</span> <span class="ident">ctx</span> <span class="op">=</span> <span class="ident">Ctx::new</span>(<span class="kw-2">&amp;</span><span class="ident">storage</span>, <span class="kw-2">&amp;</span><span class="ident">write_log</span>, <span class="kw-2">&amp;</span><span class="ident">tx</span>, <span class="ident">gas_meter</span>);
 
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">keys_changed</span> <span class="op">=</span> <span class="ident">HashSet::new</span>();
-        <span class="ident">keys_changed</span>.<span class="ident">insert</span>(<span class="ident">get_connection_key</span>());
+        <span class="ident">keys_changed</span>.<span class="ident">insert</span>(<span class="ident">conn_key</span>);
 
         <span class="kw">let</span> <span class="ident">verifiers</span> <span class="op">=</span> <span class="ident">HashSet::new</span>();
 
@@ -2387,7 +2222,7 @@
     <span class="kw">fn</span> <span class="ident">test_ack_connection</span>() {
         <span class="kw">let</span> (<span class="kw-2">mut</span> <span class="ident">storage</span>, <span class="kw-2">mut</span> <span class="ident">write_log</span>) <span class="op">=</span> <span class="ident">insert_init_states</span>();
         <span class="comment">// insert an Init connection</span>
-        <span class="kw">let</span> <span class="ident">conn_key</span> <span class="op">=</span> <span class="ident">get_connection_key</span>();
+        <span class="kw">let</span> <span class="ident">conn_key</span> <span class="op">=</span> <span class="ident">connection_key</span>(<span class="kw-2">&amp;</span><span class="ident">get_connection_id</span>());
         <span class="kw">let</span> <span class="ident">conn</span> <span class="op">=</span> <span class="ident">get_connection</span>(<span class="ident">ConnState::Init</span>);
         <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="ident">conn</span>.<span class="ident">try_to_vec</span>().<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
         <span class="ident">write_log</span>.<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="ident">conn_key</span>, <span class="ident">bytes</span>).<span class="ident">expect</span>(<span class="string">&quot;write failed&quot;</span>);
@@ -2428,7 +2263,7 @@
         <span class="kw">let</span> <span class="ident">ctx</span> <span class="op">=</span> <span class="ident">Ctx::new</span>(<span class="kw-2">&amp;</span><span class="ident">storage</span>, <span class="kw-2">&amp;</span><span class="ident">write_log</span>, <span class="kw-2">&amp;</span><span class="ident">tx</span>, <span class="ident">gas_meter</span>);
 
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">keys_changed</span> <span class="op">=</span> <span class="ident">HashSet::new</span>();
-        <span class="ident">keys_changed</span>.<span class="ident">insert</span>(<span class="ident">get_connection_key</span>());
+        <span class="ident">keys_changed</span>.<span class="ident">insert</span>(<span class="ident">conn_key</span>);
 
         <span class="kw">let</span> <span class="ident">verifiers</span> <span class="op">=</span> <span class="ident">HashSet::new</span>();
 
@@ -2443,7 +2278,7 @@
     <span class="kw">fn</span> <span class="ident">test_confirm_connection</span>() {
         <span class="kw">let</span> (<span class="kw-2">mut</span> <span class="ident">storage</span>, <span class="kw-2">mut</span> <span class="ident">write_log</span>) <span class="op">=</span> <span class="ident">insert_init_states</span>();
         <span class="comment">// insert a TryOpen connection</span>
-        <span class="kw">let</span> <span class="ident">conn_key</span> <span class="op">=</span> <span class="ident">get_connection_key</span>();
+        <span class="kw">let</span> <span class="ident">conn_key</span> <span class="op">=</span> <span class="ident">connection_key</span>(<span class="kw-2">&amp;</span><span class="ident">get_connection_id</span>());
         <span class="kw">let</span> <span class="ident">conn</span> <span class="op">=</span> <span class="ident">get_connection</span>(<span class="ident">ConnState::TryOpen</span>);
         <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="ident">conn</span>.<span class="ident">try_to_vec</span>().<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
         <span class="ident">write_log</span>.<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="ident">conn_key</span>, <span class="ident">bytes</span>).<span class="ident">expect</span>(<span class="string">&quot;write failed&quot;</span>);
@@ -2475,7 +2310,7 @@
         <span class="kw">let</span> <span class="ident">ctx</span> <span class="op">=</span> <span class="ident">Ctx::new</span>(<span class="kw-2">&amp;</span><span class="ident">storage</span>, <span class="kw-2">&amp;</span><span class="ident">write_log</span>, <span class="kw-2">&amp;</span><span class="ident">tx</span>, <span class="ident">gas_meter</span>);
 
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">keys_changed</span> <span class="op">=</span> <span class="ident">HashSet::new</span>();
-        <span class="ident">keys_changed</span>.<span class="ident">insert</span>(<span class="ident">get_connection_key</span>());
+        <span class="ident">keys_changed</span>.<span class="ident">insert</span>(<span class="ident">conn_key</span>);
 
         <span class="kw">let</span> <span class="ident">verifiers</span> <span class="op">=</span> <span class="ident">HashSet::new</span>();
 
@@ -2490,7 +2325,7 @@
     <span class="kw">fn</span> <span class="ident">test_init_channel</span>() {
         <span class="kw">let</span> (<span class="kw-2">mut</span> <span class="ident">storage</span>, <span class="kw-2">mut</span> <span class="ident">write_log</span>) <span class="op">=</span> <span class="ident">insert_init_states</span>();
         <span class="comment">// insert an opened connection</span>
-        <span class="kw">let</span> <span class="ident">conn_key</span> <span class="op">=</span> <span class="ident">get_connection_key</span>();
+        <span class="kw">let</span> <span class="ident">conn_key</span> <span class="op">=</span> <span class="ident">connection_key</span>(<span class="kw-2">&amp;</span><span class="ident">get_connection_id</span>());
         <span class="kw">let</span> <span class="ident">conn</span> <span class="op">=</span> <span class="ident">get_connection</span>(<span class="ident">ConnState::Open</span>);
         <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="ident">conn</span>.<span class="ident">try_to_vec</span>().<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
         <span class="ident">write_log</span>.<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="ident">conn_key</span>, <span class="ident">bytes</span>).<span class="ident">expect</span>(<span class="string">&quot;write failed&quot;</span>);
@@ -2507,7 +2342,7 @@
 
         <span class="comment">// insert an Init channel</span>
         <span class="ident">set_port</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">write_log</span>, <span class="number">0</span>);
-        <span class="kw">let</span> <span class="ident">channel_key</span> <span class="op">=</span> <span class="ident">get_channel_key</span>();
+        <span class="kw">let</span> <span class="ident">channel_key</span> <span class="op">=</span> <span class="ident">channel_key</span>(<span class="kw-2">&amp;</span><span class="ident">get_port_channel_id</span>());
         <span class="kw">let</span> <span class="ident">channel</span> <span class="op">=</span> <span class="ident">data</span>.<span class="ident">channel</span>();
         <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="ident">channel</span>.<span class="ident">try_to_vec</span>().<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
         <span class="ident">write_log</span>.<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="ident">channel_key</span>, <span class="ident">bytes</span>).<span class="ident">expect</span>(<span class="string">&quot;write failed&quot;</span>);
@@ -2520,7 +2355,7 @@
         <span class="kw">let</span> <span class="ident">ctx</span> <span class="op">=</span> <span class="ident">Ctx::new</span>(<span class="kw-2">&amp;</span><span class="ident">storage</span>, <span class="kw-2">&amp;</span><span class="ident">write_log</span>, <span class="kw-2">&amp;</span><span class="ident">tx</span>, <span class="ident">gas_meter</span>);
 
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">keys_changed</span> <span class="op">=</span> <span class="ident">HashSet::new</span>();
-        <span class="ident">keys_changed</span>.<span class="ident">insert</span>(<span class="ident">get_channel_key</span>());
+        <span class="ident">keys_changed</span>.<span class="ident">insert</span>(<span class="ident">channel_key</span>);
 
         <span class="kw">let</span> <span class="ident">verifiers</span> <span class="op">=</span> <span class="ident">HashSet::new</span>();
 
@@ -2535,7 +2370,7 @@
     <span class="kw">fn</span> <span class="ident">test_try_channel</span>() {
         <span class="kw">let</span> (<span class="kw-2">mut</span> <span class="ident">storage</span>, <span class="kw-2">mut</span> <span class="ident">write_log</span>) <span class="op">=</span> <span class="ident">insert_init_states</span>();
         <span class="comment">// insert an opend connection</span>
-        <span class="kw">let</span> <span class="ident">conn_key</span> <span class="op">=</span> <span class="ident">get_connection_key</span>();
+        <span class="kw">let</span> <span class="ident">conn_key</span> <span class="op">=</span> <span class="ident">connection_key</span>(<span class="kw-2">&amp;</span><span class="ident">get_connection_id</span>());
         <span class="kw">let</span> <span class="ident">conn</span> <span class="op">=</span> <span class="ident">get_connection</span>(<span class="ident">ConnState::Open</span>);
         <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="ident">conn</span>.<span class="ident">try_to_vec</span>().<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
         <span class="ident">write_log</span>.<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="ident">conn_key</span>, <span class="ident">bytes</span>).<span class="ident">expect</span>(<span class="string">&quot;write failed&quot;</span>);
@@ -2560,7 +2395,7 @@
 
         <span class="comment">// insert a TryOpen channel</span>
         <span class="ident">set_port</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">write_log</span>, <span class="number">0</span>);
-        <span class="kw">let</span> <span class="ident">channel_key</span> <span class="op">=</span> <span class="ident">get_channel_key</span>();
+        <span class="kw">let</span> <span class="ident">channel_key</span> <span class="op">=</span> <span class="ident">channel_key</span>(<span class="kw-2">&amp;</span><span class="ident">get_port_channel_id</span>());
         <span class="kw">let</span> <span class="ident">channel</span> <span class="op">=</span> <span class="ident">data</span>.<span class="ident">channel</span>();
         <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="ident">channel</span>.<span class="ident">try_to_vec</span>().<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
         <span class="ident">write_log</span>.<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="ident">channel_key</span>, <span class="ident">bytes</span>).<span class="ident">expect</span>(<span class="string">&quot;write failed&quot;</span>);
@@ -2573,7 +2408,7 @@
         <span class="kw">let</span> <span class="ident">ctx</span> <span class="op">=</span> <span class="ident">Ctx::new</span>(<span class="kw-2">&amp;</span><span class="ident">storage</span>, <span class="kw-2">&amp;</span><span class="ident">write_log</span>, <span class="kw-2">&amp;</span><span class="ident">tx</span>, <span class="ident">gas_meter</span>);
 
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">keys_changed</span> <span class="op">=</span> <span class="ident">HashSet::new</span>();
-        <span class="ident">keys_changed</span>.<span class="ident">insert</span>(<span class="ident">get_channel_key</span>());
+        <span class="ident">keys_changed</span>.<span class="ident">insert</span>(<span class="ident">channel_key</span>);
 
         <span class="kw">let</span> <span class="ident">verifiers</span> <span class="op">=</span> <span class="ident">HashSet::new</span>();
 
@@ -2588,13 +2423,13 @@
     <span class="kw">fn</span> <span class="ident">test_ack_channel</span>() {
         <span class="kw">let</span> (<span class="kw-2">mut</span> <span class="ident">storage</span>, <span class="kw-2">mut</span> <span class="ident">write_log</span>) <span class="op">=</span> <span class="ident">insert_init_states</span>();
         <span class="comment">// insert an opend connection</span>
-        <span class="kw">let</span> <span class="ident">conn_key</span> <span class="op">=</span> <span class="ident">get_connection_key</span>();
+        <span class="kw">let</span> <span class="ident">conn_key</span> <span class="op">=</span> <span class="ident">connection_key</span>(<span class="kw-2">&amp;</span><span class="ident">get_connection_id</span>());
         <span class="kw">let</span> <span class="ident">conn</span> <span class="op">=</span> <span class="ident">get_connection</span>(<span class="ident">ConnState::Open</span>);
         <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="ident">conn</span>.<span class="ident">try_to_vec</span>().<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
         <span class="ident">write_log</span>.<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="ident">conn_key</span>, <span class="ident">bytes</span>).<span class="ident">expect</span>(<span class="string">&quot;write failed&quot;</span>);
         <span class="comment">// insert an Init channel</span>
         <span class="ident">set_port</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">write_log</span>, <span class="number">0</span>);
-        <span class="kw">let</span> <span class="ident">channel_key</span> <span class="op">=</span> <span class="ident">get_channel_key</span>();
+        <span class="kw">let</span> <span class="ident">channel_key</span> <span class="op">=</span> <span class="ident">channel_key</span>(<span class="kw-2">&amp;</span><span class="ident">get_port_channel_id</span>());
         <span class="kw">let</span> <span class="ident">channel</span> <span class="op">=</span> <span class="ident">get_channel</span>(<span class="ident">ChanState::Init</span>, <span class="ident">Order::Ordered</span>);
         <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="ident">channel</span>.<span class="ident">try_to_vec</span>().<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
         <span class="ident">write_log</span>.<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="ident">channel_key</span>, <span class="ident">bytes</span>).<span class="ident">expect</span>(<span class="string">&quot;write failed&quot;</span>);
@@ -2617,7 +2452,6 @@
         );
 
         <span class="comment">// update the channel to Open</span>
-        <span class="kw">let</span> <span class="ident">channel_key</span> <span class="op">=</span> <span class="ident">get_channel_key</span>();
         <span class="kw">let</span> <span class="ident">channel</span> <span class="op">=</span> <span class="ident">get_channel</span>(<span class="ident">ChanState::Open</span>, <span class="ident">Order::Ordered</span>);
         <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="ident">channel</span>.<span class="ident">try_to_vec</span>().<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
         <span class="ident">write_log</span>.<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="ident">channel_key</span>, <span class="ident">bytes</span>).<span class="ident">expect</span>(<span class="string">&quot;write failed&quot;</span>);
@@ -2630,7 +2464,7 @@
         <span class="kw">let</span> <span class="ident">ctx</span> <span class="op">=</span> <span class="ident">Ctx::new</span>(<span class="kw-2">&amp;</span><span class="ident">storage</span>, <span class="kw-2">&amp;</span><span class="ident">write_log</span>, <span class="kw-2">&amp;</span><span class="ident">tx</span>, <span class="ident">gas_meter</span>);
 
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">keys_changed</span> <span class="op">=</span> <span class="ident">HashSet::new</span>();
-        <span class="ident">keys_changed</span>.<span class="ident">insert</span>(<span class="ident">get_channel_key</span>());
+        <span class="ident">keys_changed</span>.<span class="ident">insert</span>(<span class="ident">channel_key</span>);
 
         <span class="kw">let</span> <span class="ident">verifiers</span> <span class="op">=</span> <span class="ident">HashSet::new</span>();
 
@@ -2645,13 +2479,13 @@
     <span class="kw">fn</span> <span class="ident">test_confirm_channel</span>() {
         <span class="kw">let</span> (<span class="kw-2">mut</span> <span class="ident">storage</span>, <span class="kw-2">mut</span> <span class="ident">write_log</span>) <span class="op">=</span> <span class="ident">insert_init_states</span>();
         <span class="comment">// insert an opend connection</span>
-        <span class="kw">let</span> <span class="ident">conn_key</span> <span class="op">=</span> <span class="ident">get_connection_key</span>();
+        <span class="kw">let</span> <span class="ident">conn_key</span> <span class="op">=</span> <span class="ident">connection_key</span>(<span class="kw-2">&amp;</span><span class="ident">get_connection_id</span>());
         <span class="kw">let</span> <span class="ident">conn</span> <span class="op">=</span> <span class="ident">get_connection</span>(<span class="ident">ConnState::Open</span>);
         <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="ident">conn</span>.<span class="ident">try_to_vec</span>().<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
         <span class="ident">write_log</span>.<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="ident">conn_key</span>, <span class="ident">bytes</span>).<span class="ident">expect</span>(<span class="string">&quot;write failed&quot;</span>);
         <span class="comment">// insert a TryOpen channel</span>
         <span class="ident">set_port</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">write_log</span>, <span class="number">0</span>);
-        <span class="kw">let</span> <span class="ident">channel_key</span> <span class="op">=</span> <span class="ident">get_channel_key</span>();
+        <span class="kw">let</span> <span class="ident">channel_key</span> <span class="op">=</span> <span class="ident">channel_key</span>(<span class="kw-2">&amp;</span><span class="ident">get_port_channel_id</span>());
         <span class="kw">let</span> <span class="ident">channel</span> <span class="op">=</span> <span class="ident">get_channel</span>(<span class="ident">ChanState::TryOpen</span>, <span class="ident">Order::Ordered</span>);
         <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="ident">channel</span>.<span class="ident">try_to_vec</span>().<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
         <span class="ident">write_log</span>.<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="ident">channel_key</span>, <span class="ident">bytes</span>).<span class="ident">expect</span>(<span class="string">&quot;write failed&quot;</span>);
@@ -2672,7 +2506,6 @@
         );
 
         <span class="comment">// update the channel to Open</span>
-        <span class="kw">let</span> <span class="ident">channel_key</span> <span class="op">=</span> <span class="ident">get_channel_key</span>();
         <span class="kw">let</span> <span class="ident">channel</span> <span class="op">=</span> <span class="ident">get_channel</span>(<span class="ident">ChanState::Open</span>, <span class="ident">Order::Ordered</span>);
         <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="ident">channel</span>.<span class="ident">try_to_vec</span>().<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
         <span class="ident">write_log</span>.<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="ident">channel_key</span>, <span class="ident">bytes</span>).<span class="ident">expect</span>(<span class="string">&quot;write failed&quot;</span>);
@@ -2685,7 +2518,7 @@
         <span class="kw">let</span> <span class="ident">ctx</span> <span class="op">=</span> <span class="ident">Ctx::new</span>(<span class="kw-2">&amp;</span><span class="ident">storage</span>, <span class="kw-2">&amp;</span><span class="ident">write_log</span>, <span class="kw-2">&amp;</span><span class="ident">tx</span>, <span class="ident">gas_meter</span>);
 
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">keys_changed</span> <span class="op">=</span> <span class="ident">HashSet::new</span>();
-        <span class="ident">keys_changed</span>.<span class="ident">insert</span>(<span class="ident">get_channel_key</span>());
+        <span class="ident">keys_changed</span>.<span class="ident">insert</span>(<span class="ident">channel_key</span>);
 
         <span class="kw">let</span> <span class="ident">verifiers</span> <span class="op">=</span> <span class="ident">HashSet::new</span>();
 
@@ -2710,7 +2543,7 @@
         <span class="kw">let</span> <span class="ident">ctx</span> <span class="op">=</span> <span class="ident">Ctx::new</span>(<span class="kw-2">&amp;</span><span class="ident">storage</span>, <span class="kw-2">&amp;</span><span class="ident">write_log</span>, <span class="kw-2">&amp;</span><span class="ident">tx</span>, <span class="ident">gas_meter</span>);
 
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">keys_changed</span> <span class="op">=</span> <span class="ident">HashSet::new</span>();
-        <span class="ident">keys_changed</span>.<span class="ident">insert</span>(<span class="ident">get_port_key</span>());
+        <span class="ident">keys_changed</span>.<span class="ident">insert</span>(<span class="ident">port_key</span>(<span class="kw-2">&amp;</span><span class="ident">get_port_id</span>()));
 
         <span class="kw">let</span> <span class="ident">verifiers</span> <span class="op">=</span> <span class="ident">HashSet::new</span>();
 
@@ -2736,7 +2569,7 @@
         <span class="kw">let</span> <span class="ident">ctx</span> <span class="op">=</span> <span class="ident">Ctx::new</span>(<span class="kw-2">&amp;</span><span class="ident">storage</span>, <span class="kw-2">&amp;</span><span class="ident">write_log</span>, <span class="kw-2">&amp;</span><span class="ident">tx</span>, <span class="ident">gas_meter</span>);
 
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">keys_changed</span> <span class="op">=</span> <span class="ident">HashSet::new</span>();
-        <span class="kw">let</span> <span class="ident">cap_key</span> <span class="op">=</span> <span class="ident">Key::ibc_capability</span>(<span class="ident">index</span>);
+        <span class="kw">let</span> <span class="ident">cap_key</span> <span class="op">=</span> <span class="ident">capability_key</span>(<span class="ident">index</span>);
         <span class="ident">keys_changed</span>.<span class="ident">insert</span>(<span class="ident">cap_key</span>);
 
         <span class="kw">let</span> <span class="ident">verifiers</span> <span class="op">=</span> <span class="ident">HashSet::new</span>();
@@ -2752,13 +2585,13 @@
     <span class="kw">fn</span> <span class="ident">test_validate_seq_send</span>() {
         <span class="kw">let</span> (<span class="kw-2">mut</span> <span class="ident">storage</span>, <span class="kw-2">mut</span> <span class="ident">write_log</span>) <span class="op">=</span> <span class="ident">insert_init_states</span>();
         <span class="comment">// insert an opened connection</span>
-        <span class="kw">let</span> <span class="ident">conn_key</span> <span class="op">=</span> <span class="ident">get_connection_key</span>();
+        <span class="kw">let</span> <span class="ident">conn_key</span> <span class="op">=</span> <span class="ident">connection_key</span>(<span class="kw-2">&amp;</span><span class="ident">get_connection_id</span>());
         <span class="kw">let</span> <span class="ident">conn</span> <span class="op">=</span> <span class="ident">get_connection</span>(<span class="ident">ConnState::Open</span>);
         <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="ident">conn</span>.<span class="ident">try_to_vec</span>().<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
         <span class="ident">write_log</span>.<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="ident">conn_key</span>, <span class="ident">bytes</span>).<span class="ident">expect</span>(<span class="string">&quot;write failed&quot;</span>);
         <span class="comment">// insert an opened channel</span>
         <span class="ident">set_port</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">write_log</span>, <span class="number">0</span>);
-        <span class="kw">let</span> <span class="ident">channel_key</span> <span class="op">=</span> <span class="ident">get_channel_key</span>();
+        <span class="kw">let</span> <span class="ident">channel_key</span> <span class="op">=</span> <span class="ident">channel_key</span>(<span class="kw-2">&amp;</span><span class="ident">get_port_channel_id</span>());
         <span class="kw">let</span> <span class="ident">channel</span> <span class="op">=</span> <span class="ident">get_channel</span>(<span class="ident">ChanState::Open</span>, <span class="ident">Order::Ordered</span>);
         <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="ident">channel</span>.<span class="ident">try_to_vec</span>().<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
         <span class="ident">write_log</span>.<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="ident">channel_key</span>, <span class="ident">bytes</span>).<span class="ident">expect</span>(<span class="string">&quot;write failed&quot;</span>);
@@ -2780,22 +2613,16 @@
         );
 
         <span class="comment">// get and increment the nextSequenceSend</span>
-        <span class="kw">let</span> <span class="ident">seq_path</span> <span class="op">=</span> <span class="ident">Path::SeqSends</span>(<span class="ident">get_port_id</span>(), <span class="ident">get_channel_id</span>());
-        <span class="kw">let</span> <span class="ident">sequence</span> <span class="op">=</span> <span class="ident">get_next_seq</span>(<span class="kw-2">&amp;</span><span class="ident">storage</span>, <span class="ident">seq_path</span>.<span class="ident">clone</span>());
-        <span class="ident">increment_seq</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">write_log</span>, <span class="ident">seq_path</span>.<span class="ident">clone</span>(), <span class="ident">sequence</span>);
+        <span class="kw">let</span> <span class="ident">seq_key</span> <span class="op">=</span> <span class="ident">next_sequence_send_key</span>(<span class="kw-2">&amp;</span><span class="ident">get_port_channel_id</span>());
+        <span class="kw">let</span> <span class="ident">sequence</span> <span class="op">=</span> <span class="ident">get_next_seq</span>(<span class="kw-2">&amp;</span><span class="ident">storage</span>, <span class="kw-2">&amp;</span><span class="ident">seq_key</span>);
+        <span class="ident">increment_seq</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">write_log</span>, <span class="kw-2">&amp;</span><span class="ident">seq_key</span>, <span class="ident">sequence</span>);
         <span class="comment">// make a packet</span>
         <span class="kw">let</span> <span class="ident">packet</span> <span class="op">=</span> <span class="ident">data</span>.<span class="ident">packet</span>(<span class="ident">sequence</span>);
         <span class="comment">// insert a commitment</span>
         <span class="kw">let</span> <span class="ident">commitment</span> <span class="op">=</span> <span class="ident">hash</span>(<span class="kw-2">&amp;</span><span class="ident">packet</span>);
-        <span class="kw">let</span> <span class="ident">path</span> <span class="op">=</span> <span class="ident">Path::Commitments</span> {
-            <span class="ident">port_id</span>: <span class="ident">get_port_id</span>(),
-            <span class="ident">channel_id</span>: <span class="ident">get_channel_id</span>(),
-            <span class="ident">sequence</span>,
-        };
-        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Key::ibc_key</span>(<span class="ident">path</span>.<span class="ident">to_string</span>())
-            .<span class="ident">expect</span>(<span class="string">&quot;Creating a key for a commitment shouldn&#39;t fail&quot;</span>);
+        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">commitment_key</span>(<span class="kw-2">&amp;</span><span class="ident">get_port_id</span>(), <span class="kw-2">&amp;</span><span class="ident">get_channel_id</span>(), <span class="ident">sequence</span>);
         <span class="ident">write_log</span>
-            .<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>, <span class="ident">storage::types::encode</span>(<span class="kw-2">&amp;</span><span class="ident">commitment</span>))
+            .<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>, <span class="ident">commitment</span>.<span class="ident">try_to_vec</span>().<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>))
             .<span class="ident">expect</span>(<span class="string">&quot;write failed&quot;</span>);
         <span class="ident">write_log</span>.<span class="ident">commit_tx</span>();
 
@@ -2806,8 +2633,6 @@
         <span class="kw">let</span> <span class="ident">ctx</span> <span class="op">=</span> <span class="ident">Ctx::new</span>(<span class="kw-2">&amp;</span><span class="ident">storage</span>, <span class="kw-2">&amp;</span><span class="ident">write_log</span>, <span class="kw-2">&amp;</span><span class="ident">tx</span>, <span class="ident">gas_meter</span>);
 
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">keys_changed</span> <span class="op">=</span> <span class="ident">HashSet::new</span>();
-        <span class="kw">let</span> <span class="ident">seq_key</span> <span class="op">=</span> <span class="ident">Key::ibc_key</span>(<span class="ident">seq_path</span>.<span class="ident">to_string</span>())
-            .<span class="ident">expect</span>(<span class="string">&quot;Creating a key for nextSequenceSend shouldn&#39;t fail&quot;</span>);
         <span class="ident">keys_changed</span>.<span class="ident">insert</span>(<span class="ident">seq_key</span>);
 
         <span class="kw">let</span> <span class="ident">verifiers</span> <span class="op">=</span> <span class="ident">HashSet::new</span>();
@@ -2823,13 +2648,13 @@
     <span class="kw">fn</span> <span class="ident">test_validate_seq_recv</span>() {
         <span class="kw">let</span> (<span class="kw-2">mut</span> <span class="ident">storage</span>, <span class="kw-2">mut</span> <span class="ident">write_log</span>) <span class="op">=</span> <span class="ident">insert_init_states</span>();
         <span class="comment">// insert an opened connection</span>
-        <span class="kw">let</span> <span class="ident">conn_key</span> <span class="op">=</span> <span class="ident">get_connection_key</span>();
+        <span class="kw">let</span> <span class="ident">conn_key</span> <span class="op">=</span> <span class="ident">connection_key</span>(<span class="kw-2">&amp;</span><span class="ident">get_connection_id</span>());
         <span class="kw">let</span> <span class="ident">conn</span> <span class="op">=</span> <span class="ident">get_connection</span>(<span class="ident">ConnState::Open</span>);
         <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="ident">conn</span>.<span class="ident">try_to_vec</span>().<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
         <span class="ident">write_log</span>.<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="ident">conn_key</span>, <span class="ident">bytes</span>).<span class="ident">expect</span>(<span class="string">&quot;write failed&quot;</span>);
         <span class="comment">// insert an opened channel</span>
         <span class="ident">set_port</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">write_log</span>, <span class="number">0</span>);
-        <span class="kw">let</span> <span class="ident">channel_key</span> <span class="op">=</span> <span class="ident">get_channel_key</span>();
+        <span class="kw">let</span> <span class="ident">channel_key</span> <span class="op">=</span> <span class="ident">channel_key</span>(<span class="kw-2">&amp;</span><span class="ident">get_port_channel_id</span>());
         <span class="kw">let</span> <span class="ident">channel</span> <span class="op">=</span> <span class="ident">get_channel</span>(<span class="ident">ChanState::Open</span>, <span class="ident">Order::Ordered</span>);
         <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="ident">channel</span>.<span class="ident">try_to_vec</span>().<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
         <span class="ident">write_log</span>.<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="ident">channel_key</span>, <span class="ident">bytes</span>).<span class="ident">expect</span>(<span class="string">&quot;write failed&quot;</span>);
@@ -2837,9 +2662,9 @@
         <span class="ident">write_log</span>.<span class="ident">commit_block</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">storage</span>).<span class="ident">expect</span>(<span class="string">&quot;commit failed&quot;</span>);
 
         <span class="comment">// get and increment the nextSequenceRecv</span>
-        <span class="kw">let</span> <span class="ident">seq_path</span> <span class="op">=</span> <span class="ident">Path::SeqRecvs</span>(<span class="ident">get_port_id</span>(), <span class="ident">get_channel_id</span>());
-        <span class="kw">let</span> <span class="ident">sequence</span> <span class="op">=</span> <span class="ident">get_next_seq</span>(<span class="kw-2">&amp;</span><span class="ident">storage</span>, <span class="ident">seq_path</span>.<span class="ident">clone</span>());
-        <span class="ident">increment_seq</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">write_log</span>, <span class="ident">seq_path</span>.<span class="ident">clone</span>(), <span class="ident">sequence</span>);
+        <span class="kw">let</span> <span class="ident">seq_key</span> <span class="op">=</span> <span class="ident">next_sequence_recv_key</span>(<span class="kw-2">&amp;</span><span class="ident">get_port_channel_id</span>());
+        <span class="kw">let</span> <span class="ident">sequence</span> <span class="op">=</span> <span class="ident">get_next_seq</span>(<span class="kw-2">&amp;</span><span class="ident">storage</span>, <span class="kw-2">&amp;</span><span class="ident">seq_key</span>);
+        <span class="ident">increment_seq</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">write_log</span>, <span class="kw-2">&amp;</span><span class="ident">seq_key</span>, <span class="ident">sequence</span>);
         <span class="comment">// make a packet and data</span>
         <span class="kw">let</span> <span class="ident">counterparty</span> <span class="op">=</span> <span class="ident">get_channel_counterparty</span>();
         <span class="kw">let</span> <span class="ident">timestamp</span> <span class="op">=</span> <span class="ident">Utc::now</span>() <span class="op">+</span> <span class="ident">chrono::Duration::seconds</span>(<span class="number">100</span>);
@@ -2859,25 +2684,13 @@
             <span class="ident">PacketReceiptData::new</span>(<span class="ident">packet</span>, <span class="ident">Height::new</span>(<span class="number">1</span>, <span class="number">10</span>), <span class="ident">proof_packet</span>);
 
         <span class="comment">// insert a receipt and an ack</span>
-        <span class="kw">let</span> <span class="ident">path</span> <span class="op">=</span> <span class="ident">Path::Receipts</span> {
-            <span class="ident">port_id</span>: <span class="ident">get_port_id</span>(),
-            <span class="ident">channel_id</span>: <span class="ident">get_channel_id</span>(),
-            <span class="ident">sequence</span>,
-        };
-        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Key::ibc_key</span>(<span class="ident">path</span>.<span class="ident">to_string</span>())
-            .<span class="ident">expect</span>(<span class="string">&quot;Creating a key for a receipt shouldn&#39;t fail&quot;</span>);
+        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">receipt_key</span>(<span class="kw-2">&amp;</span><span class="ident">get_port_id</span>(), <span class="kw-2">&amp;</span><span class="ident">get_channel_id</span>(), <span class="ident">sequence</span>);
         <span class="ident">write_log</span>
-            .<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>, <span class="ident">storage::types::encode</span>(<span class="kw-2">&amp;</span><span class="number">0</span>))
+            .<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>, <span class="number">0_u64</span>.<span class="ident">try_to_vec</span>().<span class="ident">unwrap</span>())
             .<span class="ident">expect</span>(<span class="string">&quot;write failed&quot;</span>);
-        <span class="kw">let</span> <span class="ident">path</span> <span class="op">=</span> <span class="ident">Path::Acks</span> {
-            <span class="ident">port_id</span>: <span class="ident">get_port_id</span>(),
-            <span class="ident">channel_id</span>: <span class="ident">get_channel_id</span>(),
-            <span class="ident">sequence</span>,
-        };
-        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Key::ibc_key</span>(<span class="ident">path</span>.<span class="ident">to_string</span>())
-            .<span class="ident">expect</span>(<span class="string">&quot;Creating a key for an ack shouldn&#39;t fail&quot;</span>);
+        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">ack_key</span>(<span class="kw-2">&amp;</span><span class="ident">get_port_id</span>(), <span class="kw-2">&amp;</span><span class="ident">get_channel_id</span>(), <span class="ident">sequence</span>);
         <span class="ident">write_log</span>
-            .<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>, <span class="ident">storage::types::encode</span>(<span class="kw-2">&amp;</span><span class="string">&quot;test_ack&quot;</span>.<span class="ident">to_owned</span>()))
+            .<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>, <span class="string">&quot;test_ack&quot;</span>.<span class="ident">to_owned</span>().<span class="ident">try_to_vec</span>().<span class="ident">unwrap</span>())
             .<span class="ident">expect</span>(<span class="string">&quot;write failed&quot;</span>);
         <span class="ident">write_log</span>.<span class="ident">commit_tx</span>();
 
@@ -2888,8 +2701,6 @@
         <span class="kw">let</span> <span class="ident">ctx</span> <span class="op">=</span> <span class="ident">Ctx::new</span>(<span class="kw-2">&amp;</span><span class="ident">storage</span>, <span class="kw-2">&amp;</span><span class="ident">write_log</span>, <span class="kw-2">&amp;</span><span class="ident">tx</span>, <span class="ident">gas_meter</span>);
 
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">keys_changed</span> <span class="op">=</span> <span class="ident">HashSet::new</span>();
-        <span class="kw">let</span> <span class="ident">seq_key</span> <span class="op">=</span> <span class="ident">Key::ibc_key</span>(<span class="ident">seq_path</span>.<span class="ident">to_string</span>())
-            .<span class="ident">expect</span>(<span class="string">&quot;Creating a key for nextSequenceSend shouldn&#39;t fail&quot;</span>);
         <span class="ident">keys_changed</span>.<span class="ident">insert</span>(<span class="ident">seq_key</span>);
 
         <span class="kw">let</span> <span class="ident">verifiers</span> <span class="op">=</span> <span class="ident">HashSet::new</span>();
@@ -2905,8 +2716,8 @@
     <span class="kw">fn</span> <span class="ident">test_validate_seq_ack</span>() {
         <span class="kw">let</span> (<span class="kw-2">mut</span> <span class="ident">storage</span>, <span class="kw-2">mut</span> <span class="ident">write_log</span>) <span class="op">=</span> <span class="ident">insert_init_states</span>();
         <span class="comment">// get the nextSequenceAck</span>
-        <span class="kw">let</span> <span class="ident">seq_path</span> <span class="op">=</span> <span class="ident">Path::SeqAcks</span>(<span class="ident">get_port_id</span>(), <span class="ident">get_channel_id</span>());
-        <span class="kw">let</span> <span class="ident">sequence</span> <span class="op">=</span> <span class="ident">get_next_seq</span>(<span class="kw-2">&amp;</span><span class="ident">storage</span>, <span class="ident">seq_path</span>.<span class="ident">clone</span>());
+        <span class="kw">let</span> <span class="ident">seq_key</span> <span class="op">=</span> <span class="ident">next_sequence_ack_key</span>(<span class="kw-2">&amp;</span><span class="ident">get_port_channel_id</span>());
+        <span class="kw">let</span> <span class="ident">sequence</span> <span class="op">=</span> <span class="ident">get_next_seq</span>(<span class="kw-2">&amp;</span><span class="ident">storage</span>, <span class="kw-2">&amp;</span><span class="ident">seq_key</span>);
         <span class="comment">// make a packet</span>
         <span class="kw">let</span> <span class="ident">counterparty</span> <span class="op">=</span> <span class="ident">get_channel_counterparty</span>();
         <span class="kw">let</span> <span class="ident">timestamp</span> <span class="op">=</span> <span class="ident">Utc::now</span>() <span class="op">+</span> <span class="ident">chrono::Duration::seconds</span>(<span class="number">100</span>);
@@ -2922,27 +2733,25 @@
             <span class="ident">timeout_timestamp</span>,
         };
         <span class="comment">// insert an opened connection</span>
-        <span class="kw">let</span> <span class="ident">conn_key</span> <span class="op">=</span> <span class="ident">get_connection_key</span>();
+        <span class="kw">let</span> <span class="ident">conn_key</span> <span class="op">=</span> <span class="ident">connection_key</span>(<span class="kw-2">&amp;</span><span class="ident">get_connection_id</span>());
         <span class="kw">let</span> <span class="ident">conn</span> <span class="op">=</span> <span class="ident">get_connection</span>(<span class="ident">ConnState::Open</span>);
         <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="ident">conn</span>.<span class="ident">try_to_vec</span>().<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
         <span class="ident">write_log</span>.<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="ident">conn_key</span>, <span class="ident">bytes</span>).<span class="ident">expect</span>(<span class="string">&quot;write failed&quot;</span>);
         <span class="comment">// insert an opened channel</span>
         <span class="ident">set_port</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">write_log</span>, <span class="number">0</span>);
-        <span class="kw">let</span> <span class="ident">channel_key</span> <span class="op">=</span> <span class="ident">get_channel_key</span>();
+        <span class="kw">let</span> <span class="ident">channel_key</span> <span class="op">=</span> <span class="ident">channel_key</span>(<span class="kw-2">&amp;</span><span class="ident">get_port_channel_id</span>());
         <span class="kw">let</span> <span class="ident">channel</span> <span class="op">=</span> <span class="ident">get_channel</span>(<span class="ident">ChanState::Open</span>, <span class="ident">Order::Ordered</span>);
         <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="ident">channel</span>.<span class="ident">try_to_vec</span>().<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
         <span class="ident">write_log</span>.<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="ident">channel_key</span>, <span class="ident">bytes</span>).<span class="ident">expect</span>(<span class="string">&quot;write failed&quot;</span>);
         <span class="comment">// insert a commitment</span>
         <span class="kw">let</span> <span class="ident">commitment</span> <span class="op">=</span> <span class="ident">hash</span>(<span class="kw-2">&amp;</span><span class="ident">packet</span>);
-        <span class="kw">let</span> <span class="ident">path</span> <span class="op">=</span> <span class="ident">Path::Commitments</span> {
-            <span class="ident">port_id</span>: <span class="ident">get_port_id</span>(),
-            <span class="ident">channel_id</span>: <span class="ident">get_channel_id</span>(),
-            <span class="ident">sequence</span>,
-        };
-        <span class="kw">let</span> <span class="ident">commitment_key</span> <span class="op">=</span> <span class="ident">Key::ibc_key</span>(<span class="ident">path</span>.<span class="ident">to_string</span>())
-            .<span class="ident">expect</span>(<span class="string">&quot;Creating a key for a commitment shouldn&#39;t fail&quot;</span>);
+        <span class="kw">let</span> <span class="ident">commitment_key</span> <span class="op">=</span>
+            <span class="ident">commitment_key</span>(<span class="kw-2">&amp;</span><span class="ident">get_port_id</span>(), <span class="kw-2">&amp;</span><span class="ident">get_channel_id</span>(), <span class="ident">sequence</span>);
         <span class="ident">write_log</span>
-            .<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="ident">commitment_key</span>, <span class="ident">storage::types::encode</span>(<span class="kw-2">&amp;</span><span class="ident">commitment</span>))
+            .<span class="ident">write</span>(
+                <span class="kw-2">&amp;</span><span class="ident">commitment_key</span>,
+                <span class="ident">commitment</span>.<span class="ident">try_to_vec</span>().<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>),
+            )
             .<span class="ident">expect</span>(<span class="string">&quot;write failed&quot;</span>);
         <span class="ident">write_log</span>.<span class="ident">commit_tx</span>();
         <span class="ident">write_log</span>.<span class="ident">commit_block</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">storage</span>).<span class="ident">expect</span>(<span class="string">&quot;commit failed&quot;</span>);
@@ -2954,7 +2763,7 @@
             <span class="ident">PacketAckData::new</span>(<span class="ident">packet</span>, <span class="ident">ack</span>, <span class="ident">Height::new</span>(<span class="number">1</span>, <span class="number">10</span>), <span class="ident">proof_packet</span>);
 
         <span class="comment">// increment the nextSequenceAck</span>
-        <span class="ident">increment_seq</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">write_log</span>, <span class="ident">seq_path</span>.<span class="ident">clone</span>(), <span class="ident">sequence</span>);
+        <span class="ident">increment_seq</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">write_log</span>, <span class="kw-2">&amp;</span><span class="ident">seq_key</span>, <span class="ident">sequence</span>);
         <span class="comment">// delete the commitment</span>
         <span class="ident">write_log</span>.<span class="ident">delete</span>(<span class="kw-2">&amp;</span><span class="ident">commitment_key</span>).<span class="ident">expect</span>(<span class="string">&quot;delete failed&quot;</span>);
         <span class="ident">write_log</span>.<span class="ident">commit_tx</span>();
@@ -2966,8 +2775,6 @@
         <span class="kw">let</span> <span class="ident">ctx</span> <span class="op">=</span> <span class="ident">Ctx::new</span>(<span class="kw-2">&amp;</span><span class="ident">storage</span>, <span class="kw-2">&amp;</span><span class="ident">write_log</span>, <span class="kw-2">&amp;</span><span class="ident">tx</span>, <span class="ident">gas_meter</span>);
 
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">keys_changed</span> <span class="op">=</span> <span class="ident">HashSet::new</span>();
-        <span class="kw">let</span> <span class="ident">seq_key</span> <span class="op">=</span> <span class="ident">Key::ibc_key</span>(<span class="ident">seq_path</span>.<span class="ident">to_string</span>())
-            .<span class="ident">expect</span>(<span class="string">&quot;Creating a key for nextSequenceSend shouldn&#39;t fail&quot;</span>);
         <span class="ident">keys_changed</span>.<span class="ident">insert</span>(<span class="ident">seq_key</span>);
 
         <span class="kw">let</span> <span class="ident">verifiers</span> <span class="op">=</span> <span class="ident">HashSet::new</span>();
@@ -2983,13 +2790,13 @@
     <span class="kw">fn</span> <span class="ident">test_validate_commitment</span>() {
         <span class="kw">let</span> (<span class="kw-2">mut</span> <span class="ident">storage</span>, <span class="kw-2">mut</span> <span class="ident">write_log</span>) <span class="op">=</span> <span class="ident">insert_init_states</span>();
         <span class="comment">// insert an opened connection</span>
-        <span class="kw">let</span> <span class="ident">conn_key</span> <span class="op">=</span> <span class="ident">get_connection_key</span>();
+        <span class="kw">let</span> <span class="ident">conn_key</span> <span class="op">=</span> <span class="ident">connection_key</span>(<span class="kw-2">&amp;</span><span class="ident">get_connection_id</span>());
         <span class="kw">let</span> <span class="ident">conn</span> <span class="op">=</span> <span class="ident">get_connection</span>(<span class="ident">ConnState::Open</span>);
         <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="ident">conn</span>.<span class="ident">try_to_vec</span>().<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
         <span class="ident">write_log</span>.<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="ident">conn_key</span>, <span class="ident">bytes</span>).<span class="ident">expect</span>(<span class="string">&quot;write failed&quot;</span>);
         <span class="comment">// insert an opened channel</span>
         <span class="ident">set_port</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">write_log</span>, <span class="number">0</span>);
-        <span class="kw">let</span> <span class="ident">channel_key</span> <span class="op">=</span> <span class="ident">get_channel_key</span>();
+        <span class="kw">let</span> <span class="ident">channel_key</span> <span class="op">=</span> <span class="ident">channel_key</span>(<span class="kw-2">&amp;</span><span class="ident">get_port_channel_id</span>());
         <span class="kw">let</span> <span class="ident">channel</span> <span class="op">=</span> <span class="ident">get_channel</span>(<span class="ident">ChanState::Open</span>, <span class="ident">Order::Ordered</span>);
         <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="ident">channel</span>.<span class="ident">try_to_vec</span>().<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
         <span class="ident">write_log</span>.<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="ident">channel_key</span>, <span class="ident">bytes</span>).<span class="ident">expect</span>(<span class="string">&quot;write failed&quot;</span>);
@@ -3011,20 +2818,21 @@
         );
 
         <span class="comment">// make a packet</span>
-        <span class="kw">let</span> <span class="ident">seq_path</span> <span class="op">=</span> <span class="ident">Path::SeqSends</span>(<span class="ident">get_port_id</span>(), <span class="ident">get_channel_id</span>());
-        <span class="kw">let</span> <span class="ident">sequence</span> <span class="op">=</span> <span class="ident">get_next_seq</span>(<span class="kw-2">&amp;</span><span class="ident">storage</span>, <span class="ident">seq_path</span>);
+        <span class="kw">let</span> <span class="ident">seq_key</span> <span class="op">=</span> <span class="ident">next_sequence_send_key</span>(<span class="kw-2">&amp;</span><span class="ident">get_port_channel_id</span>());
+        <span class="kw">let</span> <span class="ident">sequence</span> <span class="op">=</span> <span class="ident">get_next_seq</span>(<span class="kw-2">&amp;</span><span class="ident">storage</span>, <span class="kw-2">&amp;</span><span class="ident">seq_key</span>);
         <span class="kw">let</span> <span class="ident">packet</span> <span class="op">=</span> <span class="ident">data</span>.<span class="ident">packet</span>(<span class="ident">sequence</span>);
         <span class="comment">// insert a commitment</span>
         <span class="kw">let</span> <span class="ident">commitment</span> <span class="op">=</span> <span class="ident">hash</span>(<span class="kw-2">&amp;</span><span class="ident">packet</span>);
-        <span class="kw">let</span> <span class="ident">path</span> <span class="op">=</span> <span class="ident">Path::Commitments</span> {
-            <span class="ident">port_id</span>: <span class="ident">get_port_id</span>(),
-            <span class="ident">channel_id</span>: <span class="ident">get_channel_id</span>(),
+        <span class="kw">let</span> <span class="ident">commitment_key</span> <span class="op">=</span> <span class="ident">commitment_key</span>(
+            <span class="kw-2">&amp;</span><span class="ident">packet</span>.<span class="ident">source_port</span>,
+            <span class="kw-2">&amp;</span><span class="ident">packet</span>.<span class="ident">source_channel</span>,
             <span class="ident">sequence</span>,
-        };
-        <span class="kw">let</span> <span class="ident">commitment_key</span> <span class="op">=</span> <span class="ident">Key::ibc_key</span>(<span class="ident">path</span>.<span class="ident">to_string</span>())
-            .<span class="ident">expect</span>(<span class="string">&quot;Creating a key for a commitment shouldn&#39;t fail&quot;</span>);
+        );
         <span class="ident">write_log</span>
-            .<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="ident">commitment_key</span>, <span class="ident">storage::types::encode</span>(<span class="kw-2">&amp;</span><span class="ident">commitment</span>))
+            .<span class="ident">write</span>(
+                <span class="kw-2">&amp;</span><span class="ident">commitment_key</span>,
+                <span class="ident">commitment</span>.<span class="ident">try_to_vec</span>().<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>),
+            )
             .<span class="ident">expect</span>(<span class="string">&quot;write failed&quot;</span>);
         <span class="ident">write_log</span>.<span class="ident">commit_tx</span>();
 
@@ -3050,13 +2858,13 @@
     <span class="kw">fn</span> <span class="ident">test_validate_receipt</span>() {
         <span class="kw">let</span> (<span class="kw-2">mut</span> <span class="ident">storage</span>, <span class="kw-2">mut</span> <span class="ident">write_log</span>) <span class="op">=</span> <span class="ident">insert_init_states</span>();
         <span class="comment">// insert an opened connection</span>
-        <span class="kw">let</span> <span class="ident">conn_key</span> <span class="op">=</span> <span class="ident">get_connection_key</span>();
+        <span class="kw">let</span> <span class="ident">conn_key</span> <span class="op">=</span> <span class="ident">connection_key</span>(<span class="kw-2">&amp;</span><span class="ident">get_connection_id</span>());
         <span class="kw">let</span> <span class="ident">conn</span> <span class="op">=</span> <span class="ident">get_connection</span>(<span class="ident">ConnState::Open</span>);
         <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="ident">conn</span>.<span class="ident">try_to_vec</span>().<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
         <span class="ident">write_log</span>.<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="ident">conn_key</span>, <span class="ident">bytes</span>).<span class="ident">expect</span>(<span class="string">&quot;write failed&quot;</span>);
         <span class="comment">// insert an opened channel</span>
         <span class="ident">set_port</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">write_log</span>, <span class="number">0</span>);
-        <span class="kw">let</span> <span class="ident">channel_key</span> <span class="op">=</span> <span class="ident">get_channel_key</span>();
+        <span class="kw">let</span> <span class="ident">channel_key</span> <span class="op">=</span> <span class="ident">channel_key</span>(<span class="kw-2">&amp;</span><span class="ident">get_port_channel_id</span>());
         <span class="kw">let</span> <span class="ident">channel</span> <span class="op">=</span> <span class="ident">get_channel</span>(<span class="ident">ChanState::Open</span>, <span class="ident">Order::Ordered</span>);
         <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="ident">channel</span>.<span class="ident">try_to_vec</span>().<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
         <span class="ident">write_log</span>.<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="ident">channel_key</span>, <span class="ident">bytes</span>).<span class="ident">expect</span>(<span class="string">&quot;write failed&quot;</span>);
@@ -3082,25 +2890,21 @@
             <span class="ident">PacketReceiptData::new</span>(<span class="ident">packet</span>, <span class="ident">Height::new</span>(<span class="number">1</span>, <span class="number">10</span>), <span class="ident">proof_packet</span>);
 
         <span class="comment">// insert a receipt and an ack</span>
-        <span class="kw">let</span> <span class="ident">path</span> <span class="op">=</span> <span class="ident">Path::Receipts</span> {
-            <span class="ident">port_id</span>: <span class="ident">get_port_id</span>(),
-            <span class="ident">channel_id</span>: <span class="ident">get_channel_id</span>(),
-            <span class="ident">sequence</span>: <span class="ident">data</span>.<span class="ident">packet</span>.<span class="ident">sequence</span>,
-        };
-        <span class="kw">let</span> <span class="ident">receipt_key</span> <span class="op">=</span> <span class="ident">Key::ibc_key</span>(<span class="ident">path</span>.<span class="ident">to_string</span>())
-            .<span class="ident">expect</span>(<span class="string">&quot;Creating a key for a commitment shouldn&#39;t fail&quot;</span>);
+        <span class="kw">let</span> <span class="ident">receipt_key</span> <span class="op">=</span> <span class="ident">receipt_key</span>(
+            <span class="kw-2">&amp;</span><span class="ident">data</span>.<span class="ident">packet</span>.<span class="ident">destination_port</span>,
+            <span class="kw-2">&amp;</span><span class="ident">data</span>.<span class="ident">packet</span>.<span class="ident">destination_channel</span>,
+            <span class="ident">data</span>.<span class="ident">packet</span>.<span class="ident">sequence</span>,
+        );
         <span class="ident">write_log</span>
-            .<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="ident">receipt_key</span>, <span class="ident">storage::types::encode</span>(<span class="kw-2">&amp;</span><span class="number">0</span>))
+            .<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="ident">receipt_key</span>, <span class="number">0_u64</span>.<span class="ident">try_to_vec</span>().<span class="ident">unwrap</span>())
             .<span class="ident">expect</span>(<span class="string">&quot;write failed&quot;</span>);
-        <span class="kw">let</span> <span class="ident">path</span> <span class="op">=</span> <span class="ident">Path::Acks</span> {
-            <span class="ident">port_id</span>: <span class="ident">get_port_id</span>(),
-            <span class="ident">channel_id</span>: <span class="ident">get_channel_id</span>(),
-            <span class="ident">sequence</span>: <span class="ident">data</span>.<span class="ident">packet</span>.<span class="ident">sequence</span>,
-        };
-        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Key::ibc_key</span>(<span class="ident">path</span>.<span class="ident">to_string</span>())
-            .<span class="ident">expect</span>(<span class="string">&quot;Creating a key for an ack shouldn&#39;t fail&quot;</span>);
+        <span class="kw">let</span> <span class="ident">ack_key</span> <span class="op">=</span> <span class="ident">ack_key</span>(
+            <span class="kw-2">&amp;</span><span class="ident">data</span>.<span class="ident">packet</span>.<span class="ident">destination_port</span>,
+            <span class="kw-2">&amp;</span><span class="ident">data</span>.<span class="ident">packet</span>.<span class="ident">destination_channel</span>,
+            <span class="ident">data</span>.<span class="ident">packet</span>.<span class="ident">sequence</span>,
+        );
         <span class="ident">write_log</span>
-            .<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>, <span class="ident">storage::types::encode</span>(<span class="kw-2">&amp;</span><span class="string">&quot;test_ack&quot;</span>.<span class="ident">to_owned</span>()))
+            .<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="ident">ack_key</span>, <span class="string">&quot;test_ack&quot;</span>.<span class="ident">to_owned</span>().<span class="ident">try_to_vec</span>().<span class="ident">unwrap</span>())
             .<span class="ident">expect</span>(<span class="string">&quot;write failed&quot;</span>);
         <span class="ident">write_log</span>.<span class="ident">commit_tx</span>();
 
@@ -3127,25 +2931,15 @@
         <span class="kw">let</span> (<span class="ident">storage</span>, <span class="kw-2">mut</span> <span class="ident">write_log</span>) <span class="op">=</span> <span class="ident">insert_init_states</span>();
 
         <span class="comment">// insert a receipt and an ack</span>
-        <span class="kw">let</span> <span class="ident">path</span> <span class="op">=</span> <span class="ident">Path::Receipts</span> {
-            <span class="ident">port_id</span>: <span class="ident">get_port_id</span>(),
-            <span class="ident">channel_id</span>: <span class="ident">get_channel_id</span>(),
-            <span class="ident">sequence</span>: <span class="ident">Sequence::from</span>(<span class="number">1</span>),
-        };
-        <span class="kw">let</span> <span class="ident">ack_key</span> <span class="op">=</span> <span class="ident">Key::ibc_key</span>(<span class="ident">path</span>.<span class="ident">to_string</span>())
-            .<span class="ident">expect</span>(<span class="string">&quot;Creating a key for a commitment shouldn&#39;t fail&quot;</span>);
+        <span class="kw">let</span> <span class="ident">receipt_key</span> <span class="op">=</span>
+            <span class="ident">receipt_key</span>(<span class="kw-2">&amp;</span><span class="ident">get_port_id</span>(), <span class="kw-2">&amp;</span><span class="ident">get_channel_id</span>(), <span class="ident">Sequence::from</span>(<span class="number">1</span>));
         <span class="ident">write_log</span>
-            .<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="ident">ack_key</span>, <span class="ident">storage::types::encode</span>(<span class="kw-2">&amp;</span><span class="number">0</span>))
+            .<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="ident">receipt_key</span>, <span class="number">0_u64</span>.<span class="ident">try_to_vec</span>().<span class="ident">unwrap</span>())
             .<span class="ident">expect</span>(<span class="string">&quot;write failed&quot;</span>);
-        <span class="kw">let</span> <span class="ident">path</span> <span class="op">=</span> <span class="ident">Path::Acks</span> {
-            <span class="ident">port_id</span>: <span class="ident">get_port_id</span>(),
-            <span class="ident">channel_id</span>: <span class="ident">get_channel_id</span>(),
-            <span class="ident">sequence</span>: <span class="ident">Sequence::from</span>(<span class="number">1</span>),
-        };
-        <span class="kw">let</span> <span class="ident">ack_key</span> <span class="op">=</span> <span class="ident">Key::ibc_key</span>(<span class="ident">path</span>.<span class="ident">to_string</span>())
-            .<span class="ident">expect</span>(<span class="string">&quot;Creating a key for a commitment shouldn&#39;t fail&quot;</span>);
+        <span class="kw">let</span> <span class="ident">ack_key</span> <span class="op">=</span>
+            <span class="ident">ack_key</span>(<span class="kw-2">&amp;</span><span class="ident">get_port_id</span>(), <span class="kw-2">&amp;</span><span class="ident">get_channel_id</span>(), <span class="ident">Sequence::from</span>(<span class="number">1</span>));
         <span class="ident">write_log</span>
-            .<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="ident">ack_key</span>, <span class="ident">storage::types::encode</span>(<span class="kw-2">&amp;</span><span class="number">0</span>))
+            .<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="ident">ack_key</span>, <span class="string">&quot;test_ack&quot;</span>.<span class="ident">to_owned</span>().<span class="ident">try_to_vec</span>().<span class="ident">unwrap</span>())
             .<span class="ident">expect</span>(<span class="string">&quot;write failed&quot;</span>);
         <span class="ident">write_log</span>.<span class="ident">commit_tx</span>();
 
