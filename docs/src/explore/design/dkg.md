@@ -20,10 +20,10 @@ and their voting powers for epoch `n+1` will be known at the beginning of
 epoch `n`. 
 
 For validators who start for the first time at epoch `n+1`, they
-must participate in the [Vote Extensions](https://github.com/tendermint/spec/blob/master/rfc/004-abci%2B%2B.md#vote-extensions)
-in epoch `n`. So internally, they will be validators but with 0 voting power.
-The job of using the consensus layer to validate the DKG protocol will be 
-done by the current validator set with their current voting powers.
+must participate in the broadcasting their PVSS transcripts 
+in epoch `n`. The job of using the consensus layer to validate the DKG
+protocol will be done by the current validator set with their current 
+voting powers.
 
 ##  Computing weight shares
 
@@ -60,24 +60,15 @@ which includes the session id (\\( \tau \\)) as well the data of the
 PVSS (we do not concern ourselves with the details here). The creation of this
 message is handled by the Ferveo library.
 
-The signed message will be returned as part of the [Vote Extension](https://github.com/tendermint/spec/blob/master/rfc/004-abci%2B%2B.md#vote-extensions). However,
+The signed message will be broadcast as a special transaction. However,
 for performance reasons, these transcripts will not be verified at this stage.
 Rather, the verification will be performed when an aggregation is attempted
 (discussed next). This verification is provided by the Ferveo library.
 
-However, not all PVSS transcripts necessary to complete the protocol will be
-posted in a single block due to the size of the transcripts. A parameter,
-`PVSS_PER_BLOCK`, will specify at most how many transcripts will be added to
-each block during the protocol. 
-
-Using the ordering of the weight shares computed by Ferveo, we schedule the block at which a 
-PVSS transcript should be added. For the PVSS transcript corresponding to 
-weight share with index \\(i\\), it is scheduled in block 
-
-\\[ B(i) := s + \bigg\lfloor \frac{i}{\text{PVSS_PER_BLOCK}}\bigg\rfloor \\]
-
-where \\(s\\) is the block for which which the protocol started. The dealing
-phase of the protocol is thus expected to end at block \\(B(W)\\).
+Validators will need to keep track of the current weight of shared PVSS
+transcripts on the blockchain so that they know when enough have been 
+posted to perform the next step, aggregation. This may require waiting
+for several blocks.
 
 ## Aggregation
 
@@ -127,8 +118,6 @@ needs to be stored by each node
    PVSS transcripts and signing DKG protocol messages.
  - A list of session ids from the last completed DKG instance up until the
    latest started (we may prune ids for failed instances however)
- - The current round of the dealing phase (for scheduling the submission
-   of their PVSS transcripts)
  - The DKG state machine associated to each of these session ids.
 
 ##  The DKG state machine
@@ -181,7 +170,8 @@ phase.
 
 We list the phase of ABCI++ in which each of the above actions takes place.
 
- - `Deal`: `Deal` happens during the [Vote Extension](https://github.com/tendermint/spec/blob/master/rfc/004-abci%2B%2B.md#vote-extensions) phase.
+ - `Deal`: `Deal` happens when validators detect a new epoch has begun. In practice,
+    this happens during or just after the [Finalize Block](https://github.com/tendermint/spec/blob/master/rfc/004-abci%2B%2B.md#delivertx-rename-to-finalizeblock) phase.
  - `Aggregate` / `Complain`: This is done during the [Prepare Proposal](https://github.com/tendermint/spec/blob/master/rfc/004-abci%2B%2B.md#prepare-proposal) phase 
    (it could be done earlier if validators know they are likely to be the
    next proposer). `Aggregate` messages will be  included in the header of 
