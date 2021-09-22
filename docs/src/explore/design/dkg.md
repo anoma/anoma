@@ -60,22 +60,28 @@ which includes the session id (\\( \tau \\)) as well the data of the
 PVSS (we do not concern ourselves with the details here). The creation of this
 message is handled by the Ferveo library.
 
-The signed message will be broadcast as a special transaction. However,
-for performance reasons, these transcripts will not be verified at this stage.
-Rather, the verification will be performed when an aggregation is attempted
-(discussed next). This verification is provided by the Ferveo library.
+The signed message will be broadcast as a special transaction. and  will be
+posted on the blockchain once they are verified. This verification is 
+provided by the Ferveo library.
 
 Validators will need to keep track of the current weight of shared PVSS
 transcripts on the blockchain so that they know when enough have been 
 posted to perform the next step, aggregation. This may require waiting
 for several blocks.
 
+In particular, since PVSS transcripts are large with respect to the size of 
+a block, a sensible limit of PVSS transcripts that can be included in a
+single block must be chosen. It must also be considered that enough room
+for user transactions be left so as not to throttle throughput. However,
+even a limit of one PVSS transcript per block will be sufficient for the
+most probable choices of epoch length and \\( W \\).
+
 ## Aggregation
 
-During the dealing phase of the DKG protocol, PVSS transcripts recieved
-are continuously stored by each validator. Once a block proposer detects
-that they have enough PVSS transcripts ( at least \\(\frac{2}{3}W\\)), they
-should attempt to aggregate them. 
+During the dealing phase of the DKG protocol, PVSS transcripts observed on
+the blockchain are continuously stored by each validator. Once a validator
+detects that they have enough PVSS transcripts ( at least \\(\frac{2}{3}W\\)),
+they should attempt to aggregate them. 
 
 If aggregation cannot happen and the next epoch begins, the protocol is 
 restarted from scratch. Furthermore, since a new key was not created, 
@@ -84,28 +90,19 @@ inability to include transactions represents a lost opportunity cost (in
  terms of transaction fees if chosen as block proposer) and should incentivize
 correct and timely reporting of PVSS transcripts in the previous epoch.
 
-The block proposer aggregates the messages into a 
-single instance using Ferveo during its [Prepare Proposal](https://github.com/tendermint/spec/blob/master/rfc/004-abci%2B%2B.md#prepare-proposal)
-phase. If the aggregation succeeds, the result of this is included in the 
-header of the proposed block along with the PVSS transcripts. Once this is
-on the blockchain, it can be used for encryption of transactions until the
-next epoch.
+The validator aggregates the transcripts into a 
+single instance using Ferveo during its [Finalize Block](https://github.com/tendermint/spec/blob/master/rfc/004-abci%2B%2B.md#delivertx-rename-to-finalizeblock)
+phase. If the aggregation succeeds, the result is kept stored by the validator
+and  can be used for the encryption of transactions until the next epoch. If
+a block proposer has successfully created the public key, and it is not
+posted on the blockchain yet, this should be included as a special transaction
+during the [Prepare Proposal](https://github.com/tendermint/spec/blob/master/rfc/004-abci%2B%2B.md#prepare-proposal) phase.
 
 When deciding to aggregate the PVSS instances into a single one, we shall
 consider the instances ranked in terms of their validators as was also used
-for partitioning the weight shares (described above).
-
-If the aggregation fails, the proposer should instead include a 
-special transaction into its proposed block (a transaction that only proposers
-can make). This transaction states that the aggregation could not succeed 
-because some PVSS transcripts are invalid. In the [Process Proposal](https://github.com/tendermint/spec/blob/master/rfc/004-abci%2B%2B.md#process-proposal)
-phase, each node should check each PVSS transcript and if any are found to be 
-invalid, they update their local state, slashing the author of the offending 
-transcript appropriately. This amount should be significant to mitigate denial of 
-service attack vectors.
-
-If the block proposer is found to be in error instead, other validators should
-simply reject the proposed block. __TBD: (And do we slash the proposer as well?)__
+for partitioning the weight shares (described above). Since the PVSS 
+transcripts to be used are all on the blockchain, this should produce a
+deterministic result.
 
 ## Storage considerations
 
@@ -125,10 +122,8 @@ needs to be stored by each node
 We first describe each new message type needed for the protocol.
 - `Deal`: This message contains the PVSS transcript from a validator
   acting as a dealer
-- `Aggregate`: Add the combined PVSS transcripts as well as each transcript
-  included in the aggregation in the header of a proposed block
-- `Complain`: A special transaction stating that the block proposer could
-  not aggregate the PVSS transcripts and an inclusion of the transcripts. 
+- `Aggregate`: Add the public key from combined PVSS transcripts in the 
+   proposed block 
 
 In Ferveo, the DKG protocol is modelled as a state machine. This allows a
 validator to initialize an instance and drive it forward by reacting to
@@ -136,22 +131,16 @@ each of the above message in the appropriate way. All necessary state
 is persisted by this state machine. We describe the  appropriate action for
 each of the above transactions.
 
- - `Deal`: Each validator adds every deal message
-   it receives to the state machine and when the threshold is reached,
+ - `Deal`: Each validator adds every verified deal message
+   it observes to the DKG state machine and when the threshold is reached,
    the state machine says that it is ready for aggregation. The subsequent
-   block proposer asks the DKG state machine to perform the aggregation. If
-   successful, it adds an `Aggregate` message to the block it is proposing.
-   The includes the aggregations as wells as  the PVSS transcripts and is 
-   added tto the block header. Otherwise, a `Complain` transaction is added
-   to the proposed block along with the PVSS transcripts that it attempted
-   to aggregate.
+   block proposer asks the DKG state machine to perform the aggregation. It
+   then adds an `Aggregate` message to the block it is proposing.
  - `Aggregate`: This simply needs to be verified and the resulting key added
-   to the DKG state machine instance along with the input PVSS transcripts. 
-   If validation of the aggregated key fails, the proposed block is rejected.
- - `Complain`: Each validator verifies the validity of each of the included
-   PVSS transcripts. They slash those validators who authored invalid 
-   transcripts. If none are invalid, the block proposer is in error and the
-   block should be rejected. __TBD: We could also slash the block proposer__
+   to the DKG state machine instance. Since every validator should aggregate
+   the PVSS shares, verification is simply checking that their result equals
+   that in the aggregate transaction. If validation of the aggregated key
+   fails, the proposed block is rejected.
 
 While every validator must send and react to `Deal` messages, `Aggregate` / `Complain`
 messages must be made by the current block proposer if their current DKG 
@@ -172,8 +161,6 @@ We list the phase of ABCI++ in which each of the above actions takes place.
 
  - `Deal`: `Deal` happens when validators detect a new epoch has begun. In practice,
     this happens during or just after the [Finalize Block](https://github.com/tendermint/spec/blob/master/rfc/004-abci%2B%2B.md#delivertx-rename-to-finalizeblock) phase.
- - `Aggregate` / `Complain`: This is done during the [Prepare Proposal](https://github.com/tendermint/spec/blob/master/rfc/004-abci%2B%2B.md#prepare-proposal) phase 
-   (it could be done earlier if validators know they are likely to be the
-   next proposer). `Aggregate` messages will be  included in the header of 
-   the proposed block while `Complain` is a transaction. The final result 
-   should be verified by validators as part of their [Process Proposal](https://github.com/tendermint/spec/blob/master/rfc/004-abci%2B%2B.md#process-proposal) phase.
+ - `Aggregate`: This is done during the [Prepare Proposal](https://github.com/tendermint/spec/blob/master/rfc/004-abci%2B%2B.md#prepare-proposal) phase 
+   `Aggregate` messages will be  included in the proposed block and 
+    should be verified by validators as part of their [Process Proposal](https://github.com/tendermint/spec/blob/master/rfc/004-abci%2B%2B.md#process-proposal) phase.
