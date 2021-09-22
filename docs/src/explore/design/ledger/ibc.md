@@ -233,6 +233,12 @@ impl Ibc {
 }
 ```
 
+### Proof
+If a proven IBC-related data is needed, the response of a query should have proof of the data (ICS 24). It is used to verify if the key-value pair exists or doesn't exist on the counterpart ledger in IBC validity predicate (ICS 23).
+
+The query response has the proof as [`tendermint::merkle::proof::Proof`](https://github.com/informalsystems/tendermint-rs/blob/dd371372da58921efe1b48a4dd24a2597225df11/tendermint/src/merkle/proof.rs#L15), which consists of a vector of [`tendermint::merkle::proof::ProofOp`](https://github.com/informalsystems/tendermint-rs/blob/dd371372da58921efe1b48a4dd24a2597225df11/tendermint/src/merkle/proof.rs#L25). `ProofOp` should have `data`, which is encoded to `Vec<u8>` from [`ibc_proto::ics23::CommitmentProof`](https://github.com/informalsystems/ibc-rs/blob/66049e29a3f5a0c9258d228b9a6c21704e7e2fa4/proto/src/prost/ics23.rs#L49). The relayer getting the proof converts the proof from `tendermint::merkle::proof::Proof` to `ibc::ics23_commitment::commitment::CommitmentProofBytes` by [`convert_tm_to_ics_merkle_proof()`](https://github.com/informalsystems/ibc-rs/blob/66049e29a3f5a0c9258d228b9a6c21704e7e2fa4/modules/src/ics23_commitment/merkle.rs#L84) and set it to the request data of
+ the following IBC operation.
+
 ## IBC validity predicate
 IBC validity predicate validates that the IBC-related transactions are correct by checking the ledger state including prior and posterior. It is executed after a transaction has written IBC-related state. If the result is true, the IBC-related mutations are committed and the events are returned. If the result is false, the IBC-related mustations are dropped and the events aren't emitted. For the performance, IBC validity predicate is a [native validity predicate](ledger/vp.md#native-vps) that are built into the ledger.
 
@@ -569,10 +575,6 @@ impl ChainEndpoint for Anoma {
     ...
 }
 ```
-
-### Proof
-If a proven IBC-related data is needed, the response of a query should have the proof of the data. It is used to verify if the key value pair exists or doesn't exist on the counterpart ledger in an IBC operation executed in a transaction. The proof is `tendermint::merkle::proof::Proof`, which consists of a vector of `tendermint::merkle::proof::ProofOp`. `ProofOp` should have `data`, which is encoded to `Vec<u8>` from `ibc_proto::ics23::CommitmentProof`. The relayer getting the proof converts the proof to `ibc::ics23_commitment::commitment::CommitmentProofBytes` and set it to the request data of
- an IBC operation.
 
 ## Transfer (ICS 20)
 ![transfer](./ibc/transfer.svg  "transfer")
