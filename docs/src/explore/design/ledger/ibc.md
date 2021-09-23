@@ -38,7 +38,7 @@ The transaction can modify the ledger state by writing not only data specified i
 The IBC-related transaction can write IBC-related data to check the state or to be proved by other ledgers according to IBC protocol. Its storage key should be prefixed with `InternalAddress::Ibc` to protect them from other storage operations. The paths(keys) for Tendermint client are defined by [ICS 24](https://github.com/cosmos/ibc/blob/master/spec/core/ics-024-host-requirements/README.md#path-space). For example, a client state will be stored with a key `#IBC_encoded_addr/clients/{client_id}/clientState`.
 
 ### Emit IBC event
-The ledger should set an IBC event to `events` in the ABCI response to allow relayers to get the events. We could add `IbcEvent` to `TxResult`. `IbcEvent` should have the IBC event type and necessary data according to the IBC operation. If the `IbcEvent` is set, the ledger sets an IBC event to the response of the transaction. `IbcEvent` should be given to `TxEnv` and a transaction should be able to set the data.
+The ledger should set an IBC event to `events` in the ABCI response to allow relayers to get the events. We could add `IbcEvent` to `TxResult`. `IbcEvent` should have the IBC event type and necessary data according to the IBC operation. If the `IbcEvent` is set, the ledger sets an IBC event to the response of the transaction. A transaction sets `IbcEvent` on the write log as non-committed data. We provide functions to set/get them.
 
 IBC relayer can subscribe to the ledger with Tendermint RPC or get the response when the relayer submits a transaction, then get the event. It is parsed in the relayer by [`from_tx_response_event()`](https://github.com/informalsystems/ibc-rs/blob/26087d575c620d1ec57b3343d1aaf5afd1db72d5/modules/src/events.rs#L167-L181).
 
@@ -101,29 +101,6 @@ impl IbcEvent {
 ```rust
 /* shared/src/vm/host_env.rs */
 
-pub struct TxCtx<'a, DB, H>
-where
-    DB: storage::DB + for<'iter> storage::DBIter<'iter>,
-    H: StorageHasher,
-{
-    /// Read-only access to the storage.
-    pub storage: HostRef<'a, &'a Storage<DB, H>>,
-    /// Read/write access to the write log.
-    pub write_log: MutHostRef<'a, &'a WriteLog>,
-    /// Storage prefix iterators.
-    pub iterators: MutHostRef<'a, &'a PrefixIterators<'a, DB>>,
-    /// Transaction gas meter.
-    pub gas_meter: MutHostRef<'a, &'a BlockGasMeter>,
-    /// The verifiers whose validity predicates should be triggered.
-    pub verifiers: MutHostRef<'a, &'a HashSet<Address>>,
-    /// IBC related data to be set to the tx event
-    pub ibc_event: MutHostRef<'a, &'a IbvEvent>,
-    /// Cache for 2-step reads from host environment.
-    pub result_buffer: MutHostRef<'a, &'a Option<Vec<u8>>>,
-}
-
-...
-
 /// IBC event type insertion function exposed to the wasm VM Tx environment.
 pub fn tx_set_ibc_event_type<MEM, DB, H>(
     env: &TxEnv<MEM, DB, H>,
@@ -141,8 +118,11 @@ where
         .map_err(|e| TxRuntimeError::MemoryError(Box::new(e)))?;
     tx_add_gas(env, gas)?;
 
-    let event = unsafe { env.ctx.ibc_event.get() };
-    event.set_event_type(event_type);
+    let write_log = unsafe { env.ctx.write_log.get() };
+    let (gas, _size_diff) = write_log
+        .set_ibc_event_type(event_type)
+        .map_err(TxRuntimeError::StorageModificationError)?;
+    tx_add_gas(env, gas)
 }
 
 /// IBC data insertion function exposed to the wasm VM Tx environment.
@@ -169,8 +149,8 @@ where
         .map_err(|e| TxRuntimeError::MemoryError(Box::new(e)))?;
     tx_add_gas(env, gas)?;
 
-    let event = unsafe { env.ctx.ibc_event.get() };
-    event.insert(key, value);
+    let write_log = unsafe { env.ctx.write_log.get() };
+    write_log.insert_ibc_attribute(key, value);
 }
 ```
 
