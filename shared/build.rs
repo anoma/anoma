@@ -6,7 +6,7 @@ use std::{env, str};
 const PROTO_SRC: &str = "./proto";
 
 /// The version should match the one we use in the `Makefile`
-const RUSTFMT_TOOLCHAIN_SRC: &str = "../rust-nightly-version";
+const RUSTFMT_TOOLCHAIN_SRC: &str = "./rust-nightly-version";
 
 fn main() {
     if let Ok(val) = env::var("COMPILE_PROTO") {
