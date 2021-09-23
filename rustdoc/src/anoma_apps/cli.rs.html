@@ -2034,6 +2034,83 @@
 <span id="2032">2032</span>
 <span id="2033">2033</span>
 <span id="2034">2034</span>
+<span id="2035">2035</span>
+<span id="2036">2036</span>
+<span id="2037">2037</span>
+<span id="2038">2038</span>
+<span id="2039">2039</span>
+<span id="2040">2040</span>
+<span id="2041">2041</span>
+<span id="2042">2042</span>
+<span id="2043">2043</span>
+<span id="2044">2044</span>
+<span id="2045">2045</span>
+<span id="2046">2046</span>
+<span id="2047">2047</span>
+<span id="2048">2048</span>
+<span id="2049">2049</span>
+<span id="2050">2050</span>
+<span id="2051">2051</span>
+<span id="2052">2052</span>
+<span id="2053">2053</span>
+<span id="2054">2054</span>
+<span id="2055">2055</span>
+<span id="2056">2056</span>
+<span id="2057">2057</span>
+<span id="2058">2058</span>
+<span id="2059">2059</span>
+<span id="2060">2060</span>
+<span id="2061">2061</span>
+<span id="2062">2062</span>
+<span id="2063">2063</span>
+<span id="2064">2064</span>
+<span id="2065">2065</span>
+<span id="2066">2066</span>
+<span id="2067">2067</span>
+<span id="2068">2068</span>
+<span id="2069">2069</span>
+<span id="2070">2070</span>
+<span id="2071">2071</span>
+<span id="2072">2072</span>
+<span id="2073">2073</span>
+<span id="2074">2074</span>
+<span id="2075">2075</span>
+<span id="2076">2076</span>
+<span id="2077">2077</span>
+<span id="2078">2078</span>
+<span id="2079">2079</span>
+<span id="2080">2080</span>
+<span id="2081">2081</span>
+<span id="2082">2082</span>
+<span id="2083">2083</span>
+<span id="2084">2084</span>
+<span id="2085">2085</span>
+<span id="2086">2086</span>
+<span id="2087">2087</span>
+<span id="2088">2088</span>
+<span id="2089">2089</span>
+<span id="2090">2090</span>
+<span id="2091">2091</span>
+<span id="2092">2092</span>
+<span id="2093">2093</span>
+<span id="2094">2094</span>
+<span id="2095">2095</span>
+<span id="2096">2096</span>
+<span id="2097">2097</span>
+<span id="2098">2098</span>
+<span id="2099">2099</span>
+<span id="2100">2100</span>
+<span id="2101">2101</span>
+<span id="2102">2102</span>
+<span id="2103">2103</span>
+<span id="2104">2104</span>
+<span id="2105">2105</span>
+<span id="2106">2106</span>
+<span id="2107">2107</span>
+<span id="2108">2108</span>
+<span id="2109">2109</span>
+<span id="2110">2110</span>
+<span id="2111">2111</span>
 </pre><pre class="rust">
 <span class="doccomment">//! The CLI commands that are re-used between the executables `anoma`,</span>
 <span class="doccomment">//! `anoma-node` and `anoma-client`.</span>
@@ -2182,6 +2259,8 @@
         <span class="comment">// Gossip cmds</span>
         <span class="ident">Intent</span>(<span class="ident">Intent</span>),
         <span class="ident">SubscribeTopic</span>(<span class="ident">SubscribeTopic</span>),
+        <span class="comment">// Utils cmds</span>
+        <span class="ident">Utils</span>(<span class="ident">Utils</span>),
     }
 
     <span class="kw">impl</span> <span class="ident">Cmd</span> <span class="kw">for</span> <span class="ident">AnomaClient</span> {
@@ -2205,6 +2284,8 @@
                 <span class="comment">// Intents</span>
                 .<span class="ident">subcommand</span>(<span class="ident">Intent::def</span>().<span class="ident">display_order</span>(<span class="number">4</span>))
                 .<span class="ident">subcommand</span>(<span class="ident">SubscribeTopic::def</span>().<span class="ident">display_order</span>(<span class="number">4</span>))
+                <span class="comment">// Utils</span>
+                .<span class="ident">subcommand</span>(<span class="ident">Utils::def</span>().<span class="ident">display_order</span>(<span class="number">5</span>))
         }
 
         <span class="kw">fn</span> <span class="ident">parse</span>(<span class="ident">matches</span>: <span class="kw-2">&amp;</span><span class="ident">ArgMatches</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
@@ -2225,6 +2306,7 @@
             <span class="kw">let</span> <span class="ident">intent</span> <span class="op">=</span> <span class="ident">SubCmd::parse</span>(<span class="ident">matches</span>).<span class="ident">map</span>(<span class="self">Self</span><span class="ident">::Intent</span>);
             <span class="kw">let</span> <span class="ident">subscribe_topic</span> <span class="op">=</span>
                 <span class="ident">SubCmd::parse</span>(<span class="ident">matches</span>).<span class="ident">map</span>(<span class="self">Self</span><span class="ident">::SubscribeTopic</span>);
+            <span class="kw">let</span> <span class="ident">utils</span> <span class="op">=</span> <span class="ident">SubCmd::parse</span>(<span class="ident">matches</span>).<span class="ident">map</span>(<span class="self">Self</span><span class="ident">::Utils</span>);
             <span class="ident">tx_custom</span>
                 .<span class="ident">or</span>(<span class="ident">tx_transfer</span>)
                 .<span class="ident">or</span>(<span class="ident">tx_update_vp</span>)
@@ -2239,6 +2321,7 @@
                 .<span class="ident">or</span>(<span class="ident">query_slashes</span>)
                 .<span class="ident">or</span>(<span class="ident">intent</span>)
                 .<span class="ident">or</span>(<span class="ident">subscribe_topic</span>)
+                .<span class="ident">or</span>(<span class="ident">utils</span>)
         }
     }
 
@@ -2956,6 +3039,51 @@
             <span class="ident">App::new</span>(<span class="self">Self</span><span class="ident">::CMD</span>)
                 .<span class="ident">about</span>(<span class="string">&quot;subscribe to a topic.&quot;</span>)
                 .<span class="ident">add_args</span>::<span class="op">&lt;</span><span class="ident">args::SubscribeTopic</span><span class="op">&gt;</span>()
+        }
+    }
+
+    <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
+    <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">Utils</span> {
+        <span class="ident">InitGenesisValidator</span>(<span class="ident">InitGenesisValidator</span>),
+    }
+
+    <span class="kw">impl</span> <span class="ident">SubCmd</span> <span class="kw">for</span> <span class="ident">Utils</span> {
+        <span class="kw">const</span> <span class="ident">CMD</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;utils&quot;</span>;
+
+        <span class="kw">fn</span> <span class="ident">parse</span>(<span class="ident">matches</span>: <span class="kw-2">&amp;</span><span class="ident">ArgMatches</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
+            <span class="ident">matches</span>.<span class="ident">subcommand_matches</span>(<span class="self">Self</span><span class="ident">::CMD</span>).<span class="ident">and_then</span>(<span class="op">|</span><span class="ident">matches</span><span class="op">|</span> {
+                <span class="ident">SubCmd::parse</span>(<span class="ident">matches</span>).<span class="ident">map</span>(<span class="self">Self</span><span class="ident">::InitGenesisValidator</span>)
+            })
+        }
+
+        <span class="kw">fn</span> <span class="ident">def</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">App</span> {
+            <span class="ident">App::new</span>(<span class="self">Self</span><span class="ident">::CMD</span>)
+                .<span class="ident">about</span>(<span class="string">&quot;Utils sub-commands&quot;</span>)
+                .<span class="ident">subcommand</span>(<span class="ident">InitGenesisValidator::def</span>())
+                .<span class="ident">setting</span>(<span class="ident">AppSettings::SubcommandRequiredElseHelp</span>)
+        }
+    }
+
+    <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
+    <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">InitGenesisValidator</span>(<span class="kw">pub</span> <span class="ident">args::InitGenesisValidator</span>);
+
+    <span class="kw">impl</span> <span class="ident">SubCmd</span> <span class="kw">for</span> <span class="ident">InitGenesisValidator</span> {
+        <span class="kw">const</span> <span class="ident">CMD</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;init-genesis-validator&quot;</span>;
+
+        <span class="kw">fn</span> <span class="ident">parse</span>(<span class="ident">matches</span>: <span class="kw-2">&amp;</span><span class="ident">ArgMatches</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
+            <span class="ident">matches</span>
+                .<span class="ident">subcommand_matches</span>(<span class="self">Self</span><span class="ident">::CMD</span>)
+                .<span class="ident">map</span>(<span class="op">|</span><span class="ident">matches</span><span class="op">|</span> <span class="self">Self</span>(<span class="ident">args::InitGenesisValidator::parse</span>(<span class="ident">matches</span>)))
+        }
+
+        <span class="kw">fn</span> <span class="ident">def</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">App</span> {
+            <span class="ident">App::new</span>(<span class="self">Self</span><span class="ident">::CMD</span>)
+                .<span class="ident">about</span>(
+                    <span class="string">&quot;Initialize genesis validator&#39;s address, staking reward \
+                     address, consensus key, validator account key and \
+                     staking rewards key and use it in the ledger&#39;s node.&quot;</span>,
+                )
+                .<span class="ident">add_args</span>::<span class="op">&lt;</span><span class="ident">args::InitGenesisValidator</span><span class="op">&gt;</span>()
         }
     }
 }
@@ -4003,7 +4131,33 @@
             )
         }
     }
+
+    <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
+    <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">InitGenesisValidator</span> {
+        <span class="kw">pub</span> <span class="ident">alias</span>: <span class="ident">String</span>,
+        <span class="kw">pub</span> <span class="ident">unsafe_dont_encrypt</span>: <span class="ident">bool</span>,
+    }
+
+    <span class="kw">impl</span> <span class="ident">Args</span> <span class="kw">for</span> <span class="ident">InitGenesisValidator</span> {
+        <span class="kw">fn</span> <span class="ident">parse</span>(<span class="ident">matches</span>: <span class="kw-2">&amp;</span><span class="ident">ArgMatches</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+            <span class="kw">let</span> <span class="ident">alias</span> <span class="op">=</span> <span class="ident">ALIAS</span>.<span class="ident">parse</span>(<span class="ident">matches</span>);
+            <span class="kw">let</span> <span class="ident">unsafe_dont_encrypt</span> <span class="op">=</span> <span class="ident">UNSAFE_DONT_ENCRYPT</span>.<span class="ident">parse</span>(<span class="ident">matches</span>);
+            <span class="self">Self</span> {
+                <span class="ident">alias</span>,
+                <span class="ident">unsafe_dont_encrypt</span>,
+            }
+        }
+
+        <span class="kw">fn</span> <span class="ident">def</span>(<span class="ident">app</span>: <span class="ident">App</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">App</span> {
+            <span class="ident">app</span>.<span class="ident">arg</span>(<span class="ident">ALIAS</span>.<span class="ident">def</span>().<span class="ident">about</span>(<span class="string">&quot;The validator address alias&quot;</span>))
+                .<span class="ident">arg</span>(<span class="ident">UNSAFE_DONT_ENCRYPT</span>.<span class="ident">def</span>().<span class="ident">about</span>(
+                    <span class="string">&quot;UNSAFE: Do not encrypt the keypair. Do not use this for \
+                     keys used in a live network.&quot;</span>,
+                ))
+        }
+    }
 }
+
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">anoma_cli</span>() <span class="op">-</span><span class="op">&gt;</span> (<span class="ident">cmds::Anoma</span>, <span class="ident">String</span>) {
     <span class="kw">let</span> <span class="ident">app</span> <span class="op">=</span> <span class="ident">anoma_app</span>();
     <span class="kw">let</span> <span class="ident">matches</span> <span class="op">=</span> <span class="ident">app</span>.<span class="ident">get_matches</span>();

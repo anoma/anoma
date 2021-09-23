@@ -479,6 +479,13 @@
 <span id="477">477</span>
 <span id="478">478</span>
 <span id="479">479</span>
+<span id="480">480</span>
+<span id="481">481</span>
+<span id="482">482</span>
+<span id="483">483</span>
+<span id="484">484</span>
+<span id="485">485</span>
+<span id="486">486</span>
 </pre><pre class="rust">
 <span class="doccomment">//! Implements transparent addresses as described in [Accounts</span>
 <span class="doccomment">//! Addresses](docs/src/explore/design/ledger/accounts.md#addresses).</span>
@@ -880,12 +887,29 @@
     }
 }
 
+<span class="doccomment">/// Generate a new established address.</span>
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;rand&quot;</span>)]</span>
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">gen_established_address</span>(<span class="ident">seed</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span><span class="ident">str</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Address</span> {
+    <span class="kw">use</span> <span class="ident">rand::prelude::ThreadRng</span>;
+    <span class="kw">use</span> <span class="ident">rand</span>::{<span class="ident">thread_rng</span>, <span class="ident">RngCore</span>};
+
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">key_gen</span> <span class="op">=</span> <span class="ident">EstablishedAddressGen::new</span>(<span class="ident">seed</span>);
+
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">rng</span>: <span class="ident">ThreadRng</span> <span class="op">=</span> <span class="ident">thread_rng</span>();
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">rng_bytes</span> <span class="op">=</span> <span class="macro">vec!</span>[<span class="number">0u8</span>; <span class="number">32</span>];
+    <span class="ident">rng</span>.<span class="ident">fill_bytes</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">rng_bytes</span>[..]);
+    <span class="kw">let</span> <span class="ident">rng_source</span> <span class="op">=</span> <span class="ident">rng_bytes</span>
+        .<span class="ident">iter</span>()
+        .<span class="ident">map</span>(<span class="op">|</span><span class="ident">b</span><span class="op">|</span> <span class="macro">format!</span>(<span class="string">&quot;{:02X}&quot;</span>, <span class="ident">b</span>))
+        .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span><span class="op">&gt;</span>()
+        .<span class="ident">join</span>(<span class="string">&quot;&quot;</span>);
+    <span class="ident">key_gen</span>.<span class="ident">generate_address</span>(<span class="ident">rng_source</span>)
+}
+
 <span class="doccomment">/// Helpers for testing with addresses.</span>
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">test</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;testing&quot;</span>))]</span>
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">testing</span> {
     <span class="kw">use</span> <span class="ident">proptest::prelude</span>::<span class="kw-2">*</span>;
-    <span class="kw">use</span> <span class="ident">rand::prelude::ThreadRng</span>;
-    <span class="kw">use</span> <span class="ident">rand</span>::{<span class="ident">thread_rng</span>, <span class="ident">RngCore</span>};
 
     <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
     <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::types::key::ed25519</span>;
@@ -893,17 +917,7 @@
     <span class="doccomment">/// Generate a new established address.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">gen_established_address</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Address</span> {
         <span class="kw">let</span> <span class="ident">seed</span> <span class="op">=</span> <span class="string">&quot;such randomness, much wow&quot;</span>;
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">key_gen</span> <span class="op">=</span> <span class="ident">EstablishedAddressGen::new</span>(<span class="ident">seed</span>);
-
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">rng</span>: <span class="ident">ThreadRng</span> <span class="op">=</span> <span class="ident">thread_rng</span>();
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">rng_bytes</span> <span class="op">=</span> <span class="macro">vec!</span>[<span class="number">0u8</span>; <span class="number">32</span>];
-        <span class="ident">rng</span>.<span class="ident">fill_bytes</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">rng_bytes</span>[..]);
-        <span class="kw">let</span> <span class="ident">rng_source</span> <span class="op">=</span> <span class="ident">rng_bytes</span>
-            .<span class="ident">iter</span>()
-            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">b</span><span class="op">|</span> <span class="macro">format!</span>(<span class="string">&quot;{:02X}&quot;</span>, <span class="ident">b</span>))
-            .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span><span class="op">&gt;</span>()
-            .<span class="ident">join</span>(<span class="string">&quot;&quot;</span>);
-        <span class="ident">key_gen</span>.<span class="ident">generate_address</span>(<span class="ident">rng_source</span>)
+        <span class="kw">super</span><span class="ident">::gen_established_address</span>(<span class="ident">seed</span>)
     }
 
     <span class="doccomment">/// A sampled established address for tests</span>

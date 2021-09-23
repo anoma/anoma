@@ -194,11 +194,6 @@
 <span id="192">192</span>
 <span id="193">193</span>
 <span id="194">194</span>
-<span id="195">195</span>
-<span id="196">196</span>
-<span id="197">197</span>
-<span id="198">198</span>
-<span id="199">199</span>
 </pre><pre class="rust">
 <span class="doccomment">//! The parameters used for the chain&#39;s genesis</span>
 
@@ -215,10 +210,6 @@
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Genesis</span> {
     <span class="kw">pub</span> <span class="ident">validators</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Validator</span><span class="op">&gt;</span>,
-    <span class="doccomment">/// The consensus key will be written into Tendermint node&#39;s</span>
-    <span class="doccomment">/// `priv_validator_key.json`</span>
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;dev&quot;</span>)]</span>
-    <span class="kw">pub</span> <span class="ident">validator_consensus_key</span>: <span class="ident">Keypair</span>,
     <span class="kw">pub</span> <span class="ident">token_accounts</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">TokenAccount</span><span class="op">&gt;</span>,
     <span class="kw">pub</span> <span class="ident">established_accounts</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">EstablishedAccount</span><span class="op">&gt;</span>,
     <span class="kw">pub</span> <span class="ident">implicit_accounts</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">ImplicitAccount</span><span class="op">&gt;</span>,
@@ -303,7 +294,7 @@
             <span class="ident">address</span>,
             <span class="ident">staking_reward_address</span>,
             <span class="ident">tokens</span>: <span class="ident">token::Amount::whole</span>(<span class="number">200_000</span>),
-            <span class="ident">consensus_key</span>: <span class="ident">consensus_keypair</span>.<span class="ident">public</span>.<span class="ident">clone</span>(),
+            <span class="ident">consensus_key</span>: <span class="ident">consensus_keypair</span>.<span class="ident">public</span>,
             <span class="ident">staking_reward_key</span>: <span class="ident">staking_reward_keypair</span>.<span class="ident">public</span>,
         },
         <span class="ident">account_key</span>: <span class="ident">account_keypair</span>.<span class="ident">public</span>,
@@ -361,7 +352,6 @@
         .<span class="ident">collect</span>();
     <span class="ident">Genesis</span> {
         <span class="ident">validators</span>: <span class="macro">vec!</span>[<span class="ident">validator</span>],
-        <span class="ident">validator_consensus_key</span>: <span class="ident">consensus_keypair</span>,
         <span class="ident">established_accounts</span>: <span class="macro">vec!</span>[<span class="ident">albert</span>, <span class="ident">bertha</span>, <span class="ident">christel</span>, <span class="ident">matchmaker</span>],
         <span class="ident">implicit_accounts</span>,
         <span class="ident">token_accounts</span>,

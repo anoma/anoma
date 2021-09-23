@@ -224,6 +224,17 @@
 <span id="222">222</span>
 <span id="223">223</span>
 <span id="224">224</span>
+<span id="225">225</span>
+<span id="226">226</span>
+<span id="227">227</span>
+<span id="228">228</span>
+<span id="229">229</span>
+<span id="230">230</span>
+<span id="231">231</span>
+<span id="232">232</span>
+<span id="233">233</span>
+<span id="234">234</span>
+<span id="235">235</span>
 </pre><pre class="rust">
 <span class="doccomment">//! Cryptographic keys for digital signatures support for the wallet.</span>
 
@@ -364,13 +375,24 @@
 
 <span class="kw">impl</span> <span class="ident">StoredKeypair</span> {
     <span class="doccomment">/// Construct a keypair for storage. If no password is provided, the keypair</span>
-    <span class="doccomment">/// will be stored raw without encryption.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">keypair</span>: <span class="ident">Keypair</span>, <span class="ident">password</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="doccomment">/// will be stored raw without encryption. Returns the key for storing and a</span>
+    <span class="doccomment">/// reference-counting point to the raw key.</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(
+        <span class="ident">keypair</span>: <span class="ident">Keypair</span>,
+        <span class="ident">password</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>,
+    ) <span class="op">-</span><span class="op">&gt;</span> (<span class="self">Self</span>, <span class="ident">Rc</span><span class="op">&lt;</span><span class="ident">Keypair</span><span class="op">&gt;</span>) {
         <span class="kw">match</span> <span class="ident">password</span> {
             <span class="prelude-val">Some</span>(<span class="ident">password</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="self">Self</span><span class="ident">::Encrypted</span>(<span class="ident">EncryptedKeypair::new</span>(<span class="ident">keypair</span>, <span class="ident">password</span>))
+                <span class="kw">let</span> <span class="ident">keypair</span> <span class="op">=</span> <span class="ident">Rc::new</span>(<span class="ident">keypair</span>);
+                (
+                    <span class="self">Self</span><span class="ident">::Encrypted</span>(<span class="ident">EncryptedKeypair::new</span>(<span class="kw-2">&amp;</span><span class="ident">keypair</span>, <span class="ident">password</span>)),
+                    <span class="ident">keypair</span>,
+                )
             }
-            <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">Self</span><span class="ident">::Raw</span>(<span class="ident">Rc::new</span>(<span class="ident">keypair</span>)),
+            <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="kw">let</span> <span class="ident">keypair</span> <span class="op">=</span> <span class="ident">Rc::new</span>(<span class="ident">keypair</span>);
+                (<span class="self">Self</span><span class="ident">::Raw</span>(<span class="ident">keypair</span>.<span class="ident">clone</span>()), <span class="ident">keypair</span>)
+            }
         }
     }
 
@@ -401,7 +423,7 @@
 
 <span class="kw">impl</span> <span class="ident">EncryptedKeypair</span> {
     <span class="doccomment">/// Encrypt a keypair and store it with its salt.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">keypair</span>: <span class="ident">Keypair</span>, <span class="ident">password</span>: <span class="ident">String</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">keypair</span>: <span class="kw-2">&amp;</span><span class="ident">Keypair</span>, <span class="ident">password</span>: <span class="ident">String</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="kw">let</span> <span class="ident">salt</span> <span class="op">=</span> <span class="ident">encryption_salt</span>();
         <span class="kw">let</span> <span class="ident">encryption_key</span> <span class="op">=</span> <span class="ident">encryption_key</span>(<span class="kw-2">&amp;</span><span class="ident">salt</span>, <span class="ident">password</span>);
 

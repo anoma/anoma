@@ -216,6 +216,10 @@
 <span id="214">214</span>
 <span id="215">215</span>
 <span id="216">216</span>
+<span id="217">217</span>
+<span id="218">218</span>
+<span id="219">219</span>
+<span id="220">220</span>
 </pre><pre class="rust">
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">defaults</span>;
 <span class="kw">mod</span> <span class="ident">keys</span>;
@@ -271,20 +275,24 @@
     <span class="doccomment">/// Generate a new keypair and derive an implicit address from its public</span>
     <span class="doccomment">/// and insert them into the store with the provided alias. If none</span>
     <span class="doccomment">/// provided, the alias will be the public key hash. If the key is to be</span>
-    <span class="doccomment">/// encrypted, will prompt for password from stdin. Returns the alias of</span>
-    <span class="doccomment">/// the key.</span>
+    <span class="doccomment">/// encrypted, will prompt for password from stdin. Stores the key in</span>
+    <span class="doccomment">/// decrypted key cache and returns the alias of the key and a</span>
+    <span class="doccomment">/// reference-counting pointer to the key.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">gen_key</span>(
         <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
         <span class="ident">alias</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>,
         <span class="ident">unsafe_dont_encrypt</span>: <span class="ident">bool</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">String</span> {
+    ) <span class="op">-</span><span class="op">&gt;</span> (<span class="ident">String</span>, <span class="ident">Rc</span><span class="op">&lt;</span><span class="ident">Keypair</span><span class="op">&gt;</span>) {
         <span class="kw">let</span> <span class="ident">password</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">unsafe_dont_encrypt</span> {
             <span class="macro">println!</span>(<span class="string">&quot;Warning: The keypair will NOT be encrypted.&quot;</span>);
             <span class="prelude-val">None</span>
         } <span class="kw">else</span> {
             <span class="prelude-val">Some</span>(<span class="ident">read_password</span>(<span class="string">&quot;Enter encryption password: &quot;</span>))
         };
-        <span class="self">self</span>.<span class="ident">store</span>.<span class="ident">gen_key</span>(<span class="ident">alias</span>, <span class="ident">password</span>)
+        <span class="kw">let</span> (<span class="ident">alias</span>, <span class="ident">key</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">store</span>.<span class="ident">gen_key</span>(<span class="ident">alias</span>, <span class="ident">password</span>);
+        <span class="comment">// Cache the newly added key</span>
+        <span class="self">self</span>.<span class="ident">decrypted_key_cache</span>.<span class="ident">insert</span>(<span class="ident">alias</span>.<span class="ident">clone</span>(), <span class="ident">key</span>.<span class="ident">clone</span>());
+        (<span class="ident">alias</span>, <span class="ident">key</span>)
     }
 
     <span class="doccomment">/// Find the stored key by an alias, a public key hash or a public key.</span>
