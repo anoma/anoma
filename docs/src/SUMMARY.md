@@ -1,6 +1,10 @@
 # Summary
 
 - [Introduction](./README.md)
+- [User Guide](./user-guide/README.md)
+  - [The Wallet](./user-guide/wallet.md)
+  - [The Ledger](./user-guide/ledger.md)
+  - [The Intent gossip and Matchmaker](./user-guide/intent-gossip-and-matchmaker.md)
 - [Exploration](./explore/README.md)
   - [Design](./explore/design/README.md)
     - [Overview](./explore/design/overview.md)
