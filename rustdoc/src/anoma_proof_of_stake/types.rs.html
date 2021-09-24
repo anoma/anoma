@@ -688,6 +688,8 @@
 <span id="686">686</span>
 <span id="687">687</span>
 <span id="688">688</span>
+<span id="689">689</span>
+<span id="690">690</span>
 </pre><pre class="rust">
 <span class="doccomment">//! Proof of Stake data types</span>
 
@@ -863,7 +865,7 @@
 {
     <span class="doccomment">/// The `voting_power` field must be on top, because lexicographic ordering</span>
     <span class="doccomment">/// is based on the top-to-bottom declaration order and in the</span>
-    <span class="doccomment">/// `ValidatorSet` the `WeighedValidator`s these need to be sorted by</span>
+    <span class="doccomment">/// `ValidatorSet` the `WeightedValidator`s these need to be sorted by</span>
     <span class="doccomment">/// the `voting_power`.</span>
     <span class="kw">pub</span> <span class="ident">voting_power</span>: <span class="ident">VotingPower</span>,
     <span class="doccomment">/// Validator&#39;s address</span>
@@ -923,7 +925,9 @@
 }
 
 <span class="doccomment">/// Validator&#39;s state.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">Copy</span>, <span class="ident">BorshDeserialize</span>, <span class="ident">BorshSerialize</span>)]</span>
+<span class="attribute">#[<span class="ident">derive</span>(
+    <span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">Copy</span>, <span class="ident">BorshDeserialize</span>, <span class="ident">BorshSerialize</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>,
+)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">ValidatorState</span> {
     <span class="doccomment">/// Inactive validator may not participate in the consensus.</span>
     <span class="ident">Inactive</span>,

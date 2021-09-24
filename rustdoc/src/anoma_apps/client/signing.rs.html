@@ -37,6 +37,7 @@
 <span id="35">35</span>
 <span id="36">36</span>
 <span id="37">37</span>
+<span id="38">38</span>
 </pre><pre class="rust">
 <span class="doccomment">//! Helpers for making digital signatures using cryptographic keys from the</span>
 <span class="doccomment">//! wallet.</span>
@@ -47,12 +48,13 @@
 <span class="kw">use</span> <span class="ident">anoma::types::key::ed25519::Keypair</span>;
 
 <span class="kw">use</span> <span class="kw">super</span><span class="ident">::rpc</span>;
-<span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">cli</span>, <span class="ident">wallet</span>};
+<span class="kw">use</span> <span class="kw">crate</span><span class="ident">::cli</span>;
+<span class="kw">use</span> <span class="kw">crate</span><span class="ident">::wallet::Wallet</span>;
 
-<span class="doccomment">/// Find the public key for the given address and try to load the keypair for it</span>
-<span class="doccomment">/// from the wallet. Panics if the key cannot be found or loaded.</span>
+<span class="doccomment">/// Find the public key for the given address and try to load the keypair</span>
+<span class="doccomment">/// for it from the wallet. Panics if the key cannot be found or loaded.</span>
 <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">find_keypair</span>(
-    <span class="ident">wallet</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">wallet::Wallet</span>,
+    <span class="ident">wallet</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Wallet</span>,
     <span class="ident">addr</span>: <span class="kw-2">&amp;</span><span class="ident">Address</span>,
     <span class="ident">ledger_address</span>: <span class="ident">tendermint::net::Address</span>,
 ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Rc</span><span class="op">&lt;</span><span class="ident">Keypair</span><span class="op">&gt;</span> {

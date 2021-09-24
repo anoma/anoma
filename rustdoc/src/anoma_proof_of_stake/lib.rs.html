@@ -1804,6 +1804,55 @@
 <span id="1802">1802</span>
 <span id="1803">1803</span>
 <span id="1804">1804</span>
+<span id="1805">1805</span>
+<span id="1806">1806</span>
+<span id="1807">1807</span>
+<span id="1808">1808</span>
+<span id="1809">1809</span>
+<span id="1810">1810</span>
+<span id="1811">1811</span>
+<span id="1812">1812</span>
+<span id="1813">1813</span>
+<span id="1814">1814</span>
+<span id="1815">1815</span>
+<span id="1816">1816</span>
+<span id="1817">1817</span>
+<span id="1818">1818</span>
+<span id="1819">1819</span>
+<span id="1820">1820</span>
+<span id="1821">1821</span>
+<span id="1822">1822</span>
+<span id="1823">1823</span>
+<span id="1824">1824</span>
+<span id="1825">1825</span>
+<span id="1826">1826</span>
+<span id="1827">1827</span>
+<span id="1828">1828</span>
+<span id="1829">1829</span>
+<span id="1830">1830</span>
+<span id="1831">1831</span>
+<span id="1832">1832</span>
+<span id="1833">1833</span>
+<span id="1834">1834</span>
+<span id="1835">1835</span>
+<span id="1836">1836</span>
+<span id="1837">1837</span>
+<span id="1838">1838</span>
+<span id="1839">1839</span>
+<span id="1840">1840</span>
+<span id="1841">1841</span>
+<span id="1842">1842</span>
+<span id="1843">1843</span>
+<span id="1844">1844</span>
+<span id="1845">1845</span>
+<span id="1846">1846</span>
+<span id="1847">1847</span>
+<span id="1848">1848</span>
+<span id="1849">1849</span>
+<span id="1850">1850</span>
+<span id="1851">1851</span>
+<span id="1852">1852</span>
+<span id="1853">1853</span>
 </pre><pre class="rust">
 <span class="doccomment">//! Proof of Stake system.</span>
 <span class="doccomment">//!</span>
@@ -2034,9 +2083,18 @@
                 <span class="ident">address</span>.<span class="ident">clone</span>(),
             ));
         }
+        <span class="kw">if</span> <span class="ident">address</span> <span class="op">=</span><span class="op">=</span> <span class="ident">staking_reward_address</span> {
+            <span class="kw">return</span> <span class="prelude-val">Err</span>(
+                <span class="ident">BecomeValidatorError::StakingRewardAddressEqValidatorAddress</span>(
+                    <span class="ident">address</span>.<span class="ident">clone</span>(),
+                ),
+            );
+        }
         <span class="kw">let</span> <span class="ident">BecomeValidatorData</span> {
             <span class="ident">consensus_key</span>,
             <span class="ident">state</span>,
+            <span class="ident">total_deltas</span>,
+            <span class="ident">voting_power</span>,
         } <span class="op">=</span> <span class="ident">become_validator</span>(
             <span class="kw-2">&amp;</span><span class="ident">params</span>,
             <span class="ident">address</span>,
@@ -2052,6 +2110,8 @@
         <span class="self">self</span>.<span class="ident">write_validator_state</span>(<span class="ident">address</span>, <span class="ident">state</span>);
         <span class="self">self</span>.<span class="ident">write_validator_set</span>(<span class="ident">validator_set</span>);
         <span class="self">self</span>.<span class="ident">write_validator_address_raw_hash</span>(<span class="ident">address</span>);
+        <span class="self">self</span>.<span class="ident">write_validator_total_deltas</span>(<span class="ident">address</span>, <span class="ident">total_deltas</span>);
+        <span class="self">self</span>.<span class="ident">write_validator_voting_power</span>(<span class="ident">address</span>, <span class="ident">voting_power</span>);
         <span class="prelude-val">Ok</span>(())
     }
 
@@ -2604,6 +2664,11 @@
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">BecomeValidatorError</span><span class="op">&lt;</span><span class="ident">Address</span>: <span class="ident">Display</span> <span class="op">+</span> <span class="ident">Debug</span><span class="op">&gt;</span> {
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;The given address {0} is already a validator&quot;</span>)]</span>
     <span class="ident">AlreadyValidator</span>(<span class="ident">Address</span>),
+    <span class="attribute">#[<span class="ident">error</span>(
+        <span class="string">&quot;The staking reward address must be different from the validator&#39;s \
+         address {0}&quot;</span>
+    )]</span>
+    <span class="ident">StakingRewardAddressEqValidatorAddress</span>(<span class="ident">Address</span>),
 }
 
 <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">missing_docs</span>)]</span>
@@ -2964,31 +3029,62 @@
     <span class="prelude-val">Ok</span>(<span class="ident">slashed_amount</span>)
 }
 
-<span class="kw">struct</span> <span class="ident">BecomeValidatorData</span><span class="op">&lt;</span><span class="ident">PK</span><span class="op">&gt;</span>
+<span class="kw">struct</span> <span class="ident">BecomeValidatorData</span><span class="op">&lt;</span><span class="ident">PK</span>, <span class="ident">TokenChange</span><span class="op">&gt;</span>
 <span class="kw">where</span>
     <span class="ident">PK</span>: <span class="ident">Debug</span> <span class="op">+</span> <span class="ident">Clone</span> <span class="op">+</span> <span class="ident">BorshDeserialize</span> <span class="op">+</span> <span class="ident">BorshSerialize</span>,
+    <span class="ident">TokenChange</span>: <span class="ident">Default</span>
+        <span class="op">+</span> <span class="ident">Debug</span>
+        <span class="op">+</span> <span class="ident">Clone</span>
+        <span class="op">+</span> <span class="ident">Copy</span>
+        <span class="op">+</span> <span class="ident">Add</span><span class="op">&lt;</span><span class="ident">Output</span> <span class="op">=</span> <span class="ident">TokenChange</span><span class="op">&gt;</span>
+        <span class="op">+</span> <span class="ident">BorshDeserialize</span>
+        <span class="op">+</span> <span class="ident">BorshSerialize</span>,
 {
     <span class="ident">consensus_key</span>: <span class="ident">ValidatorConsensusKeys</span><span class="op">&lt;</span><span class="ident">PK</span><span class="op">&gt;</span>,
     <span class="ident">state</span>: <span class="ident">ValidatorStates</span>,
+    <span class="ident">total_deltas</span>: <span class="ident">ValidatorTotalDeltas</span><span class="op">&lt;</span><span class="ident">TokenChange</span><span class="op">&gt;</span>,
+    <span class="ident">voting_power</span>: <span class="ident">ValidatorVotingPowers</span>,
 }
 
 <span class="doccomment">/// A function that initialized data for a new validator.</span>
-<span class="kw">fn</span> <span class="ident">become_validator</span><span class="op">&lt;</span><span class="ident">Address</span>, <span class="ident">PK</span><span class="op">&gt;</span>(
+<span class="kw">fn</span> <span class="ident">become_validator</span><span class="op">&lt;</span><span class="ident">Address</span>, <span class="ident">PK</span>, <span class="ident">TokenChange</span><span class="op">&gt;</span>(
     <span class="ident">params</span>: <span class="kw-2">&amp;</span><span class="ident">PosParams</span>,
     <span class="ident">address</span>: <span class="kw-2">&amp;</span><span class="ident">Address</span>,
     <span class="ident">consensus_key</span>: <span class="kw-2">&amp;</span><span class="ident">PK</span>,
     <span class="ident">validator_set</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">ValidatorSets</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span>,
     <span class="ident">current_epoch</span>: <span class="ident">Epoch</span>,
-) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">BecomeValidatorData</span><span class="op">&lt;</span><span class="ident">PK</span><span class="op">&gt;</span>
+) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">BecomeValidatorData</span><span class="op">&lt;</span><span class="ident">PK</span>, <span class="ident">TokenChange</span><span class="op">&gt;</span>
 <span class="kw">where</span>
     <span class="ident">Address</span>: <span class="ident">Debug</span> <span class="op">+</span> <span class="ident">Clone</span> <span class="op">+</span> <span class="ident">Ord</span> <span class="op">+</span> <span class="ident">Hash</span> <span class="op">+</span> <span class="ident">BorshDeserialize</span> <span class="op">+</span> <span class="ident">BorshSerialize</span>,
     <span class="ident">PK</span>: <span class="ident">Debug</span> <span class="op">+</span> <span class="ident">Clone</span> <span class="op">+</span> <span class="ident">BorshDeserialize</span> <span class="op">+</span> <span class="ident">BorshSerialize</span>,
+    <span class="ident">TokenChange</span>: <span class="ident">Default</span>
+        <span class="op">+</span> <span class="ident">Debug</span>
+        <span class="op">+</span> <span class="ident">Clone</span>
+        <span class="op">+</span> <span class="ident">Copy</span>
+        <span class="op">+</span> <span class="ident">Add</span><span class="op">&lt;</span><span class="ident">Output</span> <span class="op">=</span> <span class="ident">TokenChange</span><span class="op">&gt;</span>
+        <span class="op">+</span> <span class="ident">BorshDeserialize</span>
+        <span class="op">+</span> <span class="ident">BorshSerialize</span>,
 {
     <span class="kw">let</span> <span class="ident">consensus_key</span> <span class="op">=</span>
         <span class="ident">Epoched::init</span>(<span class="ident">consensus_key</span>.<span class="ident">clone</span>(), <span class="ident">current_epoch</span>, <span class="ident">params</span>);
+
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">state</span> <span class="op">=</span>
-        <span class="ident">Epoched::init</span>(<span class="ident">ValidatorState::Pending</span>, <span class="ident">current_epoch</span>, <span class="ident">params</span>);
+        <span class="ident">Epoched::init_at_genesis</span>(<span class="ident">ValidatorState::Pending</span>, <span class="ident">current_epoch</span>);
     <span class="ident">state</span>.<span class="ident">set</span>(<span class="ident">ValidatorState::Candidate</span>, <span class="ident">current_epoch</span>, <span class="ident">params</span>);
+
+    <span class="kw">let</span> <span class="ident">total_deltas</span> <span class="op">=</span> <span class="ident">EpochedDelta::init_at_offset</span>(
+        <span class="ident">Default::default</span>(),
+        <span class="ident">current_epoch</span>,
+        <span class="ident">DynEpochOffset::PipelineLen</span>,
+        <span class="ident">params</span>,
+    );
+    <span class="kw">let</span> <span class="ident">voting_power</span> <span class="op">=</span> <span class="ident">EpochedDelta::init_at_offset</span>(
+        <span class="ident">Default::default</span>(),
+        <span class="ident">current_epoch</span>,
+        <span class="ident">DynEpochOffset::PipelineLen</span>,
+        <span class="ident">params</span>,
+    );
+
     <span class="ident">validator_set</span>.<span class="ident">update_from_offset</span>(
         <span class="op">|</span><span class="ident">validator_set</span>, <span class="ident">_epoch</span><span class="op">|</span> {
             <span class="kw">let</span> <span class="ident">validator</span> <span class="op">=</span> <span class="ident">WeightedValidator</span> {
@@ -3010,6 +3106,8 @@
     <span class="ident">BecomeValidatorData</span> {
         <span class="ident">consensus_key</span>,
         <span class="ident">state</span>,
+        <span class="ident">total_deltas</span>,
+        <span class="ident">voting_power</span>,
     }
 }
 

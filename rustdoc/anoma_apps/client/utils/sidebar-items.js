@@ -1,0 +1,1 @@
+initSidebarItems({"fn":[["init_genesis_validator","Initialize genesis validator’s address, staking reward address, consensus key, validator account key and staking rewards key and use it in the ledger’s node.“,"]]});

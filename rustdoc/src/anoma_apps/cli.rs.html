@@ -2111,6 +2111,114 @@
 <span id="2109">2109</span>
 <span id="2110">2110</span>
 <span id="2111">2111</span>
+<span id="2112">2112</span>
+<span id="2113">2113</span>
+<span id="2114">2114</span>
+<span id="2115">2115</span>
+<span id="2116">2116</span>
+<span id="2117">2117</span>
+<span id="2118">2118</span>
+<span id="2119">2119</span>
+<span id="2120">2120</span>
+<span id="2121">2121</span>
+<span id="2122">2122</span>
+<span id="2123">2123</span>
+<span id="2124">2124</span>
+<span id="2125">2125</span>
+<span id="2126">2126</span>
+<span id="2127">2127</span>
+<span id="2128">2128</span>
+<span id="2129">2129</span>
+<span id="2130">2130</span>
+<span id="2131">2131</span>
+<span id="2132">2132</span>
+<span id="2133">2133</span>
+<span id="2134">2134</span>
+<span id="2135">2135</span>
+<span id="2136">2136</span>
+<span id="2137">2137</span>
+<span id="2138">2138</span>
+<span id="2139">2139</span>
+<span id="2140">2140</span>
+<span id="2141">2141</span>
+<span id="2142">2142</span>
+<span id="2143">2143</span>
+<span id="2144">2144</span>
+<span id="2145">2145</span>
+<span id="2146">2146</span>
+<span id="2147">2147</span>
+<span id="2148">2148</span>
+<span id="2149">2149</span>
+<span id="2150">2150</span>
+<span id="2151">2151</span>
+<span id="2152">2152</span>
+<span id="2153">2153</span>
+<span id="2154">2154</span>
+<span id="2155">2155</span>
+<span id="2156">2156</span>
+<span id="2157">2157</span>
+<span id="2158">2158</span>
+<span id="2159">2159</span>
+<span id="2160">2160</span>
+<span id="2161">2161</span>
+<span id="2162">2162</span>
+<span id="2163">2163</span>
+<span id="2164">2164</span>
+<span id="2165">2165</span>
+<span id="2166">2166</span>
+<span id="2167">2167</span>
+<span id="2168">2168</span>
+<span id="2169">2169</span>
+<span id="2170">2170</span>
+<span id="2171">2171</span>
+<span id="2172">2172</span>
+<span id="2173">2173</span>
+<span id="2174">2174</span>
+<span id="2175">2175</span>
+<span id="2176">2176</span>
+<span id="2177">2177</span>
+<span id="2178">2178</span>
+<span id="2179">2179</span>
+<span id="2180">2180</span>
+<span id="2181">2181</span>
+<span id="2182">2182</span>
+<span id="2183">2183</span>
+<span id="2184">2184</span>
+<span id="2185">2185</span>
+<span id="2186">2186</span>
+<span id="2187">2187</span>
+<span id="2188">2188</span>
+<span id="2189">2189</span>
+<span id="2190">2190</span>
+<span id="2191">2191</span>
+<span id="2192">2192</span>
+<span id="2193">2193</span>
+<span id="2194">2194</span>
+<span id="2195">2195</span>
+<span id="2196">2196</span>
+<span id="2197">2197</span>
+<span id="2198">2198</span>
+<span id="2199">2199</span>
+<span id="2200">2200</span>
+<span id="2201">2201</span>
+<span id="2202">2202</span>
+<span id="2203">2203</span>
+<span id="2204">2204</span>
+<span id="2205">2205</span>
+<span id="2206">2206</span>
+<span id="2207">2207</span>
+<span id="2208">2208</span>
+<span id="2209">2209</span>
+<span id="2210">2210</span>
+<span id="2211">2211</span>
+<span id="2212">2212</span>
+<span id="2213">2213</span>
+<span id="2214">2214</span>
+<span id="2215">2215</span>
+<span id="2216">2216</span>
+<span id="2217">2217</span>
+<span id="2218">2218</span>
+<span id="2219">2219</span>
 </pre><pre class="rust">
 <span class="doccomment">//! The CLI commands that are re-used between the executables `anoma`,</span>
 <span class="doccomment">//! `anoma-node` and `anoma-client`.</span>
@@ -2233,7 +2341,7 @@
         <span class="kw">fn</span> <span class="ident">def</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">App</span> {
             <span class="op">&lt;</span><span class="self">Self</span> <span class="kw">as</span> <span class="ident">Cmd</span><span class="op">&gt;</span><span class="ident">::add_sub</span>(
                 <span class="ident">App::new</span>(<span class="self">Self</span><span class="ident">::CMD</span>)
-                    .<span class="ident">about</span>(<span class="string">&quot;Node sub-commands&quot;</span>)
+                    .<span class="ident">about</span>(<span class="string">&quot;Node sub-commands.&quot;</span>)
                     .<span class="ident">setting</span>(<span class="ident">AppSettings::SubcommandRequiredElseHelp</span>),
             )
         }
@@ -2248,6 +2356,7 @@
         <span class="ident">TxTransfer</span>(<span class="ident">TxTransfer</span>),
         <span class="ident">TxUpdateVp</span>(<span class="ident">TxUpdateVp</span>),
         <span class="ident">TxInitAccount</span>(<span class="ident">TxInitAccount</span>),
+        <span class="ident">TxInitValidator</span>(<span class="ident">TxInitValidator</span>),
         <span class="ident">Bond</span>(<span class="ident">Bond</span>),
         <span class="ident">Unbond</span>(<span class="ident">Unbond</span>),
         <span class="ident">Withdraw</span>(<span class="ident">Withdraw</span>),
@@ -2271,6 +2380,7 @@
                 .<span class="ident">subcommand</span>(<span class="ident">TxTransfer::def</span>().<span class="ident">display_order</span>(<span class="number">1</span>))
                 .<span class="ident">subcommand</span>(<span class="ident">TxUpdateVp::def</span>().<span class="ident">display_order</span>(<span class="number">1</span>))
                 .<span class="ident">subcommand</span>(<span class="ident">TxInitAccount::def</span>().<span class="ident">display_order</span>(<span class="number">1</span>))
+                .<span class="ident">subcommand</span>(<span class="ident">TxInitValidator::def</span>().<span class="ident">display_order</span>(<span class="number">1</span>))
                 <span class="comment">// PoS transactions</span>
                 .<span class="ident">subcommand</span>(<span class="ident">Bond::def</span>().<span class="ident">display_order</span>(<span class="number">2</span>))
                 .<span class="ident">subcommand</span>(<span class="ident">Unbond::def</span>().<span class="ident">display_order</span>(<span class="number">2</span>))
@@ -2294,6 +2404,8 @@
             <span class="kw">let</span> <span class="ident">tx_update_vp</span> <span class="op">=</span> <span class="ident">SubCmd::parse</span>(<span class="ident">matches</span>).<span class="ident">map</span>(<span class="self">Self</span><span class="ident">::TxUpdateVp</span>);
             <span class="kw">let</span> <span class="ident">tx_init_account</span> <span class="op">=</span>
                 <span class="ident">SubCmd::parse</span>(<span class="ident">matches</span>).<span class="ident">map</span>(<span class="self">Self</span><span class="ident">::TxInitAccount</span>);
+            <span class="kw">let</span> <span class="ident">tx_init_validator</span> <span class="op">=</span>
+                <span class="ident">SubCmd::parse</span>(<span class="ident">matches</span>).<span class="ident">map</span>(<span class="self">Self</span><span class="ident">::TxInitValidator</span>);
             <span class="kw">let</span> <span class="ident">bond</span> <span class="op">=</span> <span class="ident">SubCmd::parse</span>(<span class="ident">matches</span>).<span class="ident">map</span>(<span class="self">Self</span><span class="ident">::Bond</span>);
             <span class="kw">let</span> <span class="ident">unbond</span> <span class="op">=</span> <span class="ident">SubCmd::parse</span>(<span class="ident">matches</span>).<span class="ident">map</span>(<span class="self">Self</span><span class="ident">::Unbond</span>);
             <span class="kw">let</span> <span class="ident">withdraw</span> <span class="op">=</span> <span class="ident">SubCmd::parse</span>(<span class="ident">matches</span>).<span class="ident">map</span>(<span class="self">Self</span><span class="ident">::Withdraw</span>);
@@ -2311,6 +2423,7 @@
                 .<span class="ident">or</span>(<span class="ident">tx_transfer</span>)
                 .<span class="ident">or</span>(<span class="ident">tx_update_vp</span>)
                 .<span class="ident">or</span>(<span class="ident">tx_init_account</span>)
+                .<span class="ident">or</span>(<span class="ident">tx_init_validator</span>)
                 .<span class="ident">or</span>(<span class="ident">bond</span>)
                 .<span class="ident">or</span>(<span class="ident">unbond</span>)
                 .<span class="ident">or</span>(<span class="ident">withdraw</span>)
@@ -2337,7 +2450,7 @@
         <span class="kw">fn</span> <span class="ident">def</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">App</span> {
             <span class="op">&lt;</span><span class="self">Self</span> <span class="kw">as</span> <span class="ident">Cmd</span><span class="op">&gt;</span><span class="ident">::add_sub</span>(
                 <span class="ident">App::new</span>(<span class="self">Self</span><span class="ident">::CMD</span>)
-                    .<span class="ident">about</span>(<span class="string">&quot;Client sub-commands&quot;</span>)
+                    .<span class="ident">about</span>(<span class="string">&quot;Client sub-commands.&quot;</span>)
                     .<span class="ident">setting</span>(<span class="ident">AppSettings::SubcommandRequiredElseHelp</span>),
             )
         }
@@ -2376,7 +2489,7 @@
         <span class="kw">fn</span> <span class="ident">def</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">App</span> {
             <span class="op">&lt;</span><span class="self">Self</span> <span class="kw">as</span> <span class="ident">Cmd</span><span class="op">&gt;</span><span class="ident">::add_sub</span>(
                 <span class="ident">App::new</span>(<span class="self">Self</span><span class="ident">::CMD</span>)
-                    .<span class="ident">about</span>(<span class="string">&quot;Wallet sub-commands&quot;</span>)
+                    .<span class="ident">about</span>(<span class="string">&quot;Wallet sub-commands.&quot;</span>)
                     .<span class="ident">setting</span>(<span class="ident">AppSettings::SubcommandRequiredElseHelp</span>),
             )
         }
@@ -2408,7 +2521,7 @@
             <span class="ident">App::new</span>(<span class="self">Self</span><span class="ident">::CMD</span>)
                 .<span class="ident">about</span>(
                     <span class="string">&quot;Keypair management, including methods to generate and \
-                     look-up keys&quot;</span>,
+                     look-up keys.&quot;</span>,
                 )
                 .<span class="ident">setting</span>(<span class="ident">AppSettings::SubcommandRequiredElseHelp</span>)
                 .<span class="ident">subcommand</span>(<span class="ident">KeyGen::def</span>())
@@ -2456,7 +2569,7 @@
 
         <span class="kw">fn</span> <span class="ident">def</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">App</span> {
             <span class="ident">App::new</span>(<span class="self">Self</span><span class="ident">::CMD</span>)
-                .<span class="ident">about</span>(<span class="string">&quot;Searches for a keypair from a public key or an alias&quot;</span>)
+                .<span class="ident">about</span>(<span class="string">&quot;Searches for a keypair from a public key or an alias.&quot;</span>)
                 .<span class="ident">add_args</span>::<span class="op">&lt;</span><span class="ident">args::KeyFind</span><span class="op">&gt;</span>()
         }
     }
@@ -2475,7 +2588,7 @@
 
         <span class="kw">fn</span> <span class="ident">def</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">App</span> {
             <span class="ident">App::new</span>(<span class="self">Self</span><span class="ident">::CMD</span>)
-                .<span class="ident">about</span>(<span class="string">&quot;List all known keys&quot;</span>)
+                .<span class="ident">about</span>(<span class="string">&quot;List all known keys.&quot;</span>)
                 .<span class="ident">add_args</span>::<span class="op">&lt;</span><span class="ident">args::KeyList</span><span class="op">&gt;</span>()
         }
     }
@@ -2494,7 +2607,7 @@
 
         <span class="kw">fn</span> <span class="ident">def</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">App</span> {
             <span class="ident">App::new</span>(<span class="self">Self</span><span class="ident">::CMD</span>)
-                .<span class="ident">about</span>(<span class="string">&quot;Exports a keypair to a file&quot;</span>)
+                .<span class="ident">about</span>(<span class="string">&quot;Exports a keypair to a file.&quot;</span>)
                 .<span class="ident">add_args</span>::<span class="op">&lt;</span><span class="ident">args::KeyExport</span><span class="op">&gt;</span>()
         }
     }
@@ -2524,7 +2637,7 @@
             <span class="ident">App::new</span>(<span class="self">Self</span><span class="ident">::CMD</span>)
                 .<span class="ident">about</span>(
                     <span class="string">&quot;Address management, including methods to generate and \
-                     look-up addresses&quot;</span>,
+                     look-up addresses.&quot;</span>,
                 )
                 .<span class="ident">setting</span>(<span class="ident">AppSettings::SubcommandRequiredElseHelp</span>)
                 .<span class="ident">subcommand</span>(<span class="ident">AddressGen::def</span>())
@@ -2573,7 +2686,7 @@
 
         <span class="kw">fn</span> <span class="ident">def</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">App</span> {
             <span class="ident">App::new</span>(<span class="self">Self</span><span class="ident">::CMD</span>)
-                .<span class="ident">about</span>(<span class="string">&quot;Find an address by its alias&quot;</span>)
+                .<span class="ident">about</span>(<span class="string">&quot;Find an address by its alias.&quot;</span>)
                 .<span class="ident">add_args</span>::<span class="op">&lt;</span><span class="ident">args::AddressFind</span><span class="op">&gt;</span>()
         }
     }
@@ -2592,7 +2705,7 @@
         }
 
         <span class="kw">fn</span> <span class="ident">def</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">App</span> {
-            <span class="ident">App::new</span>(<span class="self">Self</span><span class="ident">::CMD</span>).<span class="ident">about</span>(<span class="string">&quot;List all known addresses&quot;</span>)
+            <span class="ident">App::new</span>(<span class="self">Self</span><span class="ident">::CMD</span>).<span class="ident">about</span>(<span class="string">&quot;List all known addresses.&quot;</span>)
         }
     }
 
@@ -2611,7 +2724,7 @@
 
         <span class="kw">fn</span> <span class="ident">def</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">App</span> {
             <span class="ident">App::new</span>(<span class="self">Self</span><span class="ident">::CMD</span>)
-                .<span class="ident">about</span>(<span class="string">&quot;Store an alias for an address in the wallet&quot;</span>)
+                .<span class="ident">about</span>(<span class="string">&quot;Store an alias for an address in the wallet.&quot;</span>)
                 .<span class="ident">add_args</span>::<span class="op">&lt;</span><span class="ident">args::AddressAdd</span><span class="op">&gt;</span>()
         }
     }
@@ -2725,7 +2838,7 @@
 
         <span class="kw">fn</span> <span class="ident">def</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">App</span> {
             <span class="ident">App::new</span>(<span class="self">Self</span><span class="ident">::CMD</span>)
-                .<span class="ident">about</span>(<span class="string">&quot;Run a gossip node&quot;</span>)
+                .<span class="ident">about</span>(<span class="string">&quot;Run a gossip node.&quot;</span>)
                 .<span class="ident">add_args</span>::<span class="op">&lt;</span><span class="ident">args::GossipRun</span><span class="op">&gt;</span>()
         }
     }
@@ -2747,7 +2860,7 @@
         <span class="kw">fn</span> <span class="ident">def</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">App</span> {
             <span class="ident">App::new</span>(<span class="self">Self</span><span class="ident">::CMD</span>)
                 .<span class="ident">setting</span>(<span class="ident">AppSettings::SubcommandRequiredElseHelp</span>)
-                .<span class="ident">about</span>(<span class="string">&quot;Configuration sub-commands&quot;</span>)
+                .<span class="ident">about</span>(<span class="string">&quot;Configuration sub-commands.&quot;</span>)
                 .<span class="ident">subcommand</span>(<span class="ident">ConfigGen::def</span>())
         }
     }
@@ -2763,7 +2876,8 @@
         }
 
         <span class="kw">fn</span> <span class="ident">def</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">App</span> {
-            <span class="ident">App::new</span>(<span class="self">Self</span><span class="ident">::CMD</span>).<span class="ident">about</span>(<span class="string">&quot;Generate the default configuration file&quot;</span>)
+            <span class="ident">App::new</span>(<span class="self">Self</span><span class="ident">::CMD</span>)
+                .<span class="ident">about</span>(<span class="string">&quot;Generate the default configuration file.&quot;</span>)
         }
     }
 
@@ -2781,7 +2895,7 @@
 
         <span class="kw">fn</span> <span class="ident">def</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">App</span> {
             <span class="ident">App::new</span>(<span class="self">Self</span><span class="ident">::CMD</span>)
-                .<span class="ident">about</span>(<span class="string">&quot;Send a transaction with custom WASM code&quot;</span>)
+                .<span class="ident">about</span>(<span class="string">&quot;Send a transaction with custom WASM code.&quot;</span>)
                 .<span class="ident">add_args</span>::<span class="op">&lt;</span><span class="ident">args::TxCustom</span><span class="op">&gt;</span>()
         }
     }
@@ -2800,7 +2914,7 @@
 
         <span class="kw">fn</span> <span class="ident">def</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">App</span> {
             <span class="ident">App::new</span>(<span class="self">Self</span><span class="ident">::CMD</span>)
-                .<span class="ident">about</span>(<span class="string">&quot;Send a signed transfer transaction&quot;</span>)
+                .<span class="ident">about</span>(<span class="string">&quot;Send a signed transfer transaction.&quot;</span>)
                 .<span class="ident">add_args</span>::<span class="op">&lt;</span><span class="ident">args::TxTransfer</span><span class="op">&gt;</span>()
         }
     }
@@ -2821,7 +2935,7 @@
             <span class="ident">App::new</span>(<span class="self">Self</span><span class="ident">::CMD</span>)
                 .<span class="ident">about</span>(
                     <span class="string">&quot;Send a signed transaction to update account&#39;s validity \
-                     predicate&quot;</span>,
+                     predicate.&quot;</span>,
                 )
                 .<span class="ident">add_args</span>::<span class="op">&lt;</span><span class="ident">args::TxUpdateVp</span><span class="op">&gt;</span>()
         }
@@ -2843,9 +2957,31 @@
             <span class="ident">App::new</span>(<span class="self">Self</span><span class="ident">::CMD</span>)
                 .<span class="ident">about</span>(
                     <span class="string">&quot;Send a signed transaction to create a new established \
-                     account&quot;</span>,
+                     account.&quot;</span>,
                 )
                 .<span class="ident">add_args</span>::<span class="op">&lt;</span><span class="ident">args::TxInitAccount</span><span class="op">&gt;</span>()
+        }
+    }
+
+    <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
+    <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">TxInitValidator</span>(<span class="kw">pub</span> <span class="ident">args::TxInitValidator</span>);
+
+    <span class="kw">impl</span> <span class="ident">SubCmd</span> <span class="kw">for</span> <span class="ident">TxInitValidator</span> {
+        <span class="kw">const</span> <span class="ident">CMD</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;init-validator&quot;</span>;
+
+        <span class="kw">fn</span> <span class="ident">parse</span>(<span class="ident">matches</span>: <span class="kw-2">&amp;</span><span class="ident">ArgMatches</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
+            <span class="ident">matches</span>.<span class="ident">subcommand_matches</span>(<span class="self">Self</span><span class="ident">::CMD</span>).<span class="ident">map</span>(<span class="op">|</span><span class="ident">matches</span><span class="op">|</span> {
+                <span class="ident">TxInitValidator</span>(<span class="ident">args::TxInitValidator::parse</span>(<span class="ident">matches</span>))
+            })
+        }
+
+        <span class="kw">fn</span> <span class="ident">def</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">App</span> {
+            <span class="ident">App::new</span>(<span class="self">Self</span><span class="ident">::CMD</span>)
+                .<span class="ident">about</span>(
+                    <span class="string">&quot;Send a signed transaction to create a new validator and \
+                     its staking reward account.&quot;</span>,
+                )
+                .<span class="ident">add_args</span>::<span class="op">&lt;</span><span class="ident">args::TxInitValidator</span><span class="op">&gt;</span>()
         }
     }
 
@@ -2920,7 +3056,7 @@
 
         <span class="kw">fn</span> <span class="ident">def</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">App</span> {
             <span class="ident">App::new</span>(<span class="self">Self</span><span class="ident">::CMD</span>)
-                .<span class="ident">about</span>(<span class="string">&quot;Query the epoch of the last committed block&quot;</span>)
+                .<span class="ident">about</span>(<span class="string">&quot;Query the epoch of the last committed block.&quot;</span>)
                 .<span class="ident">add_args</span>::<span class="op">&lt;</span><span class="ident">args::Query</span><span class="op">&gt;</span>()
         }
     }
@@ -2939,7 +3075,7 @@
 
         <span class="kw">fn</span> <span class="ident">def</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">App</span> {
             <span class="ident">App::new</span>(<span class="self">Self</span><span class="ident">::CMD</span>)
-                .<span class="ident">about</span>(<span class="string">&quot;Query balance(s) of tokens&quot;</span>)
+                .<span class="ident">about</span>(<span class="string">&quot;Query balance(s) of tokens.&quot;</span>)
                 .<span class="ident">add_args</span>::<span class="op">&lt;</span><span class="ident">args::QueryBalance</span><span class="op">&gt;</span>()
         }
     }
@@ -2958,7 +3094,7 @@
 
         <span class="kw">fn</span> <span class="ident">def</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">App</span> {
             <span class="ident">App::new</span>(<span class="self">Self</span><span class="ident">::CMD</span>)
-                .<span class="ident">about</span>(<span class="string">&quot;Query PoS bond(s)&quot;</span>)
+                .<span class="ident">about</span>(<span class="string">&quot;Query PoS bond(s).&quot;</span>)
                 .<span class="ident">add_args</span>::<span class="op">&lt;</span><span class="ident">args::QueryBonds</span><span class="op">&gt;</span>()
         }
     }
@@ -2977,7 +3113,7 @@
 
         <span class="kw">fn</span> <span class="ident">def</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">App</span> {
             <span class="ident">App::new</span>(<span class="self">Self</span><span class="ident">::CMD</span>)
-                .<span class="ident">about</span>(<span class="string">&quot;Query PoS voting power&quot;</span>)
+                .<span class="ident">about</span>(<span class="string">&quot;Query PoS voting power.&quot;</span>)
                 .<span class="ident">add_args</span>::<span class="op">&lt;</span><span class="ident">args::QueryVotingPower</span><span class="op">&gt;</span>()
         }
     }
@@ -2999,7 +3135,7 @@
 
         <span class="kw">fn</span> <span class="ident">def</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">App</span> {
             <span class="ident">App::new</span>(<span class="self">Self</span><span class="ident">::CMD</span>)
-                .<span class="ident">about</span>(<span class="string">&quot;Query PoS voting power&quot;</span>)
+                .<span class="ident">about</span>(<span class="string">&quot;Query PoS applied slashes.&quot;</span>)
                 .<span class="ident">add_args</span>::<span class="op">&lt;</span><span class="ident">args::QuerySlashes</span><span class="op">&gt;</span>()
         }
     }
@@ -3037,7 +3173,10 @@
 
         <span class="kw">fn</span> <span class="ident">def</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">App</span> {
             <span class="ident">App::new</span>(<span class="self">Self</span><span class="ident">::CMD</span>)
-                .<span class="ident">about</span>(<span class="string">&quot;subscribe to a topic.&quot;</span>)
+                .<span class="ident">about</span>(
+                    <span class="string">&quot;Subscribe intent gossip node with a matchmaker to a \
+                     topic.&quot;</span>,
+                )
                 .<span class="ident">add_args</span>::<span class="op">&lt;</span><span class="ident">args::SubscribeTopic</span><span class="op">&gt;</span>()
         }
     }
@@ -3058,7 +3197,7 @@
 
         <span class="kw">fn</span> <span class="ident">def</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">App</span> {
             <span class="ident">App::new</span>(<span class="self">Self</span><span class="ident">::CMD</span>)
-                .<span class="ident">about</span>(<span class="string">&quot;Utils sub-commands&quot;</span>)
+                .<span class="ident">about</span>(<span class="string">&quot;Utilities.&quot;</span>)
                 .<span class="ident">subcommand</span>(<span class="ident">InitGenesisValidator::def</span>())
                 .<span class="ident">setting</span>(<span class="ident">AppSettings::SubcommandRequiredElseHelp</span>)
         }
@@ -3142,6 +3281,8 @@
     <span class="kw">const</span> <span class="ident">PUBLIC_KEY</span>: <span class="ident">Arg</span><span class="op">&lt;</span><span class="ident">WalletPublicKey</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">arg</span>(<span class="string">&quot;public-key&quot;</span>);
     <span class="kw">const</span> <span class="ident">RAW_ADDRESS</span>: <span class="ident">Arg</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">arg</span>(<span class="string">&quot;address&quot;</span>);
     <span class="kw">const</span> <span class="ident">RAW_PUBLIC_KEY_OPT</span>: <span class="ident">ArgOpt</span><span class="op">&lt;</span><span class="ident">PublicKey</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">arg_opt</span>(<span class="string">&quot;public-key&quot;</span>);
+    <span class="kw">const</span> <span class="ident">REWARDS_CODE_PATH</span>: <span class="ident">ArgOpt</span><span class="op">&lt;</span><span class="ident">PathBuf</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">arg_opt</span>(<span class="string">&quot;rewards-code-path&quot;</span>);
+    <span class="kw">const</span> <span class="ident">REWARDS_KEY</span>: <span class="ident">ArgOpt</span><span class="op">&lt;</span><span class="ident">WalletPublicKey</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">arg_opt</span>(<span class="string">&quot;rewards-key&quot;</span>);
     <span class="kw">const</span> <span class="ident">RPC_SOCKET_ADDR</span>: <span class="ident">ArgOpt</span><span class="op">&lt;</span><span class="ident">SocketAddr</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">arg_opt</span>(<span class="string">&quot;rpc&quot;</span>);
     <span class="kw">const</span> <span class="ident">SIGNER</span>: <span class="ident">ArgOpt</span><span class="op">&lt;</span><span class="ident">WalletAddress</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">arg_opt</span>(<span class="string">&quot;signer&quot;</span>);
     <span class="kw">const</span> <span class="ident">SIGNING_KEY_OPT</span>: <span class="ident">ArgOpt</span><span class="op">&lt;</span><span class="ident">WalletKeypair</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">SIGNING_KEY</span>.<span class="ident">opt</span>();
@@ -3160,6 +3301,11 @@
     <span class="kw">const</span> <span class="ident">UNSAFE_SHOW_SECRET</span>: <span class="ident">ArgFlag</span> <span class="op">=</span> <span class="ident">flag</span>(<span class="string">&quot;unsafe-show-secret&quot;</span>);
     <span class="kw">const</span> <span class="ident">VALIDATOR</span>: <span class="ident">Arg</span><span class="op">&lt;</span><span class="ident">WalletAddress</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">arg</span>(<span class="string">&quot;validator&quot;</span>);
     <span class="kw">const</span> <span class="ident">VALIDATOR_OPT</span>: <span class="ident">ArgOpt</span><span class="op">&lt;</span><span class="ident">WalletAddress</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">VALIDATOR</span>.<span class="ident">opt</span>();
+    <span class="kw">const</span> <span class="ident">VALIDATOR_ACCOUNT_KEY</span>: <span class="ident">ArgOpt</span><span class="op">&lt;</span><span class="ident">WalletPublicKey</span><span class="op">&gt;</span> <span class="op">=</span>
+        <span class="ident">arg_opt</span>(<span class="string">&quot;account-key&quot;</span>);
+    <span class="kw">const</span> <span class="ident">VALIDATOR_CONSENSUS_KEY</span>: <span class="ident">ArgOpt</span><span class="op">&lt;</span><span class="ident">WalletKeypair</span><span class="op">&gt;</span> <span class="op">=</span>
+        <span class="ident">arg_opt</span>(<span class="string">&quot;consensus-key&quot;</span>);
+    <span class="kw">const</span> <span class="ident">VALIDATOR_CODE_PATH</span>: <span class="ident">ArgOpt</span><span class="op">&lt;</span><span class="ident">PathBuf</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">arg_opt</span>(<span class="string">&quot;validator-code-path&quot;</span>);
     <span class="kw">const</span> <span class="ident">VALUE</span>: <span class="ident">ArgOpt</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">arg_opt</span>(<span class="string">&quot;value&quot;</span>);
 
     <span class="doccomment">/// Global command arguments</span>
@@ -3337,6 +3483,75 @@
         }
     }
 
+    <span class="doccomment">/// Transaction to initialize a new account</span>
+    <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
+    <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">TxInitValidator</span> {
+        <span class="kw">pub</span> <span class="ident">tx</span>: <span class="ident">Tx</span>,
+        <span class="kw">pub</span> <span class="ident">source</span>: <span class="ident">WalletAddress</span>,
+        <span class="kw">pub</span> <span class="ident">account_key</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">WalletPublicKey</span><span class="op">&gt;</span>,
+        <span class="kw">pub</span> <span class="ident">consensus_key</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">WalletKeypair</span><span class="op">&gt;</span>,
+        <span class="kw">pub</span> <span class="ident">rewards_account_key</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">WalletPublicKey</span><span class="op">&gt;</span>,
+        <span class="kw">pub</span> <span class="ident">validator_vp_code_path</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">PathBuf</span><span class="op">&gt;</span>,
+        <span class="kw">pub</span> <span class="ident">rewards_vp_code_path</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">PathBuf</span><span class="op">&gt;</span>,
+        <span class="kw">pub</span> <span class="ident">unsafe_dont_encrypt</span>: <span class="ident">bool</span>,
+    }
+
+    <span class="kw">impl</span> <span class="ident">Args</span> <span class="kw">for</span> <span class="ident">TxInitValidator</span> {
+        <span class="kw">fn</span> <span class="ident">parse</span>(<span class="ident">matches</span>: <span class="kw-2">&amp;</span><span class="ident">ArgMatches</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+            <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx::parse</span>(<span class="ident">matches</span>);
+            <span class="kw">let</span> <span class="ident">source</span> <span class="op">=</span> <span class="ident">SOURCE</span>.<span class="ident">parse</span>(<span class="ident">matches</span>);
+            <span class="kw">let</span> <span class="ident">account_key</span> <span class="op">=</span> <span class="ident">VALIDATOR_ACCOUNT_KEY</span>.<span class="ident">parse</span>(<span class="ident">matches</span>);
+            <span class="kw">let</span> <span class="ident">consensus_key</span> <span class="op">=</span> <span class="ident">VALIDATOR_CONSENSUS_KEY</span>.<span class="ident">parse</span>(<span class="ident">matches</span>);
+            <span class="kw">let</span> <span class="ident">rewards_account_key</span> <span class="op">=</span> <span class="ident">REWARDS_KEY</span>.<span class="ident">parse</span>(<span class="ident">matches</span>);
+            <span class="kw">let</span> <span class="ident">validator_vp_code_path</span> <span class="op">=</span> <span class="ident">VALIDATOR_CODE_PATH</span>.<span class="ident">parse</span>(<span class="ident">matches</span>);
+            <span class="kw">let</span> <span class="ident">rewards_vp_code_path</span> <span class="op">=</span> <span class="ident">REWARDS_CODE_PATH</span>.<span class="ident">parse</span>(<span class="ident">matches</span>);
+            <span class="kw">let</span> <span class="ident">unsafe_dont_encrypt</span> <span class="op">=</span> <span class="ident">UNSAFE_DONT_ENCRYPT</span>.<span class="ident">parse</span>(<span class="ident">matches</span>);
+            <span class="self">Self</span> {
+                <span class="ident">tx</span>,
+                <span class="ident">source</span>,
+                <span class="ident">account_key</span>,
+                <span class="ident">consensus_key</span>,
+                <span class="ident">rewards_account_key</span>,
+                <span class="ident">validator_vp_code_path</span>,
+                <span class="ident">rewards_vp_code_path</span>,
+                <span class="ident">unsafe_dont_encrypt</span>,
+            }
+        }
+
+        <span class="kw">fn</span> <span class="ident">def</span>(<span class="ident">app</span>: <span class="ident">App</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">App</span> {
+            <span class="ident">app</span>.<span class="ident">add_args</span>::<span class="op">&lt;</span><span class="ident">Tx</span><span class="op">&gt;</span>()
+                .<span class="ident">arg</span>(<span class="ident">SOURCE</span>.<span class="ident">def</span>().<span class="ident">about</span>(
+                    <span class="string">&quot;The source account&#39;s address that signs the transaction.&quot;</span>,
+                ))
+                .<span class="ident">arg</span>(<span class="ident">VALIDATOR_ACCOUNT_KEY</span>.<span class="ident">def</span>().<span class="ident">about</span>(
+                    <span class="string">&quot;A public key for the validator account. A new one will \
+                     be generated if none given.&quot;</span>,
+                ))
+                .<span class="ident">arg</span>(<span class="ident">VALIDATOR_CONSENSUS_KEY</span>.<span class="ident">def</span>().<span class="ident">about</span>(
+                    <span class="string">&quot;A consensus key for the validator account. A new one \
+                     will be generated if none given.&quot;</span>,
+                ))
+                .<span class="ident">arg</span>(<span class="ident">REWARDS_KEY</span>.<span class="ident">def</span>().<span class="ident">about</span>(
+                    <span class="string">&quot;A public key for the staking reward account. A new one \
+                     will be generated if none given.&quot;</span>,
+                ))
+                .<span class="ident">arg</span>(<span class="ident">VALIDATOR_CODE_PATH</span>.<span class="ident">def</span>().<span class="ident">about</span>(
+                    <span class="string">&quot;The path to the validity predicate WASM code to be used \
+                     for the validator account. Uses the default validator VP \
+                     if none specified.&quot;</span>,
+                ))
+                .<span class="ident">arg</span>(<span class="ident">REWARDS_CODE_PATH</span>.<span class="ident">def</span>().<span class="ident">about</span>(
+                    <span class="string">&quot;The path to the validity predicate WASM code to be used \
+                     for the staking reward account. Uses the default staking \
+                     reward VP if none specified.&quot;</span>,
+                ))
+                .<span class="ident">arg</span>(<span class="ident">UNSAFE_DONT_ENCRYPT</span>.<span class="ident">def</span>().<span class="ident">about</span>(
+                    <span class="string">&quot;UNSAFE: Do not encrypt the generated keypairs. Do not \
+                     use this for keys used in a live network.&quot;</span>,
+                ))
+        }
+    }
+
     <span class="doccomment">/// Transaction to update a VP arguments</span>
     <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
     <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">TxUpdateVp</span> {
@@ -3408,7 +3623,7 @@
                 .<span class="ident">arg</span>(<span class="ident">AMOUNT</span>.<span class="ident">def</span>().<span class="ident">about</span>(<span class="string">&quot;Amount of tokens to stake in a bond.&quot;</span>))
                 .<span class="ident">arg</span>(<span class="ident">SOURCE_OPT</span>.<span class="ident">def</span>().<span class="ident">about</span>(
                     <span class="string">&quot;Source address for delegations. For self-bonds, the \
-                     validator is also the source&quot;</span>,
+                     validator is also the source.&quot;</span>,
                 ))
         }
     }
@@ -3452,7 +3667,7 @@
                 .<span class="ident">arg</span>(<span class="ident">SOURCE_OPT</span>.<span class="ident">def</span>().<span class="ident">about</span>(
                     <span class="string">&quot;Source address for unbonding from delegations. For \
                      unbonding from self-bonds, the validator is also the \
-                     source&quot;</span>,
+                     source.&quot;</span>,
                 ))
         }
     }
@@ -3487,7 +3702,7 @@
                 .<span class="ident">arg</span>(<span class="ident">SOURCE_OPT</span>.<span class="ident">def</span>().<span class="ident">about</span>(
                     <span class="string">&quot;Source address for withdrawing from delegations. For \
                      withdrawing from self-bonds, the validator is also the \
-                     source&quot;</span>,
+                     source.&quot;</span>,
                 ))
         }
     }
@@ -3520,12 +3735,12 @@
                 .<span class="ident">arg</span>(
                     <span class="ident">OWNER</span>
                         .<span class="ident">def</span>()
-                        .<span class="ident">about</span>(<span class="string">&quot;The account address whose balance to query&quot;</span>),
+                        .<span class="ident">about</span>(<span class="string">&quot;The account address whose balance to query.&quot;</span>),
                 )
                 .<span class="ident">arg</span>(
                     <span class="ident">TOKEN_OPT</span>
                         .<span class="ident">def</span>()
-                        .<span class="ident">about</span>(<span class="string">&quot;The token&#39;s address whose balance to query&quot;</span>),
+                        .<span class="ident">about</span>(<span class="string">&quot;The token&#39;s address whose balance to query.&quot;</span>),
                 )
         }
     }
@@ -3618,13 +3833,13 @@
             <span class="ident">app</span>.<span class="ident">add_args</span>::<span class="op">&lt;</span><span class="ident">Query</span><span class="op">&gt;</span>()
                 .<span class="ident">arg</span>(
                     <span class="ident">OWNER</span>.<span class="ident">def</span>().<span class="ident">about</span>(
-                        <span class="string">&quot;The owner account address whose bonds to query&quot;</span>,
+                        <span class="string">&quot;The owner account address whose bonds to query.&quot;</span>,
                     ),
                 )
                 .<span class="ident">arg</span>(
                     <span class="ident">VALIDATOR_OPT</span>
                         .<span class="ident">def</span>()
-                        .<span class="ident">about</span>(<span class="string">&quot;The validator&#39;s address whose bonds to query&quot;</span>),
+                        .<span class="ident">about</span>(<span class="string">&quot;The validator&#39;s address whose bonds to query.&quot;</span>),
                 )
         }
     }
@@ -3655,11 +3870,11 @@
         <span class="kw">fn</span> <span class="ident">def</span>(<span class="ident">app</span>: <span class="ident">App</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">App</span> {
             <span class="ident">app</span>.<span class="ident">add_args</span>::<span class="op">&lt;</span><span class="ident">Query</span><span class="op">&gt;</span>()
                 .<span class="ident">arg</span>(<span class="ident">VALIDATOR_OPT</span>.<span class="ident">def</span>().<span class="ident">about</span>(
-                    <span class="string">&quot;The validator&#39;s address whose voting power to query&quot;</span>,
+                    <span class="string">&quot;The validator&#39;s address whose voting power to query.&quot;</span>,
                 ))
                 .<span class="ident">arg</span>(<span class="ident">EPOCH</span>.<span class="ident">def</span>().<span class="ident">about</span>(
                     <span class="string">&quot;The epoch at which to query (last committed, if not \
-                     specified)&quot;</span>,
+                     specified).&quot;</span>,
                 ))
         }
     }
@@ -3684,7 +3899,7 @@
             <span class="ident">app</span>.<span class="ident">add_args</span>::<span class="op">&lt;</span><span class="ident">Query</span><span class="op">&gt;</span>().<span class="ident">arg</span>(
                 <span class="ident">VALIDATOR_OPT</span>
                     .<span class="ident">def</span>()
-                    .<span class="ident">about</span>(<span class="string">&quot;The validator&#39;s address whose slashes to query&quot;</span>),
+                    .<span class="ident">about</span>(<span class="string">&quot;The validator&#39;s address whose slashes to query.&quot;</span>),
             )
         }
     }
@@ -3777,7 +3992,7 @@
             .<span class="ident">arg</span>(
                 <span class="ident">TOPIC_OPT</span>
                     .<span class="ident">def</span>()
-                    .<span class="ident">about</span>(<span class="string">&quot;The subnetwork where the intent should be sent to&quot;</span>)
+                    .<span class="ident">about</span>(<span class="string">&quot;The subnetwork where the intent should be sent to.&quot;</span>)
                     .<span class="ident">conflicts_with</span>(<span class="ident">TO_STDOUT</span>.<span class="ident">name</span>),
             )
             .<span class="ident">arg</span>(
@@ -3871,7 +4086,7 @@
             .<span class="ident">arg</span>(
                 <span class="ident">TX_CODE_PATH</span>
                     .<span class="ident">def</span>()
-                    .<span class="ident">about</span>(<span class="string">&quot;The transaction code to use with the matchmaker&quot;</span>),
+                    .<span class="ident">about</span>(<span class="string">&quot;The transaction code to use with the matchmaker.&quot;</span>),
             )
             .<span class="ident">arg</span>(<span class="ident">LEDGER_ADDRESS_OPT</span>.<span class="ident">def</span>().<span class="ident">about</span>(
                 <span class="string">&quot;The address of the ledger as \&quot;{scheme}://{host}:{port}\&quot; \
@@ -3881,7 +4096,7 @@
             .<span class="ident">arg</span>(
                 <span class="ident">FILTER_PATH</span>
                     .<span class="ident">def</span>()
-                    .<span class="ident">about</span>(<span class="string">&quot;The private filter for the matchmaker&quot;</span>),
+                    .<span class="ident">about</span>(<span class="string">&quot;The private filter for the matchmaker.&quot;</span>),
             )
             .<span class="ident">arg</span>(<span class="ident">SIGNING_KEY_OPT</span>.<span class="ident">def</span>().<span class="ident">about</span>(
                 <span class="string">&quot;Sign the transactions created by the matchmaker (if enabled) \
@@ -3920,7 +4135,7 @@
                 <span class="string">&quot;If any new account is initialized by the tx, use the given \
                  alias to save it in the wallet. If multiple accounts are \
                  initialized, the alias will be the prefix of each new \
-                 address joined with a number&quot;</span>,
+                 address joined with a number.&quot;</span>,
             ))
         }
 
@@ -4013,25 +4228,24 @@
             <span class="ident">app</span>.<span class="ident">arg</span>(
                 <span class="ident">RAW_PUBLIC_KEY_OPT</span>
                     .<span class="ident">def</span>()
-                    .<span class="ident">about</span>(<span class="string">&quot;A public key associated with the keypair&quot;</span>)
-                    .<span class="ident">conflicts_with</span>(<span class="string">&quot;alias&quot;</span>)
-                    .<span class="ident">conflicts_with</span>(<span class="string">&quot;value&quot;</span>),
+                    .<span class="ident">about</span>(<span class="string">&quot;A public key associated with the keypair.&quot;</span>)
+                    .<span class="ident">conflicts_with_all</span>(<span class="kw-2">&amp;</span>[<span class="ident">ALIAS_OPT</span>.<span class="ident">name</span>, <span class="ident">VALUE</span>.<span class="ident">name</span>]),
             )
             .<span class="ident">arg</span>(
                 <span class="ident">ALIAS_OPT</span>
                     .<span class="ident">def</span>()
-                    .<span class="ident">about</span>(<span class="string">&quot;An alias associated with the keypair&quot;</span>)
-                    .<span class="ident">conflicts_with</span>(<span class="string">&quot;value&quot;</span>),
+                    .<span class="ident">about</span>(<span class="string">&quot;An alias associated with the keypair.&quot;</span>)
+                    .<span class="ident">conflicts_with</span>(<span class="ident">VALUE</span>.<span class="ident">name</span>),
             )
             .<span class="ident">arg</span>(
-                <span class="ident">VALUE</span>
-                    .<span class="ident">def</span>()
-                    .<span class="ident">about</span>(<span class="string">&quot;A public key or alias associated with the keypair&quot;</span>),
+                <span class="ident">VALUE</span>.<span class="ident">def</span>().<span class="ident">about</span>(
+                    <span class="string">&quot;A public key or alias associated with the keypair.&quot;</span>,
+                ),
             )
             .<span class="ident">arg</span>(
                 <span class="ident">UNSAFE_SHOW_SECRET</span>
                     .<span class="ident">def</span>()
-                    .<span class="ident">about</span>(<span class="string">&quot;UNSAFE: Print the secret key&quot;</span>),
+                    .<span class="ident">about</span>(<span class="string">&quot;UNSAFE: Print the secret key.&quot;</span>),
             )
         }
     }
@@ -4054,11 +4268,11 @@
         }
 
         <span class="kw">fn</span> <span class="ident">def</span>(<span class="ident">app</span>: <span class="ident">App</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">App</span> {
-            <span class="ident">app</span>.<span class="ident">arg</span>(<span class="ident">DECRYPT</span>.<span class="ident">def</span>().<span class="ident">about</span>(<span class="string">&quot;Decrypt keys that are encrypted&quot;</span>))
+            <span class="ident">app</span>.<span class="ident">arg</span>(<span class="ident">DECRYPT</span>.<span class="ident">def</span>().<span class="ident">about</span>(<span class="string">&quot;Decrypt keys that are encrypted.&quot;</span>))
                 .<span class="ident">arg</span>(
                     <span class="ident">UNSAFE_SHOW_SECRET</span>
                         .<span class="ident">def</span>()
-                        .<span class="ident">about</span>(<span class="string">&quot;UNSAFE: Print the secret keys&quot;</span>),
+                        .<span class="ident">about</span>(<span class="string">&quot;UNSAFE: Print the secret keys.&quot;</span>),
                 )
         }
     }
@@ -4078,7 +4292,9 @@
 
         <span class="kw">fn</span> <span class="ident">def</span>(<span class="ident">app</span>: <span class="ident">App</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">App</span> {
             <span class="ident">app</span>.<span class="ident">arg</span>(
-                <span class="ident">ALIAS</span>.<span class="ident">def</span>().<span class="ident">about</span>(<span class="string">&quot;The alias of the key you wish to export&quot;</span>),
+                <span class="ident">ALIAS</span>
+                    .<span class="ident">def</span>()
+                    .<span class="ident">about</span>(<span class="string">&quot;The alias of the key you wish to export.&quot;</span>),
             )
         }
     }
@@ -4099,7 +4315,7 @@
             <span class="ident">app</span>.<span class="ident">arg</span>(
                 <span class="ident">ALIAS_OPT</span>
                     .<span class="ident">def</span>()
-                    .<span class="ident">about</span>(<span class="string">&quot;An alias associated with the address&quot;</span>),
+                    .<span class="ident">about</span>(<span class="string">&quot;An alias associated with the address.&quot;</span>),
             )
         }
     }
@@ -4122,12 +4338,12 @@
             <span class="ident">app</span>.<span class="ident">arg</span>(
                 <span class="ident">ALIAS</span>
                     .<span class="ident">def</span>()
-                    .<span class="ident">about</span>(<span class="string">&quot;An alias to be associated with the address&quot;</span>),
+                    .<span class="ident">about</span>(<span class="string">&quot;An alias to be associated with the address.&quot;</span>),
             )
             .<span class="ident">arg</span>(
                 <span class="ident">RAW_ADDRESS</span>
                     .<span class="ident">def</span>()
-                    .<span class="ident">about</span>(<span class="string">&quot;The bech32m encoded address string&quot;</span>),
+                    .<span class="ident">about</span>(<span class="string">&quot;The bech32m encoded address string.&quot;</span>),
             )
         }
     }
@@ -4149,10 +4365,10 @@
         }
 
         <span class="kw">fn</span> <span class="ident">def</span>(<span class="ident">app</span>: <span class="ident">App</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">App</span> {
-            <span class="ident">app</span>.<span class="ident">arg</span>(<span class="ident">ALIAS</span>.<span class="ident">def</span>().<span class="ident">about</span>(<span class="string">&quot;The validator address alias&quot;</span>))
+            <span class="ident">app</span>.<span class="ident">arg</span>(<span class="ident">ALIAS</span>.<span class="ident">def</span>().<span class="ident">about</span>(<span class="string">&quot;The validator address alias.&quot;</span>))
                 .<span class="ident">arg</span>(<span class="ident">UNSAFE_DONT_ENCRYPT</span>.<span class="ident">def</span>().<span class="ident">about</span>(
-                    <span class="string">&quot;UNSAFE: Do not encrypt the keypair. Do not use this for \
-                     keys used in a live network.&quot;</span>,
+                    <span class="string">&quot;UNSAFE: Do not encrypt the generated keypairs. Do not \
+                     use this for keys used in a live network.&quot;</span>,
                 ))
         }
     }

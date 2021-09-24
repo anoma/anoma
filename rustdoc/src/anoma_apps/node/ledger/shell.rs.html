@@ -947,6 +947,7 @@
 <span id="945">945</span>
 <span id="946">946</span>
 <span id="947">947</span>
+<span id="948">948</span>
 </pre><pre class="rust">
 <span class="doccomment">//! The ledger shell connects the ABCI++ interface with the Anoma ledger app.</span>
 <span class="doccomment">//!</span>
@@ -1852,8 +1853,9 @@
         <span class="ident">pos_params</span>: <span class="kw-2">&amp;</span><span class="ident">PosParams</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">EvidenceParams</span> {
         <span class="comment">// Minimum number of epochs before tokens are unbonded and can be</span>
-        <span class="comment">// withdrawn</span>
-        <span class="kw">let</span> <span class="ident">len_before_unbonded</span> <span class="op">=</span> <span class="ident">max</span>(<span class="ident">pos_params</span>.<span class="ident">unbonding_len</span> <span class="kw">as</span> <span class="ident">i64</span> <span class="op">-</span> <span class="number">1</span>, <span class="number">0</span>);
+        <span class="comment">// withdrawn. This must be greater than 0, otherwise Tendermint won&#39;t be</span>
+        <span class="comment">// happy and will fail updating the consensus parameters.</span>
+        <span class="kw">let</span> <span class="ident">len_before_unbonded</span> <span class="op">=</span> <span class="ident">max</span>(<span class="ident">pos_params</span>.<span class="ident">unbonding_len</span> <span class="kw">as</span> <span class="ident">i64</span> <span class="op">-</span> <span class="number">1</span>, <span class="number">1</span>);
         <span class="kw">let</span> <span class="ident">max_age_num_blocks</span>: <span class="ident">i64</span> <span class="op">=</span>
             <span class="ident">protocol_params</span>.<span class="ident">epoch_duration</span>.<span class="ident">min_num_of_blocks</span> <span class="kw">as</span> <span class="ident">i64</span>
                 <span class="op">*</span> <span class="ident">len_before_unbonded</span>;

@@ -334,6 +334,69 @@
 <span id="332">332</span>
 <span id="333">333</span>
 <span id="334">334</span>
+<span id="335">335</span>
+<span id="336">336</span>
+<span id="337">337</span>
+<span id="338">338</span>
+<span id="339">339</span>
+<span id="340">340</span>
+<span id="341">341</span>
+<span id="342">342</span>
+<span id="343">343</span>
+<span id="344">344</span>
+<span id="345">345</span>
+<span id="346">346</span>
+<span id="347">347</span>
+<span id="348">348</span>
+<span id="349">349</span>
+<span id="350">350</span>
+<span id="351">351</span>
+<span id="352">352</span>
+<span id="353">353</span>
+<span id="354">354</span>
+<span id="355">355</span>
+<span id="356">356</span>
+<span id="357">357</span>
+<span id="358">358</span>
+<span id="359">359</span>
+<span id="360">360</span>
+<span id="361">361</span>
+<span id="362">362</span>
+<span id="363">363</span>
+<span id="364">364</span>
+<span id="365">365</span>
+<span id="366">366</span>
+<span id="367">367</span>
+<span id="368">368</span>
+<span id="369">369</span>
+<span id="370">370</span>
+<span id="371">371</span>
+<span id="372">372</span>
+<span id="373">373</span>
+<span id="374">374</span>
+<span id="375">375</span>
+<span id="376">376</span>
+<span id="377">377</span>
+<span id="378">378</span>
+<span id="379">379</span>
+<span id="380">380</span>
+<span id="381">381</span>
+<span id="382">382</span>
+<span id="383">383</span>
+<span id="384">384</span>
+<span id="385">385</span>
+<span id="386">386</span>
+<span id="387">387</span>
+<span id="388">388</span>
+<span id="389">389</span>
+<span id="390">390</span>
+<span id="391">391</span>
+<span id="392">392</span>
+<span id="393">393</span>
+<span id="394">394</span>
+<span id="395">395</span>
+<span id="396">396</span>
+<span id="397">397</span>
 </pre><pre class="rust">
 <span class="doccomment">//! Proof-of-Stake native validity predicate.</span>
 
@@ -364,6 +427,10 @@
     <span class="ident">Unbonds</span>, <span class="ident">ValidatorConsensusKeys</span>, <span class="ident">ValidatorSets</span>, <span class="ident">ValidatorTotalDeltas</span>,
 };
 <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::ledger::native_vp</span>::{<span class="self">self</span>, <span class="ident">Ctx</span>, <span class="ident">NativeVp</span>};
+<span class="kw">use</span> <span class="kw">crate</span><span class="ident">::ledger::pos</span>::{
+    <span class="ident">is_validator_address_raw_hash_key</span>, <span class="ident">is_validator_consensus_key_key</span>,
+    <span class="ident">is_validator_state_key</span>,
+};
 <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::ledger::storage::types::decode</span>;
 <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::ledger::storage</span>::{<span class="self">self</span> <span class="kw">as</span> <span class="ident">ledger_storage</span>, <span class="ident">StorageHasher</span>};
 <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::types::address</span>::{<span class="ident">Address</span>, <span class="ident">InternalAddress</span>};
@@ -425,18 +492,28 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">_tx_data</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>],
         <span class="ident">keys_changed</span>: <span class="kw-2">&amp;</span><span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">Key</span><span class="op">&gt;</span>,
-        <span class="ident">_verifiers</span>: <span class="kw-2">&amp;</span><span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span>,
+        <span class="ident">verifiers</span>: <span class="kw-2">&amp;</span><span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span> {
         <span class="kw">use</span> <span class="ident">validation::Data</span>;
         <span class="kw">use</span> <span class="ident">validation::DataUpdate</span>::{<span class="self">self</span>, <span class="kw-2">*</span>};
         <span class="kw">use</span> <span class="ident">validation::ValidatorUpdate</span>::<span class="kw-2">*</span>;
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">changes</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">DataUpdate</span><span class="op">&lt;</span><span class="kw">_</span>, <span class="kw">_</span>, <span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">=</span> <span class="macro">vec!</span>[];
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">changes</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">DataUpdate</span><span class="op">&lt;</span><span class="kw">_</span>, <span class="kw">_</span>, <span class="kw">_</span>, <span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">=</span> <span class="macro">vec!</span>[];
         <span class="kw">let</span> <span class="ident">current_epoch</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">get_block_epoch</span>()<span class="question-mark">?</span>;
         <span class="kw">for</span> <span class="ident">key</span> <span class="kw">in</span> <span class="ident">keys_changed</span> {
             <span class="kw">if</span> <span class="ident">is_params_key</span>(<span class="ident">key</span>) {
                 <span class="comment">// TODO parameters changes are not yet implemented</span>
                 <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="bool-val">false</span>);
+            } <span class="kw">else</span> <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">owner</span>) <span class="op">=</span> <span class="ident">key</span>.<span class="ident">is_validity_predicate</span>() {
+                <span class="kw">let</span> <span class="ident">has_pre</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">has_key_pre</span>(<span class="ident">key</span>)<span class="question-mark">?</span>;
+                <span class="kw">let</span> <span class="ident">has_post</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">has_key_post</span>(<span class="ident">key</span>)<span class="question-mark">?</span>;
+                <span class="kw">if</span> <span class="ident">has_pre</span> <span class="op">&amp;&amp;</span> <span class="ident">has_post</span> {
+                    <span class="comment">// VP updates must be verified by the owner</span>
+                    <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="op">!</span><span class="ident">verifiers</span>.<span class="ident">contains</span>(<span class="ident">owner</span>));
+                } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">has_pre</span> <span class="op">|</span><span class="op">|</span> <span class="op">!</span><span class="ident">has_post</span> {
+                    <span class="comment">// VP cannot be deleted</span>
+                    <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="bool-val">false</span>);
+                }
             } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">is_validator_set_key</span>(<span class="ident">key</span>) {
                 <span class="kw">let</span> <span class="ident">pre</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">read_pre</span>(<span class="ident">key</span>)<span class="question-mark">?</span>.<span class="ident">and_then</span>(<span class="op">|</span><span class="ident">bytes</span><span class="op">|</span> {
                     <span class="ident">ValidatorSets::try_from_slice</span>(<span class="kw-2">&amp;</span><span class="ident">bytes</span>[..]).<span class="ident">ok</span>()
@@ -445,6 +522,17 @@
                     <span class="ident">ValidatorSets::try_from_slice</span>(<span class="kw-2">&amp;</span><span class="ident">bytes</span>[..]).<span class="ident">ok</span>()
                 });
                 <span class="ident">changes</span>.<span class="ident">push</span>(<span class="ident">ValidatorSet</span>(<span class="ident">Data</span> { <span class="ident">pre</span>, <span class="ident">post</span> }));
+            } <span class="kw">else</span> <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">validator</span>) <span class="op">=</span> <span class="ident">is_validator_state_key</span>(<span class="ident">key</span>) {
+                <span class="kw">let</span> <span class="ident">pre</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">read_pre</span>(<span class="ident">key</span>)<span class="question-mark">?</span>.<span class="ident">and_then</span>(<span class="op">|</span><span class="ident">bytes</span><span class="op">|</span> {
+                    <span class="ident">ValidatorStates::try_from_slice</span>(<span class="kw-2">&amp;</span><span class="ident">bytes</span>[..]).<span class="ident">ok</span>()
+                });
+                <span class="kw">let</span> <span class="ident">post</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">read_post</span>(<span class="ident">key</span>)<span class="question-mark">?</span>.<span class="ident">and_then</span>(<span class="op">|</span><span class="ident">bytes</span><span class="op">|</span> {
+                    <span class="ident">ValidatorStates::try_from_slice</span>(<span class="kw-2">&amp;</span><span class="ident">bytes</span>[..]).<span class="ident">ok</span>()
+                });
+                <span class="ident">changes</span>.<span class="ident">push</span>(<span class="ident">Validator</span> {
+                    <span class="ident">address</span>: <span class="ident">validator</span>.<span class="ident">clone</span>(),
+                    <span class="ident">update</span>: <span class="ident">State</span>(<span class="ident">Data</span> { <span class="ident">pre</span>, <span class="ident">post</span> }),
+                });
             } <span class="kw">else</span> <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">validator</span>) <span class="op">=</span>
                 <span class="ident">is_validator_staking_reward_address_key</span>(<span class="ident">key</span>)
             {
@@ -459,6 +547,18 @@
                 <span class="ident">changes</span>.<span class="ident">push</span>(<span class="ident">Validator</span> {
                     <span class="ident">address</span>: <span class="ident">validator</span>.<span class="ident">clone</span>(),
                     <span class="ident">update</span>: <span class="ident">StakingRewardAddress</span>(<span class="ident">Data</span> { <span class="ident">pre</span>, <span class="ident">post</span> }),
+                });
+            } <span class="kw">else</span> <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">validator</span>) <span class="op">=</span> <span class="ident">is_validator_consensus_key_key</span>(<span class="ident">key</span>)
+            {
+                <span class="kw">let</span> <span class="ident">pre</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">read_pre</span>(<span class="ident">key</span>)<span class="question-mark">?</span>.<span class="ident">and_then</span>(<span class="op">|</span><span class="ident">bytes</span><span class="op">|</span> {
+                    <span class="ident">ValidatorConsensusKeys::try_from_slice</span>(<span class="kw-2">&amp;</span><span class="ident">bytes</span>[..]).<span class="ident">ok</span>()
+                });
+                <span class="kw">let</span> <span class="ident">post</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">read_post</span>(<span class="ident">key</span>)<span class="question-mark">?</span>.<span class="ident">and_then</span>(<span class="op">|</span><span class="ident">bytes</span><span class="op">|</span> {
+                    <span class="ident">ValidatorConsensusKeys::try_from_slice</span>(<span class="kw-2">&amp;</span><span class="ident">bytes</span>[..]).<span class="ident">ok</span>()
+                });
+                <span class="ident">changes</span>.<span class="ident">push</span>(<span class="ident">Validator</span> {
+                    <span class="ident">address</span>: <span class="ident">validator</span>.<span class="ident">clone</span>(),
+                    <span class="ident">update</span>: <span class="ident">ConsensusKey</span>(<span class="ident">Data</span> { <span class="ident">pre</span>, <span class="ident">post</span> }),
                 });
             } <span class="kw">else</span> <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">validator</span>) <span class="op">=</span> <span class="ident">is_validator_total_deltas_key</span>(<span class="ident">key</span>) {
                 <span class="kw">let</span> <span class="ident">pre</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">read_pre</span>(<span class="ident">key</span>)<span class="question-mark">?</span>.<span class="ident">and_then</span>(<span class="op">|</span><span class="ident">bytes</span><span class="op">|</span> {
@@ -481,6 +581,32 @@
                 <span class="ident">changes</span>.<span class="ident">push</span>(<span class="ident">Validator</span> {
                     <span class="ident">address</span>: <span class="ident">validator</span>.<span class="ident">clone</span>(),
                     <span class="ident">update</span>: <span class="ident">VotingPowerUpdate</span>(<span class="ident">Data</span> { <span class="ident">pre</span>, <span class="ident">post</span> }),
+                });
+            } <span class="kw">else</span> <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">raw_hash</span>) <span class="op">=</span>
+                <span class="ident">is_validator_address_raw_hash_key</span>(<span class="ident">key</span>)
+            {
+                <span class="kw">let</span> <span class="ident">pre</span> <span class="op">=</span> <span class="self">self</span>
+                    .<span class="ident">ctx</span>
+                    .<span class="ident">read_pre</span>(<span class="ident">key</span>)<span class="question-mark">?</span>
+                    .<span class="ident">and_then</span>(<span class="op">|</span><span class="ident">bytes</span><span class="op">|</span> <span class="ident">Address::try_from_slice</span>(<span class="kw-2">&amp;</span><span class="ident">bytes</span>[..]).<span class="ident">ok</span>());
+                <span class="kw">let</span> <span class="ident">post</span> <span class="op">=</span> <span class="self">self</span>
+                    .<span class="ident">ctx</span>
+                    .<span class="ident">read_post</span>(<span class="ident">key</span>)<span class="question-mark">?</span>
+                    .<span class="ident">and_then</span>(<span class="op">|</span><span class="ident">bytes</span><span class="op">|</span> <span class="ident">Address::try_from_slice</span>(<span class="kw-2">&amp;</span><span class="ident">bytes</span>[..]).<span class="ident">ok</span>());
+                <span class="comment">// Find the raw hashes of the addresses</span>
+                <span class="kw">let</span> <span class="ident">pre</span> <span class="op">=</span> <span class="ident">pre</span>.<span class="ident">map</span>(<span class="op">|</span><span class="ident">pre</span><span class="op">|</span> {
+                    <span class="kw">let</span> <span class="ident">raw_hash</span> <span class="op">=</span>
+                        <span class="ident">pre</span>.<span class="ident">raw_hash</span>().<span class="ident">map</span>(<span class="ident">String::from</span>).<span class="ident">unwrap_or_default</span>();
+                    (<span class="ident">pre</span>, <span class="ident">raw_hash</span>)
+                });
+                <span class="kw">let</span> <span class="ident">post</span> <span class="op">=</span> <span class="ident">post</span>.<span class="ident">map</span>(<span class="op">|</span><span class="ident">post</span><span class="op">|</span> {
+                    <span class="kw">let</span> <span class="ident">raw_hash</span> <span class="op">=</span>
+                        <span class="ident">post</span>.<span class="ident">raw_hash</span>().<span class="ident">map</span>(<span class="ident">String::from</span>).<span class="ident">unwrap_or_default</span>();
+                    (<span class="ident">post</span>, <span class="ident">raw_hash</span>)
+                });
+                <span class="ident">changes</span>.<span class="ident">push</span>(<span class="ident">ValidatorAddressRawHash</span> {
+                    <span class="ident">raw_hash</span>: <span class="ident">raw_hash</span>.<span class="ident">to_string</span>(),
+                    <span class="ident">data</span>: <span class="ident">Data</span> { <span class="ident">pre</span>, <span class="ident">post</span> },
                 });
             } <span class="kw">else</span> <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">owner</span>) <span class="op">=</span>
                 <span class="ident">token::is_balance_key</span>(<span class="kw-2">&amp;</span><span class="ident">staking_token_address</span>(), <span class="ident">key</span>)

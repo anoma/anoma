@@ -261,6 +261,15 @@
 <span id="259">259</span>
 <span id="260">260</span>
 <span id="261">261</span>
+<span id="262">262</span>
+<span id="263">263</span>
+<span id="264">264</span>
+<span id="265">265</span>
+<span id="266">266</span>
+<span id="267">267</span>
+<span id="268">268</span>
+<span id="269">269</span>
+<span id="270">270</span>
 </pre><pre class="rust">
 <span class="kw">mod</span> <span class="ident">events</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">protocol</span>;
@@ -462,8 +471,10 @@
         .<span class="ident">unwrap</span>();
 
     <span class="comment">// Run the server with the shell</span>
-    <span class="kw">let</span> <span class="ident">future</span> <span class="op">=</span>
-        <span class="ident">Abortable::new</span>(<span class="ident">server</span>.<span class="ident">listen</span>(<span class="ident">config</span>.<span class="ident">address</span>), <span class="ident">abort_registration</span>);
+    <span class="kw">let</span> <span class="ident">future</span> <span class="op">=</span> <span class="ident">Abortable::new</span>(
+        <span class="ident">server</span>.<span class="ident">listen</span>(<span class="ident">config</span>.<span class="ident">ledger_address</span>),
+        <span class="ident">abort_registration</span>,
+    );
     <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">future</span>.<span class="kw">await</span>;
 }
 
@@ -478,7 +489,9 @@
 <span class="doccomment">/// did we stop the tendermint node with a channel that acts as a kill switch.</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">run</span>(<span class="ident">config</span>: <span class="ident">config::Ledger</span>) {
     <span class="kw">let</span> <span class="ident">home_dir</span> <span class="op">=</span> <span class="ident">config</span>.<span class="ident">tendermint</span>.<span class="ident">clone</span>();
-    <span class="kw">let</span> <span class="ident">socket_address</span> <span class="op">=</span> <span class="ident">config</span>.<span class="ident">address</span>.<span class="ident">to_string</span>();
+    <span class="kw">let</span> <span class="ident">ledger_address</span> <span class="op">=</span> <span class="ident">config</span>.<span class="ident">ledger_address</span>.<span class="ident">to_string</span>();
+    <span class="kw">let</span> <span class="ident">rpc_address</span> <span class="op">=</span> <span class="ident">config</span>.<span class="ident">rpc_address</span>.<span class="ident">to_string</span>();
+    <span class="kw">let</span> <span class="ident">p2p_address</span> <span class="op">=</span> <span class="ident">config</span>.<span class="ident">p2p_address</span>.<span class="ident">to_string</span>();
 
     <span class="comment">// used for shutting down Tendermint node in case the shell panics</span>
     <span class="kw">let</span> (<span class="ident">sender</span>, <span class="ident">receiver</span>) <span class="op">=</span> <span class="ident">channel</span>();
@@ -489,9 +502,14 @@
 
     <span class="comment">// start Tendermint node</span>
     <span class="kw">let</span> <span class="ident">tendermint_handle</span> <span class="op">=</span> <span class="ident">std::thread::spawn</span>(<span class="kw">move</span> <span class="op">|</span><span class="op">|</span> {
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Err</span>(<span class="ident">err</span>) <span class="op">=</span>
-            <span class="ident">tendermint_node::run</span>(<span class="ident">home_dir</span>, <span class="kw-2">&amp;</span><span class="ident">socket_address</span>, <span class="ident">sender</span>, <span class="ident">receiver</span>)
-        {
+        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Err</span>(<span class="ident">err</span>) <span class="op">=</span> <span class="ident">tendermint_node::run</span>(
+            <span class="ident">home_dir</span>,
+            <span class="ident">ledger_address</span>,
+            <span class="ident">rpc_address</span>,
+            <span class="ident">p2p_address</span>,
+            <span class="ident">sender</span>,
+            <span class="ident">receiver</span>,
+        ) {
             <span class="macro">tracing::error!</span>(
                 <span class="string">&quot;Failed to start-up a Tendermint node with {}&quot;</span>,
                 <span class="ident">err</span>

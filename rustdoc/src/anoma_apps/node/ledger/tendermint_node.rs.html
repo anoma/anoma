@@ -255,6 +255,48 @@
 <span id="253">253</span>
 <span id="254">254</span>
 <span id="255">255</span>
+<span id="256">256</span>
+<span id="257">257</span>
+<span id="258">258</span>
+<span id="259">259</span>
+<span id="260">260</span>
+<span id="261">261</span>
+<span id="262">262</span>
+<span id="263">263</span>
+<span id="264">264</span>
+<span id="265">265</span>
+<span id="266">266</span>
+<span id="267">267</span>
+<span id="268">268</span>
+<span id="269">269</span>
+<span id="270">270</span>
+<span id="271">271</span>
+<span id="272">272</span>
+<span id="273">273</span>
+<span id="274">274</span>
+<span id="275">275</span>
+<span id="276">276</span>
+<span id="277">277</span>
+<span id="278">278</span>
+<span id="279">279</span>
+<span id="280">280</span>
+<span id="281">281</span>
+<span id="282">282</span>
+<span id="283">283</span>
+<span id="284">284</span>
+<span id="285">285</span>
+<span id="286">286</span>
+<span id="287">287</span>
+<span id="288">288</span>
+<span id="289">289</span>
+<span id="290">290</span>
+<span id="291">291</span>
+<span id="292">292</span>
+<span id="293">293</span>
+<span id="294">294</span>
+<span id="295">295</span>
+<span id="296">296</span>
+<span id="297">297</span>
 </pre><pre class="rust">
 <span class="kw">use</span> <span class="ident">std::fs</span>::{<span class="self">self</span>, <span class="ident">File</span>, <span class="ident">OpenOptions</span>};
 <span class="kw">use</span> <span class="ident">std::io</span>::{<span class="ident">BufReader</span>, <span class="ident">Write</span>};
@@ -270,6 +312,7 @@
 <span class="kw">use</span> <span class="ident">signal_hook::consts::TERM_SIGNALS</span>;
 <span class="kw">use</span> <span class="ident">signal_hook::iterator::Signals</span>;
 <span class="kw">use</span> <span class="ident">tendermint::config::TendermintConfig</span>;
+<span class="kw">use</span> <span class="ident">tendermint::net</span>;
 <span class="kw">use</span> <span class="ident">thiserror::Error</span>;
 
 <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::config</span>;
@@ -296,11 +339,24 @@
 <span class="doccomment">/// Run the tendermint node.</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">run</span>(
     <span class="ident">home_dir</span>: <span class="ident">PathBuf</span>,
-    <span class="ident">socket_address</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>,
+    <span class="ident">ledger_address</span>: <span class="ident">String</span>,
+    <span class="ident">rpc_address</span>: <span class="ident">String</span>,
+    <span class="ident">p2p_address</span>: <span class="ident">String</span>,
     <span class="ident">kill_switch</span>: <span class="ident">Sender</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span>,
     <span class="ident">receiver</span>: <span class="ident">Receiver</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span>,
 ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="ident">home_dir_string</span> <span class="op">=</span> <span class="ident">home_dir</span>.<span class="ident">to_string_lossy</span>().<span class="ident">to_string</span>();
+    <span class="kw">let</span> <span class="ident">rpc_address</span>: <span class="ident">net::Address</span> <span class="op">=</span>
+        <span class="ident">net::Address::from_str</span>(<span class="kw-2">&amp;</span><span class="ident">rpc_address</span>).<span class="ident">unwrap</span>();
+    <span class="kw">let</span> <span class="ident">p2p_address</span>: <span class="ident">net::Address</span> <span class="op">=</span>
+        <span class="ident">net::Address::from_str</span>(<span class="kw-2">&amp;</span><span class="ident">p2p_address</span>).<span class="ident">unwrap</span>();
+
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;dev&quot;</span>)]</span>
+    <span class="comment">// This has to be checked before we run tendermint init</span>
+    <span class="kw">let</span> <span class="ident">has_validator_key</span> <span class="op">=</span> {
+        <span class="kw">let</span> <span class="ident">path</span> <span class="op">=</span> <span class="ident">home_dir</span>.<span class="ident">join</span>(<span class="string">&quot;config&quot;</span>).<span class="ident">join</span>(<span class="string">&quot;priv_validator_key.json&quot;</span>);
+        <span class="ident">Path::new</span>(<span class="kw-2">&amp;</span><span class="ident">path</span>).<span class="ident">exists</span>()
+    };
 
     <span class="comment">// init and run a tendermint node child process</span>
     <span class="kw">let</span> <span class="ident">output</span> <span class="op">=</span> <span class="ident">Command::new</span>(<span class="string">&quot;tendermint&quot;</span>)
@@ -316,25 +372,30 @@
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;dev&quot;</span>)]</span>
     {
         <span class="kw">let</span> <span class="ident">genesis</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="kw">crate</span><span class="ident">::config::genesis::genesis</span>();
-        <span class="comment">// override the validator key file</span>
-        <span class="ident">write_validator_key</span>(
-            <span class="kw-2">&amp;</span><span class="ident">home_dir</span>,
-            <span class="kw-2">&amp;</span><span class="ident">genesis</span>
-                .<span class="ident">validators</span>
-                .<span class="ident">first</span>()
-                .<span class="ident">expect</span>(<span class="string">&quot;There should be one genesis validator in \&quot;dev\&quot; mode&quot;</span>)
-                .<span class="ident">pos_data</span>
-                .<span class="ident">address</span>,
-            <span class="kw-2">&amp;</span><span class="kw">crate</span><span class="ident">::wallet::defaults::validator_keypair</span>(),
-        );
+        <span class="comment">// write the validator key file if it didn&#39;t already exist</span>
+        <span class="kw">if</span> <span class="op">!</span><span class="ident">has_validator_key</span> {
+            <span class="ident">write_validator_key</span>(
+                <span class="kw-2">&amp;</span><span class="ident">home_dir</span>,
+                <span class="kw-2">&amp;</span><span class="ident">genesis</span>
+                    .<span class="ident">validators</span>
+                    .<span class="ident">first</span>()
+                    .<span class="ident">expect</span>(
+                        <span class="string">&quot;There should be one genesis validator in \&quot;dev\&quot; mode&quot;</span>,
+                    )
+                    .<span class="ident">pos_data</span>
+                    .<span class="ident">address</span>,
+                <span class="kw-2">&amp;</span><span class="kw">crate</span><span class="ident">::wallet::defaults::validator_keypair</span>(),
+            );
+        }
     }
 
-    <span class="ident">update_tendermint_config</span>(<span class="kw-2">&amp;</span><span class="ident">home_dir</span>)<span class="question-mark">?</span>;
+    <span class="ident">update_tendermint_config</span>(<span class="kw-2">&amp;</span><span class="ident">home_dir</span>, <span class="ident">rpc_address</span>, <span class="ident">p2p_address</span>)<span class="question-mark">?</span>;
+
     <span class="kw">let</span> <span class="ident">tendermint_node</span> <span class="op">=</span> <span class="ident">Command::new</span>(<span class="string">&quot;tendermint&quot;</span>)
         .<span class="ident">args</span>(<span class="kw-2">&amp;</span>[
             <span class="string">&quot;node&quot;</span>,
             <span class="string">&quot;--proxy_app&quot;</span>,
-            <span class="ident">socket_address</span>,
+            <span class="kw-2">&amp;</span><span class="ident">ledger_address</span>,
             <span class="string">&quot;--home&quot;</span>,
             <span class="kw-2">&amp;</span><span class="ident">home_dir_string</span>,
         ])
@@ -414,8 +475,16 @@
 ) {
     <span class="kw">let</span> <span class="ident">home_dir</span> <span class="op">=</span> <span class="ident">home_dir</span>.<span class="ident">as_ref</span>();
     <span class="kw">let</span> <span class="ident">path</span> <span class="op">=</span> <span class="ident">home_dir</span>.<span class="ident">join</span>(<span class="string">&quot;config&quot;</span>).<span class="ident">join</span>(<span class="string">&quot;priv_validator_key.json&quot;</span>);
-    <span class="kw">let</span> <span class="ident">file</span> <span class="op">=</span>
-        <span class="ident">File::create</span>(<span class="ident">path</span>).<span class="ident">expect</span>(<span class="string">&quot;Couldn&#39;t create private validator key file&quot;</span>);
+    <span class="comment">// Make sure the dir exists</span>
+    <span class="kw">let</span> <span class="ident">wallet_dir</span> <span class="op">=</span> <span class="ident">path</span>.<span class="ident">parent</span>().<span class="ident">unwrap</span>();
+    <span class="ident">fs::create_dir_all</span>(<span class="ident">wallet_dir</span>)
+        .<span class="ident">expect</span>(<span class="string">&quot;Couldn&#39;t create private validator key directory&quot;</span>);
+    <span class="kw">let</span> <span class="ident">file</span> <span class="op">=</span> <span class="ident">OpenOptions::new</span>()
+        .<span class="ident">create</span>(<span class="bool-val">true</span>)
+        .<span class="ident">write</span>(<span class="bool-val">true</span>)
+        .<span class="ident">truncate</span>(<span class="bool-val">true</span>)
+        .<span class="ident">open</span>(<span class="kw-2">&amp;</span><span class="ident">path</span>)
+        .<span class="ident">expect</span>(<span class="string">&quot;Couldn&#39;t create private validator key file&quot;</span>);
     <span class="kw">let</span> <span class="ident">pk</span>: <span class="ident">ed25519_dalek::PublicKey</span> <span class="op">=</span> <span class="ident">consensus_key</span>.<span class="ident">public</span>.<span class="ident">clone</span>().<span class="ident">into</span>();
     <span class="kw">let</span> <span class="ident">pk</span> <span class="op">=</span> <span class="ident">base64::encode</span>(<span class="ident">pk</span>.<span class="ident">as_bytes</span>());
     <span class="kw">let</span> <span class="ident">sk</span> <span class="op">=</span> <span class="ident">base64::encode</span>(<span class="ident">consensus_key</span>.<span class="ident">to_bytes</span>());
@@ -439,7 +508,15 @@
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">write_validator_state</span>(<span class="ident">home_dir</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span><span class="ident">Path</span><span class="op">&gt;</span>) {
     <span class="kw">let</span> <span class="ident">home_dir</span> <span class="op">=</span> <span class="ident">home_dir</span>.<span class="ident">as_ref</span>();
     <span class="kw">let</span> <span class="ident">path</span> <span class="op">=</span> <span class="ident">home_dir</span>.<span class="ident">join</span>(<span class="string">&quot;data&quot;</span>).<span class="ident">join</span>(<span class="string">&quot;priv_validator_state.json&quot;</span>);
-    <span class="kw">let</span> <span class="ident">file</span> <span class="op">=</span> <span class="ident">File::create</span>(<span class="ident">path</span>)
+    <span class="comment">// Make sure the dir exists</span>
+    <span class="kw">let</span> <span class="ident">wallet_dir</span> <span class="op">=</span> <span class="ident">path</span>.<span class="ident">parent</span>().<span class="ident">unwrap</span>();
+    <span class="ident">fs::create_dir_all</span>(<span class="ident">wallet_dir</span>)
+        .<span class="ident">expect</span>(<span class="string">&quot;Couldn&#39;t create private validator state directory&quot;</span>);
+    <span class="kw">let</span> <span class="ident">file</span> <span class="op">=</span> <span class="ident">OpenOptions::new</span>()
+        .<span class="ident">create</span>(<span class="bool-val">true</span>)
+        .<span class="ident">write</span>(<span class="bool-val">true</span>)
+        .<span class="ident">truncate</span>(<span class="bool-val">true</span>)
+        .<span class="ident">open</span>(<span class="kw-2">&amp;</span><span class="ident">path</span>)
         .<span class="ident">expect</span>(<span class="string">&quot;Couldn&#39;t create private validator state file&quot;</span>);
     <span class="kw">let</span> <span class="ident">state</span> <span class="op">=</span> <span class="macro">json!</span>({
        <span class="string">&quot;height&quot;</span>: <span class="string">&quot;0&quot;</span>,
@@ -450,11 +527,18 @@
         .<span class="ident">expect</span>(<span class="string">&quot;Couldn&#39;t write private validator state file&quot;</span>);
 }
 
-<span class="kw">fn</span> <span class="ident">update_tendermint_config</span>(<span class="ident">home_dir</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span><span class="ident">Path</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+<span class="kw">fn</span> <span class="ident">update_tendermint_config</span>(
+    <span class="ident">home_dir</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span><span class="ident">Path</span><span class="op">&gt;</span>,
+    <span class="ident">rpc_address</span>: <span class="ident">net::Address</span>,
+    <span class="ident">p2p_address</span>: <span class="ident">net::Address</span>,
+) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="ident">home_dir</span> <span class="op">=</span> <span class="ident">home_dir</span>.<span class="ident">as_ref</span>();
     <span class="kw">let</span> <span class="ident">path</span> <span class="op">=</span> <span class="ident">home_dir</span>.<span class="ident">join</span>(<span class="string">&quot;config&quot;</span>).<span class="ident">join</span>(<span class="string">&quot;config.toml&quot;</span>);
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">config</span> <span class="op">=</span>
         <span class="ident">TendermintConfig::load_toml_file</span>(<span class="kw-2">&amp;</span><span class="ident">path</span>).<span class="ident">map_err</span>(<span class="ident">Error::LoadConfig</span>)<span class="question-mark">?</span>;
+
+    <span class="ident">config</span>.<span class="ident">rpc</span>.<span class="ident">laddr</span> <span class="op">=</span> <span class="ident">rpc_address</span>;
+    <span class="ident">config</span>.<span class="ident">p2p</span>.<span class="ident">laddr</span> <span class="op">=</span> <span class="ident">p2p_address</span>;
 
     <span class="comment">// In &quot;dev&quot;, only produce blocks when there are txs or when the AppHash</span>
     <span class="comment">// changes</span>

@@ -419,6 +419,14 @@
 <span id="417">417</span>
 <span id="418">418</span>
 <span id="419">419</span>
+<span id="420">420</span>
+<span id="421">421</span>
+<span id="422">422</span>
+<span id="423">423</span>
+<span id="424">424</span>
+<span id="425">425</span>
+<span id="426">426</span>
+<span id="427">427</span>
 </pre><pre class="rust">
 <span class="doccomment">//! Node and client configuration</span>
 
@@ -510,8 +518,9 @@ And this is correct
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Ledger</span> {
     <span class="kw">pub</span> <span class="ident">tendermint</span>: <span class="ident">PathBuf</span>,
     <span class="kw">pub</span> <span class="ident">db</span>: <span class="ident">PathBuf</span>,
-    <span class="kw">pub</span> <span class="ident">address</span>: <span class="ident">SocketAddr</span>,
-    <span class="kw">pub</span> <span class="ident">network</span>: <span class="ident">String</span>,
+    <span class="kw">pub</span> <span class="ident">ledger_address</span>: <span class="ident">SocketAddr</span>,
+    <span class="kw">pub</span> <span class="ident">rpc_address</span>: <span class="ident">SocketAddr</span>,
+    <span class="kw">pub</span> <span class="ident">p2p_address</span>: <span class="ident">SocketAddr</span>,
 }
 
 <span class="kw">impl</span> <span class="ident">Default</span> <span class="kw">for</span> <span class="ident">Ledger</span> {
@@ -521,11 +530,18 @@ And this is correct
             <span class="comment">// config::generate(base_dir). There must be a better way ?</span>
             <span class="ident">tendermint</span>: <span class="ident">PathBuf::from</span>(<span class="ident">BASEDIR</span>).<span class="ident">join</span>(<span class="ident">TENDERMINT_DIR</span>),
             <span class="ident">db</span>: <span class="ident">PathBuf::from</span>(<span class="ident">BASEDIR</span>).<span class="ident">join</span>(<span class="ident">DB_DIR</span>).<span class="ident">join</span>(<span class="ident">DEFAULT_CHAIN_ID</span>),
-            <span class="ident">address</span>: <span class="ident">SocketAddr::new</span>(
-                <span class="ident">IpAddr::V4</span>(<span class="ident">Ipv4Addr::new</span>(<span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>)),
+            <span class="ident">ledger_address</span>: <span class="ident">SocketAddr::new</span>(
+                <span class="ident">IpAddr::V4</span>(<span class="ident">Ipv4Addr::new</span>(<span class="number">127</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">1</span>)),
                 <span class="number">26658</span>,
             ),
-            <span class="ident">network</span>: <span class="ident">String::from</span>(<span class="string">&quot;mainnet&quot;</span>),
+            <span class="ident">rpc_address</span>: <span class="ident">SocketAddr::new</span>(
+                <span class="ident">IpAddr::V4</span>(<span class="ident">Ipv4Addr::new</span>(<span class="number">127</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">1</span>)),
+                <span class="number">26657</span>,
+            ),
+            <span class="ident">p2p_address</span>: <span class="ident">SocketAddr::new</span>(
+                <span class="ident">IpAddr::V4</span>(<span class="ident">Ipv4Addr::new</span>(<span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>)),
+                <span class="number">26656</span>,
+            ),
         }
     }
 }

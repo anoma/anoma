@@ -937,6 +937,35 @@
 <span id="935">935</span>
 <span id="936">936</span>
 <span id="937">937</span>
+<span id="938">938</span>
+<span id="939">939</span>
+<span id="940">940</span>
+<span id="941">941</span>
+<span id="942">942</span>
+<span id="943">943</span>
+<span id="944">944</span>
+<span id="945">945</span>
+<span id="946">946</span>
+<span id="947">947</span>
+<span id="948">948</span>
+<span id="949">949</span>
+<span id="950">950</span>
+<span id="951">951</span>
+<span id="952">952</span>
+<span id="953">953</span>
+<span id="954">954</span>
+<span id="955">955</span>
+<span id="956">956</span>
+<span id="957">957</span>
+<span id="958">958</span>
+<span id="959">959</span>
+<span id="960">960</span>
+<span id="961">961</span>
+<span id="962">962</span>
+<span id="963">963</span>
+<span id="964">964</span>
+<span id="965">965</span>
+<span id="966">966</span>
 </pre><pre class="rust">
 <span class="doccomment">//! Client RPC queries</span>
 
@@ -961,22 +990,11 @@
 <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::cli</span>::{<span class="self">self</span>, <span class="ident">args</span>, <span class="ident">Context</span>};
 <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::node::ledger::rpc</span>::{<span class="ident">Path</span>, <span class="ident">PrefixValue</span>};
 
-<span class="doccomment">/// Dry run a transaction</span>
-<span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">dry_run_tx</span>(
-    <span class="ident">ledger_address</span>: <span class="kw-2">&amp;</span><span class="ident">tendermint::net::Address</span>,
-    <span class="ident">tx_bytes</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>,
-) {
-    <span class="kw">let</span> <span class="ident">client</span> <span class="op">=</span> <span class="ident">HttpClient::new</span>(<span class="ident">ledger_address</span>.<span class="ident">clone</span>()).<span class="ident">unwrap</span>();
-    <span class="kw">let</span> <span class="ident">path</span> <span class="op">=</span> <span class="ident">Path::DryRunTx</span>;
-    <span class="kw">let</span> <span class="ident">response</span> <span class="op">=</span> <span class="ident">client</span>
-        .<span class="ident">abci_query</span>(<span class="prelude-val">Some</span>(<span class="ident">path</span>.<span class="ident">into</span>()), <span class="ident">tx_bytes</span>, <span class="prelude-val">None</span>, <span class="bool-val">false</span>)
-        .<span class="kw">await</span>
-        .<span class="ident">unwrap</span>();
-    <span class="macro">println!</span>(<span class="string">&quot;{:#?}&quot;</span>, <span class="ident">response</span>);
-}
-
 <span class="doccomment">/// Query the epoch of the last committed block</span>
-<span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">query_epoch</span>(<span class="ident">args</span>: <span class="ident">args::Query</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Epoch</span><span class="op">&gt;</span> {
+<span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">query_epoch</span>(
+    <span class="ident">ctx</span>: <span class="ident">Context</span>,
+    <span class="ident">args</span>: <span class="ident">args::Query</span>,
+) <span class="op">-</span><span class="op">&gt;</span> (<span class="ident">Context</span>, <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Epoch</span><span class="op">&gt;</span>) {
     <span class="kw">let</span> <span class="ident">client</span> <span class="op">=</span> <span class="ident">HttpClient::new</span>(<span class="ident">args</span>.<span class="ident">ledger_address</span>).<span class="ident">unwrap</span>();
     <span class="kw">let</span> <span class="ident">path</span> <span class="op">=</span> <span class="ident">Path::Epoch</span>;
     <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="macro">vec!</span>[];
@@ -989,7 +1007,7 @@
             <span class="kw">match</span> <span class="ident">Epoch::try_from_slice</span>(<span class="kw-2">&amp;</span><span class="ident">response</span>.<span class="ident">value</span>[..]) {
                 <span class="prelude-val">Ok</span>(<span class="ident">epoch</span>) <span class="op">=</span><span class="op">&gt;</span> {
                     <span class="macro">println!</span>(<span class="string">&quot;Last committed epoch: {}&quot;</span>, <span class="ident">epoch</span>);
-                    <span class="kw">return</span> <span class="prelude-val">Some</span>(<span class="ident">epoch</span>);
+                    <span class="kw">return</span> (<span class="ident">ctx</span>, <span class="prelude-val">Some</span>(<span class="ident">epoch</span>));
                 }
 
                 <span class="prelude-val">Err</span>(<span class="ident">err</span>) <span class="op">=</span><span class="op">&gt;</span> {
@@ -1065,7 +1083,9 @@
                             .<span class="ident">unwrap</span>();
                     }
                 }
-                <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">println!</span>(<span class="string">&quot;No balances for token {}&quot;</span>, <span class="ident">token</span>.<span class="ident">encode</span>()),
+                <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="macro">println!</span>(<span class="string">&quot;No balances for token {}&quot;</span>, <span class="ident">token</span>.<span class="ident">encode</span>())
+                }
             }
         }
         (<span class="prelude-val">None</span>, <span class="prelude-val">None</span>) <span class="op">=</span><span class="op">&gt;</span> {
@@ -1095,140 +1115,9 @@
     }
 }
 
-<span class="doccomment">/// Accumulate slashes starting from `epoch_start` until (optionally)</span>
-<span class="doccomment">/// `withdraw_epoch` and apply them to the token amount `delta`.</span>
-<span class="kw">fn</span> <span class="ident">apply_slashes</span>(
-    <span class="ident">slashes</span>: <span class="kw-2">&amp;</span>[<span class="ident">Slash</span>],
-    <span class="kw-2">mut</span> <span class="ident">delta</span>: <span class="ident">token::Amount</span>,
-    <span class="ident">epoch_start</span>: <span class="ident">PosEpoch</span>,
-    <span class="ident">withdraw_epoch</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">PosEpoch</span><span class="op">&gt;</span>,
-    <span class="ident">w</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">std::io::StdoutLock</span>,
-) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">token::Amount</span> {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">slashed</span> <span class="op">=</span> <span class="ident">token::Amount::default</span>();
-    <span class="kw">for</span> <span class="ident">slash</span> <span class="kw">in</span> <span class="ident">slashes</span> {
-        <span class="kw">if</span> <span class="ident">slash</span>.<span class="ident">epoch</span> <span class="op">&gt;</span><span class="op">=</span> <span class="ident">epoch_start</span>
-            <span class="op">&amp;&amp;</span> <span class="ident">slash</span>.<span class="ident">epoch</span> <span class="op">&lt;</span> <span class="ident">withdraw_epoch</span>.<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="op">|</span> <span class="ident">u64::MAX</span>.<span class="ident">into</span>())
-        {
-            <span class="macro">writeln!</span>(
-                <span class="ident">w</span>,
-                <span class="string">&quot;    ⚠ Slash: {} from epoch {}&quot;</span>,
-                <span class="ident">slash</span>.<span class="ident">rate</span>, <span class="ident">slash</span>.<span class="ident">epoch</span>
-            )
-            .<span class="ident">unwrap</span>();
-            <span class="kw">let</span> <span class="ident">raw_delta</span>: <span class="ident">u64</span> <span class="op">=</span> <span class="ident">delta</span>.<span class="ident">into</span>();
-            <span class="kw">let</span> <span class="ident">current_slashed</span> <span class="op">=</span> <span class="ident">token::Amount::from</span>(<span class="ident">slash</span>.<span class="ident">rate</span> <span class="op">*</span> <span class="ident">raw_delta</span>);
-            <span class="ident">slashed</span> <span class="op">+</span><span class="op">=</span> <span class="ident">current_slashed</span>;
-            <span class="ident">delta</span> <span class="op">-</span><span class="op">=</span> <span class="ident">current_slashed</span>;
-        }
-    }
-    <span class="kw">if</span> <span class="ident">slashed</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span>.<span class="ident">into</span>() {
-        <span class="macro">writeln!</span>(<span class="ident">w</span>, <span class="string">&quot;    ⚠ Slash total: {}&quot;</span>, <span class="ident">slashed</span>).<span class="ident">unwrap</span>();
-        <span class="macro">writeln!</span>(<span class="ident">w</span>, <span class="string">&quot;    ⚠ After slashing: Δ {}&quot;</span>, <span class="ident">delta</span>).<span class="ident">unwrap</span>();
-    }
-    <span class="ident">delta</span>
-}
-
-<span class="doccomment">/// Process the result of a blonds query to determine total bonds</span>
-<span class="doccomment">/// and total active bonds. This includes taking into account</span>
-<span class="doccomment">/// an aggregation of slashes since the start of the given epoch.</span>
-<span class="kw">fn</span> <span class="ident">process_bonds_query</span>(
-    <span class="ident">bonds</span>: <span class="kw-2">&amp;</span><span class="ident">Bonds</span>,
-    <span class="ident">slashes</span>: <span class="kw-2">&amp;</span>[<span class="ident">Slash</span>],
-    <span class="ident">epoch</span>: <span class="kw-2">&amp;</span><span class="ident">Epoch</span>,
-    <span class="ident">source</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">Address</span><span class="op">&gt;</span>,
-    <span class="ident">total</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">token::Amount</span><span class="op">&gt;</span>,
-    <span class="ident">total_active</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">token::Amount</span><span class="op">&gt;</span>,
-    <span class="ident">w</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">std::io::StdoutLock</span>,
-) <span class="op">-</span><span class="op">&gt;</span> (<span class="ident">token::Amount</span>, <span class="ident">token::Amount</span>) {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">total_active</span> <span class="op">=</span> <span class="ident">total_active</span>.<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="op">|</span> <span class="number">0</span>.<span class="ident">into</span>());
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">current_total</span>: <span class="ident">token::Amount</span> <span class="op">=</span> <span class="number">0</span>.<span class="ident">into</span>();
-    <span class="kw">for</span> <span class="ident">bond</span> <span class="kw">in</span> <span class="ident">bonds</span>.<span class="ident">iter</span>() {
-        <span class="kw">for</span> (<span class="ident">epoch_start</span>, <span class="kw-2">&amp;</span>(<span class="kw-2">mut</span> <span class="ident">delta</span>)) <span class="kw">in</span> <span class="ident">bond</span>.<span class="ident">deltas</span>.<span class="ident">iter</span>().<span class="ident">sorted</span>() {
-            <span class="macro">writeln!</span>(<span class="ident">w</span>, <span class="string">&quot;  Active from epoch {}: Δ {}&quot;</span>, <span class="ident">epoch_start</span>, <span class="ident">delta</span>)
-                .<span class="ident">unwrap</span>();
-            <span class="ident">delta</span> <span class="op">=</span> <span class="ident">apply_slashes</span>(<span class="ident">slashes</span>, <span class="ident">delta</span>, <span class="kw-2">*</span><span class="ident">epoch_start</span>, <span class="prelude-val">None</span>, <span class="ident">w</span>);
-            <span class="ident">current_total</span> <span class="op">+</span><span class="op">=</span> <span class="ident">delta</span>;
-            <span class="kw">let</span> <span class="ident">epoch_start</span>: <span class="ident">Epoch</span> <span class="op">=</span> (<span class="kw-2">*</span><span class="ident">epoch_start</span>).<span class="ident">into</span>();
-            <span class="kw">if</span> <span class="ident">epoch</span> <span class="op">&gt;</span><span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">epoch_start</span> {
-                <span class="ident">total_active</span> <span class="op">+</span><span class="op">=</span> <span class="ident">delta</span>;
-            }
-        }
-    }
-    <span class="kw">let</span> <span class="ident">total</span> <span class="op">=</span> <span class="ident">total</span>.<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="op">|</span> <span class="number">0</span>.<span class="ident">into</span>()) <span class="op">+</span> <span class="ident">current_total</span>;
-    <span class="kw">match</span> <span class="ident">source</span> {
-        <span class="prelude-val">Some</span>(<span class="ident">addr</span>) <span class="op">=</span><span class="op">&gt;</span> {
-            <span class="macro">writeln!</span>(<span class="ident">w</span>, <span class="string">&quot;  Bonded total from {}: {}&quot;</span>, <span class="ident">addr</span>, <span class="ident">current_total</span>)
-                .<span class="ident">unwrap</span>();
-        }
-        <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> {
-            <span class="kw">if</span> <span class="ident">total_active</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span>.<span class="ident">into</span>() <span class="op">&amp;&amp;</span> <span class="ident">total_active</span> <span class="op">!</span><span class="op">=</span> <span class="ident">total</span> {
-                <span class="macro">writeln!</span>(<span class="ident">w</span>, <span class="string">&quot;Active bonds total: {}&quot;</span>, <span class="ident">total_active</span>).<span class="ident">unwrap</span>();
-            }
-            <span class="macro">writeln!</span>(<span class="ident">w</span>, <span class="string">&quot;Bonds total: {}&quot;</span>, <span class="ident">total</span>).<span class="ident">unwrap</span>();
-        }
-    }
-    (<span class="ident">total</span>, <span class="ident">total_active</span>)
-}
-
-<span class="doccomment">/// Process the result of an unbonds query to determine total bonds</span>
-<span class="doccomment">/// and total withdrawable bonds. This includes taking into account</span>
-<span class="doccomment">/// an aggregation of slashes since the start of the given epoch up</span>
-<span class="doccomment">/// until the withdrawal epoch.</span>
-<span class="kw">fn</span> <span class="ident">process_unbonds_query</span>(
-    <span class="ident">unbonds</span>: <span class="kw-2">&amp;</span><span class="ident">Unbonds</span>,
-    <span class="ident">slashes</span>: <span class="kw-2">&amp;</span>[<span class="ident">Slash</span>],
-    <span class="ident">epoch</span>: <span class="kw-2">&amp;</span><span class="ident">Epoch</span>,
-    <span class="ident">source</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">Address</span><span class="op">&gt;</span>,
-    <span class="ident">total</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">token::Amount</span><span class="op">&gt;</span>,
-    <span class="ident">total_withdrawable</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">token::Amount</span><span class="op">&gt;</span>,
-    <span class="ident">w</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">std::io::StdoutLock</span>,
-) <span class="op">-</span><span class="op">&gt;</span> (<span class="ident">token::Amount</span>, <span class="ident">token::Amount</span>) {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">withdrawable</span> <span class="op">=</span> <span class="ident">total_withdrawable</span>.<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="op">|</span> <span class="number">0</span>.<span class="ident">into</span>());
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">current_total</span>: <span class="ident">token::Amount</span> <span class="op">=</span> <span class="number">0</span>.<span class="ident">into</span>();
-    <span class="kw">for</span> <span class="ident">deltas</span> <span class="kw">in</span> <span class="ident">unbonds</span>.<span class="ident">iter</span>() {
-        <span class="kw">for</span> ((<span class="ident">epoch_start</span>, <span class="ident">epoch_end</span>), <span class="kw-2">&amp;</span>(<span class="kw-2">mut</span> <span class="ident">delta</span>)) <span class="kw">in</span>
-            <span class="ident">deltas</span>.<span class="ident">deltas</span>.<span class="ident">iter</span>().<span class="ident">sorted</span>()
-        {
-            <span class="kw">let</span> <span class="ident">withdraw_epoch</span> <span class="op">=</span> <span class="kw-2">*</span><span class="ident">epoch_end</span> <span class="op">+</span> <span class="number">1_u64</span>;
-            <span class="macro">writeln!</span>(
-                <span class="ident">w</span>,
-                <span class="string">&quot;  Withdrawable from epoch {} (active from {}): Δ {}&quot;</span>,
-                <span class="ident">withdraw_epoch</span>, <span class="ident">epoch_start</span>, <span class="ident">delta</span>
-            )
-            .<span class="ident">unwrap</span>();
-            <span class="ident">delta</span> <span class="op">=</span> <span class="ident">apply_slashes</span>(
-                <span class="ident">slashes</span>,
-                <span class="ident">delta</span>,
-                <span class="kw-2">*</span><span class="ident">epoch_start</span>,
-                <span class="prelude-val">Some</span>(<span class="ident">withdraw_epoch</span>),
-                <span class="ident">w</span>,
-            );
-            <span class="ident">current_total</span> <span class="op">+</span><span class="op">=</span> <span class="ident">delta</span>;
-            <span class="kw">let</span> <span class="ident">epoch_end</span>: <span class="ident">Epoch</span> <span class="op">=</span> (<span class="kw-2">*</span><span class="ident">epoch_end</span>).<span class="ident">into</span>();
-            <span class="kw">if</span> <span class="ident">epoch</span> <span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="ident">epoch_end</span> {
-                <span class="ident">withdrawable</span> <span class="op">+</span><span class="op">=</span> <span class="ident">delta</span>;
-            }
-        }
-    }
-    <span class="kw">let</span> <span class="ident">total</span> <span class="op">=</span> <span class="ident">total</span>.<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="op">|</span> <span class="number">0</span>.<span class="ident">into</span>()) <span class="op">+</span> <span class="ident">current_total</span>;
-    <span class="kw">match</span> <span class="ident">source</span> {
-        <span class="prelude-val">Some</span>(<span class="ident">addr</span>) <span class="op">=</span><span class="op">&gt;</span> {
-            <span class="macro">writeln!</span>(<span class="ident">w</span>, <span class="string">&quot;  Unbonded total from {}: {}&quot;</span>, <span class="ident">addr</span>, <span class="ident">current_total</span>)
-                .<span class="ident">unwrap</span>();
-        }
-        <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> {
-            <span class="kw">if</span> <span class="ident">withdrawable</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span>.<span class="ident">into</span>() {
-                <span class="macro">writeln!</span>(<span class="ident">w</span>, <span class="string">&quot;Withdrawable total: {}&quot;</span>, <span class="ident">withdrawable</span>).<span class="ident">unwrap</span>();
-            }
-            <span class="macro">writeln!</span>(<span class="ident">w</span>, <span class="string">&quot;Unbonded total: {}&quot;</span>, <span class="ident">total</span>).<span class="ident">unwrap</span>();
-        }
-    }
-    (<span class="ident">total</span>, <span class="ident">withdrawable</span>)
-}
-
 <span class="doccomment">/// Query PoS bond(s)</span>
 <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">query_bonds</span>(<span class="ident">ctx</span>: <span class="ident">Context</span>, <span class="ident">args</span>: <span class="ident">args::QueryBonds</span>) {
-    <span class="kw">let</span> <span class="ident">epoch</span> <span class="op">=</span> <span class="ident">query_epoch</span>(<span class="ident">args</span>.<span class="ident">query</span>.<span class="ident">clone</span>()).<span class="kw">await</span>;
+    <span class="kw">let</span> (<span class="ident">ctx</span>, <span class="ident">epoch</span>) <span class="op">=</span> <span class="ident">query_epoch</span>(<span class="ident">ctx</span>, <span class="ident">args</span>.<span class="ident">query</span>.<span class="ident">clone</span>()).<span class="kw">await</span>;
     <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">epoch</span>) <span class="op">=</span> <span class="ident">epoch</span> {
         <span class="kw">let</span> <span class="ident">client</span> <span class="op">=</span> <span class="ident">HttpClient::new</span>(<span class="ident">args</span>.<span class="ident">query</span>.<span class="ident">ledger_address</span>).<span class="ident">unwrap</span>();
         <span class="kw">match</span> (<span class="ident">args</span>.<span class="ident">owner</span>, <span class="ident">args</span>.<span class="ident">validator</span>) {
@@ -1241,7 +1130,8 @@
                 <span class="kw">let</span> <span class="ident">bonds</span> <span class="op">=</span>
                     <span class="ident">query_storage_value</span>::<span class="op">&lt;</span><span class="ident">pos::Bonds</span><span class="op">&gt;</span>(<span class="ident">client</span>.<span class="ident">clone</span>(), <span class="ident">bond_key</span>)
                         .<span class="kw">await</span>;
-                <span class="comment">// Find owner&#39;s unbonded delegations from the given validator</span>
+                <span class="comment">// Find owner&#39;s unbonded delegations from the given</span>
+                <span class="comment">// validator</span>
                 <span class="kw">let</span> <span class="ident">unbond_key</span> <span class="op">=</span> <span class="ident">pos::unbond_key</span>(<span class="kw-2">&amp;</span><span class="ident">bond_id</span>);
                 <span class="kw">let</span> <span class="ident">unbonds</span> <span class="op">=</span> <span class="ident">query_storage_value</span>::<span class="op">&lt;</span><span class="ident">pos::Unbonds</span><span class="op">&gt;</span>(
                     <span class="ident">client</span>.<span class="ident">clone</span>(),
@@ -1403,7 +1293,9 @@
                                 <span class="ident">total</span> <span class="op">=</span> <span class="ident">tot</span>;
                                 <span class="ident">total_active</span> <span class="op">=</span> <span class="ident">tot_active</span>;
                             }
-                            <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">panic!</span>(<span class="string">&quot;Unexpected storage key {}&quot;</span>, <span class="ident">key</span>),
+                            <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> {
+                                <span class="macro">panic!</span>(<span class="string">&quot;Unexpected storage key {}&quot;</span>, <span class="ident">key</span>)
+                            }
                         }
                     }
                 }
@@ -1455,7 +1347,9 @@
                                 <span class="ident">total</span> <span class="op">=</span> <span class="ident">tot</span>;
                                 <span class="ident">total_withdrawable</span> <span class="op">=</span> <span class="ident">tot_withdrawable</span>;
                             }
-                            <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">panic!</span>(<span class="string">&quot;Unexpected storage key {}&quot;</span>, <span class="ident">key</span>),
+                            <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> {
+                                <span class="macro">panic!</span>(<span class="string">&quot;Unexpected storage key {}&quot;</span>, <span class="ident">key</span>)
+                            }
                         }
                     }
                 }
@@ -1530,7 +1424,9 @@
                                 <span class="ident">total</span> <span class="op">=</span> <span class="ident">tot</span>;
                                 <span class="ident">total_active</span> <span class="op">=</span> <span class="ident">tot_active</span>;
                             }
-                            <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">panic!</span>(<span class="string">&quot;Unexpected storage key {}&quot;</span>, <span class="ident">key</span>),
+                            <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> {
+                                <span class="macro">panic!</span>(<span class="string">&quot;Unexpected storage key {}&quot;</span>, <span class="ident">key</span>)
+                            }
                         }
                     }
                 }
@@ -1585,7 +1481,9 @@
                                 <span class="ident">total</span> <span class="op">=</span> <span class="ident">tot</span>;
                                 <span class="ident">total_withdrawable</span> <span class="op">=</span> <span class="ident">tot_withdrawable</span>;
                             }
-                            <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">panic!</span>(<span class="string">&quot;Unexpected storage key {}&quot;</span>, <span class="ident">key</span>),
+                            <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> {
+                                <span class="macro">panic!</span>(<span class="string">&quot;Unexpected storage key {}&quot;</span>, <span class="ident">key</span>)
+                            }
                         }
                     }
                 }
@@ -1600,9 +1498,9 @@
 
 <span class="doccomment">/// Query PoS voting power</span>
 <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">query_voting_power</span>(<span class="ident">ctx</span>: <span class="ident">Context</span>, <span class="ident">args</span>: <span class="ident">args::QueryVotingPower</span>) {
-    <span class="kw">let</span> <span class="ident">epoch</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">args</span>.<span class="ident">epoch</span> {
-        <span class="prelude-val">Some</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">args</span>.<span class="ident">epoch</span>,
-        <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">query_epoch</span>(<span class="ident">args</span>.<span class="ident">query</span>.<span class="ident">clone</span>()).<span class="kw">await</span>,
+    <span class="kw">let</span> (<span class="ident">ctx</span>, <span class="ident">epoch</span>) <span class="op">=</span> <span class="kw">match</span> <span class="ident">args</span>.<span class="ident">epoch</span> {
+        <span class="prelude-val">Some</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> (<span class="ident">ctx</span>, <span class="ident">args</span>.<span class="ident">epoch</span>),
+        <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">query_epoch</span>(<span class="ident">ctx</span>, <span class="ident">args</span>.<span class="ident">query</span>.<span class="ident">clone</span>()).<span class="kw">await</span>,
     };
     <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">epoch</span>) <span class="op">=</span> <span class="ident">epoch</span> {
         <span class="kw">let</span> <span class="ident">client</span> <span class="op">=</span> <span class="ident">HttpClient::new</span>(<span class="ident">args</span>.<span class="ident">query</span>.<span class="ident">ledger_address</span>).<span class="ident">unwrap</span>();
@@ -1779,6 +1677,20 @@
     }
 }
 
+<span class="doccomment">/// Dry run a transaction</span>
+<span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">dry_run_tx</span>(
+    <span class="ident">ledger_address</span>: <span class="kw-2">&amp;</span><span class="ident">tendermint::net::Address</span>,
+    <span class="ident">tx_bytes</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>,
+) {
+    <span class="kw">let</span> <span class="ident">client</span> <span class="op">=</span> <span class="ident">HttpClient::new</span>(<span class="ident">ledger_address</span>.<span class="ident">clone</span>()).<span class="ident">unwrap</span>();
+    <span class="kw">let</span> <span class="ident">path</span> <span class="op">=</span> <span class="ident">Path::DryRunTx</span>;
+    <span class="kw">let</span> <span class="ident">response</span> <span class="op">=</span> <span class="ident">client</span>
+        .<span class="ident">abci_query</span>(<span class="prelude-val">Some</span>(<span class="ident">path</span>.<span class="ident">into</span>()), <span class="ident">tx_bytes</span>, <span class="prelude-val">None</span>, <span class="bool-val">false</span>)
+        .<span class="kw">await</span>
+        .<span class="ident">unwrap</span>();
+    <span class="macro">println!</span>(<span class="string">&quot;{:#?}&quot;</span>, <span class="ident">response</span>);
+}
+
 <span class="doccomment">/// Get account&#39;s public key stored in its storage sub-space</span>
 <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">get_public_key</span>(
     <span class="ident">address</span>: <span class="kw-2">&amp;</span><span class="ident">Address</span>,
@@ -1787,6 +1699,152 @@
     <span class="kw">let</span> <span class="ident">client</span> <span class="op">=</span> <span class="ident">HttpClient::new</span>(<span class="ident">ledger_address</span>).<span class="ident">unwrap</span>();
     <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">ed25519::pk_key</span>(<span class="ident">address</span>);
     <span class="ident">query_storage_value</span>(<span class="ident">client</span>, <span class="ident">key</span>).<span class="kw">await</span>
+}
+
+<span class="doccomment">/// Check if the given address is a known validator.</span>
+<span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">is_validator</span>(
+    <span class="ident">address</span>: <span class="kw-2">&amp;</span><span class="ident">Address</span>,
+    <span class="ident">ledger_address</span>: <span class="ident">tendermint::net::Address</span>,
+) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
+    <span class="kw">let</span> <span class="ident">client</span> <span class="op">=</span> <span class="ident">HttpClient::new</span>(<span class="ident">ledger_address</span>).<span class="ident">unwrap</span>();
+    <span class="comment">// Check if there&#39;s any validator state</span>
+    <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">pos::validator_state_key</span>(<span class="ident">address</span>);
+    <span class="comment">// We do not need to decode it</span>
+    <span class="kw">let</span> <span class="ident">state</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">pos::ValidatorStates</span><span class="op">&gt;</span> <span class="op">=</span>
+        <span class="ident">query_storage_value</span>(<span class="ident">client</span>, <span class="ident">key</span>).<span class="kw">await</span>;
+    <span class="comment">// If there is, then the address is a validator</span>
+    <span class="ident">state</span>.<span class="ident">is_some</span>()
+}
+
+<span class="doccomment">/// Accumulate slashes starting from `epoch_start` until (optionally)</span>
+<span class="doccomment">/// `withdraw_epoch` and apply them to the token amount `delta`.</span>
+<span class="kw">fn</span> <span class="ident">apply_slashes</span>(
+    <span class="ident">slashes</span>: <span class="kw-2">&amp;</span>[<span class="ident">Slash</span>],
+    <span class="kw-2">mut</span> <span class="ident">delta</span>: <span class="ident">token::Amount</span>,
+    <span class="ident">epoch_start</span>: <span class="ident">PosEpoch</span>,
+    <span class="ident">withdraw_epoch</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">PosEpoch</span><span class="op">&gt;</span>,
+    <span class="ident">w</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">std::io::StdoutLock</span>,
+) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">token::Amount</span> {
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">slashed</span> <span class="op">=</span> <span class="ident">token::Amount::default</span>();
+    <span class="kw">for</span> <span class="ident">slash</span> <span class="kw">in</span> <span class="ident">slashes</span> {
+        <span class="kw">if</span> <span class="ident">slash</span>.<span class="ident">epoch</span> <span class="op">&gt;</span><span class="op">=</span> <span class="ident">epoch_start</span>
+            <span class="op">&amp;&amp;</span> <span class="ident">slash</span>.<span class="ident">epoch</span> <span class="op">&lt;</span> <span class="ident">withdraw_epoch</span>.<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="op">|</span> <span class="ident">u64::MAX</span>.<span class="ident">into</span>())
+        {
+            <span class="macro">writeln!</span>(
+                <span class="ident">w</span>,
+                <span class="string">&quot;    ⚠ Slash: {} from epoch {}&quot;</span>,
+                <span class="ident">slash</span>.<span class="ident">rate</span>, <span class="ident">slash</span>.<span class="ident">epoch</span>
+            )
+            .<span class="ident">unwrap</span>();
+            <span class="kw">let</span> <span class="ident">raw_delta</span>: <span class="ident">u64</span> <span class="op">=</span> <span class="ident">delta</span>.<span class="ident">into</span>();
+            <span class="kw">let</span> <span class="ident">current_slashed</span> <span class="op">=</span> <span class="ident">token::Amount::from</span>(<span class="ident">slash</span>.<span class="ident">rate</span> <span class="op">*</span> <span class="ident">raw_delta</span>);
+            <span class="ident">slashed</span> <span class="op">+</span><span class="op">=</span> <span class="ident">current_slashed</span>;
+            <span class="ident">delta</span> <span class="op">-</span><span class="op">=</span> <span class="ident">current_slashed</span>;
+        }
+    }
+    <span class="kw">if</span> <span class="ident">slashed</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span>.<span class="ident">into</span>() {
+        <span class="macro">writeln!</span>(<span class="ident">w</span>, <span class="string">&quot;    ⚠ Slash total: {}&quot;</span>, <span class="ident">slashed</span>).<span class="ident">unwrap</span>();
+        <span class="macro">writeln!</span>(<span class="ident">w</span>, <span class="string">&quot;    ⚠ After slashing: Δ {}&quot;</span>, <span class="ident">delta</span>).<span class="ident">unwrap</span>();
+    }
+    <span class="ident">delta</span>
+}
+
+<span class="doccomment">/// Process the result of a blonds query to determine total bonds</span>
+<span class="doccomment">/// and total active bonds. This includes taking into account</span>
+<span class="doccomment">/// an aggregation of slashes since the start of the given epoch.</span>
+<span class="kw">fn</span> <span class="ident">process_bonds_query</span>(
+    <span class="ident">bonds</span>: <span class="kw-2">&amp;</span><span class="ident">Bonds</span>,
+    <span class="ident">slashes</span>: <span class="kw-2">&amp;</span>[<span class="ident">Slash</span>],
+    <span class="ident">epoch</span>: <span class="kw-2">&amp;</span><span class="ident">Epoch</span>,
+    <span class="ident">source</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">Address</span><span class="op">&gt;</span>,
+    <span class="ident">total</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">token::Amount</span><span class="op">&gt;</span>,
+    <span class="ident">total_active</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">token::Amount</span><span class="op">&gt;</span>,
+    <span class="ident">w</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">std::io::StdoutLock</span>,
+) <span class="op">-</span><span class="op">&gt;</span> (<span class="ident">token::Amount</span>, <span class="ident">token::Amount</span>) {
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">total_active</span> <span class="op">=</span> <span class="ident">total_active</span>.<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="op">|</span> <span class="number">0</span>.<span class="ident">into</span>());
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">current_total</span>: <span class="ident">token::Amount</span> <span class="op">=</span> <span class="number">0</span>.<span class="ident">into</span>();
+    <span class="kw">for</span> <span class="ident">bond</span> <span class="kw">in</span> <span class="ident">bonds</span>.<span class="ident">iter</span>() {
+        <span class="kw">for</span> (<span class="ident">epoch_start</span>, <span class="kw-2">&amp;</span>(<span class="kw-2">mut</span> <span class="ident">delta</span>)) <span class="kw">in</span> <span class="ident">bond</span>.<span class="ident">deltas</span>.<span class="ident">iter</span>().<span class="ident">sorted</span>() {
+            <span class="macro">writeln!</span>(<span class="ident">w</span>, <span class="string">&quot;  Active from epoch {}: Δ {}&quot;</span>, <span class="ident">epoch_start</span>, <span class="ident">delta</span>)
+                .<span class="ident">unwrap</span>();
+            <span class="ident">delta</span> <span class="op">=</span> <span class="ident">apply_slashes</span>(<span class="ident">slashes</span>, <span class="ident">delta</span>, <span class="kw-2">*</span><span class="ident">epoch_start</span>, <span class="prelude-val">None</span>, <span class="ident">w</span>);
+            <span class="ident">current_total</span> <span class="op">+</span><span class="op">=</span> <span class="ident">delta</span>;
+            <span class="kw">let</span> <span class="ident">epoch_start</span>: <span class="ident">Epoch</span> <span class="op">=</span> (<span class="kw-2">*</span><span class="ident">epoch_start</span>).<span class="ident">into</span>();
+            <span class="kw">if</span> <span class="ident">epoch</span> <span class="op">&gt;</span><span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">epoch_start</span> {
+                <span class="ident">total_active</span> <span class="op">+</span><span class="op">=</span> <span class="ident">delta</span>;
+            }
+        }
+    }
+    <span class="kw">let</span> <span class="ident">total</span> <span class="op">=</span> <span class="ident">total</span>.<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="op">|</span> <span class="number">0</span>.<span class="ident">into</span>()) <span class="op">+</span> <span class="ident">current_total</span>;
+    <span class="kw">match</span> <span class="ident">source</span> {
+        <span class="prelude-val">Some</span>(<span class="ident">addr</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="macro">writeln!</span>(<span class="ident">w</span>, <span class="string">&quot;  Bonded total from {}: {}&quot;</span>, <span class="ident">addr</span>, <span class="ident">current_total</span>)
+                .<span class="ident">unwrap</span>();
+        }
+        <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="kw">if</span> <span class="ident">total_active</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span>.<span class="ident">into</span>() <span class="op">&amp;&amp;</span> <span class="ident">total_active</span> <span class="op">!</span><span class="op">=</span> <span class="ident">total</span> {
+                <span class="macro">writeln!</span>(<span class="ident">w</span>, <span class="string">&quot;Active bonds total: {}&quot;</span>, <span class="ident">total_active</span>).<span class="ident">unwrap</span>();
+            }
+            <span class="macro">writeln!</span>(<span class="ident">w</span>, <span class="string">&quot;Bonds total: {}&quot;</span>, <span class="ident">total</span>).<span class="ident">unwrap</span>();
+        }
+    }
+    (<span class="ident">total</span>, <span class="ident">total_active</span>)
+}
+
+<span class="doccomment">/// Process the result of an unbonds query to determine total bonds</span>
+<span class="doccomment">/// and total withdrawable bonds. This includes taking into account</span>
+<span class="doccomment">/// an aggregation of slashes since the start of the given epoch up</span>
+<span class="doccomment">/// until the withdrawal epoch.</span>
+<span class="kw">fn</span> <span class="ident">process_unbonds_query</span>(
+    <span class="ident">unbonds</span>: <span class="kw-2">&amp;</span><span class="ident">Unbonds</span>,
+    <span class="ident">slashes</span>: <span class="kw-2">&amp;</span>[<span class="ident">Slash</span>],
+    <span class="ident">epoch</span>: <span class="kw-2">&amp;</span><span class="ident">Epoch</span>,
+    <span class="ident">source</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">Address</span><span class="op">&gt;</span>,
+    <span class="ident">total</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">token::Amount</span><span class="op">&gt;</span>,
+    <span class="ident">total_withdrawable</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">token::Amount</span><span class="op">&gt;</span>,
+    <span class="ident">w</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">std::io::StdoutLock</span>,
+) <span class="op">-</span><span class="op">&gt;</span> (<span class="ident">token::Amount</span>, <span class="ident">token::Amount</span>) {
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">withdrawable</span> <span class="op">=</span> <span class="ident">total_withdrawable</span>.<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="op">|</span> <span class="number">0</span>.<span class="ident">into</span>());
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">current_total</span>: <span class="ident">token::Amount</span> <span class="op">=</span> <span class="number">0</span>.<span class="ident">into</span>();
+    <span class="kw">for</span> <span class="ident">deltas</span> <span class="kw">in</span> <span class="ident">unbonds</span>.<span class="ident">iter</span>() {
+        <span class="kw">for</span> ((<span class="ident">epoch_start</span>, <span class="ident">epoch_end</span>), <span class="kw-2">&amp;</span>(<span class="kw-2">mut</span> <span class="ident">delta</span>)) <span class="kw">in</span>
+            <span class="ident">deltas</span>.<span class="ident">deltas</span>.<span class="ident">iter</span>().<span class="ident">sorted</span>()
+        {
+            <span class="kw">let</span> <span class="ident">withdraw_epoch</span> <span class="op">=</span> <span class="kw-2">*</span><span class="ident">epoch_end</span> <span class="op">+</span> <span class="number">1_u64</span>;
+            <span class="macro">writeln!</span>(
+                <span class="ident">w</span>,
+                <span class="string">&quot;  Withdrawable from epoch {} (active from {}): Δ {}&quot;</span>,
+                <span class="ident">withdraw_epoch</span>, <span class="ident">epoch_start</span>, <span class="ident">delta</span>
+            )
+            .<span class="ident">unwrap</span>();
+            <span class="ident">delta</span> <span class="op">=</span> <span class="ident">apply_slashes</span>(
+                <span class="ident">slashes</span>,
+                <span class="ident">delta</span>,
+                <span class="kw-2">*</span><span class="ident">epoch_start</span>,
+                <span class="prelude-val">Some</span>(<span class="ident">withdraw_epoch</span>),
+                <span class="ident">w</span>,
+            );
+            <span class="ident">current_total</span> <span class="op">+</span><span class="op">=</span> <span class="ident">delta</span>;
+            <span class="kw">let</span> <span class="ident">epoch_end</span>: <span class="ident">Epoch</span> <span class="op">=</span> (<span class="kw-2">*</span><span class="ident">epoch_end</span>).<span class="ident">into</span>();
+            <span class="kw">if</span> <span class="ident">epoch</span> <span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="ident">epoch_end</span> {
+                <span class="ident">withdrawable</span> <span class="op">+</span><span class="op">=</span> <span class="ident">delta</span>;
+            }
+        }
+    }
+    <span class="kw">let</span> <span class="ident">total</span> <span class="op">=</span> <span class="ident">total</span>.<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="op">|</span> <span class="number">0</span>.<span class="ident">into</span>()) <span class="op">+</span> <span class="ident">current_total</span>;
+    <span class="kw">match</span> <span class="ident">source</span> {
+        <span class="prelude-val">Some</span>(<span class="ident">addr</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="macro">writeln!</span>(<span class="ident">w</span>, <span class="string">&quot;  Unbonded total from {}: {}&quot;</span>, <span class="ident">addr</span>, <span class="ident">current_total</span>)
+                .<span class="ident">unwrap</span>();
+        }
+        <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="kw">if</span> <span class="ident">withdrawable</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span>.<span class="ident">into</span>() {
+                <span class="macro">writeln!</span>(<span class="ident">w</span>, <span class="string">&quot;Withdrawable total: {}&quot;</span>, <span class="ident">withdrawable</span>).<span class="ident">unwrap</span>();
+            }
+            <span class="macro">writeln!</span>(<span class="ident">w</span>, <span class="string">&quot;Unbonded total: {}&quot;</span>, <span class="ident">total</span>).<span class="ident">unwrap</span>();
+        }
+    }
+    (<span class="ident">total</span>, <span class="ident">withdrawable</span>)
 }
 
 <span class="doccomment">/// Query a storage value and decode it with [`BorshDeserialize`].</span>

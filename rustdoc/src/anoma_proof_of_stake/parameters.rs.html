@@ -51,6 +51,7 @@
 <span id="49">49</span>
 <span id="50">50</span>
 <span id="51">51</span>
+<span id="52">52</span>
 </pre><pre class="rust">
 <span class="doccomment">//! Proof-of-Stake system parameters</span>
 
@@ -69,6 +70,7 @@
     <span class="doccomment">/// How many epochs after a committed fault a validator can be slashed.</span>
     <span class="doccomment">/// If a fault is detected in epoch `n`, it can slashed up until the end of</span>
     <span class="doccomment">/// `n + slashable_period_len` epoch.</span>
+    <span class="doccomment">/// The value must be greater or equal to `pipeline_len`.</span>
     <span class="kw">pub</span> <span class="ident">unbonding_len</span>: <span class="ident">u64</span>,
     <span class="doccomment">/// Used in validators&#39; voting power calculation. Given in basis points</span>
     <span class="doccomment">/// (voting power per ten thousand tokens).</span>

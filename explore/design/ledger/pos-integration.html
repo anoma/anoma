@@ -148,40 +148,37 @@
 <p>All <a href="/explore/design/pos.html#storage">the data relevant to the PoS system</a> are stored under the PoS account's storage sub-space, with the following key schema (the PoS address prefix is omitted for clarity):</p>
 <ul>
 <li>
-<p><code>params</code>: the system parameters</p>
+<p><code>params</code> (required): the system parameters</p>
 </li>
 <li>
-<p><code>validator/{validator_address}/consensus_key</code></p>
+<p>for any validator, all the following fields are required:</p>
+<ul>
+<li><code>validator/{validator_address}/consensus_key</code></li>
+<li><code>validator/{validator_address}/state</code></li>
+<li><code>validator/{validator_address}/total_deltas</code></li>
+<li><code>validator/{validator_address}/voting_power</code></li>
+</ul>
 </li>
 <li>
-<p><code>validator/{validator_address}/state</code></p>
+<p><code>slash/{validator_address}</code> (optional): a list of slashes, where each record contains epoch and slash rate</p>
 </li>
 <li>
-<p><code>validator/{validator_address}/total_deltas</code></p>
+<p><code>bond/{bond_source}/{bond_validator} (optional)</code></p>
 </li>
 <li>
-<p><code>validator/{validator_address}/voting_power</code></p>
+<p><code>unbond/{unbond_source}/{unbond_validator} (optional)</code></p>
 </li>
 <li>
-<p><code>slash/{validator_address}</code>: a list of slashes, where each record contains epoch and slash rate</p>
+<p><code>validator_set (required)</code></p>
 </li>
 <li>
-<p><code>bond/{bond_source}/{bond_validator}</code></p>
-</li>
-<li>
-<p><code>unbond/{unbond_source}/{unbond_validator}</code></p>
-</li>
-<li>
-<p><code>validator_set</code></p>
-</li>
-<li>
-<p><code>total_voting_power</code></p>
+<p><code>total_voting_power (required)</code></p>
 </li>
 <li>
 <p>standard validator metadata (these are regular storage values, not epoched data):</p>
 <ul>
-<li><code>validator/{validator_address}/staking_reward_address</code>: an address that should receive staking rewards</li>
-<li><code>validator/{validator_address}/address_raw_hash</code>: raw hash of validator's address associated with the address is used for look-up of validator address from a raw hash</li>
+<li><code>validator/{validator_address}/staking_reward_address</code> (required): an address that should receive staking rewards</li>
+<li><code>validator/{validator_address}/address_raw_hash</code> (required): raw hash of validator's address associated with the address is used for look-up of validator address from a raw hash</li>
 <li>TBA (e.g. alias, website, description, delegation commission rate, etc.)</li>
 </ul>
 </li>
@@ -356,6 +353,7 @@
 <li><code>validator_set_pre: Option&lt;ValidatorSets&lt;Address&gt;&gt;</code></li>
 <li><code>validator_set_post: Option&lt;ValidatorSets&lt;Address&gt;&gt;</code></li>
 <li><code>total_voting_power_delta_by_epoch: HashMap&lt;Epoch, VotingPowerDelta&gt;</code></li>
+<li><code>new_validators: HashMap&lt;Address, NewValidator&gt;</code></li>
 </ul>
 <p>The accumulators are initialized to their default values (empty hash maps and hash set). The data keyed by address are using the validator addresses.</p>
 <p>For any updated epoched data, the <code>last_update</code> field must be set to the current epoch.</p>
@@ -364,10 +362,10 @@
 <li><code>validator/{validator_address}/consensus_key</code>:
 <pre><code class="language-rust ignore">match (pre_state, post_state) {
   (None, Some(post)) =&gt; {
-    // - check that any other sub-keys for this validator address didn't exist
-    // in a pre-state
+    // - check that all other required validator fields have been initialized
     // - check that the `state` sub-key for this validator address has been set
     // correctly, i.e. the value should be initialized at `pipeline_length` offset
+    // - insert into or update `new_validators` accumulator
   },
   (Some(pre), Some(post)) =&gt; {
     // - check that the new consensus key is different from the old consensus
@@ -380,18 +378,17 @@
 <li><code>validator/{validator_address}/state</code>:
 <pre><code class="language-rust ignore">match (pre_state, post_state) {
   (None, Some(post)) =&gt; {
-    // - check that any other sub-keys for this validator address didn't exist
-    // in a pre-state
-    // - check that a consensus key record is also created
+    // - check that all other required validator fields have been initialized
     // - check that the `post` state is set correctly:
     //   - the state should be set to `pending` in the current epoch and `candidate` at pipeline offset
+    // - insert into or update `new_validators` accumulator
   },
   (Some(pre), Some(post)) =&gt; {
     // - check that a validator has been correctly deactivated or reactivated
     // - the `state` should only be changed at `pipeline_length` offset
     // - if the `state` becomes `inactive`, it must have been `pending` or `candidate`
     // - if the `state` becomes `pending`, it must have been `inactive`
-    // - if the `state` becomes `candidate`, it must have been `pending`
+    // - if the `state` becomes `candidate`, it must have been `pending` or `inactive`
   },
   _ =&gt; false,
 }
@@ -458,6 +455,7 @@
 <li>Check expected voting power changes against <code>voting_power_by_epoch</code>.</li>
 <li>Check expected total voting power change against <code>total_voting_power_delta_by_epoch</code>.</li>
 <li>Check that the sum of bonds and unbonds deltas is equal to the balance delta.</li>
+<li>Check that all the new validators have their required fields set and that they have been added to the validator set</li>
 </ul>
 
                     </main>

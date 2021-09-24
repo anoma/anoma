@@ -555,6 +555,18 @@
 <span id="553">553</span>
 <span id="554">554</span>
 <span id="555">555</span>
+<span id="556">556</span>
+<span id="557">557</span>
+<span id="558">558</span>
+<span id="559">559</span>
+<span id="560">560</span>
+<span id="561">561</span>
+<span id="562">562</span>
+<span id="563">563</span>
+<span id="564">564</span>
+<span id="565">565</span>
+<span id="566">566</span>
+<span id="567">567</span>
 </pre><pre class="rust">
 <span class="doccomment">//! Proof-of-Stake storage keys and storage integration via [`PosBase`] trait.</span>
 
@@ -634,6 +646,18 @@
         .<span class="ident">expect</span>(<span class="string">&quot;Cannot obtain a storage key&quot;</span>)
         .<span class="ident">push</span>(<span class="kw-2">&amp;</span><span class="ident">raw_hash</span>)
         .<span class="ident">expect</span>(<span class="string">&quot;Cannot obtain a storage key&quot;</span>)
+}
+
+<span class="doccomment">/// Is storage key for validator&#39;s address raw hash?</span>
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_validator_address_raw_hash_key</span>(<span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">Key</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">str</span><span class="op">&gt;</span> {
+    <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="ident">key</span>.<span class="ident">segments</span>[..] {
+        [<span class="ident">DbKeySeg::AddressSeg</span>(<span class="ident">addr</span>), <span class="ident">DbKeySeg::StringSeg</span>(<span class="ident">prefix</span>), <span class="ident">DbKeySeg::StringSeg</span>(<span class="ident">raw_hash</span>)]
+            <span class="kw">if</span> <span class="ident">addr</span> <span class="op">=</span><span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">ADDRESS</span> <span class="op">&amp;&amp;</span> <span class="ident">prefix</span> <span class="op">=</span><span class="op">=</span> <span class="ident">VALIDATOR_ADDRESS_RAW_HASH</span> <span class="op">=</span><span class="op">&gt;</span>
+        {
+            <span class="prelude-val">Some</span>(<span class="ident">raw_hash</span>)
+        }
+        <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">None</span>,
+    }
 }
 
 <span class="doccomment">/// Storage key for validator&#39;s staking reward address.</span>
