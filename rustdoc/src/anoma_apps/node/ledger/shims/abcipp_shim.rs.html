@@ -115,10 +115,14 @@
 <span id="113">113</span>
 <span id="114">114</span>
 <span id="115">115</span>
+<span id="116">116</span>
+<span id="117">117</span>
+<span id="118">118</span>
+<span id="119">119</span>
 </pre><pre class="rust">
 <span class="kw">use</span> <span class="ident">std::convert::TryFrom</span>;
 <span class="kw">use</span> <span class="ident">std::future::Future</span>;
-<span class="kw">use</span> <span class="ident">std::path::Path</span>;
+<span class="kw">use</span> <span class="ident">std::path</span>::{<span class="ident">Path</span>, <span class="ident">PathBuf</span>};
 <span class="kw">use</span> <span class="ident">std::pin::Pin</span>;
 <span class="kw">use</span> <span class="ident">std::task</span>::{<span class="ident">Context</span>, <span class="ident">Poll</span>};
 
@@ -142,9 +146,13 @@
 }
 
 <span class="kw">impl</span> <span class="ident">AbcippShim</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">db_path</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span><span class="ident">Path</span><span class="op">&gt;</span>, <span class="ident">chain_id</span>: <span class="ident">String</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(
+        <span class="ident">db_path</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span><span class="ident">Path</span><span class="op">&gt;</span>,
+        <span class="ident">chain_id</span>: <span class="ident">String</span>,
+        <span class="ident">wasm_dir</span>: <span class="ident">PathBuf</span>,
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="self">Self</span> {
-            <span class="ident">service</span>: <span class="ident">Shell::new</span>(<span class="ident">db_path</span>, <span class="ident">chain_id</span>),
+            <span class="ident">service</span>: <span class="ident">Shell::new</span>(<span class="ident">db_path</span>, <span class="ident">chain_id</span>, <span class="ident">wasm_dir</span>),
             <span class="ident">block_txs</span>: <span class="macro">vec!</span>[],
         }
     }

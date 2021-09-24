@@ -427,6 +427,8 @@
 <span id="425">425</span>
 <span id="426">426</span>
 <span id="427">427</span>
+<span id="428">428</span>
+<span id="429">429</span>
 </pre><pre class="rust">
 <span class="doccomment">//! Node and client configuration</span>
 
@@ -521,6 +523,7 @@ And this is correct
     <span class="kw">pub</span> <span class="ident">ledger_address</span>: <span class="ident">SocketAddr</span>,
     <span class="kw">pub</span> <span class="ident">rpc_address</span>: <span class="ident">SocketAddr</span>,
     <span class="kw">pub</span> <span class="ident">p2p_address</span>: <span class="ident">SocketAddr</span>,
+    <span class="kw">pub</span> <span class="ident">wasm_dir</span>: <span class="ident">PathBuf</span>,
 }
 
 <span class="kw">impl</span> <span class="ident">Default</span> <span class="kw">for</span> <span class="ident">Ledger</span> {
@@ -542,6 +545,7 @@ And this is correct
                 <span class="ident">IpAddr::V4</span>(<span class="ident">Ipv4Addr::new</span>(<span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>)),
                 <span class="number">26656</span>,
             ),
+            <span class="ident">wasm_dir</span>: <span class="string">&quot;wasm&quot;</span>.<span class="ident">into</span>(),
         }
     }
 }

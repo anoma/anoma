@@ -598,6 +598,14 @@
 <span id="596">596</span>
 <span id="597">597</span>
 <span id="598">598</span>
+<span id="599">599</span>
+<span id="600">600</span>
+<span id="601">601</span>
+<span id="602">602</span>
+<span id="603">603</span>
+<span id="604">604</span>
+<span id="605">605</span>
+<span id="606">606</span>
 </pre><pre class="rust">
 <span class="kw">use</span> <span class="ident">std::borrow::Cow</span>;
 <span class="kw">use</span> <span class="ident">std::convert::TryFrom</span>;
@@ -620,17 +628,18 @@
 };
 <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::node::ledger::tendermint_node</span>;
 
-<span class="kw">const</span> <span class="ident">TX_INIT_ACCOUNT_WASM</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;wasm/tx_init_account.wasm&quot;</span>;
-<span class="kw">const</span> <span class="ident">TX_INIT_VALIDATOR_WASM</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;wasm/tx_init_validator.wasm&quot;</span>;
-<span class="kw">const</span> <span class="ident">TX_UPDATE_VP_WASM</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;wasm/tx_update_vp.wasm&quot;</span>;
-<span class="kw">const</span> <span class="ident">TX_TRANSFER_WASM</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;wasm/tx_transfer.wasm&quot;</span>;
-<span class="kw">const</span> <span class="ident">VP_USER_WASM</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;wasm/vp_user.wasm&quot;</span>;
-<span class="kw">const</span> <span class="ident">TX_BOND_WASM</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;wasm/tx_bond.wasm&quot;</span>;
-<span class="kw">const</span> <span class="ident">TX_UNBOND_WASM</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;wasm/tx_unbond.wasm&quot;</span>;
-<span class="kw">const</span> <span class="ident">TX_WITHDRAW_WASM</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;wasm/tx_withdraw.wasm&quot;</span>;
+<span class="kw">const</span> <span class="ident">TX_INIT_ACCOUNT_WASM</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;tx_init_account.wasm&quot;</span>;
+<span class="kw">const</span> <span class="ident">TX_INIT_VALIDATOR_WASM</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;tx_init_validator.wasm&quot;</span>;
+<span class="kw">const</span> <span class="ident">TX_UPDATE_VP_WASM</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;tx_update_vp.wasm&quot;</span>;
+<span class="kw">const</span> <span class="ident">TX_TRANSFER_WASM</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;tx_transfer.wasm&quot;</span>;
+<span class="kw">const</span> <span class="ident">VP_USER_WASM</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;vp_user.wasm&quot;</span>;
+<span class="kw">const</span> <span class="ident">TX_BOND_WASM</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;tx_bond.wasm&quot;</span>;
+<span class="kw">const</span> <span class="ident">TX_UNBOND_WASM</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;tx_unbond.wasm&quot;</span>;
+<span class="kw">const</span> <span class="ident">TX_WITHDRAW_WASM</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;tx_withdraw.wasm&quot;</span>;
 
 <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">submit_custom</span>(<span class="kw-2">mut</span> <span class="ident">ctx</span>: <span class="ident">Context</span>, <span class="ident">args</span>: <span class="ident">args::TxCustom</span>) {
-    <span class="kw">let</span> <span class="ident">tx_code</span> <span class="op">=</span> <span class="ident">std::fs::read</span>(<span class="ident">args</span>.<span class="ident">code_path</span>)
+    <span class="kw">let</span> <span class="ident">tx_code</span> <span class="op">=</span> <span class="ident">ctx</span>
+        .<span class="ident">read_wasm</span>(<span class="ident">args</span>.<span class="ident">code_path</span>)
         .<span class="ident">expect</span>(<span class="string">&quot;Expected a file at given code path&quot;</span>);
     <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="ident">args</span>.<span class="ident">data_path</span>.<span class="ident">map</span>(<span class="op">|</span><span class="ident">data_path</span><span class="op">|</span> {
         <span class="ident">std::fs::read</span>(<span class="ident">data_path</span>).<span class="ident">expect</span>(<span class="string">&quot;Expected a file at given data path&quot;</span>)
@@ -666,9 +675,11 @@
     )
     .<span class="kw">await</span>;
 
-    <span class="kw">let</span> <span class="ident">vp_code</span> <span class="op">=</span> <span class="ident">std::fs::read</span>(<span class="ident">args</span>.<span class="ident">vp_code_path</span>)
+    <span class="kw">let</span> <span class="ident">vp_code</span> <span class="op">=</span> <span class="ident">ctx</span>
+        .<span class="ident">read_wasm</span>(<span class="ident">args</span>.<span class="ident">vp_code_path</span>)
         .<span class="ident">expect</span>(<span class="string">&quot;Expected a file at given code path&quot;</span>);
-    <span class="kw">let</span> <span class="ident">tx_code</span> <span class="op">=</span> <span class="ident">std::fs::read</span>(<span class="ident">TX_UPDATE_VP_WASM</span>)
+    <span class="kw">let</span> <span class="ident">tx_code</span> <span class="op">=</span> <span class="ident">ctx</span>
+        .<span class="ident">read_wasm</span>(<span class="ident">TX_UPDATE_VP_WASM</span>)
         .<span class="ident">expect</span>(<span class="string">&quot;Expected a file at given code path&quot;</span>);
 
     <span class="kw">let</span> <span class="ident">update_vp</span> <span class="op">=</span> <span class="ident">UpdateVp</span> {
@@ -695,13 +706,15 @@
     <span class="kw">let</span> <span class="ident">vp_code</span> <span class="op">=</span> <span class="ident">args</span>
         .<span class="ident">vp_code_path</span>
         .<span class="ident">map</span>(<span class="op">|</span><span class="ident">path</span><span class="op">|</span> {
-            <span class="ident">std::fs::read</span>(<span class="ident">path</span>).<span class="ident">expect</span>(<span class="string">&quot;Expected a file at given code path&quot;</span>)
+            <span class="ident">ctx</span>.<span class="ident">read_wasm</span>(<span class="ident">path</span>)
+                .<span class="ident">expect</span>(<span class="string">&quot;Expected a file at given code path&quot;</span>)
         })
         .<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="op">|</span> {
-            <span class="ident">std::fs::read</span>(<span class="ident">VP_USER_WASM</span>)
+            <span class="ident">ctx</span>.<span class="ident">read_wasm</span>(<span class="ident">VP_USER_WASM</span>)
                 .<span class="ident">expect</span>(<span class="string">&quot;Expected a file at given code path&quot;</span>)
         });
-    <span class="kw">let</span> <span class="ident">tx_code</span> <span class="op">=</span> <span class="ident">std::fs::read</span>(<span class="ident">TX_INIT_ACCOUNT_WASM</span>)
+    <span class="kw">let</span> <span class="ident">tx_code</span> <span class="op">=</span> <span class="ident">ctx</span>
+        .<span class="ident">read_wasm</span>(<span class="ident">TX_INIT_ACCOUNT_WASM</span>)
         .<span class="ident">expect</span>(<span class="string">&quot;Expected a file at given code path&quot;</span>);
 
     <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="ident">InitAccount</span> {
@@ -778,21 +791,24 @@
 
     <span class="kw">let</span> <span class="ident">validator_vp_code</span> <span class="op">=</span> <span class="ident">validator_vp_code_path</span>
         .<span class="ident">map</span>(<span class="op">|</span><span class="ident">path</span><span class="op">|</span> {
-            <span class="ident">std::fs::read</span>(<span class="ident">path</span>).<span class="ident">expect</span>(<span class="string">&quot;Expected a file at given code path&quot;</span>)
+            <span class="ident">ctx</span>.<span class="ident">read_wasm</span>(<span class="ident">path</span>)
+                .<span class="ident">expect</span>(<span class="string">&quot;Expected a file at given code path&quot;</span>)
         })
         .<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="op">|</span> {
-            <span class="ident">std::fs::read</span>(<span class="ident">VP_USER_WASM</span>)
+            <span class="ident">ctx</span>.<span class="ident">read_wasm</span>(<span class="ident">VP_USER_WASM</span>)
                 .<span class="ident">expect</span>(<span class="string">&quot;Expected a file at given code path&quot;</span>)
         });
     <span class="kw">let</span> <span class="ident">rewards_vp_code</span> <span class="op">=</span> <span class="ident">rewards_vp_code_path</span>
         .<span class="ident">map</span>(<span class="op">|</span><span class="ident">path</span><span class="op">|</span> {
-            <span class="ident">std::fs::read</span>(<span class="ident">path</span>).<span class="ident">expect</span>(<span class="string">&quot;Expected a file at given code path&quot;</span>)
+            <span class="ident">ctx</span>.<span class="ident">read_wasm</span>(<span class="ident">path</span>)
+                .<span class="ident">expect</span>(<span class="string">&quot;Expected a file at given code path&quot;</span>)
         })
         .<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="op">|</span> {
-            <span class="ident">std::fs::read</span>(<span class="ident">VP_USER_WASM</span>)
+            <span class="ident">ctx</span>.<span class="ident">read_wasm</span>(<span class="ident">VP_USER_WASM</span>)
                 .<span class="ident">expect</span>(<span class="string">&quot;Expected a file at given code path&quot;</span>)
         });
-    <span class="kw">let</span> <span class="ident">tx_code</span> <span class="op">=</span> <span class="ident">std::fs::read</span>(<span class="ident">TX_INIT_VALIDATOR_WASM</span>)
+    <span class="kw">let</span> <span class="ident">tx_code</span> <span class="op">=</span> <span class="ident">ctx</span>
+        .<span class="ident">read_wasm</span>(<span class="ident">TX_INIT_VALIDATOR_WASM</span>)
         .<span class="ident">expect</span>(<span class="string">&quot;Expected a file at given code path&quot;</span>);
 
     <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="ident">InitValidator</span> {
@@ -921,7 +937,7 @@
     )
     .<span class="kw">await</span>;
 
-    <span class="kw">let</span> <span class="ident">tx_code</span> <span class="op">=</span> <span class="ident">std::fs::read</span>(<span class="ident">TX_TRANSFER_WASM</span>).<span class="ident">unwrap</span>();
+    <span class="kw">let</span> <span class="ident">tx_code</span> <span class="op">=</span> <span class="ident">ctx</span>.<span class="ident">read_wasm</span>(<span class="ident">TX_TRANSFER_WASM</span>).<span class="ident">unwrap</span>();
     <span class="kw">let</span> <span class="ident">transfer</span> <span class="op">=</span> <span class="ident">token::Transfer</span> {
         <span class="ident">source</span>,
         <span class="ident">target</span>,
@@ -947,7 +963,7 @@
         <span class="ident">args</span>.<span class="ident">tx</span>.<span class="ident">ledger_address</span>.<span class="ident">clone</span>(),
     )
     .<span class="kw">await</span>;
-    <span class="kw">let</span> <span class="ident">tx_code</span> <span class="op">=</span> <span class="ident">std::fs::read</span>(<span class="ident">TX_BOND_WASM</span>).<span class="ident">unwrap</span>();
+    <span class="kw">let</span> <span class="ident">tx_code</span> <span class="op">=</span> <span class="ident">ctx</span>.<span class="ident">read_wasm</span>(<span class="ident">TX_BOND_WASM</span>).<span class="ident">unwrap</span>();
 
     <span class="kw">let</span> <span class="ident">bond</span> <span class="op">=</span> <span class="ident">pos::Bond</span> {
         <span class="ident">validator</span>,
@@ -971,7 +987,7 @@
         <span class="ident">args</span>.<span class="ident">tx</span>.<span class="ident">ledger_address</span>.<span class="ident">clone</span>(),
     )
     .<span class="kw">await</span>;
-    <span class="kw">let</span> <span class="ident">tx_code</span> <span class="op">=</span> <span class="ident">std::fs::read</span>(<span class="ident">TX_UNBOND_WASM</span>).<span class="ident">unwrap</span>();
+    <span class="kw">let</span> <span class="ident">tx_code</span> <span class="op">=</span> <span class="ident">ctx</span>.<span class="ident">read_wasm</span>(<span class="ident">TX_UNBOND_WASM</span>).<span class="ident">unwrap</span>();
 
     <span class="kw">let</span> <span class="ident">unbond</span> <span class="op">=</span> <span class="ident">pos::Unbond</span> {
         <span class="ident">validator</span>,
@@ -997,7 +1013,7 @@
         <span class="ident">args</span>.<span class="ident">tx</span>.<span class="ident">ledger_address</span>.<span class="ident">clone</span>(),
     )
     .<span class="kw">await</span>;
-    <span class="kw">let</span> <span class="ident">tx_code</span> <span class="op">=</span> <span class="ident">std::fs::read</span>(<span class="ident">TX_WITHDRAW_WASM</span>).<span class="ident">unwrap</span>();
+    <span class="kw">let</span> <span class="ident">tx_code</span> <span class="op">=</span> <span class="ident">ctx</span>.<span class="ident">read_wasm</span>(<span class="ident">TX_WITHDRAW_WASM</span>).<span class="ident">unwrap</span>();
 
     <span class="kw">let</span> <span class="ident">withdraw</span> <span class="op">=</span> <span class="ident">pos::Withdraw</span> { <span class="ident">validator</span>, <span class="ident">source</span> };
     <span class="macro">tracing::debug!</span>(<span class="string">&quot;Withdraw data {:?}&quot;</span>, <span class="ident">withdraw</span>);

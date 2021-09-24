@@ -270,6 +270,9 @@
 <span id="268">268</span>
 <span id="269">269</span>
 <span id="270">270</span>
+<span id="271">271</span>
+<span id="272">272</span>
+<span id="273">273</span>
 </pre><pre class="rust">
 <span class="kw">mod</span> <span class="ident">events</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">protocol</span>;
@@ -443,8 +446,11 @@
     <span class="ident">abort_registration</span>: <span class="ident">AbortRegistration</span>,
 ) {
     <span class="comment">// Construct our ABCI application.</span>
-    <span class="kw">let</span> <span class="ident">service</span> <span class="op">=</span>
-        <span class="ident">AbcippShim::new</span>(<span class="kw-2">&amp;</span><span class="ident">config</span>.<span class="ident">db</span>, <span class="ident">config::DEFAULT_CHAIN_ID</span>.<span class="ident">to_owned</span>());
+    <span class="kw">let</span> <span class="ident">service</span> <span class="op">=</span> <span class="ident">AbcippShim::new</span>(
+        <span class="kw-2">&amp;</span><span class="ident">config</span>.<span class="ident">db</span>,
+        <span class="ident">config::DEFAULT_CHAIN_ID</span>.<span class="ident">to_owned</span>(),
+        <span class="ident">config</span>.<span class="ident">wasm_dir</span>,
+    );
 
     <span class="comment">// Split it into components.</span>
     <span class="kw">let</span> (<span class="ident">consensus</span>, <span class="ident">mempool</span>, <span class="ident">snapshot</span>, <span class="ident">info</span>) <span class="op">=</span> <span class="ident">split::service</span>(<span class="ident">service</span>, <span class="number">5</span>);

@@ -2219,6 +2219,25 @@
 <span id="2217">2217</span>
 <span id="2218">2218</span>
 <span id="2219">2219</span>
+<span id="2220">2220</span>
+<span id="2221">2221</span>
+<span id="2222">2222</span>
+<span id="2223">2223</span>
+<span id="2224">2224</span>
+<span id="2225">2225</span>
+<span id="2226">2226</span>
+<span id="2227">2227</span>
+<span id="2228">2228</span>
+<span id="2229">2229</span>
+<span id="2230">2230</span>
+<span id="2231">2231</span>
+<span id="2232">2232</span>
+<span id="2233">2233</span>
+<span id="2234">2234</span>
+<span id="2235">2235</span>
+<span id="2236">2236</span>
+<span id="2237">2237</span>
+<span id="2238">2238</span>
 </pre><pre class="rust">
 <span class="doccomment">//! The CLI commands that are re-used between the executables `anoma`,</span>
 <span class="doccomment">//! `anoma-node` and `anoma-client`.</span>
@@ -3230,6 +3249,7 @@
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">args</span> {
 
     <span class="kw">use</span> <span class="ident">std::convert::TryFrom</span>;
+    <span class="kw">use</span> <span class="ident">std::env</span>;
     <span class="kw">use</span> <span class="ident">std::fs::File</span>;
     <span class="kw">use</span> <span class="ident">std::net::SocketAddr</span>;
     <span class="kw">use</span> <span class="ident">std::path::PathBuf</span>;
@@ -3251,8 +3271,13 @@
     <span class="kw">const</span> <span class="ident">ALIAS_OPT</span>: <span class="ident">ArgOpt</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">ALIAS</span>.<span class="ident">opt</span>();
     <span class="kw">const</span> <span class="ident">ALIAS</span>: <span class="ident">Arg</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">arg</span>(<span class="string">&quot;alias&quot;</span>);
     <span class="kw">const</span> <span class="ident">AMOUNT</span>: <span class="ident">Arg</span><span class="op">&lt;</span><span class="ident">token::Amount</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">arg</span>(<span class="string">&quot;amount&quot;</span>);
-    <span class="kw">const</span> <span class="ident">BASE_DIR</span>: <span class="ident">ArgDefault</span><span class="op">&lt;</span><span class="ident">PathBuf</span><span class="op">&gt;</span> <span class="op">=</span>
-        <span class="ident">arg_default</span>(<span class="string">&quot;base-dir&quot;</span>, <span class="ident">DefaultFn</span>(<span class="op">|</span><span class="op">|</span> <span class="string">&quot;.anoma&quot;</span>.<span class="ident">into</span>()));
+    <span class="kw">const</span> <span class="ident">BASE_DIR</span>: <span class="ident">ArgDefault</span><span class="op">&lt;</span><span class="ident">PathBuf</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">arg_default</span>(
+        <span class="string">&quot;base-dir&quot;</span>,
+        <span class="ident">DefaultFn</span>(<span class="op">|</span><span class="op">|</span> <span class="kw">match</span> <span class="ident">env::var</span>(<span class="string">&quot;ANOMA_BASE_DIR&quot;</span>) {
+            <span class="prelude-val">Ok</span>(<span class="ident">dir</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">dir</span>.<span class="ident">into</span>(),
+            <span class="prelude-val">Err</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;.anoma&quot;</span>.<span class="ident">into</span>(),
+        }),
+    );
     <span class="kw">const</span> <span class="ident">CODE_PATH</span>: <span class="ident">Arg</span><span class="op">&lt;</span><span class="ident">PathBuf</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">arg</span>(<span class="string">&quot;code-path&quot;</span>);
     <span class="kw">const</span> <span class="ident">CODE_PATH_OPT</span>: <span class="ident">ArgOpt</span><span class="op">&lt;</span><span class="ident">PathBuf</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">CODE_PATH</span>.<span class="ident">opt</span>();
     <span class="kw">const</span> <span class="ident">DATA_PATH_OPT</span>: <span class="ident">ArgOpt</span><span class="op">&lt;</span><span class="ident">PathBuf</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">arg_opt</span>(<span class="string">&quot;data-path&quot;</span>);
@@ -3307,26 +3332,39 @@
         <span class="ident">arg_opt</span>(<span class="string">&quot;consensus-key&quot;</span>);
     <span class="kw">const</span> <span class="ident">VALIDATOR_CODE_PATH</span>: <span class="ident">ArgOpt</span><span class="op">&lt;</span><span class="ident">PathBuf</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">arg_opt</span>(<span class="string">&quot;validator-code-path&quot;</span>);
     <span class="kw">const</span> <span class="ident">VALUE</span>: <span class="ident">ArgOpt</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">arg_opt</span>(<span class="string">&quot;value&quot;</span>);
+    <span class="kw">const</span> <span class="ident">WASM_DIR</span>: <span class="ident">ArgOpt</span><span class="op">&lt;</span><span class="ident">PathBuf</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">arg_opt</span>(<span class="string">&quot;wasm-dir&quot;</span>);
 
     <span class="doccomment">/// Global command arguments</span>
     <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
     <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Global</span> {
         <span class="kw">pub</span> <span class="ident">base_dir</span>: <span class="ident">PathBuf</span>,
+        <span class="kw">pub</span> <span class="ident">wasm_dir</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">PathBuf</span><span class="op">&gt;</span>,
     }
 
     <span class="kw">impl</span> <span class="ident">Global</span> {
         <span class="doccomment">/// Parse global arguments</span>
         <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">parse</span>(<span class="ident">matches</span>: <span class="kw-2">&amp;</span><span class="ident">ArgMatches</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
             <span class="kw">let</span> <span class="ident">base_dir</span> <span class="op">=</span> <span class="ident">BASE_DIR</span>.<span class="ident">parse</span>(<span class="ident">matches</span>);
-            <span class="ident">Global</span> { <span class="ident">base_dir</span> }
+            <span class="kw">let</span> <span class="ident">wasm_dir</span> <span class="op">=</span> <span class="ident">WASM_DIR</span>.<span class="ident">parse</span>(<span class="ident">matches</span>);
+            <span class="ident">Global</span> { <span class="ident">base_dir</span>, <span class="ident">wasm_dir</span> }
         }
 
         <span class="doccomment">/// Add global args definition. Should be added to every top-level</span>
         <span class="doccomment">/// command.</span>
         <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">def</span>(<span class="ident">app</span>: <span class="ident">App</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">App</span> {
             <span class="ident">app</span>.<span class="ident">arg</span>(<span class="ident">BASE_DIR</span>.<span class="ident">def</span>().<span class="ident">about</span>(
-                <span class="string">&quot;The base directory is where the client and nodes \
-                 configuration and state is stored.&quot;</span>,
+                <span class="string">&quot;The base directory is where the nodes, client and wallet \
+                 configuration and state is stored. This value can also be \
+                 set via `ANOMA_BASE_DIR` environment variable, but the \
+                 argument takes precedence, if specified. Defaults to \
+                 `.anoma`.&quot;</span>,
+            ))
+            .<span class="ident">arg</span>(<span class="ident">WASM_DIR</span>.<span class="ident">def</span>().<span class="ident">about</span>(
+                <span class="string">&quot;Directory with built WASM validity predicates, transactions \
+                 and matchmaker files. This value can also be set via \
+                 `ANOMA_WASM_DIR` environment variable, but the argument \
+                 takes precedence, if specified. Defaults to `wasm` path, \
+                 relative to current working directory.&quot;</span>,
             ))
         }
     }

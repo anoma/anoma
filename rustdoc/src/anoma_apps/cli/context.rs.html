@@ -196,11 +196,42 @@
 <span id="194">194</span>
 <span id="195">195</span>
 <span id="196">196</span>
+<span id="197">197</span>
+<span id="198">198</span>
+<span id="199">199</span>
+<span id="200">200</span>
+<span id="201">201</span>
+<span id="202">202</span>
+<span id="203">203</span>
+<span id="204">204</span>
+<span id="205">205</span>
+<span id="206">206</span>
+<span id="207">207</span>
+<span id="208">208</span>
+<span id="209">209</span>
+<span id="210">210</span>
+<span id="211">211</span>
+<span id="212">212</span>
+<span id="213">213</span>
+<span id="214">214</span>
+<span id="215">215</span>
+<span id="216">216</span>
+<span id="217">217</span>
+<span id="218">218</span>
+<span id="219">219</span>
+<span id="220">220</span>
+<span id="221">221</span>
+<span id="222">222</span>
+<span id="223">223</span>
+<span id="224">224</span>
+<span id="225">225</span>
+<span id="226">226</span>
 </pre><pre class="rust">
 <span class="doccomment">//! CLI input types can be used for command arguments</span>
 
+<span class="kw">use</span> <span class="ident">std::env</span>;
 <span class="kw">use</span> <span class="ident">std::marker::PhantomData</span>;
-<span class="kw">use</span> <span class="ident">std::path::Path</span>;
+<span class="kw">use</span> <span class="ident">std::path</span>::{<span class="ident">Path</span>, <span class="ident">PathBuf</span>};
 <span class="kw">use</span> <span class="ident">std::rc::Rc</span>;
 <span class="kw">use</span> <span class="ident">std::str::FromStr</span>;
 
@@ -238,7 +269,19 @@
 <span class="kw">impl</span> <span class="ident">Context</span> {
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">global_args</span>: <span class="ident">args::Global</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="kw">let</span> <span class="ident">wallet</span> <span class="op">=</span> <span class="ident">Wallet::load_or_new</span>(<span class="kw-2">&amp;</span><span class="ident">global_args</span>.<span class="ident">base_dir</span>);
-        <span class="kw">let</span> <span class="ident">config</span> <span class="op">=</span> <span class="ident">load_config</span>(<span class="kw-2">&amp;</span><span class="ident">global_args</span>.<span class="ident">base_dir</span>);
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">config</span> <span class="op">=</span> <span class="ident">load_config</span>(<span class="kw-2">&amp;</span><span class="ident">global_args</span>.<span class="ident">base_dir</span>);
+
+        <span class="comment">// If the WASM dir specified, put it in the config</span>
+        <span class="kw">match</span> <span class="ident">global_args</span>.<span class="ident">wasm_dir</span>.<span class="ident">as_ref</span>() {
+            <span class="prelude-val">Some</span>(<span class="ident">wasm_dir</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">config</span>.<span class="ident">ledger</span>.<span class="ident">wasm_dir</span> <span class="op">=</span> <span class="ident">wasm_dir</span>.<span class="ident">clone</span>();
+            }
+            <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Ok</span>(<span class="ident">wasm_dir</span>) <span class="op">=</span> <span class="ident">env::var</span>(<span class="string">&quot;ANOMA_WASM_DIR&quot;</span>) {
+                    <span class="ident">config</span>.<span class="ident">ledger</span>.<span class="ident">wasm_dir</span> <span class="op">=</span> <span class="ident">wasm_dir</span>.<span class="ident">into</span>();
+                }
+            }
+        }
         <span class="self">Self</span> {
             <span class="ident">global_args</span>,
             <span class="ident">wallet</span>,
@@ -280,6 +323,23 @@
         <span class="ident">T</span>: <span class="ident">ArgFromMutContext</span>,
     {
         <span class="ident">from_context</span>.<span class="ident">map</span>(<span class="op">|</span><span class="ident">from_context</span><span class="op">|</span> <span class="ident">from_context</span>.<span class="ident">from_mut_ctx</span>(<span class="self">self</span>))
+    }
+
+    <span class="doccomment">/// Read the given WASM file from the WASM directory.</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">read_wasm</span>(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        <span class="ident">file_name</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span><span class="ident">Path</span><span class="op">&gt;</span>,
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">std::io::Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+        <span class="ident">std::fs::read</span>(<span class="self">self</span>.<span class="ident">wasm_path</span>(<span class="ident">file_name</span>))
+    }
+
+    <span class="doccomment">/// Find the path to the given WASM file name.</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">wasm_path</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">file_name</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span><span class="ident">Path</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">PathBuf</span> {
+        <span class="kw">let</span> <span class="ident">file_path</span> <span class="op">=</span> <span class="ident">file_name</span>.<span class="ident">as_ref</span>();
+        <span class="kw">if</span> <span class="ident">file_path</span>.<span class="ident">is_absolute</span>() {
+            <span class="kw">return</span> <span class="ident">file_path</span>.<span class="ident">into</span>();
+        }
+        <span class="self">self</span>.<span class="ident">config</span>.<span class="ident">ledger</span>.<span class="ident">wasm_dir</span>.<span class="ident">join</span>(<span class="ident">file_name</span>)
     }
 }
 
