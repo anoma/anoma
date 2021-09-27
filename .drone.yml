@@ -10,101 +10,12 @@ steps:
   image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/git:latest
   name: clone
   pull: never
-- commands: [echo "332646f4610a50c9205d15a80a08b737574e171bd67d2f388156aa87f6759aad  Makefile",
-    'sha256sum -c -, echo "96f503edaeb65d5b75855c75ead35c6c3e394ee82ec6fd4aa15d0e7d9f1051d6  wasm/wasm_source/Makefile"',
-    'sha256sum -c -, echo "52d59575c0767b4738ea9b4c07844c761dce6f54a59b3429e75fb5f4410cdc7e  wasm/vp_template/Makefile"',
-    'sha256sum -c -, echo "52d59575c0767b4738ea9b4c07844c761dce6f54a59b3429e75fb5f4410cdc7e  wasm/tx_template/Makefile"',
-    'sha256sum -c -, echo "52d59575c0767b4738ea9b4c07844c761dce6f54a59b3429e75fb5f4410cdc7e  wasm/mm_template/Makefile"',
-    'sha256sum -c -, echo "52d59575c0767b4738ea9b4c07844c761dce6f54a59b3429e75fb5f4410cdc7e  wasm/mm_filter_template/Makefile"',
-    'sha256sum -c -, echo "4388598b8ace38607a492e2f4d3eae46ef97ac9edb98a20619de3298e5aea081  docs/Makefile"',
-    'sha256sum -c -, echo "4b0b566f5bc572569ebcf2eee17129e91f2009a66972fe294bc4d1e0b4d9ad8f  scripts/ci/update-wasm.sh"',
-    'sha256sum -c -, echo "c2bbcc7ab5f2b4cc478513dc1db117e3a1a9122271db0160afa3929132f54f82  scripts/ci/pre-run.sh"',
-    'sha256sum -c -, echo "19ab6263cc481222b4ecedd1037d2942e4b93d915693aad153bec2a80977ce3d  scripts/ci/audit.py"',
-    'sha256sum -c -, echo "d4790094234822503bc8fd230bbc9ae066c073f17aeb3d773b0bc4c879a49d65  scripts/ci/udeps.py"',
-    'sha256sum -c -, sh scripts/ci/pre-run.sh false']
-  depends_on: [clone]
-  image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/git:latest
-  name: check-scripts-integrity
-  pull: never
-- depends_on: [check-scripts-integrity]
-  environment:
-    AWS_ACCESS_KEY_ID: {from_secret: aws_access_key_id}
-    AWS_SECRET_ACCESS_KEY: {from_secret: aws_secret_access_key}
-    SCCACHE_BUCKET: heliax-drone-cache-v2
-    SCCACHE_S3_KEY_PREFIX: sccache-build
-  image: meltwater/drone-cache:latest
-  name: restore_cache
-  pull: never
-  settings:
-    archive_format: gzip
-    backend: s3
-    bucket: heliax-drone-cache-v2
-    cache_key: 1-54-0/build/{{ checksum "Cargo.lock" }}
-    mount: [.cargo]
-    region: eu-west-1
-    restore: true
-- commands: [sccache --start-server, make build]
-  depends_on: [restore-cache]
-  environment:
-    AWS_ACCESS_KEY_ID: {from_secret: aws_access_key_id}
-    AWS_SECRET_ACCESS_KEY: {from_secret: aws_secret_access_key}
-    SCCACHE_BUCKET: heliax-drone-cache-v2
-    SCCACHE_S3_KEY_PREFIX: sccache-build
-  image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/anoma:latest
-  name: build
-  pull: never
-- commands: [sccache --start-server, make build-test]
-  depends_on: [build]
-  environment:
-    AWS_ACCESS_KEY_ID: {from_secret: aws_access_key_id}
-    AWS_SECRET_ACCESS_KEY: {from_secret: aws_secret_access_key}
-    SCCACHE_BUCKET: heliax-drone-cache-v2
-    SCCACHE_S3_KEY_PREFIX: sccache-build-test
-  image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/anoma:latest
-  name: build-test
-  pull: never
-- commands: [sccache --start-server, make test-unit]
-  depends_on: [build-test]
-  environment:
-    AWS_ACCESS_KEY_ID: {from_secret: aws_access_key_id}
-    AWS_SECRET_ACCESS_KEY: {from_secret: aws_secret_access_key}
-    SCCACHE_BUCKET: heliax-drone-cache-v2
-    SCCACHE_S3_KEY_PREFIX: sccache-test-unit
-  image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/anoma:latest
-  name: test-unit
-  pull: never
-- commands: [cargo cache]
-  depends_on: [test-unit]
-  image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/anoma:latest
-  name: clean-cache
-  pull: never
-  when:
-    status: [success, failure]
-- depends_on: [clean-cache]
-  environment:
-    AWS_ACCESS_KEY_ID: {from_secret: aws_access_key_id}
-    AWS_SECRET_ACCESS_KEY: {from_secret: aws_secret_access_key}
-    BACKEND_OPERATION_TIMEOUT: 8m
-  image: meltwater/drone-cache:latest
-  name: clean-cache
-  pull: never
-  settings:
-    archive_format: gzip
-    backend: s3
-    bucket: heliax-drone-cache-v2
-    cache_key: 1-54-0/build/{{ checksum "Cargo.lock" }}
-    mount: [.cargo]
-    override: false
-    rebuild: true
-    region: eu-west-1
-  when:
-    status: [success, failure]
 trigger:
   event: [pull_request]
 type: docker
 workspace: {path: /usr/local/rust/project}
 ---
 kind: signature
-hmac: 3b1a9af06b42cb9a0a6154993af212313e04376a5205007055c016c6bfe8632d
+hmac: 81a833b3fc23bd541b4700f694158bbc55ea1bf651cf6b8046ab943414d5b737
 
 ...
