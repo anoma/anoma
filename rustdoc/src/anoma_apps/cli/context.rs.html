@@ -226,6 +226,10 @@
 <span id="224">224</span>
 <span id="225">225</span>
 <span id="226">226</span>
+<span id="227">227</span>
+<span id="228">228</span>
+<span id="229">229</span>
+<span id="230">230</span>
 </pre><pre class="rust">
 <span class="doccomment">//! CLI input types can be used for command arguments</span>
 
@@ -290,7 +294,7 @@
     }
 
     <span class="doccomment">/// Parse and/or look-up the value from the context.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">from_context</span>: <span class="ident">FromContext</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">T</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">from_context</span>: <span class="kw-2">&amp;</span><span class="ident">FromContext</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">T</span>
     <span class="kw">where</span>
         <span class="ident">T</span>: <span class="ident">ArgFromContext</span>,
     {
@@ -298,15 +302,17 @@
     }
 
     <span class="doccomment">/// Try to parse and/or look-up an optional value from the context.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_opt</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">from_context</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">FromContext</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_opt</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">from_context</span>: <span class="kw-2">&amp;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">FromContext</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>
     <span class="kw">where</span>
         <span class="ident">T</span>: <span class="ident">ArgFromContext</span>,
     {
-        <span class="ident">from_context</span>.<span class="ident">map</span>(<span class="op">|</span><span class="ident">from_context</span><span class="op">|</span> <span class="ident">from_context</span>.<span class="ident">from_ctx</span>(<span class="self">self</span>))
+        <span class="ident">from_context</span>
+            .<span class="ident">as_ref</span>()
+            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">from_context</span><span class="op">|</span> <span class="ident">from_context</span>.<span class="ident">from_ctx</span>(<span class="self">self</span>))
     }
 
     <span class="doccomment">/// Parse and/or look-up the value from the context with cache.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_cached</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">from_context</span>: <span class="ident">FromContext</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">T</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_cached</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">from_context</span>: <span class="kw-2">&amp;</span><span class="ident">FromContext</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">T</span>
     <span class="kw">where</span>
         <span class="ident">T</span>: <span class="ident">ArgFromMutContext</span>,
     {
@@ -317,12 +323,14 @@
     <span class="doccomment">/// cache.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_opt_cached</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(
         <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
-        <span class="ident">from_context</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">FromContext</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+        <span class="ident">from_context</span>: <span class="kw-2">&amp;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">FromContext</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>
     <span class="kw">where</span>
         <span class="ident">T</span>: <span class="ident">ArgFromMutContext</span>,
     {
-        <span class="ident">from_context</span>.<span class="ident">map</span>(<span class="op">|</span><span class="ident">from_context</span><span class="op">|</span> <span class="ident">from_context</span>.<span class="ident">from_mut_ctx</span>(<span class="self">self</span>))
+        <span class="ident">from_context</span>
+            .<span class="ident">as_ref</span>()
+            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">from_context</span><span class="op">|</span> <span class="ident">from_context</span>.<span class="ident">from_mut_ctx</span>(<span class="self">self</span>))
     }
 
     <span class="doccomment">/// Read the given WASM file from the WASM directory.</span>

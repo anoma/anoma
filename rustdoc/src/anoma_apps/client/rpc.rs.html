@@ -1029,8 +1029,8 @@
     <span class="kw">let</span> <span class="ident">tokens</span> <span class="op">=</span> <span class="ident">address::tokens</span>();
     <span class="kw">match</span> (<span class="ident">args</span>.<span class="ident">token</span>, <span class="ident">args</span>.<span class="ident">owner</span>) {
         (<span class="prelude-val">Some</span>(<span class="ident">token</span>), <span class="prelude-val">Some</span>(<span class="ident">owner</span>)) <span class="op">=</span><span class="op">&gt;</span> {
-            <span class="kw">let</span> <span class="ident">token</span> <span class="op">=</span> <span class="ident">ctx</span>.<span class="ident">get</span>(<span class="ident">token</span>);
-            <span class="kw">let</span> <span class="ident">owner</span> <span class="op">=</span> <span class="ident">ctx</span>.<span class="ident">get</span>(<span class="ident">owner</span>);
+            <span class="kw">let</span> <span class="ident">token</span> <span class="op">=</span> <span class="ident">ctx</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">token</span>);
+            <span class="kw">let</span> <span class="ident">owner</span> <span class="op">=</span> <span class="ident">ctx</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">owner</span>);
             <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">token::balance_key</span>(<span class="kw-2">&amp;</span><span class="ident">token</span>, <span class="kw-2">&amp;</span><span class="ident">owner</span>);
             <span class="kw">let</span> <span class="ident">currency_code</span> <span class="op">=</span> <span class="ident">tokens</span>
                 .<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">token</span>)
@@ -1046,7 +1046,7 @@
             }
         }
         (<span class="prelude-val">None</span>, <span class="prelude-val">Some</span>(<span class="ident">owner</span>)) <span class="op">=</span><span class="op">&gt;</span> {
-            <span class="kw">let</span> <span class="ident">owner</span> <span class="op">=</span> <span class="ident">ctx</span>.<span class="ident">get</span>(<span class="ident">owner</span>);
+            <span class="kw">let</span> <span class="ident">owner</span> <span class="op">=</span> <span class="ident">ctx</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">owner</span>);
             <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">found_any</span> <span class="op">=</span> <span class="bool-val">false</span>;
             <span class="kw">for</span> (<span class="ident">token</span>, <span class="ident">currency_code</span>) <span class="kw">in</span> <span class="ident">tokens</span> {
                 <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">token::balance_key</span>(<span class="kw-2">&amp;</span><span class="ident">token</span>, <span class="kw-2">&amp;</span><span class="ident">owner</span>);
@@ -1063,7 +1063,7 @@
             }
         }
         (<span class="prelude-val">Some</span>(<span class="ident">token</span>), <span class="prelude-val">None</span>) <span class="op">=</span><span class="op">&gt;</span> {
-            <span class="kw">let</span> <span class="ident">token</span> <span class="op">=</span> <span class="ident">ctx</span>.<span class="ident">get</span>(<span class="ident">token</span>);
+            <span class="kw">let</span> <span class="ident">token</span> <span class="op">=</span> <span class="ident">ctx</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">token</span>);
             <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">token::balance_prefix</span>(<span class="kw-2">&amp;</span><span class="ident">token</span>);
             <span class="kw">let</span> <span class="ident">balances</span> <span class="op">=</span>
                 <span class="ident">query_storage_prefix</span>::<span class="op">&lt;</span><span class="ident">token::Amount</span><span class="op">&gt;</span>(<span class="ident">client</span>, <span class="ident">key</span>).<span class="kw">await</span>;
@@ -1122,8 +1122,8 @@
         <span class="kw">let</span> <span class="ident">client</span> <span class="op">=</span> <span class="ident">HttpClient::new</span>(<span class="ident">args</span>.<span class="ident">query</span>.<span class="ident">ledger_address</span>).<span class="ident">unwrap</span>();
         <span class="kw">match</span> (<span class="ident">args</span>.<span class="ident">owner</span>, <span class="ident">args</span>.<span class="ident">validator</span>) {
             (<span class="prelude-val">Some</span>(<span class="ident">owner</span>), <span class="prelude-val">Some</span>(<span class="ident">validator</span>)) <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="kw">let</span> <span class="ident">source</span> <span class="op">=</span> <span class="ident">ctx</span>.<span class="ident">get</span>(<span class="ident">owner</span>);
-                <span class="kw">let</span> <span class="ident">validator</span> <span class="op">=</span> <span class="ident">ctx</span>.<span class="ident">get</span>(<span class="ident">validator</span>);
+                <span class="kw">let</span> <span class="ident">source</span> <span class="op">=</span> <span class="ident">ctx</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">owner</span>);
+                <span class="kw">let</span> <span class="ident">validator</span> <span class="op">=</span> <span class="ident">ctx</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">validator</span>);
                 <span class="comment">// Find owner&#39;s delegations to the given validator</span>
                 <span class="kw">let</span> <span class="ident">bond_id</span> <span class="op">=</span> <span class="ident">pos::BondId</span> { <span class="ident">source</span>, <span class="ident">validator</span> };
                 <span class="kw">let</span> <span class="ident">bond_key</span> <span class="op">=</span> <span class="ident">pos::bond_key</span>(<span class="kw-2">&amp;</span><span class="ident">bond_id</span>);
@@ -1184,7 +1184,7 @@
                 }
             }
             (<span class="prelude-val">None</span>, <span class="prelude-val">Some</span>(<span class="ident">validator</span>)) <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="kw">let</span> <span class="ident">validator</span> <span class="op">=</span> <span class="ident">ctx</span>.<span class="ident">get</span>(<span class="ident">validator</span>);
+                <span class="kw">let</span> <span class="ident">validator</span> <span class="op">=</span> <span class="ident">ctx</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">validator</span>);
                 <span class="comment">// Find validator&#39;s self-bonds</span>
                 <span class="kw">let</span> <span class="ident">bond_id</span> <span class="op">=</span> <span class="ident">pos::BondId</span> {
                     <span class="ident">source</span>: <span class="ident">validator</span>.<span class="ident">clone</span>(),
@@ -1236,7 +1236,7 @@
                 }
             }
             (<span class="prelude-val">Some</span>(<span class="ident">owner</span>), <span class="prelude-val">None</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="kw">let</span> <span class="ident">owner</span> <span class="op">=</span> <span class="ident">ctx</span>.<span class="ident">get</span>(<span class="ident">owner</span>);
+                <span class="kw">let</span> <span class="ident">owner</span> <span class="op">=</span> <span class="ident">ctx</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">owner</span>);
                 <span class="comment">// Find owner&#39;s bonds to any validator</span>
                 <span class="kw">let</span> <span class="ident">bonds_prefix</span> <span class="op">=</span> <span class="ident">pos::bonds_for_source_prefix</span>(<span class="kw-2">&amp;</span><span class="ident">owner</span>);
                 <span class="kw">let</span> <span class="ident">bonds</span> <span class="op">=</span> <span class="ident">query_storage_prefix</span>::<span class="op">&lt;</span><span class="ident">pos::Bonds</span><span class="op">&gt;</span>(
@@ -1518,7 +1518,7 @@
             .<span class="ident">expect</span>(<span class="string">&quot;Validator set should be always set in the current epoch&quot;</span>);
         <span class="kw">match</span> <span class="ident">args</span>.<span class="ident">validator</span> {
             <span class="prelude-val">Some</span>(<span class="ident">validator</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="kw">let</span> <span class="ident">validator</span> <span class="op">=</span> <span class="ident">ctx</span>.<span class="ident">get</span>(<span class="ident">validator</span>);
+                <span class="kw">let</span> <span class="ident">validator</span> <span class="op">=</span> <span class="ident">ctx</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">validator</span>);
                 <span class="comment">// Find voting power for the given validator</span>
                 <span class="kw">let</span> <span class="ident">voting_power_key</span> <span class="op">=</span>
                     <span class="ident">pos::validator_voting_power_key</span>(<span class="kw-2">&amp;</span><span class="ident">validator</span>);
@@ -1608,7 +1608,7 @@
     <span class="kw">let</span> <span class="ident">client</span> <span class="op">=</span> <span class="ident">HttpClient::new</span>(<span class="ident">args</span>.<span class="ident">query</span>.<span class="ident">ledger_address</span>).<span class="ident">unwrap</span>();
     <span class="kw">match</span> <span class="ident">args</span>.<span class="ident">validator</span> {
         <span class="prelude-val">Some</span>(<span class="ident">validator</span>) <span class="op">=</span><span class="op">&gt;</span> {
-            <span class="kw">let</span> <span class="ident">validator</span> <span class="op">=</span> <span class="ident">ctx</span>.<span class="ident">get</span>(<span class="ident">validator</span>);
+            <span class="kw">let</span> <span class="ident">validator</span> <span class="op">=</span> <span class="ident">ctx</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">validator</span>);
             <span class="comment">// Find slashes for the given validator</span>
             <span class="kw">let</span> <span class="ident">slashes_key</span> <span class="op">=</span> <span class="ident">pos::validator_slashes_key</span>(<span class="kw-2">&amp;</span><span class="ident">validator</span>);
             <span class="kw">let</span> <span class="ident">slashes</span> <span class="op">=</span> <span class="ident">query_storage_value</span>::<span class="op">&lt;</span><span class="ident">pos::Slashes</span><span class="op">&gt;</span>(

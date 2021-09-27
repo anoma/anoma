@@ -560,52 +560,6 @@
 <span id="558">558</span>
 <span id="559">559</span>
 <span id="560">560</span>
-<span id="561">561</span>
-<span id="562">562</span>
-<span id="563">563</span>
-<span id="564">564</span>
-<span id="565">565</span>
-<span id="566">566</span>
-<span id="567">567</span>
-<span id="568">568</span>
-<span id="569">569</span>
-<span id="570">570</span>
-<span id="571">571</span>
-<span id="572">572</span>
-<span id="573">573</span>
-<span id="574">574</span>
-<span id="575">575</span>
-<span id="576">576</span>
-<span id="577">577</span>
-<span id="578">578</span>
-<span id="579">579</span>
-<span id="580">580</span>
-<span id="581">581</span>
-<span id="582">582</span>
-<span id="583">583</span>
-<span id="584">584</span>
-<span id="585">585</span>
-<span id="586">586</span>
-<span id="587">587</span>
-<span id="588">588</span>
-<span id="589">589</span>
-<span id="590">590</span>
-<span id="591">591</span>
-<span id="592">592</span>
-<span id="593">593</span>
-<span id="594">594</span>
-<span id="595">595</span>
-<span id="596">596</span>
-<span id="597">597</span>
-<span id="598">598</span>
-<span id="599">599</span>
-<span id="600">600</span>
-<span id="601">601</span>
-<span id="602">602</span>
-<span id="603">603</span>
-<span id="604">604</span>
-<span id="605">605</span>
-<span id="606">606</span>
 </pre><pre class="rust">
 <span class="kw">use</span> <span class="ident">std::borrow::Cow</span>;
 <span class="kw">use</span> <span class="ident">std::convert::TryFrom</span>;
@@ -622,6 +576,7 @@
 <span class="kw">use</span> <span class="ident">tendermint_rpc::Client</span>;
 
 <span class="kw">use</span> <span class="kw">super</span>::{<span class="ident">rpc</span>, <span class="ident">signing</span>};
+<span class="kw">use</span> <span class="kw">crate</span><span class="ident">::cli::context::WalletAddress</span>;
 <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::cli</span>::{<span class="ident">args</span>, <span class="ident">safe_exit</span>, <span class="ident">Context</span>};
 <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::client::tendermint_websocket_client</span>::{
     <span class="ident">hash_tx</span>, <span class="ident">Error</span>, <span class="ident">TendermintWebsocketClient</span>, <span class="ident">WebSocketAddress</span>,
@@ -637,7 +592,7 @@
 <span class="kw">const</span> <span class="ident">TX_UNBOND_WASM</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;tx_unbond.wasm&quot;</span>;
 <span class="kw">const</span> <span class="ident">TX_WITHDRAW_WASM</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;tx_withdraw.wasm&quot;</span>;
 
-<span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">submit_custom</span>(<span class="kw-2">mut</span> <span class="ident">ctx</span>: <span class="ident">Context</span>, <span class="ident">args</span>: <span class="ident">args::TxCustom</span>) {
+<span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">submit_custom</span>(<span class="ident">ctx</span>: <span class="ident">Context</span>, <span class="ident">args</span>: <span class="ident">args::TxCustom</span>) {
     <span class="kw">let</span> <span class="ident">tx_code</span> <span class="op">=</span> <span class="ident">ctx</span>
         .<span class="ident">read_wasm</span>(<span class="ident">args</span>.<span class="ident">code_path</span>)
         .<span class="ident">expect</span>(<span class="string">&quot;Expected a file at given code path&quot;</span>);
@@ -645,64 +600,30 @@
         <span class="ident">std::fs::read</span>(<span class="ident">data_path</span>).<span class="ident">expect</span>(<span class="string">&quot;Expected a file at given data path&quot;</span>)
     });
     <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx::new</span>(<span class="ident">tx_code</span>, <span class="ident">data</span>);
-    <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">signing_key</span>) <span class="op">=</span> <span class="ident">args</span>.<span class="ident">signing_key</span> {
-        <span class="kw">let</span> <span class="ident">signing_key</span> <span class="op">=</span> <span class="ident">ctx</span>.<span class="ident">get_cached</span>(<span class="ident">signing_key</span>);
-        <span class="ident">tx</span>.<span class="ident">sign</span>(<span class="kw-2">&amp;</span><span class="ident">signing_key</span>)
-    } <span class="kw">else</span> <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">signer</span>) <span class="op">=</span> <span class="ident">args</span>.<span class="ident">signer</span> {
-        <span class="kw">let</span> <span class="ident">signer</span> <span class="op">=</span> <span class="ident">ctx</span>.<span class="ident">get</span>(<span class="ident">signer</span>);
-        <span class="kw">let</span> <span class="ident">signing_key</span> <span class="op">=</span> <span class="ident">signing::find_keypair</span>(
-            <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">ctx</span>.<span class="ident">wallet</span>,
-            <span class="kw-2">&amp;</span><span class="ident">signer</span>,
-            <span class="ident">args</span>.<span class="ident">tx</span>.<span class="ident">ledger_address</span>.<span class="ident">clone</span>(),
-        )
-        .<span class="kw">await</span>;
-        <span class="ident">tx</span>.<span class="ident">sign</span>(<span class="kw-2">&amp;</span><span class="ident">signing_key</span>)
-    } <span class="kw">else</span> {
-        <span class="comment">// Unsigned tx</span>
-        <span class="ident">tx</span>
-    };
 
+    <span class="kw">let</span> (<span class="ident">ctx</span>, <span class="ident">tx</span>) <span class="op">=</span> <span class="ident">sign_tx</span>(<span class="ident">ctx</span>, <span class="ident">tx</span>, <span class="kw-2">&amp;</span><span class="ident">args</span>.<span class="ident">tx</span>, <span class="prelude-val">None</span>).<span class="kw">await</span>;
     <span class="kw">let</span> (<span class="ident">ctx</span>, <span class="ident">initialized_accounts</span>) <span class="op">=</span> <span class="ident">submit_tx</span>(<span class="ident">ctx</span>, <span class="kw-2">&amp;</span><span class="ident">args</span>.<span class="ident">tx</span>, <span class="ident">tx</span>).<span class="kw">await</span>;
     <span class="ident">save_initialized_accounts</span>(<span class="ident">ctx</span>, <span class="kw-2">&amp;</span><span class="ident">args</span>.<span class="ident">tx</span>, <span class="ident">initialized_accounts</span>).<span class="kw">await</span>;
 }
 
-<span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">submit_update_vp</span>(<span class="kw-2">mut</span> <span class="ident">ctx</span>: <span class="ident">Context</span>, <span class="ident">args</span>: <span class="ident">args::TxUpdateVp</span>) {
-    <span class="kw">let</span> <span class="ident">source</span> <span class="op">=</span> <span class="ident">ctx</span>.<span class="ident">get</span>(<span class="ident">args</span>.<span class="ident">addr</span>);
-    <span class="kw">let</span> <span class="ident">keypair</span> <span class="op">=</span> <span class="ident">signing::find_keypair</span>(
-        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">ctx</span>.<span class="ident">wallet</span>,
-        <span class="kw-2">&amp;</span><span class="ident">source</span>,
-        <span class="ident">args</span>.<span class="ident">tx</span>.<span class="ident">ledger_address</span>.<span class="ident">clone</span>(),
-    )
-    .<span class="kw">await</span>;
-
+<span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">submit_update_vp</span>(<span class="ident">ctx</span>: <span class="ident">Context</span>, <span class="ident">args</span>: <span class="ident">args::TxUpdateVp</span>) {
+    <span class="kw">let</span> <span class="ident">addr</span> <span class="op">=</span> <span class="ident">ctx</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">args</span>.<span class="ident">addr</span>);
     <span class="kw">let</span> <span class="ident">vp_code</span> <span class="op">=</span> <span class="ident">ctx</span>
         .<span class="ident">read_wasm</span>(<span class="ident">args</span>.<span class="ident">vp_code_path</span>)
         .<span class="ident">expect</span>(<span class="string">&quot;Expected a file at given code path&quot;</span>);
     <span class="kw">let</span> <span class="ident">tx_code</span> <span class="op">=</span> <span class="ident">ctx</span>
         .<span class="ident">read_wasm</span>(<span class="ident">TX_UPDATE_VP_WASM</span>)
         .<span class="ident">expect</span>(<span class="string">&quot;Expected a file at given code path&quot;</span>);
+    <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="ident">UpdateVp</span> { <span class="ident">addr</span>, <span class="ident">vp_code</span> };
+    <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="ident">data</span>.<span class="ident">try_to_vec</span>().<span class="ident">expect</span>(<span class="string">&quot;Encoding tx data shouldn&#39;t fail&quot;</span>);
 
-    <span class="kw">let</span> <span class="ident">update_vp</span> <span class="op">=</span> <span class="ident">UpdateVp</span> {
-        <span class="ident">addr</span>: <span class="ident">source</span>,
-        <span class="ident">vp_code</span>,
-    };
-    <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="ident">update_vp</span>.<span class="ident">try_to_vec</span>().<span class="ident">expect</span>(
-        <span class="string">&quot;Encoding transfer data to update a validity predicate shouldn&#39;t fail&quot;</span>,
-    );
-    <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx::new</span>(<span class="ident">tx_code</span>, <span class="prelude-val">Some</span>(<span class="ident">data</span>)).<span class="ident">sign</span>(<span class="kw-2">&amp;</span><span class="ident">keypair</span>);
-
+    <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx::new</span>(<span class="ident">tx_code</span>, <span class="prelude-val">Some</span>(<span class="ident">data</span>));
+    <span class="kw">let</span> (<span class="ident">ctx</span>, <span class="ident">tx</span>) <span class="op">=</span> <span class="ident">sign_tx</span>(<span class="ident">ctx</span>, <span class="ident">tx</span>, <span class="kw-2">&amp;</span><span class="ident">args</span>.<span class="ident">tx</span>, <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="ident">args</span>.<span class="ident">addr</span>)).<span class="kw">await</span>;
     <span class="ident">submit_tx</span>(<span class="ident">ctx</span>, <span class="kw-2">&amp;</span><span class="ident">args</span>.<span class="ident">tx</span>, <span class="ident">tx</span>).<span class="kw">await</span>;
 }
 
 <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">submit_init_account</span>(<span class="kw-2">mut</span> <span class="ident">ctx</span>: <span class="ident">Context</span>, <span class="ident">args</span>: <span class="ident">args::TxInitAccount</span>) {
-    <span class="kw">let</span> <span class="ident">source</span> <span class="op">=</span> <span class="ident">ctx</span>.<span class="ident">get</span>(<span class="ident">args</span>.<span class="ident">source</span>);
-    <span class="kw">let</span> <span class="ident">keypair</span> <span class="op">=</span> <span class="ident">signing::find_keypair</span>(
-        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">ctx</span>.<span class="ident">wallet</span>,
-        <span class="kw-2">&amp;</span><span class="ident">source</span>,
-        <span class="ident">args</span>.<span class="ident">tx</span>.<span class="ident">ledger_address</span>.<span class="ident">clone</span>(),
-    )
-    .<span class="kw">await</span>;
-    <span class="kw">let</span> <span class="ident">public_key</span> <span class="op">=</span> <span class="ident">ctx</span>.<span class="ident">get_cached</span>(<span class="ident">args</span>.<span class="ident">public_key</span>);
+    <span class="kw">let</span> <span class="ident">public_key</span> <span class="op">=</span> <span class="ident">ctx</span>.<span class="ident">get_cached</span>(<span class="kw-2">&amp;</span><span class="ident">args</span>.<span class="ident">public_key</span>);
     <span class="kw">let</span> <span class="ident">vp_code</span> <span class="op">=</span> <span class="ident">args</span>
         .<span class="ident">vp_code_path</span>
         .<span class="ident">map</span>(<span class="op">|</span><span class="ident">path</span><span class="op">|</span> {
@@ -716,16 +637,14 @@
     <span class="kw">let</span> <span class="ident">tx_code</span> <span class="op">=</span> <span class="ident">ctx</span>
         .<span class="ident">read_wasm</span>(<span class="ident">TX_INIT_ACCOUNT_WASM</span>)
         .<span class="ident">expect</span>(<span class="string">&quot;Expected a file at given code path&quot;</span>);
-
     <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="ident">InitAccount</span> {
         <span class="ident">public_key</span>,
         <span class="ident">vp_code</span>,
     };
-    <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="ident">data</span>.<span class="ident">try_to_vec</span>().<span class="ident">expect</span>(
-        <span class="string">&quot;Encoding transfer data to initialize a new account shouldn&#39;t fail&quot;</span>,
-    );
-    <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx::new</span>(<span class="ident">tx_code</span>, <span class="prelude-val">Some</span>(<span class="ident">data</span>)).<span class="ident">sign</span>(<span class="kw-2">&amp;</span><span class="ident">keypair</span>);
+    <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="ident">data</span>.<span class="ident">try_to_vec</span>().<span class="ident">expect</span>(<span class="string">&quot;Encoding tx data shouldn&#39;t fail&quot;</span>);
 
+    <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx::new</span>(<span class="ident">tx_code</span>, <span class="prelude-val">Some</span>(<span class="ident">data</span>));
+    <span class="kw">let</span> (<span class="ident">ctx</span>, <span class="ident">tx</span>) <span class="op">=</span> <span class="ident">sign_tx</span>(<span class="ident">ctx</span>, <span class="ident">tx</span>, <span class="kw-2">&amp;</span><span class="ident">args</span>.<span class="ident">tx</span>, <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="ident">args</span>.<span class="ident">source</span>)).<span class="kw">await</span>;
     <span class="kw">let</span> (<span class="ident">ctx</span>, <span class="ident">initialized_accounts</span>) <span class="op">=</span> <span class="ident">submit_tx</span>(<span class="ident">ctx</span>, <span class="kw-2">&amp;</span><span class="ident">args</span>.<span class="ident">tx</span>, <span class="ident">tx</span>).<span class="kw">await</span>;
     <span class="ident">save_initialized_accounts</span>(<span class="ident">ctx</span>, <span class="kw-2">&amp;</span><span class="ident">args</span>.<span class="ident">tx</span>, <span class="ident">initialized_accounts</span>).<span class="kw">await</span>;
 }
@@ -743,14 +662,6 @@
         <span class="ident">unsafe_dont_encrypt</span>,
     }: <span class="ident">args::TxInitValidator</span>,
 ) {
-    <span class="kw">let</span> <span class="ident">source</span> <span class="op">=</span> <span class="ident">ctx</span>.<span class="ident">get</span>(<span class="ident">source</span>);
-    <span class="kw">let</span> <span class="ident">keypair</span> <span class="op">=</span> <span class="ident">signing::find_keypair</span>(
-        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">ctx</span>.<span class="ident">wallet</span>,
-        <span class="kw-2">&amp;</span><span class="ident">source</span>,
-        <span class="ident">tx_args</span>.<span class="ident">ledger_address</span>.<span class="ident">clone</span>(),
-    )
-    .<span class="kw">await</span>;
-
     <span class="kw">let</span> <span class="ident">alias</span> <span class="op">=</span> <span class="ident">tx_args</span>
         .<span class="ident">initialized_account_alias</span>
         .<span class="ident">as_ref</span>()
@@ -760,7 +671,7 @@
     <span class="kw">let</span> <span class="ident">validator_key_alias</span> <span class="op">=</span> <span class="macro">format!</span>(<span class="string">&quot;{}-key&quot;</span>, <span class="ident">alias</span>);
     <span class="kw">let</span> <span class="ident">consensus_key_alias</span> <span class="op">=</span> <span class="macro">format!</span>(<span class="string">&quot;{}-consensus-key&quot;</span>, <span class="ident">alias</span>);
     <span class="kw">let</span> <span class="ident">rewards_key_alias</span> <span class="op">=</span> <span class="macro">format!</span>(<span class="string">&quot;{}-rewards-key&quot;</span>, <span class="ident">alias</span>);
-    <span class="kw">let</span> <span class="ident">account_key</span> <span class="op">=</span> <span class="ident">ctx</span>.<span class="ident">get_opt_cached</span>(<span class="ident">account_key</span>).<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="op">|</span> {
+    <span class="kw">let</span> <span class="ident">account_key</span> <span class="op">=</span> <span class="ident">ctx</span>.<span class="ident">get_opt_cached</span>(<span class="kw-2">&amp;</span><span class="ident">account_key</span>).<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="op">|</span> {
         <span class="macro">println!</span>(<span class="string">&quot;Generating validator account key...&quot;</span>);
         <span class="ident">ctx</span>.<span class="ident">wallet</span>
             .<span class="ident">gen_key</span>(<span class="prelude-val">Some</span>(<span class="ident">validator_key_alias</span>.<span class="ident">clone</span>()), <span class="ident">unsafe_dont_encrypt</span>)
@@ -770,7 +681,7 @@
     });
 
     <span class="kw">let</span> <span class="ident">consensus_key</span> <span class="op">=</span>
-        <span class="ident">ctx</span>.<span class="ident">get_opt_cached</span>(<span class="ident">consensus_key</span>).<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="op">|</span> {
+        <span class="ident">ctx</span>.<span class="ident">get_opt_cached</span>(<span class="kw-2">&amp;</span><span class="ident">consensus_key</span>).<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="op">|</span> {
             <span class="macro">println!</span>(<span class="string">&quot;Generating consensus key...&quot;</span>);
             <span class="ident">ctx</span>.<span class="ident">wallet</span>
                 .<span class="ident">gen_key</span>(<span class="prelude-val">Some</span>(<span class="ident">consensus_key_alias</span>.<span class="ident">clone</span>()), <span class="ident">unsafe_dont_encrypt</span>)
@@ -778,7 +689,7 @@
         });
 
     <span class="kw">let</span> <span class="ident">rewards_account_key</span> <span class="op">=</span>
-        <span class="ident">ctx</span>.<span class="ident">get_opt_cached</span>(<span class="ident">rewards_account_key</span>).<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="op">|</span> {
+        <span class="ident">ctx</span>.<span class="ident">get_opt_cached</span>(<span class="kw-2">&amp;</span><span class="ident">rewards_account_key</span>).<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="op">|</span> {
             <span class="macro">println!</span>(<span class="string">&quot;Generating staking reward account key...&quot;</span>);
             <span class="ident">ctx</span>.<span class="ident">wallet</span>
                 .<span class="ident">gen_key</span>(<span class="prelude-val">Some</span>(<span class="ident">rewards_key_alias</span>.<span class="ident">clone</span>()), <span class="ident">unsafe_dont_encrypt</span>)
@@ -818,10 +729,9 @@
         <span class="ident">validator_vp_code</span>,
         <span class="ident">rewards_vp_code</span>,
     };
-    <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="ident">data</span>.<span class="ident">try_to_vec</span>().<span class="ident">expect</span>(
-        <span class="string">&quot;Encoding transfer data to initialize a new account shouldn&#39;t fail&quot;</span>,
-    );
-    <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx::new</span>(<span class="ident">tx_code</span>, <span class="prelude-val">Some</span>(<span class="ident">data</span>)).<span class="ident">sign</span>(<span class="kw-2">&amp;</span><span class="ident">keypair</span>);
+    <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="ident">data</span>.<span class="ident">try_to_vec</span>().<span class="ident">expect</span>(<span class="string">&quot;Encoding tx data shouldn&#39;t fail&quot;</span>);
+    <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx::new</span>(<span class="ident">tx_code</span>, <span class="prelude-val">Some</span>(<span class="ident">data</span>));
+    <span class="kw">let</span> (<span class="ident">ctx</span>, <span class="ident">tx</span>) <span class="op">=</span> <span class="ident">sign_tx</span>(<span class="ident">ctx</span>, <span class="ident">tx</span>, <span class="kw-2">&amp;</span><span class="ident">tx_args</span>, <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="ident">source</span>)).<span class="kw">await</span>;
 
     <span class="kw">let</span> (<span class="kw-2">mut</span> <span class="ident">ctx</span>, <span class="ident">initialized_accounts</span>) <span class="op">=</span> <span class="ident">submit_tx</span>(<span class="ident">ctx</span>, <span class="kw-2">&amp;</span><span class="ident">tx_args</span>, <span class="ident">tx</span>).<span class="kw">await</span>;
     <span class="kw">if</span> <span class="op">!</span><span class="ident">tx_args</span>.<span class="ident">dry_run</span> {
@@ -926,17 +836,10 @@
     }
 }
 
-<span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">submit_transfer</span>(<span class="kw-2">mut</span> <span class="ident">ctx</span>: <span class="ident">Context</span>, <span class="ident">args</span>: <span class="ident">args::TxTransfer</span>) {
-    <span class="kw">let</span> <span class="ident">source</span> <span class="op">=</span> <span class="ident">ctx</span>.<span class="ident">get</span>(<span class="ident">args</span>.<span class="ident">source</span>);
-    <span class="kw">let</span> <span class="ident">target</span> <span class="op">=</span> <span class="ident">ctx</span>.<span class="ident">get</span>(<span class="ident">args</span>.<span class="ident">target</span>);
-    <span class="kw">let</span> <span class="ident">token</span> <span class="op">=</span> <span class="ident">ctx</span>.<span class="ident">get</span>(<span class="ident">args</span>.<span class="ident">token</span>);
-    <span class="kw">let</span> <span class="ident">keypair</span> <span class="op">=</span> <span class="ident">signing::find_keypair</span>(
-        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">ctx</span>.<span class="ident">wallet</span>,
-        <span class="kw-2">&amp;</span><span class="ident">source</span>,
-        <span class="ident">args</span>.<span class="ident">tx</span>.<span class="ident">ledger_address</span>.<span class="ident">clone</span>(),
-    )
-    .<span class="kw">await</span>;
-
+<span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">submit_transfer</span>(<span class="ident">ctx</span>: <span class="ident">Context</span>, <span class="ident">args</span>: <span class="ident">args::TxTransfer</span>) {
+    <span class="kw">let</span> <span class="ident">source</span> <span class="op">=</span> <span class="ident">ctx</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">args</span>.<span class="ident">source</span>);
+    <span class="kw">let</span> <span class="ident">target</span> <span class="op">=</span> <span class="ident">ctx</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">args</span>.<span class="ident">target</span>);
+    <span class="kw">let</span> <span class="ident">token</span> <span class="op">=</span> <span class="ident">ctx</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">args</span>.<span class="ident">token</span>);
     <span class="kw">let</span> <span class="ident">tx_code</span> <span class="op">=</span> <span class="ident">ctx</span>.<span class="ident">read_wasm</span>(<span class="ident">TX_TRANSFER_WASM</span>).<span class="ident">unwrap</span>();
     <span class="kw">let</span> <span class="ident">transfer</span> <span class="op">=</span> <span class="ident">token::Transfer</span> {
         <span class="ident">source</span>,
@@ -947,82 +850,87 @@
     <span class="macro">tracing::debug!</span>(<span class="string">&quot;Transfer data {:?}&quot;</span>, <span class="ident">transfer</span>);
     <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="ident">transfer</span>
         .<span class="ident">try_to_vec</span>()
-        .<span class="ident">expect</span>(<span class="string">&quot;Encoding unsigned transfer shouldn&#39;t fail&quot;</span>);
-    <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx::new</span>(<span class="ident">tx_code</span>, <span class="prelude-val">Some</span>(<span class="ident">data</span>)).<span class="ident">sign</span>(<span class="kw-2">&amp;</span><span class="ident">keypair</span>);
+        .<span class="ident">expect</span>(<span class="string">&quot;Encoding tx data shouldn&#39;t fail&quot;</span>);
 
+    <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx::new</span>(<span class="ident">tx_code</span>, <span class="prelude-val">Some</span>(<span class="ident">data</span>));
+    <span class="kw">let</span> (<span class="ident">ctx</span>, <span class="ident">tx</span>) <span class="op">=</span> <span class="ident">sign_tx</span>(<span class="ident">ctx</span>, <span class="ident">tx</span>, <span class="kw-2">&amp;</span><span class="ident">args</span>.<span class="ident">tx</span>, <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="ident">args</span>.<span class="ident">source</span>)).<span class="kw">await</span>;
     <span class="ident">submit_tx</span>(<span class="ident">ctx</span>, <span class="kw-2">&amp;</span><span class="ident">args</span>.<span class="ident">tx</span>, <span class="ident">tx</span>).<span class="kw">await</span>;
 }
 
-<span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">submit_bond</span>(<span class="kw-2">mut</span> <span class="ident">ctx</span>: <span class="ident">Context</span>, <span class="ident">args</span>: <span class="ident">args::Bond</span>) {
-    <span class="kw">let</span> <span class="ident">validator</span> <span class="op">=</span> <span class="ident">ctx</span>.<span class="ident">get</span>(<span class="ident">args</span>.<span class="ident">validator</span>);
-    <span class="kw">let</span> <span class="ident">source</span> <span class="op">=</span> <span class="ident">ctx</span>.<span class="ident">get_opt</span>(<span class="ident">args</span>.<span class="ident">source</span>);
-    <span class="kw">let</span> <span class="ident">signer</span> <span class="op">=</span> <span class="ident">source</span>.<span class="ident">as_ref</span>().<span class="ident">unwrap_or</span>(<span class="kw-2">&amp;</span><span class="ident">validator</span>);
-    <span class="kw">let</span> <span class="ident">keypair</span> <span class="op">=</span> <span class="ident">signing::find_keypair</span>(
-        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">ctx</span>.<span class="ident">wallet</span>,
-        <span class="ident">signer</span>,
-        <span class="ident">args</span>.<span class="ident">tx</span>.<span class="ident">ledger_address</span>.<span class="ident">clone</span>(),
-    )
-    .<span class="kw">await</span>;
+<span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">submit_bond</span>(<span class="ident">ctx</span>: <span class="ident">Context</span>, <span class="ident">args</span>: <span class="ident">args::Bond</span>) {
+    <span class="kw">let</span> <span class="ident">validator</span> <span class="op">=</span> <span class="ident">ctx</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">args</span>.<span class="ident">validator</span>);
+    <span class="kw">let</span> <span class="ident">source</span> <span class="op">=</span> <span class="ident">ctx</span>.<span class="ident">get_opt</span>(<span class="kw-2">&amp;</span><span class="ident">args</span>.<span class="ident">source</span>);
     <span class="kw">let</span> <span class="ident">tx_code</span> <span class="op">=</span> <span class="ident">ctx</span>.<span class="ident">read_wasm</span>(<span class="ident">TX_BOND_WASM</span>).<span class="ident">unwrap</span>();
-
     <span class="kw">let</span> <span class="ident">bond</span> <span class="op">=</span> <span class="ident">pos::Bond</span> {
         <span class="ident">validator</span>,
         <span class="ident">amount</span>: <span class="ident">args</span>.<span class="ident">amount</span>,
         <span class="ident">source</span>,
     };
-    <span class="macro">tracing::debug!</span>(<span class="string">&quot;Bond data {:?}&quot;</span>, <span class="ident">bond</span>);
     <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="ident">bond</span>.<span class="ident">try_to_vec</span>().<span class="ident">expect</span>(<span class="string">&quot;Encoding tx data shouldn&#39;t fail&quot;</span>);
-    <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx::new</span>(<span class="ident">tx_code</span>, <span class="prelude-val">Some</span>(<span class="ident">data</span>)).<span class="ident">sign</span>(<span class="kw-2">&amp;</span><span class="ident">keypair</span>);
 
+    <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx::new</span>(<span class="ident">tx_code</span>, <span class="prelude-val">Some</span>(<span class="ident">data</span>));
+    <span class="kw">let</span> <span class="ident">default_signer</span> <span class="op">=</span> <span class="ident">args</span>.<span class="ident">source</span>.<span class="ident">as_ref</span>().<span class="ident">unwrap_or</span>(<span class="kw-2">&amp;</span><span class="ident">args</span>.<span class="ident">validator</span>);
+    <span class="kw">let</span> (<span class="ident">ctx</span>, <span class="ident">tx</span>) <span class="op">=</span> <span class="ident">sign_tx</span>(<span class="ident">ctx</span>, <span class="ident">tx</span>, <span class="kw-2">&amp;</span><span class="ident">args</span>.<span class="ident">tx</span>, <span class="prelude-val">Some</span>(<span class="ident">default_signer</span>)).<span class="kw">await</span>;
     <span class="ident">submit_tx</span>(<span class="ident">ctx</span>, <span class="kw-2">&amp;</span><span class="ident">args</span>.<span class="ident">tx</span>, <span class="ident">tx</span>).<span class="kw">await</span>;
 }
 
-<span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">submit_unbond</span>(<span class="kw-2">mut</span> <span class="ident">ctx</span>: <span class="ident">Context</span>, <span class="ident">args</span>: <span class="ident">args::Unbond</span>) {
-    <span class="kw">let</span> <span class="ident">validator</span> <span class="op">=</span> <span class="ident">ctx</span>.<span class="ident">get</span>(<span class="ident">args</span>.<span class="ident">validator</span>);
-    <span class="kw">let</span> <span class="ident">source</span> <span class="op">=</span> <span class="ident">ctx</span>.<span class="ident">get_opt</span>(<span class="ident">args</span>.<span class="ident">source</span>);
-    <span class="kw">let</span> <span class="ident">signer</span> <span class="op">=</span> <span class="ident">source</span>.<span class="ident">as_ref</span>().<span class="ident">unwrap_or</span>(<span class="kw-2">&amp;</span><span class="ident">validator</span>);
-    <span class="kw">let</span> <span class="ident">keypair</span> <span class="op">=</span> <span class="ident">signing::find_keypair</span>(
-        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">ctx</span>.<span class="ident">wallet</span>,
-        <span class="ident">signer</span>,
-        <span class="ident">args</span>.<span class="ident">tx</span>.<span class="ident">ledger_address</span>.<span class="ident">clone</span>(),
-    )
-    .<span class="kw">await</span>;
+<span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">submit_unbond</span>(<span class="ident">ctx</span>: <span class="ident">Context</span>, <span class="ident">args</span>: <span class="ident">args::Unbond</span>) {
+    <span class="kw">let</span> <span class="ident">validator</span> <span class="op">=</span> <span class="ident">ctx</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">args</span>.<span class="ident">validator</span>);
+    <span class="kw">let</span> <span class="ident">source</span> <span class="op">=</span> <span class="ident">ctx</span>.<span class="ident">get_opt</span>(<span class="kw-2">&amp;</span><span class="ident">args</span>.<span class="ident">source</span>);
     <span class="kw">let</span> <span class="ident">tx_code</span> <span class="op">=</span> <span class="ident">ctx</span>.<span class="ident">read_wasm</span>(<span class="ident">TX_UNBOND_WASM</span>).<span class="ident">unwrap</span>();
 
-    <span class="kw">let</span> <span class="ident">unbond</span> <span class="op">=</span> <span class="ident">pos::Unbond</span> {
+    <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="ident">pos::Unbond</span> {
         <span class="ident">validator</span>,
         <span class="ident">amount</span>: <span class="ident">args</span>.<span class="ident">amount</span>,
         <span class="ident">source</span>,
     };
-    <span class="macro">tracing::debug!</span>(<span class="string">&quot;Unbond data {:?}&quot;</span>, <span class="ident">unbond</span>);
-    <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="ident">unbond</span>
-        .<span class="ident">try_to_vec</span>()
-        .<span class="ident">expect</span>(<span class="string">&quot;Encoding tx data shouldn&#39;t fail&quot;</span>);
-    <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx::new</span>(<span class="ident">tx_code</span>, <span class="prelude-val">Some</span>(<span class="ident">data</span>)).<span class="ident">sign</span>(<span class="kw-2">&amp;</span><span class="ident">keypair</span>);
+    <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="ident">data</span>.<span class="ident">try_to_vec</span>().<span class="ident">expect</span>(<span class="string">&quot;Encoding tx data shouldn&#39;t fail&quot;</span>);
 
+    <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx::new</span>(<span class="ident">tx_code</span>, <span class="prelude-val">Some</span>(<span class="ident">data</span>));
+    <span class="kw">let</span> <span class="ident">default_signer</span> <span class="op">=</span> <span class="ident">args</span>.<span class="ident">source</span>.<span class="ident">as_ref</span>().<span class="ident">unwrap_or</span>(<span class="kw-2">&amp;</span><span class="ident">args</span>.<span class="ident">validator</span>);
+    <span class="kw">let</span> (<span class="ident">ctx</span>, <span class="ident">tx</span>) <span class="op">=</span> <span class="ident">sign_tx</span>(<span class="ident">ctx</span>, <span class="ident">tx</span>, <span class="kw-2">&amp;</span><span class="ident">args</span>.<span class="ident">tx</span>, <span class="prelude-val">Some</span>(<span class="ident">default_signer</span>)).<span class="kw">await</span>;
     <span class="ident">submit_tx</span>(<span class="ident">ctx</span>, <span class="kw-2">&amp;</span><span class="ident">args</span>.<span class="ident">tx</span>, <span class="ident">tx</span>).<span class="kw">await</span>;
 }
 
-<span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">submit_withdraw</span>(<span class="kw-2">mut</span> <span class="ident">ctx</span>: <span class="ident">Context</span>, <span class="ident">args</span>: <span class="ident">args::Withdraw</span>) {
-    <span class="kw">let</span> <span class="ident">validator</span> <span class="op">=</span> <span class="ident">ctx</span>.<span class="ident">get</span>(<span class="ident">args</span>.<span class="ident">validator</span>);
-    <span class="kw">let</span> <span class="ident">source</span> <span class="op">=</span> <span class="ident">ctx</span>.<span class="ident">get_opt</span>(<span class="ident">args</span>.<span class="ident">source</span>);
-    <span class="kw">let</span> <span class="ident">signer</span> <span class="op">=</span> <span class="ident">source</span>.<span class="ident">as_ref</span>().<span class="ident">unwrap_or</span>(<span class="kw-2">&amp;</span><span class="ident">validator</span>);
-    <span class="kw">let</span> <span class="ident">keypair</span> <span class="op">=</span> <span class="ident">signing::find_keypair</span>(
-        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">ctx</span>.<span class="ident">wallet</span>,
-        <span class="ident">signer</span>,
-        <span class="ident">args</span>.<span class="ident">tx</span>.<span class="ident">ledger_address</span>.<span class="ident">clone</span>(),
-    )
-    .<span class="kw">await</span>;
+<span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">submit_withdraw</span>(<span class="ident">ctx</span>: <span class="ident">Context</span>, <span class="ident">args</span>: <span class="ident">args::Withdraw</span>) {
+    <span class="kw">let</span> <span class="ident">validator</span> <span class="op">=</span> <span class="ident">ctx</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">args</span>.<span class="ident">validator</span>);
+    <span class="kw">let</span> <span class="ident">source</span> <span class="op">=</span> <span class="ident">ctx</span>.<span class="ident">get_opt</span>(<span class="kw-2">&amp;</span><span class="ident">args</span>.<span class="ident">source</span>);
     <span class="kw">let</span> <span class="ident">tx_code</span> <span class="op">=</span> <span class="ident">ctx</span>.<span class="ident">read_wasm</span>(<span class="ident">TX_WITHDRAW_WASM</span>).<span class="ident">unwrap</span>();
+    <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="ident">pos::Withdraw</span> { <span class="ident">validator</span>, <span class="ident">source</span> };
+    <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="ident">data</span>.<span class="ident">try_to_vec</span>().<span class="ident">expect</span>(<span class="string">&quot;Encoding tx data shouldn&#39;t fail&quot;</span>);
 
-    <span class="kw">let</span> <span class="ident">withdraw</span> <span class="op">=</span> <span class="ident">pos::Withdraw</span> { <span class="ident">validator</span>, <span class="ident">source</span> };
-    <span class="macro">tracing::debug!</span>(<span class="string">&quot;Withdraw data {:?}&quot;</span>, <span class="ident">withdraw</span>);
-    <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="ident">withdraw</span>
-        .<span class="ident">try_to_vec</span>()
-        .<span class="ident">expect</span>(<span class="string">&quot;Encoding tx data shouldn&#39;t fail&quot;</span>);
-    <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx::new</span>(<span class="ident">tx_code</span>, <span class="prelude-val">Some</span>(<span class="ident">data</span>)).<span class="ident">sign</span>(<span class="kw-2">&amp;</span><span class="ident">keypair</span>);
-
+    <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx::new</span>(<span class="ident">tx_code</span>, <span class="prelude-val">Some</span>(<span class="ident">data</span>));
+    <span class="kw">let</span> <span class="ident">default_signer</span> <span class="op">=</span> <span class="ident">args</span>.<span class="ident">source</span>.<span class="ident">as_ref</span>().<span class="ident">unwrap_or</span>(<span class="kw-2">&amp;</span><span class="ident">args</span>.<span class="ident">validator</span>);
+    <span class="kw">let</span> (<span class="ident">ctx</span>, <span class="ident">tx</span>) <span class="op">=</span> <span class="ident">sign_tx</span>(<span class="ident">ctx</span>, <span class="ident">tx</span>, <span class="kw-2">&amp;</span><span class="ident">args</span>.<span class="ident">tx</span>, <span class="prelude-val">Some</span>(<span class="ident">default_signer</span>)).<span class="kw">await</span>;
     <span class="ident">submit_tx</span>(<span class="ident">ctx</span>, <span class="kw-2">&amp;</span><span class="ident">args</span>.<span class="ident">tx</span>, <span class="ident">tx</span>).<span class="kw">await</span>;
+}
+
+<span class="doccomment">/// Sign a transaction with a given signing key or public key of a given signer.</span>
+<span class="doccomment">/// If no explicit signer given, use the `default`. If no `default` is given,</span>
+<span class="doccomment">/// returns unsigned transaction.</span>
+<span class="kw">async</span> <span class="kw">fn</span> <span class="ident">sign_tx</span>(
+    <span class="kw-2">mut</span> <span class="ident">ctx</span>: <span class="ident">Context</span>,
+    <span class="ident">tx</span>: <span class="ident">Tx</span>,
+    <span class="ident">args</span>: <span class="kw-2">&amp;</span><span class="ident">args::Tx</span>,
+    <span class="ident">default</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">WalletAddress</span><span class="op">&gt;</span>,
+) <span class="op">-</span><span class="op">&gt;</span> (<span class="ident">Context</span>, <span class="ident">Tx</span>) {
+    <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">signing_key</span>) <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">args</span>.<span class="ident">signing_key</span> {
+        <span class="kw">let</span> <span class="ident">signing_key</span> <span class="op">=</span> <span class="ident">ctx</span>.<span class="ident">get_cached</span>(<span class="ident">signing_key</span>);
+        <span class="ident">tx</span>.<span class="ident">sign</span>(<span class="kw-2">&amp;</span><span class="ident">signing_key</span>)
+    } <span class="kw">else</span> <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">signer</span>) <span class="op">=</span> <span class="ident">args</span>.<span class="ident">signer</span>.<span class="ident">as_ref</span>().<span class="ident">or</span>(<span class="ident">default</span>) {
+        <span class="kw">let</span> <span class="ident">signer</span> <span class="op">=</span> <span class="ident">ctx</span>.<span class="ident">get</span>(<span class="ident">signer</span>);
+        <span class="kw">let</span> <span class="ident">signing_key</span> <span class="op">=</span> <span class="ident">signing::find_keypair</span>(
+            <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">ctx</span>.<span class="ident">wallet</span>,
+            <span class="kw-2">&amp;</span><span class="ident">signer</span>,
+            <span class="ident">args</span>.<span class="ident">ledger_address</span>.<span class="ident">clone</span>(),
+        )
+        .<span class="kw">await</span>;
+        <span class="ident">tx</span>.<span class="ident">sign</span>(<span class="kw-2">&amp;</span><span class="ident">signing_key</span>)
+    } <span class="kw">else</span> {
+        <span class="comment">// Unsigned tx</span>
+        <span class="ident">tx</span>
+    };
+    (<span class="ident">ctx</span>, <span class="ident">tx</span>)
 }
 
 <span class="doccomment">/// Submit transaction and wait for result. Returns a list of addresses</span>
