@@ -14,7 +14,8 @@ use crate::btree_set::BTreeSetShims;
 use crate::epoched::DynEpochOffset;
 use crate::parameters::PosParams;
 use crate::types::{
-    BondId, Bonds, Epoch, Slashes, TotalVotingPowers, Unbonds, ValidatorSets,
+    BondId, Bonds, Epoch, Slashes, TotalVotingPowers, Unbonds,
+    ValidatorConsensusKeys, ValidatorSets, ValidatorState, ValidatorStates,
     ValidatorTotalDeltas, ValidatorVotingPowers, VotingPower, VotingPowerDelta,
     WeightedValidator,
 };
@@ -35,6 +36,16 @@ where
         + BorshDeserialize,
     TokenChange: Debug + Display,
 {
+    #[error("Unexpectedly missing state value for validator {0}")]
+    ValidatorStateIsRequired(Address),
+    #[error("Invalid new validator state in epoch {0}")]
+    InvalidNewValidatorState(u64),
+    #[error("Invalid validator state update in epoch {0}")]
+    InvalidValidatorStateUpdate(u64),
+    #[error("Missing new validator consensus key in epoch {0}")]
+    MissingNewValidatorConsensusKey(u64),
+    #[error("Invalid validator consensus key update in epoch {0}")]
+    InvalidValidatorConsensusKeyUpdate(u64),
     #[error("Validator staking reward address is required for validator {0}")]
     StakingRewardAddressIsRequired(Address),
     #[error(
@@ -141,11 +152,21 @@ where
          got {2}"
     )]
     InvalidTotalVotingPowerChange(u64, VotingPowerDelta, VotingPowerDelta),
+    #[error("Invalid address raw hash, got {0}, expected {1}")]
+    InvalidAddressRawHash(String, String),
+    #[error("Invalid address raw hash update")]
+    InvalidRawHashUpdate,
+    #[error("Invalid new validator {0}, some fields are missing: {1:?}.")]
+    InvalidNewValidator(Address, NewValidator),
+    #[error("New validator {0} has not been added to the validator set.")]
+    NewValidatorMissingInValidatorSet(Address),
+    #[error("Validator set has not been updated for new validators.")]
+    MissingValidatorSetUpdate,
 }
 
 /// An update of PoS data.
 #[derive(Clone, Debug)]
-pub enum DataUpdate<Address, TokenAmount, TokenChange>
+pub enum DataUpdate<Address, TokenAmount, TokenChange, PublicKey>
 where
     Address: Display
         + Debug
@@ -179,6 +200,7 @@ where
         + Eq
         + BorshDeserialize
         + BorshSerialize,
+    PublicKey: Debug + Clone + BorshDeserialize + BorshSerialize,
 {
     /// PoS account's balance update
     Balance(Data<TokenAmount>),
@@ -205,17 +227,24 @@ where
         /// Validator's address
         address: Address,
         /// Validator's data update
-        update: ValidatorUpdate<Address, TokenChange>,
+        update: ValidatorUpdate<Address, TokenChange, PublicKey>,
     },
     /// Validator set update
     ValidatorSet(Data<ValidatorSets<Address>>),
     /// Total voting power update
     TotalVotingPower(Data<TotalVotingPowers>),
+    /// Validator's address raw hash
+    ValidatorAddressRawHash {
+        /// Raw hash value
+        raw_hash: String,
+        /// The address and raw hash derived from it
+        data: Data<(Address, String)>,
+    },
 }
 
 /// An update of a validator's data.
 #[derive(Clone, Debug)]
-pub enum ValidatorUpdate<Address, TokenChange>
+pub enum ValidatorUpdate<Address, TokenChange, PublicKey>
 where
     Address: Clone + Debug,
     TokenChange: Display
@@ -229,7 +258,12 @@ where
         + Eq
         + BorshDeserialize
         + BorshSerialize,
+    PublicKey: Debug + Clone + BorshDeserialize + BorshSerialize,
 {
+    /// Validator's state update
+    State(Data<ValidatorStates>),
+    /// Consensus key update
+    ConsensusKey(Data<ValidatorConsensusKeys<PublicKey>>),
     /// Staking reward address update
     StakingRewardAddress(Data<Address>),
     /// Total deltas update
@@ -250,11 +284,24 @@ where
     pub post: Option<T>,
 }
 
+/// A new validator account initialized in a transaction, which is used to check
+/// that all the validator's required fields have been written.
+#[derive(Clone, Debug, Default)]
+pub struct NewValidator {
+    has_state: bool,
+    has_consensus_key: bool,
+    has_total_deltas: bool,
+    has_voting_power: bool,
+    has_staking_reward_address: bool,
+    has_address_raw_hash: bool,
+    voting_power: VotingPower,
+}
+
 /// Validate the given list of PoS data `changes`. Returns empty list, if all
 /// the changes are valid.
-pub fn validate<Address, TokenAmount, TokenChange>(
+pub fn validate<Address, TokenAmount, TokenChange, PublicKey>(
     params: &PosParams,
-    changes: Vec<DataUpdate<Address, TokenAmount, TokenChange>>,
+    changes: Vec<DataUpdate<Address, TokenAmount, TokenChange, PublicKey>>,
     current_epoch: impl Into<Epoch>,
 ) -> Vec<Error<Address, TokenChange>>
 where
@@ -301,6 +348,7 @@ where
         + Ord
         + BorshDeserialize
         + BorshSerialize,
+    PublicKey: Debug + Clone + BorshDeserialize + BorshSerialize + PartialEq,
 {
     let current_epoch = current_epoch.into();
     use DataUpdate::*;
@@ -351,9 +399,128 @@ where
         VotingPowerDelta,
     > = HashMap::default();
 
+    let mut new_validators: HashMap<Address, NewValidator> = HashMap::default();
+
     for change in changes {
         match change {
             Validator { address, update } => match update {
+                State(data) => match (data.pre, data.post) {
+                    (None, Some(post)) => {
+                        if post.last_update() != current_epoch {
+                            errors.push(Error::InvalidLastUpdate)
+                        }
+                        // Before pipeline epoch, the state must be `Pending`
+                        for epoch in
+                            Epoch::iter_range(current_epoch, pipeline_offset)
+                        {
+                            match post.get(epoch) {
+                                Some(ValidatorState::Pending) => {}
+                                _ => errors.push(
+                                    Error::InvalidNewValidatorState(
+                                        epoch.into(),
+                                    ),
+                                ),
+                            }
+                        }
+                        // At pipeline epoch, the state must be `Candidate`
+                        match post.get(pipeline_epoch) {
+                            Some(ValidatorState::Candidate) => {}
+                            _ => errors.push(Error::InvalidNewValidatorState(
+                                pipeline_epoch.into(),
+                            )),
+                        }
+                        let validator =
+                            new_validators.entry(address.clone()).or_default();
+                        validator.has_state = true;
+                    }
+                    (Some(pre), Some(post)) => {
+                        if post.last_update() != current_epoch {
+                            errors.push(Error::InvalidLastUpdate)
+                        }
+                        use ValidatorState::*;
+                        // Before pipeline epoch, the only allowed state change
+                        // is from `Inactive` to `Pending`
+                        for epoch in
+                            Epoch::iter_range(current_epoch, pipeline_offset)
+                        {
+                            match (pre.get(epoch), post.get(epoch)) {
+                                (Some(Inactive), Some(Pending)) => {}
+                                (Some(state_pre), Some(state_post))
+                                    if state_pre == state_post => {}
+                                _ => errors.push(
+                                    Error::InvalidValidatorStateUpdate(
+                                        epoch.into(),
+                                    ),
+                                ),
+                            }
+                        }
+                        // Check allowed state changes at pipeline epoch
+                        match (
+                            pre.get(pipeline_epoch),
+                            post.get(pipeline_epoch),
+                        ) {
+                            (
+                                Some(Pending),
+                                Some(Candidate) | Some(Inactive),
+                            )
+                            | (Some(Candidate), Some(Inactive))
+                            | (
+                                Some(Inactive),
+                                Some(Candidate) | Some(Pending),
+                            ) => {}
+                            _ => errors.push(Error::InvalidNewValidatorState(
+                                pipeline_epoch.into(),
+                            )),
+                        }
+                    }
+                    (Some(_), None) => errors
+                        .push(Error::ValidatorStateIsRequired(address.clone())),
+                    (None, None) => continue,
+                },
+                ConsensusKey(data) => match (data.pre, data.post) {
+                    (None, Some(post)) => {
+                        if post.last_update() != current_epoch {
+                            errors.push(Error::InvalidLastUpdate)
+                        }
+                        // The value must be known at pipeline epoch
+                        match post.get(pipeline_epoch) {
+                            Some(_) => {}
+                            _ => errors.push(
+                                Error::MissingNewValidatorConsensusKey(
+                                    pipeline_epoch.into(),
+                                ),
+                            ),
+                        }
+                        let validator =
+                            new_validators.entry(address.clone()).or_default();
+                        validator.has_consensus_key = true;
+                    }
+                    (Some(pre), Some(post)) => {
+                        if post.last_update() != current_epoch {
+                            errors.push(Error::InvalidLastUpdate)
+                        }
+                        // Before pipeline epoch, the key must not change
+                        for epoch in
+                            Epoch::iter_range(current_epoch, pipeline_offset)
+                        {
+                            match (pre.get(epoch), post.get(epoch)) {
+                                (Some(key_pre), Some(key_post))
+                                    if key_pre == key_post =>
+                                {
+                                    continue;
+                                }
+                                _ => errors.push(
+                                    Error::InvalidValidatorConsensusKeyUpdate(
+                                        epoch.into(),
+                                    ),
+                                ),
+                            }
+                        }
+                    }
+                    (Some(_), None) => errors
+                        .push(Error::ValidatorStateIsRequired(address.clone())),
+                    (None, None) => continue,
+                },
                 StakingRewardAddress(data) => match (data.pre, data.post) {
                     (Some(_), Some(post)) => {
                         if post == address {
@@ -363,6 +530,18 @@ where
                                 ),
                             );
                         }
+                    }
+                    (None, Some(post)) => {
+                        if post == address {
+                            errors.push(
+                                Error::StakingRewardAddressEqValidator(
+                                    address.clone(),
+                                ),
+                            );
+                        }
+                        let validator =
+                            new_validators.entry(address.clone()).or_default();
+                        validator.has_staking_reward_address = true;
                     }
                     _ => errors.push(Error::StakingRewardAddressIsRequired(
                         address.clone(),
@@ -576,13 +755,16 @@ where
                         if deltas != TokenChange::default() {
                             total_deltas.insert(address.clone(), deltas);
                         }
+                        let validator =
+                            new_validators.entry(address.clone()).or_default();
+                        validator.has_total_deltas = true;
                     }
                     (Some(_), None) => {
                         errors.push(Error::MissingValidatorTotalDeltas(address))
                     }
                     (None, None) => continue,
                 },
-                VotingPowerUpdate(data) => match (data.pre, data.post) {
+                VotingPowerUpdate(data) => match (&data.pre, data.post) {
                     (Some(_), Some(post)) | (None, Some(post)) => {
                         if post.last_update() != current_epoch {
                             errors.push(Error::InvalidLastUpdate)
@@ -614,6 +796,12 @@ where
                                     ),
                                 }
                             }
+                        }
+                        if data.pre.is_none() {
+                            let validator = new_validators
+                                .entry(address.clone())
+                                .or_default();
+                            validator.has_voting_power = true;
                         }
                     }
                     (Some(_), None) => errors.push(
@@ -1014,6 +1202,25 @@ where
                 }
                 _ => errors.push(Error::MissingTotalVotingPower),
             },
+            ValidatorAddressRawHash { raw_hash, data } => {
+                match (data.pre, data.post) {
+                    (None, Some((address, expected_raw_hash))) => {
+                        if raw_hash != expected_raw_hash {
+                            errors.push(Error::InvalidAddressRawHash(
+                                raw_hash,
+                                expected_raw_hash,
+                            ))
+                        }
+                        let validator =
+                            new_validators.entry(address.clone()).or_default();
+                        validator.has_address_raw_hash = true;
+                    }
+                    (pre, post) if pre != post => {
+                        errors.push(Error::InvalidRawHashUpdate)
+                    }
+                    _ => continue,
+                }
+            }
         }
     }
 
@@ -1048,7 +1255,7 @@ where
 
     // Check validator sets against validator total stakes.
     // Iter from the first epoch to the last epoch of `validator_set_post`
-    if let Some(post) = validator_set_post {
+    if let Some(post) = &validator_set_post {
         for epoch in Epoch::iter_range(current_epoch, unbonding_offset + 1) {
             if let Some(post) = post.get_at_epoch(epoch) {
                 // Check that active validators length is not over the limit
@@ -1267,6 +1474,57 @@ where
             None => {
                 if expected_delta != VotingPowerDelta::default() {
                     errors.push(Error::TotalVotingPowerNotUpdated)
+                }
+            }
+        }
+    }
+
+    // Check new validators are initialized with all the required fields
+    if !new_validators.is_empty() {
+        match &validator_set_post {
+            None => errors.push(Error::MissingValidatorSetUpdate),
+            Some(sets) => {
+                let validator_sets = sets.get(pipeline_epoch);
+                for (address, new_validator) in new_validators {
+                    let NewValidator {
+                        has_state,
+                        has_consensus_key,
+                        has_total_deltas,
+                        has_voting_power,
+                        has_staking_reward_address,
+                        has_address_raw_hash,
+                        voting_power,
+                    } = &new_validator;
+                    // The new validator must have set all the required fields
+                    if !(*has_state
+                        && *has_consensus_key
+                        && *has_total_deltas
+                        && *has_voting_power
+                        && *has_staking_reward_address
+                        && *has_address_raw_hash)
+                    {
+                        errors.push(Error::InvalidNewValidator(
+                            address.clone(),
+                            new_validator.clone(),
+                        ))
+                    }
+                    let weighted_validator = WeightedValidator {
+                        voting_power: *voting_power,
+                        address: address.clone(),
+                    };
+                    match validator_sets {
+                        Some(set)
+                            if set.active.contains(&weighted_validator)
+                                || set
+                                    .inactive
+                                    .contains(&weighted_validator) =>
+                        {
+                            continue;
+                        }
+                        _ => errors.push(
+                            Error::NewValidatorMissingInValidatorSet(address),
+                        ),
+                    }
                 }
             }
         }

@@ -11,7 +11,7 @@ fi
 REMOTE=$(git remote get-url origin | cut -c 9-)
 PUSH_URL="https://${GITHUB_TOKEN}@${REMOTE}"
 
-git fetch --all
+git fetch origin $DRONE_SOURCE_BRANCH
 git stash
 git checkout $DRONE_SOURCE_BRANCH
 

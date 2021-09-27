@@ -31,6 +31,10 @@ The host functions available to call from inside the VP code can be found in [do
 
 The native VPs follow the same interface as WASM VPs and rules for how they are [triggered by a transaction](tx.md#tx-execution). They can also call the same host functions as those provided in [WASM VPs environment](wasm-vm.md#vps-environment) and must also account any computation for gas usage.
 
+### PoS slash pool VP
+
+The Proof-of-Stake slash pool is a simple account with a native VP which can receive slashed tokens, but no token can ever be withdrawn from it by anyone at this point.
+
 ## Fungible token VP
 
 The [fungible token VP](https://github.com/anoma/anoma/tree/master/wasm/vp_token.wasm) allows to associate accounts balances of a specific token under its account. 
@@ -47,4 +51,3 @@ Note that the fungible token VP doesn't need to know whether any of involved use
 The [user VP](https://github.com/anoma/anoma/tree/master/wasm/vp_user.wasm) currently provides a signature verification against a public key for sending tokens as prescribed by the fungible token VP. In this VP, a transfer of tokens doesn't have to be authorized by the receiving party. 
 
 It also allows arbitrary storage modifications to the user's sub-space to be performed by a transaction that has been signed by the secret key corresponding to the user's public key stored on-chain. This functionality also allows one to update their own validity predicate.
-

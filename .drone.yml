@@ -262,14 +262,14 @@ kind: pipeline
 name: anoma-ci-misc-pr
 node: {project: anoma}
 steps:
-- commands: [echo "23b892f57324bc5d3ca100e95e8581dbb26132a0e7a7c756790fd401fd45e5f0  Makefile"
-      | sha256sum -c -, echo "3e1736793ae000d7ae7660105d106b017f23cffaa8ad50de5f47831202f5f2e5  wasm/wasm_source/Makefile"
+- commands: [echo "4888011c2cc1c15f489a4d259d3e86cd0ac3dfe76af44e2b8d2b5ffd386a52ad  Makefile"
+      | sha256sum -c -, echo "96f503edaeb65d5b75855c75ead35c6c3e394ee82ec6fd4aa15d0e7d9f1051d6  wasm/wasm_source/Makefile"
       | sha256sum -c -, echo "52d59575c0767b4738ea9b4c07844c761dce6f54a59b3429e75fb5f4410cdc7e  wasm/vp_template/Makefile"
       | sha256sum -c -, echo "52d59575c0767b4738ea9b4c07844c761dce6f54a59b3429e75fb5f4410cdc7e  wasm/tx_template/Makefile"
       | sha256sum -c -, echo "52d59575c0767b4738ea9b4c07844c761dce6f54a59b3429e75fb5f4410cdc7e  wasm/mm_template/Makefile"
       | sha256sum -c -, echo "52d59575c0767b4738ea9b4c07844c761dce6f54a59b3429e75fb5f4410cdc7e  wasm/mm_filter_template/Makefile"
       | sha256sum -c -, echo "4388598b8ace38607a492e2f4d3eae46ef97ac9edb98a20619de3298e5aea081  docs/Makefile"
-      | sha256sum -c -, echo "3ed5190a36ae374bceff55e2dce7302f9e1d1a30570ad0e700aade76e69ea1ef  scripts/ci/update-wasm.sh"
+      | sha256sum -c -, echo "4b0b566f5bc572569ebcf2eee17129e91f2009a66972fe294bc4d1e0b4d9ad8f  scripts/ci/update-wasm.sh"
       | sha256sum -c -, echo "c2bbcc7ab5f2b4cc478513dc1db117e3a1a9122271db0160afa3929132f54f82  scripts/ci/pre-run.sh"
       | sha256sum -c -, echo "ca991132c0ab2ee48a785157a6fd7ce9b315f2f51ac62d311bf27f0efe7e91a8  scripts/ci/release.sh"
       | sha256sum -c -, echo "19ab6263cc481222b4ecedd1037d2942e4b93d915693aad153bec2a80977ce3d  scripts/ci/audit.py"
@@ -686,14 +686,14 @@ kind: pipeline
 name: anoma-ci-release
 node: {project: anoma}
 steps:
-- commands: [echo "23b892f57324bc5d3ca100e95e8581dbb26132a0e7a7c756790fd401fd45e5f0  Makefile"
-      | sha256sum -c -, echo "3e1736793ae000d7ae7660105d106b017f23cffaa8ad50de5f47831202f5f2e5  wasm/wasm_source/Makefile"
+- commands: [echo "4888011c2cc1c15f489a4d259d3e86cd0ac3dfe76af44e2b8d2b5ffd386a52ad  Makefile"
+      | sha256sum -c -, echo "96f503edaeb65d5b75855c75ead35c6c3e394ee82ec6fd4aa15d0e7d9f1051d6  wasm/wasm_source/Makefile"
       | sha256sum -c -, echo "52d59575c0767b4738ea9b4c07844c761dce6f54a59b3429e75fb5f4410cdc7e  wasm/vp_template/Makefile"
       | sha256sum -c -, echo "52d59575c0767b4738ea9b4c07844c761dce6f54a59b3429e75fb5f4410cdc7e  wasm/tx_template/Makefile"
       | sha256sum -c -, echo "52d59575c0767b4738ea9b4c07844c761dce6f54a59b3429e75fb5f4410cdc7e  wasm/mm_template/Makefile"
       | sha256sum -c -, echo "52d59575c0767b4738ea9b4c07844c761dce6f54a59b3429e75fb5f4410cdc7e  wasm/mm_filter_template/Makefile"
       | sha256sum -c -, echo "4388598b8ace38607a492e2f4d3eae46ef97ac9edb98a20619de3298e5aea081  docs/Makefile"
-      | sha256sum -c -, echo "3ed5190a36ae374bceff55e2dce7302f9e1d1a30570ad0e700aade76e69ea1ef  scripts/ci/update-wasm.sh"
+      | sha256sum -c -, echo "4b0b566f5bc572569ebcf2eee17129e91f2009a66972fe294bc4d1e0b4d9ad8f  scripts/ci/update-wasm.sh"
       | sha256sum -c -, echo "c2bbcc7ab5f2b4cc478513dc1db117e3a1a9122271db0160afa3929132f54f82  scripts/ci/pre-run.sh"
       | sha256sum -c -, echo "ca991132c0ab2ee48a785157a6fd7ce9b315f2f51ac62d311bf27f0efe7e91a8  scripts/ci/release.sh"
       | sha256sum -c -, echo "19ab6263cc481222b4ecedd1037d2942e4b93d915693aad153bec2a80977ce3d  scripts/ci/audit.py"
@@ -750,6 +750,6 @@ type: docker
 workspace: {path: /usr/local/rust/project}
 ---
 kind: signature
-hmac: 5184e6b658ec9b4cafb34ad029c211608eecfbe5c8457bb630d07ef23347e196
+hmac: 5606f452580cd01461705d742664892a0149b64b632d4963212686ab301b0623
 
 ...

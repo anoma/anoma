@@ -174,7 +174,17 @@ pub mod shim {
         }
 
         pub struct VerifyHeader;
-        pub struct ProcessProposal;
+
+        pub struct ProcessProposal {
+            pub tx: super::TxBytes,
+        }
+
+        impl From<super::TxBytes> for ProcessProposal {
+            fn from(tx: super::TxBytes) -> Self {
+                Self { tx }
+            }
+        }
+
         pub struct RevertProposal;
         pub struct ExtendVote;
         pub struct VerifyVoteExtension;
@@ -203,7 +213,38 @@ pub mod shim {
         pub struct VerifyHeader;
 
         #[derive(Debug, Default)]
-        pub struct ProcessProposal;
+        pub struct TxResult {
+            pub code: u32,
+            pub info: String,
+        }
+
+        impl<T> From<T> for TxResult
+        where
+            T: std::error::Error,
+        {
+            fn from(err: T) -> Self {
+                TxResult {
+                    code: 1,
+                    info: err.to_string(),
+                }
+            }
+        }
+
+        #[derive(Debug, Default)]
+        pub struct ProcessProposal {
+            pub result: TxResult,
+            pub tx: super::TxBytes,
+        }
+
+        impl From<ProcessProposal> for response::CheckTx {
+            fn from(resp: ProcessProposal) -> Self {
+                Self {
+                    code: resp.result.code,
+                    log: resp.result.info,
+                    ..Default::default()
+                }
+            }
+        }
 
         #[derive(Debug, Default)]
         pub struct RevertProposal;
@@ -213,12 +254,6 @@ pub mod shim {
 
         #[derive(Debug, Default)]
         pub struct VerifyVoteExtension;
-
-        #[derive(Debug, Default)]
-        pub struct TxResult {
-            pub code: u32,
-            pub info: String,
-        }
 
         #[derive(Debug, Default)]
         pub struct FinalizeBlock {

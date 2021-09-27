@@ -18,7 +18,8 @@ use libp2p::identity::Keypair;
 use libp2p::swarm::NetworkBehaviourEventProcess;
 use libp2p::{NetworkBehaviour, PeerId};
 use thiserror::Error;
-use tokio::sync::mpsc::Receiver;
+use tokio::sync::mpsc::Sender;
+use tokio::sync::oneshot::channel;
 
 use self::discovery::DiscoveryEvent;
 use super::intent_gossiper;
@@ -130,9 +131,8 @@ impl TopicSubscriptionFilter for IntentGossipSubscriptionFilter {
 pub struct Behaviour {
     pub intent_gossip_behaviour: Gossipsub,
     pub discover_behaviour: DiscoveryBehaviour,
-    // TODO add another gossipsub (or floodsub ?) for dkg message propagation ?
     #[behaviour(ignore)]
-    pub intent_gossip_app: intent_gossiper::GossipIntent,
+    pub mm_sender: Option<Sender<MatchmakerMessage>>,
 }
 
 /// [message_id] use the hash of the message data as an id
@@ -147,7 +147,8 @@ impl Behaviour {
     pub fn new(
         key: Keypair,
         config: &crate::config::IntentGossiper,
-    ) -> (Self, Option<Receiver<MatchmakerMessage>>) {
+        mm_sender: Option<Sender<MatchmakerMessage>>,
+    ) -> Self {
         let peer_id = PeerId::from_public_key(key.public());
 
         // TODO remove hardcoded value and add them to the config Except
@@ -195,9 +196,6 @@ impl Behaviour {
             )
             .unwrap();
 
-        let (intent_gossip_app, matchmaker_event_receiver) =
-            intent_gossiper::GossipIntent::new(config).unwrap();
-
         // subscribe to all topic listed in the config.
         config
             .topics
@@ -232,39 +230,44 @@ impl Behaviour {
             };
             DiscoveryBehaviour::new(peer_id, discover_config).unwrap()
         };
-        (
-            Self {
-                intent_gossip_behaviour,
-                discover_behaviour,
-                intent_gossip_app,
-            },
-            matchmaker_event_receiver,
-        )
+        Self {
+            intent_gossip_behaviour,
+            discover_behaviour,
+            mm_sender,
+        }
     }
 
     /// tries to apply a new intent. Fails if the logic fails or if the intent
     /// is rejected. If the matchmaker fails the message is only ignore
     fn handle_intent(&mut self, intent: Intent) -> MessageAcceptance {
-        match self.intent_gossip_app.apply_intent(intent) {
-            Ok(true) => MessageAcceptance::Accept,
-            Ok(false) => MessageAcceptance::Reject,
-            Err(e) => {
-                tracing::error!("Error while trying to apply an intent: {}", e);
-                match e {
-                    intent_gossiper::Error::Decode(_) => {
-                        panic!("can't happens, because intent already decoded")
-                    }
-                    intent_gossiper::Error::MatchmakerInit(err)
-                    | intent_gossiper::Error::Matchmaker(err) => {
-                        tracing::info!(
-                            "error while running the matchmaker: {:?}",
-                            err
-                        );
-                        MessageAcceptance::Ignore
-                    }
+        if let Some(sender) = &self.mm_sender {
+            let (response_sender, mut response_receiver) = channel::<bool>();
+            sender
+                .try_send(MatchmakerMessage::ApplyIntent(
+                    intent,
+                    response_sender,
+                ))
+                .unwrap_or_else(|err| {
+                    tracing::error!(
+                        "Error sending intent to the matchmaker: {}",
+                        err
+                    );
+                });
+            return match response_receiver.try_recv() {
+                Ok(true) => MessageAcceptance::Accept,
+                Ok(false) => MessageAcceptance::Reject,
+                Err(err) => {
+                    tracing::error!(
+                        "Ignoring intent because error while trying to apply \
+                         an intent in matchmaker: {}",
+                        err
+                    );
+                    MessageAcceptance::Ignore
                 }
-            }
+            };
         }
+        // When no is matchmaker running, accept any intent
+        MessageAcceptance::Accept
     }
 
     /// Tries to decoded the arbitrary data in an intent then call

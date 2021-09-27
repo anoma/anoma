@@ -2,7 +2,6 @@
 
 use std::collections::HashSet;
 use std::marker::PhantomData;
-use std::sync::{Arc, Mutex};
 
 use parity_wasm::elements;
 use pwasm_utils::{self, rules};
@@ -361,7 +360,7 @@ pub fn matchmaker<MM>(
     data: impl AsRef<[u8]>,
     intent_id: impl AsRef<[u8]>,
     intent_data: impl AsRef<[u8]>,
-    mm: Arc<Mutex<MM>>,
+    mm: MM,
 ) -> Result<bool>
 where
     MM: 'static + MmHost,

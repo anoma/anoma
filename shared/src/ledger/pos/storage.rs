@@ -12,7 +12,7 @@ use super::{
 };
 use crate::ledger::storage::types::{decode, encode};
 use crate::ledger::storage::{self, Storage, StorageHasher};
-use crate::types::address::{Address, InternalAddress};
+use crate::types::address::Address;
 use crate::types::storage::{DbKeySeg, Key, KeySeg};
 use crate::types::{key, token};
 
@@ -76,6 +76,18 @@ pub fn validator_address_raw_hash_key(raw_hash: impl AsRef<str>) -> Key {
         .expect("Cannot obtain a storage key")
         .push(&raw_hash)
         .expect("Cannot obtain a storage key")
+}
+
+/// Is storage key for validator's address raw hash?
+pub fn is_validator_address_raw_hash_key(key: &Key) -> Option<&str> {
+    match &key.segments[..] {
+        [DbKeySeg::AddressSeg(addr), DbKeySeg::StringSeg(prefix), DbKeySeg::StringSeg(raw_hash)]
+            if addr == &ADDRESS && prefix == VALIDATOR_ADDRESS_RAW_HASH =>
+        {
+            Some(raw_hash)
+        }
+        _ => None,
+    }
 }
 
 /// Storage key for validator's staking reward address.
@@ -329,9 +341,8 @@ where
     type TokenAmount = token::Amount;
     type TokenChange = token::Change;
 
-    const POS_ADDRESS: Self::Address = Address::Internal(InternalAddress::PoS);
-    const POS_SLASH_POOL_ADDRESS: Self::Address =
-        Address::Internal(InternalAddress::PosSlashPool);
+    const POS_ADDRESS: Self::Address = super::ADDRESS;
+    const POS_SLASH_POOL_ADDRESS: Self::Address = super::SLASH_POOL_ADDRESS;
 
     fn staking_token_address() -> Self::Address {
         super::staking_token_address()

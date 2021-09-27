@@ -4,6 +4,9 @@ pub mod mm_token_exch;
 #[cfg(feature = "vp_user")]
 pub mod vp_user;
 
+#[cfg(feature = "vp_testnet_faucet")]
+pub mod vp_testnet_faucet;
+
 /// A tx to initialize a new established address with a given public key and
 /// a validity predicate.
 #[cfg(feature = "tx_init_account")]
@@ -24,6 +27,40 @@ pub mod tx_init_account {
         let address = init_account(&tx_data.vp_code);
         let pk_key = key::ed25519::pk_key(&address);
         write(&pk_key.to_string(), &tx_data.public_key);
+    }
+}
+
+/// A tx to initialize a new validator account and staking reward account with a
+/// given public keys and a validity predicates.
+#[cfg(feature = "tx_init_validator")]
+pub mod tx_init_validator {
+    use anoma_vm_env::tx_prelude::transaction::InitValidator;
+    use anoma_vm_env::tx_prelude::*;
+
+    #[transaction]
+    fn apply_tx(tx_data: Vec<u8>) {
+        let signed =
+            key::ed25519::SignedTxData::try_from_slice(&tx_data[..]).unwrap();
+        let init_validator =
+            InitValidator::try_from_slice(&signed.data.unwrap()[..]).unwrap();
+        log_string(
+            "apply_tx called to init a new established account".to_string(),
+        );
+
+        // Register the validator in PoS
+        match proof_of_stake::init_validator(init_validator) {
+            Ok((validator_address, staking_reward_address)) => {
+                log_string(format!(
+                    "Created validator {} and staking reward account {}",
+                    validator_address.encode(),
+                    staking_reward_address.encode()
+                ))
+            }
+            Err(err) => {
+                log_string(format!("Validator creation failed with: {}", err));
+                panic!()
+            }
+        }
     }
 }
 
@@ -213,19 +250,20 @@ pub mod tx_from_intent {
         let tx_data = tx_data.unwrap();
 
         // make sure that the matchmaker has to validate this tx
-        insert_verifier(&address::matchmaker());
+        insert_verifier(&tx_data.source);
 
         for token::Transfer {
             source,
             target,
             token,
             amount,
-        } in tx_data.transfers
+        } in tx_data.matches.transfers
         {
             token::transfer(&source, &target, &token, amount);
         }
 
         tx_data
+            .matches
             .exchanges
             .values()
             .into_iter()

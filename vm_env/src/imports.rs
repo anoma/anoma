@@ -154,7 +154,7 @@ pub mod tx {
     // Initialize a new account
     pub fn init_account(code: impl AsRef<[u8]>) -> Address {
         let code = code.as_ref();
-        let result = Vec::with_capacity(address::RAW_ADDRESS_LEN);
+        let result = Vec::with_capacity(address::ESTABLISHED_ADDRESS_BYTES_LEN);
         unsafe {
             anoma_tx_init_account(
                 code.as_ptr() as _,
@@ -163,7 +163,10 @@ pub mod tx {
             )
         };
         let slice = unsafe {
-            slice::from_raw_parts(result.as_ptr(), address::RAW_ADDRESS_LEN)
+            slice::from_raw_parts(
+                result.as_ptr(),
+                address::ESTABLISHED_ADDRESS_BYTES_LEN,
+            )
         };
         Address::try_from_slice(slice)
             .expect("Decoding address created by the ledger shouldn't fail")

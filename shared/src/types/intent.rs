@@ -60,7 +60,8 @@ pub struct Exchange {
     pub vp: Option<Vec<u8>>,
 }
 
-/// These are transfers crafted from matched [`Exchange`]s.
+/// These are transfers crafted from matched [`Exchange`]s created by a
+/// matchmaker program.
 #[derive(
     Debug,
     Clone,
@@ -70,7 +71,7 @@ pub struct Exchange {
     Deserialize,
     PartialEq,
 )]
-pub struct IntentTransfers {
+pub struct MatchedExchanges {
     /// Transfers crafted from the matched intents
     pub transfers: HashSet<token::Transfer>,
     // TODO benchmark between an map or a set, see which is less costly
@@ -81,6 +82,24 @@ pub struct IntentTransfers {
     // `exchanges` hashmap are already contained in the FungibleTokenIntents
     // belows
     pub intents: HashMap<Address, Signed<FungibleTokenIntent>>,
+}
+
+/// These are transfers crafted from matched [`Exchange`]s with a source address
+/// that is expected to sign this data.
+#[derive(
+    Debug,
+    Clone,
+    BorshSerialize,
+    BorshDeserialize,
+    Serialize,
+    Deserialize,
+    PartialEq,
+)]
+pub struct IntentTransfers {
+    /// Matched exchanges
+    pub matches: MatchedExchanges,
+    /// Source address that should sign this data
+    pub source: Address,
 }
 
 /// Struct holding a safe rapresentation of a float
@@ -177,8 +196,8 @@ impl BorshDeserialize for DecimalWrapper {
     }
 }
 
-impl IntentTransfers {
-    /// Create an empty [`IntentTransfers`].
+impl MatchedExchanges {
+    /// Create an empty [`MatchedExchanges`].
     pub fn empty() -> Self {
         Self {
             transfers: HashSet::new(),
@@ -252,7 +271,7 @@ mod tests {
         let signed_exchange_one = Signed::new(&bertha_keypair, exchange_one);
         let signed_exchange_two = Signed::new(&bertha_keypair, exchange_two);
 
-        let mut it = IntentTransfers::empty();
+        let mut it = MatchedExchanges::empty();
         it.exchanges = HashMap::<_, _>::from_iter(IntoIter::new([
             (bertha_addr.clone(), signed_exchange_one.clone()),
             (albert_addr.clone(), signed_exchange_two.clone()),
@@ -295,7 +314,7 @@ mod tests {
         ]));
 
         let encoded_intent_transfer = encode(&it);
-        let decoded_intent_transfer: IntentTransfers =
+        let decoded_intent_transfer: MatchedExchanges =
             decode(encoded_intent_transfer).unwrap();
 
         assert!(decoded_intent_transfer == it);
@@ -347,7 +366,7 @@ mod tests {
         let signed_exchange_one = Signed::new(&bertha_keypair, exchange_one);
         let signed_exchange_two = Signed::new(&bertha_keypair, exchange_two);
 
-        let mut it = IntentTransfers::empty();
+        let mut it = MatchedExchanges::empty();
         it.exchanges = HashMap::<_, _>::from_iter(IntoIter::new([
             (bertha_addr.clone(), signed_exchange_one.clone()),
             (albert_addr.clone(), signed_exchange_two.clone()),
@@ -390,7 +409,7 @@ mod tests {
         ]));
 
         let encoded_intent_transfer = encode(&it);
-        let decoded_intent_transfer: IntentTransfers =
+        let decoded_intent_transfer: MatchedExchanges =
             decode(encoded_intent_transfer).unwrap();
 
         assert!(decoded_intent_transfer == it);
@@ -401,20 +420,20 @@ mod tests {
     mod constants {
 
         // User addresses
-        pub const ALBERT: &str = "a1qq5qqqqqg4znssfsgcurjsfhgfpy2vjyxy6yg3z98pp5zvp5xgersvfjxvcnx3f4xycrzdfkak0xhx";
-        pub const BERTHA: &str = "a1qq5qqqqqxv6yydz9xc6ry33589q5x33eggcnjs2xx9znydj9xuens3phxppnwvzpg4rrqdpswve4n9";
-        pub const CHRISTEL: &str = "a1qq5qqqqqxsuygd2x8pq5yw2ygdryxs6xgsmrsdzx8pryxv34gfrrssfjgccyg3zpxezrqd2y2s3g5s";
+        pub const ALBERT: &str = "atest1v4ehgw368ycryv2z8qcnxv3cxgmrgvjpxs6yg333gym5vv2zxepnj334g4rryvj9xucrgve4x3xvr4";
+        pub const BERTHA: &str = "atest1v4ehgw36xvcyyvejgvenxs34g3zygv3jxqunjd6rxyeyys3sxy6rwvfkx4qnj33hg9qnvse4lsfctw";
+        pub const CHRISTEL: &str = "atest1v4ehgw36x3qng3jzggu5yvpsxgcngv2xgguy2dpkgvu5x33kx3pr2w2zgep5xwfkxscrxs2pj8075p";
 
         // Fungible token addresses
-        pub const XAN: &str = "a1qq5qqqqqxuc5gvz9gycryv3sgye5v3j9gvurjv34g9prsd6x8qu5xs2ygdzrzsf38q6rss33xf42f3";
-        pub const BTC: &str = "a1qq5qqqqq8q6yy3p4xyurys3n8qerz3zxxeryyv6rg4pnxdf3x3pyv32rx3zrgwzpxu6ny32r3laduc";
-        pub const ETH: &str = "a1qq5qqqqqx3z5xd3ngdqnzwzrgfpnxd3hgsuyx3phgfry2s3kxsc5xves8qe5x33sgdprzvjptzfry9";
-        pub const DOT: &str = "a1qq5qqqqqxq652v3sxap523fs8pznjse5g3pyydf3xqurws6ygvc5gdfcxyuy2deeggenjsjrjrl2ph";
+        pub const XAN: &str = "atest1v4ehgw36x3prswzxggunzv6pxqmnvdj9xvcyzvpsggeyvs3cg9qnywf589qnwvfsg5erg3fkl09rg5";
+        pub const BTC: &str = "atest1v4ehgw36xdzryve5gsc52veeg5cnsv2yx5eygvp38qcrvd29xy6rys6p8yc5xvp4xfpy2v694wgwcp";
+        pub const ETH: &str = "atest1v4ehgw36xqmr2d3nx3ryvd2xxgmrq33j8qcns33sxezrgv6zxdzrydjrxveygd2yxumrsdpsf9jc2p";
+        pub const DOT: &str = "atest1v4ehgw36gg6nvs2zgfpyxsfjgc65yv6pxy6nwwfsxgungdzrggeyzv35gveyxsjyxymyz335hur2jn";
 
         // Bite-sized tokens
-        pub const SCHNITZEL: &str = "a1qq5qqqqq8prrzv6xxcury3p4xucygdp5gfprzdfex9prz3jyg56rxv69gvenvsj9g5enswpcl8npyz";
-        pub const APFEL: &str = "a1qq5qqqqqgfp52de4x56nqd3ex56y2wph8pznssjzx5ersw2pxfznsd3jxeqnjd3cxapnqsjz2fyt3j";
-        pub const KARTOFFEL: &str = "a1qq5qqqqqxs6yvsekxuuyy3pjxsmrgd2rxuungdzpgsmyydjrxsenjdp5xaqn233sgccnjs3eak5wwh";
+        pub const SCHNITZEL: &str = "atest1v4ehgw36xue5xvf5xvuyzvpjx5un2v3k8qeyvd3cxdqns32p89rrxd6xx9zngvpegccnzs699rdnnt";
+        pub const APFEL: &str = "atest1v4ehgw36gfryydj9g3p5zv3kg9znyd358ycnzsfcggc5gvecgc6ygs2rxv6ry3zpg4zrwdfeumqcz9";
+        pub const KARTOFFEL: &str = "atest1v4ehgw36gep5ysecxq6nyv3jg3zygv3e89qn2vp48pryxsf4xpznvve5gvmy23fs89pryvf5a6ht90";
 
         // Paths to the WASMs used for tests
         pub const TX_TRANSFER_WASM: &str = "wasm/tx_transfer.wasm";

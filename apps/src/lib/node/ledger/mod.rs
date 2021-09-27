@@ -4,7 +4,7 @@ pub mod rpc;
 mod shell;
 mod shims;
 pub mod storage;
-mod tendermint_node;
+pub mod tendermint_node;
 
 use std::convert::{TryFrom, TryInto};
 use std::sync::mpsc::channel;
@@ -58,29 +58,26 @@ impl Shell {
                     Ok(mut resp) => {
                         // Set the initial validator set
                         let genesis = genesis::genesis();
-                        let mut abci_validator =
+                        for validator in genesis.validators {
+                            let mut abci_validator =
                             tendermint_proto::abci::ValidatorUpdate::default();
-                        let consensus_key: ed25519_dalek::PublicKey = genesis
-                            .validator
-                            .pos_data
-                            .consensus_key
-                            .clone()
-                            .into();
-                        let pub_key = tendermint_proto::crypto::PublicKey {
+                            let consensus_key: ed25519_dalek::PublicKey =
+                                validator.pos_data.consensus_key.clone().into();
+                            let pub_key = tendermint_proto::crypto::PublicKey {
                             sum: Some(tendermint_proto::crypto::public_key::Sum::Ed25519(
                                 consensus_key.to_bytes().to_vec(),
                             )),
                         };
-                        abci_validator.pub_key = Some(pub_key);
-                        let power: u64 = genesis
-                            .validator
-                            .pos_data
-                            .voting_power(&genesis.pos_params)
-                            .into();
-                        abci_validator.power = power
-                            .try_into()
-                            .expect("unexpected validator's voting power");
-                        resp.validators.push(abci_validator);
+                            abci_validator.pub_key = Some(pub_key);
+                            let power: u64 = validator
+                                .pos_data
+                                .voting_power(&genesis.pos_params)
+                                .into();
+                            abci_validator.power = power
+                                .try_into()
+                                .expect("unexpected validator's voting power");
+                            resp.validators.push(abci_validator);
+                        }
                         Ok(Response::InitChain(resp))
                     }
                     Err(inner) => Err(inner),
@@ -173,8 +170,11 @@ async fn run_shell(
     abort_registration: AbortRegistration,
 ) {
     // Construct our ABCI application.
-    let service =
-        AbcippShim::new(&config.db, config::DEFAULT_CHAIN_ID.to_owned());
+    let service = AbcippShim::new(
+        &config.db,
+        config::DEFAULT_CHAIN_ID.to_owned(),
+        config.wasm_dir,
+    );
 
     // Split it into components.
     let (consensus, mempool, snapshot, info) = split::service(service, 5);
@@ -201,8 +201,10 @@ async fn run_shell(
         .unwrap();
 
     // Run the server with the shell
-    let future =
-        Abortable::new(server.listen(config.address), abort_registration);
+    let future = Abortable::new(
+        server.listen(config.ledger_address),
+        abort_registration,
+    );
     let _ = future.await;
 }
 
@@ -217,7 +219,9 @@ async fn run_shell(
 /// did we stop the tendermint node with a channel that acts as a kill switch.
 pub fn run(config: config::Ledger) {
     let home_dir = config.tendermint.clone();
-    let socket_address = config.address.to_string();
+    let ledger_address = config.ledger_address.to_string();
+    let rpc_address = config.rpc_address.to_string();
+    let p2p_address = config.p2p_address.to_string();
 
     // used for shutting down Tendermint node in case the shell panics
     let (sender, receiver) = channel();
@@ -228,9 +232,14 @@ pub fn run(config: config::Ledger) {
 
     // start Tendermint node
     let tendermint_handle = std::thread::spawn(move || {
-        if let Err(err) =
-            tendermint_node::run(home_dir, &socket_address, sender, receiver)
-        {
+        if let Err(err) = tendermint_node::run(
+            home_dir,
+            ledger_address,
+            rpc_address,
+            p2p_address,
+            sender,
+            receiver,
+        ) {
             tracing::error!(
                 "Failed to start-up a Tendermint node with {}",
                 err

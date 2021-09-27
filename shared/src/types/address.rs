@@ -14,16 +14,43 @@ use sha2::{Digest, Sha256};
 use thiserror::Error;
 
 use crate::types::key;
+use crate::types::key::ed25519::PublicKeyHash;
 
-/// The length of [`Address`] encoded with Borsh.
-pub const RAW_ADDRESS_LEN: usize = 45;
+/// The length of an established [`Address`] encoded with Borsh.
+pub const ESTABLISHED_ADDRESS_BYTES_LEN: usize = 45;
+
 /// The length of [`Address`] encoded with Bech32m.
-pub const ADDRESS_LEN: usize = 80;
+pub const ADDRESS_LEN: usize = 79 + ADDRESS_HRP.len();
 
 /// human-readable part of Bech32m encoded address
-const ADDRESS_HRP: &str = "a";
+// TODO use "a" for live network
+const ADDRESS_HRP: &str = "atest";
 const ADDRESS_BECH32_VARIANT: bech32::Variant = Variant::Bech32m;
 pub(crate) const HASH_LEN: usize = 40;
+
+/// An address string before bech32m encoding must be this size.
+pub const FIXED_LEN_STRING_BYTES: usize = 45;
+
+/// Raw strings used to produce internal addresses. All the strings must begin
+/// with `PREFIX_INTERNAL` and be `FIXED_LEN_STRING_BYTES` characters long.
+#[rustfmt::skip]
+mod internal {
+    pub const POS: &str = 
+        "ano::Proof of Stake                          ";
+    pub const POS_SLASH_POOL: &str =
+        "ano::Proof of Stake Slash Pool               ";
+    pub const IBC: &str = 
+        "ano::Inter-Blockchain Communication          ";
+    pub const PARAMETERS: &str =
+        "ano::Protocol Parameters                     ";
+}
+
+/// Fixed-length address strings prefix for established addresses.
+const PREFIX_ESTABLISHED: &str = "est";
+/// Fixed-length address strings prefix for implicit addresses.
+const PREFIX_IMPLICIT: &str = "imp";
+/// Fixed-length address strings prefix for internal addresses.
+const PREFIX_INTERNAL: &str = "ano";
 
 #[allow(missing_docs)]
 #[derive(Error, Debug)]
@@ -74,9 +101,7 @@ pub enum Address {
 impl Address {
     /// Encode an address with Bech32m encoding
     pub fn encode(&self) -> String {
-        let bytes = self
-            .try_to_vec()
-            .expect("Encoding an address shouldn't fail");
+        let bytes = self.to_fixed_len_string();
         bech32::encode(ADDRESS_HRP, bytes.to_base32(), ADDRESS_BECH32_VARIANT)
             .unwrap_or_else(|_| {
                 panic!(
@@ -99,24 +124,8 @@ impl Address {
         }
         let bytes: Vec<u8> = FromBase32::from_base32(&hash_base32)
             .map_err(Error::DecodeBase32)?;
-        let address = BorshDeserialize::try_from_slice(&bytes[..])
-            .map_err(Error::InvalidAddressEncoding)?;
-        match &address {
-            Address::Established(established) => {
-                if established.hash.len() != HASH_LEN {
-                    return Err(Error::UnexpectedHashLength(
-                        established.hash.len(),
-                    ));
-                }
-            }
-            Address::Implicit(ImplicitAddress::Ed25519(pkh)) => {
-                if pkh.0.len() != HASH_LEN {
-                    return Err(Error::UnexpectedHashLength(pkh.0.len()));
-                }
-            }
-            Address::Internal(_) => {}
-        }
-        Ok(address)
+        Self::try_from_fixed_len_string(&mut &bytes[..])
+            .map_err(Error::InvalidAddressEncoding)
     }
 
     /// Try to get a raw hash of an address, only defined for established and
@@ -128,6 +137,79 @@ impl Address {
                 Some(&implicit.0)
             }
             Address::Internal(_) => None,
+        }
+    }
+
+    /// Convert an address to a fixed length 7-bit ascii string bytes
+    fn to_fixed_len_string(&self) -> Vec<u8> {
+        let mut string = match self {
+            Address::Established(EstablishedAddress { hash }) => {
+                format!("{}::{}", PREFIX_ESTABLISHED, hash)
+            }
+            Address::Implicit(ImplicitAddress::Ed25519(pkh)) => {
+                format!("{}::{}", PREFIX_IMPLICIT, pkh)
+            }
+            Address::Internal(internal) => {
+                let string = match internal {
+                    InternalAddress::PoS => internal::POS,
+                    InternalAddress::PosSlashPool => internal::POS_SLASH_POOL,
+                    InternalAddress::Ibc => internal::IBC,
+                    InternalAddress::Parameters => internal::PARAMETERS,
+                }
+                .to_string();
+                debug_assert_eq!(string.len(), FIXED_LEN_STRING_BYTES);
+                string
+            }
+        }
+        .into_bytes();
+        string.resize(FIXED_LEN_STRING_BYTES, b' ');
+        string
+    }
+
+    /// Try to parse an address from fixed-length utf-8 encoded address string.
+    fn try_from_fixed_len_string(buf: &mut &[u8]) -> std::io::Result<Self> {
+        use std::io::{Error, ErrorKind};
+        let string = std::str::from_utf8(buf)
+            .map_err(|err| Error::new(ErrorKind::InvalidData, err))?;
+        if string.len() != FIXED_LEN_STRING_BYTES {
+            return Err(Error::new(ErrorKind::InvalidData, "Invalid length"));
+        }
+        match string.split_once("::") {
+            Some((PREFIX_ESTABLISHED, hash)) => {
+                if hash.len() == HASH_LEN {
+                    Ok(Address::Established(EstablishedAddress {
+                        hash: hash.to_string(),
+                    }))
+                } else {
+                    Err(Error::new(
+                        ErrorKind::InvalidData,
+                        "Established address hash must be 40 characters long",
+                    ))
+                }
+            }
+            Some((PREFIX_IMPLICIT, pkh)) => {
+                let pkh = PublicKeyHash::from_str(pkh)
+                    .map_err(|err| Error::new(ErrorKind::InvalidData, err))?;
+                Ok(Address::Implicit(ImplicitAddress::Ed25519(pkh)))
+            }
+            Some((PREFIX_INTERNAL, _raw)) => match string {
+                internal::POS => Ok(Address::Internal(InternalAddress::PoS)),
+                internal::POS_SLASH_POOL => {
+                    Ok(Address::Internal(InternalAddress::PosSlashPool))
+                }
+                internal::IBC => Ok(Address::Internal(InternalAddress::Ibc)),
+                internal::PARAMETERS => {
+                    Ok(Address::Internal(InternalAddress::Parameters))
+                }
+                _ => Err(Error::new(
+                    ErrorKind::InvalidData,
+                    "Invalid internal address",
+                )),
+            },
+            _ => Err(Error::new(
+                ErrorKind::InvalidData,
+                "Invalid address prefix",
+            )),
         }
     }
 
@@ -261,6 +343,18 @@ pub enum ImplicitAddress {
     Ed25519(key::ed25519::PublicKeyHash),
 }
 
+impl From<&key::ed25519::PublicKey> for ImplicitAddress {
+    fn from(pk: &key::ed25519::PublicKey) -> Self {
+        ImplicitAddress::Ed25519(pk.into())
+    }
+}
+
+impl From<&key::ed25519::PublicKey> for Address {
+    fn from(pk: &key::ed25519::PublicKey) -> Self {
+        Self::Implicit(pk.into())
+    }
+}
+
 /// An internal address represents a module with a native VP
 #[derive(
     Debug,
@@ -303,37 +397,37 @@ impl Display for InternalAddress {
 
 /// Temporary helper for testing
 pub fn xan() -> Address {
-    Address::decode("a1qq5qqqqqxuc5gvz9gycryv3sgye5v3j9gvurjv34g9prsd6x8qu5xs2ygdzrzsf38q6rss33xf42f3").expect("The token address decoding shouldn't fail")
+    Address::decode("atest1v4ehgw36x3prswzxggunzv6pxqmnvdj9xvcyzvpsggeyvs3cg9qnywf589qnwvfsg5erg3fkl09rg5").expect("The token address decoding shouldn't fail")
 }
 
 /// Temporary helper for testing
 pub fn btc() -> Address {
-    Address::decode("a1qq5qqqqq8q6yy3p4xyurys3n8qerz3zxxeryyv6rg4pnxdf3x3pyv32rx3zrgwzpxu6ny32r3laduc").expect("The token address decoding shouldn't fail")
+    Address::decode("atest1v4ehgw36xdzryve5gsc52veeg5cnsv2yx5eygvp38qcrvd29xy6rys6p8yc5xvp4xfpy2v694wgwcp").expect("The token address decoding shouldn't fail")
 }
 
 /// Temporary helper for testing
 pub fn eth() -> Address {
-    Address::decode("a1qq5qqqqqx3z5xd3ngdqnzwzrgfpnxd3hgsuyx3phgfry2s3kxsc5xves8qe5x33sgdprzvjptzfry9").expect("The token address decoding shouldn't fail")
+    Address::decode("atest1v4ehgw36xqmr2d3nx3ryvd2xxgmrq33j8qcns33sxezrgv6zxdzrydjrxveygd2yxumrsdpsf9jc2p").expect("The token address decoding shouldn't fail")
 }
 
 /// Temporary helper for testing
 pub fn dot() -> Address {
-    Address::decode("a1qq5qqqqqxq652v3sxap523fs8pznjse5g3pyydf3xqurws6ygvc5gdfcxyuy2deeggenjsjrjrl2ph").expect("The token address decoding shouldn't fail")
+    Address::decode("atest1v4ehgw36gg6nvs2zgfpyxsfjgc65yv6pxy6nwwfsxgungdzrggeyzv35gveyxsjyxymyz335hur2jn").expect("The token address decoding shouldn't fail")
 }
 
 /// Temporary helper for testing
 pub fn schnitzel() -> Address {
-    Address::decode("a1qq5qqqqq8prrzv6xxcury3p4xucygdp5gfprzdfex9prz3jyg56rxv69gvenvsj9g5enswpcl8npyz").expect("The token address decoding shouldn't fail")
+    Address::decode("atest1v4ehgw36xue5xvf5xvuyzvpjx5un2v3k8qeyvd3cxdqns32p89rrxd6xx9zngvpegccnzs699rdnnt").expect("The token address decoding shouldn't fail")
 }
 
 /// Temporary helper for testing
 pub fn apfel() -> Address {
-    Address::decode("a1qq5qqqqqgfp52de4x56nqd3ex56y2wph8pznssjzx5ersw2pxfznsd3jxeqnjd3cxapnqsjz2fyt3j").expect("The token address decoding shouldn't fail")
+    Address::decode("atest1v4ehgw36gfryydj9g3p5zv3kg9znyd358ycnzsfcggc5gvecgc6ygs2rxv6ry3zpg4zrwdfeumqcz9").expect("The token address decoding shouldn't fail")
 }
 
 /// Temporary helper for testing
 pub fn kartoffel() -> Address {
-    Address::decode("a1qq5qqqqqxs6yvsekxuuyy3pjxsmrgd2rxuungdzpgsmyydjrxsenjdp5xaqn233sgccnjs3eak5wwh").expect("The token address decoding shouldn't fail")
+    Address::decode("atest1v4ehgw36gep5ysecxq6nyv3jg3zygv3e89qn2vp48pryxsf4xpznvve5gvmy23fs89pryvf5a6ht90").expect("The token address decoding shouldn't fail")
 }
 
 /// Temporary helper for testing, a hash map of tokens addresses with their
@@ -352,36 +446,37 @@ pub fn tokens() -> HashMap<Address, &'static str> {
     .collect()
 }
 
-/// Temporary helper for testing
-pub fn matchmaker() -> Address {
-    Address::decode("a1qq5qqqqqxu6rvdzpxymnqwfkxfznvsjxggunyd3jg5erg3p3geqnvv35gep5yvzxx5m5x3fsfje8td").expect("The token address decoding shouldn't fail")
-}
-
 #[cfg(test)]
 pub mod tests {
+    use proptest::prelude::*;
+
     use super::*;
 
     /// Run `cargo test gen_established_address -- --nocapture` to generate a
     /// new established address.
     #[test]
     pub fn gen_established_address() {
-        let address = testing::gen_established_address();
-        println!("address {}", address);
+        for _ in 0..10 {
+            let address = testing::gen_established_address();
+            println!("address {}", address);
+        }
     }
 
+    /// Run `cargo test gen_implicit_address -- --nocapture` to generate a
+    /// new established address.
     #[test]
-    fn test_address_len() {
-        let addr = testing::established_address_1();
-        let bytes = addr.try_to_vec().unwrap();
-        assert_eq!(bytes.len(), RAW_ADDRESS_LEN);
-        assert_eq!(addr.encode().len(), ADDRESS_LEN);
+    pub fn gen_implicit_address() {
+        for _ in 0..10 {
+            let address = testing::gen_implicit_address();
+            println!("address {}", address);
+        }
     }
 
     #[test]
     fn test_address_serde_serialize() {
-        let original_address = Address::decode("a1qq5qqqqqgcmyxd35xguy2wp5xsu5vs6pxqcy232pgvm5zs6yggunssfs89znv33h8q6rjde4cjc3dr").unwrap();
+        let original_address = Address::decode("atest1v4ehgw36g56ngwpk8ppnzsf4xqeyvsf3xq6nxde5gseyys3nxgenvvfex5cnyd2rx9zrzwfctgx7sp").unwrap();
         let expect =
-            "\"a1qq5qqqqqgcmyxd35xguy2wp5xsu5vs6pxqcy232pgvm5zs6yggunssfs89znv33h8q6rjde4cjc3dr\"";
+            "\"atest1v4ehgw36g56ngwpk8ppnzsf4xqeyvsf3xq6nxde5gseyys3nxgenvvfex5cnyd2rx9zrzwfctgx7sp\"";
         let decoded_address: Address =
             serde_json::from_str(expect).expect("could not read JSON");
         assert_eq!(original_address, decoded_address);
@@ -389,14 +484,52 @@ pub mod tests {
         let encoded_address = serde_json::to_string(&original_address).unwrap();
         assert_eq!(encoded_address, expect);
     }
+
+    proptest! {
+        #[test]
+        /// Check that all the address types are of the same length
+        /// `ADDRESS_LEN` when bech32m encoded, and that that decoding them
+        /// yields back the same value.
+        fn test_encoded_address_length(address in testing::arb_address()) {
+            let encoded: String = address.encode();
+            assert_eq!(encoded.len(), ADDRESS_LEN);
+            // Also roundtrip check that we decode back the same value
+            let decoded = Address::decode(&encoded).unwrap();
+            assert_eq!(address, decoded);
+        }
+
+        #[test]
+        fn test_established_address_bytes_length(address in testing::arb_established_address()) {
+            let address = Address::Established(address);
+            let bytes = address.try_to_vec().unwrap();
+            assert_eq!(bytes.len(), ESTABLISHED_ADDRESS_BYTES_LEN);
+        }
+    }
+}
+
+/// Generate a new established address.
+#[cfg(feature = "rand")]
+pub fn gen_established_address(seed: impl AsRef<str>) -> Address {
+    use rand::prelude::ThreadRng;
+    use rand::{thread_rng, RngCore};
+
+    let mut key_gen = EstablishedAddressGen::new(seed);
+
+    let mut rng: ThreadRng = thread_rng();
+    let mut rng_bytes = vec![0u8; 32];
+    rng.fill_bytes(&mut rng_bytes[..]);
+    let rng_source = rng_bytes
+        .iter()
+        .map(|b| format!("{:02X}", b))
+        .collect::<Vec<String>>()
+        .join("");
+    key_gen.generate_address(rng_source)
 }
 
 /// Helpers for testing with addresses.
 #[cfg(any(test, feature = "testing"))]
 pub mod testing {
     use proptest::prelude::*;
-    use rand::prelude::ThreadRng;
-    use rand::{thread_rng, RngCore};
 
     use super::*;
     use crate::types::key::ed25519;
@@ -404,44 +537,50 @@ pub mod testing {
     /// Generate a new established address.
     pub fn gen_established_address() -> Address {
         let seed = "such randomness, much wow";
-        let mut key_gen = EstablishedAddressGen::new(seed);
+        super::gen_established_address(seed)
+    }
 
-        let mut rng: ThreadRng = thread_rng();
-        let mut rng_bytes = vec![0u8; 32];
-        rng.fill_bytes(&mut rng_bytes[..]);
-        let rng_source = rng_bytes
-            .iter()
-            .map(|b| format!("{:02X}", b))
-            .collect::<Vec<String>>()
-            .join("");
-        key_gen.generate_address(rng_source)
+    /// Generate a new implicit address.
+    pub fn gen_implicit_address() -> Address {
+        let keypair = ed25519::testing::gen_keypair();
+        let pkh = ed25519::PublicKeyHash::from(keypair.public);
+        Address::Implicit(ImplicitAddress::Ed25519(pkh))
     }
 
     /// A sampled established address for tests
     pub fn established_address_1() -> Address {
-        Address::decode("a1qq5qqqqqgcmyxd35xguy2wp5xsu5vs6pxqcy232pgvm5zs6yggunssfs89znv33h8q6rjde4cjc3dr").expect("The token address decoding shouldn't fail")
+        Address::decode("atest1v4ehgw36g56ngwpk8ppnzsf4xqeyvsf3xq6nxde5gseyys3nxgenvvfex5cnyd2rx9zrzwfctgx7sp").expect("The token address decoding shouldn't fail")
     }
 
     /// A sampled established address for tests
     pub fn established_address_2() -> Address {
-        Address::decode("a1qq5qqqqqgcuyxv2pxgcrzdecx4prq3pexccr2vj9xse5gvf3gvmnv3f3xqcyyvjyxv6yvv34e393x7").expect("The token address decoding shouldn't fail")
+        Address::decode("atest1v4ehgw36xezyzv33x56rws6zxccnwwzzgycy23p3ggur2d3ex56yxdejxerrysejx3rrxdfs44s9wu").expect("The token address decoding shouldn't fail")
     }
 
     /// A sampled established address for tests
     pub fn established_address_3() -> Address {
-        Address::decode("a1qq5qqqqq8pp52dfjxserjwf3g9znzveng9zy2wfcx5cnxs6zxq6nydek8qcrqdjrxucrws3jcq9z7a").expect("The token address decoding shouldn't fail")
+        Address::decode("atest1v4ehgw36xcerywfsgsu5vsfeg3zy2v3egcenx32pggcrswzxg4zns3p5xv6rsvf4gvenqwpkdnnqsy").expect("The token address decoding shouldn't fail")
     }
 
     /// A sampled established address for tests
     pub fn established_address_4() -> Address {
-        Address::decode("a1qq5qqqqqg56yxdpeg5er2d69g4rrxv2rxdryxdes8yenwvejxpzrvd6r8qcnjsjpxg6nww2r3zt5ax").expect("The token address decoding shouldn't fail")
+        Address::decode("atest1v4ehgw36gscrw333g3z5zvjzg4rrq3psxu6rqd2xxqc5gs35gerrs3pjgfprvdejxqunxs29t6p5s9").expect("The token address decoding shouldn't fail")
     }
 
     /// Generate an arbitrary [`Address`] (established or implicit).
+    pub fn arb_non_internal_address() -> impl Strategy<Value = Address> {
+        prop_oneof![
+            arb_established_address().prop_map(Address::Established),
+            arb_implicit_address().prop_map(Address::Implicit),
+        ]
+    }
+
+    /// Generate an arbitrary [`Address`] (established, implicit or internal).
     pub fn arb_address() -> impl Strategy<Value = Address> {
         prop_oneof![
             arb_established_address().prop_map(Address::Established),
             arb_implicit_address().prop_map(Address::Implicit),
+            arb_internal_address().prop_map(Address::Internal),
         ]
     }
 
@@ -465,9 +604,27 @@ pub mod testing {
     /// Generate an arbitrary [`ImplicitAddress`].
     pub fn arb_implicit_address() -> impl Strategy<Value = ImplicitAddress> {
         ed25519::testing::arb_keypair().prop_map(|keypair| {
-            let pk = ed25519::PublicKey::from(keypair.public);
-            let pkh = ed25519::PublicKeyHash::from(pk);
+            let pkh = ed25519::PublicKeyHash::from(keypair.public);
             ImplicitAddress::Ed25519(pkh)
         })
+    }
+
+    /// Generate an arbitrary [`InternalAddress`].
+    pub fn arb_internal_address() -> impl Strategy<Value = InternalAddress> {
+        // This is here for match exhaustion check to remind to add any new
+        // internal addresses below.
+        match InternalAddress::PoS {
+            InternalAddress::PoS => {}
+            InternalAddress::PosSlashPool => {}
+            InternalAddress::Ibc => {}
+            InternalAddress::Parameters => {} /* Add new addresses in the
+                                               * `prop_oneof` below. */
+        };
+        prop_oneof![
+            Just(InternalAddress::PoS),
+            Just(InternalAddress::PosSlashPool),
+            Just(InternalAddress::Ibc),
+            Just(InternalAddress::Parameters),
+        ]
     }
 }

@@ -371,7 +371,7 @@ mod tests {
         // Write the public key to storage
         let pk_key = key::ed25519::pk_key(&addr);
         let keypair = key::ed25519::testing::keypair_1();
-        let pk = key::ed25519::PublicKey::from(keypair.public);
+        let pk = keypair.public.clone();
         env.storage
             .write(&pk_key, pk.try_to_vec().unwrap())
             .unwrap();
@@ -398,9 +398,8 @@ mod tests {
             assert!(vp_host_env::verify_tx_signature(&pk, &signed_tx_data.sig));
 
             let other_keypair = key::ed25519::testing::keypair_2();
-            let other_pk = key::ed25519::PublicKey::from(other_keypair.public);
             assert!(!vp_host_env::verify_tx_signature(
-                &other_pk,
+                &other_keypair.public,
                 &signed_tx_data.sig
             ));
         }

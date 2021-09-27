@@ -1,6 +1,16 @@
 //! A basic user VP.
+//!
 //! This VP currently provides a signature verification against a public key for
 //! sending tokens (receiving tokens is permissive).
+//!
+//! It allows to bond, unbond and withdraw tokens to and from PoS system with a
+//! valid signature.
+//!
+//! It allows to fulfil intents that were signed by this account's key if they
+//! haven't already been fulfilled (fulfilled intents are added to the owner's
+//! invalid intent set).
+//!
+//! Any other storage key changes are allowed only with a valid signature.
 
 use anoma_vm_env::vp_prelude::intent::{
     Exchange, FungibleTokenIntent, IntentTransfers,
@@ -10,27 +20,6 @@ use anoma_vm_env::vp_prelude::*;
 use once_cell::unsync::Lazy;
 use rust_decimal::prelude::*;
 
-enum KeyType<'a> {
-    Token(&'a Address),
-    PoS,
-    InvalidIntentSet(&'a Address),
-    Unknown,
-}
-
-impl<'a> From<&'a storage::Key> for KeyType<'a> {
-    fn from(key: &'a storage::Key) -> KeyType<'a> {
-        if let Some(address) = token::is_any_token_balance_key(key) {
-            Self::Token(address)
-        } else if proof_of_stake::is_pos_key(key) {
-            Self::PoS
-        } else if let Some(address) = intent::is_invalid_intent_key(key) {
-            Self::InvalidIntentSet(address)
-        } else {
-            Self::Unknown
-        }
-    }
-}
-
 #[validity_predicate]
 fn validate_tx(
     tx_data: Vec<u8>,
@@ -39,8 +28,7 @@ fn validate_tx(
     verifiers: HashSet<Address>,
 ) -> bool {
     log_string(format!(
-        "validate_tx called with user addr: {}, key_changed: {:?}, verifiers: \
-         {:?}",
+        "vp_user called with user addr: {}, key_changed: {:?}, verifiers: {:?}",
         addr, keys_changed, verifiers
     ));
 
@@ -64,85 +52,73 @@ fn validate_tx(
     });
 
     for key in keys_changed.iter() {
-        let is_valid = match KeyType::from(key) {
-            KeyType::Token(owner) => {
-                if owner == &addr {
-                    let key = key.to_string();
-                    let pre: token::Amount = read_pre(&key).unwrap_or_default();
-                    let post: token::Amount =
-                        read_post(&key).unwrap_or_default();
-                    let change = post.change() - pre.change();
-                    // debit has to signed, credit doesn't
-                    let valid = !(change < 0 && !*valid_sig && !*valid_intent);
-                    log_string(format!(
-                        "token key: {}, change: {}, valid_sig: {}, \
-                         valid_intent: {}, valid modification: {}",
-                        key, change, *valid_sig, *valid_intent, valid
-                    ));
-                    valid
-                } else {
-                    log_string(format!(
-                        "This address ({}) is not of owner ({}) of token key: \
-                         {}",
-                        addr, owner, key
-                    ));
-                    // If this is not the owner, allow any change
-                    true
-                }
-            }
-            KeyType::PoS => {
-                // Allow the account to be used in PoS
-                let bond_id = proof_of_stake::is_bond_key(key)
-                    .or_else(|| proof_of_stake::is_unbond_key(key));
-                let valid = match bond_id {
-                    Some(bond_id) => {
-                        // Bonds and unbonds changes for this address
-                        // must be signed
-                        bond_id.source != addr || *valid_sig
-                    }
-                    None => {
-                        // Any other PoS changes are allowed without signature
-                        true
-                    }
-                };
+        let is_valid = if let Some(owner) = token::is_any_token_balance_key(key)
+        {
+            if owner == &addr {
+                let key = key.to_string();
+                let pre: token::Amount = read_pre(&key).unwrap_or_default();
+                let post: token::Amount = read_post(&key).unwrap_or_default();
+                let change = post.change() - pre.change();
+                // debit has to signed, credit doesn't
+                let valid = change >= 0 || *valid_sig || *valid_intent;
                 log_string(format!(
-                    "PoS key {} {}",
-                    key,
-                    if valid { "accepted" } else { "rejected" }
+                    "token key: {}, change: {}, valid_sig: {}, valid_intent: \
+                     {}, valid modification: {}",
+                    key, change, *valid_sig, *valid_intent, valid
                 ));
                 valid
+            } else {
+                log_string(format!(
+                    "This address ({}) is not of owner ({}) of token key: {}",
+                    addr, owner, key
+                ));
+                // If this is not the owner, allow any change
+                true
             }
-            KeyType::InvalidIntentSet(owner) => {
-                if owner == &addr {
-                    let key = key.to_string();
-                    let pre: Vec<Vec<u8>> = read_pre(&key).unwrap_or_default();
-                    let post: Vec<Vec<u8>> =
-                        read_post(&key).unwrap_or_default();
-                    // only one sig is added, intent is already checked
-                    log_string(format!(
-                        "intent sig set key: {}, valid modification: {}",
-                        key,
-                        pre.len() + 1 != post.len()
-                    ));
-                    pre.len() + 1 == post.len()
-                } else {
-                    log_string(format!(
-                        "This address ({}) is not of owner ({}) of \
-                         InvalidIntentSet key: {}",
-                        addr, owner, key
-                    ));
-                    // If this is not the owner, allow any change
+        } else if proof_of_stake::is_pos_key(key) {
+            // Allow the account to be used in PoS
+            let bond_id = proof_of_stake::is_bond_key(key)
+                .or_else(|| proof_of_stake::is_unbond_key(key));
+            let valid = match bond_id {
+                Some(bond_id) => {
+                    // Bonds and unbonds changes for this address
+                    // must be signed
+                    bond_id.source != addr || *valid_sig
+                }
+                None => {
+                    // Any other PoS changes are allowed without signature
                     true
                 }
-            }
-            KeyType::Unknown => {
+            };
+            log_string(format!(
+                "PoS key {} {}",
+                key,
+                if valid { "accepted" } else { "rejected" }
+            ));
+            valid
+        } else if let Some(owner) = intent::is_invalid_intent_key(key) {
+            if owner == &addr {
+                let key = key.to_string();
+                let pre: Vec<Vec<u8>> = read_pre(&key).unwrap_or_default();
+                let post: Vec<Vec<u8>> = read_post(&key).unwrap_or_default();
+                // A new invalid intent must have been added
+                pre.len() + 1 == post.len()
+            } else {
                 log_string(format!(
-                    "Unknown key modified, valid sig {}",
-                    *valid_sig
+                    "This address ({}) is not of owner ({}) of \
+                     InvalidIntentSet key: {}",
+                    addr, owner, key
                 ));
-                // Allow any change if authorized by a signature
-                *valid_sig
+                // If this is not the owner, allow any change
+                true
             }
+        } else {
+            log_string(format!(
+                "Unknown key modified, valid sig {}",
+                *valid_sig
+            ));
+            // Allow any other key change if authorized by a signature
+            *valid_sig
         };
         if !is_valid {
             log_string(format!("key {} modification failed vp", key));
@@ -173,12 +149,13 @@ fn try_decode_intent(
     let mut tx_data =
         IntentTransfers::try_from_slice(&raw_intent_transfers[..]).ok()?;
     log_string(format!(
-        "tx_data.exchanges: {:?}, {}",
-        tx_data.exchanges, &addr
+        "tx_data.matches.exchanges: {:?}, {}",
+        tx_data.matches.exchanges, &addr
     ));
-    if let (Some(exchange), Some(intent)) =
-        (tx_data.exchanges.remove(addr), tx_data.intents.remove(addr))
-    {
+    if let (Some(exchange), Some(intent)) = (
+        tx_data.matches.exchanges.remove(addr),
+        tx_data.matches.intents.remove(addr),
+    ) {
         return Some((raw_intent_transfers, exchange, intent));
     } else {
         log_string("no intent with a matching address".to_string());
@@ -290,7 +267,7 @@ fn check_intent(
 
 #[cfg(test)]
 mod tests {
-    use address::testing::arb_address;
+    use address::testing::arb_non_internal_address;
     // Use this as `#[test]` annotation to enable logging
     use anoma_tests::log::test;
     use anoma_tests::tx::{tx_host_env, TestTxEnv};
@@ -388,7 +365,7 @@ mod tests {
 
         let vp_owner = address::testing::established_address_1();
         let keypair = key::ed25519::testing::keypair_1();
-        let public_key: key::ed25519::PublicKey = keypair.public.into();
+        let public_key = &keypair.public;
         let target = address::testing::established_address_2();
         let token = address::xan();
         let amount = token::Amount::from(10_098_123);
@@ -400,7 +377,7 @@ mod tests {
         // be able to transfer from it
         tx_env.credit_tokens(&vp_owner, &token, amount);
 
-        tx_env.write_public_key(&vp_owner, &public_key);
+        tx_env.write_public_key(&vp_owner, public_key);
 
         // Initialize VP environment from a transaction
         let mut vp_env =
@@ -456,7 +433,7 @@ mod tests {
         /// Generates an account address and a storage key inside its storage.
         fn arb_account_storage_subspace_key()
             // Generate an address
-            (address in arb_address())
+            (address in arb_non_internal_address())
             // Generate a storage key other than its VP key (VP cannot be
             // modified directly via `write`, it has to be modified via
             // `tx::update_validity_predicate`.
@@ -517,14 +494,14 @@ mod tests {
             let mut tx_env = TestTxEnv::default();
 
             let keypair = key::ed25519::testing::keypair_1();
-            let public_key: key::ed25519::PublicKey = keypair.public.into();
+            let public_key = &keypair.public;
 
             // Spawn all the accounts in the storage key to be able to modify
             // their storage
             let storage_key_addresses = storage_key.find_addresses();
             tx_env.spawn_accounts(storage_key_addresses);
 
-            tx_env.write_public_key(&vp_owner, &public_key);
+            tx_env.write_public_key(&vp_owner, public_key);
 
             // Initialize VP environment from a transaction
             let mut vp_env =
@@ -584,14 +561,14 @@ mod tests {
 
         let vp_owner = address::testing::established_address_1();
         let keypair = key::ed25519::testing::keypair_1();
-        let public_key: key::ed25519::PublicKey = keypair.public.into();
+        let public_key = &keypair.public;
         let vp_code =
             std::fs::read(VP_ALWAYS_TRUE_WASM).expect("cannot load wasm");
 
         // Spawn the accounts to be able to modify their storage
         tx_env.spawn_accounts([&vp_owner]);
 
-        tx_env.write_public_key(&vp_owner, &public_key);
+        tx_env.write_public_key(&vp_owner, public_key);
 
         // Initialize VP environment from a transaction
         let mut vp_env =

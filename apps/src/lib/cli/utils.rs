@@ -5,20 +5,26 @@ use std::str::FromStr;
 
 use clap::ArgMatches;
 
+use super::args;
+use super::context::{Context, FromContext};
+
 // We only use static strings
 pub type App = clap::App<'static>;
 pub type ClapArg = clap::Arg<'static>;
 
 pub trait Cmd: Sized {
     fn add_sub(app: App) -> App;
-    fn parse(matches: &ArgMatches) -> Option<(Self, &ArgMatches)>;
+    fn parse(matches: &ArgMatches) -> Option<Self>;
 
-    fn parse_or_print_help(app: App) -> (Self, ArgMatches) {
+    fn parse_or_print_help(app: App) -> (Self, Context) {
         let mut app = Self::add_sub(app);
         let matches = app.clone().get_matches();
-        let result = Self::parse(&matches);
-        match result {
-            Some((cmd, _)) => (cmd, matches),
+        match Self::parse(&matches) {
+            Some(cmd) => {
+                let global_args = args::Global::parse(&matches);
+                let context = Context::new(global_args);
+                (cmd, context)
+            }
             None => {
                 app.print_help().unwrap();
                 safe_exit(2);
@@ -27,11 +33,9 @@ pub trait Cmd: Sized {
     }
 }
 
-pub trait SubCmd {
+pub trait SubCmd: Sized {
     const CMD: &'static str;
-    fn parse(matches: &ArgMatches) -> Option<(Self, &ArgMatches)>
-    where
-        Self: Sized;
+    fn parse(matches: &ArgMatches) -> Option<Self>;
     fn def() -> App;
 }
 
@@ -131,20 +135,35 @@ impl<T> Arg<T> {
     }
 }
 
-impl<T> Arg<T>
-where
-    T: FromStr,
-    <T as FromStr>::Err: Debug,
-{
+impl<T> Arg<T> {
     pub fn def(&self) -> ClapArg {
         ClapArg::new(self.name)
             .long(self.name)
             .takes_value(true)
             .required(true)
     }
+}
 
+impl<T> Arg<T>
+where
+    T: FromStr,
+    <T as FromStr>::Err: Debug,
+{
     pub fn parse(&self, matches: &ArgMatches) -> T {
         parse_opt(matches, self.name).unwrap()
+    }
+}
+
+impl<T> Arg<FromContext<T>> {
+    pub fn parse(&self, matches: &ArgMatches) -> FromContext<T> {
+        let raw = matches.value_of(self.name).unwrap();
+        FromContext::new(raw.to_string())
+    }
+}
+
+impl<T> ArgOpt<T> {
+    pub fn def(&self) -> ClapArg {
+        ClapArg::new(self.name).long(self.name).takes_value(true)
     }
 }
 
@@ -153,12 +172,15 @@ where
     T: FromStr,
     <T as FromStr>::Err: Debug,
 {
-    pub fn def(&self) -> ClapArg {
-        ClapArg::new(self.name).long(self.name).takes_value(true)
-    }
-
     pub fn parse(&self, matches: &ArgMatches) -> Option<T> {
         parse_opt(matches, self.name)
+    }
+}
+
+impl<T> ArgOpt<FromContext<T>> {
+    pub fn parse(&self, matches: &ArgMatches) -> Option<FromContext<T>> {
+        let raw = matches.value_of(self.name)?;
+        Some(FromContext::new(raw.to_string()))
     }
 }
 
@@ -239,10 +261,10 @@ impl ArgMatchesExt for ArgMatches {
     }
 }
 
-pub fn parse_opt<F>(args: &ArgMatches, field: &str) -> Option<F>
+pub fn parse_opt<T>(args: &ArgMatches, field: &str) -> Option<T>
 where
-    F: FromStr,
-    F::Err: Debug,
+    T: FromStr,
+    T::Err: Debug,
 {
     args.value_of(field).map(|arg| {
         arg.parse().unwrap_or_else(|e| {
@@ -252,23 +274,6 @@ where
             )
         })
     })
-}
-
-/// A helper extension to map the first element of a pair tuple inside an
-/// `Option`.
-pub trait OptTupleExt<T> {
-    type Inner;
-    type Out;
-    fn map_fst<F: Fn(Self::Inner) -> T>(self, f: F) -> Self::Out;
-}
-
-impl<A, B, T> OptTupleExt<T> for Option<(A, B)> {
-    type Inner = A;
-    type Out = Option<(T, B)>;
-
-    fn map_fst<F: Fn(A) -> T>(self, f: F) -> Option<(T, B)> {
-        self.map(|(a, b)| (f(a), b))
-    }
 }
 
 /// A helper to exit after flushing output, borrowed from `clap::util` module.

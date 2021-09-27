@@ -227,9 +227,18 @@ pub trait PosActions: PosReadOnly {
                 address.clone(),
             ));
         }
+        if address == staking_reward_address {
+            return Err(
+                BecomeValidatorError::StakingRewardAddressEqValidatorAddress(
+                    address.clone(),
+                ),
+            );
+        }
         let BecomeValidatorData {
             consensus_key,
             state,
+            total_deltas,
+            voting_power,
         } = become_validator(
             &params,
             address,
@@ -245,6 +254,8 @@ pub trait PosActions: PosReadOnly {
         self.write_validator_state(address, state);
         self.write_validator_set(validator_set);
         self.write_validator_address_raw_hash(address);
+        self.write_validator_total_deltas(address, total_deltas);
+        self.write_validator_voting_power(address, voting_power);
         Ok(())
     }
 
@@ -797,6 +808,11 @@ pub enum GenesisError {
 pub enum BecomeValidatorError<Address: Display + Debug> {
     #[error("The given address {0} is already a validator")]
     AlreadyValidator(Address),
+    #[error(
+        "The staking reward address must be different from the validator's \
+         address {0}"
+    )]
+    StakingRewardAddressEqValidatorAddress(Address),
 }
 
 #[allow(missing_docs)]
@@ -1157,31 +1173,62 @@ where
     Ok(slashed_amount)
 }
 
-struct BecomeValidatorData<PK>
+struct BecomeValidatorData<PK, TokenChange>
 where
     PK: Debug + Clone + BorshDeserialize + BorshSerialize,
+    TokenChange: Default
+        + Debug
+        + Clone
+        + Copy
+        + Add<Output = TokenChange>
+        + BorshDeserialize
+        + BorshSerialize,
 {
     consensus_key: ValidatorConsensusKeys<PK>,
     state: ValidatorStates,
+    total_deltas: ValidatorTotalDeltas<TokenChange>,
+    voting_power: ValidatorVotingPowers,
 }
 
 /// A function that initialized data for a new validator.
-fn become_validator<Address, PK>(
+fn become_validator<Address, PK, TokenChange>(
     params: &PosParams,
     address: &Address,
     consensus_key: &PK,
     validator_set: &mut ValidatorSets<Address>,
     current_epoch: Epoch,
-) -> BecomeValidatorData<PK>
+) -> BecomeValidatorData<PK, TokenChange>
 where
     Address: Debug + Clone + Ord + Hash + BorshDeserialize + BorshSerialize,
     PK: Debug + Clone + BorshDeserialize + BorshSerialize,
+    TokenChange: Default
+        + Debug
+        + Clone
+        + Copy
+        + Add<Output = TokenChange>
+        + BorshDeserialize
+        + BorshSerialize,
 {
     let consensus_key =
         Epoched::init(consensus_key.clone(), current_epoch, params);
+
     let mut state =
-        Epoched::init(ValidatorState::Pending, current_epoch, params);
+        Epoched::init_at_genesis(ValidatorState::Pending, current_epoch);
     state.set(ValidatorState::Candidate, current_epoch, params);
+
+    let total_deltas = EpochedDelta::init_at_offset(
+        Default::default(),
+        current_epoch,
+        DynEpochOffset::PipelineLen,
+        params,
+    );
+    let voting_power = EpochedDelta::init_at_offset(
+        Default::default(),
+        current_epoch,
+        DynEpochOffset::PipelineLen,
+        params,
+    );
+
     validator_set.update_from_offset(
         |validator_set, _epoch| {
             let validator = WeightedValidator {
@@ -1203,6 +1250,8 @@ where
     BecomeValidatorData {
         consensus_key,
         state,
+        total_deltas,
+        voting_power,
     }
 }
 

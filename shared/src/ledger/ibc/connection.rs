@@ -1,7 +1,5 @@
 //! IBC validity predicate for connection module
 
-use std::str::FromStr;
-
 use borsh::{BorshDeserialize, BorshSerialize};
 use ibc::ics02_client::client_consensus::{AnyConsensusState, ConsensusState};
 use ibc::ics02_client::client_state::AnyClientState;
@@ -14,9 +12,12 @@ use ibc::ics03_connection::handler::verify::verify_proofs;
 use ibc::ics07_tendermint::consensus_state::ConsensusState as TendermintConsensusState;
 use ibc::ics23_commitment::commitment::CommitmentPrefix;
 use ibc::ics24_host::identifier::{ClientId, ConnectionId};
-use ibc::ics24_host::Path;
 use thiserror::Error;
 
+use super::storage::{
+    connection_counter_key, connection_id, connection_key,
+    is_connection_counter_key, Error as IbcStorageError,
+};
 use super::{Ibc, StateChange};
 use crate::ledger::storage::{self, StorageHasher};
 use crate::types::address::{Address, InternalAddress};
@@ -24,13 +25,11 @@ use crate::types::ibc::{
     ConnectionOpenAckData, ConnectionOpenConfirmData, ConnectionOpenTryData,
     Error as IbcDataError,
 };
-use crate::types::storage::{BlockHeight, DbKeySeg, Epoch, Key, KeySeg};
+use crate::types::storage::{BlockHeight, Epoch, Key, KeySeg};
 
 #[allow(missing_docs)]
 #[derive(Error, Debug)]
 pub enum Error {
-    #[error("Key error: {0}")]
-    InvalidKey(String),
     #[error("State change error: {0}")]
     InvalidStateChange(String),
     #[error("Client error: {0}")]
@@ -45,6 +44,8 @@ pub enum Error {
     DecodingTxData(std::io::Error),
     #[error("IBC data error: {0}")]
     InvalidIbcData(IbcDataError),
+    #[error("IBC storage error: {0}")]
+    IbcStorage(IbcStorageError),
 }
 
 /// IBC connection functions result
@@ -60,7 +61,7 @@ where
         key: &Key,
         tx_data: &[u8],
     ) -> Result<()> {
-        if key.is_ibc_connection_counter() {
+        if is_connection_counter_key(key) {
             // the counter should be increased
             if self.connection_counter_pre()? < self.connection_counter() {
                 return Ok(());
@@ -71,7 +72,7 @@ where
             }
         }
 
-        let conn_id = Self::get_connection_id(key)?;
+        let conn_id = connection_id(key)?;
         let conn = self.connection_end(&conn_id).ok_or_else(|| {
             Error::InvalidConnection(format!(
                 "The connection doesn't exist: ID {}",
@@ -93,29 +94,11 @@ where
         }
     }
 
-    fn get_connection_id(key: &Key) -> Result<ConnectionId> {
-        match &key.segments[..] {
-            [DbKeySeg::AddressSeg(addr), DbKeySeg::StringSeg(prefix), DbKeySeg::StringSeg(conn_id)]
-                if addr == &Address::Internal(InternalAddress::Ibc)
-                    && prefix == "connections" =>
-            {
-                ConnectionId::from_str(&conn_id.raw())
-                    .map_err(|e| Error::InvalidKey(e.to_string()))
-            }
-            _ => Err(Error::InvalidKey(format!(
-                "The key doesn't have a connection ID: {}",
-                key
-            ))),
-        }
-    }
-
     fn get_connection_state_change(
         &self,
         conn_id: &ConnectionId,
     ) -> Result<StateChange> {
-        let path = Path::Connections(conn_id.clone()).to_string();
-        let key =
-            Key::ibc_key(path).expect("Creating a key for a connection failed");
+        let key = connection_key(conn_id);
         self.get_state_change(&key)
             .map_err(|e| Error::InvalidStateChange(e.to_string()))
     }
@@ -289,9 +272,7 @@ where
         &self,
         conn_id: &ConnectionId,
     ) -> Result<ConnectionEnd> {
-        let path = Path::Connections(conn_id.clone()).to_string();
-        let key = Key::ibc_key(path)
-            .expect("Creating a key for a connection end failed");
+        let key = connection_key(conn_id);
         match self.ctx.read_pre(&key) {
             Ok(Some(value)) => ConnectionEnd::try_from_slice(&value[..])
                 .map_err(|e| {
@@ -308,7 +289,7 @@ where
     }
 
     fn connection_counter_pre(&self) -> Result<u64> {
-        let key = Key::ibc_connection_counter();
+        let key = connection_counter_key();
         self.read_counter_pre(&key)
             .map_err(|e| Error::InvalidConnection(e.to_string()))
     }
@@ -320,9 +301,7 @@ where
     H: 'static + StorageHasher,
 {
     fn connection_end(&self, conn_id: &ConnectionId) -> Option<ConnectionEnd> {
-        let path = Path::Connections(conn_id.clone()).to_string();
-        let key = Key::ibc_key(path)
-            .expect("Creating a key for a connection end failed");
+        let key = connection_key(conn_id);
         match self.ctx.read_post(&key) {
             Ok(Some(value)) => ConnectionEnd::try_from_slice(&value[..]).ok(),
             // returns None even if DB read fails
@@ -375,8 +354,14 @@ where
     }
 
     fn connection_counter(&self) -> u64 {
-        let key = Key::ibc_connection_counter();
+        let key = connection_counter_key();
         self.read_counter(&key)
+    }
+}
+
+impl From<IbcStorageError> for Error {
+    fn from(err: IbcStorageError) -> Self {
+        Self::IbcStorage(err)
     }
 }
 

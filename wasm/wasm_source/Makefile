@@ -9,11 +9,13 @@ wasms := mm_filter_token_exch
 wasms += mm_token_exch
 wasms += tx_bond
 wasms += tx_init_account
+wasms += tx_init_validator
 wasms += tx_from_intent
 wasms += tx_transfer
 wasms += tx_unbond
 wasms += tx_update_vp
 wasms += tx_withdraw
+wasms += vp_testnet_faucet
 wasms += vp_token
 wasms += vp_user
 

@@ -88,8 +88,10 @@ And this is correct
 pub struct Ledger {
     pub tendermint: PathBuf,
     pub db: PathBuf,
-    pub address: SocketAddr,
-    pub network: String,
+    pub ledger_address: SocketAddr,
+    pub rpc_address: SocketAddr,
+    pub p2p_address: SocketAddr,
+    pub wasm_dir: PathBuf,
 }
 
 impl Default for Ledger {
@@ -99,11 +101,19 @@ impl Default for Ledger {
             // config::generate(base_dir). There must be a better way ?
             tendermint: PathBuf::from(BASEDIR).join(TENDERMINT_DIR),
             db: PathBuf::from(BASEDIR).join(DB_DIR).join(DEFAULT_CHAIN_ID),
-            address: SocketAddr::new(
-                IpAddr::V4(Ipv4Addr::new(0, 0, 0, 0)),
+            ledger_address: SocketAddr::new(
+                IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)),
                 26658,
             ),
-            network: String::from("mainnet"),
+            rpc_address: SocketAddr::new(
+                IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)),
+                26657,
+            ),
+            p2p_address: SocketAddr::new(
+                IpAddr::V4(Ipv4Addr::new(0, 0, 0, 0)),
+                26656,
+            ),
+            wasm_dir: "wasm".into(),
         }
     }
 }
@@ -246,23 +256,27 @@ impl Default for IntentGossiper {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Config {
-    pub ledger: Option<Ledger>,
-    pub intent_gossiper: Option<IntentGossiper>,
+    pub ledger: Ledger,
+    pub intent_gossiper: IntentGossiper,
 }
 
 impl Default for Config {
     fn default() -> Self {
         Self {
-            ledger: Some(Ledger::default()),
-            intent_gossiper: Some(IntentGossiper::default()),
+            ledger: Ledger::default(),
+            intent_gossiper: IntentGossiper::default(),
         }
     }
 }
 
 impl Config {
-    // TODO try to check from any "config.*" file instead of only .toml
-    pub fn read(base_dir_path: &Path) -> Result<Self> {
-        let file_path = base_dir_path.join(FILENAME);
+    /// Read the config from a file, or generate a default one and write it to
+    /// a file if it doesn't already exist.
+    pub fn read(base_dir: &Path) -> Result<Self> {
+        let file_path = Self::file_path(base_dir);
+        if !file_path.exists() {
+            return Self::generate(base_dir, true);
+        };
         let mut config = config::Config::new();
         config
             .merge(config::File::with_name(
@@ -272,22 +286,20 @@ impl Config {
         config.try_into().map_err(Error::DeserializationError)
     }
 
+    /// Generate configuration and write it to a file.
     pub fn generate(base_dir: &Path, replace: bool) -> Result<Self> {
         let mut config = Config::default();
-        let mut ledger_cfg = config
-            .ledger
-            .as_mut()
-            .expect("safe because default has ledger");
+        let ledger_cfg = &mut config.ledger;
         ledger_cfg.db = base_dir.join(DB_DIR).join(DEFAULT_CHAIN_ID);
         ledger_cfg.tendermint = base_dir.join(TENDERMINT_DIR);
         config.write(base_dir, replace)?;
         Ok(config)
     }
 
-    // TODO add format in config instead and serialize it to that format
+    /// Write configuration to a file.
     pub fn write(&self, base_dir: &Path, replace: bool) -> Result<()> {
         create_dir_all(&base_dir).map_err(Error::FileError)?;
-        let file_path = base_dir.join(FILENAME);
+        let file_path = Self::file_path(base_dir);
         if file_path.exists() && !replace {
             Err(Error::AlreadyExistingConfig(file_path))
         } else {
@@ -301,10 +313,72 @@ impl Config {
             file.write_all(toml.as_bytes()).map_err(Error::WriteError)
         }
     }
+
+    fn file_path(base_dir: &Path) -> PathBuf {
+        base_dir.join(FILENAME)
+    }
 }
 
-#[cfg(any(test, feature = "testing"))]
 impl IntentGossiper {
+    pub fn update(
+        &mut self,
+        addr: Option<Multiaddr>,
+        rpc: Option<SocketAddr>,
+        matchmaker_path: Option<PathBuf>,
+        tx_code_path: Option<PathBuf>,
+        ledger_addr: Option<tendermint::net::Address>,
+        filter_path: Option<PathBuf>,
+    ) {
+        if let Some(addr) = addr {
+            self.address = addr;
+        }
+
+        let matchmaker_arg = matchmaker_path;
+        let tx_code_arg = tx_code_path;
+        let ledger_address_arg = ledger_addr;
+        let filter_arg = filter_path;
+        if let Some(mut matchmaker_cfg) = self.matchmaker.as_mut() {
+            if let Some(matchmaker) = matchmaker_arg {
+                matchmaker_cfg.matchmaker = matchmaker
+            }
+            if let Some(tx_code) = tx_code_arg {
+                matchmaker_cfg.tx_code = tx_code
+            }
+            if let Some(ledger_address) = ledger_address_arg {
+                matchmaker_cfg.ledger_address = ledger_address
+            }
+            if let Some(filter) = filter_arg {
+                matchmaker_cfg.filter = Some(filter)
+            }
+        } else if let (Some(matchmaker), Some(tx_code), Some(ledger_address)) = (
+            matchmaker_arg.as_ref(),
+            tx_code_arg.as_ref(),
+            ledger_address_arg.as_ref(),
+        ) {
+            self.matchmaker = Some(Matchmaker {
+                matchmaker: matchmaker.clone(),
+                tx_code: tx_code.clone(),
+                ledger_address: ledger_address.clone(),
+                filter: filter_arg,
+            });
+        } else if matchmaker_arg.is_some()
+            || tx_code_arg.is_some()
+            || ledger_address_arg.is_some()
+        // if at least one argument is not none then fail
+        {
+            panic!(
+                "No complete matchmaker configuration found (matchmaker code \
+                 path, tx code path, and ledger address). Please update the \
+                 configuration with default value or use all cli argument to \
+                 use the matchmaker"
+            );
+        }
+        if let Some(address) = rpc {
+            self.rpc = Some(RpcServer { address });
+        }
+    }
+
+    #[cfg(any(test, feature = "testing"))]
     pub fn default_with_address(
         ip: String,
         port: u32,

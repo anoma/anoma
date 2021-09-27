@@ -21,6 +21,10 @@ use crate::types::{key, token};
 /// Address of the PoS account implemented as a native VP
 pub const ADDRESS: Address = Address::Internal(InternalAddress::PoS);
 
+/// Address of the PoS slash pool account
+pub const SLASH_POOL_ADDRESS: Address =
+    Address::Internal(InternalAddress::PosSlashPool);
+
 /// Address of the staking token (XAN)
 pub fn staking_token_address() -> Address {
     address::xan()
