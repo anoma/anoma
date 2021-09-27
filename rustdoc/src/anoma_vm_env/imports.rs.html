@@ -598,6 +598,9 @@
 <span id="596">596</span>
 <span id="597">597</span>
 <span id="598">598</span>
+<span id="599">599</span>
+<span id="600">600</span>
+<span id="601">601</span>
 </pre><pre class="rust">
 <span class="kw">use</span> <span class="ident">std::mem::ManuallyDrop</span>;
 
@@ -755,7 +758,7 @@
     <span class="comment">// Initialize a new account</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">init_account</span>(<span class="ident">code</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span>[<span class="ident">u8</span>]<span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Address</span> {
         <span class="kw">let</span> <span class="ident">code</span> <span class="op">=</span> <span class="ident">code</span>.<span class="ident">as_ref</span>();
-        <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">Vec::with_capacity</span>(<span class="ident">address::RAW_ADDRESS_LEN</span>);
+        <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">Vec::with_capacity</span>(<span class="ident">address::ESTABLISHED_ADDRESS_BYTES_LEN</span>);
         <span class="kw">unsafe</span> {
             <span class="ident">anoma_tx_init_account</span>(
                 <span class="ident">code</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="kw">_</span>,
@@ -764,7 +767,10 @@
             )
         };
         <span class="kw">let</span> <span class="ident">slice</span> <span class="op">=</span> <span class="kw">unsafe</span> {
-            <span class="ident">slice::from_raw_parts</span>(<span class="ident">result</span>.<span class="ident">as_ptr</span>(), <span class="ident">address::RAW_ADDRESS_LEN</span>)
+            <span class="ident">slice::from_raw_parts</span>(
+                <span class="ident">result</span>.<span class="ident">as_ptr</span>(),
+                <span class="ident">address::ESTABLISHED_ADDRESS_BYTES_LEN</span>,
+            )
         };
         <span class="ident">Address::try_from_slice</span>(<span class="ident">slice</span>)
             .<span class="ident">expect</span>(<span class="string">&quot;Decoding address created by the ledger shouldn&#39;t fail&quot;</span>)

@@ -182,21 +182,6 @@
 <span id="180">180</span>
 <span id="181">181</span>
 <span id="182">182</span>
-<span id="183">183</span>
-<span id="184">184</span>
-<span id="185">185</span>
-<span id="186">186</span>
-<span id="187">187</span>
-<span id="188">188</span>
-<span id="189">189</span>
-<span id="190">190</span>
-<span id="191">191</span>
-<span id="192">192</span>
-<span id="193">193</span>
-<span id="194">194</span>
-<span id="195">195</span>
-<span id="196">196</span>
-<span id="197">197</span>
 </pre><pre class="rust">
 <span class="doccomment">//! Default addresses and keys.</span>
 
@@ -263,38 +248,38 @@
 <span class="doccomment">/// An established user address for testing &amp; development</span>
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;dev&quot;</span>)]</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">albert_address</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Address</span> {
-    <span class="ident">Address::decode</span>(<span class="string">&quot;a1qq5qqqqqg4znssfsgcurjsfhgfpy2vjyxy6yg3z98pp5zvp5xgersvfjxvcnx3f4xycrzdfkak0xhx&quot;</span>).<span class="ident">expect</span>(<span class="string">&quot;The token address decoding shouldn&#39;t fail&quot;</span>)
+    <span class="ident">Address::decode</span>(<span class="string">&quot;atest1v4ehgw368ycryv2z8qcnxv3cxgmrgvjpxs6yg333gym5vv2zxepnj334g4rryvj9xucrgve4x3xvr4&quot;</span>).<span class="ident">expect</span>(<span class="string">&quot;The token address decoding shouldn&#39;t fail&quot;</span>)
 }
 
 <span class="doccomment">/// An established user address for testing &amp; development</span>
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;dev&quot;</span>)]</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">bertha_address</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Address</span> {
-    <span class="ident">Address::decode</span>(<span class="string">&quot;a1qq5qqqqqxv6yydz9xc6ry33589q5x33eggcnjs2xx9znydj9xuens3phxppnwvzpg4rrqdpswve4n9&quot;</span>).<span class="ident">expect</span>(<span class="string">&quot;The token address decoding shouldn&#39;t fail&quot;</span>)
+    <span class="ident">Address::decode</span>(<span class="string">&quot;atest1v4ehgw36xvcyyvejgvenxs34g3zygv3jxqunjd6rxyeyys3sxy6rwvfkx4qnj33hg9qnvse4lsfctw&quot;</span>).<span class="ident">expect</span>(<span class="string">&quot;The token address decoding shouldn&#39;t fail&quot;</span>)
 }
 
 <span class="doccomment">/// An established user address for testing &amp; development</span>
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;dev&quot;</span>)]</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">christel_address</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Address</span> {
-    <span class="ident">Address::decode</span>(<span class="string">&quot;a1qq5qqqqqxsuygd2x8pq5yw2ygdryxs6xgsmrsdzx8pryxv34gfrrssfjgccyg3zpxezrqd2y2s3g5s&quot;</span>).<span class="ident">expect</span>(<span class="string">&quot;The token address decoding shouldn&#39;t fail&quot;</span>)
+    <span class="ident">Address::decode</span>(<span class="string">&quot;atest1v4ehgw36x3qng3jzggu5yvpsxgcngv2xgguy2dpkgvu5x33kx3pr2w2zgep5xwfkxscrxs2pj8075p&quot;</span>).<span class="ident">expect</span>(<span class="string">&quot;The token address decoding shouldn&#39;t fail&quot;</span>)
 }
 
 <span class="doccomment">/// An implicit user address for testing &amp; development</span>
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;dev&quot;</span>)]</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">daewon_address</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Address</span> {
-    <span class="comment">// &quot;a1qyqzsqqqqqcyvvf5xcu5vd6rg4z5233hg9pn23pjgdryzdjy8pz52wzxxscnvvjxx3rryvzz8y5p6mtz&quot;</span>
+    <span class="comment">// &quot;atest1d9khqw36xprrzdpk89rrws69g4z5vd6pgv65gvjrgeqnv3pcg4zns335xymry335gcerqs3etd0xfa&quot;</span>
     (<span class="kw-2">&amp;</span><span class="ident">daewon_keypair</span>().<span class="ident">public</span>).<span class="ident">into</span>()
 }
 
 <span class="doccomment">/// An established validator address for testing &amp; development</span>
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;dev&quot;</span>)]</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">validator_address</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Address</span> {
-    <span class="ident">Address::decode</span>(<span class="string">&quot;a1qq5qqqqqgfqnsd6pxse5zdj9g5crzsf5x4zyzv6yxerr2d2rxpryzwp5g5m5zvfjxv6ygsekjmraj0&quot;</span>).<span class="ident">expect</span>(<span class="string">&quot;The token address decoding shouldn&#39;t fail&quot;</span>)
+    <span class="ident">Address::decode</span>(<span class="string">&quot;atest1v4ehgw36ggcnsdee8qerswph8y6ry3p5xgunvve3xaqngd3kxc6nqwz9gseyydzzg5unys3ht2n48q&quot;</span>).<span class="ident">expect</span>(<span class="string">&quot;The token address decoding shouldn&#39;t fail&quot;</span>)
 }
 
 <span class="doccomment">/// An established matchmaker address for testing &amp; development</span>
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;dev&quot;</span>)]</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">matchmaker_address</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Address</span> {
-    <span class="ident">Address::decode</span>(<span class="string">&quot;a1qq5qqqqqxu6rvdzpxymnqwfkxfznvsjxggunyd3jg5erg3p3geqnvv35gep5yvzxx5m5x3fsfje8td&quot;</span>).<span class="ident">expect</span>(<span class="string">&quot;The address decoding shouldn&#39;t fail&quot;</span>)
+    <span class="ident">Address::decode</span>(<span class="string">&quot;atest1v4ehgw36x5mnswphx565gv2yxdprzvf5gdp523jpxy6rvv6zxaznzsejxeznzseh8pp5ywz93xwala&quot;</span>).<span class="ident">expect</span>(<span class="string">&quot;The address decoding shouldn&#39;t fail&quot;</span>)
 }
 
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;dev&quot;</span>)]</span>
@@ -379,21 +364,6 @@
         <span class="number">104</span>,
     ];
     <span class="ident">Keypair::from_bytes</span>(<span class="kw-2">&amp;</span><span class="ident">bytes</span>).<span class="ident">unwrap</span>()
-}
-
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;dev&quot;</span>)]</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">key_of</span>(<span class="ident">name</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span><span class="ident">str</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Keypair</span> {
-    <span class="kw">match</span> <span class="ident">name</span>.<span class="ident">as_ref</span>() {
-        <span class="string">&quot;a1qq5qqqqqg4znssfsgcurjsfhgfpy2vjyxy6yg3z98pp5zvp5xgersvfjxvcnx3f4xycrzdfkak0xhx&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">albert_keypair</span>(),
-        <span class="string">&quot;a1qq5qqqqqxv6yydz9xc6ry33589q5x33eggcnjs2xx9znydj9xuens3phxppnwvzpg4rrqdpswve4n9&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">bertha_keypair</span>(),
-        <span class="string">&quot;a1qq5qqqqqxsuygd2x8pq5yw2ygdryxs6xgsmrsdzx8pryxv34gfrrssfjgccyg3zpxezrqd2y2s3g5s&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">christel_keypair</span>(),
-        <span class="string">&quot;a1qyqzsqqqqqcyvvf5xcu5vd6rg4z5233hg9pn23pjgdryzdjy8pz52wzxxscnvvjxx3rryvzz8y5p6mtz&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">daewon_keypair</span>(),
-        <span class="string">&quot;a1qq5qqqqqxu6rvdzpxymnqwfkxfznvsjxggunyd3jg5erg3p3geqnvv35gep5yvzxx5m5x3fsfje8td&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">matchmaker_keypair</span>(),
-        <span class="string">&quot;a1qq5qqqqqgfqnsd6pxse5zdj9g5crzsf5x4zyzv6yxerr2d2rxpryzwp5g5m5zvfjxv6ygsekjmraj0&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">validator_keypair</span>(),
-        <span class="ident">other</span> <span class="op">=</span><span class="op">&gt;</span> {
-            <span class="macro">panic!</span>(<span class="string">&quot;Dont&#39; have keys for: {}&quot;</span>, <span class="ident">other</span>)
-        }
-    }
 }
 </pre></div>
 </section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="anoma_apps" data-search-index-js="../../../search-index.js" data-search-js="../../../search.js"></div><script src="../../../main.js"></script><script src="../../../source-script.js"></script><script src="../../../source-files.js"></script></body></html>

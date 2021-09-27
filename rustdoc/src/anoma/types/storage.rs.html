@@ -791,6 +791,9 @@
 <span id="789">789</span>
 <span id="790">790</span>
 <span id="791">791</span>
+<span id="792">792</span>
+<span id="793">793</span>
+<span id="794">794</span>
 </pre><pre class="rust">
 <span class="doccomment">//! Storage types</span>
 <span class="kw">use</span> <span class="ident">std::convert</span>::{<span class="ident">TryFrom</span>, <span class="ident">TryInto</span>};
@@ -1531,13 +1534,16 @@
     <span class="kw">use</span> <span class="ident">proptest::prelude</span>::<span class="kw-2">*</span>;
 
     <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
-    <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::types::address::testing::arb_address</span>;
+    <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::types::address::testing</span>::{
+        <span class="ident">arb_address</span>, <span class="ident">arb_non_internal_address</span>,
+    };
 
     <span class="doccomment">/// Generate an arbitrary [`Key`].</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">arb_key</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="kw">impl</span> <span class="ident">Strategy</span><span class="op">&lt;</span><span class="ident">Value</span> <span class="op">=</span> <span class="ident">Key</span><span class="op">&gt;</span> {
         <span class="macro">prop_oneof!</span>[
             <span class="comment">// a key for a validity predicate</span>
-            <span class="ident">arb_address</span>().<span class="ident">prop_map</span>(<span class="op">|</span><span class="ident">addr</span><span class="op">|</span> <span class="ident">Key::validity_predicate</span>(<span class="kw-2">&amp;</span><span class="ident">addr</span>)),
+            <span class="ident">arb_non_internal_address</span>()
+                .<span class="ident">prop_map</span>(<span class="op">|</span><span class="ident">addr</span><span class="op">|</span> <span class="ident">Key::validity_predicate</span>(<span class="kw-2">&amp;</span><span class="ident">addr</span>)),
             <span class="comment">// a key from key segments</span>
             <span class="ident">arb_key_no_vp</span>(),
         ]

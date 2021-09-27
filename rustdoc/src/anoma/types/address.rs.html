@@ -486,6 +486,150 @@
 <span id="484">484</span>
 <span id="485">485</span>
 <span id="486">486</span>
+<span id="487">487</span>
+<span id="488">488</span>
+<span id="489">489</span>
+<span id="490">490</span>
+<span id="491">491</span>
+<span id="492">492</span>
+<span id="493">493</span>
+<span id="494">494</span>
+<span id="495">495</span>
+<span id="496">496</span>
+<span id="497">497</span>
+<span id="498">498</span>
+<span id="499">499</span>
+<span id="500">500</span>
+<span id="501">501</span>
+<span id="502">502</span>
+<span id="503">503</span>
+<span id="504">504</span>
+<span id="505">505</span>
+<span id="506">506</span>
+<span id="507">507</span>
+<span id="508">508</span>
+<span id="509">509</span>
+<span id="510">510</span>
+<span id="511">511</span>
+<span id="512">512</span>
+<span id="513">513</span>
+<span id="514">514</span>
+<span id="515">515</span>
+<span id="516">516</span>
+<span id="517">517</span>
+<span id="518">518</span>
+<span id="519">519</span>
+<span id="520">520</span>
+<span id="521">521</span>
+<span id="522">522</span>
+<span id="523">523</span>
+<span id="524">524</span>
+<span id="525">525</span>
+<span id="526">526</span>
+<span id="527">527</span>
+<span id="528">528</span>
+<span id="529">529</span>
+<span id="530">530</span>
+<span id="531">531</span>
+<span id="532">532</span>
+<span id="533">533</span>
+<span id="534">534</span>
+<span id="535">535</span>
+<span id="536">536</span>
+<span id="537">537</span>
+<span id="538">538</span>
+<span id="539">539</span>
+<span id="540">540</span>
+<span id="541">541</span>
+<span id="542">542</span>
+<span id="543">543</span>
+<span id="544">544</span>
+<span id="545">545</span>
+<span id="546">546</span>
+<span id="547">547</span>
+<span id="548">548</span>
+<span id="549">549</span>
+<span id="550">550</span>
+<span id="551">551</span>
+<span id="552">552</span>
+<span id="553">553</span>
+<span id="554">554</span>
+<span id="555">555</span>
+<span id="556">556</span>
+<span id="557">557</span>
+<span id="558">558</span>
+<span id="559">559</span>
+<span id="560">560</span>
+<span id="561">561</span>
+<span id="562">562</span>
+<span id="563">563</span>
+<span id="564">564</span>
+<span id="565">565</span>
+<span id="566">566</span>
+<span id="567">567</span>
+<span id="568">568</span>
+<span id="569">569</span>
+<span id="570">570</span>
+<span id="571">571</span>
+<span id="572">572</span>
+<span id="573">573</span>
+<span id="574">574</span>
+<span id="575">575</span>
+<span id="576">576</span>
+<span id="577">577</span>
+<span id="578">578</span>
+<span id="579">579</span>
+<span id="580">580</span>
+<span id="581">581</span>
+<span id="582">582</span>
+<span id="583">583</span>
+<span id="584">584</span>
+<span id="585">585</span>
+<span id="586">586</span>
+<span id="587">587</span>
+<span id="588">588</span>
+<span id="589">589</span>
+<span id="590">590</span>
+<span id="591">591</span>
+<span id="592">592</span>
+<span id="593">593</span>
+<span id="594">594</span>
+<span id="595">595</span>
+<span id="596">596</span>
+<span id="597">597</span>
+<span id="598">598</span>
+<span id="599">599</span>
+<span id="600">600</span>
+<span id="601">601</span>
+<span id="602">602</span>
+<span id="603">603</span>
+<span id="604">604</span>
+<span id="605">605</span>
+<span id="606">606</span>
+<span id="607">607</span>
+<span id="608">608</span>
+<span id="609">609</span>
+<span id="610">610</span>
+<span id="611">611</span>
+<span id="612">612</span>
+<span id="613">613</span>
+<span id="614">614</span>
+<span id="615">615</span>
+<span id="616">616</span>
+<span id="617">617</span>
+<span id="618">618</span>
+<span id="619">619</span>
+<span id="620">620</span>
+<span id="621">621</span>
+<span id="622">622</span>
+<span id="623">623</span>
+<span id="624">624</span>
+<span id="625">625</span>
+<span id="626">626</span>
+<span id="627">627</span>
+<span id="628">628</span>
+<span id="629">629</span>
+<span id="630">630</span>
 </pre><pre class="rust">
 <span class="doccomment">//! Implements transparent addresses as described in [Accounts</span>
 <span class="doccomment">//! Addresses](docs/src/explore/design/ledger/accounts.md#addresses).</span>
@@ -503,16 +647,43 @@
 <span class="kw">use</span> <span class="ident">thiserror::Error</span>;
 
 <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::types::key</span>;
+<span class="kw">use</span> <span class="kw">crate</span><span class="ident">::types::key::ed25519::PublicKeyHash</span>;
 
-<span class="doccomment">/// The length of [`Address`] encoded with Borsh.</span>
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">RAW_ADDRESS_LEN</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">45</span>;
+<span class="doccomment">/// The length of an established [`Address`] encoded with Borsh.</span>
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">ESTABLISHED_ADDRESS_BYTES_LEN</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">45</span>;
+
 <span class="doccomment">/// The length of [`Address`] encoded with Bech32m.</span>
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">ADDRESS_LEN</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">80</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">ADDRESS_LEN</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">79</span> <span class="op">+</span> <span class="ident">ADDRESS_HRP</span>.<span class="ident">len</span>();
 
 <span class="doccomment">/// human-readable part of Bech32m encoded address</span>
-<span class="kw">const</span> <span class="ident">ADDRESS_HRP</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;a&quot;</span>;
+<span class="comment">// TODO use &quot;a&quot; for live network</span>
+<span class="kw">const</span> <span class="ident">ADDRESS_HRP</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;atest&quot;</span>;
 <span class="kw">const</span> <span class="ident">ADDRESS_BECH32_VARIANT</span>: <span class="ident">bech32::Variant</span> <span class="op">=</span> <span class="ident">Variant::Bech32m</span>;
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">const</span> <span class="ident">HASH_LEN</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">40</span>;
+
+<span class="doccomment">/// An address string before bech32m encoding must be this size.</span>
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">FIXED_LEN_STRING_BYTES</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">45</span>;
+
+<span class="doccomment">/// Raw strings used to produce internal addresses. All the strings must begin</span>
+<span class="doccomment">/// with `PREFIX_INTERNAL` and be `FIXED_LEN_STRING_BYTES` characters long.</span>
+<span class="attribute">#[<span class="ident">rustfmt::skip</span>]</span>
+<span class="kw">mod</span> <span class="ident">internal</span> {
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">POS</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> 
+        <span class="string">&quot;ano::Proof of Stake                          &quot;</span>;
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">POS_SLASH_POOL</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span>
+        <span class="string">&quot;ano::Proof of Stake Slash Pool               &quot;</span>;
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">IBC</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> 
+        <span class="string">&quot;ano::Inter-Blockchain Communication          &quot;</span>;
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">PARAMETERS</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span>
+        <span class="string">&quot;ano::Protocol Parameters                     &quot;</span>;
+}
+
+<span class="doccomment">/// Fixed-length address strings prefix for established addresses.</span>
+<span class="kw">const</span> <span class="ident">PREFIX_ESTABLISHED</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;est&quot;</span>;
+<span class="doccomment">/// Fixed-length address strings prefix for implicit addresses.</span>
+<span class="kw">const</span> <span class="ident">PREFIX_IMPLICIT</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;imp&quot;</span>;
+<span class="doccomment">/// Fixed-length address strings prefix for internal addresses.</span>
+<span class="kw">const</span> <span class="ident">PREFIX_INTERNAL</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;ano&quot;</span>;
 
 <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">missing_docs</span>)]</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Error</span>, <span class="ident">Debug</span>)]</span>
@@ -563,9 +734,7 @@
 <span class="kw">impl</span> <span class="ident">Address</span> {
     <span class="doccomment">/// Encode an address with Bech32m encoding</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">encode</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">String</span> {
-        <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="self">self</span>
-            .<span class="ident">try_to_vec</span>()
-            .<span class="ident">expect</span>(<span class="string">&quot;Encoding an address shouldn&#39;t fail&quot;</span>);
+        <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">to_fixed_len_string</span>();
         <span class="ident">bech32::encode</span>(<span class="ident">ADDRESS_HRP</span>, <span class="ident">bytes</span>.<span class="ident">to_base32</span>(), <span class="ident">ADDRESS_BECH32_VARIANT</span>)
             .<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> {
                 <span class="macro">panic!</span>(
@@ -588,24 +757,8 @@
         }
         <span class="kw">let</span> <span class="ident">bytes</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">FromBase32::from_base32</span>(<span class="kw-2">&amp;</span><span class="ident">hash_base32</span>)
             .<span class="ident">map_err</span>(<span class="ident">Error::DecodeBase32</span>)<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">address</span> <span class="op">=</span> <span class="ident">BorshDeserialize::try_from_slice</span>(<span class="kw-2">&amp;</span><span class="ident">bytes</span>[..])
-            .<span class="ident">map_err</span>(<span class="ident">Error::InvalidAddressEncoding</span>)<span class="question-mark">?</span>;
-        <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="ident">address</span> {
-            <span class="ident">Address::Established</span>(<span class="ident">established</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="kw">if</span> <span class="ident">established</span>.<span class="ident">hash</span>.<span class="ident">len</span>() <span class="op">!</span><span class="op">=</span> <span class="ident">HASH_LEN</span> {
-                    <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error::UnexpectedHashLength</span>(
-                        <span class="ident">established</span>.<span class="ident">hash</span>.<span class="ident">len</span>(),
-                    ));
-                }
-            }
-            <span class="ident">Address::Implicit</span>(<span class="ident">ImplicitAddress::Ed25519</span>(<span class="ident">pkh</span>)) <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="kw">if</span> <span class="ident">pkh</span>.<span class="number">0</span>.<span class="ident">len</span>() <span class="op">!</span><span class="op">=</span> <span class="ident">HASH_LEN</span> {
-                    <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error::UnexpectedHashLength</span>(<span class="ident">pkh</span>.<span class="number">0</span>.<span class="ident">len</span>()));
-                }
-            }
-            <span class="ident">Address::Internal</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> {}
-        }
-        <span class="prelude-val">Ok</span>(<span class="ident">address</span>)
+        <span class="self">Self</span><span class="ident">::try_from_fixed_len_string</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="kw-2">&amp;</span><span class="ident">bytes</span>[..])
+            .<span class="ident">map_err</span>(<span class="ident">Error::InvalidAddressEncoding</span>)
     }
 
     <span class="doccomment">/// Try to get a raw hash of an address, only defined for established and</span>
@@ -617,6 +770,79 @@
                 <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="ident">implicit</span>.<span class="number">0</span>)
             }
             <span class="ident">Address::Internal</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">None</span>,
+        }
+    }
+
+    <span class="doccomment">/// Convert an address to a fixed length 7-bit ascii string bytes</span>
+    <span class="kw">fn</span> <span class="ident">to_fixed_len_string</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">string</span> <span class="op">=</span> <span class="kw">match</span> <span class="self">self</span> {
+            <span class="ident">Address::Established</span>(<span class="ident">EstablishedAddress</span> { <span class="ident">hash</span> }) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="macro">format!</span>(<span class="string">&quot;{}::{}&quot;</span>, <span class="ident">PREFIX_ESTABLISHED</span>, <span class="ident">hash</span>)
+            }
+            <span class="ident">Address::Implicit</span>(<span class="ident">ImplicitAddress::Ed25519</span>(<span class="ident">pkh</span>)) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="macro">format!</span>(<span class="string">&quot;{}::{}&quot;</span>, <span class="ident">PREFIX_IMPLICIT</span>, <span class="ident">pkh</span>)
+            }
+            <span class="ident">Address::Internal</span>(<span class="ident">internal</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="kw">let</span> <span class="ident">string</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">internal</span> {
+                    <span class="ident">InternalAddress::PoS</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">internal::POS</span>,
+                    <span class="ident">InternalAddress::PosSlashPool</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">internal::POS_SLASH_POOL</span>,
+                    <span class="ident">InternalAddress::Ibc</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">internal::IBC</span>,
+                    <span class="ident">InternalAddress::Parameters</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">internal::PARAMETERS</span>,
+                }
+                .<span class="ident">to_string</span>();
+                <span class="macro">debug_assert_eq!</span>(<span class="ident">string</span>.<span class="ident">len</span>(), <span class="ident">FIXED_LEN_STRING_BYTES</span>);
+                <span class="ident">string</span>
+            }
+        }
+        .<span class="ident">into_bytes</span>();
+        <span class="ident">string</span>.<span class="ident">resize</span>(<span class="ident">FIXED_LEN_STRING_BYTES</span>, <span class="string">b&#39; &#39;</span>);
+        <span class="ident">string</span>
+    }
+
+    <span class="doccomment">/// Try to parse an address from fixed-length utf-8 encoded address string.</span>
+    <span class="kw">fn</span> <span class="ident">try_from_fixed_len_string</span>(<span class="ident">buf</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">std::io::Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
+        <span class="kw">use</span> <span class="ident">std::io</span>::{<span class="ident">Error</span>, <span class="ident">ErrorKind</span>};
+        <span class="kw">let</span> <span class="ident">string</span> <span class="op">=</span> <span class="ident">std::str::from_utf8</span>(<span class="ident">buf</span>)
+            .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">err</span><span class="op">|</span> <span class="ident">Error::new</span>(<span class="ident">ErrorKind::InvalidData</span>, <span class="ident">err</span>))<span class="question-mark">?</span>;
+        <span class="kw">if</span> <span class="ident">string</span>.<span class="ident">len</span>() <span class="op">!</span><span class="op">=</span> <span class="ident">FIXED_LEN_STRING_BYTES</span> {
+            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error::new</span>(<span class="ident">ErrorKind::InvalidData</span>, <span class="string">&quot;Invalid length&quot;</span>));
+        }
+        <span class="kw">match</span> <span class="ident">string</span>.<span class="ident">split_once</span>(<span class="string">&quot;::&quot;</span>) {
+            <span class="prelude-val">Some</span>((<span class="ident">PREFIX_ESTABLISHED</span>, <span class="ident">hash</span>)) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="kw">if</span> <span class="ident">hash</span>.<span class="ident">len</span>() <span class="op">=</span><span class="op">=</span> <span class="ident">HASH_LEN</span> {
+                    <span class="prelude-val">Ok</span>(<span class="ident">Address::Established</span>(<span class="ident">EstablishedAddress</span> {
+                        <span class="ident">hash</span>: <span class="ident">hash</span>.<span class="ident">to_string</span>(),
+                    }))
+                } <span class="kw">else</span> {
+                    <span class="prelude-val">Err</span>(<span class="ident">Error::new</span>(
+                        <span class="ident">ErrorKind::InvalidData</span>,
+                        <span class="string">&quot;Established address hash must be 40 characters long&quot;</span>,
+                    ))
+                }
+            }
+            <span class="prelude-val">Some</span>((<span class="ident">PREFIX_IMPLICIT</span>, <span class="ident">pkh</span>)) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="kw">let</span> <span class="ident">pkh</span> <span class="op">=</span> <span class="ident">PublicKeyHash::from_str</span>(<span class="ident">pkh</span>)
+                    .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">err</span><span class="op">|</span> <span class="ident">Error::new</span>(<span class="ident">ErrorKind::InvalidData</span>, <span class="ident">err</span>))<span class="question-mark">?</span>;
+                <span class="prelude-val">Ok</span>(<span class="ident">Address::Implicit</span>(<span class="ident">ImplicitAddress::Ed25519</span>(<span class="ident">pkh</span>)))
+            }
+            <span class="prelude-val">Some</span>((<span class="ident">PREFIX_INTERNAL</span>, <span class="ident">_raw</span>)) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="ident">string</span> {
+                <span class="ident">internal::POS</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="ident">Address::Internal</span>(<span class="ident">InternalAddress::PoS</span>)),
+                <span class="ident">internal::POS_SLASH_POOL</span> <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="prelude-val">Ok</span>(<span class="ident">Address::Internal</span>(<span class="ident">InternalAddress::PosSlashPool</span>))
+                }
+                <span class="ident">internal::IBC</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="ident">Address::Internal</span>(<span class="ident">InternalAddress::Ibc</span>)),
+                <span class="ident">internal::PARAMETERS</span> <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="prelude-val">Ok</span>(<span class="ident">Address::Internal</span>(<span class="ident">InternalAddress::Parameters</span>))
+                }
+                <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">Error::new</span>(
+                    <span class="ident">ErrorKind::InvalidData</span>,
+                    <span class="string">&quot;Invalid internal address&quot;</span>,
+                )),
+            },
+            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">Error::new</span>(
+                <span class="ident">ErrorKind::InvalidData</span>,
+                <span class="string">&quot;Invalid address prefix&quot;</span>,
+            )),
         }
     }
 
@@ -804,37 +1030,37 @@
 
 <span class="doccomment">/// Temporary helper for testing</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">xan</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Address</span> {
-    <span class="ident">Address::decode</span>(<span class="string">&quot;a1qq5qqqqqxuc5gvz9gycryv3sgye5v3j9gvurjv34g9prsd6x8qu5xs2ygdzrzsf38q6rss33xf42f3&quot;</span>).<span class="ident">expect</span>(<span class="string">&quot;The token address decoding shouldn&#39;t fail&quot;</span>)
+    <span class="ident">Address::decode</span>(<span class="string">&quot;atest1v4ehgw36x3prswzxggunzv6pxqmnvdj9xvcyzvpsggeyvs3cg9qnywf589qnwvfsg5erg3fkl09rg5&quot;</span>).<span class="ident">expect</span>(<span class="string">&quot;The token address decoding shouldn&#39;t fail&quot;</span>)
 }
 
 <span class="doccomment">/// Temporary helper for testing</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">btc</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Address</span> {
-    <span class="ident">Address::decode</span>(<span class="string">&quot;a1qq5qqqqq8q6yy3p4xyurys3n8qerz3zxxeryyv6rg4pnxdf3x3pyv32rx3zrgwzpxu6ny32r3laduc&quot;</span>).<span class="ident">expect</span>(<span class="string">&quot;The token address decoding shouldn&#39;t fail&quot;</span>)
+    <span class="ident">Address::decode</span>(<span class="string">&quot;atest1v4ehgw36xdzryve5gsc52veeg5cnsv2yx5eygvp38qcrvd29xy6rys6p8yc5xvp4xfpy2v694wgwcp&quot;</span>).<span class="ident">expect</span>(<span class="string">&quot;The token address decoding shouldn&#39;t fail&quot;</span>)
 }
 
 <span class="doccomment">/// Temporary helper for testing</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">eth</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Address</span> {
-    <span class="ident">Address::decode</span>(<span class="string">&quot;a1qq5qqqqqx3z5xd3ngdqnzwzrgfpnxd3hgsuyx3phgfry2s3kxsc5xves8qe5x33sgdprzvjptzfry9&quot;</span>).<span class="ident">expect</span>(<span class="string">&quot;The token address decoding shouldn&#39;t fail&quot;</span>)
+    <span class="ident">Address::decode</span>(<span class="string">&quot;atest1v4ehgw36xqmr2d3nx3ryvd2xxgmrq33j8qcns33sxezrgv6zxdzrydjrxveygd2yxumrsdpsf9jc2p&quot;</span>).<span class="ident">expect</span>(<span class="string">&quot;The token address decoding shouldn&#39;t fail&quot;</span>)
 }
 
 <span class="doccomment">/// Temporary helper for testing</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">dot</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Address</span> {
-    <span class="ident">Address::decode</span>(<span class="string">&quot;a1qq5qqqqqxq652v3sxap523fs8pznjse5g3pyydf3xqurws6ygvc5gdfcxyuy2deeggenjsjrjrl2ph&quot;</span>).<span class="ident">expect</span>(<span class="string">&quot;The token address decoding shouldn&#39;t fail&quot;</span>)
+    <span class="ident">Address::decode</span>(<span class="string">&quot;atest1v4ehgw36gg6nvs2zgfpyxsfjgc65yv6pxy6nwwfsxgungdzrggeyzv35gveyxsjyxymyz335hur2jn&quot;</span>).<span class="ident">expect</span>(<span class="string">&quot;The token address decoding shouldn&#39;t fail&quot;</span>)
 }
 
 <span class="doccomment">/// Temporary helper for testing</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">schnitzel</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Address</span> {
-    <span class="ident">Address::decode</span>(<span class="string">&quot;a1qq5qqqqq8prrzv6xxcury3p4xucygdp5gfprzdfex9prz3jyg56rxv69gvenvsj9g5enswpcl8npyz&quot;</span>).<span class="ident">expect</span>(<span class="string">&quot;The token address decoding shouldn&#39;t fail&quot;</span>)
+    <span class="ident">Address::decode</span>(<span class="string">&quot;atest1v4ehgw36xue5xvf5xvuyzvpjx5un2v3k8qeyvd3cxdqns32p89rrxd6xx9zngvpegccnzs699rdnnt&quot;</span>).<span class="ident">expect</span>(<span class="string">&quot;The token address decoding shouldn&#39;t fail&quot;</span>)
 }
 
 <span class="doccomment">/// Temporary helper for testing</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">apfel</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Address</span> {
-    <span class="ident">Address::decode</span>(<span class="string">&quot;a1qq5qqqqqgfp52de4x56nqd3ex56y2wph8pznssjzx5ersw2pxfznsd3jxeqnjd3cxapnqsjz2fyt3j&quot;</span>).<span class="ident">expect</span>(<span class="string">&quot;The token address decoding shouldn&#39;t fail&quot;</span>)
+    <span class="ident">Address::decode</span>(<span class="string">&quot;atest1v4ehgw36gfryydj9g3p5zv3kg9znyd358ycnzsfcggc5gvecgc6ygs2rxv6ry3zpg4zrwdfeumqcz9&quot;</span>).<span class="ident">expect</span>(<span class="string">&quot;The token address decoding shouldn&#39;t fail&quot;</span>)
 }
 
 <span class="doccomment">/// Temporary helper for testing</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">kartoffel</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Address</span> {
-    <span class="ident">Address::decode</span>(<span class="string">&quot;a1qq5qqqqqxs6yvsekxuuyy3pjxsmrgd2rxuungdzpgsmyydjrxsenjdp5xaqn233sgccnjs3eak5wwh&quot;</span>).<span class="ident">expect</span>(<span class="string">&quot;The token address decoding shouldn&#39;t fail&quot;</span>)
+    <span class="ident">Address::decode</span>(<span class="string">&quot;atest1v4ehgw36gep5ysecxq6nyv3jg3zygv3e89qn2vp48pryxsf4xpznvve5gvmy23fs89pryvf5a6ht90&quot;</span>).<span class="ident">expect</span>(<span class="string">&quot;The token address decoding shouldn&#39;t fail&quot;</span>)
 }
 
 <span class="doccomment">/// Temporary helper for testing, a hash map of tokens addresses with their</span>
@@ -855,35 +1081,62 @@
 
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">tests</span> {
+    <span class="kw">use</span> <span class="ident">proptest::prelude</span>::<span class="kw-2">*</span>;
+
     <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
 
     <span class="doccomment">/// Run `cargo test gen_established_address -- --nocapture` to generate a</span>
     <span class="doccomment">/// new established address.</span>
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">gen_established_address</span>() {
-        <span class="kw">let</span> <span class="ident">address</span> <span class="op">=</span> <span class="ident">testing::gen_established_address</span>();
-        <span class="macro">println!</span>(<span class="string">&quot;address {}&quot;</span>, <span class="ident">address</span>);
+        <span class="kw">for</span> <span class="kw">_</span> <span class="kw">in</span> <span class="number">0</span>..<span class="number">10</span> {
+            <span class="kw">let</span> <span class="ident">address</span> <span class="op">=</span> <span class="ident">testing::gen_established_address</span>();
+            <span class="macro">println!</span>(<span class="string">&quot;address {}&quot;</span>, <span class="ident">address</span>);
+        }
     }
 
+    <span class="doccomment">/// Run `cargo test gen_implicit_address -- --nocapture` to generate a</span>
+    <span class="doccomment">/// new established address.</span>
     <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_address_len</span>() {
-        <span class="kw">let</span> <span class="ident">addr</span> <span class="op">=</span> <span class="ident">testing::established_address_1</span>();
-        <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="ident">addr</span>.<span class="ident">try_to_vec</span>().<span class="ident">unwrap</span>();
-        <span class="macro">assert_eq!</span>(<span class="ident">bytes</span>.<span class="ident">len</span>(), <span class="ident">RAW_ADDRESS_LEN</span>);
-        <span class="macro">assert_eq!</span>(<span class="ident">addr</span>.<span class="ident">encode</span>().<span class="ident">len</span>(), <span class="ident">ADDRESS_LEN</span>);
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">gen_implicit_address</span>() {
+        <span class="kw">for</span> <span class="kw">_</span> <span class="kw">in</span> <span class="number">0</span>..<span class="number">10</span> {
+            <span class="kw">let</span> <span class="ident">address</span> <span class="op">=</span> <span class="ident">testing::gen_implicit_address</span>();
+            <span class="macro">println!</span>(<span class="string">&quot;address {}&quot;</span>, <span class="ident">address</span>);
+        }
     }
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="kw">fn</span> <span class="ident">test_address_serde_serialize</span>() {
-        <span class="kw">let</span> <span class="ident">original_address</span> <span class="op">=</span> <span class="ident">Address::decode</span>(<span class="string">&quot;a1qq5qqqqqgcmyxd35xguy2wp5xsu5vs6pxqcy232pgvm5zs6yggunssfs89znv33h8q6rjde4cjc3dr&quot;</span>).<span class="ident">unwrap</span>();
+        <span class="kw">let</span> <span class="ident">original_address</span> <span class="op">=</span> <span class="ident">Address::decode</span>(<span class="string">&quot;atest1v4ehgw36g56ngwpk8ppnzsf4xqeyvsf3xq6nxde5gseyys3nxgenvvfex5cnyd2rx9zrzwfctgx7sp&quot;</span>).<span class="ident">unwrap</span>();
         <span class="kw">let</span> <span class="ident">expect</span> <span class="op">=</span>
-            <span class="string">&quot;\&quot;a1qq5qqqqqgcmyxd35xguy2wp5xsu5vs6pxqcy232pgvm5zs6yggunssfs89znv33h8q6rjde4cjc3dr\&quot;&quot;</span>;
+            <span class="string">&quot;\&quot;atest1v4ehgw36g56ngwpk8ppnzsf4xqeyvsf3xq6nxde5gseyys3nxgenvvfex5cnyd2rx9zrzwfctgx7sp\&quot;&quot;</span>;
         <span class="kw">let</span> <span class="ident">decoded_address</span>: <span class="ident">Address</span> <span class="op">=</span>
             <span class="ident">serde_json::from_str</span>(<span class="ident">expect</span>).<span class="ident">expect</span>(<span class="string">&quot;could not read JSON&quot;</span>);
         <span class="macro">assert_eq!</span>(<span class="ident">original_address</span>, <span class="ident">decoded_address</span>);
 
         <span class="kw">let</span> <span class="ident">encoded_address</span> <span class="op">=</span> <span class="ident">serde_json::to_string</span>(<span class="kw-2">&amp;</span><span class="ident">original_address</span>).<span class="ident">unwrap</span>();
         <span class="macro">assert_eq!</span>(<span class="ident">encoded_address</span>, <span class="ident">expect</span>);
+    }
+
+    <span class="macro">proptest!</span> {
+        <span class="attribute">#[<span class="ident">test</span>]</span>
+        <span class="doccomment">/// Check that all the address types are of the same length</span>
+        <span class="doccomment">/// `ADDRESS_LEN` when bech32m encoded, and that that decoding them</span>
+        <span class="doccomment">/// yields back the same value.</span>
+        <span class="kw">fn</span> <span class="ident">test_encoded_address_length</span>(<span class="ident">address</span> <span class="kw">in</span> <span class="ident">testing::arb_address</span>()) {
+            <span class="kw">let</span> <span class="ident">encoded</span>: <span class="ident">String</span> <span class="op">=</span> <span class="ident">address</span>.<span class="ident">encode</span>();
+            <span class="macro">assert_eq!</span>(<span class="ident">encoded</span>.<span class="ident">len</span>(), <span class="ident">ADDRESS_LEN</span>);
+            <span class="comment">// Also roundtrip check that we decode back the same value</span>
+            <span class="kw">let</span> <span class="ident">decoded</span> <span class="op">=</span> <span class="ident">Address::decode</span>(<span class="kw-2">&amp;</span><span class="ident">encoded</span>).<span class="ident">unwrap</span>();
+            <span class="macro">assert_eq!</span>(<span class="ident">address</span>, <span class="ident">decoded</span>);
+        }
+
+        <span class="attribute">#[<span class="ident">test</span>]</span>
+        <span class="kw">fn</span> <span class="ident">test_established_address_bytes_length</span>(<span class="ident">address</span> <span class="kw">in</span> <span class="ident">testing::arb_established_address</span>()) {
+            <span class="kw">let</span> <span class="ident">address</span> <span class="op">=</span> <span class="ident">Address::Established</span>(<span class="ident">address</span>);
+            <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="ident">address</span>.<span class="ident">try_to_vec</span>().<span class="ident">unwrap</span>();
+            <span class="macro">assert_eq!</span>(<span class="ident">bytes</span>.<span class="ident">len</span>(), <span class="ident">ESTABLISHED_ADDRESS_BYTES_LEN</span>);
+        }
     }
 }
 
@@ -920,31 +1173,47 @@
         <span class="kw">super</span><span class="ident">::gen_established_address</span>(<span class="ident">seed</span>)
     }
 
+    <span class="doccomment">/// Generate a new implicit address.</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">gen_implicit_address</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Address</span> {
+        <span class="kw">let</span> <span class="ident">keypair</span> <span class="op">=</span> <span class="ident">ed25519::testing::gen_keypair</span>();
+        <span class="kw">let</span> <span class="ident">pkh</span> <span class="op">=</span> <span class="ident">ed25519::PublicKeyHash::from</span>(<span class="ident">keypair</span>.<span class="ident">public</span>);
+        <span class="ident">Address::Implicit</span>(<span class="ident">ImplicitAddress::Ed25519</span>(<span class="ident">pkh</span>))
+    }
+
     <span class="doccomment">/// A sampled established address for tests</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">established_address_1</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Address</span> {
-        <span class="ident">Address::decode</span>(<span class="string">&quot;a1qq5qqqqqgcmyxd35xguy2wp5xsu5vs6pxqcy232pgvm5zs6yggunssfs89znv33h8q6rjde4cjc3dr&quot;</span>).<span class="ident">expect</span>(<span class="string">&quot;The token address decoding shouldn&#39;t fail&quot;</span>)
+        <span class="ident">Address::decode</span>(<span class="string">&quot;atest1v4ehgw36g56ngwpk8ppnzsf4xqeyvsf3xq6nxde5gseyys3nxgenvvfex5cnyd2rx9zrzwfctgx7sp&quot;</span>).<span class="ident">expect</span>(<span class="string">&quot;The token address decoding shouldn&#39;t fail&quot;</span>)
     }
 
     <span class="doccomment">/// A sampled established address for tests</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">established_address_2</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Address</span> {
-        <span class="ident">Address::decode</span>(<span class="string">&quot;a1qq5qqqqqgcuyxv2pxgcrzdecx4prq3pexccr2vj9xse5gvf3gvmnv3f3xqcyyvjyxv6yvv34e393x7&quot;</span>).<span class="ident">expect</span>(<span class="string">&quot;The token address decoding shouldn&#39;t fail&quot;</span>)
+        <span class="ident">Address::decode</span>(<span class="string">&quot;atest1v4ehgw36xezyzv33x56rws6zxccnwwzzgycy23p3ggur2d3ex56yxdejxerrysejx3rrxdfs44s9wu&quot;</span>).<span class="ident">expect</span>(<span class="string">&quot;The token address decoding shouldn&#39;t fail&quot;</span>)
     }
 
     <span class="doccomment">/// A sampled established address for tests</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">established_address_3</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Address</span> {
-        <span class="ident">Address::decode</span>(<span class="string">&quot;a1qq5qqqqq8pp52dfjxserjwf3g9znzveng9zy2wfcx5cnxs6zxq6nydek8qcrqdjrxucrws3jcq9z7a&quot;</span>).<span class="ident">expect</span>(<span class="string">&quot;The token address decoding shouldn&#39;t fail&quot;</span>)
+        <span class="ident">Address::decode</span>(<span class="string">&quot;atest1v4ehgw36xcerywfsgsu5vsfeg3zy2v3egcenx32pggcrswzxg4zns3p5xv6rsvf4gvenqwpkdnnqsy&quot;</span>).<span class="ident">expect</span>(<span class="string">&quot;The token address decoding shouldn&#39;t fail&quot;</span>)
     }
 
     <span class="doccomment">/// A sampled established address for tests</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">established_address_4</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Address</span> {
-        <span class="ident">Address::decode</span>(<span class="string">&quot;a1qq5qqqqqg56yxdpeg5er2d69g4rrxv2rxdryxdes8yenwvejxpzrvd6r8qcnjsjpxg6nww2r3zt5ax&quot;</span>).<span class="ident">expect</span>(<span class="string">&quot;The token address decoding shouldn&#39;t fail&quot;</span>)
+        <span class="ident">Address::decode</span>(<span class="string">&quot;atest1v4ehgw36gscrw333g3z5zvjzg4rrq3psxu6rqd2xxqc5gs35gerrs3pjgfprvdejxqunxs29t6p5s9&quot;</span>).<span class="ident">expect</span>(<span class="string">&quot;The token address decoding shouldn&#39;t fail&quot;</span>)
     }
 
     <span class="doccomment">/// Generate an arbitrary [`Address`] (established or implicit).</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">arb_non_internal_address</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="kw">impl</span> <span class="ident">Strategy</span><span class="op">&lt;</span><span class="ident">Value</span> <span class="op">=</span> <span class="ident">Address</span><span class="op">&gt;</span> {
+        <span class="macro">prop_oneof!</span>[
+            <span class="ident">arb_established_address</span>().<span class="ident">prop_map</span>(<span class="ident">Address::Established</span>),
+            <span class="ident">arb_implicit_address</span>().<span class="ident">prop_map</span>(<span class="ident">Address::Implicit</span>),
+        ]
+    }
+
+    <span class="doccomment">/// Generate an arbitrary [`Address`] (established, implicit or internal).</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">arb_address</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="kw">impl</span> <span class="ident">Strategy</span><span class="op">&lt;</span><span class="ident">Value</span> <span class="op">=</span> <span class="ident">Address</span><span class="op">&gt;</span> {
         <span class="macro">prop_oneof!</span>[
             <span class="ident">arb_established_address</span>().<span class="ident">prop_map</span>(<span class="ident">Address::Established</span>),
             <span class="ident">arb_implicit_address</span>().<span class="ident">prop_map</span>(<span class="ident">Address::Implicit</span>),
+            <span class="ident">arb_internal_address</span>().<span class="ident">prop_map</span>(<span class="ident">Address::Internal</span>),
         ]
     }
 
@@ -971,6 +1240,25 @@
             <span class="kw">let</span> <span class="ident">pkh</span> <span class="op">=</span> <span class="ident">ed25519::PublicKeyHash::from</span>(<span class="ident">keypair</span>.<span class="ident">public</span>);
             <span class="ident">ImplicitAddress::Ed25519</span>(<span class="ident">pkh</span>)
         })
+    }
+
+    <span class="doccomment">/// Generate an arbitrary [`InternalAddress`].</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">arb_internal_address</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="kw">impl</span> <span class="ident">Strategy</span><span class="op">&lt;</span><span class="ident">Value</span> <span class="op">=</span> <span class="ident">InternalAddress</span><span class="op">&gt;</span> {
+        <span class="comment">// This is here for match exhaustion check to remind to add any new</span>
+        <span class="comment">// internal addresses below.</span>
+        <span class="kw">match</span> <span class="ident">InternalAddress::PoS</span> {
+            <span class="ident">InternalAddress::PoS</span> <span class="op">=</span><span class="op">&gt;</span> {}
+            <span class="ident">InternalAddress::PosSlashPool</span> <span class="op">=</span><span class="op">&gt;</span> {}
+            <span class="ident">InternalAddress::Ibc</span> <span class="op">=</span><span class="op">&gt;</span> {}
+            <span class="ident">InternalAddress::Parameters</span> <span class="op">=</span><span class="op">&gt;</span> {} <span class="comment">/* Add new addresses in the
+                                               * `prop_oneof` below. */</span>
+        };
+        <span class="macro">prop_oneof!</span>[
+            <span class="ident">Just</span>(<span class="ident">InternalAddress::PoS</span>),
+            <span class="ident">Just</span>(<span class="ident">InternalAddress::PosSlashPool</span>),
+            <span class="ident">Just</span>(<span class="ident">InternalAddress::Ibc</span>),
+            <span class="ident">Just</span>(<span class="ident">InternalAddress::Parameters</span>),
+        ]
     }
 }
 </pre></div>
