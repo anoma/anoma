@@ -1,5 +1,4 @@
 ---
-clone: {disable: true}
 environment: {CARGO_HOME: /usr/local/rust/project/.cargo, CARGO_INCREMENTAL: '0',
   GIT_LFS_SKIP_SMUDGE: '1'}
 kind: pipeline
@@ -16,6 +15,6 @@ type: docker
 workspace: {path: /usr/local/rust/project}
 ---
 kind: signature
-hmac: e45c7c9e149d5f3f9f7e709504ca809be411c457722dd44d59eef15a81a1da88
+hmac: a0f9f2748c801e3f75e140d724f115b65ae11bfd7d767c961213175ee3360513
 
 ...
