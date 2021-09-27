@@ -36,7 +36,7 @@ steps:
   name: restore_cache
   pull: never
   settings: {archive_format: gzip, backend: s3, bucket: heliax-drone-cache-v2, cache_key: '1-54-0/build/{{
-      checksum "Cargo.lock" }}', mount: '[.cargo]', region: eu-west-1, restore: true}
+      checksum "Cargo.lock" }}', mount: ['.cargo'], region: eu-west-1, restore: true}
 - commands: [sccache --start-server, make build]
   depends_on: [restore-cache]
   environment:
@@ -83,7 +83,7 @@ steps:
   name: clean-cache
   pull: never
   settings: {archive_format: gzip, backend: s3, bucket: heliax-drone-cache-v2, cache_key: '1-54-0/build/{{
-      checksum "Cargo.lock" }}', mount: '[.cargo]', override: false, rebuild: true,
+      checksum "Cargo.lock" }}', mount: ['.cargo'], override: false, rebuild: true,
     region: eu-west-1}
   when:
     status: [success, failure]
