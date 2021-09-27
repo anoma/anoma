@@ -11,5 +11,3 @@ make deps
 # Build - this will create a `.wasm` file
 make build-release
 ```
-
-The crate is configured to build into wasm in [cargo config](.cargo/config).
