@@ -35,8 +35,14 @@ steps:
   image: meltwater/drone-cache:latest
   name: restore_cache
   pull: never
-  settings: {archive_format: gzip, backend: s3, bucket: heliax-drone-cache-v2, cache_key: '1-54-0/build/{{
-      checksum "Cargo.lock" }}', mount: ['.cargo'], region: eu-west-1, restore: true}
+  settings:
+    archive_format: gzip
+    backend: s3
+    bucket: heliax-drone-cache-v2
+    cache_key: 1-54-0/build/{{ checksum "Cargo.lock" }}
+    mount: [.cargo]
+    region: eu-west-1
+    restore: true
 - commands: [sccache --start-server, make build]
   depends_on: [restore-cache]
   environment:
@@ -82,9 +88,15 @@ steps:
   image: meltwater/drone-cache:latest
   name: clean-cache
   pull: never
-  settings: {archive_format: gzip, backend: s3, bucket: heliax-drone-cache-v2, cache_key: '1-54-0/build/{{
-      checksum "Cargo.lock" }}', mount: ['.cargo'], override: false, rebuild: true,
-    region: eu-west-1}
+  settings:
+    archive_format: gzip
+    backend: s3
+    bucket: heliax-drone-cache-v2
+    cache_key: 1-54-0/build/{{ checksum "Cargo.lock" }}
+    mount: [.cargo]
+    override: false
+    rebuild: true
+    region: eu-west-1
   when:
     status: [success, failure]
 triggers:
@@ -93,6 +105,6 @@ type: docker
 workspace: {path: /usr/local/rust/project}
 ---
 kind: signature
-hmac: cd5daa18869051c67ca2ae9a1876a717509bbb14c134abdc8124a6db297ef125
+hmac: b14807126c8585dc7263af698f24ac1bc603b9f594029477f6dbe1429f80b162
 
 ...
