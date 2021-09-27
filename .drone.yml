@@ -6,7 +6,7 @@ kind: pipeline
 name: anoma-ci-build-pr
 node: {project: anoma}
 steps:
-- commands: [git clone $DRONE_GIT_HTTP_URL ., git fetch --all, git checkout $DRONE_COMMIT]
+- commands: [echo "hello world"]
   image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/git:latest
   name: clone
   pull: never
@@ -16,6 +16,6 @@ type: docker
 workspace: {path: /usr/local/rust/project}
 ---
 kind: signature
-hmac: 664d4c1c153d514f63c826d81377a6406a56063476a26a0178411b66f9ea7f3a
+hmac: e45c7c9e149d5f3f9f7e709504ca809be411c457722dd44d59eef15a81a1da88
 
 ...
