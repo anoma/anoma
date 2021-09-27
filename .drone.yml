@@ -7,7 +7,7 @@ node: {project: anoma}
 steps:
 - commands: [echo "hello world"]
   image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/git:latest
-  name: clone
+  name: test
   pull: if-not-exists
 trigger:
   event: [pull_request]
@@ -15,6 +15,6 @@ type: docker
 workspace: {path: /usr/local/rust/project}
 ---
 kind: signature
-hmac: 5dc2afb752543b85d4de92e984255161b8010dbb47567f1c5eb3d29cc7879134
+hmac: 9d01f86c5ffa6d623f0094fbb15b5c2d1d47fe6ed5863ad08c231a853c8c7987
 
 ...
