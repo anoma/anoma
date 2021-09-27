@@ -9,13 +9,13 @@ steps:
 - commands: [git clone $DRONE_GIT_HTTP_URL ., git fetch --all, git checkout $DRONE_COMMIT]
   image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/git:latest
   name: clone
-  pull: never
+  pull: if-not-exists
 trigger:
   event: [pull_request]
 type: docker
 workspace: {path: /usr/local/rust/project}
 ---
 kind: signature
-hmac: 81a833b3fc23bd541b4700f694158bbc55ea1bf651cf6b8046ab943414d5b737
+hmac: 2af74107caa5e7c7d0083f0e91903ee41994d5b293f814f54f4806ca2ccfd640
 
 ...
