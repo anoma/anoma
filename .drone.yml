@@ -506,7 +506,7 @@ clone: {disable: true}
 environment: {CARGO_HOME: /usr/local/rust/project/.cargo, CARGO_INCREMENTAL: '0',
   GIT_LFS_SKIP_SMUDGE: '1'}
 kind: pipeline
-name: anoma-ci-docs-master
+name: anoma-ci-build-master
 node: {project: anoma}
 steps:
 - commands: [git clone $DRONE_GIT_HTTP_URL ., git fetch --all, git checkout $DRONE_COMMIT]
@@ -750,6 +750,6 @@ type: docker
 workspace: {path: /usr/local/rust/project}
 ---
 kind: signature
-hmac: 5606f452580cd01461705d742664892a0149b64b632d4963212686ab301b0623
+hmac: f4c6d6cc875c2ce742d6f01447167be664cf96b8b788b382b599611c68d77fd2
 
 ...
