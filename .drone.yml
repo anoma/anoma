@@ -1,20 +1,21 @@
 ---
+clone: {disable: true}
 environment: {CARGO_HOME: /usr/local/rust/project/.cargo, CARGO_INCREMENTAL: '0',
   GIT_LFS_SKIP_SMUDGE: '1'}
 kind: pipeline
 name: anoma-ci-build-pr
 node: {project: anoma}
 steps:
-- commands: [echo "hello world"]
-  image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/anoma:latest
-  name: test
-  pull: if-not-exists
+- commands: [git clone $DRONE_GIT_HTTP_URL ., git fetch --all, git checkout $DRONE_COMMIT]
+  image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/git:latest
+  name: clone
+  pull: never
 trigger:
   event: [pull_request]
 type: docker
 workspace: {path: /usr/local/rust/project}
 ---
 kind: signature
-hmac: ebfec4c7c33b4147a67e993af2a248c9d6f951a2ca2aec4c80e6eb495438422a
+hmac: 81a833b3fc23bd541b4700f694158bbc55ea1bf651cf6b8046ab943414d5b737
 
 ...
