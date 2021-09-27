@@ -38,13 +38,38 @@
 <span id="36">36</span>
 <span id="37">37</span>
 <span id="38">38</span>
+<span id="39">39</span>
+<span id="40">40</span>
+<span id="41">41</span>
+<span id="42">42</span>
+<span id="43">43</span>
+<span id="44">44</span>
+<span id="45">45</span>
+<span id="46">46</span>
+<span id="47">47</span>
+<span id="48">48</span>
+<span id="49">49</span>
+<span id="50">50</span>
+<span id="51">51</span>
+<span id="52">52</span>
+<span id="53">53</span>
+<span id="54">54</span>
+<span id="55">55</span>
+<span id="56">56</span>
+<span id="57">57</span>
+<span id="58">58</span>
+<span id="59">59</span>
+<span id="60">60</span>
+<span id="61">61</span>
+<span id="62">62</span>
+<span id="63">63</span>
 </pre><pre class="rust">
 <span class="doccomment">//! Helpers for making digital signatures using cryptographic keys from the</span>
 <span class="doccomment">//! wallet.</span>
 
 <span class="kw">use</span> <span class="ident">std::rc::Rc</span>;
 
-<span class="kw">use</span> <span class="ident">anoma::types::address::Address</span>;
+<span class="kw">use</span> <span class="ident">anoma::types::address</span>::{<span class="ident">Address</span>, <span class="ident">ImplicitAddress</span>};
 <span class="kw">use</span> <span class="ident">anoma::types::key::ed25519::Keypair</span>;
 
 <span class="kw">use</span> <span class="kw">super</span><span class="ident">::rpc</span>;
@@ -58,24 +83,49 @@
     <span class="ident">addr</span>: <span class="kw-2">&amp;</span><span class="ident">Address</span>,
     <span class="ident">ledger_address</span>: <span class="ident">tendermint::net::Address</span>,
 ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Rc</span><span class="op">&lt;</span><span class="ident">Keypair</span><span class="op">&gt;</span> {
-    <span class="macro">println!</span>(
-        <span class="string">&quot;Looking-up public key of {} from the ledger...&quot;</span>,
-        <span class="ident">addr</span>.<span class="ident">encode</span>()
-    );
-    <span class="kw">let</span> <span class="ident">public_key</span> <span class="op">=</span> <span class="ident">rpc::get_public_key</span>(<span class="ident">addr</span>, <span class="ident">ledger_address</span>)
-        .<span class="kw">await</span>
-        .<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="op">|</span> {
-            <span class="macro">eprintln!</span>(<span class="string">&quot;No public key found for the address {}&quot;</span>, <span class="ident">addr</span>.<span class="ident">encode</span>());
-            <span class="ident">cli::safe_exit</span>(<span class="number">1</span>);
-        });
-    <span class="ident">wallet</span>.<span class="ident">find_key_by_pk</span>(<span class="kw-2">&amp;</span><span class="ident">public_key</span>).<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="ident">err</span><span class="op">|</span> {
-        <span class="macro">eprintln!</span>(
-            <span class="string">&quot;Unable to load the keypair from the wallet for public key {}. \
-             Failed with: {}&quot;</span>,
-            <span class="ident">public_key</span>, <span class="ident">err</span>
-        );
-        <span class="ident">cli::safe_exit</span>(<span class="number">1</span>)
-    })
+    <span class="kw">match</span> <span class="ident">addr</span> {
+        <span class="ident">Address::Established</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="macro">println!</span>(
+                <span class="string">&quot;Looking-up public key of {} from the ledger...&quot;</span>,
+                <span class="ident">addr</span>.<span class="ident">encode</span>()
+            );
+            <span class="kw">let</span> <span class="ident">public_key</span> <span class="op">=</span> <span class="ident">rpc::get_public_key</span>(<span class="ident">addr</span>, <span class="ident">ledger_address</span>)
+                .<span class="kw">await</span>
+                .<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="op">|</span> {
+                    <span class="macro">eprintln!</span>(
+                        <span class="string">&quot;No public key found for the address {}&quot;</span>,
+                        <span class="ident">addr</span>.<span class="ident">encode</span>()
+                    );
+                    <span class="ident">cli::safe_exit</span>(<span class="number">1</span>);
+                });
+            <span class="ident">wallet</span>.<span class="ident">find_key_by_pk</span>(<span class="kw-2">&amp;</span><span class="ident">public_key</span>).<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="ident">err</span><span class="op">|</span> {
+                <span class="macro">eprintln!</span>(
+                    <span class="string">&quot;Unable to load the keypair from the wallet for public \
+                     key {}. Failed with: {}&quot;</span>,
+                    <span class="ident">public_key</span>, <span class="ident">err</span>
+                );
+                <span class="ident">cli::safe_exit</span>(<span class="number">1</span>)
+            })
+        }
+        <span class="ident">Address::Implicit</span>(<span class="ident">ImplicitAddress::Ed25519</span>(<span class="ident">pkh</span>)) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">wallet</span>.<span class="ident">find_key_by_pkh</span>(<span class="ident">pkh</span>).<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="ident">err</span><span class="op">|</span> {
+                <span class="macro">eprintln!</span>(
+                    <span class="string">&quot;Unable to load the keypair from the wallet for the \
+                     implicit address {}. Failed with: {}&quot;</span>,
+                    <span class="ident">addr</span>.<span class="ident">encode</span>(),
+                    <span class="ident">err</span>
+                );
+                <span class="ident">cli::safe_exit</span>(<span class="number">1</span>)
+            })
+        }
+        <span class="ident">Address::Internal</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="macro">eprintln!</span>(
+                <span class="string">&quot;Internal address {} doesn&#39;t have any signing keys.&quot;</span>,
+                <span class="ident">addr</span>
+            );
+            <span class="ident">cli::safe_exit</span>(<span class="number">1</span>)
+        }
+    }
 }
 </pre></div>
 </section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="anoma_apps" data-search-index-js="../../../search-index.js" data-search-js="../../../search.js"></div><script src="../../../main.js"></script><script src="../../../source-script.js"></script><script src="../../../source-files.js"></script></body></html>
