@@ -275,7 +275,6 @@ steps:
       | sha256sum -c -, echo "19ab6263cc481222b4ecedd1037d2942e4b93d915693aad153bec2a80977ce3d  scripts/ci/audit.py"
       | sha256sum -c -, echo "d4790094234822503bc8fd230bbc9ae066c073f17aeb3d773b0bc4c879a49d65  scripts/ci/udeps.py"
       | sha256sum -c -, sh scripts/ci/pre-run.sh]
-  depends_on: [clone]
   image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/git:latest
   name: check-scripts-integrity
   pull: never
@@ -373,6 +372,26 @@ steps:
   image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/anoma:latest
   name: udeps
   pull: never
+- commands: [cargo cache]
+  depends_on: [udeps]
+  image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/anoma:latest
+  name: clean-cache
+  pull: never
+  when:
+    status: [success, failure]
+- depends_on: [clean-cache]
+  environment:
+    AWS_ACCESS_KEY_ID: {from_secret: aws_access_key_id}
+    AWS_SECRET_ACCESS_KEY: {from_secret: aws_secret_access_key}
+    BACKEND_OPERATION_TIMEOUT: 8m
+  image: meltwater/drone-cache:latest
+  name: clean-cache
+  pull: never
+  settings: {archive_format: gzip, backend: s3, bucket: heliax-drone-cache-v2, cache_key: '1-54-0/cron/{{
+      checksum "Cargo.lock" }}', mount: '[.cargo]', override: false, rebuild: true,
+    region: eu-west-1}
+  when:
+    status: [success, failure]
 triggers:
   cron: [audit]
   event: [cron]
@@ -496,6 +515,26 @@ steps:
   image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/anoma:latest
   name: docs
   pull: never
+- commands: [cargo cache]
+  depends_on: [docs]
+  image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/anoma:latest
+  name: clean-cache
+  pull: never
+  when:
+    status: [success, failure]
+- depends_on: [clean-cache]
+  environment:
+    AWS_ACCESS_KEY_ID: {from_secret: aws_access_key_id}
+    AWS_SECRET_ACCESS_KEY: {from_secret: aws_secret_access_key}
+    BACKEND_OPERATION_TIMEOUT: 8m
+  image: meltwater/drone-cache:latest
+  name: clean-cache
+  pull: never
+  settings: {archive_format: gzip, backend: s3, bucket: heliax-drone-cache-v2, cache_key: '1-54-0/docs/{{
+      checksum "Cargo.lock" }}', mount: '[.cargo]', override: false, rebuild: true,
+    region: eu-west-1}
+  when:
+    status: [success, failure]
 triggers:
   branch: [master]
   event: [push]
@@ -699,7 +738,6 @@ steps:
       | sha256sum -c -, echo "19ab6263cc481222b4ecedd1037d2942e4b93d915693aad153bec2a80977ce3d  scripts/ci/audit.py"
       | sha256sum -c -, echo "d4790094234822503bc8fd230bbc9ae066c073f17aeb3d773b0bc4c879a49d65  scripts/ci/udeps.py"
       | sha256sum -c -, sh scripts/ci/pre-run.sh]
-  depends_on: [clone]
   image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/git:latest
   name: check-scripts-integrity
   pull: never
@@ -750,6 +788,6 @@ type: docker
 workspace: {path: /usr/local/rust/project}
 ---
 kind: signature
-hmac: f4c6d6cc875c2ce742d6f01447167be664cf96b8b788b382b599611c68d77fd2
+hmac: ff4cdaac184b76f51eb4cfc3226be02dfad3dc993f1eb5d96302573a6e228376
 
 ...
