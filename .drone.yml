@@ -6,7 +6,7 @@ kind: pipeline
 name: anoma-ci-misc-pr
 node: {project: anoma}
 steps:
-- commands: [git clone $DRONE_GIT_HTTP_URL ., git fetch --all, git checkout $DRONE_TARGET_BRANCH,
+- commands: [pwd, git clone $DRONE_GIT_HTTP_URL ., git fetch --all, git checkout $DRONE_TARGET_BRANCH,
     git merge $DRONE_COMMIT, CONFLICTS=$(git ls-files -u | wc -l), 'if [ "$CONFLICTS"
       -gt 0 ]; then exit 1; fi;exit 0']
   image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/git:latest
@@ -18,6 +18,6 @@ type: docker
 workspace: {path: /usr/local/rust/wasm}
 ---
 kind: signature
-hmac: f0325fa2fee3de4eb0a663c71d43a08529a667bcc3b757941603067f32ea7f3f
+hmac: 4d7aff44a58bcd9b04c283429c163f60b413ecd5ce94139af9e49e859c42057a
 
 ...
