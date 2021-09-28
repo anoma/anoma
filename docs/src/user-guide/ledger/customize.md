@@ -4,7 +4,7 @@ On this page, we'll cover how to tailor your account(s) to your use-case with cu
 
 We currently only support Rust for custom validity predicates and transactions via WASM, but expect many more options to be available in the future!
 
-## Anoma accounts primer
+## 👩🏽‍🏫Anoma accounts primer
 
 Instead of the common smart contract design, in Anoma, all the accounts follow the same basic principles. Each account has exactly one validity predicate. Any transaction that attempts to make some storage modifications will trigger validity predicates of each account whose storage has been modified by it. Validity predicates are stateless functions that decide if an account accepts the transaction.
 

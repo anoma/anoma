@@ -14,7 +14,7 @@ cargo run --bin anoman gossip --rpc "127.0.0.1:39111" --matchmaker-path wasm/mm_
 
 This pre-built matchmaker implementation is [the fungible token exchange `mm_token_exch`](https://github.com/anoma/anoma/blob/master/wasm/wasm_source/src/mm_token_exch.rs), that is being used together with [the pre-built `tx_from_intent` transaction WASM](https://github.com/anoma/anoma/blob/master/wasm/wasm_source/src/lib.rs) to submit transaction from matched intents to the ledger.
 
-## Example intents
+## ✋Example intents
 
 1) We'll be using these addresses in the intents:
 
@@ -53,7 +53,7 @@ This pre-built matchmaker implementation is [the fungible token exchange `mm_tok
 
    The matchmaker should find a match from these intents and submit a transaction to the ledger that performs the n-party transfers of tokens.
 
-## Custom matchmaker
+## 🤝Custom matchmaker
 
 A custom matchmaker code can be built from [`wasm/mm_template`](https://github.com/anoma/anoma/tree/master/wasm/mm_template).
 
