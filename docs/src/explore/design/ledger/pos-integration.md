@@ -1,13 +1,13 @@
 # PoS integration
 
-The [PoS system](/explore/design/pos.md) is integrated into Anoma ledger at 3 different layers:
+The [PoS system](../pos.md) is integrated into Anoma ledger at 3 different layers:
 - base ledger that performs genesis initialization, validator set updates on new epoch and applies slashes when they are received from ABCI
 - an account with an internal address and a [native VP](vp.md#native-vps) that validates any changes applied by transactions to the PoS account state
 - transaction WASMs to perform various PoS actions, also available as a library code for custom made transactions
 
 The `votes_per_token` PoS system parameter must be chosen to satisfy the [Tendermint requirement](https://github.com/tendermint/spec/blob/60395941214439339cc60040944c67893b5f8145/spec/abci/apps.md#validator-updates) of `MaxTotalVotingPower = MaxInt64 / 8`.
 
-All [the data relevant to the PoS system](/explore/design/pos.md#storage) are stored under the PoS account's storage sub-space, with the following key schema (the PoS address prefix is omitted for clarity):
+All [the data relevant to the PoS system](../pos.md#storage) are stored under the PoS account's storage sub-space, with the following key schema (the PoS address prefix is omitted for clarity):
 
 - `params` (required): the system parameters
 - for any validator, all the following fields are required:
@@ -44,9 +44,9 @@ All the fees that are charged in a transaction execution (DKG transaction wrappe
 
 ## Transactions
 
-The transactions are assumed to be applied in epoch `n`. Any transaction that modifies [epoched data](/explore/design/pos.md#epoched-data) updates the structure as described in [epoched data storage](/explore/design/pos.md#storage).
+The transactions are assumed to be applied in epoch `n`. Any transaction that modifies [epoched data](../pos.md#epoched-data) updates the structure as described in [epoched data storage](../pos.md#storage).
 
-For slashing tokens, we implement a [PoS slash pool account](/explore/design/ledger/vp.md#pos-slash-pool-vp). Slashed tokens should be credited to this account and, for now, no tokens can be be debited by anyone.
+For slashing tokens, we implement a [PoS slash pool account](vp.md#pos-slash-pool-vp). Slashed tokens should be credited to this account and, for now, no tokens can be be debited by anyone.
 
 ### Validator transactions
 
@@ -150,7 +150,7 @@ Evidence for byzantine behaviour is received from Tendermint ABCI on `BeginBlock
 
 In the following description, "pre-state" is the state prior to transaction execution and "post-state" is the state posterior to it.
 
-Any changes to PoS epoched data are checked to update the structure as described in [epoched data storage](/explore/design/pos.md#storage).
+Any changes to PoS epoched data are checked to update the structure as described in [epoched data storage](../pos.md#storage).
 
 Because some key changes are expected to relate to others, the VP also accumulates some values that are checked for validity after key specific logic:
 - `balance_delta: token::Change`

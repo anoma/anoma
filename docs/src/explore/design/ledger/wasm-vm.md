@@ -1,10 +1,10 @@
 # WASM VM
 
-A wasm virtual machine will be used for [validity predicates](./vp.md) and [transactions code](./tx-execution.md). 
+A wasm virtual machine will be used for [validity predicates](./vp.md) and [transactions code](./tx.md). 
 
 The VM should provide:
 - an interface for compiling from higher-level languages to wasm (initially only Rust)
-- a wasm compiler, unless we use [an interpreted runtime](/explore/libraries/wasm.md)
+- a wasm compiler, unless we use [an interpreted runtime](../../libraries/wasm.md)
 - provide and inject [environments for higher-level languages for VPs and transactions](#wasm-environment)
 - pre-process wasm modules
   - check & sanitize modules

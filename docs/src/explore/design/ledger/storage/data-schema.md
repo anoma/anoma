@@ -1,7 +1,7 @@
 # Data schema
 
 At high level, all the data in the [accounts' dynamic
-sub-spaces](accounts.md#dynamic-storage-sub-space) is just keys associated with
+sub-spaces](../accounts.md#dynamic-storage-sub-space) is just keys associated with
 arbitrary bytes and intents are just wrapper around arbitrary data. To help the
 processes that read and write this data (transactions, validity predicates,
 matchmaker) interpret it and implement interesting functionality on top it, the

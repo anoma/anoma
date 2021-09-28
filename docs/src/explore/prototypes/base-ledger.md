@@ -45,7 +45,7 @@ When it's ran:
 - launch tendermint node in another thread with the channel sender
   - send tendermint ABCI requests via the channel together with a new channel sender to receive a response
 - run shell loop with the channel receiver, which handles ABIC requests:
-  - [transaction execution](/explore/design/ledger/tx-execution.md) which includes [wasm VM calls](/explore/design/ledger/wasm-vm.md)
+  - [transaction execution](../design/ledger/tx.md) which includes [wasm VM calls](../design/ledger/wasm-vm.md)
 
 ###### Tendermint
 
@@ -53,7 +53,7 @@ This module handles initializing and running `tendermint` and forwards messages 
 
 ##### Storage
 
-Key-value storage. More details are specified on [Database page](./explore/design/db.md).
+Key-value storage. More details are specified on [Storage page](../design/ledger/storage.md).
 
 ##### CLI
 

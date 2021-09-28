@@ -7,11 +7,8 @@ in different languages, has a large user base and an active development.  It
 allows us to readily implement a network to run our application.
 
 The gossip network is used to propagate messages of two different applications,
-intents for the intent gossip system, and message for distributed keys
+intents for the [intent gossip system](intent_gossip/intent_gossip.md), and message for distributed keys
 generation application.
-
-- [intent gossip](./intent_gossip.md)
-- [distributed key generation](./dkg_gossip.md)
 
 ## Flow diagram: High level overview
 

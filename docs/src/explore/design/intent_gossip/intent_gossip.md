@@ -28,7 +28,7 @@ interest, e.g. “asset_exchange”. see
 for more information on the network topology.
 
 Each node has an incentive to propagate intents and will obtain a small portion
-of the fees if the intent is settled. [TODO: update when logic is found] See
+of the fees if the intent is settled. (TODO: update when logic is found) See
 [incentive](./incentive.md) for more information.
 
 ### Flow diagram: asset exchange
