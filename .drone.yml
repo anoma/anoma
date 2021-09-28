@@ -345,7 +345,7 @@ steps:
   name: check-wasm
   pull: never
 - commands: [cargo cache]
-  depends_on: [update-wasm]
+  depends_on: [check-wasm]
   image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/anoma:latest
   name: clean-cache
   pull: never
@@ -914,6 +914,6 @@ type: docker
 workspace: {path: /usr/local/rust/project}
 ---
 kind: signature
-hmac: 0204ced3105dee77688282395a25b0c74a438a50d10b261007746633f85f71ba
+hmac: d3b0bafd66d3d286592eb3607d64cbfc780f73b3969f74db90f49036bb8abf39
 
 ...
