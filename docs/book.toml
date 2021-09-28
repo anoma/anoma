@@ -16,6 +16,8 @@ mathjax-support = true
 [output.html.search]
 expand = true
 
+[output.linkcheck]
+
 [preprocessor]
 [preprocessor.mermaid]
 command = "mdbook-mermaid"
