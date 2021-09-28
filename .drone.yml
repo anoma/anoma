@@ -10,7 +10,7 @@ steps:
       | sha256sum -c -, echo "52d59575c0767b4738ea9b4c07844c761dce6f54a59b3429e75fb5f4410cdc7e  wasm/tx_template/Makefile"
       | sha256sum -c -, echo "52d59575c0767b4738ea9b4c07844c761dce6f54a59b3429e75fb5f4410cdc7e  wasm/mm_template/Makefile"
       | sha256sum -c -, echo "52d59575c0767b4738ea9b4c07844c761dce6f54a59b3429e75fb5f4410cdc7e  wasm/mm_filter_template/Makefile"
-      | sha256sum -c -, echo "4388598b8ace38607a492e2f4d3eae46ef97ac9edb98a20619de3298e5aea081  docs/Makefile"
+      | sha256sum -c -, echo "f01f320575fbbbd3d0ba0f2dd7e9b0132e8448e4e07ce99d425d9ad03d811428  docs/Makefile"
       | sha256sum -c -, echo "4b0b566f5bc572569ebcf2eee17129e91f2009a66972fe294bc4d1e0b4d9ad8f  scripts/ci/update-wasm.sh"
       | sha256sum -c -, echo "c2bbcc7ab5f2b4cc478513dc1db117e3a1a9122271db0160afa3929132f54f82  scripts/ci/pre-run.sh"
       | sha256sum -c -, echo "19ab6263cc481222b4ecedd1037d2942e4b93d915693aad153bec2a80977ce3d  scripts/ci/audit.py"
@@ -114,7 +114,7 @@ steps:
       | sha256sum -c -, echo "52d59575c0767b4738ea9b4c07844c761dce6f54a59b3429e75fb5f4410cdc7e  wasm/tx_template/Makefile"
       | sha256sum -c -, echo "52d59575c0767b4738ea9b4c07844c761dce6f54a59b3429e75fb5f4410cdc7e  wasm/mm_template/Makefile"
       | sha256sum -c -, echo "52d59575c0767b4738ea9b4c07844c761dce6f54a59b3429e75fb5f4410cdc7e  wasm/mm_filter_template/Makefile"
-      | sha256sum -c -, echo "4388598b8ace38607a492e2f4d3eae46ef97ac9edb98a20619de3298e5aea081  docs/Makefile"
+      | sha256sum -c -, echo "f01f320575fbbbd3d0ba0f2dd7e9b0132e8448e4e07ce99d425d9ad03d811428  docs/Makefile"
       | sha256sum -c -, echo "4b0b566f5bc572569ebcf2eee17129e91f2009a66972fe294bc4d1e0b4d9ad8f  scripts/ci/update-wasm.sh"
       | sha256sum -c -, echo "c2bbcc7ab5f2b4cc478513dc1db117e3a1a9122271db0160afa3929132f54f82  scripts/ci/pre-run.sh"
       | sha256sum -c -, echo "19ab6263cc481222b4ecedd1037d2942e4b93d915693aad153bec2a80977ce3d  scripts/ci/audit.py"
@@ -199,7 +199,7 @@ steps:
       | sha256sum -c -, echo "52d59575c0767b4738ea9b4c07844c761dce6f54a59b3429e75fb5f4410cdc7e  wasm/tx_template/Makefile"
       | sha256sum -c -, echo "52d59575c0767b4738ea9b4c07844c761dce6f54a59b3429e75fb5f4410cdc7e  wasm/mm_template/Makefile"
       | sha256sum -c -, echo "52d59575c0767b4738ea9b4c07844c761dce6f54a59b3429e75fb5f4410cdc7e  wasm/mm_filter_template/Makefile"
-      | sha256sum -c -, echo "4388598b8ace38607a492e2f4d3eae46ef97ac9edb98a20619de3298e5aea081  docs/Makefile"
+      | sha256sum -c -, echo "f01f320575fbbbd3d0ba0f2dd7e9b0132e8448e4e07ce99d425d9ad03d811428  docs/Makefile"
       | sha256sum -c -, echo "4b0b566f5bc572569ebcf2eee17129e91f2009a66972fe294bc4d1e0b4d9ad8f  scripts/ci/update-wasm.sh"
       | sha256sum -c -, echo "c2bbcc7ab5f2b4cc478513dc1db117e3a1a9122271db0160afa3929132f54f82  scripts/ci/pre-run.sh"
       | sha256sum -c -, echo "19ab6263cc481222b4ecedd1037d2942e4b93d915693aad153bec2a80977ce3d  scripts/ci/audit.py"
@@ -285,7 +285,7 @@ steps:
       | sha256sum -c -, echo "52d59575c0767b4738ea9b4c07844c761dce6f54a59b3429e75fb5f4410cdc7e  wasm/tx_template/Makefile"
       | sha256sum -c -, echo "52d59575c0767b4738ea9b4c07844c761dce6f54a59b3429e75fb5f4410cdc7e  wasm/mm_template/Makefile"
       | sha256sum -c -, echo "52d59575c0767b4738ea9b4c07844c761dce6f54a59b3429e75fb5f4410cdc7e  wasm/mm_filter_template/Makefile"
-      | sha256sum -c -, echo "4388598b8ace38607a492e2f4d3eae46ef97ac9edb98a20619de3298e5aea081  docs/Makefile"
+      | sha256sum -c -, echo "f01f320575fbbbd3d0ba0f2dd7e9b0132e8448e4e07ce99d425d9ad03d811428  docs/Makefile"
       | sha256sum -c -, echo "4b0b566f5bc572569ebcf2eee17129e91f2009a66972fe294bc4d1e0b4d9ad8f  scripts/ci/update-wasm.sh"
       | sha256sum -c -, echo "c2bbcc7ab5f2b4cc478513dc1db117e3a1a9122271db0160afa3929132f54f82  scripts/ci/pre-run.sh"
       | sha256sum -c -, echo "19ab6263cc481222b4ecedd1037d2942e4b93d915693aad153bec2a80977ce3d  scripts/ci/audit.py"
@@ -359,7 +359,7 @@ steps:
       | sha256sum -c -, echo "52d59575c0767b4738ea9b4c07844c761dce6f54a59b3429e75fb5f4410cdc7e  wasm/tx_template/Makefile"
       | sha256sum -c -, echo "52d59575c0767b4738ea9b4c07844c761dce6f54a59b3429e75fb5f4410cdc7e  wasm/mm_template/Makefile"
       | sha256sum -c -, echo "52d59575c0767b4738ea9b4c07844c761dce6f54a59b3429e75fb5f4410cdc7e  wasm/mm_filter_template/Makefile"
-      | sha256sum -c -, echo "4388598b8ace38607a492e2f4d3eae46ef97ac9edb98a20619de3298e5aea081  docs/Makefile"
+      | sha256sum -c -, echo "f01f320575fbbbd3d0ba0f2dd7e9b0132e8448e4e07ce99d425d9ad03d811428  docs/Makefile"
       | sha256sum -c -, echo "4b0b566f5bc572569ebcf2eee17129e91f2009a66972fe294bc4d1e0b4d9ad8f  scripts/ci/update-wasm.sh"
       | sha256sum -c -, echo "c2bbcc7ab5f2b4cc478513dc1db117e3a1a9122271db0160afa3929132f54f82  scripts/ci/pre-run.sh"
       | sha256sum -c -, echo "19ab6263cc481222b4ecedd1037d2942e4b93d915693aad153bec2a80977ce3d  scripts/ci/audit.py"
@@ -430,7 +430,7 @@ steps:
       | sha256sum -c -, echo "52d59575c0767b4738ea9b4c07844c761dce6f54a59b3429e75fb5f4410cdc7e  wasm/tx_template/Makefile"
       | sha256sum -c -, echo "52d59575c0767b4738ea9b4c07844c761dce6f54a59b3429e75fb5f4410cdc7e  wasm/mm_template/Makefile"
       | sha256sum -c -, echo "52d59575c0767b4738ea9b4c07844c761dce6f54a59b3429e75fb5f4410cdc7e  wasm/mm_filter_template/Makefile"
-      | sha256sum -c -, echo "4388598b8ace38607a492e2f4d3eae46ef97ac9edb98a20619de3298e5aea081  docs/Makefile"
+      | sha256sum -c -, echo "f01f320575fbbbd3d0ba0f2dd7e9b0132e8448e4e07ce99d425d9ad03d811428  docs/Makefile"
       | sha256sum -c -, echo "4b0b566f5bc572569ebcf2eee17129e91f2009a66972fe294bc4d1e0b4d9ad8f  scripts/ci/update-wasm.sh"
       | sha256sum -c -, echo "c2bbcc7ab5f2b4cc478513dc1db117e3a1a9122271db0160afa3929132f54f82  scripts/ci/pre-run.sh"
       | sha256sum -c -, echo "19ab6263cc481222b4ecedd1037d2942e4b93d915693aad153bec2a80977ce3d  scripts/ci/audit.py"
@@ -509,7 +509,7 @@ steps:
       | sha256sum -c -, echo "52d59575c0767b4738ea9b4c07844c761dce6f54a59b3429e75fb5f4410cdc7e  wasm/tx_template/Makefile"
       | sha256sum -c -, echo "52d59575c0767b4738ea9b4c07844c761dce6f54a59b3429e75fb5f4410cdc7e  wasm/mm_template/Makefile"
       | sha256sum -c -, echo "52d59575c0767b4738ea9b4c07844c761dce6f54a59b3429e75fb5f4410cdc7e  wasm/mm_filter_template/Makefile"
-      | sha256sum -c -, echo "4388598b8ace38607a492e2f4d3eae46ef97ac9edb98a20619de3298e5aea081  docs/Makefile"
+      | sha256sum -c -, echo "f01f320575fbbbd3d0ba0f2dd7e9b0132e8448e4e07ce99d425d9ad03d811428  docs/Makefile"
       | sha256sum -c -, echo "4b0b566f5bc572569ebcf2eee17129e91f2009a66972fe294bc4d1e0b4d9ad8f  scripts/ci/update-wasm.sh"
       | sha256sum -c -, echo "c2bbcc7ab5f2b4cc478513dc1db117e3a1a9122271db0160afa3929132f54f82  scripts/ci/pre-run.sh"
       | sha256sum -c -, echo "19ab6263cc481222b4ecedd1037d2942e4b93d915693aad153bec2a80977ce3d  scripts/ci/audit.py"
@@ -614,7 +614,7 @@ steps:
       | sha256sum -c -, echo "52d59575c0767b4738ea9b4c07844c761dce6f54a59b3429e75fb5f4410cdc7e  wasm/tx_template/Makefile"
       | sha256sum -c -, echo "52d59575c0767b4738ea9b4c07844c761dce6f54a59b3429e75fb5f4410cdc7e  wasm/mm_template/Makefile"
       | sha256sum -c -, echo "52d59575c0767b4738ea9b4c07844c761dce6f54a59b3429e75fb5f4410cdc7e  wasm/mm_filter_template/Makefile"
-      | sha256sum -c -, echo "4388598b8ace38607a492e2f4d3eae46ef97ac9edb98a20619de3298e5aea081  docs/Makefile"
+      | sha256sum -c -, echo "f01f320575fbbbd3d0ba0f2dd7e9b0132e8448e4e07ce99d425d9ad03d811428  docs/Makefile"
       | sha256sum -c -, echo "4b0b566f5bc572569ebcf2eee17129e91f2009a66972fe294bc4d1e0b4d9ad8f  scripts/ci/update-wasm.sh"
       | sha256sum -c -, echo "c2bbcc7ab5f2b4cc478513dc1db117e3a1a9122271db0160afa3929132f54f82  scripts/ci/pre-run.sh"
       | sha256sum -c -, echo "19ab6263cc481222b4ecedd1037d2942e4b93d915693aad153bec2a80977ce3d  scripts/ci/audit.py"
@@ -682,6 +682,6 @@ type: docker
 workspace: {path: /usr/local/rust/project}
 ---
 kind: signature
-hmac: 7486d90e69b8e9162ac596a47ad74851b0c305e3a215c939ef9703a0c1dc9308
+hmac: 6afb8e4822aac39b4751f5e28a5765a81351f1143cacfbbe8aa0ed4515bad03c
 
 ...
