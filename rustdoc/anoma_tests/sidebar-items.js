@@ -1,1 +1,1 @@
-initSidebarItems({"mod":[["log","Using this import requires `tracing` and `tracing-subscriber` dependencies. Set env var `RUST_LOG=info` to see the logs from a test run (and `--nocapture` if the test is not failing)."],["tx",""],["vp",""]]});
+initSidebarItems({"mod":[["ibc",""],["log","Using this import requires `tracing` and `tracing-subscriber` dependencies. Set env var `RUST_LOG=info` to see the logs from a test run (and `--nocapture` if the test is not failing)."],["tx",""],["vp",""]]});

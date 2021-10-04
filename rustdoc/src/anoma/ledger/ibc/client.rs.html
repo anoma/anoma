@@ -350,6 +350,12 @@
 <span id="348">348</span>
 <span id="349">349</span>
 <span id="350">350</span>
+<span id="351">351</span>
+<span id="352">352</span>
+<span id="353">353</span>
+<span id="354">354</span>
+<span id="355">355</span>
+<span id="356">356</span>
 </pre><pre class="rust">
 <span class="doccomment">//! IBC validity predicate for client module</span>
 
@@ -554,37 +560,43 @@
         }
 
         <span class="comment">// check the posterior states</span>
-        <span class="kw">let</span> <span class="ident">client_state</span> <span class="op">=</span> <span class="ident">ClientReader::client_state</span>(<span class="self">self</span>, <span class="ident">client_id</span>)
+        <span class="kw">let</span> <span class="ident">client_state_post</span> <span class="op">=</span> <span class="ident">ClientReader::client_state</span>(<span class="self">self</span>, <span class="ident">client_id</span>)
             .<span class="ident">ok_or_else</span>(<span class="op">|</span><span class="op">|</span> {
                 <span class="ident">Error::InvalidClient</span>(<span class="macro">format!</span>(
                     <span class="string">&quot;The client state doesn&#39;t exist: ID {}&quot;</span>,
                     <span class="ident">client_id</span>
                 ))
             })<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">height</span> <span class="op">=</span> <span class="ident">client_state</span>.<span class="ident">latest_height</span>();
-        <span class="kw">let</span> <span class="ident">consensus_state</span> <span class="op">=</span>
+        <span class="kw">let</span> <span class="ident">height</span> <span class="op">=</span> <span class="ident">client_state_post</span>.<span class="ident">latest_height</span>();
+        <span class="kw">let</span> <span class="ident">consensus_state_post</span> <span class="op">=</span>
             <span class="self">self</span>.<span class="ident">consensus_state</span>(<span class="ident">client_id</span>, <span class="ident">height</span>).<span class="ident">ok_or_else</span>(<span class="op">|</span><span class="op">|</span> {
                 <span class="ident">Error::InvalidClient</span>(<span class="macro">format!</span>(
                     <span class="string">&quot;The consensus state doesn&#39;t exist: ID {}, Height {}&quot;</span>,
                     <span class="ident">client_id</span>, <span class="ident">height</span>
                 ))
             })<span class="question-mark">?</span>;
-        <span class="comment">// check the prior client state</span>
-        <span class="kw">let</span> <span class="ident">pre_client_state</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">client_state_pre</span>(<span class="ident">client_id</span>)<span class="question-mark">?</span>;
-        <span class="comment">// get proofs</span>
+
+        <span class="comment">// verify the given states</span>
+        <span class="kw">let</span> <span class="ident">client_state</span> <span class="op">=</span> <span class="ident">data</span>.<span class="ident">client_state</span>.<span class="ident">clone</span>();
+        <span class="kw">let</span> <span class="ident">consensus_state</span> <span class="op">=</span> <span class="ident">data</span>.<span class="ident">consensus_state</span>.<span class="ident">clone</span>();
         <span class="kw">let</span> <span class="ident">client_proof</span> <span class="op">=</span> <span class="ident">data</span>.<span class="ident">proof_client</span>()<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">consensus_proof</span> <span class="op">=</span> <span class="ident">data</span>.<span class="ident">proof_consensus_state</span>()<span class="question-mark">?</span>;
-
-        <span class="kw">let</span> <span class="ident">client</span> <span class="op">=</span> <span class="ident">AnyClient::from_client_type</span>(<span class="ident">client_state</span>.<span class="ident">client_type</span>());
+        <span class="kw">let</span> <span class="ident">client_type</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">client_type</span>(<span class="ident">client_id</span>).<span class="ident">ok_or_else</span>(<span class="op">|</span><span class="op">|</span> {
+            <span class="ident">Error::InvalidClient</span>(<span class="macro">format!</span>(
+                <span class="string">&quot;The client type doesn&#39;t exist: ID {}&quot;</span>,
+                <span class="ident">client_id</span>
+            ))
+        })<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">client</span> <span class="op">=</span> <span class="ident">AnyClient::from_client_type</span>(<span class="ident">client_type</span>);
         <span class="kw">match</span> <span class="ident">client</span>.<span class="ident">verify_upgrade_and_update_state</span>(
-            <span class="kw-2">&amp;</span><span class="ident">pre_client_state</span>,
+            <span class="kw-2">&amp;</span><span class="ident">client_state</span>,
             <span class="kw-2">&amp;</span><span class="ident">consensus_state</span>,
             <span class="ident">client_proof</span>,
             <span class="ident">consensus_proof</span>,
         ) {
             <span class="prelude-val">Ok</span>((<span class="ident">new_client_state</span>, <span class="ident">new_consensus_state</span>)) <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="kw">if</span> <span class="ident">new_client_state</span> <span class="op">=</span><span class="op">=</span> <span class="ident">client_state</span>
-                    <span class="op">&amp;&amp;</span> <span class="ident">new_consensus_state</span> <span class="op">=</span><span class="op">=</span> <span class="ident">consensus_state</span>
+                <span class="kw">if</span> <span class="ident">new_client_state</span> <span class="op">=</span><span class="op">=</span> <span class="ident">client_state_post</span>
+                    <span class="op">&amp;&amp;</span> <span class="ident">new_consensus_state</span> <span class="op">=</span><span class="op">=</span> <span class="ident">consensus_state_post</span>
                 {
                     <span class="prelude-val">Ok</span>(())
                 } <span class="kw">else</span> {
