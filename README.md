@@ -9,7 +9,7 @@
 
 This is an implementation of the Anoma protocol in Rust.
 
-## 📓Docs
+## 📓 Docs
 
 - [docs](https://anoma.github.io/anoma/): built from [docs mdBook](./docs/)
 - [rustdoc](https://anoma.github.io/anoma/rustdoc/anoma/): built from the source
@@ -18,7 +18,7 @@ This is an implementation of the Anoma protocol in Rust.
 
 > Here lay dragons: this codebase is still experimental, try at your own risk!
 
-## 💾Installing
+## 💾 Installing
 
 There's a single command to build and install Anoma executables from source (the node, the client and the wallet). This command will also verify that [Tendermint](#dependencies) with a compatible version is available and if not, attempt to install it.
 
@@ -30,7 +30,7 @@ After installation, the main `anoma` executable will be available on path.
 
 To find how to use it, check out the [User Guide section of the docs](https://anoma.github.io/anoma/user-guide/).
 
-## ⚙️Development
+## ⚙️ Development
 
 ```shell
 # Build the provided validity predicate, transaction and matchmaker wasm modules
@@ -59,7 +59,7 @@ make fmt
 make clippy
 ```
 
-## 🧾Logging
+## 🧾 Logging
 
 To change the log level, set `ANOMA_LOG` environment variable to one of:
 
