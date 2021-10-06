@@ -2,6 +2,7 @@ use std::path::PathBuf;
 use std::process::Command;
 use std::{fs, thread, time};
 
+use anoma::types::chain::ChainId;
 use anoma_apps::config::{Config, IntentGossiper, Ledger};
 use assert_cmd::assert::OutputAssertExt;
 use libp2p::identity::Keypair;
@@ -35,6 +36,8 @@ pub fn generate_network_of(
 
     let mut node_dirs: Vec<(PathBuf, PeerId)> = Vec::new();
 
+    let chain_id = ChainId::default();
+
     while index < n_of_peers {
         let node_path = path.join(format!("anoma-{}", index));
 
@@ -55,15 +58,11 @@ pub fn generate_network_of(
         node_dirs.push((node_path.clone(), peer_id));
 
         let config = Config {
-            ledger: Ledger {
-                tendermint: node_path.join("tendermint").to_path_buf(),
-                db: node_path.join("db").to_path_buf(),
-                ..Default::default()
-            },
+            ledger: Ledger::new(&node_path, chain_id.clone()),
             intent_gossiper: gossiper_config,
         };
 
-        config.write(&node_path, false).unwrap();
+        config.write(&node_path, &chain_id, false).unwrap();
         index += 1;
     }
     node_dirs

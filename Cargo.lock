@@ -141,6 +141,7 @@ dependencies = [
  "clap 3.0.0-beta.2",
  "color-eyre",
  "config",
+ "derivative",
  "ed25519-dalek",
  "eyre",
  "futures 0.3.17",

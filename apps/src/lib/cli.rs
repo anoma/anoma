@@ -129,25 +129,11 @@ pub mod cmds {
     /// Used as sub-commands (`SubCmd` instance) in `anoma` binary.
     #[derive(Clone, Debug)]
     pub enum AnomaClient {
-        // Ledger cmds
-        TxCustom(TxCustom),
-        TxTransfer(TxTransfer),
-        TxUpdateVp(TxUpdateVp),
-        TxInitAccount(TxInitAccount),
-        TxInitValidator(TxInitValidator),
-        Bond(Bond),
-        Unbond(Unbond),
-        Withdraw(Withdraw),
-        QueryEpoch(QueryEpoch),
-        QueryBalance(QueryBalance),
-        QueryBonds(QueryBonds),
-        QueryVotingPower(QueryVotingPower),
-        QuerySlashes(QuerySlashes),
-        // Gossip cmds
-        Intent(Intent),
-        SubscribeTopic(SubscribeTopic),
-        // Utils cmds
-        Utils(Utils),
+        /// The [`Context`] provides access to the wallet and the config.
+        /// It will generate a new wallet and config, if they don't exist.
+        WithContext(AnomaClientWithContext),
+        /// Utils don't have [`Context`], only the global arguments.
+        WithoutContext(Utils),
     }
 
     impl Cmd for AnomaClient {
@@ -177,26 +163,25 @@ pub mod cmds {
         }
 
         fn parse(matches: &ArgMatches) -> Option<Self> {
-            let tx_custom = SubCmd::parse(matches).map(Self::TxCustom);
-            let tx_transfer = SubCmd::parse(matches).map(Self::TxTransfer);
-            let tx_update_vp = SubCmd::parse(matches).map(Self::TxUpdateVp);
-            let tx_init_account =
-                SubCmd::parse(matches).map(Self::TxInitAccount);
+            use AnomaClientWithContext::*;
+            let tx_custom = Self::parse_with_ctx(matches, TxCustom);
+            let tx_transfer = Self::parse_with_ctx(matches, TxTransfer);
+            let tx_update_vp = Self::parse_with_ctx(matches, TxUpdateVp);
+            let tx_init_account = Self::parse_with_ctx(matches, TxInitAccount);
             let tx_init_validator =
-                SubCmd::parse(matches).map(Self::TxInitValidator);
-            let bond = SubCmd::parse(matches).map(Self::Bond);
-            let unbond = SubCmd::parse(matches).map(Self::Unbond);
-            let withdraw = SubCmd::parse(matches).map(Self::Withdraw);
-            let query_epoch = SubCmd::parse(matches).map(Self::TxInitAccount);
-            let query_balance = SubCmd::parse(matches).map(Self::QueryBalance);
-            let query_bonds = SubCmd::parse(matches).map(Self::QueryBonds);
+                Self::parse_with_ctx(matches, TxInitValidator);
+            let bond = Self::parse_with_ctx(matches, Bond);
+            let unbond = Self::parse_with_ctx(matches, Unbond);
+            let withdraw = Self::parse_with_ctx(matches, Withdraw);
+            let query_epoch = Self::parse_with_ctx(matches, TxInitAccount);
+            let query_balance = Self::parse_with_ctx(matches, QueryBalance);
+            let query_bonds = Self::parse_with_ctx(matches, QueryBonds);
             let query_voting_power =
-                SubCmd::parse(matches).map(Self::QueryVotingPower);
-            let query_slashes = SubCmd::parse(matches).map(Self::QuerySlashes);
-            let intent = SubCmd::parse(matches).map(Self::Intent);
-            let subscribe_topic =
-                SubCmd::parse(matches).map(Self::SubscribeTopic);
-            let utils = SubCmd::parse(matches).map(Self::Utils);
+                Self::parse_with_ctx(matches, QueryVotingPower);
+            let query_slashes = Self::parse_with_ctx(matches, QuerySlashes);
+            let intent = Self::parse_with_ctx(matches, Intent);
+            let subscribe_topic = Self::parse_with_ctx(matches, SubscribeTopic);
+            let utils = SubCmd::parse(matches).map(Self::WithoutContext);
             tx_custom
                 .or(tx_transfer)
                 .or(tx_update_vp)
@@ -216,6 +201,17 @@ pub mod cmds {
         }
     }
 
+    impl AnomaClient {
+        /// A helper method to parse sub cmds with context
+        fn parse_with_ctx<T: SubCmd>(
+            matches: &ArgMatches,
+            sub_to_self: impl Fn(T) -> AnomaClientWithContext,
+        ) -> Option<Self> {
+            SubCmd::parse(matches)
+                .map(|sub| Self::WithContext(sub_to_self(sub)))
+        }
+    }
+
     impl SubCmd for AnomaClient {
         const CMD: &'static str = CLIENT_CMD;
 
@@ -232,6 +228,27 @@ pub mod cmds {
                     .setting(AppSettings::SubcommandRequiredElseHelp),
             )
         }
+    }
+
+    #[derive(Clone, Debug)]
+    pub enum AnomaClientWithContext {
+        // Ledger cmds
+        TxCustom(TxCustom),
+        TxTransfer(TxTransfer),
+        TxUpdateVp(TxUpdateVp),
+        TxInitAccount(TxInitAccount),
+        TxInitValidator(TxInitValidator),
+        Bond(Bond),
+        Unbond(Unbond),
+        Withdraw(Withdraw),
+        QueryEpoch(QueryEpoch),
+        QueryBalance(QueryBalance),
+        QueryBonds(QueryBonds),
+        QueryVotingPower(QueryVotingPower),
+        QuerySlashes(QuerySlashes),
+        // Gossip cmds
+        Intent(Intent),
+        SubscribeTopic(SubscribeTopic),
     }
 
     #[derive(Clone, Debug)]
@@ -961,6 +978,7 @@ pub mod cmds {
 
     #[derive(Clone, Debug)]
     pub enum Utils {
+        InitNetwork(InitNetwork),
         InitGenesisValidator(InitGenesisValidator),
     }
 
@@ -969,15 +987,39 @@ pub mod cmds {
 
         fn parse(matches: &ArgMatches) -> Option<Self> {
             matches.subcommand_matches(Self::CMD).and_then(|matches| {
-                SubCmd::parse(matches).map(Self::InitGenesisValidator)
+                let init_network =
+                    SubCmd::parse(matches).map(Self::InitNetwork);
+                let init_genesis =
+                    SubCmd::parse(matches).map(Self::InitGenesisValidator);
+                init_network.or(init_genesis)
             })
         }
 
         fn def() -> App {
             App::new(Self::CMD)
                 .about("Utilities.")
+                .subcommand(InitNetwork::def())
                 .subcommand(InitGenesisValidator::def())
                 .setting(AppSettings::SubcommandRequiredElseHelp)
+        }
+    }
+
+    #[derive(Clone, Debug)]
+    pub struct InitNetwork(pub args::InitNetwork);
+
+    impl SubCmd for InitNetwork {
+        const CMD: &'static str = "init-network";
+
+        fn parse(matches: &ArgMatches) -> Option<Self> {
+            matches
+                .subcommand_matches(Self::CMD)
+                .map(|matches| Self(args::InitNetwork::parse(matches)))
+        }
+
+        fn def() -> App {
+            App::new(Self::CMD)
+                .about("Initialize a new test network.")
+                .add_args::<args::InitNetwork>()
         }
     }
 
@@ -1015,6 +1057,7 @@ pub mod args {
     use std::str::FromStr;
 
     use anoma::types::address::Address;
+    use anoma::types::chain::{ChainId, ChainIdPrefix};
     use anoma::types::intent::{DecimalWrapper, Exchange};
     use anoma::types::key::ed25519::PublicKey;
     use anoma::types::storage::Epoch;
@@ -1037,6 +1080,9 @@ pub mod args {
             Err(_) => ".anoma".into(),
         }),
     );
+    const CHAIN_ID: Arg<ChainId> = arg("chain-id");
+    const CHAIN_ID_OPT: ArgOpt<ChainId> = CHAIN_ID.opt();
+    const CHAIN_ID_PREFIX: Arg<ChainIdPrefix> = arg("chain-prefix");
     const CODE_PATH: Arg<PathBuf> = arg("code-path");
     const CODE_PATH_OPT: ArgOpt<PathBuf> = CODE_PATH.opt();
     const DATA_PATH_OPT: ArgOpt<PathBuf> = arg_opt("data-path");
@@ -1045,6 +1091,7 @@ pub mod args {
     const DRY_RUN_TX: ArgFlag = flag("dry-run");
     const EPOCH: ArgOpt<Epoch> = arg_opt("epoch");
     const FILTER_PATH: ArgOpt<PathBuf> = arg_opt("filter-path");
+    const GENESIS_PATH: Arg<PathBuf> = arg("genesis-path");
     const LEDGER_ADDRESS_ABOUT: &str =
         "Address of a ledger node as \"{scheme}://{host}:{port}\". If the \
          scheme is not supplied, it is assumed to be TCP.";
@@ -1096,6 +1143,7 @@ pub mod args {
     /// Global command arguments
     #[derive(Clone, Debug)]
     pub struct Global {
+        pub chain_id: Option<ChainId>,
         pub base_dir: PathBuf,
         pub wasm_dir: Option<PathBuf>,
     }
@@ -1103,28 +1151,34 @@ pub mod args {
     impl Global {
         /// Parse global arguments
         pub fn parse(matches: &ArgMatches) -> Self {
+            let chain_id = CHAIN_ID_OPT.parse(matches);
             let base_dir = BASE_DIR.parse(matches);
             let wasm_dir = WASM_DIR.parse(matches);
-            Global { base_dir, wasm_dir }
+            Global {
+                chain_id,
+                base_dir,
+                wasm_dir,
+            }
         }
 
         /// Add global args definition. Should be added to every top-level
         /// command.
         pub fn def(app: App) -> App {
-            app.arg(BASE_DIR.def().about(
-                "The base directory is where the nodes, client and wallet \
-                 configuration and state is stored. This value can also be \
-                 set via `ANOMA_BASE_DIR` environment variable, but the \
-                 argument takes precedence, if specified. Defaults to \
-                 `.anoma`.",
-            ))
-            .arg(WASM_DIR.def().about(
-                "Directory with built WASM validity predicates, transactions \
-                 and matchmaker files. This value can also be set via \
-                 `ANOMA_WASM_DIR` environment variable, but the argument \
-                 takes precedence, if specified. Defaults to `wasm` path, \
-                 relative to current working directory.",
-            ))
+            app.arg(CHAIN_ID_OPT.def().about("The chain ID."))
+                .arg(BASE_DIR.def().about(
+                    "The base directory is where the nodes, client and wallet \
+                     configuration and state is stored. This value can also \
+                     be set via `ANOMA_BASE_DIR` environment variable, but \
+                     the argument takes precedence, if specified. Defaults to \
+                     `.anoma`.",
+                ))
+                .arg(WASM_DIR.def().about(
+                    "Directory with built WASM validity predicates, \
+                     transactions and matchmaker files. This value can also \
+                     be set via `ANOMA_WASM_DIR` environment variable, but \
+                     the argument takes precedence, if specified. Defaults to \
+                     `wasm` path, relative to current working directory.",
+                ))
         }
     }
 
@@ -2146,23 +2200,63 @@ pub mod args {
     }
 
     #[derive(Clone, Debug)]
+    pub struct InitNetwork {
+        pub genesis_path: PathBuf,
+        pub chain_id_prefix: ChainIdPrefix,
+        pub unsafe_dont_encrypt: bool,
+    }
+
+    impl Args for InitNetwork {
+        fn parse(matches: &ArgMatches) -> Self {
+            let genesis_path = GENESIS_PATH.parse(matches);
+            let chain_id_prefix = CHAIN_ID_PREFIX.parse(matches);
+            let unsafe_dont_encrypt = UNSAFE_DONT_ENCRYPT.parse(matches);
+            Self {
+                genesis_path,
+                chain_id_prefix,
+                unsafe_dont_encrypt,
+            }
+        }
+
+        fn def(app: App) -> App {
+            app.arg(
+                GENESIS_PATH.def().about(
+                    "Path to the preliminary genesis configuration file.",
+                ),
+            )
+            .arg(CHAIN_ID_PREFIX.def().about(
+                "The chain ID prefix. Up to 19 alphanumeric or punctuation \
+                 ASCII characters.",
+            ))
+            .arg(UNSAFE_DONT_ENCRYPT.def().about(
+                "UNSAFE: Do not encrypt the generated keypairs. Do not use \
+                 this for keys used in a live network.",
+            ))
+        }
+    }
+
+    #[derive(Clone, Debug)]
     pub struct InitGenesisValidator {
         pub alias: String,
+        pub chain_id: ChainId,
         pub unsafe_dont_encrypt: bool,
     }
 
     impl Args for InitGenesisValidator {
         fn parse(matches: &ArgMatches) -> Self {
             let alias = ALIAS.parse(matches);
+            let chain_id = CHAIN_ID.parse(matches);
             let unsafe_dont_encrypt = UNSAFE_DONT_ENCRYPT.parse(matches);
             Self {
                 alias,
+                chain_id,
                 unsafe_dont_encrypt,
             }
         }
 
         fn def(app: App) -> App {
             app.arg(ALIAS.def().about("The validator address alias."))
+                .arg(CHAIN_ID.def().about("The chain ID."))
                 .arg(UNSAFE_DONT_ENCRYPT.def().about(
                     "UNSAFE: Do not encrypt the generated keypairs. Do not \
                      use this for keys used in a live network.",
@@ -2191,9 +2285,33 @@ pub fn anoma_node_cli() -> (cmds::AnomaNode, Context) {
     cmds::AnomaNode::parse_or_print_help(app)
 }
 
-pub fn anoma_client_cli() -> (cmds::AnomaClient, Context) {
+pub enum AnomaClient {
+    WithoutContext(cmds::Utils, args::Global),
+    WithContext(cmds::AnomaClientWithContext, Context),
+}
+
+pub fn anoma_client_cli() -> AnomaClient {
     let app = anoma_client_app();
-    cmds::AnomaClient::parse_or_print_help(app)
+    let mut app = cmds::AnomaClient::add_sub(app);
+    let matches = app.clone().get_matches();
+    match Cmd::parse(&matches) {
+        Some(cmd) => {
+            let global_args = args::Global::parse(&matches);
+            match cmd {
+                cmds::AnomaClient::WithContext(sub_cmd) => {
+                    let context = Context::new(global_args);
+                    AnomaClient::WithContext(sub_cmd, context)
+                }
+                cmds::AnomaClient::WithoutContext(sub_cmd) => {
+                    AnomaClient::WithoutContext(sub_cmd, global_args)
+                }
+            }
+        }
+        None => {
+            app.print_help().unwrap();
+            safe_exit(2);
+        }
+    }
 }
 
 pub fn anoma_wallet_cli() -> (cmds::AnomaWallet, Context) {

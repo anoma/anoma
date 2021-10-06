@@ -10,23 +10,26 @@ version = "0.1.0"
 
 [features]
 default = []
+# NOTE "dev" features that shouldn't be used in live networks are enabled by default for now
+dev = []
 ferveo-tpke = [
   "tpke",
   "ark-bls12-381",
   "ark-ec",
   "ark-serialize",
   "rand_core",
-  "rand_new"]
-
-# for integration tests and test utilies
+  "rand_new",
+]
 ibc-vp = [
   "ibc",
   "ibc-proto",
 ]
+# for integration tests and test utilies
 testing = [
   "proptest",
   "rand",
   "rand_core",
+  "dev",
 ]
 wasm-runtime = [
   "loupe",
@@ -40,16 +43,16 @@ wasm-runtime = [
 ]
 
 [dependencies]
-anoma_proof_of_stake = { path = "../proof_of_stake" }
-ark-bls12-381 = {version= "0.3", optional = true}
-ark-ec = {version= "0.3", optional = true}
-ark-serialize = {version= "0.3", optional = true}
+anoma_proof_of_stake = {path = "../proof_of_stake"}
+ark-bls12-381 = {version = "0.3", optional = true}
+ark-ec = {version = "0.3", optional = true}
+ark-serialize = {version = "0.3", optional = true}
 bech32 = "0.8.0"
 borsh = "0.9.0"
 chrono = "0.4.19"
 ed25519-dalek = {version = "1.0.1", default-features = false, features = ["rand", "u64_backend", "serde"]}
 hex = "0.4.3"
-tpke = {package = "group-threshold-cryptography", optional=true, git = "https://github.com/anoma/ferveo", branch="bat/workspace-cleanup"}
+tpke = {package = "group-threshold-cryptography", optional = true, git = "https://github.com/anoma/ferveo", branch = "bat/workspace-cleanup"}
 # TODO temp fork for https://github.com/informalsystems/ibc-rs/issues/1161
 # Also, using the same version of tendermint-rs as we do here.
 ibc = {git = "https://github.com/heliaxdev/ibc-rs", branch = "tomas/tm-lowercase-node-id", features = ["mocks", "borsh"], optional = true}
@@ -64,8 +67,8 @@ pwasm-utils = {version = "0.18.0", optional = true}
 # TODO the older versions of rand and rand_core are currently required to avoid mismatching version issue (https://github.com/dalek-cryptography/ed25519-dalek/pull/159)
 rand = {version = "=0.7", optional = true}
 # TODO proptest rexports the RngCore trait but the re-implementations only work for version `0.8`. *sigh*
-rand_new = {package = "rand", version = "0.8", optional=true}
 rand_core = {version = "0.5", optional = true}
+rand_new = {package = "rand", version = "0.8", optional = true}
 rust_decimal = "1.14.3"
 serde = {version = "1.0.125", features = ["derive"]}
 sha2 = "0.9.3"

@@ -254,7 +254,7 @@ impl<'de> serde::Deserialize<'de> for Address {
 
 impl Display for Address {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        self.pretty_fmt(f)
+        write!(f, "{}", self.encode())
     }
 }
 

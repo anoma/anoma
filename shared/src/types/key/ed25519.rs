@@ -211,6 +211,14 @@ impl Keypair {
     }
 }
 
+impl PublicKey {
+    /// Construct a PublicKey from bytes
+    pub fn from_bytes(bytes: &[u8]) -> Result<PublicKey, SignatureError> {
+        let pk = ed25519_dalek::PublicKey::from_bytes(bytes)?;
+        Ok(pk.into())
+    }
+}
+
 impl<T> PartialEq for Signed<T>
 where
     T: BorshSerialize + BorshDeserialize + PartialEq,
@@ -381,6 +389,18 @@ impl PartialOrd for PublicKey {
         self.try_to_vec()
             .expect("Encoding public key shouldn't fail")
             .partial_cmp(
+                &other
+                    .try_to_vec()
+                    .expect("Encoding public key shouldn't fail"),
+            )
+    }
+}
+
+impl Ord for PublicKey {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        self.try_to_vec()
+            .expect("Encoding public key shouldn't fail")
+            .cmp(
                 &other
                     .try_to_vec()
                     .expect("Encoding public key shouldn't fail"),

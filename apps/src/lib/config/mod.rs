@@ -1,6 +1,7 @@
 //! Node and client configuration
 
 pub mod genesis;
+pub mod global;
 pub mod gossiper;
 
 use std::collections::HashSet;
@@ -11,6 +12,8 @@ use std::net::{IpAddr, Ipv4Addr, SocketAddr};
 use std::path::{Path, PathBuf};
 use std::str::FromStr;
 
+use anoma::types::chain::ChainId;
+use anoma::types::time::Rfc3339String;
 use gossiper::Gossiper;
 use libp2p::multiaddr::{Multiaddr, Protocol};
 use libp2p::multihash::Multihash;
@@ -19,6 +22,8 @@ use regex::Regex;
 use serde::{de, Deserialize, Serialize};
 use tendermint::net;
 use thiserror::Error;
+
+use crate::cli;
 
 #[derive(Error, Debug)]
 pub enum Error {
@@ -30,8 +35,6 @@ pub enum Error {
     TomlError(toml::ser::Error),
     #[error("Error while writing config: {0}")]
     WriteError(std::io::Error),
-    #[error("Error while creating config file: {0}")]
-    FileError(std::io::Error),
     #[error("A config file already exists in {0}")]
     AlreadyExistingConfig(PathBuf),
     #[error(
@@ -53,15 +56,12 @@ pub enum SerdeError {
     Message(String),
 }
 
-pub const BASEDIR: &str = ".anoma";
 pub const FILENAME: &str = "config.toml";
 pub const TENDERMINT_DIR: &str = "tendermint";
 pub const DB_DIR: &str = "db";
-// TODO: change the ID for the production chain
-pub const DEFAULT_CHAIN_ID: &str = "anoma-devchain-00000";
 
 pub type Result<T> = std::result::Result<T, Error>;
-const VALUE_AFTER_TABLE_ERROR_MSG: &str = r#"
+pub const VALUE_AFTER_TABLE_ERROR_MSG: &str = r#"
 Error while serializing to toml. It means that some nested structure is followed
  by simple fields.
 This fails:
@@ -86,21 +86,55 @@ And this is correct
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Ledger {
+    pub base_dir: PathBuf,
+    pub chain_id: ChainId,
+    pub genesis_time: Rfc3339String,
     pub tendermint: PathBuf,
     pub db: PathBuf,
     pub ledger_address: SocketAddr,
     pub rpc_address: SocketAddr,
     pub p2p_address: SocketAddr,
+    /// The persistent peers addresses must include node ID
+    pub p2p_persistent_peers: Vec<tendermint::net::Address>,
+    /// Turns the peer exchange reactor on or off. Validator node will want the
+    /// pex turned off.
+    pub p2p_pex: bool,
     pub wasm_dir: PathBuf,
 }
 
-impl Default for Ledger {
-    fn default() -> Self {
+impl Ledger {
+    pub fn new(base_dir: impl AsRef<Path>, chain_id: ChainId) -> Self {
+        let base_dir = base_dir.as_ref().to_owned();
+        let sub_dir = base_dir.join(chain_id.as_str());
+
+        #[cfg(feature = "dev")]
+        let p2p_persistent_peers = vec![];
+        #[cfg(not(feature = "dev"))]
+        let p2p_persistent_peers = vec![
+            tendermint::net::Address::from_str(
+                "72eb02444a4736d569734675c6ba893aadb3fb99@52.210.23.30:26656",
+            )
+            .unwrap(),
+            tendermint::net::Address::from_str(
+                "39f31bcf0a0b73a08d9e18f4e9cada33d4997779@63.34.55.152:26656",
+            )
+            .unwrap(),
+            tendermint::net::Address::from_str(
+                "d7d2e6e942b157df4137ca3b47258ca20db00416@54.195.72.213:26656",
+            )
+            .unwrap(),
+            tendermint::net::Address::from_str(
+                "31752d323de34e4dcd36ecf30b4ed179de7dc48a@79.125.112.218:26656",
+            )
+            .unwrap(),
+        ];
+
         Self {
-            // this two value are override when generating a default config in
-            // config::generate(base_dir). There must be a better way ?
-            tendermint: PathBuf::from(BASEDIR).join(TENDERMINT_DIR),
-            db: PathBuf::from(BASEDIR).join(DB_DIR).join(DEFAULT_CHAIN_ID),
+            base_dir,
+            chain_id,
+            genesis_time: Rfc3339String("1970-01-01T00:00:00Z".to_owned()),
+            tendermint: sub_dir.join(TENDERMINT_DIR),
+            db: sub_dir.join(DB_DIR),
             ledger_address: SocketAddr::new(
                 IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)),
                 26658,
@@ -113,6 +147,8 @@ impl Default for Ledger {
                 IpAddr::V4(Ipv4Addr::new(0, 0, 0, 0)),
                 26656,
             ),
+            p2p_persistent_peers,
+            p2p_pex: true,
             wasm_dir: "wasm".into(),
         }
     }
@@ -126,7 +162,7 @@ impl Default for RpcServer {
         Self {
             address: SocketAddr::new(
                 IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)),
-                39111,
+                26660,
             ),
         }
     }
@@ -240,7 +276,7 @@ pub struct IntentGossiper {
 impl Default for IntentGossiper {
     fn default() -> Self {
         Self {
-            address: Multiaddr::from_str("/ip4/0.0.0.0/tcp/20201").unwrap(),
+            address: Multiaddr::from_str("/ip4/0.0.0.0/tcp/26659").unwrap(),
             rpc: None,
             subscription_filter: SubscriptionFilter::RegexFilter(
                 Regex::new("asset_v\\d{1,2}").unwrap(),
@@ -260,11 +296,28 @@ pub struct Config {
     pub intent_gossiper: IntentGossiper,
 }
 
-impl Default for Config {
-    fn default() -> Self {
+impl Config {
+    pub fn new(base_dir: impl AsRef<Path>, chain_id: ChainId) -> Self {
         Self {
-            ledger: Ledger::default(),
+            ledger: Ledger::new(base_dir, chain_id),
             intent_gossiper: IntentGossiper::default(),
+        }
+    }
+
+    /// Load config from expected path in the `base_dir` or generate a new one
+    /// if it doesn't exist. Terminates with an error if the config loading
+    /// fails.
+    pub fn load(base_dir: &Path, chain_id: &ChainId) -> Self {
+        match Self::read(base_dir, chain_id) {
+            Ok(config) => config,
+            Err(err) => {
+                eprintln!(
+                    "Tried to read config in {} but failed with: {}",
+                    base_dir.display(),
+                    err
+                );
+                cli::safe_exit(1)
+            }
         }
     }
 }
@@ -272,38 +325,45 @@ impl Default for Config {
 impl Config {
     /// Read the config from a file, or generate a default one and write it to
     /// a file if it doesn't already exist.
-    pub fn read(base_dir: &Path) -> Result<Self> {
-        let file_path = Self::file_path(base_dir);
+    pub fn read(base_dir: &Path, chain_id: &ChainId) -> Result<Self> {
+        let file_path = Self::file_path(base_dir, chain_id);
+        let file_name = file_path.to_str().expect("Expected UTF-8 file path");
         if !file_path.exists() {
-            return Self::generate(base_dir, true);
+            return Self::generate(base_dir, chain_id, true);
         };
         let mut config = config::Config::new();
         config
-            .merge(config::File::with_name(
-                file_path.to_str().expect("uncorrect file"),
-            ))
+            .merge(config::File::with_name(file_name))
             .map_err(Error::ReadError)?;
         config.try_into().map_err(Error::DeserializationError)
     }
 
     /// Generate configuration and write it to a file.
-    pub fn generate(base_dir: &Path, replace: bool) -> Result<Self> {
-        let mut config = Config::default();
-        let ledger_cfg = &mut config.ledger;
-        ledger_cfg.db = base_dir.join(DB_DIR).join(DEFAULT_CHAIN_ID);
-        ledger_cfg.tendermint = base_dir.join(TENDERMINT_DIR);
-        config.write(base_dir, replace)?;
+    pub fn generate(
+        base_dir: &Path,
+        chain_id: &ChainId,
+        replace: bool,
+    ) -> Result<Self> {
+        let config = Config::new(base_dir, chain_id.clone());
+        config.write(base_dir, chain_id, replace)?;
         Ok(config)
     }
 
     /// Write configuration to a file.
-    pub fn write(&self, base_dir: &Path, replace: bool) -> Result<()> {
-        create_dir_all(&base_dir).map_err(Error::FileError)?;
-        let file_path = Self::file_path(base_dir);
+    pub fn write(
+        &self,
+        base_dir: &Path,
+        chain_id: &ChainId,
+        replace: bool,
+    ) -> Result<()> {
+        let file_path = Self::file_path(base_dir, chain_id);
+        let file_dir = file_path.parent().unwrap();
+        create_dir_all(file_dir).map_err(Error::WriteError)?;
         if file_path.exists() && !replace {
             Err(Error::AlreadyExistingConfig(file_path))
         } else {
-            let mut file = File::create(file_path).map_err(Error::FileError)?;
+            let mut file =
+                File::create(file_path).map_err(Error::WriteError)?;
             let toml = toml::ser::to_string(&self).map_err(|err| {
                 if let toml::ser::Error::ValueAfterTable = err {
                     tracing::error!("{}", VALUE_AFTER_TABLE_ERROR_MSG);
@@ -314,8 +374,9 @@ impl Config {
         }
     }
 
-    fn file_path(base_dir: &Path) -> PathBuf {
-        base_dir.join(FILENAME)
+    fn file_path(base_dir: &Path, chain_id: &ChainId) -> PathBuf {
+        // Join base dir to the chain ID
+        base_dir.join(chain_id.to_string()).join(FILENAME)
     }
 }
 

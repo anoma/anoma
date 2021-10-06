@@ -7,6 +7,7 @@ pub mod storage;
 pub mod tendermint_node;
 
 use std::convert::{TryFrom, TryInto};
+use std::mem;
 use std::sync::mpsc::{channel, Receiver};
 
 use anoma::types::storage::BlockHash;
@@ -16,7 +17,6 @@ use tower::ServiceBuilder;
 use tower_abci::{response, split, Server};
 
 use crate::config;
-use crate::config::genesis;
 use crate::node::ledger::shell::{Error, MempoolTxType, Shell};
 use crate::node::ledger::shims::abcipp_shim::AbcippShim;
 use crate::node::ledger::shims::abcipp_shim_types::shim::{Request, Response};
@@ -54,34 +54,7 @@ impl Shell {
     fn call(&mut self, req: Request) -> Result<Response, Error> {
         match req {
             Request::InitChain(init) => {
-                match self.init_chain(init) {
-                    Ok(mut resp) => {
-                        // Set the initial validator set
-                        let genesis = genesis::genesis();
-                        for validator in genesis.validators {
-                            let mut abci_validator =
-                            tendermint_proto::abci::ValidatorUpdate::default();
-                            let consensus_key: ed25519_dalek::PublicKey =
-                                validator.pos_data.consensus_key.clone().into();
-                            let pub_key = tendermint_proto::crypto::PublicKey {
-                            sum: Some(tendermint_proto::crypto::public_key::Sum::Ed25519(
-                                consensus_key.to_bytes().to_vec(),
-                            )),
-                        };
-                            abci_validator.pub_key = Some(pub_key);
-                            let power: u64 = validator
-                                .pos_data
-                                .voting_power(&genesis.pos_params)
-                                .into();
-                            abci_validator.power = power
-                                .try_into()
-                                .expect("unexpected validator's voting power");
-                            resp.validators.push(abci_validator);
-                        }
-                        Ok(Response::InitChain(resp))
-                    }
-                    Err(inner) => Err(inner),
-                }
+                self.init_chain(init).map(Response::InitChain)
             }
             Request::Info(_) => Ok(Response::Info(self.last_state())),
             Request::Query(query) => Ok(Response::Query(self.query(query))),
@@ -172,8 +145,9 @@ async fn run_shell(
 ) {
     // Construct our ABCI application.
     let service = AbcippShim::new(
+        config.base_dir,
         &config.db,
-        config::DEFAULT_CHAIN_ID.to_owned(),
+        config.chain_id,
         config.wasm_dir,
     );
 
@@ -228,11 +202,19 @@ async fn run_shell(
 ///
 /// When the shell process finishes, we check if it finished with a panic. If it
 /// did we stop the tendermint node with a channel that acts as a kill switch.
-pub fn run(config: config::Ledger) {
+pub fn run(mut config: config::Ledger) {
     let home_dir = config.tendermint.clone();
     let ledger_address = config.ledger_address.to_string();
     let rpc_address = config.rpc_address.to_string();
     let p2p_address = config.p2p_address.to_string();
+    let p2p_persistent_peers = mem::take(&mut config.p2p_persistent_peers);
+    let chain_id = config.chain_id.clone();
+    let genesis_time = config
+        .genesis_time
+        .clone()
+        .try_into()
+        .expect("expected RFC3339 genesis_time");
+    let p2p_pex = config.p2p_pex;
 
     // For signalling shut down to the Tendermint node, sent from the
     // shell or from within the Tendermint process itself.
@@ -252,9 +234,13 @@ pub fn run(config: config::Ledger) {
     let tendermint_handle = std::thread::spawn(move || {
         if let Err(err) = tendermint_node::run(
             home_dir,
+            chain_id,
+            genesis_time,
             ledger_address,
             rpc_address,
             p2p_address,
+            p2p_persistent_peers,
+            p2p_pex,
             abort_sender,
             abort_receiver,
         ) {

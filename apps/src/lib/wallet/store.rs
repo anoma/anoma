@@ -55,9 +55,9 @@ impl Store {
     }
 
     /// Save the wallet store to a file.
-    pub fn save(&self, base_dir: &Path) -> std::io::Result<()> {
+    pub fn save(&self, store_dir: &Path) -> std::io::Result<()> {
         let data = self.encode();
-        let wallet_path = wallet_file(base_dir);
+        let wallet_path = wallet_file(store_dir);
         // Make sure the dir exists
         let wallet_dir = wallet_path.parent().unwrap();
         fs::create_dir_all(wallet_dir)?;
@@ -72,8 +72,8 @@ impl Store {
 
     /// Load the store file or create a new one with the default keys and
     /// addresses if not found.
-    pub fn load_or_new(base_dir: &Path) -> Result<Self, LoadStoreError> {
-        let wallet_file = wallet_file(base_dir);
+    pub fn load_or_new(store_dir: &Path) -> Result<Self, LoadStoreError> {
+        let wallet_file = wallet_file(store_dir);
         let store = fs::read(&wallet_file);
         match store {
             Ok(store_data) => {
@@ -86,7 +86,7 @@ impl Store {
                         wallet_file
                     );
                     let store = Self::new();
-                    store.save(base_dir).map_err(|err| {
+                    store.save(store_dir).map_err(|err| {
                         LoadStoreError::StoreNewWallet(err.to_string())
                     })?;
                     Ok(store)
@@ -284,6 +284,6 @@ fn show_overwrite_confirmation(
 const FILE_NAME: &str = "wallet.toml";
 
 /// Get the path to the wallet store.
-fn wallet_file(base_dir: &Path) -> PathBuf {
-    base_dir.join(FILE_NAME)
+fn wallet_file(store_dir: &Path) -> PathBuf {
+    store_dir.join(FILE_NAME)
 }

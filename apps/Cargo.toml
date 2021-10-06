@@ -41,10 +41,10 @@ path = "src/bin/anoma-wallet/main.rs"
 [features]
 default = ["std", "dev"]
 # NOTE "dev" features that shouldn't be used in live networks are enabled by default for now
-dev = []
+dev = ["anoma/dev"]
 std = ["ed25519-dalek/std", "rand/std", "rand_core/std"]
 # for integration tests and test utilies
-testing = []
+testing = ["dev"]
 
 [dependencies]
 anoma = {path = "../shared", features = ["ibc-vp", "wasm-runtime", "ferveo-tpke", "rand"]}
@@ -59,6 +59,7 @@ byteorder = "1.4.2"
 clap = {git = "https://github.com/clap-rs/clap/", tag = "v3.0.0-beta.2", default-features = false, features = ["std", "suggestions", "color"]}
 color-eyre = "0.5.10"
 config = "0.11.0"
+derivative = "2.2.0"
 # TODO the older versions of rand and rand_core are currently required to avoid mismatching version issue (https://github.com/dalek-cryptography/ed25519-dalek/pull/159)
 ed25519-dalek = {version = "1.0.1", default-features = false, features = ["rand", "u64_backend", "serde"]}
 eyre = "0.6.5"

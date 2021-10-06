@@ -1,18 +1,18 @@
 //! Anoma node CLI.
 
+use anoma_apps::cli;
+use anoma_apps::cli::cmds;
 use anoma_apps::node::{gossip, ledger};
-use anoma_apps::{cli, config};
 use eyre::{Context, Result};
 
 pub fn main() -> Result<()> {
     let (cmd, mut ctx) = cli::anoma_node_cli();
-    let base_dir = &ctx.global_args.base_dir;
     match cmd {
-        cli::cmds::AnomaNode::Ledger(sub) => match sub {
-            cli::cmds::Ledger::Run(_) => {
+        cmds::AnomaNode::Ledger(sub) => match sub {
+            cmds::Ledger::Run(_) => {
                 ledger::run(ctx.config.ledger);
             }
-            cli::cmds::Ledger::Reset(_) => {
+            cmds::Ledger::Reset(_) => {
                 ledger::reset(ctx.config.ledger)
                     .wrap_err("Failed to reset Anoma node")?;
             }
@@ -38,11 +38,24 @@ pub fn main() -> Result<()> {
                     )?;
             }
         },
-        cli::cmds::AnomaNode::Config(sub) => match sub {
-            cli::cmds::Config::Gen(_) => {
-                let gen_config = config::Config::generate(base_dir, false)
-                    .wrap_err("Failed to generate the default config")?;
-                tracing::debug!("Generated config {:?}", gen_config);
+        cmds::AnomaNode::Config(sub) => match sub {
+            cmds::Config::Gen(cmds::ConfigGen) => {
+                // If the config doesn't exit, it gets generated in the context.
+                // In here, we just need to overwrite the default chain ID, in
+                // case it's been already set to a different value
+                if let Some(chain_id) = ctx.global_args.chain_id.as_ref() {
+                    ctx.global_config.default_chain_id = chain_id.clone();
+                    ctx.global_config
+                        .write(&ctx.global_args.base_dir)
+                        .unwrap_or_else(|err| {
+                            eprintln!("Error writing global config: {}", err);
+                            cli::safe_exit(1)
+                        });
+                }
+                tracing::debug!(
+                    "Generated config and set default chain ID to {}",
+                    &ctx.global_config.default_chain_id
+                );
             }
         },
     }

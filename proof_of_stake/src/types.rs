@@ -92,7 +92,16 @@ pub struct VotingPower(u64);
 pub struct VotingPowerDelta(i64);
 
 /// A genesis validator definition.
-#[derive(Debug, Clone)]
+#[derive(
+    Debug,
+    Clone,
+    BorshSerialize,
+    BorshDeserialize,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+)]
 pub struct GenesisValidator<Address, Token, PK> {
     /// Validator's address
     pub address: Address,

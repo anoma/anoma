@@ -7,7 +7,9 @@ use std::sync::mpsc::Receiver;
 use std::time::Duration;
 
 use anoma::types::address::Address;
+use anoma::types::chain::ChainId;
 use anoma::types::key::ed25519::Keypair;
+use anoma::types::time::DateTimeUtc;
 use serde_json::json;
 use signal_hook::consts::TERM_SIGNALS;
 use signal_hook::iterator::Signals;
@@ -40,10 +42,15 @@ pub type Result<T> = std::result::Result<T, Error>;
 
 /// Run the tendermint node.
 pub fn run(
+    // TODO we should just use ledger config replace all the args
     home_dir: PathBuf,
+    chain_id: ChainId,
+    genesis_time: DateTimeUtc,
     ledger_address: String,
     rpc_address: String,
     p2p_address: String,
+    p2p_persistent_peers: Vec<net::Address>,
+    p2p_pex: bool,
     abort_sender: Sender<bool>,
     abort_receiver: Receiver<bool>,
 ) -> Result<()> {
@@ -69,8 +76,6 @@ pub fn run(
         panic!("Tendermint failed to initialize with {:#?}", output);
     }
 
-    write_chain_id(&home_dir, config::DEFAULT_CHAIN_ID);
-
     #[cfg(feature = "dev")]
     {
         let genesis = &crate::config::genesis::genesis();
@@ -91,7 +96,15 @@ pub fn run(
         }
     }
 
-    update_tendermint_config(&home_dir, rpc_address, p2p_address)?;
+    write_tm_genesis(&home_dir, chain_id, genesis_time);
+
+    update_tendermint_config(
+        &home_dir,
+        rpc_address,
+        p2p_address,
+        p2p_persistent_peers,
+        p2p_pex,
+    )?;
 
     let tendermint_node = Command::new("tendermint")
         .args(&[
@@ -239,6 +252,8 @@ fn update_tendermint_config(
     home_dir: impl AsRef<Path>,
     rpc_address: net::Address,
     p2p_address: net::Address,
+    p2p_persistent_peers: Vec<net::Address>,
+    p2p_pex: bool,
 ) -> Result<()> {
     let home_dir = home_dir.as_ref();
     let path = home_dir.join("config").join("config.toml");
@@ -247,6 +262,8 @@ fn update_tendermint_config(
 
     config.rpc.laddr = rpc_address;
     config.p2p.laddr = p2p_address;
+    config.p2p.persistent_peers = p2p_persistent_peers;
+    config.p2p.pex = p2p_pex;
 
     // In "dev", only produce blocks when there are txs or when the AppHash
     // changes
@@ -275,7 +292,11 @@ fn update_tendermint_config(
         .map_err(Error::WriteConfig)
 }
 
-fn write_chain_id(home_dir: impl AsRef<Path>, chain_id: impl AsRef<str>) {
+fn write_tm_genesis(
+    home_dir: impl AsRef<Path>,
+    chain_id: ChainId,
+    genesis_time: DateTimeUtc,
+) {
     let home_dir = home_dir.as_ref();
     let path = home_dir.join("config").join("genesis.json");
     let file = File::open(&path).unwrap_or_else(|err| {
@@ -288,7 +309,8 @@ fn write_chain_id(home_dir: impl AsRef<Path>, chain_id: impl AsRef<str>) {
     let mut genesis: tendermint::Genesis = serde_json::from_reader(reader)
         .expect("Couldn't deserialize the genesis file");
     genesis.chain_id =
-        FromStr::from_str(chain_id.as_ref()).expect("Invalid chain ID");
+        FromStr::from_str(chain_id.as_str()).expect("Invalid chain ID");
+    genesis.genesis_time = genesis_time.into();
 
     let file = OpenOptions::new()
         .write(true)

@@ -1,0 +1,163 @@
+# Example genesis with dev settings.
+genesis_time = "2021-09-30:10:00.00Z"
+
+# A genesis validator.
+[validator.dev]
+# Validator's public key for consensus.
+consensus_public_key = "5e704c4e46265e1ccc87505149f79b9d2e414d01a4e3806dfc65f0a73901c1d0"
+# Public key of the validator's Anoma account.
+account_public_key = "5e704c4e46265e1ccc87505149f79b9d2e414d01a4e3806dfc65f0a73901c1d0"
+# Public key of the Anoma account for this validator's staking rewards.
+staking_reward_public_key = "6f5c421769d321ec05d01158b170649a01848f43a27988f71443041be23f2f39"
+# Address of the validator.
+address = "a1qq5qqqqqgfqnsd6pxse5zdj9g5crzsf5x4zyzv6yxerr2d2rxpryzwp5g5m5zvfjxv6ygsekjmraj0"
+# Staking reward address of the validator.
+staking_reward_address = "a1qq5qqqqqxaz5vven8yu5gdpng9zrys6ygvurwv3sgsmrvd6xgdzrys6yg4pnwd6z89rrqv2xvjcy9t"
+# Validator's token balance at genesis.
+tokens = 200000
+# Amount of the validator's genesis token balance which is not staked.
+non_staked_balance = 100000
+# VP for the validator account
+validator_vp = "vp_user"
+# VP for the staking reward account
+staking_reward_vp = "vp_user"
+# Public IP:port address
+net_address = "127.0.0.1:26656"
+
+# Some tokens present at genesis.
+
+[token.xan]
+address = "a1qq5qqqqqxuc5gvz9gycryv3sgye5v3j9gvurjv34g9prsd6x8qu5xs2ygdzrzsf38q6rss33xf42f3"
+vp = "vp_token"
+[token.xan.balances]
+a1qq5qqqqqg4znssfsgcurjsfhgfpy2vjyxy6yg3z98pp5zvp5xgersvfjxvcnx3f4xycrzdfkak0xhx = 1000000
+a1qq5qqqqqxsuygd2x8pq5yw2ygdryxs6xgsmrsdzx8pryxv34gfrrssfjgccyg3zpxezrqd2y2s3g5s = 1000000
+a1qq5qqqqqxv6yydz9xc6ry33589q5x33eggcnjs2xx9znydj9xuens3phxppnwvzpg4rrqdpswve4n9 = 1000000
+a1qyqzsqqqqqcyvvf5xcu5vd6rg4z5233hg9pn23pjgdryzdjy8pz52wzxxscnvvjxx3rryvzz8y5p6mtz = 1000000
+
+[token.btc]
+address = "a1qq5qqqqq8q6yy3p4xyurys3n8qerz3zxxeryyv6rg4pnxdf3x3pyv32rx3zrgwzpxu6ny32r3laduc"
+vp = "vp_token"
+[token.btc.balances]
+a1qq5qqqqqg4znssfsgcurjsfhgfpy2vjyxy6yg3z98pp5zvp5xgersvfjxvcnx3f4xycrzdfkak0xhx = 1000000
+a1qq5qqqqqxsuygd2x8pq5yw2ygdryxs6xgsmrsdzx8pryxv34gfrrssfjgccyg3zpxezrqd2y2s3g5s = 1000000
+a1qq5qqqqqxv6yydz9xc6ry33589q5x33eggcnjs2xx9znydj9xuens3phxppnwvzpg4rrqdpswve4n9 = 1000000
+a1qyqzsqqqqqcyvvf5xcu5vd6rg4z5233hg9pn23pjgdryzdjy8pz52wzxxscnvvjxx3rryvzz8y5p6mtz = 1000000
+
+[token.eth]
+address = "a1qq5qqqqqx3z5xd3ngdqnzwzrgfpnxd3hgsuyx3phgfry2s3kxsc5xves8qe5x33sgdprzvjptzfry9"
+vp = "vp_token"
+[token.eth.balances]
+a1qq5qqqqqg4znssfsgcurjsfhgfpy2vjyxy6yg3z98pp5zvp5xgersvfjxvcnx3f4xycrzdfkak0xhx = 1000000
+a1qq5qqqqqxsuygd2x8pq5yw2ygdryxs6xgsmrsdzx8pryxv34gfrrssfjgccyg3zpxezrqd2y2s3g5s = 1000000
+a1qq5qqqqqxv6yydz9xc6ry33589q5x33eggcnjs2xx9znydj9xuens3phxppnwvzpg4rrqdpswve4n9 = 1000000
+a1qyqzsqqqqqcyvvf5xcu5vd6rg4z5233hg9pn23pjgdryzdjy8pz52wzxxscnvvjxx3rryvzz8y5p6mtz = 1000000
+
+[token.dot]
+address = "a1qq5qqqqqxq652v3sxap523fs8pznjse5g3pyydf3xqurws6ygvc5gdfcxyuy2deeggenjsjrjrl2ph"
+vp = "vp_token"
+[token.dot.balances]
+a1qq5qqqqqg4znssfsgcurjsfhgfpy2vjyxy6yg3z98pp5zvp5xgersvfjxvcnx3f4xycrzdfkak0xhx = 1000000
+a1qq5qqqqqxsuygd2x8pq5yw2ygdryxs6xgsmrsdzx8pryxv34gfrrssfjgccyg3zpxezrqd2y2s3g5s = 1000000
+a1qq5qqqqqxv6yydz9xc6ry33589q5x33eggcnjs2xx9znydj9xuens3phxppnwvzpg4rrqdpswve4n9 = 1000000
+a1qyqzsqqqqqcyvvf5xcu5vd6rg4z5233hg9pn23pjgdryzdjy8pz52wzxxscnvvjxx3rryvzz8y5p6mtz = 1000000
+
+[token.schnitzel]
+address = "a1qq5qqqqq8prrzv6xxcury3p4xucygdp5gfprzdfex9prz3jyg56rxv69gvenvsj9g5enswpcl8npyz"
+vp = "vp_token"
+[token.schnitzel.balances]
+a1qq5qqqqqg4znssfsgcurjsfhgfpy2vjyxy6yg3z98pp5zvp5xgersvfjxvcnx3f4xycrzdfkak0xhx = 1000000
+a1qq5qqqqqxsuygd2x8pq5yw2ygdryxs6xgsmrsdzx8pryxv34gfrrssfjgccyg3zpxezrqd2y2s3g5s = 1000000
+a1qq5qqqqqxv6yydz9xc6ry33589q5x33eggcnjs2xx9znydj9xuens3phxppnwvzpg4rrqdpswve4n9 = 1000000
+a1qyqzsqqqqqcyvvf5xcu5vd6rg4z5233hg9pn23pjgdryzdjy8pz52wzxxscnvvjxx3rryvzz8y5p6mtz = 1000000
+
+[token.apfel]
+address = "a1qq5qqqqqgfp52de4x56nqd3ex56y2wph8pznssjzx5ersw2pxfznsd3jxeqnjd3cxapnqsjz2fyt3j"
+vp = "vp_token"
+[token.apfel.balances]
+a1qq5qqqqqg4znssfsgcurjsfhgfpy2vjyxy6yg3z98pp5zvp5xgersvfjxvcnx3f4xycrzdfkak0xhx = 1000000
+a1qq5qqqqqxsuygd2x8pq5yw2ygdryxs6xgsmrsdzx8pryxv34gfrrssfjgccyg3zpxezrqd2y2s3g5s = 1000000
+a1qq5qqqqqxv6yydz9xc6ry33589q5x33eggcnjs2xx9znydj9xuens3phxppnwvzpg4rrqdpswve4n9 = 1000000
+a1qyqzsqqqqqcyvvf5xcu5vd6rg4z5233hg9pn23pjgdryzdjy8pz52wzxxscnvvjxx3rryvzz8y5p6mtz = 1000000
+
+[token.kartoffel]
+address = "a1qq5qqqqqxs6yvsekxuuyy3pjxsmrgd2rxuungdzpgsmyydjrxsenjdp5xaqn233sgccnjs3eak5wwh"
+public_key = ""
+vp = "vp_token"
+[token.kartoffel.balances]
+a1qq5qqqqqg4znssfsgcurjsfhgfpy2vjyxy6yg3z98pp5zvp5xgersvfjxvcnx3f4xycrzdfkak0xhx = 1000000
+a1qq5qqqqqxsuygd2x8pq5yw2ygdryxs6xgsmrsdzx8pryxv34gfrrssfjgccyg3zpxezrqd2y2s3g5s = 1000000
+a1qq5qqqqqxv6yydz9xc6ry33589q5x33eggcnjs2xx9znydj9xuens3phxppnwvzpg4rrqdpswve4n9 = 1000000
+a1qyqzsqqqqqcyvvf5xcu5vd6rg4z5233hg9pn23pjgdryzdjy8pz52wzxxscnvvjxx3rryvzz8y5p6mtz = 1000000
+
+# Some established accounts present at genesis.
+
+[established.albert]
+address = "a1qq5qqqqqg4znssfsgcurjsfhgfpy2vjyxy6yg3z98pp5zvp5xgersvfjxvcnx3f4xycrzdfkak0xhx"
+public_key = "a57281e1dd9fd39ec3e8a162a1643ca7c836c0f2dae3bef1412a3a61a2fde1a7"
+vp = "vp_user"
+
+[established.bertha]
+address = "a1qq5qqqqqxv6yydz9xc6ry33589q5x33eggcnjs2xx9znydj9xuens3phxppnwvzpg4rrqdpswve4n9"
+public_key = "572512a95b190d615b1987f7072572a64951ad50f4f97ef9dbb83545c46ae600"
+vp = "vp_user"
+
+[established.christel]
+address = "a1qq5qqqqqxsuygd2x8pq5yw2ygdryxs6xgsmrsdzx8pryxv34gfrrssfjgccyg3zpxezrqd2y2s3g5s"
+public_key = "d06f8d4f897f329a50fd23ba5d2503bbe22fab2f14d5f625e07a65f617eb2778"
+vp = "vp_user"
+
+[established.matchmaker]
+address = "a1qq5qqqqqxu6rvdzpxymnqwfkxfznvsjxggunyd3jg5erg3p3geqnvv35gep5yvzxx5m5x3fsfje8td"
+public_key = "f4fe03b0d3130f077e4d51cc7748baac998750476bef994a0a73ac4e7d183168"
+vp = "vp_user"
+
+# An implicit account present at genesis.
+
+# Daewon (a1qyqzsqqqqqcyvvf5xcu5vd6rg4z5233hg9pn23pjgdryzdjy8pz52wzxxscnvvjxx3rryvzz8y5p6mtz)
+[implicit.daewon]
+public_key = "2b5b8fda66fb6fc4ef0d86f84b21f250034077effc459fc2403a77a35aa95e3f"
+
+# Wasm VP definitions
+
+# Default user VP
+[wasm.vp_user]
+# filename (relative to wasm path used by the node)
+filename = "vp_user.wasm"
+# SHA-256 hash of the wasm file
+sha256 = "dc7b97f0448f2369bd2401c3c1d8898f53cac8c464a8c1b1f7f81415a658625d"
+
+# Token VP
+[wasm.vp_token]
+filename = "vp_token.wasm"
+sha256 = "e428a11f570d21dd3c871f5d35de6fe18098eb8ee0456b3e11a72ccdd8685cd0"
+
+# General protocol parameters.
+[parameters]
+# Minimum number of blocks in an epoch.
+min_num_of_blocks = 10
+# Minimum duration of an epoch (in seconds).
+min_duration = 60
+
+# Proof of stake parameters.
+[pos_params]
+# Maximum number of active validators.
+max_validator_slots = 128
+# Pipeline length (in epochs). Any change in the validator set made in
+# epoch 'n' will become active in epoch 'n + pipeline_len'.
+pipeline_len = 2
+# Unbonding length (in epochs). Validators may have their stake slashed
+# for a fault in epoch 'n' up through epoch 'n + unbonding_len'.
+unbonding_len = 6
+# Votes per token (in basis points, i.e., per 10,000 tokens)
+votes_per_token = 10
+# Reward for proposing a block.
+block_proposer_reward = 100
+# Reward for voting on a block.
+block_vote_reward = 1
+# Portion of a validator's stake that should be slashed on a duplicate
+# vote (in basis points, i.e., 500 = 5%).
+duplicate_vote_slash_rate = 500
+# Portion of a validator's stake that should be slashed on a light
+# client attack (in basis points, i.e., 500 = 5%).
+light_client_attack_slash_rate = 500

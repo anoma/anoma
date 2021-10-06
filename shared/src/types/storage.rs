@@ -28,10 +28,6 @@ pub enum Error {
 /// Result for functions that may fail
 pub type Result<T> = std::result::Result<T, Error>;
 
-/// The length of chain ID string
-// TODO adjust once chain ID scheme is chosen, add `Default` impl that allocates
-// this
-pub const CHAIN_ID_LENGTH: usize = 20;
 /// The length of the block's hash string
 pub const BLOCK_HASH_LENGTH: usize = 32;
 

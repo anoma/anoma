@@ -16,7 +16,7 @@ use crate::cli;
 
 #[derive(Debug)]
 pub struct Wallet {
-    base_dir: PathBuf,
+    store_dir: PathBuf,
     store: Store,
     decrypted_key_cache: HashMap<Alias, Rc<Keypair>>,
 }
@@ -32,13 +32,13 @@ pub enum FindKeyError {
 impl Wallet {
     /// Load a wallet from the store file or create a new one with the default
     /// keys and addresses if not found.
-    pub fn load_or_new(base_dir: &Path) -> Self {
-        let store = Store::load_or_new(base_dir).unwrap_or_else(|err| {
+    pub fn load_or_new(store_dir: &Path) -> Self {
+        let store = Store::load_or_new(store_dir).unwrap_or_else(|err| {
             eprintln!("Unable to load the wallet: {}", err);
             cli::safe_exit(1)
         });
         Self {
-            base_dir: base_dir.to_path_buf(),
+            store_dir: store_dir.to_path_buf(),
             store,
             decrypted_key_cache: HashMap::default(),
         }
@@ -46,7 +46,7 @@ impl Wallet {
 
     /// Save the wallet store to a file.
     pub fn save(&self) -> std::io::Result<()> {
-        self.store.save(&self.base_dir)
+        self.store.save(&self.store_dir)
     }
 
     /// Generate a new keypair and derive an implicit address from its public

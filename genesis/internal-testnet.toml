@@ -1,0 +1,159 @@
+# Example genesis with internal testnet settings.
+genesis_time = "2021-09-30T10:00:00Z"
+
+# 4 genesis validators.
+[validator.validator-1]
+# Validator's token balance at genesis.
+tokens = 200000
+# Amount of the validator's genesis token balance which is not staked.
+non_staked_balance = 1000000000000
+# VP for the validator account
+validator_vp = "vp_user"
+# VP for the staking reward account
+staking_reward_vp = "vp_user"
+# Public IP:port address
+net_address = "52.210.23.30:26656"
+# This has to be an alias of one of the established accounts
+matchmaker_account = "matchmaker"
+# A matchmaker WASM program
+matchmaker_code = "wasm/mm_token_exch.wasm"
+# A transaction WASM code used by the matchmaker
+matchmaker_tx = "wasm/tx_from_intent.wasm"
+
+[validator.validator-2]
+# Validator's token balance at genesis.
+tokens = 200000
+# Amount of the validator's genesis token balance which is not staked.
+non_staked_balance = 1000000000000
+# VP for the validator account
+validator_vp = "vp_user"
+# VP for the staking reward account
+staking_reward_vp = "vp_user"
+# Public IP:port address
+net_address = "63.34.55.152:26656"
+
+[validator.validator-3]
+# Validator's token balance at genesis.
+tokens = 200000
+# Amount of the validator's genesis token balance which is not staked.
+non_staked_balance = 1000000000000
+# VP for the validator account
+validator_vp = "vp_user"
+# VP for the staking reward account
+staking_reward_vp = "vp_user"
+# Public IP:port address
+net_address = "54.195.72.213:26656"
+
+[validator.validator-4]
+# Validator's token balance at genesis.
+tokens = 200000
+# Amount of the validator's genesis token balance which is not staked.
+non_staked_balance = 1000000000000
+# VP for the validator account
+validator_vp = "vp_user"
+# VP for the staking reward account
+staking_reward_vp = "vp_user"
+# Public IP:port address
+net_address = "79.125.112.218:26656"
+
+# Some tokens present at genesis.
+
+[token.xan]
+address = "a1qq5qqqqqxuc5gvz9gycryv3sgye5v3j9gvurjv34g9prsd6x8qu5xs2ygdzrzsf38q6rss33xf42f3"
+vp = "vp_token"
+[token.xan.balances]
+a1qq5qqqqqg4znssfsgcurjsfhgfpy2vjyxy6yg3z98pp5zvp5xgersvfjxvcnx3f4xycrzdfkak0xhx = 9223372036854
+
+[token.btc]
+address = "a1qq5qqqqq8q6yy3p4xyurys3n8qerz3zxxeryyv6rg4pnxdf3x3pyv32rx3zrgwzpxu6ny32r3laduc"
+vp = "vp_token"
+[token.btc.balances]
+a1qq5qqqqqg4znssfsgcurjsfhgfpy2vjyxy6yg3z98pp5zvp5xgersvfjxvcnx3f4xycrzdfkak0xhx = 9223372036854
+
+[token.eth]
+address = "a1qq5qqqqqx3z5xd3ngdqnzwzrgfpnxd3hgsuyx3phgfry2s3kxsc5xves8qe5x33sgdprzvjptzfry9"
+vp = "vp_token"
+[token.eth.balances]
+a1qq5qqqqqg4znssfsgcurjsfhgfpy2vjyxy6yg3z98pp5zvp5xgersvfjxvcnx3f4xycrzdfkak0xhx = 9223372036854
+
+[token.dot]
+address = "a1qq5qqqqqxq652v3sxap523fs8pznjse5g3pyydf3xqurws6ygvc5gdfcxyuy2deeggenjsjrjrl2ph"
+vp = "vp_token"
+[token.dot.balances]
+a1qq5qqqqqg4znssfsgcurjsfhgfpy2vjyxy6yg3z98pp5zvp5xgersvfjxvcnx3f4xycrzdfkak0xhx = 9223372036854
+
+[token.schnitzel]
+address = "a1qq5qqqqq8prrzv6xxcury3p4xucygdp5gfprzdfex9prz3jyg56rxv69gvenvsj9g5enswpcl8npyz"
+vp = "vp_token"
+[token.schnitzel.balances]
+a1qq5qqqqqg4znssfsgcurjsfhgfpy2vjyxy6yg3z98pp5zvp5xgersvfjxvcnx3f4xycrzdfkak0xhx = 9223372036854
+
+[token.apfel]
+address = "a1qq5qqqqqgfp52de4x56nqd3ex56y2wph8pznssjzx5ersw2pxfznsd3jxeqnjd3cxapnqsjz2fyt3j"
+vp = "vp_token"
+[token.apfel.balances]
+a1qq5qqqqqg4znssfsgcurjsfhgfpy2vjyxy6yg3z98pp5zvp5xgersvfjxvcnx3f4xycrzdfkak0xhx = 9223372036854
+
+[token.kartoffel]
+address = "a1qq5qqqqqxs6yvsekxuuyy3pjxsmrgd2rxuungdzpgsmyydjrxsenjdp5xaqn233sgccnjs3eak5wwh"
+public_key = ""
+vp = "vp_token"
+[token.kartoffel.balances]
+a1qq5qqqqqg4znssfsgcurjsfhgfpy2vjyxy6yg3z98pp5zvp5xgersvfjxvcnx3f4xycrzdfkak0xhx = 9223372036854
+
+# Some established accounts present at genesis.
+[established.matchmaker]
+vp = "vp_user"
+
+[established.faucet]
+address = "a1qq5qqqqqg4znssfsgcurjsfhgfpy2vjyxy6yg3z98pp5zvp5xgersvfjxvcnx3f4xycrzdfkak0xhx"
+vp = "vp_testnet_faucet"
+
+# Wasm VP definitions
+
+# Default user VP
+[wasm.vp_user]
+# filename (relative to wasm path used by the node)
+filename = "vp_user.wasm"
+# SHA-256 hash of the wasm file
+sha256 = "dc7b97f0448f2369bd2401c3c1d8898f53cac8c464a8c1b1f7f81415a658625d"
+
+# Token VP
+[wasm.vp_token]
+filename = "vp_token.wasm"
+sha256 = "e428a11f570d21dd3c871f5d35de6fe18098eb8ee0456b3e11a72ccdd8685cd0"
+
+# Faucet VP
+[wasm.vp_testnet_faucet]
+filename = "vp_testnet_faucet.wasm"
+sha256 = "2038d93afd456a77c45123811b671627f488c8d2a72b714d82dd494cbbd552bc"
+
+# General protocol parameters.
+[parameters]
+# Minimum number of blocks in an epoch.
+min_num_of_blocks = 10
+# Minimum duration of an epoch (in seconds).
+min_duration = 60
+
+# Proof of stake parameters.
+[pos_params]
+# Maximum number of active validators.
+max_validator_slots = 128
+# Pipeline length (in epochs). Any change in the validator set made in
+# epoch 'n' will become active in epoch 'n + pipeline_len'.
+pipeline_len = 2
+# Unbonding length (in epochs). Validators may have their stake slashed
+# for a fault in epoch 'n' up through epoch 'n + unbonding_len'.
+unbonding_len = 3
+# Votes per token (in basis points, i.e., per 10,000 tokens)
+votes_per_token = 10
+# Reward for proposing a block.
+block_proposer_reward = 100
+# Reward for voting on a block.
+block_vote_reward = 1
+# Portion of a validator's stake that should be slashed on a duplicate
+# vote (in basis points, i.e., 500 = 5%).
+duplicate_vote_slash_rate = 500
+# Portion of a validator's stake that should be slashed on a light
+# client attack (in basis points, i.e., 500 = 5%).
+light_client_attack_slash_rate = 500

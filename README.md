@@ -65,7 +65,7 @@ make reset-ledger
 
 ### Anoma Wallet
 
-The wallet is stored under `.anoma/wallet.toml` (with the default `--base-dir`), which will be created if it doesn't already exist. A newly created wallet will be pre-loaded with some default keys and addresses for development.
+The wallet is stored under `.anoma/{chain_id}/wallet.toml` (with the default `--base-dir`), which will be created if it doesn't already exist. A newly created wallet will be pre-loaded with some default keys and addresses for development.
 
 The ledger and intent gossip commands that use keys and addresses may use their aliases as defined in the wallet.
 

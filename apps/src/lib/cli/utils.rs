@@ -226,11 +226,12 @@ where
             .unwrap_or_default()
             .map(|raw| {
                 raw.parse().unwrap_or_else(|e| {
-                    panic!(
+                    eprintln!(
                         "Failed to parse the {} argument. Raw value: {}, \
                          error: {:?}",
                         self.name, raw, e
-                    )
+                    );
+                    safe_exit(1)
                 })
             })
             .collect()
@@ -268,10 +269,11 @@ where
 {
     args.value_of(field).map(|arg| {
         arg.parse().unwrap_or_else(|e| {
-            panic!(
+            eprintln!(
                 "Failed to parse the argument {}. Raw value: {}, error: {:?}",
                 field, arg, e
-            )
+            );
+            safe_exit(1)
         })
     })
 }

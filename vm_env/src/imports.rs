@@ -55,9 +55,10 @@ pub mod tx {
 
     use anoma::types::address;
     use anoma::types::address::Address;
+    use anoma::types::chain::CHAIN_ID_LENGTH;
     use anoma::types::internal::HostEnvResult;
     use anoma::types::storage::{
-        BlockHash, BlockHeight, Epoch, BLOCK_HASH_LENGTH, CHAIN_ID_LENGTH,
+        BlockHash, BlockHeight, Epoch, BLOCK_HASH_LENGTH,
     };
     pub use borsh::{BorshDeserialize, BorshSerialize};
 
@@ -286,10 +287,11 @@ pub mod vp {
     use std::convert::TryFrom;
     use std::marker::PhantomData;
 
+    use anoma::types::chain::CHAIN_ID_LENGTH;
     use anoma::types::internal::HostEnvResult;
     use anoma::types::key::ed25519::{PublicKey, Signature};
     use anoma::types::storage::{
-        BlockHash, BlockHeight, Epoch, BLOCK_HASH_LENGTH, CHAIN_ID_LENGTH,
+        BlockHash, BlockHeight, Epoch, BLOCK_HASH_LENGTH,
     };
     pub use borsh::{BorshDeserialize, BorshSerialize};
 
