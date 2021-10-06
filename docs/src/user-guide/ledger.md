@@ -14,7 +14,7 @@ If not found on start up, the ledger will generate a configuration file at `.ano
 
 The ledger also needs access to the built WASM files that are used in the genesis block. These files are included in release and shouldn't be modified, otherwise your node will fail with consensus error on the genesis block. By default, these are expected to be in the `wasm` directory, relative to the current working directory. This can also be set with `--wasm-dir` CLI global argument, `ANOMA_WASM_DIR` environment variable or the configuration file.
 
-## 📝Initialize an account
+## 📝 Initialize an account
 
 First, let's generate a key in the wallet that we'll use for the account.
 
@@ -35,7 +35,7 @@ Once this transaction has been applied, the client will automatically see the ne
 
 By default, this command will use the prebuilt user validity predicate (from the [vp_user](https://github.com/anoma/anoma/blob/fb445f67ffe3afe3bf50eb71658b01ff760e909d/wasm/wasm_source/src/vp_user.rs) source). You can supply a different validity predicate with `--code-path` argument. We'll come back to this topic and cover how to write and deploy custom validity predicates in the [custom validity predicates section](ledger/customize.md#validity-predicates).
 
-## 💸Token transactions and queries
+## 💸 Token transactions and queries
 
 In Anoma, tokens are implemented as accounts with a token validity predicate. It checks that its total supply is preserved in any transaction that uses this token. Your wallet will be pre-loaded with some token addresses that are initialized in the genesis block.
 

@@ -1,4 +1,4 @@
-# 🔏Interacting with the Proof-of-Stake system
+# 🔏 Interacting with the Proof-of-Stake system
 
 The Anoma Proof of Stake system is using the XAN token as the staking token. It features delegation to any number of validators and customizable validator validity predicates.
 
@@ -82,7 +82,7 @@ anoma client voting-power
 
 With this command, you can specify `--epoch` to find the voting powers at some future epoch. Note that only the voting powers for the current and the next epoch are final.
 
-## 📒PoS Validators
+## 📒 PoS Validators
 
 To register a new validator account, run:
 

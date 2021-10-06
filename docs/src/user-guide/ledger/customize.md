@@ -4,7 +4,7 @@ On this page, we'll cover how to tailor your account(s) to your use-case with cu
 
 We currently only support Rust for custom validity predicates and transactions via WASM, but expect many more options to be available in the future!
 
-## 👩🏽‍🏫Anoma accounts primer
+## 👩🏽‍🏫 Anoma accounts primer
 
 Instead of the common smart contract design, in Anoma, all the accounts follow the same basic principles. Each account has exactly one validity predicate. Any transaction that attempts to make some storage modifications will trigger validity predicates of each account whose storage has been modified by it. Validity predicates are stateless functions that decide if an account accepts the transaction.
 
@@ -26,7 +26,7 @@ This approach allows multiparty transactions to be applied atomically, without a
 
 In fact, most of the functionality in the Anoma ledger is being built leveraging the simplicity and flexibility of this account system, from a simple fungible token to more complex accounts that integrate Inter-blockchain Communication protocol and the Proof of Stake system.
 
-## ☑Validity predicates
+## ☑ Validity predicates
 
 A custom validity predicates can be built from scratch using `vp_template` (from root directory [`wasm/vp_template`](https://github.com/anoma/anoma/tree/master/wasm/vp_template)), which is Rust code compiled to WASM. Consult its `README.md` to find out more.
 
@@ -85,7 +85,7 @@ To submit a transaction that updates an account's validity predicate:
 anoma client update --address my-new-acc --code-path my_vp.wasm
 ```
 
-## 📩Custom transactions
+## 📩 Custom transactions
 
 A transaction must contain a WASM code that can perform arbitrary storage changes. It can also contain arbitrary data, which will be passed to the transaction and validity predicates when the transaction is being applied.
 

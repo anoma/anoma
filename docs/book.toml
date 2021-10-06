@@ -6,7 +6,7 @@ language = "en"
 multilingual = false
 site-url = "https://anoma.github.io/anoma/"
 src = "src"
-title = "Anoma - Technical Specifications"
+title = "Anoma - DOCS"
 
 [output.html]
 additional-css = ["assets/custom.css"]

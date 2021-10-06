@@ -1,5 +1,7 @@
 # Playnet
 
+> ⚠️ This section is deprecated
+
  🕹🎮👾 Welcome to the very first Anoma testnet and thank you for joining us! 🕹🎮👾
 
 The main goals of this testnet is to try out some of the functionality of the ledger, intent gossip and the matchmaker and to get some early feedback on its current state. To give feedback, ask questions and report issues, please use the #playnet Slack channel. Many issues and limitations are well known and our test coverage is currently very low, so please excuse Anoma while it is rough around the edges.

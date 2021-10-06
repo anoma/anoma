@@ -6,7 +6,7 @@ The wallet's state is stored under `.anoma/wallet.toml` (with the default `--bas
 
 For the ledger and intent gossip commands that use keys and addresses, you can enter their aliases as as defined in the wallet (case-sensitive).
 
-## 🔐Keys
+## 🔐 Keys
 
 For cryptographic signatures we currently support ed25519 keys. More will be added in future.
 
@@ -30,7 +30,7 @@ anoma wallet key gen --alias my-key
 
 Note that this will also save an implicit address derived from this public key under the same alias. More about addresses below. This command has the same effect as `address gen`.
 
-## 📇Addresses
+## 📇 Addresses
 
 All accounts in Anoma ledger have a unique address, exactly one validity predicate and optionally any additional data in its dynamic storage sub-space.
 

@@ -14,4 +14,4 @@ generation application.
 
 ![gossip process](./gossip_process.svg  "gossip process")
 
-[exilidraw link](https://excalidraw.com/#room=5d4a2a84ef52cf5f5f96,r4ghl40frJ9putMy-0vyOQ)
+[Diagram on Excalidraw](https://excalidraw.com/#room=5d4a2a84ef52cf5f5f96,r4ghl40frJ9putMy-0vyOQ)

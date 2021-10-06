@@ -38,7 +38,7 @@ These three intents express user desires to exchange assets.
 
 ![intent gossip and ledger network
 interaction](./example.svg "intent gossip network")
-[exilidraw link](https://excalidraw.com/#room=257e44f4b4b5867bf541,XDEKyGVIpqCrfq55bRqKug)
+[Diagram on Excalidraw](https://excalidraw.com/#room=257e44f4b4b5867bf541,XDEKyGVIpqCrfq55bRqKug)
 
 # Flow diagram: life cycle of intent and global process
 
@@ -47,5 +47,5 @@ desire to the ledger executing the validity predicate to check the crafted
 transaction.
 
 ![intent life cycle](./intent_life_cycle.svg "intent life
-cycle") [exilidraw
-link](https://excalidraw.com/#room=7ac107b3757c64049003,cdMInfvdLtjaGWSZWEKrhw)
+cycle") 
+[Diagram on Excalidraw](https://excalidraw.com/#room=7ac107b3757c64049003,cdMInfvdLtjaGWSZWEKrhw)
