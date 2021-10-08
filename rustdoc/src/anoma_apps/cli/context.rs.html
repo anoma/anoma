@@ -255,6 +255,12 @@
 <span id="255">255</span>
 <span id="256">256</span>
 <span id="257">257</span>
+<span id="258">258</span>
+<span id="259">259</span>
+<span id="260">260</span>
+<span id="261">261</span>
+<span id="262">262</span>
+<span id="263">263</span>
 </pre><pre class="rust">
 <span class="doccomment">//! CLI input types can be used for command arguments</span>
 
@@ -270,6 +276,7 @@
 
 <span class="kw">use</span> <span class="kw">super</span><span class="ident">::args</span>;
 <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::cli::safe_exit</span>;
+<span class="kw">use</span> <span class="kw">crate</span><span class="ident">::config::genesis::genesis_config</span>;
 <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::config::global::GlobalConfig</span>;
 <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::config</span>::{<span class="self">self</span>, <span class="ident">Config</span>};
 <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::wallet::Wallet</span>;
@@ -317,7 +324,12 @@
         <span class="kw">let</span> <span class="ident">chain_dir</span> <span class="op">=</span> <span class="ident">global_args</span>
             .<span class="ident">base_dir</span>
             .<span class="ident">join</span>(<span class="kw-2">&amp;</span><span class="ident">global_config</span>.<span class="ident">default_chain_id</span>.<span class="ident">as_str</span>());
-        <span class="kw">let</span> <span class="ident">wallet</span> <span class="op">=</span> <span class="ident">Wallet::load_or_new</span>(<span class="kw-2">&amp;</span><span class="ident">chain_dir</span>);
+        <span class="kw">let</span> <span class="ident">genesis_file_path</span> <span class="op">=</span> <span class="ident">global_args</span>
+            .<span class="ident">base_dir</span>
+            .<span class="ident">join</span>(<span class="macro">format!</span>(<span class="string">&quot;{}.toml&quot;</span>, <span class="ident">global_config</span>.<span class="ident">default_chain_id</span>.<span class="ident">as_str</span>()));
+        <span class="kw">let</span> <span class="ident">wallet</span> <span class="op">=</span> <span class="ident">Wallet::load_or_new_from_genesis</span>(<span class="kw-2">&amp;</span><span class="ident">chain_dir</span>, <span class="kw">move</span> <span class="op">|</span><span class="op">|</span> {
+            <span class="ident">genesis_config::open_genesis_config</span>(<span class="ident">genesis_file_path</span>)
+        });
 
         <span class="comment">// If the WASM dir specified, put it in the config</span>
         <span class="kw">match</span> <span class="ident">global_args</span>.<span class="ident">wasm_dir</span>.<span class="ident">as_ref</span>() {

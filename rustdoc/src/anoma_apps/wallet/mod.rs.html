@@ -218,6 +218,30 @@
 <span id="218">218</span>
 <span id="219">219</span>
 <span id="220">220</span>
+<span id="221">221</span>
+<span id="222">222</span>
+<span id="223">223</span>
+<span id="224">224</span>
+<span id="225">225</span>
+<span id="226">226</span>
+<span id="227">227</span>
+<span id="228">228</span>
+<span id="229">229</span>
+<span id="230">230</span>
+<span id="231">231</span>
+<span id="232">232</span>
+<span id="233">233</span>
+<span id="234">234</span>
+<span id="235">235</span>
+<span id="236">236</span>
+<span id="237">237</span>
+<span id="238">238</span>
+<span id="239">239</span>
+<span id="240">240</span>
+<span id="241">241</span>
+<span id="242">242</span>
+<span id="243">243</span>
+<span id="244">244</span>
 </pre><pre class="rust">
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">defaults</span>;
 <span class="kw">mod</span> <span class="ident">keys</span>;
@@ -234,6 +258,7 @@
 <span class="kw">pub</span> <span class="kw">use</span> <span class="self">self</span><span class="ident">::keys</span>::{<span class="ident">DecryptionError</span>, <span class="ident">StoredKeypair</span>};
 <span class="kw">use</span> <span class="self">self</span><span class="ident">::store</span>::{<span class="ident">Alias</span>, <span class="ident">Store</span>};
 <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::cli</span>;
+<span class="kw">use</span> <span class="kw">crate</span><span class="ident">::config::genesis::genesis_config::GenesisConfig</span>;
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Wallet</span> {
@@ -251,8 +276,8 @@
 }
 
 <span class="kw">impl</span> <span class="ident">Wallet</span> {
-    <span class="doccomment">/// Load a wallet from the store file or create a new one with the default</span>
-    <span class="doccomment">/// keys and addresses if not found.</span>
+    <span class="doccomment">/// Load a wallet from the store file or create a new wallet without any</span>
+    <span class="doccomment">/// keys or addresses.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">load_or_new</span>(<span class="ident">store_dir</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="kw">let</span> <span class="ident">store</span> <span class="op">=</span> <span class="ident">Store::load_or_new</span>(<span class="ident">store_dir</span>).<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="ident">err</span><span class="op">|</span> {
             <span class="macro">eprintln!</span>(<span class="string">&quot;Unable to load the wallet: {}&quot;</span>, <span class="ident">err</span>);
@@ -263,6 +288,29 @@
             <span class="ident">store</span>,
             <span class="ident">decrypted_key_cache</span>: <span class="ident">HashMap::default</span>(),
         }
+    }
+
+    <span class="doccomment">/// Load a wallet from the store file or create a new one with the default</span>
+    <span class="doccomment">/// addresses loaded from the genesis file, if not found.</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">load_or_new_from_genesis</span>(
+        <span class="ident">store_dir</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>,
+        <span class="ident">load_genesis</span>: <span class="kw">impl</span> <span class="ident">FnOnce</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">GenesisConfig</span>,
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="kw">let</span> <span class="ident">store</span> <span class="op">=</span> <span class="ident">Store::load_or_new_from_genesis</span>(<span class="ident">store_dir</span>, <span class="ident">load_genesis</span>)
+            .<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="ident">err</span><span class="op">|</span> {
+                <span class="macro">eprintln!</span>(<span class="string">&quot;Unable to load the wallet: {}&quot;</span>, <span class="ident">err</span>);
+                <span class="ident">cli::safe_exit</span>(<span class="number">1</span>)
+            });
+        <span class="self">Self</span> {
+            <span class="ident">store_dir</span>: <span class="ident">store_dir</span>.<span class="ident">to_path_buf</span>(),
+            <span class="ident">store</span>,
+            <span class="ident">decrypted_key_cache</span>: <span class="ident">HashMap::default</span>(),
+        }
+    }
+
+    <span class="doccomment">/// Add addresses from a genesis configuration.</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">add_genesis_addresses</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">genesis</span>: <span class="ident">GenesisConfig</span>) {
+        <span class="self">self</span>.<span class="ident">store</span>.<span class="ident">add_genesis_addresses</span>(<span class="ident">genesis</span>)
     }
 
     <span class="doccomment">/// Save the wallet store to a file.</span>

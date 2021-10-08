@@ -2349,12 +2349,6 @@
 <span id="2349">2349</span>
 <span id="2350">2350</span>
 <span id="2351">2351</span>
-<span id="2352">2352</span>
-<span id="2353">2353</span>
-<span id="2354">2354</span>
-<span id="2355">2355</span>
-<span id="2356">2356</span>
-<span id="2357">2357</span>
 </pre><pre class="rust">
 <span class="doccomment">//! The CLI commands that are re-used between the executables `anoma`,</span>
 <span class="doccomment">//! `anoma-node` and `anoma-client`.</span>
@@ -2367,18 +2361,13 @@
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">context</span>;
 <span class="kw">mod</span> <span class="ident">utils</span>;
 
-<span class="kw">use</span> <span class="ident">clap</span>::{<span class="ident">AppSettings</span>, <span class="ident">ArgMatches</span>};
+<span class="kw">use</span> <span class="ident">clap</span>::{<span class="ident">crate_authors</span>, <span class="ident">crate_version</span>, <span class="ident">AppSettings</span>, <span class="ident">ArgMatches</span>};
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">utils::safe_exit</span>;
 <span class="kw">use</span> <span class="ident">utils</span>::<span class="kw-2">*</span>;
 
 <span class="kw">pub</span> <span class="kw">use</span> <span class="self">self</span><span class="ident">::context::Context</span>;
 
-<span class="kw">const</span> <span class="ident">AUTHOR</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;Heliax AG &lt;hello@heliax.dev&gt;&quot;</span>;
 <span class="kw">const</span> <span class="ident">APP_NAME</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;Anoma&quot;</span>;
-<span class="kw">const</span> <span class="ident">CLI_VERSION</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;0.1.0&quot;</span>;
-<span class="kw">const</span> <span class="ident">NODE_VERSION</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;0.1.0&quot;</span>;
-<span class="kw">const</span> <span class="ident">CLIENT_VERSION</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;0.1.0&quot;</span>;
-<span class="kw">const</span> <span class="ident">WALLET_VERSION</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;0.1.0&quot;</span>;
 
 <span class="comment">// Main Anoma sub-commands</span>
 <span class="kw">const</span> <span class="ident">NODE_CMD</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;node&quot;</span>;
@@ -2392,7 +2381,6 @@
     <span class="kw">use</span> <span class="kw">super</span>::{<span class="ident">args</span>, <span class="ident">ArgMatches</span>, <span class="ident">CLIENT_CMD</span>, <span class="ident">NODE_CMD</span>, <span class="ident">WALLET_CMD</span>};
 
     <span class="doccomment">/// Commands for `anoma` binary.</span>
-    <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy::large_enum_variant</span>)]</span>
     <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
     <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">Anoma</span> {
         <span class="ident">Node</span>(<span class="ident">AnomaNode</span>),
@@ -4680,8 +4668,8 @@
 
 <span class="kw">fn</span> <span class="ident">anoma_app</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">App</span> {
     <span class="kw">let</span> <span class="ident">app</span> <span class="op">=</span> <span class="ident">App::new</span>(<span class="ident">APP_NAME</span>)
-        .<span class="ident">version</span>(<span class="ident">CLI_VERSION</span>)
-        .<span class="ident">author</span>(<span class="ident">AUTHOR</span>)
+        .<span class="ident">version</span>(<span class="macro">crate_version!</span>())
+        .<span class="ident">author</span>(<span class="macro">crate_authors!</span>(<span class="string">&quot;\n&quot;</span>))
         .<span class="ident">about</span>(<span class="string">&quot;Anoma command line interface.&quot;</span>)
         .<span class="ident">setting</span>(<span class="ident">AppSettings::SubcommandRequiredElseHelp</span>);
     <span class="ident">cmds::Anoma::add_sub</span>(<span class="ident">args::Global::def</span>(<span class="ident">app</span>))
@@ -4689,8 +4677,8 @@
 
 <span class="kw">fn</span> <span class="ident">anoma_node_app</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">App</span> {
     <span class="kw">let</span> <span class="ident">app</span> <span class="op">=</span> <span class="ident">App::new</span>(<span class="ident">APP_NAME</span>)
-        .<span class="ident">version</span>(<span class="ident">NODE_VERSION</span>)
-        .<span class="ident">author</span>(<span class="ident">AUTHOR</span>)
+        .<span class="ident">version</span>(<span class="macro">crate_version!</span>())
+        .<span class="ident">author</span>(<span class="macro">crate_authors!</span>(<span class="string">&quot;\n&quot;</span>))
         .<span class="ident">about</span>(<span class="string">&quot;Anoma node command line interface.&quot;</span>)
         .<span class="ident">setting</span>(<span class="ident">AppSettings::SubcommandRequiredElseHelp</span>);
     <span class="ident">cmds::AnomaNode::add_sub</span>(<span class="ident">args::Global::def</span>(<span class="ident">app</span>))
@@ -4698,8 +4686,8 @@
 
 <span class="kw">fn</span> <span class="ident">anoma_client_app</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">App</span> {
     <span class="kw">let</span> <span class="ident">app</span> <span class="op">=</span> <span class="ident">App::new</span>(<span class="ident">APP_NAME</span>)
-        .<span class="ident">version</span>(<span class="ident">CLIENT_VERSION</span>)
-        .<span class="ident">author</span>(<span class="ident">AUTHOR</span>)
+        .<span class="ident">version</span>(<span class="macro">crate_version!</span>())
+        .<span class="ident">author</span>(<span class="macro">crate_authors!</span>(<span class="string">&quot;\n&quot;</span>))
         .<span class="ident">about</span>(<span class="string">&quot;Anoma client command line interface.&quot;</span>)
         .<span class="ident">setting</span>(<span class="ident">AppSettings::SubcommandRequiredElseHelp</span>);
     <span class="ident">cmds::AnomaClient::add_sub</span>(<span class="ident">args::Global::def</span>(<span class="ident">app</span>))
@@ -4707,8 +4695,8 @@
 
 <span class="kw">fn</span> <span class="ident">anoma_wallet_app</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">App</span> {
     <span class="kw">let</span> <span class="ident">app</span> <span class="op">=</span> <span class="ident">App::new</span>(<span class="ident">APP_NAME</span>)
-        .<span class="ident">version</span>(<span class="ident">WALLET_VERSION</span>)
-        .<span class="ident">author</span>(<span class="ident">AUTHOR</span>)
+        .<span class="ident">version</span>(<span class="macro">crate_version!</span>())
+        .<span class="ident">author</span>(<span class="macro">crate_authors!</span>(<span class="string">&quot;\n&quot;</span>))
         .<span class="ident">about</span>(<span class="string">&quot;Anoma wallet command line interface.&quot;</span>)
         .<span class="ident">setting</span>(<span class="ident">AppSettings::SubcommandRequiredElseHelp</span>);
     <span class="ident">cmds::AnomaWallet::add_sub</span>(<span class="ident">args::Global::def</span>(<span class="ident">app</span>))
