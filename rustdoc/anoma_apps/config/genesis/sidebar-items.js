@@ -1,1 +1,1 @@
-initSidebarItems({"fn":[["genesis",""]],"struct":[["EstablishedAccount",""],["Genesis",""],["ImplicitAccount",""],["TokenAccount",""],["Validator","Genesis validator definition"]]});
+initSidebarItems({"fn":[["genesis",""]],"mod":[["genesis_config","Genesis configuration file format"]],"struct":[["EstablishedAccount",""],["Genesis",""],["ImplicitAccount",""],["TokenAccount",""],["Validator","Genesis validator definition"]]});

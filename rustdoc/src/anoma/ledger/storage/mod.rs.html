@@ -1,6 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `shared/src/ledger/storage/mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs - source</title><link rel="stylesheet" type="text/css" href="../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../../ayu.css" disabled ><script id="default-settings"></script><script src="../../../../storage.js"></script><script src="../../../../crates.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg">
-<link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png">
-<link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../../anoma/index.html'><div class='logo-container rust-logo'><img src='../../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img src="../../../../brush.svg" width="18" height="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../../../settings.html" title="settings"><img src="../../../../wheel.svg" width="18" height="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">  1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `shared/src/ledger/storage/mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs - source</title><link rel="stylesheet" type="text/css" href="../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../../ayu.css" disabled ><script id="default-settings"></script><script src="../../../../storage.js"></script><script src="../../../../crates.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="shortcut icon" href="https://docs.anoma.network/favicon.png"><style type="text/css">#crate-search{background-image:url("../../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../../anoma/index.html'><div class='logo-container'><img src='https://docs.anoma.network/rustdoc-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img src="../../../../brush.svg" width="18" height="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../../../settings.html" title="settings"><img src="../../../../wheel.svg" width="18" height="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">  1</span>
 <span id="2">  2</span>
 <span id="3">  3</span>
 <span id="4">  4</span>
@@ -707,15 +705,6 @@
 <span id="705">705</span>
 <span id="706">706</span>
 <span id="707">707</span>
-<span id="708">708</span>
-<span id="709">709</span>
-<span id="710">710</span>
-<span id="711">711</span>
-<span id="712">712</span>
-<span id="713">713</span>
-<span id="714">714</span>
-<span id="715">715</span>
-<span id="716">716</span>
 </pre><pre class="rust">
 <span class="doccomment">//! Ledger&#39;s state storage with key-value backed store and a merkle tree</span>
 
@@ -739,9 +728,9 @@
 <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::ledger::gas::MIN_STORAGE_GAS</span>;
 <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::ledger::parameters</span>::{<span class="self">self</span>, <span class="ident">EpochDuration</span>};
 <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::types::address</span>::{<span class="ident">Address</span>, <span class="ident">EstablishedAddressGen</span>};
+<span class="kw">use</span> <span class="kw">crate</span><span class="ident">::types::chain</span>::{<span class="ident">ChainId</span>, <span class="ident">CHAIN_ID_LENGTH</span>};
 <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::types::storage</span>::{
     <span class="ident">BlockHash</span>, <span class="ident">BlockHeight</span>, <span class="ident">DbKeySeg</span>, <span class="ident">Epoch</span>, <span class="ident">Epochs</span>, <span class="ident">Key</span>, <span class="ident">BLOCK_HASH_LENGTH</span>,
-    <span class="ident">CHAIN_ID_LENGTH</span>,
 };
 <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::types::time::DateTimeUtc</span>;
 
@@ -758,7 +747,7 @@
     <span class="doccomment">/// The database for the storage</span>
     <span class="kw">pub</span> <span class="ident">db</span>: <span class="ident">D</span>,
     <span class="doccomment">/// The ID of the chain</span>
-    <span class="kw">pub</span> <span class="ident">chain_id</span>: <span class="ident">String</span>,
+    <span class="kw">pub</span> <span class="ident">chain_id</span>: <span class="ident">ChainId</span>,
     <span class="doccomment">/// The storage for the current (yet to be committed) block</span>
     <span class="kw">pub</span> <span class="ident">block</span>: <span class="ident">BlockStorage</span><span class="op">&lt;</span><span class="ident">H</span><span class="op">&gt;</span>,
     <span class="doccomment">/// The latest block header</span>
@@ -1042,14 +1031,6 @@
         <span class="prelude-val">Ok</span>((<span class="ident">gas</span> <span class="kw">as</span> <span class="kw">_</span>, <span class="ident">size_diff</span>))
     }
 
-    <span class="doccomment">/// Set the chain ID.</span>
-    <span class="doccomment">/// Chain ID is not in the Merkle tree as it&#39;s tracked by Tendermint in the</span>
-    <span class="doccomment">/// block header. Hence, we don&#39;t update the tree when this is set.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set_chain_id</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">chain_id</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">chain_id</span> <span class="op">=</span> <span class="ident">chain_id</span>.<span class="ident">to_owned</span>();
-        <span class="prelude-val">Ok</span>(())
-    }
-
     <span class="doccomment">/// Set the block header.</span>
     <span class="doccomment">/// The header is not in the Merkle tree as it&#39;s tracked by Tendermint.</span>
     <span class="doccomment">/// Hence, we don&#39;t update the tree when this is set.</span>
@@ -1087,9 +1068,9 @@
         <span class="self">self</span>.<span class="ident">has_key</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>)
     }
 
-    <span class="doccomment">/// Get the chain ID</span>
+    <span class="doccomment">/// Get the chain ID as a raw string</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_chain_id</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> (<span class="ident">String</span>, <span class="ident">u64</span>) {
-        (<span class="self">self</span>.<span class="ident">chain_id</span>.<span class="ident">clone</span>(), <span class="ident">CHAIN_ID_LENGTH</span> <span class="kw">as</span> <span class="kw">_</span>)
+        (<span class="self">self</span>.<span class="ident">chain_id</span>.<span class="ident">to_string</span>(), <span class="ident">CHAIN_ID_LENGTH</span> <span class="kw">as</span> <span class="kw">_</span>)
     }
 
     <span class="doccomment">/// Get the current (yet to be committed) block height</span>
@@ -1265,8 +1246,7 @@
 
     <span class="kw">impl</span> <span class="ident">Default</span> <span class="kw">for</span> <span class="ident">TestStorage</span> {
         <span class="kw">fn</span> <span class="ident">default</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
-            <span class="kw">let</span> <span class="ident">chain_id</span> <span class="op">=</span> <span class="string">&quot;Testing-chain-000000&quot;</span>.<span class="ident">to_string</span>();
-            <span class="macro">assert_eq!</span>(<span class="ident">chain_id</span>.<span class="ident">len</span>(), <span class="ident">CHAIN_ID_LENGTH</span>);
+            <span class="kw">let</span> <span class="ident">chain_id</span> <span class="op">=</span> <span class="ident">ChainId::default</span>();
             <span class="kw">let</span> <span class="ident">tree</span> <span class="op">=</span> <span class="ident">MerkleTree::default</span>();
             <span class="kw">let</span> <span class="ident">subspaces</span> <span class="op">=</span> <span class="ident">HashMap::new</span>();
             <span class="kw">let</span> <span class="ident">block</span> <span class="op">=</span> <span class="ident">BlockStorage</span> {

@@ -1,6 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `apps/src/lib/node/ledger/storage/mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs - source</title><link rel="stylesheet" type="text/css" href="../../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../../../ayu.css" disabled ><script id="default-settings"></script><script src="../../../../../storage.js"></script><script src="../../../../../crates.js"></script><noscript><link rel="stylesheet" href="../../../../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../../../../favicon.svg">
-<link rel="alternate icon" type="image/png" href="../../../../../favicon-16x16.png">
-<link rel="alternate icon" type="image/png" href="../../../../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../../../anoma_apps/index.html'><div class='logo-container rust-logo'><img src='../../../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img src="../../../../../brush.svg" width="18" height="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../../../../settings.html" title="settings"><img src="../../../../../wheel.svg" width="18" height="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">  1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `apps/src/lib/node/ledger/storage/mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs - source</title><link rel="stylesheet" type="text/css" href="../../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../../../ayu.css" disabled ><script id="default-settings"></script><script src="../../../../../storage.js"></script><script src="../../../../../crates.js"></script><noscript><link rel="stylesheet" href="../../../../../noscript.css"></noscript><link rel="shortcut icon" href="https://docs.anoma.network/favicon.png"><style type="text/css">#crate-search{background-image:url("../../../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../../../anoma_apps/index.html'><div class='logo-container'><img src='https://docs.anoma.network/rustdoc-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img src="../../../../../brush.svg" width="18" height="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../../../../settings.html" title="settings"><img src="../../../../../wheel.svg" width="18" height="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">  1</span>
 <span id="2">  2</span>
 <span id="3">  3</span>
 <span id="4">  4</span>
@@ -266,6 +264,7 @@
 <span class="kw">use</span> <span class="ident">anoma::ledger::storage::types::MerkleTree</span>;
 <span class="kw">use</span> <span class="ident">anoma::ledger::storage</span>::{<span class="ident">types</span>, <span class="ident">BlockStorage</span>, <span class="ident">Storage</span>, <span class="ident">StorageHasher</span>};
 <span class="kw">use</span> <span class="ident">anoma::types::address::EstablishedAddressGen</span>;
+<span class="kw">use</span> <span class="ident">anoma::types::chain::ChainId</span>;
 <span class="kw">use</span> <span class="ident">anoma::types::storage</span>::{<span class="ident">BlockHash</span>, <span class="ident">BlockHeight</span>, <span class="ident">Epoch</span>, <span class="ident">Epochs</span>, <span class="ident">Key</span>};
 <span class="kw">use</span> <span class="ident">anoma::types::time::DateTimeUtc</span>;
 <span class="kw">use</span> <span class="ident">blake2b_rs</span>::{<span class="ident">Blake2b</span>, <span class="ident">Blake2bBuilder</span>};
@@ -279,7 +278,7 @@
 
 <span class="kw">pub</span> <span class="kw">type</span> <span class="ident">PersistentStorage</span> <span class="op">=</span> <span class="ident">Storage</span><span class="op">&lt;</span><span class="ident">PersistentDB</span>, <span class="ident">PersistentStorageHasher</span><span class="op">&gt;</span>;
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">open</span>(<span class="ident">db_path</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span><span class="ident">Path</span><span class="op">&gt;</span>, <span class="ident">chain_id</span>: <span class="ident">String</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">PersistentStorage</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">open</span>(<span class="ident">db_path</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span><span class="ident">Path</span><span class="op">&gt;</span>, <span class="ident">chain_id</span>: <span class="ident">ChainId</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">PersistentStorage</span> {
     <span class="kw">let</span> <span class="ident">block</span> <span class="op">=</span> <span class="ident">BlockStorage</span> {
         <span class="ident">tree</span>: <span class="ident">MerkleTree::default</span>(),
         <span class="ident">hash</span>: <span class="ident">BlockHash::default</span>(),
@@ -353,13 +352,12 @@
     <span class="kw">use</span> <span class="ident">tempfile::TempDir</span>;
 
     <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
-    <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::config::DEFAULT_CHAIN_ID</span>;
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="kw">fn</span> <span class="ident">test_crud_value</span>() {
         <span class="kw">let</span> <span class="ident">db_path</span> <span class="op">=</span>
             <span class="ident">TempDir::new</span>().<span class="ident">expect</span>(<span class="string">&quot;Unable to create a temporary DB directory&quot;</span>);
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">storage</span> <span class="op">=</span> <span class="ident">open</span>(<span class="ident">db_path</span>.<span class="ident">path</span>(), <span class="ident">DEFAULT_CHAIN_ID</span>.<span class="ident">to_owned</span>());
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">storage</span> <span class="op">=</span> <span class="ident">open</span>(<span class="ident">db_path</span>.<span class="ident">path</span>(), <span class="ident">ChainId::default</span>());
         <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span>
             <span class="ident">Key::parse</span>(<span class="string">&quot;key&quot;</span>.<span class="ident">to_owned</span>()).<span class="ident">expect</span>(<span class="string">&quot;cannot parse the key string&quot;</span>);
         <span class="kw">let</span> <span class="ident">value</span>: <span class="ident">u64</span> <span class="op">=</span> <span class="number">1</span>;
@@ -402,7 +400,7 @@
     <span class="kw">fn</span> <span class="ident">test_commit_block</span>() {
         <span class="kw">let</span> <span class="ident">db_path</span> <span class="op">=</span>
             <span class="ident">TempDir::new</span>().<span class="ident">expect</span>(<span class="string">&quot;Unable to create a temporary DB directory&quot;</span>);
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">storage</span> <span class="op">=</span> <span class="ident">open</span>(<span class="ident">db_path</span>.<span class="ident">path</span>(), <span class="ident">DEFAULT_CHAIN_ID</span>.<span class="ident">to_owned</span>());
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">storage</span> <span class="op">=</span> <span class="ident">open</span>(<span class="ident">db_path</span>.<span class="ident">path</span>(), <span class="ident">ChainId::default</span>());
         <span class="ident">storage</span>
             .<span class="ident">begin_block</span>(<span class="ident">BlockHash::default</span>(), <span class="ident">BlockHeight</span>(<span class="number">100</span>))
             .<span class="ident">expect</span>(<span class="string">&quot;begin_block failed&quot;</span>);
@@ -424,7 +422,7 @@
         <span class="ident">drop</span>(<span class="ident">storage</span>);
 
         <span class="comment">// load the last state</span>
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">storage</span> <span class="op">=</span> <span class="ident">open</span>(<span class="ident">db_path</span>.<span class="ident">path</span>(), <span class="ident">DEFAULT_CHAIN_ID</span>.<span class="ident">to_owned</span>());
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">storage</span> <span class="op">=</span> <span class="ident">open</span>(<span class="ident">db_path</span>.<span class="ident">path</span>(), <span class="ident">ChainId::default</span>());
         <span class="ident">storage</span>
             .<span class="ident">load_last_state</span>()
             .<span class="ident">expect</span>(<span class="string">&quot;loading the last state failed&quot;</span>);
@@ -442,7 +440,7 @@
     <span class="kw">fn</span> <span class="ident">test_iter</span>() {
         <span class="kw">let</span> <span class="ident">db_path</span> <span class="op">=</span>
             <span class="ident">TempDir::new</span>().<span class="ident">expect</span>(<span class="string">&quot;Unable to create a temporary DB directory&quot;</span>);
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">storage</span> <span class="op">=</span> <span class="ident">open</span>(<span class="ident">db_path</span>.<span class="ident">path</span>(), <span class="ident">DEFAULT_CHAIN_ID</span>.<span class="ident">to_owned</span>());
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">storage</span> <span class="op">=</span> <span class="ident">open</span>(<span class="ident">db_path</span>.<span class="ident">path</span>(), <span class="ident">ChainId::default</span>());
         <span class="ident">storage</span>
             .<span class="ident">begin_block</span>(<span class="ident">BlockHash::default</span>(), <span class="ident">BlockHeight</span>(<span class="number">100</span>))
             .<span class="ident">expect</span>(<span class="string">&quot;begin_block failed&quot;</span>);
@@ -482,7 +480,7 @@
     <span class="kw">fn</span> <span class="ident">test_validity_predicate</span>() {
         <span class="kw">let</span> <span class="ident">db_path</span> <span class="op">=</span>
             <span class="ident">TempDir::new</span>().<span class="ident">expect</span>(<span class="string">&quot;Unable to create a temporary DB directory&quot;</span>);
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">storage</span> <span class="op">=</span> <span class="ident">open</span>(<span class="ident">db_path</span>.<span class="ident">path</span>(), <span class="ident">DEFAULT_CHAIN_ID</span>.<span class="ident">to_owned</span>());
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">storage</span> <span class="op">=</span> <span class="ident">open</span>(<span class="ident">db_path</span>.<span class="ident">path</span>(), <span class="ident">ChainId::default</span>());
         <span class="ident">storage</span>
             .<span class="ident">begin_block</span>(<span class="ident">BlockHash::default</span>(), <span class="ident">BlockHeight</span>(<span class="number">100</span>))
             .<span class="ident">expect</span>(<span class="string">&quot;begin_block failed&quot;</span>);

@@ -1,1 +1,1 @@
-initSidebarItems({"fn":[["init_genesis_validator","Initialize genesis validator’s address, staking reward address, consensus key, validator account key and staking rewards key and use it in the ledger’s node.“,"]]});
+initSidebarItems({"fn":[["init_genesis_validator","Initialize genesis validator’s address, staking reward address, consensus key, validator account key and staking rewards key and use it in the ledger’s node."],["init_network","Initialize a new test network with the given validators and faucet accounts."]]});

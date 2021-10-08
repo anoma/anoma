@@ -1,6 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `apps/src/lib/config/mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs - source</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script id="default-settings"></script><script src="../../../storage.js"></script><script src="../../../crates.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../../favicon.svg">
-<link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png">
-<link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../anoma_apps/index.html'><div class='logo-container rust-logo'><img src='../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img src="../../../brush.svg" width="18" height="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../../settings.html" title="settings"><img src="../../../wheel.svg" width="18" height="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">  1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `apps/src/lib/config/mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs - source</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script id="default-settings"></script><script src="../../../storage.js"></script><script src="../../../crates.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="shortcut icon" href="https://docs.anoma.network/favicon.png"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../anoma_apps/index.html'><div class='logo-container'><img src='https://docs.anoma.network/rustdoc-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img src="../../../brush.svg" width="18" height="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../../settings.html" title="settings"><img src="../../../wheel.svg" width="18" height="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">  1</span>
 <span id="2">  2</span>
 <span id="3">  3</span>
 <span id="4">  4</span>
@@ -429,10 +427,72 @@
 <span id="427">427</span>
 <span id="428">428</span>
 <span id="429">429</span>
+<span id="430">430</span>
+<span id="431">431</span>
+<span id="432">432</span>
+<span id="433">433</span>
+<span id="434">434</span>
+<span id="435">435</span>
+<span id="436">436</span>
+<span id="437">437</span>
+<span id="438">438</span>
+<span id="439">439</span>
+<span id="440">440</span>
+<span id="441">441</span>
+<span id="442">442</span>
+<span id="443">443</span>
+<span id="444">444</span>
+<span id="445">445</span>
+<span id="446">446</span>
+<span id="447">447</span>
+<span id="448">448</span>
+<span id="449">449</span>
+<span id="450">450</span>
+<span id="451">451</span>
+<span id="452">452</span>
+<span id="453">453</span>
+<span id="454">454</span>
+<span id="455">455</span>
+<span id="456">456</span>
+<span id="457">457</span>
+<span id="458">458</span>
+<span id="459">459</span>
+<span id="460">460</span>
+<span id="461">461</span>
+<span id="462">462</span>
+<span id="463">463</span>
+<span id="464">464</span>
+<span id="465">465</span>
+<span id="466">466</span>
+<span id="467">467</span>
+<span id="468">468</span>
+<span id="469">469</span>
+<span id="470">470</span>
+<span id="471">471</span>
+<span id="472">472</span>
+<span id="473">473</span>
+<span id="474">474</span>
+<span id="475">475</span>
+<span id="476">476</span>
+<span id="477">477</span>
+<span id="478">478</span>
+<span id="479">479</span>
+<span id="480">480</span>
+<span id="481">481</span>
+<span id="482">482</span>
+<span id="483">483</span>
+<span id="484">484</span>
+<span id="485">485</span>
+<span id="486">486</span>
+<span id="487">487</span>
+<span id="488">488</span>
+<span id="489">489</span>
+<span id="490">490</span>
 </pre><pre class="rust">
 <span class="doccomment">//! Node and client configuration</span>
 
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">genesis</span>;
+<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">global</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">gossiper</span>;
 
 <span class="kw">use</span> <span class="ident">std::collections::HashSet</span>;
@@ -443,6 +503,8 @@
 <span class="kw">use</span> <span class="ident">std::path</span>::{<span class="ident">Path</span>, <span class="ident">PathBuf</span>};
 <span class="kw">use</span> <span class="ident">std::str::FromStr</span>;
 
+<span class="kw">use</span> <span class="ident">anoma::types::chain::ChainId</span>;
+<span class="kw">use</span> <span class="ident">anoma::types::time::Rfc3339String</span>;
 <span class="kw">use</span> <span class="ident">gossiper::Gossiper</span>;
 <span class="kw">use</span> <span class="ident">libp2p::multiaddr</span>::{<span class="ident">Multiaddr</span>, <span class="ident">Protocol</span>};
 <span class="kw">use</span> <span class="ident">libp2p::multihash::Multihash</span>;
@@ -451,6 +513,8 @@
 <span class="kw">use</span> <span class="ident">serde</span>::{<span class="ident">de</span>, <span class="ident">Deserialize</span>, <span class="ident">Serialize</span>};
 <span class="kw">use</span> <span class="ident">tendermint::net</span>;
 <span class="kw">use</span> <span class="ident">thiserror::Error</span>;
+
+<span class="kw">use</span> <span class="kw">crate</span><span class="ident">::cli</span>;
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Error</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">Error</span> {
@@ -462,8 +526,6 @@
     <span class="ident">TomlError</span>(<span class="ident">toml::ser::Error</span>),
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Error while writing config: {0}&quot;</span>)]</span>
     <span class="ident">WriteError</span>(<span class="ident">std::io::Error</span>),
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Error while creating config file: {0}&quot;</span>)]</span>
-    <span class="ident">FileError</span>(<span class="ident">std::io::Error</span>),
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;A config file already exists in {0}&quot;</span>)]</span>
     <span class="ident">AlreadyExistingConfig</span>(<span class="ident">PathBuf</span>),
     <span class="attribute">#[<span class="ident">error</span>(
@@ -485,15 +547,12 @@
     <span class="ident">Message</span>(<span class="ident">String</span>),
 }
 
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">BASEDIR</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;.anoma&quot;</span>;
 <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">FILENAME</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;config.toml&quot;</span>;
 <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">TENDERMINT_DIR</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;tendermint&quot;</span>;
 <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DB_DIR</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;db&quot;</span>;
-<span class="comment">// TODO: change the ID for the production chain</span>
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DEFAULT_CHAIN_ID</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;anoma-devchain-00000&quot;</span>;
 
 <span class="kw">pub</span> <span class="kw">type</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">std::result::Result</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">Error</span><span class="op">&gt;</span>;
-<span class="kw">const</span> <span class="ident">VALUE_AFTER_TABLE_ERROR_MSG</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">r#&quot;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">VALUE_AFTER_TABLE_ERROR_MSG</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">r#&quot;
 Error while serializing to toml. It means that some nested structure is followed
  by simple fields.
 This fails:
@@ -518,21 +577,55 @@ And this is correct
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Serialize</span>, <span class="ident">Deserialize</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Ledger</span> {
+    <span class="kw">pub</span> <span class="ident">base_dir</span>: <span class="ident">PathBuf</span>,
+    <span class="kw">pub</span> <span class="ident">chain_id</span>: <span class="ident">ChainId</span>,
+    <span class="kw">pub</span> <span class="ident">genesis_time</span>: <span class="ident">Rfc3339String</span>,
     <span class="kw">pub</span> <span class="ident">tendermint</span>: <span class="ident">PathBuf</span>,
     <span class="kw">pub</span> <span class="ident">db</span>: <span class="ident">PathBuf</span>,
     <span class="kw">pub</span> <span class="ident">ledger_address</span>: <span class="ident">SocketAddr</span>,
     <span class="kw">pub</span> <span class="ident">rpc_address</span>: <span class="ident">SocketAddr</span>,
     <span class="kw">pub</span> <span class="ident">p2p_address</span>: <span class="ident">SocketAddr</span>,
+    <span class="doccomment">/// The persistent peers addresses must include node ID</span>
+    <span class="kw">pub</span> <span class="ident">p2p_persistent_peers</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">tendermint::net::Address</span><span class="op">&gt;</span>,
+    <span class="doccomment">/// Turns the peer exchange reactor on or off. Validator node will want the</span>
+    <span class="doccomment">/// pex turned off.</span>
+    <span class="kw">pub</span> <span class="ident">p2p_pex</span>: <span class="ident">bool</span>,
     <span class="kw">pub</span> <span class="ident">wasm_dir</span>: <span class="ident">PathBuf</span>,
 }
 
-<span class="kw">impl</span> <span class="ident">Default</span> <span class="kw">for</span> <span class="ident">Ledger</span> {
-    <span class="kw">fn</span> <span class="ident">default</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+<span class="kw">impl</span> <span class="ident">Ledger</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">base_dir</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span><span class="ident">Path</span><span class="op">&gt;</span>, <span class="ident">chain_id</span>: <span class="ident">ChainId</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="kw">let</span> <span class="ident">base_dir</span> <span class="op">=</span> <span class="ident">base_dir</span>.<span class="ident">as_ref</span>().<span class="ident">to_owned</span>();
+        <span class="kw">let</span> <span class="ident">sub_dir</span> <span class="op">=</span> <span class="ident">base_dir</span>.<span class="ident">join</span>(<span class="ident">chain_id</span>.<span class="ident">as_str</span>());
+
+        <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;dev&quot;</span>)]</span>
+        <span class="kw">let</span> <span class="ident">p2p_persistent_peers</span> <span class="op">=</span> <span class="macro">vec!</span>[];
+        <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;dev&quot;</span>))]</span>
+        <span class="kw">let</span> <span class="ident">p2p_persistent_peers</span> <span class="op">=</span> <span class="macro">vec!</span>[
+            <span class="ident">tendermint::net::Address::from_str</span>(
+                <span class="string">&quot;72eb02444a4736d569734675c6ba893aadb3fb99@52.210.23.30:26656&quot;</span>,
+            )
+            .<span class="ident">unwrap</span>(),
+            <span class="ident">tendermint::net::Address::from_str</span>(
+                <span class="string">&quot;39f31bcf0a0b73a08d9e18f4e9cada33d4997779@63.34.55.152:26656&quot;</span>,
+            )
+            .<span class="ident">unwrap</span>(),
+            <span class="ident">tendermint::net::Address::from_str</span>(
+                <span class="string">&quot;d7d2e6e942b157df4137ca3b47258ca20db00416@54.195.72.213:26656&quot;</span>,
+            )
+            .<span class="ident">unwrap</span>(),
+            <span class="ident">tendermint::net::Address::from_str</span>(
+                <span class="string">&quot;31752d323de34e4dcd36ecf30b4ed179de7dc48a@79.125.112.218:26656&quot;</span>,
+            )
+            .<span class="ident">unwrap</span>(),
+        ];
+
         <span class="self">Self</span> {
-            <span class="comment">// this two value are override when generating a default config in</span>
-            <span class="comment">// config::generate(base_dir). There must be a better way ?</span>
-            <span class="ident">tendermint</span>: <span class="ident">PathBuf::from</span>(<span class="ident">BASEDIR</span>).<span class="ident">join</span>(<span class="ident">TENDERMINT_DIR</span>),
-            <span class="ident">db</span>: <span class="ident">PathBuf::from</span>(<span class="ident">BASEDIR</span>).<span class="ident">join</span>(<span class="ident">DB_DIR</span>).<span class="ident">join</span>(<span class="ident">DEFAULT_CHAIN_ID</span>),
+            <span class="ident">base_dir</span>,
+            <span class="ident">chain_id</span>,
+            <span class="ident">genesis_time</span>: <span class="ident">Rfc3339String</span>(<span class="string">&quot;1970-01-01T00:00:00Z&quot;</span>.<span class="ident">to_owned</span>()),
+            <span class="ident">tendermint</span>: <span class="ident">sub_dir</span>.<span class="ident">join</span>(<span class="ident">TENDERMINT_DIR</span>),
+            <span class="ident">db</span>: <span class="ident">sub_dir</span>.<span class="ident">join</span>(<span class="ident">DB_DIR</span>),
             <span class="ident">ledger_address</span>: <span class="ident">SocketAddr::new</span>(
                 <span class="ident">IpAddr::V4</span>(<span class="ident">Ipv4Addr::new</span>(<span class="number">127</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">1</span>)),
                 <span class="number">26658</span>,
@@ -545,6 +638,8 @@ And this is correct
                 <span class="ident">IpAddr::V4</span>(<span class="ident">Ipv4Addr::new</span>(<span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>)),
                 <span class="number">26656</span>,
             ),
+            <span class="ident">p2p_persistent_peers</span>,
+            <span class="ident">p2p_pex</span>: <span class="bool-val">true</span>,
             <span class="ident">wasm_dir</span>: <span class="string">&quot;wasm&quot;</span>.<span class="ident">into</span>(),
         }
     }
@@ -558,7 +653,7 @@ And this is correct
         <span class="self">Self</span> {
             <span class="ident">address</span>: <span class="ident">SocketAddr::new</span>(
                 <span class="ident">IpAddr::V4</span>(<span class="ident">Ipv4Addr::new</span>(<span class="number">127</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">1</span>)),
-                <span class="number">39111</span>,
+                <span class="number">26660</span>,
             ),
         }
     }
@@ -672,7 +767,7 @@ And this is correct
 <span class="kw">impl</span> <span class="ident">Default</span> <span class="kw">for</span> <span class="ident">IntentGossiper</span> {
     <span class="kw">fn</span> <span class="ident">default</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="self">Self</span> {
-            <span class="ident">address</span>: <span class="ident">Multiaddr::from_str</span>(<span class="string">&quot;/ip4/0.0.0.0/tcp/20201&quot;</span>).<span class="ident">unwrap</span>(),
+            <span class="ident">address</span>: <span class="ident">Multiaddr::from_str</span>(<span class="string">&quot;/ip4/0.0.0.0/tcp/26659&quot;</span>).<span class="ident">unwrap</span>(),
             <span class="ident">rpc</span>: <span class="prelude-val">None</span>,
             <span class="ident">subscription_filter</span>: <span class="ident">SubscriptionFilter::RegexFilter</span>(
                 <span class="ident">Regex::new</span>(<span class="string">&quot;asset_v\\d{1,2}&quot;</span>).<span class="ident">unwrap</span>(),
@@ -692,11 +787,28 @@ And this is correct
     <span class="kw">pub</span> <span class="ident">intent_gossiper</span>: <span class="ident">IntentGossiper</span>,
 }
 
-<span class="kw">impl</span> <span class="ident">Default</span> <span class="kw">for</span> <span class="ident">Config</span> {
-    <span class="kw">fn</span> <span class="ident">default</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+<span class="kw">impl</span> <span class="ident">Config</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">base_dir</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span><span class="ident">Path</span><span class="op">&gt;</span>, <span class="ident">chain_id</span>: <span class="ident">ChainId</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="self">Self</span> {
-            <span class="ident">ledger</span>: <span class="ident">Ledger::default</span>(),
+            <span class="ident">ledger</span>: <span class="ident">Ledger::new</span>(<span class="ident">base_dir</span>, <span class="ident">chain_id</span>),
             <span class="ident">intent_gossiper</span>: <span class="ident">IntentGossiper::default</span>(),
+        }
+    }
+
+    <span class="doccomment">/// Load config from expected path in the `base_dir` or generate a new one</span>
+    <span class="doccomment">/// if it doesn&#39;t exist. Terminates with an error if the config loading</span>
+    <span class="doccomment">/// fails.</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">load</span>(<span class="ident">base_dir</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>, <span class="ident">chain_id</span>: <span class="kw-2">&amp;</span><span class="ident">ChainId</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="kw">match</span> <span class="self">Self</span><span class="ident">::read</span>(<span class="ident">base_dir</span>, <span class="ident">chain_id</span>) {
+            <span class="prelude-val">Ok</span>(<span class="ident">config</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">config</span>,
+            <span class="prelude-val">Err</span>(<span class="ident">err</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="macro">eprintln!</span>(
+                    <span class="string">&quot;Tried to read config in {} but failed with: {}&quot;</span>,
+                    <span class="ident">base_dir</span>.<span class="ident">display</span>(),
+                    <span class="ident">err</span>
+                );
+                <span class="ident">cli::safe_exit</span>(<span class="number">1</span>)
+            }
         }
     }
 }
@@ -704,38 +816,45 @@ And this is correct
 <span class="kw">impl</span> <span class="ident">Config</span> {
     <span class="doccomment">/// Read the config from a file, or generate a default one and write it to</span>
     <span class="doccomment">/// a file if it doesn&#39;t already exist.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">read</span>(<span class="ident">base_dir</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">file_path</span> <span class="op">=</span> <span class="self">Self</span><span class="ident">::file_path</span>(<span class="ident">base_dir</span>);
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">read</span>(<span class="ident">base_dir</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>, <span class="ident">chain_id</span>: <span class="kw-2">&amp;</span><span class="ident">ChainId</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="ident">file_path</span> <span class="op">=</span> <span class="self">Self</span><span class="ident">::file_path</span>(<span class="ident">base_dir</span>, <span class="ident">chain_id</span>);
+        <span class="kw">let</span> <span class="ident">file_name</span> <span class="op">=</span> <span class="ident">file_path</span>.<span class="ident">to_str</span>().<span class="ident">expect</span>(<span class="string">&quot;Expected UTF-8 file path&quot;</span>);
         <span class="kw">if</span> <span class="op">!</span><span class="ident">file_path</span>.<span class="ident">exists</span>() {
-            <span class="kw">return</span> <span class="self">Self</span><span class="ident">::generate</span>(<span class="ident">base_dir</span>, <span class="bool-val">true</span>);
+            <span class="kw">return</span> <span class="self">Self</span><span class="ident">::generate</span>(<span class="ident">base_dir</span>, <span class="ident">chain_id</span>, <span class="bool-val">true</span>);
         };
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">config</span> <span class="op">=</span> <span class="ident">config::Config::new</span>();
         <span class="ident">config</span>
-            .<span class="ident">merge</span>(<span class="ident">config::File::with_name</span>(
-                <span class="ident">file_path</span>.<span class="ident">to_str</span>().<span class="ident">expect</span>(<span class="string">&quot;uncorrect file&quot;</span>),
-            ))
+            .<span class="ident">merge</span>(<span class="ident">config::File::with_name</span>(<span class="ident">file_name</span>))
             .<span class="ident">map_err</span>(<span class="ident">Error::ReadError</span>)<span class="question-mark">?</span>;
         <span class="ident">config</span>.<span class="ident">try_into</span>().<span class="ident">map_err</span>(<span class="ident">Error::DeserializationError</span>)
     }
 
     <span class="doccomment">/// Generate configuration and write it to a file.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">generate</span>(<span class="ident">base_dir</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>, <span class="ident">replace</span>: <span class="ident">bool</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">config</span> <span class="op">=</span> <span class="ident">Config::default</span>();
-        <span class="kw">let</span> <span class="ident">ledger_cfg</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">config</span>.<span class="ident">ledger</span>;
-        <span class="ident">ledger_cfg</span>.<span class="ident">db</span> <span class="op">=</span> <span class="ident">base_dir</span>.<span class="ident">join</span>(<span class="ident">DB_DIR</span>).<span class="ident">join</span>(<span class="ident">DEFAULT_CHAIN_ID</span>);
-        <span class="ident">ledger_cfg</span>.<span class="ident">tendermint</span> <span class="op">=</span> <span class="ident">base_dir</span>.<span class="ident">join</span>(<span class="ident">TENDERMINT_DIR</span>);
-        <span class="ident">config</span>.<span class="ident">write</span>(<span class="ident">base_dir</span>, <span class="ident">replace</span>)<span class="question-mark">?</span>;
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">generate</span>(
+        <span class="ident">base_dir</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>,
+        <span class="ident">chain_id</span>: <span class="kw-2">&amp;</span><span class="ident">ChainId</span>,
+        <span class="ident">replace</span>: <span class="ident">bool</span>,
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="ident">config</span> <span class="op">=</span> <span class="ident">Config::new</span>(<span class="ident">base_dir</span>, <span class="ident">chain_id</span>.<span class="ident">clone</span>());
+        <span class="ident">config</span>.<span class="ident">write</span>(<span class="ident">base_dir</span>, <span class="ident">chain_id</span>, <span class="ident">replace</span>)<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(<span class="ident">config</span>)
     }
 
     <span class="doccomment">/// Write configuration to a file.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">base_dir</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>, <span class="ident">replace</span>: <span class="ident">bool</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="ident">create_dir_all</span>(<span class="kw-2">&amp;</span><span class="ident">base_dir</span>).<span class="ident">map_err</span>(<span class="ident">Error::FileError</span>)<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">file_path</span> <span class="op">=</span> <span class="self">Self</span><span class="ident">::file_path</span>(<span class="ident">base_dir</span>);
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">write</span>(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        <span class="ident">base_dir</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>,
+        <span class="ident">chain_id</span>: <span class="kw-2">&amp;</span><span class="ident">ChainId</span>,
+        <span class="ident">replace</span>: <span class="ident">bool</span>,
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="ident">file_path</span> <span class="op">=</span> <span class="self">Self</span><span class="ident">::file_path</span>(<span class="ident">base_dir</span>, <span class="ident">chain_id</span>);
+        <span class="kw">let</span> <span class="ident">file_dir</span> <span class="op">=</span> <span class="ident">file_path</span>.<span class="ident">parent</span>().<span class="ident">unwrap</span>();
+        <span class="ident">create_dir_all</span>(<span class="ident">file_dir</span>).<span class="ident">map_err</span>(<span class="ident">Error::WriteError</span>)<span class="question-mark">?</span>;
         <span class="kw">if</span> <span class="ident">file_path</span>.<span class="ident">exists</span>() <span class="op">&amp;&amp;</span> <span class="op">!</span><span class="ident">replace</span> {
             <span class="prelude-val">Err</span>(<span class="ident">Error::AlreadyExistingConfig</span>(<span class="ident">file_path</span>))
         } <span class="kw">else</span> {
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">file</span> <span class="op">=</span> <span class="ident">File::create</span>(<span class="ident">file_path</span>).<span class="ident">map_err</span>(<span class="ident">Error::FileError</span>)<span class="question-mark">?</span>;
+            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">file</span> <span class="op">=</span>
+                <span class="ident">File::create</span>(<span class="ident">file_path</span>).<span class="ident">map_err</span>(<span class="ident">Error::WriteError</span>)<span class="question-mark">?</span>;
             <span class="kw">let</span> <span class="ident">toml</span> <span class="op">=</span> <span class="ident">toml::ser::to_string</span>(<span class="kw-2">&amp;</span><span class="self">self</span>).<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">err</span><span class="op">|</span> {
                 <span class="kw">if</span> <span class="kw">let</span> <span class="ident">toml::ser::Error::ValueAfterTable</span> <span class="op">=</span> <span class="ident">err</span> {
                     <span class="macro">tracing::error!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">VALUE_AFTER_TABLE_ERROR_MSG</span>);
@@ -746,8 +865,9 @@ And this is correct
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">file_path</span>(<span class="ident">base_dir</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">PathBuf</span> {
-        <span class="ident">base_dir</span>.<span class="ident">join</span>(<span class="ident">FILENAME</span>)
+    <span class="kw">fn</span> <span class="ident">file_path</span>(<span class="ident">base_dir</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>, <span class="ident">chain_id</span>: <span class="kw-2">&amp;</span><span class="ident">ChainId</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">PathBuf</span> {
+        <span class="comment">// Join base dir to the chain ID</span>
+        <span class="ident">base_dir</span>.<span class="ident">join</span>(<span class="ident">chain_id</span>.<span class="ident">to_string</span>()).<span class="ident">join</span>(<span class="ident">FILENAME</span>)
     }
 }
 

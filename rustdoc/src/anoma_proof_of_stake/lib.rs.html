@@ -1,6 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `proof_of_stake/src/lib.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>lib.rs - source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script id="default-settings"></script><script src="../../storage.js"></script><script src="../../crates.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../favicon.svg">
-<link rel="alternate icon" type="image/png" href="../../favicon-16x16.png">
-<link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../anoma_proof_of_stake/index.html'><div class='logo-container rust-logo'><img src='../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img src="../../brush.svg" width="18" height="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../settings.html" title="settings"><img src="../../wheel.svg" width="18" height="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">   1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `proof_of_stake/src/lib.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>lib.rs - source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script id="default-settings"></script><script src="../../storage.js"></script><script src="../../crates.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="shortcut icon" href="https://docs.anoma.network/favicon.png"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../anoma_proof_of_stake/index.html'><div class='logo-container'><img src='https://docs.anoma.network/rustdoc-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img src="../../brush.svg" width="18" height="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../settings.html" title="settings"><img src="../../wheel.svg" width="18" height="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">   1</span>
 <span id="2">   2</span>
 <span id="3">   3</span>
 <span id="4">   4</span>
@@ -1853,6 +1851,83 @@
 <span id="1851">1851</span>
 <span id="1852">1852</span>
 <span id="1853">1853</span>
+<span id="1854">1854</span>
+<span id="1855">1855</span>
+<span id="1856">1856</span>
+<span id="1857">1857</span>
+<span id="1858">1858</span>
+<span id="1859">1859</span>
+<span id="1860">1860</span>
+<span id="1861">1861</span>
+<span id="1862">1862</span>
+<span id="1863">1863</span>
+<span id="1864">1864</span>
+<span id="1865">1865</span>
+<span id="1866">1866</span>
+<span id="1867">1867</span>
+<span id="1868">1868</span>
+<span id="1869">1869</span>
+<span id="1870">1870</span>
+<span id="1871">1871</span>
+<span id="1872">1872</span>
+<span id="1873">1873</span>
+<span id="1874">1874</span>
+<span id="1875">1875</span>
+<span id="1876">1876</span>
+<span id="1877">1877</span>
+<span id="1878">1878</span>
+<span id="1879">1879</span>
+<span id="1880">1880</span>
+<span id="1881">1881</span>
+<span id="1882">1882</span>
+<span id="1883">1883</span>
+<span id="1884">1884</span>
+<span id="1885">1885</span>
+<span id="1886">1886</span>
+<span id="1887">1887</span>
+<span id="1888">1888</span>
+<span id="1889">1889</span>
+<span id="1890">1890</span>
+<span id="1891">1891</span>
+<span id="1892">1892</span>
+<span id="1893">1893</span>
+<span id="1894">1894</span>
+<span id="1895">1895</span>
+<span id="1896">1896</span>
+<span id="1897">1897</span>
+<span id="1898">1898</span>
+<span id="1899">1899</span>
+<span id="1900">1900</span>
+<span id="1901">1901</span>
+<span id="1902">1902</span>
+<span id="1903">1903</span>
+<span id="1904">1904</span>
+<span id="1905">1905</span>
+<span id="1906">1906</span>
+<span id="1907">1907</span>
+<span id="1908">1908</span>
+<span id="1909">1909</span>
+<span id="1910">1910</span>
+<span id="1911">1911</span>
+<span id="1912">1912</span>
+<span id="1913">1913</span>
+<span id="1914">1914</span>
+<span id="1915">1915</span>
+<span id="1916">1916</span>
+<span id="1917">1917</span>
+<span id="1918">1918</span>
+<span id="1919">1919</span>
+<span id="1920">1920</span>
+<span id="1921">1921</span>
+<span id="1922">1922</span>
+<span id="1923">1923</span>
+<span id="1924">1924</span>
+<span id="1925">1925</span>
+<span id="1926">1926</span>
+<span id="1927">1927</span>
+<span id="1928">1928</span>
+<span id="1929">1929</span>
+<span id="1930">1930</span>
 </pre><pre class="rust">
 <span class="doccomment">//! Proof of Stake system.</span>
 <span class="doccomment">//!</span>
@@ -1862,6 +1937,8 @@
 <span class="doccomment">//! voting on a protocol parameter changes, upgrades, default VP changes) we</span>
 <span class="doccomment">//! should use the total validator set voting power.</span>
 
+<span class="attribute">#![<span class="ident">doc</span>(<span class="ident">html_favicon_url</span> <span class="op">=</span> <span class="string">&quot;https://docs.anoma.network/favicon.png&quot;</span>)]</span>
+<span class="attribute">#![<span class="ident">doc</span>(<span class="ident">html_logo_url</span> <span class="op">=</span> <span class="string">&quot;https://docs.anoma.network/rustdoc-logo.png&quot;</span>)]</span>
 <span class="attribute">#![<span class="ident">warn</span>(<span class="ident">missing_docs</span>)]</span>
 <span class="attribute">#![<span class="ident">deny</span>(<span class="ident">rustdoc::broken_intra_doc_links</span>)]</span>
 <span class="attribute">#![<span class="ident">deny</span>(<span class="ident">rustdoc::private_intra_doc_links</span>)]</span>
@@ -2388,6 +2465,11 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="self">Self</span><span class="ident">::Address</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">ValidatorConsensusKeys</span><span class="op">&lt;</span><span class="self">Self</span><span class="ident">::PublicKey</span><span class="op">&gt;</span><span class="op">&gt;</span>;
+    <span class="doccomment">/// Read PoS validator&#39;s state.</span>
+    <span class="kw">fn</span> <span class="ident">read_validator_state</span>(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="self">Self</span><span class="ident">::Address</span>,
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">ValidatorStates</span><span class="op">&gt;</span>;
     <span class="doccomment">/// Read PoS validator&#39;s total deltas of their bonds (validator self-bonds</span>
     <span class="doccomment">/// and delegations).</span>
     <span class="kw">fn</span> <span class="ident">read_validator_total_deltas</span>(
@@ -2551,40 +2633,110 @@
         <span class="ident">current_epoch</span>: <span class="kw">impl</span> <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">Epoch</span><span class="op">&gt;</span>,
         <span class="ident">f</span>: <span class="kw">impl</span> <span class="ident">FnMut</span>(<span class="ident">ValidatorSetUpdate</span><span class="op">&lt;</span><span class="self">Self</span><span class="ident">::PublicKey</span><span class="op">&gt;</span>),
     ) {
-        <span class="kw">let</span> <span class="ident">current_epoch</span> <span class="op">=</span> <span class="ident">current_epoch</span>.<span class="ident">into</span>();
+        <span class="kw">let</span> <span class="ident">current_epoch</span>: <span class="ident">Epoch</span> <span class="op">=</span> <span class="ident">current_epoch</span>.<span class="ident">into</span>();
+        <span class="kw">let</span> <span class="ident">current_epoch_u64</span>: <span class="ident">u64</span> <span class="op">=</span> <span class="ident">current_epoch</span>.<span class="ident">into</span>();
+        <span class="comment">// INVARIANT: We can only access the previous epochs data, because</span>
+        <span class="comment">// this function is called on a beginning of a new block, before</span>
+        <span class="comment">// anything else could be updated (in epoched data updates, the old</span>
+        <span class="comment">// epochs data are merged with the current one).</span>
+        <span class="kw">let</span> <span class="ident">previous_epoch</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Epoch</span><span class="op">&gt;</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">current_epoch_u64</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span> {
+            <span class="prelude-val">None</span>
+        } <span class="kw">else</span> {
+            <span class="prelude-val">Some</span>(<span class="ident">Epoch::from</span>(<span class="ident">current_epoch_u64</span> <span class="op">-</span> <span class="number">1</span>))
+        };
         <span class="kw">let</span> <span class="ident">validators</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">read_validator_set</span>();
-        <span class="kw">let</span> <span class="ident">validators</span> <span class="op">=</span> <span class="ident">validators</span>.<span class="ident">get</span>(<span class="ident">current_epoch</span>).<span class="ident">unwrap</span>();
-        <span class="kw">let</span> <span class="ident">active_validators</span> <span class="op">=</span> <span class="ident">validators</span>.<span class="ident">active</span>.<span class="ident">iter</span>().<span class="ident">map</span>(
-            <span class="op">|</span><span class="ident">WeightedValidator</span> {
-                 <span class="ident">voting_power</span>,
-                 <span class="ident">address</span>,
-             }: <span class="kw-2">&amp;</span><span class="ident">WeightedValidator</span><span class="op">&lt;</span><span class="self">Self</span><span class="ident">::Address</span><span class="op">&gt;</span><span class="op">|</span> {
+        <span class="kw">let</span> <span class="ident">cur_validators</span> <span class="op">=</span> <span class="ident">validators</span>.<span class="ident">get</span>(<span class="ident">current_epoch</span>).<span class="ident">unwrap</span>();
+        <span class="kw">let</span> <span class="ident">prev_validators</span> <span class="op">=</span>
+            <span class="ident">previous_epoch</span>.<span class="ident">and_then</span>(<span class="op">|</span><span class="ident">epoch</span><span class="op">|</span> <span class="ident">validators</span>.<span class="ident">get</span>(<span class="ident">epoch</span>));
+
+        <span class="comment">// If the validator never been active before and it doesn&#39;t have more</span>
+        <span class="comment">// than 0 voting power, we should not tell Tendermint to update it until</span>
+        <span class="comment">// it does. Tendermint uses 0 voting power as a way to signal</span>
+        <span class="comment">// that a validator has been removed from the validator set, but</span>
+        <span class="comment">// fails if we attempt to give it a new validator with 0 voting</span>
+        <span class="comment">// power.</span>
+        <span class="comment">// For active validators, this would only ever happen until all the</span>
+        <span class="comment">// validator slots are filled with non-0 voting power validators, but we</span>
+        <span class="comment">// still need to guard against it.</span>
+        <span class="kw">let</span> <span class="ident">active_validators</span> <span class="op">=</span> <span class="ident">cur_validators</span>.<span class="ident">active</span>.<span class="ident">iter</span>().<span class="ident">filter_map</span>(
+            <span class="op">|</span><span class="ident">validator</span>: <span class="kw-2">&amp;</span><span class="ident">WeightedValidator</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span><span class="op">|</span> {
+                <span class="comment">// If the validators set from previous epoch contains the same</span>
+                <span class="comment">// validator, it means its voting power hasn&#39;t changed and hence</span>
+                <span class="comment">// doesn&#39;t need to updated.</span>
+                <span class="kw">if</span> <span class="kw">let</span> (<span class="prelude-val">Some</span>(<span class="ident">prev_epoch</span>), <span class="prelude-val">Some</span>(<span class="ident">prev_validators</span>)) <span class="op">=</span>
+                    (<span class="ident">previous_epoch</span>, <span class="ident">prev_validators</span>)
+                {
+                    <span class="kw">if</span> <span class="ident">prev_validators</span>.<span class="ident">active</span>.<span class="ident">contains</span>(<span class="ident">validator</span>) {
+                        <span class="macro">println!</span>(
+                            <span class="string">&quot;skipping validator update, still the same {}&quot;</span>,
+                            <span class="ident">validator</span>.<span class="ident">address</span>
+                        );
+                        <span class="kw">return</span> <span class="prelude-val">None</span>;
+                    }
+                    <span class="kw">if</span> <span class="ident">validator</span>.<span class="ident">voting_power</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span>.<span class="ident">into</span>() {
+                        <span class="comment">// If the validator was `Pending` in the previous epoch,</span>
+                        <span class="comment">// it means that it just was just added to validator</span>
+                        <span class="comment">// set. We have to skip it, because it&#39;s 0.</span>
+                        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">state</span>) <span class="op">=</span>
+                            <span class="self">self</span>.<span class="ident">read_validator_state</span>(<span class="kw-2">&amp;</span><span class="ident">validator</span>.<span class="ident">address</span>)
+                        {
+                            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">ValidatorState::Pending</span>) <span class="op">=</span>
+                                <span class="ident">state</span>.<span class="ident">get</span>(<span class="ident">prev_epoch</span>)
+                            {
+                                <span class="macro">println!</span>(
+                                    <span class="string">&quot;skipping validator update, it&#39;s new {}&quot;</span>,
+                                    <span class="ident">validator</span>.<span class="ident">address</span>
+                                );
+                                <span class="kw">return</span> <span class="prelude-val">None</span>;
+                            }
+                        }
+                    }
+                }
                 <span class="kw">let</span> <span class="ident">consensus_key</span> <span class="op">=</span> <span class="self">self</span>
-                    .<span class="ident">read_validator_consensus_key</span>(<span class="ident">address</span>)
+                    .<span class="ident">read_validator_consensus_key</span>(<span class="kw-2">&amp;</span><span class="ident">validator</span>.<span class="ident">address</span>)
                     .<span class="ident">unwrap</span>()
                     .<span class="ident">get</span>(<span class="ident">current_epoch</span>)
                     .<span class="ident">unwrap</span>()
                     .<span class="ident">clone</span>();
-                <span class="ident">ValidatorSetUpdate::Active</span>(<span class="ident">ActiveValidator</span> {
+                <span class="prelude-val">Some</span>(<span class="ident">ValidatorSetUpdate::Active</span>(<span class="ident">ActiveValidator</span> {
                     <span class="ident">consensus_key</span>,
-                    <span class="ident">voting_power</span>: <span class="kw-2">*</span><span class="ident">voting_power</span>,
-                })
+                    <span class="ident">voting_power</span>: <span class="ident">validator</span>.<span class="ident">voting_power</span>,
+                }))
             },
         );
-        <span class="comment">// TODO we only need inactive validators that were active in the last</span>
-        <span class="comment">// update</span>
-        <span class="kw">let</span> <span class="ident">inactive_validators</span> <span class="op">=</span> <span class="ident">validators</span>.<span class="ident">inactive</span>.<span class="ident">iter</span>().<span class="ident">map</span>(
-            <span class="op">|</span><span class="ident">WeightedValidator</span> {
-                 <span class="ident">voting_power</span>: <span class="kw">_</span>,
-                 <span class="ident">address</span>,
-             }: <span class="kw-2">&amp;</span><span class="ident">WeightedValidator</span><span class="op">&lt;</span><span class="self">Self</span><span class="ident">::Address</span><span class="op">&gt;</span><span class="op">|</span> {
+        <span class="kw">let</span> <span class="ident">inactive_validators</span> <span class="op">=</span> <span class="ident">cur_validators</span>.<span class="ident">inactive</span>.<span class="ident">iter</span>().<span class="ident">filter_map</span>(
+            <span class="op">|</span><span class="ident">validator</span>: <span class="kw-2">&amp;</span><span class="ident">WeightedValidator</span><span class="op">&lt;</span><span class="self">Self</span><span class="ident">::Address</span><span class="op">&gt;</span><span class="op">|</span> {
+                <span class="comment">// If the validators set from previous epoch contains the same</span>
+                <span class="comment">// validator, it means its voting power hasn&#39;t changed and hence</span>
+                <span class="comment">// doesn&#39;t need to updated.</span>
+                <span class="kw">if</span> <span class="kw">let</span> (<span class="prelude-val">Some</span>(<span class="ident">prev_epoch</span>), <span class="prelude-val">Some</span>(<span class="ident">prev_validators</span>)) <span class="op">=</span>
+                    (<span class="ident">previous_epoch</span>, <span class="ident">prev_validators</span>)
+                {
+                    <span class="kw">if</span> <span class="ident">prev_validators</span>.<span class="ident">inactive</span>.<span class="ident">contains</span>(<span class="ident">validator</span>) {
+                        <span class="kw">return</span> <span class="prelude-val">None</span>;
+                    }
+                    <span class="kw">if</span> <span class="ident">validator</span>.<span class="ident">voting_power</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span>.<span class="ident">into</span>() {
+                        <span class="comment">// If the validator was `Pending` in the previous epoch,</span>
+                        <span class="comment">// it means that it just was just added to validator</span>
+                        <span class="comment">// set. We have to skip it, because it&#39;s 0.</span>
+                        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">state</span>) <span class="op">=</span>
+                            <span class="self">self</span>.<span class="ident">read_validator_state</span>(<span class="kw-2">&amp;</span><span class="ident">validator</span>.<span class="ident">address</span>)
+                        {
+                            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">ValidatorState::Pending</span>) <span class="op">=</span>
+                                <span class="ident">state</span>.<span class="ident">get</span>(<span class="ident">prev_epoch</span>)
+                            {
+                                <span class="kw">return</span> <span class="prelude-val">None</span>;
+                            }
+                        }
+                    }
+                }
                 <span class="kw">let</span> <span class="ident">consensus_key</span> <span class="op">=</span> <span class="self">self</span>
-                    .<span class="ident">read_validator_consensus_key</span>(<span class="ident">address</span>)
+                    .<span class="ident">read_validator_consensus_key</span>(<span class="kw-2">&amp;</span><span class="ident">validator</span>.<span class="ident">address</span>)
                     .<span class="ident">unwrap</span>()
                     .<span class="ident">get</span>(<span class="ident">current_epoch</span>)
                     .<span class="ident">unwrap</span>()
                     .<span class="ident">clone</span>();
-                <span class="ident">ValidatorSetUpdate::Deactivated</span>(<span class="ident">consensus_key</span>)
+                <span class="prelude-val">Some</span>(<span class="ident">ValidatorSetUpdate::Deactivated</span>(<span class="ident">consensus_key</span>))
             },
         );
         <span class="ident">active_validators</span>.<span class="ident">chain</span>(<span class="ident">inactive_validators</span>).<span class="ident">for_each</span>(<span class="ident">f</span>)

@@ -1,6 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `apps/src/lib/cli.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>cli.rs - source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script id="default-settings"></script><script src="../../storage.js"></script><script src="../../crates.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../favicon.svg">
-<link rel="alternate icon" type="image/png" href="../../favicon-16x16.png">
-<link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../anoma_apps/index.html'><div class='logo-container rust-logo'><img src='../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img src="../../brush.svg" width="18" height="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../settings.html" title="settings"><img src="../../wheel.svg" width="18" height="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">   1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `apps/src/lib/cli.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>cli.rs - source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script id="default-settings"></script><script src="../../storage.js"></script><script src="../../crates.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="shortcut icon" href="https://docs.anoma.network/favicon.png"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../anoma_apps/index.html'><div class='logo-container'><img src='https://docs.anoma.network/rustdoc-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img src="../../brush.svg" width="18" height="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../settings.html" title="settings"><img src="../../wheel.svg" width="18" height="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">   1</span>
 <span id="2">   2</span>
 <span id="3">   3</span>
 <span id="4">   4</span>
@@ -2238,6 +2236,125 @@
 <span id="2236">2236</span>
 <span id="2237">2237</span>
 <span id="2238">2238</span>
+<span id="2239">2239</span>
+<span id="2240">2240</span>
+<span id="2241">2241</span>
+<span id="2242">2242</span>
+<span id="2243">2243</span>
+<span id="2244">2244</span>
+<span id="2245">2245</span>
+<span id="2246">2246</span>
+<span id="2247">2247</span>
+<span id="2248">2248</span>
+<span id="2249">2249</span>
+<span id="2250">2250</span>
+<span id="2251">2251</span>
+<span id="2252">2252</span>
+<span id="2253">2253</span>
+<span id="2254">2254</span>
+<span id="2255">2255</span>
+<span id="2256">2256</span>
+<span id="2257">2257</span>
+<span id="2258">2258</span>
+<span id="2259">2259</span>
+<span id="2260">2260</span>
+<span id="2261">2261</span>
+<span id="2262">2262</span>
+<span id="2263">2263</span>
+<span id="2264">2264</span>
+<span id="2265">2265</span>
+<span id="2266">2266</span>
+<span id="2267">2267</span>
+<span id="2268">2268</span>
+<span id="2269">2269</span>
+<span id="2270">2270</span>
+<span id="2271">2271</span>
+<span id="2272">2272</span>
+<span id="2273">2273</span>
+<span id="2274">2274</span>
+<span id="2275">2275</span>
+<span id="2276">2276</span>
+<span id="2277">2277</span>
+<span id="2278">2278</span>
+<span id="2279">2279</span>
+<span id="2280">2280</span>
+<span id="2281">2281</span>
+<span id="2282">2282</span>
+<span id="2283">2283</span>
+<span id="2284">2284</span>
+<span id="2285">2285</span>
+<span id="2286">2286</span>
+<span id="2287">2287</span>
+<span id="2288">2288</span>
+<span id="2289">2289</span>
+<span id="2290">2290</span>
+<span id="2291">2291</span>
+<span id="2292">2292</span>
+<span id="2293">2293</span>
+<span id="2294">2294</span>
+<span id="2295">2295</span>
+<span id="2296">2296</span>
+<span id="2297">2297</span>
+<span id="2298">2298</span>
+<span id="2299">2299</span>
+<span id="2300">2300</span>
+<span id="2301">2301</span>
+<span id="2302">2302</span>
+<span id="2303">2303</span>
+<span id="2304">2304</span>
+<span id="2305">2305</span>
+<span id="2306">2306</span>
+<span id="2307">2307</span>
+<span id="2308">2308</span>
+<span id="2309">2309</span>
+<span id="2310">2310</span>
+<span id="2311">2311</span>
+<span id="2312">2312</span>
+<span id="2313">2313</span>
+<span id="2314">2314</span>
+<span id="2315">2315</span>
+<span id="2316">2316</span>
+<span id="2317">2317</span>
+<span id="2318">2318</span>
+<span id="2319">2319</span>
+<span id="2320">2320</span>
+<span id="2321">2321</span>
+<span id="2322">2322</span>
+<span id="2323">2323</span>
+<span id="2324">2324</span>
+<span id="2325">2325</span>
+<span id="2326">2326</span>
+<span id="2327">2327</span>
+<span id="2328">2328</span>
+<span id="2329">2329</span>
+<span id="2330">2330</span>
+<span id="2331">2331</span>
+<span id="2332">2332</span>
+<span id="2333">2333</span>
+<span id="2334">2334</span>
+<span id="2335">2335</span>
+<span id="2336">2336</span>
+<span id="2337">2337</span>
+<span id="2338">2338</span>
+<span id="2339">2339</span>
+<span id="2340">2340</span>
+<span id="2341">2341</span>
+<span id="2342">2342</span>
+<span id="2343">2343</span>
+<span id="2344">2344</span>
+<span id="2345">2345</span>
+<span id="2346">2346</span>
+<span id="2347">2347</span>
+<span id="2348">2348</span>
+<span id="2349">2349</span>
+<span id="2350">2350</span>
+<span id="2351">2351</span>
+<span id="2352">2352</span>
+<span id="2353">2353</span>
+<span id="2354">2354</span>
+<span id="2355">2355</span>
+<span id="2356">2356</span>
+<span id="2357">2357</span>
 </pre><pre class="rust">
 <span class="doccomment">//! The CLI commands that are re-used between the executables `anoma`,</span>
 <span class="doccomment">//! `anoma-node` and `anoma-client`.</span>
@@ -2370,25 +2487,12 @@
     <span class="doccomment">/// Used as sub-commands (`SubCmd` instance) in `anoma` binary.</span>
     <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
     <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">AnomaClient</span> {
-        <span class="comment">// Ledger cmds</span>
-        <span class="ident">TxCustom</span>(<span class="ident">TxCustom</span>),
-        <span class="ident">TxTransfer</span>(<span class="ident">TxTransfer</span>),
-        <span class="ident">TxUpdateVp</span>(<span class="ident">TxUpdateVp</span>),
-        <span class="ident">TxInitAccount</span>(<span class="ident">TxInitAccount</span>),
-        <span class="ident">TxInitValidator</span>(<span class="ident">TxInitValidator</span>),
-        <span class="ident">Bond</span>(<span class="ident">Bond</span>),
-        <span class="ident">Unbond</span>(<span class="ident">Unbond</span>),
-        <span class="ident">Withdraw</span>(<span class="ident">Withdraw</span>),
-        <span class="ident">QueryEpoch</span>(<span class="ident">QueryEpoch</span>),
-        <span class="ident">QueryBalance</span>(<span class="ident">QueryBalance</span>),
-        <span class="ident">QueryBonds</span>(<span class="ident">QueryBonds</span>),
-        <span class="ident">QueryVotingPower</span>(<span class="ident">QueryVotingPower</span>),
-        <span class="ident">QuerySlashes</span>(<span class="ident">QuerySlashes</span>),
-        <span class="comment">// Gossip cmds</span>
-        <span class="ident">Intent</span>(<span class="ident">Intent</span>),
-        <span class="ident">SubscribeTopic</span>(<span class="ident">SubscribeTopic</span>),
-        <span class="comment">// Utils cmds</span>
-        <span class="ident">Utils</span>(<span class="ident">Utils</span>),
+        <span class="doccomment">/// The [`super::Context`] provides access to the wallet and the</span>
+        <span class="doccomment">/// config. It will generate a new wallet and config, if they</span>
+        <span class="doccomment">/// don&#39;t exist.</span>
+        <span class="ident">WithContext</span>(<span class="ident">AnomaClientWithContext</span>),
+        <span class="doccomment">/// Utils don&#39;t have [`super::Context`], only the global arguments.</span>
+        <span class="ident">WithoutContext</span>(<span class="ident">Utils</span>),
     }
 
     <span class="kw">impl</span> <span class="ident">Cmd</span> <span class="kw">for</span> <span class="ident">AnomaClient</span> {
@@ -2418,26 +2522,25 @@
         }
 
         <span class="kw">fn</span> <span class="ident">parse</span>(<span class="ident">matches</span>: <span class="kw-2">&amp;</span><span class="ident">ArgMatches</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
-            <span class="kw">let</span> <span class="ident">tx_custom</span> <span class="op">=</span> <span class="ident">SubCmd::parse</span>(<span class="ident">matches</span>).<span class="ident">map</span>(<span class="self">Self</span><span class="ident">::TxCustom</span>);
-            <span class="kw">let</span> <span class="ident">tx_transfer</span> <span class="op">=</span> <span class="ident">SubCmd::parse</span>(<span class="ident">matches</span>).<span class="ident">map</span>(<span class="self">Self</span><span class="ident">::TxTransfer</span>);
-            <span class="kw">let</span> <span class="ident">tx_update_vp</span> <span class="op">=</span> <span class="ident">SubCmd::parse</span>(<span class="ident">matches</span>).<span class="ident">map</span>(<span class="self">Self</span><span class="ident">::TxUpdateVp</span>);
-            <span class="kw">let</span> <span class="ident">tx_init_account</span> <span class="op">=</span>
-                <span class="ident">SubCmd::parse</span>(<span class="ident">matches</span>).<span class="ident">map</span>(<span class="self">Self</span><span class="ident">::TxInitAccount</span>);
+            <span class="kw">use</span> <span class="ident">AnomaClientWithContext</span>::<span class="kw-2">*</span>;
+            <span class="kw">let</span> <span class="ident">tx_custom</span> <span class="op">=</span> <span class="self">Self</span><span class="ident">::parse_with_ctx</span>(<span class="ident">matches</span>, <span class="ident">TxCustom</span>);
+            <span class="kw">let</span> <span class="ident">tx_transfer</span> <span class="op">=</span> <span class="self">Self</span><span class="ident">::parse_with_ctx</span>(<span class="ident">matches</span>, <span class="ident">TxTransfer</span>);
+            <span class="kw">let</span> <span class="ident">tx_update_vp</span> <span class="op">=</span> <span class="self">Self</span><span class="ident">::parse_with_ctx</span>(<span class="ident">matches</span>, <span class="ident">TxUpdateVp</span>);
+            <span class="kw">let</span> <span class="ident">tx_init_account</span> <span class="op">=</span> <span class="self">Self</span><span class="ident">::parse_with_ctx</span>(<span class="ident">matches</span>, <span class="ident">TxInitAccount</span>);
             <span class="kw">let</span> <span class="ident">tx_init_validator</span> <span class="op">=</span>
-                <span class="ident">SubCmd::parse</span>(<span class="ident">matches</span>).<span class="ident">map</span>(<span class="self">Self</span><span class="ident">::TxInitValidator</span>);
-            <span class="kw">let</span> <span class="ident">bond</span> <span class="op">=</span> <span class="ident">SubCmd::parse</span>(<span class="ident">matches</span>).<span class="ident">map</span>(<span class="self">Self</span><span class="ident">::Bond</span>);
-            <span class="kw">let</span> <span class="ident">unbond</span> <span class="op">=</span> <span class="ident">SubCmd::parse</span>(<span class="ident">matches</span>).<span class="ident">map</span>(<span class="self">Self</span><span class="ident">::Unbond</span>);
-            <span class="kw">let</span> <span class="ident">withdraw</span> <span class="op">=</span> <span class="ident">SubCmd::parse</span>(<span class="ident">matches</span>).<span class="ident">map</span>(<span class="self">Self</span><span class="ident">::Withdraw</span>);
-            <span class="kw">let</span> <span class="ident">query_epoch</span> <span class="op">=</span> <span class="ident">SubCmd::parse</span>(<span class="ident">matches</span>).<span class="ident">map</span>(<span class="self">Self</span><span class="ident">::TxInitAccount</span>);
-            <span class="kw">let</span> <span class="ident">query_balance</span> <span class="op">=</span> <span class="ident">SubCmd::parse</span>(<span class="ident">matches</span>).<span class="ident">map</span>(<span class="self">Self</span><span class="ident">::QueryBalance</span>);
-            <span class="kw">let</span> <span class="ident">query_bonds</span> <span class="op">=</span> <span class="ident">SubCmd::parse</span>(<span class="ident">matches</span>).<span class="ident">map</span>(<span class="self">Self</span><span class="ident">::QueryBonds</span>);
+                <span class="self">Self</span><span class="ident">::parse_with_ctx</span>(<span class="ident">matches</span>, <span class="ident">TxInitValidator</span>);
+            <span class="kw">let</span> <span class="ident">bond</span> <span class="op">=</span> <span class="self">Self</span><span class="ident">::parse_with_ctx</span>(<span class="ident">matches</span>, <span class="ident">Bond</span>);
+            <span class="kw">let</span> <span class="ident">unbond</span> <span class="op">=</span> <span class="self">Self</span><span class="ident">::parse_with_ctx</span>(<span class="ident">matches</span>, <span class="ident">Unbond</span>);
+            <span class="kw">let</span> <span class="ident">withdraw</span> <span class="op">=</span> <span class="self">Self</span><span class="ident">::parse_with_ctx</span>(<span class="ident">matches</span>, <span class="ident">Withdraw</span>);
+            <span class="kw">let</span> <span class="ident">query_epoch</span> <span class="op">=</span> <span class="self">Self</span><span class="ident">::parse_with_ctx</span>(<span class="ident">matches</span>, <span class="ident">QueryEpoch</span>);
+            <span class="kw">let</span> <span class="ident">query_balance</span> <span class="op">=</span> <span class="self">Self</span><span class="ident">::parse_with_ctx</span>(<span class="ident">matches</span>, <span class="ident">QueryBalance</span>);
+            <span class="kw">let</span> <span class="ident">query_bonds</span> <span class="op">=</span> <span class="self">Self</span><span class="ident">::parse_with_ctx</span>(<span class="ident">matches</span>, <span class="ident">QueryBonds</span>);
             <span class="kw">let</span> <span class="ident">query_voting_power</span> <span class="op">=</span>
-                <span class="ident">SubCmd::parse</span>(<span class="ident">matches</span>).<span class="ident">map</span>(<span class="self">Self</span><span class="ident">::QueryVotingPower</span>);
-            <span class="kw">let</span> <span class="ident">query_slashes</span> <span class="op">=</span> <span class="ident">SubCmd::parse</span>(<span class="ident">matches</span>).<span class="ident">map</span>(<span class="self">Self</span><span class="ident">::QuerySlashes</span>);
-            <span class="kw">let</span> <span class="ident">intent</span> <span class="op">=</span> <span class="ident">SubCmd::parse</span>(<span class="ident">matches</span>).<span class="ident">map</span>(<span class="self">Self</span><span class="ident">::Intent</span>);
-            <span class="kw">let</span> <span class="ident">subscribe_topic</span> <span class="op">=</span>
-                <span class="ident">SubCmd::parse</span>(<span class="ident">matches</span>).<span class="ident">map</span>(<span class="self">Self</span><span class="ident">::SubscribeTopic</span>);
-            <span class="kw">let</span> <span class="ident">utils</span> <span class="op">=</span> <span class="ident">SubCmd::parse</span>(<span class="ident">matches</span>).<span class="ident">map</span>(<span class="self">Self</span><span class="ident">::Utils</span>);
+                <span class="self">Self</span><span class="ident">::parse_with_ctx</span>(<span class="ident">matches</span>, <span class="ident">QueryVotingPower</span>);
+            <span class="kw">let</span> <span class="ident">query_slashes</span> <span class="op">=</span> <span class="self">Self</span><span class="ident">::parse_with_ctx</span>(<span class="ident">matches</span>, <span class="ident">QuerySlashes</span>);
+            <span class="kw">let</span> <span class="ident">intent</span> <span class="op">=</span> <span class="self">Self</span><span class="ident">::parse_with_ctx</span>(<span class="ident">matches</span>, <span class="ident">Intent</span>);
+            <span class="kw">let</span> <span class="ident">subscribe_topic</span> <span class="op">=</span> <span class="self">Self</span><span class="ident">::parse_with_ctx</span>(<span class="ident">matches</span>, <span class="ident">SubscribeTopic</span>);
+            <span class="kw">let</span> <span class="ident">utils</span> <span class="op">=</span> <span class="ident">SubCmd::parse</span>(<span class="ident">matches</span>).<span class="ident">map</span>(<span class="self">Self</span><span class="ident">::WithoutContext</span>);
             <span class="ident">tx_custom</span>
                 .<span class="ident">or</span>(<span class="ident">tx_transfer</span>)
                 .<span class="ident">or</span>(<span class="ident">tx_update_vp</span>)
@@ -2457,6 +2560,17 @@
         }
     }
 
+    <span class="kw">impl</span> <span class="ident">AnomaClient</span> {
+        <span class="doccomment">/// A helper method to parse sub cmds with context</span>
+        <span class="kw">fn</span> <span class="ident">parse_with_ctx</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">SubCmd</span><span class="op">&gt;</span>(
+            <span class="ident">matches</span>: <span class="kw-2">&amp;</span><span class="ident">ArgMatches</span>,
+            <span class="ident">sub_to_self</span>: <span class="kw">impl</span> <span class="ident">Fn</span>(<span class="ident">T</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">AnomaClientWithContext</span>,
+        ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
+            <span class="ident">SubCmd::parse</span>(<span class="ident">matches</span>)
+                .<span class="ident">map</span>(<span class="op">|</span><span class="ident">sub</span><span class="op">|</span> <span class="self">Self</span><span class="ident">::WithContext</span>(<span class="ident">sub_to_self</span>(<span class="ident">sub</span>)))
+        }
+    }
+
     <span class="kw">impl</span> <span class="ident">SubCmd</span> <span class="kw">for</span> <span class="ident">AnomaClient</span> {
         <span class="kw">const</span> <span class="ident">CMD</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span> <span class="op">=</span> <span class="ident">CLIENT_CMD</span>;
 
@@ -2473,6 +2587,27 @@
                     .<span class="ident">setting</span>(<span class="ident">AppSettings::SubcommandRequiredElseHelp</span>),
             )
         }
+    }
+
+    <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
+    <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">AnomaClientWithContext</span> {
+        <span class="comment">// Ledger cmds</span>
+        <span class="ident">TxCustom</span>(<span class="ident">TxCustom</span>),
+        <span class="ident">TxTransfer</span>(<span class="ident">TxTransfer</span>),
+        <span class="ident">TxUpdateVp</span>(<span class="ident">TxUpdateVp</span>),
+        <span class="ident">TxInitAccount</span>(<span class="ident">TxInitAccount</span>),
+        <span class="ident">TxInitValidator</span>(<span class="ident">TxInitValidator</span>),
+        <span class="ident">Bond</span>(<span class="ident">Bond</span>),
+        <span class="ident">Unbond</span>(<span class="ident">Unbond</span>),
+        <span class="ident">Withdraw</span>(<span class="ident">Withdraw</span>),
+        <span class="ident">QueryEpoch</span>(<span class="ident">QueryEpoch</span>),
+        <span class="ident">QueryBalance</span>(<span class="ident">QueryBalance</span>),
+        <span class="ident">QueryBonds</span>(<span class="ident">QueryBonds</span>),
+        <span class="ident">QueryVotingPower</span>(<span class="ident">QueryVotingPower</span>),
+        <span class="ident">QuerySlashes</span>(<span class="ident">QuerySlashes</span>),
+        <span class="comment">// Gossip cmds</span>
+        <span class="ident">Intent</span>(<span class="ident">Intent</span>),
+        <span class="ident">SubscribeTopic</span>(<span class="ident">SubscribeTopic</span>),
     }
 
     <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
@@ -3202,6 +3337,7 @@
 
     <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
     <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">Utils</span> {
+        <span class="ident">InitNetwork</span>(<span class="ident">InitNetwork</span>),
         <span class="ident">InitGenesisValidator</span>(<span class="ident">InitGenesisValidator</span>),
     }
 
@@ -3210,15 +3346,39 @@
 
         <span class="kw">fn</span> <span class="ident">parse</span>(<span class="ident">matches</span>: <span class="kw-2">&amp;</span><span class="ident">ArgMatches</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
             <span class="ident">matches</span>.<span class="ident">subcommand_matches</span>(<span class="self">Self</span><span class="ident">::CMD</span>).<span class="ident">and_then</span>(<span class="op">|</span><span class="ident">matches</span><span class="op">|</span> {
-                <span class="ident">SubCmd::parse</span>(<span class="ident">matches</span>).<span class="ident">map</span>(<span class="self">Self</span><span class="ident">::InitGenesisValidator</span>)
+                <span class="kw">let</span> <span class="ident">init_network</span> <span class="op">=</span>
+                    <span class="ident">SubCmd::parse</span>(<span class="ident">matches</span>).<span class="ident">map</span>(<span class="self">Self</span><span class="ident">::InitNetwork</span>);
+                <span class="kw">let</span> <span class="ident">init_genesis</span> <span class="op">=</span>
+                    <span class="ident">SubCmd::parse</span>(<span class="ident">matches</span>).<span class="ident">map</span>(<span class="self">Self</span><span class="ident">::InitGenesisValidator</span>);
+                <span class="ident">init_network</span>.<span class="ident">or</span>(<span class="ident">init_genesis</span>)
             })
         }
 
         <span class="kw">fn</span> <span class="ident">def</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">App</span> {
             <span class="ident">App::new</span>(<span class="self">Self</span><span class="ident">::CMD</span>)
                 .<span class="ident">about</span>(<span class="string">&quot;Utilities.&quot;</span>)
+                .<span class="ident">subcommand</span>(<span class="ident">InitNetwork::def</span>())
                 .<span class="ident">subcommand</span>(<span class="ident">InitGenesisValidator::def</span>())
                 .<span class="ident">setting</span>(<span class="ident">AppSettings::SubcommandRequiredElseHelp</span>)
+        }
+    }
+
+    <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
+    <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">InitNetwork</span>(<span class="kw">pub</span> <span class="ident">args::InitNetwork</span>);
+
+    <span class="kw">impl</span> <span class="ident">SubCmd</span> <span class="kw">for</span> <span class="ident">InitNetwork</span> {
+        <span class="kw">const</span> <span class="ident">CMD</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;init-network&quot;</span>;
+
+        <span class="kw">fn</span> <span class="ident">parse</span>(<span class="ident">matches</span>: <span class="kw-2">&amp;</span><span class="ident">ArgMatches</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
+            <span class="ident">matches</span>
+                .<span class="ident">subcommand_matches</span>(<span class="self">Self</span><span class="ident">::CMD</span>)
+                .<span class="ident">map</span>(<span class="op">|</span><span class="ident">matches</span><span class="op">|</span> <span class="self">Self</span>(<span class="ident">args::InitNetwork::parse</span>(<span class="ident">matches</span>)))
+        }
+
+        <span class="kw">fn</span> <span class="ident">def</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">App</span> {
+            <span class="ident">App::new</span>(<span class="self">Self</span><span class="ident">::CMD</span>)
+                .<span class="ident">about</span>(<span class="string">&quot;Initialize a new test network.&quot;</span>)
+                .<span class="ident">add_args</span>::<span class="op">&lt;</span><span class="ident">args::InitNetwork</span><span class="op">&gt;</span>()
         }
     }
 
@@ -3256,6 +3416,7 @@
     <span class="kw">use</span> <span class="ident">std::str::FromStr</span>;
 
     <span class="kw">use</span> <span class="ident">anoma::types::address::Address</span>;
+    <span class="kw">use</span> <span class="ident">anoma::types::chain</span>::{<span class="ident">ChainId</span>, <span class="ident">ChainIdPrefix</span>};
     <span class="kw">use</span> <span class="ident">anoma::types::intent</span>::{<span class="ident">DecimalWrapper</span>, <span class="ident">Exchange</span>};
     <span class="kw">use</span> <span class="ident">anoma::types::key::ed25519::PublicKey</span>;
     <span class="kw">use</span> <span class="ident">anoma::types::storage::Epoch</span>;
@@ -3278,6 +3439,9 @@
             <span class="prelude-val">Err</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;.anoma&quot;</span>.<span class="ident">into</span>(),
         }),
     );
+    <span class="kw">const</span> <span class="ident">CHAIN_ID</span>: <span class="ident">Arg</span><span class="op">&lt;</span><span class="ident">ChainId</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">arg</span>(<span class="string">&quot;chain-id&quot;</span>);
+    <span class="kw">const</span> <span class="ident">CHAIN_ID_OPT</span>: <span class="ident">ArgOpt</span><span class="op">&lt;</span><span class="ident">ChainId</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">CHAIN_ID</span>.<span class="ident">opt</span>();
+    <span class="kw">const</span> <span class="ident">CHAIN_ID_PREFIX</span>: <span class="ident">Arg</span><span class="op">&lt;</span><span class="ident">ChainIdPrefix</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">arg</span>(<span class="string">&quot;chain-prefix&quot;</span>);
     <span class="kw">const</span> <span class="ident">CODE_PATH</span>: <span class="ident">Arg</span><span class="op">&lt;</span><span class="ident">PathBuf</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">arg</span>(<span class="string">&quot;code-path&quot;</span>);
     <span class="kw">const</span> <span class="ident">CODE_PATH_OPT</span>: <span class="ident">ArgOpt</span><span class="op">&lt;</span><span class="ident">PathBuf</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">CODE_PATH</span>.<span class="ident">opt</span>();
     <span class="kw">const</span> <span class="ident">DATA_PATH_OPT</span>: <span class="ident">ArgOpt</span><span class="op">&lt;</span><span class="ident">PathBuf</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">arg_opt</span>(<span class="string">&quot;data-path&quot;</span>);
@@ -3286,6 +3450,7 @@
     <span class="kw">const</span> <span class="ident">DRY_RUN_TX</span>: <span class="ident">ArgFlag</span> <span class="op">=</span> <span class="ident">flag</span>(<span class="string">&quot;dry-run&quot;</span>);
     <span class="kw">const</span> <span class="ident">EPOCH</span>: <span class="ident">ArgOpt</span><span class="op">&lt;</span><span class="ident">Epoch</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">arg_opt</span>(<span class="string">&quot;epoch&quot;</span>);
     <span class="kw">const</span> <span class="ident">FILTER_PATH</span>: <span class="ident">ArgOpt</span><span class="op">&lt;</span><span class="ident">PathBuf</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">arg_opt</span>(<span class="string">&quot;filter-path&quot;</span>);
+    <span class="kw">const</span> <span class="ident">GENESIS_PATH</span>: <span class="ident">Arg</span><span class="op">&lt;</span><span class="ident">PathBuf</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">arg</span>(<span class="string">&quot;genesis-path&quot;</span>);
     <span class="kw">const</span> <span class="ident">LEDGER_ADDRESS_ABOUT</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span>
         <span class="string">&quot;Address of a ledger node as \&quot;{scheme}://{host}:{port}\&quot;. If the \
          scheme is not supplied, it is assumed to be TCP.&quot;</span>;
@@ -3337,6 +3502,7 @@
     <span class="doccomment">/// Global command arguments</span>
     <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
     <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Global</span> {
+        <span class="kw">pub</span> <span class="ident">chain_id</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">ChainId</span><span class="op">&gt;</span>,
         <span class="kw">pub</span> <span class="ident">base_dir</span>: <span class="ident">PathBuf</span>,
         <span class="kw">pub</span> <span class="ident">wasm_dir</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">PathBuf</span><span class="op">&gt;</span>,
     }
@@ -3344,28 +3510,34 @@
     <span class="kw">impl</span> <span class="ident">Global</span> {
         <span class="doccomment">/// Parse global arguments</span>
         <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">parse</span>(<span class="ident">matches</span>: <span class="kw-2">&amp;</span><span class="ident">ArgMatches</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+            <span class="kw">let</span> <span class="ident">chain_id</span> <span class="op">=</span> <span class="ident">CHAIN_ID_OPT</span>.<span class="ident">parse</span>(<span class="ident">matches</span>);
             <span class="kw">let</span> <span class="ident">base_dir</span> <span class="op">=</span> <span class="ident">BASE_DIR</span>.<span class="ident">parse</span>(<span class="ident">matches</span>);
             <span class="kw">let</span> <span class="ident">wasm_dir</span> <span class="op">=</span> <span class="ident">WASM_DIR</span>.<span class="ident">parse</span>(<span class="ident">matches</span>);
-            <span class="ident">Global</span> { <span class="ident">base_dir</span>, <span class="ident">wasm_dir</span> }
+            <span class="ident">Global</span> {
+                <span class="ident">chain_id</span>,
+                <span class="ident">base_dir</span>,
+                <span class="ident">wasm_dir</span>,
+            }
         }
 
         <span class="doccomment">/// Add global args definition. Should be added to every top-level</span>
         <span class="doccomment">/// command.</span>
         <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">def</span>(<span class="ident">app</span>: <span class="ident">App</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">App</span> {
-            <span class="ident">app</span>.<span class="ident">arg</span>(<span class="ident">BASE_DIR</span>.<span class="ident">def</span>().<span class="ident">about</span>(
-                <span class="string">&quot;The base directory is where the nodes, client and wallet \
-                 configuration and state is stored. This value can also be \
-                 set via `ANOMA_BASE_DIR` environment variable, but the \
-                 argument takes precedence, if specified. Defaults to \
-                 `.anoma`.&quot;</span>,
-            ))
-            .<span class="ident">arg</span>(<span class="ident">WASM_DIR</span>.<span class="ident">def</span>().<span class="ident">about</span>(
-                <span class="string">&quot;Directory with built WASM validity predicates, transactions \
-                 and matchmaker files. This value can also be set via \
-                 `ANOMA_WASM_DIR` environment variable, but the argument \
-                 takes precedence, if specified. Defaults to `wasm` path, \
-                 relative to current working directory.&quot;</span>,
-            ))
+            <span class="ident">app</span>.<span class="ident">arg</span>(<span class="ident">CHAIN_ID_OPT</span>.<span class="ident">def</span>().<span class="ident">about</span>(<span class="string">&quot;The chain ID.&quot;</span>))
+                .<span class="ident">arg</span>(<span class="ident">BASE_DIR</span>.<span class="ident">def</span>().<span class="ident">about</span>(
+                    <span class="string">&quot;The base directory is where the nodes, client and wallet \
+                     configuration and state is stored. This value can also \
+                     be set via `ANOMA_BASE_DIR` environment variable, but \
+                     the argument takes precedence, if specified. Defaults to \
+                     `.anoma`.&quot;</span>,
+                ))
+                .<span class="ident">arg</span>(<span class="ident">WASM_DIR</span>.<span class="ident">def</span>().<span class="ident">about</span>(
+                    <span class="string">&quot;Directory with built WASM validity predicates, \
+                     transactions and matchmaker files. This value can also \
+                     be set via `ANOMA_WASM_DIR` environment variable, but \
+                     the argument takes precedence, if specified. Defaults to \
+                     `wasm` path, relative to current working directory.&quot;</span>,
+                ))
         }
     }
 
@@ -4387,23 +4559,63 @@
     }
 
     <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
+    <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">InitNetwork</span> {
+        <span class="kw">pub</span> <span class="ident">genesis_path</span>: <span class="ident">PathBuf</span>,
+        <span class="kw">pub</span> <span class="ident">chain_id_prefix</span>: <span class="ident">ChainIdPrefix</span>,
+        <span class="kw">pub</span> <span class="ident">unsafe_dont_encrypt</span>: <span class="ident">bool</span>,
+    }
+
+    <span class="kw">impl</span> <span class="ident">Args</span> <span class="kw">for</span> <span class="ident">InitNetwork</span> {
+        <span class="kw">fn</span> <span class="ident">parse</span>(<span class="ident">matches</span>: <span class="kw-2">&amp;</span><span class="ident">ArgMatches</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+            <span class="kw">let</span> <span class="ident">genesis_path</span> <span class="op">=</span> <span class="ident">GENESIS_PATH</span>.<span class="ident">parse</span>(<span class="ident">matches</span>);
+            <span class="kw">let</span> <span class="ident">chain_id_prefix</span> <span class="op">=</span> <span class="ident">CHAIN_ID_PREFIX</span>.<span class="ident">parse</span>(<span class="ident">matches</span>);
+            <span class="kw">let</span> <span class="ident">unsafe_dont_encrypt</span> <span class="op">=</span> <span class="ident">UNSAFE_DONT_ENCRYPT</span>.<span class="ident">parse</span>(<span class="ident">matches</span>);
+            <span class="self">Self</span> {
+                <span class="ident">genesis_path</span>,
+                <span class="ident">chain_id_prefix</span>,
+                <span class="ident">unsafe_dont_encrypt</span>,
+            }
+        }
+
+        <span class="kw">fn</span> <span class="ident">def</span>(<span class="ident">app</span>: <span class="ident">App</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">App</span> {
+            <span class="ident">app</span>.<span class="ident">arg</span>(
+                <span class="ident">GENESIS_PATH</span>.<span class="ident">def</span>().<span class="ident">about</span>(
+                    <span class="string">&quot;Path to the preliminary genesis configuration file.&quot;</span>,
+                ),
+            )
+            .<span class="ident">arg</span>(<span class="ident">CHAIN_ID_PREFIX</span>.<span class="ident">def</span>().<span class="ident">about</span>(
+                <span class="string">&quot;The chain ID prefix. Up to 19 alphanumeric, &#39;.&#39;, &#39;-&#39; or &#39;_&#39; \
+                 characters.&quot;</span>,
+            ))
+            .<span class="ident">arg</span>(<span class="ident">UNSAFE_DONT_ENCRYPT</span>.<span class="ident">def</span>().<span class="ident">about</span>(
+                <span class="string">&quot;UNSAFE: Do not encrypt the generated keypairs. Do not use \
+                 this for keys used in a live network.&quot;</span>,
+            ))
+        }
+    }
+
+    <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
     <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">InitGenesisValidator</span> {
         <span class="kw">pub</span> <span class="ident">alias</span>: <span class="ident">String</span>,
+        <span class="kw">pub</span> <span class="ident">chain_id</span>: <span class="ident">ChainId</span>,
         <span class="kw">pub</span> <span class="ident">unsafe_dont_encrypt</span>: <span class="ident">bool</span>,
     }
 
     <span class="kw">impl</span> <span class="ident">Args</span> <span class="kw">for</span> <span class="ident">InitGenesisValidator</span> {
         <span class="kw">fn</span> <span class="ident">parse</span>(<span class="ident">matches</span>: <span class="kw-2">&amp;</span><span class="ident">ArgMatches</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
             <span class="kw">let</span> <span class="ident">alias</span> <span class="op">=</span> <span class="ident">ALIAS</span>.<span class="ident">parse</span>(<span class="ident">matches</span>);
+            <span class="kw">let</span> <span class="ident">chain_id</span> <span class="op">=</span> <span class="ident">CHAIN_ID</span>.<span class="ident">parse</span>(<span class="ident">matches</span>);
             <span class="kw">let</span> <span class="ident">unsafe_dont_encrypt</span> <span class="op">=</span> <span class="ident">UNSAFE_DONT_ENCRYPT</span>.<span class="ident">parse</span>(<span class="ident">matches</span>);
             <span class="self">Self</span> {
                 <span class="ident">alias</span>,
+                <span class="ident">chain_id</span>,
                 <span class="ident">unsafe_dont_encrypt</span>,
             }
         }
 
         <span class="kw">fn</span> <span class="ident">def</span>(<span class="ident">app</span>: <span class="ident">App</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">App</span> {
             <span class="ident">app</span>.<span class="ident">arg</span>(<span class="ident">ALIAS</span>.<span class="ident">def</span>().<span class="ident">about</span>(<span class="string">&quot;The validator address alias.&quot;</span>))
+                .<span class="ident">arg</span>(<span class="ident">CHAIN_ID</span>.<span class="ident">def</span>().<span class="ident">about</span>(<span class="string">&quot;The chain ID.&quot;</span>))
                 .<span class="ident">arg</span>(<span class="ident">UNSAFE_DONT_ENCRYPT</span>.<span class="ident">def</span>().<span class="ident">about</span>(
                     <span class="string">&quot;UNSAFE: Do not encrypt the generated keypairs. Do not \
                      use this for keys used in a live network.&quot;</span>,
@@ -4432,9 +4644,33 @@
     <span class="ident">cmds::AnomaNode::parse_or_print_help</span>(<span class="ident">app</span>)
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">anoma_client_cli</span>() <span class="op">-</span><span class="op">&gt;</span> (<span class="ident">cmds::AnomaClient</span>, <span class="ident">Context</span>) {
+<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">AnomaClient</span> {
+    <span class="ident">WithoutContext</span>(<span class="ident">cmds::Utils</span>, <span class="ident">args::Global</span>),
+    <span class="ident">WithContext</span>(<span class="ident">Box</span><span class="op">&lt;</span>(<span class="ident">cmds::AnomaClientWithContext</span>, <span class="ident">Context</span>)<span class="op">&gt;</span>),
+}
+
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">anoma_client_cli</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">AnomaClient</span> {
     <span class="kw">let</span> <span class="ident">app</span> <span class="op">=</span> <span class="ident">anoma_client_app</span>();
-    <span class="ident">cmds::AnomaClient::parse_or_print_help</span>(<span class="ident">app</span>)
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">app</span> <span class="op">=</span> <span class="ident">cmds::AnomaClient::add_sub</span>(<span class="ident">app</span>);
+    <span class="kw">let</span> <span class="ident">matches</span> <span class="op">=</span> <span class="ident">app</span>.<span class="ident">clone</span>().<span class="ident">get_matches</span>();
+    <span class="kw">match</span> <span class="ident">Cmd::parse</span>(<span class="kw-2">&amp;</span><span class="ident">matches</span>) {
+        <span class="prelude-val">Some</span>(<span class="ident">cmd</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="kw">let</span> <span class="ident">global_args</span> <span class="op">=</span> <span class="ident">args::Global::parse</span>(<span class="kw-2">&amp;</span><span class="ident">matches</span>);
+            <span class="kw">match</span> <span class="ident">cmd</span> {
+                <span class="ident">cmds::AnomaClient::WithContext</span>(<span class="ident">sub_cmd</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="kw">let</span> <span class="ident">context</span> <span class="op">=</span> <span class="ident">Context::new</span>(<span class="ident">global_args</span>);
+                    <span class="ident">AnomaClient::WithContext</span>(<span class="ident">Box::new</span>((<span class="ident">sub_cmd</span>, <span class="ident">context</span>)))
+                }
+                <span class="ident">cmds::AnomaClient::WithoutContext</span>(<span class="ident">sub_cmd</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="ident">AnomaClient::WithoutContext</span>(<span class="ident">sub_cmd</span>, <span class="ident">global_args</span>)
+                }
+            }
+        }
+        <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">app</span>.<span class="ident">print_help</span>().<span class="ident">unwrap</span>();
+            <span class="ident">safe_exit</span>(<span class="number">2</span>);
+        }
+    }
 }
 
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">anoma_wallet_cli</span>() <span class="op">-</span><span class="op">&gt;</span> (<span class="ident">cmds::AnomaWallet</span>, <span class="ident">Context</span>) {
