@@ -214,7 +214,6 @@
 <span id="214">214</span>
 <span id="215">215</span>
 <span id="216">216</span>
-<span id="217">217</span>
 </pre><pre class="rust">
 <span class="kw">use</span> <span class="ident">std::path::Path</span>;
 <span class="kw">use</span> <span class="ident">std::rc::Rc</span>;
@@ -358,7 +357,7 @@
             <span class="self">self</span>.<span class="ident">mempool</span>
                 .<span class="ident">put</span>(<span class="ident">intent</span>.<span class="ident">clone</span>())
                 .<span class="ident">map_err</span>(<span class="ident">Error::MempoolFailed</span>)<span class="question-mark">?</span>;
-            <span class="prelude-val">Ok</span>(<span class="ident">wasm::run::matchmaker</span>(
+            <span class="ident">wasm::run::matchmaker</span>(
                 <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">matchmaker_code</span>.<span class="ident">clone</span>(),
                 <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">state</span>,
                 <span class="kw-2">&amp;</span><span class="ident">intent</span>.<span class="ident">id</span>().<span class="number">0</span>,
@@ -366,7 +365,6 @@
                 <span class="self">self</span>.<span class="ident">wasm_host</span>.<span class="ident">clone</span>(),
             )
             .<span class="ident">map_err</span>(<span class="ident">Error::RunnerFailed</span>)
-            .<span class="ident">unwrap</span>())
         } <span class="kw">else</span> {
             <span class="prelude-val">Ok</span>(<span class="bool-val">false</span>)
         }
