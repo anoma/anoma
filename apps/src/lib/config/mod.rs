@@ -27,9 +27,9 @@ use crate::cli;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Config {
+    pub wasm_dir: PathBuf,
     pub ledger: Ledger,
     pub intent_gossiper: IntentGossiper,
-    pub wasm_dir: PathBuf,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -155,9 +155,9 @@ pub type Result<T> = std::result::Result<T, Error>;
 impl Config {
     pub fn new(base_dir: impl AsRef<Path>, chain_id: ChainId) -> Self {
         Self {
+            wasm_dir: "wasm".into(),
             ledger: Ledger::new(base_dir, chain_id),
             intent_gossiper: IntentGossiper::default(),
-            wasm_dir: "wasm".into(),
         }
     }
 
