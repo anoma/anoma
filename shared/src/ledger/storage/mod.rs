@@ -20,9 +20,9 @@ use crate::bytes::ByteBuf;
 use crate::ledger::gas::MIN_STORAGE_GAS;
 use crate::ledger::parameters::{self, EpochDuration};
 use crate::types::address::{Address, EstablishedAddressGen};
+use crate::types::chain::{ChainId, CHAIN_ID_LENGTH};
 use crate::types::storage::{
     BlockHash, BlockHeight, DbKeySeg, Epoch, Epochs, Key, BLOCK_HASH_LENGTH,
-    CHAIN_ID_LENGTH,
 };
 use crate::types::time::DateTimeUtc;
 
@@ -39,7 +39,7 @@ where
     /// The database for the storage
     pub db: D,
     /// The ID of the chain
-    pub chain_id: String,
+    pub chain_id: ChainId,
     /// The storage for the current (yet to be committed) block
     pub block: BlockStorage<H>,
     /// The latest block header
@@ -323,14 +323,6 @@ where
         Ok((gas as _, size_diff))
     }
 
-    /// Set the chain ID.
-    /// Chain ID is not in the Merkle tree as it's tracked by Tendermint in the
-    /// block header. Hence, we don't update the tree when this is set.
-    pub fn set_chain_id(&mut self, chain_id: &str) -> Result<()> {
-        self.chain_id = chain_id.to_owned();
-        Ok(())
-    }
-
     /// Set the block header.
     /// The header is not in the Merkle tree as it's tracked by Tendermint.
     /// Hence, we don't update the tree when this is set.
@@ -368,9 +360,9 @@ where
         self.has_key(&key)
     }
 
-    /// Get the chain ID
+    /// Get the chain ID as a raw string
     pub fn get_chain_id(&self) -> (String, u64) {
-        (self.chain_id.clone(), CHAIN_ID_LENGTH as _)
+        (self.chain_id.to_string(), CHAIN_ID_LENGTH as _)
     }
 
     /// Get the current (yet to be committed) block height
@@ -546,8 +538,7 @@ pub mod testing {
 
     impl Default for TestStorage {
         fn default() -> Self {
-            let chain_id = "Testing-chain-000000".to_string();
-            assert_eq!(chain_id.len(), CHAIN_ID_LENGTH);
+            let chain_id = ChainId::default();
             let tree = MerkleTree::default();
             let subspaces = HashMap::new();
             let block = BlockStorage {

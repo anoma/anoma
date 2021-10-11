@@ -1,9 +1,10 @@
 use std::convert::TryFrom;
 use std::future::Future;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::pin::Pin;
 use std::task::{Context, Poll};
 
+use anoma::types::chain::ChainId;
 use anoma::types::storage::BlockHeight;
 use futures::future::FutureExt;
 use tower::Service;
@@ -24,9 +25,14 @@ pub struct AbcippShim {
 }
 
 impl AbcippShim {
-    pub fn new(db_path: impl AsRef<Path>, chain_id: String) -> Self {
+    pub fn new(
+        base_dir: PathBuf,
+        db_path: impl AsRef<Path>,
+        chain_id: ChainId,
+        wasm_dir: PathBuf,
+    ) -> Self {
         Self {
-            service: Shell::new(db_path, chain_id),
+            service: Shell::new(base_dir, db_path, chain_id, wasm_dir),
             block_txs: vec![],
         }
     }
@@ -49,8 +55,17 @@ impl Service<Req> for AbcippShim {
     }
 
     fn call(&mut self, req: Req) -> Self::Future {
-        tracing::debug!(?req);
         let rsp = match req {
+            Req::CheckTx(tx_request) => self
+                .service
+                .call(Request::ProcessProposal(tx_request.tx.into()))
+                .map_err(Error::from)
+                .and_then(|res| match res {
+                    Response::ProcessProposal(resp) => {
+                        Ok(Resp::CheckTx(resp.into()))
+                    }
+                    _ => Err(Error::ConvertResp(res)),
+                }),
             Req::BeginBlock(block) => {
                 // we simply forward BeginBlock request to the PrepareProposal
                 // request

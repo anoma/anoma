@@ -13,10 +13,11 @@ use thiserror::Error;
 pub use self::keys::{DecryptionError, StoredKeypair};
 use self::store::{Alias, Store};
 use crate::cli;
+use crate::config::genesis::genesis_config::GenesisConfig;
 
 #[derive(Debug)]
 pub struct Wallet {
-    base_dir: PathBuf,
+    store_dir: PathBuf,
     store: Store,
     decrypted_key_cache: HashMap<Alias, Rc<Keypair>>,
 }
@@ -30,42 +31,69 @@ pub enum FindKeyError {
 }
 
 impl Wallet {
-    /// Load a wallet from the store file or create a new one with the default
-    /// keys and addresses if not found.
-    pub fn load_or_new(base_dir: &Path) -> Self {
-        let store = Store::load_or_new(base_dir).unwrap_or_else(|err| {
+    /// Load a wallet from the store file or create a new wallet without any
+    /// keys or addresses.
+    pub fn load_or_new(store_dir: &Path) -> Self {
+        let store = Store::load_or_new(store_dir).unwrap_or_else(|err| {
             eprintln!("Unable to load the wallet: {}", err);
             cli::safe_exit(1)
         });
         Self {
-            base_dir: base_dir.to_path_buf(),
+            store_dir: store_dir.to_path_buf(),
             store,
             decrypted_key_cache: HashMap::default(),
         }
     }
 
+    /// Load a wallet from the store file or create a new one with the default
+    /// addresses loaded from the genesis file, if not found.
+    pub fn load_or_new_from_genesis(
+        store_dir: &Path,
+        load_genesis: impl FnOnce() -> GenesisConfig,
+    ) -> Self {
+        let store = Store::load_or_new_from_genesis(store_dir, load_genesis)
+            .unwrap_or_else(|err| {
+                eprintln!("Unable to load the wallet: {}", err);
+                cli::safe_exit(1)
+            });
+        Self {
+            store_dir: store_dir.to_path_buf(),
+            store,
+            decrypted_key_cache: HashMap::default(),
+        }
+    }
+
+    /// Add addresses from a genesis configuration.
+    pub fn add_genesis_addresses(&mut self, genesis: GenesisConfig) {
+        self.store.add_genesis_addresses(genesis)
+    }
+
     /// Save the wallet store to a file.
     pub fn save(&self) -> std::io::Result<()> {
-        self.store.save(&self.base_dir)
+        self.store.save(&self.store_dir)
     }
 
     /// Generate a new keypair and derive an implicit address from its public
     /// and insert them into the store with the provided alias. If none
     /// provided, the alias will be the public key hash. If the key is to be
-    /// encrypted, will prompt for password from stdin. Returns the alias of
-    /// the key.
+    /// encrypted, will prompt for password from stdin. Stores the key in
+    /// decrypted key cache and returns the alias of the key and a
+    /// reference-counting pointer to the key.
     pub fn gen_key(
         &mut self,
         alias: Option<String>,
         unsafe_dont_encrypt: bool,
-    ) -> String {
+    ) -> (String, Rc<Keypair>) {
         let password = if unsafe_dont_encrypt {
             println!("Warning: The keypair will NOT be encrypted.");
             None
         } else {
             Some(read_password("Enter encryption password: "))
         };
-        self.store.gen_key(alias, password)
+        let (alias, key) = self.store.gen_key(alias, password);
+        // Cache the newly added key
+        self.decrypted_key_cache.insert(alias.clone(), key.clone());
+        (alias, key)
     }
 
     /// Find the stored key by an alias, a public key hash or a public key.

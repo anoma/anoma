@@ -576,7 +576,7 @@ mod tests {
 #[cfg(any(test, feature = "testing"))]
 pub mod testing {
     use proptest::collection;
-    use proptest::prelude::*;
+    use proptest::prelude::{any, prop_oneof, Just, Strategy};
 
     use super::*;
     use crate::types::address::testing::arb_address;

@@ -137,13 +137,24 @@ pub enum DecryptionError {
 
 impl StoredKeypair {
     /// Construct a keypair for storage. If no password is provided, the keypair
-    /// will be stored raw without encryption.
-    pub fn new(keypair: Keypair, password: Option<String>) -> Self {
+    /// will be stored raw without encryption. Returns the key for storing and a
+    /// reference-counting point to the raw key.
+    pub fn new(
+        keypair: Keypair,
+        password: Option<String>,
+    ) -> (Self, Rc<Keypair>) {
         match password {
             Some(password) => {
-                Self::Encrypted(EncryptedKeypair::new(keypair, password))
+                let keypair = Rc::new(keypair);
+                (
+                    Self::Encrypted(EncryptedKeypair::new(&keypair, password)),
+                    keypair,
+                )
             }
-            None => Self::Raw(Rc::new(keypair)),
+            None => {
+                let keypair = Rc::new(keypair);
+                (Self::Raw(keypair.clone()), keypair)
+            }
         }
     }
 
@@ -174,7 +185,7 @@ impl StoredKeypair {
 
 impl EncryptedKeypair {
     /// Encrypt a keypair and store it with its salt.
-    pub fn new(keypair: Keypair, password: String) -> Self {
+    pub fn new(keypair: &Keypair, password: String) -> Self {
         let salt = encryption_salt();
         let encryption_key = encryption_key(&salt, password);
 

@@ -74,6 +74,10 @@ impl From<std::time::Duration> for DurationNanos {
     }
 }
 
+/// An RFC 3339 timestamp (e.g., "1970-01-01T00:00:00Z").
+#[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
+pub struct Rfc3339String(pub String);
+
 /// A duration in seconds precision.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct DateTimeUtc(pub DateTime<Utc>);
@@ -152,6 +156,27 @@ impl From<DateTimeUtc> for prost_types::Timestamp {
 }
 
 impl From<DateTimeUtc> for std::time::SystemTime {
+    fn from(dt: DateTimeUtc) -> Self {
+        dt.0.into()
+    }
+}
+
+impl TryFrom<Rfc3339String> for DateTimeUtc {
+    type Error = chrono::ParseError;
+
+    fn try_from(str: Rfc3339String) -> Result<Self, Self::Error> {
+        let utc = DateTime::parse_from_rfc3339(&str.0)?;
+        Ok(Self(utc.into()))
+    }
+}
+
+impl From<DateTimeUtc> for Rfc3339String {
+    fn from(dt: DateTimeUtc) -> Self {
+        Self(DateTime::to_rfc3339(&dt.0))
+    }
+}
+
+impl From<DateTimeUtc> for tendermint::time::Time {
     fn from(dt: DateTimeUtc) -> Self {
         dt.0.into()
     }

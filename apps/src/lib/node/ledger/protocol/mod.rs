@@ -1,5 +1,4 @@
 //! The ledger's protocol
-
 use std::collections::HashSet;
 use std::convert::TryFrom;
 use std::{fmt, panic};
@@ -13,6 +12,7 @@ use anoma::ledger::storage::write_log::WriteLog;
 use anoma::proto::{self, Tx};
 use anoma::types::address::{Address, InternalAddress};
 use anoma::types::storage::Key;
+use anoma::types::transaction::{process_tx, TxType};
 use anoma::vm::{self, wasm};
 use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
 use thiserror::Error;
@@ -48,7 +48,7 @@ pub enum Error {
 pub type Result<T> = std::result::Result<T, Error>;
 
 /// Transaction application result
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Default)]
 pub struct TxResult {
     pub gas_used: u64,
     pub changed_keys: HashSet<Key>,
@@ -95,23 +95,42 @@ pub fn apply_tx(
 
     let tx = Tx::try_from(tx_bytes).map_err(Error::TxDecodingError)?;
 
-    let verifiers = execute_tx(&tx, storage, block_gas_meter, write_log)?;
+    match process_tx(tx).unwrap() {
+        TxType::Raw(tx) => {
+            let verifiers =
+                execute_tx(&tx, storage, block_gas_meter, write_log)?;
 
-    let vps_result =
-        check_vps(&tx, storage, block_gas_meter, write_log, &verifiers)?;
+            let vps_result = check_vps(
+                &tx,
+                storage,
+                block_gas_meter,
+                write_log,
+                &verifiers,
+            )?;
 
-    let gas_used = block_gas_meter
-        .finalize_transaction()
-        .map_err(Error::GasError)?;
-    let initialized_accounts = write_log.get_initialized_accounts();
-    let changed_keys = write_log.get_keys();
+            let gas_used = block_gas_meter
+                .finalize_transaction()
+                .map_err(Error::GasError)?;
+            let initialized_accounts = write_log.get_initialized_accounts();
+            let changed_keys = write_log.get_keys();
 
-    Ok(TxResult {
-        gas_used,
-        changed_keys,
-        vps_result,
-        initialized_accounts,
-    })
+            Ok(TxResult {
+                gas_used,
+                changed_keys,
+                vps_result,
+                initialized_accounts,
+            })
+        }
+        TxType::Wrapper(_) => {
+            let gas_used = block_gas_meter
+                .finalize_transaction()
+                .map_err(Error::GasError)?;
+            Ok(TxResult {
+                gas_used,
+                ..Default::default()
+            })
+        }
+    }
 }
 
 /// Execute a transaction code. Returns verifiers requested by the transaction.

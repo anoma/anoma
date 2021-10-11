@@ -1,6 +1,7 @@
 //! Types definitions.
 
 pub mod address;
+pub mod chain;
 #[cfg(feature = "ibc-vp")]
 pub mod ibc;
 pub mod intent;

@@ -1,0 +1,65 @@
+# Example testnet
+
+genesis_time = "2021-10-01T00:00:00Z"
+
+[parameters]
+min_num_of_blocks = 10
+min_duration      = 60
+
+[pos_params]
+max_validator_slots            = 128
+pipeline_len                   = 2
+unbonding_len                  = 6
+votes_per_token                = 10
+block_proposer_reward          = 100
+block_vote_reward              = 1
+duplicate_vote_slash_rate      = 500
+light_client_attack_slash_rate = 500
+
+[validator.validator_1]
+tokens             = 200000
+non_staked_balance = 100000
+validator_vp       = "vp_user"
+staking_reward_vp  = "vp_user"
+net_address        = "0.0.0.0:20000"
+
+[validator.validator_2]
+tokens             = 200000
+non_staked_balance = 100000
+validator_vp       = "vp_user"
+staking_reward_vp  = "vp_user"
+net_address        = "0.0.0.0:20000"
+
+[validator.validator_3]
+tokens             = 200000
+non_staked_balance = 100000
+validator_vp       = "vp_user"
+staking_reward_vp  = "vp_user"
+net_address        = "0.0.0.0:20000"
+
+[validator.validator_4]
+tokens             = 200000
+non_staked_balance = 100000
+validator_vp       = "vp_user"
+staking_reward_vp  = "vp_user"
+net_address        = "0.0.0.0:20000"
+
+[established.faucet]
+vp = "vp_testnet_faucet"
+
+[token.xan]
+vp = "vp_token"
+[token.xan.balances]
+faucet = 9223372036854
+
+[wasm.vp_user]
+filename = "vp_user.wasm"
+sha256 = "dc7b97f0448f2369bd2401c3c1d8898f53cac8c464a8c1b1f7f81415a658625d"
+
+[wasm.vp_token]
+filename = "vp_token.wasm"
+sha256 = "e428a11f570d21dd3c871f5d35de6fe18098eb8ee0456b3e11a72ccdd8685cd0"
+
+[wasm.vp_testnet_faucet]
+filename = "vp_testnet_faucet.wasm"
+sha256 = "2038d93afd456a77c45123811b671627f488c8d2a72b714d82dd494cbbd552bc"

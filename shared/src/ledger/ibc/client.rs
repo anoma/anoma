@@ -1,7 +1,5 @@
 //! IBC validity predicate for client module
 
-use std::str::FromStr;
-
 use borsh::BorshDeserialize;
 use ibc::ics02_client::client_consensus::AnyConsensusState;
 use ibc::ics02_client::client_def::{AnyClient, ClientDef};
@@ -10,22 +8,20 @@ use ibc::ics02_client::client_type::ClientType;
 use ibc::ics02_client::context::ClientReader;
 use ibc::ics02_client::height::Height;
 use ibc::ics24_host::identifier::ClientId;
-use ibc::ics24_host::Path;
 use thiserror::Error;
 
+use super::storage::{
+    client_counter_key, client_state_key, client_type_key, consensus_state_key,
+};
 use super::{Ibc, StateChange};
 use crate::ledger::storage::{self, StorageHasher};
-use crate::types::address::{Address, InternalAddress};
 use crate::types::ibc::{
     ClientUpdateData, ClientUpgradeData, Error as IbcDataError,
 };
-use crate::types::storage::{DbKeySeg, Key, KeySeg};
 
 #[allow(missing_docs)]
 #[derive(Error, Debug)]
 pub enum Error {
-    #[error("Key error: {0}")]
-    InvalidKey(String),
     #[error("State change error: {0}")]
     InvalidStateChange(String),
     #[error("Client error: {0}")]
@@ -65,29 +61,11 @@ where
         }
     }
 
-    pub(super) fn get_client_id(key: &Key) -> Result<ClientId> {
-        match &key.segments[..] {
-            [DbKeySeg::AddressSeg(addr), DbKeySeg::StringSeg(prefix), DbKeySeg::StringSeg(client_id), ..]
-                if addr == &Address::Internal(InternalAddress::Ibc)
-                    && prefix == "clients" =>
-            {
-                ClientId::from_str(&client_id.raw())
-                    .map_err(|e| Error::InvalidKey(e.to_string()))
-            }
-            _ => Err(Error::InvalidKey(format!(
-                "The key doesn't have a client ID: {}",
-                key
-            ))),
-        }
-    }
-
     fn get_client_state_change(
         &self,
         client_id: &ClientId,
     ) -> Result<StateChange> {
-        let path = Path::ClientState(client_id.clone()).to_string();
-        let key = Key::ibc_key(path)
-            .expect("Creating a key for a client type failed");
+        let key = client_state_key(client_id);
         self.get_state_change(&key)
             .map_err(|e| Error::InvalidStateChange(e.to_string()))
     }
@@ -223,37 +201,43 @@ where
         }
 
         // check the posterior states
-        let client_state = ClientReader::client_state(self, client_id)
+        let client_state_post = ClientReader::client_state(self, client_id)
             .ok_or_else(|| {
                 Error::InvalidClient(format!(
                     "The client state doesn't exist: ID {}",
                     client_id
                 ))
             })?;
-        let height = client_state.latest_height();
-        let consensus_state =
+        let height = client_state_post.latest_height();
+        let consensus_state_post =
             self.consensus_state(client_id, height).ok_or_else(|| {
                 Error::InvalidClient(format!(
                     "The consensus state doesn't exist: ID {}, Height {}",
                     client_id, height
                 ))
             })?;
-        // check the prior client state
-        let pre_client_state = self.client_state_pre(client_id)?;
-        // get proofs
+
+        // verify the given states
+        let client_state = data.client_state.clone();
+        let consensus_state = data.consensus_state.clone();
         let client_proof = data.proof_client()?;
         let consensus_proof = data.proof_consensus_state()?;
-
-        let client = AnyClient::from_client_type(client_state.client_type());
+        let client_type = self.client_type(client_id).ok_or_else(|| {
+            Error::InvalidClient(format!(
+                "The client type doesn't exist: ID {}",
+                client_id
+            ))
+        })?;
+        let client = AnyClient::from_client_type(client_type);
         match client.verify_upgrade_and_update_state(
-            &pre_client_state,
+            &client_state,
             &consensus_state,
             client_proof,
             consensus_proof,
         ) {
             Ok((new_client_state, new_consensus_state)) => {
-                if new_client_state == client_state
-                    && new_consensus_state == consensus_state
+                if new_client_state == client_state_post
+                    && new_consensus_state == consensus_state_post
                 {
                     Ok(())
                 } else {
@@ -269,9 +253,7 @@ where
     }
 
     fn client_state_pre(&self, client_id: &ClientId) -> Result<AnyClientState> {
-        let path = Path::ClientState(client_id.clone()).to_string();
-        let key = Key::ibc_key(path)
-            .expect("Creating a key for a client state shouldn't fail");
+        let key = client_state_key(client_id);
         match self.ctx.read_pre(&key) {
             Ok(Some(value)) => AnyClientState::try_from_slice(&value[..])
                 .map_err(|e| {
@@ -288,7 +270,7 @@ where
     }
 
     pub(super) fn client_counter_pre(&self) -> Result<u64> {
-        let key = Key::ibc_client_counter();
+        let key = client_counter_key();
         self.read_counter_pre(&key)
             .map_err(|e| Error::InvalidClient(e.to_string()))
     }
@@ -298,14 +280,7 @@ where
         client_id: &ClientId,
         height: Height,
     ) -> Result<AnyConsensusState> {
-        let path = Path::ClientConsensusState {
-            client_id: client_id.clone(),
-            epoch: height.revision_number,
-            height: height.revision_height,
-        }
-        .to_string();
-        let key = Key::ibc_key(path)
-            .expect("Creating a key for a consensus state shouldn't fail");
+        let key = consensus_state_key(client_id, height);
         match self.ctx.read_pre(&key) {
             Ok(Some(value)) => AnyConsensusState::try_from_slice(&value[..])
                 .map_err(|e| {
@@ -330,9 +305,7 @@ where
     H: 'static + StorageHasher,
 {
     fn client_type(&self, client_id: &ClientId) -> Option<ClientType> {
-        let path = Path::ClientType(client_id.clone()).to_string();
-        let key = Key::ibc_key(path)
-            .expect("Creating a key for a client type shouldn't fail");
+        let key = client_type_key(client_id);
         match self.ctx.read_post(&key) {
             Ok(Some(value)) => ClientType::try_from_slice(&value[..]).ok(),
             // returns None even if DB read fails
@@ -341,9 +314,7 @@ where
     }
 
     fn client_state(&self, client_id: &ClientId) -> Option<AnyClientState> {
-        let path = Path::ClientState(client_id.clone()).to_string();
-        let key = Key::ibc_key(path)
-            .expect("Creating a key for a client state shouldn't fail");
+        let key = client_state_key(client_id);
         match self.ctx.read_post(&key) {
             Ok(Some(value)) => AnyClientState::try_from_slice(&value[..]).ok(),
             // returns None even if DB read fails
@@ -356,14 +327,7 @@ where
         client_id: &ClientId,
         height: Height,
     ) -> Option<AnyConsensusState> {
-        let path = Path::ClientConsensusState {
-            client_id: client_id.clone(),
-            epoch: height.revision_number,
-            height: height.revision_height,
-        }
-        .to_string();
-        let key = Key::ibc_key(path)
-            .expect("Creating a key for a consensus state shouldn't fail");
+        let key = consensus_state_key(client_id, height);
         match self.ctx.read_post(&key) {
             Ok(Some(value)) => {
                 AnyConsensusState::try_from_slice(&value[..]).ok()
@@ -374,7 +338,7 @@ where
     }
 
     fn client_counter(&self) -> u64 {
-        let key = Key::ibc_client_counter();
+        let key = client_counter_key();
         self.read_counter(&key)
     }
 }

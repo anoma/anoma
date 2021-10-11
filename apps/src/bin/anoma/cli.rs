@@ -56,7 +56,11 @@ fn handle_command(cmd: cli::cmds::Anoma, raw_sub_cmd: String) -> Result<()> {
     }
 }
 
-fn handle_subcommand(program: &str, mut sub_args: Vec<String>) -> Result<()> {
+fn handle_subcommand(
+    program: &str,
+    #[cfg(not(feature = "dev"))] sub_args: Vec<String>,
+    #[cfg(feature = "dev")] mut sub_args: Vec<String>,
+) -> Result<()> {
     let env_vars = env::vars_os();
 
     #[cfg(feature = "dev")]

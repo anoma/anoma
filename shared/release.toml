@@ -1,0 +1,2 @@
+disable-tag = false
+tag-name    = "v{{version}}"

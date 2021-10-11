@@ -211,6 +211,14 @@ impl Keypair {
     }
 }
 
+impl PublicKey {
+    /// Construct a PublicKey from bytes
+    pub fn from_bytes(bytes: &[u8]) -> Result<PublicKey, SignatureError> {
+        let pk = ed25519_dalek::PublicKey::from_bytes(bytes)?;
+        Ok(pk.into())
+    }
+}
+
 impl<T> PartialEq for Signed<T>
 where
     T: BorshSerialize + BorshDeserialize + PartialEq,
@@ -381,6 +389,18 @@ impl PartialOrd for PublicKey {
         self.try_to_vec()
             .expect("Encoding public key shouldn't fail")
             .partial_cmp(
+                &other
+                    .try_to_vec()
+                    .expect("Encoding public key shouldn't fail"),
+            )
+    }
+}
+
+impl Ord for PublicKey {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        self.try_to_vec()
+            .expect("Encoding public key shouldn't fail")
+            .cmp(
                 &other
                     .try_to_vec()
                     .expect("Encoding public key shouldn't fail"),
@@ -659,7 +679,7 @@ fn gen_keypair() {
     use rand::thread_rng;
 
     let mut rng: ThreadRng = thread_rng();
-    let keypair = ed25519_dalek::Keypair::generate(&mut rng);
+    let keypair = Keypair::generate(&mut rng);
     println!("keypair {:?}", keypair.to_bytes());
 }
 
@@ -667,8 +687,8 @@ fn gen_keypair() {
 #[cfg(any(test, feature = "testing"))]
 pub mod testing {
     use proptest::prelude::*;
-    use rand::prelude::StdRng;
-    use rand::SeedableRng;
+    use rand::prelude::{StdRng, ThreadRng};
+    use rand::{thread_rng, SeedableRng};
 
     use super::*;
 
@@ -705,22 +725,26 @@ pub mod testing {
             ed25519_dalek::Keypair::generate(&mut rng).into()
         })
     }
+
+    /// Generate a new random [`Keypair`].
+    pub fn gen_keypair() -> Keypair {
+        let mut rng: ThreadRng = thread_rng();
+        Keypair::generate(&mut rng)
+    }
 }
 
 #[cfg(test)]
 pub mod tests {
-    use rand::prelude::ThreadRng;
-    use rand::thread_rng;
-
     use super::*;
 
     /// Run `cargo test gen_keypair -- --nocapture` to generate a
     /// new keypair.
     #[test]
     fn gen_keypair() {
-        let mut rng: ThreadRng = thread_rng();
-        let keypair = Keypair::generate(&mut rng);
-        println!("Public key: {}", keypair.public);
-        println!("Secret key: {}", keypair.secret);
+        let keypair = testing::gen_keypair();
+        let public_key: PublicKey = keypair.public;
+        let secret_key: SecretKey = keypair.secret;
+        println!("Public key: {}", public_key);
+        println!("Secret key: {}", secret_key);
     }
 }

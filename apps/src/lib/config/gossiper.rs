@@ -20,7 +20,6 @@ pub struct Gossiper {
 
 // TODO this is needed because libp2p does not export ed255519 serde
 // feature maybe a MR for libp2p to export theses functions ?
-#[cfg(feature = "dev")]
 mod keypair_serde {
     use libp2p::identity::ed25519::Keypair;
     use serde::de::Error;

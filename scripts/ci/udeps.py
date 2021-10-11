@@ -21,7 +21,7 @@ ISSUE_LABEL = 'udeps'
 
 
 def get_nightly_from_file() -> str:
-    return open("rust-nightly-version", "r").read().strip()
+    return open("../../rust-nightly-version", "r").read().strip()
 
 # 0 - not exist,2 already exist, else issue number
 def check_issue_status(body: str) -> int:

@@ -1,7 +1,7 @@
 //! Proof of Stake system integration with functions for transactions
 
 use anoma::ledger::pos::anoma_proof_of_stake::{
-    BondError, UnbondError, WithdrawError,
+    BecomeValidatorError, BondError, UnbondError, WithdrawError,
 };
 use anoma::ledger::pos::types::Slash;
 pub use anoma::ledger::pos::*;
@@ -13,6 +13,7 @@ use anoma::ledger::pos::{
     validator_total_deltas_key, validator_voting_power_key,
 };
 use anoma::types::address::{self, Address, InternalAddress};
+use anoma::types::transaction::InitValidator;
 use anoma::types::{key, token};
 pub use anoma_proof_of_stake::{
     epoched, parameters, types, PosActions as PosWrite, PosReadOnly as PosRead,
@@ -53,6 +54,37 @@ pub fn withdraw_tokens(
 ) -> Result<token::Amount, WithdrawError<Address>> {
     let current_epoch = tx::get_block_epoch();
     PoS.withdraw_tokens(source, validator, current_epoch)
+}
+
+/// Attempt to initialize a validator account. On success, returns the
+/// initialized validator account's address and its staking reward address.
+pub fn init_validator(
+    InitValidator {
+        account_key,
+        consensus_key,
+        rewards_account_key,
+        validator_vp_code,
+        rewards_vp_code,
+    }: InitValidator,
+) -> Result<(Address, Address), BecomeValidatorError<Address>> {
+    let current_epoch = tx::get_block_epoch();
+    // Init validator account
+    let validator_address = tx::init_account(&validator_vp_code);
+    let pk_key = key::ed25519::pk_key(&validator_address);
+    tx::write(&pk_key.to_string(), &account_key);
+
+    // Init staking reward account
+    let rewards_address = tx::init_account(&rewards_vp_code);
+    let pk_key = key::ed25519::pk_key(&rewards_address);
+    tx::write(&pk_key.to_string(), &rewards_account_key);
+
+    PoS.become_validator(
+        &validator_address,
+        &rewards_address,
+        &consensus_key,
+        current_epoch,
+    )?;
+    Ok((validator_address, rewards_address))
 }
 
 /// Proof of Stake system. This struct integrates and gives access to

@@ -1,7 +1,5 @@
 //! IBC validity predicate for packets
 
-use std::str::FromStr;
-
 use borsh::BorshDeserialize;
 use ibc::ics02_client::height::Height;
 use ibc::ics04_channel::channel::{ChannelEnd, Counterparty, Order, State};
@@ -13,25 +11,23 @@ use ibc::ics04_channel::handler::verify::{
     verify_packet_recv_proofs,
 };
 use ibc::ics04_channel::packet::{Packet, Sequence};
-use ibc::ics24_host::identifier::{ChannelId, ClientId, PortId};
+use ibc::ics24_host::identifier::{ChannelId, ClientId, PortChannelId, PortId};
 use ibc::proofs::Proofs;
 use ibc::timestamp::Expiry;
 use thiserror::Error;
 
+use super::storage::{port_channel_sequence_id, Error as IbcStorageError};
 use super::{Ibc, StateChange};
 use crate::ledger::storage::{self, StorageHasher};
-use crate::types::address::{Address, InternalAddress};
 use crate::types::ibc::{
     Error as IbcDataError, PacketAckData, PacketReceiptData, PacketSendData,
     TimeoutData,
 };
-use crate::types::storage::{DbKeySeg, Key, KeySeg};
+use crate::types::storage::Key;
 
 #[allow(missing_docs)]
 #[derive(Error, Debug)]
 pub enum Error {
-    #[error("Key error: {0}")]
-    InvalidKey(String),
     #[error("State change error: {0}")]
     InvalidStateChange(String),
     #[error("Client error: {0}")]
@@ -50,6 +46,8 @@ pub enum Error {
     DecodingTxData(std::io::Error),
     #[error("IBC data error: {0}")]
     InvalidIbcData(IbcDataError),
+    #[error("IBC storage error: {0}")]
+    IbcStorage(IbcStorageError),
 }
 
 /// IBC packet functions result
@@ -71,7 +69,7 @@ where
         key: &Key,
         tx_data: &[u8],
     ) -> Result<()> {
-        let commitment_key = Self::get_port_channel_sequence_id(key)?;
+        let commitment_key = port_channel_sequence_id(key)?;
         match self
             .get_state_change(key)
             .map_err(|e| Error::InvalidStateChange(e.to_string()))?
@@ -125,8 +123,12 @@ where
                             &commitment_key,
                             &data.packet,
                         )?;
+                        let port_channel_id = PortChannelId {
+                            port_id: commitment_key.0,
+                            channel_id: commitment_key.1,
+                        };
                         self.verify_ack_proof(
-                            &(commitment_key.0, commitment_key.1),
+                            &port_channel_id,
                             &data.packet,
                             data.ack.clone(),
                             &data.proofs()?,
@@ -158,12 +160,16 @@ where
             .map_err(|e| Error::InvalidStateChange(e.to_string()))?
         {
             StateChange::Created => {
-                let receipt_key = Self::get_port_channel_sequence_id(key)?;
+                let receipt_key = port_channel_sequence_id(key)?;
                 let data = PacketReceiptData::try_from_slice(tx_data)?;
                 let packet = &data.packet;
                 self.validate_recv_packet(&receipt_key, packet)?;
+                let port_channel_id = PortChannelId {
+                    port_id: receipt_key.0,
+                    channel_id: receipt_key.1,
+                };
                 self.verify_recv_proof(
-                    &(receipt_key.0, receipt_key.1),
+                    &port_channel_id,
                     packet,
                     &data.proofs()?,
                 )
@@ -180,7 +186,7 @@ where
             .map_err(|e| Error::InvalidStateChange(e.to_string()))?
         {
             StateChange::Created => {
-                let ack_key = Self::get_port_channel_sequence_id(key)?;
+                let ack_key = port_channel_sequence_id(key)?;
                 // The receipt should have been stored
                 if self
                     .get_packet_receipt(&(
@@ -202,35 +208,6 @@ where
             _ => Err(Error::InvalidStateChange(
                 "The state change of the acknowledgment is invalid".to_owned(),
             )),
-        }
-    }
-
-    fn get_port_channel_sequence_id(
-        key: &Key,
-    ) -> Result<(PortId, ChannelId, Sequence)> {
-        match &key.segments[..] {
-            [DbKeySeg::AddressSeg(addr), DbKeySeg::StringSeg(prefix), DbKeySeg::StringSeg(module0), DbKeySeg::StringSeg(port_id), DbKeySeg::StringSeg(module1), DbKeySeg::StringSeg(channel_id), DbKeySeg::StringSeg(module2), DbKeySeg::StringSeg(seq_index)]
-                if addr == &Address::Internal(InternalAddress::Ibc)
-                    && (prefix == "commitments"
-                        || prefix == "receipts"
-                        || prefix == "acks")
-                    && module0 == "ports"
-                    && module1 == "channels"
-                    && module2 == "sequences" =>
-            {
-                let port_id = PortId::from_str(&port_id.raw())
-                    .map_err(|e| Error::InvalidKey(e.to_string()))?;
-                let channel_id = ChannelId::from_str(&channel_id.raw())
-                    .map_err(|e| Error::InvalidKey(e.to_string()))?;
-                let seq = Sequence::from_str(&seq_index.raw())
-                    .map_err(|e| Error::InvalidKey(e.to_string()))?;
-                Ok((port_id, channel_id, seq))
-            }
-            _ => Err(Error::InvalidKey(format!(
-                "The key doesn't have port ID, channel ID and sequence \
-                 number: Key {}",
-                key,
-            ))),
         }
     }
 
@@ -323,7 +300,10 @@ where
                         "The packet info invalid".to_owned(),
                     ));
                 }
-                (packet.source_port.clone(), packet.source_channel.clone())
+                PortChannelId {
+                    port_id: packet.source_port.clone(),
+                    channel_id: packet.source_channel.clone(),
+                }
             }
             Phase::Recv => {
                 if *port_id != packet.destination_port
@@ -334,35 +314,38 @@ where
                         "The packet info invalid".to_owned(),
                     ));
                 }
-                (
-                    packet.destination_port.clone(),
-                    packet.destination_channel.clone(),
-                )
+                PortChannelId {
+                    port_id: packet.destination_port.clone(),
+                    channel_id: packet.destination_channel.clone(),
+                }
             }
         };
 
         // port authentication
-        self.authenticated_capability(&port_channel_id.0)
+        self.authenticated_capability(&port_channel_id.port_id)
             .map_err(|e| {
                 Error::InvalidPort(format!(
                     "The port is not owned: Port {}, {}",
-                    port_channel_id.0, e
+                    port_channel_id.port_id, e
                 ))
             })?;
 
-        let channel = match self.channel_end(&port_channel_id) {
+        let channel = match self.channel_end(&(
+            port_channel_id.port_id.clone(),
+            port_channel_id.channel_id.clone(),
+        )) {
             Some(c) => c,
             None => {
                 return Err(Error::InvalidChannel(format!(
-                    "The channel doesn't exist: Port {}, Channel {}",
-                    port_channel_id.0, port_channel_id.1,
+                    "The channel doesn't exist: Port/Channel {}",
+                    port_channel_id,
                 )));
             }
         };
         if !channel.is_open() {
             return Err(Error::InvalidChannel(format!(
-                "The channel isn't open: Port {}, Channel {}",
-                port_channel_id.0, port_channel_id.1
+                "The channel isn't open: Port/Channel {}",
+                port_channel_id
             )));
         }
 
@@ -452,16 +435,19 @@ where
 
     fn verify_recv_proof(
         &self,
-        port_channel_id: &(PortId, ChannelId),
+        port_channel_id: &PortChannelId,
         packet: &Packet,
         proofs: &Proofs,
     ) -> Result<()> {
-        let channel = match self.channel_end(port_channel_id) {
+        let channel = match self.channel_end(&(
+            port_channel_id.port_id.clone(),
+            port_channel_id.channel_id.clone(),
+        )) {
             Some(c) => c,
             None => {
                 return Err(Error::InvalidChannel(format!(
-                    "The channel doesn't exist: Port {}, Channel {}",
-                    port_channel_id.0, port_channel_id.1,
+                    "The channel doesn't exist: Port/Channel {}",
+                    port_channel_id,
                 )));
             }
         };
@@ -476,17 +462,20 @@ where
 
     fn verify_ack_proof(
         &self,
-        port_channel_id: &(PortId, ChannelId),
+        port_channel_id: &PortChannelId,
         packet: &Packet,
         ack: Vec<u8>,
         proofs: &Proofs,
     ) -> Result<()> {
-        let channel = match self.channel_end(port_channel_id) {
+        let channel = match self.channel_end(&(
+            port_channel_id.port_id.clone(),
+            port_channel_id.channel_id.clone(),
+        )) {
             Some(c) => c,
             None => {
                 return Err(Error::InvalidChannel(format!(
-                    "The channel doesn't exist: Port {}, Channel {}",
-                    port_channel_id.0, port_channel_id.1,
+                    "The channel doesn't exist: Port/Channel {}",
+                    port_channel_id,
                 )));
             }
         };
@@ -508,6 +497,7 @@ where
     ) -> Result<()> {
         let data = TimeoutData::try_from_slice(tx_data)?;
         let packet = data.packet.clone();
+        // deleted commitment should be for the packet sent from this channel
         let commitment = self
             .get_packet_commitment_pre(commitment_key)
             .map_err(|e| Error::InvalidPacket(e.to_string()))?;
@@ -517,22 +507,30 @@ where
         self.authenticated_capability(&packet.source_port)
             .map_err(|e| Error::InvalidPort(e.to_string()))?;
 
-        let port_channel_id =
-            (packet.source_port.clone(), packet.source_channel.clone());
-        let channel = self.channel_end(&port_channel_id).ok_or_else(|| {
-            Error::InvalidChannel(format!(
-                "The channel doesn't exist: Port {}, Channel {}",
-                packet.source_port, packet.source_channel
+        // the counterparty should be equal to that of the channel
+        let port_channel_id = PortChannelId {
+            port_id: packet.source_port.clone(),
+            channel_id: packet.source_channel.clone(),
+        };
+        let channel = self
+            .channel_end(&(
+                port_channel_id.port_id.clone(),
+                port_channel_id.channel_id.clone(),
             ))
-        })?;
+            .ok_or_else(|| {
+                Error::InvalidChannel(format!(
+                    "The channel doesn't exist: Port/Channel {}",
+                    port_channel_id
+                ))
+            })?;
         let counterparty = Counterparty::new(
             packet.destination_port.clone(),
             Some(packet.destination_channel.clone()),
         );
         if !channel.counterparty_matches(&counterparty) {
             return Err(Error::InvalidPacket(format!(
-                "The packet is invalid for the counterparty: Port {}, Channel \
-                 {}",
+                "The packet is invalid for the counterparty: Port/Channel \
+                 {}/{}",
                 packet.destination_port, packet.destination_channel
             )));
         }
@@ -581,13 +579,15 @@ where
         if channel.order_matches(&Order::Ordered) {
             if !channel.state_matches(&State::Closed) {
                 return Err(Error::InvalidChannel(format!(
-                    "The channel hasn't been closed yet: Port {}, Channel {}",
-                    port_channel_id.0, port_channel_id.1
+                    "The channel hasn't been closed yet: Port/Channel {}",
+                    port_channel_id
                 )));
             }
             if packet.sequence < data.sequence {
                 return Err(Error::InvalidPacket(
-                    "The sequence is invalid".to_owned(),
+                    "The sequence is invalid. The packet might have been \
+                     already received"
+                        .to_owned(),
                 ));
             }
             match verify_next_sequence_recv(
@@ -653,6 +653,12 @@ where
                 "The timestamp of the packet is invalid".to_owned(),
             )),
         }
+    }
+}
+
+impl From<IbcStorageError> for Error {
+    fn from(err: IbcStorageError) -> Self {
+        Self::IbcStorage(err)
     }
 }
 

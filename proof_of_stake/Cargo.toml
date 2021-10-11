@@ -6,7 +6,7 @@ license = "GPL-3.0"
 name = "anoma_proof_of_stake"
 readme = "../README.md"
 resolver = "2"
-version = "0.1.0"
+version = "0.1.4"
 
 [dependencies]
 borsh = "0.9.1"

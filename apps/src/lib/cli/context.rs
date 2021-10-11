@@ -1,15 +1,27 @@
 //! CLI input types can be used for command arguments
 
+use std::env;
 use std::marker::PhantomData;
+use std::path::Path;
 use std::rc::Rc;
 use std::str::FromStr;
 
 use anoma::types::address::Address;
+use anoma::types::chain::ChainId;
 use anoma::types::key::ed25519::{Keypair, PublicKey, PublicKeyHash};
 
 use super::args;
 use crate::cli::safe_exit;
+use crate::config::genesis::genesis_config;
+use crate::config::global::GlobalConfig;
+use crate::config::{self, Config};
 use crate::wallet::Wallet;
+use crate::wasm_loader;
+
+/// Env. var to set chain ID
+const ENV_VAR_CHAIN_ID: &str = "ANOMA_CHAIN_ID";
+/// Env. var to set wasm directory
+const ENV_VAR_WASM_DIR: &str = "ANOMA_WASM_DIR";
 
 /// A raw address (bech32m encoding) or an alias of an address that may be found
 /// in the wallet
@@ -30,11 +42,52 @@ pub struct Context {
     pub global_args: args::Global,
     /// The wallet
     pub wallet: Wallet,
+    /// The global configuration
+    pub global_config: GlobalConfig,
+    /// The ledger & intent gossip configuration for a specific chain ID
+    pub config: Config,
 }
 
 impl Context {
+    pub fn new(global_args: args::Global) -> Self {
+        let global_config = read_or_try_new_global_config(&global_args);
+
+        let mut config = Config::load(
+            &global_args.base_dir,
+            &global_config.default_chain_id,
+        );
+
+        let chain_dir = global_args
+            .base_dir
+            .join(&global_config.default_chain_id.as_str());
+        let genesis_file_path = global_args
+            .base_dir
+            .join(format!("{}.toml", global_config.default_chain_id.as_str()));
+        let wallet = Wallet::load_or_new_from_genesis(&chain_dir, move || {
+            genesis_config::open_genesis_config(genesis_file_path)
+        });
+
+        // If the WASM dir specified, put it in the config
+        match global_args.wasm_dir.as_ref() {
+            Some(wasm_dir) => {
+                config.ledger.wasm_dir = wasm_dir.clone();
+            }
+            None => {
+                if let Ok(wasm_dir) = env::var(ENV_VAR_WASM_DIR) {
+                    config.ledger.wasm_dir = wasm_dir.into();
+                }
+            }
+        }
+        Self {
+            global_args,
+            wallet,
+            global_config,
+            config,
+        }
+    }
+
     /// Parse and/or look-up the value from the context.
-    pub fn get<T>(&self, from_context: FromContext<T>) -> T
+    pub fn get<T>(&self, from_context: &FromContext<T>) -> T
     where
         T: ArgFromContext,
     {
@@ -42,15 +95,17 @@ impl Context {
     }
 
     /// Try to parse and/or look-up an optional value from the context.
-    pub fn get_opt<T>(&self, from_context: Option<FromContext<T>>) -> Option<T>
+    pub fn get_opt<T>(&self, from_context: &Option<FromContext<T>>) -> Option<T>
     where
         T: ArgFromContext,
     {
-        from_context.map(|from_context| from_context.from_ctx(self))
+        from_context
+            .as_ref()
+            .map(|from_context| from_context.from_ctx(self))
     }
 
     /// Parse and/or look-up the value from the context with cache.
-    pub fn get_cached<T>(&mut self, from_context: FromContext<T>) -> T
+    pub fn get_cached<T>(&mut self, from_context: &FromContext<T>) -> T
     where
         T: ArgFromMutContext,
     {
@@ -61,13 +116,55 @@ impl Context {
     /// cache.
     pub fn get_opt_cached<T>(
         &mut self,
-        from_context: Option<FromContext<T>>,
+        from_context: &Option<FromContext<T>>,
     ) -> Option<T>
     where
         T: ArgFromMutContext,
     {
-        from_context.map(|from_context| from_context.from_mut_ctx(self))
+        from_context
+            .as_ref()
+            .map(|from_context| from_context.from_mut_ctx(self))
     }
+
+    /// Read the given WASM file from the WASM directory or an absolute path.
+    pub fn read_wasm(&self, file_name: impl AsRef<Path>) -> Vec<u8> {
+        wasm_loader::read_wasm(
+            self.config.ledger.wasm_dir.to_path_buf(),
+            file_name,
+        )
+    }
+}
+
+/// Load global config from expected path in the `base_dir` or try to generate a
+/// new one if it doesn't exist.
+pub fn read_or_try_new_global_config(
+    global_args: &args::Global,
+) -> GlobalConfig {
+    GlobalConfig::read(&global_args.base_dir).unwrap_or_else(|err| {
+        if let config::global::Error::FileNotFound(_) = err {
+            let chain_id = global_args.chain_id.clone().or_else(|| {
+                env::var(ENV_VAR_CHAIN_ID).ok().map(|chain_id| {
+                    ChainId::from_str(&chain_id).unwrap_or_else(|err| {
+                        eprintln!("Invalid chain ID: {}", err);
+                        super::safe_exit(1)
+                    })
+                })
+            });
+
+            // If not specified, use the default
+            let chain_id = chain_id.unwrap_or_default();
+
+            let config = GlobalConfig::new(chain_id);
+            config.write(&global_args.base_dir).unwrap_or_else(|err| {
+                tracing::error!("Error writing global config file: {}", err);
+                super::safe_exit(1)
+            });
+            config
+        } else {
+            eprintln!("Error reading global config: {}", err);
+            super::safe_exit(1)
+        }
+    })
 }
 
 /// Argument that can be given raw or found in the [`Context`].

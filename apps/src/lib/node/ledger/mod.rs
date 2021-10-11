@@ -4,10 +4,11 @@ pub mod rpc;
 mod shell;
 mod shims;
 pub mod storage;
-mod tendermint_node;
+pub mod tendermint_node;
 
 use std::convert::{TryFrom, TryInto};
-use std::sync::mpsc::channel;
+use std::mem;
+use std::sync::mpsc::{channel, Receiver};
 
 use anoma::types::storage::BlockHash;
 use futures::future::{AbortHandle, AbortRegistration, Abortable};
@@ -15,11 +16,10 @@ use tendermint_proto::abci::CheckTxType;
 use tower::ServiceBuilder;
 use tower_abci::{response, split, Server};
 
-use crate::config;
-use crate::config::genesis;
 use crate::node::ledger::shell::{Error, MempoolTxType, Shell};
 use crate::node::ledger::shims::abcipp_shim::AbcippShim;
 use crate::node::ledger::shims::abcipp_shim_types::shim::{Request, Response};
+use crate::{config, wasm_loader};
 
 /// A panic-proof handle for aborting a future. Will abort during
 /// stack unwinding as its drop method calls abort.
@@ -54,37 +54,7 @@ impl Shell {
     fn call(&mut self, req: Request) -> Result<Response, Error> {
         match req {
             Request::InitChain(init) => {
-                match self.init_chain(init) {
-                    Ok(mut resp) => {
-                        // Set the initial validator set
-                        let genesis = genesis::genesis();
-                        let mut abci_validator =
-                            tendermint_proto::abci::ValidatorUpdate::default();
-                        let consensus_key: ed25519_dalek::PublicKey = genesis
-                            .validator
-                            .pos_data
-                            .consensus_key
-                            .clone()
-                            .into();
-                        let pub_key = tendermint_proto::crypto::PublicKey {
-                            sum: Some(tendermint_proto::crypto::public_key::Sum::Ed25519(
-                                consensus_key.to_bytes().to_vec(),
-                            )),
-                        };
-                        abci_validator.pub_key = Some(pub_key);
-                        let power: u64 = genesis
-                            .validator
-                            .pos_data
-                            .voting_power(&genesis.pos_params)
-                            .into();
-                        abci_validator.power = power
-                            .try_into()
-                            .expect("unexpected validator's voting power");
-                        resp.validators.push(abci_validator);
-                        Ok(Response::InitChain(resp))
-                    }
-                    Err(inner) => Err(inner),
-                }
+                self.init_chain(init).map(Response::InitChain)
             }
             Request::Info(_) => Ok(Response::Info(self.last_state())),
             Request::Query(query) => Ok(Response::Query(self.query(query))),
@@ -171,10 +141,15 @@ pub fn reset(config: config::Ledger) -> Result<(), shell::Error> {
 async fn run_shell(
     config: config::Ledger,
     abort_registration: AbortRegistration,
+    failure_receiver: Receiver<()>,
 ) {
     // Construct our ABCI application.
-    let service =
-        AbcippShim::new(&config.db, config::DEFAULT_CHAIN_ID.to_owned());
+    let service = AbcippShim::new(
+        config.base_dir,
+        &config.db,
+        config.chain_id,
+        config.wasm_dir,
+    );
 
     // Split it into components.
     let (consensus, mempool, snapshot, info) = split::service(service, 5);
@@ -201,9 +176,21 @@ async fn run_shell(
         .unwrap();
 
     // Run the server with the shell
-    let future =
-        Abortable::new(server.listen(config.address), abort_registration);
-    let _ = future.await;
+    let abortable_shell = Abortable::new(
+        server.listen(config.ledger_address),
+        abort_registration,
+    );
+    // The shell will be aborted when Tendermint exits
+    let _ = abortable_shell.await;
+
+    // Check if a failure signal was sent
+    if let Ok(()) = failure_receiver.try_recv() {
+        // Exit with error status code
+        use std::io::Write;
+        let _ = std::io::stdout().lock().flush();
+        let _ = std::io::stderr().lock().flush();
+        std::process::exit(1)
+    }
 }
 
 /// Runs two child processes: A tendermint node, a shell which contains an ABCI
@@ -215,26 +202,52 @@ async fn run_shell(
 ///
 /// When the shell process finishes, we check if it finished with a panic. If it
 /// did we stop the tendermint node with a channel that acts as a kill switch.
-pub fn run(config: config::Ledger) {
+pub fn run(mut config: config::Ledger) {
     let home_dir = config.tendermint.clone();
-    let socket_address = config.address.to_string();
+    let ledger_address = config.ledger_address.to_string();
+    let rpc_address = config.rpc_address.to_string();
+    let p2p_address = config.p2p_address.to_string();
+    let p2p_persistent_peers = mem::take(&mut config.p2p_persistent_peers);
+    let chain_id = config.chain_id.clone();
+    let genesis_time = config
+        .genesis_time
+        .clone()
+        .try_into()
+        .expect("expected RFC3339 genesis_time");
+    let p2p_pex = config.p2p_pex;
 
-    // used for shutting down Tendermint node in case the shell panics
-    let (sender, receiver) = channel();
-    let kill_switch = sender.clone();
-    // used for shutting down the shell and making sure that drop is called
-    // on the database
+    // For signalling shut down to the Tendermint node, sent from the
+    // shell or from within the Tendermint process itself.
+    // Send `true` for a graceful shutdown or `false` on a critical error.
+    let (abort_sender, abort_receiver) = channel();
+    let shell_abort_sender = abort_sender.clone();
+
+    // For signalling shut down to the shell from Tendermint, which ensures that
+    // drop is called on the database
     let (abort_handle, abort_registration) = AbortHandle::new_pair();
+
+    // Prefetch needed wasm artifacts
+    wasm_loader::pre_fetch_wasm(&config.wasm_dir);
+    // Because we cannot attach any data to the `abort_handle`, we also need
+    // another channel for signalling an error to the shell from Tendermint
+    let (failure_sender, failure_receiver) = channel();
 
     // start Tendermint node
     let tendermint_handle = std::thread::spawn(move || {
-        if let Err(err) =
-            tendermint_node::run(home_dir, &socket_address, sender, receiver)
-        {
-            tracing::error!(
-                "Failed to start-up a Tendermint node with {}",
-                err
-            );
+        if let Err(err) = tendermint_node::run(
+            home_dir,
+            chain_id,
+            genesis_time,
+            ledger_address,
+            rpc_address,
+            p2p_address,
+            p2p_persistent_peers,
+            p2p_pex,
+            abort_sender,
+            abort_receiver,
+        ) {
+            tracing::error!("Tendermint node failed with {}", err);
+            failure_sender.send(()).unwrap();
         }
         // Once tendermint node stops, ensure that we stop the shell.
         // Implemented in the drop method to be panic-proof
@@ -245,7 +258,7 @@ pub fn run(config: config::Ledger) {
 
     // start the shell + ABCI server
     let shell_handle = std::thread::spawn(move || {
-        run_shell(config, abort_registration);
+        run_shell(config, abort_registration, failure_receiver);
     });
 
     tracing::info!("Anoma ledger node started.");
@@ -254,7 +267,7 @@ pub fn run(config: config::Ledger) {
         Err(_) => {
             tracing::info!("Anoma shut down unexpectedly");
             // if the shell panicked, shut down the tendermint node
-            let _ = kill_switch.send(true);
+            let _ = shell_abort_sender.send(false);
         }
         _ => tracing::info!("Shutting down Anoma node"),
     }

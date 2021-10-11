@@ -1,6 +1,8 @@
 //! This crate contains library code for wasm. Some of the code is re-exported
 //! from the `shared` crate.
 
+#![doc(html_favicon_url = "https://docs.anoma.network/favicon.png")]
+#![doc(html_logo_url = "https://docs.anoma.network/rustdoc-logo.png")]
 #![deny(rustdoc::broken_intra_doc_links)]
 #![deny(rustdoc::private_intra_doc_links)]
 

@@ -4,7 +4,7 @@ edition = "2018"
 license = "GPL-3.0"
 name = "anoma_wasm"
 resolver = "2"
-version = "0.1.0"
+version = "0.1.4"
 
 [lib]
 crate-type = ["cdylib"]
@@ -18,12 +18,14 @@ tx_bond = []
 tx_create_nft = []
 tx_from_intent = []
 tx_init_account = []
+tx_init_validator = []
 tx_mint_nft_tokens = []
 tx_transfer = []
 tx_unbond = []
 tx_update_vp = []
 tx_withdraw = []
 vp_nft = []
+vp_testnet_faucet = ["once_cell"]
 vp_token = []
 vp_user = ["once_cell", "rust_decimal"]
 

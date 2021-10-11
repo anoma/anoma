@@ -178,7 +178,7 @@ fn wallet_address_cmds() -> Result<()> {
     let base_dir = tempdir().unwrap();
     let gen_address_alias = "test_address_1";
     let add_address_alias = "test_address_2";
-    let add_address = "a1qyqzsqqqqpzrsd34gvmrss69x5eyg3pkxfq52vfh8yergd3hg9p5yd6z8qmnzwfcxymnss3nxc4fevcg";
+    let add_address = "atest1v4ehgw36gs6yydf4xq6ngdpex5c5yw2zxgunqvfjgvurxv6ygsmr2dfcxfznxde4xuurw334uclqv3";
 
     // 1. address gen
     let mut cmd = Command::cargo_bin(BIN)?;

@@ -5,20 +5,27 @@ edition = "2018"
 license = "GPL-3.0"
 name = "anoma_tests"
 resolver = "2"
-version = "0.1.0"
+version = "0.1.4"
 
 [features]
 default = ["wasm-runtime"]
 wasm-runtime = ["anoma/wasm-runtime"]
 
 [dependencies]
-anoma = {path = "../shared", features = ["testing"]}
+anoma = {path = "../shared", features = ["testing", "ibc-vp"]}
 anoma_vm_env = {path = "../vm_env"}
+chrono = "0.4.19"
 concat-idents = "1.1.2"
+# TODO temp fork for https://github.com/informalsystems/ibc-rs/issues/1161
+ibc = {git = "https://github.com/heliaxdev/ibc-rs", branch = "tomas/tm-lowercase-node-id", features = ["mocks", "borsh"]}
+ibc-proto = {git = "https://github.com/heliaxdev/ibc-rs", branch = "tomas/tm-lowercase-node-id"}
 test-env-log = {version = "0.2.7", default-features = false, features = ["trace"]}
+# temporarily using fork work-around for https://github.com/informalsystems/tendermint-rs/issues/916
+tendermint = {git = "https://github.com/heliaxdev/tendermint-rs", branch = "tomas/lowercase-node-id"}
 tracing = "0.1.26"
 tracing-subscriber = {version = "0.2.18", default-features = false, features = ["env-filter", "fmt"]}
 serde_json = { version = "1.0.65" }
+sha2 = "0.9.3"
 
 [dev-dependencies]
 anoma_apps = {path = "../apps", features = ["testing"]}

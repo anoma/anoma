@@ -10,14 +10,18 @@
 //! it is better to select a single test, e.g.:
 //!
 //! `RUST_LOG=debug cargo test test_tx_read_write -- --nocapture`
+pub mod ibc;
 pub mod tx;
 pub mod vp;
 
 #[cfg(test)]
 mod tests {
+
+    use anoma::ledger::ibc::{init_genesis_storage, Error as IbcError};
     use anoma::proto::Tx;
     use anoma::types::key::ed25519::SignedTxData;
     use anoma::types::storage::{Key, KeySeg};
+    use anoma::types::time::DateTimeUtc;
     use anoma::types::{address, key};
     use anoma_vm_env::tx_prelude::{
         BorshDeserialize, BorshSerialize, KeyValIterator,
@@ -26,6 +30,7 @@ mod tests {
     use itertools::Itertools;
     use test_env_log::test;
 
+    use super::ibc;
     use super::tx::*;
     use super::vp::*;
 
@@ -452,5 +457,1143 @@ mod tests {
         let input_data = vec![];
         let result = vp_host_env::eval(code, input_data);
         assert!(!result);
+    }
+
+    #[test]
+    fn test_ibc_client() {
+        // The environment must be initialized first
+        let mut env = TestTxEnv::default();
+        init_tx_env(&mut env);
+
+        // Set the initial state before starting transactions
+        init_genesis_storage(&mut env.storage);
+
+        // Start an invalid transaction
+        let data = ibc::client_creation_data();
+        let tx_data = data.try_to_vec().expect("encoding failed");
+        let tx = Tx {
+            code: vec![],
+            data: Some(tx_data.clone()),
+            timestamp: DateTimeUtc::now(),
+        };
+        // get and increment the connection counter
+        let counter_key = ibc::client_counter_key().to_string();
+        let counter =
+            tx_host_env::read(&counter_key).expect("no client counter");
+        tx_host_env::write(&counter_key, counter + 1);
+        let client_id = data.client_id(counter).expect("invalid client ID");
+        // only insert a client type
+        let client_type_key = ibc::client_type_key(&client_id).to_string();
+        tx_host_env::write(&client_type_key, data.client_state.client_type());
+
+        // Check should fail due to no client state
+        let ibc_vp = ibc::init_ibc_vp_from_tx(&env, &tx);
+        assert!(matches!(
+            ibc_vp
+                .validate(&tx_data)
+                .expect_err("validation succeeded unexpectedly"),
+            IbcError::ClientError(_),
+        ));
+        // drop the transaction
+        env.write_log.drop_tx();
+
+        // Start a transaction to create a new client
+        let data = ibc::client_creation_data();
+        let tx_data = data.try_to_vec().expect("encoding failed");
+        let tx = Tx {
+            code: vec![],
+            data: Some(tx_data.clone()),
+            timestamp: DateTimeUtc::now(),
+        };
+
+        // get and increment the connection counter
+        let counter_key = ibc::client_counter_key().to_string();
+        let counter =
+            tx_host_env::read(&counter_key).expect("no client counter");
+        tx_host_env::write(&counter_key, counter + 1);
+        let client_id = data.client_id(counter).expect("invalid client ID");
+        // client type
+        let client_type_key = ibc::client_type_key(&client_id).to_string();
+        tx_host_env::write(&client_type_key, data.client_state.client_type());
+        // client state
+        let client_state_key = ibc::client_state_key(&client_id).to_string();
+        tx_host_env::write(&client_state_key, data.client_state.clone());
+        // consensus state
+        let height = data.client_state.latest_height();
+        let consensus_state_key =
+            ibc::consensus_state_key(&client_id, height).to_string();
+        tx_host_env::write(&consensus_state_key, data.consensus_state);
+
+        // Check
+        let ibc_vp = ibc::init_ibc_vp_from_tx(&env, &tx);
+        assert!(
+            ibc_vp
+                .validate(&tx_data)
+                .expect("validation failed unexpectedly")
+        );
+
+        // Commit
+        env.write_log.commit_tx();
+        env.write_log.commit_block(&mut env.storage).unwrap();
+
+        // Start an invalid transaction
+        let data = ibc::client_update_data(client_id);
+        let tx_data = data.try_to_vec().expect("encoding failed");
+        let tx = Tx {
+            code: vec![],
+            data: Some(tx_data.clone()),
+            timestamp: DateTimeUtc::now(),
+        };
+        // get and update the client without a header
+        let client_id = data.client_id;
+        // update the client with the same state
+        let old_data = ibc::client_creation_data();
+        let same_client_state = old_data.client_state.clone();
+        let height = same_client_state.latest_height();
+        let same_consensus_state = old_data.consensus_state;
+        let client_state_key = ibc::client_state_key(&client_id).to_string();
+        tx_host_env::write(&client_state_key, same_client_state);
+        let consensus_state_key =
+            ibc::consensus_state_key(&client_id, height).to_string();
+        tx_host_env::write(&consensus_state_key, same_consensus_state);
+
+        // Check should fail due to the invalid updating
+        let ibc_vp = ibc::init_ibc_vp_from_tx(&env, &tx);
+        assert!(matches!(
+            ibc_vp
+                .validate(&tx_data)
+                .expect_err("validation succeeded unexpectedly"),
+            IbcError::ClientError(_),
+        ));
+        // drop the transaction
+        env.write_log.drop_tx();
+
+        // Start a transaction to update the client
+        let data = ibc::client_update_data(client_id);
+        let tx_data = data.try_to_vec().expect("encoding failed");
+        let tx = Tx {
+            code: vec![],
+            data: Some(tx_data.clone()),
+            timestamp: DateTimeUtc::now(),
+        };
+        // get and update the client
+        let client_id = data.client_id.clone();
+        let client_state_key = ibc::client_state_key(&client_id).to_string();
+        let client_state =
+            tx_host_env::read(&client_state_key).expect("no client state");
+        let (new_client_state, new_consensus_state) =
+            ibc::update_client(client_state, data.headers)
+                .expect("updating a client failed");
+        let height = new_client_state.latest_height();
+        tx_host_env::write(&client_state_key, new_client_state);
+        let consensus_state_key =
+            ibc::consensus_state_key(&client_id, height).to_string();
+        tx_host_env::write(&consensus_state_key, new_consensus_state);
+
+        // Check
+        let ibc_vp = ibc::init_ibc_vp_from_tx(&env, &tx);
+        assert!(
+            ibc_vp
+                .validate(&tx_data)
+                .expect("validation failed unexpectedly")
+        );
+
+        // Commit
+        env.write_log.commit_tx();
+        env.write_log.commit_block(&mut env.storage).unwrap();
+
+        // Start a transaction to upgrade the client
+        let data = ibc::client_upgrade_data(client_id);
+        let tx_data = data.try_to_vec().expect("encoding failed");
+        let tx = Tx {
+            code: vec![],
+            data: Some(tx_data.clone()),
+            timestamp: DateTimeUtc::now(),
+        };
+        // upgrade the client
+        let client_id = data.client_id.clone();
+        let new_client_state = data.client_state.clone();
+        let new_consensus_state = data.consensus_state;
+        let client_state_key = ibc::client_state_key(&client_id).to_string();
+        let height = new_client_state.latest_height();
+        let consensus_state_key =
+            ibc::consensus_state_key(&client_id, height).to_string();
+        tx_host_env::write(&client_state_key, new_client_state);
+        tx_host_env::write(&consensus_state_key, new_consensus_state);
+
+        // Check
+        let ibc_vp = ibc::init_ibc_vp_from_tx(&env, &tx);
+        assert!(
+            ibc_vp
+                .validate(&tx_data)
+                .expect("validation failed unexpectedly")
+        );
+    }
+
+    #[test]
+    fn test_ibc_connection_init_and_open() {
+        // The environment must be initialized first
+        let mut env = TestTxEnv::default();
+        init_tx_env(&mut env);
+        // block header
+        env.storage.set_header(ibc::tm_dummy_header()).unwrap();
+
+        // Set the initial state before starting transactions
+        init_genesis_storage(&mut env.storage);
+        let (client_id, client_state, writes) = ibc::prepare_client();
+        writes.into_iter().for_each(|(key, val)| {
+            env.storage.write(&key, val).expect("write error");
+        });
+
+        // Start an invalid transaction
+        let data = ibc::connection_open_init_data(client_id.clone());
+        let tx_data = data.try_to_vec().expect("encoding failed");
+        let tx = Tx {
+            code: vec![],
+            data: Some(tx_data.clone()),
+            timestamp: DateTimeUtc::now(),
+        };
+        // get and increment the connection counter
+        let counter_key = ibc::connection_counter_key().to_string();
+        let counter: u64 =
+            tx_host_env::read(&counter_key).expect("no connection counter");
+        tx_host_env::write(&counter_key, counter + 1);
+        // insert a new opened connection
+        let conn_id = ibc::connection_id(counter);
+        let conn_key = ibc::connection_key(&conn_id).to_string();
+        let conn = ibc::open_connection(&mut data.connection());
+        tx_host_env::write(&conn_key, conn);
+
+        // Check should fail due to directly opening a connection
+        let ibc_vp = ibc::init_ibc_vp_from_tx(&env, &tx);
+        assert!(matches!(
+            ibc_vp
+                .validate(&tx_data)
+                .expect_err("validation succeeded unexpectedly"),
+            IbcError::ConnectionError(_),
+        ));
+        // drop the transaction
+        env.write_log.drop_tx();
+
+        // Start a transaction for ConnectionOpenInit
+        // tx (Not need to decode tx_data)
+        let data = ibc::connection_open_init_data(client_id);
+        let tx_data = data.try_to_vec().expect("encoding failed");
+        let tx = Tx {
+            code: vec![],
+            data: Some(tx_data.clone()),
+            timestamp: DateTimeUtc::now(),
+        };
+        // get and increment the connection counter
+        let counter_key = ibc::connection_counter_key().to_string();
+        let counter: u64 =
+            tx_host_env::read(&counter_key).expect("no connection counter");
+        tx_host_env::write(&counter_key, counter + 1);
+        // new connection
+        let conn_id = ibc::connection_id(counter);
+        let conn_key = ibc::connection_key(&conn_id).to_string();
+        tx_host_env::write(&conn_key, data.connection());
+
+        // Check
+        let ibc_vp = ibc::init_ibc_vp_from_tx(&env, &tx);
+        assert!(
+            ibc_vp
+                .validate(&tx_data)
+                .expect("validation failed unexpectedly")
+        );
+
+        // Commit
+        env.write_log.commit_tx();
+        env.write_log.commit_block(&mut env.storage).unwrap();
+        // set a block header again
+        env.storage.set_header(ibc::tm_dummy_header()).unwrap();
+
+        // Start the next transaction for ConnectionOpenAck
+        // tx (Not need to decode tx_data)
+        let data = ibc::connection_open_ack_data(conn_id, client_state);
+        let tx_data = data.try_to_vec().expect("encoding failed");
+        let tx = Tx {
+            code: vec![],
+            data: Some(tx_data.clone()),
+            timestamp: DateTimeUtc::now(),
+        };
+        // update the connection
+        let conn_key = ibc::connection_key(&data.conn_id).to_string();
+        let mut conn = tx_host_env::read(&conn_key).expect("no connection");
+        ibc::open_connection(&mut conn);
+        tx_host_env::write(&conn_key, conn);
+
+        // Check
+        let ibc_vp = ibc::init_ibc_vp_from_tx(&env, &tx);
+        assert!(
+            ibc_vp
+                .validate(&tx_data)
+                .expect("validation failed unexpectedly")
+        );
+    }
+
+    #[test]
+    fn test_ibc_connection_try_and_open() {
+        // The environment must be initialized first
+        let mut env = TestTxEnv::default();
+        init_tx_env(&mut env);
+        // block header
+        env.storage.set_header(ibc::tm_dummy_header()).unwrap();
+
+        // Set the initial state before starting transactions
+        init_genesis_storage(&mut env.storage);
+        let (client_id, client_state, writes) = ibc::prepare_client();
+        writes.into_iter().for_each(|(key, val)| {
+            env.storage.write(&key, val).expect("write error");
+        });
+
+        // Start a transaction for ConnectionOpenTry
+        // tx (Not need to decode tx_data)
+        let data = ibc::connection_open_try_data(client_id, client_state);
+        let tx_data = data.try_to_vec().expect("encoding failed");
+        let tx = Tx {
+            code: vec![],
+            data: Some(tx_data.clone()),
+            timestamp: DateTimeUtc::now(),
+        };
+        // get and increment the connection counter
+        let counter_key = ibc::connection_counter_key().to_string();
+        let counter =
+            tx_host_env::read(&counter_key).expect("no connection counter");
+        tx_host_env::write(&counter_key, counter + 1);
+        // new connection
+        let conn_id = ibc::connection_id(counter);
+        let conn_key = ibc::connection_key(&conn_id).to_string();
+        tx_host_env::write(&conn_key, data.connection());
+
+        // Check
+        let ibc_vp = ibc::init_ibc_vp_from_tx(&env, &tx);
+        assert!(
+            ibc_vp
+                .validate(&tx_data)
+                .expect("validation failed unexpectedly")
+        );
+
+        // Commit
+        env.write_log.commit_tx();
+        env.write_log.commit_block(&mut env.storage).unwrap();
+        // set a block header again
+        env.storage.set_header(ibc::tm_dummy_header()).unwrap();
+
+        // Start the next transaction for ConnectionOpenConfirm
+        // tx (Not need to decode tx_data)
+        let data = ibc::connection_open_confirm_data(conn_id);
+        let tx_data = data.try_to_vec().expect("encoding failed");
+        let tx = Tx {
+            code: vec![],
+            data: Some(tx_data.clone()),
+            timestamp: DateTimeUtc::now(),
+        };
+        // update the connection
+        let conn_key = ibc::connection_key(&data.conn_id).to_string();
+        let mut conn = tx_host_env::read(&conn_key).expect("no connection");
+        ibc::open_connection(&mut conn);
+        tx_host_env::write(&conn_key, conn);
+
+        // Check
+        let ibc_vp = ibc::init_ibc_vp_from_tx(&env, &tx);
+        assert!(
+            ibc_vp
+                .validate(&tx_data)
+                .expect("validation failed unexpectedly")
+        );
+    }
+
+    #[test]
+    fn test_ibc_channel_init_and_open() {
+        // The environment must be initialized first
+        let mut env = TestTxEnv::default();
+        init_tx_env(&mut env);
+
+        // Set the initial state before starting transactions
+        init_genesis_storage(&mut env.storage);
+        let (client_id, _client_state, mut writes) = ibc::prepare_client();
+        let (conn_id, conn_writes) = ibc::prepare_opened_connection(&client_id);
+        writes.extend(conn_writes);
+        writes.into_iter().for_each(|(key, val)| {
+            env.storage.write(&key, val).expect("write error");
+        });
+
+        // Start an invalid transaction
+        let port_id = ibc::port_id("test_port").expect("invalid port ID");
+        let data =
+            ibc::channel_open_init_data(port_id.clone(), conn_id.clone());
+        let tx_data = data.try_to_vec().expect("encoding failed");
+        let tx = Tx {
+            code: vec![],
+            data: Some(tx_data.clone()),
+            timestamp: DateTimeUtc::now(),
+        };
+        // not bind a port
+        // get and increment the channel counter
+        let counter_key = ibc::channel_counter_key().to_string();
+        let counter =
+            tx_host_env::read(&counter_key).expect("no channel counter");
+        tx_host_env::write(&counter_key, counter + 1);
+        // channel
+        let channel_id = ibc::channel_id(counter);
+        let port_channel_id = ibc::port_channel_id(port_id, channel_id);
+        let channel_key = ibc::channel_key(&port_channel_id).to_string();
+        tx_host_env::write(&channel_key, data.channel());
+
+        // Check should fail due to no port binding
+        let ibc_vp = ibc::init_ibc_vp_from_tx(&env, &tx);
+        assert!(matches!(
+            ibc_vp
+                .validate(&tx_data)
+                .expect_err("validation succeeded unexpectedly"),
+            IbcError::ChannelError(_),
+        ));
+        // drop the transaction
+        env.write_log.drop_tx();
+
+        // Start an invalid transaction
+        let port_id = ibc::port_id("test_port").expect("invalid port ID");
+        let data =
+            ibc::channel_open_init_data(port_id.clone(), conn_id.clone());
+        let tx_data = data.try_to_vec().expect("encoding failed");
+        let tx = Tx {
+            code: vec![],
+            data: Some(tx_data.clone()),
+            timestamp: DateTimeUtc::now(),
+        };
+        // bind a port
+        let index_key = ibc::capability_index_key().to_string();
+        let cap_index: u64 = tx_host_env::read(&index_key).expect("no index");
+        tx_host_env::write(&index_key, cap_index + 1);
+        let port_key = ibc::port_key(&port_id).to_string();
+        tx_host_env::write(&port_key, cap_index);
+        let cap_key = ibc::capability_key(cap_index).to_string();
+        tx_host_env::write(&cap_key, port_id.clone());
+        // get and increment the channel counter
+        let counter_key = ibc::channel_counter_key().to_string();
+        let counter =
+            tx_host_env::read(&counter_key).expect("no channel counter");
+        tx_host_env::write(&counter_key, counter + 1);
+        // insert a opened channel
+        let channel_id = ibc::channel_id(counter);
+        let port_channel_id = ibc::port_channel_id(port_id, channel_id);
+        let channel_key = ibc::channel_key(&port_channel_id).to_string();
+        let channel = ibc::open_channel(&mut data.channel());
+        tx_host_env::write(&channel_key, channel);
+
+        // Check should fail due to directly opening a channel
+        let ibc_vp = ibc::init_ibc_vp_from_tx(&env, &tx);
+        assert!(matches!(
+            ibc_vp
+                .validate(&tx_data)
+                .expect_err("validation succeeded unexpectedly"),
+            IbcError::ChannelError(_),
+        ));
+        // drop the transaction
+        env.write_log.drop_tx();
+
+        // Start a transaction for ChannelOpenInit
+        // tx (Not need to decode tx_data)
+        let port_id = ibc::port_id("test_port").expect("invalid port ID");
+        let data = ibc::channel_open_init_data(port_id.clone(), conn_id);
+        let tx_data = data.try_to_vec().expect("encoding failed");
+        let tx = Tx {
+            code: vec![],
+            data: Some(tx_data.clone()),
+            timestamp: DateTimeUtc::now(),
+        };
+        // bind a port
+        let index_key = ibc::capability_index_key().to_string();
+        let cap_index: u64 = tx_host_env::read(&index_key).expect("no index");
+        tx_host_env::write(&index_key, cap_index + 1);
+        let port_key = ibc::port_key(&port_id).to_string();
+        tx_host_env::write(&port_key, cap_index);
+        let cap_key = ibc::capability_key(cap_index).to_string();
+        tx_host_env::write(&cap_key, port_id.clone());
+        // get and increment the channel counter
+        let counter_key = ibc::channel_counter_key().to_string();
+        let counter =
+            tx_host_env::read(&counter_key).expect("no channel counter");
+        tx_host_env::write(&counter_key, counter + 1);
+        // channel
+        let channel_id = ibc::channel_id(counter);
+        let port_channel_id =
+            ibc::port_channel_id(port_id.clone(), channel_id.clone());
+        let channel_key = ibc::channel_key(&port_channel_id).to_string();
+        tx_host_env::write(&channel_key, data.channel());
+
+        // Check
+        let ibc_vp = ibc::init_ibc_vp_from_tx(&env, &tx);
+        assert!(
+            ibc_vp
+                .validate(&tx_data)
+                .expect("validation failed unexpectedly")
+        );
+
+        // Commit
+        env.write_log.commit_tx();
+        env.write_log.commit_block(&mut env.storage).unwrap();
+
+        // Start the next transaction for ChannelOpenAck
+        // tx (Not need to decode tx_data)
+        let data = ibc::channel_open_ack_data(port_id, channel_id);
+        let tx_data = data.try_to_vec().expect("encoding failed");
+        let tx = Tx {
+            code: vec![],
+            data: Some(tx_data.clone()),
+            timestamp: DateTimeUtc::now(),
+        };
+        // update the channel
+        let port_channel_id =
+            ibc::port_channel_id(data.port_id, data.channel_id);
+        let channel_key = ibc::channel_key(&port_channel_id).to_string();
+        let mut channel = tx_host_env::read(&channel_key).expect("no channel");
+        ibc::open_channel(&mut channel);
+        tx_host_env::write(&channel_key, channel);
+
+        // Check
+        let ibc_vp = ibc::init_ibc_vp_from_tx(&env, &tx);
+        assert!(
+            ibc_vp
+                .validate(&tx_data)
+                .expect("validation failed unexpectedly")
+        );
+    }
+
+    #[test]
+    fn test_ibc_channel_try_and_open() {
+        // The environment must be initialized first
+        let mut env = TestTxEnv::default();
+        init_tx_env(&mut env);
+
+        // Set the initial state before starting transactions
+        init_genesis_storage(&mut env.storage);
+        let (client_id, _client_state, mut writes) = ibc::prepare_client();
+        let (conn_id, conn_writes) = ibc::prepare_opened_connection(&client_id);
+        writes.extend(conn_writes);
+        writes.into_iter().for_each(|(key, val)| {
+            env.storage.write(&key, val).expect("write error");
+        });
+
+        // Start a transaction for ChannelOpenTry
+        // tx (Not need to decode tx_data)
+        let port_id = ibc::port_id("test_port").expect("invalid port ID");
+        let data = ibc::channel_open_try_data(port_id.clone(), conn_id);
+        let tx_data = data.try_to_vec().expect("encoding failed");
+        let tx = Tx {
+            code: vec![],
+            data: Some(tx_data.clone()),
+            timestamp: DateTimeUtc::now(),
+        };
+        // bind a port
+        let index_key = ibc::capability_index_key().to_string();
+        let cap_index: u64 = tx_host_env::read(&index_key).expect("no index");
+        tx_host_env::write(&index_key, cap_index + 1);
+        let port_key = ibc::port_key(&port_id).to_string();
+        tx_host_env::write(&port_key, cap_index);
+        let cap_key = ibc::capability_key(cap_index).to_string();
+        tx_host_env::write(&cap_key, port_id.clone());
+        // get and increment the connection counter
+        let counter_key = ibc::channel_counter_key().to_string();
+        let counter =
+            tx_host_env::read(&counter_key).expect("no channel counter");
+        tx_host_env::write(&counter_key, counter + 1);
+        // channel
+        let channel_id = ibc::channel_id(counter);
+        let port_channel_id =
+            ibc::port_channel_id(port_id.clone(), channel_id.clone());
+        let channel_key = ibc::channel_key(&port_channel_id).to_string();
+        tx_host_env::write(&channel_key, data.channel());
+
+        // Check
+        let ibc_vp = ibc::init_ibc_vp_from_tx(&env, &tx);
+        assert!(
+            ibc_vp
+                .validate(&tx_data)
+                .expect("validation failed unexpectedly")
+        );
+
+        // Commit
+        env.write_log.commit_tx();
+        env.write_log.commit_block(&mut env.storage).unwrap();
+
+        // Start the next transaction for ChannelOpenConfirm
+        // tx (Not need to decode tx_data)
+        let data = ibc::channel_open_confirm_data(port_id, channel_id);
+        let tx_data = data.try_to_vec().expect("encoding failed");
+        let tx = Tx {
+            code: vec![],
+            data: Some(tx_data.clone()),
+            timestamp: DateTimeUtc::now(),
+        };
+        // update the channel
+        let port_channel_id =
+            ibc::port_channel_id(data.port_id, data.channel_id);
+        let channel_key = ibc::channel_key(&port_channel_id).to_string();
+        let mut channel = tx_host_env::read(&channel_key).expect("no channel");
+        ibc::open_channel(&mut channel);
+        tx_host_env::write(&channel_key, channel);
+
+        // Check
+        let ibc_vp = ibc::init_ibc_vp_from_tx(&env, &tx);
+        assert!(
+            ibc_vp
+                .validate(&tx_data)
+                .expect("validation failed unexpectedly")
+        );
+    }
+
+    #[test]
+    fn test_ibc_channel_close_init() {
+        // The environment must be initialized first
+        let mut env = TestTxEnv::default();
+        init_tx_env(&mut env);
+
+        // Set the initial state before starting transactions
+        init_genesis_storage(&mut env.storage);
+        let (client_id, _client_state, mut writes) = ibc::prepare_client();
+        let (conn_id, conn_writes) = ibc::prepare_opened_connection(&client_id);
+        writes.extend(conn_writes);
+        let (port_id, channel_id, channel_writes) =
+            ibc::prepare_opened_channel(&conn_id);
+        writes.extend(channel_writes);
+        writes.into_iter().for_each(|(key, val)| {
+            env.storage.write(&key, val).expect("write error");
+        });
+
+        // Start a transaction to close the channel
+        // tx (Not need to decode tx_data)
+        let data = ibc::channel_close_init_data(port_id, channel_id);
+        let tx_data = data.try_to_vec().expect("encoding failed");
+        let tx = Tx {
+            code: vec![],
+            data: Some(tx_data.clone()),
+            timestamp: DateTimeUtc::now(),
+        };
+
+        // close the channel
+        let port_channel_id =
+            ibc::port_channel_id(data.port_id, data.channel_id);
+        let channel_key = ibc::channel_key(&port_channel_id).to_string();
+        let mut channel = tx_host_env::read(&channel_key).expect("no channel");
+        ibc::close_channel(&mut channel);
+        tx_host_env::write(&channel_key, channel);
+
+        // Check
+        let ibc_vp = ibc::init_ibc_vp_from_tx(&env, &tx);
+        assert!(
+            ibc_vp
+                .validate(&tx_data)
+                .expect("validation failed unexpectedly")
+        );
+    }
+
+    #[test]
+    fn test_ibc_channel_close_confirm() {
+        // The environment must be initialized first
+        let mut env = TestTxEnv::default();
+        init_tx_env(&mut env);
+
+        // Set the initial state before starting transactions
+        init_genesis_storage(&mut env.storage);
+        let (client_id, _client_state, mut writes) = ibc::prepare_client();
+        let (conn_id, conn_writes) = ibc::prepare_opened_connection(&client_id);
+        writes.extend(conn_writes);
+        let (port_id, channel_id, channel_writes) =
+            ibc::prepare_opened_channel(&conn_id);
+        writes.extend(channel_writes);
+        writes.into_iter().for_each(|(key, val)| {
+            env.storage.write(&key, val).expect("write error");
+        });
+
+        // Start a transaction to close the channel
+        // tx (Not need to decode tx_data)
+        let data = ibc::channel_close_confirm_data(port_id, channel_id);
+        let tx_data = data.try_to_vec().expect("encoding failed");
+        let tx = Tx {
+            code: vec![],
+            data: Some(tx_data.clone()),
+            timestamp: DateTimeUtc::now(),
+        };
+
+        // close the channel
+        let port_channel_id =
+            ibc::port_channel_id(data.port_id, data.channel_id);
+        let channel_key = ibc::channel_key(&port_channel_id).to_string();
+        let mut channel = tx_host_env::read(&channel_key).expect("no channel");
+        ibc::close_channel(&mut channel);
+        tx_host_env::write(&channel_key, channel);
+
+        // Check
+        let ibc_vp = ibc::init_ibc_vp_from_tx(&env, &tx);
+        assert!(
+            ibc_vp
+                .validate(&tx_data)
+                .expect("validation failed unexpectedly")
+        );
+    }
+
+    #[test]
+    fn test_ibc_send_packet() {
+        // The environment must be initialized first
+        let mut env = TestTxEnv::default();
+        init_tx_env(&mut env);
+
+        // Set the initial state before starting transactions
+        init_genesis_storage(&mut env.storage);
+        let (client_id, _client_state, mut writes) = ibc::prepare_client();
+        let (conn_id, conn_writes) = ibc::prepare_opened_connection(&client_id);
+        writes.extend(conn_writes);
+        let (port_id, channel_id, channel_writes) =
+            ibc::prepare_opened_channel(&conn_id);
+        writes.extend(channel_writes);
+        writes.into_iter().for_each(|(key, val)| {
+            env.storage.write(&key, val).expect("write error");
+        });
+
+        // Start a transaction to send a packet
+        // tx (Not need to decode tx_data)
+        let data = ibc::packet_send_data(port_id, channel_id);
+        let tx_data = data.try_to_vec().expect("encoding failed");
+        let tx = Tx {
+            code: vec![],
+            data: Some(tx_data.clone()),
+            timestamp: DateTimeUtc::now(),
+        };
+        // increment nextSequenceSend
+        let port_id = data.source_port.clone();
+        let channel_id = data.source_channel.clone();
+        let port_channel_id =
+            ibc::port_channel_id(port_id.clone(), channel_id.clone());
+        let next_seq_send_key =
+            ibc::next_sequence_send_key(&port_channel_id).to_string();
+        let seq_index: u64 = tx_host_env::read(&next_seq_send_key).unwrap_or(1);
+        tx_host_env::write(&next_seq_send_key, seq_index + 1);
+        // make a packet from the given data
+        let packet = data.packet(ibc::sequence(seq_index));
+        // commitment
+        let commitment_key =
+            ibc::commitment_key(&port_id, &channel_id, packet.sequence)
+                .to_string();
+        let commitment = ibc::commitment(&packet);
+        tx_host_env::write(&commitment_key, commitment);
+
+        // the transaction does something before senging a packet
+
+        // Check
+        let ibc_vp = ibc::init_ibc_vp_from_tx(&env, &tx);
+        assert!(
+            ibc_vp
+                .validate(&tx_data)
+                .expect("validation failed unexpectedly")
+        );
+
+        // Commit
+        env.write_log.commit_tx();
+        env.write_log.commit_block(&mut env.storage).unwrap();
+
+        // Start the next transaction for receiving an ack
+        // tx (Not need to decode tx_data)
+        let data = ibc::packet_ack_data(packet);
+        let tx_data = data.try_to_vec().expect("encoding failed");
+        let tx = Tx {
+            code: vec![],
+            data: Some(tx_data.clone()),
+            timestamp: DateTimeUtc::now(),
+        };
+
+        // delete the commitment
+        let packet = data.packet;
+        let port_id = packet.source_port;
+        let channel_id = packet.source_channel;
+        let commitment_key =
+            ibc::commitment_key(&port_id, &channel_id, packet.sequence)
+                .to_string();
+        tx_host_env::delete(&commitment_key);
+        // increment nextSequenceAck
+        let next_seq_ack_key =
+            ibc::next_sequence_ack_key(&port_channel_id).to_string();
+        let seq_index: u64 = tx_host_env::read(&next_seq_ack_key).unwrap_or(1);
+        tx_host_env::write(&next_seq_ack_key, seq_index + 1);
+
+        // the transaction does something after the ack
+
+        // Check
+        let ibc_vp = ibc::init_ibc_vp_from_tx(&env, &tx);
+        assert!(
+            ibc_vp
+                .validate(&tx_data)
+                .expect("validation failed unexpectedly")
+        );
+    }
+
+    #[test]
+    fn test_ibc_receive_packet() {
+        // The environment must be initialized first
+        let mut env = TestTxEnv::default();
+        init_tx_env(&mut env);
+        // block header to check timeout timestamp
+        env.storage.set_header(ibc::tm_dummy_header()).unwrap();
+
+        // Set the initial state before starting transactions
+        init_genesis_storage(&mut env.storage);
+        let (client_id, _client_state, mut writes) = ibc::prepare_client();
+        let (conn_id, conn_writes) = ibc::prepare_opened_connection(&client_id);
+        writes.extend(conn_writes);
+        let (port_id, channel_id, channel_writes) =
+            ibc::prepare_opened_channel(&conn_id);
+        writes.extend(channel_writes);
+        writes.into_iter().for_each(|(key, val)| {
+            env.storage.write(&key, val).expect("write error");
+        });
+
+        // packet
+        let packet =
+            ibc::received_packet(port_id, channel_id, ibc::sequence(1));
+
+        // Start a transaction to receive a packet
+        // tx (Not need to decode tx_data)
+        let data = ibc::packet_receipt_data(packet);
+        let tx_data = data.try_to_vec().expect("encoding failed");
+        let tx = Tx {
+            code: vec![],
+            data: Some(tx_data.clone()),
+            timestamp: DateTimeUtc::now(),
+        };
+        // increment nextSequenceRecv
+        let port_id = data.packet.destination_port;
+        let channel_id = data.packet.destination_channel;
+        let port_channel_id =
+            ibc::port_channel_id(port_id.clone(), channel_id.clone());
+        let next_seq_recv_key =
+            ibc::next_sequence_recv_key(&port_channel_id).to_string();
+        let seq_index: u64 = tx_host_env::read(&next_seq_recv_key).unwrap_or(1);
+        tx_host_env::write(&next_seq_recv_key, seq_index + 1);
+        // receipt
+        let receipt_key =
+            ibc::receipt_key(&port_id, &channel_id, data.packet.sequence)
+                .to_string();
+        tx_host_env::write(&receipt_key, 0_u64);
+        // ack
+        let ack_key = ibc::ack_key(&port_id, &channel_id, data.packet.sequence)
+            .to_string();
+        tx_host_env::write(&ack_key, "ack".try_to_vec().unwrap());
+
+        // the transaction does something according to the packet
+
+        // Check
+        let ibc_vp = ibc::init_ibc_vp_from_tx(&env, &tx);
+        assert!(
+            ibc_vp
+                .validate(&tx_data)
+                .expect("validation failed unexpectedly")
+        );
+    }
+
+    #[test]
+    fn test_ibc_send_packet_unordered() {
+        // The environment must be initialized first
+        let mut env = TestTxEnv::default();
+        init_tx_env(&mut env);
+
+        // Set the initial state before starting transactions
+        init_genesis_storage(&mut env.storage);
+        let (client_id, _client_state, mut writes) = ibc::prepare_client();
+        let (conn_id, conn_writes) = ibc::prepare_opened_connection(&client_id);
+        writes.extend(conn_writes);
+        let (port_id, channel_id, channel_writes) =
+            ibc::prepare_opened_channel(&conn_id);
+        writes.extend(channel_writes);
+        writes.into_iter().for_each(|(key, val)| {
+            env.storage.write(&key, val).expect("write error");
+        });
+
+        // Start a transaction to send a packet
+        // tx (Not need to decode tx_data)
+        let data = ibc::packet_send_data(port_id, channel_id);
+        let tx_data = data.try_to_vec().expect("encoding failed");
+        let tx = Tx {
+            code: vec![],
+            data: Some(tx_data.clone()),
+            timestamp: DateTimeUtc::now(),
+        };
+        // increment nextSequenceSend
+        let port_id = data.source_port.clone();
+        let channel_id = data.source_channel.clone();
+        let port_channel_id =
+            ibc::port_channel_id(port_id.clone(), channel_id.clone());
+        let next_seq_send_key =
+            ibc::next_sequence_send_key(&port_channel_id).to_string();
+        let seq_index: u64 = tx_host_env::read(&next_seq_send_key).unwrap_or(1);
+        tx_host_env::write(&next_seq_send_key, seq_index + 1);
+        // make a packet from the given data
+        let packet = data.packet(ibc::sequence(seq_index));
+        // commitment
+        let commitment_key =
+            ibc::commitment_key(&port_id, &channel_id, packet.sequence)
+                .to_string();
+        let commitment = ibc::commitment(&packet);
+        tx_host_env::write(&commitment_key, commitment);
+
+        // the transaction does something before senging a packet
+
+        // Check
+        let ibc_vp = ibc::init_ibc_vp_from_tx(&env, &tx);
+        assert!(
+            ibc_vp
+                .validate(&tx_data)
+                .expect("validation failed unexpectedly")
+        );
+
+        // Commit
+        env.write_log.commit_tx();
+        env.write_log.commit_block(&mut env.storage).unwrap();
+
+        // Start the next transaction for receiving an ack
+        // tx (Not need to decode tx_data)
+        let data = ibc::packet_ack_data(packet);
+        let tx_data = data.try_to_vec().expect("encoding failed");
+        let tx = Tx {
+            code: vec![],
+            data: Some(tx_data.clone()),
+            timestamp: DateTimeUtc::now(),
+        };
+
+        // delete the commitment
+        let packet = data.packet;
+        let port_id = packet.source_port;
+        let channel_id = packet.source_channel;
+        let commitment_key =
+            ibc::commitment_key(&port_id, &channel_id, packet.sequence)
+                .to_string();
+        tx_host_env::delete(&commitment_key);
+        // increment nextSequenceAck
+        let next_seq_ack_key =
+            ibc::next_sequence_ack_key(&port_channel_id).to_string();
+        let seq_index: u64 = tx_host_env::read(&next_seq_ack_key).unwrap_or(1);
+        tx_host_env::write(&next_seq_ack_key, seq_index + 1);
+
+        // the transaction does something after the ack
+
+        // Check
+        let ibc_vp = ibc::init_ibc_vp_from_tx(&env, &tx);
+        assert!(
+            ibc_vp
+                .validate(&tx_data)
+                .expect("validation failed unexpectedly")
+        );
+    }
+
+    #[test]
+    fn test_ibc_receive_packet_unordered() {
+        // The environment must be initialized first
+        let mut env = TestTxEnv::default();
+        init_tx_env(&mut env);
+        // block header to check timeout timestamp
+        env.storage.set_header(ibc::tm_dummy_header()).unwrap();
+
+        // Set the initial state before starting transactions
+        init_genesis_storage(&mut env.storage);
+        let (client_id, _client_state, mut writes) = ibc::prepare_client();
+        let (conn_id, conn_writes) = ibc::prepare_opened_connection(&client_id);
+        writes.extend(conn_writes);
+        let (port_id, channel_id, channel_writes) =
+            ibc::prepare_opened_channel(&conn_id);
+        writes.extend(channel_writes);
+        writes.into_iter().for_each(|(key, val)| {
+            env.storage.write(&key, val).expect("write error");
+        });
+
+        // packet (sequence number isn't checked for the unordered channel)
+        let packet =
+            ibc::received_packet(port_id, channel_id, ibc::sequence(100));
+
+        // Start a transaction to receive a packet
+        // tx (Not need to decode tx_data)
+        let data = ibc::packet_receipt_data(packet);
+        let tx_data = data.try_to_vec().expect("encoding failed");
+        let tx = Tx {
+            code: vec![],
+            data: Some(tx_data.clone()),
+            timestamp: DateTimeUtc::now(),
+        };
+        // not need to increment nextSequenceRecv
+        // receipt
+        let port_id = data.packet.destination_port.clone();
+        let channel_id = data.packet.destination_channel.clone();
+        let receipt_key =
+            ibc::receipt_key(&port_id, &channel_id, data.packet.sequence)
+                .to_string();
+        tx_host_env::write(&receipt_key, 0_u64);
+        // ack
+        let ack_key = ibc::ack_key(&port_id, &channel_id, data.packet.sequence)
+            .to_string();
+        tx_host_env::write(&ack_key, "ack".try_to_vec().unwrap());
+
+        // the transaction does something according to the packet
+
+        // Check
+        let ibc_vp = ibc::init_ibc_vp_from_tx(&env, &tx);
+        assert!(
+            ibc_vp
+                .validate(&tx_data)
+                .expect("validation failed unexpectedly")
+        );
+    }
+
+    #[test]
+    fn test_ibc_packet_timeout() {
+        // The environment must be initialized first
+        let mut env = TestTxEnv::default();
+        init_tx_env(&mut env);
+
+        // Set the initial state before starting transactions
+        init_genesis_storage(&mut env.storage);
+        let (client_id, _client_state, mut writes) = ibc::prepare_client();
+        let (conn_id, conn_writes) = ibc::prepare_opened_connection(&client_id);
+        writes.extend(conn_writes);
+        let (port_id, channel_id, channel_writes) =
+            ibc::prepare_opened_channel(&conn_id);
+        writes.extend(channel_writes);
+        writes.into_iter().for_each(|(key, val)| {
+            env.storage.write(&key, val).expect("write error");
+        });
+
+        // Start a transaction to send a packet
+        // tx (Not need to decode tx_data)
+        let mut data = ibc::packet_send_data(port_id, channel_id);
+        ibc::set_timeout_height(&mut data);
+        // increment nextSequenceSend
+        let port_id = data.source_port.clone();
+        let channel_id = data.source_channel.clone();
+        let port_channel_id =
+            ibc::port_channel_id(port_id.clone(), channel_id.clone());
+        let next_seq_send_key =
+            ibc::next_sequence_send_key(&port_channel_id).to_string();
+        let seq_index: u64 = tx_host_env::read(&next_seq_send_key).unwrap_or(1);
+        tx_host_env::write(&next_seq_send_key, seq_index + 1);
+        // make a packet from the given data
+        let packet = data.packet(ibc::sequence(seq_index));
+        // commitment
+        let commitment_key =
+            ibc::commitment_key(&port_id, &channel_id, packet.sequence)
+                .to_string();
+        let commitment = ibc::commitment(&packet);
+        tx_host_env::write(&commitment_key, commitment);
+
+        // Commit
+        env.write_log.commit_tx();
+        env.write_log.commit_block(&mut env.storage).unwrap();
+
+        // Start a transaction to notify the timeout
+        let data = ibc::timeout_data(packet, ibc::sequence(1));
+        let tx_data = data.try_to_vec().expect("encoding failed");
+        let tx = Tx {
+            code: vec![],
+            data: Some(tx_data.clone()),
+            timestamp: DateTimeUtc::now(),
+        };
+
+        // close the channel
+        let packet = data.packet;
+        let port_id = packet.source_port;
+        let channel_id = packet.source_channel;
+        let port_channel_id =
+            ibc::port_channel_id(port_id.clone(), channel_id.clone());
+        let channel_key = ibc::channel_key(&port_channel_id).to_string();
+        let mut channel = tx_host_env::read(&channel_key).expect("no channel");
+        ibc::close_channel(&mut channel);
+        tx_host_env::write(&channel_key, channel);
+        // delete the commitment
+        let commitment_key =
+            ibc::commitment_key(&port_id, &channel_id, packet.sequence)
+                .to_string();
+        tx_host_env::delete(&commitment_key);
+
+        // Check
+        let ibc_vp = ibc::init_ibc_vp_from_tx(&env, &tx);
+        assert!(
+            ibc_vp
+                .validate(&tx_data)
+                .expect("validation failed unexpectedly")
+        );
+    }
+
+    #[test]
+    fn test_ibc_timeout_on_close() {
+        // The environment must be initialized first
+        let mut env = TestTxEnv::default();
+        init_tx_env(&mut env);
+
+        // Set the initial state before starting transactions
+        init_genesis_storage(&mut env.storage);
+        let (client_id, _client_state, mut writes) = ibc::prepare_client();
+        let (conn_id, conn_writes) = ibc::prepare_opened_connection(&client_id);
+        writes.extend(conn_writes);
+        let (port_id, channel_id, channel_writes) =
+            ibc::prepare_opened_channel(&conn_id);
+        writes.extend(channel_writes);
+        writes.into_iter().for_each(|(key, val)| {
+            env.storage.write(&key, val).expect("write error");
+        });
+
+        // Start a transaction to send a packet
+        // tx (Not need to decode tx_data)
+        let data = ibc::packet_send_data(port_id, channel_id);
+        // increment nextSequenceSend
+        let port_id = data.source_port.clone();
+        let channel_id = data.source_channel.clone();
+        let port_channel_id =
+            ibc::port_channel_id(port_id.clone(), channel_id.clone());
+        let next_seq_send_key =
+            ibc::next_sequence_send_key(&port_channel_id).to_string();
+        let seq_index: u64 = tx_host_env::read(&next_seq_send_key).unwrap_or(1);
+        tx_host_env::write(&next_seq_send_key, seq_index + 1);
+        // make a packet from the given data (not timeout)
+        let packet = data.packet(ibc::sequence(seq_index));
+        // commitment
+        let commitment_key =
+            ibc::commitment_key(&port_id, &channel_id, packet.sequence)
+                .to_string();
+        let commitment = ibc::commitment(&packet);
+        tx_host_env::write(&commitment_key, commitment);
+
+        // Commit
+        env.write_log.commit_tx();
+        env.write_log.commit_block(&mut env.storage).unwrap();
+
+        // Start a transaction to notify the timing-out on closed
+        let data = ibc::timeout_data(packet, ibc::sequence(1));
+        let tx_data = data.try_to_vec().expect("encoding failed");
+        let tx = Tx {
+            code: vec![],
+            data: Some(tx_data.clone()),
+            timestamp: DateTimeUtc::now(),
+        };
+
+        // close the channel
+        let packet = data.packet;
+        let port_id = packet.source_port;
+        let channel_id = packet.source_channel;
+        let port_channel_id =
+            ibc::port_channel_id(port_id.clone(), channel_id.clone());
+        let channel_key = ibc::channel_key(&port_channel_id).to_string();
+        let mut channel = tx_host_env::read(&channel_key).expect("no channel");
+        ibc::close_channel(&mut channel);
+        tx_host_env::write(&channel_key, channel);
+        // delete the commitment
+        let commitment_key =
+            ibc::commitment_key(&port_id, &channel_id, packet.sequence)
+                .to_string();
+        tx_host_env::delete(&commitment_key);
+
+        // Check
+        let ibc_vp = ibc::init_ibc_vp_from_tx(&env, &tx);
+        assert!(
+            ibc_vp
+                .validate(&tx_data)
+                .expect("validation failed unexpectedly")
+        );
     }
 }

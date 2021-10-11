@@ -27,6 +27,10 @@ use super::{
     Unbonds, ValidatorConsensusKeys, ValidatorSets, ValidatorTotalDeltas,
 };
 use crate::ledger::native_vp::{self, Ctx, NativeVp};
+use crate::ledger::pos::{
+    is_validator_address_raw_hash_key, is_validator_consensus_key_key,
+    is_validator_state_key,
+};
 use crate::ledger::storage::types::decode;
 use crate::ledger::storage::{self as ledger_storage, StorageHasher};
 use crate::types::address::{Address, InternalAddress};
@@ -88,18 +92,28 @@ where
         &self,
         _tx_data: &[u8],
         keys_changed: &HashSet<Key>,
-        _verifiers: &HashSet<Address>,
+        verifiers: &HashSet<Address>,
     ) -> Result<bool> {
         use validation::Data;
         use validation::DataUpdate::{self, *};
         use validation::ValidatorUpdate::*;
 
-        let mut changes: Vec<DataUpdate<_, _, _>> = vec![];
+        let mut changes: Vec<DataUpdate<_, _, _, _>> = vec![];
         let current_epoch = self.ctx.get_block_epoch()?;
         for key in keys_changed {
             if is_params_key(key) {
                 // TODO parameters changes are not yet implemented
                 return Ok(false);
+            } else if let Some(owner) = key.is_validity_predicate() {
+                let has_pre = self.ctx.has_key_pre(key)?;
+                let has_post = self.ctx.has_key_post(key)?;
+                if has_pre && has_post {
+                    // VP updates must be verified by the owner
+                    return Ok(!verifiers.contains(owner));
+                } else if has_pre || !has_post {
+                    // VP cannot be deleted
+                    return Ok(false);
+                }
             } else if is_validator_set_key(key) {
                 let pre = self.ctx.read_pre(key)?.and_then(|bytes| {
                     ValidatorSets::try_from_slice(&bytes[..]).ok()
@@ -108,6 +122,17 @@ where
                     ValidatorSets::try_from_slice(&bytes[..]).ok()
                 });
                 changes.push(ValidatorSet(Data { pre, post }));
+            } else if let Some(validator) = is_validator_state_key(key) {
+                let pre = self.ctx.read_pre(key)?.and_then(|bytes| {
+                    ValidatorStates::try_from_slice(&bytes[..]).ok()
+                });
+                let post = self.ctx.read_post(key)?.and_then(|bytes| {
+                    ValidatorStates::try_from_slice(&bytes[..]).ok()
+                });
+                changes.push(Validator {
+                    address: validator.clone(),
+                    update: State(Data { pre, post }),
+                });
             } else if let Some(validator) =
                 is_validator_staking_reward_address_key(key)
             {
@@ -122,6 +147,18 @@ where
                 changes.push(Validator {
                     address: validator.clone(),
                     update: StakingRewardAddress(Data { pre, post }),
+                });
+            } else if let Some(validator) = is_validator_consensus_key_key(key)
+            {
+                let pre = self.ctx.read_pre(key)?.and_then(|bytes| {
+                    ValidatorConsensusKeys::try_from_slice(&bytes[..]).ok()
+                });
+                let post = self.ctx.read_post(key)?.and_then(|bytes| {
+                    ValidatorConsensusKeys::try_from_slice(&bytes[..]).ok()
+                });
+                changes.push(Validator {
+                    address: validator.clone(),
+                    update: ConsensusKey(Data { pre, post }),
                 });
             } else if let Some(validator) = is_validator_total_deltas_key(key) {
                 let pre = self.ctx.read_pre(key)?.and_then(|bytes| {
@@ -144,6 +181,32 @@ where
                 changes.push(Validator {
                     address: validator.clone(),
                     update: VotingPowerUpdate(Data { pre, post }),
+                });
+            } else if let Some(raw_hash) =
+                is_validator_address_raw_hash_key(key)
+            {
+                let pre = self
+                    .ctx
+                    .read_pre(key)?
+                    .and_then(|bytes| Address::try_from_slice(&bytes[..]).ok());
+                let post = self
+                    .ctx
+                    .read_post(key)?
+                    .and_then(|bytes| Address::try_from_slice(&bytes[..]).ok());
+                // Find the raw hashes of the addresses
+                let pre = pre.map(|pre| {
+                    let raw_hash =
+                        pre.raw_hash().map(String::from).unwrap_or_default();
+                    (pre, raw_hash)
+                });
+                let post = post.map(|post| {
+                    let raw_hash =
+                        post.raw_hash().map(String::from).unwrap_or_default();
+                    (post, raw_hash)
+                });
+                changes.push(ValidatorAddressRawHash {
+                    raw_hash: raw_hash.to_string(),
+                    data: Data { pre, post },
                 });
             } else if let Some(owner) =
                 token::is_balance_key(&staking_token_address(), key)

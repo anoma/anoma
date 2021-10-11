@@ -54,7 +54,7 @@ We'd like to have easily reproducible benchmarks for the whole database integrat
 
 ## DB backends
 
-The considered options for a DB backend are given in [Libraries & Tools / Database page](/explore/libraries/db.md).
+The considered options for a DB backend are given in [Libraries & Tools / Database page](../../libraries/db.md).
 
 ### RocksDB
 
@@ -82,7 +82,7 @@ An API made visible only to the shell module (e.g. `pub ( in SimplePath )` - htt
 - load state from DB for latest persisted block or initialize a new storage if none found
 - begin a new block
 - within a block:
-  - transaction can modify [account sub-space](/explore/design/ledger/accounts.md#dynamic-storage-sub-space)
+  - transaction can modify [account sub-space](accounts.md#dynamic-storage-sub-space)
     - the function that modify storage (e.g. `write` and `delete`) have to guarantee to also update the Merkle tree
   - store each applied transaction and its result
 - end the current block

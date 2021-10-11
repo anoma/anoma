@@ -1,89 +1,65 @@
 //! Anoma node CLI.
 
-#[cfg(feature = "dev")]
-use std::path::Path;
-
-use anoma_apps::config::Config;
+use anoma_apps::cli;
+use anoma_apps::cli::cmds;
 use anoma_apps::node::{gossip, ledger};
-use anoma_apps::{cli, config};
 use eyre::{Context, Result};
 
 pub fn main() -> Result<()> {
-    let (cmd, ctx) = cli::anoma_node_cli();
-    let base_dir = &ctx.global_args.base_dir;
+    let (cmd, mut ctx) = cli::anoma_node_cli();
     match cmd {
-        cli::cmds::AnomaNode::Ledger(sub) => match sub {
-            cli::cmds::Ledger::Run(_) => {
-                let config = get_cfg(base_dir);
-                let ledger_cfg = config.ledger.unwrap_or_default();
-                ledger::run(ledger_cfg);
+        cmds::AnomaNode::Ledger(sub) => match sub {
+            cmds::Ledger::Run(_) => {
+                ledger::run(ctx.config.ledger);
             }
-            cli::cmds::Ledger::Reset(_) => {
-                let config = get_cfg(base_dir);
-                let ledger_cfg = config.ledger.unwrap_or_default();
-                ledger::reset(ledger_cfg)
+            cmds::Ledger::Reset(_) => {
+                ledger::reset(ctx.config.ledger)
                     .wrap_err("Failed to reset Anoma node")?;
             }
         },
-        cli::cmds::AnomaNode::Gossip(sub) => match sub {
-            cli::cmds::Gossip::Run(cli::cmds::GossipRun(args)) => {
-                let config = get_cfg(base_dir);
-                let mut gossip_cfg = config.intent_gossiper.unwrap_or_default();
-                cli::update_gossip_config(args, &mut gossip_cfg)
-                    .expect("failed to update config with cli option");
-                gossip::run(gossip_cfg).wrap_err(
-                    "Failed to run gossip
-            service",
-                )?;
+        cmds::AnomaNode::Gossip(sub) => match sub {
+            cmds::Gossip::Run(cmds::GossipRun(args)) => {
+                let tx_source_address = ctx.get_opt(&args.tx_source_address);
+                let tx_signing_key = ctx.get_opt_cached(&args.tx_signing_key);
+                let config = ctx.config;
+                let mut gossip_cfg = config.intent_gossiper;
+                gossip_cfg.update(
+                    args.addr,
+                    args.rpc,
+                    args.matchmaker_path,
+                    args.tx_code_path,
+                    args.ledger_addr,
+                    args.filter_path,
+                );
+                gossip::run(
+                    gossip_cfg,
+                    &config.ledger.wasm_dir,
+                    tx_source_address,
+                    tx_signing_key,
+                )
+                .wrap_err("Failed to run gossip service")?;
             }
         },
-        cli::cmds::AnomaNode::Config(sub) => match sub {
-            cli::cmds::Config::Gen(_) => {
-                let gen_config = config::Config::generate(base_dir, false)
-                    .wrap_err("Failed to generate the default config")?;
-                tracing::debug!("Generated config {:?}", gen_config);
+        cmds::AnomaNode::Config(sub) => match sub {
+            cmds::Config::Gen(cmds::ConfigGen) => {
+                // If the config doesn't exit, it gets generated in the context.
+                // In here, we just need to overwrite the default chain ID, in
+                // case it's been already set to a different value
+                if let Some(chain_id) = ctx.global_args.chain_id.as_ref() {
+                    ctx.global_config.default_chain_id = chain_id.clone();
+                    ctx.global_config
+                        .write(&ctx.global_args.base_dir)
+                        .unwrap_or_else(|err| {
+                            eprintln!("Error writing global config: {}", err);
+                            cli::safe_exit(1)
+                        });
+                }
+                tracing::debug!(
+                    "Generated config and set default chain ID to {}",
+                    &ctx.global_config.default_chain_id
+                );
             }
         },
     }
     Ok(())
-}
-
-// for dev purpose this is useful so if the config change it automatically
-// generate the default one
-#[cfg(feature = "dev")]
-fn get_cfg(base_dir: &Path) -> Config {
-    match Config::read(base_dir) {
-        Ok(config) => config,
-        Err(err) => {
-            tracing::error!(
-                "Tried to read config in {} but failed with: {}",
-                base_dir.display(),
-                err
-            );
-            // generate(home,true) replace current config if it exists
-            match config::Config::generate(base_dir, true) {
-                Ok(config) => {
-                    tracing::warn!(
-                        "Generated default config in {}",
-                        base_dir.display()
-                    );
-                    config
-                }
-                Err(err) => {
-                    tracing::error!(
-                        "Tried to generate config in {} but failed with: {}. \
-                         Using default config (with new generated key)",
-                        base_dir.display(),
-                        err
-                    );
-                    config::Config::default()
-                }
-            }
-        }
-    }
-}
-
-#[cfg(not(feature = "dev"))]
-fn get_cfg(home: String) -> Config {
-    Config::read(&home).expect("Failed to read config file.")
 }

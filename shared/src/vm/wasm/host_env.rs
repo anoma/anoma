@@ -3,8 +3,6 @@
 //! Here, we expose the host functions into wasm's
 //! imports, so they can be called from inside the wasm.
 
-use std::sync::{Arc, Mutex};
-
 use wasmer::{
     Function, HostEnvInitError, ImportObject, Instance, Memory, Store,
     WasmerEnv,
@@ -143,7 +141,7 @@ where
 pub fn mm_imports<MM>(
     wasm_store: &Store,
     initial_memory: Memory,
-    mm: Arc<Mutex<MM>>,
+    mm: MM,
 ) -> ImportObject
 where
     MM: 'static + MmHost,

@@ -7,7 +7,6 @@ use clap::ArgMatches;
 
 use super::args;
 use super::context::{Context, FromContext};
-use crate::wallet::Wallet;
 
 // We only use static strings
 pub type App = clap::App<'static>;
@@ -23,11 +22,7 @@ pub trait Cmd: Sized {
         match Self::parse(&matches) {
             Some(cmd) => {
                 let global_args = args::Global::parse(&matches);
-                let wallet = Wallet::load_or_new(&global_args.base_dir);
-                let context = Context {
-                    global_args,
-                    wallet,
-                };
+                let context = Context::new(global_args);
                 (cmd, context)
             }
             None => {
@@ -231,11 +226,12 @@ where
             .unwrap_or_default()
             .map(|raw| {
                 raw.parse().unwrap_or_else(|e| {
-                    panic!(
+                    eprintln!(
                         "Failed to parse the {} argument. Raw value: {}, \
                          error: {:?}",
                         self.name, raw, e
-                    )
+                    );
+                    safe_exit(1)
                 })
             })
             .collect()
@@ -273,10 +269,11 @@ where
 {
     args.value_of(field).map(|arg| {
         arg.parse().unwrap_or_else(|e| {
-            panic!(
+            eprintln!(
                 "Failed to parse the argument {}. Raw value: {}, error: {:?}",
                 field, arg, e
-            )
+            );
+            safe_exit(1)
         })
     })
 }

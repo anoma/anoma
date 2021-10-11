@@ -1,8 +1,13 @@
-use std::sync::{Arc, Mutex};
+use std::path::Path;
+use std::rc::Rc;
 
 use anoma::gossip::mm::MmHost;
 use anoma::proto::{Intent, IntentId, Tx};
+use anoma::types::address::Address;
+use anoma::types::intent::{IntentTransfers, MatchedExchanges};
+use anoma::types::key::ed25519::Keypair;
 use anoma::vm::wasm;
+use borsh::{BorshDeserialize, BorshSerialize};
 use tendermint::net;
 use thiserror::Error;
 use tokio::sync::mpsc::{channel, Receiver, Sender};
@@ -11,7 +16,7 @@ use super::filter::Filter;
 use super::mempool::{self, IntentMempool};
 use crate::client::tx::broadcast_tx;
 use crate::types::MatchmakerMessage;
-use crate::{config, wallet};
+use crate::{config, wasm_loader};
 
 /// A matchmaker receive intents and tries to find a match with previously
 /// received intent.
@@ -28,12 +33,16 @@ pub struct Matchmaker {
     state: Vec<u8>,
     /// The ledger address to send any crafted transaction to
     ledger_address: net::Address,
-    // TODO this doesn't have to be a mutex as it's just a Sender which is
-    // thread-safe
-    wasm_host: Arc<Mutex<WasmHost>>,
+    /// The WASM host allows the WASM runtime to send messages back to this
+    /// matchmaker
+    wasm_host: WasmHost,
+    /// A source address for transactions created from intents.
+    tx_source_address: Address,
+    /// A keypair that will be used to sign transactions.
+    tx_signing_key: Rc<Keypair>,
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 struct WasmHost(Sender<MatchmakerMessage>);
 
 #[derive(Error, Debug)]
@@ -80,13 +89,16 @@ impl Matchmaker {
     /// Create a new matchmaker based on the parameter config.
     pub fn new(
         config: &config::Matchmaker,
-    ) -> Result<(Self, Receiver<MatchmakerMessage>)> {
+        wasm_dir: impl AsRef<Path>,
+        tx_source_address: Address,
+        tx_signing_key: Rc<Keypair>,
+    ) -> Result<(Self, Sender<MatchmakerMessage>, Receiver<MatchmakerMessage>)>
+    {
         // TODO: find a good number or maybe unlimited channel ?
-        let (inject_mm_message, receiver_mm_message) = channel(100);
+        let (sender, receiver) = channel(100);
         let matchmaker_code =
-            std::fs::read(&config.matchmaker).map_err(Error::FileFailed)?;
-        let tx_code =
-            std::fs::read(&config.tx_code).map_err(Error::FileFailed)?;
+            wasm_loader::read_wasm(&wasm_dir, &config.matchmaker);
+        let tx_code = wasm_loader::read_wasm(&wasm_dir, &config.tx_code);
         let filter = config
             .filter
             .as_ref()
@@ -102,9 +114,12 @@ impl Matchmaker {
                 tx_code,
                 state: Vec::new(),
                 ledger_address: config.ledger_address.clone(),
-                wasm_host: Arc::new(Mutex::new(WasmHost(inject_mm_message))),
+                wasm_host: WasmHost(sender.clone()),
+                tx_source_address,
+                tx_signing_key,
             },
-            receiver_mm_message,
+            sender,
+            receiver,
         ))
     }
 
@@ -125,7 +140,7 @@ impl Matchmaker {
             self.mempool
                 .put(intent.clone())
                 .map_err(Error::MempoolFailed)?;
-            Ok(wasm::run::matchmaker(
+            wasm::run::matchmaker(
                 &self.matchmaker_code.clone(),
                 &self.state,
                 &intent.id().0,
@@ -133,7 +148,6 @@ impl Matchmaker {
                 self.wasm_host.clone(),
             )
             .map_err(Error::RunnerFailed)
-            .unwrap())
         } else {
             Ok(false)
         }
@@ -143,13 +157,35 @@ impl Matchmaker {
         match mm_message {
             MatchmakerMessage::InjectTx(tx_data) => {
                 let tx_code = self.tx_code.clone();
-                let keypair = wallet::defaults::matchmaker_keypair();
-                let tx = Tx::new(tx_code, Some(tx_data)).sign(&keypair);
+                let matches =
+                    MatchedExchanges::try_from_slice(&tx_data[..]).unwrap();
+                let intent_transfers = IntentTransfers {
+                    matches,
+                    source: self.tx_source_address.clone(),
+                };
+                let tx_data = intent_transfers.try_to_vec().unwrap();
+                let tx =
+                    Tx::new(tx_code, Some(tx_data)).sign(&self.tx_signing_key);
                 let tx_bytes = tx.to_bytes();
 
                 let response =
                     broadcast_tx(self.ledger_address.clone(), tx_bytes).await;
-                println!("{:#?}", response);
+                match response {
+                    Ok(tx_response) => {
+                        tracing::info!(
+                            "Injected transaction from matchmaker with \
+                             result: {:#?}",
+                            tx_response
+                        );
+                    }
+                    Err(err) => {
+                        tracing::error!(
+                            "Matchmaker error in submitting a transaction to \
+                             the ledger: {}",
+                            err
+                        );
+                    }
+                }
             }
             MatchmakerMessage::RemoveIntents(intents_id) => {
                 intents_id.into_iter().for_each(|intent_id| {
@@ -158,6 +194,22 @@ impl Matchmaker {
             }
             MatchmakerMessage::UpdateState(mm_data) => {
                 self.state = mm_data;
+            }
+            MatchmakerMessage::ApplyIntent(intent, response_sender) => {
+                let result =
+                    self.try_match_intent(&intent).unwrap_or_else(|err| {
+                        tracing::error!(
+                            "Matchmaker error in applying intent {}",
+                            err
+                        );
+                        false
+                    });
+                response_sender.send(result).unwrap_or_else(|err| {
+                    tracing::error!(
+                        "Matchmaker error in sending back intent result {}",
+                        err
+                    )
+                });
             }
         }
     }

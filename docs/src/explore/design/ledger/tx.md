@@ -48,7 +48,7 @@ flowchart TD
 
 New txs are injected by the client via mempool. Before including a tx in a local mempool queue, some cheap validation may be performed. Once a tx is included in a mempool queue, it will be gossiped with the peers and may be included in a block by the block proposer. Any txs that are left in the queue after flush will be subject to re-validation before being included again.
 
-The order of applying transactions within a block is fixed by the block proposer in [the front-running prevention protocol](/explore/design/ledger/front-running.md).
+The order of applying transactions within a block is fixed by the block proposer in [the front-running prevention protocol](front-running.md).
 
 TODO we might want to randomize the tx order after DKG protocol is completed
 

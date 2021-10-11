@@ -1,9 +1,11 @@
 //! IBC-related data definitions and transaction and validity-predicate helpers.
 
+use std::str::FromStr;
 use std::time::Duration;
 
 use borsh::{BorshDeserialize, BorshSerialize};
 use ibc::ics02_client::client_consensus::AnyConsensusState;
+use ibc::ics02_client::client_def::{AnyClient, ClientDef};
 use ibc::ics02_client::client_state::AnyClientState;
 use ibc::ics02_client::header::AnyHeader;
 use ibc::ics02_client::height::Height;
@@ -15,21 +17,34 @@ use ibc::ics04_channel::channel::{
     ChannelEnd, Counterparty as ChanCounterparty, Order, State as ChanState,
 };
 use ibc::ics04_channel::packet::{Packet, Sequence};
-use ibc::ics23_commitment::commitment::CommitmentProofBytes;
-use ibc::ics24_host::identifier::{ChannelId, ClientId, ConnectionId, PortId};
+use ibc::ics23_commitment::commitment::{
+    CommitmentPrefix, CommitmentProofBytes,
+};
+use ibc::ics24_host::identifier::{
+    ChannelId, ClientId, ConnectionId, PortChannelId, PortId,
+};
 use ibc::proofs::{ConsensusProof, Proofs};
 use ibc::timestamp::Timestamp;
 use ibc_proto::ibc::core::commitment::v1::MerkleProof;
 use prost::Message;
+use sha2::Digest;
 use thiserror::Error;
 
+use crate::types::address::{Address, InternalAddress};
+use crate::types::storage::KeySeg;
 use crate::types::time::{DateTimeUtc, DurationNanos};
 
 #[allow(missing_docs)]
 #[derive(Error, Debug)]
 pub enum Error {
+    #[error("Invalid client error: {0}")]
+    InvalidClient(String),
+    #[error("Invalid port error: {0}")]
+    InvalidPort(String),
     #[error("Invalid proof error: {0}")]
     InvalidProof(String),
+    #[error("Updating a client error: {0}")]
+    ClientUpdate(String),
 }
 
 /// Decode result for IBC data
@@ -54,6 +69,17 @@ impl ClientCreationData {
             client_state,
             consensus_state,
         }
+    }
+
+    /// Returns a new client ID
+    pub fn client_id(&self, counter: u64) -> Result<ClientId> {
+        let client_type = self.client_state.client_type();
+        ClientId::new(client_type, counter).map_err(|e| {
+            Error::InvalidClient(format!(
+                "Creating a new client ID failed: {}",
+                e
+            ))
+        })
     }
 }
 
@@ -830,7 +856,7 @@ impl PacketAckData {
 pub struct TimeoutData {
     /// The packet
     pub packet: Packet,
-    /// The nextSequenceRecv
+    /// The nextSequenceRecv of the receipt chain
     pub sequence: Sequence,
     /// The height of the proof
     pub proof_height: Height,
@@ -839,7 +865,7 @@ pub struct TimeoutData {
 }
 
 impl TimeoutData {
-    /// Create data for packet acknowledgement
+    /// Create data for timeout
     pub fn new(
         packet: Packet,
         sequence: Sequence,
@@ -865,4 +891,112 @@ impl TimeoutData {
         )
         .map_err(Error::InvalidProof)
     }
+}
+
+/// Update a client with the given state and headers
+pub fn update_client(
+    client_state: AnyClientState,
+    headers: Vec<AnyHeader>,
+) -> Result<(AnyClientState, AnyConsensusState)> {
+    let client = AnyClient::from_client_type(client_state.client_type());
+    let mut client_state = client_state;
+    let mut consensus_state = None;
+    for header in headers {
+        let (new_client_state, new_consensus_state) = client
+            .check_header_and_update_state(client_state, header.clone())
+            .map_err(|e| {
+                Error::ClientUpdate(format!(
+                    "Updating the client state failed: {}",
+                    e
+                ))
+            })?;
+        client_state = new_client_state;
+        consensus_state = Some(new_consensus_state);
+    }
+    if let Some(consensus_state) = consensus_state {
+        Ok((client_state, consensus_state))
+    } else {
+        Err(Error::ClientUpdate("No consensus state".to_owned()))
+    }
+}
+
+/// Returns a new connection ID
+pub fn connection_id(counter: u64) -> ConnectionId {
+    ConnectionId::new(counter)
+}
+
+/// Open the connection
+pub fn open_connection(conn: &mut ConnectionEnd) {
+    conn.set_state(ConnState::Open);
+}
+
+/// Returns a new channel ID
+pub fn channel_id(counter: u64) -> ChannelId {
+    ChannelId::new(counter)
+}
+
+/// Open the channel
+pub fn open_channel(channel: &mut ChannelEnd) {
+    channel.set_state(ChanState::Open);
+}
+
+/// Close the channel
+pub fn close_channel(channel: &mut ChannelEnd) {
+    channel.set_state(ChanState::Closed);
+}
+
+/// Returns a port ID
+pub fn port_id(id: &str) -> Result<PortId> {
+    PortId::from_str(id).map_err(|e| Error::InvalidPort(e.to_string()))
+}
+
+/// Returns a pair of port ID and channel ID
+pub fn port_channel_id(
+    port_id: PortId,
+    channel_id: ChannelId,
+) -> PortChannelId {
+    PortChannelId {
+        port_id,
+        channel_id,
+    }
+}
+
+/// Returns a sequence
+pub fn sequence(index: u64) -> Sequence {
+    Sequence::from(index)
+}
+
+/// Returns a commitment from the given packet
+pub fn commitment(packet: &Packet) -> String {
+    let input = format!(
+        "{:?},{:?},{:?}",
+        packet.timeout_timestamp, packet.timeout_height, packet.data,
+    );
+    let r = sha2::Sha256::digest(input.as_bytes());
+    format!("{:x}", r)
+}
+
+/// Returns a counterparty of a connection
+pub fn connection_counterparty(
+    client_id: ClientId,
+    conn_id: ConnectionId,
+) -> ConnCounterparty {
+    ConnCounterparty::new(client_id, Some(conn_id), commitment_prefix())
+}
+
+/// Returns a counterparty of a channel
+pub fn channel_counterparty(
+    port_id: PortId,
+    channel_id: ChannelId,
+) -> ChanCounterparty {
+    ChanCounterparty::new(port_id, Some(channel_id))
+}
+
+fn commitment_prefix() -> CommitmentPrefix {
+    let addr = Address::Internal(InternalAddress::Ibc);
+    let bytes = addr
+        .raw()
+        .try_to_vec()
+        .expect("Encoding an address string shouldn't fail");
+    CommitmentPrefix::from(bytes)
 }

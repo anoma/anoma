@@ -35,7 +35,7 @@ fn run_gossip() -> Result<()> {
     let second_node_peer_id = node_dirs[1].1.to_string();
 
     let mut base_node = Command::cargo_bin("anoman")?;
-    base_node.env("ANOMA_LOG", "debug,libp2p=debug");
+    base_node.env("ANOMA_LOG", "anoma=debug,libp2p=debug");
     base_node.args(&["--base-dir", first_node_dir, "gossip", "run"]);
 
     //  Node without peers
@@ -188,10 +188,18 @@ fn match_intent() -> Result<()> {
     generate_intent_json(intent_c_path_input.clone(), intent_c_json);
 
     let mut base_node_gossip = Command::cargo_bin("anoman")?;
-    base_node_gossip.args(&["--base-dir", first_node_dir, "gossip"]);
+    base_node_gossip.args(&[
+        "--base-dir",
+        first_node_dir,
+        "gossip",
+        "--source",
+        "matchmaker",
+        "--signing-key",
+        "matchmaker",
+    ]);
 
     //  Start gossip
-    let mut session_gossip = spawn_command(base_node_gossip, Some(60_000))
+    let mut session_gossip = spawn_command(base_node_gossip, Some(100_000))
         .map_err(|e| eyre!(format!("{}", e)))?;
 
     // Wait gossip to start
@@ -216,18 +224,18 @@ fn match_intent() -> Result<()> {
         "Bertha",
     ]);
 
-    let mut session_send_intent_a = spawn_command(send_intent_a, Some(20_000))
+    let mut session_send_intent_a = spawn_command(send_intent_a, Some(40_000))
         .map_err(|e| eyre!(format!("{}", e)))?;
 
     // means it sent it correctly but not able to gossip it (which is
     // correct since there is only 1 node)
     session_send_intent_a
-        .exp_regex(".*Failed to publish_intent InsufficientPeers*")
+        .exp_string("Failed to publish intent in gossiper: InsufficientPeers")
         .map_err(|e| eyre!(format!("{}", e)))?;
     drop(session_send_intent_a);
 
     session_gossip
-        .exp_regex(".*trying to match new intent*")
+        .exp_string("trying to match new intent")
         .map_err(|e| eyre!(format!("{}", e)))?;
 
     // Send intent B
@@ -245,18 +253,18 @@ fn match_intent() -> Result<()> {
         "--signing-key",
         "Albert",
     ]);
-    let mut session_send_intent_b = spawn_command(send_intent_b, Some(20_000))
+    let mut session_send_intent_b = spawn_command(send_intent_b, Some(40_000))
         .map_err(|e| eyre!(format!("{}", e)))?;
 
     // means it sent it correctly but not able to gossip it (which is
     // correct since there is only 1 node)
     session_send_intent_b
-        .exp_regex(".*Failed to publish_intent InsufficientPeers*")
+        .exp_string("Failed to publish intent in gossiper: InsufficientPeers")
         .map_err(|e| eyre!(format!("{}", e)))?;
     drop(session_send_intent_b);
 
     session_gossip
-        .exp_regex(".*trying to match new intent*")
+        .exp_string("trying to match new intent")
         .map_err(|e| eyre!(format!("{}", e)))?;
 
     // Send intent C
@@ -274,27 +282,27 @@ fn match_intent() -> Result<()> {
         "--signing-key",
         "Christel",
     ]);
-    let mut session_send_intent_c = spawn_command(send_intent_c, Some(20_000))
+    let mut session_send_intent_c = spawn_command(send_intent_c, Some(40_000))
         .map_err(|e| eyre!(format!("{}", e)))?;
 
     // means it sent it correctly but not able to gossip it (which is
     // correct since there is only 1 node)
     session_send_intent_c
-        .exp_string("Failed to publish_intent InsufficientPeers")
+        .exp_string("Failed to publish intent in gossiper: InsufficientPeers")
         .map_err(|e| eyre!(format!("{}", e)))?;
     drop(session_send_intent_c);
 
     // check that the transfers transactions are correct
     session_gossip
-            .exp_string("crafting transfer: Established: a1qq5qqqqqxv6yydz9xc6ry33589q5x33eggcnjs2xx9znydj9xuens3phxppnwvzpg4rrqdpswve4n9, Established: a1qq5qqqqqg4znssfsgcurjsfhgfpy2vjyxy6yg3z98pp5zvp5xgersvfjxvcnx3f4xycrzdfkak0xhx, 70")
+            .exp_string("crafting transfer: Established: atest1v4ehgw36xvcyyvejgvenxs34g3zygv3jxqunjd6rxyeyys3sxy6rwvfkx4qnj33hg9qnvse4lsfctw, Established: atest1v4ehgw368ycryv2z8qcnxv3cxgmrgvjpxs6yg333gym5vv2zxepnj334g4rryvj9xucrgve4x3xvr4, 70")
             .map_err(|e| eyre!(format!("{}", e)))?;
 
     session_gossip
-            .exp_string("crafting transfer: Established: a1qq5qqqqqxsuygd2x8pq5yw2ygdryxs6xgsmrsdzx8pryxv34gfrrssfjgccyg3zpxezrqd2y2s3g5s, Established: a1qq5qqqqqxv6yydz9xc6ry33589q5x33eggcnjs2xx9znydj9xuens3phxppnwvzpg4rrqdpswve4n9, 200")
+            .exp_string("crafting transfer: Established: atest1v4ehgw36x3qng3jzggu5yvpsxgcngv2xgguy2dpkgvu5x33kx3pr2w2zgep5xwfkxscrxs2pj8075p, Established: atest1v4ehgw36xvcyyvejgvenxs34g3zygv3jxqunjd6rxyeyys3sxy6rwvfkx4qnj33hg9qnvse4lsfctw, 200")
             .map_err(|e| eyre!(format!("{}", e)))?;
 
     session_gossip
-            .exp_string("crafting transfer: Established: a1qq5qqqqqg4znssfsgcurjsfhgfpy2vjyxy6yg3z98pp5zvp5xgersvfjxvcnx3f4xycrzdfkak0xhx, Established: a1qq5qqqqqxsuygd2x8pq5yw2ygdryxs6xgsmrsdzx8pryxv34gfrrssfjgccyg3zpxezrqd2y2s3g5s, 100")
+            .exp_string("crafting transfer: Established: atest1v4ehgw368ycryv2z8qcnxv3cxgmrgvjpxs6yg333gym5vv2zxepnj334g4rryvj9xucrgve4x3xvr4, Established: atest1v4ehgw36x3qng3jzggu5yvpsxgcngv2xgguy2dpkgvu5x33kx3pr2w2zgep5xwfkxscrxs2pj8075p, 100")
             .map_err(|e| eyre!(format!("{}", e)))?;
 
     // check that the intent vp passes evaluation
