@@ -354,3 +354,251 @@ fn find_match_and_remove_node(graph: &mut DiGraph<ExchangeNode, Address>) {
         graph.remove_node(i);
     });
 }
+
+#[cfg(test)]
+mod tests {
+    // Use this as `#[test]` annotation to enable logging
+    use std::collections::HashSet;
+    use std::panic;
+
+    use anoma_tests::log::test;
+    use anoma_tests::mm::{get_mm_state, get_tx_data, init_mm_env};
+    use anoma_tests::pretty_assertions::assert_eq;
+    use anoma_vm_env::key::ed25519::vp as ed25519;
+    use anoma_vm_env::tx_prelude::intent::DecimalWrapper;
+
+    use super::*;
+
+    #[test]
+    fn test_multiparty_exchange() {
+        // The environment must be initialized first
+        init_mm_env();
+
+        let state = vec![];
+
+        // Intent B
+        // TODO if we swap intent A and intent B, there is no match?
+        let key_b = ed25519::testing::keypair_2();
+        let intent_b_exch = Exchange {
+            addr: address::testing::established_address_2(),
+            token_sell: address::btc(),
+            rate_min: DecimalWrapper::from_str("2").unwrap(),
+            max_sell: token::Amount::from_str("70").unwrap(),
+            token_buy: address::xan(),
+            min_buy: token::Amount::from_str("100").unwrap(),
+            vp: None,
+        };
+        let intent_b_exch_signed = Signed::new(&key_b, intent_b_exch.clone());
+        let mut intent_b = FungibleTokenIntent {
+            exchange: HashSet::with_capacity(1),
+        };
+        intent_b.exchange.insert(intent_b_exch_signed.clone());
+        let intent_b_signed = Signed::new(&key_b, intent_b);
+        let intent_id = vec![];
+
+        let intent_b_data = intent_b_signed.try_to_vec().unwrap();
+        add_intent(state, intent_id, intent_b_data);
+
+        // Intent A
+        let state = get_mm_state();
+        let key_a = ed25519::testing::keypair_1();
+        let intent_a_exch = Exchange {
+            addr: address::testing::established_address_1(),
+            token_sell: address::eth(),
+            rate_min: DecimalWrapper::from_str("0.7").unwrap(),
+            max_sell: token::Amount::from_str("300").unwrap(),
+            token_buy: address::btc(),
+            min_buy: token::Amount::from_str("50").unwrap(),
+            vp: None,
+        };
+        let intent_a_exch_signed = Signed::new(&key_a, intent_a_exch.clone());
+        let mut intent_a = FungibleTokenIntent {
+            exchange: HashSet::with_capacity(1),
+        };
+        intent_a.exchange.insert(intent_a_exch_signed.clone());
+        let intent_a_signed = Signed::new(&key_a, intent_a);
+        let intent_id = vec![];
+
+        let intent_a_data = intent_a_signed.try_to_vec().unwrap();
+        add_intent(state, intent_id, intent_a_data);
+
+        // Intent C
+        let state = get_mm_state();
+        let key_c = ed25519::testing::keypair_1();
+        let intent_c_exch = Exchange {
+            addr: address::testing::established_address_3(),
+            token_sell: address::xan(),
+            rate_min: DecimalWrapper::from_str("0.5").unwrap(),
+            max_sell: token::Amount::from_str("200").unwrap(),
+            token_buy: address::eth(),
+            min_buy: token::Amount::from_str("20").unwrap(),
+            vp: None,
+        };
+        let intent_c_exch_signed = Signed::new(&key_c, intent_c_exch.clone());
+        let mut intent_c = FungibleTokenIntent {
+            exchange: HashSet::with_capacity(1),
+        };
+        intent_c.exchange.insert(intent_c_exch_signed.clone());
+        let intent_c_signed = Signed::new(&key_c, intent_c);
+        let intent_id = vec![];
+
+        let intent_c_data = intent_c_signed.try_to_vec().unwrap();
+        add_intent(state, intent_id, intent_c_data);
+
+        // Check the transaction
+        let tx_data = get_tx_data();
+        let matched = MatchedExchanges::try_from_slice(&tx_data[..]).unwrap();
+
+        assert_eq!(
+            matched.intents.get(&intent_a_exch.addr),
+            Some(&intent_a_signed)
+        );
+        assert_eq!(
+            matched.intents.get(&intent_b_exch.addr),
+            Some(&intent_b_signed)
+        );
+        assert_eq!(
+            matched.intents.get(&intent_c_exch.addr),
+            Some(&intent_c_signed)
+        );
+
+        assert_eq!(
+            matched.exchanges.get(&intent_a_exch.addr),
+            Some(&intent_a_exch_signed)
+        );
+        assert_eq!(
+            matched.exchanges.get(&intent_b_exch.addr),
+            Some(&intent_b_exch_signed)
+        );
+        assert_eq!(
+            matched.exchanges.get(&intent_c_exch.addr),
+            Some(&intent_c_exch_signed)
+        );
+
+        assert_eq!(matched.transfers.len(), 3);
+        for transfer in matched.transfers {
+            let intent_src = if transfer.source == intent_a_exch.addr {
+                &intent_a_exch
+            } else if transfer.source == intent_b_exch.addr {
+                &intent_b_exch
+            } else {
+                assert_eq!(transfer.source, intent_c_exch.addr);
+                &intent_c_exch
+            };
+            let intent_dest = if transfer.target == intent_a_exch.addr {
+                &intent_a_exch
+            } else if transfer.target == intent_b_exch.addr {
+                &intent_b_exch
+            } else {
+                assert_eq!(transfer.target, intent_c_exch.addr);
+                &intent_c_exch
+            };
+
+            if transfer.token == intent_src.token_sell {
+                assert!(transfer.amount <= intent_a_exch.max_sell);
+                assert_eq!(transfer.token, intent_dest.token_buy);
+            } else if transfer.token == intent_src.token_buy {
+                assert!(transfer.amount >= intent_a_exch.min_buy);
+                assert_eq!(transfer.token, intent_dest.token_sell);
+            }
+        }
+    }
+
+    #[test]
+    fn test_multiparty_exchange_repeated() {
+        // The environment must be initialized first
+        init_mm_env();
+
+        let state = vec![];
+
+        // Intent A
+        let key_a = ed25519::testing::keypair_1();
+        let intent_a_exch = Exchange {
+            addr: address::testing::established_address_1(),
+            token_sell: address::eth(),
+            rate_min: DecimalWrapper::from_str("0.7").unwrap(),
+            max_sell: token::Amount::from_str("300").unwrap(),
+            token_buy: address::btc(),
+            min_buy: token::Amount::from_str("50").unwrap(),
+            vp: None,
+        };
+        let intent_a_exch_signed = Signed::new(&key_a, intent_a_exch);
+        let mut intent_a = FungibleTokenIntent {
+            exchange: HashSet::with_capacity(1),
+        };
+        intent_a.exchange.insert(intent_a_exch_signed);
+        let intent_a_signed = Signed::new(&key_a, intent_a);
+        let intent_id = vec![];
+
+        let intent_a_data = intent_a_signed.try_to_vec().unwrap();
+        add_intent(state, intent_id, intent_a_data);
+
+        // Intent B
+        let state = get_mm_state();
+        let key_b = ed25519::testing::keypair_2();
+        let intent_b_exch = Exchange {
+            addr: address::testing::established_address_2(),
+            token_sell: address::btc(),
+            rate_min: DecimalWrapper::from_str("2").unwrap(),
+            max_sell: token::Amount::from_str("70").unwrap(),
+            token_buy: address::xan(),
+            min_buy: token::Amount::from_str("100").unwrap(),
+            vp: None,
+        };
+        let intent_b_exch_signed = Signed::new(&key_b, intent_b_exch);
+        let mut intent_b = FungibleTokenIntent {
+            exchange: HashSet::with_capacity(1),
+        };
+        intent_b.exchange.insert(intent_b_exch_signed);
+        let intent_b_signed = Signed::new(&key_b, intent_b);
+        let intent_id = vec![];
+
+        let intent_b_data = intent_b_signed.try_to_vec().unwrap();
+        add_intent(state, intent_id, intent_b_data);
+
+        // Intent C
+        let state = get_mm_state();
+        let key_c = ed25519::testing::keypair_1();
+        let intent_c_exch = Exchange {
+            addr: address::testing::established_address_3(),
+            token_sell: address::xan(),
+            rate_min: DecimalWrapper::from_str("0.5").unwrap(),
+            max_sell: token::Amount::from_str("200").unwrap(),
+            token_buy: address::eth(),
+            min_buy: token::Amount::from_str("20").unwrap(),
+            vp: None,
+        };
+        let intent_c_exch_signed = Signed::new(&key_c, intent_c_exch);
+        let mut intent_c = FungibleTokenIntent {
+            exchange: HashSet::with_capacity(1),
+        };
+        intent_c.exchange.insert(intent_c_exch_signed);
+        let intent_c_signed = Signed::new(&key_c, intent_c);
+        let intent_id = vec![];
+
+        let intent_c_data = intent_c_signed.try_to_vec().unwrap();
+        add_intent(state, intent_id, intent_c_data);
+
+        // Intent A
+        let state = get_mm_state();
+        let intent_id = vec![];
+        let intent_a_data = intent_a_signed.try_to_vec().unwrap();
+        add_intent(state, intent_id, intent_a_data);
+
+        // Intent B
+        let state = get_mm_state();
+        let intent_id = vec![];
+        let intent_b_data = intent_b_signed.try_to_vec().unwrap();
+
+        // TODO this shouldn't panic
+        assert_eq!(
+            panic::catch_unwind(|| {
+                add_intent(state, intent_id, intent_b_data)
+            })
+            .err()
+            .map(|a| a.downcast_ref::<String>().cloned().unwrap())
+            .unwrap(),
+            "index out of bounds: the len is 3 but the index is 4"
+        );
+    }
+}
