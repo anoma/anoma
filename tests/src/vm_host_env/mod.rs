@@ -11,6 +11,7 @@
 //!
 //! `RUST_LOG=debug cargo test test_tx_read_write -- --nocapture`
 pub mod ibc;
+pub mod mm;
 pub mod tx;
 pub mod vp;
 

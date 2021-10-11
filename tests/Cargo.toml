@@ -21,11 +21,12 @@ ibc = {git = "https://github.com/heliaxdev/ibc-rs", branch = "tomas/tm-lowercase
 ibc-proto = {git = "https://github.com/heliaxdev/ibc-rs", branch = "tomas/tm-lowercase-node-id"}
 test-env-log = {version = "0.2.7", default-features = false, features = ["trace"]}
 # temporarily using fork work-around for https://github.com/informalsystems/tendermint-rs/issues/916
+pretty_assertions = "1.0.0"
+serde_json = {version = "1.0.65"}
+sha2 = "0.9.3"
 tendermint = {git = "https://github.com/heliaxdev/tendermint-rs", branch = "tomas/lowercase-node-id"}
 tracing = "0.1.26"
 tracing-subscriber = {version = "0.2.18", default-features = false, features = ["env-filter", "fmt"]}
-serde_json = { version = "1.0.65" }
-sha2 = "0.9.3"
 
 [dev-dependencies]
 anoma_apps = {path = "../apps", features = ["testing"]}
@@ -35,7 +36,6 @@ color-eyre = "0.5.11"
 eyre = "0.6.5"
 itertools = "0.10.0"
 libp2p = "0.38.0"
-pretty_assertions = "0.7.2"
 rexpect = "0.4.0"
 tempfile = "3.2.0"
 

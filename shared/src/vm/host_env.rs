@@ -1630,4 +1630,12 @@ pub mod testing {
             eval_runner,
         )
     }
+
+    /// Setup a matchmaker environment
+    pub fn mm_env<MM: MmHost>(mm: MM) -> MatchmakerEnv<NativeMemory, MM> {
+        MatchmakerEnv {
+            memory: NativeMemory::default(),
+            mm,
+        }
+    }
 }

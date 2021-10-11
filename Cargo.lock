@@ -98,7 +98,7 @@ dependencies = [
  "itertools 0.10.1",
  "loupe",
  "parity-wasm",
- "pretty_assertions",
+ "pretty_assertions 0.7.2",
  "proptest 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "prost 0.8.0",
  "prost-types 0.8.0",
@@ -212,7 +212,7 @@ dependencies = [
  "ibc-proto",
  "itertools 0.10.1",
  "libp2p",
- "pretty_assertions",
+ "pretty_assertions 1.0.0",
  "rexpect",
  "serde_json",
  "sha2 0.9.8",
@@ -4127,6 +4127,18 @@ name = "pretty_assertions"
 version = "0.7.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1cab0e7c02cf376875e9335e0ba1da535775beb5450d21e1dffca068818ed98b"
+dependencies = [
+ "ansi_term 0.12.1",
+ "ctor",
+ "diff",
+ "output_vt100",
+]
+
+[[package]]
+name = "pretty_assertions"
+version = "1.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ec0cfe1b2403f172ba0f234e500906ee0a3e493fb81092dac23ebefe129301cc"
 dependencies = [
  "ansi_term 0.12.1",
  "ctor",

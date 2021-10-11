@@ -6,7 +6,8 @@
 #![deny(rustdoc::private_intra_doc_links)]
 
 mod vm_host_env;
-pub use vm_host_env::{ibc, tx, vp};
+pub use pretty_assertions;
+pub use vm_host_env::{ibc, mm, tx, vp};
 #[cfg(test)]
 mod e2e;
 
