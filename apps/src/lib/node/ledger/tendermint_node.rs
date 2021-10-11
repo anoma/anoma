@@ -4,7 +4,6 @@ use std::path::Path;
 use std::process::Command;
 use std::str::FromStr;
 use std::sync::mpsc::Receiver;
-use std::time::Duration;
 
 use anoma::types::address::Address;
 use anoma::types::chain::ChainId;
@@ -266,9 +265,6 @@ fn update_tendermint_config(
     // Bumped from the default `1_000_000`, because some WASMs can be
     // quite large
     config.rpc.max_body_bytes = 2_000_000;
-
-    // TODO broadcast_tx_commit shouldn't be used live;
-    config.rpc.timeout_broadcast_tx_commit = Duration::from_secs(20).into();
 
     let mut file = OpenOptions::new()
         .write(true)
