@@ -25,20 +25,31 @@ use thiserror::Error;
 
 use crate::cli;
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Config {
     pub ledger: Ledger,
     pub intent_gossiper: IntentGossiper,
+    pub wasm_dir: PathBuf,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Ledger {
-    pub base_dir: PathBuf,
-    pub chain_id: ChainId,
     pub genesis_time: Rfc3339String,
-    pub tendermint: PathBuf,
-    pub db: PathBuf,
+    pub chain_id: ChainId,
+    pub shell: Shell,
+    pub tendermint: Tendermint,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct Shell {
+    pub base_dir: PathBuf,
+    pub db_dir: PathBuf,
     pub ledger_address: SocketAddr,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct Tendermint {
+    pub tendermint_dir: PathBuf,
     pub rpc_address: SocketAddr,
     pub p2p_address: SocketAddr,
     /// The persistent peers addresses must include node ID
@@ -46,7 +57,6 @@ pub struct Ledger {
     /// Turns the peer exchange reactor on or off. Validator node will want the
     /// pex turned off.
     pub p2p_pex: bool,
-    pub wasm_dir: PathBuf,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -146,6 +156,7 @@ impl Config {
         Self {
             ledger: Ledger::new(base_dir, chain_id),
             intent_gossiper: IntentGossiper::default(),
+            wasm_dir: "wasm".into(),
         }
     }
 
@@ -228,6 +239,24 @@ impl Ledger {
         let base_dir = base_dir.as_ref().to_owned();
         let sub_dir = base_dir.join(chain_id.as_str());
 
+        Self {
+            chain_id,
+            genesis_time: Rfc3339String("1970-01-01T00:00:00Z".to_owned()),
+            shell: Shell {
+                base_dir,
+                db_dir: sub_dir.join(DB_DIR),
+                ledger_address: SocketAddr::new(
+                    IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)),
+                    26658,
+                ),
+            },
+            tendermint: Tendermint::new(&sub_dir),
+        }
+    }
+}
+
+impl Tendermint {
+    fn new(dir: impl AsRef<Path>) -> Self {
         #[cfg(feature = "dev")]
         let p2p_persistent_peers = vec![];
         #[cfg(not(feature = "dev"))]
@@ -251,15 +280,7 @@ impl Ledger {
         ];
 
         Self {
-            base_dir,
-            chain_id,
-            genesis_time: Rfc3339String("1970-01-01T00:00:00Z".to_owned()),
-            tendermint: sub_dir.join(TENDERMINT_DIR),
-            db: sub_dir.join(DB_DIR),
-            ledger_address: SocketAddr::new(
-                IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)),
-                26658,
-            ),
+            tendermint_dir: dir.as_ref().join(TENDERMINT_DIR),
             rpc_address: SocketAddr::new(
                 IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)),
                 26657,
@@ -270,7 +291,6 @@ impl Ledger {
             ),
             p2p_persistent_peers,
             p2p_pex: true,
-            wasm_dir: "wasm".into(),
         }
     }
 }

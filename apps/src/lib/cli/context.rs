@@ -70,11 +70,11 @@ impl Context {
         // If the WASM dir specified, put it in the config
         match global_args.wasm_dir.as_ref() {
             Some(wasm_dir) => {
-                config.ledger.wasm_dir = wasm_dir.clone();
+                config.wasm_dir = wasm_dir.clone();
             }
             None => {
                 if let Ok(wasm_dir) = env::var(ENV_VAR_WASM_DIR) {
-                    config.ledger.wasm_dir = wasm_dir.into();
+                    config.wasm_dir = wasm_dir.into();
                 }
             }
         }
@@ -128,10 +128,7 @@ impl Context {
 
     /// Read the given WASM file from the WASM directory or an absolute path.
     pub fn read_wasm(&self, file_name: impl AsRef<Path>) -> Vec<u8> {
-        wasm_loader::read_wasm(
-            self.config.ledger.wasm_dir.to_path_buf(),
-            file_name,
-        )
+        wasm_loader::read_wasm(&self.config.wasm_dir, file_name)
     }
 }
 

@@ -1,6 +1,6 @@
 use std::fs::{self, File, OpenOptions};
 use std::io::{BufReader, Write};
-use std::path::{Path, PathBuf};
+use std::path::Path;
 use std::process::Command;
 use std::str::FromStr;
 use std::sync::mpsc::Receiver;
@@ -41,25 +41,16 @@ pub enum Error {
 pub type Result<T> = std::result::Result<T, Error>;
 
 /// Run the tendermint node.
-// TODO we should just use ledger config replace all the args to fix this lint
-#[allow(clippy::too_many_arguments)]
 pub fn run(
-    home_dir: PathBuf,
     chain_id: ChainId,
     genesis_time: DateTimeUtc,
     ledger_address: String,
-    rpc_address: String,
-    p2p_address: String,
-    p2p_persistent_peers: Vec<net::Address>,
-    p2p_pex: bool,
+    config: config::Tendermint,
     abort_sender: Sender<bool>,
     abort_receiver: Receiver<bool>,
 ) -> Result<()> {
+    let home_dir = config.tendermint_dir.clone();
     let home_dir_string = home_dir.to_string_lossy().to_string();
-    let rpc_address: net::Address =
-        net::Address::from_str(&rpc_address).unwrap();
-    let p2p_address: net::Address =
-        net::Address::from_str(&p2p_address).unwrap();
 
     #[cfg(feature = "dev")]
     // This has to be checked before we run tendermint init
@@ -99,13 +90,7 @@ pub fn run(
 
     write_tm_genesis(&home_dir, chain_id, genesis_time);
 
-    update_tendermint_config(
-        &home_dir,
-        rpc_address,
-        p2p_address,
-        p2p_persistent_peers,
-        p2p_pex,
-    )?;
+    update_tendermint_config(&home_dir, config)?;
 
     let tendermint_node = Command::new("tendermint")
         .args(&[
@@ -169,7 +154,7 @@ fn monitor_process(
     });
 }
 
-pub fn reset(config: config::Ledger) -> Result<()> {
+pub fn reset(config: config::Tendermint) -> Result<()> {
     // reset all the Tendermint state, if any
     Command::new("tendermint")
         .args(&[
@@ -177,13 +162,13 @@ pub fn reset(config: config::Ledger) -> Result<()> {
             // NOTE: log config: https://docs.tendermint.com/master/nodes/logging.html#configuring-log-levels
             // "--log-level=\"*debug\"",
             "--home",
-            &config.tendermint.to_string_lossy(),
+            &config.tendermint_dir.to_string_lossy(),
         ])
         .output()
         .expect("Failed to reset tendermint node's data");
     fs::remove_dir_all(format!(
         "{}/config",
-        &config.tendermint.to_string_lossy()
+        &config.tendermint_dir.to_string_lossy()
     ))
     .expect("Failed to reset tendermint node's config");
     Ok(())
@@ -251,20 +236,18 @@ pub fn write_validator_state(home_dir: impl AsRef<Path>) {
 
 fn update_tendermint_config(
     home_dir: impl AsRef<Path>,
-    rpc_address: net::Address,
-    p2p_address: net::Address,
-    p2p_persistent_peers: Vec<net::Address>,
-    p2p_pex: bool,
+    tendermint_config: config::Tendermint,
 ) -> Result<()> {
     let home_dir = home_dir.as_ref();
     let path = home_dir.join("config").join("config.toml");
     let mut config =
         TendermintConfig::load_toml_file(&path).map_err(Error::LoadConfig)?;
 
-    config.rpc.laddr = rpc_address;
-    config.p2p.laddr = p2p_address;
-    config.p2p.persistent_peers = p2p_persistent_peers;
-    config.p2p.pex = p2p_pex;
+    config.p2p.laddr =
+        net::Address::from_str(&tendermint_config.p2p_address.to_string())
+            .unwrap();
+    config.p2p.persistent_peers = tendermint_config.p2p_persistent_peers;
+    config.p2p.pex = tendermint_config.p2p_pex;
 
     // In "dev", only produce blocks when there are txs or when the AppHash
     // changes
@@ -275,6 +258,9 @@ fn update_tendermint_config(
     // again in the future.
     config.mempool.keep_invalid_txs_in_cache = false;
 
+    config.rpc.laddr =
+        net::Address::from_str(&tendermint_config.rpc_address.to_string())
+            .unwrap();
     // Bumped from the default `1_000_000`, because some WASMs can be
     // quite large
     config.rpc.max_body_bytes = 2_000_000;

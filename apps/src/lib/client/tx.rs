@@ -219,7 +219,7 @@ pub async fn submit_init_validator(
 
         ctx.wallet.save().unwrap_or_else(|err| eprintln!("{}", err));
 
-        let tendermint_home = &ctx.config.ledger.tendermint;
+        let tendermint_home = &ctx.config.ledger.tendermint.tendermint_dir;
         tendermint_node::write_validator_key(
             tendermint_home,
             &validator_address,

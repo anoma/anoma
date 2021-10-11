@@ -10,7 +10,7 @@ pub fn main() -> Result<()> {
     match cmd {
         cmds::AnomaNode::Ledger(sub) => match sub {
             cmds::Ledger::Run(_) => {
-                ledger::run(ctx.config.ledger);
+                ledger::run(ctx.config.ledger, ctx.config.wasm_dir);
             }
             cmds::Ledger::Reset(_) => {
                 ledger::reset(ctx.config.ledger)
@@ -33,7 +33,7 @@ pub fn main() -> Result<()> {
                 );
                 gossip::run(
                     gossip_cfg,
-                    &config.ledger.wasm_dir,
+                    &config.wasm_dir,
                     tx_source_address,
                     tx_signing_key,
                 )

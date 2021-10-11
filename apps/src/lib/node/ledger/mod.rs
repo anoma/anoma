@@ -7,9 +7,10 @@ pub mod storage;
 pub mod tendermint_node;
 
 use std::convert::{TryFrom, TryInto};
-use std::mem;
+use std::path::PathBuf;
 use std::sync::mpsc::{channel, Receiver};
 
+use anoma::types::chain::ChainId;
 use anoma::types::storage::BlockHash;
 use futures::future::{AbortHandle, AbortRegistration, Abortable};
 use tendermint_proto::abci::CheckTxType;
@@ -139,17 +140,15 @@ pub fn reset(config: config::Ledger) -> Result<(), shell::Error> {
 /// Runs until an abort handles sends a message to terminate the process
 #[tokio::main]
 async fn run_shell(
-    config: config::Ledger,
+    chain_id: ChainId,
+    config: config::Shell,
+    wasm_dir: PathBuf,
     abort_registration: AbortRegistration,
     failure_receiver: Receiver<()>,
 ) {
     // Construct our ABCI application.
-    let service = AbcippShim::new(
-        config.base_dir,
-        &config.db,
-        config.chain_id,
-        config.wasm_dir,
-    );
+    let service =
+        AbcippShim::new(config.base_dir, &config.db_dir, chain_id, wasm_dir);
 
     // Split it into components.
     let (consensus, mempool, snapshot, info) = split::service(service, 5);
@@ -202,19 +201,15 @@ async fn run_shell(
 ///
 /// When the shell process finishes, we check if it finished with a panic. If it
 /// did we stop the tendermint node with a channel that acts as a kill switch.
-pub fn run(mut config: config::Ledger) {
-    let home_dir = config.tendermint.clone();
-    let ledger_address = config.ledger_address.to_string();
-    let rpc_address = config.rpc_address.to_string();
-    let p2p_address = config.p2p_address.to_string();
-    let p2p_persistent_peers = mem::take(&mut config.p2p_persistent_peers);
+pub fn run(config: config::Ledger, wasm_dir: PathBuf) {
+    let ledger_address = config.shell.ledger_address.to_string();
     let chain_id = config.chain_id.clone();
     let genesis_time = config
         .genesis_time
         .clone()
         .try_into()
         .expect("expected RFC3339 genesis_time");
-    let p2p_pex = config.p2p_pex;
+    let tendermint_config = config.tendermint.clone();
 
     // For signalling shut down to the Tendermint node, sent from the
     // shell or from within the Tendermint process itself.
@@ -227,7 +222,7 @@ pub fn run(mut config: config::Ledger) {
     let (abort_handle, abort_registration) = AbortHandle::new_pair();
 
     // Prefetch needed wasm artifacts
-    wasm_loader::pre_fetch_wasm(&config.wasm_dir);
+    wasm_loader::pre_fetch_wasm(&wasm_dir);
     // Because we cannot attach any data to the `abort_handle`, we also need
     // another channel for signalling an error to the shell from Tendermint
     let (failure_sender, failure_receiver) = channel();
@@ -235,14 +230,10 @@ pub fn run(mut config: config::Ledger) {
     // start Tendermint node
     let tendermint_handle = std::thread::spawn(move || {
         if let Err(err) = tendermint_node::run(
-            home_dir,
             chain_id,
             genesis_time,
             ledger_address,
-            rpc_address,
-            p2p_address,
-            p2p_persistent_peers,
-            p2p_pex,
+            tendermint_config,
             abort_sender,
             abort_receiver,
         ) {
@@ -258,7 +249,13 @@ pub fn run(mut config: config::Ledger) {
 
     // start the shell + ABCI server
     let shell_handle = std::thread::spawn(move || {
-        run_shell(config, abort_registration, failure_receiver);
+        run_shell(
+            config.chain_id,
+            config.shell,
+            wasm_dir,
+            abort_registration,
+            failure_receiver,
+        );
     });
 
     tracing::info!("Anoma ledger node started.");
