@@ -60,6 +60,7 @@ pub fn generate_network_of(
         let config = Config {
             ledger: Ledger::new(&node_path, chain_id.clone()),
             intent_gossiper: gossiper_config,
+            wasm_dir: "wasm".into(),
         };
 
         config.write(&node_path, &chain_id, false).unwrap();
