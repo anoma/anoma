@@ -57,6 +57,7 @@ pub struct Tendermint {
     /// Turns the peer exchange reactor on or off. Validator node will want the
     /// pex turned off.
     pub p2p_pex: bool,
+    pub consensus_timeout_commit: tendermint::Timeout,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -291,6 +292,8 @@ impl Tendermint {
             ),
             p2p_persistent_peers,
             p2p_pex: true,
+            consensus_timeout_commit: tendermint::Timeout::from_str("10s")
+                .unwrap(),
         }
     }
 }
