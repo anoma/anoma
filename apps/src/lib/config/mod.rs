@@ -292,7 +292,7 @@ impl Tendermint {
             ),
             p2p_persistent_peers,
             p2p_pex: true,
-            consensus_timeout_commit: tendermint::Timeout::from_str("10s")
+            consensus_timeout_commit: tendermint::Timeout::from_str("1s")
                 .unwrap(),
         }
     }
