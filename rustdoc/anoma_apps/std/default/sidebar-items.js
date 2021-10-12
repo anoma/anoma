@@ -1,0 +1,1 @@
+initSidebarItems({"fn":[["default","Return the default value of a type according to the `Default` trait."]],"macro":[["Default","Derive macro generating an impl of the trait `Default`."]],"trait":[["Default","A trait for giving a type a useful default value."]]});

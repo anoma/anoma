@@ -1,0 +1,83 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="This module implements the `Any` trait, which enables dynamic typing of any `&#39;static` type through runtime reflection."><meta name="keywords" content="rust, rustlang, rust-lang, any"><title>anoma_apps::std::any - Rust</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script id="default-settings"></script><script src="../../../storage.js"></script><script src="../../../crates.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="shortcut icon" href="https://docs.anoma.network/favicon.png"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc mod"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../anoma_apps/index.html'><div class='logo-container'><img src='https://docs.anoma.network/rustdoc-logo.png' alt='logo'></div></a><h2 class="location">Module any</h2><div class="sidebar-elems"><div class="block items"><ul><li><a href="#structs">Structs</a></li><li><a href="#traits">Traits</a></li><li><a href="#functions">Functions</a></li></ul></div><div id="sidebar-vars" data-name="any" data-ty="mod" data-relpath="./"></div><script defer src="./sidebar-items.js"></script></div></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img src="../../../brush.svg" width="18" height="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../../settings.html" title="settings"><img src="../../../wheel.svg" width="18" height="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><h1 class="fqn"><span class="in-band">Module <a href="../../index.html">anoma_apps</a>::<wbr><a href="../index.html">std</a>::<wbr><a class="mod" href="#">any</a><button id="copy-path" onclick="copy_path(this)" title="copy path"><img src="../../../clipboard.svg" width="19" height="18" alt="Copy item import" title="Copy item import to clipboard"></button></span><span class="out-of-band"><span class="since" title="Stable since Rust version 1.0.0">1.0.0</span><span id="render-detail"><a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">[<span class="inner">&#x2212;</span>]</a></span><a class="srclink" href="https://doc.rust-lang.org/1.54.0/src/core/lib.rs.html#259" title="goto source code">[src]</a></span></h1><details class="rustdoc-toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><p>This module implements the <code>Any</code> trait, which enables dynamic typing
+of any <code>'static</code> type through runtime reflection.</p>
+<p><code>Any</code> itself can be used to get a <code>TypeId</code>, and has more features when used
+as a trait object. As <code>&amp;dyn Any</code> (a borrowed trait object), it has the <code>is</code>
+and <code>downcast_ref</code> methods, to test if the contained value is of a given type,
+and to get a reference to the inner value as a type. As <code>&amp;mut dyn Any</code>, there
+is also the <code>downcast_mut</code> method, for getting a mutable reference to the
+inner value. <code>Box&lt;dyn Any&gt;</code> adds the <code>downcast</code> method, which attempts to
+convert to a <code>Box&lt;T&gt;</code>. See the <a href="../../std/boxed/struct.Box.html"><code>Box</code></a> documentation for the full details.</p>
+<p>Note that <code>&amp;dyn Any</code> is limited to testing whether a value is of a specified
+concrete type, and cannot be used to test whether a type implements a trait.</p>
+<h1 id="smart-pointers-and-dyn-any" class="section-header"><a href="#smart-pointers-and-dyn-any">Smart pointers and <code>dyn Any</code></a></h1>
+<p>One piece of behavior to keep in mind when using <code>Any</code> as a trait object,
+especially with types like <code>Box&lt;dyn Any&gt;</code> or <code>Arc&lt;dyn Any&gt;</code>, is that simply
+calling <code>.type_id()</code> on the value will produce the <code>TypeId</code> of the
+<em>container</em>, not the underlying trait object. This can be avoided by
+converting the smart pointer into a <code>&amp;dyn Any</code> instead, which will return
+the object’s <code>TypeId</code>. For example:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="kw">use</span> <span class="ident">std::any</span>::{<span class="ident">Any</span>, <span class="ident">TypeId</span>};
+
+<span class="kw">let</span> <span class="ident">boxed</span>: <span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">Any</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">Box::new</span>(<span class="number">3_i32</span>);
+
+<span class="comment">// You&#39;re more likely to want this:</span>
+<span class="kw">let</span> <span class="ident">actual_id</span> <span class="op">=</span> (<span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="ident">boxed</span>).<span class="ident">type_id</span>();
+<span class="comment">// ... than this:</span>
+<span class="kw">let</span> <span class="ident">boxed_id</span> <span class="op">=</span> <span class="ident">boxed</span>.<span class="ident">type_id</span>();
+
+<span class="macro">assert_eq!</span>(<span class="ident">actual_id</span>, <span class="ident">TypeId::of</span>::<span class="op">&lt;</span><span class="ident">i32</span><span class="op">&gt;</span>());
+<span class="macro">assert_eq!</span>(<span class="ident">boxed_id</span>, <span class="ident">TypeId::of</span>::<span class="op">&lt;</span><span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">Any</span><span class="op">&gt;</span><span class="op">&gt;</span>());</pre></div>
+<h1 id="examples" class="section-header"><a href="#examples">Examples</a></h1>
+<p>Consider a situation where we want to log out a value passed to a function.
+We know the value we’re working on implements Debug, but we don’t know its
+concrete type. We want to give special treatment to certain types: in this
+case printing out the length of String values prior to their value.
+We don’t know the concrete type of our value at compile time, so we need to
+use runtime reflection instead.</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="kw">use</span> <span class="ident">std::fmt::Debug</span>;
+<span class="kw">use</span> <span class="ident">std::any::Any</span>;
+
+<span class="comment">// Logger function for any type that implements Debug.</span>
+<span class="kw">fn</span> <span class="ident">log</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Any</span> <span class="op">+</span> <span class="ident">Debug</span><span class="op">&gt;</span>(<span class="ident">value</span>: <span class="kw-2">&amp;</span><span class="ident">T</span>) {
+    <span class="kw">let</span> <span class="ident">value_any</span> <span class="op">=</span> <span class="ident">value</span> <span class="kw">as</span> <span class="kw-2">&amp;</span><span class="kw">dyn</span> <span class="ident">Any</span>;
+
+    <span class="comment">// Try to convert our value to a `String`. If successful, we want to</span>
+    <span class="comment">// output the String`&#39;s length as well as its value. If not, it&#39;s a</span>
+    <span class="comment">// different type: just print it out unadorned.</span>
+    <span class="kw">match</span> <span class="ident">value_any</span>.<span class="ident">downcast_ref</span>::<span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>() {
+        <span class="prelude-val">Some</span>(<span class="ident">as_string</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="macro">println!</span>(<span class="string">&quot;String ({}): {}&quot;</span>, <span class="ident">as_string</span>.<span class="ident">len</span>(), <span class="ident">as_string</span>);
+        }
+        <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="macro">println!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="ident">value</span>);
+        }
+    }
+}
+
+<span class="comment">// This function wants to log its parameter out prior to doing work with it.</span>
+<span class="kw">fn</span> <span class="ident">do_work</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Any</span> <span class="op">+</span> <span class="ident">Debug</span><span class="op">&gt;</span>(<span class="ident">value</span>: <span class="kw-2">&amp;</span><span class="ident">T</span>) {
+    <span class="ident">log</span>(<span class="ident">value</span>);
+    <span class="comment">// ...do some other work</span>
+}
+
+<span class="kw">fn</span> <span class="ident">main</span>() {
+    <span class="kw">let</span> <span class="ident">my_string</span> <span class="op">=</span> <span class="string">&quot;Hello World&quot;</span>.<span class="ident">to_string</span>();
+    <span class="ident">do_work</span>(<span class="kw-2">&amp;</span><span class="ident">my_string</span>);
+
+    <span class="kw">let</span> <span class="ident">my_i8</span>: <span class="ident">i8</span> <span class="op">=</span> <span class="number">100</span>;
+    <span class="ident">do_work</span>(<span class="kw-2">&amp;</span><span class="ident">my_i8</span>);
+}</pre></div>
+</div></details><h2 id="structs" class="section-header"><a href="#structs">Structs</a></h2>
+<table><tr class="module-item"><td><a class="struct" href="struct.TypeId.html" title="anoma_apps::std::any::TypeId struct">TypeId</a></td><td class="docblock-short"><p>A <code>TypeId</code> represents a globally unique identifier for a type.</p>
+</td></tr></table><h2 id="traits" class="section-header"><a href="#traits">Traits</a></h2>
+<table><tr class="module-item"><td><a class="trait" href="trait.Any.html" title="anoma_apps::std::any::Any trait">Any</a></td><td class="docblock-short"><p>A trait to emulate dynamic typing.</p>
+</td></tr></table><h2 id="functions" class="section-header"><a href="#functions">Functions</a></h2>
+<table><tr class="unstable module-item"><td><a class="fn" href="fn.type_name_of_val.html" title="anoma_apps::std::any::type_name_of_val fn">type_name_of_val</a></td><td class="docblock-short"><span class="stab unstable" title="">Experimental</span><p>Returns the name of the type of the pointed-to value as a string slice.
+This is the same as <code>type_name::&lt;T&gt;()</code>, but can be used where the type of a
+variable is not easily available.</p>
+</td></tr><tr class="module-item"><td><a class="fn" href="fn.type_name.html" title="anoma_apps::std::any::type_name fn">type_name</a></td><td class="docblock-short"><p>Returns the name of a type as a string slice.</p>
+</td></tr></table></section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="anoma_apps" data-search-index-js="../../../search-index.js" data-search-js="../../../search.js"></div><script src="../../../main.js"></script></body></html>

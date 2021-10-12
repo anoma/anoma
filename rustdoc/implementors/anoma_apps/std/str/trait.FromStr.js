@@ -1,0 +1,3 @@
+(function() {var implementors = {};
+implementors["anoma_apps"] = [{"text":"impl <a class=\"trait\" href=\"anoma_apps/std/str/trait.FromStr.html\" title=\"trait anoma_apps::std::str::FromStr\">FromStr</a> for <a class=\"enum\" href=\"anoma_apps/node/ledger/rpc/enum.Path.html\" title=\"enum anoma_apps::node::ledger::rpc::Path\">Path</a>","synthetic":false,"types":["anoma_apps::node::ledger::rpc::Path"]}];
+if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()
