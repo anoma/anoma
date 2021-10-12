@@ -1,1 +1,0 @@
-initSidebarItems({"derive":[["BorshDeserialize",""],["BorshSerialize",""]],"fn":[["log_string","Log a string. The message will be printed at the `tracing::Level::Info`."]],"trait":[["BorshDeserialize","A data-structure that can be de-serialized from binary format by NBOR."],["BorshSerialize","A data-structure that can be serialized into binary format by NBOR."]]});

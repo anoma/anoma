@@ -1,1 +1,0 @@
-initSidebarItems({"fn":[["tx_env","Setup a transaction environment"],["vp_env","Setup a validity predicate environment"]]});

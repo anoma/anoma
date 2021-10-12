@@ -1,1 +1,0 @@
-initSidebarItems({"struct":[["EvalVp","A validity predicate with an input that is intended to be invoked via `eval` host function."]]});

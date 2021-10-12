@@ -1,1 +1,0 @@
-initSidebarItems({"struct":[["KeyVal","Key-value pair represents data from account’s subspace"],["VpInput","Input for validity predicate wasm module call"]],"type":[["MatchmakerInput","Input for matchmaker wasm module call"]]});
