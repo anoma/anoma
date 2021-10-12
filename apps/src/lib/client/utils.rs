@@ -25,6 +25,7 @@ pub fn init_network(
         genesis_path,
         chain_id_prefix,
         unsafe_dont_encrypt,
+        consensus_timeout_commit,
     }: args::InitNetwork,
 ) {
     let mut config = genesis_config::open_genesis_config(&genesis_path);
@@ -363,6 +364,8 @@ pub fn init_network(
             // Add a ledger P2P persistent peers
             config.ledger.tendermint.p2p_persistent_peers =
                 persistent_peers.clone();
+            config.ledger.tendermint.consensus_timeout_commit =
+                consensus_timeout_commit;
             // Clear the net address from the config and use it to set ports
             let net_address = validator_config.net_address.take().unwrap();
             let first_port = SocketAddr::from_str(&net_address).unwrap().port();
@@ -394,6 +397,8 @@ pub fn init_network(
     // Update the ledger config persistent peers and save it
     let mut config = Config::load(&global_args.base_dir, &chain_id);
     config.ledger.tendermint.p2p_persistent_peers = persistent_peers;
+    config.ledger.tendermint.consensus_timeout_commit =
+        consensus_timeout_commit;
     config.ledger.genesis_time = genesis.genesis_time.into();
     if let Some(discover) = &mut config.intent_gossiper.discover_peer {
         discover.bootstrap_peers = bootstrap_peers;

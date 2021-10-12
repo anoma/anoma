@@ -1080,6 +1080,11 @@ pub mod args {
     const CHAIN_ID_PREFIX: Arg<ChainIdPrefix> = arg("chain-prefix");
     const CODE_PATH: Arg<PathBuf> = arg("code-path");
     const CODE_PATH_OPT: ArgOpt<PathBuf> = CODE_PATH.opt();
+    const CONSENSUS_TIMEOUT_COMMIT: ArgDefault<tendermint::Timeout> =
+        arg_default(
+            "consensus-timeout-commit",
+            DefaultFn(|| tendermint::Timeout::from_str("10s").unwrap()),
+        );
     const DATA_PATH_OPT: ArgOpt<PathBuf> = arg_opt("data-path");
     const DATA_PATH: Arg<PathBuf> = arg("data-path");
     const DECRYPT: ArgFlag = flag("decrypt");
@@ -2199,6 +2204,7 @@ pub mod args {
         pub genesis_path: PathBuf,
         pub chain_id_prefix: ChainIdPrefix,
         pub unsafe_dont_encrypt: bool,
+        pub consensus_timeout_commit: tendermint::Timeout,
     }
 
     impl Args for InitNetwork {
@@ -2206,10 +2212,13 @@ pub mod args {
             let genesis_path = GENESIS_PATH.parse(matches);
             let chain_id_prefix = CHAIN_ID_PREFIX.parse(matches);
             let unsafe_dont_encrypt = UNSAFE_DONT_ENCRYPT.parse(matches);
+            let consensus_timeout_commit =
+                CONSENSUS_TIMEOUT_COMMIT.parse(matches);
             Self {
                 genesis_path,
                 chain_id_prefix,
                 unsafe_dont_encrypt,
+                consensus_timeout_commit,
             }
         }
 
@@ -2226,6 +2235,10 @@ pub mod args {
             .arg(UNSAFE_DONT_ENCRYPT.def().about(
                 "UNSAFE: Do not encrypt the generated keypairs. Do not use \
                  this for keys used in a live network.",
+            ))
+            .arg(CONSENSUS_TIMEOUT_COMMIT.def().about(
+                "The Tendermint consensus timeout_commit configuration as \
+                 e.g. `1s` or `1000ms`. Defaults to 10 seconds.",
             ))
         }
     }
