@@ -1,0 +1,1 @@
+initSidebarItems({"enum":[["DecryptionError",""],["FindKeyError",""],["StoredKeypair","A keypair stored in a wallet"]],"mod":[["defaults","Default addresses and keys."]],"struct":[["Wallet",""]]});

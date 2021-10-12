@@ -1,0 +1,215 @@
+<!DOCTYPE HTML>
+<html lang="en" class="sidebar-visible no-js light">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Gossip layer - Anoma - DOCS</title>
+        <!-- Custom HTML head -->
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        <link rel="icon" href="../../favicon.svg">
+        <link rel="shortcut icon" href="../../favicon.png">
+        <link rel="stylesheet" href="../../css/variables.css">
+        <link rel="stylesheet" href="../../css/general.css">
+        <link rel="stylesheet" href="../../css/chrome.css">
+        <link rel="stylesheet" href="../../css/print.css" media="print">
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../../FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="../../fonts/fonts.css">
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="../../highlight.css">
+        <link rel="stylesheet" href="../../tomorrow-night.css">
+        <link rel="stylesheet" href="../../ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+        <link rel="stylesheet" href="../../assets/custom.css">
+        <!-- MathJax -->
+        <script async type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    </head>
+    <body>
+        <!-- Provide site root to javascript -->
+        <script type="text/javascript">
+            var path_to_root = "../../";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script type="text/javascript">
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script type="text/javascript">
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add('js');
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script type="text/javascript">
+            var html = document.querySelector('html');
+            var sidebar = 'hidden';
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded "><a href="../../index.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="../../user-guide/index.html"><strong aria-hidden="true">2.</strong> User Guide</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../../user-guide/install.html"><strong aria-hidden="true">2.1.</strong> Install</a></li><li class="chapter-item expanded "><a href="../../user-guide/getting-started.html"><strong aria-hidden="true">2.2.</strong> Getting started</a></li><li class="chapter-item expanded "><a href="../../user-guide/wallet.html"><strong aria-hidden="true">2.3.</strong> The Wallet</a></li><li class="chapter-item expanded "><a href="../../user-guide/ledger.html"><strong aria-hidden="true">2.4.</strong> The Ledger</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../../user-guide/ledger/pos.html"><strong aria-hidden="true">2.4.1.</strong> Interact with PoS</a></li><li class="chapter-item expanded "><a href="../../user-guide/ledger/customize.html"><strong aria-hidden="true">2.4.2.</strong> Customize</a></li></ol></li><li class="chapter-item expanded "><a href="../../user-guide/intent-gossip-and-matchmaker.html"><strong aria-hidden="true">2.5.</strong> The Intent gossip and Matchmaker</a></li></ol></li><li class="chapter-item expanded "><a href="../../explore/index.html"><strong aria-hidden="true">3.</strong> Exploration</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../../explore/design/index.html"><strong aria-hidden="true">3.1.</strong> Design</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../../explore/design/overview.html"><strong aria-hidden="true">3.1.1.</strong> Overview</a></li><li class="chapter-item expanded "><a href="../../explore/design/gossip.html"><strong aria-hidden="true">3.1.2.</strong> Gossip network</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../../explore/design/intent_gossip/intent_gossip.html"><strong aria-hidden="true">3.1.2.1.</strong> Intent gossip</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../../explore/design/intent_gossip/intent.html"><strong aria-hidden="true">3.1.2.1.1.</strong> Intent</a></li><li class="chapter-item expanded "><a href="../../explore/design/intent_gossip/topic.html"><strong aria-hidden="true">3.1.2.1.2.</strong> Topic</a></li><li class="chapter-item expanded "><a href="../../explore/design/intent_gossip/incentive.html"><strong aria-hidden="true">3.1.2.1.3.</strong> Incentive</a></li><li class="chapter-item expanded "><a href="../../explore/design/intent_gossip/matchmaker.html"><strong aria-hidden="true">3.1.2.1.4.</strong> Matchmaker</a></li><li class="chapter-item expanded "><a href="../../explore/design/intent_gossip/fungible_token.html"><strong aria-hidden="true">3.1.2.1.5.</strong> Fungible token</a></li></ol></li><li class="chapter-item expanded "><a href="../../explore/design/dkg.html"><strong aria-hidden="true">3.1.2.2.</strong> Distributed key generation gossip</a></li></ol></li><li class="chapter-item expanded "><a href="../../explore/design/ledger.html"><strong aria-hidden="true">3.1.3.</strong> The ledger</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../../explore/design/ledger/parameters.html"><strong aria-hidden="true">3.1.3.1.</strong> Parameters</a></li><li class="chapter-item expanded "><a href="../../explore/design/ledger/epochs.html"><strong aria-hidden="true">3.1.3.2.</strong> Epochs</a></li><li class="chapter-item expanded "><a href="../../explore/design/ledger/accounts.html"><strong aria-hidden="true">3.1.3.3.</strong> Accounts</a></li><li class="chapter-item expanded "><a href="../../explore/design/ledger/vp.html"><strong aria-hidden="true">3.1.3.4.</strong> Validity predicates</a></li><li class="chapter-item expanded "><a href="../../explore/design/ledger/tx.html"><strong aria-hidden="true">3.1.3.5.</strong> Transactions</a></li><li class="chapter-item expanded "><a href="../../explore/design/ledger/wasm-vm.html"><strong aria-hidden="true">3.1.3.6.</strong> WASM VM</a></li><li class="chapter-item expanded "><a href="../../explore/design/ledger/front-running.html"><strong aria-hidden="true">3.1.3.7.</strong> Front-running prevention</a></li><li class="chapter-item expanded "><a href="../../explore/design/ledger/fractal-scaling.html"><strong aria-hidden="true">3.1.3.8.</strong> Fractal scaling</a></li><li class="chapter-item expanded "><a href="../../explore/design/upgrade-system.html"><strong aria-hidden="true">3.1.3.9.</strong> Upgrade system</a></li><li class="chapter-item expanded "><a href="../../explore/design/ledger/storage.html"><strong aria-hidden="true">3.1.3.10.</strong> Storage</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../../explore/design/ledger/storage/data-schema.html"><strong aria-hidden="true">3.1.3.10.1.</strong> Data schema</a></li></ol></li><li class="chapter-item expanded "><a href="../../explore/design/ledger/pos-integration.html"><strong aria-hidden="true">3.1.3.11.</strong> PoS integration</a></li></ol></li><li class="chapter-item expanded "><a href="../../explore/design/crypto-primitives.html"><strong aria-hidden="true">3.1.4.</strong> Crypto primitives</a></li><li class="chapter-item expanded "><a href="../../explore/design/actors.html"><strong aria-hidden="true">3.1.5.</strong> Actors</a></li><li class="chapter-item expanded "><a href="../../explore/design/pos.html"><strong aria-hidden="true">3.1.6.</strong> Proof of Stake system</a></li></ol></li><li class="chapter-item expanded "><a href="../../explore/prototypes/index.html"><strong aria-hidden="true">3.2.</strong> Prototypes</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../../explore/prototypes/base-ledger.html"><strong aria-hidden="true">3.2.1.</strong> Base ledger</a></li><li class="chapter-item expanded "><a href="../../explore/prototypes/gossip-layer.html" class="active"><strong aria-hidden="true">3.2.2.</strong> Gossip layer</a></li></ol></li><li class="chapter-item expanded "><a href="../../explore/libraries/index.html"><strong aria-hidden="true">3.3.</strong> Libraries &amp; Tools</a></li><li><ol class="section"><li class="chapter-item expanded "><div><strong aria-hidden="true">3.3.1.</strong> Cryptography</div></li><li class="chapter-item expanded "><a href="../../explore/libraries/network.html"><strong aria-hidden="true">3.3.2.</strong> network</a></li><li class="chapter-item expanded "><a href="../../explore/libraries/cli.html"><strong aria-hidden="true">3.3.3.</strong> Command-line interface</a></li><li class="chapter-item expanded "><a href="../../explore/libraries/db.html"><strong aria-hidden="true">3.3.4.</strong> Database</a></li><li class="chapter-item expanded "><a href="../../explore/libraries/logging.html"><strong aria-hidden="true">3.3.5.</strong> Logging</a></li><li class="chapter-item expanded "><div><strong aria-hidden="true">3.3.6.</strong> Networking</div></li><li class="chapter-item expanded "><a href="../../explore/libraries/packaging.html"><strong aria-hidden="true">3.3.7.</strong> Packaging</a></li><li class="chapter-item expanded "><a href="../../explore/libraries/serialization.html"><strong aria-hidden="true">3.3.8.</strong> Serialization</a></li><li class="chapter-item expanded "><a href="../../explore/libraries/wasm.html"><strong aria-hidden="true">3.3.9.</strong> WASM runtime</a></li><li class="chapter-item expanded "><a href="../../explore/libraries/errors.html"><strong aria-hidden="true">3.3.10.</strong> Error handling</a></li></ol></li><li class="chapter-item expanded "><a href="../../explore/design/glossary.html"><strong aria-hidden="true">3.4.</strong> Glossary</a></li><li class="chapter-item expanded "><a href="../../explore/resources/index.html"><strong aria-hidden="true">3.5.</strong> Resources</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../../explore/resources/ide.html"><strong aria-hidden="true">3.5.1.</strong> IDE</a></li></ol></li></ol></li><li class="chapter-item expanded "><a href="../../specs/index.html"><strong aria-hidden="true">4.</strong> Specifications</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../../specs/overview.html"><strong aria-hidden="true">4.1.</strong> Overview</a></li><li class="chapter-item expanded "><a href="../../specs/ledger.html"><strong aria-hidden="true">4.2.</strong> The ledger</a></li><li class="chapter-item expanded "><div><strong aria-hidden="true">4.3.</strong> Trade system</div></li><li class="chapter-item expanded "><div><strong aria-hidden="true">4.4.</strong> Intent gossip system</div></li><li class="chapter-item expanded "><div><strong aria-hidden="true">4.5.</strong> Fractal scaling</div></li><li class="chapter-item expanded "><div><strong aria-hidden="true">4.6.</strong> Upgrade system</div></li><li class="chapter-item expanded "><a href="../../specs/encoding.html"><strong aria-hidden="true">4.7.</strong> Encoding</a></li></ol></li><li class="chapter-item expanded "><a href="../../archive/index.html"><strong aria-hidden="true">5.</strong> Archive</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../../archive/domain-name-addresses.html"><strong aria-hidden="true">5.1.</strong> Domain name addresses</a></li></ol></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky bordered">
+                    <div class="left-buttons">
+                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </button>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light (default)</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">Anoma - DOCS</h1>
+
+                    <div class="right-buttons">
+                        <a href="../../print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script type="text/javascript">
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="intent-gossip-system-prototype"><a class="header" href="#intent-gossip-system-prototype">Intent Gossip system prototype</a></h1>
+<p>tracking issue <a href="https://github.com/anoma/anoma/issues/35">https://github.com/anoma/anoma/issues/35</a></p>
+<h2 id="goals"><a class="header" href="#goals">Goals</a></h2>
+<ul>
+<li>learning rust</li>
+<li>usable node + client setup :
+<ul>
+<li>intent</li>
+<li>incentive function</li>
+<li>mempool and white list</li>
+</ul>
+</li>
+<li>basic matchmaker</li>
+</ul>
+<h2 id="components"><a class="header" href="#components">components</a></h2>
+<p>The intent gossip is build conjointly to the ledger and share the same binary.</p>
+<h3 id="node"><a class="header" href="#node">Node</a></h3>
+<p>The node is built into <code>anoman</code>, it runs all the necesarry part, rpc server,
+libp2p, intent gossip app.</p>
+<h4 id="intent-gossip-application"><a class="header" href="#intent-gossip-application">Intent gossip application</a></h4>
+<p>The intent gossip application</p>
+<h5 id="mempool"><a class="header" href="#mempool">Mempool</a></h5>
+<h5 id="filter"><a class="header" href="#filter">Filter</a></h5>
+<h4 id="network-behaviour"><a class="header" href="#network-behaviour">Network behaviour</a></h4>
+<p>The network behaviour is the part that react on network event. It creates a
+channel (e.g. <code>tokio::mpsc::channel</code>) with the intent gossip to communicate all
+intent it receive.</p>
+<h4 id="rpc-server"><a class="header" href="#rpc-server">Rpc server</a></h4>
+<p>If the rpc command line option is set it creates a tonic server that receive
+command from a client and send theses through a channel
+(e.g. <code>tokio::mpsc::channel</code>) to the the intent gossip.</p>
+<h3 id="client"><a class="header" href="#client">Client</a></h3>
+<p>Allow to submit a intent :
+<code>anoma gossip --data &quot;data&quot;</code></p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../../explore/prototypes/base-ledger.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+                            <a rel="next" href="../../explore/libraries/index.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../../explore/prototypes/base-ledger.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+                    <a rel="next" href="../../explore/libraries/index.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+            </nav>
+
+        </div>
+
+        <script type="text/javascript">
+            window.playground_copyable = true;
+        </script>
+        <script src="../../elasticlunr.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../mark.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../searcher.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../clipboard.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../highlight.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../book.js" type="text/javascript" charset="utf-8"></script>
+
+        <!-- Custom JS scripts -->
+        <script type="text/javascript" src="../../assets/mermaid.min.js"></script>
+        <script type="text/javascript" src="../../assets/mermaid-init.js"></script>
+    </body>
+</html>
