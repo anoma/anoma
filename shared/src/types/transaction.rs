@@ -77,7 +77,7 @@ pub struct CreateNft {
 pub struct MintNft {
     /// The nft address
     pub address: Address,
-    /// The nft owner
+    /// The minted tokens owner
     pub owner: Address,
     /// The nft tokens
     pub tokens: Vec<NftToken>,

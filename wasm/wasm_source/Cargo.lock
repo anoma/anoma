@@ -116,6 +116,7 @@ dependencies = [
 name = "anoma_wasm"
 version = "0.1.4"
 dependencies = [
+ "anoma",
  "anoma_tests",
  "anoma_vm_env",
  "borsh",

@@ -41,6 +41,7 @@ serde_json = {version = "1.0.64", optional = true}
 wee_alloc = "0.4.5"
 
 [dev-dependencies]
+anoma = {path = "../../shared"}
 anoma_tests = {path = "../../tests"}
 proptest = "1.0.0"
 tracing = "0.1.26"

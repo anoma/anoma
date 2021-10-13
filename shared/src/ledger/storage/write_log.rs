@@ -536,7 +536,6 @@ mod tests {
 
             let verifiers_changed_keys = write_log.verifiers_changed_keys(&verifiers_from_tx);
 
-            println!("verifiers_from_tx {:#?}", verifiers_from_tx);
             for verifier_from_tx in verifiers_from_tx {
                 assert!(verifiers_changed_keys.contains_key(&verifier_from_tx));
                 let keys = verifiers_changed_keys.get(&verifier_from_tx).unwrap().clone();
@@ -557,8 +556,6 @@ mod tests {
                 }
             }
 
-            println!("verifiers_changed_keys {:#?}", verifiers_changed_keys);
-            println!("initialized_accounts {:#?}", initialized_accounts);
             for initialized_account in initialized_accounts {
                 // Test for 3.
                 assert!(!verifiers_changed_keys.contains_key(initialized_account));
