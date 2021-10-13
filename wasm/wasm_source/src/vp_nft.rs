@@ -9,7 +9,7 @@ fn validate_tx(
 ) -> bool {
     log_string(format!(
         "validate_tx called with token addr: {}, key_changed: {:#?}, \
-            verifiers: {:?}",
+         verifiers: {:?}",
         addr, keys_changed, verifiers
     ));
 

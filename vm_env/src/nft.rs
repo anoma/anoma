@@ -71,13 +71,10 @@ pub mod vp {
     use std::collections::HashSet;
 
     use anoma::types::address::Address;
-    use anoma::types::key::ed25519::SignedTxData;
     pub use anoma::types::nft::*;
     use anoma::types::storage::Key;
-    use borsh::BorshDeserialize;
 
     use crate::imports::vp::{self};
-    use crate::vp_prelude::key;
 
     enum KeyType {
         Metadata(String),
@@ -122,8 +119,7 @@ pub mod vp {
                 }
                 KeyType::CurrentOwner(token_id) => {
                     vp::log_string(format!(
-                        "nft vp, checking current_owner with token \
-                                 id: {}",
+                        "nft vp, checking current_owner with token id: {}",
                         token_id
                     ));
                     let past_owners_key = get_token_past_owners_key(

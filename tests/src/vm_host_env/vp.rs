@@ -101,7 +101,7 @@ pub fn init_vp_env_from_tx(
         .unwrap_or_else(|| {
             panic!(
                 "The VP for the given address has not been triggered by the \
-             transaction, {:#?}",
+                 transaction, {:#?}",
                 verifiers_changed_keys
             )
         })
