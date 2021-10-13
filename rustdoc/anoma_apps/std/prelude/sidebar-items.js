@@ -1,1 +1,0 @@
-initSidebarItems({"mod":[["rust_2015","The 2015 version of the prelude of The Rust Standard Library."],["rust_2018","The 2018 version of the prelude of The Rust Standard Library."],["rust_2021","The 2021 version of the prelude of The Rust Standard Library."],["v1","The first version of the prelude of The Rust Standard Library."]]});

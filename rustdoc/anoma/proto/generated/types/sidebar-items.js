@@ -1,1 +1,0 @@
-initSidebarItems({"mod":[["dkg_gossip_message","Nested message and enum types in `DkgGossipMessage`."],["intent_gossip_message","Nested message and enum types in `IntentGossipMessage`."]],"struct":[["Dkg",""],["DkgGossipMessage",""],["Intent",""],["IntentGossipMessage",""],["Tx",""]]});
