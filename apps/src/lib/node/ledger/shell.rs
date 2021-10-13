@@ -794,6 +794,8 @@ impl Shell {
                     tx_result["info"] = result.to_string();
                 }
                 Err(msg) => {
+                    tracing::info!("Transaction failed with: {}", msg);
+                    self.write_log.drop_tx();
                     tx_result["gas_used"] = self
                         .gas_meter
                         .get_current_transaction_gas()
