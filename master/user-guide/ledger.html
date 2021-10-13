@@ -141,28 +141,28 @@
 <p>To start a local Anoma ledger node, run:</p>
 <pre><code class="language-shell">anoma ledger
 </code></pre>
-<p>The node will attempt to connect to the persistent validator nodes and other peers in the network and synchronize to the latest block.</p>
-<p>By default, the ledger will store its configuration and state in the <code>.anoma</code> directory relative to the current working directory. You can use <code>--base-dir</code> CLI global argument or <code>ANOMA_BASE_DIR</code> environment variable to change it.</p>
+<p>The node will attempt to connect to the persistent validator nodes and other peers in the network, and synchronize to the latest block.</p>
+<p>By default, the ledger will store its configuration and state in the <code>.anoma</code> directory relative to the current working directory. You can use the <code>--base-dir</code> CLI global argument or <code>ANOMA_BASE_DIR</code> environment variable to change it.</p>
 <p>If not found on start up, the ledger will generate a configuration file at <code>.anoma/config.toml</code>.</p>
-<p>The ledger also needs access to the built WASM files that are used in the genesis block. These files are included in release and shouldn't be modified, otherwise your node will fail with consensus error on the genesis block. By default, these are expected to be in the <code>wasm</code> directory, relative to the current working directory. This can also be set with <code>--wasm-dir</code> CLI global argument, <code>ANOMA_WASM_DIR</code> environment variable or the configuration file.</p>
+<p>The ledger also needs access to the built WASM files that are used in the genesis block. These files are included in release and shouldn't be modified, otherwise your node will fail with a consensus error on the genesis block. By default, these are expected to be in the <code>wasm</code> directory, relative to the current working directory. This can also be set with the <code>--wasm-dir</code> CLI global argument, <code>ANOMA_WASM_DIR</code> environment variable or the configuration file.</p>
 <h2 id="-initialize-an-account"><a class="header" href="#-initialize-an-account">📝 Initialize an account</a></h2>
 <p>If you already have a key in your wallet, you can skip this step and use it in the following commands. Otherwise, generate a new key now:</p>
 <pre><code class="language-shell">anoma wallet key gen --alias my-key
 </code></pre>
-<p>Then send a transaction to initialize the account and save its address with alias <code>my-new-acc</code>. The <code>my-key</code> public key will be written into the account's storage for authorizing future transactions. We also sign this transaction with <code>my-key</code>.</p>
+<p>Then send a transaction to initialize the account and save its address with the alias <code>my-new-acc</code>. The <code>my-key</code> public key will be written into the account's storage for authorizing future transactions. We also sign this transaction with <code>my-key</code>.</p>
 <pre><code class="language-shell">anoma client init-account \
   --alias my-new-acc \
   --public-key my-key \
   --source my-key
 </code></pre>
 <p>Once this transaction has been applied, the client will automatically see the new address created by the transaction and add it to your <a href="./wallet.html">wallet</a> with the chosen alias <code>my-new-acc</code>.</p>
-<p>By default, this command will use the prebuilt user validity predicate (from the <a href="https://github.com/anoma/anoma/blob/fb445f67ffe3afe3bf50eb71658b01ff760e909d/wasm/wasm_source/src/vp_user.rs">vp_user</a> source). You can supply a different validity predicate with <code>--code-path</code> argument. We'll come back to this topic and cover how to write and deploy custom validity predicates in the <a href="ledger/customize.html#-validity-predicates">custom validity predicates section</a>.</p>
+<p>By default, this command will use the prebuilt user validity predicate (from the <a href="https://github.com/anoma/anoma/blob/fb445f67ffe3afe3bf50eb71658b01ff760e909d/wasm/wasm_source/src/vp_user.rs">vp_user</a> source). You can supply a different validity predicate with the <code>--code-path</code> argument. We'll come back to this topic and cover how to write and deploy custom validity predicates in the <a href="ledger/customize.html#-validity-predicates">custom validity predicates section</a>.</p>
 <h2 id="-token-transactions-and-queries"><a class="header" href="#-token-transactions-and-queries">💸 Token transactions and queries</a></h2>
 <p>In Anoma, tokens are implemented as accounts with a token validity predicate. It checks that its total supply is preserved in any transaction that uses this token. Your wallet will be pre-loaded with some token addresses that are initialized in the genesis block.</p>
 <p>You can see the tokens addresses known by the client when you query all tokens balances:</p>
 <pre><code class="language-shell">anoma client balance
 </code></pre>
-<p>XAN is Anoma's native token. To obtain some tokens in a testnet, there's a special &quot;faucet&quot; account that allows anyone to withdraw up to 1000 of any token that is posses in a single transaction. You can find the address of this account in your wallet. To get some tokens from the faucet account:</p>
+<p>XAN is Anoma's native token. To obtain some tokens in a testnet, there is a special &quot;faucet&quot; account that allows anyone to withdraw up to 1000 of any token for a single transaction. You can find the address of this account in your wallet. To get some tokens from the faucet account:</p>
 <pre><code class="language-shell">anoma client transfer \
   --source faucet \
   --target my-new-acc \
@@ -170,8 +170,8 @@
   --token XAN \
   --amount 1000
 </code></pre>
-<p>Note that because you don't have the key to sign transfer from the faucet account, in the command above we set the <code>--signer</code> explicitly to your account's address.</p>
-<p>To submit a regular token transfer from your account to <code>validator-1</code> address:</p>
+<p>Note that because you don't have the key to sign a transfer from the faucet account, in the command above, we set the <code>--signer</code> explicitly to your account's address.</p>
+<p>To submit a regular token transfer from your account to the <code>validator-1</code> address:</p>
 <pre><code class="language-shell">anoma client transfer \
   --source my-new-acc \
   --target validator-1 \

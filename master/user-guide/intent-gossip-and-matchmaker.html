@@ -138,10 +138,10 @@
                 <div id="content" class="content">
                     <main>
                         <h1 id="the-intent-gossip-and-matchmaker"><a class="header" href="#the-intent-gossip-and-matchmaker">The Intent gossip and Matchmaker</a></h1>
-<p>To run gossip node with intent gossip system and rpc server:</p>
+<p>To run an intent gossip node with an RPC server:</p>
 <pre><code class="language-shell">cargo run --bin anoma gossip --rpc &quot;127.0.0.1:39111&quot;
 </code></pre>
-<p>To run gossip node with intent gossip system, a token exchange matchmaker and RPC through which new intents requested:</p>
+<p>To run an intent gossip node with the intent gossip system, a token exchange matchmaker and RPC through which new intents are requested:</p>
 <pre><code class="language-shell">cargo run --bin anoman gossip --rpc &quot;127.0.0.1:39111&quot; --matchmaker-path wasm/mm_token_exch.wasm --tx-code-path wasm/tx_from_intent.wasm --ledger-address &quot;127.0.0.1:26657&quot; --source matchmaker --signing-key matchmaker
 </code></pre>
 <p>This pre-built matchmaker implementation is <a href="https://github.com/anoma/anoma/blob/master/wasm/wasm_source/src/mm_token_exch.rs">the fungible token exchange <code>mm_token_exch</code></a>, that is being used together with <a href="https://github.com/anoma/anoma/blob/master/wasm/wasm_source/src/lib.rs">the pre-built <code>tx_from_intent</code> transaction WASM</a> to submit transaction from matched intents to the ledger.</p>

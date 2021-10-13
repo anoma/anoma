@@ -142,7 +142,7 @@
 <p>The wallet's state is stored under <code>.anoma/{chain_id}/wallet.toml</code> (with the default <code>--base-dir</code>), which will be created for you if it doesn't already exist when you run any command that accesses the wallet. A newly created wallet will be pre-loaded with some default addresses.</p>
 <p>For the ledger and intent gossip commands that use keys and addresses, you can enter their aliases as as defined in the wallet (case-sensitive).</p>
 <h2 id="-keys"><a class="header" href="#-keys">🔐 Keys</a></h2>
-<p>For cryptographic signatures we currently support ed25519 keys. More will be added in future.</p>
+<p>For cryptographic signatures, we currently support ed25519 keys. More will be added in future.</p>
 <p>To manage keys, various sub-commands are available, see the commands <code>--help</code>:</p>
 <pre><code class="language-shell">anoma wallet key
 </code></pre>
@@ -154,12 +154,12 @@
 </code></pre>
 <p>Note that this will also save an implicit address derived from this public key under the same alias. More about addresses below. This command has the same effect as <code>address gen</code>.</p>
 <h2 id="-addresses"><a class="header" href="#-addresses">📇 Addresses</a></h2>
-<p>All accounts in Anoma ledger have a unique address, exactly one validity predicate and optionally any additional data in its dynamic storage sub-space.</p>
+<p>All accounts in the Anoma ledger have a unique address, exactly one validity predicate and optionally any additional data in its dynamic storage sub-space.</p>
 <p>There are currently 3 types of account addresses:</p>
 <ul>
-<li>Established: Used for accounts that allow to deploy custom validation logic. These must be created on-chain via a transaction (see <a href="./ledger.html#-initialize-an-account">the Ledger guide</a>). The address is generated on-chain and is not known until the transaction is applied.</li>
+<li>Established: Used for accounts that allow the deployment of custom validation logic. These must be created on-chain via a transaction (see <a href="./ledger.html#-initialize-an-account">the Ledger guide</a>). The address is generated on-chain and is not known until the transaction is applied.</li>
 <li>Implicit, <em>not yet fully supported in the ledger</em>: Derived from a key, which can be used to authorize certain transactions from the account. They can be used as recipients of transactions without even when the account has not been used on-chain before.</li>
-<li>Internal: Special internal accounts, such protocol parameters account, PoS and IBC</li>
+<li>Internal: Special internal accounts, such as protocol parameters account, PoS and IBC</li>
 </ul>
 <p>To manage addresses, similar to keys, various sub-commands are available:</p>
 <pre><code class="language-shell">anoma wallet address

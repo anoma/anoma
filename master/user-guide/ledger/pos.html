@@ -138,15 +138,15 @@
                 <div id="content" class="content">
                     <main>
                         <h1 id="-interacting-with-the-proof-of-stake-system"><a class="header" href="#-interacting-with-the-proof-of-stake-system">🔏 Interacting with the Proof-of-Stake system</a></h1>
-<p>The Anoma Proof of Stake system is using the XAN token as the staking token. It features delegation to any number of validators and customizable validator validity predicates.</p>
+<p>The Anoma Proof of Stake system uses the XAN token as the staking token. It features delegation to any number of validators and customizable validator validity predicates.</p>
 <p>The PoS system is implemented as an account with a validity predicate that governs the rules of the system. You can find its address in your wallet:</p>
 <pre><code class="language-shell">anoma wallet address find --alias PoS
 </code></pre>
-<p>The system relies on the concept of epochs. An epoch is a range of consecutive blocks identified by consecutive natural numbers. Each epoch last a minimum duration and includes a minimum number of blocks since the beginning of the last epoch. These are defined by protocol parameters.</p>
+<p>The system relies on the concept of epochs. An epoch is a range of consecutive blocks identified by consecutive natural numbers. Each epoch lasts a minimum duration and includes a minimum number of blocks since the beginning of the last epoch. These are defined by protocol parameters.</p>
 <p>To query the current epoch:</p>
 <pre><code class="language-shell">anoma client epoch
 </code></pre>
-<p>You can delegate to any number of validators at any time. When you delegate tokens, the delegation won't count towards the validator's stake (which in turn determines its voting power) until the beginning of epoch <code>n + 2</code> in the current epoch <code>n</code> (the literal <code>2</code> is set by PoS parameter <code>pipeline_len</code>). The delegated amount of tokens will be deducted from your account immediately and will be credited to the PoS system's account.</p>
+<p>You can delegate to any number of validators at any time. When you delegate tokens, the delegation won't count towards the validator's stake (which in turn determines its voting power) until the beginning of epoch <code>n + 2</code> in the current epoch <code>n</code> (the literal <code>2</code> is set by PoS parameter <code>pipeline_len</code>). The delegated amount of tokens will be deducted from your account immediately, and will be credited to the PoS system's account.</p>
 <p>To submit a delegation that bonds tokens from the source address to a validator with alias <code>validator-1</code>:</p>
 <pre><code class="language-shell">anoma client bond \
   --source my-new-acc \
@@ -178,7 +178,7 @@
   --source my-new-acc \
   --validator validator-1
 </code></pre>
-<p>On success, the withdrawn tokens will be credited back your account and debited from the PoS system.</p>
+<p>Upon success, the withdrawn tokens will be credited back your account and debited from the PoS system.</p>
 <p>To see all validators and their voting power, you can query:</p>
 <pre><code class="language-shell">anoma client voting-power
 </code></pre>
@@ -197,26 +197,26 @@
 </ul>
 <p>Then, it submits a transaction to the ledger that generates two new accounts with established addresses:</p>
 <ul>
-<li>Validator account with the main validator address, which can be used to receive new delegations</li>
-<li>Staking reward account, which will receive rewards for participation in the PoS system. In future, the validity predicate of this account will be able to control how the rewards are to be distributed to the validator's delegators. <em>Staking rewards are not yet implemented</em>.</li>
+<li>A validator account with the main validator address, which can be used to receive new delegations</li>
+<li>A staking reward account, which will receive rewards for participation in the PoS system. In the future, the validity predicate of this account will be able to control how the rewards are to be distributed to the validator's delegators. <em>Staking rewards are not yet implemented</em>.</li>
 </ul>
-<p>These keys and addresses of the addresses will be saved in your wallet. You local ledger node will also be setup to run this validator, you just have to shut down it down with e.g. <code>Ctrl + C</code>, then start it again with the same command:</p>
+<p>These keys and aliases of the addresses will be saved in your wallet. Your local ledger node will also be setup to run this validator, you just have to shut it down with e.g. <code>Ctrl + C</code>, then start it again with the same command:</p>
 <pre><code class="language-shell">anoma ledger
 </code></pre>
 <p>The ledger will then use the validator consensus key to sign blocks, should your validator account acquire enough voting power to be included in the active validator set. The size of the active validator set is limited to <code>128</code> (the limit is set by the PoS <code>max_validator_slots</code> parameter).</p>
-<p>Note that the balance of XAN tokens that is in your validator account doesn't count towards your validator's stake and voting power:</p>
+<p>Note that the balance of XAN tokens that is in your validator account does not count towards your validator's stake and voting power:</p>
 <pre><code class="language-shell">anoma client balance --owner my-validator --token XAN
 </code></pre>
-<p>That is, the balance of your account's address is a regular liquid balance that you can transfer using your validator account key, depending on the rules of the validator account's validity predicate. The default validity predicate allows you to transfer it by a signed transaction and/or stake it in the PoS system.</p>
+<p>That is, the balance of your account's address is a regular liquid balance that you can transfer using your validator account key, depending on the rules of the validator account's validity predicate. The default validity predicate allows you to transfer it with a signed transaction and/or stake it in the PoS system.</p>
 <p>You can submit a self-bonding transaction of tokens from a validator account to the PoS system with:</p>
 <pre><code class="language-shell">anoma client bond \
   --validator my-validator \
   --amount 3.3
 </code></pre>
-<p>Validator's voting power is determined from the sum of all their active self-bonds and delegations of tokens, with slashes applied, if any, divided by <code>1000</code> (PoS <code>votes_per_token</code> parameter, with current value set to <code>10‱</code> in parts per ten thousand).</p>
-<p>Same rules apply as with delegations. When you self-bond tokens, the bonded amount won't count towards your validator's stake (which in turn determines your power) until the beginning of epoch <code>n + 2</code> in the current epoch <code>n</code>. The bonded amount of tokens will be deducted from the validator's account immediately and will be credited to the PoS system's account.</p>
+<p>A validator's voting power is determined by the sum of all their active self-bonds and delegations of tokens, with slashes applied, if any, divided by <code>1000</code> (PoS <code>votes_per_token</code> parameter, with the current value set to <code>10‱</code> in parts per ten thousand).</p>
+<p>The same rules apply to delegations. When you self-bond tokens, the bonded amount won't count towards your validator's stake (which in turn determines your power) until the beginning of epoch <code>n + 2</code> in the current epoch <code>n</code>. The bonded amount of tokens will be deducted from the validator's account immediately and will be credited to the PoS system's account.</p>
 <p>While your tokens are being self-bonded, they are locked-in the PoS system and hence are not liquid until you withdraw them. To do that, you first need to send a transaction to “unbond” your tokens. You can unbond any amount, up to the sum of all your self-bonds, even before they become active.</p>
-<p>To submit an unbonding of self-bonded of tokens from your validator:</p>
+<p>To submit an unbonding of self-bonded tokens from your validator:</p>
 <pre><code class="language-shell">anoma client unbond \
   --validator my-validator \
   --amount 0.3
