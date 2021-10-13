@@ -174,7 +174,7 @@ make serve
 <p>Welcome to Anoma user guide!</p>
 <p>This guide is intended to help you find how to install, operate and interact with the Anoma ledger and intent gossip nodes, the matchmaker, the client and the wallet.</p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="-install-anoma"><a class="header" href="#-install-anoma">💾 Install Anoma</a></h1>
-<p>There's a single command to build and install Anoma executables from source (the node, the client and the wallet). This command will also verify that Tendermint with a compatible version is available and if not, attempt to install it. Note that currently at least 16GB RAM is needed to build from source.</p>
+<p>There's a single command to build and install Anoma executables from source (the node, the client and the wallet). This command will also verify if a compatible version of Tendermint is available, and if not, attempt to install it. Note that currently at least 16GB RAM is needed to build from source.</p>
 <pre><code class="language-bash">make install
 </code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="getting-started"><a class="header" href="#getting-started">Getting started</a></h1>
@@ -197,7 +197,7 @@ make serve
 <p>The wallet's state is stored under <code>.anoma/{chain_id}/wallet.toml</code> (with the default <code>--base-dir</code>), which will be created for you if it doesn't already exist when you run any command that accesses the wallet. A newly created wallet will be pre-loaded with some default addresses.</p>
 <p>For the ledger and intent gossip commands that use keys and addresses, you can enter their aliases as as defined in the wallet (case-sensitive).</p>
 <h2 id="-keys"><a class="header" href="#-keys">🔐 Keys</a></h2>
-<p>For cryptographic signatures we currently support ed25519 keys. More will be added in future.</p>
+<p>For cryptographic signatures, we currently support ed25519 keys. More will be added in future.</p>
 <p>To manage keys, various sub-commands are available, see the commands <code>--help</code>:</p>
 <pre><code class="language-shell">anoma wallet key
 </code></pre>
@@ -209,12 +209,12 @@ make serve
 </code></pre>
 <p>Note that this will also save an implicit address derived from this public key under the same alias. More about addresses below. This command has the same effect as <code>address gen</code>.</p>
 <h2 id="-addresses"><a class="header" href="#-addresses">📇 Addresses</a></h2>
-<p>All accounts in Anoma ledger have a unique address, exactly one validity predicate and optionally any additional data in its dynamic storage sub-space.</p>
+<p>All accounts in the Anoma ledger have a unique address, exactly one validity predicate and optionally any additional data in its dynamic storage sub-space.</p>
 <p>There are currently 3 types of account addresses:</p>
 <ul>
-<li>Established: Used for accounts that allow to deploy custom validation logic. These must be created on-chain via a transaction (see <a href="user-guide/./ledger.html#-initialize-an-account">the Ledger guide</a>). The address is generated on-chain and is not known until the transaction is applied.</li>
+<li>Established: Used for accounts that allow the deployment of custom validation logic. These must be created on-chain via a transaction (see <a href="user-guide/./ledger.html#-initialize-an-account">the Ledger guide</a>). The address is generated on-chain and is not known until the transaction is applied.</li>
 <li>Implicit, <em>not yet fully supported in the ledger</em>: Derived from a key, which can be used to authorize certain transactions from the account. They can be used as recipients of transactions without even when the account has not been used on-chain before.</li>
-<li>Internal: Special internal accounts, such protocol parameters account, PoS and IBC</li>
+<li>Internal: Special internal accounts, such as protocol parameters account, PoS and IBC</li>
 </ul>
 <p>To manage addresses, similar to keys, various sub-commands are available:</p>
 <pre><code class="language-shell">anoma wallet address
@@ -230,28 +230,28 @@ make serve
 <p>To start a local Anoma ledger node, run:</p>
 <pre><code class="language-shell">anoma ledger
 </code></pre>
-<p>The node will attempt to connect to the persistent validator nodes and other peers in the network and synchronize to the latest block.</p>
-<p>By default, the ledger will store its configuration and state in the <code>.anoma</code> directory relative to the current working directory. You can use <code>--base-dir</code> CLI global argument or <code>ANOMA_BASE_DIR</code> environment variable to change it.</p>
+<p>The node will attempt to connect to the persistent validator nodes and other peers in the network, and synchronize to the latest block.</p>
+<p>By default, the ledger will store its configuration and state in the <code>.anoma</code> directory relative to the current working directory. You can use the <code>--base-dir</code> CLI global argument or <code>ANOMA_BASE_DIR</code> environment variable to change it.</p>
 <p>If not found on start up, the ledger will generate a configuration file at <code>.anoma/config.toml</code>.</p>
-<p>The ledger also needs access to the built WASM files that are used in the genesis block. These files are included in release and shouldn't be modified, otherwise your node will fail with consensus error on the genesis block. By default, these are expected to be in the <code>wasm</code> directory, relative to the current working directory. This can also be set with <code>--wasm-dir</code> CLI global argument, <code>ANOMA_WASM_DIR</code> environment variable or the configuration file.</p>
+<p>The ledger also needs access to the built WASM files that are used in the genesis block. These files are included in release and shouldn't be modified, otherwise your node will fail with a consensus error on the genesis block. By default, these are expected to be in the <code>wasm</code> directory, relative to the current working directory. This can also be set with the <code>--wasm-dir</code> CLI global argument, <code>ANOMA_WASM_DIR</code> environment variable or the configuration file.</p>
 <h2 id="-initialize-an-account"><a class="header" href="#-initialize-an-account">📝 Initialize an account</a></h2>
 <p>If you already have a key in your wallet, you can skip this step and use it in the following commands. Otherwise, generate a new key now:</p>
 <pre><code class="language-shell">anoma wallet key gen --alias my-key
 </code></pre>
-<p>Then send a transaction to initialize the account and save its address with alias <code>my-new-acc</code>. The <code>my-key</code> public key will be written into the account's storage for authorizing future transactions. We also sign this transaction with <code>my-key</code>.</p>
+<p>Then send a transaction to initialize the account and save its address with the alias <code>my-new-acc</code>. The <code>my-key</code> public key will be written into the account's storage for authorizing future transactions. We also sign this transaction with <code>my-key</code>.</p>
 <pre><code class="language-shell">anoma client init-account \
   --alias my-new-acc \
   --public-key my-key \
   --source my-key
 </code></pre>
 <p>Once this transaction has been applied, the client will automatically see the new address created by the transaction and add it to your <a href="user-guide/./wallet.html">wallet</a> with the chosen alias <code>my-new-acc</code>.</p>
-<p>By default, this command will use the prebuilt user validity predicate (from the <a href="https://github.com/anoma/anoma/blob/fb445f67ffe3afe3bf50eb71658b01ff760e909d/wasm/wasm_source/src/vp_user.rs">vp_user</a> source). You can supply a different validity predicate with <code>--code-path</code> argument. We'll come back to this topic and cover how to write and deploy custom validity predicates in the <a href="user-guide/ledger/customize.html#-validity-predicates">custom validity predicates section</a>.</p>
+<p>By default, this command will use the prebuilt user validity predicate (from the <a href="https://github.com/anoma/anoma/blob/fb445f67ffe3afe3bf50eb71658b01ff760e909d/wasm/wasm_source/src/vp_user.rs">vp_user</a> source). You can supply a different validity predicate with the <code>--code-path</code> argument. We'll come back to this topic and cover how to write and deploy custom validity predicates in the <a href="user-guide/ledger/customize.html#-validity-predicates">custom validity predicates section</a>.</p>
 <h2 id="-token-transactions-and-queries"><a class="header" href="#-token-transactions-and-queries">💸 Token transactions and queries</a></h2>
 <p>In Anoma, tokens are implemented as accounts with a token validity predicate. It checks that its total supply is preserved in any transaction that uses this token. Your wallet will be pre-loaded with some token addresses that are initialized in the genesis block.</p>
 <p>You can see the tokens addresses known by the client when you query all tokens balances:</p>
 <pre><code class="language-shell">anoma client balance
 </code></pre>
-<p>XAN is Anoma's native token. To obtain some tokens in a testnet, there's a special &quot;faucet&quot; account that allows anyone to withdraw up to 1000 of any token that is posses in a single transaction. You can find the address of this account in your wallet. To get some tokens from the faucet account:</p>
+<p>XAN is Anoma's native token. To obtain some tokens in a testnet, there is a special &quot;faucet&quot; account that allows anyone to withdraw up to 1000 of any token for a single transaction. You can find the address of this account in your wallet. To get some tokens from the faucet account:</p>
 <pre><code class="language-shell">anoma client transfer \
   --source faucet \
   --target my-new-acc \
@@ -259,8 +259,8 @@ make serve
   --token XAN \
   --amount 1000
 </code></pre>
-<p>Note that because you don't have the key to sign transfer from the faucet account, in the command above we set the <code>--signer</code> explicitly to your account's address.</p>
-<p>To submit a regular token transfer from your account to <code>validator-1</code> address:</p>
+<p>Note that because you don't have the key to sign a transfer from the faucet account, in the command above, we set the <code>--signer</code> explicitly to your account's address.</p>
+<p>To submit a regular token transfer from your account to the <code>validator-1</code> address:</p>
 <pre><code class="language-shell">anoma client transfer \
   --source my-new-acc \
   --target validator-1 \
@@ -273,15 +273,15 @@ make serve
 </code></pre>
 <p>Note that for any client command that submits a transaction (<code>init-account</code>, <code>transfer</code>, <code>tx</code>, <code>update</code> and <a href="user-guide/ledger/pos.html">PoS transactions</a>), you can use the <code>--dry-run</code> flag to simulate the transaction being applied in the block, to see what its result would be.</p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="-interacting-with-the-proof-of-stake-system"><a class="header" href="#-interacting-with-the-proof-of-stake-system">🔏 Interacting with the Proof-of-Stake system</a></h1>
-<p>The Anoma Proof of Stake system is using the XAN token as the staking token. It features delegation to any number of validators and customizable validator validity predicates.</p>
+<p>The Anoma Proof of Stake system uses the XAN token as the staking token. It features delegation to any number of validators and customizable validator validity predicates.</p>
 <p>The PoS system is implemented as an account with a validity predicate that governs the rules of the system. You can find its address in your wallet:</p>
 <pre><code class="language-shell">anoma wallet address find --alias PoS
 </code></pre>
-<p>The system relies on the concept of epochs. An epoch is a range of consecutive blocks identified by consecutive natural numbers. Each epoch last a minimum duration and includes a minimum number of blocks since the beginning of the last epoch. These are defined by protocol parameters.</p>
+<p>The system relies on the concept of epochs. An epoch is a range of consecutive blocks identified by consecutive natural numbers. Each epoch lasts a minimum duration and includes a minimum number of blocks since the beginning of the last epoch. These are defined by protocol parameters.</p>
 <p>To query the current epoch:</p>
 <pre><code class="language-shell">anoma client epoch
 </code></pre>
-<p>You can delegate to any number of validators at any time. When you delegate tokens, the delegation won't count towards the validator's stake (which in turn determines its voting power) until the beginning of epoch <code>n + 2</code> in the current epoch <code>n</code> (the literal <code>2</code> is set by PoS parameter <code>pipeline_len</code>). The delegated amount of tokens will be deducted from your account immediately and will be credited to the PoS system's account.</p>
+<p>You can delegate to any number of validators at any time. When you delegate tokens, the delegation won't count towards the validator's stake (which in turn determines its voting power) until the beginning of epoch <code>n + 2</code> in the current epoch <code>n</code> (the literal <code>2</code> is set by PoS parameter <code>pipeline_len</code>). The delegated amount of tokens will be deducted from your account immediately, and will be credited to the PoS system's account.</p>
 <p>To submit a delegation that bonds tokens from the source address to a validator with alias <code>validator-1</code>:</p>
 <pre><code class="language-shell">anoma client bond \
   --source my-new-acc \
@@ -313,7 +313,7 @@ make serve
   --source my-new-acc \
   --validator validator-1
 </code></pre>
-<p>On success, the withdrawn tokens will be credited back your account and debited from the PoS system.</p>
+<p>Upon success, the withdrawn tokens will be credited back your account and debited from the PoS system.</p>
 <p>To see all validators and their voting power, you can query:</p>
 <pre><code class="language-shell">anoma client voting-power
 </code></pre>
@@ -332,26 +332,26 @@ make serve
 </ul>
 <p>Then, it submits a transaction to the ledger that generates two new accounts with established addresses:</p>
 <ul>
-<li>Validator account with the main validator address, which can be used to receive new delegations</li>
-<li>Staking reward account, which will receive rewards for participation in the PoS system. In future, the validity predicate of this account will be able to control how the rewards are to be distributed to the validator's delegators. <em>Staking rewards are not yet implemented</em>.</li>
+<li>A validator account with the main validator address, which can be used to receive new delegations</li>
+<li>A staking reward account, which will receive rewards for participation in the PoS system. In the future, the validity predicate of this account will be able to control how the rewards are to be distributed to the validator's delegators. <em>Staking rewards are not yet implemented</em>.</li>
 </ul>
-<p>These keys and addresses of the addresses will be saved in your wallet. You local ledger node will also be setup to run this validator, you just have to shut down it down with e.g. <code>Ctrl + C</code>, then start it again with the same command:</p>
+<p>These keys and aliases of the addresses will be saved in your wallet. Your local ledger node will also be setup to run this validator, you just have to shut it down with e.g. <code>Ctrl + C</code>, then start it again with the same command:</p>
 <pre><code class="language-shell">anoma ledger
 </code></pre>
 <p>The ledger will then use the validator consensus key to sign blocks, should your validator account acquire enough voting power to be included in the active validator set. The size of the active validator set is limited to <code>128</code> (the limit is set by the PoS <code>max_validator_slots</code> parameter).</p>
-<p>Note that the balance of XAN tokens that is in your validator account doesn't count towards your validator's stake and voting power:</p>
+<p>Note that the balance of XAN tokens that is in your validator account does not count towards your validator's stake and voting power:</p>
 <pre><code class="language-shell">anoma client balance --owner my-validator --token XAN
 </code></pre>
-<p>That is, the balance of your account's address is a regular liquid balance that you can transfer using your validator account key, depending on the rules of the validator account's validity predicate. The default validity predicate allows you to transfer it by a signed transaction and/or stake it in the PoS system.</p>
+<p>That is, the balance of your account's address is a regular liquid balance that you can transfer using your validator account key, depending on the rules of the validator account's validity predicate. The default validity predicate allows you to transfer it with a signed transaction and/or stake it in the PoS system.</p>
 <p>You can submit a self-bonding transaction of tokens from a validator account to the PoS system with:</p>
 <pre><code class="language-shell">anoma client bond \
   --validator my-validator \
   --amount 3.3
 </code></pre>
-<p>Validator's voting power is determined from the sum of all their active self-bonds and delegations of tokens, with slashes applied, if any, divided by <code>1000</code> (PoS <code>votes_per_token</code> parameter, with current value set to <code>10‱</code> in parts per ten thousand).</p>
-<p>Same rules apply as with delegations. When you self-bond tokens, the bonded amount won't count towards your validator's stake (which in turn determines your power) until the beginning of epoch <code>n + 2</code> in the current epoch <code>n</code>. The bonded amount of tokens will be deducted from the validator's account immediately and will be credited to the PoS system's account.</p>
+<p>A validator's voting power is determined by the sum of all their active self-bonds and delegations of tokens, with slashes applied, if any, divided by <code>1000</code> (PoS <code>votes_per_token</code> parameter, with the current value set to <code>10‱</code> in parts per ten thousand).</p>
+<p>The same rules apply to delegations. When you self-bond tokens, the bonded amount won't count towards your validator's stake (which in turn determines your power) until the beginning of epoch <code>n + 2</code> in the current epoch <code>n</code>. The bonded amount of tokens will be deducted from the validator's account immediately and will be credited to the PoS system's account.</p>
 <p>While your tokens are being self-bonded, they are locked-in the PoS system and hence are not liquid until you withdraw them. To do that, you first need to send a transaction to “unbond” your tokens. You can unbond any amount, up to the sum of all your self-bonds, even before they become active.</p>
-<p>To submit an unbonding of self-bonded of tokens from your validator:</p>
+<p>To submit an unbonding of self-bonded tokens from your validator:</p>
 <pre><code class="language-shell">anoma client unbond \
   --validator my-validator \
   --amount 0.3
@@ -363,11 +363,11 @@ make serve
 <pre><code class="language-shell">anoma client withdraw --validator my-validator
 </code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="customize-accounts-and-transactions"><a class="header" href="#customize-accounts-and-transactions">Customize accounts and transactions</a></h1>
-<p>On this page, we'll cover how to tailor your account(s) to your use-case with custom made validity predicates and transactions.</p>
+<p>On this page, we'll cover how to tailor your account(s) to your use-case with custom-made validity predicates and transactions.</p>
 <p>We currently only support Rust for custom validity predicates and transactions via WASM, but expect many more options to be available in the future!</p>
 <h2 id="-anoma-accounts-primer"><a class="header" href="#-anoma-accounts-primer">👩🏽‍🏫 Anoma accounts primer</a></h2>
 <p>Instead of the common smart contract design, in Anoma, all the accounts follow the same basic principles. Each account has exactly one validity predicate. Any transaction that attempts to make some storage modifications will trigger validity predicates of each account whose storage has been modified by it. Validity predicates are stateless functions that decide if an account accepts the transaction.</p>
-<p>Every account also has its dedicated key-value storage. The ledger is encoding agnostic, it allows you to use encoding of your preference for the storage values. Internally and for the pre-built validity predicates and transactions, we use <a href="https://github.com/near/borsh-rs">Borsh</a>, which allows you to simply derive the encoding from your data types. The storage keys are <code>/</code> separated path segments, where the first segment is always the address of the account to which the storage key belongs. In storage keys, addresses use a reserved prefix <code>#</code>.</p>
+<p>Every account also has its dedicated key-value storage. The ledger encodes agnostic, it allows you to use the encoding of your preference for the storage values. Internally and for the pre-built validity predicates and transactions, we use <a href="https://github.com/near/borsh-rs">Borsh</a>, which allows you to simply derive the encoding from your data types. The storage keys are <code>/</code> separated path segments, where the first segment is always the address of the account to which the storage key belongs. In storage keys, addresses use a reserved prefix <code>#</code>.</p>
 <p>To illustrate with an example storage key used for fungible tokens (with addresses shortened for clarity), let's say:</p>
 <ul>
 <li>
@@ -382,9 +382,9 @@ make serve
 </code></pre>
 </li>
 </ul>
-<p>Any transaction can attempt to make changes to the storage of any account(s). Only if all the involved accounts accept the transaction will it be committed. Otherwise, the transaction is rejected and its modifications discarded.</p>
-<p>This approach allows multiparty transactions to be applied atomically, without any a priori coordination. It also gives accounts complete and fine-grained control over how they can be used in transactions in themselves and in relation to other accounts.</p>
-<p>In fact, most of the functionality in the Anoma ledger is being built leveraging the simplicity and flexibility of this account system, from a simple fungible token to more complex accounts that integrate Inter-blockchain Communication protocol and the Proof of Stake system.</p>
+<p>Any transaction can attempt to make changes to the storage of any account(s). Only if all the involved accounts accept, the transaction will it be committed. Otherwise, the transaction is rejected and its modifications discarded.</p>
+<p>This approach allows multiparty transactions to be applied atomically, without any a priority coordination. It also gives accounts complete and fine-grained control over how they can be used in transactions in themselves and in relation to other accounts.</p>
+<p>In fact, most of the functionality in the Anoma ledger is being built leveraging the simplicity and flexibility of this account system, from a simple fungible token to more complex accounts that integrate the Inter-blockchain Communication protocol and the Proof of Stake system.</p>
 <h2 id="-validity-predicates"><a class="header" href="#-validity-predicates">☑ Validity predicates</a></h2>
 <p>A custom validity predicates can be built from scratch using <code>vp_template</code> (from root directory <a href="https://github.com/anoma/anoma/tree/master/wasm/vp_template"><code>wasm/vp_template</code></a>), which is Rust code compiled to WASM. Consult its <code>README.md</code> to find out more.</p>
 <p>You can also check out the pre-built validity predicates' source code in the <a href="https://github.com/anoma/anoma/tree/master/wasm/wasm_source"><code>wasm/wasm_source</code></a>, where each sub-module that begins with <code>vp_</code> implements a validity predicate. For example the <a href="https://github.com/anoma/anoma/blob/master/wasm/wasm_source/src/vp_user.rs"><code>vp_user</code></a> is the default validity predicate used for established accounts (created with <code>init-account</code> command).</p>
@@ -422,7 +422,7 @@ fn validate_tx(
 <pre><code class="language-shell">make -C wasm/vp_template
 </code></pre>
 <p>This will output a WASM file that can be found in <code>wasm/vp_template/target/wasm32-unknown-unknown/release/vp_template.wasm</code>.</p>
-<p>You can for example copy it into your <code>wasm</code> directory (the default directory used by the ledger's node and the client, which can be changed with <code>--wasm-dir</code> global argument or <code>ANOMA_WASM_DIR</code>):</p>
+<p>You can, for example, copy it into your <code>wasm</code> directory (the default directory used by the ledger's node and the client, which can be changed with <code>--wasm-dir</code> global argument or <code>ANOMA_WASM_DIR</code>):</p>
 <pre><code class="language-shell">cp \
   wasm/vp_template/target/wasm32-unknown-unknown/release/vp_template.wasm \
   wasm/my_vp.wasm
@@ -431,7 +431,7 @@ fn validate_tx(
 <pre><code class="language-shell">anoma client update --address my-new-acc --code-path my_vp.wasm
 </code></pre>
 <h2 id="-custom-transactions"><a class="header" href="#-custom-transactions">📩 Custom transactions</a></h2>
-<p>A transaction must contain a WASM code that can perform arbitrary storage changes. It can also contain arbitrary data, which will be passed to the transaction and validity predicates when the transaction is being applied.</p>
+<p>A transaction must contain a WASM code that can perform arbitrary storage changes. It can also contain arbitrary data, which will be passed onto the transaction and validity predicates when the transaction is being applied.</p>
 <p>A custom transaction can be built from scratch using <code>tx_template</code> (from root directory <a href="https://github.com/anoma/anoma/tree/master/wasm/tx_template"><code>wasm/tx_template</code></a>), which is Rust code compiled to WASM. Consult its <code>README.md</code> to find out more.</p>
 <p>For some inspiration, check out the pre-built transactions source code in the <a href="https://github.com/anoma/anoma/tree/master/wasm/wasm_source"><code>wasm/wasm_source</code></a>, where each sub-module that begins with <code>tx_</code> implements a transaction.</p>
 <p>A transaction code must contain the following function, which will be called when the transaction is being applied:</p>
@@ -457,10 +457,10 @@ fn apply_tx(tx_data: Vec&lt;u8&gt;) {
 </code></pre>
 <p>Optionally, you can also attach some data to the transaction from a file with the <code>--data-path</code> argument.</p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="the-intent-gossip-and-matchmaker"><a class="header" href="#the-intent-gossip-and-matchmaker">The Intent gossip and Matchmaker</a></h1>
-<p>To run gossip node with intent gossip system and rpc server:</p>
+<p>To run an intent gossip node with an RPC server:</p>
 <pre><code class="language-shell">cargo run --bin anoma gossip --rpc &quot;127.0.0.1:39111&quot;
 </code></pre>
-<p>To run gossip node with intent gossip system, a token exchange matchmaker and RPC through which new intents requested:</p>
+<p>To run an intent gossip node with the intent gossip system, a token exchange matchmaker and RPC through which new intents are requested:</p>
 <pre><code class="language-shell">cargo run --bin anoman gossip --rpc &quot;127.0.0.1:39111&quot; --matchmaker-path wasm/mm_token_exch.wasm --tx-code-path wasm/tx_from_intent.wasm --ledger-address &quot;127.0.0.1:26657&quot; --source matchmaker --signing-key matchmaker
 </code></pre>
 <p>This pre-built matchmaker implementation is <a href="https://github.com/anoma/anoma/blob/master/wasm/wasm_source/src/mm_token_exch.rs">the fungible token exchange <code>mm_token_exch</code></a>, that is being used together with <a href="https://github.com/anoma/anoma/blob/master/wasm/wasm_source/src/lib.rs">the pre-built <code>tx_from_intent</code> transaction WASM</a> to submit transaction from matched intents to the ledger.</p>
