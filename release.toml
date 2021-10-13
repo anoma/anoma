@@ -7,3 +7,4 @@ no-dev-version             = true
 pre-release-commit-message = "Anoma {{version}}"
 shared-version             = true
 sign-tag                   = true
+tag-message                = "Anoma {{version}}"

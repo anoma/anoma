@@ -27,6 +27,7 @@ files_to_check = [
     'docs/Makefile',
     'scripts/ci/pre-run.sh',
     'scripts/ci/release.sh',
+    'scripts/ci/build-and-publish-docs.sh',
     'scripts/ci/audit.py',
     'scripts/ci/udeps.py',
     'wasm/checksums.py'

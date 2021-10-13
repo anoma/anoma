@@ -1,12 +1,12 @@
 # The Intent gossip and Matchmaker
 
-To run gossip node with intent gossip system and rpc server:
+To run an intent gossip node with an RPC server:
 
 ```shell
 cargo run --bin anoma gossip --rpc "127.0.0.1:39111"
 ```
 
-To run gossip node with intent gossip system, a token exchange matchmaker and RPC through which new intents requested:
+To run an intent gossip node with the intent gossip system, a token exchange matchmaker and RPC through which new intents are requested:
 
 ```shell
 cargo run --bin anoman gossip --rpc "127.0.0.1:39111" --matchmaker-path wasm/mm_token_exch.wasm --tx-code-path wasm/tx_from_intent.wasm --ledger-address "127.0.0.1:26657" --source matchmaker --signing-key matchmaker

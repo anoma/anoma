@@ -1,6 +1,6 @@
 # 🔏 Interacting with the Proof-of-Stake system
 
-The Anoma Proof of Stake system is using the XAN token as the staking token. It features delegation to any number of validators and customizable validator validity predicates.
+The Anoma Proof of Stake system uses the XAN token as the staking token. It features delegation to any number of validators and customizable validator validity predicates.
 
 The PoS system is implemented as an account with a validity predicate that governs the rules of the system. You can find its address in your wallet:
 
@@ -8,7 +8,7 @@ The PoS system is implemented as an account with a validity predicate that gover
 anoma wallet address find --alias PoS
 ```
 
-The system relies on the concept of epochs. An epoch is a range of consecutive blocks identified by consecutive natural numbers. Each epoch last a minimum duration and includes a minimum number of blocks since the beginning of the last epoch. These are defined by protocol parameters.
+The system relies on the concept of epochs. An epoch is a range of consecutive blocks identified by consecutive natural numbers. Each epoch lasts a minimum duration and includes a minimum number of blocks since the beginning of the last epoch. These are defined by protocol parameters.
 
 To query the current epoch:
 
@@ -16,7 +16,7 @@ To query the current epoch:
 anoma client epoch
 ```
 
-You can delegate to any number of validators at any time. When you delegate tokens, the delegation won't count towards the validator's stake (which in turn determines its voting power) until the beginning of epoch `n + 2` in the current epoch `n` (the literal `2` is set by PoS parameter `pipeline_len`). The delegated amount of tokens will be deducted from your account immediately and will be credited to the PoS system's account.
+You can delegate to any number of validators at any time. When you delegate tokens, the delegation won't count towards the validator's stake (which in turn determines its voting power) until the beginning of epoch `n + 2` in the current epoch `n` (the literal `2` is set by PoS parameter `pipeline_len`). The delegated amount of tokens will be deducted from your account immediately, and will be credited to the PoS system's account.
 
 To submit a delegation that bonds tokens from the source address to a validator with alias `validator-1`:
 
@@ -72,7 +72,7 @@ anoma client withdraw \
   --validator validator-1
 ```
 
-On success, the withdrawn tokens will be credited back your account and debited from the PoS system.
+Upon success, the withdrawn tokens will be credited back your account and debited from the PoS system.
 
 To see all validators and their voting power, you can query:
 
@@ -100,10 +100,10 @@ This command will generate the keys required for running a validator:
 
 Then, it submits a transaction to the ledger that generates two new accounts with established addresses:
 
-- Validator account with the main validator address, which can be used to receive new delegations
-- Staking reward account, which will receive rewards for participation in the PoS system. In future, the validity predicate of this account will be able to control how the rewards are to be distributed to the validator's delegators. *Staking rewards are not yet implemented*.
+- A validator account with the main validator address, which can be used to receive new delegations
+- A staking reward account, which will receive rewards for participation in the PoS system. In the future, the validity predicate of this account will be able to control how the rewards are to be distributed to the validator's delegators. *Staking rewards are not yet implemented*.
 
-These keys and addresses of the addresses will be saved in your wallet. You local ledger node will also be setup to run this validator, you just have to shut down it down with e.g. `Ctrl + C`, then start it again with the same command:
+These keys and aliases of the addresses will be saved in your wallet. Your local ledger node will also be setup to run this validator, you just have to shut it down with e.g. `Ctrl + C`, then start it again with the same command:
 
 ```shell
 anoma ledger
@@ -111,13 +111,13 @@ anoma ledger
 
 The ledger will then use the validator consensus key to sign blocks, should your validator account acquire enough voting power to be included in the active validator set. The size of the active validator set is limited to `128` (the limit is set by the PoS `max_validator_slots` parameter).
 
-Note that the balance of XAN tokens that is in your validator account doesn't count towards your validator's stake and voting power:
+Note that the balance of XAN tokens that is in your validator account does not count towards your validator's stake and voting power:
 
 ```shell
 anoma client balance --owner my-validator --token XAN
 ```
 
-That is, the balance of your account's address is a regular liquid balance that you can transfer using your validator account key, depending on the rules of the validator account's validity predicate. The default validity predicate allows you to transfer it by a signed transaction and/or stake it in the PoS system.
+That is, the balance of your account's address is a regular liquid balance that you can transfer using your validator account key, depending on the rules of the validator account's validity predicate. The default validity predicate allows you to transfer it with a signed transaction and/or stake it in the PoS system.
 
 You can submit a self-bonding transaction of tokens from a validator account to the PoS system with:
 
@@ -127,13 +127,13 @@ anoma client bond \
   --amount 3.3
 ```
 
-Validator's voting power is determined from the sum of all their active self-bonds and delegations of tokens, with slashes applied, if any, divided by `1000` (PoS `votes_per_token` parameter, with current value set to `10‱` in parts per ten thousand).
+A validator's voting power is determined by the sum of all their active self-bonds and delegations of tokens, with slashes applied, if any, divided by `1000` (PoS `votes_per_token` parameter, with the current value set to `10‱` in parts per ten thousand).
 
-Same rules apply as with delegations. When you self-bond tokens, the bonded amount won't count towards your validator's stake (which in turn determines your power) until the beginning of epoch `n + 2` in the current epoch `n`. The bonded amount of tokens will be deducted from the validator's account immediately and will be credited to the PoS system's account.
+The same rules apply to delegations. When you self-bond tokens, the bonded amount won't count towards your validator's stake (which in turn determines your power) until the beginning of epoch `n + 2` in the current epoch `n`. The bonded amount of tokens will be deducted from the validator's account immediately and will be credited to the PoS system's account.
 
 While your tokens are being self-bonded, they are locked-in the PoS system and hence are not liquid until you withdraw them. To do that, you first need to send a transaction to “unbond” your tokens. You can unbond any amount, up to the sum of all your self-bonds, even before they become active.
 
-To submit an unbonding of self-bonded of tokens from your validator:
+To submit an unbonding of self-bonded tokens from your validator:
 
 ```shell
 anoma client unbond \

@@ -20,7 +20,7 @@ This is an implementation of the Anoma protocol in Rust.
 
 ## 💾 Installing
 
-There's a single command to build and install Anoma executables from source (the node, the client and the wallet). This command will also verify that [Tendermint](#dependencies) with a compatible version is available and if not, attempt to install it. Note that currently at least 16GB RAM is needed to build from source.
+There is a single command to build and install Anoma executables from source (the node, the client and the wallet). This command will also verify that a compatible version of [Tendermint](#dependencies) is available and if not, attempt to install it. Note that currently at least 16GB RAM is needed to build from source.
 
 ```shell
 make install
