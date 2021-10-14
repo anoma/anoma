@@ -45,7 +45,7 @@ mod tests {
 
         let nft_address = tx_host_env::nft::init_nft(CreateNft {
             owner: nft_owner.clone(),
-            vp_code: vp_code.clone(),
+            vp_code: vp_code,
             tokens: vec![],
         });
 
@@ -79,7 +79,7 @@ mod tests {
 
         let nft_address = tx_host_env::nft::init_nft(CreateNft {
             owner: nft_owner.clone(),
-            vp_code: vp_code.clone(),
+            vp_code: vp_code,
             tokens: vec![],
         });
 
@@ -120,7 +120,7 @@ mod tests {
 
         let nft_address = tx_host_env::nft::init_nft(CreateNft {
             owner: nft_owner.clone(),
-            vp_code: vp_code.clone(),
+            vp_code: vp_code,
             tokens: vec![],
         });
 
@@ -164,7 +164,7 @@ mod tests {
 
         let nft_address = tx_host_env::nft::init_nft(CreateNft {
             owner: nft_owner.clone(),
-            vp_code: vp_code.clone(),
+            vp_code: vp_code,
             tokens: vec![],
         });
 
@@ -217,7 +217,7 @@ mod tests {
 
         let nft_address = tx_host_env::nft::init_nft(CreateNft {
             owner: nft_owner.clone(),
-            vp_code: vp_code.clone(),
+            vp_code: vp_code,
             tokens: vec![],
         });
 
@@ -282,7 +282,7 @@ mod tests {
 
         let nft_address = tx_host_env::nft::init_nft(CreateNft {
             owner: nft_owner.clone(),
-            vp_code: vp_code.clone(),
+            vp_code: vp_code,
             tokens: vec![],
         });
 
@@ -336,7 +336,7 @@ mod tests {
 
         let nft_address = tx_host_env::nft::init_nft(CreateNft {
             owner: nft_owner.clone(),
-            vp_code: vp_code.clone(),
+            vp_code: vp_code,
             tokens: vec![],
         });
 
