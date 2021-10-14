@@ -66,6 +66,14 @@ impl TestTxEnv {
         }
     }
 
+    pub fn commit_tx_and_block(&mut self) {
+        self.write_log.commit_tx();
+        self.write_log.commit_block(&mut self.storage);
+        self.iterators = PrefixIterators::default();
+        self.verifiers = HashSet::default();
+        self.gas_meter = BlockGasMeter::default();
+    }
+
     /// Credit tokens to the target account.
     pub fn credit_tokens(
         &mut self,
@@ -123,7 +131,6 @@ pub fn init_tx_env(
 /// invoked host environment functions and so it must be initialized
 /// before the test.
 mod native_tx_host_env {
-
     use std::cell::RefCell;
 
     use anoma::ledger::storage::testing::Sha256Hasher;
