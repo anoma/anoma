@@ -1190,6 +1190,7 @@ pub mod args {
     const TX_CODE_PATH: ArgOpt<PathBuf> = arg_opt("tx-code-path");
     const NFT_ADDRESS: Arg<Address> = arg("nft-address");
     const NFT_ADDRESS_OWNER: Arg<Address> = arg("nft-owner");
+    const NFT_ADDRESS_APPROVAL: ArgOpt<Address> = arg_opt("nft-approval");
     const UNSAFE_DONT_ENCRYPT: ArgFlag = flag("unsafe-dont-encrypt");
     const UNSAFE_SHOW_SECRET: ArgFlag = flag("unsafe-show-secret");
     const VALIDATOR: Arg<WalletAddress> = arg("validator");
@@ -1941,6 +1942,8 @@ pub mod args {
         pub nft_owner: Address,
         /// The nft token description
         pub nft_data: PathBuf,
+        /// The nft verifier address. If None, using nft_owner by default
+        pub verifier: Option<Address>,
     }
 
     impl Args for NftMint {
@@ -1950,6 +1953,7 @@ pub mod args {
             let data_path = DATA_PATH.parse(matches);
             let signing_key = SIGNING_KEY.parse(matches);
             let nft_owner = NFT_ADDRESS_OWNER.parse(matches);
+            let verifier = NFT_ADDRESS_APPROVAL.parse(matches);
 
             Self {
                 tx,
@@ -1957,6 +1961,7 @@ pub mod args {
                 nft_address,
                 nft_owner,
                 nft_data: data_path,
+                verifier,
             }
         }
 

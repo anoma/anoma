@@ -14,22 +14,21 @@ pub mod tx {
         // write creator
         tx::write(&owner_key.to_string(), ());
 
-        tx::log_string(format!("owner_key {:?}", owner_key.to_string()));
-        tx::log_string(format!("nft address {:?}", address));
-
-        aux_mint_token(&address, &nft.owner, nft.tokens);
+        // mint tokens
+        aux_mint_token(&address, &nft.owner, nft.tokens, &nft.owner);
 
         address
     }
 
     pub fn mint_tokens(nft: MintNft) {
-        aux_mint_token(&nft.address, &nft.owner, nft.tokens);
+        aux_mint_token(&nft.address, &nft.owner, nft.tokens, &nft.verifier);
     }
 
     fn aux_mint_token(
         nft_address: &Address,
         creator_address: &Address,
         tokens: Vec<NftToken>,
+        verifier: &Address,
     ) {
         for token in tokens {
             // write token metadata
@@ -63,6 +62,7 @@ pub mod tx {
                 tx::write(&approval_key.to_string(), ());
             }
         }
+        tx::insert_verifier(verifier);
     }
 }
 

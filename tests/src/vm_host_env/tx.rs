@@ -68,7 +68,10 @@ impl TestTxEnv {
 
     pub fn commit_tx_and_block(&mut self) {
         self.write_log.commit_tx();
-        self.write_log.commit_block(&mut self.storage);
+        self.write_log
+            .commit_block(&mut self.storage)
+            .map_err(|err| println!("{:?}", err))
+            .ok();
         self.iterators = PrefixIterators::default();
         self.verifiers = HashSet::default();
         self.gas_meter = BlockGasMeter::default();

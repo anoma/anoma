@@ -317,9 +317,10 @@ pub async fn mint_nft(mut ctx: Context, args: args::NftMint) {
         serde_json::from_reader(file).expect("JSON was not well-formatted");
 
     let data = MintNft {
-        owner: args.nft_owner,
+        owner: args.nft_owner.clone(),
         address: args.nft_address,
         tokens: nft_tokens,
+        verifier: args.verifier.unwrap_or(args.nft_owner),
     };
     let data = data.try_to_vec().expect(
         "Encoding transfer data to initialize a new account shouldn't fail",

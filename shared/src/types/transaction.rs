@@ -81,6 +81,8 @@ pub struct MintNft {
     pub owner: Address,
     /// The nft tokens
     pub tokens: Vec<NftToken>,
+    /// The approval address
+    pub verifier: Address,
 }
 
 /// A tx data type to initialize a new validator account and its staking reward
