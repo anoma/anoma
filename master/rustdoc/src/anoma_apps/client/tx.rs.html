@@ -752,7 +752,7 @@
 
         <span class="ident">ctx</span>.<span class="ident">wallet</span>.<span class="ident">save</span>().<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="ident">err</span><span class="op">|</span> <span class="macro">eprintln!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">err</span>));
 
-        <span class="kw">let</span> <span class="ident">tendermint_home</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">ctx</span>.<span class="ident">config</span>.<span class="ident">ledger</span>.<span class="ident">tendermint</span>;
+        <span class="kw">let</span> <span class="ident">tendermint_home</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">ctx</span>.<span class="ident">config</span>.<span class="ident">ledger</span>.<span class="ident">tendermint</span>.<span class="ident">tendermint_dir</span>;
         <span class="ident">tendermint_node::write_validator_key</span>(
             <span class="ident">tendermint_home</span>,
             <span class="kw-2">&amp;</span><span class="ident">validator_address</span>,

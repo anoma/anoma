@@ -2349,6 +2349,19 @@
 <span id="2349">2349</span>
 <span id="2350">2350</span>
 <span id="2351">2351</span>
+<span id="2352">2352</span>
+<span id="2353">2353</span>
+<span id="2354">2354</span>
+<span id="2355">2355</span>
+<span id="2356">2356</span>
+<span id="2357">2357</span>
+<span id="2358">2358</span>
+<span id="2359">2359</span>
+<span id="2360">2360</span>
+<span id="2361">2361</span>
+<span id="2362">2362</span>
+<span id="2363">2363</span>
+<span id="2364">2364</span>
 </pre><pre class="rust">
 <span class="doccomment">//! The CLI commands that are re-used between the executables `anoma`,</span>
 <span class="doccomment">//! `anoma-node` and `anoma-client`.</span>
@@ -3432,6 +3445,11 @@
     <span class="kw">const</span> <span class="ident">CHAIN_ID_PREFIX</span>: <span class="ident">Arg</span><span class="op">&lt;</span><span class="ident">ChainIdPrefix</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">arg</span>(<span class="string">&quot;chain-prefix&quot;</span>);
     <span class="kw">const</span> <span class="ident">CODE_PATH</span>: <span class="ident">Arg</span><span class="op">&lt;</span><span class="ident">PathBuf</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">arg</span>(<span class="string">&quot;code-path&quot;</span>);
     <span class="kw">const</span> <span class="ident">CODE_PATH_OPT</span>: <span class="ident">ArgOpt</span><span class="op">&lt;</span><span class="ident">PathBuf</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">CODE_PATH</span>.<span class="ident">opt</span>();
+    <span class="kw">const</span> <span class="ident">CONSENSUS_TIMEOUT_COMMIT</span>: <span class="ident">ArgDefault</span><span class="op">&lt;</span><span class="ident">tendermint::Timeout</span><span class="op">&gt;</span> <span class="op">=</span>
+        <span class="ident">arg_default</span>(
+            <span class="string">&quot;consensus-timeout-commit&quot;</span>,
+            <span class="ident">DefaultFn</span>(<span class="op">|</span><span class="op">|</span> <span class="ident">tendermint::Timeout::from_str</span>(<span class="string">&quot;1s&quot;</span>).<span class="ident">unwrap</span>()),
+        );
     <span class="kw">const</span> <span class="ident">DATA_PATH_OPT</span>: <span class="ident">ArgOpt</span><span class="op">&lt;</span><span class="ident">PathBuf</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">arg_opt</span>(<span class="string">&quot;data-path&quot;</span>);
     <span class="kw">const</span> <span class="ident">DATA_PATH</span>: <span class="ident">Arg</span><span class="op">&lt;</span><span class="ident">PathBuf</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">arg</span>(<span class="string">&quot;data-path&quot;</span>);
     <span class="kw">const</span> <span class="ident">DECRYPT</span>: <span class="ident">ArgFlag</span> <span class="op">=</span> <span class="ident">flag</span>(<span class="string">&quot;decrypt&quot;</span>);
@@ -4551,6 +4569,7 @@
         <span class="kw">pub</span> <span class="ident">genesis_path</span>: <span class="ident">PathBuf</span>,
         <span class="kw">pub</span> <span class="ident">chain_id_prefix</span>: <span class="ident">ChainIdPrefix</span>,
         <span class="kw">pub</span> <span class="ident">unsafe_dont_encrypt</span>: <span class="ident">bool</span>,
+        <span class="kw">pub</span> <span class="ident">consensus_timeout_commit</span>: <span class="ident">tendermint::Timeout</span>,
     }
 
     <span class="kw">impl</span> <span class="ident">Args</span> <span class="kw">for</span> <span class="ident">InitNetwork</span> {
@@ -4558,10 +4577,13 @@
             <span class="kw">let</span> <span class="ident">genesis_path</span> <span class="op">=</span> <span class="ident">GENESIS_PATH</span>.<span class="ident">parse</span>(<span class="ident">matches</span>);
             <span class="kw">let</span> <span class="ident">chain_id_prefix</span> <span class="op">=</span> <span class="ident">CHAIN_ID_PREFIX</span>.<span class="ident">parse</span>(<span class="ident">matches</span>);
             <span class="kw">let</span> <span class="ident">unsafe_dont_encrypt</span> <span class="op">=</span> <span class="ident">UNSAFE_DONT_ENCRYPT</span>.<span class="ident">parse</span>(<span class="ident">matches</span>);
+            <span class="kw">let</span> <span class="ident">consensus_timeout_commit</span> <span class="op">=</span>
+                <span class="ident">CONSENSUS_TIMEOUT_COMMIT</span>.<span class="ident">parse</span>(<span class="ident">matches</span>);
             <span class="self">Self</span> {
                 <span class="ident">genesis_path</span>,
                 <span class="ident">chain_id_prefix</span>,
                 <span class="ident">unsafe_dont_encrypt</span>,
+                <span class="ident">consensus_timeout_commit</span>,
             }
         }
 
@@ -4578,6 +4600,10 @@
             .<span class="ident">arg</span>(<span class="ident">UNSAFE_DONT_ENCRYPT</span>.<span class="ident">def</span>().<span class="ident">about</span>(
                 <span class="string">&quot;UNSAFE: Do not encrypt the generated keypairs. Do not use \
                  this for keys used in a live network.&quot;</span>,
+            ))
+            .<span class="ident">arg</span>(<span class="ident">CONSENSUS_TIMEOUT_COMMIT</span>.<span class="ident">def</span>().<span class="ident">about</span>(
+                <span class="string">&quot;The Tendermint consensus timeout_commit configuration as \
+                 e.g. `1s` or `1000ms`. Defaults to 10 seconds.&quot;</span>,
             ))
         }
     }

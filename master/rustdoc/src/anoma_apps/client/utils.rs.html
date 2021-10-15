@@ -540,6 +540,16 @@
 <span id="540">540</span>
 <span id="541">541</span>
 <span id="542">542</span>
+<span id="543">543</span>
+<span id="544">544</span>
+<span id="545">545</span>
+<span id="546">546</span>
+<span id="547">547</span>
+<span id="548">548</span>
+<span id="549">549</span>
+<span id="550">550</span>
+<span id="551">551</span>
+<span id="552">552</span>
 </pre><pre class="rust">
 <span class="kw">use</span> <span class="ident">std::collections</span>::{<span class="ident">HashMap</span>, <span class="ident">HashSet</span>};
 <span class="kw">use</span> <span class="ident">std::fs</span>::{<span class="self">self</span>, <span class="ident">OpenOptions</span>};
@@ -568,6 +578,7 @@
         <span class="ident">genesis_path</span>,
         <span class="ident">chain_id_prefix</span>,
         <span class="ident">unsafe_dont_encrypt</span>,
+        <span class="ident">consensus_timeout_commit</span>,
     }: <span class="ident">args::InitNetwork</span>,
 ) {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">config</span> <span class="op">=</span> <span class="ident">genesis_config::open_genesis_config</span>(<span class="kw-2">&amp;</span><span class="ident">genesis_path</span>);
@@ -894,25 +905,32 @@
             <span class="comment">// parameter. We need to remove this prefix, because</span>
             <span class="comment">// these sub-directories will be moved to validators&#39; root</span>
             <span class="comment">// directories.</span>
-            <span class="ident">config</span>.<span class="ident">ledger</span>.<span class="ident">base_dir</span> <span class="op">=</span> <span class="ident">global_args</span>.<span class="ident">base_dir</span>.<span class="ident">clone</span>();
-            <span class="ident">config</span>.<span class="ident">ledger</span>.<span class="ident">tendermint</span> <span class="op">=</span> <span class="ident">global_args</span>
+            <span class="ident">config</span>.<span class="ident">ledger</span>.<span class="ident">shell</span>.<span class="ident">base_dir</span> <span class="op">=</span> <span class="ident">global_args</span>.<span class="ident">base_dir</span>.<span class="ident">clone</span>();
+            <span class="ident">config</span>.<span class="ident">ledger</span>.<span class="ident">tendermint</span>.<span class="ident">tendermint_dir</span> <span class="op">=</span> <span class="ident">global_args</span>
                 .<span class="ident">base_dir</span>
                 .<span class="ident">join</span>(<span class="ident">chain_id</span>.<span class="ident">as_str</span>())
                 .<span class="ident">join</span>(<span class="ident">config::TENDERMINT_DIR</span>);
-            <span class="ident">config</span>.<span class="ident">ledger</span>.<span class="ident">db</span> <span class="op">=</span> <span class="ident">global_args</span>
+            <span class="ident">config</span>.<span class="ident">ledger</span>.<span class="ident">shell</span>.<span class="ident">db_dir</span> <span class="op">=</span> <span class="ident">global_args</span>
                 .<span class="ident">base_dir</span>
                 .<span class="ident">join</span>(<span class="ident">chain_id</span>.<span class="ident">as_str</span>())
                 .<span class="ident">join</span>(<span class="ident">config::DB_DIR</span>);
             <span class="comment">// Add a ledger P2P persistent peers</span>
-            <span class="ident">config</span>.<span class="ident">ledger</span>.<span class="ident">p2p_persistent_peers</span> <span class="op">=</span> <span class="ident">persistent_peers</span>.<span class="ident">clone</span>();
+            <span class="ident">config</span>.<span class="ident">ledger</span>.<span class="ident">tendermint</span>.<span class="ident">p2p_persistent_peers</span> <span class="op">=</span>
+                <span class="ident">persistent_peers</span>.<span class="ident">clone</span>();
+            <span class="ident">config</span>.<span class="ident">ledger</span>.<span class="ident">tendermint</span>.<span class="ident">consensus_timeout_commit</span> <span class="op">=</span>
+                <span class="ident">consensus_timeout_commit</span>;
             <span class="comment">// Clear the net address from the config and use it to set ports</span>
             <span class="kw">let</span> <span class="ident">net_address</span> <span class="op">=</span> <span class="ident">validator_config</span>.<span class="ident">net_address</span>.<span class="ident">take</span>().<span class="ident">unwrap</span>();
             <span class="kw">let</span> <span class="ident">first_port</span> <span class="op">=</span> <span class="ident">SocketAddr::from_str</span>(<span class="kw-2">&amp;</span><span class="ident">net_address</span>).<span class="ident">unwrap</span>().<span class="ident">port</span>();
-            <span class="ident">config</span>.<span class="ident">ledger</span>.<span class="ident">p2p_address</span>.<span class="ident">set_port</span>(<span class="ident">first_port</span>);
-            <span class="ident">config</span>.<span class="ident">ledger</span>.<span class="ident">rpc_address</span>.<span class="ident">set_port</span>(<span class="ident">first_port</span> <span class="op">+</span> <span class="number">1</span>);
-            <span class="ident">config</span>.<span class="ident">ledger</span>.<span class="ident">ledger_address</span>.<span class="ident">set_port</span>(<span class="ident">first_port</span> <span class="op">+</span> <span class="number">2</span>);
+            <span class="ident">config</span>.<span class="ident">ledger</span>.<span class="ident">tendermint</span>.<span class="ident">p2p_address</span>.<span class="ident">set_port</span>(<span class="ident">first_port</span>);
+            <span class="ident">config</span>
+                .<span class="ident">ledger</span>
+                .<span class="ident">tendermint</span>
+                .<span class="ident">rpc_address</span>
+                .<span class="ident">set_port</span>(<span class="ident">first_port</span> <span class="op">+</span> <span class="number">1</span>);
+            <span class="ident">config</span>.<span class="ident">ledger</span>.<span class="ident">shell</span>.<span class="ident">ledger_address</span>.<span class="ident">set_port</span>(<span class="ident">first_port</span> <span class="op">+</span> <span class="number">2</span>);
             <span class="comment">// Validator node should turned off peer exchange reactor</span>
-            <span class="ident">config</span>.<span class="ident">ledger</span>.<span class="ident">p2p_pex</span> <span class="op">=</span> <span class="bool-val">false</span>;
+            <span class="ident">config</span>.<span class="ident">ledger</span>.<span class="ident">tendermint</span>.<span class="ident">p2p_pex</span> <span class="op">=</span> <span class="bool-val">false</span>;
 
             <span class="comment">// Configure the intent gossiper</span>
             <span class="ident">config</span>.<span class="ident">intent_gossiper</span> <span class="op">=</span> <span class="ident">gossiper_configs</span>.<span class="ident">remove</span>(<span class="ident">name</span>).<span class="ident">unwrap</span>();
@@ -931,7 +949,9 @@
 
     <span class="comment">// Update the ledger config persistent peers and save it</span>
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">config</span> <span class="op">=</span> <span class="ident">Config::load</span>(<span class="kw-2">&amp;</span><span class="ident">global_args</span>.<span class="ident">base_dir</span>, <span class="kw-2">&amp;</span><span class="ident">chain_id</span>);
-    <span class="ident">config</span>.<span class="ident">ledger</span>.<span class="ident">p2p_persistent_peers</span> <span class="op">=</span> <span class="ident">persistent_peers</span>;
+    <span class="ident">config</span>.<span class="ident">ledger</span>.<span class="ident">tendermint</span>.<span class="ident">p2p_persistent_peers</span> <span class="op">=</span> <span class="ident">persistent_peers</span>;
+    <span class="ident">config</span>.<span class="ident">ledger</span>.<span class="ident">tendermint</span>.<span class="ident">consensus_timeout_commit</span> <span class="op">=</span>
+        <span class="ident">consensus_timeout_commit</span>;
     <span class="ident">config</span>.<span class="ident">ledger</span>.<span class="ident">genesis_time</span> <span class="op">=</span> <span class="ident">genesis</span>.<span class="ident">genesis_time</span>.<span class="ident">into</span>();
     <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">discover</span>) <span class="op">=</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">config</span>.<span class="ident">intent_gossiper</span>.<span class="ident">discover_peer</span> {
         <span class="ident">discover</span>.<span class="ident">bootstrap_peers</span> <span class="op">=</span> <span class="ident">bootstrap_peers</span>;
@@ -1038,7 +1058,7 @@
 
     <span class="ident">wallet</span>.<span class="ident">save</span>().<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="ident">err</span><span class="op">|</span> <span class="macro">eprintln!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">err</span>));
 
-    <span class="kw">let</span> <span class="ident">tendermint_home</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">config</span>.<span class="ident">ledger</span>.<span class="ident">tendermint</span>;
+    <span class="kw">let</span> <span class="ident">tendermint_home</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">config</span>.<span class="ident">ledger</span>.<span class="ident">tendermint</span>.<span class="ident">tendermint_dir</span>;
     <span class="ident">tendermint_node::write_validator_key</span>(
         <span class="ident">tendermint_home</span>,
         <span class="kw-2">&amp;</span><span class="ident">validator_address</span>,

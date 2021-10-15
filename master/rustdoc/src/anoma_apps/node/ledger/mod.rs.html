@@ -272,9 +272,6 @@
 <span id="272">272</span>
 <span id="273">273</span>
 <span id="274">274</span>
-<span id="275">275</span>
-<span id="276">276</span>
-<span id="277">277</span>
 </pre><pre class="rust">
 <span class="kw">mod</span> <span class="ident">events</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">protocol</span>;
@@ -285,9 +282,10 @@
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">tendermint_node</span>;
 
 <span class="kw">use</span> <span class="ident">std::convert</span>::{<span class="ident">TryFrom</span>, <span class="ident">TryInto</span>};
-<span class="kw">use</span> <span class="ident">std::mem</span>;
+<span class="kw">use</span> <span class="ident">std::path::PathBuf</span>;
 <span class="kw">use</span> <span class="ident">std::sync::mpsc</span>::{<span class="ident">channel</span>, <span class="ident">Receiver</span>};
 
+<span class="kw">use</span> <span class="ident">anoma::types::chain::ChainId</span>;
 <span class="kw">use</span> <span class="ident">anoma::types::storage::BlockHash</span>;
 <span class="kw">use</span> <span class="ident">futures::future</span>::{<span class="ident">AbortHandle</span>, <span class="ident">AbortRegistration</span>, <span class="ident">Abortable</span>};
 <span class="kw">use</span> <span class="ident">tendermint_proto::abci::CheckTxType</span>;
@@ -417,17 +415,15 @@
 <span class="doccomment">/// Runs until an abort handles sends a message to terminate the process</span>
 <span class="attribute">#[<span class="ident">tokio::main</span>]</span>
 <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">run_shell</span>(
-    <span class="ident">config</span>: <span class="ident">config::Ledger</span>,
+    <span class="ident">chain_id</span>: <span class="ident">ChainId</span>,
+    <span class="ident">config</span>: <span class="ident">config::Shell</span>,
+    <span class="ident">wasm_dir</span>: <span class="ident">PathBuf</span>,
     <span class="ident">abort_registration</span>: <span class="ident">AbortRegistration</span>,
     <span class="ident">failure_receiver</span>: <span class="ident">Receiver</span><span class="op">&lt;</span>()<span class="op">&gt;</span>,
 ) {
     <span class="comment">// Construct our ABCI application.</span>
-    <span class="kw">let</span> <span class="ident">service</span> <span class="op">=</span> <span class="ident">AbcippShim::new</span>(
-        <span class="ident">config</span>.<span class="ident">base_dir</span>,
-        <span class="kw-2">&amp;</span><span class="ident">config</span>.<span class="ident">db</span>,
-        <span class="ident">config</span>.<span class="ident">chain_id</span>,
-        <span class="ident">config</span>.<span class="ident">wasm_dir</span>,
-    );
+    <span class="kw">let</span> <span class="ident">service</span> <span class="op">=</span>
+        <span class="ident">AbcippShim::new</span>(<span class="ident">config</span>.<span class="ident">base_dir</span>, <span class="kw-2">&amp;</span><span class="ident">config</span>.<span class="ident">db_dir</span>, <span class="ident">chain_id</span>, <span class="ident">wasm_dir</span>);
 
     <span class="comment">// Split it into components.</span>
     <span class="kw">let</span> (<span class="ident">consensus</span>, <span class="ident">mempool</span>, <span class="ident">snapshot</span>, <span class="ident">info</span>) <span class="op">=</span> <span class="ident">split::service</span>(<span class="ident">service</span>, <span class="number">5</span>);
@@ -480,19 +476,15 @@
 <span class="doccomment">///</span>
 <span class="doccomment">/// When the shell process finishes, we check if it finished with a panic. If it</span>
 <span class="doccomment">/// did we stop the tendermint node with a channel that acts as a kill switch.</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">run</span>(<span class="kw-2">mut</span> <span class="ident">config</span>: <span class="ident">config::Ledger</span>) {
-    <span class="kw">let</span> <span class="ident">home_dir</span> <span class="op">=</span> <span class="ident">config</span>.<span class="ident">tendermint</span>.<span class="ident">clone</span>();
-    <span class="kw">let</span> <span class="ident">ledger_address</span> <span class="op">=</span> <span class="ident">config</span>.<span class="ident">ledger_address</span>.<span class="ident">to_string</span>();
-    <span class="kw">let</span> <span class="ident">rpc_address</span> <span class="op">=</span> <span class="ident">config</span>.<span class="ident">rpc_address</span>.<span class="ident">to_string</span>();
-    <span class="kw">let</span> <span class="ident">p2p_address</span> <span class="op">=</span> <span class="ident">config</span>.<span class="ident">p2p_address</span>.<span class="ident">to_string</span>();
-    <span class="kw">let</span> <span class="ident">p2p_persistent_peers</span> <span class="op">=</span> <span class="ident">mem::take</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">config</span>.<span class="ident">p2p_persistent_peers</span>);
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">run</span>(<span class="ident">config</span>: <span class="ident">config::Ledger</span>, <span class="ident">wasm_dir</span>: <span class="ident">PathBuf</span>) {
+    <span class="kw">let</span> <span class="ident">ledger_address</span> <span class="op">=</span> <span class="ident">config</span>.<span class="ident">shell</span>.<span class="ident">ledger_address</span>.<span class="ident">to_string</span>();
     <span class="kw">let</span> <span class="ident">chain_id</span> <span class="op">=</span> <span class="ident">config</span>.<span class="ident">chain_id</span>.<span class="ident">clone</span>();
     <span class="kw">let</span> <span class="ident">genesis_time</span> <span class="op">=</span> <span class="ident">config</span>
         .<span class="ident">genesis_time</span>
         .<span class="ident">clone</span>()
         .<span class="ident">try_into</span>()
         .<span class="ident">expect</span>(<span class="string">&quot;expected RFC3339 genesis_time&quot;</span>);
-    <span class="kw">let</span> <span class="ident">p2p_pex</span> <span class="op">=</span> <span class="ident">config</span>.<span class="ident">p2p_pex</span>;
+    <span class="kw">let</span> <span class="ident">tendermint_config</span> <span class="op">=</span> <span class="ident">config</span>.<span class="ident">tendermint</span>.<span class="ident">clone</span>();
 
     <span class="comment">// For signalling shut down to the Tendermint node, sent from the</span>
     <span class="comment">// shell or from within the Tendermint process itself.</span>
@@ -505,7 +497,7 @@
     <span class="kw">let</span> (<span class="ident">abort_handle</span>, <span class="ident">abort_registration</span>) <span class="op">=</span> <span class="ident">AbortHandle::new_pair</span>();
 
     <span class="comment">// Prefetch needed wasm artifacts</span>
-    <span class="ident">wasm_loader::pre_fetch_wasm</span>(<span class="kw-2">&amp;</span><span class="ident">config</span>.<span class="ident">wasm_dir</span>);
+    <span class="ident">wasm_loader::pre_fetch_wasm</span>(<span class="kw-2">&amp;</span><span class="ident">wasm_dir</span>);
     <span class="comment">// Because we cannot attach any data to the `abort_handle`, we also need</span>
     <span class="comment">// another channel for signalling an error to the shell from Tendermint</span>
     <span class="kw">let</span> (<span class="ident">failure_sender</span>, <span class="ident">failure_receiver</span>) <span class="op">=</span> <span class="ident">channel</span>();
@@ -513,14 +505,10 @@
     <span class="comment">// start Tendermint node</span>
     <span class="kw">let</span> <span class="ident">tendermint_handle</span> <span class="op">=</span> <span class="ident">std::thread::spawn</span>(<span class="kw">move</span> <span class="op">|</span><span class="op">|</span> {
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Err</span>(<span class="ident">err</span>) <span class="op">=</span> <span class="ident">tendermint_node::run</span>(
-            <span class="ident">home_dir</span>,
             <span class="ident">chain_id</span>,
             <span class="ident">genesis_time</span>,
             <span class="ident">ledger_address</span>,
-            <span class="ident">rpc_address</span>,
-            <span class="ident">p2p_address</span>,
-            <span class="ident">p2p_persistent_peers</span>,
-            <span class="ident">p2p_pex</span>,
+            <span class="ident">tendermint_config</span>,
             <span class="ident">abort_sender</span>,
             <span class="ident">abort_receiver</span>,
         ) {
@@ -536,7 +524,13 @@
 
     <span class="comment">// start the shell + ABCI server</span>
     <span class="kw">let</span> <span class="ident">shell_handle</span> <span class="op">=</span> <span class="ident">std::thread::spawn</span>(<span class="kw">move</span> <span class="op">|</span><span class="op">|</span> {
-        <span class="ident">run_shell</span>(<span class="ident">config</span>, <span class="ident">abort_registration</span>, <span class="ident">failure_receiver</span>);
+        <span class="ident">run_shell</span>(
+            <span class="ident">config</span>.<span class="ident">chain_id</span>,
+            <span class="ident">config</span>.<span class="ident">shell</span>,
+            <span class="ident">wasm_dir</span>,
+            <span class="ident">abort_registration</span>,
+            <span class="ident">failure_receiver</span>,
+        );
     });
 
     <span class="macro">tracing::info!</span>(<span class="string">&quot;Anoma ledger node started.&quot;</span>);
