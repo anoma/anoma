@@ -166,6 +166,7 @@
 <span id="166">166</span>
 <span id="167">167</span>
 <span id="168">168</span>
+<span id="169">169</span>
 </pre><pre class="rust">
 <span class="kw">use</span> <span class="ident">std::convert::TryFrom</span>;
 <span class="kw">use</span> <span class="ident">std::net::SocketAddr</span>;
@@ -242,6 +243,7 @@
     <span class="kw">let</span> <span class="ident">addr</span> <span class="op">=</span> <span class="ident">config</span>.<span class="ident">address</span>;
     <span class="kw">let</span> (<span class="ident">rpc_sender</span>, <span class="ident">rpc_receiver</span>) <span class="op">=</span> <span class="ident">mpsc::channel</span>(<span class="number">100</span>);
     <span class="ident">thread::spawn</span>(<span class="kw">move</span> <span class="op">|</span><span class="op">|</span> <span class="ident">rpc_server</span>(<span class="ident">addr</span>, <span class="ident">rpc_sender</span>).<span class="ident">unwrap</span>());
+    <span class="macro">tracing::info!</span>(<span class="string">&quot;RPC started at {}&quot;</span>, <span class="ident">config</span>.<span class="ident">address</span>);
     <span class="ident">rpc_receiver</span>
 }
 

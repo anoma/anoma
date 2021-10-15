@@ -1044,6 +1044,7 @@
 <span id="1044">1044</span>
 <span id="1045">1045</span>
 <span id="1046">1046</span>
+<span id="1047">1047</span>
 </pre><pre class="rust">
 <span class="doccomment">//! The ledger shell connects the ABCI++ interface with the Anoma ledger app.</span>
 <span class="doccomment">//!</span>
@@ -1117,13 +1118,14 @@
 
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">reset</span>(<span class="ident">config</span>: <span class="ident">config::Ledger</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
     <span class="comment">// simply nuke the DB files</span>
-    <span class="kw">let</span> <span class="ident">db_path</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">config</span>.<span class="ident">shell</span>.<span class="ident">db_dir</span>;
+    <span class="kw">let</span> <span class="ident">db_path</span> <span class="op">=</span> <span class="ident">config</span>.<span class="ident">db_dir</span>();
     <span class="kw">match</span> <span class="ident">std::fs::remove_dir_all</span>(<span class="kw-2">&amp;</span><span class="ident">db_path</span>) {
         <span class="prelude-val">Err</span>(<span class="ident">e</span>) <span class="kw">if</span> <span class="ident">e</span>.<span class="ident">kind</span>() <span class="op">=</span><span class="op">=</span> <span class="ident">std::io::ErrorKind::NotFound</span> <span class="op">=</span><span class="op">&gt;</span> (),
         <span class="ident">res</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">res</span>.<span class="ident">map_err</span>(<span class="ident">Error::RemoveDB</span>)<span class="question-mark">?</span>,
     };
     <span class="comment">// reset Tendermint state</span>
-    <span class="ident">tendermint_node::reset</span>(<span class="ident">config</span>.<span class="ident">tendermint</span>).<span class="ident">map_err</span>(<span class="ident">Error::Tendermint</span>)<span class="question-mark">?</span>;
+    <span class="ident">tendermint_node::reset</span>(<span class="ident">config</span>.<span class="ident">tendermint_dir</span>())
+        .<span class="ident">map_err</span>(<span class="ident">Error::Tendermint</span>)<span class="question-mark">?</span>;
     <span class="prelude-val">Ok</span>(())
 }
 

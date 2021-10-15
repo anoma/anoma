@@ -258,6 +258,13 @@
 <span id="258">258</span>
 <span id="259">259</span>
 <span id="260">260</span>
+<span id="261">261</span>
+<span id="262">262</span>
+<span id="263">263</span>
+<span id="264">264</span>
+<span id="265">265</span>
+<span id="266">266</span>
+<span id="267">267</span>
 </pre><pre class="rust">
 <span class="doccomment">//! CLI input types can be used for command arguments</span>
 
@@ -288,8 +295,8 @@
 <span class="doccomment">/// in the wallet</span>
 <span class="kw">pub</span> <span class="kw">type</span> <span class="ident">WalletAddress</span> <span class="op">=</span> <span class="ident">FromContext</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span>;
 
-<span class="doccomment">/// An alias, a public key or a public key hash of a keypair that may be found</span>
-<span class="doccomment">/// in the wallet</span>
+<span class="doccomment">/// A raw keypair (hex encoding), an alias, a public key or a public key hash of</span>
+<span class="doccomment">/// a keypair that may be found in the wallet</span>
 <span class="kw">pub</span> <span class="kw">type</span> <span class="ident">WalletKeypair</span> <span class="op">=</span> <span class="ident">FromContext</span><span class="op">&lt;</span><span class="ident">Rc</span><span class="op">&lt;</span><span class="ident">Keypair</span><span class="op">&gt;</span><span class="op">&gt;</span>;
 
 <span class="doccomment">/// A raw public key (hex encoding), a public key hash (also hex encoding) or an</span>
@@ -312,6 +319,7 @@
 <span class="kw">impl</span> <span class="ident">Context</span> {
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">global_args</span>: <span class="ident">args::Global</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="kw">let</span> <span class="ident">global_config</span> <span class="op">=</span> <span class="ident">read_or_try_new_global_config</span>(<span class="kw-2">&amp;</span><span class="ident">global_args</span>);
+        <span class="macro">tracing::info!</span>(<span class="string">&quot;Chain ID: {}&quot;</span>, <span class="ident">global_config</span>.<span class="ident">default_chain_id</span>);
 
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">config</span> <span class="op">=</span> <span class="ident">Config::load</span>(
             <span class="kw-2">&amp;</span><span class="ident">global_args</span>.<span class="ident">base_dir</span>,
@@ -493,10 +501,16 @@
 <span class="kw">impl</span> <span class="ident">ArgFromMutContext</span> <span class="kw">for</span> <span class="ident">Rc</span><span class="op">&lt;</span><span class="ident">Keypair</span><span class="op">&gt;</span> {
     <span class="kw">fn</span> <span class="ident">from_mut_ctx</span>(<span class="ident">ctx</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Context</span>, <span class="ident">raw</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span><span class="ident">str</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="kw">let</span> <span class="ident">raw</span> <span class="op">=</span> <span class="ident">raw</span>.<span class="ident">as_ref</span>();
-        <span class="ident">ctx</span>.<span class="ident">wallet</span>.<span class="ident">find_key</span>(<span class="ident">raw</span>).<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="ident">_find_err</span><span class="op">|</span> {
-            <span class="macro">eprintln!</span>(<span class="string">&quot;Unknown key {}&quot;</span>, <span class="ident">raw</span>);
-            <span class="ident">safe_exit</span>(<span class="number">1</span>)
-        })
+        <span class="comment">// A keypair can be either a raw keypair in hex string</span>
+        <span class="ident">FromStr::from_str</span>(<span class="ident">raw</span>)
+            .<span class="ident">map</span>(<span class="ident">Rc::new</span>)
+            .<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="ident">_parse_err</span><span class="op">|</span> {
+                <span class="comment">// Or it can be an alias</span>
+                <span class="ident">ctx</span>.<span class="ident">wallet</span>.<span class="ident">find_key</span>(<span class="ident">raw</span>).<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="ident">_find_err</span><span class="op">|</span> {
+                    <span class="macro">eprintln!</span>(<span class="string">&quot;Unknown key {}&quot;</span>, <span class="ident">raw</span>);
+                    <span class="ident">safe_exit</span>(<span class="number">1</span>)
+                })
+            })
     }
 }
 

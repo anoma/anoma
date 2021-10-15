@@ -272,6 +272,8 @@
 <span id="272">272</span>
 <span id="273">273</span>
 <span id="274">274</span>
+<span id="275">275</span>
+<span id="276">276</span>
 </pre><pre class="rust">
 <span class="kw">mod</span> <span class="ident">events</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">protocol</span>;
@@ -422,8 +424,8 @@
     <span class="ident">failure_receiver</span>: <span class="ident">Receiver</span><span class="op">&lt;</span>()<span class="op">&gt;</span>,
 ) {
     <span class="comment">// Construct our ABCI application.</span>
-    <span class="kw">let</span> <span class="ident">service</span> <span class="op">=</span>
-        <span class="ident">AbcippShim::new</span>(<span class="ident">config</span>.<span class="ident">base_dir</span>, <span class="kw-2">&amp;</span><span class="ident">config</span>.<span class="ident">db_dir</span>, <span class="ident">chain_id</span>, <span class="ident">wasm_dir</span>);
+    <span class="kw">let</span> <span class="ident">db_dir</span> <span class="op">=</span> <span class="ident">config</span>.<span class="ident">db_dir</span>(<span class="kw-2">&amp;</span><span class="ident">chain_id</span>);
+    <span class="kw">let</span> <span class="ident">service</span> <span class="op">=</span> <span class="ident">AbcippShim::new</span>(<span class="ident">config</span>.<span class="ident">base_dir</span>, <span class="ident">db_dir</span>, <span class="ident">chain_id</span>, <span class="ident">wasm_dir</span>);
 
     <span class="comment">// Split it into components.</span>
     <span class="kw">let</span> (<span class="ident">consensus</span>, <span class="ident">mempool</span>, <span class="ident">snapshot</span>, <span class="ident">info</span>) <span class="op">=</span> <span class="ident">split::service</span>(<span class="ident">service</span>, <span class="number">5</span>);
@@ -477,6 +479,7 @@
 <span class="doccomment">/// When the shell process finishes, we check if it finished with a panic. If it</span>
 <span class="doccomment">/// did we stop the tendermint node with a channel that acts as a kill switch.</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">run</span>(<span class="ident">config</span>: <span class="ident">config::Ledger</span>, <span class="ident">wasm_dir</span>: <span class="ident">PathBuf</span>) {
+    <span class="kw">let</span> <span class="ident">tendermint_dir</span> <span class="op">=</span> <span class="ident">config</span>.<span class="ident">tendermint_dir</span>();
     <span class="kw">let</span> <span class="ident">ledger_address</span> <span class="op">=</span> <span class="ident">config</span>.<span class="ident">shell</span>.<span class="ident">ledger_address</span>.<span class="ident">to_string</span>();
     <span class="kw">let</span> <span class="ident">chain_id</span> <span class="op">=</span> <span class="ident">config</span>.<span class="ident">chain_id</span>.<span class="ident">clone</span>();
     <span class="kw">let</span> <span class="ident">genesis_time</span> <span class="op">=</span> <span class="ident">config</span>
@@ -505,6 +508,7 @@
     <span class="comment">// start Tendermint node</span>
     <span class="kw">let</span> <span class="ident">tendermint_handle</span> <span class="op">=</span> <span class="ident">std::thread::spawn</span>(<span class="kw">move</span> <span class="op">|</span><span class="op">|</span> {
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Err</span>(<span class="ident">err</span>) <span class="op">=</span> <span class="ident">tendermint_node::run</span>(
+            <span class="ident">tendermint_dir</span>,
             <span class="ident">chain_id</span>,
             <span class="ident">genesis_time</span>,
             <span class="ident">ledger_address</span>,

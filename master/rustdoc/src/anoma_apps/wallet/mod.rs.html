@@ -242,6 +242,7 @@
 <span id="242">242</span>
 <span id="243">243</span>
 <span id="244">244</span>
+<span id="245">245</span>
 </pre><pre class="rust">
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">defaults</span>;
 <span class="kw">mod</span> <span class="ident">keys</span>;
@@ -253,6 +254,7 @@
 
 <span class="kw">use</span> <span class="ident">anoma::types::address::Address</span>;
 <span class="kw">use</span> <span class="ident">anoma::types::key::ed25519</span>::{<span class="ident">Keypair</span>, <span class="ident">PublicKey</span>, <span class="ident">PublicKeyHash</span>};
+<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">store::wallet_file</span>;
 <span class="kw">use</span> <span class="ident">thiserror::Error</span>;
 
 <span class="kw">pub</span> <span class="kw">use</span> <span class="self">self</span><span class="ident">::keys</span>::{<span class="ident">DecryptionError</span>, <span class="ident">StoredKeypair</span>};

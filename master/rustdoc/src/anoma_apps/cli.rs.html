@@ -2362,6 +2362,15 @@
 <span id="2362">2362</span>
 <span id="2363">2363</span>
 <span id="2364">2364</span>
+<span id="2365">2365</span>
+<span id="2366">2366</span>
+<span id="2367">2367</span>
+<span id="2368">2368</span>
+<span id="2369">2369</span>
+<span id="2370">2370</span>
+<span id="2371">2371</span>
+<span id="2372">2372</span>
+<span id="2373">2373</span>
 </pre><pre class="rust">
 <span class="doccomment">//! The CLI commands that are re-used between the executables `anoma`,</span>
 <span class="doccomment">//! `anoma-node` and `anoma-client`.</span>
@@ -3428,6 +3437,7 @@
     <span class="kw">use</span> <span class="kw">super</span><span class="ident">::context</span>::{<span class="ident">WalletAddress</span>, <span class="ident">WalletKeypair</span>, <span class="ident">WalletPublicKey</span>};
     <span class="kw">use</span> <span class="kw">super</span><span class="ident">::utils</span>::<span class="kw-2">*</span>;
     <span class="kw">use</span> <span class="kw">super</span><span class="ident">::ArgMatches</span>;
+    <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::config</span>;
 
     <span class="kw">const</span> <span class="ident">ADDRESS</span>: <span class="ident">Arg</span><span class="op">&lt;</span><span class="ident">WalletAddress</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">arg</span>(<span class="string">&quot;address&quot;</span>);
     <span class="kw">const</span> <span class="ident">ALIAS_OPT</span>: <span class="ident">ArgOpt</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">ALIAS</span>.<span class="ident">opt</span>();
@@ -3437,7 +3447,7 @@
         <span class="string">&quot;base-dir&quot;</span>,
         <span class="ident">DefaultFn</span>(<span class="op">|</span><span class="op">|</span> <span class="kw">match</span> <span class="ident">env::var</span>(<span class="string">&quot;ANOMA_BASE_DIR&quot;</span>) {
             <span class="prelude-val">Ok</span>(<span class="ident">dir</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">dir</span>.<span class="ident">into</span>(),
-            <span class="prelude-val">Err</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;.anoma&quot;</span>.<span class="ident">into</span>(),
+            <span class="prelude-val">Err</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">config::DEFAULT_BASE_DIR</span>.<span class="ident">into</span>(),
         }),
     );
     <span class="kw">const</span> <span class="ident">CHAIN_ID</span>: <span class="ident">Arg</span><span class="op">&lt;</span><span class="ident">ChainId</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">arg</span>(<span class="string">&quot;chain-id&quot;</span>);
@@ -3468,6 +3478,7 @@
     <span class="kw">const</span> <span class="ident">LEDGER_ADDRESS_OPT</span>: <span class="ident">ArgOpt</span><span class="op">&lt;</span><span class="ident">tendermint::net::Address</span><span class="op">&gt;</span> <span class="op">=</span>
         <span class="ident">LEDGER_ADDRESS</span>.<span class="ident">opt</span>();
     <span class="kw">const</span> <span class="ident">LEDGER_ADDRESS</span>: <span class="ident">Arg</span><span class="op">&lt;</span><span class="ident">tendermint::net::Address</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">arg</span>(<span class="string">&quot;ledger-address&quot;</span>);
+    <span class="kw">const</span> <span class="ident">LOCALHOST</span>: <span class="ident">ArgFlag</span> <span class="op">=</span> <span class="ident">flag</span>(<span class="string">&quot;localhost&quot;</span>);
     <span class="kw">const</span> <span class="ident">MATCHMAKER_PATH</span>: <span class="ident">ArgOpt</span><span class="op">&lt;</span><span class="ident">PathBuf</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">arg_opt</span>(<span class="string">&quot;matchmaker-path&quot;</span>);
     <span class="kw">const</span> <span class="ident">MULTIADDR_OPT</span>: <span class="ident">ArgOpt</span><span class="op">&lt;</span><span class="ident">Multiaddr</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">arg_opt</span>(<span class="string">&quot;address&quot;</span>);
     <span class="kw">const</span> <span class="ident">NODE_OPT</span>: <span class="ident">ArgOpt</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">arg_opt</span>(<span class="string">&quot;node&quot;</span>);
@@ -4570,6 +4581,7 @@
         <span class="kw">pub</span> <span class="ident">chain_id_prefix</span>: <span class="ident">ChainIdPrefix</span>,
         <span class="kw">pub</span> <span class="ident">unsafe_dont_encrypt</span>: <span class="ident">bool</span>,
         <span class="kw">pub</span> <span class="ident">consensus_timeout_commit</span>: <span class="ident">tendermint::Timeout</span>,
+        <span class="kw">pub</span> <span class="ident">localhost</span>: <span class="ident">bool</span>,
     }
 
     <span class="kw">impl</span> <span class="ident">Args</span> <span class="kw">for</span> <span class="ident">InitNetwork</span> {
@@ -4579,11 +4591,13 @@
             <span class="kw">let</span> <span class="ident">unsafe_dont_encrypt</span> <span class="op">=</span> <span class="ident">UNSAFE_DONT_ENCRYPT</span>.<span class="ident">parse</span>(<span class="ident">matches</span>);
             <span class="kw">let</span> <span class="ident">consensus_timeout_commit</span> <span class="op">=</span>
                 <span class="ident">CONSENSUS_TIMEOUT_COMMIT</span>.<span class="ident">parse</span>(<span class="ident">matches</span>);
+            <span class="kw">let</span> <span class="ident">localhost</span> <span class="op">=</span> <span class="ident">LOCALHOST</span>.<span class="ident">parse</span>(<span class="ident">matches</span>);
             <span class="self">Self</span> {
                 <span class="ident">genesis_path</span>,
                 <span class="ident">chain_id_prefix</span>,
                 <span class="ident">unsafe_dont_encrypt</span>,
                 <span class="ident">consensus_timeout_commit</span>,
+                <span class="ident">localhost</span>,
             }
         }
 
@@ -4604,6 +4618,10 @@
             .<span class="ident">arg</span>(<span class="ident">CONSENSUS_TIMEOUT_COMMIT</span>.<span class="ident">def</span>().<span class="ident">about</span>(
                 <span class="string">&quot;The Tendermint consensus timeout_commit configuration as \
                  e.g. `1s` or `1000ms`. Defaults to 10 seconds.&quot;</span>,
+            ))
+            .<span class="ident">arg</span>(<span class="ident">LOCALHOST</span>.<span class="ident">def</span>().<span class="ident">about</span>(
+                <span class="string">&quot;Use localhost address for P2P and RPC connections for the \
+                 validators ledger and intent gossip nodes&quot;</span>,
             ))
         }
     }

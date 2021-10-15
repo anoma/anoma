@@ -223,6 +223,7 @@
 <span id="223">223</span>
 <span id="224">224</span>
 <span id="225">225</span>
+<span id="226">226</span>
 </pre><pre class="rust">
 <span class="doccomment">//! A module for loading WASM files and downloading pre-built WASMs.</span>
 <span class="kw">use</span> <span class="ident">core::borrow::Borrow</span>;
@@ -249,9 +250,10 @@
     <span class="ident">ServerError</span>(<span class="ident">String</span>, <span class="ident">String</span>),
 }
 
+<span class="doccomment">/// A hash map where keys are file names and values their expected sha256 hash</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Serialize</span>, <span class="ident">Deserialize</span>)]</span>
 <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">transparent</span>)]</span>
-<span class="kw">struct</span> <span class="ident">Checksums</span>(<span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">String</span>, <span class="ident">String</span><span class="op">&gt;</span>);
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Checksums</span>(<span class="kw">pub</span> <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">String</span>, <span class="ident">String</span><span class="op">&gt;</span>);
 
 <span class="kw">const</span> <span class="ident">S3_URL</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;https://heliax-anoma-wasm-v1.s3.eu-west-1.amazonaws.com&quot;</span>;
 

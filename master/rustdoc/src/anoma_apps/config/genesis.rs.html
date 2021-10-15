@@ -872,7 +872,7 @@
     <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">Deserialize</span>, <span class="ident">Serialize</span>)]</span>
     <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">WasmConfig</span> {
         <span class="ident">filename</span>: <span class="ident">String</span>,
-        <span class="ident">sha256</span>: <span class="ident">HexString</span>,
+        <span class="kw">pub</span> <span class="ident">sha256</span>: <span class="ident">HexString</span>,
     }
 
     <span class="kw">fn</span> <span class="ident">load_validator</span>(

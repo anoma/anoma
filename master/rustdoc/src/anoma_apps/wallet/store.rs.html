@@ -670,8 +670,8 @@
 <span class="kw">const</span> <span class="ident">FILE_NAME</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;wallet.toml&quot;</span>;
 
 <span class="doccomment">/// Get the path to the wallet store.</span>
-<span class="kw">fn</span> <span class="ident">wallet_file</span>(<span class="ident">store_dir</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">PathBuf</span> {
-    <span class="ident">store_dir</span>.<span class="ident">join</span>(<span class="ident">FILE_NAME</span>)
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">wallet_file</span>(<span class="ident">store_dir</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span><span class="ident">Path</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">PathBuf</span> {
+    <span class="ident">store_dir</span>.<span class="ident">as_ref</span>().<span class="ident">join</span>(<span class="ident">FILE_NAME</span>)
 }
 </pre></div>
 </section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="anoma_apps" data-search-index-js="../../../search-index.js" data-search-js="../../../search.js"></div><script src="../../../main.js"></script><script src="../../../source-script.js"></script><script src="../../../source-files.js"></script></body></html>
