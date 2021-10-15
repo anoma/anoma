@@ -1,0 +1,1 @@
+initSidebarItems({"mod":[["rpc_message","Nested message and enum types in `RpcMessage`."],["rpc_service_client","Generated client implementations."],["rpc_service_server","Generated server implementations."]],"struct":[["IntentMessage",""],["RpcMessage",""],["RpcResponse",""],["SubscribeTopicMessage",""]]});

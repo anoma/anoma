@@ -1,0 +1,3 @@
+(function() {var implementors = {};
+implementors["anoma"] = [{"text":"impl <a class=\"trait\" href=\"https://docs.rs/signature/1.3.1/signature/signer/trait.Signer.html\" title=\"trait signature::signer::Signer\">Signer</a>&lt;<a class=\"struct\" href=\"anoma/types/key/ed25519/struct.Signature.html\" title=\"struct anoma::types::key::ed25519::Signature\">Signature</a>&gt; for <a class=\"struct\" href=\"anoma/types/key/ed25519/struct.Keypair.html\" title=\"struct anoma::types::key::ed25519::Keypair\">Keypair</a>","synthetic":false,"types":["anoma::types::key::ed25519::Keypair"]}];
+if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()

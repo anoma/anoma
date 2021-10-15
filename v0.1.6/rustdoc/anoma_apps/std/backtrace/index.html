@@ -1,0 +1,63 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Support for capturing a stack backtrace of an OS thread"><meta name="keywords" content="rust, rustlang, rust-lang, backtrace"><title>anoma_apps::std::backtrace - Rust</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script id="default-settings"></script><script src="../../../storage.js"></script><script src="../../../crates.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="shortcut icon" href="https://docs.anoma.network/favicon.png"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc mod"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../anoma_apps/index.html'><div class='logo-container'><img src='https://docs.anoma.network/rustdoc-logo.png' alt='logo'></div></a><h2 class="location">Module backtrace</h2><div class="sidebar-elems"><div class="block items"><ul><li><a href="#structs">Structs</a></li><li><a href="#enums">Enums</a></li></ul></div><div id="sidebar-vars" data-name="backtrace" data-ty="mod" data-relpath="./"></div><script defer src="./sidebar-items.js"></script></div></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img src="../../../brush.svg" width="18" height="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../../settings.html" title="settings"><img src="../../../wheel.svg" width="18" height="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><h1 class="fqn"><span class="in-band">Module <a href="../../index.html">anoma_apps</a>::<wbr><a href="../index.html">std</a>::<wbr><a class="mod" href="#">backtrace</a><button id="copy-path" onclick="copy_path(this)" title="copy path"><img src="../../../clipboard.svg" width="19" height="18" alt="Copy item import" title="Copy item import to clipboard"></button></span><span class="out-of-band"><span id="render-detail"><a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">[<span class="inner">&#x2212;</span>]</a></span><a class="srclink" href="https://doc.rust-lang.org/1.54.0/src/std/lib.rs.html#490" title="goto source code">[src]</a></span></h1><div class="item-info"><div class="stab unstable"><span class="emoji">🔬</span> This is a nightly-only experimental API. (<code>backtrace</code>)</div></div><details class="rustdoc-toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><p>Support for capturing a stack backtrace of an OS thread</p>
+<p>This module contains the support necessary to capture a stack backtrace of a
+running OS thread from the OS thread itself. The <code>Backtrace</code> type supports
+capturing a stack trace via the <code>Backtrace::capture</code> and
+<code>Backtrace::force_capture</code> functions.</p>
+<p>A backtrace is typically quite handy to attach to errors (e.g. types
+implementing <code>std::error::Error</code>) to get a causal chain of where an error
+was generated.</p>
+<blockquote>
+<p><strong>Note</strong>: this module is unstable and is designed in <a href="https://github.com/rust-lang/rfcs/blob/master/text/2504-fix-error.md">RFC 2504</a>, and you
+can learn more about its status in the <a href="https://github.com/rust-lang/rust/issues/53487">tracking issue</a>.</p>
+</blockquote>
+<h2 id="accuracy" class="section-header"><a href="#accuracy">Accuracy</a></h2>
+<p>Backtraces are attempted to be as accurate as possible, but no guarantees
+are provided about the exact accuracy of a backtrace. Instruction pointers,
+symbol names, filenames, line numbers, etc, may all be incorrect when
+reported. Accuracy is attempted on a best-effort basis, however, and bugs
+are always welcome to indicate areas of improvement!</p>
+<p>For most platforms a backtrace with a filename/line number requires that
+programs be compiled with debug information. Without debug information
+filenames/line numbers will not be reported.</p>
+<h2 id="platform-support" class="section-header"><a href="#platform-support">Platform support</a></h2>
+<p>Not all platforms that libstd compiles for support capturing backtraces.
+Some platforms simply do nothing when capturing a backtrace. To check
+whether the platform supports capturing backtraces you can consult the
+<code>BacktraceStatus</code> enum as a result of <code>Backtrace::status</code>.</p>
+<p>Like above with accuracy platform support is done on a best effort basis.
+Sometimes libraries may not be available at runtime or something may go
+wrong which would cause a backtrace to not be captured. Please feel free to
+report issues with platforms where a backtrace cannot be captured though!</p>
+<h2 id="environment-variables" class="section-header"><a href="#environment-variables">Environment Variables</a></h2>
+<p>The <code>Backtrace::capture</code> function may not actually capture a backtrace by
+default. Its behavior is governed by two environment variables:</p>
+<ul>
+<li>
+<p><code>RUST_LIB_BACKTRACE</code> - if this is set to <code>0</code> then <code>Backtrace::capture</code>
+will never capture a backtrace. Any other value this is set to will enable
+<code>Backtrace::capture</code>.</p>
+</li>
+<li>
+<p><code>RUST_BACKTRACE</code> - if <code>RUST_LIB_BACKTRACE</code> is not set, then this variable
+is consulted with the same rules of <code>RUST_LIB_BACKTRACE</code>.</p>
+</li>
+<li>
+<p>If neither of the above env vars are set, then <code>Backtrace::capture</code> will
+be disabled.</p>
+</li>
+</ul>
+<p>Capturing a backtrace can be a quite expensive runtime operation, so the
+environment variables allow either forcibly disabling this runtime
+performance hit or allow selectively enabling it in some programs.</p>
+<p>Note that the <code>Backtrace::force_capture</code> function can be used to ignore
+these environment variables. Also note that the state of environment
+variables is cached once the first backtrace is created, so altering
+<code>RUST_LIB_BACKTRACE</code> or <code>RUST_BACKTRACE</code> at runtime may not actually change
+how backtraces are captured.</p>
+</div></details><h2 id="structs" class="section-header"><a href="#structs">Structs</a></h2>
+<table><tr class="unstable module-item"><td><a class="struct" href="struct.Backtrace.html" title="anoma_apps::std::backtrace::Backtrace struct">Backtrace</a></td><td class="docblock-short"><span class="stab unstable" title="">Experimental</span><p>A captured OS thread stack backtrace.</p>
+</td></tr><tr class="unstable module-item"><td><a class="struct" href="struct.BacktraceFrame.html" title="anoma_apps::std::backtrace::BacktraceFrame struct">BacktraceFrame</a></td><td class="docblock-short"><span class="stab unstable" title="">Experimental</span><p>A single frame of a backtrace.</p>
+</td></tr></table><h2 id="enums" class="section-header"><a href="#enums">Enums</a></h2>
+<table><tr class="unstable module-item"><td><a class="enum" href="enum.BacktraceStatus.html" title="anoma_apps::std::backtrace::BacktraceStatus enum">BacktraceStatus</a></td><td class="docblock-short"><span class="stab unstable" title="">Experimental</span><p>The current status of a backtrace, indicating whether it was captured or
+whether it is empty for some other reason.</p>
+</td></tr></table></section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="anoma_apps" data-search-index-js="../../../search-index.js" data-search-js="../../../search.js"></div><script src="../../../main.js"></script></body></html>

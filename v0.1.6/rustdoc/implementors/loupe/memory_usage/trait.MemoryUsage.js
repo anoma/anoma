@@ -1,0 +1,3 @@
+(function() {var implementors = {};
+implementors["anoma"] = [{"text":"impl&lt;T:&nbsp;Tunables&gt; MemoryUsage for <a class=\"struct\" href=\"anoma/vm/wasm/memory/struct.Limit.html\" title=\"struct anoma::vm::wasm::memory::Limit\">Limit</a>&lt;T&gt;","synthetic":false,"types":["anoma::vm::wasm::memory::Limit"]}];
+if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()
