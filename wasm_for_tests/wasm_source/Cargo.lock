@@ -34,7 +34,7 @@ dependencies = [
 
 [[package]]
 name = "anoma"
-version = "0.1.4"
+version = "0.1.5"
 dependencies = [
  "anoma_proof_of_stake",
  "bech32",
@@ -71,7 +71,7 @@ dependencies = [
 
 [[package]]
 name = "anoma_proof_of_stake"
-version = "0.1.4"
+version = "0.1.5"
 dependencies = [
  "borsh",
  "thiserror",
@@ -79,7 +79,7 @@ dependencies = [
 
 [[package]]
 name = "anoma_tests"
-version = "0.1.4"
+version = "0.1.5"
 dependencies = [
  "anoma",
  "anoma_vm_env",
@@ -97,7 +97,7 @@ dependencies = [
 
 [[package]]
 name = "anoma_vm_env"
-version = "0.1.4"
+version = "0.1.5"
 dependencies = [
  "anoma",
  "anoma_vm_macro",
@@ -106,7 +106,7 @@ dependencies = [
 
 [[package]]
 name = "anoma_vm_macro"
-version = "0.1.4"
+version = "0.1.5"
 dependencies = [
  "quote",
  "syn",
@@ -114,7 +114,7 @@ dependencies = [
 
 [[package]]
 name = "anoma_wasm_for_tests"
-version = "0.1.4"
+version = "0.1.5"
 dependencies = [
  "anoma_tests",
  "anoma_vm_env",
