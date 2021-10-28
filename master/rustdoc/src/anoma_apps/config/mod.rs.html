@@ -512,6 +512,11 @@
 <span id="512">512</span>
 <span id="513">513</span>
 <span id="514">514</span>
+<span id="515">515</span>
+<span id="516">516</span>
+<span id="517">517</span>
+<span id="518">518</span>
+<span id="519">519</span>
 </pre><pre class="rust">
 <span class="doccomment">//! Node and client configuration</span>
 
@@ -579,6 +584,10 @@
     <span class="doccomment">/// Turns the peer exchange reactor on or off. Validator node will want the</span>
     <span class="doccomment">/// pex turned off.</span>
     <span class="kw">pub</span> <span class="ident">p2p_pex</span>: <span class="ident">bool</span>,
+    <span class="doccomment">/// Toggle to disable guard against peers connecting from the same IP</span>
+    <span class="kw">pub</span> <span class="ident">p2p_allow_duplicate_ip</span>: <span class="ident">bool</span>,
+    <span class="doccomment">/// How long we wait after committing a block, before starting on the new</span>
+    <span class="doccomment">/// height</span>
     <span class="kw">pub</span> <span class="ident">consensus_timeout_commit</span>: <span class="ident">tendermint::Timeout</span>,
 }
 
@@ -618,6 +627,7 @@
                 ),
                 <span class="ident">p2p_persistent_peers</span>: <span class="macro">vec!</span>[],
                 <span class="ident">p2p_pex</span>: <span class="bool-val">true</span>,
+                <span class="ident">p2p_allow_duplicate_ip</span>: <span class="bool-val">false</span>,
                 <span class="ident">consensus_timeout_commit</span>: <span class="ident">tendermint::Timeout::from_str</span>(<span class="string">&quot;1s&quot;</span>)
                     .<span class="ident">unwrap</span>(),
             },

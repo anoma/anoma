@@ -308,6 +308,7 @@
 <span id="308">308</span>
 <span id="309">309</span>
 <span id="310">310</span>
+<span id="311">311</span>
 </pre><pre class="rust">
 <span class="kw">use</span> <span class="ident">std::fs</span>::{<span class="self">self</span>, <span class="ident">File</span>, <span class="ident">OpenOptions</span>};
 <span class="kw">use</span> <span class="ident">std::io</span>::{<span class="ident">BufReader</span>, <span class="ident">Write</span>};
@@ -556,6 +557,7 @@
             .<span class="ident">unwrap</span>();
     <span class="ident">config</span>.<span class="ident">p2p</span>.<span class="ident">persistent_peers</span> <span class="op">=</span> <span class="ident">tendermint_config</span>.<span class="ident">p2p_persistent_peers</span>;
     <span class="ident">config</span>.<span class="ident">p2p</span>.<span class="ident">pex</span> <span class="op">=</span> <span class="ident">tendermint_config</span>.<span class="ident">p2p_pex</span>;
+    <span class="ident">config</span>.<span class="ident">p2p</span>.<span class="ident">allow_duplicate_ip</span> <span class="op">=</span> <span class="ident">tendermint_config</span>.<span class="ident">p2p_allow_duplicate_ip</span>;
 
     <span class="comment">// In &quot;dev&quot;, only produce blocks when there are txs or when the AppHash</span>
     <span class="comment">// changes</span>
