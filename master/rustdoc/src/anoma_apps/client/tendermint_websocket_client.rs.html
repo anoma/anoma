@@ -645,12 +645,82 @@
 <span id="645">645</span>
 <span id="646">646</span>
 <span id="647">647</span>
+<span id="648">648</span>
+<span id="649">649</span>
+<span id="650">650</span>
+<span id="651">651</span>
+<span id="652">652</span>
+<span id="653">653</span>
+<span id="654">654</span>
+<span id="655">655</span>
+<span id="656">656</span>
+<span id="657">657</span>
+<span id="658">658</span>
+<span id="659">659</span>
+<span id="660">660</span>
+<span id="661">661</span>
+<span id="662">662</span>
+<span id="663">663</span>
+<span id="664">664</span>
+<span id="665">665</span>
+<span id="666">666</span>
+<span id="667">667</span>
+<span id="668">668</span>
+<span id="669">669</span>
+<span id="670">670</span>
+<span id="671">671</span>
+<span id="672">672</span>
+<span id="673">673</span>
+<span id="674">674</span>
+<span id="675">675</span>
+<span id="676">676</span>
+<span id="677">677</span>
+<span id="678">678</span>
+<span id="679">679</span>
+<span id="680">680</span>
+<span id="681">681</span>
+<span id="682">682</span>
+<span id="683">683</span>
+<span id="684">684</span>
+<span id="685">685</span>
+<span id="686">686</span>
+<span id="687">687</span>
+<span id="688">688</span>
+<span id="689">689</span>
+<span id="690">690</span>
+<span id="691">691</span>
+<span id="692">692</span>
+<span id="693">693</span>
+<span id="694">694</span>
+<span id="695">695</span>
+<span id="696">696</span>
+<span id="697">697</span>
+<span id="698">698</span>
+<span id="699">699</span>
+<span id="700">700</span>
+<span id="701">701</span>
+<span id="702">702</span>
+<span id="703">703</span>
+<span id="704">704</span>
+<span id="705">705</span>
+<span id="706">706</span>
+<span id="707">707</span>
+<span id="708">708</span>
+<span id="709">709</span>
+<span id="710">710</span>
+<span id="711">711</span>
+<span id="712">712</span>
+<span id="713">713</span>
+<span id="714">714</span>
+<span id="715">715</span>
+<span id="716">716</span>
 </pre><pre class="rust">
 <span class="kw">use</span> <span class="ident">std::collections::HashMap</span>;
 <span class="kw">use</span> <span class="ident">std::convert::TryFrom</span>;
 <span class="kw">use</span> <span class="ident">std::fmt</span>::{<span class="ident">Display</span>, <span class="ident">Formatter</span>};
 <span class="kw">use</span> <span class="ident">std::net::TcpStream</span>;
 <span class="kw">use</span> <span class="ident">std::sync</span>::{<span class="ident">Arc</span>, <span class="ident">Mutex</span>};
+<span class="kw">use</span> <span class="ident">std::time::Duration</span>;
 
 <span class="kw">use</span> <span class="ident">async_trait::async_trait</span>;
 <span class="kw">use</span> <span class="ident">sha2</span>::{<span class="ident">Digest</span>, <span class="ident">Sha256</span>};
@@ -659,6 +729,7 @@
 <span class="kw">use</span> <span class="ident">tendermint_rpc::query::Query</span>;
 <span class="kw">use</span> <span class="ident">tendermint_rpc</span>::{<span class="ident">Client</span>, <span class="ident">Request</span>, <span class="ident">Response</span>, <span class="ident">SimpleRequest</span>};
 <span class="kw">use</span> <span class="ident">thiserror::Error</span>;
+<span class="kw">use</span> <span class="ident">tokio::time::Instant</span>;
 <span class="kw">use</span> <span class="ident">websocket::result::WebSocketError</span>;
 <span class="kw">use</span> <span class="ident">websocket</span>::{<span class="ident">ClientBuilder</span>, <span class="ident">Message</span>, <span class="ident">OwnedMessage</span>};
 
@@ -682,6 +753,8 @@
     <span class="ident">Response</span>(<span class="ident">String</span>),
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Encountered JSONRPC request/response without an id&quot;</span>)]</span>
     <span class="ident">MissingId</span>,
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Connection timed out&quot;</span>)]</span>
+    <span class="ident">ConnectionTimeout</span>,
 }
 
 <span class="kw">type</span> <span class="ident">Json</span> <span class="op">=</span> <span class="ident">serde_json::Value</span>;
@@ -832,11 +905,16 @@
     <span class="ident">websocket</span>: <span class="ident">Websocket</span>,
     <span class="ident">subscribed</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Subscription</span><span class="op">&gt;</span>,
     <span class="ident">received_responses</span>: <span class="ident">ResponseQueue</span>,
+    <span class="ident">connection_timeout</span>: <span class="ident">Duration</span>,
 }
 
 <span class="kw">impl</span> <span class="ident">TendermintWebsocketClient</span> {
-    <span class="doccomment">/// Open up a new websocket given a specified URL</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">open</span>(<span class="ident">url</span>: <span class="ident">WebSocketAddress</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident">Error</span><span class="op">&gt;</span> {
+    <span class="doccomment">/// Open up a new websocket given a specified URL.</span>
+    <span class="doccomment">/// If no `connection_timeout` is given, defaults to 5 minutes.</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">open</span>(
+        <span class="ident">url</span>: <span class="ident">WebSocketAddress</span>,
+        <span class="ident">connection_timeout</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Duration</span><span class="op">&gt;</span>,
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident">Error</span><span class="op">&gt;</span> {
         <span class="kw">match</span> <span class="ident">ClientBuilder::new</span>(<span class="kw-2">&amp;</span><span class="ident">url</span>.<span class="ident">to_string</span>())
             .<span class="ident">unwrap</span>()
             .<span class="ident">connect_insecure</span>()
@@ -845,6 +923,8 @@
                 <span class="ident">websocket</span>: <span class="ident">Arc::new</span>(<span class="ident">Mutex::new</span>(<span class="ident">websocket</span>)),
                 <span class="ident">subscribed</span>: <span class="prelude-val">None</span>,
                 <span class="ident">received_responses</span>: <span class="ident">Arc::new</span>(<span class="ident">Mutex::new</span>(<span class="ident">HashMap::new</span>())),
+                <span class="ident">connection_timeout</span>: <span class="ident">connection_timeout</span>
+                    .<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="op">|</span> <span class="ident">Duration::new</span>(<span class="number">300</span>, <span class="number">0</span>)),
             }),
             <span class="prelude-val">Err</span>(<span class="ident">inner</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">Error::Websocket</span>(<span class="ident">inner</span>)),
         }
@@ -947,14 +1027,42 @@
         <span class="ident">F</span>: <span class="ident">FnOnce</span>(<span class="ident">String</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Error</span>,
     {
         <span class="kw">let</span> <span class="ident">resp</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">received</span> {
-            <span class="prelude-val">Some</span>(<span class="ident">resp</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="ident">OwnedMessage::Text</span>(<span class="ident">resp</span>)),
-            <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>
-                .<span class="ident">websocket</span>
-                .<span class="ident">lock</span>()
-                .<span class="ident">unwrap</span>()
-                .<span class="ident">recv_message</span>()
-                .<span class="ident">map_err</span>(<span class="ident">Error::Websocket</span>),
-        }<span class="question-mark">?</span>;
+            <span class="prelude-val">Some</span>(<span class="ident">resp</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">OwnedMessage::Text</span>(<span class="ident">resp</span>),
+            <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">websocket</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">websocket</span>.<span class="ident">lock</span>().<span class="ident">unwrap</span>();
+                <span class="kw">let</span> <span class="ident">start</span> <span class="op">=</span> <span class="ident">Instant::now</span>();
+                <span class="kw">loop</span> {
+                    <span class="kw">if</span> <span class="ident">Instant::now</span>().<span class="ident">duration_since</span>(<span class="ident">start</span>)
+                        <span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">connection_timeout</span>
+                    {
+                        <span class="macro">tracing::error!</span>(
+                            <span class="string">&quot;Websocket connection timed out while waiting for \
+                             response&quot;</span>
+                        );
+                        <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error::ConnectionTimeout</span>);
+                    }
+                    <span class="kw">match</span> <span class="ident">websocket</span>.<span class="ident">recv_message</span>().<span class="ident">map_err</span>(<span class="ident">Error::Websocket</span>)<span class="question-mark">?</span> {
+                        <span class="ident">text</span> @ <span class="ident">OwnedMessage::Text</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">break</span> <span class="ident">text</span>,
+                        <span class="ident">OwnedMessage::Ping</span>(<span class="ident">data</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                            <span class="macro">tracing::debug!</span>(
+                                <span class="string">&quot;Received websocket Ping, sending Pong&quot;</span>
+                            );
+                            <span class="ident">websocket</span>
+                                .<span class="ident">send_message</span>(<span class="kw-2">&amp;</span><span class="ident">OwnedMessage::Pong</span>(<span class="ident">data</span>))
+                                .<span class="ident">unwrap</span>();
+                            <span class="kw">continue</span>;
+                        }
+                        <span class="ident">OwnedMessage::Pong</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                            <span class="macro">tracing::debug!</span>(
+                                <span class="string">&quot;Received websocket Pong, ignoring&quot;</span>
+                            );
+                            <span class="kw">continue</span>;
+                        }
+                        <span class="ident">other</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error::UnexpectedResponse</span>(<span class="ident">other</span>)),
+                    }
+                }
+            }
+        };
         <span class="kw">match</span> <span class="ident">resp</span> {
             <span class="ident">OwnedMessage::Text</span>(<span class="ident">raw</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">RpcResponse::from_string</span>(<span class="ident">raw</span>)
                 .<span class="ident">map</span>(<span class="op">|</span><span class="ident">v</span><span class="op">|</span> <span class="ident">v</span>.<span class="number">0</span>)
@@ -992,18 +1100,34 @@
         }
 
         <span class="comment">// Return the response if text is returned, else return empty response</span>
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">websocket</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">websocket</span>.<span class="ident">lock</span>().<span class="ident">unwrap</span>();
+        <span class="kw">let</span> <span class="ident">start</span> <span class="op">=</span> <span class="ident">Instant::now</span>();
         <span class="kw">loop</span> {
-            <span class="kw">let</span> <span class="ident">response</span> <span class="op">=</span> <span class="kw">match</span> <span class="self">self</span>
-                .<span class="ident">websocket</span>
-                .<span class="ident">lock</span>()
-                .<span class="ident">unwrap</span>()
+            <span class="kw">if</span> <span class="ident">Instant::now</span>().<span class="ident">duration_since</span>(<span class="ident">start</span>) <span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">connection_timeout</span> {
+                <span class="macro">tracing::error!</span>(
+                    <span class="string">&quot;Websocket connection timed out while waiting for response&quot;</span>
+                );
+                <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">tendermint_rpc::error::Error::websocket_error</span>(
+                    <span class="ident">Error::ConnectionTimeout</span>.<span class="ident">to_string</span>(),
+                ));
+            }
+            <span class="kw">let</span> <span class="ident">response</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">websocket</span>
                 .<span class="ident">recv_message</span>()
                 .<span class="ident">expect</span>(<span class="string">&quot;Failed to receive message from websocket&quot;</span>)
             {
                 <span class="ident">OwnedMessage::Text</span>(<span class="ident">resp</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">resp</span>,
+                <span class="ident">OwnedMessage::Ping</span>(<span class="ident">data</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="macro">tracing::debug!</span>(<span class="string">&quot;Received websocket Ping, sending Pong&quot;</span>);
+                    <span class="ident">websocket</span>.<span class="ident">send_message</span>(<span class="kw-2">&amp;</span><span class="ident">OwnedMessage::Pong</span>(<span class="ident">data</span>)).<span class="ident">unwrap</span>();
+                    <span class="kw">continue</span>;
+                }
+                <span class="ident">OwnedMessage::Pong</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="macro">tracing::debug!</span>(<span class="string">&quot;Received websocket Pong, ignoring&quot;</span>);
+                    <span class="kw">continue</span>;
+                }
                 <span class="ident">other</span> <span class="op">=</span><span class="op">&gt;</span> {
                     <span class="macro">tracing::info!</span> {
-                        <span class="string">&quot;Received unexpect response to query: {}\nReceived {:?}&quot;</span>,
+                        <span class="string">&quot;Received unexpected response to query: {}\nReceived {:?}&quot;</span>,
                         <span class="kw-2">&amp;</span><span class="ident">req_json</span>,
                         <span class="ident">other</span>
                     };
@@ -1055,6 +1179,8 @@
 <span class="doccomment">/// responses are give for each of the corresponding requests</span>
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
 <span class="kw">mod</span> <span class="ident">test_tendermint_websocket_client</span> {
+    <span class="kw">use</span> <span class="ident">std::time::Duration</span>;
+
     <span class="kw">use</span> <span class="ident">serde</span>::{<span class="ident">Deserialize</span>, <span class="ident">Serialize</span>};
     <span class="kw">use</span> <span class="ident">tendermint_rpc::endpoint::abci_info::AbciInfo</span>;
     <span class="kw">use</span> <span class="ident">tendermint_rpc::query</span>::{<span class="ident">EventType</span>, <span class="ident">Query</span>};
@@ -1189,8 +1315,11 @@
         <span class="ident">std::thread::spawn</span>(<span class="ident">start</span>);
         <span class="comment">// need to make sure that the mock tendermint node has time to boot up</span>
         <span class="ident">std::thread::sleep</span>(<span class="ident">std::time::Duration::from_secs</span>(<span class="number">1</span>));
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">rpc_client</span> <span class="op">=</span> <span class="ident">TendermintWebsocketClient::open</span>(<span class="ident">address</span>())
-            .<span class="ident">expect</span>(<span class="string">&quot;Client could not start&quot;</span>);
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">rpc_client</span> <span class="op">=</span> <span class="ident">TendermintWebsocketClient::open</span>(
+            <span class="ident">address</span>(),
+            <span class="prelude-val">Some</span>(<span class="ident">Duration::new</span>(<span class="number">10</span>, <span class="number">0</span>)),
+        )
+        .<span class="ident">expect</span>(<span class="string">&quot;Client could not start&quot;</span>);
         <span class="comment">// Check that subscription was successful</span>
         <span class="ident">rpc_client</span>.<span class="ident">subscribe</span>(<span class="ident">Query::from</span>(<span class="ident">EventType::Tx</span>)).<span class="ident">unwrap</span>();
         <span class="macro">assert_eq!</span>(
@@ -1209,8 +1338,11 @@
         <span class="ident">std::thread::spawn</span>(<span class="ident">start</span>);
         <span class="comment">// need to make sure that the mock tendermint node has time to boot up</span>
         <span class="ident">std::thread::sleep</span>(<span class="ident">std::time::Duration::from_secs</span>(<span class="number">1</span>));
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">rpc_client</span> <span class="op">=</span> <span class="ident">TendermintWebsocketClient::open</span>(<span class="ident">address</span>())
-            .<span class="ident">expect</span>(<span class="string">&quot;Client could not start&quot;</span>);
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">rpc_client</span> <span class="op">=</span> <span class="ident">TendermintWebsocketClient::open</span>(
+            <span class="ident">address</span>(),
+            <span class="prelude-val">Some</span>(<span class="ident">Duration::new</span>(<span class="number">10</span>, <span class="number">0</span>)),
+        )
+        .<span class="ident">expect</span>(<span class="string">&quot;Client could not start&quot;</span>);
         <span class="comment">// Check that subscription was successful</span>
         <span class="ident">rpc_client</span>.<span class="ident">subscribe</span>(<span class="ident">Query::from</span>(<span class="ident">EventType::Tx</span>)).<span class="ident">unwrap</span>();
         <span class="macro">assert_eq!</span>(
@@ -1230,8 +1362,11 @@
         <span class="ident">std::thread::spawn</span>(<span class="ident">start</span>);
         <span class="comment">// need to make sure that the mock tendermint node has time to boot up</span>
         <span class="ident">std::thread::sleep</span>(<span class="ident">std::time::Duration::from_secs</span>(<span class="number">1</span>));
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">rpc_client</span> <span class="op">=</span> <span class="ident">TendermintWebsocketClient::open</span>(<span class="ident">address</span>())
-            .<span class="ident">expect</span>(<span class="string">&quot;Client could not start&quot;</span>);
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">rpc_client</span> <span class="op">=</span> <span class="ident">TendermintWebsocketClient::open</span>(
+            <span class="ident">address</span>(),
+            <span class="prelude-val">Some</span>(<span class="ident">Duration::new</span>(<span class="number">10</span>, <span class="number">0</span>)),
+        )
+        .<span class="ident">expect</span>(<span class="string">&quot;Client could not start&quot;</span>);
         <span class="comment">// Check that subscription was successful</span>
         <span class="ident">rpc_client</span>.<span class="ident">subscribe</span>(<span class="ident">Query::from</span>(<span class="ident">EventType::Tx</span>)).<span class="ident">unwrap</span>();
         <span class="macro">assert_eq!</span>(
@@ -1262,8 +1397,11 @@
         <span class="ident">std::thread::spawn</span>(<span class="ident">start</span>);
         <span class="comment">// need to make sure that the mock tendermint node has time to boot up</span>
         <span class="ident">std::thread::sleep</span>(<span class="ident">std::time::Duration::from_secs</span>(<span class="number">1</span>));
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">rpc_client</span> <span class="op">=</span> <span class="ident">TendermintWebsocketClient::open</span>(<span class="ident">address</span>())
-            .<span class="ident">expect</span>(<span class="string">&quot;Client could not start&quot;</span>);
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">rpc_client</span> <span class="op">=</span> <span class="ident">TendermintWebsocketClient::open</span>(
+            <span class="ident">address</span>(),
+            <span class="prelude-val">Some</span>(<span class="ident">Duration::new</span>(<span class="number">10</span>, <span class="number">0</span>)),
+        )
+        .<span class="ident">expect</span>(<span class="string">&quot;Client could not start&quot;</span>);
         <span class="comment">// Check that subscription was successful</span>
         <span class="ident">rpc_client</span>.<span class="ident">subscribe</span>(<span class="ident">Query::from</span>(<span class="ident">EventType::Tx</span>)).<span class="ident">unwrap</span>();
         <span class="macro">assert_eq!</span>(

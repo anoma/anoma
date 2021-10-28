@@ -530,6 +530,8 @@
 <span id="530">530</span>
 <span id="531">531</span>
 <span id="532">532</span>
+<span id="533">533</span>
+<span id="534">534</span>
 </pre><pre class="rust">
 <span class="kw">use</span> <span class="ident">std::borrow::Cow</span>;
 <span class="kw">use</span> <span class="ident">std::convert::TryFrom</span>;
@@ -985,8 +987,10 @@
     <span class="ident">address</span>: <span class="ident">tendermint::net::Address</span>,
     <span class="ident">tx_bytes</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>,
 ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">TxResponse</span>, <span class="ident">Error</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">client</span> <span class="op">=</span>
-        <span class="ident">TendermintWebsocketClient::open</span>(<span class="ident">WebSocketAddress::try_from</span>(<span class="ident">address</span>)<span class="question-mark">?</span>)<span class="question-mark">?</span>;
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">client</span> <span class="op">=</span> <span class="ident">TendermintWebsocketClient::open</span>(
+        <span class="ident">WebSocketAddress::try_from</span>(<span class="ident">address</span>)<span class="question-mark">?</span>,
+        <span class="prelude-val">None</span>,
+    )<span class="question-mark">?</span>;
     <span class="comment">// It is better to subscribe to the transaction before it is broadcast</span>
     <span class="comment">//</span>
     <span class="comment">// Note that the `applied.hash` key comes from a custom event</span>
