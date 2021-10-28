@@ -141,6 +141,12 @@
 <p>The Anoma wallet allows you to store and use addresses and keys by their alias.</p>
 <p>The wallet's state is stored under <code>.anoma/{chain_id}/wallet.toml</code> (with the default <code>--base-dir</code>), which will be created for you if it doesn't already exist when you run any command that accesses the wallet. A newly created wallet will be pre-loaded with some default addresses.</p>
 <p>For the ledger and intent gossip commands that use keys and addresses, you can enter their aliases as as defined in the wallet (case-sensitive).</p>
+<p>By default, keys are stored encrypted (unless the <code>--unsafe-dont-encrypt</code> flag is used). Currently, the Anoma client can load the password via:</p>
+<ul>
+<li>file, by exporting an ENV variable called <code>ANOMA_WALLET_PASSWORD_FILE</code> with value containing the path to a file containing the password.</li>
+<li>env variable, by exporting a ENV variable called <code>ANOMA_WALLET_PASSWORD</code> with value of the actual password.</li>
+<li>stdin, the client will prompt for a password.</li>
+</ul>
 <h2 id="-keys"><a class="header" href="#-keys">🔐 Keys</a></h2>
 <p>For cryptographic signatures, we currently support ed25519 keys. More will be added in future.</p>
 <p>To manage keys, various sub-commands are available, see the commands <code>--help</code>:</p>
