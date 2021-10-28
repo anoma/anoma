@@ -429,6 +429,44 @@
 <span id="429">429</span>
 <span id="430">430</span>
 <span id="431">431</span>
+<span id="432">432</span>
+<span id="433">433</span>
+<span id="434">434</span>
+<span id="435">435</span>
+<span id="436">436</span>
+<span id="437">437</span>
+<span id="438">438</span>
+<span id="439">439</span>
+<span id="440">440</span>
+<span id="441">441</span>
+<span id="442">442</span>
+<span id="443">443</span>
+<span id="444">444</span>
+<span id="445">445</span>
+<span id="446">446</span>
+<span id="447">447</span>
+<span id="448">448</span>
+<span id="449">449</span>
+<span id="450">450</span>
+<span id="451">451</span>
+<span id="452">452</span>
+<span id="453">453</span>
+<span id="454">454</span>
+<span id="455">455</span>
+<span id="456">456</span>
+<span id="457">457</span>
+<span id="458">458</span>
+<span id="459">459</span>
+<span id="460">460</span>
+<span id="461">461</span>
+<span id="462">462</span>
+<span id="463">463</span>
+<span id="464">464</span>
+<span id="465">465</span>
+<span id="466">466</span>
+<span id="467">467</span>
+<span id="468">468</span>
+<span id="469">469</span>
 </pre><pre class="rust">
 <span class="doccomment">//! The persistent storage in RocksDB.</span>
 <span class="doccomment">//!</span>
@@ -446,14 +484,17 @@
 <span class="doccomment">//!   - `subspace`: any byte data associated with accounts</span>
 <span class="doccomment">//!   - `address_gen`: established address generator</span>
 
-<span class="kw">use</span> <span class="ident">std::cmp::Ordering</span>;
+<span class="kw">use</span> <span class="ident">std::cmp</span>::{<span class="ident">min</span>, <span class="ident">Ordering</span>};
 <span class="kw">use</span> <span class="ident">std::collections::HashMap</span>;
+<span class="kw">use</span> <span class="ident">std::convert::TryInto</span>;
+<span class="kw">use</span> <span class="ident">std::io</span>;
 <span class="kw">use</span> <span class="ident">std::path::Path</span>;
 
 <span class="kw">use</span> <span class="ident">anoma::ledger::storage::types::PrefixIterator</span>;
 <span class="kw">use</span> <span class="ident">anoma::ledger::storage</span>::{<span class="ident">types</span>, <span class="ident">BlockState</span>, <span class="ident">DBIter</span>, <span class="ident">Error</span>, <span class="prelude-ty">Result</span>, <span class="ident">DB</span>};
 <span class="kw">use</span> <span class="ident">anoma::types::storage</span>::{<span class="ident">BlockHeight</span>, <span class="ident">Key</span>, <span class="ident">KeySeg</span>, <span class="ident">KEY_SEGMENT_SEPARATOR</span>};
 <span class="kw">use</span> <span class="ident">anoma::types::time::DateTimeUtc</span>;
+<span class="kw">use</span> <span class="ident">rlimit</span>::{<span class="ident">Resource</span>, <span class="ident">Rlim</span>};
 <span class="kw">use</span> <span class="ident">rocksdb</span>::{
     <span class="ident">BlockBasedOptions</span>, <span class="ident">Direction</span>, <span class="ident">FlushOptions</span>, <span class="ident">IteratorMode</span>, <span class="ident">Options</span>,
     <span class="ident">ReadOptions</span>, <span class="ident">SliceTransform</span>, <span class="ident">WriteBatch</span>, <span class="ident">WriteOptions</span>,
@@ -466,12 +507,24 @@
 
 <span class="doccomment">/// Open RocksDB for the DB</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">open</span>(<span class="ident">path</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span><span class="ident">Path</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">RocksDB</span><span class="op">&gt;</span> {
+    <span class="kw">let</span> <span class="ident">max_open_files</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">increase_nofile_limit</span>() {
+        <span class="prelude-val">Ok</span>(<span class="ident">max_open_files</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="ident">max_open_files</span>),
+        <span class="prelude-val">Err</span>(<span class="ident">err</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="macro">tracing::error!</span>(<span class="string">&quot;Failed to increase NOFILE limit: {}&quot;</span>, <span class="ident">err</span>);
+            <span class="prelude-val">None</span>
+        }
+    };
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">cf_opts</span> <span class="op">=</span> <span class="ident">Options::default</span>();
     <span class="comment">// ! recommended initial setup https://github.com/facebook/rocksdb/wiki/Setup-Options-and-Basic-Tuning#other-general-options</span>
     <span class="ident">cf_opts</span>.<span class="ident">set_level_compaction_dynamic_level_bytes</span>(<span class="bool-val">true</span>);
     <span class="comment">// compactions + flushes</span>
     <span class="ident">cf_opts</span>.<span class="ident">set_max_background_jobs</span>(<span class="number">6</span>);
     <span class="ident">cf_opts</span>.<span class="ident">set_bytes_per_sync</span>(<span class="number">1048576</span>);
+    <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">max_open_files</span>) <span class="op">=</span>
+        <span class="ident">max_open_files</span>.<span class="ident">and_then</span>(<span class="op">|</span><span class="ident">max</span><span class="op">|</span> <span class="ident">max</span>.<span class="ident">as_raw</span>().<span class="ident">try_into</span>().<span class="ident">ok</span>())
+    {
+        <span class="ident">cf_opts</span>.<span class="ident">set_max_open_files</span>(<span class="ident">max_open_files</span>);
+    }
     <span class="comment">// TODO the recommended default `options.compaction_pri =</span>
     <span class="comment">// kMinOverlappingRatio` doesn&#39;t seem to be available in Rust</span>
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">table_opts</span> <span class="op">=</span> <span class="ident">BlockBasedOptions::default</span>();
@@ -860,6 +913,29 @@
     <span class="prelude-val">Err</span>(<span class="ident">Error::UnknownKey</span> {
         <span class="ident">key</span>: <span class="ident">key</span>.<span class="ident">to_owned</span>(),
     })
+}
+
+<span class="kw">const</span> <span class="ident">DEFAULT_NOFILE_LIMIT</span>: <span class="ident">Rlim</span> <span class="op">=</span> <span class="ident">Rlim::from_raw</span>(<span class="number">16384</span>);
+
+<span class="doccomment">/// Try to increase NOFILE limit and return the current soft limit.</span>
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">increase_nofile_limit</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">io::Result</span><span class="op">&lt;</span><span class="ident">Rlim</span><span class="op">&gt;</span> {
+    <span class="kw">let</span> (<span class="ident">soft</span>, <span class="ident">hard</span>) <span class="op">=</span> <span class="ident">Resource::NOFILE</span>.<span class="ident">get</span>()<span class="question-mark">?</span>;
+    <span class="macro">tracing::debug!</span>(<span class="string">&quot;Current NOFILE limit, soft={}, hard={}&quot;</span>, <span class="ident">soft</span>, <span class="ident">hard</span>);
+
+    <span class="kw">let</span> <span class="ident">target</span> <span class="op">=</span> <span class="ident">min</span>(<span class="ident">DEFAULT_NOFILE_LIMIT</span>, <span class="ident">hard</span>);
+    <span class="kw">if</span> <span class="ident">soft</span> <span class="op">&gt;</span><span class="op">=</span> <span class="ident">target</span> {
+        <span class="macro">tracing::debug!</span>(
+            <span class="string">&quot;NOFILE limit already large enough, not attempting to increase&quot;</span>
+        );
+        <span class="prelude-val">Ok</span>(<span class="ident">soft</span>)
+    } <span class="kw">else</span> {
+        <span class="macro">tracing::debug!</span>(<span class="string">&quot;Try to increase to {}&quot;</span>, <span class="ident">target</span>);
+        <span class="ident">Resource::NOFILE</span>.<span class="ident">set</span>(<span class="ident">target</span>, <span class="ident">target</span>)<span class="question-mark">?</span>;
+
+        <span class="kw">let</span> (<span class="ident">soft</span>, <span class="ident">hard</span>) <span class="op">=</span> <span class="ident">Resource::NOFILE</span>.<span class="ident">get</span>()<span class="question-mark">?</span>;
+        <span class="macro">tracing::debug!</span>(<span class="string">&quot;Increased NOFILE limit, soft={}, hard={}&quot;</span>, <span class="ident">soft</span>, <span class="ident">hard</span>);
+        <span class="prelude-val">Ok</span>(<span class="ident">soft</span>)
+    }
 }
 </pre></div>
 </section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../../../../" data-current-crate="anoma_apps" data-search-index-js="../../../../../search-index.js" data-search-js="../../../../../search.js"></div><script src="../../../../../main.js"></script><script src="../../../../../source-script.js"></script><script src="../../../../../source-files.js"></script></body></html>
