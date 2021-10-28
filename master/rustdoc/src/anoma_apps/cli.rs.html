@@ -2371,6 +2371,45 @@
 <span id="2371">2371</span>
 <span id="2372">2372</span>
 <span id="2373">2373</span>
+<span id="2374">2374</span>
+<span id="2375">2375</span>
+<span id="2376">2376</span>
+<span id="2377">2377</span>
+<span id="2378">2378</span>
+<span id="2379">2379</span>
+<span id="2380">2380</span>
+<span id="2381">2381</span>
+<span id="2382">2382</span>
+<span id="2383">2383</span>
+<span id="2384">2384</span>
+<span id="2385">2385</span>
+<span id="2386">2386</span>
+<span id="2387">2387</span>
+<span id="2388">2388</span>
+<span id="2389">2389</span>
+<span id="2390">2390</span>
+<span id="2391">2391</span>
+<span id="2392">2392</span>
+<span id="2393">2393</span>
+<span id="2394">2394</span>
+<span id="2395">2395</span>
+<span id="2396">2396</span>
+<span id="2397">2397</span>
+<span id="2398">2398</span>
+<span id="2399">2399</span>
+<span id="2400">2400</span>
+<span id="2401">2401</span>
+<span id="2402">2402</span>
+<span id="2403">2403</span>
+<span id="2404">2404</span>
+<span id="2405">2405</span>
+<span id="2406">2406</span>
+<span id="2407">2407</span>
+<span id="2408">2408</span>
+<span id="2409">2409</span>
+<span id="2410">2410</span>
+<span id="2411">2411</span>
+<span id="2412">2412</span>
 </pre><pre class="rust">
 <span class="doccomment">//! The CLI commands that are re-used between the executables `anoma`,</span>
 <span class="doccomment">//! `anoma-node` and `anoma-client`.</span>
@@ -3347,6 +3386,7 @@
 
     <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
     <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">Utils</span> {
+        <span class="ident">JoinNetwork</span>(<span class="ident">JoinNetwork</span>),
         <span class="ident">InitNetwork</span>(<span class="ident">InitNetwork</span>),
         <span class="ident">InitGenesisValidator</span>(<span class="ident">InitGenesisValidator</span>),
     }
@@ -3356,20 +3396,42 @@
 
         <span class="kw">fn</span> <span class="ident">parse</span>(<span class="ident">matches</span>: <span class="kw-2">&amp;</span><span class="ident">ArgMatches</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
             <span class="ident">matches</span>.<span class="ident">subcommand_matches</span>(<span class="self">Self</span><span class="ident">::CMD</span>).<span class="ident">and_then</span>(<span class="op">|</span><span class="ident">matches</span><span class="op">|</span> {
+                <span class="kw">let</span> <span class="ident">join_network</span> <span class="op">=</span>
+                    <span class="ident">SubCmd::parse</span>(<span class="ident">matches</span>).<span class="ident">map</span>(<span class="self">Self</span><span class="ident">::JoinNetwork</span>);
                 <span class="kw">let</span> <span class="ident">init_network</span> <span class="op">=</span>
                     <span class="ident">SubCmd::parse</span>(<span class="ident">matches</span>).<span class="ident">map</span>(<span class="self">Self</span><span class="ident">::InitNetwork</span>);
                 <span class="kw">let</span> <span class="ident">init_genesis</span> <span class="op">=</span>
                     <span class="ident">SubCmd::parse</span>(<span class="ident">matches</span>).<span class="ident">map</span>(<span class="self">Self</span><span class="ident">::InitGenesisValidator</span>);
-                <span class="ident">init_network</span>.<span class="ident">or</span>(<span class="ident">init_genesis</span>)
+                <span class="ident">join_network</span>.<span class="ident">or</span>(<span class="ident">init_network</span>).<span class="ident">or</span>(<span class="ident">init_genesis</span>)
             })
         }
 
         <span class="kw">fn</span> <span class="ident">def</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">App</span> {
             <span class="ident">App::new</span>(<span class="self">Self</span><span class="ident">::CMD</span>)
                 .<span class="ident">about</span>(<span class="string">&quot;Utilities.&quot;</span>)
+                .<span class="ident">subcommand</span>(<span class="ident">JoinNetwork::def</span>())
                 .<span class="ident">subcommand</span>(<span class="ident">InitNetwork::def</span>())
                 .<span class="ident">subcommand</span>(<span class="ident">InitGenesisValidator::def</span>())
                 .<span class="ident">setting</span>(<span class="ident">AppSettings::SubcommandRequiredElseHelp</span>)
+        }
+    }
+
+    <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
+    <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">JoinNetwork</span>(<span class="kw">pub</span> <span class="ident">args::JoinNetwork</span>);
+
+    <span class="kw">impl</span> <span class="ident">SubCmd</span> <span class="kw">for</span> <span class="ident">JoinNetwork</span> {
+        <span class="kw">const</span> <span class="ident">CMD</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;join-network&quot;</span>;
+
+        <span class="kw">fn</span> <span class="ident">parse</span>(<span class="ident">matches</span>: <span class="kw-2">&amp;</span><span class="ident">ArgMatches</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
+            <span class="ident">matches</span>
+                .<span class="ident">subcommand_matches</span>(<span class="self">Self</span><span class="ident">::CMD</span>)
+                .<span class="ident">map</span>(<span class="op">|</span><span class="ident">matches</span><span class="op">|</span> <span class="self">Self</span>(<span class="ident">args::JoinNetwork::parse</span>(<span class="ident">matches</span>)))
+        }
+
+        <span class="kw">fn</span> <span class="ident">def</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">App</span> {
+            <span class="ident">App::new</span>(<span class="self">Self</span><span class="ident">::CMD</span>)
+                .<span class="ident">about</span>(<span class="string">&quot;Configure Anoma to join an existing network.&quot;</span>)
+                .<span class="ident">add_args</span>::<span class="op">&lt;</span><span class="ident">args::JoinNetwork</span><span class="op">&gt;</span>()
         }
     }
 
@@ -4572,6 +4634,22 @@
                     .<span class="ident">def</span>()
                     .<span class="ident">about</span>(<span class="string">&quot;The bech32m encoded address string.&quot;</span>),
             )
+        }
+    }
+
+    <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
+    <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">JoinNetwork</span> {
+        <span class="kw">pub</span> <span class="ident">chain_id</span>: <span class="ident">ChainId</span>,
+    }
+
+    <span class="kw">impl</span> <span class="ident">Args</span> <span class="kw">for</span> <span class="ident">JoinNetwork</span> {
+        <span class="kw">fn</span> <span class="ident">parse</span>(<span class="ident">matches</span>: <span class="kw-2">&amp;</span><span class="ident">ArgMatches</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+            <span class="kw">let</span> <span class="ident">chain_id</span> <span class="op">=</span> <span class="ident">CHAIN_ID</span>.<span class="ident">parse</span>(<span class="ident">matches</span>);
+            <span class="self">Self</span> { <span class="ident">chain_id</span> }
+        }
+
+        <span class="kw">fn</span> <span class="ident">def</span>(<span class="ident">app</span>: <span class="ident">App</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">App</span> {
+            <span class="ident">app</span>.<span class="ident">arg</span>(<span class="ident">CHAIN_ID</span>.<span class="ident">def</span>().<span class="ident">about</span>(<span class="string">&quot;The chain ID. The chain must be known in the https://github.com/heliaxdev/anoma-network-config repository.&quot;</span>))
         }
     }
 

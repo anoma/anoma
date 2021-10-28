@@ -579,6 +579,57 @@
 <span id="579">579</span>
 <span id="580">580</span>
 <span id="581">581</span>
+<span id="582">582</span>
+<span id="583">583</span>
+<span id="584">584</span>
+<span id="585">585</span>
+<span id="586">586</span>
+<span id="587">587</span>
+<span id="588">588</span>
+<span id="589">589</span>
+<span id="590">590</span>
+<span id="591">591</span>
+<span id="592">592</span>
+<span id="593">593</span>
+<span id="594">594</span>
+<span id="595">595</span>
+<span id="596">596</span>
+<span id="597">597</span>
+<span id="598">598</span>
+<span id="599">599</span>
+<span id="600">600</span>
+<span id="601">601</span>
+<span id="602">602</span>
+<span id="603">603</span>
+<span id="604">604</span>
+<span id="605">605</span>
+<span id="606">606</span>
+<span id="607">607</span>
+<span id="608">608</span>
+<span id="609">609</span>
+<span id="610">610</span>
+<span id="611">611</span>
+<span id="612">612</span>
+<span id="613">613</span>
+<span id="614">614</span>
+<span id="615">615</span>
+<span id="616">616</span>
+<span id="617">617</span>
+<span id="618">618</span>
+<span id="619">619</span>
+<span id="620">620</span>
+<span id="621">621</span>
+<span id="622">622</span>
+<span id="623">623</span>
+<span id="624">624</span>
+<span id="625">625</span>
+<span id="626">626</span>
+<span id="627">627</span>
+<span id="628">628</span>
+<span id="629">629</span>
+<span id="630">630</span>
+<span id="631">631</span>
+<span id="632">632</span>
 </pre><pre class="rust">
 <span class="kw">use</span> <span class="ident">std::collections</span>::{<span class="ident">HashMap</span>, <span class="ident">HashSet</span>};
 <span class="kw">use</span> <span class="ident">std::fs</span>::{<span class="self">self</span>, <span class="ident">OpenOptions</span>};
@@ -603,6 +654,38 @@
 
 <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">NET_ACCOUNTS_DIR</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;setup&quot;</span>;
 <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">NET_OTHER_ACCOUNTS_DIR</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;other&quot;</span>;
+
+<span class="doccomment">/// Configure Anoma to join an existing network. The chain must be known in the</span>
+<span class="doccomment">/// &lt;https://github.com/heliaxdev/anoma-network-config&gt; repository.</span>
+<span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">join_network</span>(
+    <span class="ident">global_args</span>: <span class="ident">args::Global</span>,
+    <span class="ident">args::JoinNetwork</span> { <span class="ident">chain_id</span> }: <span class="ident">args::JoinNetwork</span>,
+) {
+    <span class="kw">let</span> <span class="ident">chain_dir</span> <span class="op">=</span> <span class="ident">global_args</span>.<span class="ident">base_dir</span>.<span class="ident">join</span>(<span class="ident">chain_id</span>.<span class="ident">as_str</span>());
+    <span class="ident">fs::create_dir_all</span>(<span class="kw-2">&amp;</span><span class="ident">chain_dir</span>).<span class="ident">expect</span>(<span class="string">&quot;Couldn&#39;t create chain directory&quot;</span>);
+
+    <span class="kw">let</span> <span class="ident">genesis_file</span> <span class="op">=</span> <span class="macro">format!</span>(<span class="string">&quot;{}.toml&quot;</span>, <span class="ident">chain_id</span>);
+    <span class="kw">let</span> <span class="ident">global_config_file</span> <span class="op">=</span> <span class="string">&quot;global-config.toml&quot;</span>;
+    <span class="kw">let</span> <span class="ident">config_file</span> <span class="op">=</span> <span class="macro">format!</span>(<span class="string">&quot;{}/config.toml&quot;</span>, <span class="ident">chain_id</span>);
+
+    <span class="kw">let</span> <span class="ident">file_url_prefix</span> <span class="op">=</span> <span class="macro">format!</span>(<span class="string">&quot;https://raw.githubusercontent.com/heliaxdev/anoma-network-config/master/final/{}/.anoma&quot;</span>, <span class="ident">chain_id</span>);
+    <span class="kw">let</span> <span class="ident">genesis_url</span> <span class="op">=</span> <span class="macro">format!</span>(<span class="string">&quot;{}/{}&quot;</span>, <span class="ident">file_url_prefix</span>, <span class="ident">genesis_file</span>);
+    <span class="kw">let</span> <span class="ident">global_config_url</span> <span class="op">=</span>
+        <span class="macro">format!</span>(<span class="string">&quot;{}/{}&quot;</span>, <span class="ident">file_url_prefix</span>, <span class="ident">global_config_file</span>);
+    <span class="kw">let</span> <span class="ident">config_url</span> <span class="op">=</span> <span class="macro">format!</span>(<span class="string">&quot;{}/{}&quot;</span>, <span class="ident">file_url_prefix</span>, <span class="ident">config_file</span>);
+
+    <span class="kw">let</span> <span class="ident">genesis</span> <span class="op">=</span> <span class="ident">download_file</span>(<span class="ident">genesis_url</span>).<span class="kw">await</span>;
+    <span class="kw">let</span> <span class="ident">global_config</span> <span class="op">=</span> <span class="ident">download_file</span>(<span class="ident">global_config_url</span>).<span class="kw">await</span>;
+    <span class="kw">let</span> <span class="ident">config</span> <span class="op">=</span> <span class="ident">download_file</span>(<span class="ident">config_url</span>).<span class="kw">await</span>;
+
+    <span class="ident">std::fs::write</span>(<span class="ident">global_args</span>.<span class="ident">base_dir</span>.<span class="ident">join</span>(<span class="ident">genesis_file</span>), <span class="ident">genesis</span>).<span class="ident">unwrap</span>();
+    <span class="ident">std::fs::write</span>(
+        <span class="ident">global_args</span>.<span class="ident">base_dir</span>.<span class="ident">join</span>(<span class="ident">global_config_file</span>),
+        <span class="ident">global_config</span>,
+    )
+    .<span class="ident">unwrap</span>();
+    <span class="ident">std::fs::write</span>(<span class="ident">global_args</span>.<span class="ident">base_dir</span>.<span class="ident">join</span>(<span class="ident">config_file</span>), <span class="ident">config</span>).<span class="ident">unwrap</span>();
+}
 
 <span class="doccomment">/// Initialize a new test network with the given validators and faucet accounts.</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">init_network</span>(
@@ -1160,6 +1243,25 @@
     <span class="comment">// TODO print in toml format after we have https://github.com/anoma/anoma/issues/425</span>
     <span class="macro">println!</span>(<span class="string">&quot;Genesis validator config: {:#?}&quot;</span>, <span class="ident">genesis_validator</span>);
     <span class="ident">genesis_validator</span>
+}
+
+<span class="kw">async</span> <span class="kw">fn</span> <span class="ident">download_file</span>(<span class="ident">url</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span><span class="ident">str</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">String</span> {
+    <span class="kw">let</span> <span class="ident">url</span> <span class="op">=</span> <span class="ident">url</span>.<span class="ident">as_ref</span>();
+    <span class="ident">reqwest::get</span>(<span class="ident">url</span>)
+        .<span class="kw">await</span>
+        .<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="ident">err</span><span class="op">|</span> {
+            <span class="macro">eprintln!</span>(<span class="string">&quot;File not found at {}. Error: {}&quot;</span>, <span class="ident">url</span>, <span class="ident">err</span>);
+            <span class="ident">cli::safe_exit</span>(<span class="number">1</span>)
+        })
+        .<span class="ident">text</span>()
+        .<span class="kw">await</span>
+        .<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="ident">err</span><span class="op">|</span> {
+            <span class="macro">eprintln!</span>(
+                <span class="string">&quot;Failed to download file from {} with error: {}&quot;</span>,
+                <span class="ident">url</span>, <span class="ident">err</span>
+            );
+            <span class="ident">cli::safe_exit</span>(<span class="number">1</span>)
+        })
 }
 </pre></div>
 </section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="anoma_apps" data-search-index-js="../../../search-index.js" data-search-js="../../../search.js"></div><script src="../../../main.js"></script><script src="../../../source-script.js"></script><script src="../../../source-files.js"></script></body></html>
