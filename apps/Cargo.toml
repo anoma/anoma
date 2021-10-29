@@ -63,7 +63,9 @@ derivative = "2.2.0"
 # TODO the older versions of rand and rand_core are currently required to avoid mismatching version issue (https://github.com/dalek-cryptography/ed25519-dalek/pull/159)
 ed25519-dalek = {version = "1.0.1", default-features = false, features = ["rand", "u64_backend", "serde"]}
 eyre = "0.6.5"
+fs_extra = "1.2.0"
 futures = "0.3"
+git2 = "0.13.23"
 hex = "0.4.3"
 itertools = "0.10.1"
 jsonpath_lib = "0.3.0"
@@ -88,6 +90,7 @@ serde_regex = "1.1.0"
 sha2 = "0.9.3"
 signal-hook = "0.3.9"
 sparse-merkle-tree = {git = "https://github.com/heliaxdev/sparse-merkle-tree", branch = "tomas/encoding-0.9.0b", features = ["borsh"]}
+tempfile = "3.2.0"
 # temporarily using fork work-around for https://github.com/informalsystems/tendermint-rs/issues/916
 # and https://github.com/anoma/anoma/issues/445
 tendermint = {git = "https://github.com/heliaxdev/tendermint-rs", branch = "tomas/lowercase-node-id"}

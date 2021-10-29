@@ -8,9 +8,12 @@ use anoma::types::chain::ChainId;
 use anoma::types::key::ed25519::Keypair;
 use anoma::types::{address, token};
 use borsh::BorshSerialize;
+use fs_extra::dir;
+use git2::Repository;
 use rand::prelude::ThreadRng;
 use rand::thread_rng;
 use serde_json::json;
+use tempfile::tempdir;
 
 use crate::cli::{self, args};
 use crate::config::genesis::genesis_config;
@@ -21,6 +24,8 @@ use crate::wallet::Wallet;
 
 pub const NET_ACCOUNTS_DIR: &str = "setup";
 pub const NET_OTHER_ACCOUNTS_DIR: &str = "other";
+const CONFIG_REPO: &str =
+    "https://github.com/heliaxdev/anoma-network-config.git";
 
 /// Configure Anoma to join an existing network. The chain must be known in the
 /// <https://github.com/heliaxdev/anoma-network-config> repository.
@@ -31,27 +36,36 @@ pub async fn join_network(
     let chain_dir = global_args.base_dir.join(chain_id.as_str());
     fs::create_dir_all(&chain_dir).expect("Couldn't create chain directory");
 
-    let genesis_file = format!("{}.toml", chain_id);
-    let global_config_file = "global-config.toml";
-    let config_file = format!("{}/config.toml", chain_id);
+    let temp_dir = tempdir().expect("Couldn't create a temporary directory");
+    Repository::clone(CONFIG_REPO, temp_dir.path()).unwrap_or_else(|err| {
+        panic!(
+            "Couldn't clone the Anoma config repo from {}. Failed with {}",
+            CONFIG_REPO, err
+        )
+    });
 
-    let file_url_prefix = format!("https://raw.githubusercontent.com/heliaxdev/anoma-network-config/master/final/{}/.anoma", chain_id);
-    let genesis_url = format!("{}/{}", file_url_prefix, genesis_file);
-    let global_config_url =
-        format!("{}/{}", file_url_prefix, global_config_file);
-    let config_url = format!("{}/{}", file_url_prefix, config_file);
-
-    let genesis = download_file(genesis_url).await;
-    let global_config = download_file(global_config_url).await;
-    let config = download_file(config_url).await;
-
-    std::fs::write(global_args.base_dir.join(genesis_file), genesis).unwrap();
-    std::fs::write(
-        global_args.base_dir.join(global_config_file),
-        global_config,
-    )
-    .unwrap();
-    std::fs::write(global_args.base_dir.join(config_file), config).unwrap();
+    let src = temp_dir
+        .path()
+        .join("final")
+        .join(chain_id.as_str())
+        .join(config::DEFAULT_BASE_DIR);
+    // Check if the src exists
+    if let Err(err) = fs::read_dir(&src) {
+        eprintln!(
+            "No configuration found for chain ID {}. Error: {}",
+            chain_id, err
+        );
+        cli::safe_exit(1)
+    }
+    let dest = global_args.base_dir;
+    let options = dir::CopyOptions {
+        copy_inside: true,
+        content_only: true,
+        overwrite: true,
+        ..Default::default()
+    };
+    dir::copy(src, dest, &options)
+        .expect("Couldn't copy the network configuration");
 }
 
 /// Initialize a new test network with the given validators and faucet accounts.
@@ -614,23 +628,4 @@ fn init_genesis_validator_aux(
     // TODO print in toml format after we have https://github.com/anoma/anoma/issues/425
     println!("Genesis validator config: {:#?}", genesis_validator);
     genesis_validator
-}
-
-async fn download_file(url: impl AsRef<str>) -> String {
-    let url = url.as_ref();
-    reqwest::get(url)
-        .await
-        .unwrap_or_else(|err| {
-            eprintln!("File not found at {}. Error: {}", url, err);
-            cli::safe_exit(1)
-        })
-        .text()
-        .await
-        .unwrap_or_else(|err| {
-            eprintln!(
-                "Failed to download file from {} with error: {}",
-                url, err
-            );
-            cli::safe_exit(1)
-        })
 }
