@@ -1,0 +1,1 @@
+initSidebarItems({"trait":[["AsRawFd","A trait to extract the raw unix file descriptor from an underlying object."],["FromRawFd","A trait to express the ability to construct an object from a raw file descriptor."],["IntoRawFd","A trait to express the ability to consume an object and acquire ownership of its raw file descriptor."]],"type":[["RawFd","Raw file descriptors."]]});

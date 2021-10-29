@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["Sha256Hasher","The storage hasher used for the merkle tree."]],"type":[["TestStorage","Storage with a mock DB for testing"]]});
