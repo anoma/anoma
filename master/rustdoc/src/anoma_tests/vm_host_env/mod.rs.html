@@ -1597,6 +1597,20 @@
 <span id="1597">1597</span>
 <span id="1598">1598</span>
 <span id="1599">1599</span>
+<span id="1600">1600</span>
+<span id="1601">1601</span>
+<span id="1602">1602</span>
+<span id="1603">1603</span>
+<span id="1604">1604</span>
+<span id="1605">1605</span>
+<span id="1606">1606</span>
+<span id="1607">1607</span>
+<span id="1608">1608</span>
+<span id="1609">1609</span>
+<span id="1610">1610</span>
+<span id="1611">1611</span>
+<span id="1612">1612</span>
+<span id="1613">1613</span>
 </pre><pre class="rust">
 <span class="doccomment">//! VM host environment integration tests.</span>
 <span class="doccomment">//!</span>
@@ -1617,10 +1631,12 @@
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
 <span class="kw">mod</span> <span class="ident">tests</span> {
 
+    <span class="kw">use</span> <span class="ident">std::panic</span>;
+
     <span class="kw">use</span> <span class="ident">anoma::ledger::ibc</span>::{<span class="ident">init_genesis_storage</span>, <span class="ident">Error</span> <span class="kw">as</span> <span class="ident">IbcError</span>};
     <span class="kw">use</span> <span class="ident">anoma::proto::Tx</span>;
     <span class="kw">use</span> <span class="ident">anoma::types::key::ed25519::SignedTxData</span>;
-    <span class="kw">use</span> <span class="ident">anoma::types::storage</span>::{<span class="ident">Key</span>, <span class="ident">KeySeg</span>};
+    <span class="kw">use</span> <span class="ident">anoma::types::storage</span>::{<span class="self">self</span>, <span class="ident">Key</span>, <span class="ident">KeySeg</span>};
     <span class="kw">use</span> <span class="ident">anoma::types::time::DateTimeUtc</span>;
     <span class="kw">use</span> <span class="ident">anoma::types</span>::{<span class="ident">address</span>, <span class="ident">key</span>};
     <span class="kw">use</span> <span class="ident">anoma_vm_env::tx_prelude</span>::{
@@ -1699,6 +1715,8 @@
     <span class="kw">fn</span> <span class="ident">test_tx_delete</span>() {
         <span class="comment">// The environment must be initialized first</span>
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">env</span> <span class="op">=</span> <span class="ident">TestTxEnv::default</span>();
+        <span class="kw">let</span> <span class="ident">test_account</span> <span class="op">=</span> <span class="ident">address::testing::established_address_1</span>();
+        <span class="ident">env</span>.<span class="ident">spawn_accounts</span>([<span class="kw-2">&amp;</span><span class="ident">test_account</span>]);
         <span class="ident">init_tx_env</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">env</span>);
 
         <span class="comment">// Trying to delete a key that doesn&#39;t exists should be a no-op</span>
@@ -1718,6 +1736,16 @@
         <span class="macro">assert!</span>(
             <span class="op">!</span><span class="ident">tx_host_env::has_key</span>(<span class="ident">key</span>),
             <span class="string">&quot;After a key has been deleted, its key shouldn&#39;t be found&quot;</span>
+        );
+
+        <span class="comment">// Trying to delete a validity predicate should fail</span>
+        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">storage::Key::validity_predicate</span>(<span class="kw-2">&amp;</span><span class="ident">test_account</span>).<span class="ident">to_string</span>();
+        <span class="macro">assert!</span>(
+            <span class="ident">panic::catch_unwind</span>(<span class="op">|</span><span class="op">|</span> { <span class="ident">tx_host_env::delete</span>(<span class="ident">key</span>) })
+                .<span class="ident">err</span>()
+                .<span class="ident">map</span>(<span class="op">|</span><span class="ident">a</span><span class="op">|</span> <span class="ident">a</span>.<span class="ident">downcast_ref</span>::<span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>().<span class="ident">cloned</span>().<span class="ident">unwrap</span>())
+                .<span class="ident">unwrap</span>()
+                .<span class="ident">contains</span>(<span class="string">&quot;CannotDeleteVp&quot;</span>)
         );
     }
 

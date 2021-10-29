@@ -964,6 +964,16 @@
 <span id="964">964</span>
 <span id="965">965</span>
 <span id="966">966</span>
+<span id="967">967</span>
+<span id="968">968</span>
+<span id="969">969</span>
+<span id="970">970</span>
+<span id="971">971</span>
+<span id="972">972</span>
+<span id="973">973</span>
+<span id="974">974</span>
+<span id="975">975</span>
+<span id="976">976</span>
 </pre><pre class="rust">
 <span class="doccomment">//! Client RPC queries</span>
 
@@ -989,10 +999,7 @@
 <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::node::ledger::rpc</span>::{<span class="ident">Path</span>, <span class="ident">PrefixValue</span>};
 
 <span class="doccomment">/// Query the epoch of the last committed block</span>
-<span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">query_epoch</span>(
-    <span class="ident">ctx</span>: <span class="ident">Context</span>,
-    <span class="ident">args</span>: <span class="ident">args::Query</span>,
-) <span class="op">-</span><span class="op">&gt;</span> (<span class="ident">Context</span>, <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Epoch</span><span class="op">&gt;</span>) {
+<span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">query_epoch</span>(<span class="ident">ctx</span>: <span class="ident">Context</span>, <span class="ident">args</span>: <span class="ident">args::Query</span>) <span class="op">-</span><span class="op">&gt;</span> (<span class="ident">Context</span>, <span class="ident">Epoch</span>) {
     <span class="kw">let</span> <span class="ident">client</span> <span class="op">=</span> <span class="ident">HttpClient::new</span>(<span class="ident">args</span>.<span class="ident">ledger_address</span>).<span class="ident">unwrap</span>();
     <span class="kw">let</span> <span class="ident">path</span> <span class="op">=</span> <span class="ident">Path::Epoch</span>;
     <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="macro">vec!</span>[];
@@ -1005,7 +1012,7 @@
             <span class="kw">match</span> <span class="ident">Epoch::try_from_slice</span>(<span class="kw-2">&amp;</span><span class="ident">response</span>.<span class="ident">value</span>[..]) {
                 <span class="prelude-val">Ok</span>(<span class="ident">epoch</span>) <span class="op">=</span><span class="op">&gt;</span> {
                     <span class="macro">println!</span>(<span class="string">&quot;Last committed epoch: {}&quot;</span>, <span class="ident">epoch</span>);
-                    <span class="kw">return</span> (<span class="ident">ctx</span>, <span class="prelude-val">Some</span>(<span class="ident">epoch</span>));
+                    <span class="kw">return</span> (<span class="ident">ctx</span>, <span class="ident">epoch</span>);
                 }
 
                 <span class="prelude-val">Err</span>(<span class="ident">err</span>) <span class="op">=</span><span class="op">&gt;</span> {
@@ -1116,380 +1123,354 @@
 <span class="doccomment">/// Query PoS bond(s)</span>
 <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">query_bonds</span>(<span class="ident">ctx</span>: <span class="ident">Context</span>, <span class="ident">args</span>: <span class="ident">args::QueryBonds</span>) {
     <span class="kw">let</span> (<span class="ident">ctx</span>, <span class="ident">epoch</span>) <span class="op">=</span> <span class="ident">query_epoch</span>(<span class="ident">ctx</span>, <span class="ident">args</span>.<span class="ident">query</span>.<span class="ident">clone</span>()).<span class="kw">await</span>;
-    <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">epoch</span>) <span class="op">=</span> <span class="ident">epoch</span> {
-        <span class="kw">let</span> <span class="ident">client</span> <span class="op">=</span> <span class="ident">HttpClient::new</span>(<span class="ident">args</span>.<span class="ident">query</span>.<span class="ident">ledger_address</span>).<span class="ident">unwrap</span>();
-        <span class="kw">match</span> (<span class="ident">args</span>.<span class="ident">owner</span>, <span class="ident">args</span>.<span class="ident">validator</span>) {
-            (<span class="prelude-val">Some</span>(<span class="ident">owner</span>), <span class="prelude-val">Some</span>(<span class="ident">validator</span>)) <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="kw">let</span> <span class="ident">source</span> <span class="op">=</span> <span class="ident">ctx</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">owner</span>);
-                <span class="kw">let</span> <span class="ident">validator</span> <span class="op">=</span> <span class="ident">ctx</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">validator</span>);
-                <span class="comment">// Find owner&#39;s delegations to the given validator</span>
-                <span class="kw">let</span> <span class="ident">bond_id</span> <span class="op">=</span> <span class="ident">pos::BondId</span> { <span class="ident">source</span>, <span class="ident">validator</span> };
-                <span class="kw">let</span> <span class="ident">bond_key</span> <span class="op">=</span> <span class="ident">pos::bond_key</span>(<span class="kw-2">&amp;</span><span class="ident">bond_id</span>);
-                <span class="kw">let</span> <span class="ident">bonds</span> <span class="op">=</span>
-                    <span class="ident">query_storage_value</span>::<span class="op">&lt;</span><span class="ident">pos::Bonds</span><span class="op">&gt;</span>(<span class="ident">client</span>.<span class="ident">clone</span>(), <span class="ident">bond_key</span>)
-                        .<span class="kw">await</span>;
-                <span class="comment">// Find owner&#39;s unbonded delegations from the given</span>
-                <span class="comment">// validator</span>
-                <span class="kw">let</span> <span class="ident">unbond_key</span> <span class="op">=</span> <span class="ident">pos::unbond_key</span>(<span class="kw-2">&amp;</span><span class="ident">bond_id</span>);
-                <span class="kw">let</span> <span class="ident">unbonds</span> <span class="op">=</span> <span class="ident">query_storage_value</span>::<span class="op">&lt;</span><span class="ident">pos::Unbonds</span><span class="op">&gt;</span>(
-                    <span class="ident">client</span>.<span class="ident">clone</span>(),
-                    <span class="ident">unbond_key</span>,
-                )
-                .<span class="kw">await</span>;
-                <span class="comment">// Find validator&#39;s slashes, if any</span>
-                <span class="kw">let</span> <span class="ident">slashes_key</span> <span class="op">=</span>
-                    <span class="ident">pos::validator_slashes_key</span>(<span class="kw-2">&amp;</span><span class="ident">bond_id</span>.<span class="ident">validator</span>);
-                <span class="kw">let</span> <span class="ident">slashes</span> <span class="op">=</span>
-                    <span class="ident">query_storage_value</span>::<span class="op">&lt;</span><span class="ident">pos::Slashes</span><span class="op">&gt;</span>(<span class="ident">client</span>, <span class="ident">slashes_key</span>)
-                        .<span class="kw">await</span>
-                        .<span class="ident">unwrap_or_default</span>();
+    <span class="kw">let</span> <span class="ident">client</span> <span class="op">=</span> <span class="ident">HttpClient::new</span>(<span class="ident">args</span>.<span class="ident">query</span>.<span class="ident">ledger_address</span>).<span class="ident">unwrap</span>();
+    <span class="kw">match</span> (<span class="ident">args</span>.<span class="ident">owner</span>, <span class="ident">args</span>.<span class="ident">validator</span>) {
+        (<span class="prelude-val">Some</span>(<span class="ident">owner</span>), <span class="prelude-val">Some</span>(<span class="ident">validator</span>)) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="kw">let</span> <span class="ident">source</span> <span class="op">=</span> <span class="ident">ctx</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">owner</span>);
+            <span class="kw">let</span> <span class="ident">validator</span> <span class="op">=</span> <span class="ident">ctx</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">validator</span>);
+            <span class="comment">// Find owner&#39;s delegations to the given validator</span>
+            <span class="kw">let</span> <span class="ident">bond_id</span> <span class="op">=</span> <span class="ident">pos::BondId</span> { <span class="ident">source</span>, <span class="ident">validator</span> };
+            <span class="kw">let</span> <span class="ident">bond_key</span> <span class="op">=</span> <span class="ident">pos::bond_key</span>(<span class="kw-2">&amp;</span><span class="ident">bond_id</span>);
+            <span class="kw">let</span> <span class="ident">bonds</span> <span class="op">=</span>
+                <span class="ident">query_storage_value</span>::<span class="op">&lt;</span><span class="ident">pos::Bonds</span><span class="op">&gt;</span>(<span class="ident">client</span>.<span class="ident">clone</span>(), <span class="ident">bond_key</span>)
+                    .<span class="kw">await</span>;
+            <span class="comment">// Find owner&#39;s unbonded delegations from the given</span>
+            <span class="comment">// validator</span>
+            <span class="kw">let</span> <span class="ident">unbond_key</span> <span class="op">=</span> <span class="ident">pos::unbond_key</span>(<span class="kw-2">&amp;</span><span class="ident">bond_id</span>);
+            <span class="kw">let</span> <span class="ident">unbonds</span> <span class="op">=</span>
+                <span class="ident">query_storage_value</span>::<span class="op">&lt;</span><span class="ident">pos::Unbonds</span><span class="op">&gt;</span>(<span class="ident">client</span>.<span class="ident">clone</span>(), <span class="ident">unbond_key</span>)
+                    .<span class="kw">await</span>;
+            <span class="comment">// Find validator&#39;s slashes, if any</span>
+            <span class="kw">let</span> <span class="ident">slashes_key</span> <span class="op">=</span> <span class="ident">pos::validator_slashes_key</span>(<span class="kw-2">&amp;</span><span class="ident">bond_id</span>.<span class="ident">validator</span>);
+            <span class="kw">let</span> <span class="ident">slashes</span> <span class="op">=</span>
+                <span class="ident">query_storage_value</span>::<span class="op">&lt;</span><span class="ident">pos::Slashes</span><span class="op">&gt;</span>(<span class="ident">client</span>, <span class="ident">slashes_key</span>)
+                    .<span class="kw">await</span>
+                    .<span class="ident">unwrap_or_default</span>();
 
-                <span class="kw">let</span> <span class="ident">stdout</span> <span class="op">=</span> <span class="ident">io::stdout</span>();
-                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">w</span> <span class="op">=</span> <span class="ident">stdout</span>.<span class="ident">lock</span>();
+            <span class="kw">let</span> <span class="ident">stdout</span> <span class="op">=</span> <span class="ident">io::stdout</span>();
+            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">w</span> <span class="op">=</span> <span class="ident">stdout</span>.<span class="ident">lock</span>();
 
-                <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">bonds</span>) <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">bonds</span> {
-                    <span class="kw">let</span> <span class="ident">bond_type</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">bond_id</span>.<span class="ident">source</span> <span class="op">=</span><span class="op">=</span> <span class="ident">bond_id</span>.<span class="ident">validator</span> {
-                        <span class="string">&quot;Self-bonds&quot;</span>
-                    } <span class="kw">else</span> {
-                        <span class="string">&quot;Delegations&quot;</span>
-                    };
-                    <span class="macro">writeln!</span>(<span class="ident">w</span>, <span class="string">&quot;{}:&quot;</span>, <span class="ident">bond_type</span>).<span class="ident">unwrap</span>();
-                    <span class="ident">process_bonds_query</span>(
-                        <span class="ident">bonds</span>, <span class="kw-2">&amp;</span><span class="ident">slashes</span>, <span class="kw-2">&amp;</span><span class="ident">epoch</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">w</span>,
-                    );
-                }
-
-                <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">unbonds</span>) <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">unbonds</span> {
-                    <span class="kw">let</span> <span class="ident">bond_type</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">bond_id</span>.<span class="ident">source</span> <span class="op">=</span><span class="op">=</span> <span class="ident">bond_id</span>.<span class="ident">validator</span> {
-                        <span class="string">&quot;Unbonded self-bonds&quot;</span>
-                    } <span class="kw">else</span> {
-                        <span class="string">&quot;Unbonded delegations&quot;</span>
-                    };
-                    <span class="macro">writeln!</span>(<span class="ident">w</span>, <span class="string">&quot;{}:&quot;</span>, <span class="ident">bond_type</span>).<span class="ident">unwrap</span>();
-                    <span class="ident">process_unbonds_query</span>(
-                        <span class="ident">unbonds</span>, <span class="kw-2">&amp;</span><span class="ident">slashes</span>, <span class="kw-2">&amp;</span><span class="ident">epoch</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">w</span>,
-                    );
-                }
-
-                <span class="kw">if</span> <span class="ident">bonds</span>.<span class="ident">is_none</span>() <span class="op">&amp;&amp;</span> <span class="ident">unbonds</span>.<span class="ident">is_none</span>() {
-                    <span class="macro">writeln!</span>(
-                        <span class="ident">w</span>,
-                        <span class="string">&quot;No delegations found for {} to validator {}&quot;</span>,
-                        <span class="ident">bond_id</span>.<span class="ident">source</span>,
-                        <span class="ident">bond_id</span>.<span class="ident">validator</span>.<span class="ident">encode</span>()
-                    )
-                    .<span class="ident">unwrap</span>();
-                }
-            }
-            (<span class="prelude-val">None</span>, <span class="prelude-val">Some</span>(<span class="ident">validator</span>)) <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="kw">let</span> <span class="ident">validator</span> <span class="op">=</span> <span class="ident">ctx</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">validator</span>);
-                <span class="comment">// Find validator&#39;s self-bonds</span>
-                <span class="kw">let</span> <span class="ident">bond_id</span> <span class="op">=</span> <span class="ident">pos::BondId</span> {
-                    <span class="ident">source</span>: <span class="ident">validator</span>.<span class="ident">clone</span>(),
-                    <span class="ident">validator</span>,
+            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">bonds</span>) <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">bonds</span> {
+                <span class="kw">let</span> <span class="ident">bond_type</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">bond_id</span>.<span class="ident">source</span> <span class="op">=</span><span class="op">=</span> <span class="ident">bond_id</span>.<span class="ident">validator</span> {
+                    <span class="string">&quot;Self-bonds&quot;</span>
+                } <span class="kw">else</span> {
+                    <span class="string">&quot;Delegations&quot;</span>
                 };
-                <span class="kw">let</span> <span class="ident">bond_key</span> <span class="op">=</span> <span class="ident">pos::bond_key</span>(<span class="kw-2">&amp;</span><span class="ident">bond_id</span>);
-                <span class="kw">let</span> <span class="ident">bonds</span> <span class="op">=</span>
-                    <span class="ident">query_storage_value</span>::<span class="op">&lt;</span><span class="ident">pos::Bonds</span><span class="op">&gt;</span>(<span class="ident">client</span>.<span class="ident">clone</span>(), <span class="ident">bond_key</span>)
-                        .<span class="kw">await</span>;
-                <span class="comment">// Find validator&#39;s unbonded self-bonds</span>
-                <span class="kw">let</span> <span class="ident">unbond_key</span> <span class="op">=</span> <span class="ident">pos::unbond_key</span>(<span class="kw-2">&amp;</span><span class="ident">bond_id</span>);
-                <span class="kw">let</span> <span class="ident">unbonds</span> <span class="op">=</span> <span class="ident">query_storage_value</span>::<span class="op">&lt;</span><span class="ident">pos::Unbonds</span><span class="op">&gt;</span>(
-                    <span class="ident">client</span>.<span class="ident">clone</span>(),
-                    <span class="ident">unbond_key</span>,
-                )
-                .<span class="kw">await</span>;
-                <span class="comment">// Find validator&#39;s slashes, if any</span>
-                <span class="kw">let</span> <span class="ident">slashes_key</span> <span class="op">=</span>
-                    <span class="ident">pos::validator_slashes_key</span>(<span class="kw-2">&amp;</span><span class="ident">bond_id</span>.<span class="ident">validator</span>);
-                <span class="kw">let</span> <span class="ident">slashes</span> <span class="op">=</span>
-                    <span class="ident">query_storage_value</span>::<span class="op">&lt;</span><span class="ident">pos::Slashes</span><span class="op">&gt;</span>(<span class="ident">client</span>, <span class="ident">slashes_key</span>)
-                        .<span class="kw">await</span>
-                        .<span class="ident">unwrap_or_default</span>();
-
-                <span class="kw">let</span> <span class="ident">stdout</span> <span class="op">=</span> <span class="ident">io::stdout</span>();
-                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">w</span> <span class="op">=</span> <span class="ident">stdout</span>.<span class="ident">lock</span>();
-
-                <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">bonds</span>) <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">bonds</span> {
-                    <span class="macro">writeln!</span>(<span class="ident">w</span>, <span class="string">&quot;Self-bonds:&quot;</span>).<span class="ident">unwrap</span>();
-                    <span class="ident">process_bonds_query</span>(
-                        <span class="ident">bonds</span>, <span class="kw-2">&amp;</span><span class="ident">slashes</span>, <span class="kw-2">&amp;</span><span class="ident">epoch</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">w</span>,
-                    );
-                }
-
-                <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">unbonds</span>) <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">unbonds</span> {
-                    <span class="macro">writeln!</span>(<span class="ident">w</span>, <span class="string">&quot;Unbonded self-bonds:&quot;</span>).<span class="ident">unwrap</span>();
-                    <span class="ident">process_unbonds_query</span>(
-                        <span class="ident">unbonds</span>, <span class="kw-2">&amp;</span><span class="ident">slashes</span>, <span class="kw-2">&amp;</span><span class="ident">epoch</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">w</span>,
-                    );
-                }
-
-                <span class="kw">if</span> <span class="ident">bonds</span>.<span class="ident">is_none</span>() <span class="op">&amp;&amp;</span> <span class="ident">unbonds</span>.<span class="ident">is_none</span>() {
-                    <span class="macro">writeln!</span>(
-                        <span class="ident">w</span>,
-                        <span class="string">&quot;No self-bonds found for validator {}&quot;</span>,
-                        <span class="ident">bond_id</span>.<span class="ident">validator</span>.<span class="ident">encode</span>()
-                    )
-                    .<span class="ident">unwrap</span>();
-                }
+                <span class="macro">writeln!</span>(<span class="ident">w</span>, <span class="string">&quot;{}:&quot;</span>, <span class="ident">bond_type</span>).<span class="ident">unwrap</span>();
+                <span class="ident">process_bonds_query</span>(
+                    <span class="ident">bonds</span>, <span class="kw-2">&amp;</span><span class="ident">slashes</span>, <span class="kw-2">&amp;</span><span class="ident">epoch</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">w</span>,
+                );
             }
-            (<span class="prelude-val">Some</span>(<span class="ident">owner</span>), <span class="prelude-val">None</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="kw">let</span> <span class="ident">owner</span> <span class="op">=</span> <span class="ident">ctx</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">owner</span>);
-                <span class="comment">// Find owner&#39;s bonds to any validator</span>
-                <span class="kw">let</span> <span class="ident">bonds_prefix</span> <span class="op">=</span> <span class="ident">pos::bonds_for_source_prefix</span>(<span class="kw-2">&amp;</span><span class="ident">owner</span>);
-                <span class="kw">let</span> <span class="ident">bonds</span> <span class="op">=</span> <span class="ident">query_storage_prefix</span>::<span class="op">&lt;</span><span class="ident">pos::Bonds</span><span class="op">&gt;</span>(
-                    <span class="ident">client</span>.<span class="ident">clone</span>(),
-                    <span class="ident">bonds_prefix</span>,
-                )
-                .<span class="kw">await</span>;
-                <span class="comment">// Find owner&#39;s unbonds to any validator</span>
-                <span class="kw">let</span> <span class="ident">unbonds_prefix</span> <span class="op">=</span> <span class="ident">pos::unbonds_for_source_prefix</span>(<span class="kw-2">&amp;</span><span class="ident">owner</span>);
-                <span class="kw">let</span> <span class="ident">unbonds</span> <span class="op">=</span> <span class="ident">query_storage_prefix</span>::<span class="op">&lt;</span><span class="ident">pos::Unbonds</span><span class="op">&gt;</span>(
-                    <span class="ident">client</span>.<span class="ident">clone</span>(),
-                    <span class="ident">unbonds_prefix</span>,
-                )
-                .<span class="kw">await</span>;
 
-                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">total</span>: <span class="ident">token::Amount</span> <span class="op">=</span> <span class="number">0</span>.<span class="ident">into</span>();
-                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">total_active</span>: <span class="ident">token::Amount</span> <span class="op">=</span> <span class="number">0</span>.<span class="ident">into</span>();
-                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">any_bonds</span> <span class="op">=</span> <span class="bool-val">false</span>;
-                <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">bonds</span>) <span class="op">=</span> <span class="ident">bonds</span> {
-                    <span class="kw">for</span> (<span class="ident">key</span>, <span class="ident">bonds</span>) <span class="kw">in</span> <span class="ident">bonds</span> {
-                        <span class="kw">match</span> <span class="ident">pos::is_bond_key</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>) {
-                            <span class="prelude-val">Some</span>(<span class="ident">pos::BondId</span> { <span class="ident">source</span>, <span class="ident">validator</span> }) <span class="op">=</span><span class="op">&gt;</span> {
-                                <span class="comment">// Find validator&#39;s slashes, if any</span>
-                                <span class="kw">let</span> <span class="ident">slashes_key</span> <span class="op">=</span>
-                                    <span class="ident">pos::validator_slashes_key</span>(<span class="kw-2">&amp;</span><span class="ident">validator</span>);
-                                <span class="kw">let</span> <span class="ident">slashes</span> <span class="op">=</span>
-                                    <span class="ident">query_storage_value</span>::<span class="op">&lt;</span><span class="ident">pos::Slashes</span><span class="op">&gt;</span>(
-                                        <span class="ident">client</span>.<span class="ident">clone</span>(),
-                                        <span class="ident">slashes_key</span>,
-                                    )
-                                    .<span class="kw">await</span>
-                                    .<span class="ident">unwrap_or_default</span>();
+            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">unbonds</span>) <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">unbonds</span> {
+                <span class="kw">let</span> <span class="ident">bond_type</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">bond_id</span>.<span class="ident">source</span> <span class="op">=</span><span class="op">=</span> <span class="ident">bond_id</span>.<span class="ident">validator</span> {
+                    <span class="string">&quot;Unbonded self-bonds&quot;</span>
+                } <span class="kw">else</span> {
+                    <span class="string">&quot;Unbonded delegations&quot;</span>
+                };
+                <span class="macro">writeln!</span>(<span class="ident">w</span>, <span class="string">&quot;{}:&quot;</span>, <span class="ident">bond_type</span>).<span class="ident">unwrap</span>();
+                <span class="ident">process_unbonds_query</span>(
+                    <span class="ident">unbonds</span>, <span class="kw-2">&amp;</span><span class="ident">slashes</span>, <span class="kw-2">&amp;</span><span class="ident">epoch</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">w</span>,
+                );
+            }
 
-                                <span class="kw">let</span> <span class="ident">stdout</span> <span class="op">=</span> <span class="ident">io::stdout</span>();
-                                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">w</span> <span class="op">=</span> <span class="ident">stdout</span>.<span class="ident">lock</span>();
-                                <span class="ident">any_bonds</span> <span class="op">=</span> <span class="bool-val">true</span>;
-                                <span class="kw">let</span> <span class="ident">bond_type</span>: <span class="ident">Cow</span><span class="op">&lt;</span><span class="ident">str</span><span class="op">&gt;</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">source</span> <span class="op">=</span><span class="op">=</span> <span class="ident">validator</span>
-                                {
-                                    <span class="string">&quot;Self-bonds&quot;</span>.<span class="ident">into</span>()
-                                } <span class="kw">else</span> {
-                                    <span class="macro">format!</span>(<span class="string">&quot;Delegations from {}&quot;</span>, <span class="ident">source</span>)
-                                        .<span class="ident">into</span>()
-                                };
-                                <span class="macro">writeln!</span>(<span class="ident">w</span>, <span class="string">&quot;{}:&quot;</span>, <span class="ident">bond_type</span>).<span class="ident">unwrap</span>();
-                                <span class="kw">let</span> (<span class="ident">tot</span>, <span class="ident">tot_active</span>) <span class="op">=</span> <span class="ident">process_bonds_query</span>(
-                                    <span class="kw-2">&amp;</span><span class="ident">bonds</span>,
-                                    <span class="kw-2">&amp;</span><span class="ident">slashes</span>,
-                                    <span class="kw-2">&amp;</span><span class="ident">epoch</span>,
-                                    <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="ident">source</span>),
-                                    <span class="prelude-val">Some</span>(<span class="ident">total</span>),
-                                    <span class="prelude-val">Some</span>(<span class="ident">total_active</span>),
-                                    <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">w</span>,
-                                );
-                                <span class="ident">total</span> <span class="op">=</span> <span class="ident">tot</span>;
-                                <span class="ident">total_active</span> <span class="op">=</span> <span class="ident">tot_active</span>;
-                            }
-                            <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> {
-                                <span class="macro">panic!</span>(<span class="string">&quot;Unexpected storage key {}&quot;</span>, <span class="ident">key</span>)
-                            }
+            <span class="kw">if</span> <span class="ident">bonds</span>.<span class="ident">is_none</span>() <span class="op">&amp;&amp;</span> <span class="ident">unbonds</span>.<span class="ident">is_none</span>() {
+                <span class="macro">writeln!</span>(
+                    <span class="ident">w</span>,
+                    <span class="string">&quot;No delegations found for {} to validator {}&quot;</span>,
+                    <span class="ident">bond_id</span>.<span class="ident">source</span>,
+                    <span class="ident">bond_id</span>.<span class="ident">validator</span>.<span class="ident">encode</span>()
+                )
+                .<span class="ident">unwrap</span>();
+            }
+        }
+        (<span class="prelude-val">None</span>, <span class="prelude-val">Some</span>(<span class="ident">validator</span>)) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="kw">let</span> <span class="ident">validator</span> <span class="op">=</span> <span class="ident">ctx</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">validator</span>);
+            <span class="comment">// Find validator&#39;s self-bonds</span>
+            <span class="kw">let</span> <span class="ident">bond_id</span> <span class="op">=</span> <span class="ident">pos::BondId</span> {
+                <span class="ident">source</span>: <span class="ident">validator</span>.<span class="ident">clone</span>(),
+                <span class="ident">validator</span>,
+            };
+            <span class="kw">let</span> <span class="ident">bond_key</span> <span class="op">=</span> <span class="ident">pos::bond_key</span>(<span class="kw-2">&amp;</span><span class="ident">bond_id</span>);
+            <span class="kw">let</span> <span class="ident">bonds</span> <span class="op">=</span>
+                <span class="ident">query_storage_value</span>::<span class="op">&lt;</span><span class="ident">pos::Bonds</span><span class="op">&gt;</span>(<span class="ident">client</span>.<span class="ident">clone</span>(), <span class="ident">bond_key</span>)
+                    .<span class="kw">await</span>;
+            <span class="comment">// Find validator&#39;s unbonded self-bonds</span>
+            <span class="kw">let</span> <span class="ident">unbond_key</span> <span class="op">=</span> <span class="ident">pos::unbond_key</span>(<span class="kw-2">&amp;</span><span class="ident">bond_id</span>);
+            <span class="kw">let</span> <span class="ident">unbonds</span> <span class="op">=</span>
+                <span class="ident">query_storage_value</span>::<span class="op">&lt;</span><span class="ident">pos::Unbonds</span><span class="op">&gt;</span>(<span class="ident">client</span>.<span class="ident">clone</span>(), <span class="ident">unbond_key</span>)
+                    .<span class="kw">await</span>;
+            <span class="comment">// Find validator&#39;s slashes, if any</span>
+            <span class="kw">let</span> <span class="ident">slashes_key</span> <span class="op">=</span> <span class="ident">pos::validator_slashes_key</span>(<span class="kw-2">&amp;</span><span class="ident">bond_id</span>.<span class="ident">validator</span>);
+            <span class="kw">let</span> <span class="ident">slashes</span> <span class="op">=</span>
+                <span class="ident">query_storage_value</span>::<span class="op">&lt;</span><span class="ident">pos::Slashes</span><span class="op">&gt;</span>(<span class="ident">client</span>, <span class="ident">slashes_key</span>)
+                    .<span class="kw">await</span>
+                    .<span class="ident">unwrap_or_default</span>();
+
+            <span class="kw">let</span> <span class="ident">stdout</span> <span class="op">=</span> <span class="ident">io::stdout</span>();
+            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">w</span> <span class="op">=</span> <span class="ident">stdout</span>.<span class="ident">lock</span>();
+
+            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">bonds</span>) <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">bonds</span> {
+                <span class="macro">writeln!</span>(<span class="ident">w</span>, <span class="string">&quot;Self-bonds:&quot;</span>).<span class="ident">unwrap</span>();
+                <span class="ident">process_bonds_query</span>(
+                    <span class="ident">bonds</span>, <span class="kw-2">&amp;</span><span class="ident">slashes</span>, <span class="kw-2">&amp;</span><span class="ident">epoch</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">w</span>,
+                );
+            }
+
+            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">unbonds</span>) <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">unbonds</span> {
+                <span class="macro">writeln!</span>(<span class="ident">w</span>, <span class="string">&quot;Unbonded self-bonds:&quot;</span>).<span class="ident">unwrap</span>();
+                <span class="ident">process_unbonds_query</span>(
+                    <span class="ident">unbonds</span>, <span class="kw-2">&amp;</span><span class="ident">slashes</span>, <span class="kw-2">&amp;</span><span class="ident">epoch</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">w</span>,
+                );
+            }
+
+            <span class="kw">if</span> <span class="ident">bonds</span>.<span class="ident">is_none</span>() <span class="op">&amp;&amp;</span> <span class="ident">unbonds</span>.<span class="ident">is_none</span>() {
+                <span class="macro">writeln!</span>(
+                    <span class="ident">w</span>,
+                    <span class="string">&quot;No self-bonds found for validator {}&quot;</span>,
+                    <span class="ident">bond_id</span>.<span class="ident">validator</span>.<span class="ident">encode</span>()
+                )
+                .<span class="ident">unwrap</span>();
+            }
+        }
+        (<span class="prelude-val">Some</span>(<span class="ident">owner</span>), <span class="prelude-val">None</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="kw">let</span> <span class="ident">owner</span> <span class="op">=</span> <span class="ident">ctx</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">owner</span>);
+            <span class="comment">// Find owner&#39;s bonds to any validator</span>
+            <span class="kw">let</span> <span class="ident">bonds_prefix</span> <span class="op">=</span> <span class="ident">pos::bonds_for_source_prefix</span>(<span class="kw-2">&amp;</span><span class="ident">owner</span>);
+            <span class="kw">let</span> <span class="ident">bonds</span> <span class="op">=</span> <span class="ident">query_storage_prefix</span>::<span class="op">&lt;</span><span class="ident">pos::Bonds</span><span class="op">&gt;</span>(
+                <span class="ident">client</span>.<span class="ident">clone</span>(),
+                <span class="ident">bonds_prefix</span>,
+            )
+            .<span class="kw">await</span>;
+            <span class="comment">// Find owner&#39;s unbonds to any validator</span>
+            <span class="kw">let</span> <span class="ident">unbonds_prefix</span> <span class="op">=</span> <span class="ident">pos::unbonds_for_source_prefix</span>(<span class="kw-2">&amp;</span><span class="ident">owner</span>);
+            <span class="kw">let</span> <span class="ident">unbonds</span> <span class="op">=</span> <span class="ident">query_storage_prefix</span>::<span class="op">&lt;</span><span class="ident">pos::Unbonds</span><span class="op">&gt;</span>(
+                <span class="ident">client</span>.<span class="ident">clone</span>(),
+                <span class="ident">unbonds_prefix</span>,
+            )
+            .<span class="kw">await</span>;
+
+            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">total</span>: <span class="ident">token::Amount</span> <span class="op">=</span> <span class="number">0</span>.<span class="ident">into</span>();
+            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">total_active</span>: <span class="ident">token::Amount</span> <span class="op">=</span> <span class="number">0</span>.<span class="ident">into</span>();
+            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">any_bonds</span> <span class="op">=</span> <span class="bool-val">false</span>;
+            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">bonds</span>) <span class="op">=</span> <span class="ident">bonds</span> {
+                <span class="kw">for</span> (<span class="ident">key</span>, <span class="ident">bonds</span>) <span class="kw">in</span> <span class="ident">bonds</span> {
+                    <span class="kw">match</span> <span class="ident">pos::is_bond_key</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>) {
+                        <span class="prelude-val">Some</span>(<span class="ident">pos::BondId</span> { <span class="ident">source</span>, <span class="ident">validator</span> }) <span class="op">=</span><span class="op">&gt;</span> {
+                            <span class="comment">// Find validator&#39;s slashes, if any</span>
+                            <span class="kw">let</span> <span class="ident">slashes_key</span> <span class="op">=</span>
+                                <span class="ident">pos::validator_slashes_key</span>(<span class="kw-2">&amp;</span><span class="ident">validator</span>);
+                            <span class="kw">let</span> <span class="ident">slashes</span> <span class="op">=</span> <span class="ident">query_storage_value</span>::<span class="op">&lt;</span><span class="ident">pos::Slashes</span><span class="op">&gt;</span>(
+                                <span class="ident">client</span>.<span class="ident">clone</span>(),
+                                <span class="ident">slashes_key</span>,
+                            )
+                            .<span class="kw">await</span>
+                            .<span class="ident">unwrap_or_default</span>();
+
+                            <span class="kw">let</span> <span class="ident">stdout</span> <span class="op">=</span> <span class="ident">io::stdout</span>();
+                            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">w</span> <span class="op">=</span> <span class="ident">stdout</span>.<span class="ident">lock</span>();
+                            <span class="ident">any_bonds</span> <span class="op">=</span> <span class="bool-val">true</span>;
+                            <span class="kw">let</span> <span class="ident">bond_type</span>: <span class="ident">Cow</span><span class="op">&lt;</span><span class="ident">str</span><span class="op">&gt;</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">source</span> <span class="op">=</span><span class="op">=</span> <span class="ident">validator</span> {
+                                <span class="string">&quot;Self-bonds&quot;</span>.<span class="ident">into</span>()
+                            } <span class="kw">else</span> {
+                                <span class="macro">format!</span>(<span class="string">&quot;Delegations from {}&quot;</span>, <span class="ident">source</span>).<span class="ident">into</span>()
+                            };
+                            <span class="macro">writeln!</span>(<span class="ident">w</span>, <span class="string">&quot;{}:&quot;</span>, <span class="ident">bond_type</span>).<span class="ident">unwrap</span>();
+                            <span class="kw">let</span> (<span class="ident">tot</span>, <span class="ident">tot_active</span>) <span class="op">=</span> <span class="ident">process_bonds_query</span>(
+                                <span class="kw-2">&amp;</span><span class="ident">bonds</span>,
+                                <span class="kw-2">&amp;</span><span class="ident">slashes</span>,
+                                <span class="kw-2">&amp;</span><span class="ident">epoch</span>,
+                                <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="ident">source</span>),
+                                <span class="prelude-val">Some</span>(<span class="ident">total</span>),
+                                <span class="prelude-val">Some</span>(<span class="ident">total_active</span>),
+                                <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">w</span>,
+                            );
+                            <span class="ident">total</span> <span class="op">=</span> <span class="ident">tot</span>;
+                            <span class="ident">total_active</span> <span class="op">=</span> <span class="ident">tot_active</span>;
+                        }
+                        <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> {
+                            <span class="macro">panic!</span>(<span class="string">&quot;Unexpected storage key {}&quot;</span>, <span class="ident">key</span>)
                         }
                     }
                 }
-                <span class="kw">if</span> <span class="ident">total_active</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span>.<span class="ident">into</span>() <span class="op">&amp;&amp;</span> <span class="ident">total_active</span> <span class="op">!</span><span class="op">=</span> <span class="ident">total</span> {
-                    <span class="macro">println!</span>(<span class="string">&quot;Active bonds total: {}&quot;</span>, <span class="ident">total_active</span>);
-                }
+            }
+            <span class="kw">if</span> <span class="ident">total_active</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span>.<span class="ident">into</span>() <span class="op">&amp;&amp;</span> <span class="ident">total_active</span> <span class="op">!</span><span class="op">=</span> <span class="ident">total</span> {
+                <span class="macro">println!</span>(<span class="string">&quot;Active bonds total: {}&quot;</span>, <span class="ident">total_active</span>);
+            }
 
-                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">total</span>: <span class="ident">token::Amount</span> <span class="op">=</span> <span class="number">0</span>.<span class="ident">into</span>();
-                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">total_withdrawable</span>: <span class="ident">token::Amount</span> <span class="op">=</span> <span class="number">0</span>.<span class="ident">into</span>();
-                <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">unbonds</span>) <span class="op">=</span> <span class="ident">unbonds</span> {
-                    <span class="kw">for</span> (<span class="ident">key</span>, <span class="ident">unbonds</span>) <span class="kw">in</span> <span class="ident">unbonds</span> {
-                        <span class="kw">match</span> <span class="ident">pos::is_unbond_key</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>) {
-                            <span class="prelude-val">Some</span>(<span class="ident">pos::BondId</span> { <span class="ident">source</span>, <span class="ident">validator</span> }) <span class="op">=</span><span class="op">&gt;</span> {
-                                <span class="comment">// Find validator&#39;s slashes, if any</span>
-                                <span class="kw">let</span> <span class="ident">slashes_key</span> <span class="op">=</span>
-                                    <span class="ident">pos::validator_slashes_key</span>(<span class="kw-2">&amp;</span><span class="ident">validator</span>);
-                                <span class="kw">let</span> <span class="ident">slashes</span> <span class="op">=</span>
-                                    <span class="ident">query_storage_value</span>::<span class="op">&lt;</span><span class="ident">pos::Slashes</span><span class="op">&gt;</span>(
-                                        <span class="ident">client</span>.<span class="ident">clone</span>(),
-                                        <span class="ident">slashes_key</span>,
-                                    )
-                                    .<span class="kw">await</span>
-                                    .<span class="ident">unwrap_or_default</span>();
+            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">total</span>: <span class="ident">token::Amount</span> <span class="op">=</span> <span class="number">0</span>.<span class="ident">into</span>();
+            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">total_withdrawable</span>: <span class="ident">token::Amount</span> <span class="op">=</span> <span class="number">0</span>.<span class="ident">into</span>();
+            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">unbonds</span>) <span class="op">=</span> <span class="ident">unbonds</span> {
+                <span class="kw">for</span> (<span class="ident">key</span>, <span class="ident">unbonds</span>) <span class="kw">in</span> <span class="ident">unbonds</span> {
+                    <span class="kw">match</span> <span class="ident">pos::is_unbond_key</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>) {
+                        <span class="prelude-val">Some</span>(<span class="ident">pos::BondId</span> { <span class="ident">source</span>, <span class="ident">validator</span> }) <span class="op">=</span><span class="op">&gt;</span> {
+                            <span class="comment">// Find validator&#39;s slashes, if any</span>
+                            <span class="kw">let</span> <span class="ident">slashes_key</span> <span class="op">=</span>
+                                <span class="ident">pos::validator_slashes_key</span>(<span class="kw-2">&amp;</span><span class="ident">validator</span>);
+                            <span class="kw">let</span> <span class="ident">slashes</span> <span class="op">=</span> <span class="ident">query_storage_value</span>::<span class="op">&lt;</span><span class="ident">pos::Slashes</span><span class="op">&gt;</span>(
+                                <span class="ident">client</span>.<span class="ident">clone</span>(),
+                                <span class="ident">slashes_key</span>,
+                            )
+                            .<span class="kw">await</span>
+                            .<span class="ident">unwrap_or_default</span>();
 
-                                <span class="kw">let</span> <span class="ident">stdout</span> <span class="op">=</span> <span class="ident">io::stdout</span>();
-                                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">w</span> <span class="op">=</span> <span class="ident">stdout</span>.<span class="ident">lock</span>();
-                                <span class="ident">any_bonds</span> <span class="op">=</span> <span class="bool-val">true</span>;
-                                <span class="kw">let</span> <span class="ident">bond_type</span>: <span class="ident">Cow</span><span class="op">&lt;</span><span class="ident">str</span><span class="op">&gt;</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">source</span> <span class="op">=</span><span class="op">=</span> <span class="ident">validator</span>
-                                {
-                                    <span class="string">&quot;Unbonded self-bonds&quot;</span>.<span class="ident">into</span>()
-                                } <span class="kw">else</span> {
-                                    <span class="macro">format!</span>(
-                                        <span class="string">&quot;Unbonded delegations from {}&quot;</span>,
-                                        <span class="ident">source</span>
-                                    )
+                            <span class="kw">let</span> <span class="ident">stdout</span> <span class="op">=</span> <span class="ident">io::stdout</span>();
+                            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">w</span> <span class="op">=</span> <span class="ident">stdout</span>.<span class="ident">lock</span>();
+                            <span class="ident">any_bonds</span> <span class="op">=</span> <span class="bool-val">true</span>;
+                            <span class="kw">let</span> <span class="ident">bond_type</span>: <span class="ident">Cow</span><span class="op">&lt;</span><span class="ident">str</span><span class="op">&gt;</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">source</span> <span class="op">=</span><span class="op">=</span> <span class="ident">validator</span> {
+                                <span class="string">&quot;Unbonded self-bonds&quot;</span>.<span class="ident">into</span>()
+                            } <span class="kw">else</span> {
+                                <span class="macro">format!</span>(<span class="string">&quot;Unbonded delegations from {}&quot;</span>, <span class="ident">source</span>)
                                     .<span class="ident">into</span>()
-                                };
-                                <span class="macro">writeln!</span>(<span class="ident">w</span>, <span class="string">&quot;{}:&quot;</span>, <span class="ident">bond_type</span>).<span class="ident">unwrap</span>();
-                                <span class="kw">let</span> (<span class="ident">tot</span>, <span class="ident">tot_withdrawable</span>) <span class="op">=</span>
-                                    <span class="ident">process_unbonds_query</span>(
-                                        <span class="kw-2">&amp;</span><span class="ident">unbonds</span>,
-                                        <span class="kw-2">&amp;</span><span class="ident">slashes</span>,
-                                        <span class="kw-2">&amp;</span><span class="ident">epoch</span>,
-                                        <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="ident">source</span>),
-                                        <span class="prelude-val">Some</span>(<span class="ident">total</span>),
-                                        <span class="prelude-val">Some</span>(<span class="ident">total_withdrawable</span>),
-                                        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">w</span>,
-                                    );
-                                <span class="ident">total</span> <span class="op">=</span> <span class="ident">tot</span>;
-                                <span class="ident">total_withdrawable</span> <span class="op">=</span> <span class="ident">tot_withdrawable</span>;
-                            }
-                            <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> {
-                                <span class="macro">panic!</span>(<span class="string">&quot;Unexpected storage key {}&quot;</span>, <span class="ident">key</span>)
-                            }
+                            };
+                            <span class="macro">writeln!</span>(<span class="ident">w</span>, <span class="string">&quot;{}:&quot;</span>, <span class="ident">bond_type</span>).<span class="ident">unwrap</span>();
+                            <span class="kw">let</span> (<span class="ident">tot</span>, <span class="ident">tot_withdrawable</span>) <span class="op">=</span> <span class="ident">process_unbonds_query</span>(
+                                <span class="kw-2">&amp;</span><span class="ident">unbonds</span>,
+                                <span class="kw-2">&amp;</span><span class="ident">slashes</span>,
+                                <span class="kw-2">&amp;</span><span class="ident">epoch</span>,
+                                <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="ident">source</span>),
+                                <span class="prelude-val">Some</span>(<span class="ident">total</span>),
+                                <span class="prelude-val">Some</span>(<span class="ident">total_withdrawable</span>),
+                                <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">w</span>,
+                            );
+                            <span class="ident">total</span> <span class="op">=</span> <span class="ident">tot</span>;
+                            <span class="ident">total_withdrawable</span> <span class="op">=</span> <span class="ident">tot_withdrawable</span>;
+                        }
+                        <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> {
+                            <span class="macro">panic!</span>(<span class="string">&quot;Unexpected storage key {}&quot;</span>, <span class="ident">key</span>)
                         }
                     }
-                }
-                <span class="kw">if</span> <span class="ident">total_withdrawable</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span>.<span class="ident">into</span>() {
-                    <span class="macro">println!</span>(<span class="string">&quot;Withdrawable total: {}&quot;</span>, <span class="ident">total_withdrawable</span>);
-                }
-
-                <span class="kw">if</span> <span class="op">!</span><span class="ident">any_bonds</span> {
-                    <span class="macro">println!</span>(
-                        <span class="string">&quot;No self-bonds or delegations found for {}&quot;</span>,
-                        <span class="ident">owner</span>
-                    );
                 }
             }
-            (<span class="prelude-val">None</span>, <span class="prelude-val">None</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="comment">// Find all the bonds</span>
-                <span class="kw">let</span> <span class="ident">bonds_prefix</span> <span class="op">=</span> <span class="ident">pos::bonds_prefix</span>();
-                <span class="kw">let</span> <span class="ident">bonds</span> <span class="op">=</span> <span class="ident">query_storage_prefix</span>::<span class="op">&lt;</span><span class="ident">pos::Bonds</span><span class="op">&gt;</span>(
-                    <span class="ident">client</span>.<span class="ident">clone</span>(),
-                    <span class="ident">bonds_prefix</span>,
-                )
-                .<span class="kw">await</span>;
-                <span class="comment">// Find all the unbonds</span>
-                <span class="kw">let</span> <span class="ident">unbonds_prefix</span> <span class="op">=</span> <span class="ident">pos::unbonds_prefix</span>();
-                <span class="kw">let</span> <span class="ident">unbonds</span> <span class="op">=</span> <span class="ident">query_storage_prefix</span>::<span class="op">&lt;</span><span class="ident">pos::Unbonds</span><span class="op">&gt;</span>(
-                    <span class="ident">client</span>.<span class="ident">clone</span>(),
-                    <span class="ident">unbonds_prefix</span>,
-                )
-                .<span class="kw">await</span>;
-
-                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">total</span>: <span class="ident">token::Amount</span> <span class="op">=</span> <span class="number">0</span>.<span class="ident">into</span>();
-                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">total_active</span>: <span class="ident">token::Amount</span> <span class="op">=</span> <span class="number">0</span>.<span class="ident">into</span>();
-                <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">bonds</span>) <span class="op">=</span> <span class="ident">bonds</span> {
-                    <span class="kw">for</span> (<span class="ident">key</span>, <span class="ident">bonds</span>) <span class="kw">in</span> <span class="ident">bonds</span> {
-                        <span class="kw">match</span> <span class="ident">pos::is_bond_key</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>) {
-                            <span class="prelude-val">Some</span>(<span class="ident">pos::BondId</span> { <span class="ident">source</span>, <span class="ident">validator</span> }) <span class="op">=</span><span class="op">&gt;</span> {
-                                <span class="comment">// Find validator&#39;s slashes, if any</span>
-                                <span class="kw">let</span> <span class="ident">slashes_key</span> <span class="op">=</span>
-                                    <span class="ident">pos::validator_slashes_key</span>(<span class="kw-2">&amp;</span><span class="ident">validator</span>);
-                                <span class="kw">let</span> <span class="ident">slashes</span> <span class="op">=</span>
-                                    <span class="ident">query_storage_value</span>::<span class="op">&lt;</span><span class="ident">pos::Slashes</span><span class="op">&gt;</span>(
-                                        <span class="ident">client</span>.<span class="ident">clone</span>(),
-                                        <span class="ident">slashes_key</span>,
-                                    )
-                                    .<span class="kw">await</span>
-                                    .<span class="ident">unwrap_or_default</span>();
-
-                                <span class="kw">let</span> <span class="ident">stdout</span> <span class="op">=</span> <span class="ident">io::stdout</span>();
-                                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">w</span> <span class="op">=</span> <span class="ident">stdout</span>.<span class="ident">lock</span>();
-                                <span class="kw">let</span> <span class="ident">bond_type</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">source</span> <span class="op">=</span><span class="op">=</span> <span class="ident">validator</span> {
-                                    <span class="macro">format!</span>(
-                                        <span class="string">&quot;Self-bonds for {}&quot;</span>,
-                                        <span class="ident">validator</span>.<span class="ident">encode</span>()
-                                    )
-                                } <span class="kw">else</span> {
-                                    <span class="macro">format!</span>(
-                                        <span class="string">&quot;Delegations from {} to validator {}&quot;</span>,
-                                        <span class="ident">source</span>,
-                                        <span class="ident">validator</span>.<span class="ident">encode</span>()
-                                    )
-                                };
-                                <span class="macro">writeln!</span>(<span class="ident">w</span>, <span class="string">&quot;{}:&quot;</span>, <span class="ident">bond_type</span>).<span class="ident">unwrap</span>();
-                                <span class="kw">let</span> (<span class="ident">tot</span>, <span class="ident">tot_active</span>) <span class="op">=</span> <span class="ident">process_bonds_query</span>(
-                                    <span class="kw-2">&amp;</span><span class="ident">bonds</span>,
-                                    <span class="kw-2">&amp;</span><span class="ident">slashes</span>,
-                                    <span class="kw-2">&amp;</span><span class="ident">epoch</span>,
-                                    <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="ident">source</span>),
-                                    <span class="prelude-val">Some</span>(<span class="ident">total</span>),
-                                    <span class="prelude-val">Some</span>(<span class="ident">total_active</span>),
-                                    <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">w</span>,
-                                );
-                                <span class="ident">total</span> <span class="op">=</span> <span class="ident">tot</span>;
-                                <span class="ident">total_active</span> <span class="op">=</span> <span class="ident">tot_active</span>;
-                            }
-                            <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> {
-                                <span class="macro">panic!</span>(<span class="string">&quot;Unexpected storage key {}&quot;</span>, <span class="ident">key</span>)
-                            }
-                        }
-                    }
-                }
-                <span class="kw">if</span> <span class="ident">total_active</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span>.<span class="ident">into</span>() <span class="op">&amp;&amp;</span> <span class="ident">total_active</span> <span class="op">!</span><span class="op">=</span> <span class="ident">total</span> {
-                    <span class="macro">println!</span>(<span class="string">&quot;Bond total active: {}&quot;</span>, <span class="ident">total_active</span>);
-                }
-                <span class="macro">println!</span>(<span class="string">&quot;Bond total: {}&quot;</span>, <span class="ident">total</span>);
-
-                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">total</span>: <span class="ident">token::Amount</span> <span class="op">=</span> <span class="number">0</span>.<span class="ident">into</span>();
-                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">total_withdrawable</span>: <span class="ident">token::Amount</span> <span class="op">=</span> <span class="number">0</span>.<span class="ident">into</span>();
-                <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">unbonds</span>) <span class="op">=</span> <span class="ident">unbonds</span> {
-                    <span class="kw">for</span> (<span class="ident">key</span>, <span class="ident">unbonds</span>) <span class="kw">in</span> <span class="ident">unbonds</span> {
-                        <span class="kw">match</span> <span class="ident">pos::is_unbond_key</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>) {
-                            <span class="prelude-val">Some</span>(<span class="ident">pos::BondId</span> { <span class="ident">source</span>, <span class="ident">validator</span> }) <span class="op">=</span><span class="op">&gt;</span> {
-                                <span class="comment">// Find validator&#39;s slashes, if any</span>
-                                <span class="kw">let</span> <span class="ident">slashes_key</span> <span class="op">=</span>
-                                    <span class="ident">pos::validator_slashes_key</span>(<span class="kw-2">&amp;</span><span class="ident">validator</span>);
-                                <span class="kw">let</span> <span class="ident">slashes</span> <span class="op">=</span>
-                                    <span class="ident">query_storage_value</span>::<span class="op">&lt;</span><span class="ident">pos::Slashes</span><span class="op">&gt;</span>(
-                                        <span class="ident">client</span>.<span class="ident">clone</span>(),
-                                        <span class="ident">slashes_key</span>,
-                                    )
-                                    .<span class="kw">await</span>
-                                    .<span class="ident">unwrap_or_default</span>();
-
-                                <span class="kw">let</span> <span class="ident">stdout</span> <span class="op">=</span> <span class="ident">io::stdout</span>();
-                                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">w</span> <span class="op">=</span> <span class="ident">stdout</span>.<span class="ident">lock</span>();
-                                <span class="kw">let</span> <span class="ident">bond_type</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">source</span> <span class="op">=</span><span class="op">=</span> <span class="ident">validator</span> {
-                                    <span class="macro">format!</span>(
-                                        <span class="string">&quot;Unbonded self-bonds for {}&quot;</span>,
-                                        <span class="ident">validator</span>.<span class="ident">encode</span>()
-                                    )
-                                } <span class="kw">else</span> {
-                                    <span class="macro">format!</span>(
-                                        <span class="string">&quot;Unbonded delegations from {} to \
-                                         validator {}&quot;</span>,
-                                        <span class="ident">source</span>,
-                                        <span class="ident">validator</span>.<span class="ident">encode</span>()
-                                    )
-                                };
-                                <span class="macro">writeln!</span>(<span class="ident">w</span>, <span class="string">&quot;{}:&quot;</span>, <span class="ident">bond_type</span>).<span class="ident">unwrap</span>();
-                                <span class="kw">let</span> (<span class="ident">tot</span>, <span class="ident">tot_withdrawable</span>) <span class="op">=</span>
-                                    <span class="ident">process_unbonds_query</span>(
-                                        <span class="kw-2">&amp;</span><span class="ident">unbonds</span>,
-                                        <span class="kw-2">&amp;</span><span class="ident">slashes</span>,
-                                        <span class="kw-2">&amp;</span><span class="ident">epoch</span>,
-                                        <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="ident">source</span>),
-                                        <span class="prelude-val">Some</span>(<span class="ident">total</span>),
-                                        <span class="prelude-val">Some</span>(<span class="ident">total_withdrawable</span>),
-                                        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">w</span>,
-                                    );
-                                <span class="ident">total</span> <span class="op">=</span> <span class="ident">tot</span>;
-                                <span class="ident">total_withdrawable</span> <span class="op">=</span> <span class="ident">tot_withdrawable</span>;
-                            }
-                            <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> {
-                                <span class="macro">panic!</span>(<span class="string">&quot;Unexpected storage key {}&quot;</span>, <span class="ident">key</span>)
-                            }
-                        }
-                    }
-                }
-                <span class="kw">if</span> <span class="ident">total_withdrawable</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span>.<span class="ident">into</span>() {
-                    <span class="macro">println!</span>(<span class="string">&quot;Withdrawable total: {}&quot;</span>, <span class="ident">total_withdrawable</span>);
-                }
-                <span class="macro">println!</span>(<span class="string">&quot;Unbonded total: {}&quot;</span>, <span class="ident">total</span>);
+            <span class="kw">if</span> <span class="ident">total_withdrawable</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span>.<span class="ident">into</span>() {
+                <span class="macro">println!</span>(<span class="string">&quot;Withdrawable total: {}&quot;</span>, <span class="ident">total_withdrawable</span>);
             }
+
+            <span class="kw">if</span> <span class="op">!</span><span class="ident">any_bonds</span> {
+                <span class="macro">println!</span>(<span class="string">&quot;No self-bonds or delegations found for {}&quot;</span>, <span class="ident">owner</span>);
+            }
+        }
+        (<span class="prelude-val">None</span>, <span class="prelude-val">None</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="comment">// Find all the bonds</span>
+            <span class="kw">let</span> <span class="ident">bonds_prefix</span> <span class="op">=</span> <span class="ident">pos::bonds_prefix</span>();
+            <span class="kw">let</span> <span class="ident">bonds</span> <span class="op">=</span> <span class="ident">query_storage_prefix</span>::<span class="op">&lt;</span><span class="ident">pos::Bonds</span><span class="op">&gt;</span>(
+                <span class="ident">client</span>.<span class="ident">clone</span>(),
+                <span class="ident">bonds_prefix</span>,
+            )
+            .<span class="kw">await</span>;
+            <span class="comment">// Find all the unbonds</span>
+            <span class="kw">let</span> <span class="ident">unbonds_prefix</span> <span class="op">=</span> <span class="ident">pos::unbonds_prefix</span>();
+            <span class="kw">let</span> <span class="ident">unbonds</span> <span class="op">=</span> <span class="ident">query_storage_prefix</span>::<span class="op">&lt;</span><span class="ident">pos::Unbonds</span><span class="op">&gt;</span>(
+                <span class="ident">client</span>.<span class="ident">clone</span>(),
+                <span class="ident">unbonds_prefix</span>,
+            )
+            .<span class="kw">await</span>;
+
+            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">total</span>: <span class="ident">token::Amount</span> <span class="op">=</span> <span class="number">0</span>.<span class="ident">into</span>();
+            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">total_active</span>: <span class="ident">token::Amount</span> <span class="op">=</span> <span class="number">0</span>.<span class="ident">into</span>();
+            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">bonds</span>) <span class="op">=</span> <span class="ident">bonds</span> {
+                <span class="kw">for</span> (<span class="ident">key</span>, <span class="ident">bonds</span>) <span class="kw">in</span> <span class="ident">bonds</span> {
+                    <span class="kw">match</span> <span class="ident">pos::is_bond_key</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>) {
+                        <span class="prelude-val">Some</span>(<span class="ident">pos::BondId</span> { <span class="ident">source</span>, <span class="ident">validator</span> }) <span class="op">=</span><span class="op">&gt;</span> {
+                            <span class="comment">// Find validator&#39;s slashes, if any</span>
+                            <span class="kw">let</span> <span class="ident">slashes_key</span> <span class="op">=</span>
+                                <span class="ident">pos::validator_slashes_key</span>(<span class="kw-2">&amp;</span><span class="ident">validator</span>);
+                            <span class="kw">let</span> <span class="ident">slashes</span> <span class="op">=</span> <span class="ident">query_storage_value</span>::<span class="op">&lt;</span><span class="ident">pos::Slashes</span><span class="op">&gt;</span>(
+                                <span class="ident">client</span>.<span class="ident">clone</span>(),
+                                <span class="ident">slashes_key</span>,
+                            )
+                            .<span class="kw">await</span>
+                            .<span class="ident">unwrap_or_default</span>();
+
+                            <span class="kw">let</span> <span class="ident">stdout</span> <span class="op">=</span> <span class="ident">io::stdout</span>();
+                            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">w</span> <span class="op">=</span> <span class="ident">stdout</span>.<span class="ident">lock</span>();
+                            <span class="kw">let</span> <span class="ident">bond_type</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">source</span> <span class="op">=</span><span class="op">=</span> <span class="ident">validator</span> {
+                                <span class="macro">format!</span>(<span class="string">&quot;Self-bonds for {}&quot;</span>, <span class="ident">validator</span>.<span class="ident">encode</span>())
+                            } <span class="kw">else</span> {
+                                <span class="macro">format!</span>(
+                                    <span class="string">&quot;Delegations from {} to validator {}&quot;</span>,
+                                    <span class="ident">source</span>,
+                                    <span class="ident">validator</span>.<span class="ident">encode</span>()
+                                )
+                            };
+                            <span class="macro">writeln!</span>(<span class="ident">w</span>, <span class="string">&quot;{}:&quot;</span>, <span class="ident">bond_type</span>).<span class="ident">unwrap</span>();
+                            <span class="kw">let</span> (<span class="ident">tot</span>, <span class="ident">tot_active</span>) <span class="op">=</span> <span class="ident">process_bonds_query</span>(
+                                <span class="kw-2">&amp;</span><span class="ident">bonds</span>,
+                                <span class="kw-2">&amp;</span><span class="ident">slashes</span>,
+                                <span class="kw-2">&amp;</span><span class="ident">epoch</span>,
+                                <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="ident">source</span>),
+                                <span class="prelude-val">Some</span>(<span class="ident">total</span>),
+                                <span class="prelude-val">Some</span>(<span class="ident">total_active</span>),
+                                <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">w</span>,
+                            );
+                            <span class="ident">total</span> <span class="op">=</span> <span class="ident">tot</span>;
+                            <span class="ident">total_active</span> <span class="op">=</span> <span class="ident">tot_active</span>;
+                        }
+                        <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> {
+                            <span class="macro">panic!</span>(<span class="string">&quot;Unexpected storage key {}&quot;</span>, <span class="ident">key</span>)
+                        }
+                    }
+                }
+            }
+            <span class="kw">if</span> <span class="ident">total_active</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span>.<span class="ident">into</span>() <span class="op">&amp;&amp;</span> <span class="ident">total_active</span> <span class="op">!</span><span class="op">=</span> <span class="ident">total</span> {
+                <span class="macro">println!</span>(<span class="string">&quot;Bond total active: {}&quot;</span>, <span class="ident">total_active</span>);
+            }
+            <span class="macro">println!</span>(<span class="string">&quot;Bond total: {}&quot;</span>, <span class="ident">total</span>);
+
+            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">total</span>: <span class="ident">token::Amount</span> <span class="op">=</span> <span class="number">0</span>.<span class="ident">into</span>();
+            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">total_withdrawable</span>: <span class="ident">token::Amount</span> <span class="op">=</span> <span class="number">0</span>.<span class="ident">into</span>();
+            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">unbonds</span>) <span class="op">=</span> <span class="ident">unbonds</span> {
+                <span class="kw">for</span> (<span class="ident">key</span>, <span class="ident">unbonds</span>) <span class="kw">in</span> <span class="ident">unbonds</span> {
+                    <span class="kw">match</span> <span class="ident">pos::is_unbond_key</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>) {
+                        <span class="prelude-val">Some</span>(<span class="ident">pos::BondId</span> { <span class="ident">source</span>, <span class="ident">validator</span> }) <span class="op">=</span><span class="op">&gt;</span> {
+                            <span class="comment">// Find validator&#39;s slashes, if any</span>
+                            <span class="kw">let</span> <span class="ident">slashes_key</span> <span class="op">=</span>
+                                <span class="ident">pos::validator_slashes_key</span>(<span class="kw-2">&amp;</span><span class="ident">validator</span>);
+                            <span class="kw">let</span> <span class="ident">slashes</span> <span class="op">=</span> <span class="ident">query_storage_value</span>::<span class="op">&lt;</span><span class="ident">pos::Slashes</span><span class="op">&gt;</span>(
+                                <span class="ident">client</span>.<span class="ident">clone</span>(),
+                                <span class="ident">slashes_key</span>,
+                            )
+                            .<span class="kw">await</span>
+                            .<span class="ident">unwrap_or_default</span>();
+
+                            <span class="kw">let</span> <span class="ident">stdout</span> <span class="op">=</span> <span class="ident">io::stdout</span>();
+                            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">w</span> <span class="op">=</span> <span class="ident">stdout</span>.<span class="ident">lock</span>();
+                            <span class="kw">let</span> <span class="ident">bond_type</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">source</span> <span class="op">=</span><span class="op">=</span> <span class="ident">validator</span> {
+                                <span class="macro">format!</span>(
+                                    <span class="string">&quot;Unbonded self-bonds for {}&quot;</span>,
+                                    <span class="ident">validator</span>.<span class="ident">encode</span>()
+                                )
+                            } <span class="kw">else</span> {
+                                <span class="macro">format!</span>(
+                                    <span class="string">&quot;Unbonded delegations from {} to \
+                                     validator {}&quot;</span>,
+                                    <span class="ident">source</span>,
+                                    <span class="ident">validator</span>.<span class="ident">encode</span>()
+                                )
+                            };
+                            <span class="macro">writeln!</span>(<span class="ident">w</span>, <span class="string">&quot;{}:&quot;</span>, <span class="ident">bond_type</span>).<span class="ident">unwrap</span>();
+                            <span class="kw">let</span> (<span class="ident">tot</span>, <span class="ident">tot_withdrawable</span>) <span class="op">=</span> <span class="ident">process_unbonds_query</span>(
+                                <span class="kw-2">&amp;</span><span class="ident">unbonds</span>,
+                                <span class="kw-2">&amp;</span><span class="ident">slashes</span>,
+                                <span class="kw-2">&amp;</span><span class="ident">epoch</span>,
+                                <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="ident">source</span>),
+                                <span class="prelude-val">Some</span>(<span class="ident">total</span>),
+                                <span class="prelude-val">Some</span>(<span class="ident">total_withdrawable</span>),
+                                <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">w</span>,
+                            );
+                            <span class="ident">total</span> <span class="op">=</span> <span class="ident">tot</span>;
+                            <span class="ident">total_withdrawable</span> <span class="op">=</span> <span class="ident">tot_withdrawable</span>;
+                        }
+                        <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> {
+                            <span class="macro">panic!</span>(<span class="string">&quot;Unexpected storage key {}&quot;</span>, <span class="ident">key</span>)
+                        }
+                    }
+                }
+            }
+            <span class="kw">if</span> <span class="ident">total_withdrawable</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span>.<span class="ident">into</span>() {
+                <span class="macro">println!</span>(<span class="string">&quot;Withdrawable total: {}&quot;</span>, <span class="ident">total_withdrawable</span>);
+            }
+            <span class="macro">println!</span>(<span class="string">&quot;Unbonded total: {}&quot;</span>, <span class="ident">total</span>);
         }
     }
 }
@@ -1497,108 +1478,101 @@
 <span class="doccomment">/// Query PoS voting power</span>
 <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">query_voting_power</span>(<span class="ident">ctx</span>: <span class="ident">Context</span>, <span class="ident">args</span>: <span class="ident">args::QueryVotingPower</span>) {
     <span class="kw">let</span> (<span class="ident">ctx</span>, <span class="ident">epoch</span>) <span class="op">=</span> <span class="kw">match</span> <span class="ident">args</span>.<span class="ident">epoch</span> {
-        <span class="prelude-val">Some</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> (<span class="ident">ctx</span>, <span class="ident">args</span>.<span class="ident">epoch</span>),
+        <span class="prelude-val">Some</span>(<span class="ident">epoch</span>) <span class="op">=</span><span class="op">&gt;</span> (<span class="ident">ctx</span>, <span class="ident">epoch</span>),
         <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">query_epoch</span>(<span class="ident">ctx</span>, <span class="ident">args</span>.<span class="ident">query</span>.<span class="ident">clone</span>()).<span class="kw">await</span>,
     };
-    <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">epoch</span>) <span class="op">=</span> <span class="ident">epoch</span> {
-        <span class="kw">let</span> <span class="ident">client</span> <span class="op">=</span> <span class="ident">HttpClient::new</span>(<span class="ident">args</span>.<span class="ident">query</span>.<span class="ident">ledger_address</span>).<span class="ident">unwrap</span>();
+    <span class="kw">let</span> <span class="ident">client</span> <span class="op">=</span> <span class="ident">HttpClient::new</span>(<span class="ident">args</span>.<span class="ident">query</span>.<span class="ident">ledger_address</span>).<span class="ident">unwrap</span>();
 
-        <span class="comment">// Find the validator set</span>
-        <span class="kw">let</span> <span class="ident">validator_set_key</span> <span class="op">=</span> <span class="ident">pos::validator_set_key</span>();
-        <span class="kw">let</span> <span class="ident">validator_sets</span> <span class="op">=</span> <span class="ident">query_storage_value</span>::<span class="op">&lt;</span><span class="ident">pos::ValidatorSets</span><span class="op">&gt;</span>(
-            <span class="ident">client</span>.<span class="ident">clone</span>(),
-            <span class="ident">validator_set_key</span>,
-        )
-        .<span class="kw">await</span>
-        .<span class="ident">expect</span>(<span class="string">&quot;Validator set should always be set&quot;</span>);
-        <span class="kw">let</span> <span class="ident">validator_set</span> <span class="op">=</span> <span class="ident">validator_sets</span>
-            .<span class="ident">get</span>(<span class="ident">epoch</span>)
-            .<span class="ident">expect</span>(<span class="string">&quot;Validator set should be always set in the current epoch&quot;</span>);
-        <span class="kw">match</span> <span class="ident">args</span>.<span class="ident">validator</span> {
-            <span class="prelude-val">Some</span>(<span class="ident">validator</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="kw">let</span> <span class="ident">validator</span> <span class="op">=</span> <span class="ident">ctx</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">validator</span>);
-                <span class="comment">// Find voting power for the given validator</span>
-                <span class="kw">let</span> <span class="ident">voting_power_key</span> <span class="op">=</span>
-                    <span class="ident">pos::validator_voting_power_key</span>(<span class="kw-2">&amp;</span><span class="ident">validator</span>);
-                <span class="kw">let</span> <span class="ident">voting_powers</span> <span class="op">=</span> <span class="ident">query_storage_value</span>::<span class="op">&lt;</span>
-                    <span class="ident">pos::ValidatorVotingPowers</span>,
-                <span class="op">&gt;</span>(
-                    <span class="ident">client</span>.<span class="ident">clone</span>(), <span class="ident">voting_power_key</span>
+    <span class="comment">// Find the validator set</span>
+    <span class="kw">let</span> <span class="ident">validator_set_key</span> <span class="op">=</span> <span class="ident">pos::validator_set_key</span>();
+    <span class="kw">let</span> <span class="ident">validator_sets</span> <span class="op">=</span> <span class="ident">query_storage_value</span>::<span class="op">&lt;</span><span class="ident">pos::ValidatorSets</span><span class="op">&gt;</span>(
+        <span class="ident">client</span>.<span class="ident">clone</span>(),
+        <span class="ident">validator_set_key</span>,
+    )
+    .<span class="kw">await</span>
+    .<span class="ident">expect</span>(<span class="string">&quot;Validator set should always be set&quot;</span>);
+    <span class="kw">let</span> <span class="ident">validator_set</span> <span class="op">=</span> <span class="ident">validator_sets</span>
+        .<span class="ident">get</span>(<span class="ident">epoch</span>)
+        .<span class="ident">expect</span>(<span class="string">&quot;Validator set should be always set in the current epoch&quot;</span>);
+    <span class="kw">match</span> <span class="ident">args</span>.<span class="ident">validator</span> {
+        <span class="prelude-val">Some</span>(<span class="ident">validator</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="kw">let</span> <span class="ident">validator</span> <span class="op">=</span> <span class="ident">ctx</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">validator</span>);
+            <span class="comment">// Find voting power for the given validator</span>
+            <span class="kw">let</span> <span class="ident">voting_power_key</span> <span class="op">=</span> <span class="ident">pos::validator_voting_power_key</span>(<span class="kw-2">&amp;</span><span class="ident">validator</span>);
+            <span class="kw">let</span> <span class="ident">voting_powers</span> <span class="op">=</span>
+                <span class="ident">query_storage_value</span>::<span class="op">&lt;</span><span class="ident">pos::ValidatorVotingPowers</span><span class="op">&gt;</span>(
+                    <span class="ident">client</span>.<span class="ident">clone</span>(),
+                    <span class="ident">voting_power_key</span>,
                 )
                 .<span class="kw">await</span>;
-                <span class="kw">match</span> <span class="ident">voting_powers</span>.<span class="ident">and_then</span>(<span class="op">|</span><span class="ident">data</span><span class="op">|</span> <span class="ident">data</span>.<span class="ident">get</span>(<span class="ident">epoch</span>)) {
-                    <span class="prelude-val">Some</span>(<span class="ident">voting_power_delta</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                        <span class="kw">let</span> <span class="ident">voting_power</span>: <span class="ident">VotingPower</span> <span class="op">=</span>
-                            <span class="ident">voting_power_delta</span>.<span class="ident">try_into</span>().<span class="ident">expect</span>(
-                                <span class="string">&quot;The sum voting power deltas shouldn&#39;t be \
-                                 negative&quot;</span>,
-                            );
-                        <span class="kw">let</span> <span class="ident">weighted</span> <span class="op">=</span> <span class="ident">WeightedValidator</span> {
-                            <span class="ident">address</span>: <span class="ident">validator</span>.<span class="ident">clone</span>(),
-                            <span class="ident">voting_power</span>,
-                        };
-                        <span class="kw">let</span> <span class="ident">is_active</span> <span class="op">=</span>
-                            <span class="ident">validator_set</span>.<span class="ident">active</span>.<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">weighted</span>);
-                        <span class="kw">if</span> <span class="op">!</span><span class="ident">is_active</span> {
-                            <span class="macro">debug_assert!</span>(
-                                <span class="ident">validator_set</span>.<span class="ident">inactive</span>.<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">weighted</span>)
-                            );
-                        }
-                        <span class="macro">println!</span>(
-                            <span class="string">&quot;Validator {} is {}, voting power: {}&quot;</span>,
-                            <span class="ident">validator</span>.<span class="ident">encode</span>(),
-                            <span class="kw">if</span> <span class="ident">is_active</span> { <span class="string">&quot;active&quot;</span> } <span class="kw">else</span> { <span class="string">&quot;inactive&quot;</span> },
-                            <span class="ident">voting_power</span>
-                        )
+            <span class="kw">match</span> <span class="ident">voting_powers</span>.<span class="ident">and_then</span>(<span class="op">|</span><span class="ident">data</span><span class="op">|</span> <span class="ident">data</span>.<span class="ident">get</span>(<span class="ident">epoch</span>)) {
+                <span class="prelude-val">Some</span>(<span class="ident">voting_power_delta</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="kw">let</span> <span class="ident">voting_power</span>: <span class="ident">VotingPower</span> <span class="op">=</span>
+                        <span class="ident">voting_power_delta</span>.<span class="ident">try_into</span>().<span class="ident">expect</span>(
+                            <span class="string">&quot;The sum voting power deltas shouldn&#39;t be negative&quot;</span>,
+                        );
+                    <span class="kw">let</span> <span class="ident">weighted</span> <span class="op">=</span> <span class="ident">WeightedValidator</span> {
+                        <span class="ident">address</span>: <span class="ident">validator</span>.<span class="ident">clone</span>(),
+                        <span class="ident">voting_power</span>,
+                    };
+                    <span class="kw">let</span> <span class="ident">is_active</span> <span class="op">=</span> <span class="ident">validator_set</span>.<span class="ident">active</span>.<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">weighted</span>);
+                    <span class="kw">if</span> <span class="op">!</span><span class="ident">is_active</span> {
+                        <span class="macro">debug_assert!</span>(
+                            <span class="ident">validator_set</span>.<span class="ident">inactive</span>.<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">weighted</span>)
+                        );
                     }
-                    <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">println!</span>(
-                        <span class="string">&quot;No voting power found for {}&quot;</span>,
-                        <span class="ident">validator</span>.<span class="ident">encode</span>()
-                    ),
-                }
-            }
-            <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="comment">// Iterate all validators</span>
-                <span class="kw">let</span> <span class="ident">stdout</span> <span class="op">=</span> <span class="ident">io::stdout</span>();
-                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">w</span> <span class="op">=</span> <span class="ident">stdout</span>.<span class="ident">lock</span>();
-
-                <span class="macro">writeln!</span>(<span class="ident">w</span>, <span class="string">&quot;Active validators:&quot;</span>).<span class="ident">unwrap</span>();
-                <span class="kw">for</span> <span class="ident">active</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="ident">validator_set</span>.<span class="ident">active</span> {
-                    <span class="macro">writeln!</span>(
-                        <span class="ident">w</span>,
-                        <span class="string">&quot;  {}: {}&quot;</span>,
-                        <span class="ident">active</span>.<span class="ident">address</span>.<span class="ident">encode</span>(),
-                        <span class="ident">active</span>.<span class="ident">voting_power</span>
+                    <span class="macro">println!</span>(
+                        <span class="string">&quot;Validator {} is {}, voting power: {}&quot;</span>,
+                        <span class="ident">validator</span>.<span class="ident">encode</span>(),
+                        <span class="kw">if</span> <span class="ident">is_active</span> { <span class="string">&quot;active&quot;</span> } <span class="kw">else</span> { <span class="string">&quot;inactive&quot;</span> },
+                        <span class="ident">voting_power</span>
                     )
-                    .<span class="ident">unwrap</span>();
                 }
-                <span class="kw">if</span> <span class="op">!</span><span class="ident">validator_set</span>.<span class="ident">inactive</span>.<span class="ident">is_empty</span>() {
-                    <span class="macro">writeln!</span>(<span class="ident">w</span>, <span class="string">&quot;Inactive validators:&quot;</span>).<span class="ident">unwrap</span>();
-                    <span class="kw">for</span> <span class="ident">inactive</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="ident">validator_set</span>.<span class="ident">inactive</span> {
-                        <span class="macro">writeln!</span>(
-                            <span class="ident">w</span>,
-                            <span class="string">&quot;  {}: {}&quot;</span>,
-                            <span class="ident">inactive</span>.<span class="ident">address</span>.<span class="ident">encode</span>(),
-                            <span class="ident">inactive</span>.<span class="ident">voting_power</span>
-                        )
-                        .<span class="ident">unwrap</span>();
-                    }
+                <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="macro">println!</span>(<span class="string">&quot;No voting power found for {}&quot;</span>, <span class="ident">validator</span>.<span class="ident">encode</span>())
                 }
             }
         }
-        <span class="kw">let</span> <span class="ident">total_voting_power_key</span> <span class="op">=</span> <span class="ident">pos::total_voting_power_key</span>();
-        <span class="kw">let</span> <span class="ident">total_voting_powers</span> <span class="op">=</span>
-            <span class="ident">query_storage_value</span>::<span class="op">&lt;</span><span class="ident">pos::TotalVotingPowers</span><span class="op">&gt;</span>(
-                <span class="ident">client</span>,
-                <span class="ident">total_voting_power_key</span>,
-            )
-            .<span class="kw">await</span>
-            .<span class="ident">expect</span>(<span class="string">&quot;Total voting power should always be set&quot;</span>);
-        <span class="kw">let</span> <span class="ident">total_voting_power</span> <span class="op">=</span> <span class="ident">total_voting_powers</span>.<span class="ident">get</span>(<span class="ident">epoch</span>).<span class="ident">expect</span>(
-            <span class="string">&quot;Total voting power should be always set in the current epoch&quot;</span>,
-        );
-        <span class="macro">println!</span>(<span class="string">&quot;Total voting power: {}&quot;</span>, <span class="ident">total_voting_power</span>);
+        <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="comment">// Iterate all validators</span>
+            <span class="kw">let</span> <span class="ident">stdout</span> <span class="op">=</span> <span class="ident">io::stdout</span>();
+            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">w</span> <span class="op">=</span> <span class="ident">stdout</span>.<span class="ident">lock</span>();
+
+            <span class="macro">writeln!</span>(<span class="ident">w</span>, <span class="string">&quot;Active validators:&quot;</span>).<span class="ident">unwrap</span>();
+            <span class="kw">for</span> <span class="ident">active</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="ident">validator_set</span>.<span class="ident">active</span> {
+                <span class="macro">writeln!</span>(
+                    <span class="ident">w</span>,
+                    <span class="string">&quot;  {}: {}&quot;</span>,
+                    <span class="ident">active</span>.<span class="ident">address</span>.<span class="ident">encode</span>(),
+                    <span class="ident">active</span>.<span class="ident">voting_power</span>
+                )
+                .<span class="ident">unwrap</span>();
+            }
+            <span class="kw">if</span> <span class="op">!</span><span class="ident">validator_set</span>.<span class="ident">inactive</span>.<span class="ident">is_empty</span>() {
+                <span class="macro">writeln!</span>(<span class="ident">w</span>, <span class="string">&quot;Inactive validators:&quot;</span>).<span class="ident">unwrap</span>();
+                <span class="kw">for</span> <span class="ident">inactive</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="ident">validator_set</span>.<span class="ident">inactive</span> {
+                    <span class="macro">writeln!</span>(
+                        <span class="ident">w</span>,
+                        <span class="string">&quot;  {}: {}&quot;</span>,
+                        <span class="ident">inactive</span>.<span class="ident">address</span>.<span class="ident">encode</span>(),
+                        <span class="ident">inactive</span>.<span class="ident">voting_power</span>
+                    )
+                    .<span class="ident">unwrap</span>();
+                }
+            }
+        }
     }
+    <span class="kw">let</span> <span class="ident">total_voting_power_key</span> <span class="op">=</span> <span class="ident">pos::total_voting_power_key</span>();
+    <span class="kw">let</span> <span class="ident">total_voting_powers</span> <span class="op">=</span> <span class="ident">query_storage_value</span>::<span class="op">&lt;</span><span class="ident">pos::TotalVotingPowers</span><span class="op">&gt;</span>(
+        <span class="ident">client</span>,
+        <span class="ident">total_voting_power_key</span>,
+    )
+    .<span class="kw">await</span>
+    .<span class="ident">expect</span>(<span class="string">&quot;Total voting power should always be set&quot;</span>);
+    <span class="kw">let</span> <span class="ident">total_voting_power</span> <span class="op">=</span> <span class="ident">total_voting_powers</span>
+        .<span class="ident">get</span>(<span class="ident">epoch</span>)
+        .<span class="ident">expect</span>(<span class="string">&quot;Total voting power should be always set in the current epoch&quot;</span>);
+    <span class="macro">println!</span>(<span class="string">&quot;Total voting power: {}&quot;</span>, <span class="ident">total_voting_power</span>);
 }
 
 <span class="doccomment">/// Query PoS slashes</span>
@@ -1712,6 +1686,24 @@
         <span class="ident">query_storage_value</span>(<span class="ident">client</span>, <span class="ident">key</span>).<span class="kw">await</span>;
     <span class="comment">// If there is, then the address is a validator</span>
     <span class="ident">state</span>.<span class="ident">is_some</span>()
+}
+
+<span class="doccomment">/// Check if the address exists on chain. Established address exists if it has a</span>
+<span class="doccomment">/// stored validity predicate. Implicit and internal addresses always return</span>
+<span class="doccomment">/// true.</span>
+<span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">known_address</span>(
+    <span class="ident">address</span>: <span class="kw-2">&amp;</span><span class="ident">Address</span>,
+    <span class="ident">ledger_address</span>: <span class="ident">tendermint::net::Address</span>,
+) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
+    <span class="kw">let</span> <span class="ident">client</span> <span class="op">=</span> <span class="ident">HttpClient::new</span>(<span class="ident">ledger_address</span>).<span class="ident">unwrap</span>();
+    <span class="kw">match</span> <span class="ident">address</span> {
+        <span class="ident">Address::Established</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="comment">// Established account exists if it has a VP</span>
+            <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">storage::Key::validity_predicate</span>(<span class="ident">address</span>);
+            <span class="ident">query_has_storage_key</span>(<span class="ident">client</span>, <span class="ident">key</span>).<span class="kw">await</span>
+        }
+        <span class="ident">Address::Implicit</span>(<span class="kw">_</span>) <span class="op">|</span> <span class="ident">Address::Internal</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">true</span>,
+    }
 }
 
 <span class="doccomment">/// Accumulate slashes starting from `epoch_start` until (optionally)</span>
@@ -1846,7 +1838,7 @@
 }
 
 <span class="doccomment">/// Query a storage value and decode it with [`BorshDeserialize`].</span>
-<span class="kw">async</span> <span class="kw">fn</span> <span class="ident">query_storage_value</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(
+<span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">query_storage_value</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(
     <span class="ident">client</span>: <span class="ident">HttpClient</span>,
     <span class="ident">key</span>: <span class="ident">storage::Key</span>,
 ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>
@@ -1883,7 +1875,7 @@
 <span class="doccomment">/// Query a range of storage values with a matching prefix and decode them with</span>
 <span class="doccomment">/// [`BorshDeserialize`]. Returns an iterator of the storage keys paired with</span>
 <span class="doccomment">/// their associated values.</span>
-<span class="kw">async</span> <span class="kw">fn</span> <span class="ident">query_storage_prefix</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(
+<span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">query_storage_prefix</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(
     <span class="ident">client</span>: <span class="ident">HttpClient</span>,
     <span class="ident">key</span>: <span class="ident">storage::Key</span>,
 ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw">impl</span> <span class="ident">Iterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> (<span class="ident">storage::Key</span>, <span class="ident">T</span>)<span class="op">&gt;</span><span class="op">&gt;</span>
@@ -1927,6 +1919,34 @@
                     <span class="ident">response</span>.<span class="ident">info</span>, <span class="ident">err</span>
                 )
             }
+        }
+    }
+    <span class="ident">cli::safe_exit</span>(<span class="number">1</span>)
+}
+
+<span class="doccomment">/// Query to check if the given storage key exists.</span>
+<span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">query_has_storage_key</span>(
+    <span class="ident">client</span>: <span class="ident">HttpClient</span>,
+    <span class="ident">key</span>: <span class="ident">storage::Key</span>,
+) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
+    <span class="kw">let</span> <span class="ident">path</span> <span class="op">=</span> <span class="ident">Path::HasKey</span>(<span class="ident">key</span>);
+    <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="macro">vec!</span>[];
+    <span class="kw">let</span> <span class="ident">response</span> <span class="op">=</span> <span class="ident">client</span>
+        .<span class="ident">abci_query</span>(<span class="prelude-val">Some</span>(<span class="ident">path</span>.<span class="ident">into</span>()), <span class="ident">data</span>, <span class="prelude-val">None</span>, <span class="bool-val">false</span>)
+        .<span class="kw">await</span>
+        .<span class="ident">unwrap</span>();
+    <span class="kw">match</span> <span class="ident">response</span>.<span class="ident">code</span> {
+        <span class="ident">tendermint::abci::Code::Ok</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="kw">match</span> <span class="ident">bool::try_from_slice</span>(<span class="kw-2">&amp;</span><span class="ident">response</span>.<span class="ident">value</span>[..]) {
+                <span class="prelude-val">Ok</span>(<span class="ident">value</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="ident">value</span>,
+                <span class="prelude-val">Err</span>(<span class="ident">err</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="macro">eprintln!</span>(<span class="string">&quot;Error decoding the value: {}&quot;</span>, <span class="ident">err</span>),
+            }
+        }
+        <span class="ident">tendermint::abci::Code::Err</span>(<span class="ident">err</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="macro">eprintln!</span>(
+                <span class="string">&quot;Error in the query {} (error code {})&quot;</span>,
+                <span class="ident">response</span>.<span class="ident">info</span>, <span class="ident">err</span>
+            )
         }
     }
     <span class="ident">cli::safe_exit</span>(<span class="number">1</span>)

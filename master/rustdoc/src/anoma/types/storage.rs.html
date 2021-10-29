@@ -776,18 +776,6 @@
 <span id="776">776</span>
 <span id="777">777</span>
 <span id="778">778</span>
-<span id="779">779</span>
-<span id="780">780</span>
-<span id="781">781</span>
-<span id="782">782</span>
-<span id="783">783</span>
-<span id="784">784</span>
-<span id="785">785</span>
-<span id="786">786</span>
-<span id="787">787</span>
-<span id="788">788</span>
-<span id="789">789</span>
-<span id="790">790</span>
 </pre><pre class="rust">
 <span class="doccomment">//! Storage types</span>
 <span class="kw">use</span> <span class="ident">std::convert</span>::{<span class="ident">TryFrom</span>, <span class="ident">TryInto</span>};
@@ -1138,10 +1126,6 @@
                     .<span class="ident">map_err</span>(<span class="ident">Error::ParseAddress</span>)
                     .<span class="ident">map</span>(<span class="ident">DbKeySeg::AddressSeg</span>)
             }
-            <span class="comment">// reserved for a validity predicate</span>
-            <span class="prelude-val">Some</span>(<span class="ident">c</span>) <span class="kw">if</span> <span class="ident">c</span> <span class="op">=</span><span class="op">=</span> <span class="ident">VP_KEY_PREFIX</span> <span class="op">&amp;&amp;</span> <span class="ident">string</span> <span class="op">=</span><span class="op">=</span> <span class="ident">RESERVED_VP_KEY</span> <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="prelude-val">Err</span>(<span class="ident">Error::InvalidKeySeg</span>(<span class="ident">string</span>))
-            }
             <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="ident">DbKeySeg::StringSeg</span>(<span class="ident">string</span>)),
         }
     }
@@ -1383,15 +1367,10 @@
         <span class="kw">let</span> <span class="ident">target</span> <span class="op">=</span> <span class="string">&quot;?test/test@&quot;</span>.<span class="ident">to_owned</span>();
         <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Key::parse</span>(<span class="ident">target</span>.<span class="ident">clone</span>()).<span class="ident">expect</span>(<span class="string">&quot;cannot parse the string&quot;</span>);
         <span class="macro">assert_eq!</span>(<span class="ident">key</span>.<span class="ident">to_string</span>(), <span class="ident">target</span>);
-    }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_key_parse_invalid</span>() {
         <span class="kw">let</span> <span class="ident">target</span> <span class="op">=</span> <span class="string">&quot;?/test&quot;</span>.<span class="ident">to_owned</span>();
-        <span class="kw">match</span> <span class="ident">Key::parse</span>(<span class="ident">target</span>).<span class="ident">expect_err</span>(<span class="string">&quot;unexpectedly succeeded&quot;</span>) {
-            <span class="ident">Error::InvalidKeySeg</span>(<span class="ident">s</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="macro">assert_eq!</span>(<span class="ident">s</span>, <span class="string">&quot;?&quot;</span>),
-            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">panic!</span>(<span class="string">&quot;unexpected error happens&quot;</span>),
-        }
+        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Key::parse</span>(<span class="ident">target</span>.<span class="ident">clone</span>()).<span class="ident">expect</span>(<span class="string">&quot;cannot parse the string&quot;</span>);
+        <span class="macro">assert_eq!</span>(<span class="ident">key</span>.<span class="ident">to_string</span>(), <span class="ident">target</span>);
     }
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
@@ -1409,6 +1388,12 @@
             .<span class="ident">push</span>(<span class="kw-2">&amp;</span><span class="ident">target</span>)
             .<span class="ident">expect</span>(<span class="string">&quot;cannnot push the segment&quot;</span>);
         <span class="macro">assert_eq!</span>(<span class="ident">key</span>.<span class="ident">segments</span>[<span class="number">1</span>].<span class="ident">raw</span>(), <span class="ident">target</span>);
+
+        <span class="kw">let</span> <span class="ident">target</span> <span class="op">=</span> <span class="string">&quot;?&quot;</span>.<span class="ident">to_owned</span>();
+        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Key::from</span>(<span class="ident">addr</span>.<span class="ident">to_db_key</span>())
+            .<span class="ident">push</span>(<span class="kw-2">&amp;</span><span class="ident">target</span>)
+            .<span class="ident">expect</span>(<span class="string">&quot;cannnot push the segment&quot;</span>);
+        <span class="macro">assert_eq!</span>(<span class="ident">key</span>.<span class="ident">segments</span>[<span class="number">1</span>].<span class="ident">raw</span>(), <span class="ident">target</span>);
     }
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
@@ -1420,15 +1405,6 @@
             .<span class="ident">expect_err</span>(<span class="string">&quot;unexpectedly succeeded&quot;</span>)
         {
             <span class="ident">Error::InvalidKeySeg</span>(<span class="ident">s</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="macro">assert_eq!</span>(<span class="ident">s</span>, <span class="string">&quot;/&quot;</span>),
-            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">panic!</span>(<span class="string">&quot;unexpected error happens&quot;</span>),
-        }
-
-        <span class="kw">let</span> <span class="ident">target</span> <span class="op">=</span> <span class="string">&quot;?&quot;</span>.<span class="ident">to_owned</span>();
-        <span class="kw">match</span> <span class="ident">Key::from</span>(<span class="ident">addr</span>.<span class="ident">to_db_key</span>())
-            .<span class="ident">push</span>(<span class="kw-2">&amp;</span><span class="ident">target</span>)
-            .<span class="ident">expect_err</span>(<span class="string">&quot;unexpectedly succeeded&quot;</span>)
-        {
-            <span class="ident">Error::InvalidKeySeg</span>(<span class="ident">s</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="macro">assert_eq!</span>(<span class="ident">s</span>, <span class="string">&quot;?&quot;</span>),
             <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">panic!</span>(<span class="string">&quot;unexpected error happens&quot;</span>),
         }
     }

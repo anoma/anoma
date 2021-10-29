@@ -2418,6 +2418,14 @@
 <span id="2418">2418</span>
 <span id="2419">2419</span>
 <span id="2420">2420</span>
+<span id="2421">2421</span>
+<span id="2422">2422</span>
+<span id="2423">2423</span>
+<span id="2424">2424</span>
+<span id="2425">2425</span>
+<span id="2426">2426</span>
+<span id="2427">2427</span>
+<span id="2428">2428</span>
 </pre><pre class="rust">
 <span class="doccomment">//! The CLI commands that are re-used between the executables `anoma`,</span>
 <span class="doccomment">//! `anoma-node` and `anoma-client`.</span>
@@ -3537,6 +3545,7 @@
     <span class="kw">const</span> <span class="ident">DRY_RUN_TX</span>: <span class="ident">ArgFlag</span> <span class="op">=</span> <span class="ident">flag</span>(<span class="string">&quot;dry-run&quot;</span>);
     <span class="kw">const</span> <span class="ident">EPOCH</span>: <span class="ident">ArgOpt</span><span class="op">&lt;</span><span class="ident">Epoch</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">arg_opt</span>(<span class="string">&quot;epoch&quot;</span>);
     <span class="kw">const</span> <span class="ident">FILTER_PATH</span>: <span class="ident">ArgOpt</span><span class="op">&lt;</span><span class="ident">PathBuf</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">arg_opt</span>(<span class="string">&quot;filter-path&quot;</span>);
+    <span class="kw">const</span> <span class="ident">FORCE</span>: <span class="ident">ArgFlag</span> <span class="op">=</span> <span class="ident">flag</span>(<span class="string">&quot;force&quot;</span>);
     <span class="kw">const</span> <span class="ident">GENESIS_PATH</span>: <span class="ident">Arg</span><span class="op">&lt;</span><span class="ident">PathBuf</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">arg</span>(<span class="string">&quot;genesis-path&quot;</span>);
     <span class="kw">const</span> <span class="ident">LEDGER_ADDRESS_ABOUT</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span>
         <span class="string">&quot;Address of a ledger node as \&quot;{scheme}://{host}:{port}\&quot;. If the \
@@ -4387,6 +4396,8 @@
     <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Tx</span> {
         <span class="doccomment">/// Simulate applying the transaction</span>
         <span class="kw">pub</span> <span class="ident">dry_run</span>: <span class="ident">bool</span>,
+        <span class="doccomment">/// Submit the transaction even if it doesn&#39;t pass client checks</span>
+        <span class="kw">pub</span> <span class="ident">force</span>: <span class="ident">bool</span>,
         <span class="doccomment">/// The address of the ledger node as host:port</span>
         <span class="kw">pub</span> <span class="ident">ledger_address</span>: <span class="ident">tendermint::net::Address</span>,
         <span class="doccomment">/// If any new account is initialized by the tx, use the given alias to</span>
@@ -4405,6 +4416,9 @@
                     .<span class="ident">def</span>()
                     .<span class="ident">about</span>(<span class="string">&quot;Simulate the transaction application.&quot;</span>),
             )
+            .<span class="ident">arg</span>(<span class="ident">FORCE</span>.<span class="ident">def</span>().<span class="ident">about</span>(
+                <span class="string">&quot;Submit the transaction even if it doesn&#39;t pass client checks.&quot;</span>,
+            ))
             .<span class="ident">arg</span>(<span class="ident">LEDGER_ADDRESS_DEFAULT</span>.<span class="ident">def</span>().<span class="ident">about</span>(<span class="ident">LEDGER_ADDRESS_ABOUT</span>))
             .<span class="ident">arg</span>(<span class="ident">ALIAS_OPT</span>.<span class="ident">def</span>().<span class="ident">about</span>(
                 <span class="string">&quot;If any new account is initialized by the tx, use the given \
@@ -4435,12 +4449,14 @@
 
         <span class="kw">fn</span> <span class="ident">parse</span>(<span class="ident">matches</span>: <span class="kw-2">&amp;</span><span class="ident">ArgMatches</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
             <span class="kw">let</span> <span class="ident">dry_run</span> <span class="op">=</span> <span class="ident">DRY_RUN_TX</span>.<span class="ident">parse</span>(<span class="ident">matches</span>);
+            <span class="kw">let</span> <span class="ident">force</span> <span class="op">=</span> <span class="ident">FORCE</span>.<span class="ident">parse</span>(<span class="ident">matches</span>);
             <span class="kw">let</span> <span class="ident">ledger_address</span> <span class="op">=</span> <span class="ident">LEDGER_ADDRESS_DEFAULT</span>.<span class="ident">parse</span>(<span class="ident">matches</span>);
             <span class="kw">let</span> <span class="ident">initialized_account_alias</span> <span class="op">=</span> <span class="ident">ALIAS_OPT</span>.<span class="ident">parse</span>(<span class="ident">matches</span>);
             <span class="kw">let</span> <span class="ident">signing_key</span> <span class="op">=</span> <span class="ident">SIGNING_KEY_OPT</span>.<span class="ident">parse</span>(<span class="ident">matches</span>);
             <span class="kw">let</span> <span class="ident">signer</span> <span class="op">=</span> <span class="ident">SIGNER</span>.<span class="ident">parse</span>(<span class="ident">matches</span>);
             <span class="self">Self</span> {
                 <span class="ident">dry_run</span>,
+                <span class="ident">force</span>,
                 <span class="ident">ledger_address</span>,
                 <span class="ident">initialized_account_alias</span>,
                 <span class="ident">signing_key</span>,

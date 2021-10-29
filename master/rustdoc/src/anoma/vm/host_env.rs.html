@@ -1631,6 +1631,11 @@
 <span id="1631">1631</span>
 <span id="1632">1632</span>
 <span id="1633">1633</span>
+<span id="1634">1634</span>
+<span id="1635">1635</span>
+<span id="1636">1636</span>
+<span id="1637">1637</span>
+<span id="1638">1638</span>
 </pre><pre class="rust">
 <span class="doccomment">//! Virtual machine&#39;s host environment exposes functions that may be called from</span>
 <span class="doccomment">//! within a virtual machine.</span>
@@ -1671,6 +1676,8 @@
     <span class="ident">UnknownAddressStorageModification</span>(<span class="ident">Address</span>),
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Trying to update a validity predicate with an invalid WASM {0}&quot;</span>)]</span>
     <span class="ident">UpdateVpInvalid</span>(<span class="ident">WasmValidationError</span>),
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;A validity predicate of an account cannot be deleted&quot;</span>)]</span>
+    <span class="ident">CannotDeleteVp</span>,
     <span class="attribute">#[<span class="ident">error</span>(
         <span class="string">&quot;Trying to initialize an account with an invalid validity predicate \
          WASM {0}&quot;</span>
@@ -2445,6 +2452,9 @@
     <span class="macro">tracing::debug!</span>(<span class="string">&quot;tx_delete {}&quot;</span>, <span class="ident">key</span>);
 
     <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">Key::parse</span>(<span class="ident">key</span>).<span class="ident">map_err</span>(<span class="ident">TxRuntimeError::StorageDataError</span>)<span class="question-mark">?</span>;
+    <span class="kw">if</span> <span class="ident">key</span>.<span class="ident">is_validity_predicate</span>().<span class="ident">is_some</span>() {
+        <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">TxRuntimeError::CannotDeleteVp</span>);
+    }
 
     <span class="kw">let</span> <span class="ident">write_log</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">env</span>.<span class="ident">ctx</span>.<span class="ident">write_log</span>.<span class="ident">get</span>() };
     <span class="kw">let</span> (<span class="ident">gas</span>, <span class="ident">_size_diff</span>) <span class="op">=</span> <span class="ident">write_log</span>

@@ -467,6 +467,8 @@
 <span id="467">467</span>
 <span id="468">468</span>
 <span id="469">469</span>
+<span id="470">470</span>
+<span id="471">471</span>
 </pre><pre class="rust">
 <span class="doccomment">//! The persistent storage in RocksDB.</span>
 <span class="doccomment">//!</span>
@@ -525,6 +527,8 @@
     {
         <span class="ident">cf_opts</span>.<span class="ident">set_max_open_files</span>(<span class="ident">max_open_files</span>);
     }
+    <span class="ident">cf_opts</span>.<span class="ident">set_compression_type</span>(<span class="ident">rocksdb::DBCompressionType::Zstd</span>);
+    <span class="ident">cf_opts</span>.<span class="ident">set_compression_options</span>(<span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">1024</span> <span class="op">*</span> <span class="number">1024</span>);
     <span class="comment">// TODO the recommended default `options.compaction_pri =</span>
     <span class="comment">// kMinOverlappingRatio` doesn&#39;t seem to be available in Rust</span>
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">table_opts</span> <span class="op">=</span> <span class="ident">BlockBasedOptions::default</span>();
