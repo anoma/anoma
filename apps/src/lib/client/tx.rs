@@ -747,8 +747,9 @@ pub async fn broadcast_tx(
     //
     // Note that the `applied.hash` key comes from a custom event
     // created by the shell
+    let tx_hash = hash_tx(&tx_bytes);
     let query = Query::from(EventType::NewBlock)
-        .and_eq("applied.hash", hash_tx(&tx_bytes).to_string());
+        .and_eq("applied.hash", tx_hash.to_string());
     client.subscribe(query)?;
     let response = client
         .broadcast_tx_sync(tx_bytes.into())
@@ -757,7 +758,7 @@ pub async fn broadcast_tx(
 
     let parsed = if response.code == 0.into() {
         println!("Transaction added to mempool: {:?}", response);
-        let parsed = TxResponse::from(client.receive_response()?);
+        let parsed = TxResponse::find_tx(client.receive_response()?, &tx_hash);
         println!(
             "Transaction applied with result: {}",
             serde_json::to_string_pretty(&parsed).unwrap()
@@ -781,16 +782,47 @@ pub struct TxResponse {
     initialized_accounts: Vec<Address>,
 }
 
-impl From<serde_json::Value> for TxResponse {
-    fn from(json: serde_json::Value) -> Self {
+impl TxResponse {
+    pub fn find_tx(
+        json: serde_json::Value,
+        tx_hash: &tendermint::abci::transaction::Hash,
+    ) -> Self {
+        let tx_hash_json = serde_json::Value::String(tx_hash.to_string());
         let mut selector = jsonpath::selector(&json);
-        let info = selector("$.events.['applied.info'][0]").unwrap();
-        let height = selector("$.events.['applied.height'][0]").unwrap();
-        let hash = selector("$.events.['applied.hash'][0]").unwrap();
-        let code = selector("$.events.['applied.code'][0]").unwrap();
-        let gas_used = selector("$.events.['applied.gas_used'][0]").unwrap();
-        let initialized_accounts =
-            selector("$.events.['applied.initialized_accounts'][0]");
+        let mut index = 0;
+        // Find the tx with a matching hash
+        let hash = loop {
+            if let Ok(hash) =
+                selector(&format!("$.events.['applied.hash'][{}]", index))
+            {
+                let hash = hash[0].clone();
+                if hash == tx_hash_json {
+                    break hash;
+                } else {
+                    index += 1;
+                }
+            } else {
+                eprintln!(
+                    "Couldn't find tx with hash {} in the event string {}",
+                    tx_hash, json
+                );
+                safe_exit(1)
+            }
+        };
+        let info =
+            selector(&format!("$.events.['applied.info'][{}]", index)).unwrap();
+        let height =
+            selector(&format!("$.events.['applied.height'][{}]", index))
+                .unwrap();
+        let code =
+            selector(&format!("$.events.['applied.code'][{}]", index)).unwrap();
+        let gas_used =
+            selector(&format!("$.events.['applied.gas_used'][{}]", index))
+                .unwrap();
+        let initialized_accounts = selector(&format!(
+            "$.events.['applied.initialized_accounts'][{}]",
+            index
+        ));
         let initialized_accounts = match initialized_accounts {
             Ok(values) if !values.is_empty() => {
                 // In a response, the initialized accounts are encoded as e.g.:
@@ -812,7 +844,7 @@ impl From<serde_json::Value> for TxResponse {
         TxResponse {
             info: serde_json::from_value(info[0].clone()).unwrap(),
             height: serde_json::from_value(height[0].clone()).unwrap(),
-            hash: serde_json::from_value(hash[0].clone()).unwrap(),
+            hash: serde_json::from_value(hash).unwrap(),
             code: serde_json::from_value(code[0].clone()).unwrap(),
             gas_used: serde_json::from_value(gas_used[0].clone()).unwrap(),
             initialized_accounts,
