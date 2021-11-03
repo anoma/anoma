@@ -1,0 +1,1 @@
+window.ALL_CRATES = ["anoma","anoma_apps","anoma_proof_of_stake","anoma_tests","anoma_vm_env","anoma_vm_macro"];
