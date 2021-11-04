@@ -10,8 +10,6 @@ use anoma::types::chain::ChainId;
 use anoma::types::key::ed25519::Keypair;
 use anoma::types::time::DateTimeUtc;
 use serde_json::json;
-use signal_hook::consts::TERM_SIGNALS;
-use signal_hook::iterator::Signals;
 use tendermint::config::TendermintConfig;
 use tendermint::net;
 use thiserror::Error;
@@ -112,7 +110,21 @@ pub fn run(
     let exit_gracefully = abort_receiver.recv().unwrap_or_default();
     // Send signal to shut down Tendermint node
     unsafe {
-        libc::kill(pid as i32, libc::SIGTERM);
+        #[cfg(target_os = "windows")]
+        {
+            use winapi::um::processthreadsapi::{
+                OpenProcess, TerminateProcess,
+            };
+            use winapi::um::winnt::PROCESS_TERMINATE;
+            let pc = OpenProcess(PROCESS_TERMINATE, 0, pid);
+            if pc != std::ptr::null_mut() {
+                TerminateProcess(pc, 0);
+            }
+        }
+        #[cfg(not(target_os = "windows"))]
+        {
+            libc::kill(pid as i32, libc::SIGTERM);
+        }
     };
     if exit_gracefully {
         Ok(())
@@ -123,7 +135,10 @@ pub fn run(
 
 /// Listens for termination signals and forwards a kill command to the
 /// tendermint node when it encounters one.
+#[cfg(not(target_os = "windows"))]
 fn kill_on_term_signal(abort_sender: Sender<bool>) {
+    use signal_hook::consts::TERM_SIGNALS;
+    use signal_hook::iterator::Signals;
     let _ = std::thread::spawn(move || {
         let mut signals = Signals::new(TERM_SIGNALS)
             .expect("Failed to creat OS signal handlers");
@@ -137,6 +152,25 @@ fn kill_on_term_signal(abort_sender: Sender<bool>) {
                 break;
             }
         }
+    });
+}
+
+#[cfg(target_os = "windows")]
+fn kill_on_term_signal(abort_sender: Sender<bool>) {
+    use tokio::signal::ctrl_c;
+    let _ = std::thread::spawn(|| {
+        tokio_test::block_on(async move {
+            loop {
+                if ctrl_c().await.is_ok() {
+                    tracing::info!(
+                        "Received termination signal, shutting down \
+                         Tendermint node"
+                    );
+                    let _ = abort_sender.send(true);
+                    break;
+                }
+            }
+        })
     });
 }
 
