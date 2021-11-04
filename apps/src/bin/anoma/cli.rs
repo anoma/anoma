@@ -10,7 +10,9 @@ use std::process::Command;
 
 use anoma_apps::cli;
 use eyre::{eyre, Result};
+#[cfg(not(target_os = "windows"))]
 use signal_hook::consts::TERM_SIGNALS;
+#[cfg(not(target_os = "windows"))]
 use signal_hook::iterator::Signals;
 
 pub fn main() -> Result<()> {
@@ -82,7 +84,6 @@ fn handle_subcommand(
         .spawn()
         .unwrap_or_else(|_| panic!("Couldn't run {} command.", cmd));
 
-    let mut signals = Signals::new(TERM_SIGNALS).unwrap();
     loop {
         if let Ok(Some(exit_status)) = process.try_wait() {
             if exit_status.success() {
@@ -91,13 +92,49 @@ fn handle_subcommand(
                 return Err(eyre!("{} command failed.", cmd));
             }
         }
-        for sig in signals.pending() {
-            if TERM_SIGNALS.contains(&sig) {
-                tracing::info!("Anoma received termination signal");
-                unsafe { libc::kill(process.id() as i32, libc::SIGTERM) };
-                break;
-            }
+        #[cfg(not(target_os = "windows"))]
+        {
+            let mut signals = Signals::new(TERM_SIGNALS).unwrap();
+            kill_on_term_signal(process.id() as i32, &mut signals);
         }
+        #[cfg(target_os = "windows")]
+        kill_on_term_signal(process.id() as u32);
     }
     Ok(())
+}
+
+#[cfg(not(target_os = "windows"))]
+fn kill_on_term_signal(pid: i32, signals: &mut Signals) {
+    for sig in signals.pending() {
+        if TERM_SIGNALS.contains(&sig) {
+            tracing::info!("Anoma received termination signal");
+            unsafe { libc::kill(pid, libc::SIGTERM) };
+            break;
+        }
+    }
+}
+
+#[cfg(target_os = "windows")]
+fn kill_on_term_signal(pid: u32) {
+    use tokio::signal::ctrl_c;
+    let _ = std::thread::spawn(move || {
+        tokio_test::block_on(async move {
+            loop {
+                if ctrl_c().await.is_ok() {
+                    tracing::info!("Anoma received termination signal");
+                    break;
+                }
+            }
+            unsafe {
+                use winapi::um::processthreadsapi::{
+                    OpenProcess, TerminateProcess,
+                };
+                use winapi::um::winnt::PROCESS_TERMINATE;
+                let pc = OpenProcess(PROCESS_TERMINATE, 0, pid);
+                if pc != std::ptr::null_mut() {
+                    TerminateProcess(pc, 0);
+                }
+            };
+        })
+    });
 }

@@ -94,6 +94,7 @@ tendermint-proto = {git = "https://github.com/heliaxdev/tendermint-rs", branch =
 tendermint-rpc = {git = "https://github.com/heliaxdev/tendermint-rs", branch = "tomas/lowercase-node-id", features = ["http-client", "websocket-client"]}
 thiserror = "1.0.24"
 tokio = {version = "1.8.2", features = ["full"]}
+tokio-test = "0.4.2"
 toml = "0.5.8"
 tonic = "0.5.0"
 tower = "0.4"
@@ -102,6 +103,7 @@ tower-abci = {git = "https://github.com/heliaxdev/tower-abci", branch = "tomas/t
 tracing = "0.1.26"
 tracing-log = "0.1.2"
 tracing-subscriber = "0.2.18"
+winapi = "0.3.9"
 websocket = "0.26.2"
 
 [dev-dependencies]
