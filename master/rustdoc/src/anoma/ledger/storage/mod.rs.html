@@ -734,6 +734,43 @@
 <span id="734">734</span>
 <span id="735">735</span>
 <span id="736">736</span>
+<span id="737">737</span>
+<span id="738">738</span>
+<span id="739">739</span>
+<span id="740">740</span>
+<span id="741">741</span>
+<span id="742">742</span>
+<span id="743">743</span>
+<span id="744">744</span>
+<span id="745">745</span>
+<span id="746">746</span>
+<span id="747">747</span>
+<span id="748">748</span>
+<span id="749">749</span>
+<span id="750">750</span>
+<span id="751">751</span>
+<span id="752">752</span>
+<span id="753">753</span>
+<span id="754">754</span>
+<span id="755">755</span>
+<span id="756">756</span>
+<span id="757">757</span>
+<span id="758">758</span>
+<span id="759">759</span>
+<span id="760">760</span>
+<span id="761">761</span>
+<span id="762">762</span>
+<span id="763">763</span>
+<span id="764">764</span>
+<span id="765">765</span>
+<span id="766">766</span>
+<span id="767">767</span>
+<span id="768">768</span>
+<span id="769">769</span>
+<span id="770">770</span>
+<span id="771">771</span>
+<span id="772">772</span>
+<span id="773">773</span>
 </pre><pre class="rust">
 <span class="doccomment">//! Ledger&#39;s state storage with key-value backed store and a merkle tree</span>
 
@@ -749,8 +786,14 @@
 <span class="kw">use</span> <span class="ident">prost::Message</span>;
 <span class="kw">use</span> <span class="ident">sparse_merkle_tree::default_store::DefaultStore</span>;
 <span class="kw">use</span> <span class="ident">sparse_merkle_tree</span>::{<span class="ident">SparseMerkleTree</span>, <span class="ident">H256</span>};
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
 <span class="kw">use</span> <span class="ident">tendermint::block::Header</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
 <span class="kw">use</span> <span class="ident">tendermint::merkle::proof::ProofOp</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
+<span class="kw">use</span> <span class="ident">tendermint_stable::block::Header</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
+<span class="kw">use</span> <span class="ident">tendermint_stable::merkle::proof::ProofOp</span>;
 <span class="kw">use</span> <span class="ident">thiserror::Error</span>;
 <span class="kw">use</span> <span class="ident">types::MerkleTree</span>;
 
@@ -855,6 +898,9 @@
 
 <span class="doccomment">/// A database backend.</span>
 <span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">DB</span>: <span class="ident">std::fmt::Debug</span> {
+    <span class="doccomment">/// open the database from provided path</span>
+    <span class="kw">fn</span> <span class="ident">open</span>(<span class="ident">db_path</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span><span class="ident">std::path::Path</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span>;
+
     <span class="doccomment">/// Flush data on the memory to persistent them</span>
     <span class="kw">fn</span> <span class="ident">flush</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span>;
 
@@ -895,6 +941,34 @@
     <span class="ident">D</span>: <span class="ident">DB</span> <span class="op">+</span> <span class="kw">for</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span> <span class="ident">DBIter</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span>,
     <span class="ident">H</span>: <span class="ident">StorageHasher</span>,
 {
+    <span class="doccomment">/// open up a new instance of the storage given path to db and chain id</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">open</span>(
+        <span class="ident">db_path</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span><span class="ident">std::path::Path</span><span class="op">&gt;</span>,
+        <span class="ident">chain_id</span>: <span class="ident">ChainId</span>,
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="kw">let</span> <span class="ident">block</span> <span class="op">=</span> <span class="ident">BlockStorage</span> {
+            <span class="ident">tree</span>: <span class="ident">MerkleTree::default</span>(),
+            <span class="ident">hash</span>: <span class="ident">BlockHash::default</span>(),
+            <span class="ident">height</span>: <span class="ident">BlockHeight::default</span>(),
+            <span class="ident">epoch</span>: <span class="ident">Epoch::default</span>(),
+            <span class="ident">pred_epochs</span>: <span class="ident">Epochs::default</span>(),
+            <span class="ident">subspaces</span>: <span class="ident">HashMap::default</span>(),
+        };
+        <span class="ident">Storage</span>::<span class="op">&lt;</span><span class="ident">D</span>, <span class="ident">H</span><span class="op">&gt;</span> {
+            <span class="ident">db</span>: <span class="ident">D::open</span>(<span class="ident">db_path</span>),
+            <span class="ident">chain_id</span>,
+            <span class="ident">block</span>,
+            <span class="ident">header</span>: <span class="prelude-val">None</span>,
+            <span class="ident">last_height</span>: <span class="ident">BlockHeight</span>(<span class="number">0</span>),
+            <span class="ident">last_epoch</span>: <span class="ident">Epoch::default</span>(),
+            <span class="ident">next_epoch_min_start_height</span>: <span class="ident">BlockHeight::default</span>(),
+            <span class="ident">next_epoch_min_start_time</span>: <span class="ident">DateTimeUtc::now</span>(),
+            <span class="ident">address_gen</span>: <span class="ident">EstablishedAddressGen::new</span>(
+                <span class="string">&quot;Privacy is a function of liberty.&quot;</span>,
+            ),
+        }
+    }
+
     <span class="doccomment">/// Load the full state at the last committed height, if any. Returns the</span>
     <span class="doccomment">/// Merkle root hash and the height of the committed block.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">load_last_state</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {

@@ -181,6 +181,14 @@
 <span id="181">181</span>
 <span id="182">182</span>
 <span id="183">183</span>
+<span id="184">184</span>
+<span id="185">185</span>
+<span id="186">186</span>
+<span id="187">187</span>
+<span id="188">188</span>
+<span id="189">189</span>
+<span id="190">190</span>
+<span id="191">191</span>
 </pre><pre class="rust">
 <span class="doccomment">//! Types for dealing with time and durations.</span>
 
@@ -360,7 +368,15 @@
     }
 }
 
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
 <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">DateTimeUtc</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">tendermint::time::Time</span> {
+    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">dt</span>: <span class="ident">DateTimeUtc</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="ident">dt</span>.<span class="number">0</span>.<span class="ident">into</span>()
+    }
+}
+
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
+<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">DateTimeUtc</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">tendermint_stable::time::Time</span> {
     <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">dt</span>: <span class="ident">DateTimeUtc</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="ident">dt</span>.<span class="number">0</span>.<span class="ident">into</span>()
     }

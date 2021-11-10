@@ -1,1 +1,0 @@
-initSidebarItems({"fn":[["open",""]],"struct":[["PersistentStorageHasher",""]],"type":[["PersistentDB",""],["PersistentStorage",""]]});

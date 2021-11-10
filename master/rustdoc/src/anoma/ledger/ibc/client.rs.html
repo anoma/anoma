@@ -354,17 +354,59 @@
 <span id="354">354</span>
 <span id="355">355</span>
 <span id="356">356</span>
+<span id="357">357</span>
+<span id="358">358</span>
+<span id="359">359</span>
+<span id="360">360</span>
+<span id="361">361</span>
+<span id="362">362</span>
+<span id="363">363</span>
+<span id="364">364</span>
+<span id="365">365</span>
+<span id="366">366</span>
+<span id="367">367</span>
+<span id="368">368</span>
+<span id="369">369</span>
+<span id="370">370</span>
+<span id="371">371</span>
+<span id="372">372</span>
+<span id="373">373</span>
+<span id="374">374</span>
+<span id="375">375</span>
+<span id="376">376</span>
+<span id="377">377</span>
 </pre><pre class="rust">
 <span class="doccomment">//! IBC validity predicate for client module</span>
 
 <span class="kw">use</span> <span class="ident">borsh::BorshDeserialize</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
 <span class="kw">use</span> <span class="ident">ibc::ics02_client::client_consensus::AnyConsensusState</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
 <span class="kw">use</span> <span class="ident">ibc::ics02_client::client_def</span>::{<span class="ident">AnyClient</span>, <span class="ident">ClientDef</span>};
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
 <span class="kw">use</span> <span class="ident">ibc::ics02_client::client_state::AnyClientState</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
 <span class="kw">use</span> <span class="ident">ibc::ics02_client::client_type::ClientType</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
 <span class="kw">use</span> <span class="ident">ibc::ics02_client::context::ClientReader</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
 <span class="kw">use</span> <span class="ident">ibc::ics02_client::height::Height</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
 <span class="kw">use</span> <span class="ident">ibc::ics24_host::identifier::ClientId</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
+<span class="kw">use</span> <span class="ident">ibc_abci::ics02_client::client_consensus::AnyConsensusState</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
+<span class="kw">use</span> <span class="ident">ibc_abci::ics02_client::client_def</span>::{<span class="ident">AnyClient</span>, <span class="ident">ClientDef</span>};
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
+<span class="kw">use</span> <span class="ident">ibc_abci::ics02_client::client_state::AnyClientState</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
+<span class="kw">use</span> <span class="ident">ibc_abci::ics02_client::client_type::ClientType</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
+<span class="kw">use</span> <span class="ident">ibc_abci::ics02_client::context::ClientReader</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
+<span class="kw">use</span> <span class="ident">ibc_abci::ics02_client::height::Height</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
+<span class="kw">use</span> <span class="ident">ibc_abci::ics24_host::identifier::ClientId</span>;
 <span class="kw">use</span> <span class="ident">thiserror::Error</span>;
 
 <span class="kw">use</span> <span class="kw">super</span><span class="ident">::storage</span>::{

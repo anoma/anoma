@@ -164,14 +164,38 @@
 <span id="164">164</span>
 <span id="165">165</span>
 <span id="166">166</span>
+<span id="167">167</span>
+<span id="168">168</span>
+<span id="169">169</span>
+<span id="170">170</span>
+<span id="171">171</span>
+<span id="172">172</span>
+<span id="173">173</span>
+<span id="174">174</span>
+<span id="175">175</span>
+<span id="176">176</span>
+<span id="177">177</span>
+<span id="178">178</span>
 </pre><pre class="rust">
 <span class="doccomment">//! IBC validity predicate for port module</span>
 
 <span class="kw">use</span> <span class="ident">borsh::BorshDeserialize</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
 <span class="kw">use</span> <span class="ident">ibc::ics04_channel::context::ChannelReader</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
 <span class="kw">use</span> <span class="ident">ibc::ics05_port::capabilities::Capability</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
 <span class="kw">use</span> <span class="ident">ibc::ics05_port::context::PortReader</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
 <span class="kw">use</span> <span class="ident">ibc::ics24_host::identifier::PortId</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
+<span class="kw">use</span> <span class="ident">ibc_abci::ics04_channel::context::ChannelReader</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
+<span class="kw">use</span> <span class="ident">ibc_abci::ics05_port::capabilities::Capability</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
+<span class="kw">use</span> <span class="ident">ibc_abci::ics05_port::context::PortReader</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
+<span class="kw">use</span> <span class="ident">ibc_abci::ics24_host::identifier::PortId</span>;
 <span class="kw">use</span> <span class="ident">thiserror::Error</span>;
 
 <span class="kw">use</span> <span class="kw">super</span><span class="ident">::storage</span>::{

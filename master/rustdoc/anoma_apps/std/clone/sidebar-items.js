@@ -1,1 +1,0 @@
-initSidebarItems({"macro":[["Clone","Derive macro generating an impl of the trait `Clone`."]],"trait":[["Clone","A common trait for the ability to explicitly duplicate an object."]]});

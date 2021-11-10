@@ -1043,6 +1043,12 @@
 <span id="1043">1043</span>
 <span id="1044">1044</span>
 <span id="1045">1045</span>
+<span id="1046">1046</span>
+<span id="1047">1047</span>
+<span id="1048">1048</span>
+<span id="1049">1049</span>
+<span id="1050">1050</span>
+<span id="1051">1051</span>
 </pre><pre class="rust">
 <span class="doccomment">//! Wasm runners</span>
 
@@ -1171,7 +1177,6 @@
         <span class="ident">tx_data_ptr</span>,
         <span class="ident">tx_data_len</span>,
     } <span class="op">=</span> <span class="ident">memory::write_tx_inputs</span>(<span class="ident">memory</span>, <span class="ident">tx_data</span>).<span class="ident">map_err</span>(<span class="ident">Error::MemoryError</span>)<span class="question-mark">?</span>;
-
     <span class="comment">// Get the module&#39;s entrypoint to be called</span>
     <span class="kw">let</span> <span class="ident">apply_tx</span> <span class="op">=</span> <span class="ident">instance</span>
         .<span class="ident">exports</span>
@@ -1182,9 +1187,16 @@
             <span class="ident">entrypoint</span>: <span class="ident">TX_ENTRYPOINT</span>,
             <span class="ident">error</span>,
         })<span class="question-mark">?</span>;
-    <span class="ident">apply_tx</span>
+    <span class="kw">match</span> <span class="ident">apply_tx</span>
         .<span class="ident">call</span>(<span class="ident">tx_data_ptr</span>, <span class="ident">tx_data_len</span>)
-        .<span class="ident">map_err</span>(<span class="ident">Error::RuntimeError</span>)<span class="question-mark">?</span>;
+        .<span class="ident">map_err</span>(<span class="ident">Error::RuntimeError</span>)
+    {
+        <span class="prelude-val">Err</span>(<span class="ident">Error::RuntimeError</span>(<span class="ident">err</span>)) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="macro">tracing::debug!</span>(<span class="string">&quot;Tx WASM failed with {}&quot;</span>, <span class="ident">err</span>);
+            <span class="prelude-val">Err</span>(<span class="ident">Error::RuntimeError</span>(<span class="ident">err</span>))
+        }
+        <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(()),
+    }<span class="question-mark">?</span>;
 
     <span class="prelude-val">Ok</span>(<span class="ident">verifiers</span>)
 }

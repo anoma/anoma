@@ -1478,6 +1478,79 @@
 <span id="1478">1478</span>
 <span id="1479">1479</span>
 <span id="1480">1480</span>
+<span id="1481">1481</span>
+<span id="1482">1482</span>
+<span id="1483">1483</span>
+<span id="1484">1484</span>
+<span id="1485">1485</span>
+<span id="1486">1486</span>
+<span id="1487">1487</span>
+<span id="1488">1488</span>
+<span id="1489">1489</span>
+<span id="1490">1490</span>
+<span id="1491">1491</span>
+<span id="1492">1492</span>
+<span id="1493">1493</span>
+<span id="1494">1494</span>
+<span id="1495">1495</span>
+<span id="1496">1496</span>
+<span id="1497">1497</span>
+<span id="1498">1498</span>
+<span id="1499">1499</span>
+<span id="1500">1500</span>
+<span id="1501">1501</span>
+<span id="1502">1502</span>
+<span id="1503">1503</span>
+<span id="1504">1504</span>
+<span id="1505">1505</span>
+<span id="1506">1506</span>
+<span id="1507">1507</span>
+<span id="1508">1508</span>
+<span id="1509">1509</span>
+<span id="1510">1510</span>
+<span id="1511">1511</span>
+<span id="1512">1512</span>
+<span id="1513">1513</span>
+<span id="1514">1514</span>
+<span id="1515">1515</span>
+<span id="1516">1516</span>
+<span id="1517">1517</span>
+<span id="1518">1518</span>
+<span id="1519">1519</span>
+<span id="1520">1520</span>
+<span id="1521">1521</span>
+<span id="1522">1522</span>
+<span id="1523">1523</span>
+<span id="1524">1524</span>
+<span id="1525">1525</span>
+<span id="1526">1526</span>
+<span id="1527">1527</span>
+<span id="1528">1528</span>
+<span id="1529">1529</span>
+<span id="1530">1530</span>
+<span id="1531">1531</span>
+<span id="1532">1532</span>
+<span id="1533">1533</span>
+<span id="1534">1534</span>
+<span id="1535">1535</span>
+<span id="1536">1536</span>
+<span id="1537">1537</span>
+<span id="1538">1538</span>
+<span id="1539">1539</span>
+<span id="1540">1540</span>
+<span id="1541">1541</span>
+<span id="1542">1542</span>
+<span id="1543">1543</span>
+<span id="1544">1544</span>
+<span id="1545">1545</span>
+<span id="1546">1546</span>
+<span id="1547">1547</span>
+<span id="1548">1548</span>
+<span id="1549">1549</span>
+<span id="1550">1550</span>
+<span id="1551">1551</span>
+<span id="1552">1552</span>
+<span id="1553">1553</span>
 </pre><pre class="rust">
 <span class="doccomment">//! IBC integration as a native validity predicate</span>
 
@@ -1492,7 +1565,10 @@
 <span class="kw">use</span> <span class="ident">std::collections::HashSet</span>;
 
 <span class="kw">use</span> <span class="ident">borsh</span>::{<span class="ident">BorshDeserialize</span>, <span class="ident">BorshSerialize</span>};
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
 <span class="kw">use</span> <span class="ident">ibc::ics02_client::context::ClientReader</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
+<span class="kw">use</span> <span class="ident">ibc_abci::ics02_client::context::ClientReader</span>;
 <span class="kw">use</span> <span class="ident">storage</span>::{
     <span class="ident">capability_index_key</span>, <span class="ident">channel_counter_key</span>, <span class="ident">client_counter_key</span>, <span class="ident">client_id</span>,
     <span class="ident">connection_counter_key</span>, <span class="ident">ibc_prefix</span>, <span class="ident">is_client_counter_key</span>, <span class="ident">IbcPrefix</span>,
@@ -1751,28 +1827,78 @@
 
     <span class="kw">use</span> <span class="ident">borsh::ser::BorshSerialize</span>;
     <span class="kw">use</span> <span class="ident">chrono::Utc</span>;
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
     <span class="kw">use</span> <span class="ident">ibc::ics02_client::client_consensus::ConsensusState</span>;
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
     <span class="kw">use</span> <span class="ident">ibc::ics02_client::client_state::ClientState</span>;
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
     <span class="kw">use</span> <span class="ident">ibc::ics02_client::client_type::ClientType</span>;
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
     <span class="kw">use</span> <span class="ident">ibc::ics02_client::header::AnyHeader</span>;
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
     <span class="kw">use</span> <span class="ident">ibc::ics03_connection::connection</span>::{
         <span class="ident">ConnectionEnd</span>, <span class="ident">Counterparty</span> <span class="kw">as</span> <span class="ident">ConnCounterparty</span>, <span class="ident">State</span> <span class="kw">as</span> <span class="ident">ConnState</span>,
     };
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
     <span class="kw">use</span> <span class="ident">ibc::ics03_connection::version::Version</span>;
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
     <span class="kw">use</span> <span class="ident">ibc::ics04_channel::channel</span>::{
         <span class="ident">ChannelEnd</span>, <span class="ident">Counterparty</span> <span class="kw">as</span> <span class="ident">ChanCounterparty</span>, <span class="ident">Order</span>, <span class="ident">State</span> <span class="kw">as</span> <span class="ident">ChanState</span>,
     };
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
     <span class="kw">use</span> <span class="ident">ibc::ics04_channel::packet</span>::{<span class="ident">Packet</span>, <span class="ident">Sequence</span>};
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
     <span class="kw">use</span> <span class="ident">ibc::ics23_commitment::commitment</span>::{
         <span class="ident">CommitmentPrefix</span>, <span class="ident">CommitmentProofBytes</span>,
     };
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
     <span class="kw">use</span> <span class="ident">ibc::ics24_host::identifier</span>::{
         <span class="ident">ChannelId</span>, <span class="ident">ClientId</span>, <span class="ident">ConnectionId</span>, <span class="ident">PortChannelId</span>, <span class="ident">PortId</span>,
     };
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
     <span class="kw">use</span> <span class="ident">ibc::mock::client_state</span>::{<span class="ident">MockClientState</span>, <span class="ident">MockConsensusState</span>};
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
     <span class="kw">use</span> <span class="ident">ibc::mock::header::MockHeader</span>;
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
     <span class="kw">use</span> <span class="ident">ibc::timestamp::Timestamp</span>;
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
     <span class="kw">use</span> <span class="ident">ibc::Height</span>;
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
+    <span class="kw">use</span> <span class="ident">ibc_abci::ics02_client::client_consensus::ConsensusState</span>;
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
+    <span class="kw">use</span> <span class="ident">ibc_abci::ics02_client::client_state::ClientState</span>;
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
+    <span class="kw">use</span> <span class="ident">ibc_abci::ics02_client::client_type::ClientType</span>;
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
+    <span class="kw">use</span> <span class="ident">ibc_abci::ics02_client::header::AnyHeader</span>;
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
+    <span class="kw">use</span> <span class="ident">ibc_abci::ics03_connection::connection</span>::{
+        <span class="ident">ConnectionEnd</span>, <span class="ident">Counterparty</span> <span class="kw">as</span> <span class="ident">ConnCounterparty</span>, <span class="ident">State</span> <span class="kw">as</span> <span class="ident">ConnState</span>,
+    };
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
+    <span class="kw">use</span> <span class="ident">ibc_abci::ics03_connection::version::Version</span>;
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
+    <span class="kw">use</span> <span class="ident">ibc_abci::ics04_channel::channel</span>::{
+        <span class="ident">ChannelEnd</span>, <span class="ident">Counterparty</span> <span class="kw">as</span> <span class="ident">ChanCounterparty</span>, <span class="ident">Order</span>, <span class="ident">State</span> <span class="kw">as</span> <span class="ident">ChanState</span>,
+    };
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
+    <span class="kw">use</span> <span class="ident">ibc_abci::ics04_channel::packet</span>::{<span class="ident">Packet</span>, <span class="ident">Sequence</span>};
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
+    <span class="kw">use</span> <span class="ident">ibc_abci::ics23_commitment::commitment</span>::{
+        <span class="ident">CommitmentPrefix</span>, <span class="ident">CommitmentProofBytes</span>,
+    };
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
+    <span class="kw">use</span> <span class="ident">ibc_abci::ics24_host::identifier</span>::{
+        <span class="ident">ChannelId</span>, <span class="ident">ClientId</span>, <span class="ident">ConnectionId</span>, <span class="ident">PortChannelId</span>, <span class="ident">PortId</span>,
+    };
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
+    <span class="kw">use</span> <span class="ident">ibc_abci::mock::client_state</span>::{<span class="ident">MockClientState</span>, <span class="ident">MockConsensusState</span>};
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
+    <span class="kw">use</span> <span class="ident">ibc_abci::mock::header::MockHeader</span>;
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
+    <span class="kw">use</span> <span class="ident">ibc_abci::timestamp::Timestamp</span>;
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
+    <span class="kw">use</span> <span class="ident">ibc_abci::Height</span>;
     <span class="kw">use</span> <span class="ident">sha2::Digest</span>;
     <span class="kw">use</span> <span class="ident">storage</span>::{
         <span class="ident">ack_key</span>, <span class="ident">capability_key</span>, <span class="ident">channel_key</span>, <span class="ident">client_state_key</span>,
@@ -1780,12 +1906,32 @@
         <span class="ident">next_sequence_ack_key</span>, <span class="ident">next_sequence_recv_key</span>, <span class="ident">next_sequence_send_key</span>,
         <span class="ident">port_key</span>, <span class="ident">receipt_key</span>,
     };
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
     <span class="kw">use</span> <span class="ident">tendermint::account::Id</span> <span class="kw">as</span> <span class="ident">TmAccountId</span>;
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
     <span class="kw">use</span> <span class="ident">tendermint::block::header</span>::{<span class="ident">Header</span> <span class="kw">as</span> <span class="ident">TmHeader</span>, <span class="ident">Version</span> <span class="kw">as</span> <span class="ident">TmVersion</span>};
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
     <span class="kw">use</span> <span class="ident">tendermint::block::Height</span> <span class="kw">as</span> <span class="ident">TmHeight</span>;
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
     <span class="kw">use</span> <span class="ident">tendermint::chain::Id</span> <span class="kw">as</span> <span class="ident">TmChainId</span>;
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
     <span class="kw">use</span> <span class="ident">tendermint::hash</span>::{<span class="ident">AppHash</span>, <span class="ident">Hash</span> <span class="kw">as</span> <span class="ident">TmHash</span>};
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
     <span class="kw">use</span> <span class="ident">tendermint::time::Time</span> <span class="kw">as</span> <span class="ident">TmTime</span>;
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
+    <span class="kw">use</span> <span class="ident">tendermint_stable::account::Id</span> <span class="kw">as</span> <span class="ident">TmAccountId</span>;
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
+    <span class="kw">use</span> <span class="ident">tendermint_stable::block::header</span>::{
+        <span class="ident">Header</span> <span class="kw">as</span> <span class="ident">TmHeader</span>, <span class="ident">Version</span> <span class="kw">as</span> <span class="ident">TmVersion</span>,
+    };
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
+    <span class="kw">use</span> <span class="ident">tendermint_stable::block::Height</span> <span class="kw">as</span> <span class="ident">TmHeight</span>;
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
+    <span class="kw">use</span> <span class="ident">tendermint_stable::chain::Id</span> <span class="kw">as</span> <span class="ident">TmChainId</span>;
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
+    <span class="kw">use</span> <span class="ident">tendermint_stable::hash</span>::{<span class="ident">AppHash</span>, <span class="ident">Hash</span> <span class="kw">as</span> <span class="ident">TmHash</span>};
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
+    <span class="kw">use</span> <span class="ident">tendermint_stable::time::Time</span> <span class="kw">as</span> <span class="ident">TmTime</span>;
 
     <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
     <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::ledger::gas::VpGasMeter</span>;

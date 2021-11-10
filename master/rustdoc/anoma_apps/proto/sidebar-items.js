@@ -1,1 +1,0 @@
-initSidebarItems({"enum":[["RpcMessage",""]],"mod":[["services",""]],"struct":[["IntentMessage",""],["SubscribeTopicMessage",""]]});

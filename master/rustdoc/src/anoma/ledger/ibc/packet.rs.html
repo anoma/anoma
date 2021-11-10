@@ -673,23 +673,93 @@
 <span id="673">673</span>
 <span id="674">674</span>
 <span id="675">675</span>
+<span id="676">676</span>
+<span id="677">677</span>
+<span id="678">678</span>
+<span id="679">679</span>
+<span id="680">680</span>
+<span id="681">681</span>
+<span id="682">682</span>
+<span id="683">683</span>
+<span id="684">684</span>
+<span id="685">685</span>
+<span id="686">686</span>
+<span id="687">687</span>
+<span id="688">688</span>
+<span id="689">689</span>
+<span id="690">690</span>
+<span id="691">691</span>
+<span id="692">692</span>
+<span id="693">693</span>
+<span id="694">694</span>
+<span id="695">695</span>
+<span id="696">696</span>
+<span id="697">697</span>
+<span id="698">698</span>
+<span id="699">699</span>
+<span id="700">700</span>
+<span id="701">701</span>
+<span id="702">702</span>
+<span id="703">703</span>
+<span id="704">704</span>
+<span id="705">705</span>
+<span id="706">706</span>
+<span id="707">707</span>
+<span id="708">708</span>
+<span id="709">709</span>
+<span id="710">710</span>
 </pre><pre class="rust">
 <span class="doccomment">//! IBC validity predicate for packets</span>
 
 <span class="kw">use</span> <span class="ident">borsh::BorshDeserialize</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
 <span class="kw">use</span> <span class="ident">ibc::ics02_client::height::Height</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
 <span class="kw">use</span> <span class="ident">ibc::ics04_channel::channel</span>::{<span class="ident">ChannelEnd</span>, <span class="ident">Counterparty</span>, <span class="ident">Order</span>, <span class="ident">State</span>};
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
 <span class="kw">use</span> <span class="ident">ibc::ics04_channel::context::ChannelReader</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
 <span class="kw">use</span> <span class="ident">ibc::ics04_channel::error::Error</span> <span class="kw">as</span> <span class="ident">Ics04Error</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
 <span class="kw">use</span> <span class="ident">ibc::ics04_channel::handler::verify</span>::{
     <span class="ident">verify_channel_proofs</span>, <span class="ident">verify_next_sequence_recv</span>,
     <span class="ident">verify_packet_acknowledgement_proofs</span>, <span class="ident">verify_packet_receipt_absence</span>,
     <span class="ident">verify_packet_recv_proofs</span>,
 };
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
 <span class="kw">use</span> <span class="ident">ibc::ics04_channel::packet</span>::{<span class="ident">Packet</span>, <span class="ident">Sequence</span>};
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
 <span class="kw">use</span> <span class="ident">ibc::ics24_host::identifier</span>::{<span class="ident">ChannelId</span>, <span class="ident">ClientId</span>, <span class="ident">PortChannelId</span>, <span class="ident">PortId</span>};
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
 <span class="kw">use</span> <span class="ident">ibc::proofs::Proofs</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
 <span class="kw">use</span> <span class="ident">ibc::timestamp::Expiry</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
+<span class="kw">use</span> <span class="ident">ibc_abci::ics02_client::height::Height</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
+<span class="kw">use</span> <span class="ident">ibc_abci::ics04_channel::channel</span>::{
+    <span class="ident">ChannelEnd</span>, <span class="ident">Counterparty</span>, <span class="ident">Order</span>, <span class="ident">State</span>,
+};
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
+<span class="kw">use</span> <span class="ident">ibc_abci::ics04_channel::context::ChannelReader</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
+<span class="kw">use</span> <span class="ident">ibc_abci::ics04_channel::error::Error</span> <span class="kw">as</span> <span class="ident">Ics04Error</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
+<span class="kw">use</span> <span class="ident">ibc_abci::ics04_channel::handler::verify</span>::{
+    <span class="ident">verify_channel_proofs</span>, <span class="ident">verify_next_sequence_recv</span>,
+    <span class="ident">verify_packet_acknowledgement_proofs</span>, <span class="ident">verify_packet_receipt_absence</span>,
+    <span class="ident">verify_packet_recv_proofs</span>,
+};
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
+<span class="kw">use</span> <span class="ident">ibc_abci::ics04_channel::packet</span>::{<span class="ident">Packet</span>, <span class="ident">Sequence</span>};
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
+<span class="kw">use</span> <span class="ident">ibc_abci::ics24_host::identifier</span>::{
+    <span class="ident">ChannelId</span>, <span class="ident">ClientId</span>, <span class="ident">PortChannelId</span>, <span class="ident">PortId</span>,
+};
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
+<span class="kw">use</span> <span class="ident">ibc_abci::proofs::Proofs</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
+<span class="kw">use</span> <span class="ident">ibc_abci::timestamp::Expiry</span>;
 <span class="kw">use</span> <span class="ident">thiserror::Error</span>;
 
 <span class="kw">use</span> <span class="kw">super</span><span class="ident">::storage</span>::{<span class="ident">port_channel_sequence_id</span>, <span class="ident">Error</span> <span class="kw">as</span> <span class="ident">IbcStorageError</span>};

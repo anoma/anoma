@@ -328,13 +328,6 @@
 <span id="328">328</span>
 <span id="329">329</span>
 <span id="330">330</span>
-<span id="331">331</span>
-<span id="332">332</span>
-<span id="333">333</span>
-<span id="334">334</span>
-<span id="335">335</span>
-<span id="336">336</span>
-<span id="337">337</span>
 </pre><pre class="rust">
 <span class="doccomment">//! Gas accounting module to track the gas usage in a block for transactions and</span>
 <span class="doccomment">//! validity predicates triggered by transactions.</span>
@@ -470,25 +463,18 @@
     <span class="doccomment">/// consumed gas exceeds the transaction gas limit, but the state will still</span>
     <span class="doccomment">/// be updated.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">add</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">gas</span>: <span class="ident">u64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="kw">match</span> <span class="self">self</span>.<span class="ident">current_gas</span>.<span class="ident">checked_add</span>(<span class="ident">gas</span>).<span class="ident">ok_or</span>(<span class="ident">Error::GasOverflow</span>) {
-            <span class="prelude-val">Ok</span>(<span class="ident">gas</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="self">self</span>.<span class="ident">current_gas</span> <span class="op">=</span> <span class="ident">gas</span>;
-            }
-            <span class="prelude-val">Err</span>(<span class="ident">err</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">err</span>);
-            }
-        }
+        <span class="kw">let</span> <span class="ident">gas</span> <span class="op">=</span> <span class="self">self</span>
+            .<span class="ident">current_gas</span>
+            .<span class="ident">checked_add</span>(<span class="ident">gas</span>)
+            .<span class="ident">ok_or</span>(<span class="ident">Error::GasOverflow</span>)<span class="question-mark">?</span>;
 
-        <span class="kw">let</span> <span class="ident">current_total</span> <span class="op">=</span> <span class="kw">match</span> <span class="self">self</span>
+        <span class="self">self</span>.<span class="ident">current_gas</span> <span class="op">=</span> <span class="ident">gas</span>;
+
+        <span class="kw">let</span> <span class="ident">current_total</span> <span class="op">=</span> <span class="self">self</span>
             .<span class="ident">initial_gas</span>
             .<span class="ident">checked_add</span>(<span class="self">self</span>.<span class="ident">current_gas</span>)
-            .<span class="ident">ok_or</span>(<span class="ident">Error::GasOverflow</span>)
-        {
-            <span class="prelude-val">Ok</span>(<span class="ident">gas</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">gas</span>,
-            <span class="prelude-val">Err</span>(<span class="ident">err</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">err</span>);
-            }
-        };
+            .<span class="ident">ok_or</span>(<span class="ident">Error::GasOverflow</span>)<span class="question-mark">?</span>;
+
         <span class="kw">if</span> <span class="ident">current_total</span> <span class="op">&gt;</span> <span class="ident">TRANSACTION_GAS_LIMIT</span> {
             <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error::TransactionGasExceedededError</span>);
         }

@@ -313,11 +313,17 @@
 <span id="313">313</span>
 <span id="314">314</span>
 <span id="315">315</span>
+<span id="316">316</span>
+<span id="317">317</span>
+<span id="318">318</span>
+<span id="319">319</span>
+<span id="320">320</span>
 </pre><pre class="rust">
 <span class="doccomment">//! DB mock for testing</span>
 
 <span class="kw">use</span> <span class="ident">std::collections</span>::{<span class="ident">btree_map</span>, <span class="ident">BTreeMap</span>, <span class="ident">HashMap</span>};
 <span class="kw">use</span> <span class="ident">std::ops::Bound</span>::{<span class="ident">Excluded</span>, <span class="ident">Included</span>};
+<span class="kw">use</span> <span class="ident">std::path::Path</span>;
 
 <span class="kw">use</span> <span class="kw">super</span>::{<span class="ident">BlockState</span>, <span class="ident">DBIter</span>, <span class="ident">Error</span>, <span class="prelude-ty">Result</span>, <span class="ident">DB</span>};
 <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::ledger::storage::types</span>::{<span class="self">self</span>, <span class="ident">KVBytes</span>, <span class="ident">PrefixIterator</span>};
@@ -335,6 +341,10 @@
 }
 
 <span class="kw">impl</span> <span class="ident">DB</span> <span class="kw">for</span> <span class="ident">MockDB</span> {
+    <span class="kw">fn</span> <span class="ident">open</span>(<span class="ident">_db_path</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span><span class="ident">Path</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="self">Self</span><span class="ident">::default</span>()
+    }
+
     <span class="kw">fn</span> <span class="ident">flush</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="prelude-val">Ok</span>(())
     }

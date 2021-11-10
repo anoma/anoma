@@ -1,0 +1,1 @@
+initSidebarItems({"mod":[["wrapper_tx","Integration of Ferveo cryptographic primitives to enable encrypted txs inside of normal txs. Not wasm compatible"]]});
