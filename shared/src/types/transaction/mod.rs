@@ -5,6 +5,8 @@
 pub mod decrypted;
 mod encrypted;
 pub mod pos;
+/// transaction protocols made by validators
+pub mod protocol;
 /// wrapper txs with encrypted payloads
 pub mod wrapper;
 
@@ -132,9 +134,25 @@ pub struct InitValidator {
 pub mod tx_types {
     use std::convert::TryFrom;
 
+    use thiserror;
+
     use super::*;
     use crate::proto::Tx;
-    use crate::types::key::ed25519::{verify_tx_sig, SignedTxData};
+    use crate::types::key::ed25519::SignedTxData;
+    use crate::types::transaction::protocol::ProtocolTx;
+
+    /// Errors relating to decrypting a wrapper tx and its
+    /// encrypted payload from a Tx type
+    #[allow(missing_docs)]
+    #[derive(thiserror::Error, Debug, PartialEq)]
+    pub enum TxError {
+        #[error("{0}")]
+        Unsigned(String),
+        #[error("{0}")]
+        SigError(String),
+        #[error("Failed to deserialize Tx: {0}")]
+        Deserialization(String),
+    }
 
     /// Struct that classifies that kind of Tx
     /// based on the contents of its data.
@@ -146,6 +164,8 @@ pub mod tx_types {
         Wrapper(WrapperTx),
         /// An attempted decryption of a wrapper tx
         Decrypted(DecryptedTx),
+        /// Txs issued by validators as part of internal protocols
+        Protocol(ProtocolTx),
     }
 
     impl From<TxType> for Tx {
@@ -192,7 +212,7 @@ pub mod tx_types {
     /// data if valid and return it wrapped in a enum variant
     /// indicating it is a wrapper. Otherwise, an error is
     /// returned indicating the signature was not valid
-    pub fn process_tx(tx: Tx) -> Result<TxType, WrapperTxErr> {
+    pub fn process_tx(tx: Tx) -> Result<TxType, TxError> {
         if let Some(Ok(SignedTxData {
             data: Some(data),
             ref sig,
@@ -206,14 +226,17 @@ pub mod tx_types {
                 data: Some(data),
                 timestamp: tx.timestamp,
             })
-            .map_err(|err| WrapperTxErr::Deserialization(err.to_string()))?
+            .map_err(|err| TxError::Deserialization(err.to_string()))?
             {
-                // verify signature and extract signed data
-                TxType::Wrapper(wrapper) => {
-                    verify_tx_sig(&wrapper.pk, &tx, sig).map_err(|err| {
-                        WrapperTxErr::SigError(err.to_string())
-                    })?;
+                 // verify signature and extract signed data
+                 TxType::Wrapper(wrapper) => {
+                    wrapper.validate_sig(&tx, sig)?;
                     Ok(TxType::Wrapper(wrapper))
+                }
+                // verify signature and extract signed data
+                 TxType::Protocol(protocol) => {
+                    protocol.validate_sig(&tx, sig)?;
+                    Ok(TxType::Protocol(protocol))
                 }
                 // we extract the signed data, but don't check the signature
                 decrypted @ TxType::Decrypted(_) => Ok(decrypted),
@@ -222,10 +245,11 @@ pub mod tx_types {
             }
         } else {
             match TxType::try_from(tx)
-                .map_err(|err| WrapperTxErr::Deserialization(err.to_string()))?
+                .map_err(|err| TxError::Deserialization(err.to_string()))?
             {
                 // we only accept signed wrappers
-                TxType::Wrapper(_) => Err(WrapperTxErr::Unsigned),
+                TxType::Wrapper(_) => Err(TxError::Unsigned("Wrapper transactions must be signed".into())),
+                TxType::Protocol(_) => Err(TxError::Unsigned("Protocol transactions must be signed".into())),
                 // return as is
                 val => Ok(val),
             }

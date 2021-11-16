@@ -60,8 +60,7 @@ pub mod encrypted_tx {
             BorshSerialize::serialize(
                 &(nonce_buffer, ciphertext, tag_buffer),
                 writer,
-            )?;
-            Ok(())
+            )
         }
     }
 

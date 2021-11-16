@@ -14,11 +14,11 @@ pub mod wrapper_tx {
 
     use crate::proto::Tx;
     use crate::types::address::Address;
-    use crate::types::key::ed25519::{Keypair, PublicKey};
+    use crate::types::key::ed25519::{Keypair, PublicKey, Signature, verify_tx_sig};
     use crate::types::storage::Epoch;
     use crate::types::token::Amount;
     use crate::types::transaction::encrypted::EncryptedTx;
-    use crate::types::transaction::{hash_tx, Hash, TxType};
+    use crate::types::transaction::{hash_tx, Hash, TxType, TxError};
 
     /// TODO: Determine a sane number for this
     const GAS_LIMIT_RESOLUTION: u64 = 1_000_000;
@@ -36,12 +36,6 @@ pub mod wrapper_tx {
         InvalidTx,
         #[error("The given Tx data did not contain a valid WrapperTx")]
         InvalidWrapperTx,
-        #[error("Expected signed WrapperTx data")]
-        Unsigned,
-        #[error("{0}")]
-        SigError(String),
-        #[error("Unable to deserialize the Tx data: {0}")]
-        Deserialization(String),
         #[error(
             "Attempted to sign WrapperTx with keypair whose public key \
              differs from that in the WrapperTx"
@@ -253,6 +247,13 @@ pub mod wrapper_tx {
                 ),
             )
             .sign(keypair))
+        }
+
+        /// Validate the signature of a wrapper tx
+        pub fn validate_sig(&self, tx: &Tx, sig: &Signature) -> Result<(), TxError> {
+            verify_tx_sig(&self.pk, &tx, sig).map_err(|err| {
+                TxError::SigError(format!("WrapperTx signature verification failed: {}", err))
+            })
         }
     }
 

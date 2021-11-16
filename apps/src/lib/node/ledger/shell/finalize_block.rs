@@ -125,6 +125,9 @@ where
                     }
                     Event::new_tx_event(&processed_tx, height.0)
                 }
+                TxType::Protocol(protocol_tx) => {
+                    todo!()
+                }
                 TxType::Raw(_) => unreachable!(),
             };
 
@@ -189,6 +192,7 @@ where
 
         if new_epoch {
             self.update_epoch(&mut response);
+            self.update_dkg();
         }
 
         response.gas_used = self
@@ -289,6 +293,26 @@ where
             evidence: Some(evidence_params),
             ..response.consensus_param_updates.take().unwrap_or_default()
         });
+    }
+
+    fn update_dkg(&mut self) {
+        use tendermint::validator::Set;
+        let (current_epoch, _) = self.storage.get_current_epoch();
+        // TODO: The total weight should likely be a config, not hardcoded.
+        let params = DkgParams {
+            tau: current_epoch.0,
+            security_threshold: 2^12 / 3,
+            total_weight: 2^12,
+        };
+        // get the new validator for the next epoch
+        let validators = self.storage.read_validator_set();
+        let validators = validators
+            .get(current_epoch + 1)
+            .expect("Validators for the next epoch should be known");
+        self.dkg =  DkgStateMachine::new(
+
+        )
+
     }
 }
 

@@ -36,6 +36,7 @@ use anoma::types::transaction::{
 };
 use anoma::types::{address, key, token};
 use borsh::{BorshDeserialize, BorshSerialize};
+use ferveo::dkg::{DkgState, Params as DkgParams, PubliclyVerifiableAnnouncement, PubliclyVerifiableDkg};
 use num_derive::{FromPrimitive, ToPrimitive};
 use num_traits::{FromPrimitive, ToPrimitive};
 #[cfg(not(feature = "ABCI"))]
@@ -61,6 +62,8 @@ use crate::node::ledger::events::Event;
 use crate::node::ledger::shims::abcipp_shim_types::shim;
 use crate::node::ledger::shims::abcipp_shim_types::shim::response::TxResult;
 use crate::node::ledger::{protocol, storage, tendermint_node};
+
+type DkgStateMachine = PubliclyVerifiableDkg<anoma::types::transaction::EllipticCurve>;
 
 #[derive(Error, Debug)]
 pub enum Error {
@@ -150,6 +153,8 @@ pub struct Shell<
     wasm_dir: PathBuf,
     /// Wrapper txs to be decrypted in the next block proposal
     tx_queue: TxQueue,
+    /// State machine for generating distributed public keys
+    dkg: DkgStateMachine,
 }
 
 #[derive(Default, Debug, Clone, BorshDeserialize, BorshSerialize)]
