@@ -416,6 +416,14 @@
 <span id="416">416</span>
 <span id="417">417</span>
 <span id="418">418</span>
+<span id="419">419</span>
+<span id="420">420</span>
+<span id="421">421</span>
+<span id="422">422</span>
+<span id="423">423</span>
+<span id="424">424</span>
+<span id="425">425</span>
+<span id="426">426</span>
 </pre><pre class="rust">
 <span class="doccomment">//! Types that are used in transactions.</span>
 
@@ -557,7 +565,7 @@
 
     <span class="doccomment">/// Struct that classifies that kind of Tx</span>
     <span class="doccomment">/// based on the contents of its data.</span>
-    <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
+    <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">BorshSerialize</span>, <span class="ident">BorshDeserialize</span>)]</span>
     <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">TxType</span> {
         <span class="doccomment">/// An ordinary tx</span>
         <span class="ident">Raw</span>(<span class="ident">Tx</span>),
@@ -569,44 +577,25 @@
 
     <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">TxType</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Tx</span> {
         <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">ty</span>: <span class="ident">TxType</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
-            <span class="kw">match</span> <span class="ident">ty</span> {
-                <span class="ident">TxType::Raw</span>(<span class="ident">tx</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">tx</span>,
-                <span class="ident">TxType::Wrapper</span>(<span class="ident">tx</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Tx::new</span>(<span class="macro">vec!</span>[], <span class="ident">tx</span>.<span class="ident">try_to_vec</span>().<span class="ident">ok</span>()),
-                <span class="ident">TxType::Decrypted</span>(<span class="ident">tx</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Tx::new</span>(<span class="macro">vec!</span>[], <span class="ident">tx</span>.<span class="ident">try_to_vec</span>().<span class="ident">ok</span>()),
-            }
+            <span class="ident">Tx::new</span>(<span class="macro">vec!</span>[], <span class="prelude-val">Some</span>(<span class="ident">ty</span>.<span class="ident">try_to_vec</span>().<span class="ident">unwrap</span>()))
         }
     }
 
-    <span class="doccomment">/// Used to determine the type of a Tx</span>
-    <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">Tx</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">TxType</span> {
-        <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">tx</span>: <span class="ident">Tx</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="doccomment">/// We deserialize the Tx data; it should be a TxType which</span>
+    <span class="doccomment">/// tells us how to handle it. Otherwise, we return an error.</span>
+    <span class="doccomment">/// The exception is when the Tx data field is empty. We</span>
+    <span class="doccomment">/// allow this and type it as a Raw TxType.</span>
+    <span class="kw">impl</span> <span class="ident">TryFrom</span><span class="op">&lt;</span><span class="ident">Tx</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">TxType</span> {
+        <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">std::io::Error</span>;
+
+        <span class="kw">fn</span> <span class="ident">try_from</span>(<span class="ident">tx</span>: <span class="ident">Tx</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">std::io::Result</span><span class="op">&lt;</span><span class="ident">TxType</span><span class="op">&gt;</span> {
             <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="kw-2">ref</span> <span class="ident">data</span>) <span class="op">=</span> <span class="ident">tx</span>.<span class="ident">data</span> {
-                <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Ok</span>(<span class="ident">wrapper</span>) <span class="op">=</span>
-                    <span class="op">&lt;</span><span class="ident">WrapperTx</span> <span class="kw">as</span> <span class="ident">BorshDeserialize</span><span class="op">&gt;</span><span class="ident">::deserialize</span>(
-                        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">data</span>.<span class="ident">as_ref</span>(),
-                    )
-                {
-                    <span class="ident">TxType::Wrapper</span>(<span class="ident">wrapper</span>)
-                } <span class="kw">else</span> <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Ok</span>(<span class="ident">decrypted</span>) <span class="op">=</span>
-                    <span class="op">&lt;</span><span class="ident">DecryptedTx</span> <span class="kw">as</span> <span class="ident">BorshDeserialize</span><span class="op">&gt;</span><span class="ident">::deserialize</span>(
-                        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">data</span>.<span class="ident">as_ref</span>(),
-                    )
-                {
-                    <span class="ident">TxType::Decrypted</span>(<span class="ident">decrypted</span>)
-                } <span class="kw">else</span> {
-                    <span class="ident">TxType::Raw</span>(<span class="ident">tx</span>)
-                }
+                <span class="ident">BorshDeserialize::deserialize</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">data</span>.<span class="ident">as_ref</span>())
             } <span class="kw">else</span> {
-                <span class="ident">TxType::Raw</span>(<span class="ident">tx</span>)
+                <span class="comment">// We allow Txs with empty data fields, which we</span>
+                <span class="comment">// will assume to be of Raw TxType</span>
+                <span class="prelude-val">Ok</span>(<span class="ident">TxType::Raw</span>(<span class="ident">tx</span>))
             }
-        }
-    }
-
-    <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">TryFrom</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> [<span class="ident">u8</span>]<span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">TxType</span> {
-        <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="op">&lt;</span><span class="ident">Tx</span> <span class="kw">as</span> <span class="ident">TryFrom</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> [<span class="ident">u8</span>]<span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::Error</span>;
-
-        <span class="kw">fn</span> <span class="ident">try_from</span>(<span class="ident">tx_bytes</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="self">Self</span><span class="ident">::Error</span><span class="op">&gt;</span> {
-            <span class="prelude-val">Ok</span>(<span class="ident">TxType::from</span>(<span class="ident">Tx::try_from</span>(<span class="ident">tx_bytes</span>)<span class="question-mark">?</span>))
         }
     }
 
@@ -639,11 +628,13 @@
             .<span class="ident">as_ref</span>()
             .<span class="ident">map</span>(<span class="op">|</span><span class="ident">data</span><span class="op">|</span> <span class="ident">SignedTxData::try_from_slice</span>(<span class="kw-2">&amp;</span><span class="ident">data</span>[..]))
         {
-            <span class="kw">match</span> <span class="ident">TxType::from</span>(<span class="ident">Tx</span> {
+            <span class="kw">match</span> <span class="ident">TxType::try_from</span>(<span class="ident">Tx</span> {
                 <span class="ident">code</span>: <span class="macro">vec!</span>[],
                 <span class="ident">data</span>: <span class="prelude-val">Some</span>(<span class="ident">data</span>),
                 <span class="ident">timestamp</span>: <span class="ident">tx</span>.<span class="ident">timestamp</span>,
-            }) {
+            })
+            .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">err</span><span class="op">|</span> <span class="ident">WrapperTxErr::Deserialization</span>(<span class="ident">err</span>.<span class="ident">to_string</span>()))<span class="question-mark">?</span>
+            {
                 <span class="comment">// verify signature and extract signed data</span>
                 <span class="ident">TxType::Wrapper</span>(<span class="ident">wrapper</span>) <span class="op">=</span><span class="op">&gt;</span> {
                     <span class="ident">verify_tx_sig</span>(<span class="kw-2">&amp;</span><span class="ident">wrapper</span>.<span class="ident">pk</span>, <span class="kw-2">&amp;</span><span class="ident">tx</span>, <span class="ident">sig</span>).<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">err</span><span class="op">|</span> {
@@ -654,10 +645,12 @@
                 <span class="comment">// we extract the signed data, but don&#39;t check the signature</span>
                 <span class="ident">decrypted</span> @ <span class="ident">TxType::Decrypted</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="ident">decrypted</span>),
                 <span class="comment">// return as is</span>
-                <span class="ident">TxType::Raw</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="ident">TxType::Raw</span>(<span class="ident">tx</span>)),
+                <span class="ident">raw</span> @ <span class="ident">TxType::Raw</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="ident">raw</span>),
             }
         } <span class="kw">else</span> {
-            <span class="kw">match</span> <span class="ident">TxType::from</span>(<span class="ident">tx</span>) {
+            <span class="kw">match</span> <span class="ident">TxType::try_from</span>(<span class="ident">tx</span>)
+                .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">err</span><span class="op">|</span> <span class="ident">WrapperTxErr::Deserialization</span>(<span class="ident">err</span>.<span class="ident">to_string</span>()))<span class="question-mark">?</span>
+            {
                 <span class="comment">// we only accept signed wrappers</span>
                 <span class="ident">TxType::Wrapper</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">WrapperTxErr::Unsigned</span>),
                 <span class="comment">// return as is</span>
@@ -693,33 +686,50 @@
             }
         }
 
-        <span class="doccomment">/// Test that process_tx correctly identifies a raw tx with some</span>
-        <span class="doccomment">/// data and returns an identical copy</span>
+        <span class="doccomment">/// Test that process_tx correctly identifies tx containing</span>
+        <span class="doccomment">/// a raw tx with some data and returns an identical copy</span>
+        <span class="doccomment">/// of the inner data</span>
         <span class="attribute">#[<span class="ident">test</span>]</span>
         <span class="kw">fn</span> <span class="ident">test_process_tx_raw_tx_some_data</span>() {
-            <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx::new</span>(
-                <span class="string">&quot;wasm code&quot;</span>.<span class="ident">as_bytes</span>().<span class="ident">to_owned</span>(),
+            <span class="kw">let</span> <span class="ident">inner</span> <span class="op">=</span> <span class="ident">Tx::new</span>(
+                <span class="string">&quot;code&quot;</span>.<span class="ident">as_bytes</span>().<span class="ident">to_owned</span>(),
                 <span class="prelude-val">Some</span>(<span class="string">&quot;transaction data&quot;</span>.<span class="ident">as_bytes</span>().<span class="ident">to_owned</span>()),
             );
+            <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx::new</span>(
+                <span class="string">&quot;wasm code&quot;</span>.<span class="ident">as_bytes</span>().<span class="ident">to_owned</span>(),
+                <span class="prelude-val">Some</span>(
+                    <span class="ident">TxType::Raw</span>(<span class="ident">inner</span>.<span class="ident">clone</span>())
+                        .<span class="ident">try_to_vec</span>()
+                        .<span class="ident">expect</span>(<span class="string">&quot;Test failed&quot;</span>),
+                ),
+            );
 
-            <span class="kw">match</span> <span class="ident">process_tx</span>(<span class="ident">tx</span>.<span class="ident">clone</span>()).<span class="ident">expect</span>(<span class="string">&quot;Test failed&quot;</span>) {
-                <span class="ident">TxType::Raw</span>(<span class="ident">raw</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="macro">assert_eq!</span>(<span class="ident">tx</span>, <span class="ident">raw</span>),
+            <span class="kw">match</span> <span class="ident">process_tx</span>(<span class="ident">tx</span>).<span class="ident">expect</span>(<span class="string">&quot;Test failed&quot;</span>) {
+                <span class="ident">TxType::Raw</span>(<span class="ident">raw</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="macro">assert_eq!</span>(<span class="ident">inner</span>, <span class="ident">raw</span>),
                 <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">panic!</span>(<span class="string">&quot;Test failed: Expected Raw Tx&quot;</span>),
             }
         }
 
         <span class="doccomment">/// Test that process_tx correctly identifies a raw tx with some</span>
-        <span class="doccomment">/// signed data and returns an identical copy</span>
+        <span class="doccomment">/// signed data and returns an identical copy of the inner data</span>
         <span class="attribute">#[<span class="ident">test</span>]</span>
         <span class="kw">fn</span> <span class="ident">test_process_tx_raw_tx_some_signed_data</span>() {
+            <span class="kw">let</span> <span class="ident">inner</span> <span class="op">=</span> <span class="ident">Tx::new</span>(
+                <span class="string">&quot;code&quot;</span>.<span class="ident">as_bytes</span>().<span class="ident">to_owned</span>(),
+                <span class="prelude-val">Some</span>(<span class="string">&quot;transaction data&quot;</span>.<span class="ident">as_bytes</span>().<span class="ident">to_owned</span>()),
+            );
             <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx::new</span>(
                 <span class="string">&quot;wasm code&quot;</span>.<span class="ident">as_bytes</span>().<span class="ident">to_owned</span>(),
-                <span class="prelude-val">Some</span>(<span class="string">&quot;transaction data&quot;</span>.<span class="ident">as_bytes</span>().<span class="ident">to_owned</span>()),
+                <span class="prelude-val">Some</span>(
+                    <span class="ident">TxType::Raw</span>(<span class="ident">inner</span>.<span class="ident">clone</span>())
+                        .<span class="ident">try_to_vec</span>()
+                        .<span class="ident">expect</span>(<span class="string">&quot;Test failed&quot;</span>),
+                ),
             )
             .<span class="ident">sign</span>(<span class="kw-2">&amp;</span><span class="ident">gen_keypair</span>());
 
-            <span class="kw">match</span> <span class="ident">process_tx</span>(<span class="ident">tx</span>.<span class="ident">clone</span>()).<span class="ident">expect</span>(<span class="string">&quot;Test failed&quot;</span>) {
-                <span class="ident">TxType::Raw</span>(<span class="ident">raw</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="macro">assert_eq!</span>(<span class="ident">tx</span>, <span class="ident">raw</span>),
+            <span class="kw">match</span> <span class="ident">process_tx</span>(<span class="ident">tx</span>).<span class="ident">expect</span>(<span class="string">&quot;Test failed&quot;</span>) {
+                <span class="ident">TxType::Raw</span>(<span class="ident">raw</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="macro">assert_eq!</span>(<span class="ident">inner</span>, <span class="ident">raw</span>),
                 <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">panic!</span>(<span class="string">&quot;Test failed: Expected Raw Tx&quot;</span>),
             }
         }
@@ -781,7 +791,9 @@
 
             <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx::new</span>(
                 <span class="macro">vec!</span>[],
-                <span class="prelude-val">Some</span>(<span class="ident">wrapper</span>.<span class="ident">try_to_vec</span>().<span class="ident">expect</span>(<span class="string">&quot;Test failed&quot;</span>)),
+                <span class="prelude-val">Some</span>(
+                    <span class="ident">TxType::Wrapper</span>(<span class="ident">wrapper</span>).<span class="ident">try_to_vec</span>().<span class="ident">expect</span>(<span class="string">&quot;Test failed&quot;</span>),
+                ),
             );
             <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">process_tx</span>(<span class="ident">tx</span>).<span class="ident">expect_err</span>(<span class="string">&quot;Test failed&quot;</span>);
             <span class="macro">assert_eq!</span>(<span class="ident">result</span>, <span class="ident">WrapperTxErr::Unsigned</span>);
@@ -818,7 +830,11 @@
         <span class="kw">let</span> <span class="ident">decrypted</span> <span class="op">=</span> <span class="ident">DecryptedTx::Decrypted</span>(<span class="ident">payload</span>.<span class="ident">clone</span>());
         <span class="comment">// Invalid signed data</span>
         <span class="kw">let</span> <span class="ident">signed</span> <span class="op">=</span> <span class="ident">SignedTxData</span> {
-            <span class="ident">data</span>: <span class="prelude-val">Some</span>(<span class="ident">decrypted</span>.<span class="ident">try_to_vec</span>().<span class="ident">expect</span>(<span class="string">&quot;Test failed&quot;</span>)),
+            <span class="ident">data</span>: <span class="prelude-val">Some</span>(
+                <span class="ident">TxType::Decrypted</span>(<span class="ident">decrypted</span>)
+                    .<span class="ident">try_to_vec</span>()
+                    .<span class="ident">expect</span>(<span class="string">&quot;Test failed&quot;</span>),
+            ),
             <span class="ident">sig</span>: <span class="ident">ed25519_dalek::Signature::from</span>([<span class="number">0u8</span>; <span class="number">64</span>]).<span class="ident">into</span>(),
         };
         <span class="comment">// create the tx with signed decrypted data</span>
