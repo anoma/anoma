@@ -112,7 +112,8 @@ impl Service<Req> for AbcippShim {
                     self.service.reset_queue();
                 }
                 let begin_block_request =
-                    self.begin_block_request.take().unwrap();
+                    self.begin_block_request.take()
+                        .expect("Cannot process end block request without begin block request");
                 self.service
                     .call(Request::FinalizeBlock(request::FinalizeBlock {
                         hash: begin_block_request.hash,

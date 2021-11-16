@@ -17,6 +17,7 @@ use tendermint_proto_abci::crypto::{
 use tendermint_stable::block::Header;
 
 use super::*;
+use crate::node::ledger::events::EventType;
 
 impl<D, H> Shell<D, H>
 where
@@ -52,55 +53,75 @@ where
         let (height, new_epoch) =
             self.update_state(req.header, req.hash, req.byzantine_validators);
 
-        for tx in &req.txs {
+        for processed_tx in &req.txs {
+            let tx = if let Ok(tx) = Tx::try_from(processed_tx.tx.as_ref()) {
+                tx
+            } else {
+                tracing::error!(
+                    "Internal logic error: FinalizeBlock received a tx that could not \
+                     be deserialized to a Tx type"
+                    );
+                continue
+            };
+            let tx_length = processed_tx.tx.len();
             if ErrorCodes::from_u32(tx.result.code).unwrap()
                 == ErrorCodes::InvalidSig
             {
-                let wrapper = if let Ok(TxType::Wrapper(wrapper)) =
-                    TxType::try_from(Tx::try_from(tx.tx.as_ref()).unwrap())
+
+                if let Ok(TxType::Wrapper(wrapper)) = TxType::try_from(inner_tx)
                 {
-                    wrapper
+                    let mut tx_result =
+                        Event::new_tx_event(&TxType::Wrapper(wrapper), height.0);
+                    tx_result["code"] = processed_tx.result.code.to_string();
+                    tx_result["info"] = format!("Tx rejected: {}", &processed_tx.result.info);
+                    tx_result["gas_used"] = "0".into();
+                    response.events.push(tx_result.into());
+                    continue;
                 } else {
-                    unreachable!()
-                };
-                let mut tx_result =
-                    Event::new_tx_event(&TxType::Wrapper(wrapper), height.0);
-                tx_result["code"] = tx.result.code.to_string();
-                tx_result["info"] = format!("Tx rejected: {}", &tx.result.info);
-                tx_result["gas_used"] = "0".into();
-                response.events.push(tx_result.into());
-                continue;
+                    tracing::error!(
+                        "Internal logic error: FinalizeBlock received a tx with an invalid \
+                        signature error code that could not be deserialized to a WrapperTx type"
+                    );
+                    continue
+                }
             }
-            let tx_length = tx.tx.len();
-            let processed_tx =
-                process_tx(Tx::try_from(&tx.tx as &[u8]).unwrap()).unwrap();
+
+            let tx_type = if let Ok(tx_type) = process_tx(tx) {
+                tx_type
+            } else {
+                tracing::error!(
+                    "Internal logic error: FinalizeBlock received tx that could not be \
+                    deserialized to a valid TxType"
+                );
+                continue
+            };
             // If [`process_proposal`] rejected a Tx, emit an event here and
             // move on to next tx
             // If we are rejecting all decrypted txs because they were submitted
             // in an incorrect order, we do that later.
-            if ErrorCodes::from_u32(tx.result.code).unwrap() != ErrorCodes::Ok
+            if ErrorCodes::from_u32(processed_tx.result.code).unwrap() != ErrorCodes::Ok
                 && !req.reject_all_decrypted
             {
                 let mut tx_result =
-                    Event::new_tx_event(&processed_tx, height.0);
-                tx_result["code"] = tx.result.code.to_string();
-                tx_result["info"] = format!("Tx rejected: {}", &tx.result.info);
+                    Event::new_tx_event(&tx_type, height.0);
+                tx_result["code"] = processed_tx.result.code.to_string();
+                tx_result["info"] = format!("Tx rejected: {}", &processed_tx.result.info);
                 tx_result["gas_used"] = "0".into();
                 response.events.push(tx_result.into());
                 // if the rejected tx was decrypted, remove it
                 // from the queue of txs to be processed
-                if let TxType::Decrypted(_) = &processed_tx {
+                if let TxType::Decrypted(_) = &tx_type {
                     self.tx_queue.pop();
                 }
                 continue;
             }
 
-            let mut tx_result = match &processed_tx {
+            let mut tx_result = match &tx_type {
                 TxType::Wrapper(_wrapper) => {
                     if !cfg!(feature = "ABCI") {
                         self.tx_queue.push(_wrapper.clone());
                     }
-                    Event::new_tx_event(&processed_tx, height.0)
+                    Event::new_tx_event(&tx_type, height.0)
                 }
                 TxType::Decrypted(_) => {
                     // If [`process_proposal`] detected that decrypted txs were
@@ -109,7 +130,7 @@ where
                     // be accepted.
                     if req.reject_all_decrypted {
                         let mut tx_result =
-                            Event::new_tx_event(&processed_tx, height.0);
+                            Event::new_tx_event(&tx_type, height.0);
                         tx_result["code"] = ErrorCodes::InvalidOrder.into();
                         tx_result["info"] = "All decrypted txs rejected as \
                                              they were not submitted in \
@@ -123,16 +144,21 @@ where
                     if !cfg!(feature = "ABCI") {
                         self.tx_queue.pop();
                     }
-                    Event::new_tx_event(&processed_tx, height.0)
+                    Event::new_tx_event(&tx_type, height.0)
                 }
                 TxType::Protocol(protocol_tx) => {
                     todo!()
                 }
-                TxType::Raw(_) => unreachable!(),
+                TxType::Raw(_) => {
+                    tracing::error!(
+                        "Internal logic error: FinalizeBlock received a TxType::Raw transaction"
+                    );
+                    continue
+                },
             };
 
             match protocol::apply_tx(
-                processed_tx,
+                tx_type,
                 tx_length,
                 &mut self.gas_meter,
                 &mut self.write_log,

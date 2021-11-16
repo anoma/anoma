@@ -146,11 +146,14 @@ where
         ) {
             Ok(TxType::Wrapper(_)) => {}
             Ok(_) => {
-                return shim::response::TxResult {
+                let resp: shim::response::ProcessProposal = shim::response::TxResult {
                     code: ErrorCodes::InvalidSig.into(),
                     info: "The submitted transaction was not encrypted".into(),
                 }
                 .into();
+                // this ensures that emitted events are of the correct type
+                resp.tx = req.tx;
+                return resp;
             }
             Err(_) => {
                 // This will be caught later
