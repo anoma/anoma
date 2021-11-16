@@ -37,11 +37,12 @@ mod prepare_block {
                 .block_data
                 .into_iter()
                 .take(number_of_new_txs)
-                .filter(|tx| {
-                    matches!(
-                        process_tx(Tx::try_from(tx.as_slice()).unwrap()),
-                        Ok(TxType::Wrapper(_))
-                    )
+                .filter(|tx_bytes| {
+                    if let Ok(tx) = Tx::try_from(tx_bytes.as_slice()) {
+                        matches!(process_tx(tx), Ok(TxType::Wrapper(_)))
+                    } else {
+                        false
+                    }
                 })
                 .collect();
 

@@ -17,7 +17,6 @@ use tendermint_proto_abci::crypto::{
 use tendermint_stable::block::Header;
 
 use super::*;
-use crate::node::ledger::events::EventType;
 
 impl<D, H> Shell<D, H>
 where
@@ -58,31 +57,33 @@ where
                 tx
             } else {
                 tracing::error!(
-                    "Internal logic error: FinalizeBlock received a tx that could not \
-                     be deserialized to a Tx type"
-                    );
-                continue
+                    "Internal logic error: FinalizeBlock received a tx that \
+                     could not be deserialized to a Tx type"
+                );
+                continue;
             };
             let tx_length = processed_tx.tx.len();
-            if ErrorCodes::from_u32(tx.result.code).unwrap()
+            if ErrorCodes::from_u32(processed_tx.result.code).unwrap()
                 == ErrorCodes::InvalidSig
             {
-
-                if let Ok(TxType::Wrapper(wrapper)) = TxType::try_from(inner_tx)
-                {
-                    let mut tx_result =
-                        Event::new_tx_event(&TxType::Wrapper(wrapper), height.0);
+                if let Ok(TxType::Wrapper(wrapper)) = TxType::try_from(tx) {
+                    let mut tx_result = Event::new_tx_event(
+                        &TxType::Wrapper(wrapper),
+                        height.0,
+                    );
                     tx_result["code"] = processed_tx.result.code.to_string();
-                    tx_result["info"] = format!("Tx rejected: {}", &processed_tx.result.info);
+                    tx_result["info"] =
+                        format!("Tx rejected: {}", &processed_tx.result.info);
                     tx_result["gas_used"] = "0".into();
                     response.events.push(tx_result.into());
                     continue;
                 } else {
                     tracing::error!(
-                        "Internal logic error: FinalizeBlock received a tx with an invalid \
-                        signature error code that could not be deserialized to a WrapperTx type"
+                        "Internal logic error: FinalizeBlock received a tx \
+                         with an invalid signature error code that could not \
+                         be deserialized to a WrapperTx type"
                     );
-                    continue
+                    continue;
                 }
             }
 
@@ -90,22 +91,23 @@ where
                 tx_type
             } else {
                 tracing::error!(
-                    "Internal logic error: FinalizeBlock received tx that could not be \
-                    deserialized to a valid TxType"
+                    "Internal logic error: FinalizeBlock received tx that \
+                     could not be deserialized to a valid TxType"
                 );
-                continue
+                continue;
             };
             // If [`process_proposal`] rejected a Tx, emit an event here and
             // move on to next tx
             // If we are rejecting all decrypted txs because they were submitted
             // in an incorrect order, we do that later.
-            if ErrorCodes::from_u32(processed_tx.result.code).unwrap() != ErrorCodes::Ok
+            if ErrorCodes::from_u32(processed_tx.result.code).unwrap()
+                != ErrorCodes::Ok
                 && !req.reject_all_decrypted
             {
-                let mut tx_result =
-                    Event::new_tx_event(&tx_type, height.0);
+                let mut tx_result = Event::new_tx_event(&tx_type, height.0);
                 tx_result["code"] = processed_tx.result.code.to_string();
-                tx_result["info"] = format!("Tx rejected: {}", &processed_tx.result.info);
+                tx_result["info"] =
+                    format!("Tx rejected: {}", &processed_tx.result.info);
                 tx_result["gas_used"] = "0".into();
                 response.events.push(tx_result.into());
                 // if the rejected tx was decrypted, remove it
@@ -145,6 +147,13 @@ where
                         self.tx_queue.pop();
                     }
                     Event::new_tx_event(&tx_type, height.0)
+                }
+                TxType::Raw(_) => {
+                    tracing::error!(
+                        "Internal logic error: FinalizeBlock received a \
+                         TxType::Raw transaction"
+                    );
+                    continue;
                 }
                 TxType::Protocol(protocol_tx) => {
                     todo!()

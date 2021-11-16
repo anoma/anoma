@@ -1,5 +1,33 @@
 # Base ledger prototype
 
+## Version 3
+
+tracking issue <https://github.com/anoma/anoma/issues/125>
+
+
+### Goals
+
+- various shell and protocol fixes, improvements and additions
+- add more crypto support
+- WASM improvements
+- implement new validity predicates
+- storage improvements
+- gas & fees
+- fixes for issues found in the Feigenbaum testnet
+- IBC integration
+- Ferveo/ABCI++ integration
+- PoS improvements and new features
+  - testing (unit + integration + e2e)
+  - storage values refactoring
+  - use checked arithmetics
+  - validator VP
+  - staking rewards
+  - staking reward VP
+  - re-delegation
+  - validator
+    - deactivation/reactivation
+    - change consensus key
+
 ## Version 2
 
 tracking issue <https://github.com/anoma/anoma/issues/62>

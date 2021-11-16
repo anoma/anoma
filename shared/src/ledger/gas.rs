@@ -132,25 +132,18 @@ impl VpGasMeter {
     /// consumed gas exceeds the transaction gas limit, but the state will still
     /// be updated.
     pub fn add(&mut self, gas: u64) -> Result<()> {
-        match self.current_gas.checked_add(gas).ok_or(Error::GasOverflow) {
-            Ok(gas) => {
-                self.current_gas = gas;
-            }
-            Err(err) => {
-                return Err(err);
-            }
-        }
+        let gas = self
+            .current_gas
+            .checked_add(gas)
+            .ok_or(Error::GasOverflow)?;
 
-        let current_total = match self
+        self.current_gas = gas;
+
+        let current_total = self
             .initial_gas
             .checked_add(self.current_gas)
-            .ok_or(Error::GasOverflow)
-        {
-            Ok(gas) => gas,
-            Err(err) => {
-                return Err(err);
-            }
-        };
+            .ok_or(Error::GasOverflow)?;
+
         if current_total > TRANSACTION_GAS_LIMIT {
             return Err(Error::TransactionGasExceedededError);
         }
