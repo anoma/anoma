@@ -64,6 +64,8 @@ pub enum Error {
     GasOverflow,
     #[error("{0}")]
     Tendermint(tendermint_node::Error),
+    #[error("Server error: {0}")]
+    TowerServer(String),
 }
 
 pub type Result<T> = std::result::Result<T, Error>;
