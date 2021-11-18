@@ -1,1 +1,0 @@
-initSidebarItems({"mod":[["testing","Helper module for VM testing"]],"trait":[["VmMemory","Abstract representation of virtual machine’s memory."]]});

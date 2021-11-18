@@ -1,1 +1,0 @@
-initSidebarItems({"enum":[["Path","RPC query path"],["PathParseError",""]],"struct":[["BalanceQuery",""],["PrefixValue","RPC query path"]]});

@@ -1,1 +1,0 @@
-initSidebarItems({"struct":[["PrefixIteratorId","A prefix iterator identifier for the temporary storage [`PrefixIterators`]."],["PrefixIterators","A temporary iterators storage, used during a wasm run after which it’s dropped. Each iterator is assigned a [`PrefixIteratorId`]."]]});

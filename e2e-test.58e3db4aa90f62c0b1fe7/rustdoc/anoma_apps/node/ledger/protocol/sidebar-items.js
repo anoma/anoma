@@ -1,1 +1,0 @@
-initSidebarItems({"enum":[["Error",""]],"fn":[["apply_tx","Apply a given transaction"]],"struct":[["TxResult","Transaction application result"],["VpsResult","Result of checking a transaction with validity predicates"]],"type":[["Result",""]]});
