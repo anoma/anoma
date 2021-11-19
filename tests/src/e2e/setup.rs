@@ -333,6 +333,7 @@ pub fn working_dir() -> PathBuf {
 /// A command under test
 pub struct AnomaCmd {
     pub session: PtySession,
+    pub cmd_str: String,
 }
 
 impl AnomaCmd {
@@ -409,6 +410,18 @@ impl AnomaCmd {
 impl Drop for AnomaCmd {
     fn drop(&mut self) {
         // Clean up the process, if its still running
+        if let Ok(output) = self.session.exp_eof() {
+            let output = output.trim();
+            if !output.is_empty() {
+                println!(
+                    "\n\n{}: {}\n{}: {}",
+                    "Command".underline().yellow(),
+                    self.cmd_str,
+                    "Unread output".underline().yellow(),
+                    output,
+                );
+            }
+        }
         let _ = self.session.process.exit();
     }
 }
@@ -498,7 +511,7 @@ where
             }
         }
     }
-    Ok(AnomaCmd { session })
+    Ok(AnomaCmd { session, cmd_str })
 }
 
 /// Sleep for given `seconds`.
