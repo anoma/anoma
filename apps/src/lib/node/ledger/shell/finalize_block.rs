@@ -1,4 +1,4 @@
-//! Implementation of the [`FinalizeBlock`] ABCI++ method for the Shell
+//! Implementation of the `FinalizeBlock` ABCI++ method for the Shell
 
 use anoma::types::storage::BlockHash;
 #[cfg(not(feature = "ABCI"))]
