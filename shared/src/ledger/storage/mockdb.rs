@@ -242,6 +242,11 @@ impl DB for MockDB {
             }),
         }
     }
+
+    fn rollback_state(&mut self) -> Result<BlockHeight> {
+        // We do not keep predecessor blocks data in mock DB
+        unimplemented!("MockDB doesn't support state rollback")
+    }
 }
 
 impl<'iter> DBIter<'iter> for MockDB {

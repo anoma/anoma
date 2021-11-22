@@ -68,6 +68,22 @@ pub enum Error {
 
 pub type Result<T> = std::result::Result<T, Error>;
 
+pub fn rollback(config: config::Ledger) -> Result<()> {
+    // Rollback Tendermint state
+    tendermint_node::rollback(config.tendermint_dir())
+        .map_err(Error::Tendermint)?;
+    // Rollback the Anoma state
+    let mut storage = storage::open(config.db_dir(), config.chain_id);
+    let pred_height = storage
+        .rollback_state()
+        .map_err(|e| {
+            tracing::error!("Cannot load the last state from the DB {}", e);
+        })
+        .expect("PersistentStorage cannot be initialized");
+    println!("Rolled back to block height {}", pred_height);
+    Ok(())
+}
+
 pub fn reset(config: config::Ledger) -> Result<()> {
     // simply nuke the DB files
     let db_path = config.db_dir();

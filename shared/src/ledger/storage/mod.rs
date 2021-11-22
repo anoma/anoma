@@ -127,6 +127,9 @@ pub trait DB: std::fmt::Debug {
 
     /// Read the last committed block
     fn read_last_block(&mut self) -> Result<Option<BlockState>>;
+
+    /// Rollback state to the predecessor block
+    fn rollback_state(&mut self) -> Result<BlockHeight>;
 }
 
 /// A database prefix iterator.
@@ -156,8 +159,7 @@ where
     D: DB + for<'iter> DBIter<'iter>,
     H: StorageHasher,
 {
-    /// Load the full state at the last committed height, if any. Returns the
-    /// Merkle root hash and the height of the committed block.
+    /// Load the full state at the last committed height, if any.
     pub fn load_last_state(&mut self) -> Result<()> {
         if let Some(BlockState {
             root,
@@ -466,6 +468,14 @@ where
             }),
             H::hash_value(&types::encode(&self.block.epoch)),
         )
+    }
+
+    /// Rollback state to the predecessor block. On success, returns the
+    /// predecessor's block height.
+    pub fn rollback_state(&mut self) -> Result<BlockHeight> {
+        let pred_height = self.db.rollback_state()?;
+        self.db.flush()?;
+        Ok(pred_height)
     }
 }
 

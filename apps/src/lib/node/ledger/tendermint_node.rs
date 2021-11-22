@@ -153,6 +153,16 @@ fn monitor_process(
     });
 }
 
+pub fn rollback(tendermint_dir: impl AsRef<Path>) -> Result<()> {
+    let tendermint_dir = tendermint_dir.as_ref().to_string_lossy();
+    // reset all the Tendermint state, if any
+    Command::new("tendermint")
+        .args(&["rollback", "--home", &tendermint_dir])
+        .output()
+        .expect("Failed to rollback Tendermint");
+    Ok(())
+}
+
 pub fn reset(tendermint_dir: impl AsRef<Path>) -> Result<()> {
     let tendermint_dir = tendermint_dir.as_ref().to_string_lossy();
     // reset all the Tendermint state, if any

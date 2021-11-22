@@ -12,9 +12,13 @@ pub fn main() -> Result<()> {
             cmds::Ledger::Run(_) => {
                 ledger::run(ctx.config.ledger, ctx.config.wasm_dir);
             }
+            cmds::Ledger::Rollback(_) => {
+                ledger::rollback(ctx.config.ledger)
+                    .wrap_err("Failed to rollback the Anoma ledger node")?;
+            }
             cmds::Ledger::Reset(_) => {
                 ledger::reset(ctx.config.ledger)
-                    .wrap_err("Failed to reset Anoma node")?;
+                    .wrap_err("Failed to reset the Anoma ledger node")?;
             }
         },
         cmds::AnomaNode::Gossip(sub) => match sub {

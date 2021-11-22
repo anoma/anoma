@@ -384,6 +384,42 @@ impl DB for RocksDB {
             }),
         }
     }
+
+    fn rollback_state(&mut self) -> Result<BlockHeight> {
+        // Find the current block height
+        let height: BlockHeight;
+        match self
+            .0
+            .get("height")
+            .map_err(|e| Error::DBError(e.into_string()))?
+        {
+            Some(bytes) => {
+                // TODO if there's an issue decoding this height, should we try
+                // load its predecessor instead?
+                height = types::decode(bytes).map_err(Error::CodingError)?;
+            }
+            None => {
+                return Err(Error::Temporary {
+                    error: "No known block height found in the DB".to_string(),
+                });
+            }
+        }
+
+        tracing::info!("Current block height {}", height);
+        // Set the current block height to its predecessor
+        if height == BlockHeight::default() {
+            return Err(Error::Temporary {
+                error: "Cannot rollback at block height 0.".to_string(),
+            });
+        }
+        let pred_height = BlockHeight(height.0 - 1);
+        let mut write_opts = WriteOptions::default();
+        write_opts.disable_wal(true);
+        self.0
+            .put_opt("height", types::encode(&pred_height), &write_opts)
+            .map_err(|e| Error::DBError(e.into_string()))?;
+        Ok(pred_height)
+    }
 }
 
 impl<'iter> DBIter<'iter> for RocksDB {

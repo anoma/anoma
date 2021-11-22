@@ -129,6 +129,11 @@ impl Shell {
     }
 }
 
+/// Rollback the state to the predecessor block height.
+pub fn rollback(config: config::Ledger) -> Result<(), shell::Error> {
+    shell::rollback(config)
+}
+
 /// Resets the tendermint_node state and removes database files
 pub fn reset(config: config::Ledger) -> Result<(), shell::Error> {
     shell::reset(config)

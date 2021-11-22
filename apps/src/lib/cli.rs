@@ -522,6 +522,7 @@ pub mod cmds {
     #[derive(Clone, Debug)]
     pub enum Ledger {
         Run(LedgerRun),
+        Rollback(LedgerRollback),
         Reset(LedgerReset),
     }
 
@@ -531,8 +532,10 @@ pub mod cmds {
         fn parse(matches: &ArgMatches) -> Option<Self> {
             matches.subcommand_matches(Self::CMD).and_then(|matches| {
                 let run = SubCmd::parse(matches).map(Self::Run);
+                let rollback = SubCmd::parse(matches).map(Self::Rollback);
                 let reset = SubCmd::parse(matches).map(Self::Reset);
-                run.or(reset)
+                run.or(rollback)
+                    .or(reset)
                     // The `run` command is the default if no sub-command given
                     .or(Some(Self::Run(LedgerRun)))
             })
@@ -545,6 +548,7 @@ pub mod cmds {
                      defaults to run the node.",
                 )
                 .subcommand(LedgerRun::def())
+                .subcommand(LedgerRollback::def())
                 .subcommand(LedgerReset::def())
         }
     }
@@ -561,6 +565,29 @@ pub mod cmds {
 
         fn def() -> App {
             App::new(Self::CMD).about("Run Anoma ledger node.")
+        }
+    }
+
+    #[derive(Clone, Debug)]
+    pub struct LedgerRollback;
+
+    impl SubCmd for LedgerRollback {
+        const CMD: &'static str = "rollback";
+
+        fn parse(matches: &ArgMatches) -> Option<Self> {
+            matches.subcommand_matches(Self::CMD).map(|_matches| Self)
+        }
+
+        fn def() -> App {
+            App::new(Self::CMD).about(
+                "This command requires Tendermint version >= 0.34.14. A state \
+                 rollback is performed to recover from an incorrect \
+                 application state transition, when Tendermint has persisted \
+                 an incorrect app hash and is thus unable to make progress. \
+                 Rollback overwrites a state at height n with the state at \
+                 height n - 1. Upon restarting Anoma ledger, the transactions \
+                 in block n will be re-executed.",
+            )
         }
     }
 
