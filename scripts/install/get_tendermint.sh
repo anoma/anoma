@@ -3,9 +3,9 @@
 #set -x
 
 # an examplary download-url
-# https://github.com/tendermint/tendermint/releases/download/v0.34.13/tendermint_0.34.13_linux_amd64.tar.gz
+# https://github.com/tendermint/tendermint/releases/download/v0.34.14/tendermint_0.34.14_linux_amd64.tar.gz
 export TM_MAJORMINOR="0.34"
-export TM_PATCH="13"
+export TM_PATCH="14"
 export TM_REPO="https://github.com/tendermint/tendermint"
 
 export TM_VERSION="${TM_MAJORMINOR}.${TM_PATCH}"
