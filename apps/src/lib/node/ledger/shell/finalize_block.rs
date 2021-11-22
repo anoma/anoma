@@ -330,8 +330,14 @@ where
         });
     }
 
+    /// Update the DKG state machine
+    ///
+    ///  * At the start of a new epoch, issue a PVSS transcript
+    ///  * Collect PVSS transcripts from other validators
+    ///  * If a new public keys is on chain, store it
+    ///
     fn update_dkg(&mut self) {
-        use tendermint::validator::Set;
+        use ferveo::dkg::{TendermintValidator, ValidatorSet};
         let (current_epoch, _) = self.storage.get_current_epoch();
         // TODO: The total weight should likely be a config, not hardcoded.
         let params = DkgParams {
@@ -344,7 +350,19 @@ where
         let validators = validators
             .get(current_epoch + 1)
             .expect("Validators for the next epoch should be known");
+        let validator_keys = validators
+            .active
+            .iter()
+            .map(|val| val.address)
         self.dkg =  DkgStateMachine::new(
+            ValidatorSet {
+                validators: validators
+                    .active
+                    .iter()
+                    .map(|val| TendermintValidator{ power: val.voting_power.into() })
+                    .collect(),
+            },
+
 
         )
 

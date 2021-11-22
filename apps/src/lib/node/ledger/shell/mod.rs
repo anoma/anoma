@@ -154,7 +154,7 @@ pub struct Shell<
     /// Wrapper txs to be decrypted in the next block proposal
     tx_queue: TxQueue,
     /// State machine for generating distributed public keys
-    dkg: DkgStateMachine,
+    dkg: DkgInstance,
 }
 
 #[derive(Default, Debug, Clone, BorshDeserialize, BorshSerialize)]
@@ -203,6 +203,11 @@ impl TxQueue {
     pub fn is_empty(&self) -> bool {
         self.queue.is_empty()
     }
+}
+
+struct DkgInstance {
+    state_machine: DkgStateMachine,
+
 }
 
 impl<D, H> Drop for Shell<D, H>
