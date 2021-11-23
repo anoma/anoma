@@ -748,6 +748,16 @@
 <span id="748">748</span>
 <span id="749">749</span>
 <span id="750">750</span>
+<span id="751">751</span>
+<span id="752">752</span>
+<span id="753">753</span>
+<span id="754">754</span>
+<span id="755">755</span>
+<span id="756">756</span>
+<span id="757">757</span>
+<span id="758">758</span>
+<span id="759">759</span>
+<span id="760">760</span>
 </pre><pre class="rust">
 <span class="doccomment">//! Ed25519 keys and related functionality</span>
 
@@ -1110,7 +1120,17 @@
                 <span class="macro">format!</span>(<span class="string">&quot;Error decoding ed25519 signature: {}&quot;</span>, <span class="ident">e</span>),
             )
         })<span class="question-mark">?</span>;
-        <span class="prelude-val">Ok</span>(<span class="ident">Signature</span>(<span class="ident">ed25519_dalek::Signature::new</span>(<span class="ident">bytes</span>)))
+        <span class="kw">let</span> <span class="ident">sig</span> <span class="op">=</span> <span class="ident">ed25519_dalek::Signature::from_bytes</span>(<span class="kw-2">&amp;</span><span class="ident">bytes</span>[..<span class="ident">SIGNATURE_LEN</span>])
+            .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">err</span><span class="op">|</span> {
+                <span class="ident">std::io::Error::new</span>(
+                    <span class="ident">ErrorKind::InvalidData</span>,
+                    <span class="macro">format!</span>(
+                        <span class="string">&quot;Error creating ed25509 signature from bytes: {}&quot;</span>,
+                        <span class="ident">err</span>
+                    ),
+                )
+            })<span class="question-mark">?</span>;
+        <span class="prelude-val">Ok</span>(<span class="ident">Signature</span>(<span class="ident">sig</span>))
     }
 }
 

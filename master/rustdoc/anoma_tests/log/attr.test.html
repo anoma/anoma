@@ -5,7 +5,7 @@ and/or <code>tracing</code> crates initialized (depending on the features used).
 <p>Specify the attribute on a per-test basis:</p>
 
 <div class="example-wrap"><pre class="rust rust-example-rendered">
-<span class="attribute">#[<span class="ident">test_env_log::test</span>]</span>
+<span class="attribute">#[<span class="ident">test_log::test</span>]</span>
 <span class="kw">fn</span> <span class="ident">it_works</span>() {
   <span class="macro">info!</span>(<span class="string">&quot;Checking whether it still works...&quot;</span>);
   <span class="macro">assert_eq!</span>(<span class="number">2</span> <span class="op">+</span> <span class="number">2</span>, <span class="number">4</span>);
@@ -15,7 +15,7 @@ and/or <code>tracing</code> crates initialized (depending on the features used).
 the <code>#[test]</code> attribute on a per-module basis:</p>
 
 <div class="example-wrap"><pre class="rust rust-example-rendered">
-<span class="kw">use</span> <span class="ident">test_env_log::test</span>;
+<span class="kw">use</span> <span class="ident">test_log::test</span>;
 
 <span class="attribute">#[<span class="ident">test</span>]</span>
 <span class="kw">fn</span> <span class="ident">it_still_works</span>() {
@@ -26,7 +26,7 @@ the <code>#[test]</code> attribute on a per-module basis:</p>
 to run async tests:</p>
 
 <div class="example-wrap"><pre class="rust rust-example-rendered">
-<span class="kw">use</span> <span class="ident">test_env_log::test</span>;
+<span class="kw">use</span> <span class="ident">test_log::test</span>;
 
 <span class="attribute">#[<span class="ident">test</span>(<span class="ident">tokio::test</span>)]</span>
 <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">it_still_works</span>() {
