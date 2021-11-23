@@ -14,5 +14,5 @@ mod e2e;
 /// Set env var `RUST_LOG=info` to see the logs from a test run (and
 /// `--nocapture` if the test is not failing).
 pub mod log {
-    pub use test_env_log::test;
+    pub use test_log::test;
 }

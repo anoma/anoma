@@ -30,7 +30,7 @@ mod tests {
     };
     use anoma_vm_env::vp_prelude::{PostKeyValIterator, PreKeyValIterator};
     use itertools::Itertools;
-    use test_env_log::test;
+    use test_log::test;
 
     use super::ibc;
     use super::tx::*;

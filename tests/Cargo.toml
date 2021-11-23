@@ -35,15 +35,15 @@ anoma_vm_env = {path = "../vm_env", default-features = false}
 chrono = "0.4.19"
 concat-idents = "1.1.2"
 # TODO temp fork for https://github.com/informalsystems/ibc-rs/issues/1161
-ibc = {git = "https://github.com/heliaxdev/ibc-rs", branch = "bat/abci++-integration", features = ["mocks", "borsh"], optional = true}
+ibc = {git = "https://github.com/heliaxdev/ibc-rs", branch = "bat/abcipp-integration", features = ["mocks", "borsh"], optional = true}
 ibc-abci = {package = "ibc", git = "https://github.com/heliaxdev/ibc-rs", branch = "tomas/tm-lowercase-node-id", features = ["mocks", "borsh"], optional = true}
-ibc-proto = {git = "https://github.com/heliaxdev/ibc-rs", branch = "bat/abci++-integration", optional = true}
+ibc-proto = {git = "https://github.com/heliaxdev/ibc-rs", branch = "bat/abcipp-integration", optional = true}
 ibc-proto-abci = {package = "ibc-proto", git = "https://github.com/heliaxdev/ibc-rs", branch = "tomas/tm-lowercase-node-id", optional = true}
 serde_json = {version = "1.0.65"}
 sha2 = "0.9.3"
-test-env-log = {version = "0.2.7", default-features = false, features = ["trace"]}
+test-log = {version = "0.2.7", default-features = false, features = ["trace"]}
 # temporarily using fork work-around for https://github.com/informalsystems/tendermint-rs/issues/916
-tendermint = {git = "https://github.com/heliaxdev/tendermint-rs", branch = "bat/abci++-integration", optional = true}
+tendermint = {git = "https://github.com/heliaxdev/tendermint-rs", branch = "bat/abcipp-integration", optional = true}
 tendermint-stable = {package = "tendermint", git = "https://github.com/heliaxdev/tendermint-rs", branch = "tomas/lowercase-node-id", optional = true}
 tracing = "0.1.26"
 tracing-subscriber = {version = "0.2.18", default-features = false, features = ["env-filter", "fmt"]}
@@ -63,4 +63,4 @@ tempfile = "3.2.0"
 
 # This is used to enable logging from tests
 [package.metadata.cargo-udeps.ignore]
-normal = ["test-env-log", "tracing-subscriber"]
+normal = ["test-log", "tracing-subscriber"]

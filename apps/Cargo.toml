@@ -108,10 +108,10 @@ signal-hook = "0.3.9"
 sparse-merkle-tree = {git = "https://github.com/heliaxdev/sparse-merkle-tree", branch = "yuji/ics23-proof", features = ["borsh"]}
 # temporarily using fork work-around for https://github.com/informalsystems/tendermint-rs/issues/916
 # and https://github.com/anoma/anoma/issues/445
-tendermint = {git = "https://github.com/heliaxdev/tendermint-rs", branch = "bat/abci++-integration", optional = true}
-tendermint-proto = {git = "https://github.com/heliaxdev/tendermint-rs", branch = "bat/abci++-integration", optional = true}
+tendermint = {git = "https://github.com/heliaxdev/tendermint-rs", branch = "bat/abcipp-integration", optional = true}
+tendermint-proto = {git = "https://github.com/heliaxdev/tendermint-rs", branch = "bat/abcipp-integration", optional = true}
 tendermint-proto-abci = {package = "tendermint-proto", git = "https://github.com/heliaxdev/tendermint-rs", branch = "tomas/lowercase-node-id", optional = true}
-tendermint-rpc = {git = "https://github.com/heliaxdev/tendermint-rs", branch = "bat/abci++-integration", features = ["http-client", "websocket-client"], optional = true}
+tendermint-rpc = {git = "https://github.com/heliaxdev/tendermint-rs", branch = "bat/abcipp-integration", features = ["http-client", "websocket-client"], optional = true}
 tendermint-rpc-abci = {package = "tendermint-rpc", git = "https://github.com/heliaxdev/tendermint-rs", branch = "tomas/lowercase-node-id", optional = true, features = ["http-client", "websocket-client"]}
 tendermint-stable = {package = "tendermint", git = "https://github.com/heliaxdev/tendermint-rs", branch = "tomas/lowercase-node-id", optional = true}
 thiserror = "1.0.24"
@@ -120,7 +120,7 @@ toml = "0.5.8"
 tonic = "0.5.0"
 tower = "0.4"
 # Also, using the same version of tendermint-rs as we do here.
-tower-abci = {git = "https://github.com/heliaxdev/tower-abci", branch = "bat/abci++-integration", optional = true}
+tower-abci = {git = "https://github.com/heliaxdev/tower-abci", branch = "bat/abcipp-integration", optional = true}
 tower-abci-old = {package = "tower-abci", git = "https://github.com/heliaxdev/tower-abci", branch = "tomas/tm-lowercase-node-id", optional = true}
 tracing = "0.1.26"
 tracing-log = "0.1.2"

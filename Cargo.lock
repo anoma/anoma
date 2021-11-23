@@ -94,9 +94,9 @@ dependencies = [
  "ferveo",
  "group-threshold-cryptography",
  "hex",
- "ibc 0.6.0 (git+https://github.com/heliaxdev/ibc-rs?branch=bat/abci++-integration)",
+ "ibc 0.6.0 (git+https://github.com/heliaxdev/ibc-rs?branch=bat/abcipp-integration)",
  "ibc 0.6.0 (git+https://github.com/heliaxdev/ibc-rs?branch=tomas/tm-lowercase-node-id)",
- "ibc-proto 0.8.2 (git+https://github.com/heliaxdev/ibc-rs?branch=bat/abci++-integration)",
+ "ibc-proto 0.8.2 (git+https://github.com/heliaxdev/ibc-rs?branch=bat/abcipp-integration)",
  "ibc-proto 0.8.2 (git+https://github.com/heliaxdev/ibc-rs?branch=tomas/tm-lowercase-node-id)",
  "itertools 0.10.1",
  "loupe",
@@ -114,11 +114,11 @@ dependencies = [
  "serde_json",
  "sha2 0.9.8",
  "sparse-merkle-tree",
- "tendermint 0.20.0 (git+https://github.com/heliaxdev/tendermint-rs?branch=bat/abci++-integration)",
+ "tendermint 0.20.0 (git+https://github.com/heliaxdev/tendermint-rs?branch=bat/abcipp-integration)",
  "tendermint 0.20.0 (git+https://github.com/heliaxdev/tendermint-rs?branch=tomas/lowercase-node-id)",
- "tendermint-proto 0.20.0 (git+https://github.com/heliaxdev/tendermint-rs?branch=bat/abci++-integration)",
+ "tendermint-proto 0.20.0 (git+https://github.com/heliaxdev/tendermint-rs?branch=bat/abcipp-integration)",
  "tendermint-proto 0.20.0 (git+https://github.com/heliaxdev/tendermint-rs?branch=tomas/lowercase-node-id)",
- "test-env-log",
+ "test-log",
  "thiserror",
  "tonic-build",
  "tracing",
@@ -179,11 +179,11 @@ dependencies = [
  "signal-hook",
  "sparse-merkle-tree",
  "tempfile",
- "tendermint 0.20.0 (git+https://github.com/heliaxdev/tendermint-rs?branch=bat/abci++-integration)",
+ "tendermint 0.20.0 (git+https://github.com/heliaxdev/tendermint-rs?branch=bat/abcipp-integration)",
  "tendermint 0.20.0 (git+https://github.com/heliaxdev/tendermint-rs?branch=tomas/lowercase-node-id)",
- "tendermint-proto 0.20.0 (git+https://github.com/heliaxdev/tendermint-rs?branch=bat/abci++-integration)",
+ "tendermint-proto 0.20.0 (git+https://github.com/heliaxdev/tendermint-rs?branch=bat/abcipp-integration)",
  "tendermint-proto 0.20.0 (git+https://github.com/heliaxdev/tendermint-rs?branch=tomas/lowercase-node-id)",
- "tendermint-rpc 0.20.0 (git+https://github.com/heliaxdev/tendermint-rs?branch=bat/abci++-integration)",
+ "tendermint-rpc 0.20.0 (git+https://github.com/heliaxdev/tendermint-rs?branch=bat/abcipp-integration)",
  "tendermint-rpc 0.20.0 (git+https://github.com/heliaxdev/tendermint-rs?branch=tomas/lowercase-node-id)",
  "thiserror",
  "tokio",
@@ -192,7 +192,7 @@ dependencies = [
  "tonic",
  "tonic-build",
  "tower",
- "tower-abci 0.1.0 (git+https://github.com/heliaxdev/tower-abci?branch=bat/abci++-integration)",
+ "tower-abci 0.1.0 (git+https://github.com/heliaxdev/tower-abci?branch=bat/abcipp-integration)",
  "tower-abci 0.1.0 (git+https://github.com/heliaxdev/tower-abci?branch=tomas/tm-lowercase-node-id)",
  "tracing",
  "tracing-log",
@@ -223,9 +223,9 @@ dependencies = [
  "concat-idents",
  "escargot",
  "eyre",
- "ibc 0.6.0 (git+https://github.com/heliaxdev/ibc-rs?branch=bat/abci++-integration)",
+ "ibc 0.6.0 (git+https://github.com/heliaxdev/ibc-rs?branch=bat/abcipp-integration)",
  "ibc 0.6.0 (git+https://github.com/heliaxdev/ibc-rs?branch=tomas/tm-lowercase-node-id)",
- "ibc-proto 0.8.2 (git+https://github.com/heliaxdev/ibc-rs?branch=bat/abci++-integration)",
+ "ibc-proto 0.8.2 (git+https://github.com/heliaxdev/ibc-rs?branch=bat/abcipp-integration)",
  "ibc-proto 0.8.2 (git+https://github.com/heliaxdev/ibc-rs?branch=tomas/tm-lowercase-node-id)",
  "itertools 0.10.1",
  "libp2p",
@@ -234,9 +234,9 @@ dependencies = [
  "serde_json",
  "sha2 0.9.8",
  "tempfile",
- "tendermint 0.20.0 (git+https://github.com/heliaxdev/tendermint-rs?branch=bat/abci++-integration)",
+ "tendermint 0.20.0 (git+https://github.com/heliaxdev/tendermint-rs?branch=bat/abcipp-integration)",
  "tendermint 0.20.0 (git+https://github.com/heliaxdev/tendermint-rs?branch=tomas/lowercase-node-id)",
- "test-env-log",
+ "test-log",
  "tracing",
  "tracing-subscriber",
 ]
@@ -287,9 +287,9 @@ dependencies = [
 
 [[package]]
 name = "anyhow"
-version = "1.0.45"
+version = "1.0.47"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ee10e43ae4a853c0a3591d4e2ada1719e553be18199d9da9d4a83f5927c2f5c7"
+checksum = "38d9ff5d688f1c13395289f67db01d4826b46dd694e7580accdc3e8430f2d98e"
 
 [[package]]
 name = "ark-bls12-381"
@@ -424,6 +424,12 @@ name = "arrayvec"
 version = "0.5.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "23b62fc65de8e4e7f52534fb52b0f3ed04746ae267519eef2a83941e8085068b"
+
+[[package]]
+name = "arrayvec"
+version = "0.7.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8da52d66c7071e2e3fa2a1e5c6d088fec47b593032b254f5e980de8ea54454d6"
 
 [[package]]
 name = "asn1_der"
@@ -796,9 +802,9 @@ checksum = "bef38d45163c2f1dde094a7dfd33ccf595c92905c8f8f4fdc18d06fb1037718a"
 
 [[package]]
 name = "bitvec"
-version = "0.19.5"
+version = "0.19.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8942c8d352ae1838c9dda0b0ca2ab657696ef2232a20147cf1b30ae1a9cb4321"
+checksum = "55f93d0ef3363c364d5976646a38f04cf67cfe1d4c8d160cdea02cab2c116b33"
 dependencies = [
  "funty",
  "radium",
@@ -829,12 +835,12 @@ dependencies = [
 
 [[package]]
 name = "blake2b_simd"
-version = "0.5.11"
+version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "afa748e348ad3be8263be728124b24a24f268266f6f5d58af9d75f6a40b5c587"
+checksum = "72936ee4afc7f8f736d1c38383b56480b5497b4617b4a77bdbf1d2ababc76127"
 dependencies = [
  "arrayref",
- "arrayvec",
+ "arrayvec 0.7.2",
  "constant_time_eq",
 ]
 
@@ -1053,13 +1059,24 @@ dependencies = [
 ]
 
 [[package]]
+name = "chacha20"
+version = "0.8.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "01b72a433d0cf2aef113ba70f62634c56fddb0f244e6377185c56a7cadbd8f91"
+dependencies = [
+ "cfg-if 1.0.0",
+ "cipher",
+ "cpufeatures",
+]
+
+[[package]]
 name = "chacha20poly1305"
 version = "0.8.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b6547abe025f4027edacd9edaa357aded014eecec42a5070d9b885c3c334aba2"
 dependencies = [
  "aead",
- "chacha20",
+ "chacha20 0.7.3",
  "cipher",
  "poly1305",
  "zeroize",
@@ -1660,9 +1677,9 @@ checksum = "ee2626afccd7561a06cf1367e2950c4718ea04565e20fb5029b6c7d8ad09abcf"
 
 [[package]]
 name = "dynasm"
-version = "1.1.0"
+version = "1.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cdc2d9a5e44da60059bd38db2d05cbb478619541b8c79890547861ec1e3194f0"
+checksum = "ab1096ebdaa974cd6a41a743e94dfa00cce9bfbf4690bcc73fdec6a903938ccc"
 dependencies = [
  "bitflags",
  "byteorder",
@@ -1675,20 +1692,20 @@ dependencies = [
 
 [[package]]
 name = "dynasmrt"
-version = "1.1.0"
+version = "1.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "42276e3f205fe63887cca255aa9a65a63fb72764c30b9a6252a7c7e46994f689"
+checksum = "c20c69d1e16ae47889b47c301c790f48615cd9bfbdf586e3f6d4fde64af3d259"
 dependencies = [
  "byteorder",
  "dynasm",
- "memmap2",
+ "memmap2 0.5.0",
 ]
 
 [[package]]
 name = "ed25519"
-version = "1.2.0"
+version = "1.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4620d40f6d2601794401d6dd95a5cf69b6c157852539470eeda433a99b3c0efc"
+checksum = "74e1069e39f1454367eb2de793ed062fac4c35c2934b76a81d90dd9abcd28816"
 dependencies = [
  "serde 1.0.130",
  "signature",
@@ -1839,8 +1856,8 @@ dependencies = [
 
 [[package]]
 name = "ferveo"
-version = "0.1.0"
-source = "git+https://github.com/anoma/ferveo#73b729a523b391d40e7a9fe4cbbcdb17557cf089"
+version = "0.1.1"
+source = "git+https://github.com/anoma/ferveo#85943169e27d7dbbdce835d6563ac4d838a410e1"
 dependencies = [
  "anyhow",
  "ark-bls12-381",
@@ -1876,8 +1893,9 @@ dependencies = [
 [[package]]
 name = "ferveo-common"
 version = "0.1.0"
-source = "git+https://github.com/anoma/ferveo#73b729a523b391d40e7a9fe4cbbcdb17557cf089"
+source = "git+https://github.com/anoma/ferveo#85943169e27d7dbbdce835d6563ac4d838a410e1"
 dependencies = [
+ "anyhow",
  "ark-ec",
  "ark-serialize",
  "ark-std",
@@ -2230,7 +2248,7 @@ dependencies = [
 [[package]]
 name = "group-threshold-cryptography"
 version = "0.1.0"
-source = "git+https://github.com/anoma/ferveo#73b729a523b391d40e7a9fe4cbbcdb17557cf089"
+source = "git+https://github.com/anoma/ferveo#85943169e27d7dbbdce835d6563ac4d838a410e1"
 dependencies = [
  "anyhow",
  "ark-bls12-381",
@@ -2240,7 +2258,7 @@ dependencies = [
  "ark-serialize",
  "ark-std",
  "blake2b_simd",
- "chacha20",
+ "chacha20 0.8.1",
  "hex",
  "itertools 0.10.1",
  "miracl_core",
@@ -2438,9 +2456,9 @@ checksum = "acd94fdbe1d4ff688b67b04eee2e17bd50995534a61539e45adfefb45e5e5503"
 
 [[package]]
 name = "httpdate"
-version = "1.0.1"
+version = "1.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6456b8a6c8f33fee7d958fcd1b60d55b11940a79e63ae87013e6d22e26034440"
+checksum = "c4a1e36c821dbe04574f602848a19f742f4fb3c98d40449f11bcad18d6b17421"
 
 [[package]]
 name = "hyper"
@@ -2463,9 +2481,9 @@ dependencies = [
 
 [[package]]
 name = "hyper"
-version = "0.14.14"
+version = "0.14.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2b91bb1f221b6ea1f1e4371216b70f40748774c2fb5971b450c07773fb92d26b"
+checksum = "436ec0091e4f20e655156a30a0df3770fe2900aa301e548e08446ec794b6953c"
 dependencies = [
  "bytes 1.1.0",
  "futures-channel",
@@ -2495,7 +2513,7 @@ dependencies = [
  "futures 0.3.17",
  "headers",
  "http",
- "hyper 0.14.14",
+ "hyper 0.14.15",
  "hyper-tls",
  "native-tls",
  "tokio",
@@ -2511,7 +2529,7 @@ checksum = "5f9f7a97316d44c0af9b0301e65010573a853a9fc97046d7331d7f6bc0fd5a64"
 dependencies = [
  "ct-logs",
  "futures-util",
- "hyper 0.14.14",
+ "hyper 0.14.15",
  "log 0.4.14",
  "rustls",
  "rustls-native-certs",
@@ -2526,7 +2544,7 @@ version = "0.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "bbb958482e8c7be4bc3cf272a766a2b0bf1a6755e7a6ae777f017a31d11b13b1"
 dependencies = [
- "hyper 0.14.14",
+ "hyper 0.14.15",
  "pin-project-lite 0.2.7",
  "tokio",
  "tokio-io-timeout",
@@ -2539,7 +2557,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d6183ddfa99b85da61a140bea0efc93fdf56ceaa041b37d553518030827f9905"
 dependencies = [
  "bytes 1.1.0",
- "hyper 0.14.14",
+ "hyper 0.14.15",
  "native-tls",
  "tokio",
  "tokio-native-tls",
@@ -2548,14 +2566,14 @@ dependencies = [
 [[package]]
 name = "ibc"
 version = "0.6.0"
-source = "git+https://github.com/heliaxdev/ibc-rs?branch=bat/abci++-integration#740058b9b6f0c3f075768e23478e137abdd92a3a"
+source = "git+https://github.com/heliaxdev/ibc-rs?branch=bat/abcipp-integration#baa562ecd7c35f9845703953ab352e3b97bc0cff"
 dependencies = [
  "anomaly",
  "borsh",
  "bytes 1.1.0",
  "chrono",
  "dyn-clonable",
- "ibc-proto 0.8.2 (git+https://github.com/heliaxdev/ibc-rs?branch=bat/abci++-integration)",
+ "ibc-proto 0.8.2 (git+https://github.com/heliaxdev/ibc-rs?branch=bat/abcipp-integration)",
  "ics23",
  "prost 0.8.0",
  "prost-types 0.8.0",
@@ -2565,9 +2583,9 @@ dependencies = [
  "serde_json",
  "sha2 0.9.8",
  "subtle-encoding",
- "tendermint 0.20.0 (git+https://github.com/heliaxdev/tendermint-rs?branch=bat/abci++-integration)",
- "tendermint-proto 0.20.0 (git+https://github.com/heliaxdev/tendermint-rs?branch=bat/abci++-integration)",
- "tendermint-testgen 0.20.0 (git+https://github.com/heliaxdev/tendermint-rs?branch=bat/abci++-integration)",
+ "tendermint 0.20.0 (git+https://github.com/heliaxdev/tendermint-rs?branch=bat/abcipp-integration)",
+ "tendermint-proto 0.20.0 (git+https://github.com/heliaxdev/tendermint-rs?branch=bat/abcipp-integration)",
+ "tendermint-testgen 0.20.0 (git+https://github.com/heliaxdev/tendermint-rs?branch=bat/abcipp-integration)",
  "thiserror",
  "tracing",
 ]
@@ -2602,13 +2620,13 @@ dependencies = [
 [[package]]
 name = "ibc-proto"
 version = "0.8.2"
-source = "git+https://github.com/heliaxdev/ibc-rs?branch=bat/abci++-integration#740058b9b6f0c3f075768e23478e137abdd92a3a"
+source = "git+https://github.com/heliaxdev/ibc-rs?branch=bat/abcipp-integration#baa562ecd7c35f9845703953ab352e3b97bc0cff"
 dependencies = [
  "anomaly",
  "bytes 1.1.0",
  "prost 0.8.0",
  "prost-types 0.8.0",
- "tendermint-proto 0.20.0 (git+https://github.com/heliaxdev/tendermint-rs?branch=bat/abci++-integration)",
+ "tendermint-proto 0.20.0 (git+https://github.com/heliaxdev/tendermint-rs?branch=bat/abcipp-integration)",
  "thiserror",
  "tonic",
 ]
@@ -2903,7 +2921,7 @@ version = "0.7.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6607c62aa161d23d17a9072cc5da0be67cdfc89d3afb1e8d9c842bebc2525ffe"
 dependencies = [
- "arrayvec",
+ "arrayvec 0.5.2",
  "bitflags",
  "cfg-if 1.0.0",
  "ryu",
@@ -2912,9 +2930,9 @@ dependencies = [
 
 [[package]]
 name = "libc"
-version = "0.2.107"
+version = "0.2.108"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fbe5e23404da5b4f555ef85ebed98fb4083e55a00c317800bc2a50ede9f3d219"
+checksum = "8521a1b57e76b1ec69af7599e75e38e7b7fad6610f037db8c79b127201b5d119"
 
 [[package]]
 name = "libloading"
@@ -3090,7 +3108,7 @@ version = "0.30.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b07312ebe5ee4fd2404447a0609814574df55c65d4e20838b957bbd34907d820"
 dependencies = [
- "arrayvec",
+ "arrayvec 0.5.2",
  "asynchronous-codec",
  "bytes 1.1.0",
  "either",
@@ -3542,6 +3560,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "memmap2"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4647a11b578fead29cdbb34d4adef8dd3dc35b876c9c6d5240d83f205abfe96e"
+dependencies = [
+ "libc",
+]
+
+[[package]]
 name = "memoffset"
 version = "0.6.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3680,9 +3707,9 @@ checksum = "94c7128ba23c81f6471141b90f17654f89ef44a56e14b8a4dd0fddfccd655277"
 
 [[package]]
 name = "more-asserts"
-version = "0.2.1"
+version = "0.2.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0debeb9fcf88823ea64d64e4a815ab1643f33127d995978e099942ce38f25238"
+checksum = "7843ec2de400bcbc6a6328c958dc38e5359da6e93e72e37bc5246bf1ae776389"
 
 [[package]]
 name = "multihash"
@@ -4941,7 +4968,7 @@ dependencies = [
  "futures-util",
  "http",
  "http-body",
- "hyper 0.14.14",
+ "hyper 0.14.15",
  "hyper-tls",
  "ipnet",
  "js-sys",
@@ -5075,7 +5102,7 @@ version = "1.17.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "353775f96a1f400edcca737f843cb201af3645912e741e64456a257c770173e8"
 dependencies = [
- "arrayvec",
+ "arrayvec 0.5.2",
  "num-traits 0.2.14",
  "serde 1.0.130",
 ]
@@ -5331,9 +5358,9 @@ dependencies = [
 
 [[package]]
 name = "serde_json"
-version = "1.0.70"
+version = "1.0.71"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e277c495ac6cd1a01a58d0a0c574568b4d1ddf14f59965c6a58b8d96400b54f3"
+checksum = "063bf466a64011ac24040a49009724ee60a57da1b437617ceb32e53ad61bfb19"
 dependencies = [
  "indexmap",
  "itoa",
@@ -5698,7 +5725,7 @@ dependencies = [
 [[package]]
 name = "tendermint"
 version = "0.20.0"
-source = "git+https://github.com/heliaxdev/tendermint-rs?branch=bat/abci++-integration#45282e0d254dac267190b2703dc2a9233347481a"
+source = "git+https://github.com/heliaxdev/tendermint-rs?branch=bat/abcipp-integration#45282e0d254dac267190b2703dc2a9233347481a"
 dependencies = [
  "anomaly",
  "async-trait",
@@ -5719,7 +5746,7 @@ dependencies = [
  "signature",
  "subtle 2.4.1",
  "subtle-encoding",
- "tendermint-proto 0.20.0 (git+https://github.com/heliaxdev/tendermint-rs?branch=bat/abci++-integration)",
+ "tendermint-proto 0.20.0 (git+https://github.com/heliaxdev/tendermint-rs?branch=bat/abcipp-integration)",
  "thiserror",
  "toml",
  "url 2.2.2",
@@ -5760,7 +5787,7 @@ dependencies = [
 [[package]]
 name = "tendermint-proto"
 version = "0.20.0"
-source = "git+https://github.com/heliaxdev/tendermint-rs?branch=bat/abci++-integration#45282e0d254dac267190b2703dc2a9233347481a"
+source = "git+https://github.com/heliaxdev/tendermint-rs?branch=bat/abcipp-integration#45282e0d254dac267190b2703dc2a9233347481a"
 dependencies = [
  "anomaly",
  "bytes 1.1.0",
@@ -5796,7 +5823,7 @@ dependencies = [
 [[package]]
 name = "tendermint-rpc"
 version = "0.20.0"
-source = "git+https://github.com/heliaxdev/tendermint-rs?branch=bat/abci++-integration#45282e0d254dac267190b2703dc2a9233347481a"
+source = "git+https://github.com/heliaxdev/tendermint-rs?branch=bat/abcipp-integration#45282e0d254dac267190b2703dc2a9233347481a"
 dependencies = [
  "async-trait",
  "async-tungstenite",
@@ -5805,7 +5832,7 @@ dependencies = [
  "futures 0.3.17",
  "getrandom 0.1.16",
  "http",
- "hyper 0.14.14",
+ "hyper 0.14.15",
  "hyper-proxy",
  "hyper-rustls",
  "pin-project 1.0.8",
@@ -5813,8 +5840,8 @@ dependencies = [
  "serde_bytes",
  "serde_json",
  "subtle-encoding",
- "tendermint 0.20.0 (git+https://github.com/heliaxdev/tendermint-rs?branch=bat/abci++-integration)",
- "tendermint-proto 0.20.0 (git+https://github.com/heliaxdev/tendermint-rs?branch=bat/abci++-integration)",
+ "tendermint 0.20.0 (git+https://github.com/heliaxdev/tendermint-rs?branch=bat/abcipp-integration)",
+ "tendermint-proto 0.20.0 (git+https://github.com/heliaxdev/tendermint-rs?branch=bat/abcipp-integration)",
  "thiserror",
  "tokio",
  "tracing",
@@ -5835,7 +5862,7 @@ dependencies = [
  "futures 0.3.17",
  "getrandom 0.1.16",
  "http",
- "hyper 0.14.14",
+ "hyper 0.14.15",
  "hyper-proxy",
  "hyper-rustls",
  "pin-project 1.0.8",
@@ -5856,7 +5883,7 @@ dependencies = [
 [[package]]
 name = "tendermint-testgen"
 version = "0.20.0"
-source = "git+https://github.com/heliaxdev/tendermint-rs?branch=bat/abci++-integration#45282e0d254dac267190b2703dc2a9233347481a"
+source = "git+https://github.com/heliaxdev/tendermint-rs?branch=bat/abcipp-integration#45282e0d254dac267190b2703dc2a9233347481a"
 dependencies = [
  "ed25519-dalek",
  "gumdrop",
@@ -5864,7 +5891,7 @@ dependencies = [
  "serde_json",
  "simple-error",
  "tempfile",
- "tendermint 0.20.0 (git+https://github.com/heliaxdev/tendermint-rs?branch=bat/abci++-integration)",
+ "tendermint 0.20.0 (git+https://github.com/heliaxdev/tendermint-rs?branch=bat/abcipp-integration)",
 ]
 
 [[package]]
@@ -5919,10 +5946,10 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "13a4ec180a2de59b57434704ccfad967f789b12737738798fa08798cd5824c16"
 
 [[package]]
-name = "test-env-log"
-version = "0.2.7"
+name = "test-log"
+version = "0.2.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b3e4b132a630cc8a0d06cfcb400da67adef3d0087a94b3332d4692908f0c2544"
+checksum = "eb78caec569a40f42c078c798c0e35b922d9054ec28e166f0d6ac447563d91a4"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -5950,18 +5977,18 @@ dependencies = [
 
 [[package]]
 name = "thiserror"
-version = "1.0.29"
+version = "1.0.30"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "602eca064b2d83369e2b2f34b09c70b605402801927c65c11071ac911d299b88"
+checksum = "854babe52e4df1653706b98fcfc05843010039b406875930a70e4d9644e5c417"
 dependencies = [
  "thiserror-impl",
 ]
 
 [[package]]
 name = "thiserror-impl"
-version = "1.0.29"
+version = "1.0.30"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bad553cc2c78e8de258400763a647e80e6d1b31ee237275d756f6836d204494c"
+checksum = "aa32fd3f627f367fe16f893e2597ae3c05020f8bba2666a4e6ea73d377e5714b"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -6223,7 +6250,7 @@ dependencies = [
  "h2",
  "http",
  "http-body",
- "hyper 0.14.14",
+ "hyper 0.14.15",
  "hyper-timeout",
  "percent-encoding 2.1.0",
  "pin-project 1.0.8",
@@ -6253,9 +6280,9 @@ dependencies = [
 
 [[package]]
 name = "tower"
-version = "0.4.10"
+version = "0.4.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c00e500fff5fa1131c866b246041a6bf96da9c965f8fe4128cb1421f23e93c00"
+checksum = "5651b5f6860a99bd1adb59dbfe1db8beb433e73709d9032b413a77e2fb7c066a"
 dependencies = [
  "futures-core",
  "futures-util",
@@ -6276,13 +6303,13 @@ dependencies = [
 [[package]]
 name = "tower-abci"
 version = "0.1.0"
-source = "git+https://github.com/heliaxdev/tower-abci?branch=bat/abci++-integration#4f848573ec5cb03d72edb726a3a99f1c20b1b0fa"
+source = "git+https://github.com/heliaxdev/tower-abci?branch=bat/abcipp-integration#cb19bb73673e43c48d8fe5ff2e0461c20db8e02a"
 dependencies = [
  "bytes 1.1.0",
  "futures 0.3.17",
  "pin-project 1.0.8",
  "prost 0.8.0",
- "tendermint-proto 0.20.0 (git+https://github.com/heliaxdev/tendermint-rs?branch=bat/abci++-integration)",
+ "tendermint-proto 0.20.0 (git+https://github.com/heliaxdev/tendermint-rs?branch=bat/abcipp-integration)",
  "tokio",
  "tokio-stream",
  "tokio-util",
@@ -6333,7 +6360,7 @@ checksum = "360dfd1d6d30e05fda32ace2c8c70e9c0a9da713275777f5a4dbb8a1893930c6"
 [[package]]
 name = "tracing"
 version = "0.1.29"
-source = "git+https://github.com/tokio-rs/tracing/?branch=v0.1.x#0a16972ba4a5da5b9fd6534b9674d3df88652029"
+source = "git+https://github.com/tokio-rs/tracing/?branch=v0.1.x#1890d184488495cefcf0a7ac18937f843af11cec"
 dependencies = [
  "cfg-if 1.0.0",
  "log 0.4.14",
@@ -6345,7 +6372,7 @@ dependencies = [
 [[package]]
 name = "tracing-attributes"
 version = "0.1.18"
-source = "git+https://github.com/tokio-rs/tracing/?branch=v0.1.x#0a16972ba4a5da5b9fd6534b9674d3df88652029"
+source = "git+https://github.com/tokio-rs/tracing/?branch=v0.1.x#1890d184488495cefcf0a7ac18937f843af11cec"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -6355,7 +6382,7 @@ dependencies = [
 [[package]]
 name = "tracing-core"
 version = "0.1.21"
-source = "git+https://github.com/tokio-rs/tracing/?branch=v0.1.x#0a16972ba4a5da5b9fd6534b9674d3df88652029"
+source = "git+https://github.com/tokio-rs/tracing/?branch=v0.1.x#1890d184488495cefcf0a7ac18937f843af11cec"
 dependencies = [
  "lazy_static 1.4.0",
 ]
@@ -6383,7 +6410,7 @@ dependencies = [
 [[package]]
 name = "tracing-futures"
 version = "0.2.5"
-source = "git+https://github.com/tokio-rs/tracing/?branch=v0.1.x#0a16972ba4a5da5b9fd6534b9674d3df88652029"
+source = "git+https://github.com/tokio-rs/tracing/?branch=v0.1.x#1890d184488495cefcf0a7ac18937f843af11cec"
 dependencies = [
  "pin-project-lite 0.2.7",
  "tracing",
@@ -6435,7 +6462,7 @@ dependencies = [
 [[package]]
 name = "tracing-tower"
 version = "0.1.0"
-source = "git+https://github.com/tokio-rs/tracing/?branch=v0.1.x#0a16972ba4a5da5b9fd6534b9674d3df88652029"
+source = "git+https://github.com/tokio-rs/tracing/?branch=v0.1.x#1890d184488495cefcf0a7ac18937f843af11cec"
 dependencies = [
  "futures 0.3.17",
  "pin-project-lite 0.2.7",
@@ -6962,7 +6989,7 @@ dependencies = [
  "backtrace",
  "lazy_static 1.4.0",
  "loupe",
- "memmap2",
+ "memmap2 0.2.3",
  "more-asserts",
  "rustc-demangle",
  "serde 1.0.130",

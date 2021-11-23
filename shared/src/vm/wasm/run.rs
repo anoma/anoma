@@ -511,7 +511,7 @@ fn get_gas_rules() -> rules::Set {
 mod tests {
     use borsh::BorshSerialize;
     use itertools::Either;
-    use test_env_log::test;
+    use test_log::test;
     use wasmer_vm::TrapCode;
 
     use super::*;
