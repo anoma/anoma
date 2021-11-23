@@ -423,7 +423,6 @@
 <span id="423">423</span>
 <span id="424">424</span>
 <span id="425">425</span>
-<span id="426">426</span>
 </pre><pre class="rust">
 <span class="doccomment">//! Types that are used in transactions.</span>
 
@@ -637,9 +636,8 @@
             {
                 <span class="comment">// verify signature and extract signed data</span>
                 <span class="ident">TxType::Wrapper</span>(<span class="ident">wrapper</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                    <span class="ident">verify_tx_sig</span>(<span class="kw-2">&amp;</span><span class="ident">wrapper</span>.<span class="ident">pk</span>, <span class="kw-2">&amp;</span><span class="ident">tx</span>, <span class="ident">sig</span>).<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">err</span><span class="op">|</span> {
-                        <span class="ident">WrapperTxErr::SigError</span>(<span class="ident">err</span>.<span class="ident">to_string</span>())
-                    })<span class="question-mark">?</span>;
+                    <span class="ident">verify_tx_sig</span>(<span class="kw-2">&amp;</span><span class="ident">wrapper</span>.<span class="ident">pk</span>, <span class="kw-2">&amp;</span><span class="ident">tx</span>, <span class="ident">sig</span>)
+                        .<span class="ident">map_err</span>(<span class="ident">WrapperTxErr::SigError</span>)<span class="question-mark">?</span>;
                     <span class="prelude-val">Ok</span>(<span class="ident">TxType::Wrapper</span>(<span class="ident">wrapper</span>))
                 }
                 <span class="comment">// we extract the signed data, but don&#39;t check the signature</span>
@@ -796,7 +794,7 @@
                 ),
             );
             <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">process_tx</span>(<span class="ident">tx</span>).<span class="ident">expect_err</span>(<span class="string">&quot;Test failed&quot;</span>);
-            <span class="macro">assert_eq!</span>(<span class="ident">result</span>, <span class="ident">WrapperTxErr::Unsigned</span>);
+            <span class="macro">assert_matches!</span>(<span class="ident">result</span>, <span class="ident">WrapperTxErr::Unsigned</span>);
         }
     }
 

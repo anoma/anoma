@@ -464,11 +464,6 @@
 <span id="464">464</span>
 <span id="465">465</span>
 <span id="466">466</span>
-<span id="467">467</span>
-<span id="468">468</span>
-<span id="469">469</span>
-<span id="470">470</span>
-<span id="471">471</span>
 </pre><pre class="rust">
 <span class="doccomment">/// Integration of Ferveo cryptographic primitives</span>
 <span class="doccomment">/// to enable encrypted txs inside of normal txs.</span>
@@ -486,7 +481,7 @@
 
     <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::proto::Tx</span>;
     <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::types::address::Address</span>;
-    <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::types::key::ed25519</span>::{<span class="ident">Keypair</span>, <span class="ident">PublicKey</span>};
+    <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::types::key::ed25519</span>::{<span class="ident">Keypair</span>, <span class="ident">PublicKey</span>, <span class="ident">VerifySigError</span>};
     <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::types::storage::Epoch</span>;
     <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::types::token::Amount</span>;
     <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::types::transaction::encrypted::EncryptedTx</span>;
@@ -498,7 +493,7 @@
     <span class="doccomment">/// Errors relating to decrypting a wrapper tx and its</span>
     <span class="doccomment">/// encrypted payload from a Tx type</span>
     <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">missing_docs</span>)]</span>
-    <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Error</span>, <span class="ident">Debug</span>, <span class="ident">PartialEq</span>)]</span>
+    <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Error</span>, <span class="ident">Debug</span>)]</span>
     <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">WrapperTxErr</span> {
         <span class="attribute">#[<span class="ident">error</span>(
             <span class="string">&quot;The hash of the decrypted tx does not match the hash commitment&quot;</span>
@@ -511,7 +506,7 @@
         <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Expected signed WrapperTx data&quot;</span>)]</span>
         <span class="ident">Unsigned</span>,
         <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;{0}&quot;</span>)]</span>
-        <span class="ident">SigError</span>(<span class="ident">String</span>),
+        <span class="ident">SigError</span>(<span class="ident">VerifySigError</span>),
         <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Unable to deserialize the Tx data: {0}&quot;</span>)]</span>
         <span class="ident">Deserialization</span>(<span class="ident">String</span>),
         <span class="attribute">#[<span class="ident">error</span>(
@@ -854,7 +849,7 @@
             <span class="macro">assert!</span>(<span class="ident">wrapper</span>.<span class="ident">validate_ciphertext</span>());
             <span class="kw">let</span> <span class="ident">privkey</span> <span class="op">=</span> <span class="op">&lt;</span><span class="ident">EllipticCurve</span> <span class="kw">as</span> <span class="ident">PairingEngine</span><span class="op">&gt;</span><span class="ident">::G2Affine::prime_subgroup_generator</span>();
             <span class="kw">let</span> <span class="ident">err</span> <span class="op">=</span> <span class="ident">wrapper</span>.<span class="ident">decrypt</span>(<span class="ident">privkey</span>).<span class="ident">expect_err</span>(<span class="string">&quot;Test failed&quot;</span>);
-            <span class="macro">assert_eq!</span>(<span class="ident">err</span>, <span class="ident">WrapperTxErr::DecryptedHash</span>);
+            <span class="macro">assert_matches!</span>(<span class="ident">err</span>, <span class="ident">WrapperTxErr::DecryptedHash</span>);
         }
 
         <span class="doccomment">/// We check that even if the encrypted payload and has of its</span>
@@ -929,12 +924,7 @@
             <span class="comment">// check that the try from method also fails</span>
             <span class="kw">let</span> <span class="ident">err</span> <span class="op">=</span> <span class="kw">crate</span><span class="ident">::types::transaction::process_tx</span>(<span class="ident">tx</span>)
                 .<span class="ident">expect_err</span>(<span class="string">&quot;Test failed&quot;</span>);
-            <span class="macro">assert_eq!</span>(
-                <span class="ident">err</span>,
-                <span class="ident">WrapperTxErr::SigError</span>(
-                    <span class="string">&quot;Signature verification failed: signature error&quot;</span>.<span class="ident">into</span>()
-                )
-            );
+            <span class="macro">assert_matches!</span>(<span class="ident">err</span>, <span class="ident">WrapperTxErr::SigError</span>(<span class="kw">_</span>));
         }
     }
 }
