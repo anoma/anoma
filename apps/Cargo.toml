@@ -63,6 +63,8 @@ testing = ["dev"]
 
 [dependencies]
 anoma = {path = "../shared", default-features = false, features = ["wasm-runtime", "ferveo-tpke", "rand"]}
+ark-serialize = "0.3.0"
+ark-std = "0.3.0"
 async-std = {version = "1.9.0", features = ["unstable"]}
 async-trait = "0.1.51"
 base64 = "0.13.0"
@@ -77,7 +79,7 @@ config = "0.11.0"
 derivative = "2.2.0"
 # TODO the older versions of rand and rand_core are currently required to avoid mismatching version issue (https://github.com/dalek-cryptography/ed25519-dalek/pull/159)
 ed25519-dalek = {version = "1.0.1", default-features = false, features = ["rand", "u64_backend", "serde"]}
-ferveo = {git = "https://github.com/anoma/ferveo"}
+ferveo = {git = "https://github.com/anoma/ferveo", branch = "bat/serialize_dkg"}
 eyre = "0.6.5"
 futures = "0.3"
 hex = "0.4.3"

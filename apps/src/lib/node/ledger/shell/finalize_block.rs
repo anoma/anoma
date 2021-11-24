@@ -4,6 +4,8 @@ use anoma::types::storage::BlockHash;
 #[cfg(not(feature = "ABCI"))]
 use tendermint::block::Header;
 #[cfg(not(feature = "ABCI"))]
+use tendermint_rpc::{Client, HttpClient};
+#[cfg(not(feature = "ABCI"))]
 use tendermint_proto::abci::Evidence;
 #[cfg(not(feature = "ABCI"))]
 use tendermint_proto::crypto::{public_key, PublicKey as TendermintPublicKey};
@@ -46,7 +48,7 @@ where
     pub fn finalize_block(
         &mut self,
         req: shim::request::FinalizeBlock,
-    ) -> Result<shim::response::FinalizeBlock> {
+    ) -> ShellResult<shim::response::FinalizeBlock> {
         let mut response = shim::response::FinalizeBlock::default();
         // begin the next block and check if a new epoch began
         let (height, new_epoch) =
@@ -158,12 +160,6 @@ where
                 TxType::Protocol(protocol_tx) => {
                     todo!()
                 }
-                TxType::Raw(_) => {
-                    tracing::error!(
-                        "Internal logic error: FinalizeBlock received a TxType::Raw transaction"
-                    );
-                    continue
-                },
             };
 
             match protocol::apply_tx(
@@ -224,17 +220,27 @@ where
             }
             response.events.push(tx_result.into());
         }
+        self.reset_queue();
 
         if new_epoch {
             self.update_epoch(&mut response);
-            self.update_dkg();
+            #[cfg(not(feature = "ABCI"))]
+            {
+                if let Err(err) = self.update_dkg() {
+                    tracing::error!(
+                        "Failed to create a new DKG instance for the new epoch \
+                        with error: {} \n\n\n The state of the last block has \
+                        been persisted, so it is safe to shut down and resolve the issue.",
+                        err,
+                    )
+                }
+            }
         }
 
         response.gas_used = self
             .gas_meter
             .finalize_transaction()
             .map_err(|_| Error::GasOverflow)?;
-        self.reset_queue();
         Ok(response)
     }
 
@@ -336,36 +342,56 @@ where
     ///  * Collect PVSS transcripts from other validators
     ///  * If a new public keys is on chain, store it
     ///
-    fn update_dkg(&mut self) {
-        use ferveo::dkg::{TendermintValidator, ValidatorSet};
+    #[cfg(not(feature = "ABCI"))]
+    fn update_dkg(&mut self) -> ShellResult<()> {
+        let rng = &mut ark_std::rand::prelude::StdRng::from_entropy();
         let (current_epoch, _) = self.storage.get_current_epoch();
+
         // TODO: The total weight should likely be a config, not hardcoded.
         let params = DkgParams {
             tau: current_epoch.0,
             security_threshold: 2^12 / 3,
             total_weight: 2^12,
         };
+
         // get the new validator for the next epoch
-        let validators = self.storage.read_validator_set();
-        let validators = validators
+        let validators = self.storage
+            .read_validator_set()
             .get(current_epoch + 1)
             .expect("Validators for the next epoch should be known");
-        let validator_keys = validators
+
+        // extract the relevant data about the active validator set
+        let validator_set = ValidatorSet::new (validators
             .active
             .iter()
-            .map(|val| val.address)
-        self.dkg =  DkgStateMachine::new(
-            ValidatorSet {
-                validators: validators
-                    .active
-                    .iter()
-                    .map(|val| TendermintValidator{ power: val.voting_power.into() })
-                    .collect(),
-            },
+            .map(|val|
+                TendermintValidator{
+                    power: val.voting_power.into(),
+                    address:  val.address.to_string()}
+            )
+            .collect());
+        // TODO: Figure out which validator is actually us
+        let me = validator_set[0].clone();
 
+        // Initiate the new state machine
+        self.dkg.state_machine =  DkgStateMachine::new(
+            validator_set,
+            params,
+            me,
+            rng,
+        ).map_err(|e| Error::DkgUpdate(e.to_string()))?;
 
-        )
-
+        // announce our public session keys
+        let tx_bytes = ProtocolTxType::DKG(self.dkg.state_machine.announce())
+            .sign(todo!())
+            .to_bytes();
+        let client = HttpClient::new(todo!())
+            .map_err(|e| Error::DkgUpdate(e.to_string()))?;
+        client
+            .broadcast_tx_sync(tx_bytes.into())
+            .await
+            .map_err(|err| Error::DkgUpdate(format!("{:?}", err)))
+            .map(|_| ())
     }
 }
 

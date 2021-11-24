@@ -972,7 +972,7 @@ impl TxResponse {
                 if hash == tx_hash_json {
                     break hash;
                 } else {
-                    index += index;
+                    index += 1;
                 }
             } else {
                 eprintln!(

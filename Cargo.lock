@@ -92,7 +92,7 @@ dependencies = [
  "chrono",
  "ed25519-dalek",
  "ferveo",
- "group-threshold-cryptography",
+ "group-threshold-cryptography 0.1.0 (git+https://github.com/anoma/ferveo)",
  "hex",
  "ibc 0.6.0 (git+https://github.com/heliaxdev/ibc-rs?branch=bat/abcipp-integration)",
  "ibc 0.6.0 (git+https://github.com/heliaxdev/ibc-rs?branch=tomas/tm-lowercase-node-id)",
@@ -136,6 +136,8 @@ name = "anoma_apps"
 version = "0.2.0"
 dependencies = [
  "anoma",
+ "ark-serialize",
+ "ark-std",
  "async-std",
  "async-trait",
  "base64 0.13.0",
@@ -1857,7 +1859,7 @@ dependencies = [
 [[package]]
 name = "ferveo"
 version = "0.1.1"
-source = "git+https://github.com/anoma/ferveo#85943169e27d7dbbdce835d6563ac4d838a410e1"
+source = "git+https://github.com/anoma/ferveo?branch=bat/serialize_dkg#f9069d82469bacc424eee04b8e40f3ae0a52a9fd"
 dependencies = [
  "anyhow",
  "ark-bls12-381",
@@ -1875,7 +1877,7 @@ dependencies = [
  "ed25519-dalek",
  "either",
  "ferveo-common",
- "group-threshold-cryptography",
+ "group-threshold-cryptography 0.1.0 (git+https://github.com/anoma/ferveo?branch=bat/serialize_dkg)",
  "hex",
  "itertools 0.10.1",
  "measure_time",
@@ -1893,7 +1895,7 @@ dependencies = [
 [[package]]
 name = "ferveo-common"
 version = "0.1.0"
-source = "git+https://github.com/anoma/ferveo#85943169e27d7dbbdce835d6563ac4d838a410e1"
+source = "git+https://github.com/anoma/ferveo?branch=bat/serialize_dkg#f9069d82469bacc424eee04b8e40f3ae0a52a9fd"
 dependencies = [
  "anyhow",
  "ark-ec",
@@ -2243,6 +2245,29 @@ dependencies = [
  "js-sys",
  "wasm-bindgen",
  "web-sys",
+]
+
+[[package]]
+name = "group-threshold-cryptography"
+version = "0.1.0"
+source = "git+https://github.com/anoma/ferveo?branch=bat/serialize_dkg#f9069d82469bacc424eee04b8e40f3ae0a52a9fd"
+dependencies = [
+ "anyhow",
+ "ark-bls12-381",
+ "ark-ec",
+ "ark-ff",
+ "ark-poly",
+ "ark-serialize",
+ "ark-std",
+ "blake2b_simd",
+ "chacha20 0.8.1",
+ "hex",
+ "itertools 0.10.1",
+ "miracl_core",
+ "rand 0.8.4",
+ "rand_core 0.6.3",
+ "rayon",
+ "thiserror",
 ]
 
 [[package]]

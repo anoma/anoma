@@ -18,9 +18,9 @@ mod protocol_txs {
     /// Txs sent by validators as part of internal protocols
     pub struct ProtocolTx {
         /// we require ProtocolTxs be signed
-        pk: PublicKey,
+        pub pk: PublicKey,
         /// The type of protocol message being sent
-        tx: ProtocolTxType,
+        pub tx: ProtocolTxType,
     }
 
     impl ProtocolTx {

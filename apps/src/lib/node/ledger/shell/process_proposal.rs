@@ -69,6 +69,12 @@ where
                            are not supported"
                         .into(),
                 },
+                TxType::Protocol(_) => TxResult {
+                        code: ErrorCodes::Ok.into(),
+                        info: "Process Proposal accepted this \
+                                       transaction"
+                            .into(),
+                },
                 TxType::Decrypted(tx) => match self.next_wrapper() {
                     Some(wrapper) => {
                         if wrapper.tx_hash != tx.hash_commitment() {

@@ -34,7 +34,7 @@ where
     pub fn init_chain(
         &mut self,
         init: request::InitChain,
-    ) -> Result<response::InitChain> {
+    ) -> ShellResult<response::InitChain> {
         let mut response = response::InitChain::default();
         let (current_chain_id, _) = self.storage.get_chain_id();
         if current_chain_id != init.chain_id {
