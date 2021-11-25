@@ -56,7 +56,7 @@ where
         let privkey = <EllipticCurve as PairingEngine>::G2Affine::prime_subgroup_generator();
 
         match process_tx(tx) {
-            // This occurs if the wrapper tx signature is invalid
+            // This occurs if the wrapper / protocol tx signature is invalid
             Err(err) => TxResult {
                 code: ErrorCodes::InvalidSig.into(),
                 info: err.to_string(),
@@ -69,11 +69,24 @@ where
                            are not supported"
                         .into(),
                 },
-                TxType::Protocol(_) => TxResult {
-                        code: ErrorCodes::Ok.into(),
-                        info: "Process Proposal accepted this \
-                                       transaction"
-                            .into(),
+                TxType::Protocol(ProtocolTx{tx: protocol_tx, ..}) => {
+                    let rng = &mut ark_std::rand::prelude::StdRng::from_entropy();
+                    match protocol_tx {
+                        ProtocolTxType::DKG(msg) => {
+                            match self.dkg.state_machine.verify_message(todo!(), &msg, rng) {
+                                Ok(_) => shim::response::TxResult {
+                                    code: ErrorCodes::Ok.into(),
+                                    info: "Process proposal accepted this \
+                                           transaction"
+                                        .into(),
+                                },
+                                Err(err) => shim::response::TxResult {
+                                    code: ErrorCodes::InvalidTx.into(),
+                                    info: err.to_string()
+                                }
+                            }
+                        }
+                    }
                 },
                 TxType::Decrypted(tx) => match self.next_wrapper() {
                     Some(wrapper) => {

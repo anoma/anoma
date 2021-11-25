@@ -10,6 +10,8 @@ use tendermint_proto::abci::Evidence;
 #[cfg(not(feature = "ABCI"))]
 use tendermint_proto::crypto::{public_key, PublicKey as TendermintPublicKey};
 #[cfg(feature = "ABCI")]
+use tendermint_rpc_abci::{Client, HttpClient};
+#[cfg(feature = "ABCI")]
 use tendermint_proto_abci::abci::Evidence;
 #[cfg(feature = "ABCI")]
 use tendermint_proto_abci::crypto::{
@@ -65,28 +67,34 @@ where
                 continue;
             };
             let tx_length = processed_tx.tx.len();
+            // If [`process_proposal`] rejected a Tx due to invalid signature, emit
+            // an event here and move on to next tx. If we are rejecting all decrypted
+            // txs because they were submitted in an incorrect order, we do that later.
             if ErrorCodes::from_u32(processed_tx.result.code).unwrap()
                 == ErrorCodes::InvalidSig
             {
-                if let Ok(TxType::Wrapper(wrapper)) = TxType::try_from(tx) {
-                    let mut tx_result = Event::new_tx_event(
-                        &TxType::Wrapper(wrapper),
-                        height.0,
-                    );
-                    tx_result["code"] = processed_tx.result.code.to_string();
-                    tx_result["info"] =
-                        format!("Tx rejected: {}", &processed_tx.result.info);
-                    tx_result["gas_used"] = "0".into();
-                    response.events.push(tx_result.into());
-                    continue;
-                } else {
-                    tracing::error!(
+                let mut tx_result = match TxType::try_from(tx) {
+                    Ok(tx @ TxType::Wrapper(_)) | Ok(tx @ TxType::Protocol(_)) => {
+                        Event::new_tx_event(
+                            &tx,
+                            height.0,
+                        )
+                    }
+                    _ => {
+                        tracing::error!(
                         "Internal logic error: FinalizeBlock received a tx \
                          with an invalid signature error code that could not \
-                         be deserialized to a WrapperTx type"
-                    );
-                    continue;
-                }
+                         be deserialized to a WrapperTx / ProtocolTx type"
+                        );
+                        continue;
+                    }
+                };
+                tx_result["code"] = processed_tx.result.code.to_string();
+                tx_result["info"] =
+                    format!("Tx rejected: {}", &processed_tx.result.info);
+                tx_result["gas_used"] = "0".into();
+                response.events.push(tx_result.into());
+                continue;
             }
 
             let tx_type = if let Ok(tx_type) = process_tx(tx) {
@@ -157,8 +165,23 @@ where
                     );
                     continue;
                 }
-                TxType::Protocol(protocol_tx) => {
-                    todo!()
+                TxType::Protocol(ProtocolTx{tx: protocol_tx, ..}) => {
+                    match protocol_tx {
+                        ProtocolTxType::DKG(msg) => {
+                            match self.dkg.state_machine.apply_message(todo!(), msg.clone()) {
+                                Ok(_) => {
+                                    Event::new_tx_event(&tx_type, height.0)
+                                }
+                                Err(err) => {
+                                    tracing::error!(
+                                        "Internal logic error: FinalizeBlock could not apply a \
+                                        verified DKG protocol message"
+                                    );
+                                    continue;
+                                }
+                            }
+                        }
+                    }
                 }
             };
 
@@ -224,16 +247,13 @@ where
 
         if new_epoch {
             self.update_epoch(&mut response);
-            #[cfg(not(feature = "ABCI"))]
-            {
-                if let Err(err) = self.update_dkg() {
-                    tracing::error!(
-                        "Failed to create a new DKG instance for the new epoch \
-                        with error: {} \n\n\n The state of the last block has \
-                        been persisted, so it is safe to shut down and resolve the issue.",
-                        err,
-                    )
-                }
+            if let Err(err) = self.update_dkg() {
+                tracing::error!(
+                    "Failed to create a new DKG instance for the new epoch \
+                    with error: {} \n\n\n The state of the last block has \
+                    been persisted, so it is safe to shut down and resolve the issue.",
+                    err,
+                )
             }
         }
 
@@ -342,7 +362,6 @@ where
     ///  * Collect PVSS transcripts from other validators
     ///  * If a new public keys is on chain, store it
     ///
-    #[cfg(not(feature = "ABCI"))]
     fn update_dkg(&mut self) -> ShellResult<()> {
         let rng = &mut ark_std::rand::prelude::StdRng::from_entropy();
         let (current_epoch, _) = self.storage.get_current_epoch();
@@ -371,7 +390,7 @@ where
             )
             .collect());
         // TODO: Figure out which validator is actually us
-        let me = validator_set[0].clone();
+        let me = validator_set.validators[0].clone();
 
         // Initiate the new state machine
         self.dkg.state_machine =  DkgStateMachine::new(

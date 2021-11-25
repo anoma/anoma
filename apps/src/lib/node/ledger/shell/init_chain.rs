@@ -10,6 +10,8 @@ use tendermint_proto::abci;
 use tendermint_proto::crypto::{public_key, PublicKey as TendermintPublicKey};
 #[cfg(not(feature = "ABCI"))]
 use tendermint_proto::google::protobuf;
+#[cfg(not(feature = "ABCI"))]
+use tendermint_rpc::{Client, HttpClient};
 #[cfg(feature = "ABCI")]
 use tendermint_proto_abci::abci;
 #[cfg(feature = "ABCI")]
@@ -18,9 +20,12 @@ use tendermint_proto_abci::crypto::{
 };
 #[cfg(feature = "ABCI")]
 use tendermint_proto_abci::google::protobuf;
+#[cfg(feature = "ABCI")]
+use tendermint_rpc_abci::{Client, HttpClient};
 
 use super::*;
 use crate::wasm_loader;
+
 
 impl<D, H> Shell<D, H>
 where
@@ -259,7 +264,7 @@ where
             evidence: Some(evidence_params),
             ..response.consensus_params.unwrap_or_default()
         });
-
+        let mut validator_set = vec![];
         // Set the initial validator set
         for validator in genesis.validators {
             let mut abci_validator = abci::ValidatorUpdate::default();
@@ -273,11 +278,40 @@ where
             abci_validator.pub_key = Some(pub_key);
             let power: u64 =
                 validator.pos_data.voting_power(&genesis.pos_params).into();
+            validator_set.push(TendermintValidator {
+                power,
+                address: validator.pos_data.address.to_string(),
+            });
             abci_validator.power = power
                 .try_into()
                 .expect("unexpected validator's voting power");
             response.validators.push(abci_validator);
         }
+
+        // Initialize the dkg state machine and initiate protocol
+        let rng = &mut ark_std::rand::prelude::StdRng::from_entropy();
+        // TODO: Figure out which validator is actually us
+        let me = validator_set[0].clone();
+        self.dkg.state_machine = DkgStateMachine::new(
+            ValidatorSet::new(validator_set),
+            DkgParams {
+                tau: current_epoch.0,
+                security_threshold: 2^12 / 3,
+                total_weight: 2^12,
+            },
+            me,
+            rng
+        ).expect("Starting DKG at genesis should not fail");
+        // announce our public session keys
+        let tx_bytes = ProtocolTxType::DKG(self.dkg.state_machine.announce())
+            .sign(todo!())
+            .to_bytes();
+        let client = HttpClient::new(todo!())
+            .map_err(|e| Error::DkgUpdate(e.to_string()))?;
+        client
+            .broadcast_tx_sync(tx_bytes.into())
+            .await
+            .expect("Broadcasting DKG session key at genesis should not fail");
 
         Ok(response)
     }

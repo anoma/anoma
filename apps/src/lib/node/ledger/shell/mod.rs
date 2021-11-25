@@ -36,14 +36,10 @@ use anoma::types::transaction::{
 };
 use anoma::types::transaction::protocol::{ProtocolTx, ProtocolTxType};
 use anoma::types::{address, key, token};
-#[cfg(not(feature = "ABCI"))]
 use ark_serialize::{CanonicalSerialize, CanonicalDeserialize};
-#[cfg(not(feature = "ABCI"))]
 use ark_std::rand::SeedableRng;
 use borsh::{BorshDeserialize, BorshSerialize};
-#[cfg(not(feature = "ABCI"))]
 use ferveo::{TendermintValidator, ValidatorSet};
-#[cfg(not(feature = "ABCI"))]
 use ferveo::dkg::{DkgState, Params as DkgParams, PubliclyVerifiableDkg};
 use num_derive::{FromPrimitive, ToPrimitive};
 use num_traits::{FromPrimitive, ToPrimitive};
@@ -71,7 +67,6 @@ use crate::node::ledger::shims::abcipp_shim_types::shim;
 use crate::node::ledger::shims::abcipp_shim_types::shim::response::TxResult;
 use crate::node::ledger::{protocol, storage, tendermint_node};
 
-#[cfg(not(feature = "ABCI"))]
 type DkgStateMachine = PubliclyVerifiableDkg<anoma::types::transaction::EllipticCurve>;
 
 #[derive(Error, Debug)]
@@ -165,7 +160,6 @@ pub struct Shell<
     /// Wrapper txs to be decrypted in the next block proposal
     tx_queue: TxQueue,
     /// State machine for generating distributed public keys
-    #[cfg(not(feature = "ABCI"))]
     dkg: DkgInstance,
 }
 
@@ -219,12 +213,10 @@ impl TxQueue {
 
 /// Holds the DKG state machine
 #[derive(Debug)]
-#[cfg(not(feature = "ABCI"))]
 struct DkgInstance {
     state_machine: DkgStateMachine,
 }
 
-#[cfg(not(feature = "ABCI"))]
 impl Default for DkgInstance {
     fn default() -> Self {
         let rng = &mut ark_std::rand::prelude::StdRng::from_entropy();
@@ -247,7 +239,6 @@ impl Default for DkgInstance {
     }
 }
 
-#[cfg(not(feature = "ABCI"))]
 impl borsh::ser::BorshSerialize for DkgInstance {
     fn serialize<W: std::io::Write>(&self, writer: &mut W) -> std::io::Result<()> {
         let buf = Vec::<u8>::new();
@@ -257,7 +248,6 @@ impl borsh::ser::BorshSerialize for DkgInstance {
     }
 }
 
-#[cfg(not(feature = "ABCI"))]
 impl borsh::de::BorshDeserialize for DkgInstance {
     fn deserialize(buf: &mut &[u8]) -> std::io::Result<Self> {
         let state_machine: Vec<u8> = BorshDeserialize::deserialize(buf)?;
@@ -286,22 +276,19 @@ where
         .expect(
             "Failed to write tx queue to file. Good luck booting back up now",
         );
-        #[cfg(not(feature = "ABCI"))]
-        {
-            let dkg_path = self.base_dir.clone().join(".dkg");
-            let _ = std::fs::File::create(&tx_queue_path)
-                .expect("Creating the file for the DKG state machine dump should not fail");
-            std::fs::write(
-                dkg_path,
-                self.dkg
-                    .try_to_vec()
-                    .expect("Serializing DKG state machine should not fail")
-            )
-            .expect(
-                "Failed to write DKG state machine to file. Good luck booting back up now",
-            );
-        }
 
+        let dkg_path = self.base_dir.clone().join(".dkg");
+        let _ = std::fs::File::create(&tx_queue_path)
+            .expect("Creating the file for the DKG state machine dump should not fail");
+        std::fs::write(
+            dkg_path,
+            self.dkg
+                .try_to_vec()
+                .expect("Serializing DKG state machine should not fail")
+        )
+        .expect(
+            "Failed to write DKG state machine to file. Good luck booting back up now",
+        );
     }
 }
 
@@ -347,17 +334,6 @@ where
         } else {
             Default::default()
         };
-        Self::load_dkg_from_file(storage, base_dir, wasm_dir, tx_queue)
-    }
-
-    /// Load DKG state machine from file and add to Shell instance
-    #[cfg(not(feature = "ABCI"))]
-    fn load_dkg_from_file(
-        storage: Storage<D, H>,
-        base_dir: PathBuf,
-        wasm_dir: PathBuf,
-        tx_queue: TxQueue,
-    ) -> Self {
         // If we are not starting the chain for the first time, the file
         // containing the dkg should exist
         let dkg = if storage.last_height.0 > 0u64 {
@@ -369,10 +345,10 @@ where
                     )
                     .as_ref(),
             )
-                .expect(
-                    "Anoma ledger failed to start: Failed to read file containing \
-             the DKG state machine",
-                )
+            .expect(
+                "Anoma ledger failed to start: Failed to read file containing \
+                 the DKG state machine",
+            )
         } else {
             Default::default()
         };
@@ -385,25 +361,6 @@ where
             wasm_dir,
             tx_queue,
             dkg,
-        }
-    }
-
-    /// Load DKG state machine from file and add to Shell instance
-    #[cfg(feature = "ABCI")]
-    fn load_dkg_from_file(
-        storage: Storage<D, H>,
-        base_dir: PathBuf,
-        wasm_dir: PathBuf,
-        tx_queue: TxQueue,
-    ) -> Self {
-        Self {
-            storage,
-            gas_meter: BlockGasMeter::default(),
-            write_log: WriteLog::default(),
-            byzantine_validators: vec![],
-            base_dir,
-            wasm_dir,
-            tx_queue,
         }
     }
 
