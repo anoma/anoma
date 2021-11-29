@@ -771,6 +771,30 @@
 <span id="771">771</span>
 <span id="772">772</span>
 <span id="773">773</span>
+<span id="774">774</span>
+<span id="775">775</span>
+<span id="776">776</span>
+<span id="777">777</span>
+<span id="778">778</span>
+<span id="779">779</span>
+<span id="780">780</span>
+<span id="781">781</span>
+<span id="782">782</span>
+<span id="783">783</span>
+<span id="784">784</span>
+<span id="785">785</span>
+<span id="786">786</span>
+<span id="787">787</span>
+<span id="788">788</span>
+<span id="789">789</span>
+<span id="790">790</span>
+<span id="791">791</span>
+<span id="792">792</span>
+<span id="793">793</span>
+<span id="794">794</span>
+<span id="795">795</span>
+<span id="796">796</span>
+<span id="797">797</span>
 </pre><pre class="rust">
 <span class="doccomment">//! Ledger&#39;s state storage with key-value backed store and a merkle tree</span>
 
@@ -873,7 +897,7 @@
 }
 
 <span class="doccomment">/// The block&#39;s state as stored in the database.</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">BlockState</span> {
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">BlockStateRead</span> {
     <span class="doccomment">/// Merkle tree root</span>
     <span class="kw">pub</span> <span class="ident">root</span>: <span class="ident">H256</span>,
     <span class="doccomment">/// Merkle tree store</span>
@@ -896,6 +920,30 @@
     <span class="kw">pub</span> <span class="ident">address_gen</span>: <span class="ident">EstablishedAddressGen</span>,
 }
 
+<span class="doccomment">/// The block&#39;s state to write into the database.</span>
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">BlockStateWrite</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
+    <span class="doccomment">/// Merkle tree root</span>
+    <span class="kw">pub</span> <span class="ident">root</span>: <span class="ident">H256</span>,
+    <span class="doccomment">/// Merkle tree store</span>
+    <span class="kw">pub</span> <span class="ident">store</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">DefaultStore</span><span class="op">&lt;</span><span class="ident">H256</span><span class="op">&gt;</span>,
+    <span class="doccomment">/// Hash of the block</span>
+    <span class="kw">pub</span> <span class="ident">hash</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">BlockHash</span>,
+    <span class="doccomment">/// Height of the block</span>
+    <span class="kw">pub</span> <span class="ident">height</span>: <span class="ident">BlockHeight</span>,
+    <span class="doccomment">/// Epoch of the block</span>
+    <span class="kw">pub</span> <span class="ident">epoch</span>: <span class="ident">Epoch</span>,
+    <span class="doccomment">/// Predecessor block epochs</span>
+    <span class="kw">pub</span> <span class="ident">pred_epochs</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">Epochs</span>,
+    <span class="doccomment">/// Minimum block height at which the next epoch may start</span>
+    <span class="kw">pub</span> <span class="ident">next_epoch_min_start_height</span>: <span class="ident">BlockHeight</span>,
+    <span class="doccomment">/// Minimum block time at which the next epoch may start</span>
+    <span class="kw">pub</span> <span class="ident">next_epoch_min_start_time</span>: <span class="ident">DateTimeUtc</span>,
+    <span class="doccomment">/// Accounts&#39; subspaces storage for arbitrary key-values</span>
+    <span class="kw">pub</span> <span class="ident">subspaces</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">Key</span>, <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="doccomment">/// Established address generator</span>
+    <span class="kw">pub</span> <span class="ident">address_gen</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">EstablishedAddressGen</span>,
+}
+
 <span class="doccomment">/// A database backend.</span>
 <span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">DB</span>: <span class="ident">std::fmt::Debug</span> {
     <span class="doccomment">/// open the database from provided path</span>
@@ -905,13 +953,13 @@
     <span class="kw">fn</span> <span class="ident">flush</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span>;
 
     <span class="doccomment">/// Write a block</span>
-    <span class="kw">fn</span> <span class="ident">write_block</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">state</span>: <span class="ident">BlockState</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span>;
+    <span class="kw">fn</span> <span class="ident">write_block</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">state</span>: <span class="ident">BlockStateWrite</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span>;
 
     <span class="doccomment">/// Read the value with the given height and the key from the DB</span>
     <span class="kw">fn</span> <span class="ident">read</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">height</span>: <span class="ident">BlockHeight</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">Key</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>;
 
     <span class="doccomment">/// Read the last committed block</span>
-    <span class="kw">fn</span> <span class="ident">read_last_block</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">BlockState</span><span class="op">&gt;</span><span class="op">&gt;</span>;
+    <span class="kw">fn</span> <span class="ident">read_last_block</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">BlockStateRead</span><span class="op">&gt;</span><span class="op">&gt;</span>;
 }
 
 <span class="doccomment">/// A database prefix iterator.</span>
@@ -972,7 +1020,7 @@
     <span class="doccomment">/// Load the full state at the last committed height, if any. Returns the</span>
     <span class="doccomment">/// Merkle root hash and the height of the committed block.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">load_last_state</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">BlockState</span> {
+        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">BlockStateRead</span> {
             <span class="ident">root</span>,
             <span class="ident">store</span>,
             <span class="ident">hash</span>,
@@ -1018,17 +1066,17 @@
 
     <span class="doccomment">/// Persist the current block&#39;s state to the database</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">commit</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">state</span> <span class="op">=</span> <span class="ident">BlockState</span> {
+        <span class="kw">let</span> <span class="ident">state</span> <span class="op">=</span> <span class="ident">BlockStateWrite</span> {
             <span class="ident">root</span>: <span class="kw-2">*</span><span class="self">self</span>.<span class="ident">block</span>.<span class="ident">tree</span>.<span class="number">0</span>.<span class="ident">root</span>(),
-            <span class="ident">store</span>: <span class="self">self</span>.<span class="ident">block</span>.<span class="ident">tree</span>.<span class="number">0</span>.<span class="ident">store</span>().<span class="ident">clone</span>(),
-            <span class="ident">hash</span>: <span class="self">self</span>.<span class="ident">block</span>.<span class="ident">hash</span>.<span class="ident">clone</span>(),
+            <span class="ident">store</span>: <span class="self">self</span>.<span class="ident">block</span>.<span class="ident">tree</span>.<span class="number">0</span>.<span class="ident">store</span>(),
+            <span class="ident">hash</span>: <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">block</span>.<span class="ident">hash</span>,
             <span class="ident">height</span>: <span class="self">self</span>.<span class="ident">block</span>.<span class="ident">height</span>,
             <span class="ident">epoch</span>: <span class="self">self</span>.<span class="ident">block</span>.<span class="ident">epoch</span>,
-            <span class="ident">pred_epochs</span>: <span class="self">self</span>.<span class="ident">block</span>.<span class="ident">pred_epochs</span>.<span class="ident">clone</span>(),
+            <span class="ident">pred_epochs</span>: <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">block</span>.<span class="ident">pred_epochs</span>,
             <span class="ident">next_epoch_min_start_height</span>: <span class="self">self</span>.<span class="ident">next_epoch_min_start_height</span>,
             <span class="ident">next_epoch_min_start_time</span>: <span class="self">self</span>.<span class="ident">next_epoch_min_start_time</span>,
-            <span class="ident">subspaces</span>: <span class="self">self</span>.<span class="ident">block</span>.<span class="ident">subspaces</span>.<span class="ident">clone</span>(),
-            <span class="ident">address_gen</span>: <span class="self">self</span>.<span class="ident">address_gen</span>.<span class="ident">clone</span>(),
+            <span class="ident">subspaces</span>: <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">block</span>.<span class="ident">subspaces</span>,
+            <span class="ident">address_gen</span>: <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">address_gen</span>,
         };
         <span class="self">self</span>.<span class="ident">db</span>.<span class="ident">write_block</span>(<span class="ident">state</span>)<span class="question-mark">?</span>;
         <span class="self">self</span>.<span class="ident">last_height</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">block</span>.<span class="ident">height</span>;

@@ -325,7 +325,7 @@
 <span class="kw">use</span> <span class="ident">std::ops::Bound</span>::{<span class="ident">Excluded</span>, <span class="ident">Included</span>};
 <span class="kw">use</span> <span class="ident">std::path::Path</span>;
 
-<span class="kw">use</span> <span class="kw">super</span>::{<span class="ident">BlockState</span>, <span class="ident">DBIter</span>, <span class="ident">Error</span>, <span class="prelude-ty">Result</span>, <span class="ident">DB</span>};
+<span class="kw">use</span> <span class="kw">super</span>::{<span class="ident">BlockStateRead</span>, <span class="ident">BlockStateWrite</span>, <span class="ident">DBIter</span>, <span class="ident">Error</span>, <span class="prelude-ty">Result</span>, <span class="ident">DB</span>};
 <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::ledger::storage::types</span>::{<span class="self">self</span>, <span class="ident">KVBytes</span>, <span class="ident">PrefixIterator</span>};
 <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::types::storage</span>::{<span class="ident">BlockHeight</span>, <span class="ident">Key</span>, <span class="ident">KeySeg</span>, <span class="ident">KEY_SEGMENT_SEPARATOR</span>};
 <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::types::time::DateTimeUtc</span>;
@@ -349,8 +349,8 @@
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="kw">fn</span> <span class="ident">write_block</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">state</span>: <span class="ident">BlockState</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">BlockState</span> {
+    <span class="kw">fn</span> <span class="ident">write_block</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">state</span>: <span class="ident">BlockStateWrite</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="ident">BlockStateWrite</span> {
             <span class="ident">root</span>,
             <span class="ident">store</span>,
             <span class="ident">hash</span>,
@@ -361,7 +361,7 @@
             <span class="ident">next_epoch_min_start_time</span>,
             <span class="ident">subspaces</span>,
             <span class="ident">address_gen</span>,
-        }: <span class="ident">BlockState</span> <span class="op">=</span> <span class="ident">state</span>;
+        }: <span class="ident">BlockStateWrite</span> <span class="op">=</span> <span class="ident">state</span>;
 
         <span class="comment">// Epoch start height and time</span>
         <span class="self">self</span>.<span class="number">0</span>.<span class="ident">insert</span>(
@@ -448,7 +448,7 @@
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">read_last_block</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">BlockState</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">read_last_block</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">BlockStateRead</span><span class="op">&gt;</span><span class="op">&gt;</span> {
         <span class="comment">// Block height</span>
         <span class="kw">let</span> <span class="ident">height</span>: <span class="ident">BlockHeight</span>;
         <span class="kw">match</span> <span class="self">self</span>.<span class="number">0</span>.<span class="ident">get</span>(<span class="string">&quot;height&quot;</span>) {
@@ -550,7 +550,7 @@
                 <span class="prelude-val">Some</span>(<span class="ident">epoch</span>),
                 <span class="prelude-val">Some</span>(<span class="ident">pred_epochs</span>),
                 <span class="prelude-val">Some</span>(<span class="ident">address_gen</span>),
-            ) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="ident">BlockState</span> {
+            ) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="ident">BlockStateRead</span> {
                 <span class="ident">root</span>,
                 <span class="ident">store</span>,
                 <span class="ident">hash</span>,
