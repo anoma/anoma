@@ -1,0 +1,1 @@
+initSidebarItems({"fn":[["peer_cred",""]],"mod":[["impl_linux",""]],"struct":[["UCred","Credentials for a UNIX process for credentials passing."]]});

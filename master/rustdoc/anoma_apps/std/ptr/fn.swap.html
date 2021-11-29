@@ -1,0 +1,63 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Swaps the values at two mutable locations of the same type, without deinitializing either."><meta name="keywords" content="rust, rustlang, rust-lang, swap"><title>swap in anoma_apps::std::ptr - Rust</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script id="default-settings"></script><script src="../../../storage.js"></script><script src="../../../crates.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="shortcut icon" href="https://docs.anoma.network/favicon.png"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc fn"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../anoma_apps/index.html'><div class='logo-container'><img src='https://docs.anoma.network/rustdoc-logo.png' alt='logo'></div></a><div class="sidebar-elems"><h2 class="location">Other items in<br><a href="../../index.html">anoma_apps</a>::<wbr><a href="../index.html">std</a>::<wbr><a href="index.html">ptr</a></h2><div id="sidebar-vars" data-name="swap" data-ty="fn" data-relpath=""></div><script defer src="sidebar-items.js"></script></div></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img src="../../../brush.svg" width="18" height="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../../settings.html" title="settings"><img src="../../../wheel.svg" width="18" height="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><h1 class="fqn"><span class="in-band">Function <a href="../../index.html">anoma_apps</a>::<wbr><a href="../index.html">std</a>::<wbr><a href="index.html">ptr</a>::<wbr><a class="fn" href="#">swap</a><button id="copy-path" onclick="copy_path(this)" title="copy path"><img src="../../../clipboard.svg" width="19" height="18" alt="Copy item import" title="Copy item import to clipboard"></button></span><span class="out-of-band"><span class="since" title="Stable since Rust version 1.0.0">1.0.0</span><span id="render-detail"><a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">[<span class="inner">&#x2212;</span>]</a></span><a class="srclink" href="https://doc.rust-lang.org/1.54.0/src/core/ptr/mod.rs.html#365" title="goto source code">[src]</a></span></h1><pre class="rust fn">pub const unsafe fn swap&lt;T&gt;(x: <a class="primitive" href="https://doc.rust-lang.org/1.54.0/std/primitive.pointer.html">*mut T</a>, y: <a class="primitive" href="https://doc.rust-lang.org/1.54.0/std/primitive.pointer.html">*mut T</a>)</pre><details class="rustdoc-toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><p>Swaps the values at two mutable locations of the same type, without
+deinitializing either.</p>
+<p>But for the following two exceptions, this function is semantically
+equivalent to <a href="../mem/fn.swap.html" title="mem::swap"><code>mem::swap</code></a>:</p>
+<ul>
+<li>
+<p>It operates on raw pointers instead of references. When references are
+available, <a href="../mem/fn.swap.html" title="mem::swap"><code>mem::swap</code></a> should be preferred.</p>
+</li>
+<li>
+<p>The two pointed-to values may overlap. If the values do overlap, then the
+overlapping region of memory from <code>x</code> will be used. This is demonstrated
+in the second example below.</p>
+</li>
+</ul>
+<h1 id="safety" class="section-header"><a href="#safety">Safety</a></h1>
+<p>Behavior is undefined if any of the following conditions are violated:</p>
+<ul>
+<li>
+<p>Both <code>x</code> and <code>y</code> must be <a href="index.html#safety">valid</a> for both reads and writes.</p>
+</li>
+<li>
+<p>Both <code>x</code> and <code>y</code> must be properly aligned.</p>
+</li>
+</ul>
+<p>Note that even if <code>T</code> has size <code>0</code>, the pointers must be non-null and properly aligned.</p>
+<h1 id="examples" class="section-header"><a href="#examples">Examples</a></h1>
+<p>Swapping two non-overlapping regions:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="kw">use</span> <span class="ident">std::ptr</span>;
+
+<span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">array</span> <span class="op">=</span> [<span class="number">0</span>, <span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>];
+
+<span class="kw">let</span> <span class="ident">x</span> <span class="op">=</span> <span class="ident">array</span>[<span class="number">0</span>..].<span class="ident">as_mut_ptr</span>() <span class="kw">as</span> <span class="kw-2">*</span><span class="kw-2">mut</span> [<span class="ident">u32</span>; <span class="number">2</span>]; <span class="comment">// this is `array[0..2]`</span>
+<span class="kw">let</span> <span class="ident">y</span> <span class="op">=</span> <span class="ident">array</span>[<span class="number">2</span>..].<span class="ident">as_mut_ptr</span>() <span class="kw">as</span> <span class="kw-2">*</span><span class="kw-2">mut</span> [<span class="ident">u32</span>; <span class="number">2</span>]; <span class="comment">// this is `array[2..4]`</span>
+
+<span class="kw">unsafe</span> {
+    <span class="ident">ptr::swap</span>(<span class="ident">x</span>, <span class="ident">y</span>);
+    <span class="macro">assert_eq!</span>([<span class="number">2</span>, <span class="number">3</span>, <span class="number">0</span>, <span class="number">1</span>], <span class="ident">array</span>);
+}</pre></div>
+<p>Swapping two overlapping regions:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="kw">use</span> <span class="ident">std::ptr</span>;
+
+<span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">array</span>: [<span class="ident">i32</span>; <span class="number">4</span>] <span class="op">=</span> [<span class="number">0</span>, <span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>];
+
+<span class="kw">let</span> <span class="ident">array_ptr</span>: <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">i32</span> <span class="op">=</span> <span class="ident">array</span>.<span class="ident">as_mut_ptr</span>();
+
+<span class="kw">let</span> <span class="ident">x</span> <span class="op">=</span> <span class="ident">array_ptr</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw-2">mut</span> [<span class="ident">i32</span>; <span class="number">3</span>]; <span class="comment">// this is `array[0..3]`</span>
+<span class="kw">let</span> <span class="ident">y</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">array_ptr</span>.<span class="ident">add</span>(<span class="number">1</span>) } <span class="kw">as</span> <span class="kw-2">*</span><span class="kw-2">mut</span> [<span class="ident">i32</span>; <span class="number">3</span>]; <span class="comment">// this is `array[1..4]`</span>
+
+<span class="kw">unsafe</span> {
+    <span class="ident">ptr::swap</span>(<span class="ident">x</span>, <span class="ident">y</span>);
+    <span class="comment">// The indices `1..3` of the slice overlap between `x` and `y`.</span>
+    <span class="comment">// Reasonable results would be for to them be `[2, 3]`, so that indices `0..3` are</span>
+    <span class="comment">// `[1, 2, 3]` (matching `y` before the `swap`); or for them to be `[0, 1]`</span>
+    <span class="comment">// so that indices `1..4` are `[0, 1, 2]` (matching `x` before the `swap`).</span>
+    <span class="comment">// This implementation is defined to make the latter choice.</span>
+    <span class="macro">assert_eq!</span>([<span class="number">1</span>, <span class="number">0</span>, <span class="number">1</span>, <span class="number">2</span>], <span class="ident">array</span>);
+}</pre></div>
+</div></details></section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="anoma_apps" data-search-index-js="../../../search-index.js" data-search-js="../../../search.js"></div><script src="../../../main.js"></script></body></html>
