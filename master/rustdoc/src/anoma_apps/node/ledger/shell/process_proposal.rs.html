@@ -1022,13 +1022,13 @@
             <span class="ident">tx</span>: <span class="ident">new_tx</span>.<span class="ident">to_bytes</span>(),
         };
         <span class="kw">let</span> <span class="ident">response</span> <span class="op">=</span> <span class="ident">shell</span>.<span class="ident">process_proposal</span>(<span class="ident">request</span>);
+        <span class="kw">let</span> <span class="ident">expected_error</span> <span class="op">=</span> <span class="string">&quot;Signature verification failed: signature error&quot;</span>;
         <span class="macro">assert_eq!</span>(<span class="ident">response</span>.<span class="ident">result</span>.<span class="ident">code</span>, <span class="ident">u32::from</span>(<span class="ident">ErrorCodes::InvalidSig</span>));
-        <span class="macro">assert_eq!</span>(
+        <span class="macro">assert!</span>(
+            <span class="ident">response</span>.<span class="ident">result</span>.<span class="ident">info</span>.<span class="ident">contains</span>(<span class="ident">expected_error</span>),
+            <span class="string">&quot;Result info {} doesn&#39;t contain the expected error {}&quot;</span>,
             <span class="ident">response</span>.<span class="ident">result</span>.<span class="ident">info</span>,
-            <span class="ident">String::from</span>(
-                <span class="string">&quot;Signature verification failed: signature error: Verification \
-                 equation was not satisfied&quot;</span>
-            )
+            <span class="ident">expected_error</span>
         );
         <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
         {
