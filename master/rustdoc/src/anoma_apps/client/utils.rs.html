@@ -701,10 +701,18 @@
 <span id="701">701</span>
 <span id="702">702</span>
 <span id="703">703</span>
+<span id="704">704</span>
+<span id="705">705</span>
+<span id="706">706</span>
+<span id="707">707</span>
+<span id="708">708</span>
+<span id="709">709</span>
+<span id="710">710</span>
+<span id="711">711</span>
 </pre><pre class="rust">
 <span class="kw">use</span> <span class="ident">std::collections</span>::{<span class="ident">HashMap</span>, <span class="ident">HashSet</span>};
 <span class="kw">use</span> <span class="ident">std::fs</span>::{<span class="self">self</span>, <span class="ident">File</span>, <span class="ident">OpenOptions</span>};
-<span class="kw">use</span> <span class="ident">std::io::Write</span>;
+<span class="kw">use</span> <span class="ident">std::io</span>::{<span class="ident">Read</span>, <span class="ident">Write</span>};
 <span class="kw">use</span> <span class="ident">std::net</span>::{<span class="ident">IpAddr</span>, <span class="ident">Ipv4Addr</span>, <span class="ident">SocketAddr</span>};
 <span class="kw">use</span> <span class="ident">std::path::PathBuf</span>;
 <span class="kw">use</span> <span class="ident">std::str::FromStr</span>;
@@ -713,6 +721,7 @@
 <span class="kw">use</span> <span class="ident">anoma::types::key::ed25519::Keypair</span>;
 <span class="kw">use</span> <span class="ident">anoma::types</span>::{<span class="ident">address</span>, <span class="ident">token</span>};
 <span class="kw">use</span> <span class="ident">borsh::BorshSerialize</span>;
+<span class="kw">use</span> <span class="ident">flate2::read::GzDecoder</span>;
 <span class="kw">use</span> <span class="ident">flate2::write::GzEncoder</span>;
 <span class="kw">use</span> <span class="ident">flate2::Compression</span>;
 <span class="kw">use</span> <span class="ident">rand::prelude::ThreadRng</span>;
@@ -738,9 +747,12 @@
 
 <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">NET_ACCOUNTS_DIR</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;setup&quot;</span>;
 <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">NET_OTHER_ACCOUNTS_DIR</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;other&quot;</span>;
+<span class="doccomment">/// Github URL prefix of released Anoma network configs</span>
+<span class="kw">const</span> <span class="ident">RELEASE_PREFIX</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span>
+    <span class="string">&quot;https://github.com/heliaxdev/anoma-network-config/releases/download&quot;</span>;
 
-<span class="doccomment">/// Configure Anoma to join an existing network. The chain must be known in the</span>
-<span class="doccomment">/// &lt;https://github.com/heliaxdev/anoma-network-config&gt; repository.</span>
+<span class="doccomment">/// Configure Anoma to join an existing network. The chain must be released in</span>
+<span class="doccomment">/// the &lt;https://github.com/heliaxdev/anoma-network-config&gt; repository.</span>
 <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">join_network</span>(
     <span class="ident">global_args</span>: <span class="ident">args::Global</span>,
     <span class="ident">args::JoinNetwork</span> { <span class="ident">chain_id</span> }: <span class="ident">args::JoinNetwork</span>,
@@ -748,27 +760,22 @@
     <span class="kw">let</span> <span class="ident">chain_dir</span> <span class="op">=</span> <span class="ident">global_args</span>.<span class="ident">base_dir</span>.<span class="ident">join</span>(<span class="ident">chain_id</span>.<span class="ident">as_str</span>());
     <span class="ident">fs::create_dir_all</span>(<span class="kw-2">&amp;</span><span class="ident">chain_dir</span>).<span class="ident">expect</span>(<span class="string">&quot;Couldn&#39;t create chain directory&quot;</span>);
 
-    <span class="kw">let</span> <span class="ident">genesis_file</span> <span class="op">=</span> <span class="macro">format!</span>(<span class="string">&quot;{}.toml&quot;</span>, <span class="ident">chain_id</span>);
-    <span class="kw">let</span> <span class="ident">global_config_file</span> <span class="op">=</span> <span class="string">&quot;global-config.toml&quot;</span>;
-    <span class="kw">let</span> <span class="ident">config_file</span> <span class="op">=</span> <span class="macro">format!</span>(<span class="string">&quot;{}/config.toml&quot;</span>, <span class="ident">chain_id</span>);
+    <span class="kw">let</span> <span class="ident">release_filename</span> <span class="op">=</span> <span class="macro">format!</span>(<span class="string">&quot;{}.tar.gz&quot;</span>, <span class="ident">chain_id</span>);
+    <span class="kw">let</span> <span class="ident">release_url</span> <span class="op">=</span>
+        <span class="macro">format!</span>(<span class="string">&quot;{}/{}/{}&quot;</span>, <span class="ident">RELEASE_PREFIX</span>, <span class="ident">chain_id</span>, <span class="ident">release_filename</span>);
 
-    <span class="kw">let</span> <span class="ident">file_url_prefix</span> <span class="op">=</span> <span class="macro">format!</span>(<span class="string">&quot;https://raw.githubusercontent.com/heliaxdev/anoma-network-config/master/final/{}/.anoma&quot;</span>, <span class="ident">chain_id</span>);
-    <span class="kw">let</span> <span class="ident">genesis_url</span> <span class="op">=</span> <span class="macro">format!</span>(<span class="string">&quot;{}/{}&quot;</span>, <span class="ident">file_url_prefix</span>, <span class="ident">genesis_file</span>);
-    <span class="kw">let</span> <span class="ident">global_config_url</span> <span class="op">=</span>
-        <span class="macro">format!</span>(<span class="string">&quot;{}/{}&quot;</span>, <span class="ident">file_url_prefix</span>, <span class="ident">global_config_file</span>);
-    <span class="kw">let</span> <span class="ident">config_url</span> <span class="op">=</span> <span class="macro">format!</span>(<span class="string">&quot;{}/{}&quot;</span>, <span class="ident">file_url_prefix</span>, <span class="ident">config_file</span>);
+    <span class="comment">// Read or download the release archive</span>
+    <span class="macro">println!</span>(<span class="string">&quot;Downloading config release from {} ...&quot;</span>, <span class="ident">release_url</span>);
+    <span class="kw">let</span> <span class="ident">release</span> <span class="op">=</span> <span class="ident">download_file</span>(<span class="ident">release_url</span>).<span class="kw">await</span>;
 
-    <span class="kw">let</span> <span class="ident">genesis</span> <span class="op">=</span> <span class="ident">download_file</span>(<span class="ident">genesis_url</span>).<span class="kw">await</span>;
-    <span class="kw">let</span> <span class="ident">global_config</span> <span class="op">=</span> <span class="ident">download_file</span>(<span class="ident">global_config_url</span>).<span class="kw">await</span>;
-    <span class="kw">let</span> <span class="ident">config</span> <span class="op">=</span> <span class="ident">download_file</span>(<span class="ident">config_url</span>).<span class="kw">await</span>;
+    <span class="comment">// Decode and unpack the archive</span>
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">decoder</span> <span class="op">=</span> <span class="ident">GzDecoder::new</span>(<span class="kw-2">&amp;</span><span class="ident">release</span>[..]);
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tar</span> <span class="op">=</span> <span class="ident">String::new</span>();
+    <span class="ident">decoder</span>.<span class="ident">read_to_string</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">tar</span>).<span class="ident">unwrap</span>();
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">archive</span> <span class="op">=</span> <span class="ident">tar::Archive::new</span>(<span class="ident">tar</span>.<span class="ident">as_bytes</span>());
+    <span class="ident">archive</span>.<span class="ident">unpack</span>(<span class="string">&quot;.&quot;</span>).<span class="ident">unwrap</span>();
 
-    <span class="ident">std::fs::write</span>(<span class="ident">global_args</span>.<span class="ident">base_dir</span>.<span class="ident">join</span>(<span class="ident">genesis_file</span>), <span class="ident">genesis</span>).<span class="ident">unwrap</span>();
-    <span class="ident">std::fs::write</span>(
-        <span class="ident">global_args</span>.<span class="ident">base_dir</span>.<span class="ident">join</span>(<span class="ident">global_config_file</span>),
-        <span class="ident">global_config</span>,
-    )
-    .<span class="ident">unwrap</span>();
-    <span class="ident">std::fs::write</span>(<span class="ident">global_args</span>.<span class="ident">base_dir</span>.<span class="ident">join</span>(<span class="ident">config_file</span>), <span class="ident">config</span>).<span class="ident">unwrap</span>();
+    <span class="macro">println!</span>(<span class="string">&quot;Successfully configured for chain ID {}&quot;</span>, <span class="ident">chain_id</span>);
 }
 
 <span class="doccomment">/// Initialize a new test network with the given validators and faucet accounts.</span>
@@ -1196,6 +1203,14 @@
     <span class="ident">config</span>.<span class="ident">ledger</span>.<span class="ident">tendermint</span>.<span class="ident">consensus_timeout_commit</span> <span class="op">=</span>
         <span class="ident">consensus_timeout_commit</span>;
     <span class="ident">config</span>.<span class="ident">ledger</span>.<span class="ident">tendermint</span>.<span class="ident">p2p_allow_duplicate_ip</span> <span class="op">=</span> <span class="ident">allow_duplicate_ip</span>;
+    <span class="comment">// Open P2P address</span>
+    <span class="kw">if</span> <span class="op">!</span><span class="ident">localhost</span> {
+        <span class="ident">config</span>
+            .<span class="ident">ledger</span>
+            .<span class="ident">tendermint</span>
+            .<span class="ident">p2p_address</span>
+            .<span class="ident">set_ip</span>(<span class="ident">IpAddr::V4</span>(<span class="ident">Ipv4Addr::new</span>(<span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>)));
+    }
     <span class="ident">config</span>.<span class="ident">ledger</span>.<span class="ident">genesis_time</span> <span class="op">=</span> <span class="ident">genesis</span>.<span class="ident">genesis_time</span>.<span class="ident">into</span>();
     <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">discover</span>) <span class="op">=</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">config</span>.<span class="ident">intent_gossiper</span>.<span class="ident">discover_peer</span> {
         <span class="ident">discover</span>.<span class="ident">bootstrap_peers</span> <span class="op">=</span> <span class="ident">bootstrap_peers</span>;
@@ -1387,7 +1402,7 @@
     <span class="ident">genesis_validator</span>
 }
 
-<span class="kw">async</span> <span class="kw">fn</span> <span class="ident">download_file</span>(<span class="ident">url</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span><span class="ident">str</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">String</span> {
+<span class="kw">async</span> <span class="kw">fn</span> <span class="ident">download_file</span>(<span class="ident">url</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span><span class="ident">str</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="ident">url</span> <span class="op">=</span> <span class="ident">url</span>.<span class="ident">as_ref</span>();
     <span class="ident">reqwest::get</span>(<span class="ident">url</span>)
         .<span class="kw">await</span>
@@ -1395,7 +1410,7 @@
             <span class="macro">eprintln!</span>(<span class="string">&quot;File not found at {}. Error: {}&quot;</span>, <span class="ident">url</span>, <span class="ident">err</span>);
             <span class="ident">cli::safe_exit</span>(<span class="number">1</span>)
         })
-        .<span class="ident">text</span>()
+        .<span class="ident">bytes</span>()
         .<span class="kw">await</span>
         .<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="ident">err</span><span class="op">|</span> {
             <span class="macro">eprintln!</span>(
@@ -1404,6 +1419,7 @@
             );
             <span class="ident">cli::safe_exit</span>(<span class="number">1</span>)
         })
+        .<span class="ident">to_vec</span>()
 }
 </pre></div>
 </section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="anoma_apps" data-search-index-js="../../../search-index.js" data-search-js="../../../search.js"></div><script src="../../../main.js"></script><script src="../../../source-script.js"></script><script src="../../../source-files.js"></script></body></html>
