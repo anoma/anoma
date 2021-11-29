@@ -138,6 +138,7 @@ impl DB for RocksDB {
             next_epoch_min_start_time,
             subspaces,
             address_gen,
+            encryption_key,
         }: BlockState = state;
 
         // Epoch start height and time
@@ -208,6 +209,13 @@ impl DB for RocksDB {
                 .push(&"address_gen".to_owned())
                 .map_err(Error::KeyError)?;
             batch.put(key.to_string(), types::encode(&address_gen));
+        }
+        // Encryption key
+        {
+            let key = prefix_key
+                .push(&"encryption_key".to_owned())
+                .map_err(Error::KeyError)?;
+            batch.put(key.to_string(), types::encode(&encryption_key));
         }
         let mut write_opts = WriteOptions::default();
         write_opts.disable_wal(true);
@@ -294,6 +302,7 @@ impl DB for RocksDB {
         let mut epoch = None;
         let mut pred_epochs = None;
         let mut address_gen = None;
+        let mut encryption_key = None;
         let mut subspaces: HashMap<Key, Vec<u8>> = HashMap::new();
         for (key, bytes) in self.0.iterator_opt(
             IteratorMode::From(prefix.as_bytes(), Direction::Forward),
@@ -357,12 +366,25 @@ impl DB for RocksDB {
                             types::decode(bytes).map_err(Error::CodingError)?,
                         );
                     }
+                    "encryption_key" => {
+                        encryption_key = Some(
+                            types::decode(bytes).map_err(Error::CodingError)?,
+                        );
+                    }
                     _ => unknown_key_error(path)?,
                 },
                 None => unknown_key_error(path)?,
             }
         }
-        match (root, store, hash, epoch, pred_epochs, address_gen) {
+        match (
+            root,
+            store,
+            hash,
+            epoch,
+            pred_epochs,
+            address_gen,
+            encryption_key,
+        ) {
             (
                 Some(root),
                 Some(store),
@@ -370,6 +392,7 @@ impl DB for RocksDB {
                 Some(epoch),
                 Some(pred_epochs),
                 Some(address_gen),
+                Some(encryption_key),
             ) => Ok(Some(BlockState {
                 root,
                 store,
@@ -381,6 +404,7 @@ impl DB for RocksDB {
                 next_epoch_min_start_time,
                 subspaces,
                 address_gen,
+                encryption_key,
             })),
             _ => Err(Error::Temporary {
                 error: "Essential data couldn't be read from the DB"

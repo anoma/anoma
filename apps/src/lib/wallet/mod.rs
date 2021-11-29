@@ -9,6 +9,8 @@ use std::rc::Rc;
 
 use anoma::types::address::Address;
 use anoma::types::key::ed25519::{Keypair, PublicKey, PublicKeyHash};
+use anoma::types::key::dkg_session_keys::DkgPublicKey;
+use anoma::types::transaction::EllipticCurve;
 pub use store::wallet_file;
 use thiserror::Error;
 
@@ -97,6 +99,14 @@ impl Wallet {
         // Cache the newly added key
         self.decrypted_key_cache.insert(alias.clone(), key.clone());
         (alias, key)
+    }
+
+    /// Generate a new DKG keypair and insert it into the store.
+    /// Returns the public side of the keypair.
+    pub fn gen_dkg_key(
+        &mut self,
+    ) -> DkgPublicKey {
+        self.store.gen_dkg_key()
     }
 
     /// Find the stored key by an alias, a public key hash or a public key.

@@ -69,11 +69,18 @@ where
                            are not supported"
                         .into(),
                 },
-                TxType::Protocol(ProtocolTx{tx: protocol_tx, ..}) => {
-                    let rng = &mut ark_std::rand::prelude::StdRng::from_entropy();
+                TxType::Protocol(ProtocolTx {
+                    tx: protocol_tx, ..
+                }) => {
+                    let rng =
+                        &mut ark_std::rand::prelude::StdRng::from_entropy();
                     match protocol_tx {
                         ProtocolTxType::DKG(msg) => {
-                            match self.dkg.state_machine.verify_message(todo!(), &msg, rng) {
+                            match self.dkg.state_machine.verify_message(
+                                todo!(),
+                                &msg,
+                                rng,
+                            ) {
                                 Ok(_) => shim::response::TxResult {
                                     code: ErrorCodes::Ok.into(),
                                     info: "Process proposal accepted this \
@@ -82,12 +89,12 @@ where
                                 },
                                 Err(err) => shim::response::TxResult {
                                     code: ErrorCodes::InvalidTx.into(),
-                                    info: err.to_string()
-                                }
+                                    info: err.to_string(),
+                                },
                             }
                         }
                     }
-                },
+                }
                 TxType::Decrypted(tx) => match self.next_wrapper() {
                     Some(wrapper) => {
                         if wrapper.tx_hash != tx.hash_commitment() {

@@ -5,9 +5,7 @@ use anoma::ledger::pos::{BondId, Bonds, Unbonds};
 use anoma::proto::Tx;
 use anoma::types::address::Address;
 use anoma::types::key::ed25519::Keypair;
-use anoma::types::transaction::{
-    pos, Fee, InitAccount, InitValidator, UpdateVp, WrapperTx,
-};
+use anoma::types::transaction::{pos, Fee, InitAccount, InitValidator, UpdateVp, WrapperTx, EllipticCurve};
 use anoma::types::{address, token};
 use anoma::{ledger, vm};
 use async_std::io::{self, WriteExt};
@@ -149,6 +147,7 @@ pub async fn submit_init_validator(
         account_key,
         consensus_key,
         rewards_account_key,
+        protocol_key,
         validator_vp_code_path,
         rewards_vp_code_path,
         unsafe_dont_encrypt,
@@ -163,6 +162,7 @@ pub async fn submit_init_validator(
     let validator_key_alias = format!("{}-key", alias);
     let consensus_key_alias = format!("{}-consensus-key", alias);
     let rewards_key_alias = format!("{}-rewards-key", alias);
+    let protocol_key_alias = format!("{}-protocol-key", alias);
     let account_key = ctx.get_opt_cached(&account_key).unwrap_or_else(|| {
         println!("Generating validator account key...");
         ctx.wallet
@@ -190,6 +190,16 @@ pub async fn submit_init_validator(
                 .clone()
         });
 
+    let protocol_key =
+        ctx.get_opt_cached(&protocol_key).unwrap_or_else(|| {
+            println!("Generating protocol signing key...");
+            ctx.wallet
+                .gen_key(Some(protocol_key_alias.clone()), unsafe_dont_encrypt)
+                .1
+                .public
+                .clone()
+        });
+    let dkg_public_key = ctx.wallet.gen_dkg_key();
     ctx.wallet.save().unwrap_or_else(|err| eprintln!("{}", err));
 
     let validator_vp_code = validator_vp_code_path
@@ -225,6 +235,8 @@ pub async fn submit_init_validator(
         account_key,
         consensus_key: consensus_key.public.clone(),
         rewards_account_key,
+        protocol_key,
+        dkg_key: dkg_public_key,
         validator_vp_code,
         rewards_vp_code,
     };

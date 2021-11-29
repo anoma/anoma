@@ -13,6 +13,30 @@ pub mod encrypted_tx {
 
     use crate::types::transaction::EllipticCurve;
 
+    pub type G1 = <EllipticCurve as PairingEngine>::G1Affine;
+    /// An encryption key for txs
+    #[derive(Debug, Clone)]
+    pub struct EncryptionKey(pub G1);
+
+    impl borsh::ser::BorshSerialize for EncryptionKey {
+        fn serialize<W: Write>(&self, writer: &mut W) -> std::io::Result<()> {
+            let mut buf = Vec::<u8>::new();
+            CanonicalSerialize::serialize(&self.0, &mut buf)
+                .map_err(|err| Error::new(ErrorKind::InvalidData, err))?;
+            BorshSerialize::serialize(&buf, writer)
+        }
+    }
+
+    impl borsh::de::BorshDeserialize for EncryptionKey {
+        fn deserialize(buf: &mut &[u8]) -> std::io::Result<Self> {
+            let key: Vec<u8> = BorshDeserialize::deserialize(buf)?;
+            Ok(EncryptionKey(
+                CanonicalDeserialize::deserialize(&*key)
+                    .map_err(|err| Error::new(ErrorKind::InvalidData, err))?,
+            ))
+        }
+    }
+
     /// We use a specific choice of two groups and bilinear pairing
     /// We use a wrapper type to add traits
     #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -22,12 +46,9 @@ pub mod encrypted_tx {
 
     impl EncryptedTx {
         /// Encrypt a message to give a new ciphertext
-        pub fn encrypt(
-            msg: &[u8],
-            pubkey: <EllipticCurve as PairingEngine>::G1Affine,
-        ) -> Self {
+        pub fn encrypt(msg: &[u8], pubkey: EncryptionKey) -> Self {
             let mut rng = rand_new::thread_rng();
-            Self(encrypt(msg, pubkey, &mut rng))
+            Self(encrypt(msg, pubkey.0, &mut rng))
         }
 
         /// Decrypt a message and return it as raw bytes
@@ -114,7 +135,7 @@ pub mod encrypted_tx {
         #[test]
         fn test_encrypt_decrypt() {
             // The trivial public - private keypair
-            let pubkey = <EllipticCurve as PairingEngine>::G1Affine::prime_subgroup_generator();
+            let pubkey = EncryptionKey(<EllipticCurve as PairingEngine>::G1Affine::prime_subgroup_generator());
             let privkey = <EllipticCurve as PairingEngine>::G2Affine::prime_subgroup_generator();
             // generate encrypted payload
             let encrypted =
@@ -131,7 +152,7 @@ pub mod encrypted_tx {
         #[test]
         fn test_encrypted_tx_round_trip_borsh() {
             // The trivial public - private keypair
-            let pubkey = <EllipticCurve as PairingEngine>::G1Affine::prime_subgroup_generator();
+            let pubkey = EncryptionKey(<EllipticCurve as PairingEngine>::G1Affine::prime_subgroup_generator());
             let privkey = <EllipticCurve as PairingEngine>::G2Affine::prime_subgroup_generator();
             // generate encrypted payload
             let encrypted =
@@ -152,7 +173,7 @@ pub mod encrypted_tx {
         #[test]
         fn test_encrypted_tx_round_trip_serde() {
             // The trivial public - private keypair
-            let pubkey = <EllipticCurve as PairingEngine>::G1Affine::prime_subgroup_generator();
+            let pubkey = EncryptionKey(<EllipticCurve as PairingEngine>::G1Affine::prime_subgroup_generator());
             let privkey = <EllipticCurve as PairingEngine>::G2Affine::prime_subgroup_generator();
             // generate encrypted payload
             let encrypted =

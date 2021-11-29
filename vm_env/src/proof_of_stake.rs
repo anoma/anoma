@@ -63,6 +63,8 @@ pub fn init_validator(
         account_key,
         consensus_key,
         rewards_account_key,
+        protocol_key,
+        dkg_key,
         validator_vp_code,
         rewards_vp_code,
     }: InitValidator,
@@ -72,6 +74,10 @@ pub fn init_validator(
     let validator_address = tx::init_account(&validator_vp_code);
     let pk_key = key::ed25519::pk_key(&validator_address);
     tx::write(&pk_key.to_string(), &account_key);
+    let protocol_pk_key = key::ed25519::protocol_pk_key(&validator_address);
+    tx::write(&protocol_pk_key.to_string(), &protocol_key);
+    let dkg_pk_key = key::ed25519::dkg_pk_key(&validator_address);
+    tx::write(&dkg_pk_key.to_string(), &dkg_key);
 
     // Init staking reward account
     let rewards_address = tx::init_account(&rewards_vp_code);

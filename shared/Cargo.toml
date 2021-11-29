@@ -14,6 +14,7 @@ default = ["ABCI"]
 dev = []
 ferveo-tpke = [
   "ferveo",
+  "ferveo-common",
   "tpke",
   "ark-bls12-381",
   "ark-ec",
@@ -67,7 +68,8 @@ bech32 = "0.8.0"
 borsh = "0.9.0"
 chrono = "0.4.19"
 ed25519-dalek = {version = "1.0.1", default-features = false, features = ["rand", "u64_backend", "serde"]}
-ferveo = {optional = true, git = "https://github.com/anoma/ferveo", branch = "bat/serialize_dkg"}
+ferveo = {optional = true, git = "https://github.com/anoma/ferveo"}
+ferveo-common = {optional = true, git = "https://github.com/anoma/ferveo"}
 hex = "0.4.3"
 tpke = {package = "group-threshold-cryptography", optional = true, git = "https://github.com/anoma/ferveo"}
 # TODO temp fork for https://github.com/informalsystems/ibc-rs/issues/1161

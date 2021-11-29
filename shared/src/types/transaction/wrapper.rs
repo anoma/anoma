@@ -14,11 +14,15 @@ pub mod wrapper_tx {
 
     use crate::proto::Tx;
     use crate::types::address::Address;
-    use crate::types::key::ed25519::{Keypair, PublicKey, Signature, verify_tx_sig};
+    use crate::types::key::ed25519::{
+        verify_tx_sig, Keypair, PublicKey, Signature,
+    };
     use crate::types::storage::Epoch;
     use crate::types::token::Amount;
     use crate::types::transaction::encrypted::EncryptedTx;
-    use crate::types::transaction::{hash_tx, Hash, TxType, TxError};
+    use crate::types::transaction::{
+        hash_tx, EncryptionKey, Hash, TxError, TxType,
+    };
 
     /// TODO: Determine a sane number for this
     const GAS_LIMIT_RESOLUTION: u64 = 1_000_000;
@@ -187,7 +191,7 @@ pub mod wrapper_tx {
             tx: Tx,
         ) -> WrapperTx {
             // TODO: Look up current public key from storage
-            let pubkey = <EllipticCurve as PairingEngine>::G1Affine::prime_subgroup_generator();
+            let pubkey = EncryptionKey(<EllipticCurve as PairingEngine>::G1Affine::prime_subgroup_generator());
             let inner_tx = EncryptedTx::encrypt(&tx.to_bytes(), pubkey);
             Self {
                 fee,
@@ -250,9 +254,16 @@ pub mod wrapper_tx {
         }
 
         /// Validate the signature of a wrapper tx
-        pub fn validate_sig(&self, tx: &Tx, sig: &Signature) -> Result<(), TxError> {
+        pub fn validate_sig(
+            &self,
+            tx: &Tx,
+            sig: &Signature,
+        ) -> Result<(), TxError> {
             verify_tx_sig(&self.pk, &tx, sig).map_err(|err| {
-                TxError::SigError(format!("WrapperTx signature verification failed: {}", err))
+                TxError::SigError(format!(
+                    "WrapperTx signature verification failed: {}",
+                    err
+                ))
             })
         }
     }

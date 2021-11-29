@@ -87,8 +87,9 @@ impl Event {
                     &mut tx
                         .try_to_vec()
                         .expect("Serializing protocol tx should not fail")
-                        .as_ref()
-                ).to_string();
+                        .as_ref(),
+                )
+                .to_string();
                 event
             }
             _ => unreachable!(),

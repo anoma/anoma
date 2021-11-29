@@ -14,6 +14,7 @@ use std::fmt::{self, Display};
 
 use borsh::{BorshDeserialize, BorshSerialize};
 pub use decrypted::*;
+pub use encrypted::EncryptionKey;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 #[cfg(not(feature = "ABCI"))]
@@ -120,6 +121,10 @@ pub struct InitValidator {
     /// This can be used for signature verification of transactions for the
     /// newly created account.
     pub rewards_account_key: PublicKey,
+    /// Public key used to sign protocol transactions
+    pub protocol_key: PublicKey,
+    /// Public Session key used in the DKG
+    pub dkg_key: DkgPublicKey,
     /// The VP code for validator account
     pub validator_vp_code: Vec<u8>,
     /// The VP code for validator's staking reward account
@@ -228,13 +233,13 @@ pub mod tx_types {
             })
             .map_err(|err| TxError::Deserialization(err.to_string()))?
             {
-                 // verify signature and extract signed data
-                 TxType::Wrapper(wrapper) => {
+                // verify signature and extract signed data
+                TxType::Wrapper(wrapper) => {
                     wrapper.validate_sig(&tx, sig)?;
                     Ok(TxType::Wrapper(wrapper))
                 }
                 // verify signature and extract signed data
-                 TxType::Protocol(protocol) => {
+                TxType::Protocol(protocol) => {
                     protocol.validate_sig(&tx, sig)?;
                     Ok(TxType::Protocol(protocol))
                 }
@@ -248,8 +253,12 @@ pub mod tx_types {
                 .map_err(|err| TxError::Deserialization(err.to_string()))?
             {
                 // we only accept signed wrappers
-                TxType::Wrapper(_) => Err(TxError::Unsigned("Wrapper transactions must be signed".into())),
-                TxType::Protocol(_) => Err(TxError::Unsigned("Protocol transactions must be signed".into())),
+                TxType::Wrapper(_) => Err(TxError::Unsigned(
+                    "Wrapper transactions must be signed".into(),
+                )),
+                TxType::Protocol(_) => Err(TxError::Unsigned(
+                    "Protocol transactions must be signed".into(),
+                )),
                 // return as is
                 val => Ok(val),
             }
@@ -448,3 +457,4 @@ pub mod tx_types {
 
 #[cfg(feature = "ferveo-tpke")]
 pub use tx_types::*;
+use crate::types::key::dkg_session_keys::{DkgKeypair, DkgPublicKey};

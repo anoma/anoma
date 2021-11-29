@@ -7,12 +7,16 @@ use std::str::FromStr;
 
 use anoma::types::address::{Address, ImplicitAddress};
 use anoma::types::key::ed25519::{Keypair, PublicKey, PublicKeyHash};
+use anoma::types::key::dkg_session_keys::DkgPublicKey;
+use anoma::types::transaction::EllipticCurve;
+use ark_std::rand::{prelude::*, SeedableRng};
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
 use super::keys::StoredKeypair;
 use crate::cli;
 use crate::config::genesis::genesis_config::GenesisConfig;
+use anoma::types::key::dkg_session_keys::DkgKeypair;
 
 pub type Alias = String;
 
@@ -25,6 +29,9 @@ pub struct Store {
     /// Known mappings of public key hashes to their aliases in the `keys`
     /// field. Used for look-up by a public key.
     pkhs: HashMap<PublicKeyHash, Alias>,
+    /// Special session keypair needed by validators for participating
+    /// in the DKG protocol
+    dkg_keypair: Option<DkgKeypair>,
 }
 
 #[derive(Error, Debug)]
@@ -249,6 +256,18 @@ impl Store {
             cli::safe_exit(1);
         }
         (alias, raw_keypair)
+    }
+
+    /// Generate a new DKG keypair and insert it into the store.
+    /// Returns the public side of the keypair.
+    pub fn gen_dkg_key(
+        &mut self,
+    ) -> DkgPublicKey {
+        let dkg_keypair =
+            ferveo_common::Keypair::<EllipticCurve>::new(&mut StdRng::from_entropy());
+        let dkg_pk = dkg_keypair.public();
+        self.dkg_keypair = Some(dkg_keypair.into());
+        dkg_pk.into()
     }
 
     /// Insert a new key with the given alias. If the alias is already used,

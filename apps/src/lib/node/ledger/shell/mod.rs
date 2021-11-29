@@ -30,17 +30,17 @@ use anoma::proto::{self, Tx};
 use anoma::types::chain::ChainId;
 use anoma::types::storage::{BlockHeight, Key};
 use anoma::types::time::{DateTime, DateTimeUtc, TimeZone, Utc};
+use anoma::types::transaction::protocol::{ProtocolTx, ProtocolTxType};
 use anoma::types::transaction::{
     hash_tx, process_tx, verify_decrypted_correctly, AffineCurve, DecryptedTx,
     EllipticCurve, PairingEngine, TxType, WrapperTx,
 };
-use anoma::types::transaction::protocol::{ProtocolTx, ProtocolTxType};
 use anoma::types::{address, key, token};
-use ark_serialize::{CanonicalSerialize, CanonicalDeserialize};
+use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 use ark_std::rand::SeedableRng;
 use borsh::{BorshDeserialize, BorshSerialize};
-use ferveo::{TendermintValidator, ValidatorSet};
 use ferveo::dkg::{DkgState, Params as DkgParams, PubliclyVerifiableDkg};
+use ferveo::{TendermintValidator, ValidatorSet};
 use num_derive::{FromPrimitive, ToPrimitive};
 use num_traits::{FromPrimitive, ToPrimitive};
 #[cfg(not(feature = "ABCI"))]
@@ -67,7 +67,8 @@ use crate::node::ledger::shims::abcipp_shim_types::shim;
 use crate::node::ledger::shims::abcipp_shim_types::shim::response::TxResult;
 use crate::node::ledger::{protocol, storage, tendermint_node};
 
-type DkgStateMachine = PubliclyVerifiableDkg<anoma::types::transaction::EllipticCurve>;
+type DkgStateMachine =
+    PubliclyVerifiableDkg<anoma::types::transaction::EllipticCurve>;
 
 #[derive(Error, Debug)]
 pub enum Error {
@@ -222,7 +223,7 @@ impl Default for DkgInstance {
         let rng = &mut ark_std::rand::prelude::StdRng::from_entropy();
         let validator = TendermintValidator {
             power: 0,
-            address: "".into()
+            address: "".into(),
         };
         DkgInstance {
             state_machine: DkgStateMachine::new(
@@ -233,17 +234,23 @@ impl Default for DkgInstance {
                     total_weight: 0,
                 },
                 validator,
-                rng
-            ).expect("Constructing default DKG should not fail")
+                rng,
+            )
+            .expect("Constructing default DKG should not fail"),
         }
     }
 }
 
 impl borsh::ser::BorshSerialize for DkgInstance {
-    fn serialize<W: std::io::Write>(&self, writer: &mut W) -> std::io::Result<()> {
+    fn serialize<W: std::io::Write>(
+        &self,
+        writer: &mut W,
+    ) -> std::io::Result<()> {
         let buf = Vec::<u8>::new();
         let bytes = CanonicalSerialize::serialize(&self.state_machine, buf)
-            .map_err(|e| std::io::Error::new(std::io::ErrorKind::InvalidData, e))?;
+            .map_err(|e| {
+                std::io::Error::new(std::io::ErrorKind::InvalidData, e)
+            })?;
         BorshSerialize::serialize(&bytes, writer)
     }
 }
@@ -251,9 +258,11 @@ impl borsh::ser::BorshSerialize for DkgInstance {
 impl borsh::de::BorshDeserialize for DkgInstance {
     fn deserialize(buf: &mut &[u8]) -> std::io::Result<Self> {
         let state_machine: Vec<u8> = BorshDeserialize::deserialize(buf)?;
-        Ok(DkgInstance{
+        Ok(DkgInstance {
             state_machine: CanonicalDeserialize::deserialize(&*state_machine)
-                .map_err(|err| std::io::Error::new(std::io::ErrorKind::InvalidData, err))?
+                .map_err(|err| {
+                std::io::Error::new(std::io::ErrorKind::InvalidData, err)
+            })?,
         })
     }
 }
@@ -278,16 +287,18 @@ where
         );
 
         let dkg_path = self.base_dir.clone().join(".dkg");
-        let _ = std::fs::File::create(&tx_queue_path)
-            .expect("Creating the file for the DKG state machine dump should not fail");
+        let _ = std::fs::File::create(&tx_queue_path).expect(
+            "Creating the file for the DKG state machine dump should not fail",
+        );
         std::fs::write(
             dkg_path,
             self.dkg
                 .try_to_vec()
-                .expect("Serializing DKG state machine should not fail")
+                .expect("Serializing DKG state machine should not fail"),
         )
         .expect(
-            "Failed to write DKG state machine to file. Good luck booting back up now",
+            "Failed to write DKG state machine to file. Good luck booting \
+             back up now",
         );
     }
 }

@@ -33,6 +33,7 @@ use crate::types::storage::{
     BlockHash, BlockHeight, DbKeySeg, Epoch, Epochs, Key, BLOCK_HASH_LENGTH,
 };
 use crate::types::time::DateTimeUtc;
+use crate::types::transaction::EncryptionKey;
 
 /// A result of a function that may fail
 pub type Result<T> = std::result::Result<T, Error>;
@@ -62,6 +63,8 @@ where
     pub next_epoch_min_start_time: DateTimeUtc,
     /// The current established address generator
     pub address_gen: EstablishedAddressGen,
+    /// The key used to encrypt txs during this epoch
+    pub encryption_key: Option<EncryptionKey>,
 }
 
 /// The block storage data
@@ -120,6 +123,8 @@ pub struct BlockState {
     pub subspaces: HashMap<Key, Vec<u8>>,
     /// Established address generator
     pub address_gen: EstablishedAddressGen,
+    /// The key used to encrypt txs during this epoch
+    pub encryption_key: Option<EncryptionKey>,
 }
 
 /// A database backend.
@@ -192,6 +197,7 @@ where
             address_gen: EstablishedAddressGen::new(
                 "Privacy is a function of liberty.",
             ),
+            encryption_key: None,
         }
     }
 
@@ -209,6 +215,7 @@ where
             next_epoch_min_start_time,
             subspaces,
             address_gen,
+            encryption_key,
         }) = self.db.read_last_block()?
         {
             self.block.tree = MerkleTree(SparseMerkleTree::new(root, store));
@@ -222,6 +229,7 @@ where
             self.next_epoch_min_start_height = next_epoch_min_start_height;
             self.next_epoch_min_start_time = next_epoch_min_start_time;
             self.address_gen = address_gen;
+            self.encryption_key = encryption_key;
             tracing::debug!("Loaded storage from DB");
         } else {
             tracing::info!("No state could be found");
@@ -255,6 +263,7 @@ where
             next_epoch_min_start_time: self.next_epoch_min_start_time,
             subspaces: self.block.subspaces.clone(),
             address_gen: self.address_gen.clone(),
+            encryption_key: self.encryption_key.clone(),
         };
         self.db.write_block(state)?;
         self.last_height = self.block.height;
@@ -627,6 +636,7 @@ pub mod testing {
                 address_gen: EstablishedAddressGen::new(
                     "Test address generator seed",
                 ),
+                encryption_key: None,
             }
         }
     }

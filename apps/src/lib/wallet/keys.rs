@@ -5,6 +5,7 @@ use std::rc::Rc;
 use std::str::FromStr;
 
 use anoma::types::key::ed25519::Keypair;
+use anoma::types::transaction::EllipticCurve;
 use borsh::{BorshDeserialize, BorshSerialize};
 use orion::{aead, kdf};
 use serde::{Deserialize, Serialize};
