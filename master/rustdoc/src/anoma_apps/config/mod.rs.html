@@ -574,6 +574,10 @@
 <span id="574">574</span>
 <span id="575">575</span>
 <span id="576">576</span>
+<span id="577">577</span>
+<span id="578">578</span>
+<span id="579">579</span>
+<span id="580">580</span>
 </pre><pre class="rust">
 <span class="doccomment">//! Node and client configuration</span>
 
@@ -931,9 +935,13 @@
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">file_path</span>(<span class="ident">base_dir</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>, <span class="ident">chain_id</span>: <span class="kw-2">&amp;</span><span class="ident">ChainId</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">PathBuf</span> {
+    <span class="doccomment">/// Get the file path to the config</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">file_path</span>(
+        <span class="ident">base_dir</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span><span class="ident">Path</span><span class="op">&gt;</span>,
+        <span class="ident">chain_id</span>: <span class="kw-2">&amp;</span><span class="ident">ChainId</span>,
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">PathBuf</span> {
         <span class="comment">// Join base dir to the chain ID</span>
-        <span class="ident">base_dir</span>.<span class="ident">join</span>(<span class="ident">chain_id</span>.<span class="ident">to_string</span>()).<span class="ident">join</span>(<span class="ident">FILENAME</span>)
+        <span class="ident">base_dir</span>.<span class="ident">as_ref</span>().<span class="ident">join</span>(<span class="ident">chain_id</span>.<span class="ident">to_string</span>()).<span class="ident">join</span>(<span class="ident">FILENAME</span>)
     }
 }
 

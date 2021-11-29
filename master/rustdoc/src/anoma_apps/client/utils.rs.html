@@ -662,9 +662,49 @@
 <span id="662">662</span>
 <span id="663">663</span>
 <span id="664">664</span>
+<span id="665">665</span>
+<span id="666">666</span>
+<span id="667">667</span>
+<span id="668">668</span>
+<span id="669">669</span>
+<span id="670">670</span>
+<span id="671">671</span>
+<span id="672">672</span>
+<span id="673">673</span>
+<span id="674">674</span>
+<span id="675">675</span>
+<span id="676">676</span>
+<span id="677">677</span>
+<span id="678">678</span>
+<span id="679">679</span>
+<span id="680">680</span>
+<span id="681">681</span>
+<span id="682">682</span>
+<span id="683">683</span>
+<span id="684">684</span>
+<span id="685">685</span>
+<span id="686">686</span>
+<span id="687">687</span>
+<span id="688">688</span>
+<span id="689">689</span>
+<span id="690">690</span>
+<span id="691">691</span>
+<span id="692">692</span>
+<span id="693">693</span>
+<span id="694">694</span>
+<span id="695">695</span>
+<span id="696">696</span>
+<span id="697">697</span>
+<span id="698">698</span>
+<span id="699">699</span>
+<span id="700">700</span>
+<span id="701">701</span>
+<span id="702">702</span>
+<span id="703">703</span>
 </pre><pre class="rust">
 <span class="kw">use</span> <span class="ident">std::collections</span>::{<span class="ident">HashMap</span>, <span class="ident">HashSet</span>};
-<span class="kw">use</span> <span class="ident">std::fs</span>::{<span class="self">self</span>, <span class="ident">OpenOptions</span>};
+<span class="kw">use</span> <span class="ident">std::fs</span>::{<span class="self">self</span>, <span class="ident">File</span>, <span class="ident">OpenOptions</span>};
+<span class="kw">use</span> <span class="ident">std::io::Write</span>;
 <span class="kw">use</span> <span class="ident">std::net</span>::{<span class="ident">IpAddr</span>, <span class="ident">Ipv4Addr</span>, <span class="ident">SocketAddr</span>};
 <span class="kw">use</span> <span class="ident">std::path::PathBuf</span>;
 <span class="kw">use</span> <span class="ident">std::str::FromStr</span>;
@@ -673,6 +713,8 @@
 <span class="kw">use</span> <span class="ident">anoma::types::key::ed25519::Keypair</span>;
 <span class="kw">use</span> <span class="ident">anoma::types</span>::{<span class="ident">address</span>, <span class="ident">token</span>};
 <span class="kw">use</span> <span class="ident">borsh::BorshSerialize</span>;
+<span class="kw">use</span> <span class="ident">flate2::write::GzEncoder</span>;
+<span class="kw">use</span> <span class="ident">flate2::Compression</span>;
 <span class="kw">use</span> <span class="ident">rand::prelude::ThreadRng</span>;
 <span class="kw">use</span> <span class="ident">rand::thread_rng</span>;
 <span class="kw">use</span> <span class="ident">serde_json::json</span>;
@@ -739,6 +781,7 @@
         <span class="ident">consensus_timeout_commit</span>,
         <span class="ident">localhost</span>,
         <span class="ident">allow_duplicate_ip</span>,
+        <span class="ident">dont_archive</span>,
     }: <span class="ident">args::InitNetwork</span>,
 ) {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">config</span> <span class="op">=</span> <span class="ident">genesis_config::open_genesis_config</span>(<span class="kw-2">&amp;</span><span class="ident">genesis_path</span>);
@@ -1166,6 +1209,41 @@
         <span class="string">&quot;Genesis file generated at {}&quot;</span>,
         <span class="ident">genesis_path</span>.<span class="ident">to_string_lossy</span>()
     );
+
+    <span class="comment">// Create a release tarball for anoma-network-config</span>
+    <span class="kw">if</span> <span class="op">!</span><span class="ident">dont_archive</span> {
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">release</span> <span class="op">=</span> <span class="ident">tar::Builder::new</span>(<span class="ident">Vec::new</span>());
+        <span class="kw">let</span> <span class="ident">release_genesis_path</span> <span class="op">=</span> <span class="ident">PathBuf::from</span>(<span class="ident">config::DEFAULT_BASE_DIR</span>)
+            .<span class="ident">join</span>(<span class="macro">format!</span>(<span class="string">&quot;{}.toml&quot;</span>, <span class="ident">chain_id</span>.<span class="ident">as_str</span>()));
+        <span class="ident">release</span>
+            .<span class="ident">append_path_with_name</span>(<span class="ident">genesis_path</span>, <span class="ident">release_genesis_path</span>)
+            .<span class="ident">unwrap</span>();
+        <span class="kw">let</span> <span class="ident">global_config_path</span> <span class="op">=</span> <span class="ident">GlobalConfig::file_path</span>(<span class="kw-2">&amp;</span><span class="ident">global_args</span>.<span class="ident">base_dir</span>);
+        <span class="kw">let</span> <span class="ident">release_global_config_path</span> <span class="op">=</span>
+            <span class="ident">GlobalConfig::file_path</span>(<span class="ident">config::DEFAULT_BASE_DIR</span>);
+        <span class="ident">release</span>
+            .<span class="ident">append_path_with_name</span>(
+                <span class="ident">global_config_path</span>,
+                <span class="ident">release_global_config_path</span>,
+            )
+            .<span class="ident">unwrap</span>();
+        <span class="kw">let</span> <span class="ident">chain_config_path</span> <span class="op">=</span>
+            <span class="ident">Config::file_path</span>(<span class="kw-2">&amp;</span><span class="ident">global_args</span>.<span class="ident">base_dir</span>, <span class="kw-2">&amp;</span><span class="ident">chain_id</span>);
+        <span class="kw">let</span> <span class="ident">release_chain_config_path</span> <span class="op">=</span>
+            <span class="ident">Config::file_path</span>(<span class="ident">config::DEFAULT_BASE_DIR</span>, <span class="kw-2">&amp;</span><span class="ident">chain_id</span>);
+        <span class="ident">release</span>
+            .<span class="ident">append_path_with_name</span>(<span class="ident">chain_config_path</span>, <span class="ident">release_chain_config_path</span>)
+            .<span class="ident">unwrap</span>();
+
+        <span class="comment">// Gzip tar release and write to file</span>
+        <span class="kw">let</span> <span class="ident">release_file</span> <span class="op">=</span> <span class="macro">format!</span>(<span class="string">&quot;{}.tar.gz&quot;</span>, <span class="ident">chain_id</span>);
+        <span class="kw">let</span> <span class="ident">compressed_file</span> <span class="op">=</span> <span class="ident">File::create</span>(<span class="kw-2">&amp;</span><span class="ident">release_file</span>).<span class="ident">unwrap</span>();
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">encoder</span> <span class="op">=</span>
+            <span class="ident">GzEncoder::new</span>(<span class="ident">compressed_file</span>, <span class="ident">Compression::default</span>());
+        <span class="ident">encoder</span>.<span class="ident">write_all</span>(<span class="kw-2">&amp;</span><span class="ident">release</span>.<span class="ident">into_inner</span>().<span class="ident">unwrap</span>()).<span class="ident">unwrap</span>();
+        <span class="ident">encoder</span>.<span class="ident">finish</span>().<span class="ident">unwrap</span>();
+        <span class="macro">println!</span>(<span class="string">&quot;Release archive created at {}&quot;</span>, <span class="ident">release_file</span>);
+    }
 }
 
 <span class="kw">fn</span> <span class="ident">init_established_account</span>(

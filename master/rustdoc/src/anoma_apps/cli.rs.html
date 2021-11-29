@@ -2468,6 +2468,15 @@
 <span id="2468">2468</span>
 <span id="2469">2469</span>
 <span id="2470">2470</span>
+<span id="2471">2471</span>
+<span id="2472">2472</span>
+<span id="2473">2473</span>
+<span id="2474">2474</span>
+<span id="2475">2475</span>
+<span id="2476">2476</span>
+<span id="2477">2477</span>
+<span id="2478">2478</span>
+<span id="2479">2479</span>
 </pre><pre class="rust">
 <span class="doccomment">//! The CLI commands that are re-used between the executables `anoma`,</span>
 <span class="doccomment">//! `anoma-node` and `anoma-client`.</span>
@@ -3594,6 +3603,7 @@
     <span class="kw">const</span> <span class="ident">DATA_PATH_OPT</span>: <span class="ident">ArgOpt</span><span class="op">&lt;</span><span class="ident">PathBuf</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">arg_opt</span>(<span class="string">&quot;data-path&quot;</span>);
     <span class="kw">const</span> <span class="ident">DATA_PATH</span>: <span class="ident">Arg</span><span class="op">&lt;</span><span class="ident">PathBuf</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">arg</span>(<span class="string">&quot;data-path&quot;</span>);
     <span class="kw">const</span> <span class="ident">DECRYPT</span>: <span class="ident">ArgFlag</span> <span class="op">=</span> <span class="ident">flag</span>(<span class="string">&quot;decrypt&quot;</span>);
+    <span class="kw">const</span> <span class="ident">DONT_ARCHIVE</span>: <span class="ident">ArgFlag</span> <span class="op">=</span> <span class="ident">flag</span>(<span class="string">&quot;dont-archive&quot;</span>);
     <span class="kw">const</span> <span class="ident">DRY_RUN_TX</span>: <span class="ident">ArgFlag</span> <span class="op">=</span> <span class="ident">flag</span>(<span class="string">&quot;dry-run&quot;</span>);
     <span class="kw">const</span> <span class="ident">EPOCH</span>: <span class="ident">ArgOpt</span><span class="op">&lt;</span><span class="ident">Epoch</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">arg_opt</span>(<span class="string">&quot;epoch&quot;</span>);
     <span class="kw">const</span> <span class="ident">FEE_AMOUNT</span>: <span class="ident">Arg</span><span class="op">&lt;</span><span class="ident">token::Amount</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">arg</span>(<span class="string">&quot;fee-amount&quot;</span>);
@@ -4770,6 +4780,7 @@
         <span class="kw">pub</span> <span class="ident">consensus_timeout_commit</span>: <span class="ident">Timeout</span>,
         <span class="kw">pub</span> <span class="ident">localhost</span>: <span class="ident">bool</span>,
         <span class="kw">pub</span> <span class="ident">allow_duplicate_ip</span>: <span class="ident">bool</span>,
+        <span class="kw">pub</span> <span class="ident">dont_archive</span>: <span class="ident">bool</span>,
     }
 
     <span class="kw">impl</span> <span class="ident">Args</span> <span class="kw">for</span> <span class="ident">InitNetwork</span> {
@@ -4781,6 +4792,7 @@
                 <span class="ident">CONSENSUS_TIMEOUT_COMMIT</span>.<span class="ident">parse</span>(<span class="ident">matches</span>);
             <span class="kw">let</span> <span class="ident">localhost</span> <span class="op">=</span> <span class="ident">LOCALHOST</span>.<span class="ident">parse</span>(<span class="ident">matches</span>);
             <span class="kw">let</span> <span class="ident">allow_duplicate_ip</span> <span class="op">=</span> <span class="ident">ALLOW_DUPLICATE_IP</span>.<span class="ident">parse</span>(<span class="ident">matches</span>);
+            <span class="kw">let</span> <span class="ident">dont_archive</span> <span class="op">=</span> <span class="ident">DONT_ARCHIVE</span>.<span class="ident">parse</span>(<span class="ident">matches</span>);
             <span class="self">Self</span> {
                 <span class="ident">genesis_path</span>,
                 <span class="ident">chain_id_prefix</span>,
@@ -4788,6 +4800,7 @@
                 <span class="ident">consensus_timeout_commit</span>,
                 <span class="ident">localhost</span>,
                 <span class="ident">allow_duplicate_ip</span>,
+                <span class="ident">dont_archive</span>,
             }
         }
 
@@ -4817,6 +4830,11 @@
                 <span class="string">&quot;Toggle to disable guard against peers connecting from the \
                  same IP. This option shouldn&#39;t be used in mainnet.&quot;</span>,
             ))
+            .<span class="ident">arg</span>(
+                <span class="ident">DONT_ARCHIVE</span>
+                    .<span class="ident">def</span>()
+                    .<span class="ident">about</span>(<span class="string">&quot;Do NOT create the release archive.&quot;</span>),
+            )
         }
     }
 

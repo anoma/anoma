@@ -183,6 +183,56 @@
 <span id="183">183</span>
 <span id="184">184</span>
 <span id="185">185</span>
+<span id="186">186</span>
+<span id="187">187</span>
+<span id="188">188</span>
+<span id="189">189</span>
+<span id="190">190</span>
+<span id="191">191</span>
+<span id="192">192</span>
+<span id="193">193</span>
+<span id="194">194</span>
+<span id="195">195</span>
+<span id="196">196</span>
+<span id="197">197</span>
+<span id="198">198</span>
+<span id="199">199</span>
+<span id="200">200</span>
+<span id="201">201</span>
+<span id="202">202</span>
+<span id="203">203</span>
+<span id="204">204</span>
+<span id="205">205</span>
+<span id="206">206</span>
+<span id="207">207</span>
+<span id="208">208</span>
+<span id="209">209</span>
+<span id="210">210</span>
+<span id="211">211</span>
+<span id="212">212</span>
+<span id="213">213</span>
+<span id="214">214</span>
+<span id="215">215</span>
+<span id="216">216</span>
+<span id="217">217</span>
+<span id="218">218</span>
+<span id="219">219</span>
+<span id="220">220</span>
+<span id="221">221</span>
+<span id="222">222</span>
+<span id="223">223</span>
+<span id="224">224</span>
+<span id="225">225</span>
+<span id="226">226</span>
+<span id="227">227</span>
+<span id="228">228</span>
+<span id="229">229</span>
+<span id="230">230</span>
+<span id="231">231</span>
+<span id="232">232</span>
+<span id="233">233</span>
+<span id="234">234</span>
+<span id="235">235</span>
 </pre><pre class="rust">
 <span class="doccomment">//! Shell methods for querying state</span>
 <span class="kw">use</span> <span class="ident">std::cmp::max</span>;
@@ -194,9 +244,13 @@
 <span class="kw">use</span> <span class="ident">anoma::types::token</span>::{<span class="self">self</span>, <span class="ident">Amount</span>};
 <span class="kw">use</span> <span class="ident">borsh</span>::{<span class="ident">BorshDeserialize</span>, <span class="ident">BorshSerialize</span>};
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
+<span class="kw">use</span> <span class="ident">tendermint_proto::crypto::ProofOps</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
 <span class="kw">use</span> <span class="ident">tendermint_proto::google::protobuf</span>;
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
 <span class="kw">use</span> <span class="ident">tendermint_proto::types::EvidenceParams</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
+<span class="kw">use</span> <span class="ident">tendermint_proto_abci::crypto::ProofOps</span>;
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
 <span class="kw">use</span> <span class="ident">tendermint_proto_abci::google::protobuf</span>;
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
@@ -229,10 +283,10 @@
                     }
                 }
                 <span class="ident">Path::Value</span>(<span class="ident">storage_key</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                    <span class="self">self</span>.<span class="ident">read_storage_value</span>(<span class="kw-2">&amp;</span><span class="ident">storage_key</span>)
+                    <span class="self">self</span>.<span class="ident">read_storage_value</span>(<span class="kw-2">&amp;</span><span class="ident">storage_key</span>, <span class="ident">query</span>.<span class="ident">prove</span>)
                 }
                 <span class="ident">Path::Prefix</span>(<span class="ident">storage_key</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                    <span class="self">self</span>.<span class="ident">read_storage_prefix</span>(<span class="kw-2">&amp;</span><span class="ident">storage_key</span>)
+                    <span class="self">self</span>.<span class="ident">read_storage_prefix</span>(<span class="kw-2">&amp;</span><span class="ident">storage_key</span>, <span class="ident">query</span>.<span class="ident">prove</span>)
                 }
                 <span class="ident">Path::HasKey</span>(<span class="ident">storage_key</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">has_storage_key</span>(<span class="kw-2">&amp;</span><span class="ident">storage_key</span>),
             },
@@ -252,7 +306,7 @@
         <span class="ident">owner</span>: <span class="kw-2">&amp;</span><span class="ident">Address</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">std::result::Result</span><span class="op">&lt;</span><span class="ident">Amount</span>, <span class="ident">String</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">query_resp</span> <span class="op">=</span>
-            <span class="self">self</span>.<span class="ident">read_storage_value</span>(<span class="kw-2">&amp;</span><span class="ident">token::balance_key</span>(<span class="ident">token</span>, <span class="ident">owner</span>));
+            <span class="self">self</span>.<span class="ident">read_storage_value</span>(<span class="kw-2">&amp;</span><span class="ident">token::balance_key</span>(<span class="ident">token</span>, <span class="ident">owner</span>), <span class="bool-val">false</span>);
         <span class="kw">if</span> <span class="ident">query_resp</span>.<span class="ident">code</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
             <span class="prelude-val">Err</span>(<span class="macro">format!</span>(
                 <span class="string">&quot;Unable to read token {} balance of the given address {}&quot;</span>,
@@ -269,15 +323,37 @@
     }
 
     <span class="doccomment">/// Query to read a value from storage</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">read_storage_value</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">Key</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">response::Query</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">read_storage_value</span>(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">Key</span>,
+        <span class="ident">is_proven</span>: <span class="ident">bool</span>,
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">response::Query</span> {
+        <span class="kw">let</span> <span class="ident">proof_ops</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">is_proven</span> {
+            <span class="kw">match</span> <span class="self">self</span>.<span class="ident">storage</span>.<span class="ident">get_proof</span>(<span class="ident">key</span>) {
+                <span class="prelude-val">Ok</span>(<span class="ident">proof_op</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="ident">ProofOps</span> {
+                    <span class="ident">ops</span>: <span class="macro">vec!</span>[<span class="ident">proof_op</span>.<span class="ident">into</span>()],
+                }),
+                <span class="prelude-val">Err</span>(<span class="ident">err</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="kw">return</span> <span class="ident">response::Query</span> {
+                        <span class="ident">code</span>: <span class="number">2</span>,
+                        <span class="ident">info</span>: <span class="macro">format!</span>(<span class="string">&quot;Storage error: {}&quot;</span>, <span class="ident">err</span>),
+                        ..<span class="ident">Default::default</span>()
+                    };
+                }
+            }
+        } <span class="kw">else</span> {
+            <span class="prelude-val">None</span>
+        };
         <span class="kw">match</span> <span class="self">self</span>.<span class="ident">storage</span>.<span class="ident">read</span>(<span class="ident">key</span>) {
             <span class="prelude-val">Ok</span>((<span class="prelude-val">Some</span>(<span class="ident">value</span>), <span class="ident">_gas</span>)) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">response::Query</span> {
                 <span class="ident">value</span>,
+                <span class="ident">proof_ops</span>,
                 ..<span class="ident">Default::default</span>()
             },
             <span class="prelude-val">Ok</span>((<span class="prelude-val">None</span>, <span class="ident">_gas</span>)) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">response::Query</span> {
                 <span class="ident">code</span>: <span class="number">1</span>,
                 <span class="ident">info</span>: <span class="macro">format!</span>(<span class="string">&quot;No value found for key: {}&quot;</span>, <span class="ident">key</span>),
+                <span class="ident">proof_ops</span>,
                 ..<span class="ident">Default::default</span>()
             },
             <span class="prelude-val">Err</span>(<span class="ident">err</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">response::Query</span> {
@@ -291,7 +367,11 @@
     <span class="doccomment">/// Query to read a range of values from storage with a matching prefix. The</span>
     <span class="doccomment">/// value in successful response is a [`Vec&lt;PrefixValue&gt;`] encoded with</span>
     <span class="doccomment">/// [`BorshSerialize`].</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">read_storage_prefix</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">Key</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">response::Query</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">read_storage_prefix</span>(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">Key</span>,
+        <span class="ident">is_proven</span>: <span class="ident">bool</span>,
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">response::Query</span> {
         <span class="kw">let</span> (<span class="ident">iter</span>, <span class="ident">_gas</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">storage</span>.<span class="ident">iter_prefix</span>(<span class="ident">key</span>);
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">iter</span> <span class="op">=</span> <span class="ident">iter</span>.<span class="ident">peekable</span>();
         <span class="kw">if</span> <span class="ident">iter</span>.<span class="ident">peek</span>().<span class="ident">is_none</span>() {
@@ -312,9 +392,29 @@
                 .<span class="ident">collect</span>();
             <span class="kw">match</span> <span class="ident">values</span> {
                 <span class="prelude-val">Ok</span>(<span class="ident">values</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="kw">let</span> <span class="ident">proof_ops</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">is_proven</span> {
+                        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">ops</span> <span class="op">=</span> <span class="macro">vec!</span>[];
+                        <span class="kw">for</span> <span class="ident">PrefixValue</span> { <span class="ident">key</span>, <span class="ident">value</span>: <span class="kw">_</span> } <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="ident">values</span> {
+                            <span class="kw">match</span> <span class="self">self</span>.<span class="ident">storage</span>.<span class="ident">get_proof</span>(<span class="ident">key</span>) {
+                                <span class="prelude-val">Ok</span>(<span class="ident">p</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ops</span>.<span class="ident">push</span>(<span class="ident">p</span>.<span class="ident">into</span>()),
+                                <span class="prelude-val">Err</span>(<span class="ident">err</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                                    <span class="kw">return</span> <span class="ident">response::Query</span> {
+                                        <span class="ident">code</span>: <span class="number">2</span>,
+                                        <span class="ident">info</span>: <span class="macro">format!</span>(<span class="string">&quot;Storage error: {}&quot;</span>, <span class="ident">err</span>),
+                                        ..<span class="ident">Default::default</span>()
+                                    };
+                                }
+                            }
+                        }
+                        <span class="comment">// ops is not empty in this case</span>
+                        <span class="prelude-val">Some</span>(<span class="ident">ProofOps</span> { <span class="ident">ops</span> })
+                    } <span class="kw">else</span> {
+                        <span class="prelude-val">None</span>
+                    };
                     <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">values</span>.<span class="ident">try_to_vec</span>().<span class="ident">unwrap</span>();
                     <span class="ident">response::Query</span> {
                         <span class="ident">value</span>,
+                        <span class="ident">proof_ops</span>,
                         ..<span class="ident">Default::default</span>()
                     }
                 }

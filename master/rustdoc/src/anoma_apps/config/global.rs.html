@@ -71,6 +71,7 @@
 <span id="71">71</span>
 <span id="72">72</span>
 <span id="73">73</span>
+<span id="74">74</span>
 </pre><pre class="rust">
 <span class="doccomment">//! Global configuration</span>
 
@@ -141,8 +142,9 @@
         <span class="ident">file</span>.<span class="ident">write_all</span>(<span class="ident">toml</span>.<span class="ident">as_bytes</span>()).<span class="ident">map_err</span>(<span class="ident">Error::WriteError</span>)
     }
 
-    <span class="kw">fn</span> <span class="ident">file_path</span>(<span class="ident">base_dir</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">PathBuf</span> {
-        <span class="ident">base_dir</span>.<span class="ident">join</span>(<span class="ident">FILENAME</span>)
+    <span class="doccomment">/// Get the file path to the global config</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">file_path</span>(<span class="ident">base_dir</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span><span class="ident">Path</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">PathBuf</span> {
+        <span class="ident">base_dir</span>.<span class="ident">as_ref</span>().<span class="ident">join</span>(<span class="ident">FILENAME</span>)
     }
 }
 </pre></div>
