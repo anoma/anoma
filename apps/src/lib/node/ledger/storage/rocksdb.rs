@@ -26,6 +26,8 @@ use anoma::ledger::storage::{
 };
 use anoma::types::storage::{BlockHeight, Key, KeySeg, KEY_SEGMENT_SEPARATOR};
 use anoma::types::time::DateTimeUtc;
+use borsh::{BorshDeserialize, BorshSerialize};
+use rlimit::{Resource, Rlim};
 use rocksdb::{
     BlockBasedOptions, Direction, FlushOptions, IteratorMode, Options,
     ReadOptions, SliceTransform, WriteBatch, WriteOptions,
@@ -148,100 +150,11 @@ impl DB for RocksDB {
             .map_err(|e| Error::DBError(e.into_string()))
     }
 
-    fn write_block(&mut self, state: BlockStateWrite) -> Result<()> {
-        let mut batch = WriteBatch::default();
-        let BlockStateWrite {
-            root,
-            store,
-            hash,
-            height,
-            epoch,
-            pred_epochs,
-            next_epoch_min_start_height,
-            next_epoch_min_start_time,
-            address_gen,
-        }: BlockStateWrite = state;
-
-        // Epoch start height and time
-        batch.put(
-            "next_epoch_min_start_height",
-            types::encode(&next_epoch_min_start_height),
-        );
-        batch.put(
-            "next_epoch_min_start_time",
-            types::encode(&next_epoch_min_start_time),
-        );
-
-        let prefix_key = Key::from(height.to_db_key());
-        // Merkle tree
-        {
-            let prefix_key = prefix_key
-                .push(&"tree".to_owned())
-                .map_err(Error::KeyError)?;
-            // Merkle root hash
-            {
-                let key = prefix_key
-                    .push(&"root".to_owned())
-                    .map_err(Error::KeyError)?;
-                batch.put(key.to_string(), &root.as_slice());
-            }
-            // Tree's store
-            {
-                let key = prefix_key
-                    .push(&"store".to_owned())
-                    .map_err(Error::KeyError)?;
-                batch.put(key.to_string(), types::encode(&store));
-            }
-        }
-        // Block hash
-        {
-            let key = prefix_key
-                .push(&"hash".to_owned())
-                .map_err(Error::KeyError)?;
-            batch.put(key.to_string(), types::encode(&hash));
-        }
-        // Block epoch
-        {
-            let key = prefix_key
-                .push(&"epoch".to_owned())
-                .map_err(Error::KeyError)?;
-            batch.put(key.to_string(), types::encode(&epoch));
-        }
-        // Predecessor block epochs
-        {
-            let key = prefix_key
-                .push(&"pred_epochs".to_owned())
-                .map_err(Error::KeyError)?;
-            batch.put(key.to_string(), types::encode(&pred_epochs));
-        }
-        // Address gen
-        {
-            let key = prefix_key
-                .push(&"address_gen".to_owned())
-                .map_err(Error::KeyError)?;
-            batch.put(key.to_string(), types::encode(&address_gen));
-        }
-        let mut write_opts = WriteOptions::default();
-        write_opts.disable_wal(true);
-        self.0
-            .write_opt(batch, &write_opts)
-            .map_err(|e| Error::DBError(e.into_string()))?;
-
-        // Block height - write after everything else is written
-        // NOTE for async writes, we need to take care that all previous heights
-        // are known when updating this
-        self.0
-            .put_opt("height", types::encode(&height), &write_opts)
-            .map_err(|e| Error::DBError(e.into_string()))
-    }
-
     fn read(&self, height: BlockHeight, key: &Key) -> Result<Option<Vec<u8>>> {
-        let key = Key::from(height.to_db_key())
-            .push(&"subspace".to_owned())
-            .map_err(Error::KeyError)?
-            .join(key);
+        let subspace_key =
+            Key::parse("subspace").map_err(Error::KeyError)?.join(key);
         self.0
-            .get(key.to_string())
+            .get(subspace_key.to_string())
             .map_err(|e| Error::DBError(e.into_string()))
     }
 
@@ -251,37 +164,118 @@ impl DB for RocksDB {
         key: &Key,
         value: Vec<u8>,
     ) -> Result<i64> {
-        let key = Key::from(height.to_db_key())
-            .push(&"subspace".to_owned())
-            .map_err(Error::KeyError)?
-            .join(key);
-        let prev_len = self
+        let subspace_key =
+            Key::parse("subspace").map_err(Error::KeyError)?.join(key);
+        let size_diff = match self
             .0
-            .get(key.to_string())
+            .get(subspace_key.to_string())
             .map_err(|e| Error::DBError(e.into_string()))?
-            .map(|bytes| bytes.len())
-            .unwrap_or_default();
-        let size_diff = value.len() as i64 - prev_len as i64;
+        {
+            Some(prev_value) => {
+                let size_diff = value.len() as i64 - prev_value.len() as i64;
+
+                // Persist the previous value under the height where it was
+                // changed
+                let prev_val_key = Key::from(height.to_db_key())
+                    .push(&"subspace".to_owned())
+                    .map_err(Error::KeyError)?
+                    .join(key)
+                    .to_string();
+                self.0
+                    .put(prev_val_key, prev_value)
+                    .map_err(|e| Error::DBError(e.into_string()))?;
+
+                size_diff
+            }
+            None => value.len() as i64,
+        };
+
+        // Create or update the history record
+        let history_key = Key::parse("history")
+            .map_err(Error::KeyError)?
+            .join(&subspace_key)
+            .to_string();
+        // Add the current height to history
+        let history = if let Some(history) = self
+            .0
+            .get(&history_key)
+            .map_err(|e| Error::DBError(e.into_string()))?
+        {
+            let mut history: Vec<u64> =
+                BorshDeserialize::try_from_slice(&history[..]).unwrap();
+            history.push(height.0);
+            history
+        } else {
+            vec![height.0]
+        };
         self.0
-            .put(key.to_string(), value)
+            .put(&history_key, history.try_to_vec().unwrap())
             .map_err(|e| Error::DBError(e.into_string()))?;
+
+        // Write the new key-val
+        self.0
+            .put(&subspace_key.to_string(), value)
+            .map_err(|e| Error::DBError(e.into_string()))?;
+
         Ok(size_diff)
     }
 
     fn delete(&mut self, height: BlockHeight, key: &Key) -> Result<i64> {
-        let key = Key::from(height.to_db_key())
-            .push(&"subspace".to_owned())
-            .map_err(Error::KeyError)?
-            .join(key);
-        let prev_len = self
+        let subspace_key =
+            Key::parse("subspace").map_err(Error::KeyError)?.join(key);
+
+        // Check the length of previous value, if any
+        let prev_len = match self
             .0
             .get(key.to_string())
             .map_err(|e| Error::DBError(e.into_string()))?
-            .map(|bytes| bytes.len() as i64)
-            .unwrap_or_default();
+        {
+            Some(prev_value) => {
+                let prev_len = prev_value.len() as i64;
+
+                // Persist the previous value under the height where it was
+                // changed
+                let prev_val_key = Key::from(height.to_db_key())
+                    .push(&"subspace".to_owned())
+                    .map_err(Error::KeyError)?
+                    .join(key)
+                    .to_string();
+                self.0
+                    .put(prev_val_key, prev_value)
+                    .map_err(|e| Error::DBError(e.into_string()))?;
+
+                prev_len
+            }
+            None => 0,
+        };
+
+        // Delete the key-val
         self.0
             .delete(key.to_string())
             .map_err(|e| Error::DBError(e.into_string()))?;
+
+        // Create or update the history record
+        let history_key = Key::parse("history")
+            .map_err(Error::KeyError)?
+            .join(&subspace_key)
+            .to_string();
+        // Add the current height to history
+        let history = if let Some(history) = self
+            .0
+            .get(&history_key)
+            .map_err(|e| Error::DBError(e.into_string()))?
+        {
+            let mut history: Vec<u64> =
+                BorshDeserialize::try_from_slice(&history[..]).unwrap();
+            history.push(height.0);
+            history
+        } else {
+            vec![height.0]
+        };
+        self.0
+            .put(&history_key, history.try_to_vec().unwrap())
+            .map_err(|e| Error::DBError(e.into_string()))?;
+
         Ok(prev_len)
     }
 
@@ -425,6 +419,93 @@ impl DB for RocksDB {
             }),
         }
     }
+
+    fn write_block(&mut self, state: BlockStateWrite) -> Result<()> {
+        let mut batch = WriteBatch::default();
+        let BlockStateWrite {
+            root,
+            store,
+            hash,
+            height,
+            epoch,
+            pred_epochs,
+            next_epoch_min_start_height,
+            next_epoch_min_start_time,
+            address_gen,
+        }: BlockStateWrite = state;
+
+        // Epoch start height and time
+        batch.put(
+            "next_epoch_min_start_height",
+            types::encode(&next_epoch_min_start_height),
+        );
+        batch.put(
+            "next_epoch_min_start_time",
+            types::encode(&next_epoch_min_start_time),
+        );
+
+        let prefix_key = Key::from(height.to_db_key());
+        // Merkle tree
+        {
+            let prefix_key = prefix_key
+                .push(&"tree".to_owned())
+                .map_err(Error::KeyError)?;
+            // Merkle root hash
+            {
+                let key = prefix_key
+                    .push(&"root".to_owned())
+                    .map_err(Error::KeyError)?;
+                batch.put(key.to_string(), &root.as_slice());
+            }
+            // Tree's store
+            {
+                let key = prefix_key
+                    .push(&"store".to_owned())
+                    .map_err(Error::KeyError)?;
+                batch.put(key.to_string(), types::encode(&store));
+            }
+        }
+        // Block hash
+        {
+            let key = prefix_key
+                .push(&"hash".to_owned())
+                .map_err(Error::KeyError)?;
+            batch.put(key.to_string(), types::encode(&hash));
+        }
+        // Block epoch
+        {
+            let key = prefix_key
+                .push(&"epoch".to_owned())
+                .map_err(Error::KeyError)?;
+            batch.put(key.to_string(), types::encode(&epoch));
+        }
+        // Predecessor block epochs
+        {
+            let key = prefix_key
+                .push(&"pred_epochs".to_owned())
+                .map_err(Error::KeyError)?;
+            batch.put(key.to_string(), types::encode(&pred_epochs));
+        }
+        // Address gen
+        {
+            let key = prefix_key
+                .push(&"address_gen".to_owned())
+                .map_err(Error::KeyError)?;
+            batch.put(key.to_string(), types::encode(&address_gen));
+        }
+        let mut write_opts = WriteOptions::default();
+        write_opts.disable_wal(true);
+        self.0
+            .write_opt(batch, &write_opts)
+            .map_err(|e| Error::DBError(e.into_string()))?;
+
+        // Block height - write after everything else is written
+        // NOTE for async writes, we need to take care that all previous heights
+        // are known when updating this
+        self.0
+            .put_opt("height", types::encode(&height), &write_opts)
+            .map_err(|e| Error::DBError(e.into_string()))
+    }
 }
 
 impl<'iter> DBIter<'iter> for RocksDB {
@@ -432,10 +513,10 @@ impl<'iter> DBIter<'iter> for RocksDB {
 
     fn iter_prefix(
         &'iter self,
-        height: BlockHeight,
+        _height: BlockHeight,
         prefix: &Key,
     ) -> PersistentPrefixIterator<'iter> {
-        let db_prefix = format!("{}/subspace/", height.raw());
+        let db_prefix = "subspace/".to_owned();
         let prefix = format!("{}{}", db_prefix, prefix);
 
         let mut read_opts = ReadOptions::default();

@@ -99,25 +99,20 @@ impl DB for MockDB {
         Ok(())
     }
 
-    fn read(&self, height: BlockHeight, key: &Key) -> Result<Option<Vec<u8>>> {
-        let key = Key::from(height.to_db_key())
-            .push(&"subspace".to_owned())
+    fn read(&self, _height: BlockHeight, key: &Key) -> Result<Option<Vec<u8>>> {
+        let key = Key::parse(&"subspace".to_owned())
             .map_err(Error::KeyError)?
             .join(key);
-        Ok(match self.0.get(&key.to_string()) {
-            Some(v) => Some(v.clone()),
-            None => None,
-        })
+        Ok(self.0.get(&key.to_string()).cloned())
     }
 
     fn write(
         &mut self,
-        height: BlockHeight,
+        _height: BlockHeight,
         key: &Key,
         value: Vec<u8>,
     ) -> Result<i64> {
-        let key = Key::from(height.to_db_key())
-            .push(&"subspace".to_owned())
+        let key = Key::parse(&"subspace".to_owned())
             .map_err(Error::KeyError)?
             .join(key);
         let current_len = value.len() as i64;
@@ -127,9 +122,8 @@ impl DB for MockDB {
         })
     }
 
-    fn delete(&mut self, height: BlockHeight, key: &Key) -> Result<i64> {
-        let key = Key::from(height.to_db_key())
-            .push(&"subspace".to_owned())
+    fn delete(&mut self, _height: BlockHeight, key: &Key) -> Result<i64> {
+        let key = Key::parse(&"subspace".to_owned())
             .map_err(Error::KeyError)?
             .join(key);
         Ok(match self.0.remove(&key.to_string()) {
@@ -255,10 +249,10 @@ impl<'iter> DBIter<'iter> for MockDB {
 
     fn iter_prefix(
         &'iter self,
-        height: BlockHeight,
+        _height: BlockHeight,
         prefix: &Key,
     ) -> MockPrefixIterator<'iter> {
-        let db_prefix = format!("{}/subspace/", height.raw());
+        let db_prefix = "subspace/".to_owned();
         let prefix = format!("{}{}", db_prefix, prefix);
         let iter = self.0.iter();
         MockPrefixIterator::new(MockIterator { prefix, iter }, db_prefix)
