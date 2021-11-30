@@ -32,7 +32,6 @@ impl DB for MockDB {
             pred_epochs,
             next_epoch_min_start_height,
             next_epoch_min_start_time,
-            subspaces,
             address_gen,
         }: BlockStateWrite = state;
 
@@ -88,16 +87,6 @@ impl DB for MockDB {
                 .map_err(Error::KeyError)?;
             self.0.insert(key.to_string(), types::encode(&pred_epochs));
         }
-        // SubSpace
-        {
-            let subspace_prefix = prefix_key
-                .push(&"subspace".to_owned())
-                .map_err(Error::KeyError)?;
-            subspaces.iter().for_each(|(key, value)| {
-                let key = subspace_prefix.join(key);
-                self.0.insert(key.to_string(), value.clone());
-            });
-        }
         // Address gen
         {
             let key = prefix_key
@@ -115,10 +104,38 @@ impl DB for MockDB {
             .push(&"subspace".to_owned())
             .map_err(Error::KeyError)?
             .join(key);
-        match self.0.get(&key.to_string()) {
-            Some(v) => Ok(Some(v.clone())),
-            None => Ok(None),
-        }
+        Ok(match self.0.get(&key.to_string()) {
+            Some(v) => Some(v.clone()),
+            None => None,
+        })
+    }
+
+    fn write(
+        &mut self,
+        height: BlockHeight,
+        key: &Key,
+        value: Vec<u8>,
+    ) -> Result<i64> {
+        let key = Key::from(height.to_db_key())
+            .push(&"subspace".to_owned())
+            .map_err(Error::KeyError)?
+            .join(key);
+        let current_len = value.len() as i64;
+        Ok(match self.0.insert(key.to_string(), value) {
+            Some(prev_value) => current_len - prev_value.len() as i64,
+            None => current_len,
+        })
+    }
+
+    fn delete(&mut self, height: BlockHeight, key: &Key) -> Result<i64> {
+        let key = Key::from(height.to_db_key())
+            .push(&"subspace".to_owned())
+            .map_err(Error::KeyError)?
+            .join(key);
+        Ok(match self.0.remove(&key.to_string()) {
+            Some(value) => value.len() as i64,
+            None => 0,
+        })
     }
 
     fn read_last_block(&mut self) -> Result<Option<BlockStateRead>> {
@@ -156,7 +173,6 @@ impl DB for MockDB {
         let mut epoch = None;
         let mut pred_epochs = None;
         let mut address_gen = None;
-        let mut subspaces: HashMap<Key, Vec<u8>> = HashMap::new();
         for (path, bytes) in
             self.0.range((Included(prefix), Excluded(upper_prefix)))
         {
@@ -197,14 +213,6 @@ impl DB for MockDB {
                             types::decode(bytes).map_err(Error::CodingError)?,
                         )
                     }
-                    "subspace" => {
-                        let key = Key::parse_db_key(path).map_err(|e| {
-                            Error::Temporary {
-                                error: e.to_string(),
-                            }
-                        })?;
-                        subspaces.insert(key, bytes.to_vec());
-                    }
                     "address_gen" => {
                         address_gen = Some(
                             types::decode(bytes).map_err(Error::CodingError)?,
@@ -232,7 +240,6 @@ impl DB for MockDB {
                 pred_epochs,
                 next_epoch_min_start_height,
                 next_epoch_min_start_time,
-                subspaces,
                 address_gen,
             })),
             _ => Err(Error::Temporary {

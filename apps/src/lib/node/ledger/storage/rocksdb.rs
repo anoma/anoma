@@ -159,7 +159,6 @@ impl DB for RocksDB {
             pred_epochs,
             next_epoch_min_start_height,
             next_epoch_min_start_time,
-            subspaces,
             address_gen,
         }: BlockStateWrite = state;
 
@@ -215,16 +214,6 @@ impl DB for RocksDB {
                 .map_err(Error::KeyError)?;
             batch.put(key.to_string(), types::encode(&pred_epochs));
         }
-        // SubSpace
-        {
-            let subspace_prefix = prefix_key
-                .push(&"subspace".to_owned())
-                .map_err(Error::KeyError)?;
-            subspaces.iter().for_each(|(key, value)| {
-                let key = subspace_prefix.join(key);
-                batch.put(key.to_string(), value);
-            });
-        }
         // Address gen
         {
             let key = prefix_key
@@ -251,14 +240,49 @@ impl DB for RocksDB {
             .push(&"subspace".to_owned())
             .map_err(Error::KeyError)?
             .join(key);
-        match self
+        self.0
+            .get(key.to_string())
+            .map_err(|e| Error::DBError(e.into_string()))
+    }
+
+    fn write(
+        &mut self,
+        height: BlockHeight,
+        key: &Key,
+        value: Vec<u8>,
+    ) -> Result<i64> {
+        let key = Key::from(height.to_db_key())
+            .push(&"subspace".to_owned())
+            .map_err(Error::KeyError)?
+            .join(key);
+        let prev_len = self
             .0
             .get(key.to_string())
             .map_err(|e| Error::DBError(e.into_string()))?
-        {
-            Some(bytes) => Ok(Some(bytes)),
-            None => Ok(None),
-        }
+            .map(|bytes| bytes.len())
+            .unwrap_or_default();
+        let size_diff = value.len() as i64 - prev_len as i64;
+        self.0
+            .put(key.to_string(), value)
+            .map_err(|e| Error::DBError(e.into_string()))?;
+        Ok(size_diff)
+    }
+
+    fn delete(&mut self, height: BlockHeight, key: &Key) -> Result<i64> {
+        let key = Key::from(height.to_db_key())
+            .push(&"subspace".to_owned())
+            .map_err(Error::KeyError)?
+            .join(key);
+        let prev_len = self
+            .0
+            .get(key.to_string())
+            .map_err(|e| Error::DBError(e.into_string()))?
+            .map(|bytes| bytes.len() as i64)
+            .unwrap_or_default();
+        self.0
+            .delete(key.to_string())
+            .map_err(|e| Error::DBError(e.into_string()))?;
+        Ok(prev_len)
     }
 
     fn read_last_block(&mut self) -> Result<Option<BlockStateRead>> {
@@ -317,7 +341,6 @@ impl DB for RocksDB {
         let mut epoch = None;
         let mut pred_epochs = None;
         let mut address_gen = None;
-        let mut subspaces: HashMap<Key, Vec<u8>> = HashMap::new();
         for (key, bytes) in self.0.iterator_opt(
             IteratorMode::From(prefix.as_bytes(), Direction::Forward),
             read_opts,
@@ -367,14 +390,6 @@ impl DB for RocksDB {
                             types::decode(bytes).map_err(Error::CodingError)?,
                         )
                     }
-                    "subspace" => {
-                        let key = Key::parse_db_key(path).map_err(|e| {
-                            Error::Temporary {
-                                error: e.to_string(),
-                            }
-                        })?;
-                        subspaces.insert(key, bytes.to_vec());
-                    }
                     "address_gen" => {
                         address_gen = Some(
                             types::decode(bytes).map_err(Error::CodingError)?,
@@ -402,7 +417,6 @@ impl DB for RocksDB {
                 pred_epochs,
                 next_epoch_min_start_height,
                 next_epoch_min_start_time,
-                subspaces,
                 address_gen,
             })),
             _ => Err(Error::Temporary {

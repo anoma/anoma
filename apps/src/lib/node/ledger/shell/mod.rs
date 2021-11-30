@@ -723,7 +723,6 @@ mod test_utils {
         let store = Default::default();
         let hash = BlockHash([0; 32]);
         let pred_epochs = Default::default();
-        let subspaces = Default::default();
         let address_gen = EstablishedAddressGen::new("test");
         shell
             .storage
@@ -737,7 +736,6 @@ mod test_utils {
                 pred_epochs: &pred_epochs,
                 next_epoch_min_start_height: BlockHeight(3),
                 next_epoch_min_start_time: DateTimeUtc::now(),
-                subspaces: &subspaces,
                 address_gen: &address_gen,
             })
             .expect("Test failed");
@@ -791,7 +789,6 @@ mod test_utils {
         let store = Default::default();
         let hash = BlockHash([0; 32]);
         let pred_epochs = Default::default();
-        let subspaces = Default::default();
         let address_gen = EstablishedAddressGen::new("test");
         shell
             .storage
@@ -805,7 +802,6 @@ mod test_utils {
                 pred_epochs: &pred_epochs,
                 next_epoch_min_start_height: BlockHeight(3),
                 next_epoch_min_start_time: DateTimeUtc::now(),
-                subspaces: &subspaces,
                 address_gen: &address_gen,
             })
             .expect("Test failed");

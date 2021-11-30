@@ -77,8 +77,6 @@ pub struct BlockStorage<H: StorageHasher> {
     pub epoch: Epoch,
     /// Predecessor block epochs
     pub pred_epochs: Epochs,
-    /// Accounts' subspaces storage for arbitrary key-values
-    pub subspaces: HashMap<Key, Vec<u8>>,
 }
 
 #[allow(missing_docs)]
@@ -116,8 +114,6 @@ pub struct BlockStateRead {
     pub next_epoch_min_start_height: BlockHeight,
     /// Minimum block time at which the next epoch may start
     pub next_epoch_min_start_time: DateTimeUtc,
-    /// Accounts' subspaces storage for arbitrary key-values
-    pub subspaces: HashMap<Key, Vec<u8>>,
     /// Established address generator
     pub address_gen: EstablishedAddressGen,
 }
@@ -140,8 +136,6 @@ pub struct BlockStateWrite<'a> {
     pub next_epoch_min_start_height: BlockHeight,
     /// Minimum block time at which the next epoch may start
     pub next_epoch_min_start_time: DateTimeUtc,
-    /// Accounts' subspaces storage for arbitrary key-values
-    pub subspaces: &'a HashMap<Key, Vec<u8>>,
     /// Established address generator
     pub address_gen: &'a EstablishedAddressGen,
 }
@@ -159,6 +153,20 @@ pub trait DB: std::fmt::Debug {
 
     /// Read the value with the given height and the key from the DB
     fn read(&self, height: BlockHeight, key: &Key) -> Result<Option<Vec<u8>>>;
+
+    /// Write the value with the given height and the key to the DB. Returns
+    /// the size difference from previous value, if any, or the size of the
+    /// value otherwise.
+    fn write(
+        &mut self,
+        height: BlockHeight,
+        key: &Key,
+        value: Vec<u8>,
+    ) -> Result<i64>;
+
+    /// Delete the value with the given height and the key from the DB. Returns
+    /// the size of the removed value, if any, 0 if no previous value was found.
+    fn delete(&mut self, height: BlockHeight, key: &Key) -> Result<i64>;
 
     /// Read the last committed block
     fn read_last_block(&mut self) -> Result<Option<BlockStateRead>>;
@@ -202,7 +210,6 @@ where
             height: BlockHeight::default(),
             epoch: Epoch::default(),
             pred_epochs: Epochs::default(),
-            subspaces: HashMap::default(),
         };
         Storage::<D, H> {
             db: D::open(db_path),
@@ -231,7 +238,6 @@ where
             pred_epochs,
             next_epoch_min_start_height,
             next_epoch_min_start_time,
-            subspaces,
             address_gen,
         }) = self.db.read_last_block()?
         {
@@ -240,7 +246,6 @@ where
             self.block.height = height;
             self.block.epoch = epoch;
             self.block.pred_epochs = pred_epochs;
-            self.block.subspaces = subspaces;
             self.last_height = height;
             self.last_epoch = epoch;
             self.next_epoch_min_start_height = next_epoch_min_start_height;
@@ -277,7 +282,6 @@ where
             pred_epochs: &self.block.pred_epochs,
             next_epoch_min_start_height: self.next_epoch_min_start_height,
             next_epoch_min_start_time: self.next_epoch_min_start_time,
-            subspaces: &self.block.subspaces,
             address_gen: &self.address_gen,
         };
         self.db.write_block(state)?;
@@ -329,11 +333,6 @@ where
             return Ok((None, gas));
         }
 
-        if let Some(v) = self.block.subspaces.get(key) {
-            let gas = key.len() + v.len();
-            return Ok((Some(v.to_vec()), gas as _));
-        }
-
         match self.db.read(self.last_height, key)? {
             Some(v) => {
                 let gas = key.len() + v.len();
@@ -362,28 +361,21 @@ where
 
         let len = value.len();
         let gas = key.len() + len;
-        let size_diff = match self.block.subspaces.insert(key.clone(), value) {
-            Some(prev) => len as i64 - prev.len() as i64,
-            None => len as i64,
-        };
+        let size_diff = self.db.write(self.last_height, key, value)?;
         Ok((gas as _, size_diff))
     }
 
     /// Delete the specified subspace and returns the gas cost and the size
     /// difference
     pub fn delete(&mut self, key: &Key) -> Result<(u64, i64)> {
-        let mut size_diff = 0;
+        let mut deleted_bytes_len = 0;
         if self.has_key(key)?.0 {
             // update the merkle tree with a zero as a tombstone
             self.update_tree(H::hash_key(key), H256::zero())?;
-
-            size_diff -= match self.block.subspaces.remove(key) {
-                Some(prev) => prev.len() as i64,
-                None => 0,
-            };
+            deleted_bytes_len = self.db.delete(self.last_height, key)?;
         }
-        let gas = key.len() + (-size_diff as usize);
-        Ok((gas as _, size_diff))
+        let gas = key.len() + deleted_bytes_len as usize;
+        Ok((gas as _, deleted_bytes_len))
     }
 
     /// Set the block header.
@@ -625,14 +617,12 @@ pub mod testing {
         fn default() -> Self {
             let chain_id = ChainId::default();
             let tree = MerkleTree::default();
-            let subspaces = HashMap::new();
             let block = BlockStorage {
                 tree,
                 hash: BlockHash::default(),
                 height: BlockHeight::default(),
                 epoch: Epoch::default(),
                 pred_epochs: Epochs::default(),
-                subspaces,
             };
             Self {
                 db: MockDB::default(),
