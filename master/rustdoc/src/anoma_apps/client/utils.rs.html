@@ -709,6 +709,34 @@
 <span id="709">709</span>
 <span id="710">710</span>
 <span id="711">711</span>
+<span id="712">712</span>
+<span id="713">713</span>
+<span id="714">714</span>
+<span id="715">715</span>
+<span id="716">716</span>
+<span id="717">717</span>
+<span id="718">718</span>
+<span id="719">719</span>
+<span id="720">720</span>
+<span id="721">721</span>
+<span id="722">722</span>
+<span id="723">723</span>
+<span id="724">724</span>
+<span id="725">725</span>
+<span id="726">726</span>
+<span id="727">727</span>
+<span id="728">728</span>
+<span id="729">729</span>
+<span id="730">730</span>
+<span id="731">731</span>
+<span id="732">732</span>
+<span id="733">733</span>
+<span id="734">734</span>
+<span id="735">735</span>
+<span id="736">736</span>
+<span id="737">737</span>
+<span id="738">738</span>
+<span id="739">739</span>
 </pre><pre class="rust">
 <span class="kw">use</span> <span class="ident">std::collections</span>::{<span class="ident">HashMap</span>, <span class="ident">HashSet</span>};
 <span class="kw">use</span> <span class="ident">std::fs</span>::{<span class="self">self</span>, <span class="ident">File</span>, <span class="ident">OpenOptions</span>};
@@ -744,6 +772,7 @@
 };
 <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::node::ledger::tendermint_node</span>;
 <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::wallet::Wallet</span>;
+<span class="kw">use</span> <span class="kw">crate</span><span class="ident">::wasm_loader</span>;
 
 <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">NET_ACCOUNTS_DIR</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;setup&quot;</span>;
 <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">NET_OTHER_ACCOUNTS_DIR</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;other&quot;</span>;
@@ -783,6 +812,7 @@
     <span class="ident">global_args</span>: <span class="ident">args::Global</span>,
     <span class="ident">args::InitNetwork</span> {
         <span class="ident">genesis_path</span>,
+        <span class="ident">wasm_checksums_path</span>,
         <span class="ident">chain_id_prefix</span>,
         <span class="ident">unsafe_dont_encrypt</span>,
         <span class="ident">consensus_timeout_commit</span>,
@@ -792,6 +822,25 @@
     }: <span class="ident">args::InitNetwork</span>,
 ) {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">config</span> <span class="op">=</span> <span class="ident">genesis_config::open_genesis_config</span>(<span class="kw-2">&amp;</span><span class="ident">genesis_path</span>);
+
+    <span class="comment">// Update the WASM checksums</span>
+    <span class="kw">let</span> <span class="ident">checksums</span> <span class="op">=</span>
+        <span class="ident">wasm_loader::Checksums::read_checksums_file</span>(<span class="kw-2">&amp;</span><span class="ident">wasm_checksums_path</span>);
+    <span class="ident">config</span>.<span class="ident">wasm</span>.<span class="ident">iter_mut</span>().<span class="ident">for_each</span>(<span class="op">|</span>(<span class="ident">name</span>, <span class="ident">config</span>)<span class="op">|</span> {
+        <span class="comment">// Find the sha256 from checksums.json</span>
+        <span class="kw">let</span> <span class="ident">name</span> <span class="op">=</span> <span class="macro">format!</span>(<span class="string">&quot;{}.wasm&quot;</span>, <span class="ident">name</span>);
+        <span class="comment">// Full name in format `{name}.{sha256}.wasm`</span>
+        <span class="kw">let</span> <span class="ident">full_name</span> <span class="op">=</span> <span class="ident">checksums</span>.<span class="number">0</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">name</span>).<span class="ident">unwrap</span>();
+        <span class="kw">let</span> <span class="ident">hash</span> <span class="op">=</span> <span class="ident">full_name</span>
+            .<span class="ident">split_once</span>(<span class="string">&quot;.&quot;</span>)
+            .<span class="ident">unwrap</span>()
+            .<span class="number">1</span>
+            .<span class="ident">split_once</span>(<span class="string">&quot;.&quot;</span>)
+            .<span class="ident">unwrap</span>()
+            .<span class="number">0</span>;
+        <span class="ident">config</span>.<span class="ident">sha256</span> <span class="op">=</span> <span class="ident">genesis_config::HexString</span>(<span class="ident">hash</span>.<span class="ident">to_owned</span>());
+    });
+
     <span class="kw">let</span> <span class="ident">temp_chain_id</span> <span class="op">=</span> <span class="ident">chain_id_prefix</span>.<span class="ident">temp_chain_id</span>();
     <span class="kw">let</span> <span class="ident">temp_dir</span> <span class="op">=</span> <span class="ident">global_args</span>.<span class="ident">base_dir</span>.<span class="ident">join</span>(<span class="ident">temp_chain_id</span>.<span class="ident">as_str</span>());
     <span class="comment">// The `temp_chain_id` gets renamed after we have chain ID</span>
@@ -1248,6 +1297,13 @@
             <span class="ident">Config::file_path</span>(<span class="ident">config::DEFAULT_BASE_DIR</span>, <span class="kw-2">&amp;</span><span class="ident">chain_id</span>);
         <span class="ident">release</span>
             .<span class="ident">append_path_with_name</span>(<span class="ident">chain_config_path</span>, <span class="ident">release_chain_config_path</span>)
+            .<span class="ident">unwrap</span>();
+        <span class="kw">let</span> <span class="ident">release_wasm_checksums_path</span> <span class="op">=</span> <span class="string">&quot;wasm/checksums.json&quot;</span>;
+        <span class="ident">release</span>
+            .<span class="ident">append_path_with_name</span>(
+                <span class="kw-2">&amp;</span><span class="ident">wasm_checksums_path</span>,
+                <span class="ident">release_wasm_checksums_path</span>,
+            )
             .<span class="ident">unwrap</span>();
 
         <span class="comment">// Gzip tar release and write to file</span>
