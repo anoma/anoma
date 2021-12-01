@@ -2486,6 +2486,9 @@
 <span id="2486">2486</span>
 <span id="2487">2487</span>
 <span id="2488">2488</span>
+<span id="2489">2489</span>
+<span id="2490">2490</span>
+<span id="2491">2491</span>
 </pre><pre class="rust">
 <span class="doccomment">//! The CLI commands that are re-used between the executables `anoma`,</span>
 <span class="doccomment">//! `anoma-node` and `anoma-client`.</span>
@@ -3615,11 +3618,14 @@
     <span class="kw">const</span> <span class="ident">DONT_ARCHIVE</span>: <span class="ident">ArgFlag</span> <span class="op">=</span> <span class="ident">flag</span>(<span class="string">&quot;dont-archive&quot;</span>);
     <span class="kw">const</span> <span class="ident">DRY_RUN_TX</span>: <span class="ident">ArgFlag</span> <span class="op">=</span> <span class="ident">flag</span>(<span class="string">&quot;dry-run&quot;</span>);
     <span class="kw">const</span> <span class="ident">EPOCH</span>: <span class="ident">ArgOpt</span><span class="op">&lt;</span><span class="ident">Epoch</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">arg_opt</span>(<span class="string">&quot;epoch&quot;</span>);
-    <span class="kw">const</span> <span class="ident">FEE_AMOUNT</span>: <span class="ident">Arg</span><span class="op">&lt;</span><span class="ident">token::Amount</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">arg</span>(<span class="string">&quot;fee-amount&quot;</span>);
-    <span class="kw">const</span> <span class="ident">FEE_TOKEN</span>: <span class="ident">Arg</span><span class="op">&lt;</span><span class="ident">WalletAddress</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">arg</span>(<span class="string">&quot;fee-token&quot;</span>);
+    <span class="kw">const</span> <span class="ident">FEE_AMOUNT</span>: <span class="ident">ArgDefault</span><span class="op">&lt;</span><span class="ident">token::Amount</span><span class="op">&gt;</span> <span class="op">=</span>
+        <span class="ident">arg_default</span>(<span class="string">&quot;fee-amount&quot;</span>, <span class="ident">DefaultFn</span>(<span class="op">|</span><span class="op">|</span> <span class="ident">token::Amount::from</span>(<span class="number">0</span>)));
+    <span class="kw">const</span> <span class="ident">FEE_TOKEN</span>: <span class="ident">ArgDefaultFromCtx</span><span class="op">&lt;</span><span class="ident">WalletAddress</span><span class="op">&gt;</span> <span class="op">=</span>
+        <span class="ident">arg_default_from_ctx</span>(<span class="string">&quot;fee-token&quot;</span>, <span class="ident">DefaultFn</span>(<span class="op">|</span><span class="op">|</span> <span class="string">&quot;XAN&quot;</span>.<span class="ident">into</span>()));
     <span class="kw">const</span> <span class="ident">FILTER_PATH</span>: <span class="ident">ArgOpt</span><span class="op">&lt;</span><span class="ident">PathBuf</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">arg_opt</span>(<span class="string">&quot;filter-path&quot;</span>);
     <span class="kw">const</span> <span class="ident">FORCE</span>: <span class="ident">ArgFlag</span> <span class="op">=</span> <span class="ident">flag</span>(<span class="string">&quot;force&quot;</span>);
-    <span class="kw">const</span> <span class="ident">GAS_LIMIT</span>: <span class="ident">Arg</span><span class="op">&lt;</span><span class="ident">token::Amount</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">arg</span>(<span class="string">&quot;gas-limit&quot;</span>);
+    <span class="kw">const</span> <span class="ident">GAS_LIMIT</span>: <span class="ident">ArgDefault</span><span class="op">&lt;</span><span class="ident">token::Amount</span><span class="op">&gt;</span> <span class="op">=</span>
+        <span class="ident">arg_default</span>(<span class="string">&quot;gas-limit&quot;</span>, <span class="ident">DefaultFn</span>(<span class="op">|</span><span class="op">|</span> <span class="ident">token::Amount::from</span>(<span class="number">0</span>)));
     <span class="kw">const</span> <span class="ident">GENESIS_PATH</span>: <span class="ident">Arg</span><span class="op">&lt;</span><span class="ident">PathBuf</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">arg</span>(<span class="string">&quot;genesis-path&quot;</span>);
     <span class="kw">const</span> <span class="ident">LEDGER_ADDRESS_ABOUT</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span>
         <span class="string">&quot;Address of a ledger node as \&quot;{scheme}://{host}:{port}\&quot;. If the \
