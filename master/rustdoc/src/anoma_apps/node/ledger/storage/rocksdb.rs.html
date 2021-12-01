@@ -498,6 +498,40 @@
 <span id="498">498</span>
 <span id="499">499</span>
 <span id="500">500</span>
+<span id="501">501</span>
+<span id="502">502</span>
+<span id="503">503</span>
+<span id="504">504</span>
+<span id="505">505</span>
+<span id="506">506</span>
+<span id="507">507</span>
+<span id="508">508</span>
+<span id="509">509</span>
+<span id="510">510</span>
+<span id="511">511</span>
+<span id="512">512</span>
+<span id="513">513</span>
+<span id="514">514</span>
+<span id="515">515</span>
+<span id="516">516</span>
+<span id="517">517</span>
+<span id="518">518</span>
+<span id="519">519</span>
+<span id="520">520</span>
+<span id="521">521</span>
+<span id="522">522</span>
+<span id="523">523</span>
+<span id="524">524</span>
+<span id="525">525</span>
+<span id="526">526</span>
+<span id="527">527</span>
+<span id="528">528</span>
+<span id="529">529</span>
+<span id="530">530</span>
+<span id="531">531</span>
+<span id="532">532</span>
+<span id="533">533</span>
+<span id="534">534</span>
 </pre><pre class="rust">
 <span class="doccomment">//! The persistent storage in RocksDB.</span>
 <span class="doccomment">//!</span>
@@ -517,7 +551,9 @@
 
 <span class="kw">use</span> <span class="ident">std::cmp::Ordering</span>;
 <span class="kw">use</span> <span class="ident">std::collections::HashMap</span>;
+<span class="kw">use</span> <span class="ident">std::env</span>;
 <span class="kw">use</span> <span class="ident">std::path::Path</span>;
+<span class="kw">use</span> <span class="ident">std::str::FromStr</span>;
 
 <span class="kw">use</span> <span class="ident">anoma::ledger::storage::types::PrefixIterator</span>;
 <span class="kw">use</span> <span class="ident">anoma::ledger::storage</span>::{
@@ -530,18 +566,50 @@
     <span class="ident">ReadOptions</span>, <span class="ident">SliceTransform</span>, <span class="ident">WriteBatch</span>, <span class="ident">WriteOptions</span>,
 };
 
+<span class="kw">use</span> <span class="kw">crate</span><span class="ident">::cli</span>;
+
 <span class="comment">// TODO the DB schema will probably need some kind of versioning</span>
+
+<span class="doccomment">/// Env. var to set a number of Rayon global worker threads</span>
+<span class="kw">const</span> <span class="ident">ENV_VAR_ROCKSDB_COMPACTION_THREADS</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span>
+    <span class="string">&quot;ANOMA_ROCKSDB_COMPACTION_THREADS&quot;</span>;
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">RocksDB</span>(<span class="ident">rocksdb::DB</span>);
 
 <span class="doccomment">/// Open RocksDB for the DB</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">open</span>(<span class="ident">path</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span><span class="ident">Path</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">RocksDB</span><span class="op">&gt;</span> {
+    <span class="kw">let</span> <span class="ident">logical_cores</span> <span class="op">=</span> <span class="ident">num_cpus::get</span>() <span class="kw">as</span> <span class="ident">i32</span>;
+    <span class="kw">let</span> <span class="ident">compaction_threads</span> <span class="op">=</span>
+        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Ok</span>(<span class="ident">num_str</span>) <span class="op">=</span> <span class="ident">env::var</span>(<span class="ident">ENV_VAR_ROCKSDB_COMPACTION_THREADS</span>) {
+            <span class="kw">match</span> <span class="ident">i32::from_str</span>(<span class="kw-2">&amp;</span><span class="ident">num_str</span>) {
+                <span class="prelude-val">Ok</span>(<span class="ident">num</span>) <span class="kw">if</span> <span class="ident">num</span> <span class="op">&gt;</span> <span class="number">0</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">num</span>,
+                <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="macro">eprintln!</span>(
+                        <span class="string">&quot;Invalid env. var {} value: {}. Expecting a positive \
+                         number.&quot;</span>,
+                        <span class="ident">ENV_VAR_ROCKSDB_COMPACTION_THREADS</span>, <span class="ident">num_str</span>
+                    );
+                    <span class="ident">cli::safe_exit</span>(<span class="number">1</span>)
+                }
+            }
+        } <span class="kw">else</span> {
+            <span class="comment">// If not set, default to quarter of logical CPUs count</span>
+            <span class="ident">logical_cores</span> <span class="op">/</span> <span class="number">4</span>
+        };
+    <span class="macro">tracing::debug!</span>(
+        <span class="string">&quot;Using {} compactions threads for RocksDB.&quot;</span>,
+        <span class="ident">compaction_threads</span>
+    );
+
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">cf_opts</span> <span class="op">=</span> <span class="ident">Options::default</span>();
     <span class="comment">// ! recommended initial setup https://github.com/facebook/rocksdb/wiki/Setup-Options-and-Basic-Tuning#other-general-options</span>
     <span class="ident">cf_opts</span>.<span class="ident">set_level_compaction_dynamic_level_bytes</span>(<span class="bool-val">true</span>);
-    <span class="comment">// compactions + flushes</span>
-    <span class="ident">cf_opts</span>.<span class="ident">set_max_background_jobs</span>(<span class="number">6</span>);
+
+    <span class="comment">// This gives `compaction_threads` number to compaction threads and 1 thread</span>
+    <span class="comment">// for flush background jobs: https://github.com/facebook/rocksdb/blob/17ce1ca48be53ba29138f92dafc9c853d9241377/options/options.cc#L622</span>
+    <span class="ident">cf_opts</span>.<span class="ident">increase_parallelism</span>(<span class="ident">compaction_threads</span>);
+
     <span class="ident">cf_opts</span>.<span class="ident">set_bytes_per_sync</span>(<span class="number">1048576</span>);
     <span class="ident">set_max_open_files</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">cf_opts</span>);
 

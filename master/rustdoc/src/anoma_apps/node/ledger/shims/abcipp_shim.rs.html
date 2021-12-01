@@ -144,6 +144,57 @@
 <span id="144">144</span>
 <span id="145">145</span>
 <span id="146">146</span>
+<span id="147">147</span>
+<span id="148">148</span>
+<span id="149">149</span>
+<span id="150">150</span>
+<span id="151">151</span>
+<span id="152">152</span>
+<span id="153">153</span>
+<span id="154">154</span>
+<span id="155">155</span>
+<span id="156">156</span>
+<span id="157">157</span>
+<span id="158">158</span>
+<span id="159">159</span>
+<span id="160">160</span>
+<span id="161">161</span>
+<span id="162">162</span>
+<span id="163">163</span>
+<span id="164">164</span>
+<span id="165">165</span>
+<span id="166">166</span>
+<span id="167">167</span>
+<span id="168">168</span>
+<span id="169">169</span>
+<span id="170">170</span>
+<span id="171">171</span>
+<span id="172">172</span>
+<span id="173">173</span>
+<span id="174">174</span>
+<span id="175">175</span>
+<span id="176">176</span>
+<span id="177">177</span>
+<span id="178">178</span>
+<span id="179">179</span>
+<span id="180">180</span>
+<span id="181">181</span>
+<span id="182">182</span>
+<span id="183">183</span>
+<span id="184">184</span>
+<span id="185">185</span>
+<span id="186">186</span>
+<span id="187">187</span>
+<span id="188">188</span>
+<span id="189">189</span>
+<span id="190">190</span>
+<span id="191">191</span>
+<span id="192">192</span>
+<span id="193">193</span>
+<span id="194">194</span>
+<span id="195">195</span>
+<span id="196">196</span>
+<span id="197">197</span>
 </pre><pre class="rust">
 <span class="kw">use</span> <span class="ident">std::convert</span>::{<span class="ident">TryFrom</span>, <span class="ident">TryInto</span>};
 <span class="kw">use</span> <span class="ident">std::future::Future</span>;
@@ -166,35 +217,146 @@
     <span class="ident">BeginBlock</span>, <span class="ident">ProcessedTx</span>,
 };
 
-<span class="doccomment">/// The shim wraps the shell, which implements ABCI++</span>
-<span class="doccomment">/// The shim makes a crude translation between the ABCI</span>
-<span class="doccomment">/// interface currently used by tendermint and the shell&#39;s</span>
-<span class="doccomment">/// interface</span>
+<span class="doccomment">/// The shim wraps the shell, which implements ABCI++.</span>
+<span class="doccomment">/// The shim makes a crude translation between the ABCI interface currently used</span>
+<span class="doccomment">/// by tendermint and the shell&#39;s interface.</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">AbcippShim</span> {
     <span class="ident">service</span>: <span class="ident">Shell</span>,
     <span class="ident">begin_block_request</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">BeginBlock</span><span class="op">&gt;</span>,
     <span class="ident">block_txs</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">ProcessedTx</span><span class="op">&gt;</span>,
+    <span class="ident">shell_recv</span>: <span class="ident">tokio::sync::mpsc::Receiver</span><span class="op">&lt;</span>(
+        <span class="ident">Req</span>,
+        <span class="ident">tokio::sync::oneshot::Sender</span><span class="op">&lt;</span><span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Resp</span>, <span class="ident">BoxError</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    )<span class="op">&gt;</span>,
 }
 
 <span class="kw">impl</span> <span class="ident">AbcippShim</span> {
+    <span class="doccomment">/// Create a shell with a ABCI service that passes messages to and from the</span>
+    <span class="doccomment">/// shell.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(
         <span class="ident">base_dir</span>: <span class="ident">PathBuf</span>,
         <span class="ident">db_path</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span><span class="ident">Path</span><span class="op">&gt;</span>,
         <span class="ident">chain_id</span>: <span class="ident">ChainId</span>,
         <span class="ident">wasm_dir</span>: <span class="ident">PathBuf</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
-        <span class="self">Self</span> {
-            <span class="ident">service</span>: <span class="ident">Shell::new</span>(<span class="ident">base_dir</span>, <span class="ident">db_path</span>, <span class="ident">chain_id</span>, <span class="ident">wasm_dir</span>),
-            <span class="ident">begin_block_request</span>: <span class="prelude-val">None</span>,
-            <span class="ident">block_txs</span>: <span class="macro">vec!</span>[],
+    ) <span class="op">-</span><span class="op">&gt;</span> (<span class="self">Self</span>, <span class="ident">AbciService</span>) {
+        <span class="kw">let</span> (<span class="ident">shell_send</span>, <span class="ident">shell_recv</span>) <span class="op">=</span> <span class="ident">tokio::sync::mpsc::channel</span>(<span class="number">1024</span>);
+        (
+            <span class="self">Self</span> {
+                <span class="ident">service</span>: <span class="ident">Shell::new</span>(<span class="ident">base_dir</span>, <span class="ident">db_path</span>, <span class="ident">chain_id</span>, <span class="ident">wasm_dir</span>),
+                <span class="ident">begin_block_request</span>: <span class="prelude-val">None</span>,
+                <span class="ident">block_txs</span>: <span class="macro">vec!</span>[],
+                <span class="ident">shell_recv</span>,
+            },
+            <span class="ident">AbciService</span> { <span class="ident">shell_send</span> },
+        )
+    }
+
+    <span class="doccomment">/// Run the shell&#39;s blocking loop that receives messages from the</span>
+    <span class="doccomment">/// [`AbciService`].</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">run</span>(<span class="kw-2">mut</span> <span class="self">self</span>) {
+        <span class="kw">while</span> <span class="kw">let</span> <span class="prelude-val">Some</span>((<span class="ident">req</span>, <span class="ident">resp_sender</span>)) <span class="op">=</span> <span class="self">self</span>.<span class="ident">shell_recv</span>.<span class="ident">blocking_recv</span>() {
+            <span class="kw">let</span> <span class="ident">resp</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">req</span> {
+                <span class="ident">Req::BeginBlock</span>(<span class="ident">block</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="comment">// we save this data to be forwarded to finalize later</span>
+                    <span class="self">self</span>.<span class="ident">begin_block_request</span> <span class="op">=</span>
+                        <span class="prelude-val">Some</span>(<span class="ident">block</span>.<span class="ident">try_into</span>().<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> {
+                            <span class="macro">panic!</span>(<span class="string">&quot;Could not read begin block request&quot;</span>);
+                        }));
+                    <span class="prelude-val">Ok</span>(<span class="ident">Resp::BeginBlock</span>(<span class="ident">Default::default</span>()))
+                }
+                <span class="ident">Req::DeliverTx</span>(<span class="ident">deliver_tx</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="comment">// We call [`process_proposal`] to report back the validity</span>
+                    <span class="comment">// of the tx to tendermint.</span>
+                    <span class="comment">// Invariant: The service call with</span>
+                    <span class="comment">// `Request::ProcessProposal`</span>
+                    <span class="comment">// must always return `Response::ProcessProposal`</span>
+                    <span class="self">self</span>.<span class="ident">service</span>
+                        .<span class="ident">call</span>(<span class="ident">Request::ProcessProposal</span>(
+                            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
+                            <span class="ident">deliver_tx</span>.<span class="ident">tx</span>.<span class="ident">clone</span>().<span class="ident">into</span>(),
+                            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
+                            <span class="ident">deliver_tx</span>.<span class="ident">tx</span>.<span class="ident">into</span>(),
+                        ))
+                        .<span class="ident">map_err</span>(<span class="ident">Error::from</span>)
+                        .<span class="ident">and_then</span>(<span class="op">|</span><span class="ident">res</span><span class="op">|</span> <span class="kw">match</span> <span class="ident">res</span> {
+                            <span class="ident">Response::ProcessProposal</span>(<span class="ident">resp</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                                <span class="self">self</span>.<span class="ident">block_txs</span>.<span class="ident">push</span>(<span class="ident">ProcessedTx</span> {
+                                    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
+                                    <span class="ident">tx</span>: <span class="ident">deliver_tx</span>.<span class="ident">tx</span>,
+                                    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
+                                    <span class="ident">tx</span>: <span class="ident">resp</span>.<span class="ident">tx</span>,
+                                    <span class="ident">result</span>: <span class="ident">resp</span>.<span class="ident">result</span>,
+                                });
+                                <span class="prelude-val">Ok</span>(<span class="ident">Resp::DeliverTx</span>(<span class="ident">Default::default</span>()))
+                            }
+                            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unreachable!</span>(),
+                        })
+                }
+                <span class="ident">Req::EndBlock</span>(<span class="ident">end</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="ident">BlockHeight::try_from</span>(<span class="ident">end</span>.<span class="ident">height</span>).<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> {
+                        <span class="macro">panic!</span>(<span class="string">&quot;Unexpected block height {}&quot;</span>, <span class="ident">end</span>.<span class="ident">height</span>)
+                    });
+                    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">txs</span> <span class="op">=</span> <span class="macro">vec!</span>[];
+                    <span class="ident">std::mem::swap</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">txs</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">block_txs</span>);
+                    <span class="comment">// If the wrapper txs were not properly submitted, reject</span>
+                    <span class="comment">// all txs</span>
+                    <span class="kw">let</span> <span class="ident">out_of_order</span> <span class="op">=</span>
+                        <span class="ident">txs</span>.<span class="ident">iter</span>().<span class="ident">any</span>(<span class="op">|</span><span class="ident">tx</span><span class="op">|</span> <span class="ident">tx</span>.<span class="ident">result</span>.<span class="ident">code</span> <span class="op">&gt;</span> <span class="number">3u32</span>);
+                    <span class="kw">if</span> <span class="ident">out_of_order</span> {
+                        <span class="comment">// The wrapper txs will need to be decrypted again</span>
+                        <span class="comment">// and included in the proposed block after the current</span>
+                        <span class="self">self</span>.<span class="ident">service</span>.<span class="ident">reset_queue</span>();
+                    }
+                    <span class="kw">let</span> <span class="ident">begin_block_request</span> <span class="op">=</span>
+                        <span class="self">self</span>.<span class="ident">begin_block_request</span>.<span class="ident">take</span>().<span class="ident">unwrap</span>();
+                    <span class="self">self</span>.<span class="ident">service</span>
+                        .<span class="ident">call</span>(<span class="ident">Request::FinalizeBlock</span>(<span class="ident">request::FinalizeBlock</span> {
+                            <span class="ident">hash</span>: <span class="ident">begin_block_request</span>.<span class="ident">hash</span>,
+                            <span class="ident">header</span>: <span class="ident">begin_block_request</span>.<span class="ident">header</span>,
+                            <span class="ident">byzantine_validators</span>: <span class="ident">begin_block_request</span>
+                                .<span class="ident">byzantine_validators</span>,
+                            <span class="ident">txs</span>,
+                            <span class="ident">reject_all_decrypted</span>: <span class="ident">out_of_order</span>,
+                        }))
+                        .<span class="ident">map_err</span>(<span class="ident">Error::from</span>)
+                        .<span class="ident">and_then</span>(<span class="op">|</span><span class="ident">res</span><span class="op">|</span> <span class="kw">match</span> <span class="ident">res</span> {
+                            <span class="ident">Response::FinalizeBlock</span>(<span class="ident">resp</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                                <span class="kw">let</span> <span class="ident">x</span> <span class="op">=</span> <span class="ident">Resp::EndBlock</span>(<span class="ident">resp</span>.<span class="ident">into</span>());
+                                <span class="prelude-val">Ok</span>(<span class="ident">x</span>)
+                            }
+                            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">Error::ConvertResp</span>(<span class="ident">res</span>)),
+                        })
+                }
+                <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="ident">Request::try_from</span>(<span class="ident">req</span>.<span class="ident">clone</span>()) {
+                    <span class="prelude-val">Ok</span>(<span class="ident">request</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>
+                        .<span class="ident">service</span>
+                        .<span class="ident">call</span>(<span class="ident">request</span>)
+                        .<span class="ident">map</span>(<span class="ident">Resp::try_from</span>)
+                        .<span class="ident">map_err</span>(<span class="ident">Error::Shell</span>)
+                        .<span class="ident">and_then</span>(<span class="op">|</span><span class="ident">inner</span><span class="op">|</span> <span class="ident">inner</span>),
+                    <span class="prelude-val">Err</span>(<span class="ident">err</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">err</span>),
+                },
+            };
+            <span class="kw">let</span> <span class="ident">resp</span> <span class="op">=</span> <span class="ident">resp</span>.<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">e</span>.<span class="ident">into</span>());
+            <span class="kw">if</span> <span class="ident">resp_sender</span>.<span class="ident">send</span>(<span class="ident">resp</span>).<span class="ident">is_err</span>() {
+                <span class="macro">tracing::info!</span>(<span class="string">&quot;ABCI response channel is closed&quot;</span>)
+            }
         }
     }
 }
 
-<span class="doccomment">/// This is the actual tower service that we run for now.</span>
-<span class="doccomment">/// It provides the translation between tendermints interface</span>
-<span class="doccomment">/// and the interface of the shell service.</span>
-<span class="kw">impl</span> <span class="ident">Service</span><span class="op">&lt;</span><span class="ident">Req</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">AbcippShim</span> {
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">AbciService</span> {
+    <span class="ident">shell_send</span>: <span class="ident">tokio::sync::mpsc::Sender</span><span class="op">&lt;</span>(
+        <span class="ident">Req</span>,
+        <span class="ident">tokio::sync::oneshot::Sender</span><span class="op">&lt;</span><span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Resp</span>, <span class="ident">BoxError</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    )<span class="op">&gt;</span>,
+}
+
+<span class="doccomment">/// The ABCI tower service implementation sends and receives messages to and</span>
+<span class="doccomment">/// from the [`AbcippShim`] for requests from Tendermint.</span>
+<span class="kw">impl</span> <span class="ident">Service</span><span class="op">&lt;</span><span class="ident">Req</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">AbciService</span> {
     <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">BoxError</span>;
     <span class="kw">type</span> <span class="ident">Future</span> <span class="op">=</span>
         <span class="ident">Pin</span><span class="op">&lt;</span><span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">Future</span><span class="op">&lt;</span><span class="ident">Output</span> <span class="op">=</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Resp</span>, <span class="ident">BoxError</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="lifetime">&#39;static</span><span class="op">&gt;</span><span class="op">&gt;</span>;
@@ -204,91 +366,31 @@
         <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
         <span class="ident">_cx</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Context</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Poll</span><span class="op">&lt;</span><span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="self">Self</span><span class="ident">::Error</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+        <span class="comment">// First, check if the shell is still alive</span>
+        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">shell_send</span>.<span class="ident">is_closed</span>() {
+            <span class="kw">return</span> <span class="ident">Poll::Ready</span>(<span class="prelude-val">Err</span>(<span class="string">&quot;The shell is closed&quot;</span>.<span class="ident">into</span>()));
+        }
         <span class="ident">Poll::Ready</span>(<span class="prelude-val">Ok</span>(()))
     }
 
     <span class="kw">fn</span> <span class="ident">call</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">req</span>: <span class="ident">Req</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span><span class="ident">::Future</span> {
-        <span class="kw">let</span> <span class="ident">rsp</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">req</span> {
-            <span class="ident">Req::BeginBlock</span>(<span class="ident">block</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="comment">// we save this data to be forwarded to finalize later</span>
-                <span class="self">self</span>.<span class="ident">begin_block_request</span> <span class="op">=</span>
-                    <span class="prelude-val">Some</span>(<span class="ident">block</span>.<span class="ident">try_into</span>().<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> {
-                        <span class="macro">panic!</span>(<span class="string">&quot;Could not read begin block request&quot;</span>);
-                    }));
-                <span class="prelude-val">Ok</span>(<span class="ident">Resp::BeginBlock</span>(<span class="ident">Default::default</span>()))
-            }
-            <span class="ident">Req::DeliverTx</span>(<span class="ident">deliver_tx</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="comment">// We call [`process_proposal`] to report back the validity</span>
-                <span class="comment">// of the tx to tendermint.</span>
-                <span class="comment">// Invariant: The service call with `Request::ProcessProposal`</span>
-                <span class="comment">// must always return `Response::ProcessProposal`</span>
-                <span class="self">self</span>.<span class="ident">service</span>
-                    .<span class="ident">call</span>(<span class="ident">Request::ProcessProposal</span>(
-                        <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
-                        <span class="ident">deliver_tx</span>.<span class="ident">tx</span>.<span class="ident">clone</span>().<span class="ident">into</span>(),
-                        <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
-                        <span class="ident">deliver_tx</span>.<span class="ident">tx</span>.<span class="ident">into</span>(),
-                    ))
-                    .<span class="ident">map_err</span>(<span class="ident">Error::from</span>)
-                    .<span class="ident">and_then</span>(<span class="op">|</span><span class="ident">res</span><span class="op">|</span> <span class="kw">match</span> <span class="ident">res</span> {
-                        <span class="ident">Response::ProcessProposal</span>(<span class="ident">resp</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                            <span class="self">self</span>.<span class="ident">block_txs</span>.<span class="ident">push</span>(<span class="ident">ProcessedTx</span> {
-                                <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
-                                <span class="ident">tx</span>: <span class="ident">deliver_tx</span>.<span class="ident">tx</span>,
-                                <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
-                                <span class="ident">tx</span>: <span class="ident">resp</span>.<span class="ident">tx</span>,
-                                <span class="ident">result</span>: <span class="ident">resp</span>.<span class="ident">result</span>,
-                            });
-                            <span class="prelude-val">Ok</span>(<span class="ident">Resp::DeliverTx</span>(<span class="ident">Default::default</span>()))
-                        }
-                        <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unreachable!</span>(),
-                    })
-            }
-            <span class="ident">Req::EndBlock</span>(<span class="ident">end</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="ident">BlockHeight::try_from</span>(<span class="ident">end</span>.<span class="ident">height</span>).<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> {
-                    <span class="macro">panic!</span>(<span class="string">&quot;Unexpected block height {}&quot;</span>, <span class="ident">end</span>.<span class="ident">height</span>)
-                });
-                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">txs</span> <span class="op">=</span> <span class="macro">vec!</span>[];
-                <span class="ident">std::mem::swap</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">txs</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">block_txs</span>);
-                <span class="comment">// If the wrapper txs were not properly submitted, reject all</span>
-                <span class="comment">// txs</span>
-                <span class="kw">let</span> <span class="ident">out_of_order</span> <span class="op">=</span> <span class="ident">txs</span>.<span class="ident">iter</span>().<span class="ident">any</span>(<span class="op">|</span><span class="ident">tx</span><span class="op">|</span> <span class="ident">tx</span>.<span class="ident">result</span>.<span class="ident">code</span> <span class="op">&gt;</span> <span class="number">3u32</span>);
-                <span class="kw">if</span> <span class="ident">out_of_order</span> {
-                    <span class="comment">// The wrapper txs will need to be decrypted again</span>
-                    <span class="comment">// and included in the proposed block after the current</span>
-                    <span class="self">self</span>.<span class="ident">service</span>.<span class="ident">reset_queue</span>();
+        <span class="kw">let</span> <span class="ident">sender</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">shell_send</span>.<span class="ident">clone</span>();
+        <span class="ident">Box::pin</span>(
+            <span class="kw">async</span> <span class="kw">move</span> {
+                <span class="kw">let</span> (<span class="ident">resp_send</span>, <span class="ident">recv</span>) <span class="op">=</span> <span class="ident">tokio::sync::oneshot::channel</span>();
+                <span class="kw">if</span> <span class="ident">sender</span>.<span class="ident">send</span>((<span class="ident">req</span>, <span class="ident">resp_send</span>)).<span class="kw">await</span>.<span class="ident">is_err</span>() {
+                    <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="string">&quot;The shell is closed&quot;</span>.<span class="ident">into</span>());
                 }
-                <span class="kw">let</span> <span class="ident">begin_block_request</span> <span class="op">=</span>
-                    <span class="self">self</span>.<span class="ident">begin_block_request</span>.<span class="ident">take</span>().<span class="ident">unwrap</span>();
-                <span class="self">self</span>.<span class="ident">service</span>
-                    .<span class="ident">call</span>(<span class="ident">Request::FinalizeBlock</span>(<span class="ident">request::FinalizeBlock</span> {
-                        <span class="ident">hash</span>: <span class="ident">begin_block_request</span>.<span class="ident">hash</span>,
-                        <span class="ident">header</span>: <span class="ident">begin_block_request</span>.<span class="ident">header</span>,
-                        <span class="ident">byzantine_validators</span>: <span class="ident">begin_block_request</span>
-                            .<span class="ident">byzantine_validators</span>,
-                        <span class="ident">txs</span>,
-                        <span class="ident">reject_all_decrypted</span>: <span class="ident">out_of_order</span>,
-                    }))
-                    .<span class="ident">map_err</span>(<span class="ident">Error::from</span>)
-                    .<span class="ident">and_then</span>(<span class="op">|</span><span class="ident">res</span><span class="op">|</span> <span class="kw">match</span> <span class="ident">res</span> {
-                        <span class="ident">Response::FinalizeBlock</span>(<span class="ident">resp</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                            <span class="kw">let</span> <span class="ident">x</span> <span class="op">=</span> <span class="ident">Resp::EndBlock</span>(<span class="ident">resp</span>.<span class="ident">into</span>());
-                            <span class="prelude-val">Ok</span>(<span class="ident">x</span>)
-                        }
-                        <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">Error::ConvertResp</span>(<span class="ident">res</span>)),
-                    })
+                <span class="kw">match</span> <span class="ident">recv</span>.<span class="kw">await</span> {
+                    <span class="prelude-val">Ok</span>(<span class="ident">resp</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">resp</span>,
+                    <span class="prelude-val">Err</span>(<span class="ident">err</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                        <span class="macro">tracing::info!</span>(<span class="string">&quot;ABCI response channel didn&#39;t respond&quot;</span>);
+                        <span class="prelude-val">Err</span>(<span class="ident">err</span>.<span class="ident">into</span>())
+                    }
+                }
             }
-            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="ident">Request::try_from</span>(<span class="ident">req</span>.<span class="ident">clone</span>()) {
-                <span class="prelude-val">Ok</span>(<span class="ident">request</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>
-                    .<span class="ident">service</span>
-                    .<span class="ident">call</span>(<span class="ident">request</span>)
-                    .<span class="ident">map</span>(<span class="ident">Resp::try_from</span>)
-                    .<span class="ident">map_err</span>(<span class="ident">Error::Shell</span>)
-                    .<span class="ident">and_then</span>(<span class="op">|</span><span class="ident">inner</span><span class="op">|</span> <span class="ident">inner</span>),
-                <span class="prelude-val">Err</span>(<span class="ident">err</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">err</span>),
-            },
-        };
-        <span class="ident">Box::pin</span>(<span class="kw">async</span> <span class="kw">move</span> { <span class="ident">rsp</span>.<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">e</span>.<span class="ident">into</span>()) }.<span class="ident">boxed</span>())
+            .<span class="ident">boxed</span>(),
+        )
     }
 }
 </pre></div>

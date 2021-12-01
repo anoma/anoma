@@ -359,21 +359,51 @@
 <span id="359">359</span>
 <span id="360">360</span>
 <span id="361">361</span>
+<span id="362">362</span>
+<span id="363">363</span>
+<span id="364">364</span>
+<span id="365">365</span>
+<span id="366">366</span>
+<span id="367">367</span>
+<span id="368">368</span>
+<span id="369">369</span>
+<span id="370">370</span>
+<span id="371">371</span>
+<span id="372">372</span>
+<span id="373">373</span>
+<span id="374">374</span>
+<span id="375">375</span>
+<span id="376">376</span>
+<span id="377">377</span>
+<span id="378">378</span>
+<span id="379">379</span>
+<span id="380">380</span>
+<span id="381">381</span>
+<span id="382">382</span>
+<span id="383">383</span>
+<span id="384">384</span>
+<span id="385">385</span>
+<span id="386">386</span>
+<span id="387">387</span>
+<span id="388">388</span>
+<span id="389">389</span>
+<span id="390">390</span>
+<span id="391">391</span>
+<span id="392">392</span>
+<span id="393">393</span>
+<span id="394">394</span>
+<span id="395">395</span>
+<span id="396">396</span>
+<span id="397">397</span>
 </pre><pre class="rust">
-<span class="kw">use</span> <span class="ident">std::fs</span>::{<span class="self">self</span>, <span class="ident">File</span>, <span class="ident">OpenOptions</span>};
-<span class="kw">use</span> <span class="ident">std::io</span>::{<span class="ident">BufReader</span>, <span class="ident">Write</span>};
 <span class="kw">use</span> <span class="ident">std::path</span>::{<span class="ident">Path</span>, <span class="ident">PathBuf</span>};
-<span class="kw">use</span> <span class="ident">std::process::Command</span>;
 <span class="kw">use</span> <span class="ident">std::str::FromStr</span>;
-<span class="kw">use</span> <span class="ident">std::sync::mpsc::Receiver</span>;
 
 <span class="kw">use</span> <span class="ident">anoma::types::address::Address</span>;
 <span class="kw">use</span> <span class="ident">anoma::types::chain::ChainId</span>;
 <span class="kw">use</span> <span class="ident">anoma::types::key::ed25519::Keypair</span>;
 <span class="kw">use</span> <span class="ident">anoma::types::time::DateTimeUtc</span>;
 <span class="kw">use</span> <span class="ident">serde_json::json</span>;
-<span class="kw">use</span> <span class="ident">signal_hook::consts::TERM_SIGNALS</span>;
-<span class="kw">use</span> <span class="ident">signal_hook::iterator::Signals</span>;
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
 <span class="kw">use</span> <span class="ident">tendermint::error::Error</span> <span class="kw">as</span> <span class="ident">TendermintError</span>;
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
@@ -383,9 +413,11 @@
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
 <span class="kw">use</span> <span class="ident">tendermint_stable</span>::{<span class="ident">config::TendermintConfig</span>, <span class="ident">net</span>, <span class="ident">Genesis</span>};
 <span class="kw">use</span> <span class="ident">thiserror::Error</span>;
+<span class="kw">use</span> <span class="ident">tokio::fs</span>::{<span class="self">self</span>, <span class="ident">File</span>, <span class="ident">OpenOptions</span>};
+<span class="kw">use</span> <span class="ident">tokio::io</span>::{<span class="ident">AsyncReadExt</span>, <span class="ident">AsyncWriteExt</span>};
+<span class="kw">use</span> <span class="ident">tokio::process::Command</span>;
 
 <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::config</span>;
-<span class="kw">use</span> <span class="kw">crate</span><span class="ident">::std::sync::mpsc::Sender</span>;
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Error</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">Error</span> {
@@ -401,8 +433,8 @@
     <span class="ident">WriteConfig</span>(<span class="ident">std::io::Error</span>),
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Failed to start up Tendermint node: {0}&quot;</span>)]</span>
     <span class="ident">StartUp</span>(<span class="ident">std::io::Error</span>),
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Runtime error&quot;</span>)]</span>
-    <span class="ident">Runtime</span>,
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;{0}&quot;</span>)]</span>
+    <span class="ident">Runtime</span>(<span class="ident">String</span>),
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Failed to convert to String: {0:?}&quot;</span>)]</span>
     <span class="ident">TendermintPath</span>(<span class="ident">std::ffi::OsString</span>),
 }
@@ -427,14 +459,15 @@
 }
 
 <span class="doccomment">/// Run the tendermint node.</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">run</span>(
+<span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">run</span>(
     <span class="ident">home_dir</span>: <span class="ident">PathBuf</span>,
     <span class="ident">chain_id</span>: <span class="ident">ChainId</span>,
     <span class="ident">genesis_time</span>: <span class="ident">DateTimeUtc</span>,
     <span class="ident">ledger_address</span>: <span class="ident">String</span>,
     <span class="ident">config</span>: <span class="ident">config::Tendermint</span>,
-    <span class="ident">abort_sender</span>: <span class="ident">Sender</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span>,
-    <span class="ident">abort_receiver</span>: <span class="ident">Receiver</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span>,
+    <span class="ident">abort_recv</span>: <span class="ident">tokio::sync::oneshot::Receiver</span><span class="op">&lt;</span>
+        <span class="ident">tokio::sync::oneshot::Sender</span><span class="op">&lt;</span>()<span class="op">&gt;</span>,
+    <span class="op">&gt;</span>,
 ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="ident">home_dir_string</span> <span class="op">=</span> <span class="ident">home_dir</span>.<span class="ident">to_string_lossy</span>().<span class="ident">to_string</span>();
     <span class="kw">let</span> <span class="ident">tendermint_path</span> <span class="op">=</span> <span class="ident">from_env_or_default</span>()<span class="question-mark">?</span>;
@@ -452,11 +485,13 @@
         <span class="ident">Command::new</span>(<span class="kw-2">&amp;</span><span class="ident">tendermint_path</span>)
             .<span class="ident">args</span>(<span class="kw-2">&amp;</span>[<span class="string">&quot;init&quot;</span>, <span class="kw-2">&amp;</span><span class="ident">mode</span>, <span class="string">&quot;--home&quot;</span>, <span class="kw-2">&amp;</span><span class="ident">home_dir_string</span>])
             .<span class="ident">output</span>()
+            .<span class="kw">await</span>
             .<span class="ident">map_err</span>(<span class="ident">Error::Init</span>)<span class="question-mark">?</span>
     } <span class="kw">else</span> {
         <span class="ident">Command::new</span>(<span class="kw-2">&amp;</span><span class="ident">tendermint_path</span>)
             .<span class="ident">args</span>(<span class="kw-2">&amp;</span>[<span class="string">&quot;init&quot;</span>, <span class="string">&quot;--home&quot;</span>, <span class="kw-2">&amp;</span><span class="ident">home_dir_string</span>])
             .<span class="ident">output</span>()
+            .<span class="kw">await</span>
             .<span class="ident">map_err</span>(<span class="ident">Error::Init</span>)<span class="question-mark">?</span>
     };
     <span class="kw">if</span> <span class="op">!</span><span class="ident">output</span>.<span class="ident">status</span>.<span class="ident">success</span>() {
@@ -468,7 +503,7 @@
         <span class="kw">let</span> <span class="ident">genesis</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="kw">crate</span><span class="ident">::config::genesis::genesis</span>();
         <span class="comment">// write the validator key file if it didn&#39;t already exist</span>
         <span class="kw">if</span> <span class="op">!</span><span class="ident">has_validator_key</span> {
-            <span class="ident">write_validator_key</span>(
+            <span class="ident">write_validator_key_async</span>(
                 <span class="kw-2">&amp;</span><span class="ident">home_dir</span>,
                 <span class="kw-2">&amp;</span><span class="ident">genesis</span>
                     .<span class="ident">validators</span>
@@ -479,15 +514,16 @@
                     .<span class="ident">pos_data</span>
                     .<span class="ident">address</span>,
                 <span class="kw-2">&amp;</span><span class="kw">crate</span><span class="ident">::wallet::defaults::validator_keypair</span>(),
-            );
+            )
+            .<span class="kw">await</span>;
         }
     }
 
-    <span class="ident">write_tm_genesis</span>(<span class="kw-2">&amp;</span><span class="ident">home_dir</span>, <span class="ident">chain_id</span>, <span class="ident">genesis_time</span>);
+    <span class="ident">write_tm_genesis</span>(<span class="kw-2">&amp;</span><span class="ident">home_dir</span>, <span class="ident">chain_id</span>, <span class="ident">genesis_time</span>).<span class="kw">await</span>;
 
-    <span class="ident">update_tendermint_config</span>(<span class="kw-2">&amp;</span><span class="ident">home_dir</span>, <span class="ident">config</span>)<span class="question-mark">?</span>;
+    <span class="ident">update_tendermint_config</span>(<span class="kw-2">&amp;</span><span class="ident">home_dir</span>, <span class="ident">config</span>).<span class="kw">await</span><span class="question-mark">?</span>;
 
-    <span class="kw">let</span> <span class="ident">tendermint_node</span> <span class="op">=</span> <span class="kw">if</span> <span class="op">!</span><span class="macro">cfg!</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>) {
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tendermint_node</span> <span class="op">=</span> <span class="kw">if</span> <span class="op">!</span><span class="macro">cfg!</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>) {
         <span class="ident">Command::new</span>(<span class="kw-2">&amp;</span><span class="ident">tendermint_path</span>)
             .<span class="ident">args</span>(<span class="kw-2">&amp;</span>[
                 <span class="string">&quot;start&quot;</span>,
@@ -498,6 +534,7 @@
                 <span class="string">&quot;--home&quot;</span>,
                 <span class="kw-2">&amp;</span><span class="ident">home_dir_string</span>,
             ])
+            .<span class="ident">kill_on_drop</span>(<span class="bool-val">true</span>)
             .<span class="ident">spawn</span>()
             .<span class="ident">map_err</span>(<span class="ident">Error::StartUp</span>)<span class="question-mark">?</span>
     } <span class="kw">else</span> {
@@ -509,66 +546,50 @@
                 <span class="string">&quot;--home&quot;</span>,
                 <span class="kw-2">&amp;</span><span class="ident">home_dir_string</span>,
             ])
+            .<span class="ident">kill_on_drop</span>(<span class="bool-val">true</span>)
             .<span class="ident">spawn</span>()
             .<span class="ident">map_err</span>(<span class="ident">Error::StartUp</span>)<span class="question-mark">?</span>
     };
-    <span class="kw">let</span> <span class="ident">pid</span> <span class="op">=</span> <span class="ident">tendermint_node</span>.<span class="ident">id</span>();
     <span class="macro">tracing::info!</span>(<span class="string">&quot;Tendermint node started&quot;</span>);
-    <span class="comment">// make sure to shut down when receiving a termination signal</span>
-    <span class="ident">kill_on_term_signal</span>(<span class="ident">abort_sender</span>.<span class="ident">clone</span>());
-    <span class="comment">// shut down the anoma node if tendermint stops</span>
-    <span class="ident">monitor_process</span>(<span class="ident">tendermint_node</span>, <span class="ident">abort_sender</span>);
 
-    <span class="comment">// Wait for abort signal (blocking)</span>
-    <span class="kw">let</span> <span class="ident">exit_gracefully</span> <span class="op">=</span> <span class="ident">abort_receiver</span>.<span class="ident">recv</span>().<span class="ident">unwrap_or_default</span>();
-    <span class="comment">// Send signal to shut down Tendermint node</span>
-    <span class="kw">unsafe</span> {
-        <span class="ident">libc::kill</span>(<span class="ident">pid</span> <span class="kw">as</span> <span class="ident">i32</span>, <span class="ident">libc::SIGTERM</span>);
-    };
-    <span class="kw">if</span> <span class="ident">exit_gracefully</span> {
-        <span class="prelude-val">Ok</span>(())
-    } <span class="kw">else</span> {
-        <span class="prelude-val">Err</span>(<span class="ident">Error::Runtime</span>)
-    }
-}
-
-<span class="doccomment">/// Listens for termination signals and forwards a kill command to the</span>
-<span class="doccomment">/// tendermint node when it encounters one.</span>
-<span class="kw">fn</span> <span class="ident">kill_on_term_signal</span>(<span class="ident">abort_sender</span>: <span class="ident">Sender</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span>) {
-    <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">std::thread::spawn</span>(<span class="kw">move</span> <span class="op">|</span><span class="op">|</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">signals</span> <span class="op">=</span> <span class="ident">Signals::new</span>(<span class="ident">TERM_SIGNALS</span>)
-            .<span class="ident">expect</span>(<span class="string">&quot;Failed to creat OS signal handlers&quot;</span>);
-        <span class="kw">for</span> <span class="ident">sig</span> <span class="kw">in</span> <span class="ident">signals</span>.<span class="ident">forever</span>() {
-            <span class="kw">if</span> <span class="ident">TERM_SIGNALS</span>.<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">sig</span>) {
-                <span class="macro">tracing::info!</span>(
-                    <span class="string">&quot;Received termination signal, shutting down Tendermint \
-                     node&quot;</span>
-                );
-                <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">abort_sender</span>.<span class="ident">send</span>(<span class="bool-val">true</span>);
-                <span class="kw">break</span>;
+    <span class="macro">tokio::select!</span> {
+        <span class="ident">status</span> <span class="op">=</span> <span class="ident">tendermint_node</span>.<span class="ident">wait</span>() <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="kw">match</span> <span class="ident">status</span> {
+                <span class="prelude-val">Ok</span>(<span class="ident">status</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="kw">if</span> <span class="ident">status</span>.<span class="ident">success</span>() {
+                        <span class="prelude-val">Ok</span>(())
+                    } <span class="kw">else</span> {
+                        <span class="prelude-val">Err</span>(<span class="ident">Error::Runtime</span>(<span class="ident">status</span>.<span class="ident">to_string</span>()))
+                    }
+                },
+                <span class="prelude-val">Err</span>(<span class="ident">err</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="prelude-val">Err</span>(<span class="ident">Error::Runtime</span>(<span class="ident">err</span>.<span class="ident">to_string</span>()))
+                }
             }
+        },
+        <span class="ident">resp_sender</span> <span class="op">=</span> <span class="ident">abort_recv</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="kw">match</span> <span class="ident">resp_sender</span> {
+                <span class="prelude-val">Ok</span>(<span class="ident">resp_sender</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="macro">tracing::info!</span>(<span class="string">&quot;Shutting down Tendermint node...&quot;</span>);
+                    <span class="ident">tendermint_node</span>.<span class="ident">kill</span>().<span class="kw">await</span>.<span class="ident">unwrap</span>();
+                    <span class="ident">resp_sender</span>.<span class="ident">send</span>(()).<span class="ident">unwrap</span>();
+                },
+                <span class="prelude-val">Err</span>(<span class="ident">err</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="macro">tracing::error!</span>(<span class="string">&quot;The Tendermint abort sender has unexpectedly dropped: {}&quot;</span>, <span class="ident">err</span>);
+                    <span class="macro">tracing::info!</span>(<span class="string">&quot;Shutting down Tendermint node...&quot;</span>);
+                    <span class="ident">tendermint_node</span>.<span class="ident">kill</span>().<span class="kw">await</span>.<span class="ident">unwrap</span>();
+                }
+            }
+            <span class="prelude-val">Ok</span>(())
         }
-    });
-}
-
-<span class="doccomment">/// Monitors the tendermint node. If it shuts down, this detects it and</span>
-<span class="doccomment">/// shuts down the anoma node</span>
-<span class="kw">fn</span> <span class="ident">monitor_process</span>(
-    <span class="kw-2">mut</span> <span class="ident">process</span>: <span class="ident">std::process::Child</span>,
-    <span class="ident">abort_sender</span>: <span class="ident">Sender</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span>,
-) {
-    <span class="ident">std::thread::spawn</span>(<span class="kw">move</span> <span class="op">|</span><span class="op">|</span> {
-        <span class="kw">let</span> <span class="ident">status</span> <span class="op">=</span> <span class="ident">process</span>.<span class="ident">wait</span>().<span class="ident">expect</span>(<span class="string">&quot;Tendermint was not running&quot;</span>);
-        <span class="macro">tracing::info!</span>(<span class="string">&quot;Tendermint node is no longer running.&quot;</span>);
-        <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">abort_sender</span>.<span class="ident">send</span>(<span class="ident">status</span>.<span class="ident">success</span>());
-    });
+    }
 }
 
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">reset</span>(<span class="ident">tendermint_dir</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span><span class="ident">Path</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="ident">tendermint_path</span> <span class="op">=</span> <span class="ident">from_env_or_default</span>()<span class="question-mark">?</span>;
     <span class="kw">let</span> <span class="ident">tendermint_dir</span> <span class="op">=</span> <span class="ident">tendermint_dir</span>.<span class="ident">as_ref</span>().<span class="ident">to_string_lossy</span>();
     <span class="comment">// reset all the Tendermint state, if any</span>
-    <span class="ident">Command::new</span>(<span class="ident">tendermint_path</span>)
+    <span class="ident">std::process::Command::new</span>(<span class="ident">tendermint_path</span>)
         .<span class="ident">args</span>(<span class="kw-2">&amp;</span>[
             <span class="string">&quot;unsafe-reset-all&quot;</span>,
             <span class="comment">// NOTE: log config: https://docs.tendermint.com/master/nodes/logging.html#configuring-log-levels</span>
@@ -578,9 +599,51 @@
         ])
         .<span class="ident">output</span>()
         .<span class="ident">expect</span>(<span class="string">&quot;Failed to reset tendermint node&#39;s data&quot;</span>);
-    <span class="ident">fs::remove_dir_all</span>(<span class="macro">format!</span>(<span class="string">&quot;{}/config&quot;</span>, <span class="ident">tendermint_dir</span>,))
+    <span class="ident">std::fs::remove_dir_all</span>(<span class="macro">format!</span>(<span class="string">&quot;{}/config&quot;</span>, <span class="ident">tendermint_dir</span>,))
         .<span class="ident">expect</span>(<span class="string">&quot;Failed to reset tendermint node&#39;s config&quot;</span>);
     <span class="prelude-val">Ok</span>(())
+}
+
+<span class="doccomment">/// Initialize validator private key for Tendermint</span>
+<span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">write_validator_key_async</span>(
+    <span class="ident">home_dir</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span><span class="ident">Path</span><span class="op">&gt;</span>,
+    <span class="ident">address</span>: <span class="kw-2">&amp;</span><span class="ident">Address</span>,
+    <span class="ident">consensus_key</span>: <span class="kw-2">&amp;</span><span class="ident">Keypair</span>,
+) {
+    <span class="kw">let</span> <span class="ident">home_dir</span> <span class="op">=</span> <span class="ident">home_dir</span>.<span class="ident">as_ref</span>();
+    <span class="kw">let</span> <span class="ident">path</span> <span class="op">=</span> <span class="ident">home_dir</span>.<span class="ident">join</span>(<span class="string">&quot;config&quot;</span>).<span class="ident">join</span>(<span class="string">&quot;priv_validator_key.json&quot;</span>);
+    <span class="comment">// Make sure the dir exists</span>
+    <span class="kw">let</span> <span class="ident">wallet_dir</span> <span class="op">=</span> <span class="ident">path</span>.<span class="ident">parent</span>().<span class="ident">unwrap</span>();
+    <span class="ident">fs::create_dir_all</span>(<span class="ident">wallet_dir</span>)
+        .<span class="kw">await</span>
+        .<span class="ident">expect</span>(<span class="string">&quot;Couldn&#39;t create private validator key directory&quot;</span>);
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">file</span> <span class="op">=</span> <span class="ident">OpenOptions::new</span>()
+        .<span class="ident">create</span>(<span class="bool-val">true</span>)
+        .<span class="ident">write</span>(<span class="bool-val">true</span>)
+        .<span class="ident">truncate</span>(<span class="bool-val">true</span>)
+        .<span class="ident">open</span>(<span class="kw-2">&amp;</span><span class="ident">path</span>)
+        .<span class="kw">await</span>
+        .<span class="ident">expect</span>(<span class="string">&quot;Couldn&#39;t create private validator key file&quot;</span>);
+    <span class="kw">let</span> <span class="ident">pk</span>: <span class="ident">ed25519_dalek::PublicKey</span> <span class="op">=</span> <span class="ident">consensus_key</span>.<span class="ident">public</span>.<span class="ident">clone</span>().<span class="ident">into</span>();
+    <span class="kw">let</span> <span class="ident">pk</span> <span class="op">=</span> <span class="ident">base64::encode</span>(<span class="ident">pk</span>.<span class="ident">as_bytes</span>());
+    <span class="kw">let</span> <span class="ident">sk</span> <span class="op">=</span> <span class="ident">base64::encode</span>(<span class="ident">consensus_key</span>.<span class="ident">to_bytes</span>());
+    <span class="kw">let</span> <span class="ident">address</span> <span class="op">=</span> <span class="ident">address</span>.<span class="ident">raw_hash</span>().<span class="ident">unwrap</span>();
+    <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="macro">json!</span>({
+       <span class="string">&quot;address&quot;</span>: <span class="ident">address</span>,
+       <span class="string">&quot;pub_key&quot;</span>: {
+         <span class="string">&quot;type&quot;</span>: <span class="string">&quot;tendermint/PubKeyEd25519&quot;</span>,
+         <span class="string">&quot;value&quot;</span>: <span class="ident">pk</span>,
+       },
+       <span class="string">&quot;priv_key&quot;</span>: {
+         <span class="string">&quot;type&quot;</span>: <span class="string">&quot;tendermint/PrivKeyEd25519&quot;</span>,
+         <span class="string">&quot;value&quot;</span>: <span class="ident">sk</span>,
+      }
+    });
+    <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="ident">serde_json::to_vec_pretty</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>)
+        .<span class="ident">expect</span>(<span class="string">&quot;Couldn&#39;t encode private validator key file&quot;</span>);
+    <span class="ident">file</span>.<span class="ident">write_all</span>(<span class="kw-2">&amp;</span><span class="ident">data</span>[..])
+        .<span class="kw">await</span>
+        .<span class="ident">expect</span>(<span class="string">&quot;Couldn&#39;t write private validator key file&quot;</span>);
 }
 
 <span class="doccomment">/// Initialize validator private key for Tendermint</span>
@@ -593,9 +656,9 @@
     <span class="kw">let</span> <span class="ident">path</span> <span class="op">=</span> <span class="ident">home_dir</span>.<span class="ident">join</span>(<span class="string">&quot;config&quot;</span>).<span class="ident">join</span>(<span class="string">&quot;priv_validator_key.json&quot;</span>);
     <span class="comment">// Make sure the dir exists</span>
     <span class="kw">let</span> <span class="ident">wallet_dir</span> <span class="op">=</span> <span class="ident">path</span>.<span class="ident">parent</span>().<span class="ident">unwrap</span>();
-    <span class="ident">fs::create_dir_all</span>(<span class="ident">wallet_dir</span>)
+    <span class="ident">std::fs::create_dir_all</span>(<span class="ident">wallet_dir</span>)
         .<span class="ident">expect</span>(<span class="string">&quot;Couldn&#39;t create private validator key directory&quot;</span>);
-    <span class="kw">let</span> <span class="ident">file</span> <span class="op">=</span> <span class="ident">OpenOptions::new</span>()
+    <span class="kw">let</span> <span class="ident">file</span> <span class="op">=</span> <span class="ident">std::fs::OpenOptions::new</span>()
         .<span class="ident">create</span>(<span class="bool-val">true</span>)
         .<span class="ident">write</span>(<span class="bool-val">true</span>)
         .<span class="ident">truncate</span>(<span class="bool-val">true</span>)
@@ -626,9 +689,9 @@
     <span class="kw">let</span> <span class="ident">path</span> <span class="op">=</span> <span class="ident">home_dir</span>.<span class="ident">join</span>(<span class="string">&quot;data&quot;</span>).<span class="ident">join</span>(<span class="string">&quot;priv_validator_state.json&quot;</span>);
     <span class="comment">// Make sure the dir exists</span>
     <span class="kw">let</span> <span class="ident">wallet_dir</span> <span class="op">=</span> <span class="ident">path</span>.<span class="ident">parent</span>().<span class="ident">unwrap</span>();
-    <span class="ident">fs::create_dir_all</span>(<span class="ident">wallet_dir</span>)
+    <span class="ident">std::fs::create_dir_all</span>(<span class="ident">wallet_dir</span>)
         .<span class="ident">expect</span>(<span class="string">&quot;Couldn&#39;t create private validator state directory&quot;</span>);
-    <span class="kw">let</span> <span class="ident">file</span> <span class="op">=</span> <span class="ident">OpenOptions::new</span>()
+    <span class="kw">let</span> <span class="ident">file</span> <span class="op">=</span> <span class="ident">std::fs::OpenOptions::new</span>()
         .<span class="ident">create</span>(<span class="bool-val">true</span>)
         .<span class="ident">write</span>(<span class="bool-val">true</span>)
         .<span class="ident">truncate</span>(<span class="bool-val">true</span>)
@@ -643,7 +706,7 @@
         .<span class="ident">expect</span>(<span class="string">&quot;Couldn&#39;t write private validator state file&quot;</span>);
 }
 
-<span class="kw">fn</span> <span class="ident">update_tendermint_config</span>(
+<span class="kw">async</span> <span class="kw">fn</span> <span class="ident">update_tendermint_config</span>(
     <span class="ident">home_dir</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span><span class="ident">Path</span><span class="op">&gt;</span>,
     <span class="ident">tendermint_config</span>: <span class="ident">config::Tendermint</span>,
 ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
@@ -681,45 +744,54 @@
         .<span class="ident">write</span>(<span class="bool-val">true</span>)
         .<span class="ident">truncate</span>(<span class="bool-val">true</span>)
         .<span class="ident">open</span>(<span class="ident">path</span>)
+        .<span class="kw">await</span>
         .<span class="ident">map_err</span>(<span class="ident">Error::OpenWriteConfig</span>)<span class="question-mark">?</span>;
     <span class="kw">let</span> <span class="ident">config_str</span> <span class="op">=</span>
         <span class="ident">toml::to_string</span>(<span class="kw-2">&amp;</span><span class="ident">config</span>).<span class="ident">map_err</span>(<span class="ident">Error::ConfigSerializeToml</span>)<span class="question-mark">?</span>;
     <span class="ident">file</span>.<span class="ident">write_all</span>(<span class="ident">config_str</span>.<span class="ident">as_bytes</span>())
+        .<span class="kw">await</span>
         .<span class="ident">map_err</span>(<span class="ident">Error::WriteConfig</span>)
 }
 
-<span class="kw">fn</span> <span class="ident">write_tm_genesis</span>(
+<span class="kw">async</span> <span class="kw">fn</span> <span class="ident">write_tm_genesis</span>(
     <span class="ident">home_dir</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span><span class="ident">Path</span><span class="op">&gt;</span>,
     <span class="ident">chain_id</span>: <span class="ident">ChainId</span>,
     <span class="ident">genesis_time</span>: <span class="ident">DateTimeUtc</span>,
 ) {
     <span class="kw">let</span> <span class="ident">home_dir</span> <span class="op">=</span> <span class="ident">home_dir</span>.<span class="ident">as_ref</span>();
     <span class="kw">let</span> <span class="ident">path</span> <span class="op">=</span> <span class="ident">home_dir</span>.<span class="ident">join</span>(<span class="string">&quot;config&quot;</span>).<span class="ident">join</span>(<span class="string">&quot;genesis.json&quot;</span>);
-    <span class="kw">let</span> <span class="ident">file</span> <span class="op">=</span> <span class="ident">File::open</span>(<span class="kw-2">&amp;</span><span class="ident">path</span>).<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="ident">err</span><span class="op">|</span> {
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">file</span> <span class="op">=</span> <span class="ident">File::open</span>(<span class="kw-2">&amp;</span><span class="ident">path</span>).<span class="kw">await</span>.<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="ident">err</span><span class="op">|</span> {
         <span class="macro">panic!</span>(
             <span class="string">&quot;Couldn&#39;t open the genesis file at {:?}, error: {}&quot;</span>,
             <span class="ident">path</span>, <span class="ident">err</span>
         )
     });
-    <span class="kw">let</span> <span class="ident">reader</span> <span class="op">=</span> <span class="ident">BufReader::new</span>(<span class="ident">file</span>);
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">genesis</span>: <span class="ident">Genesis</span> <span class="op">=</span> <span class="ident">serde_json::from_reader</span>(<span class="ident">reader</span>)
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">file_contents</span> <span class="op">=</span> <span class="macro">vec!</span>[];
+    <span class="ident">file</span>.<span class="ident">read_to_end</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">file_contents</span>)
+        .<span class="kw">await</span>
+        .<span class="ident">expect</span>(<span class="string">&quot;Couldn&#39;t read Tendermint genesis file&quot;</span>);
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">genesis</span>: <span class="ident">Genesis</span> <span class="op">=</span> <span class="ident">serde_json::from_slice</span>(<span class="kw-2">&amp;</span><span class="ident">file_contents</span>[..])
         .<span class="ident">expect</span>(<span class="string">&quot;Couldn&#39;t deserialize the genesis file&quot;</span>);
     <span class="ident">genesis</span>.<span class="ident">chain_id</span> <span class="op">=</span>
         <span class="ident">FromStr::from_str</span>(<span class="ident">chain_id</span>.<span class="ident">as_str</span>()).<span class="ident">expect</span>(<span class="string">&quot;Invalid chain ID&quot;</span>);
     <span class="ident">genesis</span>.<span class="ident">genesis_time</span> <span class="op">=</span> <span class="ident">genesis_time</span>.<span class="ident">into</span>();
 
-    <span class="kw">let</span> <span class="ident">file</span> <span class="op">=</span> <span class="ident">OpenOptions::new</span>()
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">file</span> <span class="op">=</span> <span class="ident">OpenOptions::new</span>()
         .<span class="ident">write</span>(<span class="bool-val">true</span>)
         .<span class="ident">truncate</span>(<span class="bool-val">true</span>)
         .<span class="ident">open</span>(<span class="kw-2">&amp;</span><span class="ident">path</span>)
+        .<span class="kw">await</span>
         .<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="ident">err</span><span class="op">|</span> {
             <span class="macro">panic!</span>(
                 <span class="string">&quot;Couldn&#39;t open the genesis file at {:?} for writing, error: {}&quot;</span>,
                 <span class="ident">path</span>, <span class="ident">err</span>
             )
         });
-    <span class="ident">serde_json::to_writer_pretty</span>(<span class="ident">file</span>, <span class="kw-2">&amp;</span><span class="ident">genesis</span>)
-        .<span class="ident">expect</span>(<span class="string">&quot;Couldn&#39;t write the genesis file&quot;</span>);
+    <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="ident">serde_json::to_vec_pretty</span>(<span class="kw-2">&amp;</span><span class="ident">genesis</span>)
+        .<span class="ident">expect</span>(<span class="string">&quot;Couldn&#39;t encode the Tendermint genesis file&quot;</span>);
+    <span class="ident">file</span>.<span class="ident">write_all</span>(<span class="kw-2">&amp;</span><span class="ident">data</span>[..])
+        .<span class="kw">await</span>
+        .<span class="ident">expect</span>(<span class="string">&quot;Couldn&#39;t write the Tendermint genesis file&quot;</span>);
 }
 </pre></div>
 </section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="anoma_apps" data-search-index-js="../../../../search-index.js" data-search-js="../../../../search.js"></div><script src="../../../../main.js"></script><script src="../../../../source-script.js"></script><script src="../../../../source-files.js"></script></body></html>

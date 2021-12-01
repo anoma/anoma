@@ -147,6 +147,17 @@
                     <main>
                         <h1 id="the-ledger"><a class="header" href="#the-ledger">The ledger</a></h1>
 <p>The ledger depends on <a href="https://github.com/tendermint/tendermint">Tendermint node</a>. Running the Anoma node will also initialize and run Tendermint node. Anoma communicates with Tendermint via the ABCI.</p>
+<h2 id="overview"><a class="header" href="#overview">Overview</a></h2>
+<p>The following diagram illustrates the current boundaries between the async and blocking code.</p>
+<p><img src="ledger/ledger_threads.svg" alt="ledger threads" title="ledger threads" />
+<a href="https://excalidraw.com/#room=952eca1f17ac3c7b5cee,ReXYfqLLleTjVnSQM9zrjw">Diagram on Excalidraw</a></p>
+<h2 id="threads-config"><a class="header" href="#threads-config">Threads config</a></h2>
+<p>Configuration for threads usage can be changed via environment variables:</p>
+<ul>
+<li><code>ANOMA_TOKIO_THREADS</code>: Defaults to 1/2 logical cores</li>
+<li><code>ANOMA_RAYON_THREADS</code>: Defaults to 1/2 logical cores.</li>
+<li><code>ANOMA_ROCKSDB_COMPACTION_THREADS</code>: Defauls to 1/4 logical core. RocksDB also uses 1 more background thread for flushing.</li>
+</ul>
 <h2 id="tendermint-abci"><a class="header" href="#tendermint-abci">Tendermint ABCI</a></h2>
 <p>We are using the Tendermint state-machine replication engine via ABCI. It provides many useful things, such as a BFT consensus protocol, P2P layer with peer exchange, block sync and mempool layer.</p>
 <p>Useful resources:</p>

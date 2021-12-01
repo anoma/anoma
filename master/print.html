@@ -793,6 +793,17 @@ removed intents.</p>
 </blockquote>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="the-ledger"><a class="header" href="#the-ledger">The ledger</a></h1>
 <p>The ledger depends on <a href="https://github.com/tendermint/tendermint">Tendermint node</a>. Running the Anoma node will also initialize and run Tendermint node. Anoma communicates with Tendermint via the ABCI.</p>
+<h2 id="overview-1"><a class="header" href="#overview-1">Overview</a></h2>
+<p>The following diagram illustrates the current boundaries between the async and blocking code.</p>
+<p><img src="explore/design/ledger/ledger_threads.svg" alt="ledger threads" title="ledger threads" />
+<a href="https://excalidraw.com/#room=952eca1f17ac3c7b5cee,ReXYfqLLleTjVnSQM9zrjw">Diagram on Excalidraw</a></p>
+<h2 id="threads-config"><a class="header" href="#threads-config">Threads config</a></h2>
+<p>Configuration for threads usage can be changed via environment variables:</p>
+<ul>
+<li><code>ANOMA_TOKIO_THREADS</code>: Defaults to 1/2 logical cores</li>
+<li><code>ANOMA_RAYON_THREADS</code>: Defaults to 1/2 logical cores.</li>
+<li><code>ANOMA_ROCKSDB_COMPACTION_THREADS</code>: Defauls to 1/4 logical core. RocksDB also uses 1 more background thread for flushing.</li>
+</ul>
 <h2 id="tendermint-abci"><a class="header" href="#tendermint-abci">Tendermint ABCI</a></h2>
 <p>We are using the Tendermint state-machine replication engine via ABCI. It provides many useful things, such as a BFT consensus protocol, P2P layer with peer exchange, block sync and mempool layer.</p>
 <p>Useful resources:</p>
@@ -2647,7 +2658,7 @@ forked with more option and better integration/default value</li>
 <p><a href="https://anoma.network/papers/whitepaper.pdf">Anoma</a> is a sovereign, proof-of-stake blockchain protocol that enables private, asset-agnostic cash and private bartering among any number of parties.</p>
 <p>This specification defines the Anoma ledger's protocol and its components and the intent gossip and matchmaking system.</p>
 <p>The key words &quot;MUST&quot;, &quot;MUST NOT&quot;, &quot;REQUIRED&quot;, &quot;SHALL&quot;, &quot;SHALL NOT&quot;, &quot;SHOULD&quot;, &quot;SHOULD NOT&quot;, &quot;RECOMMENDED&quot;,  &quot;MAY&quot;, and &quot;OPTIONAL&quot; in this document are to be interpreted as described in <a href="https://www.rfc-editor.org/rfc/rfc2119">RFC-2119</a>.</p>
-<div style="break-before: page; page-break-before: always;"></div><h1 id="overview-1"><a class="header" href="#overview-1">Overview</a></h1>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="overview-2"><a class="header" href="#overview-2">Overview</a></h1>
 <p>At a high level, Anoma is composed of two main components: the distributed ledger and the intent gossip / matchmaking system. While they are designed to complement each other, they can be operated separately.</p>
 <h2 id="the-ledger-1"><a class="header" href="#the-ledger-1">The ledger</a></h2>
 <p>The ledger is a distributed state machine, relying on functionality provided by <a href="https://docs.tendermint.com/master/spec/">Tendermint</a> such as its BFT consensus algorithm with instant finality, P2P networking capabilities, transaction mempool and more. The ledger state machine is built on top the <a href="https://docs.tendermint.com/master/spec/abci/">ABCI</a>.</p>

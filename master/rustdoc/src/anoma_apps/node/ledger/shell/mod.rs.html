@@ -820,6 +820,10 @@
 <span id="820">820</span>
 <span id="821">821</span>
 <span id="822">822</span>
+<span id="823">823</span>
+<span id="824">824</span>
+<span id="825">825</span>
+<span id="826">826</span>
 </pre><pre class="rust">
 <span class="doccomment">//! The ledger shell connects the ABCI++ interface with the Anoma ledger app.</span>
 <span class="doccomment">//!</span>
@@ -899,6 +903,8 @@
     <span class="ident">GasOverflow</span>,
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;{0}&quot;</span>)]</span>
     <span class="ident">Tendermint</span>(<span class="ident">tendermint_node::Error</span>),
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Server error: {0}&quot;</span>)]</span>
+    <span class="ident">TowerServer</span>(<span class="ident">String</span>),
 }
 
 <span class="doccomment">/// The different error codes that the ledger may</span>
@@ -1029,6 +1035,7 @@
     <span class="ident">H</span>: <span class="ident">StorageHasher</span> <span class="op">+</span> <span class="ident">Sync</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>,
 {
     <span class="kw">fn</span> <span class="ident">drop</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) {
+        <span class="macro">tracing::info!</span>(<span class="string">&quot;Storing a transaction queue...&quot;</span>);
         <span class="kw">let</span> <span class="ident">cache_path</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">base_dir</span>.<span class="ident">clone</span>().<span class="ident">join</span>(<span class="string">&quot;.tx_queue&quot;</span>);
         <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">std::fs::File::create</span>(<span class="kw-2">&amp;</span><span class="ident">cache_path</span>)
             .<span class="ident">expect</span>(<span class="string">&quot;Creating the file for the tx_queue dump should not fail&quot;</span>);
@@ -1041,6 +1048,7 @@
         .<span class="ident">expect</span>(
             <span class="string">&quot;Failed to write tx queue to file. Good luck booting back up now&quot;</span>,
         );
+        <span class="macro">tracing::info!</span>(<span class="string">&quot;Transaction queue has been stored.&quot;</span>);
     }
 }
 

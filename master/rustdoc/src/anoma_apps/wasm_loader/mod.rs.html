@@ -230,6 +230,44 @@
 <span id="230">230</span>
 <span id="231">231</span>
 <span id="232">232</span>
+<span id="233">233</span>
+<span id="234">234</span>
+<span id="235">235</span>
+<span id="236">236</span>
+<span id="237">237</span>
+<span id="238">238</span>
+<span id="239">239</span>
+<span id="240">240</span>
+<span id="241">241</span>
+<span id="242">242</span>
+<span id="243">243</span>
+<span id="244">244</span>
+<span id="245">245</span>
+<span id="246">246</span>
+<span id="247">247</span>
+<span id="248">248</span>
+<span id="249">249</span>
+<span id="250">250</span>
+<span id="251">251</span>
+<span id="252">252</span>
+<span id="253">253</span>
+<span id="254">254</span>
+<span id="255">255</span>
+<span id="256">256</span>
+<span id="257">257</span>
+<span id="258">258</span>
+<span id="259">259</span>
+<span id="260">260</span>
+<span id="261">261</span>
+<span id="262">262</span>
+<span id="263">263</span>
+<span id="264">264</span>
+<span id="265">265</span>
+<span id="266">266</span>
+<span id="267">267</span>
+<span id="268">268</span>
+<span id="269">269</span>
+<span id="270">270</span>
 </pre><pre class="rust">
 <span class="doccomment">//! A module for loading WASM files and downloading pre-built WASMs.</span>
 <span class="kw">use</span> <span class="ident">core::borrow::Borrow</span>;
@@ -237,17 +275,19 @@
 <span class="kw">use</span> <span class="ident">std::fs</span>;
 <span class="kw">use</span> <span class="ident">std::path::Path</span>;
 
+<span class="kw">use</span> <span class="ident">futures::future::join_all</span>;
 <span class="kw">use</span> <span class="ident">hex</span>;
 <span class="kw">use</span> <span class="ident">serde</span>::{<span class="ident">Deserialize</span>, <span class="ident">Serialize</span>};
 <span class="kw">use</span> <span class="ident">sha2</span>::{<span class="ident">Digest</span>, <span class="ident">Sha256</span>};
 <span class="kw">use</span> <span class="ident">thiserror::Error</span>;
+<span class="kw">use</span> <span class="ident">tokio::io::AsyncReadExt</span>;
 
 <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::cli::safe_exit</span>;
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Error</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">Error</span> {
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Not able to download {0}&quot;</span>)]</span>
-    <span class="ident">Download</span>(<span class="ident">String</span>),
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Not able to download {0}, failed with {1}&quot;</span>)]</span>
+    <span class="ident">Download</span>(<span class="ident">String</span>, <span class="ident">reqwest::Error</span>),
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Error writing to {0}&quot;</span>)]</span>
     <span class="ident">FileWrite</span>(<span class="ident">String</span>),
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Cannot download {0}&quot;</span>)]</span>
@@ -292,64 +332,82 @@
         <span class="kw">let</span> <span class="ident">checksums_path</span> <span class="op">=</span> <span class="ident">wasm_directory</span>.<span class="ident">as_ref</span>().<span class="ident">join</span>(<span class="string">&quot;checksums.json&quot;</span>);
         <span class="self">Self</span><span class="ident">::read_checksums_file</span>(<span class="ident">checksums_path</span>)
     }
+
+    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">read_checksums_async</span>(
+        <span class="ident">wasm_directory</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span><span class="ident">Path</span><span class="op">&gt;</span>,
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="kw">let</span> <span class="ident">checksums_path</span> <span class="op">=</span> <span class="ident">wasm_directory</span>.<span class="ident">as_ref</span>().<span class="ident">join</span>(<span class="string">&quot;checksums.json&quot;</span>);
+        <span class="kw">match</span> <span class="ident">tokio::fs::File::open</span>(<span class="ident">checksums_path</span>).<span class="kw">await</span> {
+            <span class="prelude-val">Ok</span>(<span class="kw-2">mut</span> <span class="ident">file</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">contents</span> <span class="op">=</span> <span class="macro">vec!</span>[];
+                <span class="comment">// Ignoring the result, next step will fail if not read</span>
+                <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">file</span>.<span class="ident">read_to_end</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">contents</span>).<span class="kw">await</span>;
+                <span class="kw">match</span> <span class="ident">serde_json::from_slice</span>(<span class="kw-2">&amp;</span><span class="ident">contents</span>[..]) {
+                    <span class="prelude-val">Ok</span>(<span class="ident">checksums</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">checksums</span>,
+                    <span class="prelude-val">Err</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                        <span class="macro">eprintln!</span>(
+                            <span class="string">&quot;Can&#39;t read checksums.json in {}&quot;</span>,
+                            <span class="ident">wasm_directory</span>.<span class="ident">as_ref</span>().<span class="ident">to_string_lossy</span>()
+                        );
+                        <span class="ident">safe_exit</span>(<span class="number">1</span>);
+                    }
+                }
+            }
+            <span class="prelude-val">Err</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="macro">eprintln!</span>(
+                    <span class="string">&quot;Can&#39;t find checksums.json in {}&quot;</span>,
+                    <span class="ident">wasm_directory</span>.<span class="ident">as_ref</span>().<span class="ident">to_string_lossy</span>()
+                );
+                <span class="ident">safe_exit</span>(<span class="number">1</span>);
+            }
+        }
+    }
 }
 
 <span class="doccomment">/// Download all the pre-build WASMs, or if they&#39;re already downloaded, verify</span>
 <span class="doccomment">/// their checksums. Download all the pre-build WASMs, or if they&#39;re already</span>
 <span class="doccomment">/// downloaded, verify their checksums.</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">pre_fetch_wasm</span>(<span class="ident">wasm_directory</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span><span class="ident">Path</span><span class="op">&gt;</span>) {
+<span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">pre_fetch_wasm</span>(<span class="ident">wasm_directory</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span><span class="ident">Path</span><span class="op">&gt;</span>) {
     <span class="comment">// load json with wasm hashes</span>
-    <span class="kw">let</span> <span class="ident">checksums</span> <span class="op">=</span> <span class="ident">Checksums::read_checksums</span>(<span class="kw-2">&amp;</span><span class="ident">wasm_directory</span>);
+    <span class="kw">let</span> <span class="ident">checksums</span> <span class="op">=</span> <span class="ident">Checksums::read_checksums_async</span>(<span class="kw-2">&amp;</span><span class="ident">wasm_directory</span>).<span class="kw">await</span>;
 
-    <span class="kw">for</span> (<span class="ident">name</span>, <span class="ident">hash</span>) <span class="kw">in</span> <span class="ident">checksums</span>.<span class="number">0</span> {
-        <span class="kw">let</span> <span class="ident">wasm_path</span> <span class="op">=</span> <span class="ident">wasm_directory</span>.<span class="ident">as_ref</span>().<span class="ident">join</span>(<span class="kw-2">&amp;</span><span class="ident">hash</span>);
+    <span class="ident">join_all</span>(<span class="ident">checksums</span>.<span class="number">0</span>.<span class="ident">into_iter</span>().<span class="ident">map</span>(<span class="op">|</span>(<span class="ident">name</span>, <span class="ident">hash</span>)<span class="op">|</span> {
+        <span class="kw">let</span> <span class="ident">wasm_directory</span> <span class="op">=</span> <span class="ident">wasm_directory</span>.<span class="ident">as_ref</span>().<span class="ident">to_owned</span>();
 
-        <span class="kw">match</span> <span class="ident">fs::read</span>(<span class="kw-2">&amp;</span><span class="ident">wasm_path</span>) {
-            <span class="comment">// if the file exist, first check the hash. If not matching download</span>
-            <span class="comment">// it again.</span>
-            <span class="prelude-val">Ok</span>(<span class="ident">bytes</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">hasher</span> <span class="op">=</span> <span class="ident">Sha256::new</span>();
-                <span class="ident">hasher</span>.<span class="ident">update</span>(<span class="ident">bytes</span>);
-                <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">hex::encode</span>(<span class="ident">hasher</span>.<span class="ident">finalize</span>());
-                <span class="kw">let</span> <span class="ident">checksum</span> <span class="op">=</span> <span class="macro">format!</span>(
-                    <span class="string">&quot;{}.{}.wasm&quot;</span>,
-                    <span class="kw-2">&amp;</span><span class="ident">name</span>.<span class="ident">split</span>(<span class="string">&#39;.&#39;</span>).<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">str</span><span class="op">&gt;</span><span class="op">&gt;</span>()[<span class="number">0</span>],
-                    <span class="ident">result</span>
-                );
-                <span class="kw">if</span> <span class="ident">hash</span> <span class="op">=</span><span class="op">=</span> <span class="ident">checksum</span> {
-                    <span class="kw">continue</span>;
-                }
-                <span class="macro">tracing::info!</span>(
-                    <span class="string">&quot;Wasm checksum mismatch for {}. Fetching new version...&quot;</span>,
-                    <span class="kw-2">&amp;</span><span class="ident">name</span>,
-                );
-                <span class="kw">let</span> <span class="ident">url</span> <span class="op">=</span> <span class="macro">format!</span>(<span class="string">&quot;{}/{}&quot;</span>, <span class="ident">S3_URL</span>, <span class="ident">hash</span>);
-                <span class="kw">match</span> <span class="ident">download_wasm</span>(<span class="ident">url</span>) {
-                    <span class="prelude-val">Ok</span>(<span class="ident">bytes</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Err</span>(<span class="ident">e</span>) <span class="op">=</span> <span class="ident">fs::write</span>(<span class="ident">wasm_path</span>, <span class="kw-2">&amp;</span><span class="ident">bytes</span>) {
-                            <span class="macro">panic!</span>(
-                                <span class="string">&quot;Error while creating file for {}: {}&quot;</span>,
-                                <span class="kw-2">&amp;</span><span class="ident">name</span>, <span class="ident">e</span>
-                            );
-                        }
+        <span class="comment">// Async check and download (if needed) each file</span>
+        <span class="ident">tokio::spawn</span>(<span class="kw">async</span> <span class="kw">move</span> {
+            <span class="kw">let</span> <span class="ident">wasm_path</span> <span class="op">=</span> <span class="ident">wasm_directory</span>.<span class="ident">join</span>(<span class="kw-2">&amp;</span><span class="ident">hash</span>);
+            <span class="kw">match</span> <span class="ident">tokio::fs::read</span>(<span class="kw-2">&amp;</span><span class="ident">wasm_path</span>).<span class="kw">await</span> {
+                <span class="comment">// if the file exist, first check the hash. If not matching</span>
+                <span class="comment">// download it again.</span>
+                <span class="prelude-val">Ok</span>(<span class="ident">bytes</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">hasher</span> <span class="op">=</span> <span class="ident">Sha256::new</span>();
+                    <span class="ident">hasher</span>.<span class="ident">update</span>(<span class="ident">bytes</span>);
+                    <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">hex::encode</span>(<span class="ident">hasher</span>.<span class="ident">finalize</span>());
+                    <span class="kw">let</span> <span class="ident">checksum</span> <span class="op">=</span> <span class="macro">format!</span>(
+                        <span class="string">&quot;{}.{}.wasm&quot;</span>,
+                        <span class="kw-2">&amp;</span><span class="ident">name</span>.<span class="ident">split</span>(<span class="string">&#39;.&#39;</span>).<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">str</span><span class="op">&gt;</span><span class="op">&gt;</span>()[<span class="number">0</span>],
+                        <span class="ident">result</span>
+                    );
+                    <span class="kw">if</span> <span class="ident">hash</span> <span class="op">=</span><span class="op">=</span> <span class="ident">checksum</span> {
+                        <span class="kw">return</span>;
                     }
-                    <span class="prelude-val">Err</span>(<span class="ident">e</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                        <span class="macro">eprintln!</span>(<span class="string">&quot;Error downloading wasm: {}&quot;</span>, <span class="ident">e</span>);
-                        <span class="ident">safe_exit</span>(<span class="number">1</span>);
-                    }
-                }
-            }
-            <span class="comment">// if the doesn&#39;t file exist, download it.</span>
-            <span class="prelude-val">Err</span>(<span class="ident">err</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="ident">err</span>.<span class="ident">kind</span>() {
-                <span class="ident">std::io::ErrorKind::NotFound</span> <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="macro">tracing::info!</span>(
+                        <span class="string">&quot;Wasm checksum mismatch for {}. Fetching new \
+                         version...&quot;</span>,
+                        <span class="kw-2">&amp;</span><span class="ident">name</span>,
+                    );
                     <span class="kw">let</span> <span class="ident">url</span> <span class="op">=</span> <span class="macro">format!</span>(<span class="string">&quot;{}/{}&quot;</span>, <span class="ident">S3_URL</span>, <span class="ident">hash</span>);
-                    <span class="kw">match</span> <span class="ident">download_wasm</span>(<span class="ident">url</span>) {
+                    <span class="kw">match</span> <span class="ident">download_wasm</span>(<span class="ident">url</span>).<span class="kw">await</span> {
                         <span class="prelude-val">Ok</span>(<span class="ident">bytes</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Err</span>(<span class="ident">e</span>) <span class="op">=</span> <span class="ident">fs::write</span>(<span class="ident">wasm_path</span>, <span class="kw-2">&amp;</span><span class="ident">bytes</span>) {
-                                <span class="macro">panic!</span>(
+                            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Err</span>(<span class="ident">e</span>) <span class="op">=</span>
+                                <span class="ident">tokio::fs::write</span>(<span class="ident">wasm_path</span>, <span class="kw-2">&amp;</span><span class="ident">bytes</span>).<span class="kw">await</span>
+                            {
+                                <span class="macro">eprintln!</span>(
                                     <span class="string">&quot;Error while creating file for {}: {}&quot;</span>,
                                     <span class="kw-2">&amp;</span><span class="ident">name</span>, <span class="ident">e</span>
                                 );
+                                <span class="ident">safe_exit</span>(<span class="number">1</span>);
                             }
                         }
                         <span class="prelude-val">Err</span>(<span class="ident">e</span>) <span class="op">=</span><span class="op">&gt;</span> {
@@ -358,16 +416,40 @@
                         }
                     }
                 }
-                <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> {
-                    <span class="macro">eprintln!</span>(
-                        <span class="string">&quot;Can&#39;t read {}.&quot;</span>,
-                        <span class="ident">wasm_path</span>.<span class="ident">as_os_str</span>().<span class="ident">to_string_lossy</span>()
-                    );
-                    <span class="ident">safe_exit</span>(<span class="number">1</span>);
-                }
-            },
-        }
-    }
+                <span class="comment">// if the doesn&#39;t file exist, download it.</span>
+                <span class="prelude-val">Err</span>(<span class="ident">err</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="ident">err</span>.<span class="ident">kind</span>() {
+                    <span class="ident">std::io::ErrorKind::NotFound</span> <span class="op">=</span><span class="op">&gt;</span> {
+                        <span class="kw">let</span> <span class="ident">url</span> <span class="op">=</span> <span class="macro">format!</span>(<span class="string">&quot;{}/{}&quot;</span>, <span class="ident">S3_URL</span>, <span class="ident">hash</span>);
+                        <span class="kw">match</span> <span class="ident">download_wasm</span>(<span class="ident">url</span>).<span class="kw">await</span> {
+                            <span class="prelude-val">Ok</span>(<span class="ident">bytes</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                                <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Err</span>(<span class="ident">e</span>) <span class="op">=</span>
+                                    <span class="ident">tokio::fs::write</span>(<span class="ident">wasm_path</span>, <span class="kw-2">&amp;</span><span class="ident">bytes</span>).<span class="kw">await</span>
+                                {
+                                    <span class="macro">eprintln!</span>(
+                                        <span class="string">&quot;Error while creating file for {}: {}&quot;</span>,
+                                        <span class="kw-2">&amp;</span><span class="ident">name</span>, <span class="ident">e</span>
+                                    );
+                                    <span class="ident">safe_exit</span>(<span class="number">1</span>);
+                                }
+                            }
+                            <span class="prelude-val">Err</span>(<span class="ident">e</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                                <span class="macro">eprintln!</span>(<span class="string">&quot;Error downloading wasm: {}&quot;</span>, <span class="ident">e</span>);
+                                <span class="ident">safe_exit</span>(<span class="number">1</span>);
+                            }
+                        }
+                    }
+                    <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> {
+                        <span class="macro">eprintln!</span>(
+                            <span class="string">&quot;Can&#39;t read {}.&quot;</span>,
+                            <span class="ident">wasm_path</span>.<span class="ident">as_os_str</span>().<span class="ident">to_string_lossy</span>()
+                        );
+                        <span class="ident">safe_exit</span>(<span class="number">1</span>);
+                    }
+                },
+            }
+        })
+    }))
+    .<span class="kw">await</span>;
 }
 
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">read_wasm</span>(
@@ -436,13 +518,14 @@
     <span class="ident">safe_exit</span>(<span class="number">1</span>);
 }
 
-<span class="kw">fn</span> <span class="ident">download_wasm</span>(<span class="ident">url</span>: <span class="ident">String</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>, <span class="ident">Error</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">response</span> <span class="op">=</span> <span class="ident">reqwest::blocking::get</span>(<span class="kw-2">&amp;</span><span class="ident">url</span>);
+<span class="kw">async</span> <span class="kw">fn</span> <span class="ident">download_wasm</span>(<span class="ident">url</span>: <span class="ident">String</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>, <span class="ident">Error</span><span class="op">&gt;</span> {
+    <span class="macro">tracing::info!</span>(<span class="string">&quot;Downloading WASM {}...&quot;</span>, <span class="ident">url</span>);
+    <span class="kw">let</span> <span class="ident">response</span> <span class="op">=</span> <span class="ident">reqwest::get</span>(<span class="kw-2">&amp;</span><span class="ident">url</span>).<span class="kw">await</span>;
     <span class="kw">match</span> <span class="ident">response</span> {
         <span class="prelude-val">Ok</span>(<span class="ident">body</span>) <span class="op">=</span><span class="op">&gt;</span> {
             <span class="kw">let</span> <span class="ident">status</span> <span class="op">=</span> <span class="ident">body</span>.<span class="ident">status</span>();
             <span class="kw">if</span> <span class="ident">status</span>.<span class="ident">is_success</span>() {
-                <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="ident">body</span>.<span class="ident">bytes</span>().<span class="ident">unwrap</span>();
+                <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="ident">body</span>.<span class="ident">bytes</span>().<span class="kw">await</span>.<span class="ident">unwrap</span>();
                 <span class="kw">let</span> <span class="ident">bytes</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>] <span class="op">=</span> <span class="ident">bytes</span>.<span class="ident">borrow</span>();
                 <span class="kw">let</span> <span class="ident">bytes</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">bytes</span>.<span class="ident">to_owned</span>();
 
@@ -453,14 +536,7 @@
                 <span class="prelude-val">Err</span>(<span class="ident">Error::ServerError</span>(<span class="ident">url</span>, <span class="ident">status</span>.<span class="ident">to_string</span>()))
             }
         }
-        <span class="prelude-val">Err</span>(<span class="ident">e</span>) <span class="op">=</span><span class="op">&gt;</span> {
-            <span class="macro">tracing::error!</span>(
-                <span class="string">&quot;Error while downloading file {}. Error: {}&quot;</span>,
-                <span class="ident">url</span>,
-                <span class="ident">e</span>
-            );
-            <span class="prelude-val">Err</span>(<span class="ident">Error::Download</span>(<span class="ident">url</span>))
-        }
+        <span class="prelude-val">Err</span>(<span class="ident">e</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">Error::Download</span>(<span class="ident">url</span>, <span class="ident">e</span>)),
     }
 }
 </pre></div>

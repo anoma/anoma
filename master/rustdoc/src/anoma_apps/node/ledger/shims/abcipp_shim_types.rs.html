@@ -361,6 +361,7 @@
 <span id="361">361</span>
 <span id="362">362</span>
 <span id="363">363</span>
+<span id="364">364</span>
 </pre><pre class="rust">
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
 <span class="kw">use</span> <span class="ident">tower_abci</span>::{<span class="ident">Request</span>, <span class="ident">Response</span>};
@@ -593,6 +594,7 @@
             <span class="kw">pub</span> <span class="ident">result</span>: <span class="kw">super</span><span class="ident">::response::TxResult</span>,
         }
 
+        <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
         <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">BeginBlock</span> {
             <span class="kw">pub</span> <span class="ident">hash</span>: <span class="ident">BlockHash</span>,
             <span class="kw">pub</span> <span class="ident">header</span>: <span class="ident">Header</span>,
