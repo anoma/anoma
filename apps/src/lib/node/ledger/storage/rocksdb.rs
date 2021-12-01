@@ -5,17 +5,20 @@
 //! - `height`: the last committed block height
 //! - `epoch_start_height`: block height at which the current epoch started
 //! - `epoch_start_time`: block time at which the current epoch started
+//! - `subspace`: any byte data associated with accounts
+//! - `history/subspace`: list of block heights at which any given subspace key
+//!   has changed
 //! - `h`: for each block at height `h`:
 //!   - `tree`: merkle tree
 //!     - `root`: root hash
 //!     - `store`: the tree's store
 //!   - `hash`: block hash
 //!   - `epoch`: block epoch
-//!   - `subspace`: any byte data associated with accounts
+//!   - `subspace`: historical values of accounts data, only set at heights at
+//!     which the data has changed
 //!   - `address_gen`: established address generator
 
 use std::cmp::Ordering;
-use std::collections::HashMap;
 use std::env;
 use std::path::Path;
 use std::str::FromStr;
@@ -27,7 +30,6 @@ use anoma::ledger::storage::{
 use anoma::types::storage::{BlockHeight, Key, KeySeg, KEY_SEGMENT_SEPARATOR};
 use anoma::types::time::DateTimeUtc;
 use borsh::{BorshDeserialize, BorshSerialize};
-use rlimit::{Resource, Rlim};
 use rocksdb::{
     BlockBasedOptions, Direction, FlushOptions, IteratorMode, Options,
     ReadOptions, SliceTransform, WriteBatch, WriteOptions,
@@ -137,6 +139,58 @@ impl Drop for RocksDB {
     }
 }
 
+impl RocksDB {
+    /// Persist the previous account subspace key-val under the height where it
+    /// was changed.
+    fn write_subspace_prev_value(
+        &mut self,
+        height: BlockHeight,
+        key: &Key,
+        value: Vec<u8>,
+    ) -> Result<()> {
+        let prev_val_key = Key::from(height.to_db_key())
+            .push(&"subspace".to_owned())
+            .map_err(Error::KeyError)?
+            .join(key)
+            .to_string();
+        self.0
+            .put(prev_val_key, value)
+            .map_err(|e| Error::DBError(e.into_string()))
+    }
+
+    /// Create or update the history record for the given account subspace key.
+    /// The history record contains the block height at which a value has been
+    /// created, modified or deleted. The previous value, if any (there won't be
+    /// any for a newly created storage key), is written by
+    /// [`Self::write_subspace_prev_value`].
+    fn update_subspace_key_history(
+        &mut self,
+        height: BlockHeight,
+        subspace_key: &Key,
+    ) -> Result<()> {
+        let history_key = Key::parse("history")
+            .map_err(Error::KeyError)?
+            .join(subspace_key)
+            .to_string();
+        // Add the current height to history
+        let history = if let Some(history) = self
+            .0
+            .get(&history_key)
+            .map_err(|e| Error::DBError(e.into_string()))?
+        {
+            let mut history: Vec<u64> =
+                BorshDeserialize::try_from_slice(&history[..]).unwrap();
+            history.push(height.0);
+            history
+        } else {
+            vec![height.0]
+        };
+        self.0
+            .put(&history_key, history.try_to_vec().unwrap())
+            .map_err(|e| Error::DBError(e.into_string()))
+    }
+}
+
 impl DB for RocksDB {
     fn open(db_path: impl AsRef<Path>) -> Self {
         open(db_path).expect("cannot open the DB")
@@ -150,7 +204,7 @@ impl DB for RocksDB {
             .map_err(|e| Error::DBError(e.into_string()))
     }
 
-    fn read(&self, height: BlockHeight, key: &Key) -> Result<Option<Vec<u8>>> {
+    fn read_subspace_val(&self, key: &Key) -> Result<Option<Vec<u8>>> {
         let subspace_key =
             Key::parse("subspace").map_err(Error::KeyError)?.join(key);
         self.0
@@ -158,7 +212,7 @@ impl DB for RocksDB {
             .map_err(|e| Error::DBError(e.into_string()))
     }
 
-    fn write(
+    fn write_subspace_val(
         &mut self,
         height: BlockHeight,
         key: &Key,
@@ -173,54 +227,29 @@ impl DB for RocksDB {
         {
             Some(prev_value) => {
                 let size_diff = value.len() as i64 - prev_value.len() as i64;
-
-                // Persist the previous value under the height where it was
-                // changed
-                let prev_val_key = Key::from(height.to_db_key())
-                    .push(&"subspace".to_owned())
-                    .map_err(Error::KeyError)?
-                    .join(key)
-                    .to_string();
-                self.0
-                    .put(prev_val_key, prev_value)
-                    .map_err(|e| Error::DBError(e.into_string()))?;
-
+                // Persist the previous value
+                self.write_subspace_prev_value(height, key, prev_value)?;
                 size_diff
             }
             None => value.len() as i64,
         };
-
-        // Create or update the history record
-        let history_key = Key::parse("history")
-            .map_err(Error::KeyError)?
-            .join(&subspace_key)
-            .to_string();
-        // Add the current height to history
-        let history = if let Some(history) = self
-            .0
-            .get(&history_key)
-            .map_err(|e| Error::DBError(e.into_string()))?
-        {
-            let mut history: Vec<u64> =
-                BorshDeserialize::try_from_slice(&history[..]).unwrap();
-            history.push(height.0);
-            history
-        } else {
-            vec![height.0]
-        };
-        self.0
-            .put(&history_key, history.try_to_vec().unwrap())
-            .map_err(|e| Error::DBError(e.into_string()))?;
 
         // Write the new key-val
         self.0
             .put(&subspace_key.to_string(), value)
             .map_err(|e| Error::DBError(e.into_string()))?;
 
+        // Create or update the history record
+        self.update_subspace_key_history(height, &subspace_key)?;
+
         Ok(size_diff)
     }
 
-    fn delete(&mut self, height: BlockHeight, key: &Key) -> Result<i64> {
+    fn delete_subspace_val(
+        &mut self,
+        height: BlockHeight,
+        key: &Key,
+    ) -> Result<i64> {
         let subspace_key =
             Key::parse("subspace").map_err(Error::KeyError)?.join(key);
 
@@ -232,18 +261,8 @@ impl DB for RocksDB {
         {
             Some(prev_value) => {
                 let prev_len = prev_value.len() as i64;
-
-                // Persist the previous value under the height where it was
-                // changed
-                let prev_val_key = Key::from(height.to_db_key())
-                    .push(&"subspace".to_owned())
-                    .map_err(Error::KeyError)?
-                    .join(key)
-                    .to_string();
-                self.0
-                    .put(prev_val_key, prev_value)
-                    .map_err(|e| Error::DBError(e.into_string()))?;
-
+                // Persist the previous value
+                self.write_subspace_prev_value(height, key, prev_value)?;
                 prev_len
             }
             None => 0,
@@ -255,26 +274,7 @@ impl DB for RocksDB {
             .map_err(|e| Error::DBError(e.into_string()))?;
 
         // Create or update the history record
-        let history_key = Key::parse("history")
-            .map_err(Error::KeyError)?
-            .join(&subspace_key)
-            .to_string();
-        // Add the current height to history
-        let history = if let Some(history) = self
-            .0
-            .get(&history_key)
-            .map_err(|e| Error::DBError(e.into_string()))?
-        {
-            let mut history: Vec<u64> =
-                BorshDeserialize::try_from_slice(&history[..]).unwrap();
-            history.push(height.0);
-            history
-        } else {
-            vec![height.0]
-        };
-        self.0
-            .put(&history_key, history.try_to_vec().unwrap())
-            .map_err(|e| Error::DBError(e.into_string()))?;
+        self.update_subspace_key_history(height, &subspace_key)?;
 
         Ok(prev_len)
     }

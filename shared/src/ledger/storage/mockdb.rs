@@ -1,6 +1,6 @@
 //! DB mock for testing
 
-use std::collections::{btree_map, BTreeMap, HashMap};
+use std::collections::{btree_map, BTreeMap};
 use std::ops::Bound::{Excluded, Included};
 use std::path::Path;
 
@@ -20,6 +20,43 @@ impl DB for MockDB {
 
     fn flush(&self) -> Result<()> {
         Ok(())
+    }
+
+    fn read_subspace_val(&self, key: &Key) -> Result<Option<Vec<u8>>> {
+        let key = Key::parse(&"subspace".to_owned())
+            .map_err(Error::KeyError)?
+            .join(key);
+        Ok(self.0.get(&key.to_string()).cloned())
+    }
+
+    fn write_subspace_val(
+        &mut self,
+        _height: BlockHeight,
+        key: &Key,
+        value: Vec<u8>,
+    ) -> Result<i64> {
+        let key = Key::parse(&"subspace".to_owned())
+            .map_err(Error::KeyError)?
+            .join(key);
+        let current_len = value.len() as i64;
+        Ok(match self.0.insert(key.to_string(), value) {
+            Some(prev_value) => current_len - prev_value.len() as i64,
+            None => current_len,
+        })
+    }
+
+    fn delete_subspace_val(
+        &mut self,
+        _height: BlockHeight,
+        key: &Key,
+    ) -> Result<i64> {
+        let key = Key::parse(&"subspace".to_owned())
+            .map_err(Error::KeyError)?
+            .join(key);
+        Ok(match self.0.remove(&key.to_string()) {
+            Some(value) => value.len() as i64,
+            None => 0,
+        })
     }
 
     fn write_block(&mut self, state: BlockStateWrite) -> Result<()> {
@@ -97,39 +134,6 @@ impl DB for MockDB {
         }
         self.0.insert("height".to_owned(), types::encode(&height));
         Ok(())
-    }
-
-    fn read(&self, _height: BlockHeight, key: &Key) -> Result<Option<Vec<u8>>> {
-        let key = Key::parse(&"subspace".to_owned())
-            .map_err(Error::KeyError)?
-            .join(key);
-        Ok(self.0.get(&key.to_string()).cloned())
-    }
-
-    fn write(
-        &mut self,
-        _height: BlockHeight,
-        key: &Key,
-        value: Vec<u8>,
-    ) -> Result<i64> {
-        let key = Key::parse(&"subspace".to_owned())
-            .map_err(Error::KeyError)?
-            .join(key);
-        let current_len = value.len() as i64;
-        Ok(match self.0.insert(key.to_string(), value) {
-            Some(prev_value) => current_len - prev_value.len() as i64,
-            None => current_len,
-        })
-    }
-
-    fn delete(&mut self, _height: BlockHeight, key: &Key) -> Result<i64> {
-        let key = Key::parse(&"subspace".to_owned())
-            .map_err(Error::KeyError)?
-            .join(key);
-        Ok(match self.0.remove(&key.to_string()) {
-            Some(value) => value.len() as i64,
-            None => 0,
-        })
     }
 
     fn read_last_block(&mut self) -> Result<Option<BlockStateRead>> {

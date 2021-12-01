@@ -6,7 +6,6 @@ pub mod types;
 pub mod write_log;
 
 use core::fmt::Debug;
-use std::collections::HashMap;
 use std::fmt::Display;
 
 use prost::Message;
@@ -148,28 +147,33 @@ pub trait DB: std::fmt::Debug {
     /// Flush data on the memory to persistent them
     fn flush(&self) -> Result<()>;
 
-    /// Write a block
+    /// Read the last committed block's metadata
+    fn read_last_block(&mut self) -> Result<Option<BlockStateRead>>;
+
+    /// Write block's metadata
     fn write_block(&mut self, state: BlockStateWrite) -> Result<()>;
 
-    /// Read the value with the given height and the key from the DB
-    fn read(&self, height: BlockHeight, key: &Key) -> Result<Option<Vec<u8>>>;
+    /// Read the latest value for account subspace key from the DB
+    fn read_subspace_val(&self, key: &Key) -> Result<Option<Vec<u8>>>;
 
-    /// Write the value with the given height and the key to the DB. Returns
-    /// the size difference from previous value, if any, or the size of the
-    /// value otherwise.
-    fn write(
+    /// Write the value with the given height and account subspace key to the
+    /// DB. Returns the size difference from previous value, if any, or the
+    /// size of the value otherwise.
+    fn write_subspace_val(
         &mut self,
         height: BlockHeight,
         key: &Key,
         value: Vec<u8>,
     ) -> Result<i64>;
 
-    /// Delete the value with the given height and the key from the DB. Returns
-    /// the size of the removed value, if any, 0 if no previous value was found.
-    fn delete(&mut self, height: BlockHeight, key: &Key) -> Result<i64>;
-
-    /// Read the last committed block
-    fn read_last_block(&mut self) -> Result<Option<BlockStateRead>>;
+    /// Delete the value with the given height and account subspace key from the
+    /// DB. Returns the size of the removed value, if any, 0 if no previous
+    /// value was found.
+    fn delete_subspace_val(
+        &mut self,
+        height: BlockHeight,
+        key: &Key,
+    ) -> Result<i64>;
 }
 
 /// A database prefix iterator.
@@ -177,7 +181,7 @@ pub trait DBIter<'iter> {
     /// The concrete type of the iterator
     type PrefixIter: Debug + Iterator<Item = (String, Vec<u8>, u64)>;
 
-    /// Read key value pairs with the given prefix from the DB
+    /// Read account subspace key value pairs with the given prefix from the DB
     fn iter_prefix(
         &'iter self,
         height: BlockHeight,
@@ -327,13 +331,13 @@ where
 
     /// Returns a value from the specified subspace and the gas cost
     pub fn read(&self, key: &Key) -> Result<(Option<Vec<u8>>, u64)> {
-        tracing::debug!("storage read key {}", key,);
+        tracing::debug!("storage read key {}", key);
         let (present, gas) = self.has_key(key)?;
         if !present {
             return Ok((None, gas));
         }
 
-        match self.db.read(self.last_height, key)? {
+        match self.db.read_subspace_val(key)? {
             Some(v) => {
                 let gas = key.len() + v.len();
                 Ok((Some(v), gas as _))
@@ -361,7 +365,8 @@ where
 
         let len = value.len();
         let gas = key.len() + len;
-        let size_diff = self.db.write(self.last_height, key, value)?;
+        let size_diff =
+            self.db.write_subspace_val(self.last_height, key, value)?;
         Ok((gas as _, size_diff))
     }
 
@@ -372,7 +377,8 @@ where
         if self.has_key(key)?.0 {
             // update the merkle tree with a zero as a tombstone
             self.update_tree(H::hash_key(key), H256::zero())?;
-            deleted_bytes_len = self.db.delete(self.last_height, key)?;
+            deleted_bytes_len =
+                self.db.delete_subspace_val(self.last_height, key)?;
         }
         let gas = key.len() + deleted_bytes_len as usize;
         Ok((gas as _, deleted_bytes_len))
