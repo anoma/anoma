@@ -141,7 +141,11 @@ pub struct BlockStateWrite<'a> {
 
 /// A database backend.
 pub trait DB: std::fmt::Debug {
-    /// open the database from provided path
+    /// A handle for batch writes
+    type WriteBatch: DBWriteBatch;
+
+    /// Open the database from provided path
+    /// Open the database from provided path
     fn open(db_path: impl AsRef<std::path::Path>) -> Self;
 
     /// Flush data on the memory to persistent them
@@ -163,7 +167,7 @@ pub trait DB: std::fmt::Debug {
         &mut self,
         height: BlockHeight,
         key: &Key,
-        value: Vec<u8>,
+        value: impl AsRef<[u8]>,
     ) -> Result<i64>;
 
     /// Delete the value with the given height and account subspace key from the
@@ -171,6 +175,33 @@ pub trait DB: std::fmt::Debug {
     /// value was found.
     fn delete_subspace_val(
         &mut self,
+        height: BlockHeight,
+        key: &Key,
+    ) -> Result<i64>;
+
+    /// Start write batch.
+    fn batch() -> Self::WriteBatch;
+
+    /// Execute write batch.
+    fn exec_batch(&mut self, batch: Self::WriteBatch) -> Result<()>;
+
+    /// Batch write the value with the given height and account subspace key to
+    /// the DB. Returns the size difference from previous value, if any, or
+    /// the size of the value otherwise.
+    fn batch_write_subspace_val(
+        &self,
+        batch: &mut Self::WriteBatch,
+        height: BlockHeight,
+        key: &Key,
+        value: impl AsRef<[u8]>,
+    ) -> Result<i64>;
+
+    /// Batch delete the value with the given height and account subspace key
+    /// from the DB. Returns the size of the removed value, if any, 0 if no
+    /// previous value was found.
+    fn batch_delete_subspace_val(
+        &self,
+        batch: &mut Self::WriteBatch,
         height: BlockHeight,
         key: &Key,
     ) -> Result<i64>;
@@ -182,11 +213,20 @@ pub trait DBIter<'iter> {
     type PrefixIter: Debug + Iterator<Item = (String, Vec<u8>, u64)>;
 
     /// Read account subspace key value pairs with the given prefix from the DB
-    fn iter_prefix(
-        &'iter self,
-        height: BlockHeight,
-        prefix: &Key,
-    ) -> Self::PrefixIter;
+    fn iter_prefix(&'iter self, prefix: &Key) -> Self::PrefixIter;
+}
+
+/// Atomic batch write.
+pub trait DBWriteBatch {
+    /// Insert a value into the database under the given key.
+    fn put<K, V>(&mut self, key: K, value: V)
+    where
+        K: AsRef<[u8]>,
+        V: AsRef<[u8]>;
+
+    /// Removes the database entry for key. Does nothing if the key was not
+    /// found.
+    fn delete<K: AsRef<[u8]>>(&mut self, key: K);
 }
 
 /// The root hash of the merkle tree as bytes
@@ -351,19 +391,20 @@ where
         &self,
         prefix: &Key,
     ) -> (<D as DBIter<'_>>::PrefixIter, u64) {
-        (
-            self.db.iter_prefix(self.last_height, prefix),
-            prefix.len() as _,
-        )
+        (self.db.iter_prefix(prefix), prefix.len() as _)
     }
 
     /// Write a value to the specified subspace and returns the gas cost and the
     /// size difference
-    pub fn write(&mut self, key: &Key, value: Vec<u8>) -> Result<(u64, i64)> {
+    pub fn write(
+        &mut self,
+        key: &Key,
+        value: impl AsRef<[u8]>,
+    ) -> Result<(u64, i64)> {
         tracing::debug!("storage write key {}", key,);
         self.update_tree(H::hash_key(key), H::hash_value(&value))?;
 
-        let len = value.len();
+        let len = value.as_ref().len();
         let gas = key.len() + len;
         let size_diff =
             self.db.write_subspace_val(self.last_height, key, value)?;
@@ -554,6 +595,44 @@ where
             }),
             H::hash_value(&types::encode(&self.block.epoch)),
         )
+    }
+
+    /// Start write batch.
+    fn batch() -> D::WriteBatch {
+        D::batch()
+    }
+
+    /// Execute write batch.
+    fn exec_batch(&mut self, batch: D::WriteBatch) -> Result<()> {
+        self.db.exec_batch(batch)
+    }
+
+    /// Batch write the value with the given height and account subspace key to
+    /// the DB. Returns the size difference from previous value, if any, or
+    /// the size of the value otherwise.
+    fn batch_write_subspace_val(
+        &mut self,
+        batch: &mut D::WriteBatch,
+        key: &Key,
+        value: impl AsRef<[u8]>,
+    ) -> Result<i64> {
+        let value = value.as_ref();
+        self.update_tree(H::hash_key(key), H::hash_value(&value))?;
+        self.db
+            .batch_write_subspace_val(batch, self.last_height, key, value)
+    }
+
+    /// Batch delete the value with the given height and account subspace key
+    /// from the DB. Returns the size of the removed value, if any, 0 if no
+    /// previous value was found.
+    fn batch_delete_subspace_val(
+        &mut self,
+        batch: &mut D::WriteBatch,
+        key: &Key,
+    ) -> Result<i64> {
+        self.update_tree(H::hash_key(key), H256::zero())?;
+        self.db
+            .batch_delete_subspace_val(batch, self.last_height, key)
     }
 }
 
