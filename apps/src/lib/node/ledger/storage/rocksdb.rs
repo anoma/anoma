@@ -25,11 +25,11 @@ use std::str::FromStr;
 
 use anoma::ledger::storage::types::PrefixIterator;
 use anoma::ledger::storage::{
-    types, BlockStateRead, BlockStateWrite, DBIter, Error, Result, DB,
+    types, BlockStateRead, BlockStateWrite, DBIter, DBWriteBatch, Error,
+    Result, DB,
 };
 use anoma::types::storage::{BlockHeight, Key, KeySeg, KEY_SEGMENT_SEPARATOR};
 use anoma::types::time::DateTimeUtc;
-use borsh::{BorshDeserialize, BorshSerialize};
 use rocksdb::{
     BlockBasedOptions, Direction, FlushOptions, IteratorMode, Options,
     ReadOptions, SliceTransform, WriteBatch, WriteOptions,
@@ -43,8 +43,13 @@ use crate::cli;
 const ENV_VAR_ROCKSDB_COMPACTION_THREADS: &str =
     "ANOMA_ROCKSDB_COMPACTION_THREADS";
 
+/// RocksDB handle
 #[derive(Debug)]
 pub struct RocksDB(rocksdb::DB);
+
+/// DB Handle for batch writes.
+#[derive(Default)]
+pub struct RocksDBWriteBatch(WriteBatch);
 
 /// Open RocksDB for the DB
 pub fn open(path: impl AsRef<Path>) -> Result<RocksDB> {
@@ -140,58 +145,88 @@ impl Drop for RocksDB {
 }
 
 impl RocksDB {
-    /// Persist the previous account subspace key-val under the height where it
-    /// was changed.
-    fn write_subspace_prev_value(
+    /// Persist the diff of an account subspace key-val under the height where
+    /// it was changed.
+    fn write_subspace_diff(
         &mut self,
         height: BlockHeight,
         key: &Key,
-        value: Vec<u8>,
+        old_value: Option<&[u8]>,
+        new_value: Option<&[u8]>,
     ) -> Result<()> {
-        let prev_val_key = Key::from(height.to_db_key())
-            .push(&"subspace".to_owned())
-            .map_err(Error::KeyError)?
-            .join(key)
-            .to_string();
-        self.0
-            .put(prev_val_key, value)
-            .map_err(|e| Error::DBError(e.into_string()))
+        let key_prefix = Key::from(height.to_db_key())
+            .push(&"diffs".to_owned())
+            .map_err(Error::KeyError)?;
+
+        if let Some(old_value) = old_value {
+            let old_val_key = key_prefix
+                .push(&"old".to_owned())
+                .map_err(Error::KeyError)?
+                .join(key)
+                .to_string();
+            self.0
+                .put(old_val_key, old_value)
+                .map_err(|e| Error::DBError(e.into_string()))?;
+        }
+
+        if let Some(new_value) = new_value {
+            let new_val_key = key_prefix
+                .push(&"new".to_owned())
+                .map_err(Error::KeyError)?
+                .join(key)
+                .to_string();
+            self.0
+                .put(new_val_key, new_value)
+                .map_err(|e| Error::DBError(e.into_string()))?;
+        }
+        Ok(())
     }
 
-    /// Create or update the history record for the given account subspace key.
-    /// The history record contains the block height at which a value has been
-    /// created, modified or deleted. The previous value, if any (there won't be
-    /// any for a newly created storage key), is written by
-    /// [`Self::write_subspace_prev_value`].
-    fn update_subspace_key_history(
-        &mut self,
+    /// Persist the diff of an account subspace key-val under the height where
+    /// it was changed in a batch write.
+    fn batch_write_subspace_diff(
+        batch: &mut RocksDBWriteBatch,
         height: BlockHeight,
-        subspace_key: &Key,
+        key: &Key,
+        old_value: Option<&[u8]>,
+        new_value: Option<&[u8]>,
     ) -> Result<()> {
-        let history_key = Key::parse("history")
-            .map_err(Error::KeyError)?
-            .join(subspace_key)
-            .to_string();
-        // Add the current height to history
-        let history = if let Some(history) = self
-            .0
-            .get(&history_key)
-            .map_err(|e| Error::DBError(e.into_string()))?
-        {
-            let mut history: Vec<u64> =
-                BorshDeserialize::try_from_slice(&history[..]).unwrap();
-            history.push(height.0);
-            history
-        } else {
-            vec![height.0]
-        };
+        let key_prefix = Key::from(height.to_db_key())
+            .push(&"diffs".to_owned())
+            .map_err(Error::KeyError)?;
+
+        if let Some(old_value) = old_value {
+            let old_val_key = key_prefix
+                .push(&"old".to_owned())
+                .map_err(Error::KeyError)?
+                .join(key)
+                .to_string();
+            batch.0.put(old_val_key, old_value);
+        }
+
+        if let Some(new_value) = new_value {
+            let new_val_key = key_prefix
+                .push(&"new".to_owned())
+                .map_err(Error::KeyError)?
+                .join(key)
+                .to_string();
+            batch.0.put(new_val_key, new_value);
+        }
+        Ok(())
+    }
+
+    fn exec_batch(&mut self, batch: WriteBatch) -> Result<()> {
+        let mut write_opts = WriteOptions::default();
+        write_opts.disable_wal(true);
         self.0
-            .put(&history_key, history.try_to_vec().unwrap())
+            .write_opt(batch, &write_opts)
             .map_err(|e| Error::DBError(e.into_string()))
     }
 }
 
 impl DB for RocksDB {
+    type WriteBatch = RocksDBWriteBatch;
+
     fn open(db_path: impl AsRef<Path>) -> Self {
         open(db_path).expect("cannot open the DB")
     }
@@ -202,81 +237,6 @@ impl DB for RocksDB {
         self.0
             .flush_opt(&flush_opts)
             .map_err(|e| Error::DBError(e.into_string()))
-    }
-
-    fn read_subspace_val(&self, key: &Key) -> Result<Option<Vec<u8>>> {
-        let subspace_key =
-            Key::parse("subspace").map_err(Error::KeyError)?.join(key);
-        self.0
-            .get(subspace_key.to_string())
-            .map_err(|e| Error::DBError(e.into_string()))
-    }
-
-    fn write_subspace_val(
-        &mut self,
-        height: BlockHeight,
-        key: &Key,
-        value: Vec<u8>,
-    ) -> Result<i64> {
-        let subspace_key =
-            Key::parse("subspace").map_err(Error::KeyError)?.join(key);
-        let size_diff = match self
-            .0
-            .get(subspace_key.to_string())
-            .map_err(|e| Error::DBError(e.into_string()))?
-        {
-            Some(prev_value) => {
-                let size_diff = value.len() as i64 - prev_value.len() as i64;
-                // Persist the previous value
-                self.write_subspace_prev_value(height, key, prev_value)?;
-                size_diff
-            }
-            None => value.len() as i64,
-        };
-
-        // Write the new key-val
-        self.0
-            .put(&subspace_key.to_string(), value)
-            .map_err(|e| Error::DBError(e.into_string()))?;
-
-        // Create or update the history record
-        self.update_subspace_key_history(height, &subspace_key)?;
-
-        Ok(size_diff)
-    }
-
-    fn delete_subspace_val(
-        &mut self,
-        height: BlockHeight,
-        key: &Key,
-    ) -> Result<i64> {
-        let subspace_key =
-            Key::parse("subspace").map_err(Error::KeyError)?.join(key);
-
-        // Check the length of previous value, if any
-        let prev_len = match self
-            .0
-            .get(key.to_string())
-            .map_err(|e| Error::DBError(e.into_string()))?
-        {
-            Some(prev_value) => {
-                let prev_len = prev_value.len() as i64;
-                // Persist the previous value
-                self.write_subspace_prev_value(height, key, prev_value)?;
-                prev_len
-            }
-            None => 0,
-        };
-
-        // Delete the key-val
-        self.0
-            .delete(key.to_string())
-            .map_err(|e| Error::DBError(e.into_string()))?;
-
-        // Create or update the history record
-        self.update_subspace_key_history(height, &subspace_key)?;
-
-        Ok(prev_len)
     }
 
     fn read_last_block(&mut self) -> Result<Option<BlockStateRead>> {
@@ -493,18 +453,182 @@ impl DB for RocksDB {
                 .map_err(Error::KeyError)?;
             batch.put(key.to_string(), types::encode(&address_gen));
         }
-        let mut write_opts = WriteOptions::default();
-        write_opts.disable_wal(true);
-        self.0
-            .write_opt(batch, &write_opts)
-            .map_err(|e| Error::DBError(e.into_string()))?;
+        self.exec_batch(batch)?;
 
         // Block height - write after everything else is written
         // NOTE for async writes, we need to take care that all previous heights
         // are known when updating this
+        let mut write_opts = WriteOptions::default();
+        write_opts.disable_wal(true);
         self.0
             .put_opt("height", types::encode(&height), &write_opts)
             .map_err(|e| Error::DBError(e.into_string()))
+    }
+
+    fn read_subspace_val(&self, key: &Key) -> Result<Option<Vec<u8>>> {
+        let subspace_key =
+            Key::parse("subspace").map_err(Error::KeyError)?.join(key);
+        println!("READ KEY {}", subspace_key);
+        self.0
+            .get(subspace_key.to_string())
+            .map_err(|e| Error::DBError(e.into_string()))
+    }
+
+    fn write_subspace_val(
+        &mut self,
+        height: BlockHeight,
+        key: &Key,
+        value: impl AsRef<[u8]>,
+    ) -> Result<i64> {
+        let value = value.as_ref();
+        let subspace_key =
+            Key::parse("subspace").map_err(Error::KeyError)?.join(key);
+        let size_diff = match self
+            .0
+            .get(subspace_key.to_string())
+            .map_err(|e| Error::DBError(e.into_string()))?
+        {
+            Some(prev_value) => {
+                let size_diff = value.len() as i64 - prev_value.len() as i64;
+                self.write_subspace_diff(
+                    height,
+                    key,
+                    Some(&prev_value),
+                    Some(value),
+                )?;
+                size_diff
+            }
+            None => {
+                self.write_subspace_diff(height, key, None, Some(value))?;
+                value.len() as i64
+            }
+        };
+
+        // Write the new key-val
+        self.0
+            .put(&subspace_key.to_string(), value)
+            .map_err(|e| Error::DBError(e.into_string()))?;
+
+        Ok(size_diff)
+    }
+
+    fn delete_subspace_val(
+        &mut self,
+        height: BlockHeight,
+        key: &Key,
+    ) -> Result<i64> {
+        let subspace_key =
+            Key::parse("subspace").map_err(Error::KeyError)?.join(key);
+
+        // Check the length of previous value, if any
+        let prev_len = match self
+            .0
+            .get(key.to_string())
+            .map_err(|e| Error::DBError(e.into_string()))?
+        {
+            Some(prev_value) => {
+                let prev_len = prev_value.len() as i64;
+                self.write_subspace_diff(height, key, Some(&prev_value), None)?;
+                prev_len
+            }
+            None => 0,
+        };
+
+        // Delete the key-val
+        self.0
+            .delete(subspace_key.to_string())
+            .map_err(|e| Error::DBError(e.into_string()))?;
+
+        Ok(prev_len)
+    }
+
+    fn batch() -> Self::WriteBatch {
+        RocksDBWriteBatch::default()
+    }
+
+    fn exec_batch(&mut self, batch: Self::WriteBatch) -> Result<()> {
+        self.exec_batch(batch.0)
+    }
+
+    fn batch_write_subspace_val(
+        &self,
+        batch: &mut Self::WriteBatch,
+        height: BlockHeight,
+        key: &Key,
+        value: impl AsRef<[u8]>,
+    ) -> Result<i64> {
+        let value = value.as_ref();
+        let subspace_key =
+            Key::parse("subspace").map_err(Error::KeyError)?.join(key);
+        let size_diff = match self
+            .0
+            .get(subspace_key.to_string())
+            .map_err(|e| Error::DBError(e.into_string()))?
+        {
+            Some(old_value) => {
+                let size_diff = value.len() as i64 - old_value.len() as i64;
+                // Persist the previous value
+                Self::batch_write_subspace_diff(
+                    batch,
+                    height,
+                    key,
+                    Some(&old_value),
+                    Some(value),
+                )?;
+                size_diff
+            }
+            None => {
+                Self::batch_write_subspace_diff(
+                    batch,
+                    height,
+                    key,
+                    None,
+                    Some(value),
+                )?;
+                value.len() as i64
+            }
+        };
+
+        // Write the new key-val
+        batch.put(&subspace_key.to_string(), value);
+
+        Ok(size_diff)
+    }
+
+    fn batch_delete_subspace_val(
+        &self,
+        batch: &mut Self::WriteBatch,
+        height: BlockHeight,
+        key: &Key,
+    ) -> Result<i64> {
+        let subspace_key =
+            Key::parse("subspace").map_err(Error::KeyError)?.join(key);
+
+        // Check the length of previous value, if any
+        let prev_len = match self
+            .0
+            .get(key.to_string())
+            .map_err(|e| Error::DBError(e.into_string()))?
+        {
+            Some(prev_value) => {
+                let prev_len = prev_value.len() as i64;
+                // Persist the previous value
+                Self::batch_write_subspace_diff(
+                    batch,
+                    height,
+                    key,
+                    Some(&prev_value),
+                    None,
+                )?;
+                prev_len
+            }
+            None => 0,
+        };
+
+        // Delete the key-val
+        batch.delete(subspace_key.to_string());
+
+        Ok(prev_len)
     }
 }
 
@@ -513,7 +637,6 @@ impl<'iter> DBIter<'iter> for RocksDB {
 
     fn iter_prefix(
         &'iter self,
-        _height: BlockHeight,
         prefix: &Key,
     ) -> PersistentPrefixIterator<'iter> {
         let db_prefix = "subspace/".to_owned();
@@ -560,6 +683,20 @@ impl<'a> Iterator for PersistentPrefixIterator<'a> {
             }
             None => None,
         }
+    }
+}
+
+impl DBWriteBatch for RocksDBWriteBatch {
+    fn put<K, V>(&mut self, key: K, value: V)
+    where
+        K: AsRef<[u8]>,
+        V: AsRef<[u8]>,
+    {
+        self.0.put(key, value)
+    }
+
+    fn delete<K: AsRef<[u8]>>(&mut self, key: K) {
+        self.0.delete(key)
     }
 }
 
