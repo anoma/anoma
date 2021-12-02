@@ -180,9 +180,7 @@ impl Service<Req> for AbciService {
         Box::pin(
             async move {
                 let (resp_send, recv) = tokio::sync::oneshot::channel();
-                if sender.send((req, resp_send)).await.is_err() {
-                    return Err("The shell is closed".into());
-                }
+                sender.send((req, resp_send)).await?;
                 match recv.await {
                     Ok(resp) => resp,
                     Err(err) => {
