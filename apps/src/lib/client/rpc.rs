@@ -305,7 +305,11 @@ pub async fn query_bonds(ctx: Context, args: args::QueryBonds) {
                             let bond_type: Cow<str> = if source == validator {
                                 "Self-bonds".into()
                             } else {
-                                format!("Delegations from {}", source).into()
+                                format!(
+                                    "Delegations from {} to {}",
+                                    source, validator
+                                )
+                                .into()
                             };
                             writeln!(w, "{}:", bond_type).unwrap();
                             let (tot, tot_active) = process_bonds_query(
