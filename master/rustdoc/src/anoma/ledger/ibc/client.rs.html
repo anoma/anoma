@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `shared/src/ledger/ibc/client.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>client.rs - source</title><link rel="stylesheet" type="text/css" href="../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../../ayu.css" disabled ><script id="default-settings"></script><script src="../../../../storage.js"></script><script src="../../../../crates.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="shortcut icon" href="https://docs.anoma.network/favicon.png"><style type="text/css">#crate-search{background-image:url("../../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../../anoma/index.html'><div class='logo-container'><img src='https://docs.anoma.network/rustdoc-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img src="../../../../brush.svg" width="18" height="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../../../settings.html" title="settings"><img src="../../../../wheel.svg" width="18" height="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">  1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `shared&#x2F;src&#x2F;ledger&#x2F;ibc&#x2F;client.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>client.rs - source</title><link rel="stylesheet" type="text/css" href="../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../../ayu.css" disabled ><script id="default-settings" ></script><script src="../../../../storage.js"></script><script src="../../../../crates.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="shortcut icon" href="https:&#x2F;&#x2F;docs.anoma.network&#x2F;favicon.png"><style type="text/css">#crate-search{background-image:url("../../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../../anoma/index.html'><div class='logo-container rust-logo'><img src='https:&#x2F;&#x2F;docs.anoma.network&#x2F;rustdoc-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="18" height="18" alt="Pick another theme!" src="../../../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../../../settings.html" title="settings"><img width="18" height="18" alt="Change settings" src="../../../../wheel.svg"></a></div></form></nav><section id="main" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">  1</span>
 <span id="2">  2</span>
 <span id="3">  3</span>
 <span id="4">  4</span>
@@ -375,46 +375,123 @@
 <span id="375">375</span>
 <span id="376">376</span>
 <span id="377">377</span>
-</pre><pre class="rust">
-<span class="doccomment">//! IBC validity predicate for client module</span>
+<span id="378">378</span>
+<span id="379">379</span>
+<span id="380">380</span>
+<span id="381">381</span>
+<span id="382">382</span>
+<span id="383">383</span>
+<span id="384">384</span>
+<span id="385">385</span>
+<span id="386">386</span>
+<span id="387">387</span>
+<span id="388">388</span>
+<span id="389">389</span>
+<span id="390">390</span>
+<span id="391">391</span>
+<span id="392">392</span>
+<span id="393">393</span>
+<span id="394">394</span>
+<span id="395">395</span>
+<span id="396">396</span>
+<span id="397">397</span>
+<span id="398">398</span>
+<span id="399">399</span>
+<span id="400">400</span>
+<span id="401">401</span>
+<span id="402">402</span>
+<span id="403">403</span>
+<span id="404">404</span>
+<span id="405">405</span>
+<span id="406">406</span>
+<span id="407">407</span>
+<span id="408">408</span>
+<span id="409">409</span>
+<span id="410">410</span>
+<span id="411">411</span>
+<span id="412">412</span>
+<span id="413">413</span>
+<span id="414">414</span>
+<span id="415">415</span>
+<span id="416">416</span>
+<span id="417">417</span>
+<span id="418">418</span>
+<span id="419">419</span>
+<span id="420">420</span>
+<span id="421">421</span>
+<span id="422">422</span>
+<span id="423">423</span>
+<span id="424">424</span>
+<span id="425">425</span>
+<span id="426">426</span>
+<span id="427">427</span>
+<span id="428">428</span>
+<span id="429">429</span>
+<span id="430">430</span>
+<span id="431">431</span>
+<span id="432">432</span>
+<span id="433">433</span>
+<span id="434">434</span>
+<span id="435">435</span>
+<span id="436">436</span>
+<span id="437">437</span>
+<span id="438">438</span>
+<span id="439">439</span>
+<span id="440">440</span>
+<span id="441">441</span>
+<span id="442">442</span>
+<span id="443">443</span>
+<span id="444">444</span>
+<span id="445">445</span>
+<span id="446">446</span>
+<span id="447">447</span>
+<span id="448">448</span>
+<span id="449">449</span>
+<span id="450">450</span>
+<span id="451">451</span>
+</pre><pre class="rust"><code><span class="doccomment">//! IBC validity predicate for client module</span>
 
 <span class="kw">use</span> <span class="ident">borsh::BorshDeserialize</span>;
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
-<span class="kw">use</span> <span class="ident">ibc::ics02_client::client_consensus::AnyConsensusState</span>;
+<span class="kw">use</span> <span class="ident">ibc::core::ics02_client::client_consensus::AnyConsensusState</span>;
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
-<span class="kw">use</span> <span class="ident">ibc::ics02_client::client_def</span>::{<span class="ident">AnyClient</span>, <span class="ident">ClientDef</span>};
+<span class="kw">use</span> <span class="ident">ibc::core::ics02_client::client_def</span>::{<span class="ident">AnyClient</span>, <span class="ident">ClientDef</span>};
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
-<span class="kw">use</span> <span class="ident">ibc::ics02_client::client_state::AnyClientState</span>;
+<span class="kw">use</span> <span class="ident">ibc::core::ics02_client::client_state::AnyClientState</span>;
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
-<span class="kw">use</span> <span class="ident">ibc::ics02_client::client_type::ClientType</span>;
+<span class="kw">use</span> <span class="ident">ibc::core::ics02_client::client_type::ClientType</span>;
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
-<span class="kw">use</span> <span class="ident">ibc::ics02_client::context::ClientReader</span>;
+<span class="kw">use</span> <span class="ident">ibc::core::ics02_client::context::ClientReader</span>;
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
-<span class="kw">use</span> <span class="ident">ibc::ics02_client::height::Height</span>;
+<span class="kw">use</span> <span class="ident">ibc::core::ics02_client::error::Error</span> <span class="kw">as</span> <span class="ident">Ics02Error</span>;
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
-<span class="kw">use</span> <span class="ident">ibc::ics24_host::identifier::ClientId</span>;
+<span class="kw">use</span> <span class="ident">ibc::core::ics02_client::height::Height</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
+<span class="kw">use</span> <span class="ident">ibc::core::ics24_host::identifier::ClientId</span>;
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
-<span class="kw">use</span> <span class="ident">ibc_abci::ics02_client::client_consensus::AnyConsensusState</span>;
+<span class="kw">use</span> <span class="ident">ibc_abci::core::ics02_client::client_consensus::AnyConsensusState</span>;
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
-<span class="kw">use</span> <span class="ident">ibc_abci::ics02_client::client_def</span>::{<span class="ident">AnyClient</span>, <span class="ident">ClientDef</span>};
+<span class="kw">use</span> <span class="ident">ibc_abci::core::ics02_client::client_def</span>::{<span class="ident">AnyClient</span>, <span class="ident">ClientDef</span>};
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
-<span class="kw">use</span> <span class="ident">ibc_abci::ics02_client::client_state::AnyClientState</span>;
+<span class="kw">use</span> <span class="ident">ibc_abci::core::ics02_client::client_state::AnyClientState</span>;
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
-<span class="kw">use</span> <span class="ident">ibc_abci::ics02_client::client_type::ClientType</span>;
+<span class="kw">use</span> <span class="ident">ibc_abci::core::ics02_client::client_type::ClientType</span>;
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
-<span class="kw">use</span> <span class="ident">ibc_abci::ics02_client::context::ClientReader</span>;
+<span class="kw">use</span> <span class="ident">ibc_abci::core::ics02_client::context::ClientReader</span>;
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
-<span class="kw">use</span> <span class="ident">ibc_abci::ics02_client::height::Height</span>;
+<span class="kw">use</span> <span class="ident">ibc_abci::core::ics02_client::error::Error</span> <span class="kw">as</span> <span class="ident">Ics02Error</span>;
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
-<span class="kw">use</span> <span class="ident">ibc_abci::ics24_host::identifier::ClientId</span>;
+<span class="kw">use</span> <span class="ident">ibc_abci::core::ics02_client::height::Height</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
+<span class="kw">use</span> <span class="ident">ibc_abci::core::ics24_host::identifier::ClientId</span>;
 <span class="kw">use</span> <span class="ident">thiserror::Error</span>;
 
-<span class="kw">use</span> <span class="kw">super</span><span class="ident">::storage</span>::{
+<span class="kw">use</span> <span class="ident"><span class="kw">super</span>::storage</span>::{
     <span class="ident">client_counter_key</span>, <span class="ident">client_state_key</span>, <span class="ident">client_type_key</span>, <span class="ident">consensus_state_key</span>,
 };
 <span class="kw">use</span> <span class="kw">super</span>::{<span class="ident">Ibc</span>, <span class="ident">StateChange</span>};
-<span class="kw">use</span> <span class="kw">crate</span><span class="ident">::ledger::storage</span>::{<span class="self">self</span>, <span class="ident">StorageHasher</span>};
-<span class="kw">use</span> <span class="kw">crate</span><span class="ident">::types::ibc</span>::{
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::ledger::storage</span>::{<span class="self">self</span>, <span class="ident">StorageHasher</span>};
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::types::ibc</span>::{
     <span class="ident">ClientUpdateData</span>, <span class="ident">ClientUpgradeData</span>, <span class="ident">Error</span> <span class="kw">as</span> <span class="ident">IbcDataError</span>,
 };
 
@@ -431,12 +508,16 @@
     <span class="ident">ProofVerificationFailure</span>(<span class="ident">String</span>),
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Decoding TX data error: {0}&quot;</span>)]</span>
     <span class="ident">DecodingTxData</span>(<span class="ident">std::io::Error</span>),
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Decoding client data error: {0}&quot;</span>)]</span>
+    <span class="ident">DecodingClientData</span>(<span class="ident">std::io::Error</span>),
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;IBC data error: {0}&quot;</span>)]</span>
     <span class="ident">InvalidIbcData</span>(<span class="ident">IbcDataError</span>),
 }
 
 <span class="doccomment">/// IBC client functions result</span>
 <span class="kw">pub</span> <span class="kw">type</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">std::result::Result</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">Error</span><span class="op">&gt;</span>;
+<span class="doccomment">/// ClientReader result</span>
+<span class="kw">type</span> <span class="ident">Ics02Result</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">core::result::Result</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">Ics02Error</span><span class="op">&gt;</span>;
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">DB</span>, <span class="ident">H</span><span class="op">&gt;</span> <span class="ident">Ibc</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">DB</span>, <span class="ident">H</span><span class="op">&gt;</span>
 <span class="kw">where</span>
@@ -470,14 +551,14 @@
     }
 
     <span class="kw">fn</span> <span class="ident">validate_created_client</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">client_id</span>: <span class="kw-2">&amp;</span><span class="ident">ClientId</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">client_type</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">client_type</span>(<span class="ident">client_id</span>).<span class="ident">ok_or_else</span>(<span class="op">|</span><span class="op">|</span> {
+        <span class="kw">let</span> <span class="ident">client_type</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">client_type</span>(<span class="ident">client_id</span>).<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> {
             <span class="ident">Error::InvalidClient</span>(<span class="macro">format!</span>(
                 <span class="string">&quot;The client type doesn&#39;t exist: ID {}&quot;</span>,
                 <span class="ident">client_id</span>
             ))
         })<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">client_state</span> <span class="op">=</span> <span class="ident">ClientReader::client_state</span>(<span class="self">self</span>, <span class="ident">client_id</span>)
-            .<span class="ident">ok_or_else</span>(<span class="op">|</span><span class="op">|</span> {
+            .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> {
                 <span class="ident">Error::InvalidClient</span>(<span class="macro">format!</span>(
                     <span class="string">&quot;The client state doesn&#39;t exist: ID {}&quot;</span>,
                     <span class="ident">client_id</span>
@@ -485,7 +566,7 @@
             })<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">height</span> <span class="op">=</span> <span class="ident">client_state</span>.<span class="ident">latest_height</span>();
         <span class="kw">let</span> <span class="ident">consensus_state</span> <span class="op">=</span>
-            <span class="self">self</span>.<span class="ident">consensus_state</span>(<span class="ident">client_id</span>, <span class="ident">height</span>).<span class="ident">ok_or_else</span>(<span class="op">|</span><span class="op">|</span> {
+            <span class="self">self</span>.<span class="ident">consensus_state</span>(<span class="ident">client_id</span>, <span class="ident">height</span>).<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> {
                 <span class="ident">Error::InvalidClient</span>(<span class="macro">format!</span>(
                     <span class="string">&quot;The consensus state doesn&#39;t exist: ID {}, Height {}&quot;</span>,
                     <span class="ident">client_id</span>, <span class="ident">height</span>
@@ -535,7 +616,7 @@
 
         <span class="comment">// check the posterior states</span>
         <span class="kw">let</span> <span class="ident">client_state</span> <span class="op">=</span> <span class="ident">ClientReader::client_state</span>(<span class="self">self</span>, <span class="ident">client_id</span>)
-            .<span class="ident">ok_or_else</span>(<span class="op">|</span><span class="op">|</span> {
+            .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> {
                 <span class="ident">Error::InvalidClient</span>(<span class="macro">format!</span>(
                     <span class="string">&quot;The client state doesn&#39;t exist: ID {}&quot;</span>,
                     <span class="ident">client_id</span>
@@ -543,7 +624,7 @@
             })<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">height</span> <span class="op">=</span> <span class="ident">client_state</span>.<span class="ident">latest_height</span>();
         <span class="kw">let</span> <span class="ident">consensus_state</span> <span class="op">=</span>
-            <span class="self">self</span>.<span class="ident">consensus_state</span>(<span class="ident">client_id</span>, <span class="ident">height</span>).<span class="ident">ok_or_else</span>(<span class="op">|</span><span class="op">|</span> {
+            <span class="self">self</span>.<span class="ident">consensus_state</span>(<span class="ident">client_id</span>, <span class="ident">height</span>).<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> {
                 <span class="ident">Error::InvalidClient</span>(<span class="macro">format!</span>(
                     <span class="string">&quot;The consensus state doesn&#39;t exist: ID {}, Height {}&quot;</span>,
                     <span class="ident">client_id</span>, <span class="ident">height</span>
@@ -561,6 +642,8 @@
             (<span class="ident">prev_client_state</span>, <span class="ident">prev_consensus_state</span>),
             <span class="op">|</span>(<span class="ident">new_client_state</span>, <span class="kw">_</span>), <span class="ident">header</span><span class="op">|</span> {
                 <span class="ident">client</span>.<span class="ident">check_header_and_update_state</span>(
+                    <span class="self">self</span>,
+                    <span class="ident">client_id</span>.<span class="ident">clone</span>(),
                     <span class="ident">new_client_state</span>,
                     <span class="ident">header</span>.<span class="ident">clone</span>(),
                 )
@@ -601,7 +684,7 @@
 
         <span class="comment">// check the posterior states</span>
         <span class="kw">let</span> <span class="ident">client_state_post</span> <span class="op">=</span> <span class="ident">ClientReader::client_state</span>(<span class="self">self</span>, <span class="ident">client_id</span>)
-            .<span class="ident">ok_or_else</span>(<span class="op">|</span><span class="op">|</span> {
+            .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> {
                 <span class="ident">Error::InvalidClient</span>(<span class="macro">format!</span>(
                     <span class="string">&quot;The client state doesn&#39;t exist: ID {}&quot;</span>,
                     <span class="ident">client_id</span>
@@ -609,7 +692,7 @@
             })<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">height</span> <span class="op">=</span> <span class="ident">client_state_post</span>.<span class="ident">latest_height</span>();
         <span class="kw">let</span> <span class="ident">consensus_state_post</span> <span class="op">=</span>
-            <span class="self">self</span>.<span class="ident">consensus_state</span>(<span class="ident">client_id</span>, <span class="ident">height</span>).<span class="ident">ok_or_else</span>(<span class="op">|</span><span class="op">|</span> {
+            <span class="self">self</span>.<span class="ident">consensus_state</span>(<span class="ident">client_id</span>, <span class="ident">height</span>).<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> {
                 <span class="ident">Error::InvalidClient</span>(<span class="macro">format!</span>(
                     <span class="string">&quot;The consensus state doesn&#39;t exist: ID {}, Height {}&quot;</span>,
                     <span class="ident">client_id</span>, <span class="ident">height</span>
@@ -621,7 +704,7 @@
         <span class="kw">let</span> <span class="ident">consensus_state</span> <span class="op">=</span> <span class="ident">data</span>.<span class="ident">consensus_state</span>.<span class="ident">clone</span>();
         <span class="kw">let</span> <span class="ident">client_proof</span> <span class="op">=</span> <span class="ident">data</span>.<span class="ident">proof_client</span>()<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">consensus_proof</span> <span class="op">=</span> <span class="ident">data</span>.<span class="ident">proof_consensus_state</span>()<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">client_type</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">client_type</span>(<span class="ident">client_id</span>).<span class="ident">ok_or_else</span>(<span class="op">|</span><span class="op">|</span> {
+        <span class="kw">let</span> <span class="ident">client_type</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">client_type</span>(<span class="ident">client_id</span>).<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> {
             <span class="ident">Error::InvalidClient</span>(<span class="macro">format!</span>(
                 <span class="string">&quot;The client type doesn&#39;t exist: ID {}&quot;</span>,
                 <span class="ident">client_id</span>
@@ -703,21 +786,26 @@
     <span class="ident">DB</span>: <span class="lifetime">&#39;static</span> <span class="op">+</span> <span class="ident">storage::DB</span> <span class="op">+</span> <span class="kw">for</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span> <span class="ident">storage::DBIter</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span>,
     <span class="ident">H</span>: <span class="lifetime">&#39;static</span> <span class="op">+</span> <span class="ident">StorageHasher</span>,
 {
-    <span class="kw">fn</span> <span class="ident">client_type</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">client_id</span>: <span class="kw-2">&amp;</span><span class="ident">ClientId</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">ClientType</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">client_type</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">client_id</span>: <span class="kw-2">&amp;</span><span class="ident">ClientId</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Ics02Result</span><span class="op">&lt;</span><span class="ident">ClientType</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">client_type_key</span>(<span class="ident">client_id</span>);
         <span class="kw">match</span> <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">read_post</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>) {
-            <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="ident">value</span>)) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ClientType::try_from_slice</span>(<span class="kw-2">&amp;</span><span class="ident">value</span>[..]).<span class="ident">ok</span>(),
-            <span class="comment">// returns None even if DB read fails</span>
-            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">None</span>,
+            <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="ident">value</span>)) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ClientType::try_from_slice</span>(<span class="kw-2">&amp;</span><span class="ident">value</span>[..])
+                .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">Ics02Error::implementation_specific</span>()),
+            <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">Ics02Error::client_not_found</span>(<span class="ident">client_id</span>.<span class="ident">clone</span>())),
+            <span class="prelude-val">Err</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">Ics02Error::implementation_specific</span>()),
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">client_state</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">client_id</span>: <span class="kw-2">&amp;</span><span class="ident">ClientId</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">AnyClientState</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">client_state</span>(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        <span class="ident">client_id</span>: <span class="kw-2">&amp;</span><span class="ident">ClientId</span>,
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Ics02Result</span><span class="op">&lt;</span><span class="ident">AnyClientState</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">client_state_key</span>(<span class="ident">client_id</span>);
         <span class="kw">match</span> <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">read_post</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>) {
-            <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="ident">value</span>)) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">AnyClientState::try_from_slice</span>(<span class="kw-2">&amp;</span><span class="ident">value</span>[..]).<span class="ident">ok</span>(),
-            <span class="comment">// returns None even if DB read fails</span>
-            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">None</span>,
+            <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="ident">value</span>)) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">AnyClientState::try_from_slice</span>(<span class="kw-2">&amp;</span><span class="ident">value</span>[..])
+                .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">Ics02Error::implementation_specific</span>()),
+            <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">Ics02Error::client_not_found</span>(<span class="ident">client_id</span>.<span class="ident">clone</span>())),
+            <span class="prelude-val">Err</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">Ics02Error::implementation_specific</span>()),
         }
     }
 
@@ -725,33 +813,94 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">client_id</span>: <span class="kw-2">&amp;</span><span class="ident">ClientId</span>,
         <span class="ident">height</span>: <span class="ident">Height</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">AnyConsensusState</span><span class="op">&gt;</span> {
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Ics02Result</span><span class="op">&lt;</span><span class="ident">AnyConsensusState</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">consensus_state_key</span>(<span class="ident">client_id</span>, <span class="ident">height</span>);
         <span class="kw">match</span> <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">read_post</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>) {
-            <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="ident">value</span>)) <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="ident">AnyConsensusState::try_from_slice</span>(<span class="kw-2">&amp;</span><span class="ident">value</span>[..]).<span class="ident">ok</span>()
-            }
-            <span class="comment">// returns None even if DB read fails</span>
-            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">None</span>,
+            <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="ident">value</span>)) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">AnyConsensusState::try_from_slice</span>(<span class="kw-2">&amp;</span><span class="ident">value</span>[..])
+                .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">Ics02Error::implementation_specific</span>()),
+            <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">Ics02Error::consensus_state_not_found</span>(
+                <span class="ident">client_id</span>.<span class="ident">clone</span>(),
+                <span class="ident">height</span>,
+            )),
+            <span class="prelude-val">Err</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">Ics02Error::implementation_specific</span>()),
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">client_counter</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u64</span> {
+    <span class="doccomment">/// Search for the lowest consensus state higher than `height`.</span>
+    <span class="kw">fn</span> <span class="ident">next_consensus_state</span>(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        <span class="ident">client_id</span>: <span class="kw-2">&amp;</span><span class="ident">ClientId</span>,
+        <span class="ident">height</span>: <span class="ident">Height</span>,
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Ics02Result</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">AnyConsensusState</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">h</span> <span class="op">=</span> <span class="ident">height</span>.<span class="ident">increment</span>();
+        <span class="kw">loop</span> {
+            <span class="kw">match</span> <span class="self">self</span>.<span class="ident">consensus_state</span>(<span class="ident">client_id</span>, <span class="ident">h</span>) {
+                <span class="prelude-val">Ok</span>(<span class="ident">cs</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="ident">cs</span>)),
+                <span class="prelude-val">Err</span>(<span class="ident">e</span>)
+                    <span class="kw">if</span> <span class="ident">e</span>.<span class="ident">detail</span>()
+                        <span class="op">=</span><span class="op">=</span> <span class="ident">Ics02Error::consensus_state_not_found</span>(
+                            <span class="ident">client_id</span>.<span class="ident">clone</span>(),
+                            <span class="ident">h</span>,
+                        )
+                        .<span class="ident">detail</span>() <span class="op">=</span><span class="op">&gt;</span>
+                {
+                    <span class="ident">h</span> <span class="op">=</span> <span class="ident">h</span>.<span class="ident">increment</span>()
+                }
+                <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Ics02Error::implementation_specific</span>()),
+            }
+        }
+    }
+
+    <span class="doccomment">/// Search for the highest consensus state lower than `height`.</span>
+    <span class="kw">fn</span> <span class="ident">prev_consensus_state</span>(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        <span class="ident">client_id</span>: <span class="kw-2">&amp;</span><span class="ident">ClientId</span>,
+        <span class="ident">height</span>: <span class="ident">Height</span>,
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Ics02Result</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">AnyConsensusState</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">h</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">height</span>.<span class="ident">decrement</span>() {
+            <span class="prelude-val">Ok</span>(<span class="ident">prev</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">prev</span>,
+            <span class="prelude-val">Err</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>),
+        };
+        <span class="kw">loop</span> {
+            <span class="kw">match</span> <span class="self">self</span>.<span class="ident">consensus_state</span>(<span class="ident">client_id</span>, <span class="ident">h</span>) {
+                <span class="prelude-val">Ok</span>(<span class="ident">cs</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="ident">cs</span>)),
+                <span class="prelude-val">Err</span>(<span class="ident">e</span>)
+                    <span class="kw">if</span> <span class="ident">e</span>.<span class="ident">detail</span>()
+                        <span class="op">=</span><span class="op">=</span> <span class="ident">Ics02Error::consensus_state_not_found</span>(
+                            <span class="ident">client_id</span>.<span class="ident">clone</span>(),
+                            <span class="ident">h</span>,
+                        )
+                        .<span class="ident">detail</span>() <span class="op">=</span><span class="op">&gt;</span>
+                {
+                    <span class="ident">h</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">height</span>.<span class="ident">decrement</span>() {
+                        <span class="prelude-val">Ok</span>(<span class="ident">prev</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">prev</span>,
+                        <span class="prelude-val">Err</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>),
+                    };
+                }
+                <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Ics02Error::implementation_specific</span>()),
+            }
+        }
+    }
+
+    <span class="kw">fn</span> <span class="ident">client_counter</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Ics02Result</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">client_counter_key</span>();
         <span class="self">self</span>.<span class="ident">read_counter</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>)
+            .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">Ics02Error::implementation_specific</span>())
     }
 }
 
 <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">IbcDataError</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Error</span> {
     <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">err</span>: <span class="ident">IbcDataError</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
-        <span class="self">Self</span><span class="ident">::InvalidIbcData</span>(<span class="ident">err</span>)
+        <span class="ident"><span class="self">Self</span>::InvalidIbcData</span>(<span class="ident">err</span>)
     }
 }
 
 <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">std::io::Error</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Error</span> {
     <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">err</span>: <span class="ident">std::io::Error</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
-        <span class="self">Self</span><span class="ident">::DecodingTxData</span>(<span class="ident">err</span>)
+        <span class="ident"><span class="self">Self</span>::DecodingTxData</span>(<span class="ident">err</span>)
     }
 }
-</pre></div>
-</section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="anoma" data-search-index-js="../../../../search-index.js" data-search-js="../../../../search.js"></div><script src="../../../../main.js"></script><script src="../../../../source-script.js"></script><script src="../../../../source-files.js"></script></body></html>
+</code></pre></div>
+</section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="anoma" data-search-index-js="../../../../search-index.js" data-search-js="../../../../search.js"></div>
+    <script src="../../../../main.js"></script><script src="../../../../source-script.js"></script><script src="../../../../source-files.js"></script>
+</body></html>

@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Traits, helpers, and type definitions for core I/O functionality."><meta name="keywords" content="rust, rustlang, rust-lang, io"><title>anoma_apps::std::io - Rust</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script id="default-settings"></script><script src="../../../storage.js"></script><script src="../../../crates.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="shortcut icon" href="https://docs.anoma.network/favicon.png"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc mod"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../anoma_apps/index.html'><div class='logo-container'><img src='https://docs.anoma.network/rustdoc-logo.png' alt='logo'></div></a><h2 class="location">Module io</h2><div class="sidebar-elems"><div class="block items"><ul><li><a href="#modules">Modules</a></li><li><a href="#structs">Structs</a></li><li><a href="#enums">Enums</a></li><li><a href="#traits">Traits</a></li><li><a href="#functions">Functions</a></li><li><a href="#types">Type Definitions</a></li></ul></div><div id="sidebar-vars" data-name="io" data-ty="mod" data-relpath="./"></div><script defer src="./sidebar-items.js"></script></div></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img src="../../../brush.svg" width="18" height="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../../settings.html" title="settings"><img src="../../../wheel.svg" width="18" height="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><h1 class="fqn"><span class="in-band">Module <a href="../../index.html">anoma_apps</a>::<wbr><a href="../index.html">std</a>::<wbr><a class="mod" href="#">io</a><button id="copy-path" onclick="copy_path(this)" title="copy path"><img src="../../../clipboard.svg" width="19" height="18" alt="Copy item import" title="Copy item import to clipboard"></button></span><span class="out-of-band"><span class="since" title="Stable since Rust version 1.0.0">1.0.0</span><span id="render-detail"><a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">[<span class="inner">&#x2212;</span>]</a></span><a class="srclink" href="https://doc.rust-lang.org/1.54.0/src/std/lib.rs.html#496" title="goto source code">[src]</a></span></h1><details class="rustdoc-toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><p>Traits, helpers, and type definitions for core I/O functionality.</p>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Traits, helpers, and type definitions for core I&#x2F;O functionality."><meta name="keywords" content="rust, rustlang, rust-lang, io"><title>anoma_apps::std::io - Rust</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script id="default-settings" ></script><script src="../../../storage.js"></script><script src="../../../crates.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="shortcut icon" href="https:&#x2F;&#x2F;docs.anoma.network&#x2F;favicon.png"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc mod"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../anoma_apps/index.html'><div class='logo-container rust-logo'><img src='https:&#x2F;&#x2F;docs.anoma.network&#x2F;rustdoc-logo.png' alt='logo'></div></a><h2 class="location">Module io</h2><div class="sidebar-elems"><div class="block items"><ul><li><a href="#modules">Modules</a></li><li><a href="#structs">Structs</a></li><li><a href="#enums">Enums</a></li><li><a href="#traits">Traits</a></li><li><a href="#functions">Functions</a></li><li><a href="#types">Type Definitions</a></li></ul></div><div id="sidebar-vars" data-name="io" data-ty="mod" data-relpath="./"></div><script defer src="./sidebar-items.js"></script></div></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="18" height="18" alt="Pick another theme!" src="../../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../../settings.html" title="settings"><img width="18" height="18" alt="Change settings" src="../../../wheel.svg"></a></div></form></nav><section id="main" class="content"><h1 class="fqn"><span class="in-band">Module <a href="../../index.html">anoma_apps</a>::<wbr><a href="../index.html">std</a>::<wbr><a class="mod" href="#">io</a><button id="copy-path" onclick="copy_path(this)" title="Copy item path to clipboard"><img src="../../../clipboard.svg" width="19" height="18" alt="Copy item path"></button></span><span class="out-of-band"><span class="since" title="Stable since Rust version 1.0.0">1.0.0</span><span id="render-detail"><a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">[<span class="inner">&#x2212;</span>]</a></span><a class="srclink" href="https://doc.rust-lang.org/1.56.1/src/std/lib.rs.html#496" title="goto source code">[src]</a></span></h1><details class="rustdoc-toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><p>Traits, helpers, and type definitions for core I/O functionality.</p>
 <p>The <code>std::io</code> module contains a number of common things you’ll need
 when doing input and output. The most core part of this module is
 the <a href="trait.Read.html" title="Read"><code>Read</code></a> and <a href="trait.Write.html" title="Write"><code>Write</code></a> traits, which provide the
@@ -11,8 +11,7 @@ this module: <a href="../fs/struct.File.html"><code>File</code></a>s, <a href=".
 example, <a href="trait.Read.html" title="Read"><code>Read</code></a> adds a <a href="trait.Read.html#tymethod.read" title="Read::read"><code>read</code></a> method, which we can use on
 <a href="../fs/struct.File.html"><code>File</code></a>s:</p>
 
-<div class="example-wrap"><pre class="rust rust-example-rendered">
-<span class="kw">use</span> <span class="ident">std::io</span>;
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use</span> <span class="ident">std::io</span>;
 <span class="kw">use</span> <span class="ident">std::io::prelude</span>::<span class="kw-2">*</span>;
 <span class="kw">use</span> <span class="ident">std::fs::File</span>;
 
@@ -25,7 +24,7 @@ example, <a href="trait.Read.html" title="Read"><code>Read</code></a> adds a <a 
 
     <span class="macro">println!</span>(<span class="string">&quot;The bytes: {:?}&quot;</span>, <span class="kw-2">&amp;</span><span class="ident">buffer</span>[..<span class="ident">n</span>]);
     <span class="prelude-val">Ok</span>(())
-}</pre></div>
+}</code></pre></div>
 <p><a href="trait.Read.html" title="Read"><code>Read</code></a> and <a href="trait.Write.html" title="Write"><code>Write</code></a> are so important, implementors of the two traits have a
 nickname: readers and writers. So you’ll sometimes see ‘a reader’ instead
 of ‘a type that implements the <a href="trait.Read.html" title="Read"><code>Read</code></a> trait’. Much easier!</p>
@@ -35,8 +34,7 @@ and <a href="trait.BufRead.html" title="BufRead"><code>BufRead</code></a>. Both 
 how the reading happens. <a href="trait.Seek.html" title="Seek"><code>Seek</code></a> lets you control where the next byte is
 coming from:</p>
 
-<div class="example-wrap"><pre class="rust rust-example-rendered">
-<span class="kw">use</span> <span class="ident">std::io</span>;
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use</span> <span class="ident">std::io</span>;
 <span class="kw">use</span> <span class="ident">std::io::prelude</span>::<span class="kw-2">*</span>;
 <span class="kw">use</span> <span class="ident">std::io::SeekFrom</span>;
 <span class="kw">use</span> <span class="ident">std::fs::File</span>;
@@ -53,7 +51,7 @@ coming from:</p>
 
     <span class="macro">println!</span>(<span class="string">&quot;The bytes: {:?}&quot;</span>, <span class="kw-2">&amp;</span><span class="ident">buffer</span>[..<span class="ident">n</span>]);
     <span class="prelude-val">Ok</span>(())
-}</pre></div>
+}</code></pre></div>
 <p><a href="trait.BufRead.html" title="BufRead"><code>BufRead</code></a> uses an internal buffer to provide a number of other ways to read, but
 to show it off, we’ll need to talk about buffers in general. Keep reading!</p>
 <h2 id="bufreader-and-bufwriter" class="section-header"><a href="#bufreader-and-bufwriter">BufReader and BufWriter</a></h2>
@@ -65,8 +63,7 @@ calls and providing nicer methods for accessing exactly what you want.</p>
 <p>For example, <a href="struct.BufReader.html" title="BufReader"><code>BufReader</code></a> works with the <a href="trait.BufRead.html" title="BufRead"><code>BufRead</code></a> trait to add extra
 methods to any reader:</p>
 
-<div class="example-wrap"><pre class="rust rust-example-rendered">
-<span class="kw">use</span> <span class="ident">std::io</span>;
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use</span> <span class="ident">std::io</span>;
 <span class="kw">use</span> <span class="ident">std::io::prelude</span>::<span class="kw-2">*</span>;
 <span class="kw">use</span> <span class="ident">std::io::BufReader</span>;
 <span class="kw">use</span> <span class="ident">std::fs::File</span>;
@@ -81,12 +78,11 @@ methods to any reader:</p>
 
     <span class="macro">println!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">buffer</span>);
     <span class="prelude-val">Ok</span>(())
-}</pre></div>
+}</code></pre></div>
 <p><a href="struct.BufWriter.html" title="BufWriter"><code>BufWriter</code></a> doesn’t add any new ways of writing; it just buffers every call
 to <a href="trait.Write.html#tymethod.write" title="Write::write"><code>write</code></a>:</p>
 
-<div class="example-wrap"><pre class="rust rust-example-rendered">
-<span class="kw">use</span> <span class="ident">std::io</span>;
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use</span> <span class="ident">std::io</span>;
 <span class="kw">use</span> <span class="ident">std::io::prelude</span>::<span class="kw-2">*</span>;
 <span class="kw">use</span> <span class="ident">std::io::BufWriter</span>;
 <span class="kw">use</span> <span class="ident">std::fs::File</span>;
@@ -102,12 +98,11 @@ to <a href="trait.Write.html#tymethod.write" title="Write::write"><code>write</c
     } <span class="comment">// the buffer is flushed once writer goes out of scope</span>
 
     <span class="prelude-val">Ok</span>(())
-}</pre></div>
+}</code></pre></div>
 <h2 id="standard-input-and-output" class="section-header"><a href="#standard-input-and-output">Standard input and output</a></h2>
 <p>A very common source of input is standard input:</p>
 
-<div class="example-wrap"><pre class="rust rust-example-rendered">
-<span class="kw">use</span> <span class="ident">std::io</span>;
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use</span> <span class="ident">std::io</span>;
 
 <span class="kw">fn</span> <span class="ident">main</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">io::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">input</span> <span class="op">=</span> <span class="ident">String::new</span>();
@@ -116,27 +111,25 @@ to <a href="trait.Write.html#tymethod.write" title="Write::write"><code>write</c
 
     <span class="macro">println!</span>(<span class="string">&quot;You typed: {}&quot;</span>, <span class="ident">input</span>.<span class="ident">trim</span>());
     <span class="prelude-val">Ok</span>(())
-}</pre></div>
+}</code></pre></div>
 <p>Note that you cannot use the <a href="../../book/appendix-02-operators.html"><code>?</code> operator</a> in functions that do not return
 a <a href="../result/enum.Result.html"><code>Result&lt;T, E&gt;</code></a>. Instead, you can call <a href="../result/enum.Result.html#method.unwrap"><code>.unwrap()</code></a>
 or <code>match</code> on the return value to catch any possible errors:</p>
 
-<div class="example-wrap"><pre class="rust rust-example-rendered">
-<span class="kw">use</span> <span class="ident">std::io</span>;
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use</span> <span class="ident">std::io</span>;
 
 <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">input</span> <span class="op">=</span> <span class="ident">String::new</span>();
 
-<span class="ident">io::stdin</span>().<span class="ident">read_line</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">input</span>).<span class="ident">unwrap</span>();</pre></div>
+<span class="ident">io::stdin</span>().<span class="ident">read_line</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">input</span>).<span class="ident">unwrap</span>();</code></pre></div>
 <p>And a very common source of output is standard output:</p>
 
-<div class="example-wrap"><pre class="rust rust-example-rendered">
-<span class="kw">use</span> <span class="ident">std::io</span>;
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use</span> <span class="ident">std::io</span>;
 <span class="kw">use</span> <span class="ident">std::io::prelude</span>::<span class="kw-2">*</span>;
 
 <span class="kw">fn</span> <span class="ident">main</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">io::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
     <span class="ident">io::stdout</span>().<span class="ident">write</span>(<span class="kw-2">&amp;</span>[<span class="number">42</span>])<span class="question-mark">?</span>;
     <span class="prelude-val">Ok</span>(())
-}</pre></div>
+}</code></pre></div>
 <p>Of course, using <a href="fn.stdout.html"><code>io::stdout</code></a> directly is less common than something like
 <a href="../macro.println.html" title="println!"><code>println!</code></a>.</p>
 <h2 id="iterator-types" class="section-header"><a href="#iterator-types">Iterator types</a></h2>
@@ -144,8 +137,7 @@ or <code>match</code> on the return value to catch any possible errors:</p>
 ways of iterating over I/O. For example, <a href="struct.Lines.html" title="Lines"><code>Lines</code></a> is used to split over
 lines:</p>
 
-<div class="example-wrap"><pre class="rust rust-example-rendered">
-<span class="kw">use</span> <span class="ident">std::io</span>;
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use</span> <span class="ident">std::io</span>;
 <span class="kw">use</span> <span class="ident">std::io::prelude</span>::<span class="kw-2">*</span>;
 <span class="kw">use</span> <span class="ident">std::io::BufReader</span>;
 <span class="kw">use</span> <span class="ident">std::fs::File</span>;
@@ -158,27 +150,25 @@ lines:</p>
         <span class="macro">println!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">line</span><span class="question-mark">?</span>);
     }
     <span class="prelude-val">Ok</span>(())
-}</pre></div>
+}</code></pre></div>
 <h2 id="functions" class="section-header"><a href="#functions">Functions</a></h2>
 <p>There are a number of <a href="#functions-1">functions</a> that offer access to various
 features. For example, we can use three of these functions to copy everything
 from standard input to standard output:</p>
 
-<div class="example-wrap"><pre class="rust rust-example-rendered">
-<span class="kw">use</span> <span class="ident">std::io</span>;
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use</span> <span class="ident">std::io</span>;
 
 <span class="kw">fn</span> <span class="ident">main</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">io::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
     <span class="ident">io::copy</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">io::stdin</span>(), <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">io::stdout</span>())<span class="question-mark">?</span>;
     <span class="prelude-val">Ok</span>(())
-}</pre></div>
+}</code></pre></div>
 <h2 id="ioresult" class="section-header"><a href="#ioresult">io::Result</a></h2>
 <p>Last, but certainly not least, is <a href="type.Result.html"><code>io::Result</code></a>. This type is used
 as the return type of many <code>std::io</code> functions that can cause an error, and
 can be returned from your own functions as well. Many of the examples in this
 module use the <a href="../../book/appendix-02-operators.html"><code>?</code> operator</a>:</p>
 
-<div class="example-wrap"><pre class="rust rust-example-rendered">
-<span class="kw">use</span> <span class="ident">std::io</span>;
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use</span> <span class="ident">std::io</span>;
 
 <span class="kw">fn</span> <span class="ident">read_input</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">io::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">input</span> <span class="op">=</span> <span class="ident">String::new</span>();
@@ -188,7 +178,7 @@ module use the <a href="../../book/appendix-02-operators.html"><code>?</code> op
     <span class="macro">println!</span>(<span class="string">&quot;You typed: {}&quot;</span>, <span class="ident">input</span>.<span class="ident">trim</span>());
 
     <span class="prelude-val">Ok</span>(())
-}</pre></div>
+}</code></pre></div>
 <p>The return type of <code>read_input()</code>, <a href="type.Result.html"><code>io::Result&lt;()&gt;</code></a>, is a very
 common type for functions which don’t have a ‘real’ return value, but do want to
 return errors if they happen. In this case, the only purpose of this function is
@@ -201,56 +191,66 @@ any possibly unclear semantics. Note, however, that this is informative, not a b
 contract. The implementation of many of these functions are subject to change over
 time and may call fewer or more syscalls/library functions.</p>
 </div></details><h2 id="modules" class="section-header"><a href="#modules">Modules</a></h2>
-<table><tr class="module-item"><td><a class="mod" href="prelude/index.html" title="anoma_apps::std::io::prelude mod">prelude</a></td><td class="docblock-short"><p>The I/O Prelude.</p>
-</td></tr></table><h2 id="structs" class="section-header"><a href="#structs">Structs</a></h2>
-<table><tr class="unstable module-item"><td><a class="struct" href="struct.Initializer.html" title="anoma_apps::std::io::Initializer struct">Initializer</a></td><td class="docblock-short"><span class="stab unstable" title="">Experimental</span><p>A type used to conditionally initialize buffers passed to <code>Read</code> methods.</p>
-</td></tr><tr class="module-item"><td><a class="struct" href="struct.BufReader.html" title="anoma_apps::std::io::BufReader struct">BufReader</a></td><td class="docblock-short"><p>The <code>BufReader&lt;R&gt;</code> struct adds buffering to any reader.</p>
-</td></tr><tr class="module-item"><td><a class="struct" href="struct.BufWriter.html" title="anoma_apps::std::io::BufWriter struct">BufWriter</a></td><td class="docblock-short"><p>Wraps a writer and buffers its output.</p>
-</td></tr><tr class="module-item"><td><a class="struct" href="struct.Bytes.html" title="anoma_apps::std::io::Bytes struct">Bytes</a></td><td class="docblock-short"><p>An iterator over <code>u8</code> values of a reader.</p>
-</td></tr><tr class="module-item"><td><a class="struct" href="struct.Chain.html" title="anoma_apps::std::io::Chain struct">Chain</a></td><td class="docblock-short"><p>Adaptor to chain together two readers.</p>
-</td></tr><tr class="module-item"><td><a class="struct" href="struct.Cursor.html" title="anoma_apps::std::io::Cursor struct">Cursor</a></td><td class="docblock-short"><p>A <code>Cursor</code> wraps an in-memory buffer and provides it with a
+<div class="item-table"><div class="item-left module-item"><a class="mod" href="prelude/index.html" title="anoma_apps::std::io::prelude mod">prelude</a></div><div class="item-right docblock-short"><p>The I/O Prelude.</p>
+</div></div><h2 id="structs" class="section-header"><a href="#structs">Structs</a></h2>
+<div class="item-table"><div class="item-left unstable module-item"><a class="struct" href="struct.Initializer.html" title="anoma_apps::std::io::Initializer struct">Initializer</a><span class="stab unstable" title="">Experimental</span></div><div class="item-right docblock-short"><p>A type used to conditionally initialize buffers passed to <code>Read</code> methods.</p>
+</div><div class="item-left module-item"><a class="struct" href="struct.BufReader.html" title="anoma_apps::std::io::BufReader struct">BufReader</a></div><div class="item-right docblock-short"><p>The <code>BufReader&lt;R&gt;</code> struct adds buffering to any reader.</p>
+</div><div class="item-left module-item"><a class="struct" href="struct.BufWriter.html" title="anoma_apps::std::io::BufWriter struct">BufWriter</a></div><div class="item-right docblock-short"><p>Wraps a writer and buffers its output.</p>
+</div><div class="item-left module-item"><a class="struct" href="struct.Bytes.html" title="anoma_apps::std::io::Bytes struct">Bytes</a></div><div class="item-right docblock-short"><p>An iterator over <code>u8</code> values of a reader.</p>
+</div><div class="item-left module-item"><a class="struct" href="struct.Chain.html" title="anoma_apps::std::io::Chain struct">Chain</a></div><div class="item-right docblock-short"><p>Adapter to chain together two readers.</p>
+</div><div class="item-left module-item"><a class="struct" href="struct.Cursor.html" title="anoma_apps::std::io::Cursor struct">Cursor</a></div><div class="item-right docblock-short"><p>A <code>Cursor</code> wraps an in-memory buffer and provides it with a
 <a href="trait.Seek.html" title="Seek"><code>Seek</code></a> implementation.</p>
-</td></tr><tr class="module-item"><td><a class="struct" href="struct.Empty.html" title="anoma_apps::std::io::Empty struct">Empty</a></td><td class="docblock-short"><p>A reader which is always at EOF.</p>
-</td></tr><tr class="module-item"><td><a class="struct" href="struct.Error.html" title="anoma_apps::std::io::Error struct">Error</a></td><td class="docblock-short"><p>The error type for I/O operations of the <a href="trait.Read.html"><code>Read</code></a>, <a href="trait.Write.html"><code>Write</code></a>, <a href="trait.Seek.html"><code>Seek</code></a>, and
+</div><div class="item-left module-item"><a class="struct" href="struct.Empty.html" title="anoma_apps::std::io::Empty struct">Empty</a></div><div class="item-right docblock-short"><p>A reader which is always at EOF.</p>
+</div><div class="item-left module-item"><a class="struct" href="struct.Error.html" title="anoma_apps::std::io::Error struct">Error</a></div><div class="item-right docblock-short"><p>The error type for I/O operations of the <a href="trait.Read.html"><code>Read</code></a>, <a href="trait.Write.html"><code>Write</code></a>, <a href="trait.Seek.html"><code>Seek</code></a>, and
 associated traits.</p>
-</td></tr><tr class="module-item"><td><a class="struct" href="struct.IntoInnerError.html" title="anoma_apps::std::io::IntoInnerError struct">IntoInnerError</a></td><td class="docblock-short"><p>An error returned by <a href="struct.BufWriter.html#method.into_inner" title="BufWriter::into_inner"><code>BufWriter::into_inner</code></a> which combines an error that
+</div><div class="item-left module-item"><a class="struct" href="struct.IntoInnerError.html" title="anoma_apps::std::io::IntoInnerError struct">IntoInnerError</a></div><div class="item-right docblock-short"><p>An error returned by <a href="struct.BufWriter.html#method.into_inner" title="BufWriter::into_inner"><code>BufWriter::into_inner</code></a> which combines an error that
 happened while writing out the buffer, and the buffered writer object
 which may be used to recover from the condition.</p>
-</td></tr><tr class="module-item"><td><a class="struct" href="struct.IoSlice.html" title="anoma_apps::std::io::IoSlice struct">IoSlice</a></td><td class="docblock-short"><p>A buffer type used with <code>Write::write_vectored</code>.</p>
-</td></tr><tr class="module-item"><td><a class="struct" href="struct.IoSliceMut.html" title="anoma_apps::std::io::IoSliceMut struct">IoSliceMut</a></td><td class="docblock-short"><p>A buffer type used with <code>Read::read_vectored</code>.</p>
-</td></tr><tr class="module-item"><td><a class="struct" href="struct.LineWriter.html" title="anoma_apps::std::io::LineWriter struct">LineWriter</a></td><td class="docblock-short"><p>Wraps a writer and buffers output to it, flushing whenever a newline
+</div><div class="item-left module-item"><a class="struct" href="struct.IoSlice.html" title="anoma_apps::std::io::IoSlice struct">IoSlice</a></div><div class="item-right docblock-short"><p>A buffer type used with <code>Write::write_vectored</code>.</p>
+</div><div class="item-left module-item"><a class="struct" href="struct.IoSliceMut.html" title="anoma_apps::std::io::IoSliceMut struct">IoSliceMut</a></div><div class="item-right docblock-short"><p>A buffer type used with <code>Read::read_vectored</code>.</p>
+</div><div class="item-left module-item"><a class="struct" href="struct.LineWriter.html" title="anoma_apps::std::io::LineWriter struct">LineWriter</a></div><div class="item-right docblock-short"><p>Wraps a writer and buffers output to it, flushing whenever a newline
 (<code>0x0a</code>, <code>'\n'</code>) is detected.</p>
-</td></tr><tr class="module-item"><td><a class="struct" href="struct.Lines.html" title="anoma_apps::std::io::Lines struct">Lines</a></td><td class="docblock-short"><p>An iterator over the lines of an instance of <code>BufRead</code>.</p>
-</td></tr><tr class="module-item"><td><a class="struct" href="struct.Repeat.html" title="anoma_apps::std::io::Repeat struct">Repeat</a></td><td class="docblock-short"><p>A reader which yields one byte over and over and over and over and over and…</p>
-</td></tr><tr class="module-item"><td><a class="struct" href="struct.Sink.html" title="anoma_apps::std::io::Sink struct">Sink</a></td><td class="docblock-short"><p>A writer which will move data into the void.</p>
-</td></tr><tr class="module-item"><td><a class="struct" href="struct.Split.html" title="anoma_apps::std::io::Split struct">Split</a></td><td class="docblock-short"><p>An iterator over the contents of an instance of <code>BufRead</code> split on a
+</div><div class="item-left module-item"><a class="struct" href="struct.Lines.html" title="anoma_apps::std::io::Lines struct">Lines</a></div><div class="item-right docblock-short"><p>An iterator over the lines of an instance of <code>BufRead</code>.</p>
+</div><div class="item-left module-item"><a class="struct" href="struct.Repeat.html" title="anoma_apps::std::io::Repeat struct">Repeat</a></div><div class="item-right docblock-short"><p>A reader which yields one byte over and over and over and over and over and…</p>
+</div><div class="item-left module-item"><a class="struct" href="struct.Sink.html" title="anoma_apps::std::io::Sink struct">Sink</a></div><div class="item-right docblock-short"><p>A writer which will move data into the void.</p>
+</div><div class="item-left module-item"><a class="struct" href="struct.Split.html" title="anoma_apps::std::io::Split struct">Split</a></div><div class="item-right docblock-short"><p>An iterator over the contents of an instance of <code>BufRead</code> split on a
 particular byte.</p>
-</td></tr><tr class="module-item"><td><a class="struct" href="struct.Stderr.html" title="anoma_apps::std::io::Stderr struct">Stderr</a></td><td class="docblock-short"><p>A handle to the standard error stream of a process.</p>
-</td></tr><tr class="module-item"><td><a class="struct" href="struct.StderrLock.html" title="anoma_apps::std::io::StderrLock struct">StderrLock</a></td><td class="docblock-short"><p>A locked reference to the <a href="struct.Stderr.html" title="Stderr"><code>Stderr</code></a> handle.</p>
-</td></tr><tr class="module-item"><td><a class="struct" href="struct.Stdin.html" title="anoma_apps::std::io::Stdin struct">Stdin</a></td><td class="docblock-short"><p>A handle to the standard input stream of a process.</p>
-</td></tr><tr class="module-item"><td><a class="struct" href="struct.StdinLock.html" title="anoma_apps::std::io::StdinLock struct">StdinLock</a></td><td class="docblock-short"><p>A locked reference to the <a href="struct.Stdin.html" title="Stdin"><code>Stdin</code></a> handle.</p>
-</td></tr><tr class="module-item"><td><a class="struct" href="struct.Stdout.html" title="anoma_apps::std::io::Stdout struct">Stdout</a></td><td class="docblock-short"><p>A handle to the global standard output stream of the current process.</p>
-</td></tr><tr class="module-item"><td><a class="struct" href="struct.StdoutLock.html" title="anoma_apps::std::io::StdoutLock struct">StdoutLock</a></td><td class="docblock-short"><p>A locked reference to the <a href="struct.Stdout.html" title="Stdout"><code>Stdout</code></a> handle.</p>
-</td></tr><tr class="module-item"><td><a class="struct" href="struct.Take.html" title="anoma_apps::std::io::Take struct">Take</a></td><td class="docblock-short"><p>Reader adaptor which limits the bytes read from an underlying reader.</p>
-</td></tr></table><h2 id="enums" class="section-header"><a href="#enums">Enums</a></h2>
-<table><tr class="module-item"><td><a class="enum" href="enum.ErrorKind.html" title="anoma_apps::std::io::ErrorKind enum">ErrorKind</a></td><td class="docblock-short"><p>A list specifying general categories of I/O error.</p>
-</td></tr><tr class="module-item"><td><a class="enum" href="enum.SeekFrom.html" title="anoma_apps::std::io::SeekFrom enum">SeekFrom</a></td><td class="docblock-short"><p>Enumeration of possible methods to seek within an I/O object.</p>
-</td></tr></table><h2 id="traits" class="section-header"><a href="#traits">Traits</a></h2>
-<table><tr class="module-item"><td><a class="trait" href="trait.BufRead.html" title="anoma_apps::std::io::BufRead trait">BufRead</a></td><td class="docblock-short"><p>A <code>BufRead</code> is a type of <code>Read</code>er which has an internal buffer, allowing it
+</div><div class="item-left module-item"><a class="struct" href="struct.Stderr.html" title="anoma_apps::std::io::Stderr struct">Stderr</a></div><div class="item-right docblock-short"><p>A handle to the standard error stream of a process.</p>
+</div><div class="item-left module-item"><a class="struct" href="struct.StderrLock.html" title="anoma_apps::std::io::StderrLock struct">StderrLock</a></div><div class="item-right docblock-short"><p>A locked reference to the <a href="struct.Stderr.html" title="Stderr"><code>Stderr</code></a> handle.</p>
+</div><div class="item-left module-item"><a class="struct" href="struct.Stdin.html" title="anoma_apps::std::io::Stdin struct">Stdin</a></div><div class="item-right docblock-short"><p>A handle to the standard input stream of a process.</p>
+</div><div class="item-left module-item"><a class="struct" href="struct.StdinLock.html" title="anoma_apps::std::io::StdinLock struct">StdinLock</a></div><div class="item-right docblock-short"><p>A locked reference to the <a href="struct.Stdin.html" title="Stdin"><code>Stdin</code></a> handle.</p>
+</div><div class="item-left module-item"><a class="struct" href="struct.Stdout.html" title="anoma_apps::std::io::Stdout struct">Stdout</a></div><div class="item-right docblock-short"><p>A handle to the global standard output stream of the current process.</p>
+</div><div class="item-left module-item"><a class="struct" href="struct.StdoutLock.html" title="anoma_apps::std::io::StdoutLock struct">StdoutLock</a></div><div class="item-right docblock-short"><p>A locked reference to the <a href="struct.Stdout.html" title="Stdout"><code>Stdout</code></a> handle.</p>
+</div><div class="item-left module-item"><a class="struct" href="struct.Take.html" title="anoma_apps::std::io::Take struct">Take</a></div><div class="item-right docblock-short"><p>Reader adapter which limits the bytes read from an underlying reader.</p>
+</div><div class="item-left module-item"><a class="struct" href="struct.WriterPanicked.html" title="anoma_apps::std::io::WriterPanicked struct">WriterPanicked</a></div><div class="item-right docblock-short"><p>Error returned for the buffered data from <code>BufWriter::into_parts</code>, when the underlying
+writer has previously panicked.  Contains the (possibly partly written) buffered data.</p>
+</div></div><h2 id="enums" class="section-header"><a href="#enums">Enums</a></h2>
+<div class="item-table"><div class="item-left module-item"><a class="enum" href="enum.ErrorKind.html" title="anoma_apps::std::io::ErrorKind enum">ErrorKind</a></div><div class="item-right docblock-short"><p>A list specifying general categories of I/O error.</p>
+</div><div class="item-left module-item"><a class="enum" href="enum.SeekFrom.html" title="anoma_apps::std::io::SeekFrom enum">SeekFrom</a></div><div class="item-right docblock-short"><p>Enumeration of possible methods to seek within an I/O object.</p>
+</div></div><h2 id="traits" class="section-header"><a href="#traits">Traits</a></h2>
+<div class="item-table"><div class="item-left module-item"><a class="trait" href="trait.BufRead.html" title="anoma_apps::std::io::BufRead trait">BufRead</a></div><div class="item-right docblock-short"><p>A <code>BufRead</code> is a type of <code>Read</code>er which has an internal buffer, allowing it
 to perform extra ways of reading.</p>
-</td></tr><tr class="module-item"><td><a class="trait" href="trait.Read.html" title="anoma_apps::std::io::Read trait">Read</a></td><td class="docblock-short"><p>The <code>Read</code> trait allows for reading bytes from a source.</p>
-</td></tr><tr class="module-item"><td><a class="trait" href="trait.Seek.html" title="anoma_apps::std::io::Seek trait">Seek</a></td><td class="docblock-short"><p>The <code>Seek</code> trait provides a cursor which can be moved within a stream of
+</div><div class="item-left module-item"><a class="trait" href="trait.Read.html" title="anoma_apps::std::io::Read trait">Read</a></div><div class="item-right docblock-short"><p>The <code>Read</code> trait allows for reading bytes from a source.</p>
+</div><div class="item-left module-item"><a class="trait" href="trait.Seek.html" title="anoma_apps::std::io::Seek trait">Seek</a></div><div class="item-right docblock-short"><p>The <code>Seek</code> trait provides a cursor which can be moved within a stream of
 bytes.</p>
-</td></tr><tr class="module-item"><td><a class="trait" href="trait.Write.html" title="anoma_apps::std::io::Write trait">Write</a></td><td class="docblock-short"><p>A trait for objects which are byte-oriented sinks.</p>
-</td></tr></table><h2 id="functions-1" class="section-header"><a href="#functions-1">Functions</a></h2>
-<table><tr class="unstable module-item"><td><a class="fn" href="fn.read_to_string.html" title="anoma_apps::std::io::read_to_string fn">read_to_string</a></td><td class="docblock-short"><span class="stab unstable" title="">Experimental</span><p>Read all bytes from a <a href="trait.Read.html" title="Read">reader</a> into a new <a href="../string/struct.String.html" title="String"><code>String</code></a>.</p>
-</td></tr><tr class="module-item"><td><a class="fn" href="fn.copy.html" title="anoma_apps::std::io::copy fn">copy</a></td><td class="docblock-short"><p>Copies the entire contents of a reader into a writer.</p>
-</td></tr><tr class="module-item"><td><a class="fn" href="fn.empty.html" title="anoma_apps::std::io::empty fn">empty</a></td><td class="docblock-short"><p>Constructs a new handle to an empty reader.</p>
-</td></tr><tr class="module-item"><td><a class="fn" href="fn.repeat.html" title="anoma_apps::std::io::repeat fn">repeat</a></td><td class="docblock-short"><p>Creates an instance of a reader that infinitely repeats one byte.</p>
-</td></tr><tr class="module-item"><td><a class="fn" href="fn.sink.html" title="anoma_apps::std::io::sink fn">sink</a></td><td class="docblock-short"><p>Creates an instance of a writer which will successfully consume all data.</p>
-</td></tr><tr class="module-item"><td><a class="fn" href="fn.stderr.html" title="anoma_apps::std::io::stderr fn">stderr</a></td><td class="docblock-short"><p>Constructs a new handle to the standard error of the current process.</p>
-</td></tr><tr class="module-item"><td><a class="fn" href="fn.stdin.html" title="anoma_apps::std::io::stdin fn">stdin</a></td><td class="docblock-short"><p>Constructs a new handle to the standard input of the current process.</p>
-</td></tr><tr class="module-item"><td><a class="fn" href="fn.stdout.html" title="anoma_apps::std::io::stdout fn">stdout</a></td><td class="docblock-short"><p>Constructs a new handle to the standard output of the current process.</p>
-</td></tr></table><h2 id="types" class="section-header"><a href="#types">Type Definitions</a></h2>
-<table><tr class="module-item"><td><a class="type" href="type.Result.html" title="anoma_apps::std::io::Result type">Result</a></td><td class="docblock-short"><p>A specialized <a href="../result/enum.Result.html"><code>Result</code></a> type for I/O operations.</p>
-</td></tr></table></section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="anoma_apps" data-search-index-js="../../../search-index.js" data-search-js="../../../search.js"></div><script src="../../../main.js"></script></body></html>
+</div><div class="item-left module-item"><a class="trait" href="trait.Write.html" title="anoma_apps::std::io::Write trait">Write</a></div><div class="item-right docblock-short"><p>A trait for objects which are byte-oriented sinks.</p>
+</div></div><h2 id="functions-1" class="section-header"><a href="#functions-1">Functions</a></h2>
+<div class="item-table"><div class="item-left unstable module-item"><a class="fn" href="fn.read_to_string.html" title="anoma_apps::std::io::read_to_string fn">read_to_string</a><span class="stab unstable" title="">Experimental</span></div><div class="item-right docblock-short"><p>Read all bytes from a <a href="trait.Read.html" title="Read">reader</a> into a new <a href="../string/struct.String.html" title="String"><code>String</code></a>.</p>
+</div><div class="item-left unstable module-item"><a class="fn" href="fn.stderr_locked.html" title="anoma_apps::std::io::stderr_locked fn">stderr_locked</a><span class="stab unstable" title="">Experimental</span></div><div class="item-right docblock-short"><p>Constructs a new locked handle to the standard error of the current
+process.</p>
+</div><div class="item-left unstable module-item"><a class="fn" href="fn.stdin_locked.html" title="anoma_apps::std::io::stdin_locked fn">stdin_locked</a><span class="stab unstable" title="">Experimental</span></div><div class="item-right docblock-short"><p>Constructs a new locked handle to the standard input of the current
+process.</p>
+</div><div class="item-left unstable module-item"><a class="fn" href="fn.stdout_locked.html" title="anoma_apps::std::io::stdout_locked fn">stdout_locked</a><span class="stab unstable" title="">Experimental</span></div><div class="item-right docblock-short"><p>Constructs a new locked handle to the standard output of the current
+process.</p>
+</div><div class="item-left module-item"><a class="fn" href="fn.copy.html" title="anoma_apps::std::io::copy fn">copy</a></div><div class="item-right docblock-short"><p>Copies the entire contents of a reader into a writer.</p>
+</div><div class="item-left module-item"><a class="fn" href="fn.empty.html" title="anoma_apps::std::io::empty fn">empty</a></div><div class="item-right docblock-short"><p>Constructs a new handle to an empty reader.</p>
+</div><div class="item-left module-item"><a class="fn" href="fn.repeat.html" title="anoma_apps::std::io::repeat fn">repeat</a></div><div class="item-right docblock-short"><p>Creates an instance of a reader that infinitely repeats one byte.</p>
+</div><div class="item-left module-item"><a class="fn" href="fn.sink.html" title="anoma_apps::std::io::sink fn">sink</a></div><div class="item-right docblock-short"><p>Creates an instance of a writer which will successfully consume all data.</p>
+</div><div class="item-left module-item"><a class="fn" href="fn.stderr.html" title="anoma_apps::std::io::stderr fn">stderr</a></div><div class="item-right docblock-short"><p>Constructs a new handle to the standard error of the current process.</p>
+</div><div class="item-left module-item"><a class="fn" href="fn.stdin.html" title="anoma_apps::std::io::stdin fn">stdin</a></div><div class="item-right docblock-short"><p>Constructs a new handle to the standard input of the current process.</p>
+</div><div class="item-left module-item"><a class="fn" href="fn.stdout.html" title="anoma_apps::std::io::stdout fn">stdout</a></div><div class="item-right docblock-short"><p>Constructs a new handle to the standard output of the current process.</p>
+</div></div><h2 id="types" class="section-header"><a href="#types">Type Definitions</a></h2>
+<div class="item-table"><div class="item-left module-item"><a class="type" href="type.Result.html" title="anoma_apps::std::io::Result type">Result</a></div><div class="item-right docblock-short"><p>A specialized <a href="../result/enum.Result.html"><code>Result</code></a> type for I/O operations.</p>
+</div></div></section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="anoma_apps" data-search-index-js="../../../search-index.js" data-search-js="../../../search.js"></div>
+    <script src="../../../main.js"></script>
+</body></html>

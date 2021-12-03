@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Types that pin data to its location in memory."><meta name="keywords" content="rust, rustlang, rust-lang, pin"><title>anoma_apps::std::pin - Rust</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script id="default-settings"></script><script src="../../../storage.js"></script><script src="../../../crates.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="shortcut icon" href="https://docs.anoma.network/favicon.png"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc mod"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../anoma_apps/index.html'><div class='logo-container'><img src='https://docs.anoma.network/rustdoc-logo.png' alt='logo'></div></a><h2 class="location">Module pin</h2><div class="sidebar-elems"><div class="block items"><ul><li><a href="#structs">Structs</a></li></ul></div><div id="sidebar-vars" data-name="pin" data-ty="mod" data-relpath="./"></div><script defer src="./sidebar-items.js"></script></div></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img src="../../../brush.svg" width="18" height="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../../settings.html" title="settings"><img src="../../../wheel.svg" width="18" height="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><h1 class="fqn"><span class="in-band">Module <a href="../../index.html">anoma_apps</a>::<wbr><a href="../index.html">std</a>::<wbr><a class="mod" href="#">pin</a><button id="copy-path" onclick="copy_path(this)" title="copy path"><img src="../../../clipboard.svg" width="19" height="18" alt="Copy item import" title="Copy item import to clipboard"></button></span><span class="out-of-band"><span class="since" title="Stable since Rust version 1.33.0">1.33.0</span><span id="render-detail"><a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">[<span class="inner">&#x2212;</span>]</a></span><a class="srclink" href="https://doc.rust-lang.org/1.54.0/src/core/lib.rs.html#271" title="goto source code">[src]</a></span></h1><details class="rustdoc-toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><p>Types that pin data to its location in memory.</p>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Types that pin data to its location in memory."><meta name="keywords" content="rust, rustlang, rust-lang, pin"><title>anoma_apps::std::pin - Rust</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script id="default-settings" ></script><script src="../../../storage.js"></script><script src="../../../crates.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="shortcut icon" href="https:&#x2F;&#x2F;docs.anoma.network&#x2F;favicon.png"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc mod"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../anoma_apps/index.html'><div class='logo-container rust-logo'><img src='https:&#x2F;&#x2F;docs.anoma.network&#x2F;rustdoc-logo.png' alt='logo'></div></a><h2 class="location">Module pin</h2><div class="sidebar-elems"><div class="block items"><ul><li><a href="#structs">Structs</a></li></ul></div><div id="sidebar-vars" data-name="pin" data-ty="mod" data-relpath="./"></div><script defer src="./sidebar-items.js"></script></div></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="18" height="18" alt="Pick another theme!" src="../../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../../settings.html" title="settings"><img width="18" height="18" alt="Change settings" src="../../../wheel.svg"></a></div></form></nav><section id="main" class="content"><h1 class="fqn"><span class="in-band">Module <a href="../../index.html">anoma_apps</a>::<wbr><a href="../index.html">std</a>::<wbr><a class="mod" href="#">pin</a><button id="copy-path" onclick="copy_path(this)" title="Copy item path to clipboard"><img src="../../../clipboard.svg" width="19" height="18" alt="Copy item path"></button></span><span class="out-of-band"><span class="since" title="Stable since Rust version 1.33.0">1.33.0</span><span id="render-detail"><a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">[<span class="inner">&#x2212;</span>]</a></span><a class="srclink" href="https://doc.rust-lang.org/1.56.1/src/core/lib.rs.html#278" title="goto source code">[src]</a></span></h1><details class="rustdoc-toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><p>Types that pin data to its location in memory.</p>
 <p>It is sometimes useful to have objects that are guaranteed not to move,
 in the sense that their placement in memory does not change, and can thus be relied upon.
 A prime example of such a scenario would be building self-referential structs,
@@ -21,14 +21,13 @@ However, <code><a href="struct.Pin.html" title="Pin">Pin</a>&lt;P&gt;</code> doe
 or <code><a href="../../std/primitive.reference.html" title="mutable reference">&amp;mut</a> T</code> to pinned data, which implies that you cannot use operations such
 as <a href="../mem/fn.swap.html" title="mem::swap"><code>mem::swap</code></a>:</p>
 
-<div class="example-wrap"><pre class="rust rust-example-rendered">
-<span class="kw">use</span> <span class="ident">std::pin::Pin</span>;
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use</span> <span class="ident">std::pin::Pin</span>;
 <span class="kw">fn</span> <span class="ident">swap_pins</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="ident">x</span>: <span class="ident">Pin</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">T</span><span class="op">&gt;</span>, <span class="ident">y</span>: <span class="ident">Pin</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">T</span><span class="op">&gt;</span>) {
     <span class="comment">// `mem::swap` needs `&amp;mut T`, but we cannot get it.</span>
     <span class="comment">// We are stuck, we cannot swap the contents of these references.</span>
     <span class="comment">// We could use `Pin::get_unchecked_mut`, but that is unsafe for a reason:</span>
     <span class="comment">// we are not allowed to use it for moving things out of the `Pin`.</span>
-}</pre></div>
+}</code></pre></div>
 <p>It is worth reiterating that <code><a href="struct.Pin.html" title="Pin">Pin</a>&lt;P&gt;</code> does <em>not</em> change the fact that a Rust
 compiler considers all types movable. <a href="../mem/fn.swap.html" title="mem::swap"><code>mem::swap</code></a> remains callable for any <code>T</code>. Instead,
 <code><a href="struct.Pin.html" title="Pin">Pin</a>&lt;P&gt;</code> prevents certain <em>values</em> (pointed to by pointers wrapped in
@@ -45,7 +44,7 @@ return a pointer to pinned data when they are called on a pinned pointer.</p>
 <h1 id="unpin" class="section-header"><a href="#unpin"><code>Unpin</code></a></h1>
 <p>Many types are always freely movable, even when pinned, because they do not
 rely on having a stable address. This includes all the basic types (like
-<a href="https://doc.rust-lang.org/1.54.0/std/primitive.bool.html" title="bool"><code>bool</code></a>, <a href="https://doc.rust-lang.org/1.54.0/std/primitive.i32.html" title="i32"><code>i32</code></a>, and references) as well as types consisting solely of these
+<a href="https://doc.rust-lang.org/1.56.1/std/primitive.bool.html" title="bool"><code>bool</code></a>, <a href="https://doc.rust-lang.org/1.56.1/std/primitive.i32.html" title="i32"><code>i32</code></a>, and references) as well as types consisting solely of these
 types. Types that do not care about pinning implement the <a href="../marker/trait.Unpin.html" title="Unpin"><code>Unpin</code></a>
 auto-trait, which cancels the effect of <code><a href="struct.Pin.html" title="Pin">Pin</a>&lt;P&gt;</code>. For <code>T: <a href="../marker/trait.Unpin.html" title="Unpin">Unpin</a></code>,
 <code><a href="struct.Pin.html" title="Pin">Pin</a>&lt;<a href="../../std/boxed/struct.Box.html" title="Box">Box</a>&lt;T&gt;&gt;</code> and <code><a href="../../std/boxed/struct.Box.html" title="Box">Box</a>&lt;T&gt;</code> function identically, as do
@@ -59,8 +58,7 @@ whether or not <code><a href="../../std/boxed/struct.Box.html" title="Box">Box</
 associated with <code><a href="struct.Pin.html" title="Pin">Pin</a>&lt;P&gt;</code>, we discuss some examples for how it might be used.
 Feel free to <a href="#drop-guarantee">skip to where the theoretical discussion continues</a>.</p>
 
-<div class="example-wrap"><pre class="rust rust-example-rendered">
-<span class="kw">use</span> <span class="ident">std::pin::Pin</span>;
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use</span> <span class="ident">std::pin::Pin</span>;
 <span class="kw">use</span> <span class="ident">std::marker::PhantomPinned</span>;
 <span class="kw">use</span> <span class="ident">std::ptr::NonNull</span>;
 
@@ -108,7 +106,7 @@ Feel free to <a href="#drop-guarantee">skip to where the theoretical discussion 
 
 <span class="comment">// Since our type doesn&#39;t implement Unpin, this will fail to compile:</span>
 <span class="comment">// let mut new_unmoved = Unmovable::new(&quot;world&quot;.to_string());</span>
-<span class="comment">// std::mem::swap(&amp;mut *still_unmoved, &amp;mut *new_unmoved);</span></pre></div>
+<span class="comment">// std::mem::swap(&amp;mut *still_unmoved, &amp;mut *new_unmoved);</span></code></pre></div>
 <h1 id="example-intrusive-doubly-linked-list" class="section-header"><a href="#example-intrusive-doubly-linked-list">Example: intrusive doubly-linked list</a></h1>
 <p>In an intrusive doubly-linked list, the collection does not actually allocate
 the memory for the elements itself. Allocation is controlled by the clients,
@@ -136,9 +134,9 @@ calling the destructor first. None of this is allowed for pinned data without ca
 <p>This is exactly the kind of guarantee that the intrusive linked list from the previous
 section needs to function correctly.</p>
 <p>Notice that this guarantee does <em>not</em> mean that memory does not leak! It is still
-completely okay not ever to call <a href="../ops/trait.Drop.html#tymethod.drop" title="Drop::drop"><code>drop</code></a> on a pinned element (e.g., you can still
+completely okay to not ever call <a href="../ops/trait.Drop.html#tymethod.drop" title="Drop::drop"><code>drop</code></a> on a pinned element (e.g., you can still
 call <a href="../mem/fn.forget.html" title="mem::forget"><code>mem::forget</code></a> on a <code><a href="struct.Pin.html" title="Pin">Pin</a>&lt;<a href="../../std/boxed/struct.Box.html" title="Box">Box</a>&lt;T&gt;&gt;</code>). In the example of the doubly-linked
-list, that element would just stay in the list. However you may not free or reuse the storage
+list, that element would just stay in the list. However you must not free or reuse the storage
 <em>without calling <a href="../ops/trait.Drop.html#tymethod.drop" title="Drop::drop"><code>drop</code></a></em>.</p>
 <h1 id="drop-implementation" class="section-header"><a href="#drop-implementation"><code>Drop</code> implementation</a></h1>
 <p>If your type uses pinning (such as the two examples above), you have to be careful
@@ -153,8 +151,7 @@ use of pinning in your type (for example by implementing some operation on
 you must treat <a href="../ops/trait.Drop.html" title="Drop"><code>Drop</code></a> as implicitly taking <code><a href="struct.Pin.html" title="Pin">Pin</a>&lt;<a href="../../std/primitive.reference.html" title="mutable reference">&amp;mut</a> Self&gt;</code>.</p>
 <p>For example, you could implement <a href="../ops/trait.Drop.html" title="Drop"><code>Drop</code></a> as follows:</p>
 
-<div class="example-wrap"><pre class="rust rust-example-rendered">
-<span class="kw">impl</span> <span class="ident">Drop</span> <span class="kw">for</span> <span class="ident">Type</span> {
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">impl</span> <span class="ident">Drop</span> <span class="kw">for</span> <span class="ident">Type</span> {
     <span class="kw">fn</span> <span class="ident">drop</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) {
         <span class="comment">// `new_unchecked` is okay because we know this value is never used</span>
         <span class="comment">// again after being dropped.</span>
@@ -163,7 +160,7 @@ you must treat <a href="../ops/trait.Drop.html" title="Drop"><code>Drop</code></
             <span class="comment">// Actual drop code goes here.</span>
         }
     }
-}</pre></div>
+}</code></pre></div>
 <p>The function <code>inner_drop</code> has the type that <a href="../ops/trait.Drop.html#tymethod.drop" title="Drop::drop"><code>drop</code></a> <em>should</em> have, so this makes sure that
 you do not accidentally use <code>self</code>/<code>this</code> in a way that is in conflict with pinning.</p>
 <p>Moreover, if your type is <code>#[repr(packed)]</code>, the compiler will automatically
@@ -200,13 +197,12 @@ all you have to ensure is that you never create a pinned reference to that field
 <p>Fields without structural pinning may have a projection method that turns
 <code><a href="struct.Pin.html" title="Pin">Pin</a>&lt;<a href="../../std/primitive.reference.html" title="mutable reference">&amp;mut</a> Struct&gt;</code> into <code><a href="../../std/primitive.reference.html" title="mutable reference">&amp;mut</a> Field</code>:</p>
 
-<div class="example-wrap"><pre class="rust rust-example-rendered">
-<span class="kw">impl</span> <span class="ident">Struct</span> {
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">impl</span> <span class="ident">Struct</span> {
     <span class="kw">fn</span> <span class="ident">pin_get_field</span>(<span class="self">self</span>: <span class="ident">Pin</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">Self</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Field</span> {
         <span class="comment">// This is okay because `field` is never considered pinned.</span>
         <span class="kw">unsafe</span> { <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">get_unchecked_mut</span>().<span class="ident">field</span> }
     }
-}</pre></div>
+}</code></pre></div>
 <p>You may also <code>impl <a href="../marker/trait.Unpin.html" title="Unpin">Unpin</a> for Struct</code> <em>even if</em> the type of <code>field</code>
 is not <a href="../marker/trait.Unpin.html" title="Unpin"><code>Unpin</code></a>. What that type thinks about pinning is not relevant
 when no <code><a href="struct.Pin.html" title="Pin">Pin</a>&lt;<a href="../../std/primitive.reference.html" title="mutable reference">&amp;mut</a> Field&gt;</code> is ever created.</p>
@@ -216,13 +212,12 @@ meaning that if the struct is pinned then so is the field.</p>
 <p>This allows writing a projection that creates a <code><a href="struct.Pin.html" title="Pin">Pin</a>&lt;<a href="../../std/primitive.reference.html" title="mutable reference">&amp;mut</a> Field&gt;</code>, thus
 witnessing that the field is pinned:</p>
 
-<div class="example-wrap"><pre class="rust rust-example-rendered">
-<span class="kw">impl</span> <span class="ident">Struct</span> {
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">impl</span> <span class="ident">Struct</span> {
     <span class="kw">fn</span> <span class="ident">pin_get_field</span>(<span class="self">self</span>: <span class="ident">Pin</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">Self</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Pin</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Field</span><span class="op">&gt;</span> {
         <span class="comment">// This is okay because `field` is pinned when `self` is.</span>
         <span class="kw">unsafe</span> { <span class="self">self</span>.<span class="ident">map_unchecked_mut</span>(<span class="op">|</span><span class="ident">s</span><span class="op">|</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">s</span>.<span class="ident">field</span>) }
     }
-}</pre></div>
+}</code></pre></div>
 <p>However, structural pinning comes with a few extra requirements:</p>
 <ol>
 <li>
@@ -266,13 +261,12 @@ imagine if <code><a href="../cell/struct.RefCell.html" title="cell::RefCell">Ref
 <code>fn get_pin_mut(self: <a href="struct.Pin.html" title="Pin">Pin</a>&lt;<a href="../../std/primitive.reference.html" title="mutable reference">&amp;mut</a> Self&gt;) -&gt; <a href="struct.Pin.html" title="Pin">Pin</a>&lt;<a href="../../std/primitive.reference.html" title="mutable reference">&amp;mut</a> T&gt;</code>.
 Then we could do the following:</p>
 
-<div class='information'><div class='tooltip compile_fail'>ⓘ</div></div><div class="example-wrap"><pre class="rust rust-example-rendered compile_fail">
-<span class="kw">fn</span> <span class="ident">exploit_ref_cell</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="ident">rc</span>: <span class="ident">Pin</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">RefCell</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span>) {
+<div class='information'><div class='tooltip compile_fail'>ⓘ</div></div><div class="example-wrap"><pre class="rust rust-example-rendered compile_fail"><code><span class="kw">fn</span> <span class="ident">exploit_ref_cell</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="ident">rc</span>: <span class="ident">Pin</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">RefCell</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span>) {
     { <span class="kw">let</span> <span class="ident">p</span> <span class="op">=</span> <span class="ident">rc</span>.<span class="ident">as_mut</span>().<span class="ident">get_pin_mut</span>(); } <span class="comment">// Here we get pinned access to the `T`.</span>
     <span class="kw">let</span> <span class="ident">rc_shr</span>: <span class="kw-2">&amp;</span><span class="ident">RefCell</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">rc</span>.<span class="ident">into_ref</span>().<span class="ident">get_ref</span>();
     <span class="kw">let</span> <span class="ident">b</span> <span class="op">=</span> <span class="ident">rc_shr</span>.<span class="ident">borrow_mut</span>();
     <span class="kw">let</span> <span class="ident">content</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="kw-2">*</span><span class="ident">b</span>; <span class="comment">// And here we have `&amp;mut T` to the same data.</span>
-}</pre></div>
+}</code></pre></div>
 <p>This is catastrophic, it means we can first pin the content of the
 <code><a href="../cell/struct.RefCell.html" title="cell::RefCell">RefCell</a>&lt;T&gt;</code> (using <code><a href="../cell/struct.RefCell.html" title="cell::RefCell">RefCell</a>::get_pin_mut</code>) and then move that
 content using the mutable reference we got later.</p>
@@ -306,5 +300,7 @@ you can make those fields not structural and hence freely access them with a
 mutable reference even when you just have <code><a href="struct.Pin.html" title="Pin">Pin</a>&lt;<a href="../../std/primitive.reference.html" title="mutable reference">&amp;mut</a> Self&gt;</code> (such as in your own
 <a href="../future/trait.Future.html#tymethod.poll" title="future::Future::poll"><code>poll</code></a> implementation).</p>
 </div></details><h2 id="structs" class="section-header"><a href="#structs">Structs</a></h2>
-<table><tr class="module-item"><td><a class="struct" href="struct.Pin.html" title="anoma_apps::std::pin::Pin struct">Pin</a></td><td class="docblock-short"><p>A pinned pointer.</p>
-</td></tr></table></section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="anoma_apps" data-search-index-js="../../../search-index.js" data-search-js="../../../search.js"></div><script src="../../../main.js"></script></body></html>
+<div class="item-table"><div class="item-left module-item"><a class="struct" href="struct.Pin.html" title="anoma_apps::std::pin::Pin struct">Pin</a></div><div class="item-right docblock-short"><p>A pinned pointer.</p>
+</div></div></section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="anoma_apps" data-search-index-js="../../../search-index.js" data-search-js="../../../search.js"></div>
+    <script src="../../../main.js"></script>
+</body></html>

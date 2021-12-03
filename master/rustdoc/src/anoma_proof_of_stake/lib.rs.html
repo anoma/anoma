@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `proof_of_stake/src/lib.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>lib.rs - source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script id="default-settings"></script><script src="../../storage.js"></script><script src="../../crates.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="shortcut icon" href="https://docs.anoma.network/favicon.png"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../anoma_proof_of_stake/index.html'><div class='logo-container'><img src='https://docs.anoma.network/rustdoc-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img src="../../brush.svg" width="18" height="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../settings.html" title="settings"><img src="../../wheel.svg" width="18" height="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">   1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `proof_of_stake&#x2F;src&#x2F;lib.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>lib.rs - source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script id="default-settings" ></script><script src="../../storage.js"></script><script src="../../crates.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="shortcut icon" href="https:&#x2F;&#x2F;docs.anoma.network&#x2F;favicon.png"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../anoma_proof_of_stake/index.html'><div class='logo-container rust-logo'><img src='https:&#x2F;&#x2F;docs.anoma.network&#x2F;rustdoc-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="18" height="18" alt="Pick another theme!" src="../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../settings.html" title="settings"><img width="18" height="18" alt="Change settings" src="../../wheel.svg"></a></div></form></nav><section id="main" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">   1</span>
 <span id="2">   2</span>
 <span id="3">   3</span>
 <span id="4">   4</span>
@@ -1928,8 +1928,7 @@
 <span id="1928">1928</span>
 <span id="1929">1929</span>
 <span id="1930">1930</span>
-</pre><pre class="rust">
-<span class="doccomment">//! Proof of Stake system.</span>
+</pre><pre class="rust"><code><span class="doccomment">//! Proof of Stake system.</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//! TODO: We might need to storage both active and total validator set voting</span>
 <span class="doccomment">//! power. For consensus, we only consider active validator set voting power,</span>
@@ -1970,8 +1969,8 @@
     <span class="ident">ValidatorTotalDeltas</span>, <span class="ident">ValidatorVotingPowers</span>, <span class="ident">VotingPower</span>, <span class="ident">VotingPowerDelta</span>,
 };
 
-<span class="kw">use</span> <span class="kw">crate</span><span class="ident">::btree_set::BTreeSetShims</span>;
-<span class="kw">use</span> <span class="kw">crate</span><span class="ident">::types</span>::{<span class="ident">Bond</span>, <span class="ident">BondId</span>, <span class="ident">WeightedValidator</span>};
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::btree_set::BTreeSetShims</span>;
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::types</span>::{<span class="ident">Bond</span>, <span class="ident">BondId</span>, <span class="ident">WeightedValidator</span>};
 
 <span class="doccomment">/// Read-only part of the PoS system</span>
 <span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">PosReadOnly</span> {
@@ -1992,13 +1991,13 @@
         <span class="op">+</span> <span class="ident">Default</span>
         <span class="op">+</span> <span class="ident">Clone</span>
         <span class="op">+</span> <span class="ident">Copy</span>
-        <span class="op">+</span> <span class="ident">Add</span><span class="op">&lt;</span><span class="ident">Output</span> <span class="op">=</span> <span class="self">Self</span><span class="ident">::TokenAmount</span><span class="op">&gt;</span>
+        <span class="op">+</span> <span class="ident">Add</span><span class="op">&lt;</span><span class="ident">Output</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::TokenAmount</span><span class="op">&gt;</span>
         <span class="op">+</span> <span class="ident">AddAssign</span>
         <span class="op">+</span> <span class="ident">Sub</span>
         <span class="op">+</span> <span class="ident">PartialOrd</span>
         <span class="op">+</span> <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span>
         <span class="op">+</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span>
-        <span class="op">+</span> <span class="ident">Into</span><span class="op">&lt;</span><span class="self">Self</span><span class="ident">::TokenChange</span><span class="op">&gt;</span>
+        <span class="op">+</span> <span class="ident">Into</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::TokenChange</span><span class="op">&gt;</span>
         <span class="op">+</span> <span class="ident">SubAssign</span>
         <span class="op">+</span> <span class="ident">BorshDeserialize</span>
         <span class="op">+</span> <span class="ident">BorshSerialize</span>;
@@ -2008,66 +2007,66 @@
         <span class="op">+</span> <span class="ident">Default</span>
         <span class="op">+</span> <span class="ident">Clone</span>
         <span class="op">+</span> <span class="ident">Copy</span>
-        <span class="op">+</span> <span class="ident">Add</span><span class="op">&lt;</span><span class="ident">Output</span> <span class="op">=</span> <span class="self">Self</span><span class="ident">::TokenChange</span><span class="op">&gt;</span>
-        <span class="op">+</span> <span class="ident">Sub</span><span class="op">&lt;</span><span class="ident">Output</span> <span class="op">=</span> <span class="self">Self</span><span class="ident">::TokenChange</span><span class="op">&gt;</span>
-        <span class="op">+</span> <span class="ident">From</span><span class="op">&lt;</span><span class="self">Self</span><span class="ident">::TokenAmount</span><span class="op">&gt;</span>
+        <span class="op">+</span> <span class="ident">Add</span><span class="op">&lt;</span><span class="ident">Output</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::TokenChange</span><span class="op">&gt;</span>
+        <span class="op">+</span> <span class="ident">Sub</span><span class="op">&lt;</span><span class="ident">Output</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::TokenChange</span><span class="op">&gt;</span>
+        <span class="op">+</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::TokenAmount</span><span class="op">&gt;</span>
         <span class="op">+</span> <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">i128</span><span class="op">&gt;</span>
-        <span class="op">+</span> <span class="ident">Neg</span><span class="op">&lt;</span><span class="ident">Output</span> <span class="op">=</span> <span class="self">Self</span><span class="ident">::TokenChange</span><span class="op">&gt;</span>
+        <span class="op">+</span> <span class="ident">Neg</span><span class="op">&lt;</span><span class="ident">Output</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::TokenChange</span><span class="op">&gt;</span>
         <span class="op">+</span> <span class="ident">BorshDeserialize</span>
         <span class="op">+</span> <span class="ident">BorshSerialize</span>;
     <span class="doccomment">/// Cryptographic public key type</span>
     <span class="kw">type</span> <span class="ident">PublicKey</span>: <span class="ident">Debug</span> <span class="op">+</span> <span class="ident">Clone</span> <span class="op">+</span> <span class="ident">BorshDeserialize</span> <span class="op">+</span> <span class="ident">BorshSerialize</span>;
 
     <span class="doccomment">/// Address of the PoS account</span>
-    <span class="kw">const</span> <span class="ident">POS_ADDRESS</span>: <span class="self">Self</span><span class="ident">::Address</span>;
+    <span class="kw">const</span> <span class="ident">POS_ADDRESS</span>: <span class="ident"><span class="self">Self</span>::Address</span>;
     <span class="doccomment">/// Address of the staking token</span>
     <span class="doccomment">/// TODO: this should be `const`, but in the ledger `address::xan` is not a</span>
     <span class="doccomment">/// `const fn`</span>
-    <span class="kw">fn</span> <span class="ident">staking_token_address</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span><span class="ident">::Address</span>;
+    <span class="kw">fn</span> <span class="ident">staking_token_address</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident"><span class="self">Self</span>::Address</span>;
 
     <span class="doccomment">/// Read PoS parameters.</span>
     <span class="kw">fn</span> <span class="ident">read_pos_params</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">PosParams</span>;
     <span class="doccomment">/// Read PoS validator&#39;s staking reward address.</span>
     <span class="kw">fn</span> <span class="ident">read_validator_staking_reward_address</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="self">Self</span><span class="ident">::Address</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="self">Self</span><span class="ident">::Address</span><span class="op">&gt;</span>;
+        <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::Address</span>,
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Address</span><span class="op">&gt;</span>;
     <span class="doccomment">/// Read PoS validator&#39;s consensus key (used for signing block votes).</span>
     <span class="kw">fn</span> <span class="ident">read_validator_consensus_key</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="self">Self</span><span class="ident">::Address</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">ValidatorConsensusKeys</span><span class="op">&lt;</span><span class="self">Self</span><span class="ident">::PublicKey</span><span class="op">&gt;</span><span class="op">&gt;</span>;
+        <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::Address</span>,
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">ValidatorConsensusKeys</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::PublicKey</span><span class="op">&gt;</span><span class="op">&gt;</span>;
     <span class="doccomment">/// Read PoS validator&#39;s state.</span>
     <span class="kw">fn</span> <span class="ident">read_validator_state</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="self">Self</span><span class="ident">::Address</span>,
+        <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::Address</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">ValidatorStates</span><span class="op">&gt;</span>;
     <span class="doccomment">/// Read PoS validator&#39;s total deltas of their bonds (validator self-bonds</span>
     <span class="doccomment">/// and delegations).</span>
     <span class="kw">fn</span> <span class="ident">read_validator_total_deltas</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="self">Self</span><span class="ident">::Address</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">ValidatorTotalDeltas</span><span class="op">&lt;</span><span class="self">Self</span><span class="ident">::TokenChange</span><span class="op">&gt;</span><span class="op">&gt;</span>;
+        <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::Address</span>,
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">ValidatorTotalDeltas</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::TokenChange</span><span class="op">&gt;</span><span class="op">&gt;</span>;
     <span class="doccomment">/// Read PoS validator&#39;s voting power.</span>
     <span class="kw">fn</span> <span class="ident">read_validator_voting_power</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="self">Self</span><span class="ident">::Address</span>,
+        <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::Address</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">ValidatorVotingPowers</span><span class="op">&gt;</span>;
     <span class="doccomment">/// Read PoS slashes applied to a validator.</span>
-    <span class="kw">fn</span> <span class="ident">read_validator_slashes</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="self">Self</span><span class="ident">::Address</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Slash</span><span class="op">&gt;</span>;
+    <span class="kw">fn</span> <span class="ident">read_validator_slashes</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::Address</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Slash</span><span class="op">&gt;</span>;
     <span class="doccomment">/// Read PoS bond (validator self-bond or a delegation).</span>
     <span class="kw">fn</span> <span class="ident">read_bond</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">BondId</span><span class="op">&lt;</span><span class="self">Self</span><span class="ident">::Address</span><span class="op">&gt;</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Bonds</span><span class="op">&lt;</span><span class="self">Self</span><span class="ident">::TokenAmount</span><span class="op">&gt;</span><span class="op">&gt;</span>;
+        <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">BondId</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Address</span><span class="op">&gt;</span>,
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Bonds</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::TokenAmount</span><span class="op">&gt;</span><span class="op">&gt;</span>;
     <span class="doccomment">/// Read PoS unbond (unbonded tokens from validator self-bond or a</span>
     <span class="doccomment">/// delegation).</span>
     <span class="kw">fn</span> <span class="ident">read_unbond</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">BondId</span><span class="op">&lt;</span><span class="self">Self</span><span class="ident">::Address</span><span class="op">&gt;</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Unbonds</span><span class="op">&lt;</span><span class="self">Self</span><span class="ident">::TokenAmount</span><span class="op">&gt;</span><span class="op">&gt;</span>;
+        <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">BondId</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Address</span><span class="op">&gt;</span>,
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Unbonds</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::TokenAmount</span><span class="op">&gt;</span><span class="op">&gt;</span>;
     <span class="doccomment">/// Read PoS validator set (active and inactive).</span>
-    <span class="kw">fn</span> <span class="ident">read_validator_set</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">ValidatorSets</span><span class="op">&lt;</span><span class="self">Self</span><span class="ident">::Address</span><span class="op">&gt;</span>;
+    <span class="kw">fn</span> <span class="ident">read_validator_set</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">ValidatorSets</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Address</span><span class="op">&gt;</span>;
     <span class="doccomment">/// Read PoS total voting power of all validators (active and inactive).</span>
     <span class="kw">fn</span> <span class="ident">read_total_voting_power</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">TotalVotingPowers</span>;
 }
@@ -2078,80 +2077,80 @@
     <span class="doccomment">/// Write PoS parameters.</span>
     <span class="kw">fn</span> <span class="ident">write_pos_params</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">params</span>: <span class="kw-2">&amp;</span><span class="ident">PosParams</span>);
     <span class="doccomment">/// Write PoS validator&#39;s raw hash its address.</span>
-    <span class="kw">fn</span> <span class="ident">write_validator_address_raw_hash</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">address</span>: <span class="kw-2">&amp;</span><span class="self">Self</span><span class="ident">::Address</span>);
+    <span class="kw">fn</span> <span class="ident">write_validator_address_raw_hash</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">address</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::Address</span>);
     <span class="doccomment">/// Write PoS validator&#39;s staking reward address, into which staking rewards</span>
     <span class="doccomment">/// will be credited.</span>
     <span class="kw">fn</span> <span class="ident">write_validator_staking_reward_address</span>(
         <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
-        <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="self">Self</span><span class="ident">::Address</span>,
-        <span class="ident">value</span>: <span class="self">Self</span><span class="ident">::Address</span>,
+        <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::Address</span>,
+        <span class="ident">value</span>: <span class="ident"><span class="self">Self</span>::Address</span>,
     );
     <span class="doccomment">/// Write PoS validator&#39;s consensus key (used for signing block votes).</span>
     <span class="kw">fn</span> <span class="ident">write_validator_consensus_key</span>(
         <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
-        <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="self">Self</span><span class="ident">::Address</span>,
-        <span class="ident">value</span>: <span class="ident">ValidatorConsensusKeys</span><span class="op">&lt;</span><span class="self">Self</span><span class="ident">::PublicKey</span><span class="op">&gt;</span>,
+        <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::Address</span>,
+        <span class="ident">value</span>: <span class="ident">ValidatorConsensusKeys</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::PublicKey</span><span class="op">&gt;</span>,
     );
     <span class="doccomment">/// Write PoS validator&#39;s state.</span>
     <span class="kw">fn</span> <span class="ident">write_validator_state</span>(
         <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
-        <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="self">Self</span><span class="ident">::Address</span>,
+        <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::Address</span>,
         <span class="ident">value</span>: <span class="ident">ValidatorStates</span>,
     );
     <span class="doccomment">/// Write PoS validator&#39;s total deltas of their bonds (validator self-bonds</span>
     <span class="doccomment">/// and delegations).</span>
     <span class="kw">fn</span> <span class="ident">write_validator_total_deltas</span>(
         <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
-        <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="self">Self</span><span class="ident">::Address</span>,
-        <span class="ident">value</span>: <span class="ident">ValidatorTotalDeltas</span><span class="op">&lt;</span><span class="self">Self</span><span class="ident">::TokenChange</span><span class="op">&gt;</span>,
+        <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::Address</span>,
+        <span class="ident">value</span>: <span class="ident">ValidatorTotalDeltas</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::TokenChange</span><span class="op">&gt;</span>,
     );
     <span class="doccomment">/// Write PoS validator&#39;s voting power.</span>
     <span class="kw">fn</span> <span class="ident">write_validator_voting_power</span>(
         <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
-        <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="self">Self</span><span class="ident">::Address</span>,
+        <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::Address</span>,
         <span class="ident">value</span>: <span class="ident">ValidatorVotingPowers</span>,
     );
     <span class="doccomment">/// Write PoS bond (validator self-bond or a delegation).</span>
     <span class="kw">fn</span> <span class="ident">write_bond</span>(
         <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
-        <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">BondId</span><span class="op">&lt;</span><span class="self">Self</span><span class="ident">::Address</span><span class="op">&gt;</span>,
-        <span class="ident">value</span>: <span class="ident">Bonds</span><span class="op">&lt;</span><span class="self">Self</span><span class="ident">::TokenAmount</span><span class="op">&gt;</span>,
+        <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">BondId</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Address</span><span class="op">&gt;</span>,
+        <span class="ident">value</span>: <span class="ident">Bonds</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::TokenAmount</span><span class="op">&gt;</span>,
     );
     <span class="doccomment">/// Write PoS unbond (unbonded tokens from validator self-bond or a</span>
     <span class="doccomment">/// delegation).</span>
     <span class="kw">fn</span> <span class="ident">write_unbond</span>(
         <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
-        <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">BondId</span><span class="op">&lt;</span><span class="self">Self</span><span class="ident">::Address</span><span class="op">&gt;</span>,
-        <span class="ident">value</span>: <span class="ident">Unbonds</span><span class="op">&lt;</span><span class="self">Self</span><span class="ident">::TokenAmount</span><span class="op">&gt;</span>,
+        <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">BondId</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Address</span><span class="op">&gt;</span>,
+        <span class="ident">value</span>: <span class="ident">Unbonds</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::TokenAmount</span><span class="op">&gt;</span>,
     );
     <span class="doccomment">/// Write PoS validator set (active and inactive).</span>
-    <span class="kw">fn</span> <span class="ident">write_validator_set</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">value</span>: <span class="ident">ValidatorSets</span><span class="op">&lt;</span><span class="self">Self</span><span class="ident">::Address</span><span class="op">&gt;</span>);
+    <span class="kw">fn</span> <span class="ident">write_validator_set</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">value</span>: <span class="ident">ValidatorSets</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Address</span><span class="op">&gt;</span>);
     <span class="doccomment">/// Write PoS total voting power of all validators (active and inactive).</span>
     <span class="kw">fn</span> <span class="ident">write_total_voting_power</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">value</span>: <span class="ident">TotalVotingPowers</span>);
 
     <span class="doccomment">/// Delete an emptied PoS bond (validator self-bond or a delegation).</span>
-    <span class="kw">fn</span> <span class="ident">delete_bond</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">BondId</span><span class="op">&lt;</span><span class="self">Self</span><span class="ident">::Address</span><span class="op">&gt;</span>);
+    <span class="kw">fn</span> <span class="ident">delete_bond</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">BondId</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Address</span><span class="op">&gt;</span>);
     <span class="doccomment">/// Delete an emptied PoS unbond (unbonded tokens from validator self-bond</span>
     <span class="doccomment">/// or a delegation).</span>
-    <span class="kw">fn</span> <span class="ident">delete_unbond</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">BondId</span><span class="op">&lt;</span><span class="self">Self</span><span class="ident">::Address</span><span class="op">&gt;</span>);
+    <span class="kw">fn</span> <span class="ident">delete_unbond</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">BondId</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Address</span><span class="op">&gt;</span>);
 
     <span class="doccomment">/// Transfer tokens from the `src` to the `dest`.</span>
     <span class="kw">fn</span> <span class="ident">transfer</span>(
         <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
-        <span class="ident">token</span>: <span class="kw-2">&amp;</span><span class="self">Self</span><span class="ident">::Address</span>,
-        <span class="ident">amount</span>: <span class="self">Self</span><span class="ident">::TokenAmount</span>,
-        <span class="ident">src</span>: <span class="kw-2">&amp;</span><span class="self">Self</span><span class="ident">::Address</span>,
-        <span class="ident">dest</span>: <span class="kw-2">&amp;</span><span class="self">Self</span><span class="ident">::Address</span>,
+        <span class="ident">token</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::Address</span>,
+        <span class="ident">amount</span>: <span class="ident"><span class="self">Self</span>::TokenAmount</span>,
+        <span class="ident">src</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::Address</span>,
+        <span class="ident">dest</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::Address</span>,
     );
 
     <span class="doccomment">/// Attempt to update the given account to become a validator.</span>
     <span class="kw">fn</span> <span class="ident">become_validator</span>(
         <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
-        <span class="ident">address</span>: <span class="kw-2">&amp;</span><span class="self">Self</span><span class="ident">::Address</span>,
-        <span class="ident">staking_reward_address</span>: <span class="kw-2">&amp;</span><span class="self">Self</span><span class="ident">::Address</span>,
-        <span class="ident">consensus_key</span>: <span class="kw-2">&amp;</span><span class="self">Self</span><span class="ident">::PublicKey</span>,
+        <span class="ident">address</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::Address</span>,
+        <span class="ident">staking_reward_address</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::Address</span>,
+        <span class="ident">consensus_key</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::PublicKey</span>,
         <span class="ident">current_epoch</span>: <span class="kw">impl</span> <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">Epoch</span><span class="op">&gt;</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">BecomeValidatorError</span><span class="op">&lt;</span><span class="self">Self</span><span class="ident">::Address</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">BecomeValidatorError</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Address</span><span class="op">&gt;</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">current_epoch</span> <span class="op">=</span> <span class="ident">current_epoch</span>.<span class="ident">into</span>();
         <span class="kw">let</span> <span class="ident">params</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">read_pos_params</span>();
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">validator_set</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">read_validator_set</span>();
@@ -2194,7 +2193,7 @@
 
     <span class="doccomment">/// Check if the given address is a validator by checking that it has some</span>
     <span class="doccomment">/// state.</span>
-    <span class="kw">fn</span> <span class="ident">is_validator</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">address</span>: <span class="kw-2">&amp;</span><span class="self">Self</span><span class="ident">::Address</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
+    <span class="kw">fn</span> <span class="ident">is_validator</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">address</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::Address</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
         <span class="self">self</span>.<span class="ident">read_validator_state</span>(<span class="ident">address</span>).<span class="ident">is_some</span>()
     }
 
@@ -2203,11 +2202,11 @@
     <span class="doccomment">/// `validator`.</span>
     <span class="kw">fn</span> <span class="ident">bond_tokens</span>(
         <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
-        <span class="ident">source</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="self">Self</span><span class="ident">::Address</span><span class="op">&gt;</span>,
-        <span class="ident">validator</span>: <span class="kw-2">&amp;</span><span class="self">Self</span><span class="ident">::Address</span>,
-        <span class="ident">amount</span>: <span class="self">Self</span><span class="ident">::TokenAmount</span>,
+        <span class="ident">source</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::Address</span><span class="op">&gt;</span>,
+        <span class="ident">validator</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::Address</span>,
+        <span class="ident">amount</span>: <span class="ident"><span class="self">Self</span>::TokenAmount</span>,
         <span class="ident">current_epoch</span>: <span class="kw">impl</span> <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">Epoch</span><span class="op">&gt;</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">BondError</span><span class="op">&lt;</span><span class="self">Self</span><span class="ident">::Address</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">BondError</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Address</span><span class="op">&gt;</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">current_epoch</span> <span class="op">=</span> <span class="ident">current_epoch</span>.<span class="ident">into</span>();
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">source</span>) <span class="op">=</span> <span class="ident">source</span> {
             <span class="kw">if</span> <span class="ident">source</span> <span class="op">!</span><span class="op">=</span> <span class="ident">validator</span> <span class="op">&amp;&amp;</span> <span class="self">self</span>.<span class="ident">is_validator</span>(<span class="ident">source</span>) {
@@ -2256,10 +2255,10 @@
 
         <span class="comment">// Transfer the bonded tokens from the source to PoS</span>
         <span class="self">self</span>.<span class="ident">transfer</span>(
-            <span class="kw-2">&amp;</span><span class="self">Self</span><span class="ident">::staking_token_address</span>(),
+            <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::staking_token_address</span>(),
             <span class="ident">amount</span>,
             <span class="ident">source</span>,
-            <span class="kw-2">&amp;</span><span class="self">Self</span><span class="ident">::POS_ADDRESS</span>,
+            <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::POS_ADDRESS</span>,
         );
 
         <span class="prelude-val">Ok</span>(())
@@ -2270,11 +2269,11 @@
     <span class="doccomment">/// the `source` to the `validator`.</span>
     <span class="kw">fn</span> <span class="ident">unbond_tokens</span>(
         <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
-        <span class="ident">source</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="self">Self</span><span class="ident">::Address</span><span class="op">&gt;</span>,
-        <span class="ident">validator</span>: <span class="kw-2">&amp;</span><span class="self">Self</span><span class="ident">::Address</span>,
-        <span class="ident">amount</span>: <span class="self">Self</span><span class="ident">::TokenAmount</span>,
+        <span class="ident">source</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::Address</span><span class="op">&gt;</span>,
+        <span class="ident">validator</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::Address</span>,
+        <span class="ident">amount</span>: <span class="ident"><span class="self">Self</span>::TokenAmount</span>,
         <span class="ident">current_epoch</span>: <span class="kw">impl</span> <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">Epoch</span><span class="op">&gt;</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">UnbondError</span><span class="op">&lt;</span><span class="self">Self</span><span class="ident">::Address</span>, <span class="self">Self</span><span class="ident">::TokenAmount</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">UnbondError</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Address</span>, <span class="ident"><span class="self">Self</span>::TokenAmount</span><span class="op">&gt;</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">current_epoch</span> <span class="op">=</span> <span class="ident">current_epoch</span>.<span class="ident">into</span>();
         <span class="kw">let</span> <span class="ident">params</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">read_pos_params</span>();
         <span class="kw">let</span> <span class="ident">source</span> <span class="op">=</span> <span class="ident">source</span>.<span class="ident">unwrap_or</span>(<span class="ident">validator</span>);
@@ -2339,10 +2338,10 @@
     <span class="doccomment">/// tokens delegated to the `validator` to the `source`.</span>
     <span class="kw">fn</span> <span class="ident">withdraw_tokens</span>(
         <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
-        <span class="ident">source</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="self">Self</span><span class="ident">::Address</span><span class="op">&gt;</span>,
-        <span class="ident">validator</span>: <span class="kw-2">&amp;</span><span class="self">Self</span><span class="ident">::Address</span>,
+        <span class="ident">source</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::Address</span><span class="op">&gt;</span>,
+        <span class="ident">validator</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::Address</span>,
         <span class="ident">current_epoch</span>: <span class="kw">impl</span> <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">Epoch</span><span class="op">&gt;</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="ident">::TokenAmount</span>, <span class="ident">WithdrawError</span><span class="op">&lt;</span><span class="self">Self</span><span class="ident">::Address</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::TokenAmount</span>, <span class="ident">WithdrawError</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Address</span><span class="op">&gt;</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">current_epoch</span> <span class="op">=</span> <span class="ident">current_epoch</span>.<span class="ident">into</span>();
         <span class="kw">let</span> <span class="ident">params</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">read_pos_params</span>();
         <span class="kw">let</span> <span class="ident">source</span> <span class="op">=</span> <span class="ident">source</span>.<span class="ident">unwrap_or</span>(<span class="ident">validator</span>);
@@ -2383,9 +2382,9 @@
 
         <span class="comment">// Transfer the tokens from PoS back to the source</span>
         <span class="self">self</span>.<span class="ident">transfer</span>(
-            <span class="kw-2">&amp;</span><span class="self">Self</span><span class="ident">::staking_token_address</span>(),
+            <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::staking_token_address</span>(),
             <span class="ident">withdrawn</span>,
-            <span class="kw-2">&amp;</span><span class="self">Self</span><span class="ident">::POS_ADDRESS</span>,
+            <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::POS_ADDRESS</span>,
             <span class="ident">source</span>,
         );
 
@@ -2415,13 +2414,13 @@
         <span class="op">+</span> <span class="ident">Default</span>
         <span class="op">+</span> <span class="ident">Clone</span>
         <span class="op">+</span> <span class="ident">Copy</span>
-        <span class="op">+</span> <span class="ident">Add</span><span class="op">&lt;</span><span class="ident">Output</span> <span class="op">=</span> <span class="self">Self</span><span class="ident">::TokenAmount</span><span class="op">&gt;</span>
+        <span class="op">+</span> <span class="ident">Add</span><span class="op">&lt;</span><span class="ident">Output</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::TokenAmount</span><span class="op">&gt;</span>
         <span class="op">+</span> <span class="ident">AddAssign</span>
         <span class="op">+</span> <span class="ident">Sub</span>
         <span class="op">+</span> <span class="ident">PartialOrd</span>
         <span class="op">+</span> <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span>
         <span class="op">+</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span>
-        <span class="op">+</span> <span class="ident">Into</span><span class="op">&lt;</span><span class="self">Self</span><span class="ident">::TokenChange</span><span class="op">&gt;</span>
+        <span class="op">+</span> <span class="ident">Into</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::TokenChange</span><span class="op">&gt;</span>
         <span class="op">+</span> <span class="ident">SubAssign</span>
         <span class="op">+</span> <span class="ident">BorshDeserialize</span>
         <span class="op">+</span> <span class="ident">BorshSerialize</span>;
@@ -2433,25 +2432,25 @@
         <span class="op">+</span> <span class="ident">Clone</span>
         <span class="op">+</span> <span class="ident">Copy</span>
         <span class="op">+</span> <span class="ident">PartialOrd</span>
-        <span class="op">+</span> <span class="ident">Add</span><span class="op">&lt;</span><span class="ident">Output</span> <span class="op">=</span> <span class="self">Self</span><span class="ident">::TokenChange</span><span class="op">&gt;</span>
-        <span class="op">+</span> <span class="ident">Sub</span><span class="op">&lt;</span><span class="ident">Output</span> <span class="op">=</span> <span class="self">Self</span><span class="ident">::TokenChange</span><span class="op">&gt;</span>
-        <span class="op">+</span> <span class="ident">From</span><span class="op">&lt;</span><span class="self">Self</span><span class="ident">::TokenAmount</span><span class="op">&gt;</span>
+        <span class="op">+</span> <span class="ident">Add</span><span class="op">&lt;</span><span class="ident">Output</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::TokenChange</span><span class="op">&gt;</span>
+        <span class="op">+</span> <span class="ident">Sub</span><span class="op">&lt;</span><span class="ident">Output</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::TokenChange</span><span class="op">&gt;</span>
+        <span class="op">+</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::TokenAmount</span><span class="op">&gt;</span>
         <span class="op">+</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">i128</span><span class="op">&gt;</span>
         <span class="op">+</span> <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">i128</span><span class="op">&gt;</span>
-        <span class="op">+</span> <span class="ident">Neg</span><span class="op">&lt;</span><span class="ident">Output</span> <span class="op">=</span> <span class="self">Self</span><span class="ident">::TokenChange</span><span class="op">&gt;</span>
+        <span class="op">+</span> <span class="ident">Neg</span><span class="op">&lt;</span><span class="ident">Output</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::TokenChange</span><span class="op">&gt;</span>
         <span class="op">+</span> <span class="ident">BorshDeserialize</span>
         <span class="op">+</span> <span class="ident">BorshSerialize</span>;
     <span class="doccomment">/// Cryptographic public key type</span>
     <span class="kw">type</span> <span class="ident">PublicKey</span>: <span class="lifetime">&#39;static</span> <span class="op">+</span> <span class="ident">Debug</span> <span class="op">+</span> <span class="ident">Clone</span> <span class="op">+</span> <span class="ident">BorshDeserialize</span> <span class="op">+</span> <span class="ident">BorshSerialize</span>;
 
     <span class="doccomment">/// Address of the PoS account</span>
-    <span class="kw">const</span> <span class="ident">POS_ADDRESS</span>: <span class="self">Self</span><span class="ident">::Address</span>;
+    <span class="kw">const</span> <span class="ident">POS_ADDRESS</span>: <span class="ident"><span class="self">Self</span>::Address</span>;
     <span class="doccomment">/// Address of the staking token</span>
     <span class="doccomment">/// TODO: this should be `const`, but in the ledger `address::xan` is not a</span>
     <span class="doccomment">/// `const fn`</span>
-    <span class="kw">fn</span> <span class="ident">staking_token_address</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span><span class="ident">::Address</span>;
+    <span class="kw">fn</span> <span class="ident">staking_token_address</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident"><span class="self">Self</span>::Address</span>;
     <span class="doccomment">/// Address of the slash pool, into which slashed tokens are transferred.</span>
-    <span class="kw">const</span> <span class="ident">POS_SLASH_POOL_ADDRESS</span>: <span class="self">Self</span><span class="ident">::Address</span>;
+    <span class="kw">const</span> <span class="ident">POS_SLASH_POOL_ADDRESS</span>: <span class="ident"><span class="self">Self</span>::Address</span>;
 
     <span class="doccomment">/// Read PoS parameters.</span>
     <span class="kw">fn</span> <span class="ident">read_pos_params</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">PosParams</span>;
@@ -2459,108 +2458,108 @@
     <span class="kw">fn</span> <span class="ident">read_validator_address_raw_hash</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">raw_hash</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span><span class="ident">str</span><span class="op">&gt;</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="self">Self</span><span class="ident">::Address</span><span class="op">&gt;</span>;
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Address</span><span class="op">&gt;</span>;
     <span class="doccomment">/// Read PoS validator&#39;s consensus key (used for signing block votes).</span>
     <span class="kw">fn</span> <span class="ident">read_validator_consensus_key</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="self">Self</span><span class="ident">::Address</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">ValidatorConsensusKeys</span><span class="op">&lt;</span><span class="self">Self</span><span class="ident">::PublicKey</span><span class="op">&gt;</span><span class="op">&gt;</span>;
+        <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::Address</span>,
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">ValidatorConsensusKeys</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::PublicKey</span><span class="op">&gt;</span><span class="op">&gt;</span>;
     <span class="doccomment">/// Read PoS validator&#39;s state.</span>
     <span class="kw">fn</span> <span class="ident">read_validator_state</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="self">Self</span><span class="ident">::Address</span>,
+        <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::Address</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">ValidatorStates</span><span class="op">&gt;</span>;
     <span class="doccomment">/// Read PoS validator&#39;s total deltas of their bonds (validator self-bonds</span>
     <span class="doccomment">/// and delegations).</span>
     <span class="kw">fn</span> <span class="ident">read_validator_total_deltas</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="self">Self</span><span class="ident">::Address</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">ValidatorTotalDeltas</span><span class="op">&lt;</span><span class="self">Self</span><span class="ident">::TokenChange</span><span class="op">&gt;</span><span class="op">&gt;</span>;
+        <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::Address</span>,
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">ValidatorTotalDeltas</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::TokenChange</span><span class="op">&gt;</span><span class="op">&gt;</span>;
     <span class="doccomment">/// Read PoS validator&#39;s voting power.</span>
     <span class="kw">fn</span> <span class="ident">read_validator_voting_power</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="self">Self</span><span class="ident">::Address</span>,
+        <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::Address</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">ValidatorVotingPowers</span><span class="op">&gt;</span>;
     <span class="doccomment">/// Read PoS slashes applied to a validator.</span>
-    <span class="kw">fn</span> <span class="ident">read_validator_slashes</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="self">Self</span><span class="ident">::Address</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Slashes</span>;
+    <span class="kw">fn</span> <span class="ident">read_validator_slashes</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::Address</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Slashes</span>;
     <span class="doccomment">/// Read PoS validator set (active and inactive).</span>
-    <span class="kw">fn</span> <span class="ident">read_validator_set</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">ValidatorSets</span><span class="op">&lt;</span><span class="self">Self</span><span class="ident">::Address</span><span class="op">&gt;</span>;
+    <span class="kw">fn</span> <span class="ident">read_validator_set</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">ValidatorSets</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Address</span><span class="op">&gt;</span>;
     <span class="doccomment">/// Read PoS total voting power of all validators (active and inactive).</span>
     <span class="kw">fn</span> <span class="ident">read_total_voting_power</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">TotalVotingPowers</span>;
 
     <span class="doccomment">/// Write PoS parameters.</span>
     <span class="kw">fn</span> <span class="ident">write_pos_params</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">params</span>: <span class="kw-2">&amp;</span><span class="ident">PosParams</span>);
     <span class="doccomment">/// Write PoS validator&#39;s raw hash its address.</span>
-    <span class="kw">fn</span> <span class="ident">write_validator_address_raw_hash</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">address</span>: <span class="kw-2">&amp;</span><span class="self">Self</span><span class="ident">::Address</span>);
+    <span class="kw">fn</span> <span class="ident">write_validator_address_raw_hash</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">address</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::Address</span>);
     <span class="doccomment">/// Write PoS validator&#39;s staking reward address, into which staking rewards</span>
     <span class="doccomment">/// will be credited.</span>
     <span class="kw">fn</span> <span class="ident">write_validator_staking_reward_address</span>(
         <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
-        <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="self">Self</span><span class="ident">::Address</span>,
-        <span class="ident">value</span>: <span class="kw-2">&amp;</span><span class="self">Self</span><span class="ident">::Address</span>,
+        <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::Address</span>,
+        <span class="ident">value</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::Address</span>,
     );
     <span class="doccomment">/// Write PoS validator&#39;s consensus key (used for signing block votes).</span>
     <span class="kw">fn</span> <span class="ident">write_validator_consensus_key</span>(
         <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
-        <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="self">Self</span><span class="ident">::Address</span>,
-        <span class="ident">value</span>: <span class="kw-2">&amp;</span><span class="ident">ValidatorConsensusKeys</span><span class="op">&lt;</span><span class="self">Self</span><span class="ident">::PublicKey</span><span class="op">&gt;</span>,
+        <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::Address</span>,
+        <span class="ident">value</span>: <span class="kw-2">&amp;</span><span class="ident">ValidatorConsensusKeys</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::PublicKey</span><span class="op">&gt;</span>,
     );
     <span class="doccomment">/// Write PoS validator&#39;s state.</span>
     <span class="kw">fn</span> <span class="ident">write_validator_state</span>(
         <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
-        <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="self">Self</span><span class="ident">::Address</span>,
+        <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::Address</span>,
         <span class="ident">value</span>: <span class="kw-2">&amp;</span><span class="ident">ValidatorStates</span>,
     );
     <span class="doccomment">/// Write PoS validator&#39;s total deltas of their bonds (validator self-bonds</span>
     <span class="doccomment">/// and delegations).</span>
     <span class="kw">fn</span> <span class="ident">write_validator_total_deltas</span>(
         <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
-        <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="self">Self</span><span class="ident">::Address</span>,
-        <span class="ident">value</span>: <span class="kw-2">&amp;</span><span class="ident">ValidatorTotalDeltas</span><span class="op">&lt;</span><span class="self">Self</span><span class="ident">::TokenChange</span><span class="op">&gt;</span>,
+        <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::Address</span>,
+        <span class="ident">value</span>: <span class="kw-2">&amp;</span><span class="ident">ValidatorTotalDeltas</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::TokenChange</span><span class="op">&gt;</span>,
     );
     <span class="doccomment">/// Write PoS validator&#39;s voting power.</span>
     <span class="kw">fn</span> <span class="ident">write_validator_voting_power</span>(
         <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
-        <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="self">Self</span><span class="ident">::Address</span>,
+        <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::Address</span>,
         <span class="ident">value</span>: <span class="kw-2">&amp;</span><span class="ident">ValidatorVotingPowers</span>,
     );
     <span class="doccomment">/// Write (append) PoS slash applied to a validator.</span>
     <span class="kw">fn</span> <span class="ident">write_validator_slash</span>(
         <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
-        <span class="ident">validator</span>: <span class="kw-2">&amp;</span><span class="self">Self</span><span class="ident">::Address</span>,
+        <span class="ident">validator</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::Address</span>,
         <span class="ident">value</span>: <span class="ident">Slash</span>,
     );
     <span class="doccomment">/// Write PoS bond (validator self-bond or a delegation).</span>
     <span class="kw">fn</span> <span class="ident">write_bond</span>(
         <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
-        <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">BondId</span><span class="op">&lt;</span><span class="self">Self</span><span class="ident">::Address</span><span class="op">&gt;</span>,
-        <span class="ident">value</span>: <span class="kw-2">&amp;</span><span class="ident">Bonds</span><span class="op">&lt;</span><span class="self">Self</span><span class="ident">::TokenAmount</span><span class="op">&gt;</span>,
+        <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">BondId</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Address</span><span class="op">&gt;</span>,
+        <span class="ident">value</span>: <span class="kw-2">&amp;</span><span class="ident">Bonds</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::TokenAmount</span><span class="op">&gt;</span>,
     );
     <span class="doccomment">/// Write PoS validator set (active and inactive).</span>
-    <span class="kw">fn</span> <span class="ident">write_validator_set</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">value</span>: <span class="kw-2">&amp;</span><span class="ident">ValidatorSets</span><span class="op">&lt;</span><span class="self">Self</span><span class="ident">::Address</span><span class="op">&gt;</span>);
+    <span class="kw">fn</span> <span class="ident">write_validator_set</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">value</span>: <span class="kw-2">&amp;</span><span class="ident">ValidatorSets</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Address</span><span class="op">&gt;</span>);
     <span class="doccomment">/// Read PoS total voting power of all validators (active and inactive).</span>
     <span class="kw">fn</span> <span class="ident">write_total_voting_power</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">value</span>: <span class="kw-2">&amp;</span><span class="ident">TotalVotingPowers</span>);
     <span class="doccomment">/// Initialize staking reward account with the given public key.</span>
     <span class="kw">fn</span> <span class="ident">init_staking_reward_account</span>(
         <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
-        <span class="ident">address</span>: <span class="kw-2">&amp;</span><span class="self">Self</span><span class="ident">::Address</span>,
-        <span class="ident">pk</span>: <span class="kw-2">&amp;</span><span class="self">Self</span><span class="ident">::PublicKey</span>,
+        <span class="ident">address</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::Address</span>,
+        <span class="ident">pk</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::PublicKey</span>,
     );
     <span class="doccomment">/// Credit tokens to the `target` account. This should only be used at</span>
     <span class="doccomment">/// genesis.</span>
     <span class="kw">fn</span> <span class="ident">credit_tokens</span>(
         <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
-        <span class="ident">token</span>: <span class="kw-2">&amp;</span><span class="self">Self</span><span class="ident">::Address</span>,
-        <span class="ident">target</span>: <span class="kw-2">&amp;</span><span class="self">Self</span><span class="ident">::Address</span>,
-        <span class="ident">amount</span>: <span class="self">Self</span><span class="ident">::TokenAmount</span>,
+        <span class="ident">token</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::Address</span>,
+        <span class="ident">target</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::Address</span>,
+        <span class="ident">amount</span>: <span class="ident"><span class="self">Self</span>::TokenAmount</span>,
     );
     <span class="doccomment">/// Transfer tokens from the `src` to the `dest`.</span>
     <span class="kw">fn</span> <span class="ident">transfer</span>(
         <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
-        <span class="ident">token</span>: <span class="kw-2">&amp;</span><span class="self">Self</span><span class="ident">::Address</span>,
-        <span class="ident">amount</span>: <span class="self">Self</span><span class="ident">::TokenAmount</span>,
-        <span class="ident">src</span>: <span class="kw-2">&amp;</span><span class="self">Self</span><span class="ident">::Address</span>,
-        <span class="ident">dest</span>: <span class="kw-2">&amp;</span><span class="self">Self</span><span class="ident">::Address</span>,
+        <span class="ident">token</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::Address</span>,
+        <span class="ident">amount</span>: <span class="ident"><span class="self">Self</span>::TokenAmount</span>,
+        <span class="ident">src</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::Address</span>,
+        <span class="ident">dest</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::Address</span>,
     );
 
     <span class="doccomment">/// Initialize the PoS system storage data in the genesis block for the</span>
@@ -2572,9 +2571,9 @@
         <span class="ident">params</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">PosParams</span>,
         <span class="ident">validators</span>: <span class="kw">impl</span> <span class="ident">Iterator</span><span class="op">&lt;</span>
             <span class="ident">Item</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">GenesisValidator</span><span class="op">&lt;</span>
-                <span class="self">Self</span><span class="ident">::Address</span>,
-                <span class="self">Self</span><span class="ident">::TokenAmount</span>,
-                <span class="self">Self</span><span class="ident">::PublicKey</span>,
+                <span class="ident"><span class="self">Self</span>::Address</span>,
+                <span class="ident"><span class="self">Self</span>::TokenAmount</span>,
+                <span class="ident"><span class="self">Self</span>::PublicKey</span>,
             <span class="op">&gt;</span>,
         <span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Clone</span>
         <span class="op">+</span> <span class="lifetime">&#39;a</span>,
@@ -2620,8 +2619,8 @@
         <span class="self">self</span>.<span class="ident">write_total_voting_power</span>(<span class="kw-2">&amp;</span><span class="ident">total_voting_power</span>);
         <span class="comment">// Credit the bonded tokens to the PoS account</span>
         <span class="self">self</span>.<span class="ident">credit_tokens</span>(
-            <span class="kw-2">&amp;</span><span class="self">Self</span><span class="ident">::staking_token_address</span>(),
-            <span class="kw-2">&amp;</span><span class="self">Self</span><span class="ident">::POS_ADDRESS</span>,
+            <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::staking_token_address</span>(),
+            <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::POS_ADDRESS</span>,
             <span class="ident">total_bonded_balance</span>,
         );
         <span class="prelude-val">Ok</span>(())
@@ -2631,7 +2630,7 @@
     <span class="kw">fn</span> <span class="ident">validator_set_update</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">current_epoch</span>: <span class="kw">impl</span> <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">Epoch</span><span class="op">&gt;</span>,
-        <span class="ident">f</span>: <span class="kw">impl</span> <span class="ident">FnMut</span>(<span class="ident">ValidatorSetUpdate</span><span class="op">&lt;</span><span class="self">Self</span><span class="ident">::PublicKey</span><span class="op">&gt;</span>),
+        <span class="ident">f</span>: <span class="kw">impl</span> <span class="ident">FnMut</span>(<span class="ident">ValidatorSetUpdate</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::PublicKey</span><span class="op">&gt;</span>),
     ) {
         <span class="kw">let</span> <span class="ident">current_epoch</span>: <span class="ident">Epoch</span> <span class="op">=</span> <span class="ident">current_epoch</span>.<span class="ident">into</span>();
         <span class="kw">let</span> <span class="ident">current_epoch_u64</span>: <span class="ident">u64</span> <span class="op">=</span> <span class="ident">current_epoch</span>.<span class="ident">into</span>();
@@ -2705,7 +2704,7 @@
             },
         );
         <span class="kw">let</span> <span class="ident">inactive_validators</span> <span class="op">=</span> <span class="ident">cur_validators</span>.<span class="ident">inactive</span>.<span class="ident">iter</span>().<span class="ident">filter_map</span>(
-            <span class="op">|</span><span class="ident">validator</span>: <span class="kw-2">&amp;</span><span class="ident">WeightedValidator</span><span class="op">&lt;</span><span class="self">Self</span><span class="ident">::Address</span><span class="op">&gt;</span><span class="op">|</span> {
+            <span class="op">|</span><span class="ident">validator</span>: <span class="kw-2">&amp;</span><span class="ident">WeightedValidator</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Address</span><span class="op">&gt;</span><span class="op">|</span> {
                 <span class="comment">// If the validators set from previous epoch contains the same</span>
                 <span class="comment">// validator, it means its voting power hasn&#39;t changed and hence</span>
                 <span class="comment">// doesn&#39;t need to updated.</span>
@@ -2750,8 +2749,8 @@
         <span class="ident">evidence_epoch</span>: <span class="kw">impl</span> <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">Epoch</span><span class="op">&gt;</span>,
         <span class="ident">evidence_block_height</span>: <span class="kw">impl</span> <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span>,
         <span class="ident">slash_type</span>: <span class="ident">SlashType</span>,
-        <span class="ident">validator</span>: <span class="kw-2">&amp;</span><span class="self">Self</span><span class="ident">::Address</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">SlashError</span><span class="op">&lt;</span><span class="self">Self</span><span class="ident">::Address</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+        <span class="ident">validator</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::Address</span>,
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">SlashError</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Address</span><span class="op">&gt;</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">current_epoch</span> <span class="op">=</span> <span class="ident">current_epoch</span>.<span class="ident">into</span>();
         <span class="kw">let</span> <span class="ident">evidence_epoch</span> <span class="op">=</span> <span class="ident">evidence_epoch</span>.<span class="ident">into</span>();
         <span class="kw">let</span> <span class="ident">rate</span> <span class="op">=</span> <span class="ident">slash_type</span>.<span class="ident">get_slash_rate</span>(<span class="ident">params</span>);
@@ -2786,7 +2785,7 @@
         <span class="kw">let</span> <span class="ident">slashed_change</span>: <span class="ident">i128</span> <span class="op">=</span> <span class="ident">slashed_change</span>.<span class="ident">into</span>();
         <span class="kw">let</span> <span class="ident">slashed_amount</span> <span class="op">=</span> <span class="ident">u64::try_from</span>(<span class="ident">slashed_change</span>)
             .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">_err</span><span class="op">|</span> <span class="ident">SlashError::InvalidSlashChange</span>(<span class="ident">slashed_change</span>))<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">slashed_amount</span> <span class="op">=</span> <span class="self">Self</span><span class="ident">::TokenAmount::from</span>(<span class="ident">slashed_amount</span>);
+        <span class="kw">let</span> <span class="ident">slashed_amount</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::TokenAmount::from</span>(<span class="ident">slashed_amount</span>);
 
         <span class="self">self</span>.<span class="ident">write_validator_total_deltas</span>(<span class="ident">validator</span>, <span class="kw-2">&amp;</span><span class="ident">total_deltas</span>);
         <span class="self">self</span>.<span class="ident">write_validator_voting_power</span>(<span class="ident">validator</span>, <span class="kw-2">&amp;</span><span class="ident">voting_power</span>);
@@ -2795,10 +2794,10 @@
         <span class="self">self</span>.<span class="ident">write_total_voting_power</span>(<span class="kw-2">&amp;</span><span class="ident">total_voting_power</span>);
         <span class="comment">// Transfer the slashed tokens to the PoS slash pool</span>
         <span class="self">self</span>.<span class="ident">transfer</span>(
-            <span class="kw-2">&amp;</span><span class="self">Self</span><span class="ident">::staking_token_address</span>(),
+            <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::staking_token_address</span>(),
             <span class="ident">slashed_amount</span>,
-            <span class="kw-2">&amp;</span><span class="self">Self</span><span class="ident">::POS_ADDRESS</span>,
-            <span class="kw-2">&amp;</span><span class="self">Self</span><span class="ident">::POS_SLASH_POOL_ADDRESS</span>,
+            <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::POS_ADDRESS</span>,
+            <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::POS_SLASH_POOL_ADDRESS</span>,
         );
         <span class="prelude-val">Ok</span>(())
     }
@@ -3859,5 +3858,7 @@
         <span class="ident">slashed</span>,
     })
 }
-</pre></div>
-</section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../" data-current-crate="anoma_proof_of_stake" data-search-index-js="../../search-index.js" data-search-js="../../search.js"></div><script src="../../main.js"></script><script src="../../source-script.js"></script><script src="../../source-files.js"></script></body></html>
+</code></pre></div>
+</section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../" data-current-crate="anoma_proof_of_stake" data-search-index-js="../../search-index.js" data-search-js="../../search.js"></div>
+    <script src="../../main.js"></script><script src="../../source-script.js"></script><script src="../../source-files.js"></script>
+</body></html>

@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `shared/src/types/ibc.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>ibc.rs - source</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script id="default-settings"></script><script src="../../../storage.js"></script><script src="../../../crates.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="shortcut icon" href="https://docs.anoma.network/favicon.png"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../anoma/index.html'><div class='logo-container'><img src='https://docs.anoma.network/rustdoc-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img src="../../../brush.svg" width="18" height="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../../settings.html" title="settings"><img src="../../../wheel.svg" width="18" height="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">   1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `shared&#x2F;src&#x2F;types&#x2F;ibc.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>ibc.rs - source</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script id="default-settings" ></script><script src="../../../storage.js"></script><script src="../../../crates.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="shortcut icon" href="https:&#x2F;&#x2F;docs.anoma.network&#x2F;favicon.png"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../anoma/index.html'><div class='logo-container rust-logo'><img src='https:&#x2F;&#x2F;docs.anoma.network&#x2F;rustdoc-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="18" height="18" alt="Pick another theme!" src="../../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../../settings.html" title="settings"><img width="18" height="18" alt="Change settings" src="../../../wheel.svg"></a></div></form></nav><section id="main" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">   1</span>
 <span id="2">   2</span>
 <span id="3">   3</span>
 <span id="4">   4</span>
@@ -1050,79 +1050,113 @@
 <span id="1050">1050</span>
 <span id="1051">1051</span>
 <span id="1052">1052</span>
-</pre><pre class="rust">
-<span class="doccomment">//! IBC-related data definitions and transaction and validity-predicate helpers.</span>
+<span id="1053">1053</span>
+<span id="1054">1054</span>
+<span id="1055">1055</span>
+<span id="1056">1056</span>
+<span id="1057">1057</span>
+<span id="1058">1058</span>
+<span id="1059">1059</span>
+<span id="1060">1060</span>
+<span id="1061">1061</span>
+<span id="1062">1062</span>
+<span id="1063">1063</span>
+<span id="1064">1064</span>
+<span id="1065">1065</span>
+<span id="1066">1066</span>
+<span id="1067">1067</span>
+<span id="1068">1068</span>
+<span id="1069">1069</span>
+<span id="1070">1070</span>
+<span id="1071">1071</span>
+<span id="1072">1072</span>
+<span id="1073">1073</span>
+<span id="1074">1074</span>
+<span id="1075">1075</span>
+<span id="1076">1076</span>
+<span id="1077">1077</span>
+<span id="1078">1078</span>
+<span id="1079">1079</span>
+</pre><pre class="rust"><code><span class="doccomment">//! IBC-related data definitions and transaction and validity-predicate helpers.</span>
 
 <span class="kw">use</span> <span class="ident">std::str::FromStr</span>;
 <span class="kw">use</span> <span class="ident">std::time::Duration</span>;
 
 <span class="kw">use</span> <span class="ident">borsh</span>::{<span class="ident">BorshDeserialize</span>, <span class="ident">BorshSerialize</span>};
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
-<span class="kw">use</span> <span class="ident">ibc::ics02_client::client_consensus::AnyConsensusState</span>;
+<span class="kw">use</span> <span class="ident">ibc::clients::ics07_tendermint::consensus_state::ConsensusState</span> <span class="kw">as</span> <span class="ident">TmConsensusState</span>;
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
-<span class="kw">use</span> <span class="ident">ibc::ics02_client::client_def</span>::{<span class="ident">AnyClient</span>, <span class="ident">ClientDef</span>};
+<span class="kw">use</span> <span class="ident">ibc::core::ics02_client::client_consensus</span>::{
+    <span class="ident">AnyConsensusState</span>, <span class="ident">ConsensusState</span>,
+};
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
-<span class="kw">use</span> <span class="ident">ibc::ics02_client::client_state::AnyClientState</span>;
+<span class="kw">use</span> <span class="ident">ibc::core::ics02_client::client_state</span>::{<span class="ident">AnyClientState</span>, <span class="ident">ClientState</span>};
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
-<span class="kw">use</span> <span class="ident">ibc::ics02_client::header::AnyHeader</span>;
+<span class="kw">use</span> <span class="ident">ibc::core::ics02_client::header::AnyHeader</span>;
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
-<span class="kw">use</span> <span class="ident">ibc::ics02_client::height::Height</span>;
+<span class="kw">use</span> <span class="ident">ibc::core::ics02_client::height::Height</span>;
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
-<span class="kw">use</span> <span class="ident">ibc::ics03_connection::connection</span>::{
+<span class="kw">use</span> <span class="ident">ibc::core::ics03_connection::connection</span>::{
     <span class="ident">ConnectionEnd</span>, <span class="ident">Counterparty</span> <span class="kw">as</span> <span class="ident">ConnCounterparty</span>, <span class="ident">State</span> <span class="kw">as</span> <span class="ident">ConnState</span>,
 };
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
-<span class="kw">use</span> <span class="ident">ibc::ics03_connection::version::Version</span>;
+<span class="kw">use</span> <span class="ident">ibc::core::ics03_connection::version::Version</span>;
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
-<span class="kw">use</span> <span class="ident">ibc::ics04_channel::channel</span>::{
+<span class="kw">use</span> <span class="ident">ibc::core::ics04_channel::channel</span>::{
     <span class="ident">ChannelEnd</span>, <span class="ident">Counterparty</span> <span class="kw">as</span> <span class="ident">ChanCounterparty</span>, <span class="ident">Order</span>, <span class="ident">State</span> <span class="kw">as</span> <span class="ident">ChanState</span>,
 };
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
-<span class="kw">use</span> <span class="ident">ibc::ics04_channel::packet</span>::{<span class="ident">Packet</span>, <span class="ident">Sequence</span>};
+<span class="kw">use</span> <span class="ident">ibc::core::ics04_channel::packet</span>::{<span class="ident">Packet</span>, <span class="ident">Sequence</span>};
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
-<span class="kw">use</span> <span class="ident">ibc::ics23_commitment::commitment</span>::{
+<span class="kw">use</span> <span class="ident">ibc::core::ics23_commitment::commitment</span>::{
     <span class="ident">CommitmentPrefix</span>, <span class="ident">CommitmentProofBytes</span>,
 };
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
-<span class="kw">use</span> <span class="ident">ibc::ics24_host::identifier</span>::{
+<span class="kw">use</span> <span class="ident">ibc::core::ics24_host::identifier</span>::{
     <span class="ident">ChannelId</span>, <span class="ident">ClientId</span>, <span class="ident">ConnectionId</span>, <span class="ident">PortChannelId</span>, <span class="ident">PortId</span>,
 };
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
-<span class="kw">use</span> <span class="ident">ibc::proofs</span>::{<span class="ident">ConsensusProof</span>, <span class="ident">Proofs</span>};
+<span class="kw">use</span> <span class="ident">ibc::mock::client_state</span>::{<span class="ident">MockClientState</span>, <span class="ident">MockConsensusState</span>};
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
+<span class="kw">use</span> <span class="ident">ibc::proofs</span>::{<span class="ident">ConsensusProof</span>, <span class="ident">ProofError</span>, <span class="ident">Proofs</span>};
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
 <span class="kw">use</span> <span class="ident">ibc::timestamp::Timestamp</span>;
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
-<span class="kw">use</span> <span class="ident">ibc_abci::ics02_client::client_consensus::AnyConsensusState</span>;
+<span class="kw">use</span> <span class="ident">ibc_abci::clients::ics07_tendermint::consensus_state::ConsensusState</span> <span class="kw">as</span> <span class="ident">TmConsensusState</span>;
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
-<span class="kw">use</span> <span class="ident">ibc_abci::ics02_client::client_def</span>::{<span class="ident">AnyClient</span>, <span class="ident">ClientDef</span>};
+<span class="kw">use</span> <span class="ident">ibc_abci::core::ics02_client::client_consensus</span>::{
+    <span class="ident">AnyConsensusState</span>, <span class="ident">ConsensusState</span>,
+};
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
-<span class="kw">use</span> <span class="ident">ibc_abci::ics02_client::client_state::AnyClientState</span>;
+<span class="kw">use</span> <span class="ident">ibc_abci::core::ics02_client::client_state</span>::{<span class="ident">AnyClientState</span>, <span class="ident">ClientState</span>};
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
-<span class="kw">use</span> <span class="ident">ibc_abci::ics02_client::header::AnyHeader</span>;
+<span class="kw">use</span> <span class="ident">ibc_abci::core::ics02_client::header::AnyHeader</span>;
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
-<span class="kw">use</span> <span class="ident">ibc_abci::ics02_client::height::Height</span>;
+<span class="kw">use</span> <span class="ident">ibc_abci::core::ics02_client::height::Height</span>;
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
-<span class="kw">use</span> <span class="ident">ibc_abci::ics03_connection::connection</span>::{
+<span class="kw">use</span> <span class="ident">ibc_abci::core::ics03_connection::connection</span>::{
     <span class="ident">ConnectionEnd</span>, <span class="ident">Counterparty</span> <span class="kw">as</span> <span class="ident">ConnCounterparty</span>, <span class="ident">State</span> <span class="kw">as</span> <span class="ident">ConnState</span>,
 };
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
-<span class="kw">use</span> <span class="ident">ibc_abci::ics03_connection::version::Version</span>;
+<span class="kw">use</span> <span class="ident">ibc_abci::core::ics03_connection::version::Version</span>;
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
-<span class="kw">use</span> <span class="ident">ibc_abci::ics04_channel::channel</span>::{
+<span class="kw">use</span> <span class="ident">ibc_abci::core::ics04_channel::channel</span>::{
     <span class="ident">ChannelEnd</span>, <span class="ident">Counterparty</span> <span class="kw">as</span> <span class="ident">ChanCounterparty</span>, <span class="ident">Order</span>, <span class="ident">State</span> <span class="kw">as</span> <span class="ident">ChanState</span>,
 };
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
-<span class="kw">use</span> <span class="ident">ibc_abci::ics04_channel::packet</span>::{<span class="ident">Packet</span>, <span class="ident">Sequence</span>};
+<span class="kw">use</span> <span class="ident">ibc_abci::core::ics04_channel::packet</span>::{<span class="ident">Packet</span>, <span class="ident">Sequence</span>};
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
-<span class="kw">use</span> <span class="ident">ibc_abci::ics23_commitment::commitment</span>::{
+<span class="kw">use</span> <span class="ident">ibc_abci::core::ics23_commitment::commitment</span>::{
     <span class="ident">CommitmentPrefix</span>, <span class="ident">CommitmentProofBytes</span>,
 };
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
-<span class="kw">use</span> <span class="ident">ibc_abci::ics24_host::identifier</span>::{
+<span class="kw">use</span> <span class="ident">ibc_abci::core::ics24_host::identifier</span>::{
     <span class="ident">ChannelId</span>, <span class="ident">ClientId</span>, <span class="ident">ConnectionId</span>, <span class="ident">PortChannelId</span>, <span class="ident">PortId</span>,
 };
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
-<span class="kw">use</span> <span class="ident">ibc_abci::proofs</span>::{<span class="ident">ConsensusProof</span>, <span class="ident">Proofs</span>};
+<span class="kw">use</span> <span class="ident">ibc_abci::mock::client_state</span>::{<span class="ident">MockClientState</span>, <span class="ident">MockConsensusState</span>};
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
+<span class="kw">use</span> <span class="ident">ibc_abci::proofs</span>::{<span class="ident">ConsensusProof</span>, <span class="ident">ProofError</span>, <span class="ident">Proofs</span>};
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
 <span class="kw">use</span> <span class="ident">ibc_abci::timestamp::Timestamp</span>;
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
@@ -1133,9 +1167,9 @@
 <span class="kw">use</span> <span class="ident">sha2::Digest</span>;
 <span class="kw">use</span> <span class="ident">thiserror::Error</span>;
 
-<span class="kw">use</span> <span class="kw">crate</span><span class="ident">::types::address</span>::{<span class="ident">Address</span>, <span class="ident">InternalAddress</span>};
-<span class="kw">use</span> <span class="kw">crate</span><span class="ident">::types::storage::KeySeg</span>;
-<span class="kw">use</span> <span class="kw">crate</span><span class="ident">::types::time</span>::{<span class="ident">DateTimeUtc</span>, <span class="ident">DurationNanos</span>};
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::types::address</span>::{<span class="ident">Address</span>, <span class="ident">InternalAddress</span>};
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::types::storage::KeySeg</span>;
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::types::time</span>::{<span class="ident">DateTimeUtc</span>, <span class="ident">DurationNanos</span>};
 
 <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">missing_docs</span>)]</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Error</span>, <span class="ident">Debug</span>)]</span>
@@ -1145,9 +1179,11 @@
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Invalid port error: {0}&quot;</span>)]</span>
     <span class="ident">InvalidPort</span>(<span class="ident">String</span>),
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Invalid proof error: {0}&quot;</span>)]</span>
-    <span class="ident">InvalidProof</span>(<span class="ident">String</span>),
+    <span class="ident">InvalidProof</span>(<span class="ident">ProofError</span>),
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Updating a client error: {0}&quot;</span>)]</span>
     <span class="ident">ClientUpdate</span>(<span class="ident">String</span>),
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Decoding MerkleProof error: {0}&quot;</span>)]</span>
+    <span class="ident">DecodingMerkleProof</span>(<span class="ident">prost::DecodeError</span>),
 }
 
 <span class="doccomment">/// Decode result for IBC data</span>
@@ -1246,13 +1282,13 @@
     <span class="doccomment">/// Returns the proof for client state</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">proof_client</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">MerkleProof</span><span class="op">&gt;</span> {
         <span class="ident">MerkleProof::decode</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">proof_client</span>[..])
-            .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">Error::InvalidProof</span>(<span class="ident">e</span>.<span class="ident">to_string</span>()))
+            .<span class="ident">map_err</span>(<span class="ident">Error::DecodingMerkleProof</span>)
     }
 
     <span class="doccomment">/// Returns the proof for consensus state</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">proof_consensus_state</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">MerkleProof</span><span class="op">&gt;</span> {
         <span class="ident">MerkleProof::decode</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">proof_consensus_state</span>[..])
-            .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">Error::InvalidProof</span>(<span class="ident">e</span>.<span class="ident">to_string</span>()))
+            .<span class="ident">map_err</span>(<span class="ident">Error::DecodingMerkleProof</span>)
     }
 }
 
@@ -2001,25 +2037,42 @@
     <span class="ident">client_state</span>: <span class="ident">AnyClientState</span>,
     <span class="ident">headers</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">AnyHeader</span><span class="op">&gt;</span>,
 ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="ident">AnyClientState</span>, <span class="ident">AnyConsensusState</span>)<span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">client</span> <span class="op">=</span> <span class="ident">AnyClient::from_client_type</span>(<span class="ident">client_state</span>.<span class="ident">client_type</span>());
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">client_state</span> <span class="op">=</span> <span class="ident">client_state</span>;
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">consensus_state</span> <span class="op">=</span> <span class="prelude-val">None</span>;
-    <span class="kw">for</span> <span class="ident">header</span> <span class="kw">in</span> <span class="ident">headers</span> {
-        <span class="kw">let</span> (<span class="ident">new_client_state</span>, <span class="ident">new_consensus_state</span>) <span class="op">=</span> <span class="ident">client</span>
-            .<span class="ident">check_header_and_update_state</span>(<span class="ident">client_state</span>, <span class="ident">header</span>.<span class="ident">clone</span>())
-            .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> {
-                <span class="ident">Error::ClientUpdate</span>(<span class="macro">format!</span>(
-                    <span class="string">&quot;Updating the client state failed: {}&quot;</span>,
-                    <span class="ident">e</span>
-                ))
-            })<span class="question-mark">?</span>;
-        <span class="ident">client_state</span> <span class="op">=</span> <span class="ident">new_client_state</span>;
-        <span class="ident">consensus_state</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">new_consensus_state</span>);
+    <span class="kw">if</span> <span class="ident">headers</span>.<span class="ident">is_empty</span>() {
+        <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error::ClientUpdate</span>(<span class="string">&quot;No header is given&quot;</span>.<span class="ident">to_owned</span>()));
     }
-    <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">consensus_state</span>) <span class="op">=</span> <span class="ident">consensus_state</span> {
-        <span class="prelude-val">Ok</span>((<span class="ident">client_state</span>, <span class="ident">consensus_state</span>))
-    } <span class="kw">else</span> {
-        <span class="prelude-val">Err</span>(<span class="ident">Error::ClientUpdate</span>(<span class="string">&quot;No consensus state&quot;</span>.<span class="ident">to_owned</span>()))
+    <span class="kw">match</span> <span class="ident">client_state</span> {
+        <span class="ident">AnyClientState::Tendermint</span>(<span class="ident">cs</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">new_client_state</span> <span class="op">=</span> <span class="ident">cs</span>;
+            <span class="kw">for</span> <span class="ident">header</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="ident">headers</span> {
+                <span class="kw">let</span> <span class="ident">h</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">header</span> {
+                    <span class="ident">AnyHeader::Tendermint</span>(<span class="ident">h</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">h</span>,
+                    <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> {
+                        <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error::ClientUpdate</span>(
+                            <span class="string">&quot;The header type is mismatched&quot;</span>.<span class="ident">to_owned</span>(),
+                        ));
+                    }
+                };
+                <span class="ident">new_client_state</span> <span class="op">=</span> <span class="ident">new_client_state</span>.<span class="ident">with_header</span>(<span class="ident">h</span>.<span class="ident">clone</span>());
+            }
+            <span class="kw">let</span> <span class="ident">consensus_state</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">headers</span>.<span class="ident">last</span>().<span class="ident">unwrap</span>() {
+                <span class="ident">AnyHeader::Tendermint</span>(<span class="ident">h</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">TmConsensusState::from</span>(<span class="ident">h</span>.<span class="ident">clone</span>()),
+                <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error::ClientUpdate</span>(
+                        <span class="string">&quot;The header type is mismatched&quot;</span>.<span class="ident">to_owned</span>(),
+                    ));
+                }
+            };
+            <span class="prelude-val">Ok</span>((<span class="ident">new_client_state</span>.<span class="ident">wrap_any</span>(), <span class="ident">consensus_state</span>.<span class="ident">wrap_any</span>()))
+        }
+        <span class="ident">AnyClientState::Mock</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="ident">headers</span>.<span class="ident">last</span>().<span class="ident">unwrap</span>() {
+            <span class="ident">AnyHeader::Mock</span>(<span class="ident">h</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>((
+                <span class="ident">MockClientState</span>(<span class="kw-2">*</span><span class="ident">h</span>).<span class="ident">wrap_any</span>(),
+                <span class="ident">MockConsensusState::new</span>(<span class="kw-2">*</span><span class="ident">h</span>).<span class="ident">wrap_any</span>(),
+            )),
+            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">Error::ClientUpdate</span>(
+                <span class="string">&quot;The header type is mismatched&quot;</span>.<span class="ident">to_owned</span>(),
+            )),
+        },
     }
 }
 
@@ -2103,5 +2156,7 @@
         .<span class="ident">expect</span>(<span class="string">&quot;Encoding an address string shouldn&#39;t fail&quot;</span>);
     <span class="ident">CommitmentPrefix::from</span>(<span class="ident">bytes</span>)
 }
-</pre></div>
-</section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="anoma" data-search-index-js="../../../search-index.js" data-search-js="../../../search.js"></div><script src="../../../main.js"></script><script src="../../../source-script.js"></script><script src="../../../source-files.js"></script></body></html>
+</code></pre></div>
+</section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="anoma" data-search-index-js="../../../search-index.js" data-search-js="../../../search.js"></div>
+    <script src="../../../main.js"></script><script src="../../../source-script.js"></script><script src="../../../source-files.js"></script>
+</body></html>

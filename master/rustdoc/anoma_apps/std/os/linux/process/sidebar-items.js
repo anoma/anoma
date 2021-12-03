@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["PidFd","This type represents a file descriptor that refers to a process."]],"trait":[["ChildExt","Os-specific extensions for `Child`"],["CommandExt","Os-specific extensions for `Command`"]]});

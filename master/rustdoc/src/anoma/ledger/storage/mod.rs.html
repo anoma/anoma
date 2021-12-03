@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `shared/src/ledger/storage/mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs - source</title><link rel="stylesheet" type="text/css" href="../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../../ayu.css" disabled ><script id="default-settings"></script><script src="../../../../storage.js"></script><script src="../../../../crates.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="shortcut icon" href="https://docs.anoma.network/favicon.png"><style type="text/css">#crate-search{background-image:url("../../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../../anoma/index.html'><div class='logo-container'><img src='https://docs.anoma.network/rustdoc-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img src="../../../../brush.svg" width="18" height="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../../../settings.html" title="settings"><img src="../../../../wheel.svg" width="18" height="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">  1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `shared&#x2F;src&#x2F;ledger&#x2F;storage&#x2F;mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs - source</title><link rel="stylesheet" type="text/css" href="../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../../ayu.css" disabled ><script id="default-settings" ></script><script src="../../../../storage.js"></script><script src="../../../../crates.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="shortcut icon" href="https:&#x2F;&#x2F;docs.anoma.network&#x2F;favicon.png"><style type="text/css">#crate-search{background-image:url("../../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../../anoma/index.html'><div class='logo-container rust-logo'><img src='https:&#x2F;&#x2F;docs.anoma.network&#x2F;rustdoc-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="18" height="18" alt="Pick another theme!" src="../../../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../../../settings.html" title="settings"><img width="18" height="18" alt="Change settings" src="../../../../wheel.svg"></a></div></form></nav><section id="main" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">  1</span>
 <span id="2">  2</span>
 <span id="3">  3</span>
 <span id="4">  4</span>
@@ -790,13 +790,7 @@
 <span id="790">790</span>
 <span id="791">791</span>
 <span id="792">792</span>
-<span id="793">793</span>
-<span id="794">794</span>
-<span id="795">795</span>
-<span id="796">796</span>
-<span id="797">797</span>
-</pre><pre class="rust">
-<span class="doccomment">//! Ledger&#39;s state storage with key-value backed store and a merkle tree</span>
+</pre><pre class="rust"><code><span class="doccomment">//! Ledger&#39;s state storage with key-value backed store and a merkle tree</span>
 
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">test</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;testing&quot;</span>))]</span>
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">mockdb</span>;
@@ -821,16 +815,16 @@
 <span class="kw">use</span> <span class="ident">thiserror::Error</span>;
 <span class="kw">use</span> <span class="ident">types::MerkleTree</span>;
 
-<span class="kw">use</span> <span class="kw">super</span><span class="ident">::parameters::Parameters</span>;
-<span class="kw">use</span> <span class="kw">crate</span><span class="ident">::bytes::ByteBuf</span>;
-<span class="kw">use</span> <span class="kw">crate</span><span class="ident">::ledger::gas::MIN_STORAGE_GAS</span>;
-<span class="kw">use</span> <span class="kw">crate</span><span class="ident">::ledger::parameters</span>::{<span class="self">self</span>, <span class="ident">EpochDuration</span>};
-<span class="kw">use</span> <span class="kw">crate</span><span class="ident">::types::address</span>::{<span class="ident">Address</span>, <span class="ident">EstablishedAddressGen</span>};
-<span class="kw">use</span> <span class="kw">crate</span><span class="ident">::types::chain</span>::{<span class="ident">ChainId</span>, <span class="ident">CHAIN_ID_LENGTH</span>};
-<span class="kw">use</span> <span class="kw">crate</span><span class="ident">::types::storage</span>::{
+<span class="kw">use</span> <span class="ident"><span class="kw">super</span>::parameters::Parameters</span>;
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::bytes::ByteBuf</span>;
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::ledger::gas::MIN_STORAGE_GAS</span>;
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::ledger::parameters</span>::{<span class="self">self</span>, <span class="ident">EpochDuration</span>};
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::types::address</span>::{<span class="ident">Address</span>, <span class="ident">EstablishedAddressGen</span>};
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::types::chain</span>::{<span class="ident">ChainId</span>, <span class="ident">CHAIN_ID_LENGTH</span>};
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::types::storage</span>::{
     <span class="ident">BlockHash</span>, <span class="ident">BlockHeight</span>, <span class="ident">DbKeySeg</span>, <span class="ident">Epoch</span>, <span class="ident">Epochs</span>, <span class="ident">Key</span>, <span class="ident">BLOCK_HASH_LENGTH</span>,
 };
-<span class="kw">use</span> <span class="kw">crate</span><span class="ident">::types::time::DateTimeUtc</span>;
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::types::time::DateTimeUtc</span>;
 
 <span class="doccomment">/// A result of a function that may fail</span>
 <span class="kw">pub</span> <span class="kw">type</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">std::result::Result</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">Error</span><span class="op">&gt;</span>;
@@ -887,7 +881,7 @@
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Found an unknown key: {key}&quot;</span>)]</span>
     <span class="ident">UnknownKey</span> { <span class="ident">key</span>: <span class="ident">String</span> },
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Storage key error {0}&quot;</span>)]</span>
-    <span class="ident">KeyError</span>(<span class="kw">crate</span><span class="ident">::types::storage::Error</span>),
+    <span class="ident">KeyError</span>(<span class="ident"><span class="kw">crate</span>::types::storage::Error</span>),
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Coding error: {0}&quot;</span>)]</span>
     <span class="ident">CodingError</span>(<span class="ident">types::Error</span>),
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Merkle tree error: {0}&quot;</span>)]</span>
@@ -972,7 +966,7 @@
         <span class="kw-2">&amp;</span><span class="lifetime">&#39;iter</span> <span class="self">self</span>,
         <span class="ident">height</span>: <span class="ident">BlockHeight</span>,
         <span class="ident">prefix</span>: <span class="kw-2">&amp;</span><span class="ident">Key</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span><span class="ident">::PrefixIter</span>;
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident"><span class="self">Self</span>::PrefixIter</span>;
 }
 
 <span class="doccomment">/// The root hash of the merkle tree as bytes</span>
@@ -1373,17 +1367,12 @@
     <span class="kw">use</span> <span class="ident">sha2</span>::{<span class="ident">Digest</span>, <span class="ident">Sha256</span>};
     <span class="kw">use</span> <span class="ident">sparse_merkle_tree::H256</span>;
 
-    <span class="kw">use</span> <span class="kw">super</span><span class="ident">::mockdb::MockDB</span>;
+    <span class="kw">use</span> <span class="ident"><span class="kw">super</span>::mockdb::MockDB</span>;
     <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
 
     <span class="doccomment">/// The storage hasher used for the merkle tree.</span>
+    <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Default</span>)]</span>
     <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Sha256Hasher</span>(<span class="ident">Sha256</span>);
-
-    <span class="kw">impl</span> <span class="ident">Default</span> <span class="kw">for</span> <span class="ident">Sha256Hasher</span> {
-        <span class="kw">fn</span> <span class="ident">default</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
-            <span class="self">Self</span>(<span class="ident">Sha256::default</span>())
-        }
-    }
 
     <span class="kw">impl</span> <span class="ident">sparse_merkle_tree::traits::Hasher</span> <span class="kw">for</span> <span class="ident">Sha256Hasher</span> {
         <span class="kw">fn</span> <span class="ident">write_h256</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">h</span>: <span class="kw-2">&amp;</span><span class="ident">H256</span>) {
@@ -1459,10 +1448,10 @@
     <span class="kw">use</span> <span class="ident">chrono</span>::{<span class="ident">TimeZone</span>, <span class="ident">Utc</span>};
     <span class="kw">use</span> <span class="ident">proptest::prelude</span>::<span class="kw-2">*</span>;
 
-    <span class="kw">use</span> <span class="kw">super</span><span class="ident">::testing</span>::<span class="kw-2">*</span>;
+    <span class="kw">use</span> <span class="ident"><span class="kw">super</span>::testing</span>::<span class="kw-2">*</span>;
     <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
-    <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::ledger::parameters::Parameters</span>;
-    <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::types::time</span>::{<span class="self">self</span>, <span class="ident">Duration</span>};
+    <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::ledger::parameters::Parameters</span>;
+    <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::types::time</span>::{<span class="self">self</span>, <span class="ident">Duration</span>};
 
     <span class="macro">prop_compose!</span> {
         <span class="doccomment">/// Setup test input data with arbitrary epoch duration, epoch start</span>
@@ -1593,5 +1582,7 @@
         }
     }
 }
-</pre></div>
-</section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="anoma" data-search-index-js="../../../../search-index.js" data-search-js="../../../../search.js"></div><script src="../../../../main.js"></script><script src="../../../../source-script.js"></script><script src="../../../../source-files.js"></script></body></html>
+</code></pre></div>
+</section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="anoma" data-search-index-js="../../../../search-index.js" data-search-js="../../../../search.js"></div>
+    <script src="../../../../main.js"></script><script src="../../../../source-script.js"></script><script src="../../../../source-files.js"></script>
+</body></html>
