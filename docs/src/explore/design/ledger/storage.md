@@ -5,8 +5,7 @@ By default, we persist all the historical data for the predecessor blocks to be 
 However, for the accounts storage it is reasonable to expect that in each block only a small subset of the data will be updated, so we can avoid persisting values that haven't changed from the predecessor block. To achieve that:
 
 - The latest value is written into and read from its storage key without any height prefix
-- If the previous value is overwritten or deleted at block height `n`, we store it under `n` prefix (the height at which it's been changed from this value)
-- For each write, we also store the height at which a value changed in a list for easier look-up and pruning
+- If the previous value is overwritten or deleted at block height `n`, we store the diff (old and new value) under `n` prefix (the height at which it's been changed from this value)
 
 Note that when there are multiple updates of a value with the same storage key in the same block, only the last value will be persisted to the block.
 
