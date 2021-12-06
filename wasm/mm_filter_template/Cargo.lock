@@ -25,6 +25,7 @@ dependencies = [
  "bech32",
  "borsh",
  "chrono",
+ "clru",
  "ed25519-dalek",
  "hex",
  "itertools",
@@ -206,6 +207,12 @@ dependencies = [
  "time",
  "winapi",
 ]
+
+[[package]]
+name = "clru"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "218d6bd3dde8e442a975fa1cd233c0e5fded7596bccfe39f58eca98d22421e0a"
 
 [[package]]
 name = "cpufeatures"

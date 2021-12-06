@@ -501,7 +501,7 @@ mod tests {
         tx_host_env::write(&client_type_key, data.client_state.client_type());
 
         // Check should fail due to no client state
-        let ibc_vp = ibc::init_ibc_vp_from_tx(&env, &tx);
+        let (ibc_vp, _) = ibc::init_ibc_vp_from_tx(&env, &tx);
         assert!(matches!(
             ibc_vp
                 .validate(&tx_data)
@@ -539,7 +539,7 @@ mod tests {
         tx_host_env::write(&consensus_state_key, data.consensus_state);
 
         // Check
-        let ibc_vp = ibc::init_ibc_vp_from_tx(&env, &tx);
+        let (ibc_vp, _) = ibc::init_ibc_vp_from_tx(&env, &tx);
         assert!(
             ibc_vp
                 .validate(&tx_data)
@@ -572,7 +572,7 @@ mod tests {
         tx_host_env::write(&consensus_state_key, same_consensus_state);
 
         // Check should fail due to the invalid updating
-        let ibc_vp = ibc::init_ibc_vp_from_tx(&env, &tx);
+        let (ibc_vp, _) = ibc::init_ibc_vp_from_tx(&env, &tx);
         assert!(matches!(
             ibc_vp
                 .validate(&tx_data)
@@ -605,7 +605,7 @@ mod tests {
         tx_host_env::write(&consensus_state_key, new_consensus_state);
 
         // Check
-        let ibc_vp = ibc::init_ibc_vp_from_tx(&env, &tx);
+        let (ibc_vp, _) = ibc::init_ibc_vp_from_tx(&env, &tx);
         assert!(
             ibc_vp
                 .validate(&tx_data)
@@ -636,7 +636,7 @@ mod tests {
         tx_host_env::write(&consensus_state_key, new_consensus_state);
 
         // Check
-        let ibc_vp = ibc::init_ibc_vp_from_tx(&env, &tx);
+        let (ibc_vp, _) = ibc::init_ibc_vp_from_tx(&env, &tx);
         assert!(
             ibc_vp
                 .validate(&tx_data)
@@ -679,7 +679,7 @@ mod tests {
         tx_host_env::write(&conn_key, conn);
 
         // Check should fail due to directly opening a connection
-        let ibc_vp = ibc::init_ibc_vp_from_tx(&env, &tx);
+        let (ibc_vp, _) = ibc::init_ibc_vp_from_tx(&env, &tx);
         assert!(matches!(
             ibc_vp
                 .validate(&tx_data)
@@ -709,7 +709,7 @@ mod tests {
         tx_host_env::write(&conn_key, data.connection());
 
         // Check
-        let ibc_vp = ibc::init_ibc_vp_from_tx(&env, &tx);
+        let (ibc_vp, _) = ibc::init_ibc_vp_from_tx(&env, &tx);
         assert!(
             ibc_vp
                 .validate(&tx_data)
@@ -738,7 +738,7 @@ mod tests {
         tx_host_env::write(&conn_key, conn);
 
         // Check
-        let ibc_vp = ibc::init_ibc_vp_from_tx(&env, &tx);
+        let (ibc_vp, _) = ibc::init_ibc_vp_from_tx(&env, &tx);
         assert!(
             ibc_vp
                 .validate(&tx_data)
@@ -781,7 +781,7 @@ mod tests {
         tx_host_env::write(&conn_key, data.connection());
 
         // Check
-        let ibc_vp = ibc::init_ibc_vp_from_tx(&env, &tx);
+        let (ibc_vp, _) = ibc::init_ibc_vp_from_tx(&env, &tx);
         assert!(
             ibc_vp
                 .validate(&tx_data)
@@ -810,7 +810,7 @@ mod tests {
         tx_host_env::write(&conn_key, conn);
 
         // Check
-        let ibc_vp = ibc::init_ibc_vp_from_tx(&env, &tx);
+        let (ibc_vp, _) = ibc::init_ibc_vp_from_tx(&env, &tx);
         assert!(
             ibc_vp
                 .validate(&tx_data)
@@ -856,7 +856,7 @@ mod tests {
         tx_host_env::write(&channel_key, data.channel());
 
         // Check should fail due to no port binding
-        let ibc_vp = ibc::init_ibc_vp_from_tx(&env, &tx);
+        let (ibc_vp, _) = ibc::init_ibc_vp_from_tx(&env, &tx);
         assert!(matches!(
             ibc_vp
                 .validate(&tx_data)
@@ -897,7 +897,7 @@ mod tests {
         tx_host_env::write(&channel_key, channel);
 
         // Check should fail due to directly opening a channel
-        let ibc_vp = ibc::init_ibc_vp_from_tx(&env, &tx);
+        let (ibc_vp, _) = ibc::init_ibc_vp_from_tx(&env, &tx);
         assert!(matches!(
             ibc_vp
                 .validate(&tx_data)
@@ -938,7 +938,7 @@ mod tests {
         tx_host_env::write(&channel_key, data.channel());
 
         // Check
-        let ibc_vp = ibc::init_ibc_vp_from_tx(&env, &tx);
+        let (ibc_vp, _) = ibc::init_ibc_vp_from_tx(&env, &tx);
         assert!(
             ibc_vp
                 .validate(&tx_data)
@@ -967,7 +967,7 @@ mod tests {
         tx_host_env::write(&channel_key, channel);
 
         // Check
-        let ibc_vp = ibc::init_ibc_vp_from_tx(&env, &tx);
+        let (ibc_vp, _) = ibc::init_ibc_vp_from_tx(&env, &tx);
         assert!(
             ibc_vp
                 .validate(&tx_data)
@@ -1021,7 +1021,7 @@ mod tests {
         tx_host_env::write(&channel_key, data.channel());
 
         // Check
-        let ibc_vp = ibc::init_ibc_vp_from_tx(&env, &tx);
+        let (ibc_vp, _) = ibc::init_ibc_vp_from_tx(&env, &tx);
         assert!(
             ibc_vp
                 .validate(&tx_data)
@@ -1050,7 +1050,7 @@ mod tests {
         tx_host_env::write(&channel_key, channel);
 
         // Check
-        let ibc_vp = ibc::init_ibc_vp_from_tx(&env, &tx);
+        let (ibc_vp, _) = ibc::init_ibc_vp_from_tx(&env, &tx);
         assert!(
             ibc_vp
                 .validate(&tx_data)
@@ -1095,7 +1095,7 @@ mod tests {
         tx_host_env::write(&channel_key, channel);
 
         // Check
-        let ibc_vp = ibc::init_ibc_vp_from_tx(&env, &tx);
+        let (ibc_vp, _) = ibc::init_ibc_vp_from_tx(&env, &tx);
         assert!(
             ibc_vp
                 .validate(&tx_data)
@@ -1140,7 +1140,7 @@ mod tests {
         tx_host_env::write(&channel_key, channel);
 
         // Check
-        let ibc_vp = ibc::init_ibc_vp_from_tx(&env, &tx);
+        let (ibc_vp, _) = ibc::init_ibc_vp_from_tx(&env, &tx);
         assert!(
             ibc_vp
                 .validate(&tx_data)
@@ -1196,7 +1196,7 @@ mod tests {
         // the transaction does something before senging a packet
 
         // Check
-        let ibc_vp = ibc::init_ibc_vp_from_tx(&env, &tx);
+        let (ibc_vp, _) = ibc::init_ibc_vp_from_tx(&env, &tx);
         assert!(
             ibc_vp
                 .validate(&tx_data)
@@ -1234,7 +1234,7 @@ mod tests {
         // the transaction does something after the ack
 
         // Check
-        let ibc_vp = ibc::init_ibc_vp_from_tx(&env, &tx);
+        let (ibc_vp, _) = ibc::init_ibc_vp_from_tx(&env, &tx);
         assert!(
             ibc_vp
                 .validate(&tx_data)
@@ -1297,7 +1297,7 @@ mod tests {
         // the transaction does something according to the packet
 
         // Check
-        let ibc_vp = ibc::init_ibc_vp_from_tx(&env, &tx);
+        let (ibc_vp, _) = ibc::init_ibc_vp_from_tx(&env, &tx);
         assert!(
             ibc_vp
                 .validate(&tx_data)
@@ -1353,7 +1353,7 @@ mod tests {
         // the transaction does something before senging a packet
 
         // Check
-        let ibc_vp = ibc::init_ibc_vp_from_tx(&env, &tx);
+        let (ibc_vp, _) = ibc::init_ibc_vp_from_tx(&env, &tx);
         assert!(
             ibc_vp
                 .validate(&tx_data)
@@ -1391,7 +1391,7 @@ mod tests {
         // the transaction does something after the ack
 
         // Check
-        let ibc_vp = ibc::init_ibc_vp_from_tx(&env, &tx);
+        let (ibc_vp, _) = ibc::init_ibc_vp_from_tx(&env, &tx);
         assert!(
             ibc_vp
                 .validate(&tx_data)
@@ -1448,7 +1448,7 @@ mod tests {
         // the transaction does something according to the packet
 
         // Check
-        let ibc_vp = ibc::init_ibc_vp_from_tx(&env, &tx);
+        let (ibc_vp, _) = ibc::init_ibc_vp_from_tx(&env, &tx);
         assert!(
             ibc_vp
                 .validate(&tx_data)
@@ -1526,7 +1526,7 @@ mod tests {
         tx_host_env::delete(&commitment_key);
 
         // Check
-        let ibc_vp = ibc::init_ibc_vp_from_tx(&env, &tx);
+        let (ibc_vp, _) = ibc::init_ibc_vp_from_tx(&env, &tx);
         assert!(
             ibc_vp
                 .validate(&tx_data)
@@ -1603,7 +1603,7 @@ mod tests {
         tx_host_env::delete(&commitment_key);
 
         // Check
-        let ibc_vp = ibc::init_ibc_vp_from_tx(&env, &tx);
+        let (ibc_vp, _) = ibc::init_ibc_vp_from_tx(&env, &tx);
         assert!(
             ibc_vp
                 .validate(&tx_data)

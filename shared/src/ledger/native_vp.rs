@@ -13,6 +13,8 @@ use crate::proto::Tx;
 use crate::types::address::{Address, InternalAddress};
 use crate::types::storage::{BlockHash, BlockHeight, Epoch, Key};
 use crate::vm::prefix_iter::PrefixIterators;
+#[cfg(feature = "wasm-runtime")]
+use crate::vm::wasm::vp_cache::VpCache;
 
 #[allow(missing_docs)]
 #[derive(Error, Debug)]
@@ -62,6 +64,9 @@ where
     pub write_log: &'a WriteLog,
     /// The transaction code is used for signature verification
     pub tx: &'a Tx,
+    /// VP WASM compilation cache
+    #[cfg(feature = "wasm-runtime")]
+    pub vp_wasm_cache: VpCache,
 }
 
 impl<'a, DB, H> Ctx<'a, DB, H>
@@ -75,6 +80,7 @@ where
         write_log: &'a WriteLog,
         tx: &'a Tx,
         gas_meter: VpGasMeter,
+        #[cfg(feature = "wasm-runtime")] vp_wasm_cache: VpCache,
     ) -> Self {
         Self {
             iterators: RefCell::new(PrefixIterators::default()),
@@ -82,6 +88,8 @@ where
             storage,
             write_log,
             tx,
+            #[cfg(feature = "wasm-runtime")]
+            vp_wasm_cache,
         }
     }
 
@@ -243,6 +251,7 @@ where
                 &mut result_buffer,
                 keys_changed,
                 &eval_runner,
+                &self.vp_wasm_cache,
             );
             match eval_runner.eval_native_result(ctx, vp_code, input_data) {
                 Ok(result) => result,

@@ -7,6 +7,8 @@ use std::num::TryFromIntError;
 use borsh::{BorshDeserialize, BorshSerialize};
 use thiserror::Error;
 
+#[cfg(feature = "wasm-runtime")]
+use super::wasm::vp_cache::VpCache;
 use crate::gossip::mm::MmHost;
 use crate::ledger::gas::{self, BlockGasMeter, VpGasMeter};
 use crate::ledger::storage::write_log::{self, WriteLog};
@@ -93,6 +95,10 @@ where
     pub verifiers: MutHostRef<'a, &'a HashSet<Address>>,
     /// Cache for 2-step reads from host environment.
     pub result_buffer: MutHostRef<'a, &'a Option<Vec<u8>>>,
+    /// VP WASM compilation cache (this is available in tx context, because
+    /// we're pre-compiling VPs from [`tx_init_account`])
+    #[cfg(feature = "wasm-runtime")]
+    pub vp_wasm_cache: MutHostRef<'a, &'a VpCache>,
 }
 
 impl<'a, MEM, DB, H> TxEnv<'a, MEM, DB, H>
@@ -108,6 +114,7 @@ where
     /// The way the arguments to this function are used is not thread-safe,
     /// we're assuming single-threaded tx execution with exclusive access to the
     /// mutable references.
+    #[allow(clippy::too_many_arguments)]
     pub fn new(
         memory: MEM,
         storage: &Storage<DB, H>,
@@ -116,6 +123,7 @@ where
         gas_meter: &mut BlockGasMeter,
         verifiers: &mut HashSet<Address>,
         result_buffer: &mut Option<Vec<u8>>,
+        #[cfg(feature = "wasm-runtime")] vp_wasm_cache: &mut VpCache,
     ) -> Self {
         let storage = unsafe { HostRef::new(storage) };
         let write_log = unsafe { MutHostRef::new(write_log) };
@@ -123,6 +131,8 @@ where
         let gas_meter = unsafe { MutHostRef::new(gas_meter) };
         let verifiers = unsafe { MutHostRef::new(verifiers) };
         let result_buffer = unsafe { MutHostRef::new(result_buffer) };
+        #[cfg(feature = "wasm-runtime")]
+        let vp_wasm_cache = unsafe { MutHostRef::new(vp_wasm_cache) };
         let ctx = TxCtx {
             storage,
             write_log,
@@ -130,6 +140,8 @@ where
             gas_meter,
             verifiers,
             result_buffer,
+            #[cfg(feature = "wasm-runtime")]
+            vp_wasm_cache,
         };
 
         Self { memory, ctx }
@@ -163,6 +175,8 @@ where
             gas_meter: self.gas_meter.clone(),
             verifiers: self.verifiers.clone(),
             result_buffer: self.result_buffer.clone(),
+            #[cfg(feature = "wasm-runtime")]
+            vp_wasm_cache: self.vp_wasm_cache.clone(),
         }
     }
 }
@@ -209,6 +223,9 @@ where
     /// The verifiers whose validity predicates should be triggered. Used for
     /// calls to `eval`.
     pub verifiers: HostRef<'a, &'a HashSet<Address>>,
+    /// VP WASM compilation cache
+    #[cfg(feature = "wasm-runtime")]
+    pub vp_wasm_cache: HostRef<'a, &'a VpCache>,
 }
 
 /// A Validity predicate runner for calls from the [`vp_eval`] function.
@@ -260,6 +277,7 @@ where
         result_buffer: &mut Option<Vec<u8>>,
         keys_changed: &HashSet<Key>,
         eval_runner: &EVAL,
+        #[cfg(feature = "wasm-runtime")] vp_wasm_cache: &VpCache,
     ) -> Self {
         let ctx = VpCtx::new(
             address,
@@ -272,6 +290,8 @@ where
             result_buffer,
             keys_changed,
             eval_runner,
+            #[cfg(feature = "wasm-runtime")]
+            vp_wasm_cache,
         );
 
         Self { memory, ctx }
@@ -318,6 +338,7 @@ where
         result_buffer: &mut Option<Vec<u8>>,
         keys_changed: &HashSet<Key>,
         eval_runner: &EVAL,
+        #[cfg(feature = "wasm-runtime")] vp_wasm_cache: &VpCache,
     ) -> Self {
         let address = unsafe { HostRef::new(address) };
         let storage = unsafe { HostRef::new(storage) };
@@ -329,6 +350,8 @@ where
         let result_buffer = unsafe { MutHostRef::new(result_buffer) };
         let keys_changed = unsafe { HostRef::new(keys_changed) };
         let eval_runner = unsafe { HostRef::new(eval_runner) };
+        #[cfg(feature = "wasm-runtime")]
+        let vp_wasm_cache = unsafe { HostRef::new(vp_wasm_cache) };
         Self {
             address,
             storage,
@@ -340,6 +363,8 @@ where
             result_buffer,
             keys_changed,
             verifiers,
+            #[cfg(feature = "wasm-runtime")]
+            vp_wasm_cache,
         }
     }
 }
@@ -362,6 +387,8 @@ where
             result_buffer: self.result_buffer.clone(),
             keys_changed: self.keys_changed.clone(),
             verifiers: self.verifiers.clone(),
+            #[cfg(feature = "wasm-runtime")]
+            vp_wasm_cache: self.vp_wasm_cache.clone(),
         }
     }
 }
@@ -1204,6 +1231,11 @@ where
     tx_add_gas(env, code.len() as u64 * WASM_VALIDATION_GAS_PER_BYTE)?;
     validate_untrusted_wasm(&code)
         .map_err(TxRuntimeError::InitAccountInvalidVpWasm)?;
+    #[cfg(feature = "wasm-runtime")]
+    {
+        let vp_wasm_cache = unsafe { env.ctx.vp_wasm_cache.get() };
+        vp_wasm_cache.pre_compile(&code);
+    }
 
     tracing::debug!("tx_init_account");
 
@@ -1586,6 +1618,7 @@ pub mod testing {
         verifiers: &mut HashSet<Address>,
         gas_meter: &mut BlockGasMeter,
         result_buffer: &mut Option<Vec<u8>>,
+        #[cfg(feature = "wasm-runtime")] vp_wasm_cache: &mut VpCache,
     ) -> TxEnv<'static, NativeMemory, DB, H>
     where
         DB: 'static + storage::DB + for<'iter> storage::DBIter<'iter>,
@@ -1599,6 +1632,8 @@ pub mod testing {
             gas_meter,
             verifiers,
             result_buffer,
+            #[cfg(feature = "wasm-runtime")]
+            vp_wasm_cache,
         )
     }
 
@@ -1615,6 +1650,7 @@ pub mod testing {
         result_buffer: &mut Option<Vec<u8>>,
         keys_changed: &HashSet<Key>,
         eval_runner: &EVAL,
+        vp_wasm_cache: &VpCache,
     ) -> VpEnv<'static, NativeMemory, DB, H, EVAL>
     where
         DB: 'static + storage::DB + for<'iter> storage::DBIter<'iter>,
@@ -1633,6 +1669,7 @@ pub mod testing {
             result_buffer,
             keys_changed,
             eval_runner,
+            vp_wasm_cache,
         )
     }
 }

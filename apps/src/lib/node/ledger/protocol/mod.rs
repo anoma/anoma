@@ -13,6 +13,7 @@ use anoma::proto::{self, Tx};
 use anoma::types::address::{Address, InternalAddress};
 use anoma::types::storage::Key;
 use anoma::types::transaction::{DecryptedTx, TxType};
+use anoma::vm::wasm::vp_cache::VpCache;
 use anoma::vm::{self, wasm};
 use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
 use thiserror::Error;
@@ -84,6 +85,7 @@ pub fn apply_tx<D, H>(
     block_gas_meter: &mut BlockGasMeter,
     write_log: &mut WriteLog,
     storage: &Storage<D, H>,
+    vp_wasm_cache: &VpCache,
 ) -> Result<TxResult>
 where
     D: DB + for<'iter> DBIter<'iter> + Sync + 'static,
@@ -96,8 +98,13 @@ where
     match tx {
         TxType::Raw(_) => Err(Error::TxTypeError),
         TxType::Decrypted(DecryptedTx::Decrypted(tx)) => {
-            let verifiers =
-                execute_tx(&tx, storage, block_gas_meter, write_log)?;
+            let verifiers = execute_tx(
+                &tx,
+                storage,
+                block_gas_meter,
+                write_log,
+                vp_wasm_cache,
+            )?;
 
             let vps_result = check_vps(
                 &tx,
@@ -105,6 +112,7 @@ where
                 block_gas_meter,
                 write_log,
                 &verifiers,
+                vp_wasm_cache,
             )?;
 
             let gas_used = block_gas_meter
@@ -138,6 +146,7 @@ fn execute_tx<D, H>(
     storage: &Storage<D, H>,
     gas_meter: &mut BlockGasMeter,
     write_log: &mut WriteLog,
+    vp_wasm_cache: &VpCache,
 ) -> Result<HashSet<Address>>
 where
     D: DB + for<'iter> DBIter<'iter> + 'static,
@@ -148,8 +157,15 @@ where
         .map_err(Error::GasError)?;
     let empty = vec![];
     let tx_data = tx.data.as_ref().unwrap_or(&empty);
-    wasm::run::tx(storage, write_log, gas_meter, &tx.code, tx_data)
-        .map_err(Error::TxRunnerError)
+    wasm::run::tx(
+        storage,
+        write_log,
+        gas_meter,
+        &tx.code,
+        tx_data,
+        vp_wasm_cache.clone(),
+    )
+    .map_err(Error::TxRunnerError)
 }
 
 /// A validity predicate
@@ -165,6 +181,7 @@ fn check_vps<D, H>(
     gas_meter: &mut BlockGasMeter,
     write_log: &WriteLog,
     verifiers_from_tx: &HashSet<Address>,
+    vp_wasm_cache: &VpCache,
 ) -> Result<VpsResult>
 where
     D: DB + for<'iter> DBIter<'iter> + Sync + 'static,
@@ -201,8 +218,14 @@ where
 
     let initial_gas = gas_meter.get_current_transaction_gas();
 
-    let vps_result =
-        execute_vps(verifiers, tx, storage, write_log, initial_gas)?;
+    let vps_result = execute_vps(
+        verifiers,
+        tx,
+        storage,
+        write_log,
+        initial_gas,
+        vp_wasm_cache,
+    )?;
     tracing::debug!("Total VPs gas cost {:?}", vps_result.gas_used);
 
     gas_meter
@@ -219,6 +242,7 @@ fn execute_vps<D, H>(
     storage: &Storage<D, H>,
     write_log: &WriteLog,
     initial_gas: u64,
+    vp_wasm_cache: &VpCache,
 ) -> Result<VpsResult>
 where
     D: DB + for<'iter> DBIter<'iter> + Sync + 'static,
@@ -244,11 +268,17 @@ where
                     &mut gas_meter,
                     keys,
                     &verifiers_addr,
+                    vp_wasm_cache.clone(),
                 )
                 .map_err(Error::VpRunnerError),
                 Vp::Native(internal_addr) => {
-                    let ctx =
-                        native_vp::Ctx::new(storage, write_log, tx, gas_meter);
+                    let ctx = native_vp::Ctx::new(
+                        storage,
+                        write_log,
+                        tx,
+                        gas_meter,
+                        vp_wasm_cache.clone(),
+                    );
                     let tx_data = match tx.data.as_ref() {
                         Some(data) => &data[..],
                         None => &[],

@@ -9,6 +9,8 @@ use anoma::types::address::{self, Address};
 use anoma::types::storage::{self, Key};
 use anoma::vm;
 use anoma::vm::prefix_iter::PrefixIterators;
+use anoma::vm::wasm::vp_cache::{self, VpCache};
+use tempfile::TempDir;
 
 use crate::tx::{init_tx_env, TestTxEnv};
 
@@ -34,6 +36,8 @@ pub struct TestVpEnv {
     pub verifiers: HashSet<Address>,
     pub eval_runner: native_vp_host_env::VpEval,
     pub result_buffer: Option<Vec<u8>>,
+    pub vp_wasm_cache: VpCache,
+    pub vp_cache_dir: TempDir,
 }
 
 impl Default for TestVpEnv {
@@ -42,6 +46,8 @@ impl Default for TestVpEnv {
         let eval_runner = anoma::vm::wasm::run::VpEvalWasm::default();
         #[cfg(not(feature = "wasm-runtime"))]
         let eval_runner = native_vp_host_env::VpEval;
+
+        let (vp_wasm_cache, vp_cache_dir) = vp_cache::testing::vp_cache();
 
         Self {
             addr: address::testing::established_address_1(),
@@ -54,6 +60,8 @@ impl Default for TestVpEnv {
             verifiers: HashSet::default(),
             eval_runner,
             result_buffer: None,
+            vp_wasm_cache,
+            vp_cache_dir,
         }
     }
 }
@@ -119,6 +127,8 @@ pub fn init_vp_env(
         verifiers,
         eval_runner,
         result_buffer,
+        vp_wasm_cache,
+        vp_cache_dir: _,
     }: &mut TestVpEnv,
 ) {
     vp_host_env::ENV.with(|env| {
@@ -134,6 +144,7 @@ pub fn init_vp_env(
                 result_buffer,
                 keys_changed,
                 eval_runner,
+                vp_wasm_cache,
             )
         })
     });

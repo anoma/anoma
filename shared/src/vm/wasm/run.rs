@@ -24,6 +24,7 @@ use crate::vm::wasm::host_env::{
     mm_filter_imports, mm_imports, tx_imports, vp_imports,
 };
 use crate::vm::wasm::memory;
+use crate::vm::wasm::vp_cache::VpCache;
 use crate::vm::{validate_untrusted_wasm, WasmValidationError};
 
 const TX_ENTRYPOINT: &str = "_apply_tx";
@@ -78,6 +79,7 @@ pub fn tx<DB, H>(
     gas_meter: &mut BlockGasMeter,
     tx_code: impl AsRef<[u8]>,
     tx_data: impl AsRef<[u8]>,
+    mut vp_wasm_cache: VpCache,
 ) -> Result<HashSet<Address>>
 where
     DB: 'static + storage::DB + for<'iter> storage::DBIter<'iter>,
@@ -99,6 +101,7 @@ where
         gas_meter,
         &mut verifiers,
         &mut result_buffer,
+        &mut vp_wasm_cache,
     );
 
     let tx_code = prepare_wasm_code(tx_code)?;
@@ -162,6 +165,7 @@ pub fn vp<DB, H>(
     gas_meter: &mut VpGasMeter,
     keys_changed: &HashSet<Key>,
     verifiers: &HashSet<Address>,
+    mut vp_wasm_cache: VpCache,
 ) -> Result<bool>
 where
     DB: 'static + storage::DB + for<'iter> storage::DBIter<'iter>,
@@ -173,9 +177,12 @@ where
         None => &[],
     };
 
-    let wasm_store = untrusted_wasm_store(memory::tx_limit());
+    // let wasm_store = untrusted_wasm_store(memory::vp_limit());
 
     validate_untrusted_wasm(vp_code).map_err(Error::ValidationError)?;
+
+    // Compile the wasm module
+    let (module, store) = vp_wasm_cache.fetch_or_compile(&vp_code)?;
 
     let mut iterators: PrefixIterators<'_, DB> = PrefixIterators::default();
     let mut result_buffer: Option<Vec<u8>> = None;
@@ -196,16 +203,16 @@ where
         &mut result_buffer,
         keys_changed,
         &eval_runner,
+        &vp_wasm_cache,
     );
 
     let initial_memory =
-        memory::prepare_vp_memory(&wasm_store).map_err(Error::MemoryError)?;
-    let imports = vp_imports(&wasm_store, initial_memory, env);
+        memory::prepare_vp_memory(&store).map_err(Error::MemoryError)?;
+    let imports = vp_imports(&store, initial_memory, env);
 
     run_vp(
-        wasm_store,
+        module,
         imports,
-        vp_code,
         input_data,
         address,
         keys_changed,
@@ -214,19 +221,13 @@ where
 }
 
 fn run_vp(
-    wasm_store: wasmer::Store,
+    module: wasmer::Module,
     vp_imports: wasmer::ImportObject,
-    vp_code: &[u8],
     input_data: &[u8],
     address: &Address,
     keys_changed: &HashSet<Key>,
     verifiers: &HashSet<Address>,
 ) -> Result<bool> {
-    let vp_code = prepare_wasm_code(vp_code)?;
-
-    // Compile the wasm module
-    let module = wasmer::Module::new(&wasm_store, &vp_code)
-        .map_err(Error::CompileError)?;
     let input: VpInput = VpInput {
         addr: address,
         data: input_data,
@@ -331,27 +332,30 @@ where
         vp_code: Vec<u8>,
         input_data: Vec<u8>,
     ) -> Result<bool> {
-        let wasm_store = untrusted_wasm_store(memory::tx_limit());
+        // let wasm_store = untrusted_wasm_store(memory::tx_limit());
 
         validate_untrusted_wasm(&vp_code).map_err(Error::ValidationError)?;
-
-        let initial_memory = memory::prepare_vp_memory(&wasm_store)
-            .map_err(Error::MemoryError)?;
 
         let address = unsafe { ctx.address.get() };
         let keys_changed = unsafe { ctx.keys_changed.get() };
         let verifiers = unsafe { ctx.verifiers.get() };
+        let mut vp_wasm_cache = unsafe { ctx.vp_wasm_cache.get() }.clone();
         let env = VpEnv {
             memory: WasmMemory::default(),
             ctx,
         };
 
-        let imports = vp_imports(&wasm_store, initial_memory, env);
+        // Compile the wasm module
+        let (module, store) = vp_wasm_cache.fetch_or_compile(&vp_code)?;
+
+        let initial_memory =
+            memory::prepare_vp_memory(&store).map_err(Error::MemoryError)?;
+
+        let imports = vp_imports(&store, initial_memory, env);
 
         run_vp(
-            wasm_store,
+            module,
             imports,
-            &vp_code[..],
             &input_data[..],
             address,
             keys_changed,
@@ -471,7 +475,7 @@ pub fn matchmaker_filter(
 }
 
 /// Prepare a wasm store for untrusted code.
-fn untrusted_wasm_store(limit: Limit<BaseTunables>) -> wasmer::Store {
+pub fn untrusted_wasm_store(limit: Limit<BaseTunables>) -> wasmer::Store {
     // Use Singlepass compiler with the default settings
     let compiler = wasmer_compiler_singlepass::Singlepass::default();
     wasmer::Store::new_with_tunables(
@@ -490,7 +494,7 @@ fn trusted_wasm_store() -> wasmer::Store {
 }
 
 /// Inject gas counter and stack-height limiter into the given wasm code
-fn prepare_wasm_code<T: AsRef<[u8]>>(code: T) -> Result<Vec<u8>> {
+pub fn prepare_wasm_code<T: AsRef<[u8]>>(code: T) -> Result<Vec<u8>> {
     let module: elements::Module = elements::deserialize_buffer(code.as_ref())
         .map_err(Error::DeserializationError)?;
     let module =
@@ -517,6 +521,7 @@ mod tests {
     use super::*;
     use crate::ledger::storage::testing::TestStorage;
     use crate::types::validity_predicate::EvalVp;
+    use crate::vm::wasm::vp_cache;
 
     const TX_MEMORY_LIMIT_WASM: &str = "../wasm_for_tests/tx_memory_limit.wasm";
     const TX_NO_OP_WASM: &str = "../wasm_for_tests/tx_no_op.wasm";
@@ -593,21 +598,30 @@ mod tests {
         // Allocating `2^23` (8 MiB) should be below the memory limit and
         // shouldn't fail
         let tx_data = 2_usize.pow(23).try_to_vec().unwrap();
+        let (vp_cache, _) = vp_cache::testing::vp_cache();
         let result = tx(
             &storage,
             &mut write_log,
             &mut gas_meter,
             tx_code.clone(),
             tx_data,
+            vp_cache,
         );
         assert!(result.is_ok(), "Expected success, got {:?}", result);
 
         // Allocating `2^24` (16 MiB) should be above the memory limit and
         // should fail
         let tx_data = 2_usize.pow(24).try_to_vec().unwrap();
-        let error =
-            tx(&storage, &mut write_log, &mut gas_meter, tx_code, tx_data)
-                .expect_err("Expected to run out of memory");
+        let (vp_cache, _) = vp_cache::testing::vp_cache();
+        let error = tx(
+            &storage,
+            &mut write_log,
+            &mut gas_meter,
+            tx_code,
+            tx_data,
+            vp_cache,
+        )
+        .expect_err("Expected to run out of memory");
         assert_eq!(
             get_trap_code(&error),
             Either::Left(wasmer_vm::TrapCode::UnreachableCodeReached),
@@ -644,6 +658,7 @@ mod tests {
         };
         let tx_data = eval_vp.try_to_vec().unwrap();
         let tx = Tx::new(vec![], Some(tx_data));
+        let (vp_cache, _) = vp_cache::testing::vp_cache();
         // When the `eval`ed VP doesn't run out of memory, it should return
         // `true`
         let passed = vp(
@@ -655,6 +670,7 @@ mod tests {
             &mut gas_meter,
             &keys_changed,
             &verifiers,
+            vp_cache,
         )
         .unwrap();
         assert!(passed);
@@ -671,6 +687,7 @@ mod tests {
         // When the `eval`ed VP runs out of memory, its result should be
         // `false`, hence we should also get back `false` from the VP that
         // called `eval`.
+        let (vp_cache, _) = vp_cache::testing::vp_cache();
         let passed = vp(
             vp_eval,
             &tx,
@@ -680,6 +697,7 @@ mod tests {
             &mut gas_meter,
             &keys_changed,
             &verifiers,
+            vp_cache,
         )
         .unwrap();
 
@@ -708,6 +726,7 @@ mod tests {
         // shouldn't fail
         let tx_data = 2_usize.pow(23).try_to_vec().unwrap();
         let tx = Tx::new(vec![], Some(tx_data));
+        let (vp_cache, _) = vp_cache::testing::vp_cache();
         let result = vp(
             vp_code.clone(),
             &tx,
@@ -717,6 +736,7 @@ mod tests {
             &mut gas_meter,
             &keys_changed,
             &verifiers,
+            vp_cache,
         );
         assert!(result.is_ok(), "Expected success, got {:?}", result);
 
@@ -724,6 +744,7 @@ mod tests {
         // should fail
         let tx_data = 2_usize.pow(24).try_to_vec().unwrap();
         let tx = Tx::new(vec![], Some(tx_data));
+        let (vp_cache, _) = vp_cache::testing::vp_cache();
         let error = vp(
             vp_code,
             &tx,
@@ -733,6 +754,7 @@ mod tests {
             &mut gas_meter,
             &keys_changed,
             &verifiers,
+            vp_cache,
         )
         .expect_err("Expected to run out of memory");
 
@@ -759,8 +781,15 @@ mod tests {
         // limit and should fail
         let len = 2_usize.pow(24);
         let tx_data: Vec<u8> = vec![6_u8; len];
-        let result =
-            tx(&storage, &mut write_log, &mut gas_meter, tx_no_op, tx_data);
+        let (vp_cache, _) = vp_cache::testing::vp_cache();
+        let result = tx(
+            &storage,
+            &mut write_log,
+            &mut gas_meter,
+            tx_no_op,
+            tx_data,
+            vp_cache,
+        );
         match result {
             Err(Error::MemoryError(memory::Error::MemoryOutOfBounds(
                 wasmer::MemoryError::CouldNotGrow { .. },
@@ -793,6 +822,7 @@ mod tests {
         let len = 2_usize.pow(24);
         let tx_data: Vec<u8> = vec![6_u8; len];
         let tx = Tx::new(vec![], Some(tx_data));
+        let (vp_cache, _) = vp_cache::testing::vp_cache();
         let result = vp(
             vp_code,
             &tx,
@@ -802,6 +832,7 @@ mod tests {
             &mut gas_meter,
             &keys_changed,
             &verifiers,
+            vp_cache,
         );
         match result {
             Err(Error::MemoryError(memory::Error::MemoryOutOfBounds(
@@ -837,12 +868,14 @@ mod tests {
         // Borsh.
         storage.write(&key, value.try_to_vec().unwrap()).unwrap();
         let tx_data = key.try_to_vec().unwrap();
+        let (vp_cache, _) = vp_cache::testing::vp_cache();
         let error = tx(
             &storage,
             &mut write_log,
             &mut gas_meter,
             tx_read_key,
             tx_data,
+            vp_cache,
         )
         .expect_err("Expected to run out of memory");
         assert_eq!(
@@ -879,6 +912,7 @@ mod tests {
         storage.write(&key, value.try_to_vec().unwrap()).unwrap();
         let tx_data = key.try_to_vec().unwrap();
         let tx = Tx::new(vec![], Some(tx_data));
+        let (vp_cache, _) = vp_cache::testing::vp_cache();
         let error = vp(
             vp_read_key,
             &tx,
@@ -888,6 +922,7 @@ mod tests {
             &mut gas_meter,
             &keys_changed,
             &verifiers,
+            vp_cache,
         )
         .expect_err("Expected to run out of memory");
         assert_eq!(
@@ -933,6 +968,7 @@ mod tests {
         };
         let tx_data = eval_vp.try_to_vec().unwrap();
         let tx = Tx::new(vec![], Some(tx_data));
+        let (vp_cache, _) = vp_cache::testing::vp_cache();
         let passed = vp(
             vp_eval,
             &tx,
@@ -942,6 +978,7 @@ mod tests {
             &mut gas_meter,
             &keys_changed,
             &verifiers,
+            vp_cache,
         )
         .unwrap();
         assert!(!passed);
@@ -986,7 +1023,15 @@ mod tests {
         let storage = TestStorage::default();
         let mut write_log = WriteLog::default();
         let mut gas_meter = BlockGasMeter::default();
-        tx(&storage, &mut write_log, &mut gas_meter, tx_code, tx_data)
+        let (vp_cache, _) = vp_cache::testing::vp_cache();
+        tx(
+            &storage,
+            &mut write_log,
+            &mut gas_meter,
+            tx_code,
+            tx_data,
+            vp_cache,
+        )
     }
 
     fn loop_in_vp_wasm(loops: u32) -> Result<bool> {
@@ -1025,6 +1070,7 @@ mod tests {
         let mut gas_meter = VpGasMeter::new(0);
         let keys_changed = HashSet::new();
         let verifiers = HashSet::new();
+        let (vp_cache, _) = vp_cache::testing::vp_cache();
         vp(
             vp_code,
             &tx,
@@ -1034,6 +1080,7 @@ mod tests {
             &mut gas_meter,
             &keys_changed,
             &verifiers,
+            vp_cache,
         )
     }
 

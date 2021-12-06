@@ -10,7 +10,9 @@ use anoma::types::storage::Key;
 use anoma::types::{key, token};
 use anoma::vm;
 use anoma::vm::prefix_iter::PrefixIterators;
+use anoma::vm::wasm::vp_cache::{self, VpCache};
 use anoma_vm_env::tx_prelude::BorshSerialize;
+use tempfile::TempDir;
 
 /// This module combines the native host function implementations from
 /// `native_tx_host_env` with the functions exposed to the tx wasm
@@ -23,7 +25,6 @@ pub mod tx_host_env {
 }
 
 /// Host environment structures required for transactions.
-#[derive(Default)]
 pub struct TestTxEnv {
     pub storage: TestStorage,
     pub write_log: WriteLog,
@@ -31,6 +32,24 @@ pub struct TestTxEnv {
     pub verifiers: HashSet<Address>,
     pub gas_meter: BlockGasMeter,
     pub result_buffer: Option<Vec<u8>>,
+    pub vp_wasm_cache: VpCache,
+    pub vp_cache_dir: TempDir,
+}
+impl Default for TestTxEnv {
+    fn default() -> Self {
+        let (vp_wasm_cache, vp_cache_dir) = vp_cache::testing::vp_cache();
+
+        Self {
+            storage: TestStorage::default(),
+            write_log: WriteLog::default(),
+            iterators: PrefixIterators::default(),
+            gas_meter: BlockGasMeter::default(),
+            verifiers: HashSet::default(),
+            result_buffer: None,
+            vp_wasm_cache,
+            vp_cache_dir,
+        }
+    }
 }
 
 impl TestTxEnv {
@@ -90,6 +109,8 @@ pub fn init_tx_env(
         verifiers,
         gas_meter,
         result_buffer,
+        vp_wasm_cache,
+        vp_cache_dir: _,
     }: &mut TestTxEnv,
 ) {
     tx_host_env::ENV.with(|env| {
@@ -101,6 +122,7 @@ pub fn init_tx_env(
                 verifiers,
                 gas_meter,
                 result_buffer,
+                vp_wasm_cache,
             )
         })
     });

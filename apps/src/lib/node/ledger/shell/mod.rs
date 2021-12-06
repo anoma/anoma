@@ -35,6 +35,7 @@ use anoma::types::transaction::{
     EllipticCurve, PairingEngine, TxType, WrapperTx,
 };
 use anoma::types::{address, key, token};
+use anoma::vm::wasm::vp_cache::VpCache;
 use borsh::{BorshDeserialize, BorshSerialize};
 use num_derive::{FromPrimitive, ToPrimitive};
 use num_traits::{FromPrimitive, ToPrimitive};
@@ -152,6 +153,8 @@ pub struct Shell<
     wasm_dir: PathBuf,
     /// Wrapper txs to be decrypted in the next block proposal
     tx_queue: TxQueue,
+    /// VP WASM compilation cache
+    vp_wasm_cache: VpCache,
 }
 
 #[derive(Default, Debug, Clone, BorshDeserialize, BorshSerialize)]
@@ -243,7 +246,7 @@ where
             std::fs::create_dir(&base_dir)
                 .expect("Creating directory for Anoma should not fail");
         }
-        let mut storage = Storage::open(db_path, chain_id, db_cache);
+        let mut storage = Storage::open(db_path, chain_id.clone(), db_cache);
         storage
             .load_last_state()
             .map_err(|e| {
@@ -269,6 +272,10 @@ where
             Default::default()
         };
 
+        let vp_wasm_cache_dir =
+            base_dir.join(chain_id.as_str()).join("vp_wasm_cache");
+        // TODO set from available memory sysinfo and optionally config
+        let vp_cache_max_bytes = 1024 * 1024 * 1024;
         Self {
             storage,
             gas_meter: BlockGasMeter::default(),
@@ -277,6 +284,7 @@ where
             base_dir,
             wasm_dir,
             tx_queue,
+            vp_wasm_cache: VpCache::new(vp_wasm_cache_dir, vp_cache_max_bytes),
         }
     }
 
@@ -516,6 +524,7 @@ where
                     &mut gas_meter,
                     &mut write_log,
                     &self.storage,
+                    &self.vp_wasm_cache,
                 )
                 .map_err(Error::TxApply)
                 {
