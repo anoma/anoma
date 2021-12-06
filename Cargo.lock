@@ -90,6 +90,7 @@ dependencies = [
  "bech32",
  "borsh",
  "chrono",
+ "clru",
  "ed25519-dalek",
  "group-threshold-cryptography",
  "hex",
@@ -113,6 +114,7 @@ dependencies = [
  "serde_json",
  "sha2 0.9.8",
  "sparse-merkle-tree",
+ "tempfile",
  "tendermint 0.23.0 (git+https://github.com/heliaxdev/tendermint-rs?branch=yuji/abcipp-v0.23.0)",
  "tendermint 0.23.0 (git+https://github.com/heliaxdev/tendermint-rs?branch=yuji/rebase_v0.23.0)",
  "tendermint-proto 0.23.0 (git+https://github.com/heliaxdev/tendermint-rs?branch=yuji/abcipp-v0.23.0)",
@@ -123,8 +125,10 @@ dependencies = [
  "tracing",
  "tracing-subscriber",
  "wasmer",
+ "wasmer-cache",
  "wasmer-compiler-cranelift",
  "wasmer-compiler-singlepass",
+ "wasmer-engine-dylib",
  "wasmer-engine-universal",
  "wasmer-vm",
  "wasmparser 0.81.0",
@@ -400,6 +404,12 @@ name = "arrayvec"
 version = "0.5.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "23b62fc65de8e4e7f52534fb52b0f3ed04746ae267519eef2a83941e8085068b"
+
+[[package]]
+name = "arrayvec"
+version = "0.7.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8da52d66c7071e2e3fa2a1e5c6d088fec47b593032b254f5e980de8ea54454d6"
 
 [[package]]
 name = "asn1_der"
@@ -789,8 +799,22 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "afa748e348ad3be8263be728124b24a24f268266f6f5d58af9d75f6a40b5c587"
 dependencies = [
  "arrayref",
- "arrayvec",
+ "arrayvec 0.5.2",
  "constant_time_eq",
+]
+
+[[package]]
+name = "blake3"
+version = "1.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "526c210b4520e416420759af363083471656e819a75e831b8d2c9d5a584f2413"
+dependencies = [
+ "arrayref",
+ "arrayvec 0.7.2",
+ "cc",
+ "cfg-if 1.0.0",
+ "constant_time_eq",
+ "digest 0.9.0",
 ]
 
 [[package]]
@@ -1125,6 +1149,11 @@ checksum = "ddfc5b9aa5d4507acaf872de71051dfd0e309860e88966e1051e462a077aac4f"
 dependencies = [
  "bitflags",
 ]
+
+[[package]]
+name = "clru"
+version = "0.5.0"
+source = "git+https://github.com/marmeladema/clru-rs.git?rev=71ca566#71ca566915f21f3c308091ca7756a91b0f8b5afc"
 
 [[package]]
 name = "color-eyre"
@@ -2857,7 +2886,7 @@ version = "0.7.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6607c62aa161d23d17a9072cc5da0be67cdfc89d3afb1e8d9c842bebc2525ffe"
 dependencies = [
- "arrayvec",
+ "arrayvec 0.5.2",
  "bitflags",
  "cfg-if 1.0.0",
  "ryu",
@@ -3044,7 +3073,7 @@ version = "0.30.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b07312ebe5ee4fd2404447a0609814574df55c65d4e20838b957bbd34907d820"
 dependencies = [
- "arrayvec",
+ "arrayvec 0.5.2",
  "asynchronous-codec",
  "bytes 1.1.0",
  "either",
@@ -4989,7 +5018,7 @@ version = "1.17.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "353775f96a1f400edcca737f843cb201af3645912e741e64456a257c770173e8"
 dependencies = [
- "arrayvec",
+ "arrayvec 0.5.2",
  "num-traits 0.2.14",
  "serde 1.0.130",
 ]
@@ -6951,6 +6980,18 @@ dependencies = [
  "wasmer-vm",
  "wat",
  "winapi 0.3.9",
+]
+
+[[package]]
+name = "wasmer-cache"
+version = "2.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d7883089c31a10c01e2eebd1e42d30300976c2f60d023aa51a95462546962d9b"
+dependencies = [
+ "blake3",
+ "hex",
+ "thiserror",
+ "wasmer",
 ]
 
 [[package]]

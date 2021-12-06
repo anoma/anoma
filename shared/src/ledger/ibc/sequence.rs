@@ -20,6 +20,7 @@ use super::Ibc;
 use crate::ledger::storage::{self as ledger_storage, StorageHasher};
 use crate::types::ibc::{PacketAckData, PacketReceiptData, PacketSendData};
 use crate::types::storage::Key;
+use crate::vm::WasmCacheAccess;
 
 #[allow(missing_docs)]
 #[derive(Error, Debug)]
@@ -41,10 +42,11 @@ pub enum Error {
 /// IBC packet functions result
 pub type Result<T> = std::result::Result<T, Error>;
 
-impl<'a, DB, H> Ibc<'a, DB, H>
+impl<'a, DB, H, CA> Ibc<'a, DB, H, CA>
 where
     DB: 'static + ledger_storage::DB + for<'iter> ledger_storage::DBIter<'iter>,
     H: 'static + StorageHasher,
+    CA: 'static + WasmCacheAccess,
 {
     pub(super) fn validate_sequence_send(
         &self,

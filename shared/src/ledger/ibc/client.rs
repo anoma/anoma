@@ -43,6 +43,7 @@ use crate::ledger::storage::{self, StorageHasher};
 use crate::types::ibc::{
     ClientUpdateData, ClientUpgradeData, Error as IbcDataError,
 };
+use crate::vm::WasmCacheAccess;
 
 #[allow(missing_docs)]
 #[derive(Error, Debug)]
@@ -68,10 +69,11 @@ pub type Result<T> = std::result::Result<T, Error>;
 /// ClientReader result
 type Ics02Result<T> = core::result::Result<T, Ics02Error>;
 
-impl<'a, DB, H> Ibc<'a, DB, H>
+impl<'a, DB, H, CA> Ibc<'a, DB, H, CA>
 where
     DB: 'static + storage::DB + for<'iter> storage::DBIter<'iter>,
     H: 'static + StorageHasher,
+    CA: 'static + WasmCacheAccess,
 {
     pub(super) fn validate_client(
         &self,
@@ -330,10 +332,11 @@ where
 }
 
 /// Load the posterior client state
-impl<'a, DB, H> ClientReader for Ibc<'a, DB, H>
+impl<'a, DB, H, CA> ClientReader for Ibc<'a, DB, H, CA>
 where
     DB: 'static + storage::DB + for<'iter> storage::DBIter<'iter>,
     H: 'static + StorageHasher,
+    CA: 'static + WasmCacheAccess,
 {
     fn client_type(&self, client_id: &ClientId) -> Ics02Result<ClientType> {
         let key = client_type_key(client_id);

@@ -25,6 +25,7 @@ dependencies = [
  "bech32",
  "borsh",
  "chrono",
+ "clru",
  "ed25519-dalek",
  "hex",
  "itertools",
@@ -206,6 +207,11 @@ dependencies = [
  "time",
  "winapi",
 ]
+
+[[package]]
+name = "clru"
+version = "0.5.0"
+source = "git+https://github.com/marmeladema/clru-rs.git?rev=71ca566#71ca566915f21f3c308091ca7756a91b0f8b5afc"
 
 [[package]]
 name = "cpufeatures"
@@ -1318,9 +1324,9 @@ checksum = "1a143597ca7c7793eff794def352d41792a93c481eb1042423ff7ff72ba2c31f"
 
 [[package]]
 name = "wasmparser"
-version = "0.79.0"
+version = "0.81.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5b5894be15a559c85779254700e1d35f02f843b5a69152e5c82c626d9fd66c0e"
+checksum = "98930446519f63d00a836efdc22f67766ceae8dbcc1571379f2bcabc6b2b9abc"
 
 [[package]]
 name = "wee_alloc"

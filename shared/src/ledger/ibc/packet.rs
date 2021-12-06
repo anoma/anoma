@@ -63,6 +63,7 @@ use crate::types::ibc::{
     TimeoutData,
 };
 use crate::types::storage::Key;
+use crate::vm::WasmCacheAccess;
 
 #[allow(missing_docs)]
 #[derive(Error, Debug)]
@@ -98,10 +99,11 @@ enum Phase {
     Ack,
 }
 
-impl<'a, DB, H> Ibc<'a, DB, H>
+impl<'a, DB, H, CA> Ibc<'a, DB, H, CA>
 where
     DB: 'static + storage::DB + for<'iter> storage::DBIter<'iter>,
     H: 'static + StorageHasher,
+    CA: 'static + WasmCacheAccess,
 {
     pub(super) fn validate_commitment(
         &self,

@@ -67,6 +67,7 @@ use crate::types::ibc::{
     Error as IbcDataError,
 };
 use crate::types::storage::{BlockHeight, Epoch, Key, KeySeg};
+use crate::vm::WasmCacheAccess;
 
 #[allow(missing_docs)]
 #[derive(Error, Debug)]
@@ -94,10 +95,11 @@ pub type Result<T> = std::result::Result<T, Error>;
 /// ConnectionReader result
 type Ics03Result<T> = core::result::Result<T, Ics03Error>;
 
-impl<'a, DB, H> Ibc<'a, DB, H>
+impl<'a, DB, H, CA> Ibc<'a, DB, H, CA>
 where
     DB: 'static + storage::DB + for<'iter> storage::DBIter<'iter>,
     H: 'static + StorageHasher,
+    CA: 'static + WasmCacheAccess,
 {
     pub(super) fn validate_connection(
         &self,
@@ -344,10 +346,11 @@ where
     }
 }
 
-impl<'a, DB, H> ConnectionReader for Ibc<'a, DB, H>
+impl<'a, DB, H, CA> ConnectionReader for Ibc<'a, DB, H, CA>
 where
     DB: 'static + storage::DB + for<'iter> storage::DBIter<'iter>,
     H: 'static + StorageHasher,
+    CA: 'static + WasmCacheAccess,
 {
     fn connection_end(
         &self,
