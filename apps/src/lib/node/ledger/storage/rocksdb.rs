@@ -52,7 +52,10 @@ pub struct RocksDB(rocksdb::DB);
 pub struct RocksDBWriteBatch(WriteBatch);
 
 /// Open RocksDB for the DB
-pub fn open(path: impl AsRef<Path>) -> Result<RocksDB> {
+pub fn open(
+    path: impl AsRef<Path>,
+    cache: Option<&rocksdb::Cache>,
+) -> Result<RocksDB> {
     let logical_cores = num_cpus::get() as i32;
     let compaction_threads =
         if let Ok(num_str) = env::var(ENV_VAR_ROCKSDB_COMPACTION_THREADS) {
@@ -95,6 +98,9 @@ pub fn open(path: impl AsRef<Path>) -> Result<RocksDB> {
     table_opts.set_block_size(16 * 1024);
     table_opts.set_cache_index_and_filter_blocks(true);
     table_opts.set_pin_l0_filter_and_index_blocks_in_cache(true);
+    if let Some(cache) = cache {
+        table_opts.set_block_cache(cache);
+    }
     // latest format versions https://github.com/facebook/rocksdb/blob/d1c510baecc1aef758f91f786c4fbee3bc847a63/include/rocksdb/table.h#L394
     table_opts.set_format_version(5);
     cf_opts.set_block_based_table_factory(&table_opts);
@@ -106,6 +112,7 @@ pub fn open(path: impl AsRef<Path>) -> Result<RocksDB> {
     let extractor = SliceTransform::create_fixed_prefix(20);
     cf_opts.set_prefix_extractor(extractor);
     // TODO use column families
+
     rocksdb::DB::open_cf_descriptors(&cf_opts, path, vec![])
         .map(RocksDB)
         .map_err(|e| Error::DBError(e.into_string()))
@@ -225,10 +232,14 @@ impl RocksDB {
 }
 
 impl DB for RocksDB {
+    type Cache = rocksdb::Cache;
     type WriteBatch = RocksDBWriteBatch;
 
-    fn open(db_path: impl AsRef<Path>) -> Self {
-        open(db_path).expect("cannot open the DB")
+    fn open(
+        db_path: impl AsRef<std::path::Path>,
+        cache: Option<&Self::Cache>,
+    ) -> Self {
+        open(db_path, cache).expect("cannot open the DB")
     }
 
     fn flush(&self) -> Result<()> {

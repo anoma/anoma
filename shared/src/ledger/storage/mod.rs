@@ -141,12 +141,16 @@ pub struct BlockStateWrite<'a> {
 
 /// A database backend.
 pub trait DB: std::fmt::Debug {
+    /// A DB's cache
+    type Cache;
     /// A handle for batch writes
     type WriteBatch: DBWriteBatch;
 
     /// Open the database from provided path
-    /// Open the database from provided path
-    fn open(db_path: impl AsRef<std::path::Path>) -> Self;
+    fn open(
+        db_path: impl AsRef<std::path::Path>,
+        cache: Option<&Self::Cache>,
+    ) -> Self;
 
     /// Flush data on the memory to persistent them
     fn flush(&self) -> Result<()>;
@@ -247,6 +251,7 @@ where
     pub fn open(
         db_path: impl AsRef<std::path::Path>,
         chain_id: ChainId,
+        cache: Option<&D::Cache>,
     ) -> Self {
         let block = BlockStorage {
             tree: MerkleTree::default(),
@@ -256,7 +261,7 @@ where
             pred_epochs: Epochs::default(),
         };
         Storage::<D, H> {
-            db: D::open(db_path),
+            db: D::open(db_path, cache),
             chain_id,
             block,
             header: None,
