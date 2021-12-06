@@ -7,10 +7,10 @@ pub mod storage;
 pub mod tendermint_node;
 
 use std::convert::TryInto;
-use std::env;
 use std::net::SocketAddr;
 use std::path::PathBuf;
 use std::str::FromStr;
+use std::env;
 
 use byte_unit::Byte;
 use futures::future::TryFutureExt;
