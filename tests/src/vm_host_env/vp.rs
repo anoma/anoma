@@ -7,8 +7,10 @@ use anoma::ledger::storage::write_log::WriteLog;
 use anoma::proto::Tx;
 use anoma::types::address::{self, Address};
 use anoma::types::storage::{self, Key};
-use anoma::vm;
 use anoma::vm::prefix_iter::PrefixIterators;
+use anoma::vm::wasm::{self, VpCache};
+use anoma::vm::{self, WasmCacheRwAccess};
+use tempfile::TempDir;
 
 use crate::tx::{init_tx_env, TestTxEnv};
 
@@ -34,6 +36,8 @@ pub struct TestVpEnv {
     pub verifiers: HashSet<Address>,
     pub eval_runner: native_vp_host_env::VpEval,
     pub result_buffer: Option<Vec<u8>>,
+    pub vp_wasm_cache: VpCache<WasmCacheRwAccess>,
+    pub vp_cache_dir: TempDir,
 }
 
 impl Default for TestVpEnv {
@@ -42,6 +46,9 @@ impl Default for TestVpEnv {
         let eval_runner = anoma::vm::wasm::run::VpEvalWasm::default();
         #[cfg(not(feature = "wasm-runtime"))]
         let eval_runner = native_vp_host_env::VpEval;
+
+        let (vp_wasm_cache, vp_cache_dir) =
+            wasm::compilation_cache::common::testing::cache();
 
         Self {
             addr: address::testing::established_address_1(),
@@ -54,6 +61,8 @@ impl Default for TestVpEnv {
             verifiers: HashSet::default(),
             eval_runner,
             result_buffer: None,
+            vp_wasm_cache,
+            vp_cache_dir,
         }
     }
 }
@@ -119,6 +128,8 @@ pub fn init_vp_env(
         verifiers,
         eval_runner,
         result_buffer,
+        vp_wasm_cache,
+        vp_cache_dir: _,
     }: &mut TestVpEnv,
 ) {
     vp_host_env::ENV.with(|env| {
@@ -134,6 +145,7 @@ pub fn init_vp_env(
                 result_buffer,
                 keys_changed,
                 eval_runner,
+                vp_wasm_cache,
             )
         })
     });
@@ -150,29 +162,44 @@ mod native_vp_host_env {
     use anoma::ledger::storage::testing::Sha256Hasher;
     use anoma::vm::host_env::*;
     use anoma::vm::memory::testing::NativeMemory;
+    use anoma::vm::WasmCacheRwAccess;
     // TODO replace with `std::concat_idents` once stabilized (https://github.com/rust-lang/rust/issues/29599)
     use concat_idents::concat_idents;
 
     use super::*;
 
     #[cfg(feature = "wasm-runtime")]
-    pub type VpEval = anoma::vm::wasm::run::VpEvalWasm<MockDB, Sha256Hasher>;
+    pub type VpEval = anoma::vm::wasm::run::VpEvalWasm<
+        MockDB,
+        Sha256Hasher,
+        WasmCacheRwAccess,
+    >;
     #[cfg(not(feature = "wasm-runtime"))]
     pub struct VpEval;
 
+    pub type TestVpEnv = VpEnv<
+        'static,
+        NativeMemory,
+        MockDB,
+        Sha256Hasher,
+        VpEval,
+        WasmCacheRwAccess,
+    >;
+
     thread_local! {
-        pub static ENV: RefCell<Option<VpEnv<'static, NativeMemory, MockDB, Sha256Hasher, VpEval>>> = RefCell::new(None);
+        pub static ENV: RefCell<Option<TestVpEnv>> = RefCell::new(None);
     }
 
     #[cfg(not(feature = "wasm-runtime"))]
     impl VpEvaluator for VpEval {
+        type CA = WasmCacheRwAccess;
         type Db = MockDB;
         type Eval = VpEval;
         type H = Sha256Hasher;
 
         fn eval(
             &self,
-            _ctx: VpCtx<'static, Self::Db, Self::H, Self::Eval>,
+            _ctx: VpCtx<'static, Self::Db, Self::H, Self::Eval, Self::CA>,
             _vp_code: Vec<u8>,
             _input_data: Vec<u8>,
         ) -> anoma::types::internal::HostEnvResult {

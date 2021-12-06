@@ -51,6 +51,7 @@ dependencies = [
  "bech32",
  "borsh",
  "chrono",
+ "clru",
  "ed25519-dalek",
  "hex",
  "ibc",
@@ -68,14 +69,17 @@ dependencies = [
  "serde",
  "sha2",
  "sparse-merkle-tree",
+ "tempfile",
  "tendermint",
  "tendermint-rpc",
  "thiserror",
  "tonic-build",
  "tracing",
  "wasmer",
+ "wasmer-cache",
  "wasmer-compiler-cranelift",
  "wasmer-compiler-singlepass",
+ "wasmer-engine-dylib",
  "wasmer-engine-universal",
  "wasmer-vm",
  "wasmparser 0.81.0",
@@ -101,6 +105,7 @@ dependencies = [
  "ibc-proto",
  "serde_json",
  "sha2",
+ "tempfile",
  "tendermint",
  "test-log",
  "tracing",
@@ -150,10 +155,22 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "15af2628f6890fe2609a3b91bef4c83450512802e59489f9c1cb1fa5df064a61"
 
 [[package]]
+name = "arrayref"
+version = "0.3.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a4c527152e37cf757a3f78aae5a06fbeefdb07ccc535c980a3208ee3060dd544"
+
+[[package]]
 name = "arrayvec"
 version = "0.5.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "23b62fc65de8e4e7f52534fb52b0f3ed04746ae267519eef2a83941e8085068b"
+
+[[package]]
+name = "arrayvec"
+version = "0.7.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8da52d66c7071e2e3fa2a1e5c6d088fec47b593032b254f5e980de8ea54454d6"
 
 [[package]]
 name = "async-stream"
@@ -242,6 +259,20 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cf1de2fe8c75bc145a2f577add951f8134889b4795d47466a54a5c846d691693"
 
 [[package]]
+name = "blake3"
+version = "1.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "526c210b4520e416420759af363083471656e819a75e831b8d2c9d5a584f2413"
+dependencies = [
+ "arrayref",
+ "arrayvec 0.7.2",
+ "cc",
+ "cfg-if 1.0.0",
+ "constant_time_eq",
+ "digest",
+]
+
+[[package]]
 name = "block-buffer"
 version = "0.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -310,9 +341,9 @@ checksum = "8f1e260c3a9040a7c19a12468758f4c16f31a81a1fe087482be9570ec864bb6c"
 
 [[package]]
 name = "bytecheck"
-version = "0.6.6"
+version = "0.6.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "77f403a29df55aacacdef2114efafb10c7405e6b051d829f420c33918aeef0f8"
+checksum = "314889ea31cda264cb7c3d6e6e5c9415a987ecb0e72c17c00d36fbb881d34abe"
 dependencies = [
  "bytecheck_derive",
  "ptr_meta",
@@ -320,9 +351,9 @@ dependencies = [
 
 [[package]]
 name = "bytecheck_derive"
-version = "0.6.5"
+version = "0.6.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c3b4dff26fdc9f847dab475c9fec16f2cba82d5aa1f09981b87c44520721e10a"
+checksum = "4a2b3b92c135dae665a6f760205b89187638e83bed17ef3e44e83c712cf30600"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -374,6 +405,11 @@ dependencies = [
 ]
 
 [[package]]
+name = "clru"
+version = "0.5.0"
+source = "git+https://github.com/marmeladema/clru-rs.git?rev=71ca566#71ca566915f21f3c308091ca7756a91b0f8b5afc"
+
+[[package]]
 name = "concat-idents"
 version = "1.1.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -382,6 +418,12 @@ dependencies = [
  "quote",
  "syn",
 ]
+
+[[package]]
+name = "constant_time_eq"
+version = "0.1.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "245097e9a4535ee1e3e3931fcfcd55a796a44c643e8596ff6566d68f09b87bbc"
 
 [[package]]
 name = "contracts"
@@ -1902,9 +1944,9 @@ dependencies = [
 
 [[package]]
 name = "rend"
-version = "0.3.4"
+version = "0.3.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d0a97e3d54c72a2837a552c9ca99e7163ed7892f0f70cc5372a0aec9e9b7c152"
+checksum = "1033f6fe7ce48c8333e5412891b933e85d6a3a09728c4883240edf64e7a6f11a"
 dependencies = [
  "bytecheck",
 ]
@@ -1922,9 +1964,9 @@ dependencies = [
 
 [[package]]
 name = "rkyv"
-version = "0.7.24"
+version = "0.7.25"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1460b2dd43a8416140f3fdcd8dc76cb67f01f58d0db648ec9ae71ee375942174"
+checksum = "86c74fc6ea0317f1ba207eef55f5401b3180237625211866703183977b57dd45"
 dependencies = [
  "bytecheck",
  "hashbrown 0.11.2",
@@ -1936,9 +1978,9 @@ dependencies = [
 
 [[package]]
 name = "rkyv_derive"
-version = "0.7.24"
+version = "0.7.25"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f9d4f9c7215fac8b7ef54171e14cc18875821178fe8b99fb2f85e211d8bdda40"
+checksum = "61f677bd46008257bfdf28d051a59a72b75c2714754be3f20bcb4cbd835d2723"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -1951,7 +1993,7 @@ version = "1.14.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "01127cb8617e5e21bcf2e19b5eb48317735ca677f1d0a94833c21c331c446582"
 dependencies = [
- "arrayvec",
+ "arrayvec 0.5.2",
  "num-traits 0.2.14",
  "serde",
 ]
@@ -2863,6 +2905,18 @@ dependencies = [
  "wasmer-vm",
  "wat",
  "winapi",
+]
+
+[[package]]
+name = "wasmer-cache"
+version = "2.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d7883089c31a10c01e2eebd1e42d30300976c2f60d023aa51a95462546962d9b"
+dependencies = [
+ "blake3",
+ "hex",
+ "thiserror",
+ "wasmer",
 ]
 
 [[package]]

@@ -45,13 +45,16 @@ testing = [
   "proptest",
   "rand",
   "rand_core",
+  "tempfile",
 ]
 wasm-runtime = [
   "loupe",
   "parity-wasm",
   "pwasm-utils",
+  "wasmer-cache",
   "wasmer-compiler-singlepass",
   "wasmer-compiler-cranelift",
+  "wasmer-engine-dylib",
   "wasmer-engine-universal",
   "wasmer-vm",
   "wasmer",
@@ -65,6 +68,8 @@ ark-serialize = {version = "0.3", optional = true}
 bech32 = "0.8.0"
 borsh = "0.9.0"
 chrono = "0.4.19"
+# Using unreleased commit on top of version 0.5.0 that adds Sync to the CLruCache
+clru = {git = "https://github.com/marmeladema/clru-rs.git", rev = "71ca566"}
 ed25519-dalek = {version = "1.0.1", default-features = false, features = ["rand", "u64_backend", "serde"]}
 hex = "0.4.3"
 tpke = {package = "group-threshold-cryptography", optional = true, git = "https://github.com/anoma/ferveo", branch = "bat/workspace-cleanup"}
@@ -91,6 +96,7 @@ serde = {version = "1.0.125", features = ["derive"]}
 sha2 = "0.9.3"
 # We switch off "blake2b" because it cannot be compiled to wasm
 sparse-merkle-tree = {git = "https://github.com/heliaxdev/sparse-merkle-tree", branch = "yuji/prost-0.9", default-features = false, features = ["std", "borsh"]}
+tempfile = {version = "3.2.0", optional = true}
 # temporarily using fork work-around for https://github.com/informalsystems/tendermint-rs/issues/971
 tendermint = {git = "https://github.com/heliaxdev/tendermint-rs", branch = "yuji/abcipp-v0.23.0", optional = true}
 tendermint-proto = {git = "https://github.com/heliaxdev/tendermint-rs", branch = "yuji/abcipp-v0.23.0", optional = true}
@@ -99,10 +105,12 @@ tendermint-stable = {package = "tendermint", git = "https://github.com/heliaxdev
 thiserror = "1.0.30"
 tracing = "0.1.29"
 wasmer = {version = "=2.1.0", optional = true}
+wasmer-cache = {version = "=2.1.0", optional = true}
 wasmer-compiler-cranelift = {version = "=2.1.0", optional = true}
 wasmer-compiler-singlepass = {version = "=2.1.0", optional = true}
+wasmer-engine-dylib = {version = "=2.1.0", optional = true}
 wasmer-engine-universal = {version = "=2.1.0", optional = true}
-wasmer-vm = {version = "=2.1.0", optional = true}
+wasmer-vm = {version = "2.1.0", optional = true}
 wasmparser = "0.81.0"
 
 [dev-dependencies]
