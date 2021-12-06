@@ -31,9 +31,11 @@ unsafe impl Sync for MockDB {}
 pub struct MockDBWriteBatch;
 
 impl DB for MockDB {
+    /// There is no cache for MockDB
+    type Cache = ();
     type WriteBatch = MockDBWriteBatch;
 
-    fn open(_db_path: impl AsRef<Path>) -> Self {
+    fn open(_db_path: impl AsRef<Path>, _cache: Option<&Self::Cache>) -> Self {
         Self::default()
     }
 

@@ -7,12 +7,14 @@ pub mod storage;
 pub mod tendermint_node;
 
 use std::convert::TryInto;
-use std::env;
 use std::net::SocketAddr;
 use std::path::PathBuf;
 use std::str::FromStr;
+use std::env;
 
+use byte_unit::Byte;
 use futures::future::TryFutureExt;
+use sysinfo::{RefreshKind, System, SystemExt};
 #[cfg(not(feature = "ABCI"))]
 use tendermint_proto::abci::CheckTxType;
 #[cfg(feature = "ABCI")]
@@ -196,6 +198,31 @@ async fn run_aux(config: config::Ledger, wasm_dir: PathBuf) {
     // Prefetch needed wasm artifacts
     wasm_loader::pre_fetch_wasm(&wasm_dir).await;
 
+    // Setup DB cache, it must outlive the DB instance that's in the shell
+    let sys = System::new_with_specifics(RefreshKind::new().with_memory());
+    let available_memory_bytes = sys.available_memory() * 1024;
+    let available_memory = Byte::from_bytes(available_memory_bytes as u128)
+        .get_appropriate_unit(true);
+    tracing::debug!("Available memory: {}", available_memory);
+    let block_cache_size_bytes = match config.shell.block_cache_bytes {
+        Some(block_cache_bytes) => {
+            tracing::debug!("Block cache set from configuration.");
+            block_cache_bytes
+        }
+        None => {
+            tracing::debug!(
+                "Block cache size not configured, using 1/3 of available \
+                 memory."
+            );
+            available_memory_bytes / 3
+        }
+    };
+    let block_cache_size = Byte::from_bytes(block_cache_size_bytes as u128)
+        .get_appropriate_unit(true);
+    tracing::debug!("Block cache size: {}", block_cache_size,);
+    let db_cache =
+        rocksdb::Cache::new_lru_cache(block_cache_size_bytes as usize).unwrap();
+
     let tendermint_dir = config.tendermint_dir();
     let ledger_address = config.shell.ledger_address.to_string();
     let chain_id = config.chain_id.clone();
@@ -247,6 +274,7 @@ async fn run_aux(config: config::Ledger, wasm_dir: PathBuf) {
         db_dir,
         config.chain_id,
         wasm_dir,
+        &db_cache,
     );
 
     // Start the ABCI server

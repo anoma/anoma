@@ -237,12 +237,13 @@ where
         db_path: impl AsRef<Path>,
         chain_id: ChainId,
         wasm_dir: PathBuf,
+        db_cache: Option<&D::Cache>,
     ) -> Self {
         if !Path::new(&base_dir).is_dir() {
             std::fs::create_dir(&base_dir)
                 .expect("Creating directory for Anoma should not fail");
         }
-        let mut storage = Storage::open(db_path, chain_id);
+        let mut storage = Storage::open(db_path, chain_id, db_cache);
         storage
             .load_last_state()
             .map_err(|e| {
@@ -606,6 +607,7 @@ mod test_utils {
                     base_dir.join("db").join("anoma-devchain-00000"),
                     Default::default(),
                     top_level_directory().join("wasm"),
+                    None,
                 ),
             }
         }
@@ -700,6 +702,7 @@ mod test_utils {
             base_dir.join("db").join("anoma-devchain-00000"),
             Default::default(),
             top_level_directory().join("wasm"),
+            None,
         );
         let keypair = gen_keypair();
         // enqueue a wrapper tx
@@ -750,6 +753,7 @@ mod test_utils {
             base_dir.join("db").join("anoma-devchain-00000"),
             Default::default(),
             top_level_directory().join("wasm"),
+            None,
         );
         assert!(!shell.tx_queue.is_empty());
     }
@@ -766,6 +770,7 @@ mod test_utils {
             base_dir.join("db").join("anoma-devchain-00000"),
             Default::default(),
             top_level_directory().join("wasm"),
+            None,
         );
         let keypair = gen_keypair();
         // enqueue a wrapper tx
@@ -817,6 +822,7 @@ mod test_utils {
             base_dir.join("db").join("anoma-devchain-00000"),
             Default::default(),
             top_level_directory().join("wasm"),
+            None,
         );
     }
 }
