@@ -3,7 +3,6 @@
 use std::env;
 use std::marker::PhantomData;
 use std::path::Path;
-use std::rc::Rc;
 use std::str::FromStr;
 
 use anoma::types::address::Address;
@@ -15,7 +14,7 @@ use crate::cli::safe_exit;
 use crate::config::genesis::genesis_config;
 use crate::config::global::GlobalConfig;
 use crate::config::{self, Config};
-use crate::wallet::Wallet;
+use crate::wallet::{Wallet, AtomicKeypair};
 use crate::wasm_loader;
 
 /// Env. var to set chain ID
@@ -29,11 +28,19 @@ pub type WalletAddress = FromContext<Address>;
 
 /// A raw keypair (hex encoding), an alias, a public key or a public key hash of
 /// a keypair that may be found in the wallet
-pub type WalletKeypair = FromContext<Rc<Keypair>>;
+pub type WalletKeypair = FromContext<AtomicKeypair>;
 
 /// A raw public key (hex encoding), a public key hash (also hex encoding) or an
 /// alias of an public key that may be found in the wallet
 pub type WalletPublicKey = FromContext<PublicKey>;
+
+/// Helper struct for retrieving this particular public key
+pub struct ProtocolPublicKey<'a>(pub &'a PublicKey);
+
+/// A raw public key (hex encoding), a public key hash (also hex encoding) or an
+/// alias of an public key that may be found in the wallet that corresponds
+/// to the protocol signing key
+pub type WalletProtocolPublicKey<'a> = FromContext<ProtocolPublicKey<'a>>;
 
 /// Command execution context
 #[derive(Debug)]
@@ -231,12 +238,12 @@ impl ArgFromContext for Address {
     }
 }
 
-impl ArgFromMutContext for Rc<Keypair> {
+impl ArgFromMutContext for AtomicKeypair {
     fn from_mut_ctx(ctx: &mut Context, raw: impl AsRef<str>) -> Self {
         let raw = raw.as_ref();
         // A keypair can be either a raw keypair in hex string
-        FromStr::from_str(raw)
-            .map(Rc::new)
+        Keypair::from_str(raw)
+            .map(AtomicKeypair::from)
             .unwrap_or_else(|_parse_err| {
                 // Or it can be an alias
                 ctx.wallet.find_key(raw).unwrap_or_else(|_find_err| {
@@ -255,13 +262,19 @@ impl ArgFromMutContext for PublicKey {
             // Or it can be a public key hash in hex string
             FromStr::from_str(raw)
                 .map(|pkh: PublicKeyHash| {
+                    // check if this corresponds to the protocol signing key
+                    if let Some(data) = ctx.wallet.get_validator_data() {
+                        if PublicKeyHash::from(&data.keys.protocol_keypair.public()) == pkh {
+                            return data.keys.protocol_keypair.public()
+                        }
+                    }
                     let key = ctx.wallet.find_key_by_pkh(&pkh).unwrap();
-                    key.public.clone()
+                    key.public()
                 })
                 // Or it can be an alias that may be found in the wallet
                 .unwrap_or_else(|_parse_err| {
                     let key = ctx.wallet.find_key(raw).unwrap();
-                    key.public.clone()
+                    key.public()
                 })
         })
     }

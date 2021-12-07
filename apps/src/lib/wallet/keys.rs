@@ -1,11 +1,11 @@
 //! Cryptographic keys for digital signatures support for the wallet.
 
+use std::borrow::Borrow;
 use std::fmt::Display;
-use std::rc::Rc;
 use std::str::FromStr;
+use std::sync::{Arc, Mutex};
 
-use anoma::types::key::ed25519::Keypair;
-use anoma::types::transaction::EllipticCurve;
+use anoma::types::key::ed25519::{Keypair, PublicKey};
 use borsh::{BorshDeserialize, BorshSerialize};
 use orion::{aead, kdf};
 use serde::{Deserialize, Serialize};
@@ -16,6 +16,41 @@ use super::read_password;
 const ENCRYPTED_KEY_PREFIX: &str = "encrypted:";
 const UNENCRYPTED_KEY_PREFIX: &str = "unencrypted:";
 
+/// Thread safe reference counted pointer to a keypair
+#[derive(Debug, Serialize, Deserialize)]
+pub struct AtomicKeypair(Arc<Mutex<Keypair>>);
+
+impl AtomicKeypair {
+    /// Get the public key of the pair
+    pub fn public(&self) -> PublicKey {
+        self.0.lock().unwrap().public.clone()
+    }
+}
+
+impl From<Keypair> for AtomicKeypair {
+    fn from(kp: Keypair) -> Self {
+        AtomicKeypair(Arc::new(Mutex::new(kp)))
+    }
+}
+
+impl Clone for AtomicKeypair {
+    fn clone(&self) -> Self {
+        AtomicKeypair(self.0.clone())
+    }
+}
+
+impl AsRef<Keypair> for AtomicKeypair {
+    fn as_ref(&self) -> &Keypair {
+        self.0.lock().unwrap().borrow()
+    }
+}
+
+impl Display for AtomicKeypair {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "{}", self.as_ref())
+    }
+}
+
 /// A keypair stored in a wallet
 #[derive(Debug)]
 pub enum StoredKeypair {
@@ -24,7 +59,7 @@ pub enum StoredKeypair {
     /// An raw (unencrypted) keypair
     Raw(
         // Wrapped in `Rc` to avoid reference lifetimes when we borrow the key
-        Rc<Keypair>,
+        AtomicKeypair,
     ),
 }
 
@@ -70,8 +105,8 @@ impl<'de> Deserialize<'de> for StoredKeypair {
                 })
                 .map_err(D::Error::custom)?;
         if let Some(raw) = keypair_string.strip_prefix(UNENCRYPTED_KEY_PREFIX) {
-            FromStr::from_str(raw)
-                .map(|keypair| Self::Raw(Rc::new(keypair)))
+            Keypair::from_str(raw)
+                .map(|keypair| Self::Raw(keypair.into()))
                 .map_err(|err| {
                     DeserializeStoredKeypairError::InvalidStoredKeypairString(
                         err.to_string(),
@@ -141,19 +176,17 @@ impl StoredKeypair {
     /// will be stored raw without encryption. Returns the key for storing and a
     /// reference-counting point to the raw key.
     pub fn new(
-        keypair: Keypair,
+        keypair: AtomicKeypair,
         password: Option<String>,
-    ) -> (Self, Rc<Keypair>) {
+    ) -> (Self, AtomicKeypair) {
         match password {
             Some(password) => {
-                let keypair = Rc::new(keypair);
                 (
-                    Self::Encrypted(EncryptedKeypair::new(&keypair, password)),
+                    Self::Encrypted(EncryptedKeypair::new(keypair.as_ref(), password)),
                     keypair,
                 )
             }
             None => {
-                let keypair = Rc::new(keypair);
                 (Self::Raw(keypair.clone()), keypair)
             }
         }
@@ -161,13 +194,13 @@ impl StoredKeypair {
 
     /// Get a raw keypair from a stored keypair. If the keypair is encrypted, a
     /// password will be prompted from stdin.
-    pub fn get(&self, decrypt: bool) -> Result<Rc<Keypair>, DecryptionError> {
+    pub fn get(&self, decrypt: bool) -> Result<AtomicKeypair, DecryptionError> {
         match self {
             StoredKeypair::Encrypted(encrypted_keypair) => {
                 if decrypt {
                     let password = read_password("Enter decryption password: ");
                     let key = encrypted_keypair.decrypt(password)?;
-                    Ok(Rc::new(key))
+                    Ok(key.into())
                 } else {
                     Err(DecryptionError::NotDecrypting)
                 }

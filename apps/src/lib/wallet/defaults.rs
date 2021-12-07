@@ -70,9 +70,10 @@ mod dev {
     use anoma::types::key::ed25519::Keypair;
 
     use crate::wallet::store::Alias;
+    use crate::wallet::AtomicKeypair;
 
     /// The default keys with their aliases.
-    pub fn keys() -> Vec<(Alias, Keypair)> {
+    pub fn keys() -> Vec<(Alias, AtomicKeypair)> {
         vec![
             ("Albert".into(), albert_keypair()),
             ("Bertha".into(), bertha_keypair()),
@@ -133,7 +134,7 @@ mod dev {
         Address::decode("atest1v4ehgw36x5mnswphx565gv2yxdprzvf5gdp523jpxy6rvv6zxaznzsejxeznzseh8pp5ywz93xwala").expect("The address decoding shouldn't fail")
     }
 
-    pub fn albert_keypair() -> Keypair {
+    pub fn albert_keypair() -> AtomicKeypair {
         // generated from
         // [`anoma::types::key::ed25519::gen_keypair`]
         let bytes = [
@@ -143,10 +144,10 @@ mod dev {
             98, 161, 100, 60, 167, 200, 54, 192, 242, 218, 227, 190, 241, 65,
             42, 58, 97, 162, 253, 225, 167,
         ];
-        Keypair::from_bytes(&bytes).unwrap()
+        Keypair::from_bytes(&bytes).unwrap().into()
     }
 
-    pub fn bertha_keypair() -> Keypair {
+    pub fn bertha_keypair() -> AtomicKeypair {
         // generated from
         // [`anoma::types::key::ed25519::gen_keypair`]
         let bytes = [
@@ -156,10 +157,10 @@ mod dev {
             114, 166, 73, 81, 173, 80, 244, 249, 126, 249, 219, 184, 53, 69,
             196, 106, 230, 0,
         ];
-        Keypair::from_bytes(&bytes).unwrap()
+        Keypair::from_bytes(&bytes).unwrap().into()
     }
 
-    pub fn christel_keypair() -> Keypair {
+    pub fn christel_keypair() -> AtomicKeypair {
         // generated from
         // [`anoma::types::key::ed25519::gen_keypair`]
         let bytes = [
@@ -169,10 +170,10 @@ mod dev {
             35, 186, 93, 37, 3, 187, 226, 47, 171, 47, 20, 213, 246, 37, 224,
             122, 101, 246, 23, 235, 39, 120,
         ];
-        Keypair::from_bytes(&bytes).unwrap()
+        Keypair::from_bytes(&bytes).unwrap().into()
     }
 
-    pub fn daewon_keypair() -> Keypair {
+    pub fn daewon_keypair() -> AtomicKeypair {
         // generated from
         // [`anoma::types::key::ed25519::gen_keypair`]
         let bytes = [
@@ -182,10 +183,10 @@ mod dev {
             75, 33, 242, 80, 3, 64, 119, 239, 252, 69, 159, 194, 64, 58, 119,
             163, 90, 169, 94, 63,
         ];
-        Keypair::from_bytes(&bytes).unwrap()
+        Keypair::from_bytes(&bytes).unwrap().into()
     }
 
-    pub fn validator_keypair() -> Keypair {
+    pub fn validator_keypair() -> AtomicKeypair {
         // generated from
         // [`anoma::types::key::ed25519::gen_keypair`]
         let bytes = [
@@ -195,10 +196,10 @@ mod dev {
             73, 247, 155, 157, 46, 65, 77, 1, 164, 227, 128, 109, 252, 101,
             240, 167, 57, 1, 193, 208,
         ];
-        Keypair::from_bytes(&bytes).unwrap()
+        Keypair::from_bytes(&bytes).unwrap().into()
     }
 
-    pub fn matchmaker_keypair() -> Keypair {
+    pub fn matchmaker_keypair() -> AtomicKeypair {
         // generated from
         // [`anoma::types::key::ed25519::gen_keypair`]
         let bytes = [
@@ -208,6 +209,6 @@ mod dev {
             72, 186, 172, 153, 135, 80, 71, 107, 239, 153, 74, 10, 115, 172,
             78, 125, 24, 49, 104,
         ];
-        Keypair::from_bytes(&bytes).unwrap()
+        Keypair::from_bytes(&bytes).unwrap().into()
     }
 }

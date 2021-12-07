@@ -1,24 +1,51 @@
 use std::collections::HashMap;
-use std::fs::{self, OpenOptions};
-use std::io::{self, ErrorKind, Write};
+use std::fs;
+use std::io::{self, prelude::*, ErrorKind, Write};
 use std::path::{Path, PathBuf};
-use std::rc::Rc;
 use std::str::FromStr;
 
 use anoma::types::address::{Address, ImplicitAddress};
+use anoma::types::key::dkg_session_keys::DkgKeypair;
 use anoma::types::key::ed25519::{Keypair, PublicKey, PublicKeyHash};
-use anoma::types::key::dkg_session_keys::DkgPublicKey;
 use anoma::types::transaction::EllipticCurve;
-use ark_std::rand::{prelude::*, SeedableRng};
+use ark_std::rand::prelude::*;
+use ark_std::rand::SeedableRng;
+use file_lock::{FileLock, FileOptions};
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
 use super::keys::StoredKeypair;
 use crate::cli;
 use crate::config::genesis::genesis_config::GenesisConfig;
-use anoma::types::key::dkg_session_keys::DkgKeypair;
+use crate::wallet::keys::AtomicKeypair;
 
 pub type Alias = String;
+
+/// Special keys for a validator
+#[derive(Serialize, Deserialize, Debug)]
+pub struct ValidatorKeys {
+    /// Special keypair for signing protocol txs
+    pub protocol_keypair: AtomicKeypair,
+    /// Special session keypair needed by validators for participating
+    /// in the DKG protocol
+    pub dkg_keypair: Option<DkgKeypair>,
+}
+
+impl ValidatorKeys {
+    /// Get the protocol keypair
+    pub fn get_protocol_keypair(&self) -> &AtomicKeypair {
+        &self.protocol_keypair
+    }
+}
+
+/// Special data associated with a validator
+#[derive(Serialize, Deserialize, Debug)]
+pub struct ValidatorData {
+    /// The address associated to a validator
+    pub address: Address,
+    /// special keys for a validator
+    pub keys: ValidatorKeys,
+}
 
 #[derive(Serialize, Deserialize, Debug, Default)]
 pub struct Store {
@@ -29,9 +56,8 @@ pub struct Store {
     /// Known mappings of public key hashes to their aliases in the `keys`
     /// field. Used for look-up by a public key.
     pkhs: HashMap<PublicKeyHash, Alias>,
-    /// Special session keypair needed by validators for participating
-    /// in the DKG protocol
-    dkg_keypair: Option<DkgKeypair>,
+    /// Special keys if the wallet belongs to a validator
+    pub(crate) validator_data: Option<ValidatorData>,
 }
 
 #[derive(Error, Debug)]
@@ -86,12 +112,12 @@ impl Store {
         let wallet_dir = wallet_path.parent().unwrap();
         fs::create_dir_all(wallet_dir)?;
         // Write the file
-        let mut file = OpenOptions::new()
+        let options = FileOptions::new()
             .create(true)
             .write(true)
-            .truncate(true)
-            .open(&wallet_path)?;
-        file.write_all(&data)
+            .truncate(true);
+        let mut filelock = FileLock::lock(&wallet_path.to_str().unwrap(), true, options)?;
+        filelock.file.write_all(&data)
     }
 
     /// Load the store file or create a new one without any keys or addresses.
@@ -133,10 +159,18 @@ impl Store {
         new_store: impl FnOnce() -> Result<Self, LoadStoreError>,
     ) -> Result<Self, LoadStoreError> {
         let wallet_file = wallet_file(store_dir);
-        let store = fs::read(&wallet_file);
-        match store {
-            Ok(store_data) => {
-                Store::decode(store_data).map_err(LoadStoreError::Decode)
+        match FileLock::lock(
+            wallet_file.to_str().unwrap(),
+            true,
+            FileOptions::new().write(true)
+        ) {
+            Ok(mut filelock) => {
+                let mut store = Vec::<u8>::new();
+                filelock.file.read(&mut store.as_ref())
+                    .map_err(|err|
+                        LoadStoreError::ReadWallet(store_dir.to_str().unwrap().into(), err.to_string())
+                    )?;
+                Store::decode(store).map_err(LoadStoreError::Decode)
             }
             Err(err) => match err.kind() {
                 ErrorKind::NotFound => {
@@ -240,11 +274,11 @@ impl Store {
         &mut self,
         alias: Option<String>,
         password: Option<String>,
-    ) -> (String, Rc<Keypair>) {
+    ) -> (String, AtomicKeypair) {
         let keypair = Self::generate_keypair();
         let pkh: PublicKeyHash = PublicKeyHash::from(&keypair.public);
         let (keypair_to_store, raw_keypair) =
-            StoredKeypair::new(keypair, password);
+            StoredKeypair::new(keypair.into(), password);
         let address = Address::Implicit(ImplicitAddress::Ed25519(pkh.clone()));
         let alias = alias.unwrap_or_else(|| pkh.clone().into());
         if !self.insert_keypair(alias.clone(), keypair_to_store, pkh) {
@@ -258,16 +292,43 @@ impl Store {
         (alias, raw_keypair)
     }
 
-    /// Generate a new DKG keypair and insert it into the store.
-    /// Returns the public side of the keypair.
-    pub fn gen_dkg_key(
+    /// Generate keypair for signing protocol txs and for the DKG
+    /// A protocol keypair may be optionally provided
+    ///
+    /// Note that this removes the validator data.
+    pub fn gen_validator_keys(
         &mut self,
-    ) -> DkgPublicKey {
-        let dkg_keypair =
-            ferveo_common::Keypair::<EllipticCurve>::new(&mut StdRng::from_entropy());
-        let dkg_pk = dkg_keypair.public();
-        self.dkg_keypair = Some(dkg_keypair.into());
-        dkg_pk.into()
+        protocol_keypair: Option<AtomicKeypair>,
+    ) -> ValidatorKeys {
+        let mut protocol_keypair = protocol_keypair.unwrap_or_else(
+             || Self::generate_keypair().into()
+        );
+        let dkg_keypair = ferveo_common::Keypair::<EllipticCurve>::new(
+            &mut StdRng::from_entropy(),
+        );
+        ValidatorKeys {
+            protocol_keypair,
+            dkg_keypair: Some(dkg_keypair.into()),
+        }
+    }
+
+    /// Add validator data to the store
+    pub fn add_validator_data(
+        &mut self,
+        address: Address,
+        keys: ValidatorKeys,
+    ) {
+        self.validator_data = Some(ValidatorData { address, keys });
+    }
+
+    /// Returns the validator data, if it exists
+    pub fn get_validator_data(&self) -> Option<&ValidatorData> {
+        self.validator_data.as_ref()
+    }
+
+    /// Returns the validator data, if it exists
+    pub fn take_validator_data(self) -> Option<ValidatorData> {
+        self.validator_data
     }
 
     /// Insert a new key with the given alias. If the alias is already used,

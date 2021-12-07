@@ -59,7 +59,6 @@ pub struct Signature(ed25519_dalek::Signature);
 #[serde(transparent)]
 pub struct PublicKeyHash(pub(crate) String);
 
-const DKG_PK_STORAGE_KEY: &str = "dkg_pk_key";
 const PKH_HASH_LEN: usize = address::HASH_LEN;
 const PK_STORAGE_KEY: &str = "ed25519_pk";
 const PROTOCOL_PK_STORAGE_KEY: &str = "ed25519_protocol_pk";
@@ -71,15 +70,14 @@ pub fn pk_key(owner: &Address) -> Key {
         .expect("Cannot obtain a storage key")
 }
 
-
 /// Check if the given storage key is a public key. If it is, returns the owner.
 pub fn is_pk_key(key: &Key) -> Option<&Address> {
     match &key.segments[..] {
         [DbKeySeg::AddressSeg(owner), DbKeySeg::StringSeg(key)]
-        if key == PK_STORAGE_KEY =>
-            {
-                Some(owner)
-            }
+            if key == PK_STORAGE_KEY =>
+        {
+            Some(owner)
+        }
         _ => None,
     }
 }
@@ -91,33 +89,15 @@ pub fn protocol_pk_key(owner: &Address) -> Key {
         .expect("Cannot obtain a storage key")
 }
 
-/// Check if the given storage key is a protocol public key. If it is, returns the owner.
+/// Check if the given storage key is a protocol public key. If it is, returns
+/// the owner.
 pub fn is_protocol_pk_key(key: &Key) -> Option<&Address> {
     match &key.segments[..] {
         [DbKeySeg::AddressSeg(owner), DbKeySeg::StringSeg(key)]
-        if key == PROTOCOL_PK_STORAGE_KEY =>
-            {
-                Some(owner)
-            }
-        _ => None,
-    }
-}
-
-/// Obtain a storage key for user's public dkg session key.
-pub fn dkg_pk_key(owner: &Address) -> Key {
-    Key::from(owner.to_db_key())
-        .push(&DKG_PK_STORAGE_KEY.to_owned())
-        .expect("Cannot obtain a storage key")
-}
-
-/// Check if the given storage key is a public dkg session key. If it is, returns the owner.
-pub fn is_dkg_pk_key(key: &Key) -> Option<&Address> {
-    match &key.segments[..] {
-        [DbKeySeg::AddressSeg(owner), DbKeySeg::StringSeg(key)]
-        if key == DKG_PK_STORAGE_KEY =>
-            {
-                Some(owner)
-            }
+            if key == PROTOCOL_PK_STORAGE_KEY =>
+        {
+            Some(owner)
+        }
         _ => None,
     }
 }

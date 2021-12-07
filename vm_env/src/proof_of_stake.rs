@@ -13,7 +13,8 @@ use anoma::ledger::pos::{
     validator_total_deltas_key, validator_voting_power_key,
 };
 use anoma::types::address::{self, Address, InternalAddress};
-use anoma::types::transaction::InitValidator;
+use anoma::types::key::dkg_session_keys::dkg_pk_key;
+use anoma::types::transaction::{InitValidator, UpdateDkgSessionKey};
 use anoma::types::{key, token};
 pub use anoma_proof_of_stake::{
     epoched, parameters, types, PosActions as PosWrite, PosReadOnly as PosRead,
@@ -76,7 +77,7 @@ pub fn init_validator(
     tx::write(&pk_key.to_string(), &account_key);
     let protocol_pk_key = key::ed25519::protocol_pk_key(&validator_address);
     tx::write(&protocol_pk_key.to_string(), &protocol_key);
-    let dkg_pk_key = key::ed25519::dkg_pk_key(&validator_address);
+    let dkg_pk_key = key::dkg_session_keys::dkg_pk_key(&validator_address);
     tx::write(&dkg_pk_key.to_string(), &dkg_key);
 
     // Init staking reward account
@@ -91,6 +92,29 @@ pub fn init_validator(
         current_epoch,
     )?;
     Ok((validator_address, rewards_address))
+}
+
+/// Try to update the DKG session keypair of a validator
+///
+/// This will update storag with the new public key,
+/// assuming the storage key is valid.
+///
+/// TODO: Should this be in the [`proof_of_stake`] module?
+pub fn update_dkg_session_keypair(
+    UpdateDkgSessionKey {
+        address,
+        dkg_public_key,
+    }: UpdateDkgSessionKey,
+) -> bool {
+    let dkg_key = dkg_pk_key(&address);
+    // This acts as a check that the issuing address is a validator
+    if key::dkg_session_keys::is_dkg_pk_key(&dkg_key).is_some() {
+        // write the new announced public key to storage
+        tx::write(dkg_key.to_string(), dkg_public_key);
+        true
+    } else {
+        false
+    }
 }
 
 /// Proof of Stake system. This struct integrates and gives access to

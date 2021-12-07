@@ -5,7 +5,9 @@ use anoma::ledger::pos::{BondId, Bonds, Unbonds};
 use anoma::proto::Tx;
 use anoma::types::address::Address;
 use anoma::types::key::ed25519::Keypair;
-use anoma::types::transaction::{pos, Fee, InitAccount, InitValidator, UpdateVp, WrapperTx, EllipticCurve};
+use anoma::types::transaction::{
+    pos, Fee, InitAccount, InitValidator, UpdateVp, WrapperTx,
+};
 use anoma::types::{address, token};
 use anoma::{ledger, vm};
 use async_std::io::{self, WriteExt};
@@ -33,6 +35,7 @@ use crate::client::tendermint_websocket_client::{
 };
 use crate::node::ledger::events::{Attributes, EventType as TmEventType};
 use crate::node::ledger::tendermint_node;
+use crate::wallet::AtomicKeypair;
 
 const TX_INIT_ACCOUNT_WASM: &str = "tx_init_account.wasm";
 const TX_INIT_VALIDATOR_WASM: &str = "tx_init_validator.wasm";
@@ -51,7 +54,7 @@ pub async fn submit_custom(ctx: Context, args: args::TxCustom) {
     let tx = Tx::new(tx_code, data);
     let (ctx, tx, keypair) = sign_tx(ctx, tx, &args.tx, None).await;
     let (ctx, initialized_accounts) =
-        submit_tx(ctx, &args.tx, tx, &keypair).await;
+        submit_tx(ctx, &args.tx, tx, keypair.as_ref()).await;
     save_initialized_accounts(ctx, &args.tx, initialized_accounts).await;
 }
 
@@ -107,7 +110,7 @@ pub async fn submit_update_vp(ctx: Context, args: args::TxUpdateVp) {
 
     let tx = Tx::new(tx_code, Some(data));
     let (ctx, tx, keypair) = sign_tx(ctx, tx, &args.tx, Some(&args.addr)).await;
-    submit_tx(ctx, &args.tx, tx, &keypair).await;
+    submit_tx(ctx, &args.tx, tx, keypair.as_ref()).await;
 }
 
 pub async fn submit_init_account(mut ctx: Context, args: args::TxInitAccount) {
@@ -135,7 +138,7 @@ pub async fn submit_init_account(mut ctx: Context, args: args::TxInitAccount) {
     let (ctx, tx, keypair) =
         sign_tx(ctx, tx, &args.tx, Some(&args.source)).await;
     let (ctx, initialized_accounts) =
-        submit_tx(ctx, &args.tx, tx, &keypair).await;
+        submit_tx(ctx, &args.tx, tx, keypair.as_ref()).await;
     save_initialized_accounts(ctx, &args.tx, initialized_accounts).await;
 }
 
@@ -162,14 +165,12 @@ pub async fn submit_init_validator(
     let validator_key_alias = format!("{}-key", alias);
     let consensus_key_alias = format!("{}-consensus-key", alias);
     let rewards_key_alias = format!("{}-rewards-key", alias);
-    let protocol_key_alias = format!("{}-protocol-key", alias);
     let account_key = ctx.get_opt_cached(&account_key).unwrap_or_else(|| {
         println!("Generating validator account key...");
         ctx.wallet
             .gen_key(Some(validator_key_alias.clone()), unsafe_dont_encrypt)
             .1
-            .public
-            .clone()
+            .public()
     });
 
     let consensus_key =
@@ -186,20 +187,28 @@ pub async fn submit_init_validator(
             ctx.wallet
                 .gen_key(Some(rewards_key_alias.clone()), unsafe_dont_encrypt)
                 .1
-                .public
-                .clone()
-        });
+                .public()
 
-    let protocol_key =
-        ctx.get_opt_cached(&protocol_key).unwrap_or_else(|| {
-            println!("Generating protocol signing key...");
-            ctx.wallet
-                .gen_key(Some(protocol_key_alias.clone()), unsafe_dont_encrypt)
-                .1
-                .public
-                .clone()
         });
-    let dkg_public_key = ctx.wallet.gen_dkg_key();
+    let protocol_key =
+        ctx.get_opt_cached(&protocol_key);
+
+    if protocol_key.is_none() {
+        println!("Generating protocol signing key...");
+    }
+    // Generate the validator keys
+    let validator_keys = ctx.wallet.gen_validator_keys(protocol_key).unwrap();
+    let protocol_key = validator_keys.get_protocol_keypair().public();
+    let dkg_key = validator_keys
+        .dkg_keypair
+        .as_ref()
+        .map(|kp| {
+            kp.public()
+                .try_to_vec()
+                .expect("Serializing DKG public key shouldn't fail")
+        })
+        .expect("DKG sessions keys should have been created");
+
     ctx.wallet.save().unwrap_or_else(|err| eprintln!("{}", err));
 
     let validator_vp_code = validator_vp_code_path
@@ -233,10 +242,10 @@ pub async fn submit_init_validator(
 
     let data = InitValidator {
         account_key,
-        consensus_key: consensus_key.public.clone(),
+        consensus_key: consensus_key.public(),
         rewards_account_key,
         protocol_key,
-        dkg_key: dkg_public_key,
+        dkg_key,
         validator_vp_code,
         rewards_vp_code,
     };
@@ -245,7 +254,7 @@ pub async fn submit_init_validator(
     let (ctx, tx, keypair) = sign_tx(ctx, tx, &tx_args, Some(&source)).await;
 
     let (mut ctx, initialized_accounts) =
-        submit_tx(ctx, &tx_args, tx, &keypair).await;
+        submit_tx(ctx, &tx_args, tx, keypair.as_ref()).await;
     if !tx_args.dry_run {
         let (validator_address_alias, validator_address, rewards_address_alias) =
             match &initialized_accounts[..] {
@@ -319,14 +328,16 @@ pub async fn submit_init_validator(
                     safe_exit(1)
                 }
             };
-
+        // add validator address and keys to the wallet
+        ctx.wallet
+            .add_validator_data(validator_address.clone(), validator_keys);
         ctx.wallet.save().unwrap_or_else(|err| eprintln!("{}", err));
 
         let tendermint_home = ctx.config.ledger.tendermint_dir();
         tendermint_node::write_validator_key(
             &tendermint_home,
             &validator_address,
-            &consensus_key,
+            consensus_key.as_ref(),
         );
         tendermint_node::write_validator_state(tendermint_home);
 
@@ -421,7 +432,7 @@ pub async fn submit_transfer(ctx: Context, args: args::TxTransfer) {
     let tx = Tx::new(tx_code, Some(data));
     let (ctx, tx, keypair) =
         sign_tx(ctx, tx, &args.tx, Some(&args.source)).await;
-    submit_tx(ctx, &args.tx, tx, &keypair).await;
+    submit_tx(ctx, &args.tx, tx, keypair.as_ref()).await;
 }
 
 pub async fn submit_bond(ctx: Context, args: args::Bond) {
@@ -488,7 +499,7 @@ pub async fn submit_bond(ctx: Context, args: args::Bond) {
     let default_signer = args.source.as_ref().unwrap_or(&args.validator);
     let (ctx, tx, keypair) =
         sign_tx(ctx, tx, &args.tx, Some(default_signer)).await;
-    submit_tx(ctx, &args.tx, tx, &keypair).await;
+    submit_tx(ctx, &args.tx, tx, keypair.as_ref()).await;
 }
 
 pub async fn submit_unbond(ctx: Context, args: args::Unbond) {
@@ -558,7 +569,7 @@ pub async fn submit_unbond(ctx: Context, args: args::Unbond) {
     let default_signer = args.source.as_ref().unwrap_or(&args.validator);
     let (ctx, tx, keypair) =
         sign_tx(ctx, tx, &args.tx, Some(default_signer)).await;
-    submit_tx(ctx, &args.tx, tx, &keypair).await;
+    submit_tx(ctx, &args.tx, tx, keypair.as_ref()).await;
 }
 
 pub async fn submit_withdraw(ctx: Context, args: args::Withdraw) {
@@ -628,7 +639,7 @@ pub async fn submit_withdraw(ctx: Context, args: args::Withdraw) {
     let default_signer = args.source.as_ref().unwrap_or(&args.validator);
     let (ctx, tx, keypair) =
         sign_tx(ctx, tx, &args.tx, Some(default_signer)).await;
-    submit_tx(ctx, &args.tx, tx, &keypair).await;
+    submit_tx(ctx, &args.tx, tx, keypair.as_ref()).await;
 }
 
 /// Sign a transaction with a given signing key or public key of a given signer.
@@ -639,10 +650,10 @@ async fn sign_tx(
     tx: Tx,
     args: &args::Tx,
     default: Option<&WalletAddress>,
-) -> (Context, Tx, std::rc::Rc<Keypair>) {
+) -> (Context, Tx, AtomicKeypair) {
     let (tx, keypair) = if let Some(signing_key) = &args.signing_key {
         let signing_key = ctx.get_cached(signing_key);
-        (tx.sign(&signing_key), signing_key)
+        (tx.sign(signing_key.as_ref()), signing_key)
     } else if let Some(signer) = args.signer.as_ref().or(default) {
         let signer = ctx.get(signer);
         let signing_key = signing::find_keypair(
@@ -651,7 +662,7 @@ async fn sign_tx(
             args.ledger_address.clone(),
         )
         .await;
-        (tx.sign(&signing_key), signing_key)
+        (tx.sign(signing_key.as_ref()), signing_key)
     } else {
         panic!(
             "All transactions must be signed; please either specify the key \

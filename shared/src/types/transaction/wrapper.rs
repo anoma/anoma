@@ -442,8 +442,10 @@ pub mod wrapper_tx {
                 Tx::new("Give me all the money".as_bytes().to_owned(), None);
 
             // We replace the inner tx with a malicious one
-            wrapper.inner_tx =
-                EncryptedTx::encrypt(&malicious.to_bytes(), pubkey);
+            wrapper.inner_tx = EncryptedTx::encrypt(
+                &malicious.to_bytes(),
+                EncryptionKey(pubkey),
+            );
 
             // We change the commitment appropriately
             wrapper.tx_hash = hash_tx(&malicious.to_bytes());
@@ -471,7 +473,7 @@ pub mod wrapper_tx {
                 .expect_err("Test failed");
             assert_eq!(
                 err,
-                WrapperTxErr::SigError(
+                TxError::SigError(
                     "Signature verification failed: signature error".into()
                 )
             );

@@ -116,7 +116,7 @@ pub fn run(
                     )
                     .pos_data
                     .address,
-                &crate::wallet::defaults::validator_keypair(),
+                crate::wallet::defaults::validator_keypair().as_ref(),
             );
         }
     }
@@ -239,7 +239,7 @@ pub fn write_validator_key(
         .truncate(true)
         .open(&path)
         .expect("Couldn't create private validator key file");
-    let pk: ed25519_dalek::PublicKey = consensus_key.public.clone().into();
+    let pk: ed25519_dalek::PublicKey = consensus_key.public.into();
     let pk = base64::encode(pk.as_bytes());
     let sk = base64::encode(consensus_key.to_bytes());
     let address = address.raw_hash().unwrap();

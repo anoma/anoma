@@ -101,6 +101,15 @@ pub mod tx {
         unsafe { anoma_tx_delete(key.as_ptr() as _, key.len() as _) };
     }
 
+    /// Take a value out of storage if it exists
+    pub fn take<T: BorshDeserialize>(key: impl AsRef<str>) -> Option<T> {
+        let value = read(&key);
+        if value.is_some() {
+            delete(key);
+        }
+        value
+    }
+
     /// Get an iterator with the given prefix.
     ///
     /// Important note: The prefix iterator will ignore keys that are not yet

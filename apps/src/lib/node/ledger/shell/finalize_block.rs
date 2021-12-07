@@ -1,7 +1,9 @@
 //! Implementation of the [`FinalizeBlock`] ABCI++ method for the Shell
+use std::rc::Rc;
 
 use anoma::types::storage::BlockHash;
 use anoma::types::transaction::EncryptionKey;
+use ferveo::DkgState;
 #[cfg(not(feature = "ABCI"))]
 use tendermint::block::Header;
 #[cfg(not(feature = "ABCI"))]
@@ -22,6 +24,7 @@ use tendermint_rpc_abci::{Client, HttpClient};
 use tendermint_stable::block::Header;
 
 use super::*;
+use crate::node::ledger::shell::state::ActionQueue;
 
 impl<D, H> Shell<D, H>
 where
@@ -58,6 +61,7 @@ where
             self.update_state(req.header, req.hash, req.byzantine_validators);
 
         for processed_tx in &req.txs {
+            let mut actions = ActionQueue::new(Rc::new(self));
             let tx = if let Ok(tx) = Tx::try_from(processed_tx.tx.as_ref()) {
                 tx
             } else {
@@ -186,6 +190,40 @@ where
                             }
                         }
                     }
+                    ProtocolTxType::NewDkgKeypair(tx) => {
+                        // we update our new session keypair from the queue
+                        // after then inner transaction
+                        // has been applied by the protocol
+
+                        let UpdateDkgSessionKey {
+                            address,
+                            dkg_public_key,
+                        } = BorshDeserialize::deserialize(
+                            &mut tx.data
+                                .as_ref()
+                                .expect("This was verified by Prepare Proposal")
+                                .as_ref(),
+                        )
+                        .expect("This was verified by Prepare Proposal");
+                        let dkg_public_key = BorshDeserialize::deserialize(
+                            &mut dkg_public_key.as_ref(),
+                        )
+                        .expect("This was verified by Prepare Proposal");
+                        if Some(&address) == self.mode.get_validator_address()
+                            && Some(&dkg_public_key)
+                                != self.mode.get_next_dkg_keypair()
+                        {
+                            // this is not the new keypair requested by this
+                            // validator,
+                            // an immediate refresh is needed
+                            self.request_new_dkg_session_keypair();
+                        }
+
+                        actions.enqueue(|shell| {
+                            shell.update_dkg_session_keypair()
+                        });
+                        Event::new_tx_event(&tx_type, height.0)
+                    }
                 },
             };
 
@@ -205,6 +243,8 @@ where
                              {:#?}",
                             result
                         );
+                        // Apply all the enqueued transactions
+                        actions.apply_all();
                         self.write_log.commit_tx();
                         tx_result["code"] = ErrorCodes::Ok.into();
                         match serde_json::to_string(
@@ -344,7 +384,11 @@ where
         self.storage.encryption_key = if let DkgState::Success { final_key } =
             self.dkg.state_machine.state
         {
-            Some(EncryptionKey(final_key))
+            Some(
+                EncryptionKey(final_key)
+                    .try_to_vec()
+                    .expect("Serializing encryption key should not fail")
+            )
         } else {
             None
         };

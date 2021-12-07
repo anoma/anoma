@@ -1,5 +1,7 @@
 //! Implementation of the ['VerifyHeader`], [`ProcessProposal`],
 //! and [`RevertProposal`] ABCI++ methods for the Shell
+use anoma::types::key::dkg_session_keys::DkgPublicKey;
+
 use super::*;
 
 impl<D, H> Shell<D, H>
@@ -91,6 +93,39 @@ where
                                     code: ErrorCodes::InvalidTx.into(),
                                     info: err.to_string(),
                                 },
+                            }
+                        }
+                        ProtocolTxType::NewDkgKeypair(ref tx) => {
+                            match tx.data
+                                .as_ref()
+                                .map(|data| <UpdateDkgSessionKey as BorshDeserialize>::deserialize(&mut data.as_ref()).and_then(
+                                    | ref update_keypair | {
+                                        <DkgPublicKey as BorshDeserialize>::deserialize(&mut update_keypair.dkg_public_key.as_ref())?;
+                                        Ok(true)
+                                    }
+                                ).or::<bool>(Ok(false))) {
+                                None => {
+                                    shim::response::TxResult {
+                                        code: ErrorCodes::InvalidTx.into(),
+                                        info: "The address and new DKG public session key are \
+                                        missing from the tx.".into()
+                                    }
+                                }
+                                Some(Ok(false)) => {
+                                    shim::response::TxResult {
+                                        code: ErrorCodes::InvalidTx.into(),
+                                        info: "The address and new DKG public session key were \
+                                        not deserializable.".into()
+                                    }
+                                }
+                                Some(Ok(true)) => {
+                                    shim::response::TxResult {
+                                        code: ErrorCodes::Ok.into(),
+                                        info: "Process proposal accepted this \
+                                           transaction"
+                                            .into(),
+                                    }
+                                }
                             }
                         }
                     }

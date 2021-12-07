@@ -33,7 +33,6 @@ use crate::types::storage::{
     BlockHash, BlockHeight, DbKeySeg, Epoch, Epochs, Key, BLOCK_HASH_LENGTH,
 };
 use crate::types::time::DateTimeUtc;
-use crate::types::transaction::EncryptionKey;
 
 /// A result of a function that may fail
 pub type Result<T> = std::result::Result<T, Error>;
@@ -63,8 +62,8 @@ where
     pub next_epoch_min_start_time: DateTimeUtc,
     /// The current established address generator
     pub address_gen: EstablishedAddressGen,
-    /// The key used to encrypt txs during this epoch
-    pub encryption_key: Option<EncryptionKey>,
+    /// The serialization of the key used to encrypt txs during this epoch
+    pub encryption_key: Option<Vec<u8>>,
 }
 
 /// The block storage data
@@ -123,8 +122,8 @@ pub struct BlockState {
     pub subspaces: HashMap<Key, Vec<u8>>,
     /// Established address generator
     pub address_gen: EstablishedAddressGen,
-    /// The key used to encrypt txs during this epoch
-    pub encryption_key: Option<EncryptionKey>,
+    /// The serialization of the key used to encrypt txs during this epoch
+    pub encryption_key: Option<Vec<u8>>,
 }
 
 /// A database backend.

@@ -11,8 +11,8 @@ mod init_chain;
 mod prepare_proposal;
 mod process_proposal;
 mod queries;
+mod state;
 
-use std::collections::VecDeque;
 use std::convert::{TryFrom, TryInto};
 use std::mem;
 use std::path::{Path, PathBuf};
@@ -27,22 +27,24 @@ use anoma::ledger::storage::write_log::WriteLog;
 use anoma::ledger::storage::{DBIter, Storage, StorageHasher, DB};
 use anoma::ledger::{ibc, parameters, pos};
 use anoma::proto::{self, Tx};
+use anoma::types::address;
 use anoma::types::chain::ChainId;
+use anoma::types::key::dkg_session_keys::DkgKeypair;
 use anoma::types::storage::{BlockHeight, Key};
 use anoma::types::time::{DateTime, DateTimeUtc, TimeZone, Utc};
 use anoma::types::transaction::protocol::{ProtocolTx, ProtocolTxType};
 use anoma::types::transaction::{
     hash_tx, process_tx, verify_decrypted_correctly, AffineCurve, DecryptedTx,
-    EllipticCurve, PairingEngine, TxType, WrapperTx,
+    EllipticCurve, PairingEngine, TxType, UpdateDkgSessionKey, WrapperTx,
 };
-use anoma::types::{address, key, token};
-use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
+use anoma::types::{key, token};
 use ark_std::rand::SeedableRng;
 use borsh::{BorshDeserialize, BorshSerialize};
-use ferveo::dkg::{DkgState, Params as DkgParams, PubliclyVerifiableDkg};
 use ferveo::{TendermintValidator, ValidatorSet};
+use ferveo::dkg::Params as DkgParams;
 use num_derive::{FromPrimitive, ToPrimitive};
 use num_traits::{FromPrimitive, ToPrimitive};
+use state::{DkgInstance, DkgStateMachine, ShellMode, TxQueue};
 #[cfg(not(feature = "ABCI"))]
 use tendermint_proto::abci::{
     self, Evidence, RequestPrepareProposal, ValidatorUpdate,
@@ -61,14 +63,13 @@ use tower_abci_old::{request, response};
 
 use super::rpc;
 use crate::config;
-use crate::config::genesis;
+use crate::config::{genesis, TendermintMode};
 use crate::node::ledger::events::Event;
 use crate::node::ledger::shims::abcipp_shim_types::shim;
 use crate::node::ledger::shims::abcipp_shim_types::shim::response::TxResult;
 use crate::node::ledger::{protocol, storage, tendermint_node};
-
-type DkgStateMachine =
-    PubliclyVerifiableDkg<anoma::types::transaction::EllipticCurve>;
+use crate::wallet::Wallet;
+use crate::wasm_loader::read_wasm;
 
 #[derive(Error, Debug)]
 pub enum Error {
@@ -156,115 +157,16 @@ pub struct Shell<
     byzantine_validators: Vec<Evidence>,
     /// Path to the base directory with DB data and configs
     base_dir: PathBuf,
+    /// Path to the wallet file.
+    wallet_file: PathBuf,
     /// Path to the WASM directory for files used in the genesis block.
     wasm_dir: PathBuf,
+    /// Information about the running shell instance
+    mode: ShellMode,
     /// Wrapper txs to be decrypted in the next block proposal
     tx_queue: TxQueue,
     /// State machine for generating distributed public keys
     dkg: DkgInstance,
-}
-
-#[derive(Default, Debug, Clone, BorshDeserialize, BorshSerialize)]
-/// Wrapper txs to be decrypted in the next block proposal
-pub struct TxQueue {
-    /// Index of next wrapper_tx to fetch from storage
-    next_wrapper: usize,
-    /// The actual wrappers
-    queue: VecDeque<WrapperTx>,
-}
-
-impl TxQueue {
-    /// Add a new wrapper at the back of the queue
-    pub fn push(&mut self, wrapper: WrapperTx) {
-        self.queue.push_back(wrapper);
-    }
-
-    /// Remove the wrapper at the head of the queue
-    pub fn pop(&mut self) -> Option<WrapperTx> {
-        self.queue.pop_front()
-    }
-
-    /// Iterate lazily over the queue
-    #[allow(dead_code)]
-    fn next(&mut self) -> Option<&WrapperTx> {
-        let next = self.queue.get(self.next_wrapper);
-        if self.next_wrapper < self.queue.len() {
-            self.next_wrapper += 1;
-        }
-        next
-    }
-
-    /// Reset the iterator to the head of the queue
-    pub fn rewind(&mut self) {
-        self.next_wrapper = 0;
-    }
-
-    /// Get an iterator over the queue
-    #[allow(dead_code)]
-    pub fn iter(&self) -> impl std::iter::Iterator<Item = &WrapperTx> {
-        self.queue.iter()
-    }
-
-    /// Check if there are any txs in the queue
-    #[allow(dead_code)]
-    pub fn is_empty(&self) -> bool {
-        self.queue.is_empty()
-    }
-}
-
-/// Holds the DKG state machine
-#[derive(Debug)]
-struct DkgInstance {
-    state_machine: DkgStateMachine,
-}
-
-impl Default for DkgInstance {
-    fn default() -> Self {
-        let rng = &mut ark_std::rand::prelude::StdRng::from_entropy();
-        let validator = TendermintValidator {
-            power: 0,
-            address: "".into(),
-        };
-        DkgInstance {
-            state_machine: DkgStateMachine::new(
-                ValidatorSet::new(vec![validator.clone()]),
-                DkgParams {
-                    tau: 0,
-                    security_threshold: 0,
-                    total_weight: 0,
-                },
-                validator,
-                rng,
-            )
-            .expect("Constructing default DKG should not fail"),
-        }
-    }
-}
-
-impl borsh::ser::BorshSerialize for DkgInstance {
-    fn serialize<W: std::io::Write>(
-        &self,
-        writer: &mut W,
-    ) -> std::io::Result<()> {
-        let buf = Vec::<u8>::new();
-        let bytes = CanonicalSerialize::serialize(&self.state_machine, buf)
-            .map_err(|e| {
-                std::io::Error::new(std::io::ErrorKind::InvalidData, e)
-            })?;
-        BorshSerialize::serialize(&bytes, writer)
-    }
-}
-
-impl borsh::de::BorshDeserialize for DkgInstance {
-    fn deserialize(buf: &mut &[u8]) -> std::io::Result<Self> {
-        let state_machine: Vec<u8> = BorshDeserialize::deserialize(buf)?;
-        Ok(DkgInstance {
-            state_machine: CanonicalDeserialize::deserialize(&*state_machine)
-                .map_err(|err| {
-                std::io::Error::new(std::io::ErrorKind::InvalidData, err)
-            })?,
-        })
-    }
 }
 
 impl<D, H> Drop for Shell<D, H>
@@ -313,6 +215,9 @@ where
     pub fn new(
         base_dir: PathBuf,
         db_path: impl AsRef<Path>,
+        wallet_path: PathBuf,
+        genesis_file_path: PathBuf,
+        mode: TendermintMode,
         chain_id: ChainId,
         wasm_dir: PathBuf,
     ) -> Self {
@@ -320,6 +225,8 @@ where
             std::fs::create_dir(&base_dir)
                 .expect("Creating directory for Anoma should not fail");
         }
+
+        // load last state from storage
         let mut storage = Storage::open(db_path, chain_id);
         storage
             .load_last_state()
@@ -327,6 +234,30 @@ where
                 tracing::error!("Cannot load the last state from the DB {}", e);
             })
             .expect("PersistentStorage cannot be initialized");
+
+        // load in keys and address from wallet if mode is set to `Validator`
+        let mode = match mode {
+            TendermintMode::Validator => {
+                let wallet =
+                    Wallet::load_or_new_from_genesis(&wallet_path, move || {
+                        genesis::genesis_config::open_genesis_config(
+                            genesis_file_path,
+                        )
+                    });
+                wallet
+                    .take_validator_data()
+                    .map(|data| ShellMode::Validator {
+                        data,
+                        next_dkg_keypair: None,
+                    })
+                    .expect(
+                        "Validator data should have been stored in the wallet",
+                    )
+            }
+            TendermintMode::Full => ShellMode::Full,
+            TendermintMode::Seed => ShellMode::Seed,
+        };
+
         // If we are not starting the chain for the first time, the file
         // containing the tx queue should exist
         let tx_queue = if storage.last_height.0 > 0u64 {
@@ -345,6 +276,7 @@ where
         } else {
             Default::default()
         };
+
         // If we are not starting the chain for the first time, the file
         // containing the dkg should exist
         let dkg = if storage.last_height.0 > 0u64 {
@@ -370,6 +302,8 @@ where
             byzantine_validators: vec![],
             base_dir,
             wasm_dir,
+            wallet_file: wallet_path,
+            mode,
             tx_queue,
             dkg,
         }
@@ -627,6 +561,49 @@ where
                 response.log = format!("{}", Error::TxDecoding(err));
                 response
             }
+        }
+    }
+
+    /// Issue a tx requesting a new DKG session key
+    fn request_new_dkg_session_keypair(&mut self) {
+        if let ShellMode::Validator {
+            data,
+            next_dkg_keypair,
+        } = &mut self.mode
+        {
+            let dkg_keypair: DkgKeypair =
+                ferveo_common::Keypair::<EllipticCurve>::new(
+                    &mut ark_std::rand::prelude::StdRng::from_entropy(),
+                )
+                .into();
+            let request_data = UpdateDkgSessionKey {
+                address: data.address.clone(),
+                dkg_public_key: dkg_keypair
+                    .public()
+                    .try_to_vec()
+                    .expect("Serialization of DKG public key shouldn't fail"),
+            };
+            *next_dkg_keypair = Some(dkg_keypair);
+            let request_tx = ProtocolTxType::request_new_dkg_keypair(
+                request_data,
+                &self.wasm_dir,
+                |wasm_dir, file| read_wasm(wasm_dir, file),
+            )
+            .sign(data.keys.get_protocol_keypair().as_ref());
+        }
+    }
+
+    /// Update the dkg session keypair that was queued
+    fn update_dkg_session_keypair(&mut self) {
+        if let ShellMode::Validator {
+            data,
+            next_dkg_keypair,
+        } = &mut self.mode
+        {
+            data.keys.dkg_keypair =
+                Some(next_dkg_keypair.take().expect(
+                    "A new DKG session keypair should have been queued",
+                ));
         }
     }
 }
