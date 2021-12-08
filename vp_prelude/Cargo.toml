@@ -1,0 +1,10 @@
+[package]
+authors = ["Heliax AG <hello@heliax.dev>"]
+edition = "2021"
+license = "GPL-3.0"
+name = "anoma_vp_prelude"
+resolver = "2"
+version = "0.2.0"
+
+[dependencies]
+anoma_vm_env = {path = "../vm_env"}
