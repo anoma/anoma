@@ -12,11 +12,11 @@
 //!
 //! Any other storage key changes are allowed only with a valid signature.
 
-use anoma_vm_env::vp_prelude::intent::{
+use anoma_vp_prelude::intent::{
     Exchange, FungibleTokenIntent, IntentTransfers,
 };
-use anoma_vm_env::vp_prelude::key::ed25519::{Signed, SignedTxData};
-use anoma_vm_env::vp_prelude::*;
+use anoma_vp_prelude::key::ed25519::{Signed, SignedTxData};
+use anoma_vp_prelude::*;
 use once_cell::unsync::Lazy;
 use rust_decimal::prelude::*;
 
@@ -27,10 +27,12 @@ fn validate_tx(
     keys_changed: HashSet<storage::Key>,
     verifiers: HashSet<Address>,
 ) -> bool {
-    log_string(format!(
+    debug_log!(
         "vp_user called with user addr: {}, key_changed: {:?}, verifiers: {:?}",
-        addr, keys_changed, verifiers
-    ));
+        addr,
+        keys_changed,
+        verifiers
+    );
 
     let signed_tx_data =
         Lazy::new(|| SignedTxData::try_from_slice(&tx_data[..]));
@@ -61,17 +63,23 @@ fn validate_tx(
                 let change = post.change() - pre.change();
                 // debit has to signed, credit doesn't
                 let valid = change >= 0 || *valid_sig || *valid_intent;
-                log_string(format!(
+                debug_log!(
                     "token key: {}, change: {}, valid_sig: {}, valid_intent: \
                      {}, valid modification: {}",
-                    key, change, *valid_sig, *valid_intent, valid
-                ));
+                    key,
+                    change,
+                    *valid_sig,
+                    *valid_intent,
+                    valid
+                );
                 valid
             } else {
-                log_string(format!(
+                debug_log!(
                     "This address ({}) is not of owner ({}) of token key: {}",
-                    addr, owner, key
-                ));
+                    addr,
+                    owner,
+                    key
+                );
                 // If this is not the owner, allow any change
                 true
             }
@@ -90,11 +98,11 @@ fn validate_tx(
                     true
                 }
             };
-            log_string(format!(
+            debug_log!(
                 "PoS key {} {}",
                 key,
                 if valid { "accepted" } else { "rejected" }
-            ));
+            );
             valid
         } else if let Some(owner) = intent::is_invalid_intent_key(key) {
             if owner == &addr {
@@ -104,24 +112,23 @@ fn validate_tx(
                 // A new invalid intent must have been added
                 pre.len() + 1 == post.len()
             } else {
-                log_string(format!(
+                debug_log!(
                     "This address ({}) is not of owner ({}) of \
                      InvalidIntentSet key: {}",
-                    addr, owner, key
-                ));
+                    addr,
+                    owner,
+                    key
+                );
                 // If this is not the owner, allow any change
                 true
             }
         } else {
-            log_string(format!(
-                "Unknown key modified, valid sig {}",
-                *valid_sig
-            ));
+            debug_log!("Unknown key modified, valid sig {}", *valid_sig);
             // Allow any other key change if authorized by a signature
             *valid_sig
         };
         if !is_valid {
-            log_string(format!("key {} modification failed vp", key));
+            debug_log!("key {} modification failed vp", key);
             return false;
         }
     }
@@ -148,10 +155,11 @@ fn try_decode_intent(
     let raw_intent_transfers = signed_tx_data.data.as_ref().cloned()?;
     let mut tx_data =
         IntentTransfers::try_from_slice(&raw_intent_transfers[..]).ok()?;
-    log_string(format!(
+    debug_log!(
         "tx_data.matches.exchanges: {:?}, {}",
-        tx_data.matches.exchanges, &addr
-    ));
+        tx_data.matches.exchanges,
+        &addr
+    );
     if let (Some(exchange), Some(intent)) = (
         tx_data.matches.exchanges.remove(addr),
         tx_data.matches.intents.remove(addr),
@@ -196,24 +204,24 @@ fn check_intent(
         vp,
     } = &exchange.data;
 
-    log_string(format!("vp is: {}", vp.is_some()));
+    debug_log!("vp is: {}", vp.is_some());
 
     if let Some(code) = vp {
         let eval_result = eval(code.to_vec(), raw_intent_transfers);
-        log_string(format!("eval result: {}", eval_result));
+        debug_log!("eval result: {}", eval_result);
         if !eval_result {
             return false;
         }
     }
 
-    log_string(format!(
+    debug_log!(
         "exchange description: {}, {}, {}, {}, {}",
         token_sell,
         token_buy,
         max_sell.change(),
         min_buy.change(),
         rate_min.0
-    ));
+    );
 
     let token_sell_key = token::balance_key(token_sell, addr).to_string();
     let mut sell_difference: token::Amount =
@@ -233,21 +241,21 @@ fn check_intent(
     let sell_diff: Decimal = sell_difference.change().into(); // -> how many token I sold
     let buy_diff: Decimal = buy_difference.change().into(); // -> how many token I got
 
-    log_string(format!(
+    debug_log!(
         "buy_diff > 0: {}, rate check: {}, max_sell > sell_diff: {}, buy_diff \
          > min_buy: {}",
         buy_difference.change() > 0,
         buy_diff / sell_diff >= rate_min.0,
         max_sell.change() >= sell_difference.change(),
         buy_diff >= min_buy.change().into()
-    ));
+    );
 
     if !(buy_difference.change() > 0
         && (buy_diff / sell_diff >= rate_min.0)
         && max_sell.change() >= sell_difference.change()
         && buy_diff >= min_buy.change().into())
     {
-        log_string(format!(
+        debug_log!(
             "invalid exchange, {} / {}, sell diff: {}, buy diff: {}, \
              max_sell: {}, rate_min: {}, min_buy: {}, buy_diff / sell_diff: {}",
             token_sell,
@@ -258,7 +266,7 @@ fn check_intent(
             rate_min.0,
             min_buy.change(),
             buy_diff / sell_diff
-        ));
+        );
         false
     } else {
         true
