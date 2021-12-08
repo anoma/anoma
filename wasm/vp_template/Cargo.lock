@@ -114,6 +114,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "anoma_vp_prelude"
+version = "0.2.0"
+dependencies = [
+ "anoma_vm_env",
+]
+
+[[package]]
 name = "anyhow"
 version = "1.0.41"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2600,7 +2607,7 @@ name = "vp_template"
 version = "0.2.0"
 dependencies = [
  "anoma_tests",
- "anoma_vm_env",
+ "anoma_vp_prelude",
  "borsh",
  "wee_alloc",
 ]
