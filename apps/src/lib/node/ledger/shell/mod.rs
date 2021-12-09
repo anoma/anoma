@@ -241,6 +241,7 @@ where
         chain_id: ChainId,
         wasm_dir: PathBuf,
         db_cache: Option<&D::Cache>,
+        vp_wasm_compilation_cache: u64,
     ) -> Self {
         if !Path::new(&base_dir).is_dir() {
             std::fs::create_dir(&base_dir)
@@ -274,8 +275,6 @@ where
 
         let vp_wasm_cache_dir =
             base_dir.join(chain_id.as_str()).join("vp_wasm_cache");
-        // TODO set from available memory sysinfo and optionally config
-        let vp_cache_max_bytes = 1024 * 1024 * 1024;
         Self {
             storage,
             gas_meter: BlockGasMeter::default(),
@@ -284,7 +283,10 @@ where
             base_dir,
             wasm_dir,
             tx_queue,
-            vp_wasm_cache: VpCache::new(vp_wasm_cache_dir, vp_cache_max_bytes),
+            vp_wasm_cache: VpCache::new(
+                vp_wasm_cache_dir,
+                vp_wasm_compilation_cache as usize,
+            ),
         }
     }
 
@@ -610,6 +612,7 @@ mod test_utils {
         /// Create a new shell
         pub fn new() -> Self {
             let base_dir = tempdir().unwrap().as_ref().canonicalize().unwrap();
+            let vp_wasm_compilation_cache = 50 * 1024 * 1024; // 50 kiB
             Self {
                 shell: Shell::<MockDB, Sha256Hasher>::new(
                     base_dir.clone(),
@@ -617,6 +620,7 @@ mod test_utils {
                     Default::default(),
                     top_level_directory().join("wasm"),
                     None,
+                    vp_wasm_compilation_cache,
                 ),
             }
         }
@@ -706,12 +710,14 @@ mod test_utils {
     fn test_tx_queue_persistence() {
         let base_dir = tempdir().unwrap().as_ref().canonicalize().unwrap();
         // we have to use RocksDB for this test
+        let vp_wasm_compilation_cache = 50 * 1024 * 1024; // 50 kiB
         let mut shell = Shell::<PersistentDB, PersistentStorageHasher>::new(
             base_dir.clone(),
             base_dir.join("db").join("anoma-devchain-00000"),
             Default::default(),
             top_level_directory().join("wasm"),
             None,
+            vp_wasm_compilation_cache,
         );
         let keypair = gen_keypair();
         // enqueue a wrapper tx
@@ -763,6 +769,7 @@ mod test_utils {
             Default::default(),
             top_level_directory().join("wasm"),
             None,
+            vp_wasm_compilation_cache,
         );
         assert!(!shell.tx_queue.is_empty());
     }
@@ -774,12 +781,14 @@ mod test_utils {
     fn test_tx_queue_must_exist() {
         let base_dir = tempdir().unwrap().as_ref().canonicalize().unwrap();
         // we have to use RocksDB for this test
+        let vp_wasm_compilation_cache = 50 * 1024 * 1024; // 50 kiB
         let mut shell = Shell::<PersistentDB, PersistentStorageHasher>::new(
             base_dir.clone(),
             base_dir.join("db").join("anoma-devchain-00000"),
             Default::default(),
             top_level_directory().join("wasm"),
             None,
+            vp_wasm_compilation_cache,
         );
         let keypair = gen_keypair();
         // enqueue a wrapper tx
@@ -832,6 +841,7 @@ mod test_utils {
             Default::default(),
             top_level_directory().join("wasm"),
             None,
+            vp_wasm_compilation_cache,
         );
     }
 }

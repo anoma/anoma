@@ -164,6 +164,7 @@ dependencies = [
  "num-derive",
  "num-traits 0.2.14",
  "num_cpus",
+ "once_cell",
  "orion",
  "proptest 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "prost 0.9.0",
