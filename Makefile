@@ -61,6 +61,9 @@ check:
 	make -C $(wasms) check && \
 	$(foreach wasm,$(wasm_templates),$(check-wasm) && ) true
 
+check-abci-plus-plus:
+	$(cargo) check --no-default-features --features "ABCI-plus-plus"
+
 clippy-wasm = $(cargo) +$(nightly) clippy --manifest-path $(wasm)/Cargo.toml --all-targets -- -D warnings
 
 clippy-wasm-abci-plus-plus = $(cargo) +$(nightly) clippy --manifest-path $(wasm)/Cargo.toml --all-targets --no-default-features --features "ABCI-plus-plus" -- -D warnings
