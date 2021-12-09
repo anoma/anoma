@@ -7,13 +7,14 @@ pub mod storage;
 pub mod tendermint_node;
 
 use std::convert::TryInto;
+use std::env;
 use std::net::SocketAddr;
 use std::path::PathBuf;
 use std::str::FromStr;
-use std::env;
 
 use byte_unit::Byte;
 use futures::future::TryFutureExt;
+use once_cell::unsync::Lazy;
 use sysinfo::{RefreshKind, System, SystemExt};
 #[cfg(not(feature = "ABCI"))]
 use tendermint_proto::abci::CheckTxType;
@@ -198,15 +199,68 @@ async fn run_aux(config: config::Ledger, wasm_dir: PathBuf) {
     // Prefetch needed wasm artifacts
     wasm_loader::pre_fetch_wasm(&wasm_dir).await;
 
+    // Find the system available memory
+    let available_memory_bytes = Lazy::new(|| {
+        let sys = System::new_with_specifics(RefreshKind::new().with_memory());
+        let available_memory_bytes = sys.available_memory() * 1024;
+        tracing::debug!(
+            "Available memory: {}",
+            Byte::from_bytes(available_memory_bytes as u128)
+                .get_appropriate_unit(true)
+        );
+        available_memory_bytes
+    });
+
+    // Find the VP WASM compilation cache size
+    let vp_wasm_compilation_cache =
+        match config.shell.vp_wasm_compilation_cache_bytes {
+            Some(vp_wasm_compilation_cache) => {
+                tracing::debug!(
+                    "VP WASM compilation cache size set from the configuration"
+                );
+                vp_wasm_compilation_cache
+            }
+            None => {
+                tracing::debug!(
+                    "VP WASM compilation cache size not configured, using 1/6 \
+                     of available memory."
+                );
+                *available_memory_bytes / 6
+            }
+        };
+    tracing::debug!(
+        "VP WASM compilation cache size: {}",
+        Byte::from_bytes(vp_wasm_compilation_cache as u128)
+            .get_appropriate_unit(true)
+    );
+
+    // Find the tx WASM compilation cache size
+    let tx_wasm_compilation_cache =
+        match config.shell.tx_wasm_compilation_cache_bytes {
+            Some(tx_wasm_compilation_cache) => {
+                tracing::debug!(
+                    "Tx WASM compilation cache size set from the configuration"
+                );
+                tx_wasm_compilation_cache
+            }
+            None => {
+                tracing::debug!(
+                    "Tx WASM compilation cache size not configured, using 1/6 \
+                     of available memory."
+                );
+                *available_memory_bytes / 6
+            }
+        };
+    tracing::debug!(
+        "Tx WASM compilation cache size: {}",
+        Byte::from_bytes(tx_wasm_compilation_cache as u128)
+            .get_appropriate_unit(true)
+    );
+
     // Setup DB cache, it must outlive the DB instance that's in the shell
-    let sys = System::new_with_specifics(RefreshKind::new().with_memory());
-    let available_memory_bytes = sys.available_memory() * 1024;
-    let available_memory = Byte::from_bytes(available_memory_bytes as u128)
-        .get_appropriate_unit(true);
-    tracing::debug!("Available memory: {}", available_memory);
     let block_cache_size_bytes = match config.shell.block_cache_bytes {
         Some(block_cache_bytes) => {
-            tracing::debug!("Block cache set from configuration.");
+            tracing::debug!("Block cache set from the configuration.",);
             block_cache_bytes
         }
         None => {
@@ -214,12 +268,14 @@ async fn run_aux(config: config::Ledger, wasm_dir: PathBuf) {
                 "Block cache size not configured, using 1/3 of available \
                  memory."
             );
-            available_memory_bytes / 3
+            *available_memory_bytes / 3
         }
     };
-    let block_cache_size = Byte::from_bytes(block_cache_size_bytes as u128)
-        .get_appropriate_unit(true);
-    tracing::debug!("Block cache size: {}", block_cache_size,);
+    tracing::debug!(
+        "RocksDB block cache size: {}",
+        Byte::from_bytes(block_cache_size_bytes as u128)
+            .get_appropriate_unit(true)
+    );
     let db_cache =
         rocksdb::Cache::new_lru_cache(block_cache_size_bytes as usize).unwrap();
 
@@ -275,6 +331,8 @@ async fn run_aux(config: config::Ledger, wasm_dir: PathBuf) {
         config.chain_id,
         wasm_dir,
         &db_cache,
+        vp_wasm_compilation_cache,
+        tx_wasm_compilation_cache,
     );
 
     // Start the ABCI server
