@@ -827,7 +827,7 @@ fn ledger_many_txs_in_a_block() -> Result<()> {
             let test = Arc::clone(&test);
             let tx_args = Arc::clone(&tx_args);
             std::thread::spawn(move || {
-                let mut client = run!(*test, Bin::Client, &*tx_args, Some(20))?;
+                let mut client = run!(*test, Bin::Client, &*tx_args, Some(30))?;
                 if !cfg!(feature = "ABCI") {
                     client.exp_string("Transaction accepted")?;
                 }
