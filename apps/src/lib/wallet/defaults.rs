@@ -2,6 +2,7 @@
 
 use anoma::ledger::pos;
 use anoma::types::address::Address;
+use anoma::types::key::dkg_session_keys::DkgKeypair;
 use anoma::types::key::ed25519::PublicKey;
 #[cfg(feature = "dev")]
 pub use dev::{
@@ -12,7 +13,8 @@ pub use dev::{
 };
 
 use crate::config::genesis::genesis_config::GenesisConfig;
-use crate::wallet::store::Alias;
+use crate::wallet::store::{Alias, Store};
+use crate::wallet::AtomicKeypair;
 
 /// The default addresses with their aliases.
 pub fn addresses_from_genesis(genesis: GenesisConfig) -> Vec<(Alias, Address)> {
@@ -61,6 +63,17 @@ pub fn addresses_from_genesis(genesis: GenesisConfig) -> Vec<(Alias, Address)> {
         addresses.extend(imp_addresses);
     }
     addresses
+}
+
+/// Generate a new protocol signing keypair and DKG session keypair
+pub fn validator_keys() -> (AtomicKeypair, DkgKeypair) {
+    let validator_keys = Store::gen_validator_keys(None);
+    (
+        validator_keys.protocol_keypair,
+        validator_keys
+            .dkg_keypair
+            .expect("Should have generated a DKG session keypair"),
+    )
 }
 
 #[cfg(feature = "dev")]
@@ -121,7 +134,7 @@ mod dev {
     /// An implicit user address for testing & development
     pub fn daewon_address() -> Address {
         // "atest1d9khqw36xprrzdpk89rrws69g4z5vd6pgv65gvjrgeqnv3pcg4zns335xymry335gcerqs3etd0xfa"
-        (&daewon_keypair().public).into()
+        (&daewon_keypair().public()).into()
     }
 
     /// An established validator address for testing & development

@@ -3,7 +3,7 @@
 use std::borrow::Borrow;
 use std::fmt::Display;
 use std::str::FromStr;
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, Mutex, MutexGuard};
 
 use anoma::types::key::ed25519::{Keypair, PublicKey};
 use borsh::{BorshDeserialize, BorshSerialize};
@@ -12,6 +12,7 @@ use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
 use super::read_password;
+use crate::std::io::Write;
 
 const ENCRYPTED_KEY_PREFIX: &str = "encrypted:";
 const UNENCRYPTED_KEY_PREFIX: &str = "unencrypted:";
@@ -24,6 +25,16 @@ impl AtomicKeypair {
     /// Get the public key of the pair
     pub fn public(&self) -> PublicKey {
         self.0.lock().unwrap().public.clone()
+    }
+
+    /// Get a mutex guarded keypair
+    pub fn lock(&self) -> MutexGuard<Keypair> {
+        self.0.lock().unwrap()
+    }
+
+    /// Serialize keypair to bytes
+    pub fn to_bytes(&self) -> [u8; 64] {
+        self.0.lock().unwrap().to_bytes()
     }
 }
 
@@ -39,15 +50,18 @@ impl Clone for AtomicKeypair {
     }
 }
 
-impl AsRef<Keypair> for AtomicKeypair {
-    fn as_ref(&self) -> &Keypair {
-        self.0.lock().unwrap().borrow()
+impl Display for AtomicKeypair {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        let keypair = self.lock();
+        write!(f, "{}", keypair.borrow())
     }
 }
 
-impl Display for AtomicKeypair {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(f, "{}", self.as_ref())
+impl BorshSerialize for AtomicKeypair {
+    fn serialize<W: Write>(&self, writer: &mut W) -> std::io::Result<()> {
+        let keypair_mutex = self.lock();
+        let keypair = &*keypair_mutex;
+        BorshSerialize::serialize(keypair, writer)
     }
 }
 
@@ -58,7 +72,7 @@ pub enum StoredKeypair {
     Encrypted(EncryptedKeypair),
     /// An raw (unencrypted) keypair
     Raw(
-        // Wrapped in `Rc` to avoid reference lifetimes when we borrow the key
+        // Wrapped in `Arc` to avoid reference lifetimes when we borrow the key
         AtomicKeypair,
     ),
 }
@@ -181,14 +195,15 @@ impl StoredKeypair {
     ) -> (Self, AtomicKeypair) {
         match password {
             Some(password) => {
-                (
-                    Self::Encrypted(EncryptedKeypair::new(keypair.as_ref(), password)),
-                    keypair,
-                )
+                let keypair_mutex = keypair.lock();
+                let encrypted = Self::Encrypted(EncryptedKeypair::new(
+                    keypair_mutex.borrow(),
+                    password,
+                ));
+                drop(keypair_mutex);
+                (encrypted, keypair)
             }
-            None => {
-                (Self::Raw(keypair.clone()), keypair)
-            }
+            None => (Self::Raw(keypair.clone()), keypair),
         }
     }
 

@@ -38,6 +38,7 @@ dependencies = [
  "prost-types",
  "rust_decimal",
  "serde",
+ "serde_json",
  "sha2",
  "sparse-merkle-tree",
  "tendermint",

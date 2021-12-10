@@ -9,6 +9,7 @@ use anoma::ledger::pos::{GenesisValidator, PosParams};
 use anoma::types::address::Address;
 #[cfg(not(feature = "dev"))]
 use anoma::types::chain::ChainId;
+use anoma::types::key::dkg_session_keys::DkgPublicKey;
 #[cfg(feature = "dev")]
 use anoma::types::key::ed25519::Keypair;
 use anoma::types::key::ed25519::PublicKey;
@@ -29,6 +30,7 @@ pub mod genesis_config {
     use anoma::ledger::pos::types::BasisPoints;
     use anoma::ledger::pos::{GenesisValidator, PosParams};
     use anoma::types::address::Address;
+    use anoma::types::key::dkg_session_keys::DkgPublicKey;
     use anoma::types::key::ed25519::{ParsePublicKeyError, PublicKey};
     use anoma::types::time::Rfc3339String;
     use anoma::types::{storage, token};
@@ -57,6 +59,11 @@ pub mod genesis_config {
 
         pub fn to_public_key(&self) -> Result<PublicKey, HexKeyError> {
             let key = PublicKey::from_str(&self.0)?;
+            Ok(key)
+        }
+
+        pub fn to_dkg_public_key(&self) -> Result<DkgPublicKey, HexKeyError> {
+            let key = DkgPublicKey::from_str(&self.0)?;
             Ok(key)
         }
     }
@@ -114,6 +121,11 @@ pub mod genesis_config {
         pub account_public_key: Option<HexString>,
         // Public key for staking reward account. (default: generate)
         pub staking_reward_public_key: Option<HexString>,
+        // Public protocol signing key for validator account. (default:
+        // generate)
+        pub protocol_public_key: Option<HexString>,
+        // Public DKG session key for validator account. (default: generate)
+        pub dkg_public_key: Option<HexString>,
         // Validator address (default: generate).
         pub address: Option<String>,
         // Staking reward account address (default: generate).
@@ -249,6 +261,18 @@ pub mod genesis_config {
                 .as_ref()
                 .unwrap()
                 .to_public_key()
+                .unwrap(),
+            protocol_key: config
+                .protocol_public_key
+                .as_ref()
+                .unwrap()
+                .to_public_key()
+                .unwrap(),
+            dkg_public_key: config
+                .dkg_public_key
+                .as_ref()
+                .unwrap()
+                .to_dkg_public_key()
                 .unwrap(),
             non_staked_balance: token::Amount::whole(config.non_staked_balance),
             validator_vp_code_path: validator_vp_config.filename.to_owned(),
@@ -432,23 +456,15 @@ pub struct Genesis {
 impl Genesis {
     /// Sort all fields for deterministic encoding
     pub fn init(&mut self) {
-        self.validators.sort();
+        self.validators
+            .sort_by(|val, other| val.account_key.cmp(&other.account_key));
         self.token_accounts.sort();
         self.established_accounts.sort();
         self.implicit_accounts.sort();
     }
 }
 
-#[derive(
-    Clone,
-    Debug,
-    BorshSerialize,
-    BorshDeserialize,
-    PartialEq,
-    Eq,
-    PartialOrd,
-    Ord,
-)]
+#[derive(Clone, Debug, BorshSerialize, BorshDeserialize)]
 /// Genesis validator definition
 pub struct Validator {
     /// Data that is used for PoS system initialization
@@ -458,6 +474,11 @@ pub struct Validator {
     /// this key on a transaction signature.
     /// Note that this is distinct from consensus key used in the PoS system.
     pub account_key: PublicKey,
+    /// Public key associated with validator account used for signing protocol
+    /// transactions
+    pub protocol_key: PublicKey,
+    /// The public DKG session key used during the DKG protocol
+    pub dkg_public_key: DkgPublicKey,
     /// These tokens are no staked and hence do not contribute to the
     /// validator's voting power
     pub non_staked_balance: token::Amount,
@@ -554,15 +575,18 @@ pub fn genesis() -> Genesis {
     .unwrap();
     let address = wallet::defaults::validator_address();
     let staking_reward_address = Address::decode("atest1v4ehgw36xcersvee8qerxd35x9prsw2xg5erxv6pxfpygd2x89z5xsf5xvmnysejgv6rwd2rnj2avt").unwrap();
+    let (protocol_keypair, dkg_keypair) = wallet::defaults::validator_keys();
     let validator = Validator {
         pos_data: GenesisValidator {
             address,
             staking_reward_address,
             tokens: token::Amount::whole(200_000),
-            consensus_key: consensus_keypair.public,
+            consensus_key: consensus_keypair.public(),
             staking_reward_key: staking_reward_keypair.public,
         },
-        account_key: account_keypair.public,
+        account_key: account_keypair.public(),
+        protocol_key: protocol_keypair.public(),
+        dkg_public_key: dkg_keypair.public(),
         non_staked_balance: token::Amount::whole(100_000),
         // TODO replace with https://github.com/anoma/anoma/issues/25)
         validator_vp_code_path: vp_user_path.into(),
@@ -580,32 +604,32 @@ pub fn genesis() -> Genesis {
         address: wallet::defaults::albert_address(),
         vp_code_path: vp_user_path.into(),
         vp_sha256: Default::default(),
-        public_key: Some(wallet::defaults::albert_keypair().public),
+        public_key: Some(wallet::defaults::albert_keypair().public()),
         storage: HashMap::default(),
     };
     let bertha = EstablishedAccount {
         address: wallet::defaults::bertha_address(),
         vp_code_path: vp_user_path.into(),
         vp_sha256: Default::default(),
-        public_key: Some(wallet::defaults::bertha_keypair().public),
+        public_key: Some(wallet::defaults::bertha_keypair().public()),
         storage: HashMap::default(),
     };
     let christel = EstablishedAccount {
         address: wallet::defaults::christel_address(),
         vp_code_path: vp_user_path.into(),
         vp_sha256: Default::default(),
-        public_key: Some(wallet::defaults::christel_keypair().public),
+        public_key: Some(wallet::defaults::christel_keypair().public()),
         storage: HashMap::default(),
     };
     let matchmaker = EstablishedAccount {
         address: wallet::defaults::matchmaker_address(),
         vp_code_path: vp_user_path.into(),
         vp_sha256: Default::default(),
-        public_key: Some(wallet::defaults::matchmaker_keypair().public),
+        public_key: Some(wallet::defaults::matchmaker_keypair().public()),
         storage: HashMap::default(),
     };
     let implicit_accounts = vec![ImplicitAccount {
-        public_key: wallet::defaults::daewon_keypair().public,
+        public_key: wallet::defaults::daewon_keypair().public(),
     }];
     let default_user_tokens = token::Amount::whole(1_000_000);
     let balances: HashMap<Address, token::Amount> = HashMap::from_iter([
@@ -638,8 +662,11 @@ pub fn genesis() -> Genesis {
 pub mod tests {
     use anoma::types::address::testing::gen_established_address;
     use anoma::types::key::ed25519::Keypair;
+    use borsh::BorshSerialize;
     use rand::prelude::ThreadRng;
     use rand::thread_rng;
+
+    use crate::wallet;
 
     /// Run `cargo test gen_genesis_validator -- --nocapture` to generate a
     /// new genesis validator address, staking reward address and keypair.
@@ -650,6 +677,8 @@ pub mod tests {
         let mut rng: ThreadRng = thread_rng();
         let keypair = Keypair::generate(&mut rng);
         let staking_reward_keypair = Keypair::generate(&mut rng);
+        let (protocol_keypair, dkg_keypair) =
+            wallet::defaults::validator_keys();
         println!("address: {}", address);
         println!("staking_reward_address: {}", staking_reward_address);
         println!("keypair: {:?}", keypair.to_bytes());
@@ -657,5 +686,7 @@ pub mod tests {
             "staking_reward_keypair: {:?}",
             staking_reward_keypair.to_bytes()
         );
+        println!("protocol_keypair: {:?}", protocol_keypair.to_bytes());
+        println!("dkg_keypair: {:?}", dkg_keypair.try_to_vec().unwrap());
     }
 }

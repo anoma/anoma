@@ -3,16 +3,15 @@ mod matchmaker;
 mod mempool;
 
 use std::path::Path;
-use std::rc::Rc;
 
 use anoma::proto::Intent;
 use anoma::types::address::Address;
-use anoma::types::key::ed25519::Keypair;
 use matchmaker::Matchmaker;
 use thiserror::Error;
 use tokio::sync::mpsc::{Receiver, Sender};
 
 use crate::types::MatchmakerMessage;
+use crate::wallet::AtomicKeypair;
 
 // TODO split Error and Result type in two, one for Result/Error that can only
 // happens locally and the other that can happens locally and in the network
@@ -43,7 +42,7 @@ impl GossipIntent {
         config: &crate::config::IntentGossiper,
         wasm_dir: impl AsRef<Path>,
         tx_source_address: Option<Address>,
-        tx_signing_key: Option<Rc<Keypair>>,
+        tx_signing_key: Option<AtomicKeypair>,
     ) -> Result<Self> {
         if let (
             Some(matchmaker),

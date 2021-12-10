@@ -3,9 +3,8 @@ mod keys;
 mod store;
 
 use std::collections::HashMap;
-use std::env;
-use std::fs;
 use std::path::{Path, PathBuf};
+use std::{env, fs};
 
 use anoma::types::address::Address;
 use anoma::types::key::ed25519::{PublicKey, PublicKeyHash};
@@ -105,26 +104,24 @@ impl Wallet {
     /// we should re-use a keypair already in the wallet
     pub fn gen_validator_keys(
         &mut self,
-        protocol_pk: Option<PublicKey>
+        protocol_pk: Option<PublicKey>,
     ) -> Result<ValidatorKeys, FindKeyError> {
         let protocol_keypair = protocol_pk.map(|pk| {
             self.find_key_by_pkh(&PublicKeyHash::from(pk))
                 .ok()
-                .or_else(
-                    || self.store.validator_data
+                .or_else(|| {
+                    self.store
+                        .validator_data
                         .take()
-                        .map(|data|
-                            data.keys.protocol_keypair
-                        )
-                )
+                        .map(|data| data.keys.protocol_keypair)
+                })
                 .ok_or(FindKeyError::KeyNotFound)
-            }
-        );
+        });
         match protocol_keypair {
-            Some( Err(err)) => Err(err),
-            other @ _ => Ok(
-                self.store.gen_validator_keys(other.map(|res| res.unwrap()))
-            )
+            Some(Err(err)) => Err(err),
+            other => {
+                Ok(Store::gen_validator_keys(other.map(|res| res.unwrap())))
+            }
         }
     }
 

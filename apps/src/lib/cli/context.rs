@@ -14,7 +14,7 @@ use crate::cli::safe_exit;
 use crate::config::genesis::genesis_config;
 use crate::config::global::GlobalConfig;
 use crate::config::{self, Config};
-use crate::wallet::{Wallet, AtomicKeypair};
+use crate::wallet::{AtomicKeypair, Wallet};
 use crate::wasm_loader;
 
 /// Env. var to set chain ID
@@ -264,8 +264,11 @@ impl ArgFromMutContext for PublicKey {
                 .map(|pkh: PublicKeyHash| {
                     // check if this corresponds to the protocol signing key
                     if let Some(data) = ctx.wallet.get_validator_data() {
-                        if PublicKeyHash::from(&data.keys.protocol_keypair.public()) == pkh {
-                            return data.keys.protocol_keypair.public()
+                        if PublicKeyHash::from(
+                            &data.keys.protocol_keypair.public(),
+                        ) == pkh
+                        {
+                            return data.keys.protocol_keypair.public();
                         }
                     }
                     let key = ctx.wallet.find_key_by_pkh(&pkh).unwrap();

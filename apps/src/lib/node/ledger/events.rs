@@ -84,10 +84,8 @@ impl Event {
                     attributes: HashMap::new(),
                 };
                 event["hash"] = hash_tx(
-                    &mut tx
-                        .try_to_vec()
-                        .expect("Serializing protocol tx should not fail")
-                        .as_ref(),
+                    &tx.try_to_vec()
+                        .expect("Serializing protocol tx should not fail"),
                 )
                 .to_string();
                 event

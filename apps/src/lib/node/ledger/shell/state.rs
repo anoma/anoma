@@ -1,7 +1,6 @@
 use std::collections::VecDeque;
-use std::rc::Rc;
 
-use anoma::ledger::storage::{StorageHasher, DB, DBIter};
+use anoma::ledger::storage::{DBIter, StorageHasher, DB};
 use anoma::types::address::Address;
 use anoma::types::key::dkg_session_keys::DkgKeypair;
 use anoma::types::transaction::WrapperTx;
@@ -10,6 +9,7 @@ use ark_std::rand::SeedableRng;
 use borsh::{BorshDeserialize, BorshSerialize};
 use ferveo::dkg::{Params as DkgParams, PubliclyVerifiableDkg};
 use ferveo::{TendermintValidator, ValidatorSet};
+use tokio::sync::mpsc::UnboundedSender;
 
 use super::Shell;
 use crate::wallet::ValidatorData;
@@ -22,6 +22,8 @@ pub(super) enum ShellMode {
     Validator {
         data: ValidatorData,
         next_dkg_keypair: Option<DkgKeypair>,
+        dkg: DkgInstance,
+        broadcast_sender: UnboundedSender<Vec<u8>>,
     },
     Full,
     Seed,
@@ -152,27 +154,29 @@ impl borsh::de::BorshDeserialize for DkgInstance {
 
 /// Used to queue up state transactions that
 /// require validation from multiple code paths
-pub(super) struct ActionQueue<'a, T, D, H>
+pub(super) struct ActionQueue<T, D, H>
 where
-    T: FnOnce(&'a mut Shell<D, H>) -> (),
+    T: FnOnce(&mut Shell<D, H>),
     D: DB + for<'iter> DBIter<'iter> + Sync + 'static,
     H: StorageHasher + Sync + 'static,
 {
-    shell: Rc<&'a mut Shell<D, H>>,
     queue: Vec<T>,
+    phantom_db: std::marker::PhantomData<D>,
+    phantom_hasher: std::marker::PhantomData<H>,
 }
 
-impl<'a, T, D, H> ActionQueue<'a, T, D, H>
+impl<T, D, H> ActionQueue<T, D, H>
 where
-    T: FnOnce(&'a mut Shell<D, H>) -> (),
+    T: FnOnce(&mut Shell<D, H>),
     D: DB + for<'iter> DBIter<'iter> + Sync + 'static,
     H: StorageHasher + Sync + 'static,
 {
     /// create a new queue from a single action
-    pub fn new(shell: Rc<&'a mut Shell<D, H>>) -> Self {
+    pub fn new() -> Self {
         Self {
-            shell,
             queue: vec![],
+            phantom_db: Default::default(),
+            phantom_hasher: Default::default(),
         }
     }
 
@@ -181,28 +185,21 @@ where
         self.queue.push(action)
     }
 
-    /// Retrieve the last action in the queue
-    pub fn pop(&mut self) -> Option<T> {
-        self.queue.pop()
-    }
-
-    /// Apply the last function
-    pub fn apply_last(&'a mut self) {
-        if let Some(action) = self.queue.pop() {
-            action(
-                Rc::get_mut(&mut self.shell)
-                    .expect("No other Rc pointer to shell should exist"),
-            )
+    /// Apply all functions in the queue
+    pub fn apply_all(&mut self, shell: &mut Shell<D, H>) {
+        for action in self.queue.drain(0..).rev() {
+            action(shell)
         }
     }
+}
 
-    /// Apply all functions in the queue
-    pub fn apply_all(&'a mut self) {
-        for action in self.queue.drain(0..).rev() {
-            action(
-                Rc::get_mut(&mut self.shell)
-                    .expect("No other Rc pointer to shell should exist"),
-            )
-        };
+impl<T, D, H> Default for ActionQueue<T, D, H>
+where
+    T: FnOnce(&mut Shell<D, H>),
+    D: DB + for<'iter> DBIter<'iter> + Sync + 'static,
+    H: StorageHasher + Sync + 'static,
+{
+    fn default() -> Self {
+        Self::new()
     }
 }

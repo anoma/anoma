@@ -55,7 +55,7 @@ mod protocol_txs {
             tx: &Tx,
             sig: &Signature,
         ) -> Result<(), TxError> {
-            verify_tx_sig(&self.pk, &tx, sig).map_err(|err| {
+            verify_tx_sig(&self.pk, tx, sig).map_err(|err| {
                 TxError::SigError(format!(
                     "ProtocolTx signature verification failed: {}",
                     err
@@ -91,13 +91,13 @@ mod protocol_txs {
         }
 
         /// Create a new tx requesting a new DKG session keypair
-        pub fn request_new_dkg_keypair<F>(
+        pub fn request_new_dkg_keypair<'a, F>(
             data: UpdateDkgSessionKey,
-            wasm_dir: &Path,
+            wasm_dir: &'a Path,
             wasm_loader: F,
         ) -> Self
         where
-            F: FnOnce(&str, &str) -> Vec<u8>,
+            F: FnOnce(&'a str, &'static str) -> Vec<u8>,
         {
             let code = wasm_loader(
                 wasm_dir
@@ -158,7 +158,10 @@ mod protocol_txs {
                         BorshDeserialize::deserialize(&mut bytes.as_ref())?,
                     ))
                 }
-                _ => Err(std::io::Error::new(ErrorKind::InvalidData, "Invalid enum variant")),
+                _ => Err(std::io::Error::new(
+                    ErrorKind::InvalidData,
+                    "Invalid enum variant",
+                )),
             }
         }
     }

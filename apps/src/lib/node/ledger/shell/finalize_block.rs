@@ -1,6 +1,4 @@
 //! Implementation of the [`FinalizeBlock`] ABCI++ method for the Shell
-use std::rc::Rc;
-
 use anoma::types::storage::BlockHash;
 use anoma::types::transaction::EncryptionKey;
 use ferveo::DkgState;
@@ -16,10 +14,6 @@ use tendermint_proto_abci::abci::Evidence;
 use tendermint_proto_abci::crypto::{
     public_key, PublicKey as TendermintPublicKey,
 };
-#[cfg(not(feature = "ABCI"))]
-use tendermint_rpc::{Client, HttpClient};
-#[cfg(feature = "ABCI")]
-use tendermint_rpc_abci::{Client, HttpClient};
 #[cfg(feature = "ABCI")]
 use tendermint_stable::block::Header;
 
@@ -61,7 +55,7 @@ where
             self.update_state(req.header, req.hash, req.byzantine_validators);
 
         for processed_tx in &req.txs {
-            let mut actions = ActionQueue::new(Rc::new(self));
+            let mut actions = ActionQueue::new();
             let tx = if let Ok(tx) = Tx::try_from(processed_tx.tx.as_ref()) {
                 tx
             } else {
@@ -171,24 +165,31 @@ where
                     continue;
                 }
                 TxType::Protocol(ProtocolTx {
-                    tx: protocol_tx, ..
+                    tx: protocol_tx,
+                    pk,
                 }) => match protocol_tx {
                     ProtocolTxType::DKG(msg) => {
-                        match self
-                            .dkg
-                            .state_machine
-                            .apply_message(todo!(), msg.clone())
+                        if let Some(sender) =
+                            self.get_validator_from_protocol_pk(pk)
                         {
-                            Ok(_) => Event::new_tx_event(&tx_type, height.0),
-                            Err(err) => {
-                                tracing::error!(
-                                    "Internal logic error: FinalizeBlock \
-                                     could not apply a verified DKG protocol \
-                                     message"
-                                );
-                                continue;
+                            if let ShellMode::Validator { dkg, .. } =
+                                &mut self.mode
+                            {
+                                if let Err(err) = dkg
+                                    .state_machine
+                                    .apply_message(sender, msg.clone())
+                                {
+                                    tracing::error!(
+                                        "Internal logic error: FinalizeBlock \
+                                         could not apply a verified DKG \
+                                         protocol message. Received error: {}",
+                                        err
+                                    );
+                                    continue;
+                                }
                             }
                         }
+                        Event::new_tx_event(&tx_type, height.0)
                     }
                     ProtocolTxType::NewDkgKeypair(tx) => {
                         // we update our new session keypair from the queue
@@ -199,7 +200,8 @@ where
                             address,
                             dkg_public_key,
                         } = BorshDeserialize::deserialize(
-                            &mut tx.data
+                            &mut tx
+                                .data
                                 .as_ref()
                                 .expect("This was verified by Prepare Proposal")
                                 .as_ref(),
@@ -244,7 +246,7 @@ where
                             result
                         );
                         // Apply all the enqueued transactions
-                        actions.apply_all();
+                        actions.apply_all(self);
                         self.write_log.commit_tx();
                         tx_result["code"] = ErrorCodes::Ok.into();
                         match serde_json::to_string(
@@ -380,18 +382,18 @@ where
             let update = ValidatorUpdate { pub_key, power };
             response.validator_updates.push(update);
         });
-
-        self.storage.encryption_key = if let DkgState::Success { final_key } =
-            self.dkg.state_machine.state
-        {
-            Some(
-                EncryptionKey(final_key)
-                    .try_to_vec()
-                    .expect("Serializing encryption key should not fail")
-            )
-        } else {
-            None
-        };
+        // TODO: This is a protocol tx, refactor
+        // self.storage.encryption_key = if let DkgState::Success { final_key }
+        // = self.dkg.state_machine.state
+        // {
+        // Some(
+        // EncryptionKey(final_key)
+        // .try_to_vec()
+        // .expect("Serializing encryption key should not fail"),
+        // )
+        // } else {
+        // None
+        // };
 
         // Update evidence parameters
         let (parameters, _gas) = parameters::read(&self.storage)
@@ -406,15 +408,14 @@ where
     }
 
     /// Update the DKG state machine
-    ///  * At the start of a new epoch, reset state machine and announce session
+    ///  * At the start of a new epoch, reset state machine and update session
     ///    keys
-    ///  * After all session keys are announced, issue a PVSS transcript
+    ///  * issue a PVSS transcript
     ///  * Collect PVSS transcripts from other validators
-    ///  * If a new public keys is on chain, store it
     fn update_dkg(&mut self, new_epoch: bool) {
         if new_epoch {
             if let Err(err) = self.new_dkg_instance() {
-                tracing::error!(
+                panic!(
                     "Failed to create a new DKG instance for the new epoch \
                      with error: {} \n\n\n The state of the last block has \
                      been persisted, so it is safe to shut down and resolve \
@@ -424,7 +425,7 @@ where
             }
         }
         if let Err(err) = self.issue_pvss_transcript() {
-            tracing::error!(
+            panic!(
                 "Failed to issue a PVSS transcript for this instance of the \
                  DKG with error: {} \n\n\n The state of the last block has \
                  been persisted, so it is safe to shut down and resolve the \
@@ -437,86 +438,76 @@ where
     /// At the start of a new epoch, create a fresh DKG instance.
     /// This means resetting the DKG state machine with the new validator
     /// sets.
-    ///
-    /// Also broadcasts the session key tx for this validator
     fn new_dkg_instance(&mut self) -> ShellResult<()> {
-        let rng = &mut ark_std::rand::prelude::StdRng::from_entropy();
-        let (current_epoch, _) = self.storage.get_current_epoch();
+        if let ShellMode::Validator { dkg, ref data, .. } = &mut self.mode {
+            let rng = &mut ark_std::rand::prelude::StdRng::from_entropy();
+            let (current_epoch, _) = self.storage.get_current_epoch();
 
-        // TODO: The total weight should likely be a config, not hardcoded.
-        let params = DkgParams {
-            tau: current_epoch.0,
-            security_threshold: 2 ^ 12 / 3,
-            total_weight: 2 ^ 12,
-        };
+            // TODO: The total weight should likely be a config, not hardcoded.
+            let params = DkgParams {
+                tau: current_epoch.0,
+                security_threshold: (2 ^ 12) / 3,
+                total_weight: 2 ^ 12,
+            };
 
-        // get the new validator for the next epoch
-        let validators = self
-            .storage
-            .read_validator_set()
-            .get(current_epoch + 1)
-            .expect("Validators for the next epoch should be known");
+            // get the new validator for the next epoch
+            let validators = self.storage.read_validator_set();
+            let validators = validators
+                .get(current_epoch + 1)
+                .expect("Validators for the next epoch should be known");
 
-        // extract the relevant data about the active validator set
-        let validator_set = ValidatorSet::new(
-            validators
-                .active
+            // extract the relevant data about the active validator set
+            let validator_set = ValidatorSet::new(
+                validators
+                    .active
+                    .iter()
+                    .map(|val| TendermintValidator {
+                        power: val.voting_power.into(),
+                        address: val.address.to_string(),
+                    })
+                    .collect(),
+            );
+
+            let me = validator_set
+                .validators
                 .iter()
-                .map(|val| TendermintValidator {
-                    power: val.voting_power.into(),
-                    address: val.address.to_string(),
-                })
-                .collect(),
-        );
-        // TODO: Figure out which validator is actually us
-        let me = validator_set.validators[0].clone();
+                .find(|val| data.address.to_string() == val.address);
 
-        // Initiate the new state machine
-        self.dkg.state_machine =
-            DkgStateMachine::new(validator_set, params, me, rng)
-                .map_err(|e| Error::DkgUpdate(e.to_string()))?;
-
-        // announce our public session keys
-        let tx_bytes = ProtocolTxType::DKG(self.dkg.state_machine.announce())
-            .sign(todo!())
-            .to_bytes();
-        let client = HttpClient::new(todo!())
-            .map_err(|e| Error::DkgUpdate(e.to_string()))?;
-        client
-            .broadcast_tx_sync(tx_bytes.into())
-            .await
-            .map_err(|err| Error::DkgUpdate(format!("{:?}", err)))
-            .map(|_| ())
+            // Initiate the new state machine
+            if let Some(me) = me {
+                let me = me.clone();
+                dkg.state_machine =
+                    DkgStateMachine::new(validator_set, params, me, rng)
+                        .map_err(|e| Error::DkgUpdate(e.to_string()))?;
+            }
+        }
+        Ok(())
     }
 
     /// Check if all sesssion keys have been announced. If so, broadcast
     /// this validators PVSS transcript
     fn issue_pvss_transcript(&mut self) -> ShellResult<()> {
-        let rng = &mut ark_std::rand::prelude::StdRng::from_entropy();
-        if matches!(
-            self.dkg.state_machine.state,
-            DkgState::Shared {
-                accumulated_weight: 0
+        if let ShellMode::Validator { data, dkg, .. } = &mut self.mode {
+            let rng = &mut ark_std::rand::prelude::StdRng::from_entropy();
+            let keypair = data.keys.get_protocol_keypair();
+            let keypair = keypair.lock();
+            if matches!(
+                dkg.state_machine.state,
+                DkgState::Shared {
+                    accumulated_weight: 0
+                }
+            ) {
+                let tx_bytes = ProtocolTxType::DKG(
+                    dkg.state_machine
+                        .share(rng)
+                        .map_err(|err| Error::DkgUpdate(err.to_string()))?,
+                )
+                .sign(keypair.borrow())
+                .to_bytes();
+                // TODO issue transaction
             }
-        ) {
-            let tx_bytes = ProtocolTxType::DKG(
-                self.dkg
-                    .state_machine
-                    .share(rng)
-                    .map_err(|err| Error::DkgUpdate(err.to_string()))?,
-            )
-            .sign(todo!())
-            .to_bytes();
-            let client = HttpClient::new(todo!())
-                .map_err(|e| Error::DkgUpdate(e.to_string()))?;
-            client
-                .broadcast_tx_sync(tx_bytes.into())
-                .await
-                .map_err(|err| Error::DkgUpdate(format!("{:?}", err)))
-                .map(|_| ())
-        } else {
-            Ok(())
         }
+        Ok(())
     }
 }
 
@@ -583,7 +574,7 @@ mod test_finalize_block {
     /// not appear in the queue of txs to be decrypted
     #[test]
     fn test_process_proposal_rejected_wrapper_tx() {
-        let mut shell = setup();
+        let (mut shell, _) = setup();
         let keypair = gen_keypair();
         let mut processed_txs = vec![];
         let mut valid_wrappers = vec![];
@@ -663,7 +654,7 @@ mod test_finalize_block {
     /// check that the correct event is returned.
     #[test]
     fn test_process_proposal_rejected_wrapper_tx() {
-        let mut shell = setup();
+        let (mut shell, _) = setup();
         let keypair = gen_keypair();
         let mut processed_txs = vec![];
         // create some wrapper txs
@@ -728,7 +719,7 @@ mod test_finalize_block {
     /// proposal
     #[test]
     fn test_process_proposal_rejected_decrypted_tx() {
-        let mut shell = setup();
+        let (mut shell, _) = setup();
         let keypair = gen_keypair();
         let raw_tx = Tx::new(
             "wasm_code".as_bytes().to_owned(),
@@ -783,7 +774,7 @@ mod test_finalize_block {
     /// check that the correct event is returned.
     #[test]
     fn test_process_proposal_rejected_decrypted_tx() {
-        let mut shell = setup();
+        let (mut shell, _) = setup();
         let raw_tx = Tx::new(
             "wasm_code".as_bytes().to_owned(),
             Some(String::from("transaction data").as_bytes().to_owned()),
@@ -828,7 +819,7 @@ mod test_finalize_block {
     /// decrypted txs are de-queued.
     #[test]
     fn test_mixed_txs_queued_in_correct_order() {
-        let mut shell = setup();
+        let (mut shell, _) = setup();
         let keypair = gen_keypair();
         let mut processed_txs = vec![];
         let mut valid_txs = vec![];
@@ -996,7 +987,7 @@ mod test_finalize_block {
     ///  2. New wrapper txs are enqueued in correct order
     #[test]
     fn test_decrypted_txs_out_of_order() {
-        let mut shell = setup();
+        let (mut shell, _) = setup();
         let keypair = gen_keypair();
         let mut processed_txs = vec![];
         let mut valid_txs = vec![];

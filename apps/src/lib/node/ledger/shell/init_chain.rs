@@ -18,10 +18,6 @@ use tendermint_proto_abci::crypto::{
 };
 #[cfg(feature = "ABCI")]
 use tendermint_proto_abci::google::protobuf;
-#[cfg(not(feature = "ABCI"))]
-use tendermint_rpc::{Client, HttpClient};
-#[cfg(feature = "ABCI")]
-use tendermint_rpc_abci::{Client, HttpClient};
 
 use super::*;
 use crate::wasm_loader;
@@ -95,7 +91,7 @@ where
             vp_sha256,
             public_key,
             storage,
-        } in genesis.established_accounts
+        } in &genesis.established_accounts
         {
             let vp_code = vp_code_cache
                 .get_or_insert_with(vp_code_path.clone(), || {
@@ -111,7 +107,7 @@ where
                 hasher.update(&vp_code);
                 let vp_code_hash = hasher.finalize();
                 assert_eq!(
-                    vp_code_hash.as_slice(),
+                    &vp_code_hash.as_slice(),
                     &vp_sha256,
                     "Invalid established account's VP sha256 hash for {}",
                     vp_code_path
@@ -119,25 +115,26 @@ where
             }
 
             self.storage
-                .write(&Key::validity_predicate(&address), vp_code)
+                .write(&Key::validity_predicate(address), vp_code)
                 .unwrap();
 
             if let Some(pk) = public_key {
-                let pk_storage_key = key::ed25519::pk_key(&address);
+                let pk_storage_key = key::ed25519::pk_key(address);
                 self.storage
                     .write(&pk_storage_key, pk.try_to_vec().unwrap())
                     .unwrap();
             }
 
             for (key, value) in storage {
-                self.storage.write(&key, value).unwrap();
+                self.storage.write(key, value.to_vec()).unwrap();
             }
         }
 
         // Initialize genesis implicit
-        for genesis::ImplicitAccount { public_key } in genesis.implicit_accounts
+        for genesis::ImplicitAccount { public_key } in
+            &genesis.implicit_accounts
         {
-            let address: address::Address = (&public_key).into();
+            let address: address::Address = public_key.into();
             let pk_storage_key = key::ed25519::pk_key(&address);
             self.storage
                 .write(&pk_storage_key, public_key.try_to_vec().unwrap())
@@ -150,7 +147,7 @@ where
             vp_code_path,
             vp_sha256,
             balances,
-        } in genesis.token_accounts
+        } in &genesis.token_accounts
         {
             let vp_code = vp_code_cache
                 .get_or_insert_with(vp_code_path.clone(), || {
@@ -166,7 +163,7 @@ where
                 hasher.update(&vp_code);
                 let vp_code_hash = hasher.finalize();
                 assert_eq!(
-                    vp_code_hash.as_slice(),
+                    &vp_code_hash.as_slice(),
                     &vp_sha256,
                     "Invalid token account's VP sha256 hash for {}",
                     vp_code_path
@@ -174,13 +171,13 @@ where
             }
 
             self.storage
-                .write(&Key::validity_predicate(&address), vp_code)
+                .write(&Key::validity_predicate(address), vp_code)
                 .unwrap();
 
             for (owner, amount) in balances {
                 self.storage
                     .write(
-                        &token::balance_key(&address, &owner),
+                        &token::balance_key(address, owner),
                         amount.try_to_vec().unwrap(),
                     )
                     .unwrap();
@@ -242,6 +239,25 @@ where
                         .expect("encode token amount"),
                 )
                 .expect("Unable to set genesis balance");
+            self.storage
+                .write(
+                    &key::ed25519::protocol_pk_key(addr),
+                    validator
+                        .protocol_key
+                        .try_to_vec()
+                        .expect("encode protocol public key"),
+                )
+                .expect("Unable to set genesis user protocol public key");
+
+            self.storage
+                .write(
+                    &key::dkg_session_keys::dkg_pk_key(addr),
+                    validator
+                        .dkg_public_key
+                        .try_to_vec()
+                        .expect("encode public DKG session key"),
+                )
+                .expect("Unable to set genesis user public DKG session key");
         }
 
         // PoS system depends on epoch being initialized
@@ -263,9 +279,9 @@ where
             evidence: Some(evidence_params),
             ..response.consensus_params.unwrap_or_default()
         });
-        let mut validator_set = vec![];
+
         // Set the initial validator set
-        for validator in genesis.validators {
+        for validator in &genesis.validators {
             let mut abci_validator = abci::ValidatorUpdate::default();
             let consensus_key: ed25519_dalek::PublicKey =
                 validator.pos_data.consensus_key.clone().into();
@@ -277,42 +293,52 @@ where
             abci_validator.pub_key = Some(pub_key);
             let power: u64 =
                 validator.pos_data.voting_power(&genesis.pos_params).into();
-            validator_set.push(TendermintValidator {
-                power,
-                address: validator.pos_data.address.to_string(),
-            });
             abci_validator.power = power
                 .try_into()
                 .expect("unexpected validator's voting power");
             response.validators.push(abci_validator);
         }
 
+        // Initialize DKG data
+        let validator_set: Vec<TendermintValidator> = genesis
+            .validators
+            .iter()
+            .map(|validator| TendermintValidator {
+                power: u64::from(
+                    validator.pos_data.voting_power(&genesis.pos_params),
+                ),
+                address: validator.pos_data.address.to_string(),
+            })
+            .collect();
+
         // Initialize the dkg state machine and initiate protocol
         let rng = &mut ark_std::rand::prelude::StdRng::from_entropy();
-        // TODO: Figure out which validator is actually us
-        let me = validator_set[0].clone();
-        self.dkg.state_machine = DkgStateMachine::new(
-            ValidatorSet::new(validator_set),
-            DkgParams {
-                tau: current_epoch.0,
-                security_threshold: 2 ^ 12 / 3,
-                total_weight: 2 ^ 12,
-            },
-            me,
-            rng,
-        )
-        .expect("Starting DKG at genesis should not fail");
-        // announce our public session keys
-        let tx_bytes = ProtocolTxType::DKG(self.dkg.state_machine.announce())
-            .sign(todo!())
-            .to_bytes();
-        let client = HttpClient::new(todo!())
-            .map_err(|e| Error::DkgUpdate(e.to_string()))?;
-        client
-            .broadcast_tx_sync(tx_bytes.into())
-            .await
-            .expect("Broadcasting DKG session key at genesis should not fail");
+        let me = validator_set.iter().find(|val| {
+            if let Some(addr) = self.mode.get_validator_address() {
+                addr.to_string() == val.address
+            } else {
+                false
+            }
+        });
 
+        // Start the DKG instance if this is an active validator
+
+        if let ShellMode::Validator { dkg, .. } = &mut self.mode {
+            let me = me
+                .expect("Could not find self in active validator set")
+                .clone();
+            dkg.state_machine = DkgStateMachine::new(
+                ValidatorSet::new(validator_set),
+                DkgParams {
+                    tau: current_epoch.0,
+                    security_threshold: (2 ^ 12) / 3,
+                    total_weight: 2 ^ 12,
+                },
+                me,
+                rng,
+            )
+            .expect("Starting DKG at genesis should not fail");
+        }
         Ok(response)
     }
 }

@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 use std::fs;
-use std::io::{self, prelude::*, ErrorKind, Write};
+use std::io::prelude::*;
+use std::io::{self, ErrorKind, Write};
 use std::path::{Path, PathBuf};
 use std::str::FromStr;
 
@@ -84,7 +85,7 @@ impl Store {
         // Pre-load the default keys without encryption
         let no_password = None;
         for (alias, keypair) in super::defaults::keys() {
-            let pkh: PublicKeyHash = (&keypair.public).into();
+            let pkh: PublicKeyHash = (&keypair.public()).into();
             store.keys.insert(
                 alias.clone(),
                 StoredKeypair::new(keypair, no_password.clone()).0,
@@ -112,11 +113,10 @@ impl Store {
         let wallet_dir = wallet_path.parent().unwrap();
         fs::create_dir_all(wallet_dir)?;
         // Write the file
-        let options = FileOptions::new()
-            .create(true)
-            .write(true)
-            .truncate(true);
-        let mut filelock = FileLock::lock(&wallet_path.to_str().unwrap(), true, options)?;
+        let options =
+            FileOptions::new().create(true).write(true).truncate(true);
+        let mut filelock =
+            FileLock::lock(wallet_path.to_str().unwrap(), true, options)?;
         filelock.file.write_all(&data)
     }
 
@@ -162,14 +162,16 @@ impl Store {
         match FileLock::lock(
             wallet_file.to_str().unwrap(),
             true,
-            FileOptions::new().write(true)
+            FileOptions::new().write(true),
         ) {
             Ok(mut filelock) => {
                 let mut store = Vec::<u8>::new();
-                filelock.file.read(&mut store.as_ref())
-                    .map_err(|err|
-                        LoadStoreError::ReadWallet(store_dir.to_str().unwrap().into(), err.to_string())
-                    )?;
+                filelock.file.read(&mut store).map_err(|err| {
+                    LoadStoreError::ReadWallet(
+                        store_dir.to_str().unwrap().into(),
+                        err.to_string(),
+                    )
+                })?;
                 Store::decode(store).map_err(LoadStoreError::Decode)
             }
             Err(err) => match err.kind() {
@@ -297,12 +299,10 @@ impl Store {
     ///
     /// Note that this removes the validator data.
     pub fn gen_validator_keys(
-        &mut self,
         protocol_keypair: Option<AtomicKeypair>,
     ) -> ValidatorKeys {
-        let mut protocol_keypair = protocol_keypair.unwrap_or_else(
-             || Self::generate_keypair().into()
-        );
+        let protocol_keypair =
+            protocol_keypair.unwrap_or_else(|| Self::generate_keypair().into());
         let dkg_keypair = ferveo_common::Keypair::<EllipticCurve>::new(
             &mut StdRng::from_entropy(),
         );

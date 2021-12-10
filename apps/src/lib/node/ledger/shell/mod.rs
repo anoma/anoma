@@ -13,6 +13,7 @@ mod process_proposal;
 mod queries;
 mod state;
 
+use std::borrow::Borrow;
 use std::convert::{TryFrom, TryInto};
 use std::mem;
 use std::path::{Path, PathBuf};
@@ -27,8 +28,6 @@ use anoma::ledger::storage::write_log::WriteLog;
 use anoma::ledger::storage::{DBIter, Storage, StorageHasher, DB};
 use anoma::ledger::{ibc, parameters, pos};
 use anoma::proto::{self, Tx};
-use anoma::types::address;
-use anoma::types::chain::ChainId;
 use anoma::types::key::dkg_session_keys::DkgKeypair;
 use anoma::types::storage::{BlockHeight, Key};
 use anoma::types::time::{DateTime, DateTimeUtc, TimeZone, Utc};
@@ -37,14 +36,14 @@ use anoma::types::transaction::{
     hash_tx, process_tx, verify_decrypted_correctly, AffineCurve, DecryptedTx,
     EllipticCurve, PairingEngine, TxType, UpdateDkgSessionKey, WrapperTx,
 };
-use anoma::types::{key, token};
+use anoma::types::{address, key, token};
 use ark_std::rand::SeedableRng;
 use borsh::{BorshDeserialize, BorshSerialize};
-use ferveo::{TendermintValidator, ValidatorSet};
 use ferveo::dkg::Params as DkgParams;
+use ferveo::{TendermintValidator, ValidatorSet};
 use num_derive::{FromPrimitive, ToPrimitive};
 use num_traits::{FromPrimitive, ToPrimitive};
-use state::{DkgInstance, DkgStateMachine, ShellMode, TxQueue};
+use state::{DkgStateMachine, ShellMode, TxQueue};
 #[cfg(not(feature = "ABCI"))]
 use tendermint_proto::abci::{
     self, Evidence, RequestPrepareProposal, ValidatorUpdate,
@@ -56,6 +55,7 @@ use tendermint_proto_abci::abci::ConsensusParams;
 #[cfg(feature = "ABCI")]
 use tendermint_proto_abci::abci::{self, Evidence, ValidatorUpdate};
 use thiserror::Error;
+use tokio::sync::mpsc::UnboundedSender;
 #[cfg(not(feature = "ABCI"))]
 use tower_abci::{request, response};
 #[cfg(feature = "ABCI")]
@@ -157,16 +157,12 @@ pub struct Shell<
     byzantine_validators: Vec<Evidence>,
     /// Path to the base directory with DB data and configs
     base_dir: PathBuf,
-    /// Path to the wallet file.
-    wallet_file: PathBuf,
     /// Path to the WASM directory for files used in the genesis block.
     wasm_dir: PathBuf,
     /// Information about the running shell instance
     mode: ShellMode,
     /// Wrapper txs to be decrypted in the next block proposal
     tx_queue: TxQueue,
-    /// State machine for generating distributed public keys
-    dkg: DkgInstance,
 }
 
 impl<D, H> Drop for Shell<D, H>
@@ -188,20 +184,22 @@ where
             "Failed to write tx queue to file. Good luck booting back up now",
         );
 
-        let dkg_path = self.base_dir.clone().join(".dkg");
-        let _ = std::fs::File::create(&tx_queue_path).expect(
-            "Creating the file for the DKG state machine dump should not fail",
-        );
-        std::fs::write(
-            dkg_path,
-            self.dkg
-                .try_to_vec()
-                .expect("Serializing DKG state machine should not fail"),
-        )
-        .expect(
-            "Failed to write DKG state machine to file. Good luck booting \
-             back up now",
-        );
+        if let ShellMode::Validator { dkg, .. } = &self.mode {
+            let dkg_path = self.base_dir.clone().join(".dkg");
+            let _ = std::fs::File::create(&dkg_path).expect(
+                "Creating the file for the DKG state machine dump should not \
+                 fail",
+            );
+            std::fs::write(
+                dkg_path,
+                dkg.try_to_vec()
+                    .expect("Serializing DKG state machine should not fail"),
+            )
+            .expect(
+                "Failed to write DKG state machine to file. Good luck booting \
+                 back up now",
+            );
+        }
     }
 }
 
@@ -213,14 +211,17 @@ where
     /// Create a new shell from a path to a database and a chain id. Looks
     /// up the database with this data and tries to load the last state.
     pub fn new(
-        base_dir: PathBuf,
-        db_path: impl AsRef<Path>,
-        wallet_path: PathBuf,
-        genesis_file_path: PathBuf,
-        mode: TendermintMode,
-        chain_id: ChainId,
+        config: config::Ledger,
         wasm_dir: PathBuf,
+        broadcast_sender: UnboundedSender<Vec<u8>>,
     ) -> Self {
+        let chain_id = config.chain_id;
+        let db_path = config.shell.db_dir(&chain_id);
+        let base_dir = config.shell.base_dir;
+        let wallet_path = &base_dir.join(chain_id.as_str());
+        let genesis_path =
+            &base_dir.join(format!("{}.toml", chain_id.as_str()));
+        let mode = config.tendermint.tendermint_mode;
         if !Path::new(&base_dir).is_dir() {
             std::fs::create_dir(&base_dir)
                 .expect("Creating directory for Anoma should not fail");
@@ -234,29 +235,6 @@ where
                 tracing::error!("Cannot load the last state from the DB {}", e);
             })
             .expect("PersistentStorage cannot be initialized");
-
-        // load in keys and address from wallet if mode is set to `Validator`
-        let mode = match mode {
-            TendermintMode::Validator => {
-                let wallet =
-                    Wallet::load_or_new_from_genesis(&wallet_path, move || {
-                        genesis::genesis_config::open_genesis_config(
-                            genesis_file_path,
-                        )
-                    });
-                wallet
-                    .take_validator_data()
-                    .map(|data| ShellMode::Validator {
-                        data,
-                        next_dkg_keypair: None,
-                    })
-                    .expect(
-                        "Validator data should have been stored in the wallet",
-                    )
-            }
-            TendermintMode::Full => ShellMode::Full,
-            TendermintMode::Seed => ShellMode::Seed,
-        };
 
         // If we are not starting the chain for the first time, the file
         // containing the tx queue should exist
@@ -277,24 +255,50 @@ where
             Default::default()
         };
 
-        // If we are not starting the chain for the first time, the file
-        // containing the dkg should exist
-        let dkg = if storage.last_height.0 > 0u64 {
-            BorshDeserialize::deserialize(
-                &mut std::fs::read(base_dir.join(".dkg"))
+        // load in keys and address from wallet if mode is set to `Validator`
+        let mode = match mode {
+            TendermintMode::Validator => {
+                // If we are not starting the chain for the first time, the file
+                // containing the dkg should exist
+                let dkg = if storage.last_height.0 > 0u64 {
+                    BorshDeserialize::deserialize(
+                        &mut std::fs::read(base_dir.join(".dkg"))
+                            .expect(
+                                "Anoma ledger failed to start: Failed to open \
+                                 file containing the DKG state machine",
+                            )
+                            .as_ref(),
+                    )
                     .expect(
-                        "Anoma ledger failed to start: Failed to open file \
+                        "Anoma ledger failed to start: Failed to read file \
                          containing the DKG state machine",
                     )
-                    .as_ref(),
-            )
-            .expect(
-                "Anoma ledger failed to start: Failed to read file containing \
-                 the DKG state machine",
-            )
-        } else {
-            Default::default()
+                } else {
+                    Default::default()
+                };
+
+                let wallet =
+                    Wallet::load_or_new_from_genesis(wallet_path, move || {
+                        genesis::genesis_config::open_genesis_config(
+                            genesis_path,
+                        )
+                    });
+                wallet
+                    .take_validator_data()
+                    .map(|data| ShellMode::Validator {
+                        data,
+                        next_dkg_keypair: None,
+                        dkg,
+                        broadcast_sender,
+                    })
+                    .expect(
+                        "Validator data should have been stored in the wallet",
+                    )
+            }
+            TendermintMode::Full => ShellMode::Full,
+            TendermintMode::Seed => ShellMode::Seed,
         };
+
         Self {
             storage,
             gas_meter: BlockGasMeter::default(),
@@ -302,10 +306,8 @@ where
             byzantine_validators: vec![],
             base_dir,
             wasm_dir,
-            wallet_file: wallet_path,
             mode,
             tx_queue,
-            dkg,
         }
     }
 
@@ -569,6 +571,7 @@ where
         if let ShellMode::Validator {
             data,
             next_dkg_keypair,
+            ..
         } = &mut self.mode
         {
             let dkg_keypair: DkgKeypair =
@@ -584,12 +587,15 @@ where
                     .expect("Serialization of DKG public key shouldn't fail"),
             };
             *next_dkg_keypair = Some(dkg_keypair);
+            let keypair = data.keys.get_protocol_keypair();
+            let keypair = keypair.lock();
             let request_tx = ProtocolTxType::request_new_dkg_keypair(
                 request_data,
                 &self.wasm_dir,
-                |wasm_dir, file| read_wasm(wasm_dir, file),
+                read_wasm,
             )
-            .sign(data.keys.get_protocol_keypair().as_ref());
+            .sign(keypair.borrow());
+            // TODO: Issue tx with client
         }
     }
 
@@ -598,6 +604,7 @@ where
         if let ShellMode::Validator {
             data,
             next_dkg_keypair,
+            ..
         } = &mut self.mode
         {
             data.keys.dkg_keypair =
@@ -618,6 +625,7 @@ mod test_utils {
     use anoma::ledger::storage::testing::Sha256Hasher;
     use anoma::ledger::storage::BlockState;
     use anoma::types::address::{xan, EstablishedAddressGen};
+    use anoma::types::chain::ChainId;
     use anoma::types::key::ed25519::Keypair;
     use anoma::types::storage::{BlockHash, Epoch};
     use anoma::types::transaction::Fee;
@@ -632,6 +640,7 @@ mod test_utils {
     use tendermint_proto_abci::abci::{Event as TmEvent, RequestInitChain};
     #[cfg(feature = "ABCI")]
     use tendermint_proto_abci::google::protobuf::Timestamp;
+    use tokio::sync::mpsc::UnboundedReceiver;
 
     use super::*;
     use crate::node::ledger::shims::abcipp_shim_types::shim::request::{
@@ -671,16 +680,23 @@ mod test_utils {
 
     impl TestShell {
         /// Create a new shell
-        pub fn new() -> Self {
+        pub fn new() -> (Self, UnboundedReceiver<Vec<u8>>) {
+            let (sender, receiver) = tokio::sync::mpsc::unbounded_channel();
             let base_dir = tempdir().unwrap().as_ref().canonicalize().unwrap();
-            Self {
-                shell: Shell::<MockDB, Sha256Hasher>::new(
-                    base_dir.clone(),
-                    base_dir.join("db").join("anoma-devchain-00000"),
-                    Default::default(),
-                    top_level_directory().join("wasm"),
-                ),
-            }
+            (
+                Self {
+                    shell: Shell::<MockDB, Sha256Hasher>::new(
+                        config::Ledger::new(
+                            base_dir,
+                            Default::default(),
+                            TendermintMode::Validator,
+                        ),
+                        top_level_directory().join("wasm"),
+                        sender,
+                    ),
+                },
+                receiver,
+            )
         }
 
         /// Forward a InitChain request and expect a success
@@ -748,8 +764,8 @@ mod test_utils {
     }
 
     /// Start a new test shell and initialize it
-    pub(super) fn setup() -> TestShell {
-        let mut test = TestShell::new();
+    pub(super) fn setup() -> (TestShell, UnboundedReceiver<Vec<u8>>) {
+        let (mut test, receiver) = TestShell::new();
         test.init_chain(RequestInitChain {
             time: Some(Timestamp {
                 seconds: 0,
@@ -758,7 +774,7 @@ mod test_utils {
             chain_id: ChainId::default().to_string(),
             ..Default::default()
         });
-        test
+        (test, receiver)
     }
 
     /// We test that on shell shutdown, the tx queue gets
@@ -768,11 +784,15 @@ mod test_utils {
     fn test_tx_queue_persistence() {
         let base_dir = tempdir().unwrap().as_ref().canonicalize().unwrap();
         // we have to use RocksDB for this test
+        let (sender, _) = tokio::sync::mpsc::unbounded_channel();
         let mut shell = Shell::<PersistentDB, PersistentStorageHasher>::new(
-            base_dir.clone(),
-            base_dir.join("db").join("anoma-devchain-00000"),
-            Default::default(),
+            config::Ledger::new(
+                base_dir.clone(),
+                Default::default(),
+                TendermintMode::Validator,
+            ),
             top_level_directory().join("wasm"),
+            sender.clone(),
         );
         let keypair = gen_keypair();
         // enqueue a wrapper tx
@@ -807,6 +827,7 @@ mod test_utils {
                 next_epoch_min_start_time: DateTimeUtc::now(),
                 subspaces: Default::default(),
                 address_gen: EstablishedAddressGen::new("test"),
+                encryption_key: None,
             })
             .expect("Test failed");
 
@@ -816,10 +837,13 @@ mod test_utils {
 
         // Reboot the shell and check that the queue was restored from disk
         let shell = Shell::<PersistentDB, PersistentStorageHasher>::new(
-            base_dir.clone(),
-            base_dir.join("db").join("anoma-devchain-00000"),
-            Default::default(),
+            config::Ledger::new(
+                base_dir,
+                Default::default(),
+                TendermintMode::Validator,
+            ),
             top_level_directory().join("wasm"),
+            sender,
         );
         assert!(!shell.tx_queue.is_empty());
     }
@@ -831,11 +855,15 @@ mod test_utils {
     fn test_tx_queue_must_exist() {
         let base_dir = tempdir().unwrap().as_ref().canonicalize().unwrap();
         // we have to use RocksDB for this test
+        let (sender, _) = tokio::sync::mpsc::unbounded_channel();
         let mut shell = Shell::<PersistentDB, PersistentStorageHasher>::new(
-            base_dir.clone(),
-            base_dir.join("db").join("anoma-devchain-00000"),
-            Default::default(),
+            config::Ledger::new(
+                base_dir.clone(),
+                Default::default(),
+                TendermintMode::Validator,
+            ),
             top_level_directory().join("wasm"),
+            sender.clone(),
         );
         let keypair = gen_keypair();
         // enqueue a wrapper tx
@@ -870,6 +898,7 @@ mod test_utils {
                 next_epoch_min_start_time: DateTimeUtc::now(),
                 subspaces: Default::default(),
                 address_gen: EstablishedAddressGen::new("test"),
+                encryption_key: None,
             })
             .expect("Test failed");
 
@@ -880,10 +909,13 @@ mod test_utils {
 
         // Reboot the shell and check that the queue was restored from disk
         let _ = Shell::<PersistentDB, PersistentStorageHasher>::new(
-            base_dir.clone(),
-            base_dir.join("db").join("anoma-devchain-00000"),
-            Default::default(),
+            config::Ledger::new(
+                base_dir,
+                Default::default(),
+                TendermintMode::Validator,
+            ),
             top_level_directory().join("wasm"),
+            sender,
         );
     }
 }

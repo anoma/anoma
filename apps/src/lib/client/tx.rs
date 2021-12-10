@@ -1,4 +1,4 @@
-use std::borrow::Cow;
+use std::borrow::{Borrow, Cow};
 use std::convert::TryFrom;
 
 use anoma::ledger::pos::{BondId, Bonds, Unbonds};
@@ -53,8 +53,9 @@ pub async fn submit_custom(ctx: Context, args: args::TxCustom) {
     });
     let tx = Tx::new(tx_code, data);
     let (ctx, tx, keypair) = sign_tx(ctx, tx, &args.tx, None).await;
+    let keypair = keypair.lock();
     let (ctx, initialized_accounts) =
-        submit_tx(ctx, &args.tx, tx, keypair.as_ref()).await;
+        submit_tx(ctx, &args.tx, tx, keypair.borrow()).await;
     save_initialized_accounts(ctx, &args.tx, initialized_accounts).await;
 }
 
@@ -110,7 +111,8 @@ pub async fn submit_update_vp(ctx: Context, args: args::TxUpdateVp) {
 
     let tx = Tx::new(tx_code, Some(data));
     let (ctx, tx, keypair) = sign_tx(ctx, tx, &args.tx, Some(&args.addr)).await;
-    submit_tx(ctx, &args.tx, tx, keypair.as_ref()).await;
+    let keypair = keypair.lock();
+    submit_tx(ctx, &args.tx, tx, keypair.borrow()).await;
 }
 
 pub async fn submit_init_account(mut ctx: Context, args: args::TxInitAccount) {
@@ -137,8 +139,9 @@ pub async fn submit_init_account(mut ctx: Context, args: args::TxInitAccount) {
     let tx = Tx::new(tx_code, Some(data));
     let (ctx, tx, keypair) =
         sign_tx(ctx, tx, &args.tx, Some(&args.source)).await;
+    let keypair = keypair.lock();
     let (ctx, initialized_accounts) =
-        submit_tx(ctx, &args.tx, tx, keypair.as_ref()).await;
+        submit_tx(ctx, &args.tx, tx, keypair.borrow()).await;
     save_initialized_accounts(ctx, &args.tx, initialized_accounts).await;
 }
 
@@ -188,10 +191,8 @@ pub async fn submit_init_validator(
                 .gen_key(Some(rewards_key_alias.clone()), unsafe_dont_encrypt)
                 .1
                 .public()
-
         });
-    let protocol_key =
-        ctx.get_opt_cached(&protocol_key);
+    let protocol_key = ctx.get_opt_cached(&protocol_key);
 
     if protocol_key.is_none() {
         println!("Generating protocol signing key...");
@@ -252,9 +253,9 @@ pub async fn submit_init_validator(
     let data = data.try_to_vec().expect("Encoding tx data shouldn't fail");
     let tx = Tx::new(tx_code, Some(data));
     let (ctx, tx, keypair) = sign_tx(ctx, tx, &tx_args, Some(&source)).await;
-
+    let keypair = keypair.lock();
     let (mut ctx, initialized_accounts) =
-        submit_tx(ctx, &tx_args, tx, keypair.as_ref()).await;
+        submit_tx(ctx, &tx_args, tx, keypair.borrow()).await;
     if !tx_args.dry_run {
         let (validator_address_alias, validator_address, rewards_address_alias) =
             match &initialized_accounts[..] {
@@ -334,10 +335,11 @@ pub async fn submit_init_validator(
         ctx.wallet.save().unwrap_or_else(|err| eprintln!("{}", err));
 
         let tendermint_home = ctx.config.ledger.tendermint_dir();
+        let consensus_key_mutex = consensus_key.lock();
         tendermint_node::write_validator_key(
             &tendermint_home,
             &validator_address,
-            consensus_key.as_ref(),
+            consensus_key_mutex.borrow(),
         );
         tendermint_node::write_validator_state(tendermint_home);
 
@@ -432,7 +434,8 @@ pub async fn submit_transfer(ctx: Context, args: args::TxTransfer) {
     let tx = Tx::new(tx_code, Some(data));
     let (ctx, tx, keypair) =
         sign_tx(ctx, tx, &args.tx, Some(&args.source)).await;
-    submit_tx(ctx, &args.tx, tx, keypair.as_ref()).await;
+    let keypair = keypair.lock();
+    submit_tx(ctx, &args.tx, tx, keypair.borrow()).await;
 }
 
 pub async fn submit_bond(ctx: Context, args: args::Bond) {
@@ -499,7 +502,8 @@ pub async fn submit_bond(ctx: Context, args: args::Bond) {
     let default_signer = args.source.as_ref().unwrap_or(&args.validator);
     let (ctx, tx, keypair) =
         sign_tx(ctx, tx, &args.tx, Some(default_signer)).await;
-    submit_tx(ctx, &args.tx, tx, keypair.as_ref()).await;
+    let keypair = keypair.lock();
+    submit_tx(ctx, &args.tx, tx, keypair.borrow()).await;
 }
 
 pub async fn submit_unbond(ctx: Context, args: args::Unbond) {
@@ -569,7 +573,8 @@ pub async fn submit_unbond(ctx: Context, args: args::Unbond) {
     let default_signer = args.source.as_ref().unwrap_or(&args.validator);
     let (ctx, tx, keypair) =
         sign_tx(ctx, tx, &args.tx, Some(default_signer)).await;
-    submit_tx(ctx, &args.tx, tx, keypair.as_ref()).await;
+    let keypair = keypair.lock();
+    submit_tx(ctx, &args.tx, tx, keypair.borrow()).await;
 }
 
 pub async fn submit_withdraw(ctx: Context, args: args::Withdraw) {
@@ -639,7 +644,8 @@ pub async fn submit_withdraw(ctx: Context, args: args::Withdraw) {
     let default_signer = args.source.as_ref().unwrap_or(&args.validator);
     let (ctx, tx, keypair) =
         sign_tx(ctx, tx, &args.tx, Some(default_signer)).await;
-    submit_tx(ctx, &args.tx, tx, keypair.as_ref()).await;
+    let keypair = keypair.lock();
+    submit_tx(ctx, &args.tx, tx, keypair.borrow()).await;
 }
 
 /// Sign a transaction with a given signing key or public key of a given signer.
@@ -653,7 +659,10 @@ async fn sign_tx(
 ) -> (Context, Tx, AtomicKeypair) {
     let (tx, keypair) = if let Some(signing_key) = &args.signing_key {
         let signing_key = ctx.get_cached(signing_key);
-        (tx.sign(signing_key.as_ref()), signing_key)
+        let signing_key_mutex = signing_key.lock();
+        let tx = tx.sign(signing_key_mutex.borrow());
+        drop(signing_key_mutex);
+        (tx, signing_key)
     } else if let Some(signer) = args.signer.as_ref().or(default) {
         let signer = ctx.get(signer);
         let signing_key = signing::find_keypair(
@@ -662,7 +671,10 @@ async fn sign_tx(
             args.ledger_address.clone(),
         )
         .await;
-        (tx.sign(signing_key.as_ref()), signing_key)
+        let signing_key_mutex = signing_key.lock();
+        let tx = tx.sign(signing_key_mutex.borrow());
+        drop(signing_key_mutex);
+        (tx, signing_key)
     } else {
         panic!(
             "All transactions must be signed; please either specify the key \

@@ -5,10 +5,8 @@ mod rpc;
 
 use std::borrow::Cow;
 use std::path::Path;
-use std::rc::Rc;
 
 use anoma::types::address::Address;
-use anoma::types::key::ed25519::Keypair;
 use thiserror::Error;
 use tokio::sync::{mpsc, oneshot};
 
@@ -16,6 +14,7 @@ use self::intent_gossiper::GossipIntent;
 use self::p2p::P2P;
 use crate::config::IntentGossiper;
 use crate::proto::services::{rpc_message, RpcResponse};
+use crate::wallet::AtomicKeypair;
 
 #[derive(Error, Debug)]
 pub enum Error {
@@ -29,7 +28,7 @@ pub fn run(
     config: IntentGossiper,
     wasm_dir: impl AsRef<Path>,
     tx_source_address: Option<Address>,
-    tx_signing_key: Option<Rc<Keypair>>,
+    tx_signing_key: Option<AtomicKeypair>,
 ) -> Result<()> {
     // Start intent gossiper with matchmaker, if enabled.
     let intent_gossip_app = intent_gossiper::GossipIntent::new(

@@ -1,3 +1,4 @@
+use std::borrow::Borrow;
 use std::collections::HashSet;
 use std::io::Write;
 
@@ -53,8 +54,9 @@ pub async fn gossip_intent(
             .await
         }
     };
+    let source_keypair = source_keypair.lock();
     let signed_ft: Signed<FungibleTokenIntent> = Signed::new(
-        source_keypair.as_ref(),
+        source_keypair.borrow(),
         FungibleTokenIntent {
             exchange: signed_exchanges,
         },
@@ -107,5 +109,6 @@ async fn sign_exchange(
 ) -> Signed<Exchange> {
     let source_keypair =
         signing::find_keypair(wallet, &exchange.addr, ledger_address).await;
-    Signed::new(source_keypair.as_ref(), exchange.clone())
+    let source_keypair = source_keypair.lock();
+    Signed::new(source_keypair.borrow(), exchange.clone())
 }

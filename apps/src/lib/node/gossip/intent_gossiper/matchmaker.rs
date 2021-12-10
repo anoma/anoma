@@ -1,11 +1,10 @@
+use std::borrow::Borrow;
 use std::path::Path;
-use std::rc::Rc;
 
 use anoma::gossip::mm::MmHost;
 use anoma::proto::{Intent, IntentId, Tx};
 use anoma::types::address::{xan, Address};
 use anoma::types::intent::{IntentTransfers, MatchedExchanges};
-use anoma::types::key::ed25519::Keypair;
 use anoma::types::transaction::{Fee, WrapperTx};
 use anoma::vm::wasm;
 use borsh::{BorshDeserialize, BorshSerialize};
@@ -22,6 +21,7 @@ use crate::cli::args;
 use crate::client::rpc;
 use crate::client::tx::broadcast_tx;
 use crate::types::MatchmakerMessage;
+use crate::wallet::AtomicKeypair;
 use crate::{config, wasm_loader};
 
 /// A matchmaker receive intents and tries to find a match with previously
@@ -45,7 +45,7 @@ pub struct Matchmaker {
     /// A source address for transactions created from intents.
     tx_source_address: Address,
     /// A keypair that will be used to sign transactions.
-    tx_signing_key: Rc<Keypair>,
+    tx_signing_key: AtomicKeypair,
 }
 
 #[derive(Clone, Debug)]
@@ -97,7 +97,7 @@ impl Matchmaker {
         config: &config::Matchmaker,
         wasm_dir: impl AsRef<Path>,
         tx_source_address: Address,
-        tx_signing_key: Rc<Keypair>,
+        tx_signing_key: AtomicKeypair,
     ) -> Result<(Self, Sender<MatchmakerMessage>, Receiver<MatchmakerMessage>)>
     {
         // TODO: find a good number or maybe unlimited channel ?
@@ -170,24 +170,24 @@ impl Matchmaker {
                     source: self.tx_source_address.clone(),
                 };
                 let tx_data = intent_transfers.try_to_vec().unwrap();
+                let tx_signing_key = self.tx_signing_key.lock();
                 let tx = WrapperTx::new(
                     Fee {
                         amount: 0.into(),
                         token: xan(),
                     },
-                    &self.tx_signing_key,
+                    tx_signing_key.borrow(),
                     rpc::query_epoch(args::Query {
                         ledger_address: self.ledger_address.clone(),
                     })
                     .await,
                     0.into(),
-                    Tx::new(tx_code, Some(tx_data)).sign(&self.tx_signing_key),
+                    Tx::new(tx_code, Some(tx_data)).sign(&tx_signing_key),
                 );
-
                 let response = broadcast_tx(
                     self.ledger_address.clone(),
                     tx,
-                    &self.tx_signing_key,
+                    &tx_signing_key,
                 )
                 .await;
                 match response {

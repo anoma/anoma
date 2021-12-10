@@ -2,13 +2,16 @@ use crate::types::address::Address;
 use crate::types::storage::{DbKeySeg, Key, KeySeg};
 
 #[cfg(feature = "ferveo-tpke")]
-mod dkg_session_keys {
+mod dkg_keys {
+    use std::fmt::Display;
     use std::io::{Error, ErrorKind};
+    use std::str::FromStr;
 
     use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
     use borsh::{BorshDeserialize, BorshSerialize};
     use serde::{Deserialize, Serialize};
 
+    use crate::types::key::ed25519::ParsePublicKeyError;
     use crate::types::transaction::EllipticCurve;
 
     /// A keypair used in the DKG protocol
@@ -81,10 +84,30 @@ mod dkg_session_keys {
             Ok(pk.into())
         }
     }
+
+    impl Display for DkgPublicKey {
+        fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            let vec = self
+                .try_to_vec()
+                .expect("Encoding public key shouldn't fail");
+            write!(f, "{}", hex::encode(&vec))
+        }
+    }
+
+    impl FromStr for DkgPublicKey {
+        type Err = ParsePublicKeyError;
+
+        fn from_str(s: &str) -> Result<Self, Self::Err> {
+            let vec =
+                hex::decode(s).map_err(ParsePublicKeyError::InvalidHex)?;
+            BorshDeserialize::try_from_slice(&vec)
+                .map_err(ParsePublicKeyError::InvalidEncoding)
+        }
+    }
 }
 
 #[cfg(feature = "ferveo-tpke")]
-pub use dkg_session_keys::*;
+pub use dkg_keys::*;
 
 /// Obtain a storage key for user's public dkg session key.
 pub fn dkg_pk_key(owner: &Address) -> Key {

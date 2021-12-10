@@ -1411,8 +1411,8 @@ pub mod args {
                      will be generated if none given.",
                 ))
                 .arg(PROTOCOL_KEY.def().about(
-                    "A public key for signing protocol transactions. A new one \
-                    will be generated if none given.",
+                    "A public key for signing protocol transactions. A new \
+                     one will be generated if none given.",
                 ))
                 .arg(VALIDATOR_CODE_PATH.def().about(
                     "The path to the validity predicate WASM code to be used \

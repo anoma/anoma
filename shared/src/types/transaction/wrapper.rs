@@ -259,7 +259,7 @@ pub mod wrapper_tx {
             tx: &Tx,
             sig: &Signature,
         ) -> Result<(), TxError> {
-            verify_tx_sig(&self.pk, &tx, sig).map_err(|err| {
+            verify_tx_sig(&self.pk, tx, sig).map_err(|err| {
                 TxError::SigError(format!(
                     "WrapperTx signature verification failed: {}",
                     err

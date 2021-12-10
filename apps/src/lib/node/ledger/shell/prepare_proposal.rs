@@ -78,7 +78,7 @@ mod prepare_block {
         /// proposed block.
         #[test]
         fn test_prepare_proposal_rejects_non_wrapper_tx() {
-            let mut shell = TestShell::new();
+            let (mut shell, _) = TestShell::new();
             let tx = Tx::new(
                 "wasm_code".as_bytes().to_owned(),
                 Some("transaction_data".as_bytes().to_owned()),
@@ -95,7 +95,7 @@ mod prepare_block {
         /// we simply exclude it from the proposal
         #[test]
         fn test_error_in_processing_tx() {
-            let mut shell = TestShell::new();
+            let (mut shell, _) = TestShell::new();
             let keypair = gen_keypair();
             let tx = Tx::new(
                 "wasm_code".as_bytes().to_owned(),
@@ -132,7 +132,7 @@ mod prepare_block {
         /// corresponding wrappers
         #[test]
         fn test_decrypted_txs_in_correct_order() {
-            let mut shell = TestShell::new();
+            let (mut shell, _) = TestShell::new();
             let keypair = gen_keypair();
             let mut expected_wrapper = vec![];
             let mut expected_decrypted = vec![];

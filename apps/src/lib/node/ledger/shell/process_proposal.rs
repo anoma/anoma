@@ -72,27 +72,39 @@ where
                         .into(),
                 },
                 TxType::Protocol(ProtocolTx {
-                    tx: protocol_tx, ..
+                    tx: protocol_tx, pk
                 }) => {
                     let rng =
                         &mut ark_std::rand::prelude::StdRng::from_entropy();
                     match protocol_tx {
                         ProtocolTxType::DKG(msg) => {
-                            match self.dkg.state_machine.verify_message(
-                                todo!(),
-                                &msg,
-                                rng,
-                            ) {
-                                Ok(_) => shim::response::TxResult {
-                                    code: ErrorCodes::Ok.into(),
-                                    info: "Process proposal accepted this \
+                            if let Some(sender) = self.get_validator_from_protocol_pk(&pk) {
+                                if let ShellMode::Validator { dkg, .. } = &mut self.mode {
+                                    match dkg.state_machine.verify_message(&sender,
+                                                                           &msg,
+                                                                           rng,
+                                    ) {
+                                        Ok(_) => shim::response::TxResult {
+                                            code: ErrorCodes::Ok.into(),
+                                            info: "Process proposal accepted this \
                                            transaction"
-                                        .into(),
-                                },
-                                Err(err) => shim::response::TxResult {
-                                    code: ErrorCodes::InvalidTx.into(),
-                                    info: err.to_string(),
-                                },
+                                                .into(),
+                                        },
+                                        Err(err) => shim::response::TxResult {
+                                            code: ErrorCodes::InvalidTx.into(),
+                                            info: err.to_string(),
+                                        },
+                                    }
+                                } else {
+                                    shim::response::TxResult {
+                                        code: ErrorCodes::InvalidSig.into(),
+                                        info: "Could not match signature of protocol tx to \
+                                               a public protocol key of an active validator \
+                                               set.".into()
+                                    }
+                                }
+                            } else {
+                                panic!("Process proposal called on a non-validator node.")
                             }
                         }
                         ProtocolTxType::NewDkgKeypair(ref tx) => {
@@ -114,7 +126,7 @@ where
                                 Some(Ok(false)) => {
                                     shim::response::TxResult {
                                         code: ErrorCodes::InvalidTx.into(),
-                                        info: "The address and new DKG public session key were \
+                                        info: "The address and / or new DKG public session key were \
                                         not deserializable.".into()
                                     }
                                 }
@@ -126,6 +138,7 @@ where
                                             .into(),
                                     }
                                 }
+                                _ => unreachable!(),
                             }
                         }
                     }
@@ -294,6 +307,7 @@ where
 #[cfg(test)]
 mod test_process_proposal {
     use anoma::types::address::{xan, Address};
+    use anoma::types::chain::ChainId;
     use anoma::types::key::ed25519::SignedTxData;
     use anoma::types::storage::Epoch;
     use anoma::types::token::Amount;
@@ -316,7 +330,7 @@ mod test_process_proposal {
     /// by [`process_proposal`].
     #[test]
     fn test_unsigned_wrapper_rejected() {
-        let mut shell = TestShell::new();
+        let (mut shell, _) = TestShell::new();
         let keypair = gen_keypair();
         let tx = Tx::new(
             "wasm_code".as_bytes().to_owned(),
@@ -356,7 +370,7 @@ mod test_process_proposal {
     /// Test that a wrapper tx with invalid signature is rejected
     #[test]
     fn test_wrapper_bad_signature_rejected() {
-        let mut shell = TestShell::new();
+        let (mut shell, _) = TestShell::new();
         let keypair = gen_keypair();
         let tx = Tx::new(
             "wasm_code".as_bytes().to_owned(),
@@ -432,8 +446,9 @@ mod test_process_proposal {
     /// not known, [`process_proposal`] rejects that tx
     #[test]
     fn test_wrapper_unknown_address() {
-        let mut shell = TestShell::new();
+        let (mut shell, _) = TestShell::new();
         let keypair = crate::wallet::defaults::keys().remove(0).1;
+        let keypair = keypair.lock();
         let tx = Tx::new(
             "wasm_code".as_bytes().to_owned(),
             Some("transaction data".as_bytes().to_owned()),
@@ -476,7 +491,7 @@ mod test_process_proposal {
     /// [`process_proposal`] rejects that tx
     #[test]
     fn test_wrapper_insufficient_balance_address() {
-        let mut shell = TestShell::new();
+        let (mut shell, _) = TestShell::new();
         shell.init_chain(RequestInitChain {
             time: Some(Timestamp {
                 seconds: 0,
@@ -486,7 +501,7 @@ mod test_process_proposal {
             ..Default::default()
         });
         let keypair = crate::wallet::defaults::daewon_keypair();
-
+        let keypair = keypair.lock();
         let tx = Tx::new(
             "wasm_code".as_bytes().to_owned(),
             Some("transaction data".as_bytes().to_owned()),
@@ -528,7 +543,7 @@ mod test_process_proposal {
     /// validated, [`process_proposal`] rejects it
     #[test]
     fn test_decrypted_txs_out_of_order() {
-        let mut shell = TestShell::new();
+        let (mut shell, _) = TestShell::new();
         let keypair = gen_keypair();
         let mut txs = vec![];
         for i in 0..3 {
@@ -575,7 +590,7 @@ mod test_process_proposal {
     /// is rejected by [`process_proposal`]
     #[test]
     fn test_incorrectly_labelled_as_undecryptable() {
-        let mut shell = TestShell::new();
+        let (mut shell, _) = TestShell::new();
         let keypair = gen_keypair();
 
         let tx = Tx::new(
@@ -613,7 +628,7 @@ mod test_process_proposal {
     /// Test that undecryptable txs are accepted
     #[test]
     fn test_undecryptable() {
-        let mut shell = TestShell::new();
+        let (mut shell, _) = TestShell::new();
         shell.init_chain(RequestInitChain {
             time: Some(Timestamp {
                 seconds: 0,
@@ -623,7 +638,7 @@ mod test_process_proposal {
             ..Default::default()
         });
         let keypair = crate::wallet::defaults::daewon_keypair();
-
+        let keypair = keypair.lock();
         let tx = Tx::new(
             "wasm_code".as_bytes().to_owned(),
             Some("transaction data".as_bytes().to_owned()),
@@ -678,7 +693,7 @@ mod test_process_proposal {
     /// [`process_proposal`] than expected, they are rejected
     #[test]
     fn test_too_many_decrypted_txs() {
-        let mut shell = TestShell::new();
+        let (mut shell, _) = TestShell::new();
 
         let tx = Tx::new(
             "wasm_code".as_bytes().to_owned(),
@@ -699,7 +714,7 @@ mod test_process_proposal {
     /// Process Proposal should reject a RawTx, but not panic
     #[test]
     fn test_raw_tx_rejected() {
-        let mut shell = TestShell::new();
+        let (mut shell, _) = TestShell::new();
 
         let tx = Tx::new(
             "wasm_code".as_bytes().to_owned(),

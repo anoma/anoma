@@ -4,6 +4,7 @@ use std::cmp::max;
 use anoma::ledger::parameters::Parameters;
 use anoma::ledger::pos::PosParams;
 use anoma::types::address::Address;
+use anoma::types::key::ed25519::PublicKey;
 use anoma::types::storage::Key;
 use anoma::types::token::{self, Amount};
 use borsh::{BorshDeserialize, BorshSerialize};
@@ -181,5 +182,34 @@ where
             max_age_duration,
             ..EvidenceParams::default()
         }
+    }
+
+    pub fn get_validator_from_protocol_pk(
+        &self,
+        pk: &PublicKey,
+    ) -> Option<TendermintValidator> {
+        let pk_bytes = pk
+            .try_to_vec()
+            .expect("Serializing public key should not fail");
+        // get the current epoch
+        let (current_epoch, _) = self.storage.get_current_epoch();
+        // get the active validator set
+        self.storage
+            .read_validator_set()
+            .get(current_epoch)
+            .expect("Validators for the next epoch should be known")
+            .active
+            .iter()
+            .find(|validator| {
+                let pk_key = key::ed25519::protocol_pk_key(&validator.address);
+                match self.storage.read(&pk_key) {
+                    Ok((Some(bytes), _)) => bytes == pk_bytes,
+                    _ => false,
+                }
+            })
+            .map(|validator| TendermintValidator {
+                power: validator.voting_power.into(),
+                address: validator.address.to_string(),
+            })
     }
 }

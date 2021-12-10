@@ -1,3 +1,4 @@
+mod broadcaster;
 pub mod events;
 pub mod protocol;
 pub mod rpc;
@@ -10,7 +11,6 @@ use std::convert::TryInto;
 use std::path::PathBuf;
 use std::sync::mpsc::{channel, Receiver};
 
-use anoma::types::chain::ChainId;
 use futures::future::{AbortHandle, AbortRegistration, Abortable};
 #[cfg(not(feature = "ABCI"))]
 use tendermint_proto::abci::CheckTxType;
@@ -22,6 +22,8 @@ use tower_abci::{response, split, Server};
 #[cfg(feature = "ABCI")]
 use tower_abci_old::{response, split, Server};
 
+use crate::config::TendermintMode;
+use crate::node::ledger::broadcaster::Broadcaster;
 use crate::node::ledger::shell::{Error, MempoolTxType, Shell};
 use crate::node::ledger::shims::abcipp_shim::AbcippShim;
 use crate::node::ledger::shims::abcipp_shim_types::shim::{Request, Response};
@@ -139,15 +141,20 @@ pub fn reset(config: config::Ledger) -> Result<(), shell::Error> {
 /// Runs until an abort handles sends a message to terminate the process
 #[tokio::main]
 async fn run_shell(
-    chain_id: ChainId,
-    config: config::Shell,
+    config: config::Ledger,
     wasm_dir: PathBuf,
     abort_registration: AbortRegistration,
     failure_receiver: Receiver<()>,
 ) {
     // Construct our ABCI application.
-    let db_dir = config.db_dir(&chain_id);
-    let service = AbcippShim::new(config.base_dir, db_dir, chain_id, wasm_dir);
+    #[allow(clippy::clone_on_copy)]
+    let rpc_address = config.tendermint.rpc_address.clone();
+    #[allow(clippy::clone_on_copy)]
+    let ledger_address = config.shell.ledger_address.clone();
+    let mode = config.tendermint.tendermint_mode.clone();
+    let (broadcaster_sender, broadcaster_receiver) =
+        tokio::sync::mpsc::unbounded_channel();
+    let service = AbcippShim::new(config, wasm_dir, broadcaster_sender);
 
     // Split it into components.
     let (consensus, mempool, snapshot, info) = split::service(service, 5);
@@ -174,12 +181,29 @@ async fn run_shell(
         .unwrap();
 
     // Run the server with the shell
-    let abortable_shell = Abortable::new(
-        server.listen(config.ledger_address),
-        abort_registration,
-    );
-    // The shell will be aborted when Tendermint exits
-    let _ = abortable_shell.await;
+    let abortable_shell =
+        Abortable::new(server.listen(ledger_address), abort_registration);
+
+    // Start up the service to broadcast protocol txs if we are in validator
+    // mode
+    if matches!(mode, TendermintMode::Validator) {
+        let broadcaster = Broadcaster::new(rpc_address, broadcaster_receiver);
+        // The shell will be aborted when Tendermint exits
+        let _ = tokio::select!(
+            _ = abortable_shell => {},
+            result = broadcaster::run(broadcaster) => {
+                if let Err(err) = result {
+                    use std::io::Write;
+                    let _ = std::io::stdout().lock().flush();
+                    let _ = std::io::stderr().lock().flush();
+                    tracing::error!("{}", err);
+                    std::process::exit(1);
+                }
+            }
+        );
+    } else {
+        let _ = abortable_shell.await;
+    }
 
     // Check if a failure signal was sent
     if let Ok(()) = failure_receiver.try_recv() {
@@ -250,13 +274,7 @@ pub fn run(config: config::Ledger, wasm_dir: PathBuf) {
 
     // start the shell + ABCI server
     let shell_handle = std::thread::spawn(move || {
-        run_shell(
-            config.chain_id,
-            config.shell,
-            wasm_dir,
-            abort_registration,
-            failure_receiver,
-        );
+        run_shell(config, wasm_dir, abort_registration, failure_receiver);
     });
 
     tracing::info!("Anoma ledger node started.");
