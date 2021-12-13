@@ -16,6 +16,7 @@ use color_eyre::eyre::Result;
 use serde_json::json;
 use setup::constants::*;
 
+use crate::e2e::helpers::find_address;
 use crate::e2e::setup::{self, Bin, Who};
 use crate::{run, run_as};
 
@@ -24,7 +25,8 @@ use crate::{run, run_as};
 /// bootstrap kademia and connect to the other peer.
 #[test]
 fn run_gossip() -> Result<()> {
-    let test = setup::network(|genesis| setup::add_validators(1, genesis))?;
+    let test =
+        setup::network(|genesis| setup::add_validators(1, genesis), None)?;
 
     let mut cmd =
         run_as!(test, Who::Validator(0), Bin::Node, &["gossip"], Some(20),)?;
@@ -75,12 +77,12 @@ fn match_intents() -> Result<()> {
     let intent_b_path_input = test.base_dir.path().join("intent.B.data");
     let intent_c_path_input = test.base_dir.path().join("intent.C.data");
 
-    let albert = setup::find_address(&test, ALBERT)?;
-    let bertha = setup::find_address(&test, BERTHA)?;
-    let christel = setup::find_address(&test, CHRISTEL)?;
-    let xan = setup::find_address(&test, XAN)?;
-    let btc = setup::find_address(&test, BTC)?;
-    let eth = setup::find_address(&test, ETH)?;
+    let albert = find_address(&test, ALBERT)?;
+    let bertha = find_address(&test, BERTHA)?;
+    let christel = find_address(&test, CHRISTEL)?;
+    let xan = find_address(&test, XAN)?;
+    let btc = find_address(&test, BTC)?;
+    let eth = find_address(&test, ETH)?;
     let intent_a_json = json!([
         {
             "key": bertha,

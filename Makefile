@@ -17,11 +17,6 @@ wasms := wasm/wasm_source
 # Paths for all the wasm templates
 wasm_templates := wasm/tx_template wasm/vp_template wasm/mm_template wasm/mm_filter_template
 
-# Transitive dependency warning from tendermint-rpc
-audit-ignores += RUSTSEC-2020-0016
-# Transitive dependency warning from tendermint-rs and ibc-rs
-# TODO https://github.com/anoma/anoma/issues/340
-audit-ignores += RUSTSEC-2021-0073
 # TODO upgrade libp2p
 audit-ignores += RUSTSEC-2021-0076
 
@@ -33,6 +28,9 @@ build-abci-plus-plus:
 
 build-test:
 	$(cargo) build --tests
+
+build-test-abci-plus-plus:
+	$(cargo) build --tests --no-default-features --features "ABCI-plus-plus"
 
 build-release:
 	$(cargo) build --release --package anoma_apps
@@ -49,7 +47,7 @@ package: build-release
 	rm -rf $(package-name)
 
 build-release-image-docker:
-	docker build -t anoma-build .
+	docker build -t anoma-build - < docker/anoma-build/Dockerfile
 
 build-release-docker: build-release-image-docker
 	docker run --rm -v ${PWD}:/var/build anoma-build make build-release
@@ -199,7 +197,7 @@ doc:
 	$(cargo) doc --open
 
 build-wasm-image-docker:
-	docker build -t anoma-wasm wasm
+	docker build -t anoma-wasm - < docker/anoma-wasm/Dockerfile
 
 build-wasm-scripts-docker: build-wasm-image-docker
 	docker run --rm -v ${PWD}:/usr/local/rust/wasm anoma-wasm make build-wasm-scripts
@@ -212,7 +210,7 @@ build-wasm-scripts:
 
 # need python
 checksum-wasm:
-	python wasm/checksums.py
+	python3 wasm/checksums.py
 
 # this command needs wasm-opt installed
 opt-wasm:

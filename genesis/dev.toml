@@ -1,8 +1,8 @@
 # Example genesis with dev settings.
 genesis_time = "2021-09-30:10:00.00Z"
 
-# A genesis validator.
-[validator.dev]
+# A genesis validator with alias "validator".
+[validator.validator]
 # Validator's public key for consensus.
 consensus_public_key = "5e704c4e46265e1ccc87505149f79b9d2e414d01a4e3806dfc65f0a73901c1d0"
 # Public key of the validator's Anoma account.
@@ -30,10 +30,17 @@ net_address = "127.0.0.1:26656"
 address = "atest1v4ehgw36x3prswzxggunzv6pxqmnvdj9xvcyzvpsggeyvs3cg9qnywf589qnwvfsg5erg3fkl09rg5"
 vp = "vp_token"
 [token.xan.balances]
-atest1v4ehgw368ycryv2z8qcnxv3cxgmrgvjpxs6yg333gym5vv2zxepnj334g4rryvj9xucrgve4x3xvr4 = 1000000
+# In token balances, we can use:
+# 1. An address any account
+a1qyqzsqqqqqcyvvf5xcu5vd6rg4z5233hg9pn23pjgdryzdjy8pz52wzxxscnvvjxx3rryvzz8y5p6mtz = 1000000
 atest1v4ehgw36x3qng3jzggu5yvpsxgcngv2xgguy2dpkgvu5x33kx3pr2w2zgep5xwfkxscrxs2pj8075p = 1000000
 atest1v4ehgw36xvcyyvejgvenxs34g3zygv3jxqunjd6rxyeyys3sxy6rwvfkx4qnj33hg9qnvse4lsfctw = 1000000
-a1qyqzsqqqqqcyvvf5xcu5vd6rg4z5233hg9pn23pjgdryzdjy8pz52wzxxscnvvjxx3rryvzz8y5p6mtz = 1000000
+# 2. An alias of any account
+bertha = 1000000
+# 3. A public key of a validator or an established account from which the 
+#    address of the implicit account is derived)
+"bertha.public_key" = 100
+"validator.public_key" = 100
 
 [token.btc]
 address = "atest1v4ehgw36xdzryve5gsc52veeg5cnsv2yx5eygvp38qcrvd29xy6rys6p8yc5xvp4xfpy2v694wgwcp"

@@ -1,7 +1,7 @@
 [package]
 authors = ["Heliax AG <hello@heliax.dev>"]
 description = "Anoma tests"
-edition = "2018"
+edition = "2021"
 license = "GPL-3.0"
 name = "anoma_tests"
 resolver = "2"
@@ -35,18 +35,18 @@ anoma_vm_env = {path = "../vm_env", default-features = false}
 chrono = "0.4.19"
 concat-idents = "1.1.2"
 # TODO temp fork for https://github.com/informalsystems/ibc-rs/issues/1161
-ibc = {git = "https://github.com/heliaxdev/ibc-rs", branch = "bat/abcipp-integration", features = ["mocks", "borsh"], optional = true}
-ibc-abci = {package = "ibc", git = "https://github.com/heliaxdev/ibc-rs", branch = "tomas/tm-lowercase-node-id", features = ["mocks", "borsh"], optional = true}
-ibc-proto = {git = "https://github.com/heliaxdev/ibc-rs", branch = "bat/abcipp-integration", optional = true}
-ibc-proto-abci = {package = "ibc-proto", git = "https://github.com/heliaxdev/ibc-rs", branch = "tomas/tm-lowercase-node-id", optional = true}
+ibc = {git = "https://github.com/heliaxdev/ibc-rs", branch = "yuji/abcipp-v0.23.0", features = ["mocks", "borsh"], optional = true}
+ibc-abci = {package = "ibc", git = "https://github.com/heliaxdev/ibc-rs", branch = "yuji/rebase_v0.23.0", features = ["mocks", "borsh"], optional = true}
+ibc-proto = {git = "https://github.com/heliaxdev/ibc-rs", branch = "yuji/abcipp-v0.23.0", optional = true}
+ibc-proto-abci = {package = "ibc-proto", git = "https://github.com/heliaxdev/ibc-rs", branch = "yuji/rebase_v0.23.0", optional = true}
 serde_json = {version = "1.0.65"}
 sha2 = "0.9.3"
 test-log = {version = "0.2.7", default-features = false, features = ["trace"]}
-# temporarily using fork work-around for https://github.com/informalsystems/tendermint-rs/issues/916
-tendermint = {git = "https://github.com/heliaxdev/tendermint-rs", branch = "bat/abcipp-integration", optional = true}
-tendermint-stable = {package = "tendermint", git = "https://github.com/heliaxdev/tendermint-rs", branch = "tomas/lowercase-node-id", optional = true}
+# temporarily using fork work-around for https://github.com/informalsystems/tendermint-rs/issues/971
+tendermint = {git = "https://github.com/heliaxdev/tendermint-rs", branch = "yuji/abcipp-v0.23.0", optional = true}
+tendermint-stable = {package = "tendermint", git = "https://github.com/heliaxdev/tendermint-rs", branch = "yuji/rebase_v0.23.0", optional = true}
 tracing = "0.1.26"
-tracing-subscriber = {version = "0.2.18", default-features = false, features = ["env-filter", "fmt"]}
+tracing-subscriber = {version = "0.2.25", default-features = false, features = ["env-filter", "fmt"]}
 
 [dev-dependencies]
 anoma_apps = {path = "../apps", default-features = false, features = ["testing"]}
@@ -58,7 +58,7 @@ eyre = "0.6.5"
 itertools = "0.10.0"
 libp2p = "0.38.0"
 pretty_assertions = "0.7.2"
-rexpect = "0.4.0"
+rexpect = {git = "https://github.com/heliaxdev/rexpect.git", branch = "tomas/eof-hack-fix"}
 tempfile = "3.2.0"
 
 # This is used to enable logging from tests

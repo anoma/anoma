@@ -6,7 +6,7 @@
 genesis_time = "2021-09-30T10:00:00Z"
 
 [validator.validator-0]
-# Validator's token balance at genesis.
+# Validator's staked XAN at genesis.
 tokens = 200000
 # Amount of the validator's genesis token balance which is not staked.
 non_staked_balance = 1000000000000
@@ -29,106 +29,97 @@ matchmaker_tx = "wasm/tx_from_intent.wasm"
 address = "atest1v4ehgw36x3prswzxggunzv6pxqmnvdj9xvcyzvpsggeyvs3cg9qnywf589qnwvfsg5erg3fkl09rg5"
 vp = "vp_token"
 [token.XAN.balances]
-atest1d9khqw36gcuns32xxservv6rxvm5gve5x4zrqwfhgdry2s3cgsmrq334gg65xdzx8ymrgd3ccer3dv = 1000000
-atest1d9khqw36xprrzdpk89rrws69g4z5vd6pgv65gvjrgeqnv3pcg4zns335xymry335gcerqs3etd0xfa = 1000000
-atest1v4ehgw368ycryv2z8qcnxv3cxgmrgvjpxs6yg333gym5vv2zxepnj334g4rryvj9xucrgve4x3xvr4 = 1000000
-atest1v4ehgw36gc6yxvpjxccyzvphxycrxw2xxsuyydesxgcnjs3cg9znwv3cxgmnj32yxy6rssf5tcqjm3 = 9223372036854
-atest1v4ehgw36x3qng3jzggu5yvpsxgcngv2xgguy2dpkgvu5x33kx3pr2w2zgep5xwfkxscrxs2pj8075p = 1000000
-atest1v4ehgw36xvcyyvejgvenxs34g3zygv3jxqunjd6rxyeyys3sxy6rwvfkx4qnj33hg9qnvse4lsfctw = 1000000
-atest1d9khqw36ggengdekxv6rsvpjxaprzd69x3rrs3pcgccrswp3gvmyxdpex9zyzsfnxppnvv29t20ag6 = 1000000
+Albert = 1000000
+"Albert.public_key" = 100
+Bertha = 1000000
+"Bertha.public_key" = 100
+Christel = 1000000
+"Christel.public_key" = 100
+Daewon = 1000000
+faucet = 9223372036854
+"faucet.public_key" = 100
+matchmaker = 1000000
+"matchmaker.public_key" = 1000
+"validator-0.public_key" = 100
 
 [token.BTC]
 address = "atest1v4ehgw36xdzryve5gsc52veeg5cnsv2yx5eygvp38qcrvd29xy6rys6p8yc5xvp4xfpy2v694wgwcp"
 vp = "vp_token"
 [token.BTC.balances]
-atest1d9khqw36xprrzdpk89rrws69g4z5vd6pgv65gvjrgeqnv3pcg4zns335xymry335gcerqs3etd0xfa = 1000000
-atest1v4ehgw368ycryv2z8qcnxv3cxgmrgvjpxs6yg333gym5vv2zxepnj334g4rryvj9xucrgve4x3xvr4 = 1000000
-atest1v4ehgw36gc6yxvpjxccyzvphxycrxw2xxsuyydesxgcnjs3cg9znwv3cxgmnj32yxy6rssf5tcqjm3 = 9223372036854
-atest1v4ehgw36x3qng3jzggu5yvpsxgcngv2xgguy2dpkgvu5x33kx3pr2w2zgep5xwfkxscrxs2pj8075p = 1000000
-atest1v4ehgw36xvcyyvejgvenxs34g3zygv3jxqunjd6rxyeyys3sxy6rwvfkx4qnj33hg9qnvse4lsfctw = 1000000
+Albert = 1000000
+Bertha = 1000000
+Christel = 1000000
+Daewon = 1000000
+faucet = 9223372036854
 
 [token.ETH]
 address = "atest1v4ehgw36xqmr2d3nx3ryvd2xxgmrq33j8qcns33sxezrgv6zxdzrydjrxveygd2yxumrsdpsf9jc2p"
 vp = "vp_token"
 [token.ETH.balances]
-atest1d9khqw36xprrzdpk89rrws69g4z5vd6pgv65gvjrgeqnv3pcg4zns335xymry335gcerqs3etd0xfa = 1000000
-atest1v4ehgw368ycryv2z8qcnxv3cxgmrgvjpxs6yg333gym5vv2zxepnj334g4rryvj9xucrgve4x3xvr4 = 1000000
-atest1v4ehgw36gc6yxvpjxccyzvphxycrxw2xxsuyydesxgcnjs3cg9znwv3cxgmnj32yxy6rssf5tcqjm3 = 9223372036854
-atest1v4ehgw36x3qng3jzggu5yvpsxgcngv2xgguy2dpkgvu5x33kx3pr2w2zgep5xwfkxscrxs2pj8075p = 1000000
-atest1v4ehgw36xvcyyvejgvenxs34g3zygv3jxqunjd6rxyeyys3sxy6rwvfkx4qnj33hg9qnvse4lsfctw = 1000000
+Albert = 1000000
+Bertha = 1000000
+Christel = 1000000
+Daewon = 1000000
+faucet = 9223372036854
 
 [token.DOT]
 address = "atest1v4ehgw36gg6nvs2zgfpyxsfjgc65yv6pxy6nwwfsxgungdzrggeyzv35gveyxsjyxymyz335hur2jn"
 vp = "vp_token"
 [token.Dot.balances]
-atest1d9khqw36xprrzdpk89rrws69g4z5vd6pgv65gvjrgeqnv3pcg4zns335xymry335gcerqs3etd0xfa = 1000000
-atest1v4ehgw368ycryv2z8qcnxv3cxgmrgvjpxs6yg333gym5vv2zxepnj334g4rryvj9xucrgve4x3xvr4 = 1000000
-atest1v4ehgw36gc6yxvpjxccyzvphxycrxw2xxsuyydesxgcnjs3cg9znwv3cxgmnj32yxy6rssf5tcqjm3 = 9223372036854
-atest1v4ehgw36x3qng3jzggu5yvpsxgcngv2xgguy2dpkgvu5x33kx3pr2w2zgep5xwfkxscrxs2pj8075p = 1000000
-atest1v4ehgw36xvcyyvejgvenxs34g3zygv3jxqunjd6rxyeyys3sxy6rwvfkx4qnj33hg9qnvse4lsfctw = 1000000
+Albert = 1000000
+Bertha = 1000000
+Christel = 1000000
+Daewon = 1000000
+faucet = 9223372036854
 
 [token.Schnitzel]
 address = "atest1v4ehgw36xue5xvf5xvuyzvpjx5un2v3k8qeyvd3cxdqns32p89rrxd6xx9zngvpegccnzs699rdnnt"
 vp = "vp_token"
 [token.Schnitzel.balances]
-atest1d9khqw36xprrzdpk89rrws69g4z5vd6pgv65gvjrgeqnv3pcg4zns335xymry335gcerqs3etd0xfa = 1000000
-atest1v4ehgw368ycryv2z8qcnxv3cxgmrgvjpxs6yg333gym5vv2zxepnj334g4rryvj9xucrgve4x3xvr4 = 1000000
-atest1v4ehgw36gc6yxvpjxccyzvphxycrxw2xxsuyydesxgcnjs3cg9znwv3cxgmnj32yxy6rssf5tcqjm3 = 9223372036854
-atest1v4ehgw36x3qng3jzggu5yvpsxgcngv2xgguy2dpkgvu5x33kx3pr2w2zgep5xwfkxscrxs2pj8075p = 1000000
-atest1v4ehgw36xvcyyvejgvenxs34g3zygv3jxqunjd6rxyeyys3sxy6rwvfkx4qnj33hg9qnvse4lsfctw = 1000000
+Albert = 1000000
+Bertha = 1000000
+Christel = 1000000
+Daewon = 1000000
+faucet = 9223372036854
 
 [token.Apfel]
 address = "atest1v4ehgw36gfryydj9g3p5zv3kg9znyd358ycnzsfcggc5gvecgc6ygs2rxv6ry3zpg4zrwdfeumqcz9"
 vp = "vp_token"
 [token.Apfel.balances]
-atest1d9khqw36xprrzdpk89rrws69g4z5vd6pgv65gvjrgeqnv3pcg4zns335xymry335gcerqs3etd0xfa = 1000000
-atest1v4ehgw368ycryv2z8qcnxv3cxgmrgvjpxs6yg333gym5vv2zxepnj334g4rryvj9xucrgve4x3xvr4 = 1000000
-atest1v4ehgw36gc6yxvpjxccyzvphxycrxw2xxsuyydesxgcnjs3cg9znwv3cxgmnj32yxy6rssf5tcqjm3 = 9223372036854
-atest1v4ehgw36x3qng3jzggu5yvpsxgcngv2xgguy2dpkgvu5x33kx3pr2w2zgep5xwfkxscrxs2pj8075p = 1000000
-atest1v4ehgw36xvcyyvejgvenxs34g3zygv3jxqunjd6rxyeyys3sxy6rwvfkx4qnj33hg9qnvse4lsfctw = 1000000
+Albert = 1000000
+Bertha = 1000000
+Christel = 1000000
+Daewon = 1000000
+faucet = 9223372036854
 
 [token.Kartoffel]
 address = "atest1v4ehgw36gep5ysecxq6nyv3jg3zygv3e89qn2vp48pryxsf4xpznvve5gvmy23fs89pryvf5a6ht90"
 public_key = ""
 vp = "vp_token"
 [token.Kartoffel.balances]
-atest1d9khqw36xprrzdpk89rrws69g4z5vd6pgv65gvjrgeqnv3pcg4zns335xymry335gcerqs3etd0xfa = 1000000
-atest1v4ehgw368ycryv2z8qcnxv3cxgmrgvjpxs6yg333gym5vv2zxepnj334g4rryvj9xucrgve4x3xvr4 = 1000000
-atest1v4ehgw36gc6yxvpjxccyzvphxycrxw2xxsuyydesxgcnjs3cg9znwv3cxgmnj32yxy6rssf5tcqjm3 = 9223372036854
-atest1v4ehgw36x3qng3jzggu5yvpsxgcngv2xgguy2dpkgvu5x33kx3pr2w2zgep5xwfkxscrxs2pj8075p = 1000000
-atest1v4ehgw36xvcyyvejgvenxs34g3zygv3jxqunjd6rxyeyys3sxy6rwvfkx4qnj33hg9qnvse4lsfctw = 1000000
+Albert = 1000000
+Bertha = 1000000
+Christel = 1000000
+Daewon = 1000000
+faucet = 9223372036854
 
 # Some established accounts present at genesis.
 [established.faucet]
-address = "atest1v4ehgw36gc6yxvpjxccyzvphxycrxw2xxsuyydesxgcnjs3cg9znwv3cxgmnj32yxy6rssf5tcqjm3"
 vp = "vp_testnet_faucet"
 
 [established.matchmaker]
-# Address derived from this key is atest1d9khqw36gcuns32xxservv6rxvm5gve5x4zrqwfhgdry2s3cgsmrq334gg65xdzx8ymrgd3ccer3dv
-public_key = "2000000034afc284494621022874fcf365c3bcb45749eabe43a9c3acf9bc0332759ac889"
 vp = "vp_user"
 
 [established.Albert]
-address = "atest1v4ehgw368ycryv2z8qcnxv3cxgmrgvjpxs6yg333gym5vv2zxepnj334g4rryvj9xucrgve4x3xvr4"
 vp = "vp_user"
 
 [established.Bertha]
-address = "atest1v4ehgw36xvcyyvejgvenxs34g3zygv3jxqunjd6rxyeyys3sxy6rwvfkx4qnj33hg9qnvse4lsfctw"
 vp = "vp_user"
-public_key = "20000000ddfaeb3984ddbfc7851e66e3658e538a18d58ce5fed99302753cebad4993b37a"
-
-[implicit.Bertha-key]
-# Address derived from this key is atest1d9khqw36ggengdekxv6rsvpjxaprzd69x3rrs3pcgccrswp3gvmyxdpex9zyzsfnxppnvv29t20ag6
-public_key = "20000000ddfaeb3984ddbfc7851e66e3658e538a18d58ce5fed99302753cebad4993b37a"
 
 [established.Christel]
-address = "atest1v4ehgw36x3qng3jzggu5yvpsxgcngv2xgguy2dpkgvu5x33kx3pr2w2zgep5xwfkxscrxs2pj8075p"
 vp = "vp_user"
 
 [implicit.Daewon]
-# Same as the public key in `wallet::defaults::daewon_keypair`
-# Address derived from this key is "atest1d9khqw36xprrzdpk89rrws69g4z5vd6pgv65gvjrgeqnv3pcg4zns335xymry335gcerqs3etd0xfa"
-public_key = "200000002b5b8fda66fb6fc4ef0d86f84b21f250034077effc459fc2403a77a35aa95e3f"
 
 # Wasm VP definitions
 

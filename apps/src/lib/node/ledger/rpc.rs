@@ -36,7 +36,9 @@ pub struct PrefixValue {
 
 #[derive(Debug, Clone)]
 pub struct BalanceQuery {
+    #[allow(dead_code)]
     owner: Option<Address>,
+    #[allow(dead_code)]
     token: Option<Address>,
 }
 

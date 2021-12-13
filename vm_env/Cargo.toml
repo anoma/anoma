@@ -1,6 +1,6 @@
 [package]
 authors = ["Heliax AG <hello@heliax.dev>"]
-edition = "2018"
+edition = "2021"
 license = "GPL-3.0"
 name = "anoma_vm_env"
 resolver = "2"

@@ -1,7 +1,7 @@
 [package]
 authors = ["Heliax AG <hello@heliax.dev>"]
 description = "Anoma Proof of Stake system"
-edition = "2018"
+edition = "2021"
 license = "GPL-3.0"
 name = "anoma_proof_of_stake"
 readme = "../README.md"
@@ -10,7 +10,7 @@ version = "0.2.0"
 
 [dependencies]
 borsh = "0.9.1"
-thiserror = "1.0.26"
+thiserror = "1.0.30"
 
 [dev-dependencies]
 proptest = {git = "https://github.com/heliaxdev/proptest", branch = "tomas/state-machine"}

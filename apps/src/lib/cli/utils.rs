@@ -60,6 +60,12 @@ pub struct ArgDefault<T> {
     pub r#type: PhantomData<T>,
 }
 
+pub struct ArgDefaultFromCtx<T> {
+    pub name: &'static str,
+    pub default: DefaultFn<String>,
+    pub r#type: PhantomData<T>,
+}
+
 /// This wrapper type is a workaround for "function pointers in const fn are
 /// unstable", which allows us to use this type in a const fn, because the
 /// type-checker doesn't inspect the wrapped type.
@@ -94,6 +100,17 @@ pub const fn arg_default<T>(
     default: DefaultFn<T>,
 ) -> ArgDefault<T> {
     ArgDefault {
+        name,
+        default,
+        r#type: PhantomData,
+    }
+}
+
+pub const fn arg_default_from_ctx<T>(
+    name: &'static str,
+    default: DefaultFn<String>,
+) -> ArgDefaultFromCtx<T> {
+    ArgDefaultFromCtx {
         name,
         default,
         r#type: PhantomData,
@@ -198,6 +215,24 @@ where
             let DefaultFn(default) = self.default;
             default()
         })
+    }
+}
+
+impl<T> ArgDefaultFromCtx<FromContext<T>>
+where
+    T: FromStr,
+    <T as FromStr>::Err: Debug,
+{
+    pub fn def(&self) -> ClapArg {
+        ClapArg::new(self.name).long(self.name).takes_value(true)
+    }
+
+    pub fn parse(&self, matches: &ArgMatches) -> FromContext<T> {
+        let raw = parse_opt(matches, self.name).unwrap_or_else(|| {
+            let DefaultFn(default) = self.default;
+            default()
+        });
+        FromContext::new(raw)
     }
 }
 

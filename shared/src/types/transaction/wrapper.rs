@@ -30,7 +30,7 @@ pub mod wrapper_tx {
     /// Errors relating to decrypting a wrapper tx and its
     /// encrypted payload from a Tx type
     #[allow(missing_docs)]
-    #[derive(Error, Debug, PartialEq)]
+    #[derive(Error, Debug)]
     pub enum WrapperTxErr {
         #[error(
             "The hash of the decrypted tx does not match the hash commitment"
@@ -394,7 +394,7 @@ pub mod wrapper_tx {
             assert!(wrapper.validate_ciphertext());
             let privkey = <EllipticCurve as PairingEngine>::G2Affine::prime_subgroup_generator();
             let err = wrapper.decrypt(privkey).expect_err("Test failed");
-            assert_eq!(err, WrapperTxErr::DecryptedHash);
+            assert_matches!(err, WrapperTxErr::DecryptedHash);
         }
 
         /// We check that even if the encrypted payload and has of its
@@ -471,12 +471,7 @@ pub mod wrapper_tx {
             // check that the try from method also fails
             let err = crate::types::transaction::process_tx(tx)
                 .expect_err("Test failed");
-            assert_eq!(
-                err,
-                TxError::SigError(
-                    "Signature verification failed: signature error".into()
-                )
-            );
+            assert_matches!(err, TxError::SigError(_));
         }
     }
 }

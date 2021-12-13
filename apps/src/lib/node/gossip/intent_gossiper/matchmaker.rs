@@ -5,13 +5,13 @@ use anoma::gossip::mm::MmHost;
 use anoma::proto::{Intent, IntentId, Tx};
 use anoma::types::address::{xan, Address};
 use anoma::types::intent::{IntentTransfers, MatchedExchanges};
-use anoma::types::transaction::{Fee, WrapperTx};
+use anoma::types::transaction::{hash_tx, Fee, WrapperTx};
 use anoma::vm::wasm;
 use borsh::{BorshDeserialize, BorshSerialize};
 #[cfg(not(feature = "ABCI"))]
-use tendermint::net;
+use tendermint_config::net;
 #[cfg(feature = "ABCI")]
-use tendermint_stable::net;
+use tendermint_config_abci::net;
 use thiserror::Error;
 use tokio::sync::mpsc::{channel, Receiver, Sender};
 
@@ -19,7 +19,7 @@ use super::filter::Filter;
 use super::mempool::{self, IntentMempool};
 use crate::cli::args;
 use crate::client::rpc;
-use crate::client::tx::broadcast_tx;
+use crate::client::tx::{broadcast_tx, TxBroadcastData};
 use crate::types::MatchmakerMessage;
 use crate::wallet::AtomicKeypair;
 use crate::{config, wasm_loader};
@@ -170,26 +170,46 @@ impl Matchmaker {
                     source: self.tx_source_address.clone(),
                 };
                 let tx_data = intent_transfers.try_to_vec().unwrap();
-                let tx_signing_key = self.tx_signing_key.lock();
-                let tx = WrapperTx::new(
-                    Fee {
-                        amount: 0.into(),
-                        token: xan(),
-                    },
-                    tx_signing_key.borrow(),
-                    rpc::query_epoch(args::Query {
-                        ledger_address: self.ledger_address.clone(),
-                    })
-                    .await,
-                    0.into(),
-                    Tx::new(tx_code, Some(tx_data)).sign(&tx_signing_key),
-                );
-                let response = broadcast_tx(
-                    self.ledger_address.clone(),
-                    tx,
-                    &tx_signing_key,
-                )
+                let epoch = rpc::query_epoch(args::Query {
+                    ledger_address: self.ledger_address.clone(),
+                })
                 .await;
+
+                let to_broadcast = {
+                    let tx_signing_key = self.tx_signing_key.lock();
+                    let tx = WrapperTx::new(
+                        Fee {
+                            amount: 0.into(),
+                            token: xan(),
+                        },
+                        tx_signing_key.borrow(),
+                        epoch,
+                        0.into(),
+                        Tx::new(tx_code, Some(tx_data)).sign(&tx_signing_key),
+                    );
+
+                    let wrapper_hash = if !cfg!(feature = "ABCI") {
+                        hash_tx(&tx.try_to_vec().unwrap()).to_string()
+                    } else {
+                        tx.tx_hash.to_string()
+                    };
+
+                    let decrypted_hash = if !cfg!(feature = "ABCI") {
+                        Some(tx.tx_hash.to_string())
+                    } else {
+                        None
+                    };
+                    TxBroadcastData {
+                        tx: tx.sign(&tx_signing_key).expect(
+                            "Wrapper tx signing keypair should be correct",
+                        ),
+                        wrapper_hash,
+                        decrypted_hash,
+                    }
+                };
+                let response =
+                    broadcast_tx(self.ledger_address.clone(), to_broadcast)
+                        .await;
                 match response {
                     Ok(tx_response) => {
                         tracing::info!(

@@ -67,7 +67,8 @@ impl GlobalConfig {
         file.write_all(toml.as_bytes()).map_err(Error::WriteError)
     }
 
-    fn file_path(base_dir: &Path) -> PathBuf {
-        base_dir.join(FILENAME)
+    /// Get the file path to the global config
+    pub fn file_path(base_dir: impl AsRef<Path>) -> PathBuf {
+        base_dir.as_ref().join(FILENAME)
     }
 }

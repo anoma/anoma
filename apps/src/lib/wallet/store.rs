@@ -283,11 +283,14 @@ impl Store {
             StoredKeypair::new(keypair.into(), password);
         let address = Address::Implicit(ImplicitAddress::Ed25519(pkh.clone()));
         let alias = alias.unwrap_or_else(|| pkh.clone().into());
-        if !self.insert_keypair(alias.clone(), keypair_to_store, pkh) {
+        if self
+            .insert_keypair(alias.clone(), keypair_to_store, pkh)
+            .is_none()
+        {
             eprintln!("Action cancelled, no changes persisted.");
             cli::safe_exit(1);
         }
-        if !self.insert_address(alias.clone(), address) {
+        if self.insert_address(alias.clone(), address).is_none() {
             eprintln!("Action cancelled, no changes persisted.");
             cli::safe_exit(1);
         }
@@ -332,36 +335,61 @@ impl Store {
     }
 
     /// Insert a new key with the given alias. If the alias is already used,
-    /// will prompt for overwrite confirmation.
+    /// will prompt for overwrite/reselection confirmation. If declined, then
+    /// keypair is not inserted and nothing is returned, otherwise selected
+    /// alias is returned.
     pub(super) fn insert_keypair(
         &mut self,
         alias: Alias,
         keypair: StoredKeypair,
         pkh: PublicKeyHash,
-    ) -> bool {
+    ) -> Option<Alias> {
+        if alias.is_empty() {
+            println!(
+                "Empty alias given, defaulting to {}.",
+                alias = Into::<Alias>::into(pkh.clone())
+            );
+        }
         if self.keys.contains_key(&alias) {
             match show_overwrite_confirmation(&alias, "a key") {
-                ConfirmationResponse::Overwrite => {}
-                ConfirmationResponse::Cancel => return false,
+                ConfirmationResponse::Replace => {}
+                ConfirmationResponse::Reselect(new_alias) => {
+                    return self.insert_keypair(new_alias, keypair, pkh);
+                }
+                ConfirmationResponse::Skip => return None,
             }
         }
         self.keys.insert(alias.clone(), keypair);
-        self.pkhs.insert(pkh, alias);
-        true
+        self.pkhs.insert(pkh, alias.clone());
+        Some(alias)
     }
 
     /// Insert a new address with the given alias. If the alias is already used,
-    /// will prompt for overwrite confirmation, which when declined, the address
-    /// won't be added. Return `true` if the address has been added.
-    pub fn insert_address(&mut self, alias: Alias, address: Address) -> bool {
+    /// will prompt for overwrite/reselection confirmation, which when declined,
+    /// the address won't be added. Return the selected alias if the address has
+    /// been added.
+    pub fn insert_address(
+        &mut self,
+        alias: Alias,
+        address: Address,
+    ) -> Option<Alias> {
+        if alias.is_empty() {
+            println!(
+                "Empty alias given, defaulting to {}.",
+                alias = address.encode()
+            );
+        }
         if self.addresses.contains_key(&alias) {
             match show_overwrite_confirmation(&alias, "an address") {
-                ConfirmationResponse::Overwrite => {}
-                ConfirmationResponse::Cancel => return false,
+                ConfirmationResponse::Replace => {}
+                ConfirmationResponse::Reselect(new_alias) => {
+                    return self.insert_address(new_alias, address);
+                }
+                ConfirmationResponse::Skip => return None,
             }
         }
-        self.addresses.insert(alias, address);
-        true
+        self.addresses.insert(alias.clone(), address);
+        Some(alias)
     }
 
     fn decode(data: Vec<u8>) -> Result<Self, toml::de::Error> {
@@ -374,38 +402,56 @@ impl Store {
 }
 
 enum ConfirmationResponse {
-    Overwrite,
-    Cancel,
+    Replace,
+    Reselect(Alias),
+    Skip,
 }
+
+/// The given alias has been selected but conflicts with another alias in
+/// the store. Offer the user to either replace existing mapping, alter the
+/// chosen alias to a name of their chosing, or cancel the aliasing.
 
 fn show_overwrite_confirmation(
     alias: &str,
     alias_for: &str,
 ) -> ConfirmationResponse {
-    println!(
+    print!(
         "You're trying to create an alias \"{}\" that already exists for {} \
-         in your store.",
+         inyour store.\nWould you like to replace it? \
+         s(k)ip/re(p)lace/re(s)elect: ",
         alias, alias_for
     );
-    print!("Would you like to replace it? [y/N]: ");
-
     io::stdout().flush().unwrap();
 
     let mut buffer = String::new();
+    // Get the user to select between 3 choices
     match io::stdin().read_line(&mut buffer) {
         Ok(size) if size > 0 => {
+            // Isolate the single character representing the choice
             let byte = buffer.chars().next().unwrap();
+            buffer.clear();
             match byte {
-                'y' | 'Y' => ConfirmationResponse::Overwrite,
-                'n' | 'N' | '\n' => ConfirmationResponse::Cancel,
-                _ => {
-                    println!("Invalid option, try again.");
-                    show_overwrite_confirmation(alias, alias_for)
+                'p' | 'P' => return ConfirmationResponse::Replace,
+                's' | 'S' => {
+                    // In the case of reselection, elicit new alias
+                    print!("Please enter a different alias: ");
+                    io::stdout().flush().unwrap();
+                    if io::stdin().read_line(&mut buffer).is_ok() {
+                        return ConfirmationResponse::Reselect(
+                            buffer.trim().to_string(),
+                        );
+                    }
                 }
-            }
+                'k' | 'K' => return ConfirmationResponse::Skip,
+                // Input is senseless fall through to repeat prompt
+                _ => {}
+            };
         }
-        _ => ConfirmationResponse::Cancel,
+        _ => {}
     }
+    // Input is senseless fall through to repeat prompt
+    println!("Invalid option, try again.");
+    show_overwrite_confirmation(alias, alias_for)
 }
 
 /// Wallet file name

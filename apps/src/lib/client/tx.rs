@@ -5,6 +5,7 @@ use anoma::ledger::pos::{BondId, Bonds, Unbonds};
 use anoma::proto::Tx;
 use anoma::types::address::Address;
 use anoma::types::key::ed25519::Keypair;
+use anoma::types::storage::Epoch;
 use anoma::types::transaction::{
     pos, Fee, InitAccount, InitValidator, UpdateVp, WrapperTx,
 };
@@ -15,7 +16,9 @@ use borsh::BorshSerialize;
 use jsonpath_lib as jsonpath;
 use serde::Serialize;
 #[cfg(not(feature = "ABCI"))]
-use tendermint::net::Address as TendermintAddress;
+use tendermint_config::net::Address as TendermintAddress;
+#[cfg(feature = "ABCI")]
+use tendermint_config_abci::net::Address as TendermintAddress;
 #[cfg(not(feature = "ABCI"))]
 use tendermint_rpc::query::{EventType, Query};
 #[cfg(not(feature = "ABCI"))]
@@ -24,8 +27,6 @@ use tendermint_rpc::{Client, HttpClient};
 use tendermint_rpc_abci::query::{EventType, Query};
 #[cfg(feature = "ABCI")]
 use tendermint_rpc_abci::{Client, HttpClient};
-#[cfg(feature = "ABCI")]
-use tendermint_stable::net::Address as TendermintAddress;
 
 use super::{rpc, signing};
 use crate::cli::context::WalletAddress;
@@ -35,7 +36,6 @@ use crate::client::tendermint_websocket_client::{
 };
 use crate::node::ledger::events::{Attributes, EventType as TmEventType};
 use crate::node::ledger::tendermint_node;
-use crate::wallet::AtomicKeypair;
 
 const TX_INIT_ACCOUNT_WASM: &str = "tx_init_account.wasm";
 const TX_INIT_VALIDATOR_WASM: &str = "tx_init_validator.wasm";
@@ -46,16 +46,20 @@ const TX_BOND_WASM: &str = "tx_bond.wasm";
 const TX_UNBOND_WASM: &str = "tx_unbond.wasm";
 const TX_WITHDRAW_WASM: &str = "tx_withdraw.wasm";
 
+pub struct TxBroadcastData {
+    pub tx: Tx,
+    pub wrapper_hash: String,
+    pub decrypted_hash: Option<String>,
+}
+
 pub async fn submit_custom(ctx: Context, args: args::TxCustom) {
     let tx_code = ctx.read_wasm(args.code_path);
     let data = args.data_path.map(|data_path| {
         std::fs::read(data_path).expect("Expected a file at given data path")
     });
     let tx = Tx::new(tx_code, data);
-    let (ctx, tx, keypair) = sign_tx(ctx, tx, &args.tx, None).await;
-    let keypair = keypair.lock();
-    let (ctx, initialized_accounts) =
-        submit_tx(ctx, &args.tx, tx, keypair.borrow()).await;
+    let (ctx, tx) = sign_tx(ctx, tx, &args.tx, None).await;
+    let (ctx, initialized_accounts) = submit_tx(ctx, &args.tx, tx).await;
     save_initialized_accounts(ctx, &args.tx, initialized_accounts).await;
 }
 
@@ -110,9 +114,8 @@ pub async fn submit_update_vp(ctx: Context, args: args::TxUpdateVp) {
     let data = data.try_to_vec().expect("Encoding tx data shouldn't fail");
 
     let tx = Tx::new(tx_code, Some(data));
-    let (ctx, tx, keypair) = sign_tx(ctx, tx, &args.tx, Some(&args.addr)).await;
-    let keypair = keypair.lock();
-    submit_tx(ctx, &args.tx, tx, keypair.borrow()).await;
+    let (ctx, tx) = sign_tx(ctx, tx, &args.tx, Some(&args.addr)).await;
+    submit_tx(ctx, &args.tx, tx).await;
 }
 
 pub async fn submit_init_account(mut ctx: Context, args: args::TxInitAccount) {
@@ -137,11 +140,8 @@ pub async fn submit_init_account(mut ctx: Context, args: args::TxInitAccount) {
     let data = data.try_to_vec().expect("Encoding tx data shouldn't fail");
 
     let tx = Tx::new(tx_code, Some(data));
-    let (ctx, tx, keypair) =
-        sign_tx(ctx, tx, &args.tx, Some(&args.source)).await;
-    let keypair = keypair.lock();
-    let (ctx, initialized_accounts) =
-        submit_tx(ctx, &args.tx, tx, keypair.borrow()).await;
+    let (ctx, tx) = sign_tx(ctx, tx, &args.tx, Some(&args.source)).await;
+    let (ctx, initialized_accounts) = submit_tx(ctx, &args.tx, tx).await;
     save_initialized_accounts(ctx, &args.tx, initialized_accounts).await;
 }
 
@@ -252,10 +252,8 @@ pub async fn submit_init_validator(
     };
     let data = data.try_to_vec().expect("Encoding tx data shouldn't fail");
     let tx = Tx::new(tx_code, Some(data));
-    let (ctx, tx, keypair) = sign_tx(ctx, tx, &tx_args, Some(&source)).await;
-    let keypair = keypair.lock();
-    let (mut ctx, initialized_accounts) =
-        submit_tx(ctx, &tx_args, tx, keypair.borrow()).await;
+    let (ctx, tx) = sign_tx(ctx, tx, &tx_args, Some(&source)).await;
+    let (mut ctx, initialized_accounts) = submit_tx(ctx, &tx_args, tx).await;
     if !tx_args.dry_run {
         let (validator_address_alias, validator_address, rewards_address_alias) =
             match &initialized_accounts[..] {
@@ -296,25 +294,25 @@ pub async fn submit_init_validator(
                         } else {
                             validator_address_alias
                         };
-                    if ctx.wallet.add_address(
+                    if let Some(new_alias) = ctx.wallet.add_address(
                         validator_address_alias.clone(),
                         validator_address.clone(),
                     ) {
                         println!(
                             "Added alias {} for address {}.",
-                            validator_address_alias,
+                            new_alias,
                             validator_address.encode()
                         );
                     }
                     let rewards_address_alias =
                         format!("{}-rewards", validator_address_alias);
-                    if ctx.wallet.add_address(
+                    if let Some(new_alias) = ctx.wallet.add_address(
                         rewards_address_alias.clone(),
                         rewards_address.clone(),
                     ) {
                         println!(
                             "Added alias {} for address {}.",
-                            rewards_address_alias,
+                            new_alias,
                             rewards_address.encode()
                         );
                     }
@@ -432,10 +430,8 @@ pub async fn submit_transfer(ctx: Context, args: args::TxTransfer) {
         .expect("Encoding tx data shouldn't fail");
 
     let tx = Tx::new(tx_code, Some(data));
-    let (ctx, tx, keypair) =
-        sign_tx(ctx, tx, &args.tx, Some(&args.source)).await;
-    let keypair = keypair.lock();
-    submit_tx(ctx, &args.tx, tx, keypair.borrow()).await;
+    let (ctx, tx) = sign_tx(ctx, tx, &args.tx, Some(&args.source)).await;
+    submit_tx(ctx, &args.tx, tx).await;
 }
 
 pub async fn submit_bond(ctx: Context, args: args::Bond) {
@@ -500,10 +496,8 @@ pub async fn submit_bond(ctx: Context, args: args::Bond) {
 
     let tx = Tx::new(tx_code, Some(data));
     let default_signer = args.source.as_ref().unwrap_or(&args.validator);
-    let (ctx, tx, keypair) =
-        sign_tx(ctx, tx, &args.tx, Some(default_signer)).await;
-    let keypair = keypair.lock();
-    submit_tx(ctx, &args.tx, tx, keypair.borrow()).await;
+    let (ctx, tx) = sign_tx(ctx, tx, &args.tx, Some(default_signer)).await;
+    submit_tx(ctx, &args.tx, tx).await;
 }
 
 pub async fn submit_unbond(ctx: Context, args: args::Unbond) {
@@ -571,10 +565,8 @@ pub async fn submit_unbond(ctx: Context, args: args::Unbond) {
 
     let tx = Tx::new(tx_code, Some(data));
     let default_signer = args.source.as_ref().unwrap_or(&args.validator);
-    let (ctx, tx, keypair) =
-        sign_tx(ctx, tx, &args.tx, Some(default_signer)).await;
-    let keypair = keypair.lock();
-    submit_tx(ctx, &args.tx, tx, keypair.borrow()).await;
+    let (ctx, tx) = sign_tx(ctx, tx, &args.tx, Some(default_signer)).await;
+    submit_tx(ctx, &args.tx, tx).await;
 }
 
 pub async fn submit_withdraw(ctx: Context, args: args::Withdraw) {
@@ -642,21 +634,22 @@ pub async fn submit_withdraw(ctx: Context, args: args::Withdraw) {
 
     let tx = Tx::new(tx_code, Some(data));
     let default_signer = args.source.as_ref().unwrap_or(&args.validator);
-    let (ctx, tx, keypair) =
-        sign_tx(ctx, tx, &args.tx, Some(default_signer)).await;
-    let keypair = keypair.lock();
-    submit_tx(ctx, &args.tx, tx, keypair.borrow()).await;
+    let (ctx, tx) = sign_tx(ctx, tx, &args.tx, Some(default_signer)).await;
+    submit_tx(ctx, &args.tx, tx).await;
 }
 
 /// Sign a transaction with a given signing key or public key of a given signer.
 /// If no explicit signer given, use the `default`. If no `default` is given,
-/// returns unsigned transaction.
+/// panics.
+///
+/// Then the tx, is put in a wrapper and returned along with hashes needed
+/// for monitoring the tx on chain.
 async fn sign_tx(
     mut ctx: Context,
     tx: Tx,
     args: &args::Tx,
     default: Option<&WalletAddress>,
-) -> (Context, Tx, AtomicKeypair) {
+) -> (Context, TxBroadcastData) {
     let (tx, keypair) = if let Some(signing_key) = &args.signing_key {
         let signing_key = ctx.get_cached(signing_key);
         let signing_key_mutex = signing_key.lock();
@@ -681,8 +674,56 @@ async fn sign_tx(
              or the address from which to look up the signing key."
         );
     };
+    let epoch = rpc::query_epoch(args::Query {
+        ledger_address: args.ledger_address.clone(),
+    })
+    .await;
+    let keypair = keypair.lock();
+    let broadcast_data = sign_wrapper(&ctx, args, epoch, tx, &keypair);
+    (ctx, broadcast_data)
+}
 
-    (ctx, tx, keypair)
+/// Create a wrapper tx from a normal tx. Get the hash of the
+/// wrapper and its payload which is needed for monitoring its
+/// progress on chain.
+fn sign_wrapper(
+    ctx: &Context,
+    args: &args::Tx,
+    epoch: Epoch,
+    tx: Tx,
+    keypair: &Keypair,
+) -> TxBroadcastData {
+    let tx = WrapperTx::new(
+        Fee {
+            amount: args.fee_amount,
+            token: ctx.get(&args.fee_token),
+        },
+        keypair,
+        epoch,
+        args.gas_limit.clone(),
+        tx,
+    );
+
+    // We use this to determine when the wrapper tx makes it on-chain
+    let wrapper_hash = if !cfg!(feature = "ABCI") {
+        hash_tx(&tx.try_to_vec().unwrap()).to_string()
+    } else {
+        tx.tx_hash.to_string()
+    };
+    // We use this to determine when the decrypted inner tx makes it on-chain
+    let decrypted_hash = if !cfg!(feature = "ABCI") {
+        Some(tx.tx_hash.to_string())
+    } else {
+        None
+    };
+
+    TxBroadcastData {
+        tx: tx
+            .sign(keypair)
+            .expect("Wrapper tx signing keypair should be correct"),
+        wrapper_hash,
+        decrypted_hash,
+    }
 }
 
 /// Submit transaction and wait for result. Returns a list of addresses
@@ -690,8 +731,7 @@ async fn sign_tx(
 async fn submit_tx(
     ctx: Context,
     args: &args::Tx,
-    tx: Tx,
-    keypair: &Keypair,
+    to_broadcast: TxBroadcastData,
 ) -> (Context, Vec<Address>) {
     // NOTE: use this to print the request JSON body:
 
@@ -704,24 +744,10 @@ async fn submit_tx(
     // println!("HTTP request body: {}", request_body);
 
     if args.dry_run {
-        rpc::dry_run_tx(&args.ledger_address, tx.to_bytes()).await;
+        rpc::dry_run_tx(&args.ledger_address, to_broadcast.tx.to_bytes()).await;
         (ctx, vec![])
     } else {
-        let epoch = rpc::query_epoch(args::Query {
-            ledger_address: args.ledger_address.clone(),
-        })
-        .await;
-        let tx = WrapperTx::new(
-            Fee {
-                amount: args.fee_amount,
-                token: ctx.get(&args.fee_token),
-            },
-            keypair,
-            epoch,
-            args.gas_limit.clone(),
-            tx,
-        );
-        match broadcast_tx(args.ledger_address.clone(), tx, keypair).await {
+        match broadcast_tx(args.ledger_address.clone(), to_broadcast).await {
             Ok(result) => (ctx, result.initialized_accounts),
             Err(err) => {
                 eprintln!(
@@ -752,49 +778,38 @@ async fn save_initialized_accounts(
         let wallet = &mut ctx.wallet;
         for (ix, address) in initialized_accounts.iter().enumerate() {
             let encoded = address.encode();
-            let mut added = false;
-            while !added {
-                let alias: Cow<str> = match &args.initialized_account_alias {
-                    Some(initialized_account_alias) => {
-                        if len == 1 {
-                            // If there's only one account, use the
-                            // alias as is
-                            initialized_account_alias.into()
-                        } else {
-                            // If there're multiple accounts, use
-                            // the alias as prefix, followed by
-                            // index number
-                            format!("{}{}", initialized_account_alias, ix)
-                                .into()
-                        }
+            let alias: Cow<str> = match &args.initialized_account_alias {
+                Some(initialized_account_alias) => {
+                    if len == 1 {
+                        // If there's only one account, use the
+                        // alias as is
+                        initialized_account_alias.into()
+                    } else {
+                        // If there're multiple accounts, use
+                        // the alias as prefix, followed by
+                        // index number
+                        format!("{}{}", initialized_account_alias, ix).into()
                     }
-                    None => {
-                        print!("Choose an alias for {}: ", encoded);
-                        io::stdout().flush().await.unwrap();
-                        let mut alias = String::new();
-                        io::stdin().read_line(&mut alias).await.unwrap();
-                        alias.trim().to_owned().into()
-                    }
-                };
-                added = if alias.is_empty() {
-                    println!(
-                        "Empty alias given, using {} as the alias.",
-                        encoded
-                    );
-                    wallet.add_address(encoded.clone(), address.clone())
-                } else {
-                    let alias = alias.into_owned();
-                    let added =
-                        wallet.add_address(alias.clone(), address.clone());
-                    if added {
-                        println!(
-                            "Added alias {} for address {}.",
-                            alias, encoded
-                        );
-                    }
-                    added
                 }
-            }
+                None => {
+                    print!("Choose an alias for {}: ", encoded);
+                    io::stdout().flush().await.unwrap();
+                    let mut alias = String::new();
+                    io::stdin().read_line(&mut alias).await.unwrap();
+                    alias.trim().to_owned().into()
+                }
+            };
+            let alias = alias.into_owned();
+            let added = wallet.add_address(alias.clone(), address.clone());
+            match added {
+                Some(new_alias) if new_alias != encoded => {
+                    println!(
+                        "Added alias {} for address {}.",
+                        new_alias, encoded
+                    );
+                }
+                _ => println!("No alias added for address {}.", encoded),
+            };
         }
         if !args.dry_run {
             wallet.save().unwrap_or_else(|err| eprintln!("{}", err));
@@ -814,28 +829,13 @@ async fn save_initialized_accounts(
 /// In the case of errors in any of those stages, an error message is returned
 pub async fn broadcast_tx(
     address: TendermintAddress,
-    tx: WrapperTx,
-    keypair: &Keypair,
+    TxBroadcastData {
+        tx,
+        wrapper_hash,
+        decrypted_hash,
+    }: TxBroadcastData,
 ) -> Result<TxResponse, Error> {
-    // We use this to determine when the wrapper tx makes it on-chain
-    let wrapper_tx_hash = if !cfg!(feature = "ABCI") {
-        hash_tx(&tx.try_to_vec().unwrap()).to_string()
-    } else {
-        tx.tx_hash.to_string()
-    };
-    // We use this to determine when the decrypted inner tx makes it on-chain
-    let decrypted_tx_hash = if !cfg!(feature = "ABCI") {
-        Some(tx.tx_hash.to_string())
-    } else {
-        None
-    };
-
-    // we sign all txs
-    let tx = tx
-        .sign(keypair)
-        .expect("Signing of the wrapper transaction should not fail");
     let tx_bytes = tx.to_bytes();
-
     let mut wrapper_tx_subscription = TendermintWebsocketClient::open(
         WebSocketAddress::try_from(address.clone())?,
         None,
@@ -847,10 +847,10 @@ pub async fn broadcast_tx(
     // created by the shell
     let query = if !cfg!(feature = "ABCI") {
         Query::from(EventType::NewBlock)
-            .and_eq("accepted.hash", wrapper_tx_hash.as_str())
+            .and_eq("accepted.hash", wrapper_hash.as_str())
     } else {
         Query::from(EventType::NewBlock)
-            .and_eq("applied.hash", wrapper_tx_hash.as_str())
+            .and_eq("applied.hash", wrapper_hash.as_str())
     };
     wrapper_tx_subscription.subscribe(query)?;
 
@@ -861,10 +861,8 @@ pub async fn broadcast_tx(
             WebSocketAddress::try_from(address)?,
             None,
         )?;
-        let query = Query::from(EventType::NewBlock).and_eq(
-            "applied.hash",
-            decrypted_tx_hash.as_ref().unwrap().as_str(),
-        );
+        let query = Query::from(EventType::NewBlock)
+            .and_eq("applied.hash", decrypted_hash.as_ref().unwrap().as_str());
         decrypted_tx_subscription.subscribe(query)?;
         Some(decrypted_tx_subscription)
     } else {
@@ -882,12 +880,12 @@ pub async fn broadcast_tx(
             parse(
                 wrapper_tx_subscription.receive_response()?,
                 TmEventType::Accepted,
-                &wrapper_tx_hash.to_string(),
+                &wrapper_hash.to_string(),
             )
         } else {
             TxResponse::find_tx(
                 wrapper_tx_subscription.receive_response()?,
-                wrapper_tx_hash,
+                wrapper_hash,
             )
         };
         #[cfg(feature = "ABCI")]
@@ -913,7 +911,7 @@ pub async fn broadcast_tx(
                         .unwrap()
                         .receive_response()?,
                     TmEventType::Applied,
-                    decrypted_tx_hash.as_ref().unwrap(),
+                    decrypted_hash.as_ref().unwrap(),
                 );
                 println!(
                     "Transaction applied with result: {}",
@@ -957,21 +955,19 @@ fn parse(
     tx_hash: &str,
 ) -> TxResponse {
     let mut selector = jsonpath::selector(&json);
-    let mut event = selector(&format!(
-        "$.events.[?(@.type=='{}')]",
-        event_type.to_string()
-    ))
-    .unwrap()
-    .iter()
-    .filter_map(|event| {
-        let attrs = Attributes::from(*event);
-        match attrs.get("hash") {
-            Some(hash) if hash == tx_hash => Some(attrs),
-            _ => None,
-        }
-    })
-    .collect::<Vec<Attributes>>()
-    .remove(0);
+    let mut event =
+        selector(&format!("$.events.[?(@.type=='{}')]", event_type))
+            .unwrap()
+            .iter()
+            .filter_map(|event| {
+                let attrs = Attributes::from(*event);
+                match attrs.get("hash") {
+                    Some(hash) if hash == tx_hash => Some(attrs),
+                    _ => None,
+                }
+            })
+            .collect::<Vec<Attributes>>()
+            .remove(0);
 
     let info = event.take("info").unwrap();
     let height = event.take("height").unwrap();

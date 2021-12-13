@@ -8,7 +8,7 @@ Each [account](accounts.md) is associated with exactly one validity predicate (V
 
 Conceptually, a VP is a function from the transaction's data and the storage state prior and posterior to a transaction execution returning a boolean value. A transaction may modify any data in the [accounts' dynamic storage sub-space](accounts.md#dynamic-storage-sub-space). Upon [transaction execution](tx.md#tx-execution), the VPs associated with the accounts whose storage has been modified are invoked to verify the transaction. If any of them reject the transaction, all of its storage modifications are discarded.
 
-There are some native VPs for [internal transparent addresses](accounts.md#internal-transparent-addresses) that are built into the ledger. All the other VPs are implemented as [WASM programs](wasm-vm.md). One can build a custom VP using the [VP template](https://github.com/anoma/anoma/tree/master/vps/vp_template) or use one of the pre-defined VPs.
+There are some native VPs for [internal transparent addresses](accounts.md#internal-transparent-addresses) that are built into the ledger. All the other VPs are implemented as [WASM programs](wasm-vm.md). One can build a custom VP using the [VP template](https://github.com/anoma/anoma/tree/master/wasm/vp_template) or use one of the pre-defined VPs.
 
 The VPs must implement the following interface that will be invoked by the protocol:
 
@@ -37,7 +37,7 @@ The Proof-of-Stake slash pool is a simple account with a native VP which can rec
 
 ## Fungible token VP
 
-The [fungible token VP](https://github.com/anoma/anoma/tree/master/wasm/vp_token.wasm) allows to associate accounts balances of a specific token under its account. 
+The [fungible token VP](https://github.com/anoma/anoma/tree/master/wasm/wasm_source) allows to associate accounts balances of a specific token under its account. 
 
 For illustration, users `Albert` and `Bertha` might hold some amount of token with the address `XAN`. Their balances would be stored in the `XAN`'s storage sub-space under the storage keys `@XAN/balance/@Albert` and `@XAN/balance/@Bertha`, respectively. When `Albert` or `Bertha` attempt to transact with their `XAN` tokens, its validity predicate would be triggered to check:
 
@@ -48,6 +48,6 @@ Note that the fungible token VP doesn't need to know whether any of involved use
 
 ## User VP
 
-The [user VP](https://github.com/anoma/anoma/tree/master/wasm/vp_user.wasm) currently provides a signature verification against a public key for sending tokens as prescribed by the fungible token VP. In this VP, a transfer of tokens doesn't have to be authorized by the receiving party. 
+The [user VP](https://github.com/anoma/anoma/blob/master/wasm/wasm_source/src/vp_user.rs) currently provides a signature verification against a public key for sending tokens as prescribed by the fungible token VP. In this VP, a transfer of tokens doesn't have to be authorized by the receiving party.
 
 It also allows arbitrary storage modifications to the user's sub-space to be performed by a transaction that has been signed by the secret key corresponding to the user's public key stored on-chain. This functionality also allows one to update their own validity predicate.

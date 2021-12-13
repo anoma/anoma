@@ -380,16 +380,15 @@ impl BorshDeserialize for Signature {
                 format!("Error decoding ed25519 signature: {}", e),
             )
         })?;
-        let sig = ed25519_dalek::Signature::from_bytes(&bytes[..SIGNATURE_LEN])
-            .map_err(|err| {
-                std::io::Error::new(
-                    ErrorKind::InvalidData,
-                    format!(
-                        "Error creating ed25509 signature from bytes: {}",
-                        err
-                    ),
-                )
-            })?;
+        let sig = ed25519_dalek::ed25519::signature::Signature::from_bytes(
+            &bytes[..SIGNATURE_LEN],
+        )
+        .map_err(|err| {
+            std::io::Error::new(
+                ErrorKind::InvalidData,
+                format!("Error creating ed25509 signature from bytes: {}", err),
+            )
+        })?;
         Ok(Signature(sig))
     }
 }

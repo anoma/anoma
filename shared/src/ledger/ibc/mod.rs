@@ -12,9 +12,9 @@ use std::collections::HashSet;
 
 use borsh::{BorshDeserialize, BorshSerialize};
 #[cfg(not(feature = "ABCI"))]
-use ibc::ics02_client::context::ClientReader;
+use ibc::core::ics02_client::context::ClientReader;
 #[cfg(feature = "ABCI")]
-use ibc_abci::ics02_client::context::ClientReader;
+use ibc_abci::core::ics02_client::context::ClientReader;
 use storage::{
     capability_index_key, channel_counter_key, client_counter_key, client_id,
     connection_counter_key, ibc_prefix, is_client_counter_key, IbcPrefix,
@@ -118,7 +118,12 @@ where
             match ibc_prefix(key) {
                 IbcPrefix::Client => {
                     if is_client_counter_key(key) {
-                        if self.client_counter_pre()? >= self.client_counter() {
+                        let counter = self.client_counter().map_err(|_| {
+                            Error::CounterError(
+                                "The client counter doesn't exist".to_owned(),
+                            )
+                        })?;
+                        if self.client_counter_pre()? >= counter {
                             return Err(Error::CounterError(
                                 "The client counter is invalid".to_owned(),
                             ));
@@ -196,29 +201,35 @@ where
         match self.ctx.read_pre(key) {
             Ok(Some(value)) => u64::try_from_slice(&value[..]).map_err(|e| {
                 Error::CounterError(format!(
-                    "Decoding the client counter failed: {}",
+                    "Decoding the counter failed: {}",
                     e
                 ))
             }),
-            _ => Err(Error::CounterError(
-                "The client counter doesn't exist".to_owned(),
-            )),
+            Ok(None) => {
+                Err(Error::CounterError("The counter doesn't exist".to_owned()))
+            }
+            Err(e) => Err(Error::CounterError(format!(
+                "Reading the counter failed: {}",
+                e
+            ))),
         }
     }
 
-    fn read_counter(&self, key: &Key) -> u64 {
+    fn read_counter(&self, key: &Key) -> Result<u64> {
         match self.ctx.read_post(key) {
-            Ok(Some(value)) => match u64::try_from_slice(&value[..]) {
-                Ok(c) => c,
-                Err(e) => {
-                    tracing::error!("decoding a counter failed: {}", e);
-                    u64::MIN
-                }
-            },
-            _ => {
-                tracing::error!("the counter doesn't exist");
-                unreachable!();
+            Ok(Some(value)) => u64::try_from_slice(&value[..]).map_err(|e| {
+                Error::CounterError(format!(
+                    "Decoding the counter failed: {}",
+                    e
+                ))
+            }),
+            Ok(None) => {
+                Err(Error::CounterError("The counter doesn't exist".to_owned()))
             }
+            Err(e) => Err(Error::CounterError(format!(
+                "Reading the counter failed: {}",
+                e
+            ))),
         }
     }
 }
@@ -274,31 +285,31 @@ mod tests {
     use borsh::ser::BorshSerialize;
     use chrono::Utc;
     #[cfg(not(feature = "ABCI"))]
-    use ibc::ics02_client::client_consensus::ConsensusState;
+    use ibc::core::ics02_client::client_consensus::ConsensusState;
     #[cfg(not(feature = "ABCI"))]
-    use ibc::ics02_client::client_state::ClientState;
+    use ibc::core::ics02_client::client_state::ClientState;
     #[cfg(not(feature = "ABCI"))]
-    use ibc::ics02_client::client_type::ClientType;
+    use ibc::core::ics02_client::client_type::ClientType;
     #[cfg(not(feature = "ABCI"))]
-    use ibc::ics02_client::header::AnyHeader;
+    use ibc::core::ics02_client::header::AnyHeader;
     #[cfg(not(feature = "ABCI"))]
-    use ibc::ics03_connection::connection::{
+    use ibc::core::ics03_connection::connection::{
         ConnectionEnd, Counterparty as ConnCounterparty, State as ConnState,
     };
     #[cfg(not(feature = "ABCI"))]
-    use ibc::ics03_connection::version::Version;
+    use ibc::core::ics03_connection::version::Version;
     #[cfg(not(feature = "ABCI"))]
-    use ibc::ics04_channel::channel::{
+    use ibc::core::ics04_channel::channel::{
         ChannelEnd, Counterparty as ChanCounterparty, Order, State as ChanState,
     };
     #[cfg(not(feature = "ABCI"))]
-    use ibc::ics04_channel::packet::{Packet, Sequence};
+    use ibc::core::ics04_channel::packet::{Packet, Sequence};
     #[cfg(not(feature = "ABCI"))]
-    use ibc::ics23_commitment::commitment::{
+    use ibc::core::ics23_commitment::commitment::{
         CommitmentPrefix, CommitmentProofBytes,
     };
     #[cfg(not(feature = "ABCI"))]
-    use ibc::ics24_host::identifier::{
+    use ibc::core::ics24_host::identifier::{
         ChannelId, ClientId, ConnectionId, PortChannelId, PortId,
     };
     #[cfg(not(feature = "ABCI"))]
@@ -310,31 +321,31 @@ mod tests {
     #[cfg(not(feature = "ABCI"))]
     use ibc::Height;
     #[cfg(feature = "ABCI")]
-    use ibc_abci::ics02_client::client_consensus::ConsensusState;
+    use ibc_abci::core::ics02_client::client_consensus::ConsensusState;
     #[cfg(feature = "ABCI")]
-    use ibc_abci::ics02_client::client_state::ClientState;
+    use ibc_abci::core::ics02_client::client_state::ClientState;
     #[cfg(feature = "ABCI")]
-    use ibc_abci::ics02_client::client_type::ClientType;
+    use ibc_abci::core::ics02_client::client_type::ClientType;
     #[cfg(feature = "ABCI")]
-    use ibc_abci::ics02_client::header::AnyHeader;
+    use ibc_abci::core::ics02_client::header::AnyHeader;
     #[cfg(feature = "ABCI")]
-    use ibc_abci::ics03_connection::connection::{
+    use ibc_abci::core::ics03_connection::connection::{
         ConnectionEnd, Counterparty as ConnCounterparty, State as ConnState,
     };
     #[cfg(feature = "ABCI")]
-    use ibc_abci::ics03_connection::version::Version;
+    use ibc_abci::core::ics03_connection::version::Version;
     #[cfg(feature = "ABCI")]
-    use ibc_abci::ics04_channel::channel::{
+    use ibc_abci::core::ics04_channel::channel::{
         ChannelEnd, Counterparty as ChanCounterparty, Order, State as ChanState,
     };
     #[cfg(feature = "ABCI")]
-    use ibc_abci::ics04_channel::packet::{Packet, Sequence};
+    use ibc_abci::core::ics04_channel::packet::{Packet, Sequence};
     #[cfg(feature = "ABCI")]
-    use ibc_abci::ics23_commitment::commitment::{
+    use ibc_abci::core::ics23_commitment::commitment::{
         CommitmentPrefix, CommitmentProofBytes,
     };
     #[cfg(feature = "ABCI")]
-    use ibc_abci::ics24_host::identifier::{
+    use ibc_abci::core::ics24_host::identifier::{
         ChannelId, ClientId, ConnectionId, PortChannelId, PortId,
     };
     #[cfg(feature = "ABCI")]
@@ -447,7 +458,8 @@ mod tests {
                 .expect("Creating an TmChainId shouldn't fail"),
             height: TmHeight::try_from(10_u64)
                 .expect("Creating a height shouldn't fail"),
-            time: TmTime::now(),
+            time: TmTime::from_str("2021-11-01T18:14:32.024837Z")
+                .expect("Setting the time shouldn't fail"),
             last_block_id: None,
             last_commit_hash: None,
             data_hash: None,

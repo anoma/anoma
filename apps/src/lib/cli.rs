@@ -108,7 +108,7 @@ pub mod cmds {
         fn parse(matches: &ArgMatches) -> Option<Self> {
             matches
                 .subcommand_matches(Self::CMD)
-                .and_then(|matches| <Self as Cmd>::parse(matches))
+                .and_then(<Self as Cmd>::parse)
         }
 
         fn def() -> App {
@@ -123,6 +123,7 @@ pub mod cmds {
     /// Used as top-level commands (`Cmd` instance) in `anomac` binary.
     /// Used as sub-commands (`SubCmd` instance) in `anoma` binary.
     #[derive(Clone, Debug)]
+    #[allow(clippy::large_enum_variant)]
     pub enum AnomaClient {
         /// The [`super::Context`] provides access to the wallet and the
         /// config. It will generate a new wallet and config, if they
@@ -214,7 +215,7 @@ pub mod cmds {
         fn parse(matches: &ArgMatches) -> Option<Self> {
             matches
                 .subcommand_matches(Self::CMD)
-                .and_then(|matches| <Self as Cmd>::parse(matches))
+                .and_then(<Self as Cmd>::parse)
         }
 
         fn def() -> App {
@@ -274,7 +275,7 @@ pub mod cmds {
         fn parse(matches: &ArgMatches) -> Option<Self> {
             matches
                 .subcommand_matches(Self::CMD)
-                .and_then(|matches| <Self as Cmd>::parse(matches))
+                .and_then(<Self as Cmd>::parse)
         }
 
         fn def() -> App {
@@ -1085,11 +1086,11 @@ pub mod args {
     use libp2p::Multiaddr;
     use serde::Deserialize;
     #[cfg(not(feature = "ABCI"))]
-    use tendermint::net::Address as TendermintAddress;
-    #[cfg(not(feature = "ABCI"))]
     use tendermint::Timeout;
+    #[cfg(not(feature = "ABCI"))]
+    use tendermint_config::net::Address as TendermintAddress;
     #[cfg(feature = "ABCI")]
-    use tendermint_stable::net::Address as TendermintAddress;
+    use tendermint_config_abci::net::Address as TendermintAddress;
     #[cfg(feature = "ABCI")]
     use tendermint_stable::Timeout;
 
@@ -1123,13 +1124,17 @@ pub mod args {
     const DATA_PATH_OPT: ArgOpt<PathBuf> = arg_opt("data-path");
     const DATA_PATH: Arg<PathBuf> = arg("data-path");
     const DECRYPT: ArgFlag = flag("decrypt");
+    const DONT_ARCHIVE: ArgFlag = flag("dont-archive");
     const DRY_RUN_TX: ArgFlag = flag("dry-run");
     const EPOCH: ArgOpt<Epoch> = arg_opt("epoch");
-    const FEE_AMOUNT: Arg<token::Amount> = arg("fee-amount");
-    const FEE_TOKEN: Arg<WalletAddress> = arg("fee-token");
+    const FEE_AMOUNT: ArgDefault<token::Amount> =
+        arg_default("fee-amount", DefaultFn(|| token::Amount::from(0)));
+    const FEE_TOKEN: ArgDefaultFromCtx<WalletAddress> =
+        arg_default_from_ctx("fee-token", DefaultFn(|| "XAN".into()));
     const FILTER_PATH: ArgOpt<PathBuf> = arg_opt("filter-path");
     const FORCE: ArgFlag = flag("force");
-    const GAS_LIMIT: Arg<token::Amount> = arg("gas-limit");
+    const GAS_LIMIT: ArgDefault<token::Amount> =
+        arg_default("gas-limit", DefaultFn(|| token::Amount::from(0)));
     const GENESIS_PATH: Arg<PathBuf> = arg("genesis-path");
     const LEDGER_ADDRESS_ABOUT: &str =
         "Address of a ledger node as \"{scheme}://{host}:{port}\". If the \
@@ -1179,6 +1184,7 @@ pub mod args {
         arg_opt("consensus-key");
     const VALIDATOR_CODE_PATH: ArgOpt<PathBuf> = arg_opt("validator-code-path");
     const VALUE: ArgOpt<String> = arg_opt("value");
+    const WASM_CHECKSUMS_PATH: Arg<PathBuf> = arg("wasm-checksums-path");
     const WASM_DIR: ArgOpt<PathBuf> = arg_opt("wasm-dir");
 
     /// Global command arguments
@@ -2302,29 +2308,35 @@ pub mod args {
     #[derive(Clone, Debug)]
     pub struct InitNetwork {
         pub genesis_path: PathBuf,
+        pub wasm_checksums_path: PathBuf,
         pub chain_id_prefix: ChainIdPrefix,
         pub unsafe_dont_encrypt: bool,
         pub consensus_timeout_commit: Timeout,
         pub localhost: bool,
         pub allow_duplicate_ip: bool,
+        pub dont_archive: bool,
     }
 
     impl Args for InitNetwork {
         fn parse(matches: &ArgMatches) -> Self {
             let genesis_path = GENESIS_PATH.parse(matches);
+            let wasm_checksums_path = WASM_CHECKSUMS_PATH.parse(matches);
             let chain_id_prefix = CHAIN_ID_PREFIX.parse(matches);
             let unsafe_dont_encrypt = UNSAFE_DONT_ENCRYPT.parse(matches);
             let consensus_timeout_commit =
                 CONSENSUS_TIMEOUT_COMMIT.parse(matches);
             let localhost = LOCALHOST.parse(matches);
             let allow_duplicate_ip = ALLOW_DUPLICATE_IP.parse(matches);
+            let dont_archive = DONT_ARCHIVE.parse(matches);
             Self {
                 genesis_path,
+                wasm_checksums_path,
                 chain_id_prefix,
                 unsafe_dont_encrypt,
                 consensus_timeout_commit,
                 localhost,
                 allow_duplicate_ip,
+                dont_archive,
             }
         }
 
@@ -2333,6 +2345,11 @@ pub mod args {
                 GENESIS_PATH.def().about(
                     "Path to the preliminary genesis configuration file.",
                 ),
+            )
+            .arg(
+                WASM_CHECKSUMS_PATH
+                    .def()
+                    .about("Path to the WASM checksums file."),
             )
             .arg(CHAIN_ID_PREFIX.def().about(
                 "The chain ID prefix. Up to 19 alphanumeric, '.', '-' or '_' \
@@ -2354,6 +2371,11 @@ pub mod args {
                 "Toggle to disable guard against peers connecting from the \
                  same IP. This option shouldn't be used in mainnet.",
             ))
+            .arg(
+                DONT_ARCHIVE
+                    .def()
+                    .about("Do NOT create the release archive."),
+            )
         }
     }
 

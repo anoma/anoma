@@ -40,6 +40,7 @@ pub mod genesis_config {
     use super::{
         EstablishedAccount, Genesis, ImplicitAccount, TokenAccount, Validator,
     };
+    use crate::cli;
 
     #[derive(Clone, Debug, Deserialize, Serialize)]
     pub struct HexString(pub String);
@@ -183,40 +184,40 @@ pub mod genesis_config {
     pub struct ParametersConfig {
         // Minimum number of blocks per epoch.
         // XXX: u64 doesn't work with toml-rs!
-        min_num_of_blocks: u64,
+        pub min_num_of_blocks: u64,
         // Minimum duration of an epoch (in seconds).
         // TODO: this is i64 because datetime wants it
-        min_duration: i64,
+        pub min_duration: i64,
     }
 
     #[derive(Clone, Debug, Deserialize, Serialize)]
     pub struct PosParamsConfig {
         // Maximum number of active validators.
         // XXX: u64 doesn't work with toml-rs!
-        max_validator_slots: u64,
+        pub max_validator_slots: u64,
         // Pipeline length (in epochs).
         // XXX: u64 doesn't work with toml-rs!
-        pipeline_len: u64,
+        pub pipeline_len: u64,
         // Unbonding length (in epochs).
         // XXX: u64 doesn't work with toml-rs!
-        unbonding_len: u64,
+        pub unbonding_len: u64,
         // Votes per token (in basis points).
         // XXX: u64 doesn't work with toml-rs!
-        votes_per_token: u64,
+        pub votes_per_token: u64,
         // Reward for proposing a block.
         // XXX: u64 doesn't work with toml-rs!
-        block_proposer_reward: u64,
+        pub block_proposer_reward: u64,
         // Reward for voting on a block.
         // XXX: u64 doesn't work with toml-rs!
-        block_vote_reward: u64,
+        pub block_vote_reward: u64,
         // Portion of a validator's stake that should be slashed on a
         // duplicate vote (in basis points).
         // XXX: u64 doesn't work with toml-rs!
-        duplicate_vote_slash_rate: u64,
+        pub duplicate_vote_slash_rate: u64,
         // Portion of a validator's stake that should be slashed on a
         // light client attack (in basis points).
         // XXX: u64 doesn't work with toml-rs!
-        light_client_attack_slash_rate: u64,
+        pub light_client_attack_slash_rate: u64,
     }
 
     #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -291,6 +292,9 @@ pub mod genesis_config {
     fn load_token(
         config: &TokenAccountConfig,
         wasm: &HashMap<String, WasmConfig>,
+        validators: &HashMap<String, Validator>,
+        established_accounts: &HashMap<String, EstablishedAccount>,
+        implicit_accounts: &HashMap<String, ImplicitAccount>,
     ) -> TokenAccount {
         let token_vp_name = config.vp.as_ref().unwrap();
         let token_vp_config = wasm.get(token_vp_name).unwrap();
@@ -305,9 +309,56 @@ pub mod genesis_config {
                 .as_ref()
                 .unwrap_or(&HashMap::default())
                 .iter()
-                .map(|(address, amount)| {
+                .map(|(alias_or_address, amount)| {
                     (
-                        Address::decode(&address).unwrap(),
+                        match Address::decode(&alias_or_address) {
+                            Ok(address) => address,
+                            Err(decode_err) => {
+                                if let Some(alias) =
+                                    alias_or_address.strip_suffix(".public_key")
+                                {
+                                    if let Some(established) =
+                                        established_accounts.get(alias)
+                                    {
+                                        established
+                                            .public_key
+                                            .as_ref()
+                                            .unwrap()
+                                            .into()
+                                    } else if let Some(validator) =
+                                        validators.get(alias)
+                                    {
+                                        (&validator.account_key).into()
+                                    } else {
+                                        eprintln!(
+                                            "No established or validator \
+                                             account with alias {} found",
+                                            alias
+                                        );
+                                        cli::safe_exit(1)
+                                    }
+                                } else if let Some(established) =
+                                    established_accounts.get(alias_or_address)
+                                {
+                                    established.address.clone()
+                                } else if let Some(validator) =
+                                    validators.get(alias_or_address)
+                                {
+                                    validator.pos_data.address.clone()
+                                } else if let Some(implicit) =
+                                    implicit_accounts.get(alias_or_address)
+                                {
+                                    (&implicit.public_key).into()
+                                } else {
+                                    eprintln!(
+                                        "{} is unknown alias and not a valid \
+                                         address: {}",
+                                        alias_or_address, decode_err
+                                    );
+                                    cli::safe_exit(1)
+                                }
+                            }
+                        },
                         token::Amount::whole(*amount),
                     )
                 })
@@ -359,28 +410,36 @@ pub mod genesis_config {
 
     pub fn load_genesis_config(config: GenesisConfig) -> Genesis {
         let wasms = config.wasm;
-        let validators = config
+        let validators: HashMap<String, Validator> = config
             .validator
             .iter()
-            .map(|(_name, cfg)| load_validator(cfg, &wasms))
+            .map(|(name, cfg)| (name.clone(), load_validator(cfg, &wasms)))
+            .collect();
+        let established_accounts: HashMap<String, EstablishedAccount> = config
+            .established
+            .unwrap_or_default()
+            .iter()
+            .map(|(name, cfg)| (name.clone(), load_established(cfg, &wasms)))
+            .collect();
+        let implicit_accounts: HashMap<String, ImplicitAccount> = config
+            .implicit
+            .unwrap_or_default()
+            .iter()
+            .map(|(name, cfg)| (name.clone(), load_implicit(cfg)))
             .collect();
         let token_accounts = config
             .token
             .unwrap_or_default()
             .iter()
-            .map(|(_name, cfg)| load_token(cfg, &wasms))
-            .collect();
-        let established_accounts = config
-            .established
-            .unwrap_or_default()
-            .iter()
-            .map(|(_name, cfg)| load_established(cfg, &wasms))
-            .collect();
-        let implicit_accounts = config
-            .implicit
-            .unwrap_or_default()
-            .iter()
-            .map(|(_name, cfg)| load_implicit(cfg))
+            .map(|(_name, cfg)| {
+                load_token(
+                    cfg,
+                    &wasms,
+                    &validators,
+                    &established_accounts,
+                    &implicit_accounts,
+                )
+            })
             .collect();
 
         let parameters = Parameters {
@@ -412,10 +471,10 @@ pub mod genesis_config {
 
         let mut genesis = Genesis {
             genesis_time: config.genesis_time.try_into().unwrap(),
-            validators,
+            validators: validators.into_values().collect(),
             token_accounts,
-            established_accounts,
-            implicit_accounts,
+            established_accounts: established_accounts.into_values().collect(),
+            implicit_accounts: implicit_accounts.into_values().collect(),
             parameters,
             pos_params,
         };
@@ -551,8 +610,6 @@ pub fn genesis(base_dir: impl AsRef<Path>, chain_id: &ChainId) -> Genesis {
 }
 #[cfg(feature = "dev")]
 pub fn genesis() -> Genesis {
-    use std::iter::FromIterator;
-
     use anoma::ledger::parameters::EpochDuration;
     use anoma::types::address;
 
@@ -632,11 +689,32 @@ pub fn genesis() -> Genesis {
         public_key: wallet::defaults::daewon_keypair().public(),
     }];
     let default_user_tokens = token::Amount::whole(1_000_000);
+    let default_key_tokens = token::Amount::whole(1_000);
     let balances: HashMap<Address, token::Amount> = HashMap::from_iter([
+        // established accounts' balances
         (wallet::defaults::albert_address(), default_user_tokens),
         (wallet::defaults::bertha_address(), default_user_tokens),
         (wallet::defaults::christel_address(), default_user_tokens),
+        // implicit accounts' balances
         (wallet::defaults::daewon_address(), default_user_tokens),
+        // implicit accounts derived from public keys balances
+        (
+            bertha.public_key.as_ref().unwrap().into(),
+            default_key_tokens,
+        ),
+        (
+            albert.public_key.as_ref().unwrap().into(),
+            default_key_tokens,
+        ),
+        (
+            christel.public_key.as_ref().unwrap().into(),
+            default_key_tokens,
+        ),
+        ((&validator.account_key).into(), default_key_tokens),
+        (
+            matchmaker.public_key.as_ref().unwrap().into(),
+            default_key_tokens,
+        ),
     ]);
     let token_accounts = address::tokens()
         .into_iter()

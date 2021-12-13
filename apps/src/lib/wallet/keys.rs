@@ -88,16 +88,13 @@ impl Serialize for StoredKeypair {
         // String encoded, because toml doesn't support enums
         match self {
             StoredKeypair::Encrypted(encrypted) => {
-                let keypair_string = format!(
-                    "{}{}",
-                    ENCRYPTED_KEY_PREFIX,
-                    encrypted.to_string()
-                );
+                let keypair_string =
+                    format!("{}{}", ENCRYPTED_KEY_PREFIX, encrypted);
                 serde::Serialize::serialize(&keypair_string, serializer)
             }
             StoredKeypair::Raw(raw) => {
                 let keypair_string =
-                    format!("{}{}", UNENCRYPTED_KEY_PREFIX, raw.to_string());
+                    format!("{}{}", UNENCRYPTED_KEY_PREFIX, raw);
                 serde::Serialize::serialize(&keypair_string, serializer)
             }
         }

@@ -8,10 +8,12 @@ pub mod storage;
 pub mod tendermint_node;
 
 use std::convert::TryInto;
+use std::env;
+use std::net::SocketAddr;
 use std::path::PathBuf;
-use std::sync::mpsc::{channel, Receiver};
+use std::str::FromStr;
 
-use futures::future::{AbortHandle, AbortRegistration, Abortable};
+use futures::future::TryFutureExt;
 #[cfg(not(feature = "ABCI"))]
 use tendermint_proto::abci::CheckTxType;
 #[cfg(feature = "ABCI")]
@@ -22,24 +24,19 @@ use tower_abci::{response, split, Server};
 #[cfg(feature = "ABCI")]
 use tower_abci_old::{response, split, Server};
 
+use self::shims::abcipp_shim::AbciService;
 use crate::config::TendermintMode;
 use crate::node::ledger::broadcaster::Broadcaster;
 use crate::node::ledger::shell::{Error, MempoolTxType, Shell};
 use crate::node::ledger::shims::abcipp_shim::AbcippShim;
 use crate::node::ledger::shims::abcipp_shim_types::shim::{Request, Response};
-use crate::{config, wasm_loader};
+use crate::{cli, config, wasm_loader};
 
-/// A panic-proof handle for aborting a future. Will abort during
-/// stack unwinding as its drop method calls abort.
-struct Aborter {
-    handle: AbortHandle,
-}
+/// Env. var to set a number of Tokio RT worker threads
+const ENV_VAR_TOKIO_THREADS: &str = "ANOMA_TOKIO_THREADS";
 
-impl Drop for Aborter {
-    fn drop(&mut self) {
-        self.handle.abort();
-    }
-}
+/// Env. var to set a number of Rayon global worker threads
+const ENV_VAR_RAYON_THREADS: &str = "ANOMA_RAYON_THREADS";
 
 // Until ABCI++ is ready, the shim provides the service implementation.
 // We will add this part back in once the shim is no longer needed.
@@ -130,34 +127,270 @@ impl Shell {
     }
 }
 
+/// Run the ledger with an async runtime
+pub fn run(config: config::Ledger, wasm_dir: PathBuf) {
+    let logical_cores = num_cpus::get();
+    tracing::debug!("Available logical cores: {}", logical_cores);
+
+    let rayon_threads = if let Ok(num_str) = env::var(ENV_VAR_RAYON_THREADS) {
+        match usize::from_str(&num_str) {
+            Ok(num) if num > 0 => num,
+            _ => {
+                eprintln!(
+                    "Invalid env. var {} value: {}. Expecting a positive \
+                     number.",
+                    ENV_VAR_RAYON_THREADS, num_str
+                );
+                cli::safe_exit(1)
+            }
+        }
+    } else {
+        // If not set, default to half of logical CPUs count
+        logical_cores / 2
+    };
+    tracing::debug!("Using {} threads for Rayon.", rayon_threads);
+
+    let tokio_threads = if let Ok(num_str) = env::var(ENV_VAR_TOKIO_THREADS) {
+        match usize::from_str(&num_str) {
+            Ok(num) if num > 0 => num,
+            _ => {
+                eprintln!(
+                    "Invalid env. var {} value: {}. Expecting a positive \
+                     number.",
+                    ENV_VAR_TOKIO_THREADS, num_str
+                );
+                cli::safe_exit(1)
+            }
+        }
+    } else {
+        // If not set, default to half of logical CPUs count
+        logical_cores / 2
+    };
+    tracing::debug!("Using {} threads for Tokio.", tokio_threads);
+
+    // Configure number of threads for rayon (used in `par_iter` when running
+    // VPs)
+    rayon::ThreadPoolBuilder::new()
+        .num_threads(rayon_threads)
+        .thread_name(|i| format!("ledger-rayon-worker-{}", i))
+        .build_global()
+        .unwrap();
+
+    // Start tokio runtime with the `run_aux` function
+    tokio::runtime::Builder::new_multi_thread()
+        .worker_threads(tokio_threads)
+        .thread_name("ledger-tokio-worker")
+        // Enable time and I/O drivers
+        .enable_all()
+        .build()
+        .unwrap()
+        .block_on(run_aux(config, wasm_dir));
+}
+
 /// Resets the tendermint_node state and removes database files
 pub fn reset(config: config::Ledger) -> Result<(), shell::Error> {
     shell::reset(config)
 }
 
-/// Runs the an asynchronous ABCI server with four sub-components for consensus,
-/// mempool, snapshot, and info.
-///
-/// Runs until an abort handles sends a message to terminate the process
-#[tokio::main]
-async fn run_shell(
-    config: config::Ledger,
-    wasm_dir: PathBuf,
-    abort_registration: AbortRegistration,
-    failure_receiver: Receiver<()>,
-) {
-    // Construct our ABCI application.
-    #[allow(clippy::clone_on_copy)]
-    let rpc_address = config.tendermint.rpc_address.clone();
-    #[allow(clippy::clone_on_copy)]
-    let ledger_address = config.shell.ledger_address.clone();
-    let mode = config.tendermint.tendermint_mode.clone();
+/// Runs two concurrent tasks: A tendermint node, a shell which contains an ABCI
+/// server for talking to the tendermint node. Both must be alive for correct
+/// functioning.
+async fn run_aux(config: config::Ledger, wasm_dir: PathBuf) {
+    // Prefetch needed wasm artifacts
+    wasm_loader::pre_fetch_wasm(&wasm_dir).await;
+
+    let tendermint_dir = config.tendermint_dir();
+    let ledger_address = config.shell.ledger_address.to_string();
+    let rpc_address = config.tendermint.rpc_address.to_string();
+    let chain_id = config.chain_id.clone();
+    let genesis_time = config
+        .genesis_time
+        .clone()
+        .try_into()
+        .expect("expected RFC3339 genesis_time");
+    let tendermint_config = config.tendermint.clone();
+
+    // Channel for signalling shut down from the shell or from Tendermint
+    let (abort_send, mut abort_recv) =
+        tokio::sync::mpsc::unbounded_channel::<&'static str>();
+    // Channels for validators to send protocol txs to be broadcast to the
+    // broadcaster service
     let (broadcaster_sender, broadcaster_receiver) =
         tokio::sync::mpsc::unbounded_channel();
-    let service = AbcippShim::new(config, wasm_dir, broadcaster_sender);
 
+    // Channel for signalling shut down to Tendermint process
+    let (tm_abort_send, tm_abort_recv) =
+        tokio::sync::oneshot::channel::<tokio::sync::oneshot::Sender<()>>();
+
+    // Start Tendermint node
+    let abort_send_for_tm = abort_send.clone();
+    let tendermint_node = tokio::spawn(async move {
+        // On panic or exit, the `Drop` of `AbortSender` will send abort message
+        let aborter = Aborter {
+            sender: abort_send_for_tm,
+            who: "Tendermint",
+        };
+
+        let res = tendermint_node::run(
+            tendermint_dir,
+            chain_id,
+            genesis_time,
+            ledger_address,
+            tendermint_config,
+            tm_abort_recv,
+        )
+        .map_err(Error::Tendermint)
+        .await;
+        tracing::info!("Tendermint node is no longer running.");
+
+        drop(aborter);
+        res
+    });
+
+    let broadcaster = if matches!(
+        config.tendermint.tendermint_mode,
+        TendermintMode::Validator
+    ) {
+        // Channel for signalling shut down to broadcaster
+        let (bc_abort_send, bc_abort_recv) =
+            tokio::sync::oneshot::channel::<()>();
+        let abort_send_for_broadcaster = abort_send.clone();
+        Some((
+            tokio::spawn(async move {
+                // Construct a service for broadcasting protocol txs from the
+                // ledger
+                let mut broadcaster =
+                    Broadcaster::new(&rpc_address, broadcaster_receiver);
+                // On panic or exit, the `Drop` of `AbortSender` will send abort
+                // message
+                let aborter = Aborter {
+                    sender: abort_send_for_broadcaster,
+                    who: "Broadcaster",
+                };
+                let res = broadcaster.run(bc_abort_recv).await;
+                tracing::info!("Broadcaster is no longer running.");
+
+                drop(aborter);
+                res
+            }),
+            bc_abort_send,
+        ))
+    } else {
+        None
+    };
+
+    // Construct our ABCI application.
+    let ledger_address = config.shell.ledger_address;
+    let (shell, abci_service) =
+        AbcippShim::new(config, wasm_dir, broadcaster_sender);
+
+    // Start the ABCI server
+    let abci = tokio::spawn(async move {
+        // On panic or exit, the `Drop` of `AbortSender` will send abort
+        // message
+        let aborter = Aborter {
+            sender: abort_send,
+            who: "ABCI",
+        };
+
+        let res = run_abci(abci_service, ledger_address).await;
+
+        drop(aborter);
+        res
+    });
+
+    // Run the shell in the main thread
+    let thread_builder =
+        std::thread::Builder::new().name("ledger-shell".into());
+    let shell_handler = thread_builder
+        .spawn(move || {
+            tracing::info!("Anoma ledger node started.");
+            shell.run()
+        })
+        .expect("Must be able to start a thread for the shell");
+
+    // Wait for interrupt signal or abort message
+    tokio::select! {
+        signal = tokio::signal::ctrl_c() => {
+            match signal {
+                Ok(()) => tracing::info!("Received interrupt signal, exiting..."),
+                Err(err) => tracing::error!("Failed to listen for CTRL+C signal: {}", err),
+            }
+        },
+        msg = abort_recv.recv() => {
+            // When the msg is `None`, there are no more abort senders, so both
+            // Tendermint and the shell must have already exited
+            if let Some(who) = msg {
+                 tracing::info!("{} has exited, shutting down...", who);
+            }
+        }
+    };
+
+    // Abort the ABCI service task
+    abci.abort();
+
+    // Shutdown tendermint_node via a message to ensure that the child process
+    // is properly cleaned-up.
+    let (tm_abort_resp_send, tm_abort_resp_recv) =
+        tokio::sync::oneshot::channel::<()>();
+    // Ask to shutdown tendermint node cleanly. Ignore error, which can happen
+    // if the tendermint_node task has already finished.
+    if let Ok(()) = tm_abort_send.send(tm_abort_resp_send) {
+        match tm_abort_resp_recv.await {
+            Ok(()) => {}
+            Err(err) => {
+                tracing::error!(
+                    "Failed to receive a response from tendermint: {}",
+                    err
+                );
+            }
+        }
+    }
+
+    let res = match broadcaster {
+        Some((broadcaster, bc_abort_send)) => {
+            // request the broadcaster to shutdown
+            let _ = bc_abort_send.send(());
+            tokio::try_join!(tendermint_node, abci, broadcaster)
+        }
+        None => {
+            // if the broadcaster service is not active, we fill in its return
+            // value with ()
+            tokio::try_join!(tendermint_node, abci)
+                .map(|results| (results.0, results.1, ()))
+        }
+    };
+    match res {
+        Ok((tendermint_res, abci_res, _)) => {
+            if let Err(err) = tendermint_res {
+                tracing::error!("Tendermint error: {}", err);
+            }
+            if let Err(err) = abci_res {
+                tracing::error!("ABCI error: {}", err);
+            }
+        }
+        Err(err) => {
+            // Ignore cancellation errors
+            if !err.is_cancelled() {
+                tracing::error!("Ledger error: {}", err);
+            }
+        }
+    }
+    tracing::info!("Anoma ledger node has shut down.");
+
+    if let Err(err) = shell_handler.join() {
+        std::panic::resume_unwind(err)
+    }
+}
+
+/// Runs the an asynchronous ABCI server with four sub-components for consensus,
+/// mempool, snapshot, and info.
+async fn run_abci(
+    abci_service: AbciService,
+    ledger_address: SocketAddr,
+) -> shell::ShellResult<()> {
     // Split it into components.
-    let (consensus, mempool, snapshot, info) = split::service(service, 5);
+    let (consensus, mempool, snapshot, info) = split::service(abci_service, 5);
 
     // Hand those components to the ABCI server, but customize request behavior
     // for each category
@@ -167,7 +400,7 @@ async fn run_shell(
         .mempool(
             ServiceBuilder::new()
                 .load_shed()
-                .buffer(10)
+                .buffer(1024)
                 .service(mempool),
         )
         .info(
@@ -180,114 +413,23 @@ async fn run_shell(
         .finish()
         .unwrap();
 
-    // Run the server with the shell
-    let abortable_shell =
-        Abortable::new(server.listen(ledger_address), abort_registration);
-
-    // Start up the service to broadcast protocol txs if we are in validator
-    // mode
-    if matches!(mode, TendermintMode::Validator) {
-        let broadcaster = Broadcaster::new(rpc_address, broadcaster_receiver);
-        // The shell will be aborted when Tendermint exits
-        let _ = tokio::select!(
-            _ = abortable_shell => {},
-            result = broadcaster::run(broadcaster) => {
-                if let Err(err) = result {
-                    use std::io::Write;
-                    let _ = std::io::stdout().lock().flush();
-                    let _ = std::io::stderr().lock().flush();
-                    tracing::error!("{}", err);
-                    std::process::exit(1);
-                }
-            }
-        );
-    } else {
-        let _ = abortable_shell.await;
-    }
-
-    // Check if a failure signal was sent
-    if let Ok(()) = failure_receiver.try_recv() {
-        // Exit with error status code
-        use std::io::Write;
-        let _ = std::io::stdout().lock().flush();
-        let _ = std::io::stderr().lock().flush();
-        std::process::exit(1)
-    }
+    // Run the server with the ABCI service
+    server
+        .listen(ledger_address)
+        .await
+        .map_err(|err| Error::TowerServer(err.to_string()))
 }
 
-/// Runs two child processes: A tendermint node, a shell which contains an ABCI
-/// server for talking to the tendermint node. Both should be alive for correct
-/// functioning.
-///
-/// When the thread containing the tendermint node finishes its work (either by
-/// panic or by a termination signal), will send an abort message to the shell.
-///
-/// When the shell process finishes, we check if it finished with a panic. If it
-/// did we stop the tendermint node with a channel that acts as a kill switch.
-pub fn run(config: config::Ledger, wasm_dir: PathBuf) {
-    let tendermint_dir = config.tendermint_dir();
-    let ledger_address = config.shell.ledger_address.to_string();
-    let chain_id = config.chain_id.clone();
-    let genesis_time = config
-        .genesis_time
-        .clone()
-        .try_into()
-        .expect("expected RFC3339 genesis_time");
-    let tendermint_config = config.tendermint.clone();
+/// A panic-proof handle for aborting a future. Will abort during stack
+/// unwinding and its drop method sends abort message with `who` inside it.
+struct Aborter {
+    sender: tokio::sync::mpsc::UnboundedSender<&'static str>,
+    who: &'static str,
+}
 
-    // For signalling shut down to the Tendermint node, sent from the
-    // shell or from within the Tendermint process itself.
-    // Send `true` for a graceful shutdown or `false` on a critical error.
-    let (abort_sender, abort_receiver) = channel();
-    let shell_abort_sender = abort_sender.clone();
-
-    // For signalling shut down to the shell from Tendermint, which ensures that
-    // drop is called on the database
-    let (abort_handle, abort_registration) = AbortHandle::new_pair();
-
-    // Prefetch needed wasm artifacts
-    wasm_loader::pre_fetch_wasm(&wasm_dir);
-    // Because we cannot attach any data to the `abort_handle`, we also need
-    // another channel for signalling an error to the shell from Tendermint
-    let (failure_sender, failure_receiver) = channel();
-
-    // start Tendermint node
-    let tendermint_handle = std::thread::spawn(move || {
-        if let Err(err) = tendermint_node::run(
-            tendermint_dir,
-            chain_id,
-            genesis_time,
-            ledger_address,
-            tendermint_config,
-            abort_sender,
-            abort_receiver,
-        ) {
-            tracing::error!("Tendermint node failed with {}", err);
-            failure_sender.send(()).unwrap();
-        }
-        // Once tendermint node stops, ensure that we stop the shell.
-        // Implemented in the drop method to be panic-proof
-        Aborter {
-            handle: abort_handle,
-        };
-    });
-
-    // start the shell + ABCI server
-    let shell_handle = std::thread::spawn(move || {
-        run_shell(config, wasm_dir, abort_registration, failure_receiver);
-    });
-
-    tracing::info!("Anoma ledger node started.");
-
-    match shell_handle.join() {
-        Err(_) => {
-            tracing::info!("Anoma shut down unexpectedly");
-            // if the shell panicked, shut down the tendermint node
-            let _ = shell_abort_sender.send(false);
-        }
-        _ => tracing::info!("Shutting down Anoma node"),
+impl Drop for Aborter {
+    fn drop(&mut self) {
+        // Send abort message, ignore result
+        let _ = self.sender.send(self.who);
     }
-    tendermint_handle
-        .join()
-        .expect("Tendermint node did not shut down properly");
 }

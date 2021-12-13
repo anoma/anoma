@@ -23,7 +23,7 @@ This pre-built matchmaker implementation is [the fungible token exchange `mm_tok
    anoma wallet key gen --alias alberto --unsafe-dont-encrypt
    anoma client init-account --alias alberto-account --public-key alberto --source alberto
 
-   anoma wallet  key gen --alias chisel --unsafe-dont-encrypt
+   anoma wallet  key gen --alias christel --unsafe-dont-encrypt
    anoma client init-account --alias christel-account --public-key christel --source christel
 
    anoma wallet key gen --alias bertha --unsafe-dont-encrypt
@@ -108,4 +108,4 @@ fn add_intent(last_state: Vec<u8>, intent_id: Vec<u8>, intent_data: Vec<u8>) -> 
 
 The matchmaker can keep some state between its runs. The state can be updated from within the matchmaker code with [`update_state` function](https://docs.anoma.network/rustdoc/anoma_vm_env/imports/matchmaker/fn.update_state.html) and received from the `last_state` argument.
 
-To find out about the interface available in a matchmaker and the library code used in the `mm_token_exch` implementation, please check out [Rust docs for `matchmaker_prelude`](/rustdoc/anoma_vm_env/matchmaker_prelude/index.html).
+To find out about the interface available in a matchmaker and the library code used in the `mm_token_exch` implementation, please check out [Rust docs for `matchmaker_prelude`](https://docs.anoma.network/master/rustdoc/anoma_vm_env/matchmaker_prelude/index.html).

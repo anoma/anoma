@@ -81,9 +81,11 @@ pub fn validator_address_raw_hash_key(raw_hash: impl AsRef<str>) -> Key {
 /// Is storage key for validator's address raw hash?
 pub fn is_validator_address_raw_hash_key(key: &Key) -> Option<&str> {
     match &key.segments[..] {
-        [DbKeySeg::AddressSeg(addr), DbKeySeg::StringSeg(prefix), DbKeySeg::StringSeg(raw_hash)]
-            if addr == &ADDRESS && prefix == VALIDATOR_ADDRESS_RAW_HASH =>
-        {
+        [
+            DbKeySeg::AddressSeg(addr),
+            DbKeySeg::StringSeg(prefix),
+            DbKeySeg::StringSeg(raw_hash),
+        ] if addr == &ADDRESS && prefix == VALIDATOR_ADDRESS_RAW_HASH => {
             Some(raw_hash)
         }
         _ => None,
@@ -100,10 +102,14 @@ pub fn validator_staking_reward_address_key(validator: &Address) -> Key {
 /// Is storage key for validator's staking reward address?
 pub fn is_validator_staking_reward_address_key(key: &Key) -> Option<&Address> {
     match &key.segments[..] {
-        [DbKeySeg::AddressSeg(addr), DbKeySeg::StringSeg(prefix), DbKeySeg::AddressSeg(validator), DbKeySeg::StringSeg(key)]
-            if addr == &ADDRESS
-                && prefix == VALIDATOR_STORAGE_PREFIX
-                && key == VALIDATOR_STAKING_REWARD_ADDRESS_STORAGE_KEY =>
+        [
+            DbKeySeg::AddressSeg(addr),
+            DbKeySeg::StringSeg(prefix),
+            DbKeySeg::AddressSeg(validator),
+            DbKeySeg::StringSeg(key),
+        ] if addr == &ADDRESS
+            && prefix == VALIDATOR_STORAGE_PREFIX
+            && key == VALIDATOR_STAKING_REWARD_ADDRESS_STORAGE_KEY =>
         {
             Some(validator)
         }
@@ -121,10 +127,14 @@ pub fn validator_consensus_key_key(validator: &Address) -> Key {
 /// Is storage key for validator's consensus key?
 pub fn is_validator_consensus_key_key(key: &Key) -> Option<&Address> {
     match &key.segments[..] {
-        [DbKeySeg::AddressSeg(addr), DbKeySeg::StringSeg(prefix), DbKeySeg::AddressSeg(validator), DbKeySeg::StringSeg(key)]
-            if addr == &ADDRESS
-                && prefix == VALIDATOR_STORAGE_PREFIX
-                && key == VALIDATOR_CONSENSUS_KEY_STORAGE_KEY =>
+        [
+            DbKeySeg::AddressSeg(addr),
+            DbKeySeg::StringSeg(prefix),
+            DbKeySeg::AddressSeg(validator),
+            DbKeySeg::StringSeg(key),
+        ] if addr == &ADDRESS
+            && prefix == VALIDATOR_STORAGE_PREFIX
+            && key == VALIDATOR_CONSENSUS_KEY_STORAGE_KEY =>
         {
             Some(validator)
         }
@@ -142,10 +152,14 @@ pub fn validator_state_key(validator: &Address) -> Key {
 /// Is storage key for validator's state?
 pub fn is_validator_state_key(key: &Key) -> Option<&Address> {
     match &key.segments[..] {
-        [DbKeySeg::AddressSeg(addr), DbKeySeg::StringSeg(prefix), DbKeySeg::AddressSeg(validator), DbKeySeg::StringSeg(key)]
-            if addr == &ADDRESS
-                && prefix == VALIDATOR_STORAGE_PREFIX
-                && key == VALIDATOR_STATE_STORAGE_KEY =>
+        [
+            DbKeySeg::AddressSeg(addr),
+            DbKeySeg::StringSeg(prefix),
+            DbKeySeg::AddressSeg(validator),
+            DbKeySeg::StringSeg(key),
+        ] if addr == &ADDRESS
+            && prefix == VALIDATOR_STORAGE_PREFIX
+            && key == VALIDATOR_STATE_STORAGE_KEY =>
         {
             Some(validator)
         }
@@ -163,10 +177,14 @@ pub fn validator_total_deltas_key(validator: &Address) -> Key {
 /// Is storage key for validator's total deltas?
 pub fn is_validator_total_deltas_key(key: &Key) -> Option<&Address> {
     match &key.segments[..] {
-        [DbKeySeg::AddressSeg(addr), DbKeySeg::StringSeg(prefix), DbKeySeg::AddressSeg(validator), DbKeySeg::StringSeg(key)]
-            if addr == &ADDRESS
-                && prefix == VALIDATOR_STORAGE_PREFIX
-                && key == VALIDATOR_TOTAL_DELTAS_STORAGE_KEY =>
+        [
+            DbKeySeg::AddressSeg(addr),
+            DbKeySeg::StringSeg(prefix),
+            DbKeySeg::AddressSeg(validator),
+            DbKeySeg::StringSeg(key),
+        ] if addr == &ADDRESS
+            && prefix == VALIDATOR_STORAGE_PREFIX
+            && key == VALIDATOR_TOTAL_DELTAS_STORAGE_KEY =>
         {
             Some(validator)
         }
@@ -184,10 +202,14 @@ pub fn validator_voting_power_key(validator: &Address) -> Key {
 /// Is storage key for validator's voting power?
 pub fn is_validator_voting_power_key(key: &Key) -> Option<&Address> {
     match &key.segments[..] {
-        [DbKeySeg::AddressSeg(addr), DbKeySeg::StringSeg(prefix), DbKeySeg::AddressSeg(validator), DbKeySeg::StringSeg(key)]
-            if addr == &ADDRESS
-                && prefix == VALIDATOR_STORAGE_PREFIX
-                && key == VALIDATOR_VOTING_POWER_STORAGE_KEY =>
+        [
+            DbKeySeg::AddressSeg(addr),
+            DbKeySeg::StringSeg(prefix),
+            DbKeySeg::AddressSeg(validator),
+            DbKeySeg::StringSeg(key),
+        ] if addr == &ADDRESS
+            && prefix == VALIDATOR_STORAGE_PREFIX
+            && key == VALIDATOR_VOTING_POWER_STORAGE_KEY =>
         {
             Some(validator)
         }
@@ -212,11 +234,11 @@ pub fn validator_slashes_key(validator: &Address) -> Key {
 /// Is storage key for validator's slashes?
 pub fn is_validator_slashes_key(key: &Key) -> Option<&Address> {
     match &key.segments[..] {
-        [DbKeySeg::AddressSeg(addr), DbKeySeg::StringSeg(prefix), DbKeySeg::AddressSeg(validator)]
-            if addr == &ADDRESS && prefix == SLASHES_PREFIX =>
-        {
-            Some(validator)
-        }
+        [
+            DbKeySeg::AddressSeg(addr),
+            DbKeySeg::StringSeg(prefix),
+            DbKeySeg::AddressSeg(validator),
+        ] if addr == &ADDRESS && prefix == SLASHES_PREFIX => Some(validator),
         _ => None,
     }
 }
@@ -245,14 +267,15 @@ pub fn bond_key(bond_id: &BondId) -> Key {
 /// Is storage key for a bond?
 pub fn is_bond_key(key: &Key) -> Option<BondId> {
     match &key.segments[..] {
-        [DbKeySeg::AddressSeg(addr), DbKeySeg::StringSeg(prefix), DbKeySeg::AddressSeg(source), DbKeySeg::AddressSeg(validator)]
-            if addr == &ADDRESS && prefix == BOND_STORAGE_KEY =>
-        {
-            Some(BondId {
-                source: source.clone(),
-                validator: validator.clone(),
-            })
-        }
+        [
+            DbKeySeg::AddressSeg(addr),
+            DbKeySeg::StringSeg(prefix),
+            DbKeySeg::AddressSeg(source),
+            DbKeySeg::AddressSeg(validator),
+        ] if addr == &ADDRESS && prefix == BOND_STORAGE_KEY => Some(BondId {
+            source: source.clone(),
+            validator: validator.clone(),
+        }),
         _ => None,
     }
 }
@@ -281,14 +304,15 @@ pub fn unbond_key(bond_id: &BondId) -> Key {
 /// Is storage key for a unbond?
 pub fn is_unbond_key(key: &Key) -> Option<BondId> {
     match &key.segments[..] {
-        [DbKeySeg::AddressSeg(addr), DbKeySeg::StringSeg(prefix), DbKeySeg::AddressSeg(source), DbKeySeg::AddressSeg(validator)]
-            if addr == &ADDRESS && prefix == UNBOND_STORAGE_KEY =>
-        {
-            Some(BondId {
-                source: source.clone(),
-                validator: validator.clone(),
-            })
-        }
+        [
+            DbKeySeg::AddressSeg(addr),
+            DbKeySeg::StringSeg(prefix),
+            DbKeySeg::AddressSeg(source),
+            DbKeySeg::AddressSeg(validator),
+        ] if addr == &ADDRESS && prefix == UNBOND_STORAGE_KEY => Some(BondId {
+            source: source.clone(),
+            validator: validator.clone(),
+        }),
         _ => None,
     }
 }

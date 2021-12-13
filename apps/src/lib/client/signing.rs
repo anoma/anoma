@@ -2,9 +2,9 @@
 //! wallet.
 use anoma::types::address::{Address, ImplicitAddress};
 #[cfg(not(feature = "ABCI"))]
-use tendermint::net::Address as TendermintAddress;
+use tendermint_config::net::Address as TendermintAddress;
 #[cfg(feature = "ABCI")]
-use tendermint_stable::net::Address as TendermintAddress;
+use tendermint_config_abci::net::Address as TendermintAddress;
 
 use super::rpc;
 use crate::cli;

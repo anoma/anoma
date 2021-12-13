@@ -208,7 +208,7 @@ fn create_and_send_tx_data(
             send_tx(tx_data)
         }
         Err(err) => {
-            log_string(format!("Invalid exchange: {}.", err.to_string()));
+            log_string(format!("Invalid exchange: {}.", err));
         }
     }
 }

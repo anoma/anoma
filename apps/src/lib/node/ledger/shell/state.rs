@@ -18,6 +18,7 @@ pub type DkgStateMachine =
     PubliclyVerifiableDkg<anoma::types::transaction::EllipticCurve>;
 
 #[derive(Debug)]
+#[allow(clippy::large_enum_variant)]
 pub(super) enum ShellMode {
     Validator {
         data: ValidatorData,

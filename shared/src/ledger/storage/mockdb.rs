@@ -4,20 +4,14 @@ use std::collections::{btree_map, BTreeMap, HashMap};
 use std::ops::Bound::{Excluded, Included};
 use std::path::Path;
 
-use super::{BlockState, DBIter, Error, Result, DB};
+use super::{BlockStateRead, BlockStateWrite, DBIter, Error, Result, DB};
 use crate::ledger::storage::types::{self, KVBytes, PrefixIterator};
 use crate::types::storage::{BlockHeight, Key, KeySeg, KEY_SEGMENT_SEPARATOR};
 use crate::types::time::DateTimeUtc;
 
 /// An in-memory DB for testing.
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct MockDB(BTreeMap<String, Vec<u8>>);
-
-impl Default for MockDB {
-    fn default() -> MockDB {
-        MockDB(BTreeMap::new())
-    }
-}
 
 impl DB for MockDB {
     fn open(_db_path: impl AsRef<Path>) -> Self {
@@ -28,8 +22,8 @@ impl DB for MockDB {
         Ok(())
     }
 
-    fn write_block(&mut self, state: BlockState) -> Result<()> {
-        let BlockState {
+    fn write_block(&mut self, state: BlockStateWrite) -> Result<()> {
+        let BlockStateWrite {
             root,
             store,
             hash,
@@ -41,7 +35,7 @@ impl DB for MockDB {
             subspaces,
             address_gen,
             encryption_key,
-        }: BlockState = state;
+        }: BlockStateWrite = state;
 
         // Epoch start height and time
         self.0.insert(
@@ -136,7 +130,7 @@ impl DB for MockDB {
         }
     }
 
-    fn read_last_block(&mut self) -> Result<Option<BlockState>> {
+    fn read_last_block(&mut self) -> Result<Option<BlockStateRead>> {
         // Block height
         let height: BlockHeight;
         match self.0.get("height") {
@@ -253,7 +247,7 @@ impl DB for MockDB {
                 Some(pred_epochs),
                 Some(address_gen),
                 Some(encryption_key),
-            ) => Ok(Some(BlockState {
+            ) => Ok(Some(BlockStateRead {
                 root,
                 store,
                 hash,
@@ -283,7 +277,7 @@ impl<'iter> DBIter<'iter> for MockDB {
         prefix: &Key,
     ) -> MockPrefixIterator<'iter> {
         let db_prefix = format!("{}/subspace/", height.raw());
-        let prefix = format!("{}{}", db_prefix, prefix.to_string());
+        let prefix = format!("{}{}", db_prefix, prefix);
         let iter = self.0.iter();
         MockPrefixIterator::new(MockIterator { prefix, iter }, db_prefix)
     }

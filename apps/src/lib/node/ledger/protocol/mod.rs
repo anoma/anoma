@@ -63,23 +63,12 @@ impl TxResult {
 }
 
 /// Result of checking a transaction with validity predicates
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Default)]
 pub struct VpsResult {
     pub accepted_vps: HashSet<Address>,
     pub rejected_vps: HashSet<Address>,
     pub gas_used: VpsGas,
     pub errors: Vec<(Address, String)>,
-}
-
-impl Default for VpsResult {
-    fn default() -> Self {
-        Self {
-            accepted_vps: HashSet::default(),
-            rejected_vps: HashSet::default(),
-            gas_used: VpsGas::default(),
-            errors: Vec::default(),
-        }
-    }
 }
 
 /// Apply a given transaction

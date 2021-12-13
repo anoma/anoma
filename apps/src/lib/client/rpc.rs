@@ -19,15 +19,15 @@ use itertools::Itertools;
 #[cfg(not(feature = "ABCI"))]
 use tendermint::abci::Code;
 #[cfg(not(feature = "ABCI"))]
-use tendermint::net::Address as TendermintAddress;
+use tendermint_config::net::Address as TendermintAddress;
+#[cfg(feature = "ABCI")]
+use tendermint_config_abci::net::Address as TendermintAddress;
 #[cfg(not(feature = "ABCI"))]
 use tendermint_rpc::{Client, HttpClient};
 #[cfg(feature = "ABCI")]
 use tendermint_rpc_abci::{Client, HttpClient};
 #[cfg(feature = "ABCI")]
 use tendermint_stable::abci::Code;
-#[cfg(feature = "ABCI")]
-use tendermint_stable::net::Address as TendermintAddress;
 
 use crate::cli::{self, args, Context};
 use crate::node::ledger::rpc::{Path, PrefixValue};

@@ -21,11 +21,11 @@ use libp2p::PeerId;
 use regex::Regex;
 use serde::{de, Deserialize, Serialize};
 #[cfg(not(feature = "ABCI"))]
-use tendermint::net::{self, Address as TendermintAddress};
-#[cfg(not(feature = "ABCI"))]
 use tendermint::Timeout;
+#[cfg(not(feature = "ABCI"))]
+use tendermint_config::net::Address as TendermintAddress;
 #[cfg(feature = "ABCI")]
-use tendermint_stable::net::{self, Address as TendermintAddress};
+use tendermint_config_abci::net::Address as TendermintAddress;
 #[cfg(feature = "ABCI")]
 use tendermint_stable::Timeout;
 use thiserror::Error;
@@ -192,7 +192,7 @@ pub struct RpcServer {
 pub struct Matchmaker {
     pub matchmaker: PathBuf,
     pub tx_code: PathBuf,
-    pub ledger_address: net::Address,
+    pub ledger_address: TendermintAddress,
     pub filter: Option<PathBuf>,
 }
 
@@ -354,9 +354,13 @@ impl Config {
         }
     }
 
-    fn file_path(base_dir: &Path, chain_id: &ChainId) -> PathBuf {
+    /// Get the file path to the config
+    pub fn file_path(
+        base_dir: impl AsRef<Path>,
+        chain_id: &ChainId,
+    ) -> PathBuf {
         // Join base dir to the chain ID
-        base_dir.join(chain_id.to_string()).join(FILENAME)
+        base_dir.as_ref().join(chain_id.to_string()).join(FILENAME)
     }
 }
 

@@ -1,7 +1,7 @@
 [package]
 authors = ["Heliax AG <hello@heliax.dev>"]
 description = "Anoma apps"
-edition = "2018"
+edition = "2021"
 license = "GPL-3.0"
 name = "anoma_apps"
 readme = "../README.md"
@@ -45,6 +45,7 @@ std = ["ed25519-dalek/std", "rand/std", "rand_core/std"]
 # for integration tests and test utilies
 ABCI = [
   "tendermint-stable",
+  "tendermint-config-abci",
   "tendermint-proto-abci",
   "tendermint-rpc-abci",
   "tower-abci-old",
@@ -53,6 +54,7 @@ ABCI = [
 ]
 ABCI-plus-plus = [
   "tendermint",
+  "tendermint-config",
   "tendermint-proto",
   "tendermint-rpc",
   "tower-abci",
@@ -82,6 +84,7 @@ ed25519-dalek = {version = "1.0.1", default-features = false, features = ["rand"
 ferveo = {git = "https://github.com/anoma/ferveo"}
 ferveo-common = {git = "https://github.com/anoma/ferveo"}
 eyre = "0.6.5"
+flate2 = "1.0.22"
 file-lock = {git = "https://gitlab.com/batconjurer/file-lock", branch = "bat/add-readwrite-options" }
 futures = "0.3"
 hex = "0.4.3"
@@ -91,15 +94,16 @@ libc = "0.2.97"
 libp2p = "0.38.0"
 num-derive = "0.3.3"
 num-traits = "0.2.14"
+num_cpus = "1.13.0"
 orion = "0.16.0"
-prost = "0.8.0"
-prost-types = "0.8.0"
+prost = "0.9.0"
+prost-types = "0.9.0"
 # TODO the older versions of rand and rand_core are currently required to avoid mismatching version issue (https://github.com/dalek-cryptography/ed25519-dalek/pull/159)
 rand = {version = "0.7", default-features = false}
 rand_core = {version = "0.5", default-features = false}
 rayon = "=1.5.0"
 regex = "1.4.5"
-reqwest = {version = "0.11.4", features = ["blocking"]}
+reqwest = "0.11.4"
 rlimit = "0.5.4"
 rocksdb = "0.16.0"
 rpassword = "5.0.1"
@@ -109,27 +113,31 @@ serde_json = "1.0.62"
 serde_regex = "1.1.0"
 sha2 = "0.9.3"
 signal-hook = "0.3.9"
-sparse-merkle-tree = {git = "https://github.com/heliaxdev/sparse-merkle-tree", branch = "yuji/ics23-proof", features = ["borsh"]}
-# temporarily using fork work-around for https://github.com/informalsystems/tendermint-rs/issues/916
-# and https://github.com/anoma/anoma/issues/445
-tendermint = {git = "https://github.com/heliaxdev/tendermint-rs", branch = "bat/abcipp-integration", optional = true}
-tendermint-proto = {git = "https://github.com/heliaxdev/tendermint-rs", branch = "bat/abcipp-integration", optional = true}
-tendermint-proto-abci = {package = "tendermint-proto", git = "https://github.com/heliaxdev/tendermint-rs", branch = "tomas/lowercase-node-id", optional = true}
-tendermint-rpc = {git = "https://github.com/heliaxdev/tendermint-rs", branch = "bat/abcipp-integration", features = ["http-client", "websocket-client"], optional = true}
-tendermint-rpc-abci = {package = "tendermint-rpc", git = "https://github.com/heliaxdev/tendermint-rs", branch = "tomas/lowercase-node-id", optional = true, features = ["http-client", "websocket-client"]}
-tendermint-stable = {package = "tendermint", git = "https://github.com/heliaxdev/tendermint-rs", branch = "tomas/lowercase-node-id", optional = true}
-thiserror = "1.0.24"
+sparse-merkle-tree = {git = "https://github.com/heliaxdev/sparse-merkle-tree", branch = "yuji/prost-0.9", features = ["borsh"]}
+tar = "0.4.37"
+# temporarily using fork work-around for https://github.com/informalsystems/tendermint-rs/issues/971
+tendermint = {git = "https://github.com/heliaxdev/tendermint-rs", branch = "yuji/abcipp-v0.23.0", optional = true}
+tendermint-config = {git = "https://github.com/heliaxdev/tendermint-rs", branch = "yuji/abcipp-v0.23.0", optional = true}
+tendermint-config-abci = {package = "tendermint-config", git = "https://github.com/heliaxdev/tendermint-rs", branch = "yuji/rebase_v0.23.0", optional = true}
+tendermint-proto = {git = "https://github.com/heliaxdev/tendermint-rs", branch = "yuji/abcipp-v0.23.0", optional = true}
+tendermint-proto-abci = {package = "tendermint-proto", git = "https://github.com/heliaxdev/tendermint-rs", branch = "yuji/rebase_v0.23.0", optional = true}
+tendermint-rpc = {git = "https://github.com/heliaxdev/tendermint-rs", branch = "yuji/abcipp-v0.23.0", optional = true, features = ["http-client", "websocket-client"]}
+tendermint-rpc-abci = {package = "tendermint-rpc", git = "https://github.com/heliaxdev/tendermint-rs", branch = "yuji/rebase_v0.23.0", optional = true, features = ["http-client", "websocket-client"]}
+tendermint-stable = {package = "tendermint", git = "https://github.com/heliaxdev/tendermint-rs", branch = "yuji/rebase_v0.23.0", optional = true}
+thiserror = "1.0.30"
 tokio = {version = "1.8.2", features = ["full"]}
 toml = "0.5.8"
-tonic = "0.5.0"
+tonic = "0.6.1"
 tower = "0.4"
 # Also, using the same version of tendermint-rs as we do here.
-tower-abci = {git = "https://github.com/heliaxdev/tower-abci", branch = "bat/abcipp-integration", optional = true}
-tower-abci-old = {package = "tower-abci", git = "https://github.com/heliaxdev/tower-abci", branch = "tomas/tm-lowercase-node-id", optional = true}
-tracing = "0.1.26"
+# with a patch for https://github.com/penumbra-zone/tower-abci/issues/7.
+tower-abci = {git = "https://github.com/heliaxdev/tower-abci", branch = "yuji/abcipp-v0.23.0", optional = true}
+tower-abci-old = {package = "tower-abci", git = "https://github.com/heliaxdev/tower-abci", branch = "yuji/rebase_v0.23.0", optional = true}
+tracing = "0.1.29"
 tracing-log = "0.1.2"
-tracing-subscriber = "0.2.18"
+tracing-subscriber = "0.2.25"
 websocket = "0.26.2"
+winapi = "0.3.9"
 
 [dev-dependencies]
 anoma = {path = "../shared", default-features = false, features = ["testing", "wasm-runtime"]}
@@ -139,4 +147,4 @@ tempfile = "3.2.0"
 tokio-test = "0.4.2"
 
 [build-dependencies]
-tonic-build = "0.5.0"
+tonic-build = "0.6.0"

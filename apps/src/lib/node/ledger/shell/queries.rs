@@ -9,9 +9,13 @@ use anoma::types::storage::Key;
 use anoma::types::token::{self, Amount};
 use borsh::{BorshDeserialize, BorshSerialize};
 #[cfg(not(feature = "ABCI"))]
+use tendermint_proto::crypto::ProofOps;
+#[cfg(not(feature = "ABCI"))]
 use tendermint_proto::google::protobuf;
 #[cfg(not(feature = "ABCI"))]
 use tendermint_proto::types::EvidenceParams;
+#[cfg(feature = "ABCI")]
+use tendermint_proto_abci::crypto::ProofOps;
 #[cfg(feature = "ABCI")]
 use tendermint_proto_abci::google::protobuf;
 #[cfg(feature = "ABCI")]
@@ -44,10 +48,10 @@ where
                     }
                 }
                 Path::Value(storage_key) => {
-                    self.read_storage_value(&storage_key)
+                    self.read_storage_value(&storage_key, query.prove)
                 }
                 Path::Prefix(storage_key) => {
-                    self.read_storage_prefix(&storage_key)
+                    self.read_storage_prefix(&storage_key, query.prove)
                 }
                 Path::HasKey(storage_key) => self.has_storage_key(&storage_key),
             },
@@ -67,7 +71,7 @@ where
         owner: &Address,
     ) -> std::result::Result<Amount, String> {
         let query_resp =
-            self.read_storage_value(&token::balance_key(token, owner));
+            self.read_storage_value(&token::balance_key(token, owner), false);
         if query_resp.code != 0 {
             Err(format!(
                 "Unable to read token {} balance of the given address {}",
@@ -84,15 +88,37 @@ where
     }
 
     /// Query to read a value from storage
-    pub fn read_storage_value(&self, key: &Key) -> response::Query {
+    pub fn read_storage_value(
+        &self,
+        key: &Key,
+        is_proven: bool,
+    ) -> response::Query {
+        let proof_ops = if is_proven {
+            match self.storage.get_proof(key) {
+                Ok(proof_op) => Some(ProofOps {
+                    ops: vec![proof_op.into()],
+                }),
+                Err(err) => {
+                    return response::Query {
+                        code: 2,
+                        info: format!("Storage error: {}", err),
+                        ..Default::default()
+                    };
+                }
+            }
+        } else {
+            None
+        };
         match self.storage.read(key) {
             Ok((Some(value), _gas)) => response::Query {
                 value,
+                proof_ops,
                 ..Default::default()
             },
             Ok((None, _gas)) => response::Query {
                 code: 1,
                 info: format!("No value found for key: {}", key),
+                proof_ops,
                 ..Default::default()
             },
             Err(err) => response::Query {
@@ -106,7 +132,11 @@ where
     /// Query to read a range of values from storage with a matching prefix. The
     /// value in successful response is a [`Vec<PrefixValue>`] encoded with
     /// [`BorshSerialize`].
-    pub fn read_storage_prefix(&self, key: &Key) -> response::Query {
+    pub fn read_storage_prefix(
+        &self,
+        key: &Key,
+        is_proven: bool,
+    ) -> response::Query {
         let (iter, _gas) = self.storage.iter_prefix(key);
         let mut iter = iter.peekable();
         if iter.peek().is_none() {
@@ -127,9 +157,29 @@ where
                 .collect();
             match values {
                 Ok(values) => {
+                    let proof_ops = if is_proven {
+                        let mut ops = vec![];
+                        for PrefixValue { key, value: _ } in &values {
+                            match self.storage.get_proof(key) {
+                                Ok(p) => ops.push(p.into()),
+                                Err(err) => {
+                                    return response::Query {
+                                        code: 2,
+                                        info: format!("Storage error: {}", err),
+                                        ..Default::default()
+                                    };
+                                }
+                            }
+                        }
+                        // ops is not empty in this case
+                        Some(ProofOps { ops })
+                    } else {
+                        None
+                    };
                     let value = values.try_to_vec().unwrap();
                     response::Query {
                         value,
+                        proof_ops,
                         ..Default::default()
                     }
                 }

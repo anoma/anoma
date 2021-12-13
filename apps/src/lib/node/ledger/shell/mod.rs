@@ -1,9 +1,9 @@
 //! The ledger shell connects the ABCI++ interface with the Anoma ledger app.
 //!
 //! Any changes applied before [`Shell::finalize_block`] might have to be
-//! reverted, so any changes applied in the methods [`Shell::prepare_proposal`],
-//! [`Shell::process_proposal`] must be also reverted (unless we can simply
-//! overwrite them in the next block).
+//! reverted, so any changes applied in the methods `Shell::prepare_proposal`
+//! (ABCI++), [`Shell::process_proposal`] must be also reverted (unless we can
+//! simply overwrite them in the next block).
 //! More info in <https://github.com/anoma/anoma/issues/362>.
 mod finalize_block;
 mod init_chain;
@@ -87,6 +87,10 @@ pub enum Error {
     Tendermint(tendermint_node::Error),
     #[error("Could not update the DKG state machine because: {0}")]
     DkgUpdate(String),
+    #[error("Server error: {0}")]
+    TowerServer(String),
+    #[error("{0}")]
+    Broadcaster(tokio::sync::mpsc::error::TryRecvError),
 }
 
 /// The different error codes that the ledger may
@@ -171,6 +175,7 @@ where
     H: StorageHasher + Sync + 'static,
 {
     fn drop(&mut self) {
+        tracing::info!("Storing a transaction queue...");
         let tx_queue_path = self.base_dir.clone().join(".tx_queue");
         let _ = std::fs::File::create(&tx_queue_path)
             .expect("Creating the file for the tx_queue dump should not fail");
@@ -183,8 +188,10 @@ where
         .expect(
             "Failed to write tx queue to file. Good luck booting back up now",
         );
+        tracing::info!("Transaction queue has been stored.");
 
         if let ShellMode::Validator { dkg, .. } = &self.mode {
+            tracing::info!("Storing a DKG state machine...");
             let dkg_path = self.base_dir.clone().join(".dkg");
             let _ = std::fs::File::create(&dkg_path).expect(
                 "Creating the file for the DKG state machine dump should not \
@@ -199,6 +206,7 @@ where
                 "Failed to write DKG state machine to file. Good luck booting \
                  back up now",
             );
+            tracing::info!("DKG state machine has been stored.");
         }
     }
 }
@@ -623,7 +631,7 @@ mod test_utils {
 
     use anoma::ledger::storage::mockdb::MockDB;
     use anoma::ledger::storage::testing::Sha256Hasher;
-    use anoma::ledger::storage::BlockState;
+    use anoma::ledger::storage::BlockStateWrite;
     use anoma::types::address::{xan, EstablishedAddressGen};
     use anoma::types::chain::ChainId;
     use anoma::types::key::ed25519::Keypair;
@@ -813,20 +821,25 @@ mod test_utils {
         shell.tx_queue.push(wrapper);
         // Artificially increase the block height so that chain
         // will read the ".tx_queue" file when restarted
+        let store = Default::default();
+        let hash = BlockHash([0; 32]);
+        let pred_epochs = Default::default();
+        let subspaces = Default::default();
+        let address_gen = EstablishedAddressGen::new("test");
         shell
             .storage
             .db
-            .write_block(BlockState {
+            .write_block(BlockStateWrite {
                 root: [0; 32].into(),
-                store: Default::default(),
-                hash: BlockHash([0; 32]),
+                store: &store,
+                hash: &hash,
                 height: BlockHeight(1),
                 epoch: Epoch(0),
-                pred_epochs: Default::default(),
+                pred_epochs: &pred_epochs,
                 next_epoch_min_start_height: BlockHeight(3),
                 next_epoch_min_start_time: DateTimeUtc::now(),
-                subspaces: Default::default(),
-                address_gen: EstablishedAddressGen::new("test"),
+                subspaces: &subspaces,
+                address_gen: &address_gen,
                 encryption_key: None,
             })
             .expect("Test failed");
@@ -884,20 +897,25 @@ mod test_utils {
         shell.tx_queue.push(wrapper);
         // Artificially increase the block height so that chain
         // will read the ".tx_queue" file when restarted
+        let store = Default::default();
+        let hash = BlockHash([0; 32]);
+        let pred_epochs = Default::default();
+        let subspaces = Default::default();
+        let address_gen = EstablishedAddressGen::new("test");
         shell
             .storage
             .db
-            .write_block(BlockState {
+            .write_block(BlockStateWrite {
                 root: [0; 32].into(),
-                store: Default::default(),
-                hash: BlockHash([0; 32]),
+                store: &store,
+                hash: &hash,
                 height: BlockHeight(1),
                 epoch: Epoch(0),
-                pred_epochs: Default::default(),
+                pred_epochs: &pred_epochs,
                 next_epoch_min_start_height: BlockHeight(3),
                 next_epoch_min_start_time: DateTimeUtc::now(),
-                subspaces: Default::default(),
-                address_gen: EstablishedAddressGen::new("test"),
+                subspaces: &subspaces,
+                address_gen: &address_gen,
                 encryption_key: None,
             })
             .expect("Test failed");

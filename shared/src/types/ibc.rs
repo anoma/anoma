@@ -5,71 +5,79 @@ use std::time::Duration;
 
 use borsh::{BorshDeserialize, BorshSerialize};
 #[cfg(not(feature = "ABCI"))]
-use ibc::ics02_client::client_consensus::AnyConsensusState;
+use ibc::clients::ics07_tendermint::consensus_state::ConsensusState as TmConsensusState;
 #[cfg(not(feature = "ABCI"))]
-use ibc::ics02_client::client_def::{AnyClient, ClientDef};
+use ibc::core::ics02_client::client_consensus::{
+    AnyConsensusState, ConsensusState,
+};
 #[cfg(not(feature = "ABCI"))]
-use ibc::ics02_client::client_state::AnyClientState;
+use ibc::core::ics02_client::client_state::{AnyClientState, ClientState};
 #[cfg(not(feature = "ABCI"))]
-use ibc::ics02_client::header::AnyHeader;
+use ibc::core::ics02_client::header::AnyHeader;
 #[cfg(not(feature = "ABCI"))]
-use ibc::ics02_client::height::Height;
+use ibc::core::ics02_client::height::Height;
 #[cfg(not(feature = "ABCI"))]
-use ibc::ics03_connection::connection::{
+use ibc::core::ics03_connection::connection::{
     ConnectionEnd, Counterparty as ConnCounterparty, State as ConnState,
 };
 #[cfg(not(feature = "ABCI"))]
-use ibc::ics03_connection::version::Version;
+use ibc::core::ics03_connection::version::Version;
 #[cfg(not(feature = "ABCI"))]
-use ibc::ics04_channel::channel::{
+use ibc::core::ics04_channel::channel::{
     ChannelEnd, Counterparty as ChanCounterparty, Order, State as ChanState,
 };
 #[cfg(not(feature = "ABCI"))]
-use ibc::ics04_channel::packet::{Packet, Sequence};
+use ibc::core::ics04_channel::packet::{Packet, Sequence};
 #[cfg(not(feature = "ABCI"))]
-use ibc::ics23_commitment::commitment::{
+use ibc::core::ics23_commitment::commitment::{
     CommitmentPrefix, CommitmentProofBytes,
 };
 #[cfg(not(feature = "ABCI"))]
-use ibc::ics24_host::identifier::{
+use ibc::core::ics24_host::identifier::{
     ChannelId, ClientId, ConnectionId, PortChannelId, PortId,
 };
 #[cfg(not(feature = "ABCI"))]
-use ibc::proofs::{ConsensusProof, Proofs};
+use ibc::mock::client_state::{MockClientState, MockConsensusState};
+#[cfg(not(feature = "ABCI"))]
+use ibc::proofs::{ConsensusProof, ProofError, Proofs};
 #[cfg(not(feature = "ABCI"))]
 use ibc::timestamp::Timestamp;
 #[cfg(feature = "ABCI")]
-use ibc_abci::ics02_client::client_consensus::AnyConsensusState;
+use ibc_abci::clients::ics07_tendermint::consensus_state::ConsensusState as TmConsensusState;
 #[cfg(feature = "ABCI")]
-use ibc_abci::ics02_client::client_def::{AnyClient, ClientDef};
+use ibc_abci::core::ics02_client::client_consensus::{
+    AnyConsensusState, ConsensusState,
+};
 #[cfg(feature = "ABCI")]
-use ibc_abci::ics02_client::client_state::AnyClientState;
+use ibc_abci::core::ics02_client::client_state::{AnyClientState, ClientState};
 #[cfg(feature = "ABCI")]
-use ibc_abci::ics02_client::header::AnyHeader;
+use ibc_abci::core::ics02_client::header::AnyHeader;
 #[cfg(feature = "ABCI")]
-use ibc_abci::ics02_client::height::Height;
+use ibc_abci::core::ics02_client::height::Height;
 #[cfg(feature = "ABCI")]
-use ibc_abci::ics03_connection::connection::{
+use ibc_abci::core::ics03_connection::connection::{
     ConnectionEnd, Counterparty as ConnCounterparty, State as ConnState,
 };
 #[cfg(feature = "ABCI")]
-use ibc_abci::ics03_connection::version::Version;
+use ibc_abci::core::ics03_connection::version::Version;
 #[cfg(feature = "ABCI")]
-use ibc_abci::ics04_channel::channel::{
+use ibc_abci::core::ics04_channel::channel::{
     ChannelEnd, Counterparty as ChanCounterparty, Order, State as ChanState,
 };
 #[cfg(feature = "ABCI")]
-use ibc_abci::ics04_channel::packet::{Packet, Sequence};
+use ibc_abci::core::ics04_channel::packet::{Packet, Sequence};
 #[cfg(feature = "ABCI")]
-use ibc_abci::ics23_commitment::commitment::{
+use ibc_abci::core::ics23_commitment::commitment::{
     CommitmentPrefix, CommitmentProofBytes,
 };
 #[cfg(feature = "ABCI")]
-use ibc_abci::ics24_host::identifier::{
+use ibc_abci::core::ics24_host::identifier::{
     ChannelId, ClientId, ConnectionId, PortChannelId, PortId,
 };
 #[cfg(feature = "ABCI")]
-use ibc_abci::proofs::{ConsensusProof, Proofs};
+use ibc_abci::mock::client_state::{MockClientState, MockConsensusState};
+#[cfg(feature = "ABCI")]
+use ibc_abci::proofs::{ConsensusProof, ProofError, Proofs};
 #[cfg(feature = "ABCI")]
 use ibc_abci::timestamp::Timestamp;
 #[cfg(not(feature = "ABCI"))]
@@ -92,9 +100,11 @@ pub enum Error {
     #[error("Invalid port error: {0}")]
     InvalidPort(String),
     #[error("Invalid proof error: {0}")]
-    InvalidProof(String),
+    InvalidProof(ProofError),
     #[error("Updating a client error: {0}")]
     ClientUpdate(String),
+    #[error("Decoding MerkleProof error: {0}")]
+    DecodingMerkleProof(prost::DecodeError),
 }
 
 /// Decode result for IBC data
@@ -193,13 +203,13 @@ impl ClientUpgradeData {
     /// Returns the proof for client state
     pub fn proof_client(&self) -> Result<MerkleProof> {
         MerkleProof::decode(&self.proof_client[..])
-            .map_err(|e| Error::InvalidProof(e.to_string()))
+            .map_err(Error::DecodingMerkleProof)
     }
 
     /// Returns the proof for consensus state
     pub fn proof_consensus_state(&self) -> Result<MerkleProof> {
         MerkleProof::decode(&self.proof_consensus_state[..])
-            .map_err(|e| Error::InvalidProof(e.to_string()))
+            .map_err(Error::DecodingMerkleProof)
     }
 }
 
@@ -948,25 +958,42 @@ pub fn update_client(
     client_state: AnyClientState,
     headers: Vec<AnyHeader>,
 ) -> Result<(AnyClientState, AnyConsensusState)> {
-    let client = AnyClient::from_client_type(client_state.client_type());
-    let mut client_state = client_state;
-    let mut consensus_state = None;
-    for header in headers {
-        let (new_client_state, new_consensus_state) = client
-            .check_header_and_update_state(client_state, header.clone())
-            .map_err(|e| {
-                Error::ClientUpdate(format!(
-                    "Updating the client state failed: {}",
-                    e
-                ))
-            })?;
-        client_state = new_client_state;
-        consensus_state = Some(new_consensus_state);
+    if headers.is_empty() {
+        return Err(Error::ClientUpdate("No header is given".to_owned()));
     }
-    if let Some(consensus_state) = consensus_state {
-        Ok((client_state, consensus_state))
-    } else {
-        Err(Error::ClientUpdate("No consensus state".to_owned()))
+    match client_state {
+        AnyClientState::Tendermint(cs) => {
+            let mut new_client_state = cs;
+            for header in &headers {
+                let h = match header {
+                    AnyHeader::Tendermint(h) => h,
+                    _ => {
+                        return Err(Error::ClientUpdate(
+                            "The header type is mismatched".to_owned(),
+                        ));
+                    }
+                };
+                new_client_state = new_client_state.with_header(h.clone());
+            }
+            let consensus_state = match headers.last().unwrap() {
+                AnyHeader::Tendermint(h) => TmConsensusState::from(h.clone()),
+                _ => {
+                    return Err(Error::ClientUpdate(
+                        "The header type is mismatched".to_owned(),
+                    ));
+                }
+            };
+            Ok((new_client_state.wrap_any(), consensus_state.wrap_any()))
+        }
+        AnyClientState::Mock(_) => match headers.last().unwrap() {
+            AnyHeader::Mock(h) => Ok((
+                MockClientState(*h).wrap_any(),
+                MockConsensusState::new(*h).wrap_any(),
+            )),
+            _ => Err(Error::ClientUpdate(
+                "The header type is mismatched".to_owned(),
+            )),
+        },
     }
 }
 

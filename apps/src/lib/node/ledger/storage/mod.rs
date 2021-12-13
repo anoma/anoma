@@ -12,17 +12,12 @@ use sparse_merkle_tree::blake2b::Blake2bHasher;
 use sparse_merkle_tree::traits::Hasher;
 use sparse_merkle_tree::H256;
 
+#[derive(Default)]
 pub struct PersistentStorageHasher(Blake2bHasher);
 
 pub type PersistentDB = rocksdb::RocksDB;
 
 pub type PersistentStorage = Storage<PersistentDB, PersistentStorageHasher>;
-
-impl Default for PersistentStorageHasher {
-    fn default() -> Self {
-        Self(Blake2bHasher::default())
-    }
-}
 
 impl Hasher for PersistentStorageHasher {
     fn write_h256(&mut self, h: &H256) {

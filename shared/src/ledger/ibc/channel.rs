@@ -2,33 +2,31 @@
 
 use borsh::BorshDeserialize;
 #[cfg(not(feature = "ABCI"))]
-use ibc::ics02_client::client_consensus::AnyConsensusState;
+use ibc::core::ics02_client::client_consensus::AnyConsensusState;
 #[cfg(not(feature = "ABCI"))]
-use ibc::ics02_client::client_state::AnyClientState;
+use ibc::core::ics02_client::client_state::AnyClientState;
 #[cfg(not(feature = "ABCI"))]
-use ibc::ics02_client::context::ClientReader;
+use ibc::core::ics02_client::height::Height;
 #[cfg(not(feature = "ABCI"))]
-use ibc::ics02_client::height::Height;
+use ibc::core::ics03_connection::connection::ConnectionEnd;
 #[cfg(not(feature = "ABCI"))]
-use ibc::ics03_connection::connection::ConnectionEnd;
+use ibc::core::ics03_connection::context::ConnectionReader;
 #[cfg(not(feature = "ABCI"))]
-use ibc::ics03_connection::context::ConnectionReader;
+use ibc::core::ics04_channel::channel::{ChannelEnd, Counterparty, State};
 #[cfg(not(feature = "ABCI"))]
-use ibc::ics04_channel::channel::{ChannelEnd, Counterparty, State};
+use ibc::core::ics04_channel::context::ChannelReader;
 #[cfg(not(feature = "ABCI"))]
-use ibc::ics04_channel::context::ChannelReader;
+use ibc::core::ics04_channel::error::Error as Ics04Error;
 #[cfg(not(feature = "ABCI"))]
-use ibc::ics04_channel::error::{Error as Ics04Error, Kind as Ics04Kind};
+use ibc::core::ics04_channel::handler::verify::verify_channel_proofs;
 #[cfg(not(feature = "ABCI"))]
-use ibc::ics04_channel::handler::verify::verify_channel_proofs;
+use ibc::core::ics04_channel::packet::{Receipt, Sequence};
 #[cfg(not(feature = "ABCI"))]
-use ibc::ics04_channel::packet::{Receipt, Sequence};
+use ibc::core::ics05_port::capabilities::Capability;
 #[cfg(not(feature = "ABCI"))]
-use ibc::ics05_port::capabilities::Capability;
+use ibc::core::ics05_port::context::PortReader;
 #[cfg(not(feature = "ABCI"))]
-use ibc::ics05_port::context::PortReader;
-#[cfg(not(feature = "ABCI"))]
-use ibc::ics24_host::identifier::{
+use ibc::core::ics24_host::identifier::{
     ChannelId, ClientId, ConnectionId, PortChannelId, PortId,
 };
 #[cfg(not(feature = "ABCI"))]
@@ -36,33 +34,31 @@ use ibc::proofs::Proofs;
 #[cfg(not(feature = "ABCI"))]
 use ibc::timestamp::Timestamp;
 #[cfg(feature = "ABCI")]
-use ibc_abci::ics02_client::client_consensus::AnyConsensusState;
+use ibc_abci::core::ics02_client::client_consensus::AnyConsensusState;
 #[cfg(feature = "ABCI")]
-use ibc_abci::ics02_client::client_state::AnyClientState;
+use ibc_abci::core::ics02_client::client_state::AnyClientState;
 #[cfg(feature = "ABCI")]
-use ibc_abci::ics02_client::context::ClientReader;
+use ibc_abci::core::ics02_client::height::Height;
 #[cfg(feature = "ABCI")]
-use ibc_abci::ics02_client::height::Height;
+use ibc_abci::core::ics03_connection::connection::ConnectionEnd;
 #[cfg(feature = "ABCI")]
-use ibc_abci::ics03_connection::connection::ConnectionEnd;
+use ibc_abci::core::ics03_connection::context::ConnectionReader;
 #[cfg(feature = "ABCI")]
-use ibc_abci::ics03_connection::context::ConnectionReader;
+use ibc_abci::core::ics04_channel::channel::{ChannelEnd, Counterparty, State};
 #[cfg(feature = "ABCI")]
-use ibc_abci::ics04_channel::channel::{ChannelEnd, Counterparty, State};
+use ibc_abci::core::ics04_channel::context::ChannelReader;
 #[cfg(feature = "ABCI")]
-use ibc_abci::ics04_channel::context::ChannelReader;
+use ibc_abci::core::ics04_channel::error::Error as Ics04Error;
 #[cfg(feature = "ABCI")]
-use ibc_abci::ics04_channel::error::{Error as Ics04Error, Kind as Ics04Kind};
+use ibc_abci::core::ics04_channel::handler::verify::verify_channel_proofs;
 #[cfg(feature = "ABCI")]
-use ibc_abci::ics04_channel::handler::verify::verify_channel_proofs;
+use ibc_abci::core::ics04_channel::packet::{Receipt, Sequence};
 #[cfg(feature = "ABCI")]
-use ibc_abci::ics04_channel::packet::{Receipt, Sequence};
+use ibc_abci::core::ics05_port::capabilities::Capability;
 #[cfg(feature = "ABCI")]
-use ibc_abci::ics05_port::capabilities::Capability;
+use ibc_abci::core::ics05_port::context::PortReader;
 #[cfg(feature = "ABCI")]
-use ibc_abci::ics05_port::context::PortReader;
-#[cfg(feature = "ABCI")]
-use ibc_abci::ics24_host::identifier::{
+use ibc_abci::core::ics24_host::identifier::{
     ChannelId, ClientId, ConnectionId, PortChannelId, PortId,
 };
 #[cfg(feature = "ABCI")]
@@ -119,6 +115,8 @@ pub enum Error {
 
 /// IBC channel functions result
 pub type Result<T> = std::result::Result<T, Error>;
+/// ChannelReader result
+type Ics04Result<T> = core::result::Result<T, Ics04Error>;
 
 impl<'a, DB, H> Ibc<'a, DB, H>
 where
@@ -131,7 +129,12 @@ where
         tx_data: &[u8],
     ) -> Result<()> {
         if is_channel_counter_key(key) {
-            if self.channel_counter_pre()? < self.channel_counter() {
+            let counter = self.channel_counter().map_err(|_| {
+                Error::InvalidChannel(
+                    "The channel counter doesn't exist".to_owned(),
+                )
+            })?;
+            if self.channel_counter_pre()? < counter {
                 return Ok(());
             } else {
                 return Err(Error::InvalidChannel(
@@ -154,7 +157,7 @@ where
                 port_channel_id.port_id.clone(),
                 port_channel_id.channel_id.clone(),
             ))
-            .ok_or_else(|| {
+            .map_err(|_| {
                 Error::InvalidChannel(format!(
                     "The channel doesn't exist: Port/Channel {}",
                     port_channel_id
@@ -489,15 +492,13 @@ where
         channel: &ChannelEnd,
     ) -> Result<ConnectionEnd> {
         match channel.connection_hops().get(0) {
-            Some(conn_id) => {
-                match ChannelReader::connection_end(self, conn_id) {
-                    Some(conn) => Ok(conn),
-                    None => Err(Error::InvalidConnection(format!(
+            Some(conn_id) => ChannelReader::connection_end(self, conn_id)
+                .map_err(|_| {
+                    Error::InvalidConnection(format!(
                         "The connection doesn't exist: ID {}",
                         conn_id
-                    ))),
-                }
-            }
+                    ))
+                }),
             _ => Err(Error::InvalidConnection(
                 "the corresponding connection ID doesn't exist".to_owned(),
             )),
@@ -576,39 +577,59 @@ where
     fn channel_end(
         &self,
         port_channel_id: &(PortId, ChannelId),
-    ) -> Option<ChannelEnd> {
+    ) -> Ics04Result<ChannelEnd> {
         let port_channel_id = PortChannelId {
             port_id: port_channel_id.0.clone(),
             channel_id: port_channel_id.1.clone(),
         };
         let key = channel_key(&port_channel_id);
         match self.ctx.read_post(&key) {
-            Ok(Some(value)) => ChannelEnd::try_from_slice(&value[..]).ok(),
-            // returns None even if DB read fails
-            _ => None,
+            Ok(Some(value)) => ChannelEnd::try_from_slice(&value[..])
+                .map_err(|_| Ics04Error::implementation_specific()),
+            Ok(None) => Err(Ics04Error::channel_not_found(
+                port_channel_id.port_id,
+                port_channel_id.channel_id,
+            )),
+            Err(_) => Err(Ics04Error::implementation_specific()),
         }
     }
 
-    fn connection_end(&self, conn_id: &ConnectionId) -> Option<ConnectionEnd> {
+    fn connection_end(
+        &self,
+        conn_id: &ConnectionId,
+    ) -> Ics04Result<ConnectionEnd> {
         ConnectionReader::connection_end(self, conn_id)
+            .map_err(Ics04Error::ics03_connection)
     }
 
     fn connection_channels(
         &self,
         conn_id: &ConnectionId,
-    ) -> Option<Vec<(PortId, ChannelId)>> {
+    ) -> Ics04Result<Vec<(PortId, ChannelId)>> {
         let mut channels = vec![];
         let prefix = Key::parse("channelEnds/ports")
             .expect("Creating a key for the prefix shouldn't fail");
-        let mut iter = self.ctx.iter_prefix(&prefix).ok()?;
+        let mut iter = self
+            .ctx
+            .iter_prefix(&prefix)
+            .map_err(|_| Ics04Error::implementation_specific())?;
         loop {
-            let next = self.ctx.iter_post_next(&mut iter).ok()?;
+            let next = self
+                .ctx
+                .iter_post_next(&mut iter)
+                .map_err(|_| Ics04Error::implementation_specific())?;
             if let Some((key, value)) = next {
-                let channel = ChannelEnd::try_from_slice(&value[..]).ok()?;
+                let channel = ChannelEnd::try_from_slice(&value[..])
+                    .map_err(|_| Ics04Error::implementation_specific())?;
                 if let Some(id) = channel.connection_hops().get(0) {
                     if id == conn_id {
-                        let key = Key::parse(&key).ok()?;
-                        let port_channel_id = port_channel_id(&key).ok()?;
+                        let key = Key::parse(&key).map_err(|_| {
+                            Ics04Error::implementation_specific()
+                        })?;
+                        let port_channel_id =
+                            port_channel_id(&key).map_err(|_| {
+                                Ics04Error::implementation_specific()
+                            })?;
                         channels.push((
                             port_channel_id.port_id,
                             port_channel_id.channel_id,
@@ -619,99 +640,118 @@ where
                 break;
             }
         }
-        Some(channels)
+        Ok(channels)
     }
 
-    fn client_state(&self, client_id: &ClientId) -> Option<AnyClientState> {
-        ClientReader::client_state(self, client_id)
+    fn client_state(
+        &self,
+        client_id: &ClientId,
+    ) -> Ics04Result<AnyClientState> {
+        ConnectionReader::client_state(self, client_id)
+            .map_err(Ics04Error::ics03_connection)
     }
 
     fn client_consensus_state(
         &self,
         client_id: &ClientId,
         height: Height,
-    ) -> Option<AnyConsensusState> {
-        ClientReader::consensus_state(self, client_id, height)
+    ) -> Ics04Result<AnyConsensusState> {
+        ConnectionReader::client_consensus_state(self, client_id, height)
+            .map_err(Ics04Error::ics03_connection)
     }
 
     fn authenticated_capability(
         &self,
         port_id: &PortId,
-    ) -> std::result::Result<Capability, Ics04Error> {
-        match self.lookup_module_by_port(port_id) {
-            Some(cap) => {
-                if self.authenticate(&cap, port_id) {
-                    Ok(cap)
-                } else {
-                    Err(Ics04Kind::InvalidPortCapability.into())
-                }
-            }
-            None => Err(Ics04Kind::NoPortCapability(port_id.clone()).into()),
+    ) -> Ics04Result<Capability> {
+        let cap = self
+            .lookup_module_by_port(port_id)
+            .map_err(|_| Ics04Error::no_port_capability(port_id.clone()))?;
+        if self.authenticate(&cap, port_id) {
+            Ok(cap)
+        } else {
+            Err(Ics04Error::invalid_port_capability())
         }
     }
 
     fn get_next_sequence_send(
         &self,
         port_channel_id: &(PortId, ChannelId),
-    ) -> Option<Sequence> {
+    ) -> Ics04Result<Sequence> {
         let port_channel_id = PortChannelId {
             port_id: port_channel_id.0.clone(),
             channel_id: port_channel_id.1.clone(),
         };
         let key = next_sequence_send_key(&port_channel_id);
-        self.get_sequence(&key).ok()
+        self.get_sequence(&key).map_err(|_| {
+            Ics04Error::missing_next_send_seq((
+                port_channel_id.port_id,
+                port_channel_id.channel_id,
+            ))
+        })
     }
 
     fn get_next_sequence_recv(
         &self,
         port_channel_id: &(PortId, ChannelId),
-    ) -> Option<Sequence> {
+    ) -> Ics04Result<Sequence> {
         let port_channel_id = PortChannelId {
             port_id: port_channel_id.0.clone(),
             channel_id: port_channel_id.1.clone(),
         };
         let key = next_sequence_recv_key(&port_channel_id);
-        self.get_sequence(&key).ok()
+        self.get_sequence(&key).map_err(|_| {
+            Ics04Error::missing_next_recv_seq((
+                port_channel_id.port_id,
+                port_channel_id.channel_id,
+            ))
+        })
     }
 
     fn get_next_sequence_ack(
         &self,
         port_channel_id: &(PortId, ChannelId),
-    ) -> Option<Sequence> {
+    ) -> Ics04Result<Sequence> {
         let port_channel_id = PortChannelId {
             port_id: port_channel_id.0.clone(),
             channel_id: port_channel_id.1.clone(),
         };
         let key = next_sequence_ack_key(&port_channel_id);
-        self.get_sequence(&key).ok()
+        self.get_sequence(&key).map_err(|_| {
+            Ics04Error::missing_next_ack_seq((
+                port_channel_id.port_id,
+                port_channel_id.channel_id,
+            ))
+        })
     }
 
     fn get_packet_commitment(
         &self,
         key: &(PortId, ChannelId, Sequence),
-    ) -> Option<String> {
-        let key = commitment_key(&key.0, &key.1, key.2);
-        self.get_packet_info(&key).ok()
+    ) -> Ics04Result<String> {
+        let commitment_key = commitment_key(&key.0, &key.1, key.2);
+        self.get_packet_info(&commitment_key)
+            .map_err(|_| Ics04Error::packet_commitment_not_found(key.2))
     }
 
     fn get_packet_receipt(
         &self,
         key: &(PortId, ChannelId, Sequence),
-    ) -> Option<Receipt> {
-        let key = receipt_key(&key.0, &key.1, key.2);
-        match self.ctx.read_post(&key) {
-            Ok(Some(_)) => Some(Receipt::Ok),
-            // returns None even if DB read fails
-            _ => None,
+    ) -> Ics04Result<Receipt> {
+        let receipt_key = receipt_key(&key.0, &key.1, key.2);
+        match self.ctx.read_post(&receipt_key) {
+            Ok(Some(_)) => Ok(Receipt::Ok),
+            _ => Err(Ics04Error::packet_receipt_not_found(key.2)),
         }
     }
 
     fn get_packet_acknowledgement(
         &self,
         key: &(PortId, ChannelId, Sequence),
-    ) -> Option<String> {
-        let key = ack_key(&key.0, &key.1, key.2);
-        self.get_packet_info(&key).ok()
+    ) -> Ics04Result<String> {
+        let ack_key = ack_key(&key.0, &key.1, key.2);
+        self.get_packet_info(&ack_key)
+            .map_err(|_| Ics04Error::packet_acknowledgement_not_found(key.2))
     }
 
     fn hash(&self, value: String) -> String {
@@ -730,9 +770,10 @@ where
         }
     }
 
-    fn channel_counter(&self) -> u64 {
+    fn channel_counter(&self) -> Ics04Result<u64> {
         let key = channel_counter_key();
         self.read_counter(&key)
+            .map_err(|_| Ics04Error::implementation_specific())
     }
 }
 

@@ -2,17 +2,17 @@
 
 use borsh::BorshDeserialize;
 #[cfg(not(feature = "ABCI"))]
-use ibc::ics04_channel::channel::Order;
+use ibc::core::ics04_channel::channel::Order;
 #[cfg(not(feature = "ABCI"))]
-use ibc::ics04_channel::context::ChannelReader;
+use ibc::core::ics04_channel::context::ChannelReader;
 #[cfg(not(feature = "ABCI"))]
-use ibc::ics24_host::identifier::PortChannelId;
+use ibc::core::ics24_host::identifier::PortChannelId;
 #[cfg(feature = "ABCI")]
-use ibc_abci::ics04_channel::channel::Order;
+use ibc_abci::core::ics04_channel::channel::Order;
 #[cfg(feature = "ABCI")]
-use ibc_abci::ics04_channel::context::ChannelReader;
+use ibc_abci::core::ics04_channel::context::ChannelReader;
 #[cfg(feature = "ABCI")]
-use ibc_abci::ics24_host::identifier::PortChannelId;
+use ibc_abci::core::ics24_host::identifier::PortChannelId;
 use thiserror::Error;
 
 use super::storage::{port_channel_id, Error as IbcStorageError};
@@ -57,17 +57,16 @@ where
             .get_next_sequence_send_pre(&port_channel_id)
             .map_err(|e| Error::InvalidSequence(e.to_string()))?;
         let packet = data.packet(next_seq_pre);
-        let next_seq = match self.get_next_sequence_send(&(
-            port_channel_id.port_id.clone(),
-            port_channel_id.channel_id.clone(),
-        )) {
-            Some(s) => s,
-            None => {
-                return Err(Error::InvalidSequence(
+        let next_seq = self
+            .get_next_sequence_send(&(
+                port_channel_id.port_id.clone(),
+                port_channel_id.channel_id.clone(),
+            ))
+            .map_err(|_| {
+                Error::InvalidSequence(
                     "The nextSequenceSend doesn't exit".to_owned(),
-                ));
-            }
-        };
+                )
+            })?;
         if u64::from(next_seq_pre) + 1 != u64::from(next_seq) {
             return Err(Error::InvalidSequence(
                 "The nextSequenceSend is invalid".to_owned(),
@@ -88,13 +87,13 @@ where
             port_channel_id.channel_id,
             packet.sequence,
         );
-        if self.get_packet_commitment(&commitment_key).is_none() {
-            return Err(Error::InvalidSequence(format!(
+        self.get_packet_commitment(&commitment_key).map_err(|_| {
+            Error::InvalidSequence(format!(
                 "The commitement doesn't exist: Port/Channel {}/{}, Sequence \
                  {}",
                 commitment_key.0, commitment_key.1, commitment_key.2,
-            )));
-        }
+            ))
+        })?;
         Ok(())
     }
 
@@ -109,17 +108,16 @@ where
         let next_seq_pre = self
             .get_next_sequence_recv_pre(&port_channel_id)
             .map_err(|e| Error::InvalidSequence(e.to_string()))?;
-        let next_seq = match self.get_next_sequence_recv(&(
-            port_channel_id.port_id.clone(),
-            port_channel_id.channel_id.clone(),
-        )) {
-            Some(s) => s,
-            None => {
-                return Err(Error::InvalidSequence(
+        let next_seq = self
+            .get_next_sequence_recv(&(
+                port_channel_id.port_id.clone(),
+                port_channel_id.channel_id.clone(),
+            ))
+            .map_err(|_| {
+                Error::InvalidSequence(
                     "The nextSequenceRecv doesn't exist".to_owned(),
-                ));
-            }
-        };
+                )
+            })?;
         if u64::from(next_seq_pre) + 1 != u64::from(next_seq) {
             return Err(Error::InvalidSequence(
                 "The nextSequenceRecv is invalid".to_owned(),
@@ -140,19 +138,19 @@ where
             port_channel_id.channel_id,
             packet.sequence,
         );
-        if self.get_packet_receipt(&key).is_none() {
-            return Err(Error::InvalidSequence(format!(
+        self.get_packet_receipt(&key).map_err(|_| {
+            Error::InvalidSequence(format!(
                 "The receipt doesn't exist: Port/Channel {}/{}, Sequence {}",
                 key.0, key.1, key.2,
-            )));
-        }
-        if self.get_packet_acknowledgement(&key).is_none() {
-            return Err(Error::InvalidSequence(format!(
+            ))
+        })?;
+        self.get_packet_acknowledgement(&key).map_err(|_| {
+            Error::InvalidSequence(format!(
                 "The acknowledgment doesn't exist: Port/Channel {}/{}, \
                  Sequence {}",
                 key.0, key.1, key.2,
-            )));
-        }
+            ))
+        })?;
         Ok(())
     }
 
@@ -167,17 +165,16 @@ where
         let next_seq_pre = self
             .get_next_sequence_ack_pre(&port_channel_id)
             .map_err(|e| Error::InvalidSequence(e.to_string()))?;
-        let next_seq = match self.get_next_sequence_ack(&(
-            port_channel_id.port_id.clone(),
-            port_channel_id.channel_id.clone(),
-        )) {
-            Some(s) => s,
-            None => {
-                return Err(Error::InvalidSequence(
+        let next_seq = self
+            .get_next_sequence_ack(&(
+                port_channel_id.port_id.clone(),
+                port_channel_id.channel_id.clone(),
+            ))
+            .map_err(|_| {
+                Error::InvalidSequence(
                     "The nextSequenceAck doesn't exist".to_owned(),
-                ));
-            }
-        };
+                )
+            })?;
         if u64::from(next_seq_pre) + 1 != u64::from(next_seq) {
             return Err(Error::InvalidSequence(
                 "The sequence number is invalid".to_owned(),
@@ -198,7 +195,7 @@ where
             port_channel_id.channel_id,
             packet.sequence,
         );
-        if self.get_packet_commitment(&commitment_key).is_some() {
+        if self.get_packet_commitment(&commitment_key).is_ok() {
             return Err(Error::InvalidSequence(format!(
                 "The commitement hasn't been deleted yet: Port/Channel {}/{}, \
                  Sequence {}",
@@ -212,18 +209,17 @@ where
         &self,
         port_channel_id: &PortChannelId,
     ) -> Result<bool> {
-        let channel = match self.channel_end(&(
-            port_channel_id.port_id.clone(),
-            port_channel_id.channel_id.clone(),
-        )) {
-            Some(c) => c,
-            None => {
-                return Err(Error::InvalidChannel(format!(
+        let channel = self
+            .channel_end(&(
+                port_channel_id.port_id.clone(),
+                port_channel_id.channel_id.clone(),
+            ))
+            .map_err(|_| {
+                Error::InvalidChannel(format!(
                     "The channel doesn't exist: Port/Channel {}",
                     port_channel_id
-                )));
-            }
-        };
+                ))
+            })?;
         Ok(channel.order_matches(&Order::Ordered))
     }
 }

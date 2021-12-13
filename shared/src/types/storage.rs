@@ -81,6 +81,7 @@ impl From<BlockHeight> for u64 {
 /// Hash of a block as fixed-size byte array
 #[derive(
     Clone,
+    Default,
     BorshSerialize,
     BorshDeserialize,
     PartialEq,
@@ -110,11 +111,6 @@ impl BlockHeight {
     }
 }
 
-impl Default for BlockHash {
-    fn default() -> Self {
-        Self([0; 32])
-    }
-}
 impl TryFrom<&[u8]> for BlockHash {
     type Error = self::Error;
 
@@ -289,7 +285,7 @@ impl Display for Key {
         let key = self
             .segments
             .iter()
-            .map(|s| DbKeySeg::raw(s))
+            .map(DbKeySeg::raw)
             .collect::<Vec<String>>()
             .join(&KEY_SEGMENT_SEPARATOR.to_string());
         f.write_str(&key)

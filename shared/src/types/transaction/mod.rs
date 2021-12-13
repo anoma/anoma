@@ -404,10 +404,7 @@ pub mod tx_types {
                 ),
             );
             let result = process_tx(tx).expect_err("Test failed");
-            assert_eq!(
-                result,
-                TxError::Unsigned("Wrapper transactions must be signed".into())
-            );
+            assert_matches!(result, TxError::Unsigned(_));
         }
     }
 

@@ -6,9 +6,9 @@ use anoma::types::intent::{Exchange, FungibleTokenIntent};
 use anoma::types::key::ed25519::Signed;
 use borsh::BorshSerialize;
 #[cfg(not(feature = "ABCI"))]
-use tendermint::net::Address as TendermintAddress;
+use tendermint_config::net::Address as TendermintAddress;
 #[cfg(feature = "ABCI")]
-use tendermint_stable::net::Address as TendermintAddress;
+use tendermint_config_abci::net::Address as TendermintAddress;
 
 use super::signing;
 use crate::cli::{self, args, Context};
@@ -54,13 +54,15 @@ pub async fn gossip_intent(
             .await
         }
     };
-    let source_keypair = source_keypair.lock();
-    let signed_ft: Signed<FungibleTokenIntent> = Signed::new(
-        source_keypair.borrow(),
-        FungibleTokenIntent {
-            exchange: signed_exchanges,
-        },
-    );
+    let signed_ft: Signed<FungibleTokenIntent> = {
+        let source_keypair = source_keypair.lock();
+        Signed::new(
+            source_keypair.borrow(),
+            FungibleTokenIntent {
+                exchange: signed_exchanges,
+            },
+        )
+    };
     let data_bytes = signed_ft.try_to_vec().unwrap();
 
     if to_stdout {

@@ -1,6 +1,7 @@
 use std::borrow::Borrow;
 use std::collections::{HashMap, HashSet};
-use std::fs::{self, OpenOptions};
+use std::fs::{self, File, OpenOptions};
+use std::io::{Read, Write};
 use std::net::{IpAddr, Ipv4Addr, SocketAddr};
 use std::path::PathBuf;
 use std::str::FromStr;
@@ -9,15 +10,18 @@ use anoma::types::chain::ChainId;
 use anoma::types::key::ed25519::Keypair;
 use anoma::types::{address, token};
 use borsh::BorshSerialize;
+use flate2::read::GzDecoder;
+use flate2::write::GzEncoder;
+use flate2::Compression;
 use rand::prelude::ThreadRng;
 use rand::thread_rng;
 use serde_json::json;
 #[cfg(not(feature = "ABCI"))]
-use tendermint::net::Address as TendermintAddress;
-#[cfg(not(feature = "ABCI"))]
 use tendermint::node::Id as TendermintNodeId;
+#[cfg(not(feature = "ABCI"))]
+use tendermint_config::net::Address as TendermintAddress;
 #[cfg(feature = "ABCI")]
-use tendermint_stable::net::Address as TendermintAddress;
+use tendermint_config_abci::net::Address as TendermintAddress;
 #[cfg(feature = "ABCI")]
 use tendermint_stable::node::Id as TendermintNodeId;
 
@@ -29,12 +33,16 @@ use crate::config::{
 };
 use crate::node::ledger::tendermint_node;
 use crate::wallet::Wallet;
+use crate::wasm_loader;
 
 pub const NET_ACCOUNTS_DIR: &str = "setup";
 pub const NET_OTHER_ACCOUNTS_DIR: &str = "other";
+/// Github URL prefix of released Anoma network configs
+const RELEASE_PREFIX: &str =
+    "https://github.com/heliaxdev/anoma-network-config/releases/download";
 
-/// Configure Anoma to join an existing network. The chain must be known in the
-/// <https://github.com/heliaxdev/anoma-network-config> repository.
+/// Configure Anoma to join an existing network. The chain must be released in
+/// the <https://github.com/heliaxdev/anoma-network-config> repository.
 pub async fn join_network(
     global_args: args::Global,
     args::JoinNetwork { chain_id }: args::JoinNetwork,
@@ -42,27 +50,22 @@ pub async fn join_network(
     let chain_dir = global_args.base_dir.join(chain_id.as_str());
     fs::create_dir_all(&chain_dir).expect("Couldn't create chain directory");
 
-    let genesis_file = format!("{}.toml", chain_id);
-    let global_config_file = "global-config.toml";
-    let config_file = format!("{}/config.toml", chain_id);
+    let release_filename = format!("{}.tar.gz", chain_id);
+    let release_url =
+        format!("{}/{}/{}", RELEASE_PREFIX, chain_id, release_filename);
 
-    let file_url_prefix = format!("https://raw.githubusercontent.com/heliaxdev/anoma-network-config/master/final/{}/.anoma", chain_id);
-    let genesis_url = format!("{}/{}", file_url_prefix, genesis_file);
-    let global_config_url =
-        format!("{}/{}", file_url_prefix, global_config_file);
-    let config_url = format!("{}/{}", file_url_prefix, config_file);
+    // Read or download the release archive
+    println!("Downloading config release from {} ...", release_url);
+    let release = download_file(release_url).await;
 
-    let genesis = download_file(genesis_url).await;
-    let global_config = download_file(global_config_url).await;
-    let config = download_file(config_url).await;
+    // Decode and unpack the archive
+    let mut decoder = GzDecoder::new(&release[..]);
+    let mut tar = String::new();
+    decoder.read_to_string(&mut tar).unwrap();
+    let mut archive = tar::Archive::new(tar.as_bytes());
+    archive.unpack(".").unwrap();
 
-    std::fs::write(global_args.base_dir.join(genesis_file), genesis).unwrap();
-    std::fs::write(
-        global_args.base_dir.join(global_config_file),
-        global_config,
-    )
-    .unwrap();
-    std::fs::write(global_args.base_dir.join(config_file), config).unwrap();
+    println!("Successfully configured for chain ID {}", chain_id);
 }
 
 /// Initialize a new test network with the given validators and faucet accounts.
@@ -70,14 +73,35 @@ pub fn init_network(
     global_args: args::Global,
     args::InitNetwork {
         genesis_path,
+        wasm_checksums_path,
         chain_id_prefix,
         unsafe_dont_encrypt,
         consensus_timeout_commit,
         localhost,
         allow_duplicate_ip,
+        dont_archive,
     }: args::InitNetwork,
 ) {
     let mut config = genesis_config::open_genesis_config(&genesis_path);
+
+    // Update the WASM checksums
+    let checksums =
+        wasm_loader::Checksums::read_checksums_file(&wasm_checksums_path);
+    config.wasm.iter_mut().for_each(|(name, config)| {
+        // Find the sha256 from checksums.json
+        let name = format!("{}.wasm", name);
+        // Full name in format `{name}.{sha256}.wasm`
+        let full_name = checksums.0.get(&name).unwrap();
+        let hash = full_name
+            .split_once(".")
+            .unwrap()
+            .1
+            .split_once(".")
+            .unwrap()
+            .0;
+        config.sha256 = genesis_config::HexString(hash.to_owned());
+    });
+
     let temp_chain_id = chain_id_prefix.temp_chain_id();
     let temp_dir = global_args.base_dir.join(temp_chain_id.as_str());
     // The `temp_chain_id` gets renamed after we have chain ID
@@ -500,6 +524,14 @@ pub fn init_network(
     config.ledger.tendermint.consensus_timeout_commit =
         consensus_timeout_commit;
     config.ledger.tendermint.p2p_allow_duplicate_ip = allow_duplicate_ip;
+    // Open P2P address
+    if !localhost {
+        config
+            .ledger
+            .tendermint
+            .p2p_address
+            .set_ip(IpAddr::V4(Ipv4Addr::new(0, 0, 0, 0)));
+    }
     config.ledger.genesis_time = genesis.genesis_time.into();
     if let Some(discover) = &mut config.intent_gossiper.discover_peer {
         discover.bootstrap_peers = bootstrap_peers;
@@ -513,6 +545,48 @@ pub fn init_network(
         "Genesis file generated at {}",
         genesis_path.to_string_lossy()
     );
+
+    // Create a release tarball for anoma-network-config
+    if !dont_archive {
+        let mut release = tar::Builder::new(Vec::new());
+        let release_genesis_path = PathBuf::from(config::DEFAULT_BASE_DIR)
+            .join(format!("{}.toml", chain_id.as_str()));
+        release
+            .append_path_with_name(genesis_path, release_genesis_path)
+            .unwrap();
+        let global_config_path = GlobalConfig::file_path(&global_args.base_dir);
+        let release_global_config_path =
+            GlobalConfig::file_path(config::DEFAULT_BASE_DIR);
+        release
+            .append_path_with_name(
+                global_config_path,
+                release_global_config_path,
+            )
+            .unwrap();
+        let chain_config_path =
+            Config::file_path(&global_args.base_dir, &chain_id);
+        let release_chain_config_path =
+            Config::file_path(config::DEFAULT_BASE_DIR, &chain_id);
+        release
+            .append_path_with_name(chain_config_path, release_chain_config_path)
+            .unwrap();
+        let release_wasm_checksums_path = "wasm/checksums.json";
+        release
+            .append_path_with_name(
+                &wasm_checksums_path,
+                release_wasm_checksums_path,
+            )
+            .unwrap();
+
+        // Gzip tar release and write to file
+        let release_file = format!("{}.tar.gz", chain_id);
+        let compressed_file = File::create(&release_file).unwrap();
+        let mut encoder =
+            GzEncoder::new(compressed_file, Compression::default());
+        encoder.write_all(&release.into_inner().unwrap()).unwrap();
+        encoder.finish().unwrap();
+        println!("Release archive created at {}", release_file);
+    }
 }
 
 fn init_established_account(
@@ -580,8 +654,9 @@ fn init_genesis_validator_aux(
     let validator_address =
         address::gen_established_address("genesis validator address");
     let validator_address_alias = alias.clone();
-    if !wallet
+    if wallet
         .add_address(validator_address_alias.clone(), validator_address.clone())
+        .is_none()
     {
         cli::safe_exit(1)
     }
@@ -589,8 +664,9 @@ fn init_genesis_validator_aux(
     let rewards_address =
         address::gen_established_address("genesis validator reward address");
     let rewards_address_alias = format!("{}-rewards", alias);
-    if !wallet
+    if wallet
         .add_address(rewards_address_alias.clone(), rewards_address.clone())
+        .is_none()
     {
         cli::safe_exit(1)
     }
@@ -674,7 +750,7 @@ fn init_genesis_validator_aux(
     genesis_validator
 }
 
-async fn download_file(url: impl AsRef<str>) -> String {
+async fn download_file(url: impl AsRef<str>) -> Vec<u8> {
     let url = url.as_ref();
     reqwest::get(url)
         .await
@@ -682,7 +758,7 @@ async fn download_file(url: impl AsRef<str>) -> String {
             eprintln!("File not found at {}. Error: {}", url, err);
             cli::safe_exit(1)
         })
-        .text()
+        .bytes()
         .await
         .unwrap_or_else(|err| {
             eprintln!(
@@ -691,4 +767,5 @@ async fn download_file(url: impl AsRef<str>) -> String {
             );
             cli::safe_exit(1)
         })
+        .to_vec()
 }

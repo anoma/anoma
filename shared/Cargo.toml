@@ -1,6 +1,6 @@
 [package]
 authors = ["Heliax AG <hello@heliax.dev>"]
-edition = "2018"
+edition = "2021"
 license = "GPL-3.0"
 name = "anoma"
 resolver = "2"
@@ -74,16 +74,16 @@ hex = "0.4.3"
 tpke = {package = "group-threshold-cryptography", optional = true, git = "https://github.com/anoma/ferveo"}
 # TODO temp fork for https://github.com/informalsystems/ibc-rs/issues/1161
 # Also, using the same version of tendermint-rs as we do here.
-ibc = {git = "https://github.com/heliaxdev/ibc-rs", branch = "bat/abcipp-integration", features = ["mocks", "borsh"], optional = true}
-ibc-abci = {package = "ibc", git = "https://github.com/heliaxdev/ibc-rs", branch = "tomas/tm-lowercase-node-id", features = ["mocks", "borsh"], optional = true}
-ibc-proto = {git = "https://github.com/heliaxdev/ibc-rs", branch = "bat/abcipp-integration", optional = true}
-ibc-proto-abci = {package = "ibc-proto", git = "https://github.com/heliaxdev/ibc-rs", branch = "tomas/tm-lowercase-node-id", optional = true}
+ibc = {git = "https://github.com/heliaxdev/ibc-rs", branch = "yuji/abcipp-v0.23.0", features = ["mocks", "borsh"], optional = true}
+ibc-abci = {package = "ibc", git = "https://github.com/heliaxdev/ibc-rs", branch = "yuji/rebase_v0.23.0", features = ["mocks", "borsh"], optional = true}
+ibc-proto = {git = "https://github.com/heliaxdev/ibc-rs", branch = "yuji/abcipp-v0.23.0", optional = true}
+ibc-proto-abci = {package = "ibc-proto", git = "https://github.com/heliaxdev/ibc-rs", branch = "yuji/rebase_v0.23.0", optional = true}
 itertools = "0.10.0"
 loupe = {version = "0.1.3", optional = true}
 parity-wasm = {version = "0.42.2", optional = true}
 proptest = {version = "1.0.0", optional = true}
-prost = "0.8.0"
-prost-types = "0.8.0"
+prost = "0.9.0"
+prost-types = "0.9.0"
 pwasm-utils = {version = "0.18.0", optional = true}
 # TODO the older versions of rand and rand_core are currently required to avoid mismatching version issue (https://github.com/dalek-cryptography/ed25519-dalek/pull/159)
 rand = {version = "=0.7", optional = true}
@@ -95,15 +95,14 @@ serde = {version = "1.0.125", features = ["derive"]}
 serde_json = "1.0.69"
 sha2 = "0.9.3"
 # We switch off "blake2b" because it cannot be compiled to wasm
-sparse-merkle-tree = {git = "https://github.com/heliaxdev/sparse-merkle-tree", branch = "yuji/ics23-proof", default-features = false, features = ["std", "borsh"]}
-# temporarily using fork work-around for https://github.com/informalsystems/tendermint-rs/issues/916
-# and https://github.com/anoma/anoma/issues/445
-tendermint = {git = "https://github.com/heliaxdev/tendermint-rs", branch = "bat/abcipp-integration", optional = true}
-tendermint-proto = {git = "https://github.com/heliaxdev/tendermint-rs", branch = "bat/abcipp-integration", optional = true}
-tendermint-proto-abci = {package = "tendermint-proto", git = "https://github.com/heliaxdev/tendermint-rs", branch = "tomas/lowercase-node-id", optional = true}
-tendermint-stable = {package = "tendermint", git = "https://github.com/heliaxdev/tendermint-rs", branch = "tomas/lowercase-node-id", optional = true}
-thiserror = "1.0.26"
-tracing = "0.1.26"
+sparse-merkle-tree = {git = "https://github.com/heliaxdev/sparse-merkle-tree", branch = "yuji/prost-0.9", default-features = false, features = ["std", "borsh"]}
+# temporarily using fork work-around for https://github.com/informalsystems/tendermint-rs/issues/971
+tendermint = {git = "https://github.com/heliaxdev/tendermint-rs", branch = "yuji/abcipp-v0.23.0", optional = true}
+tendermint-proto = {git = "https://github.com/heliaxdev/tendermint-rs", branch = "yuji/abcipp-v0.23.0", optional = true}
+tendermint-proto-abci = {package = "tendermint-rpc", git = "https://github.com/heliaxdev/tendermint-rs", branch = "yuji/rebase_v0.23.0", optional = true}
+tendermint-stable = {package = "tendermint", git = "https://github.com/heliaxdev/tendermint-rs", branch = "yuji/rebase_v0.23.0", optional = true}
+thiserror = "1.0.30"
+tracing = "0.1.29"
 wasmer = {version = "2.0.0", optional = true}
 wasmer-compiler-cranelift = {version = "2.0.0", optional = true}
 wasmer-compiler-singlepass = {version = "2.0.0", optional = true}
@@ -117,7 +116,7 @@ pretty_assertions = "0.7.2"
 proptest = "1.0.0"
 serde_json = "1.0.62"
 test-log = {version = "0.2.7", default-features = false, features = ["trace"]}
-tracing-subscriber = {version = "0.2.18", default-features = false, features = ["env-filter", "fmt"]}
+tracing-subscriber = {version = "0.2.25", default-features = false, features = ["env-filter", "fmt"]}
 
 [build-dependencies]
-tonic-build = "0.5.0"
+tonic-build = "0.6.0"

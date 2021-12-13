@@ -9,9 +9,7 @@ use std::env;
 use std::process::Command;
 
 use anoma_apps::cli;
-use eyre::{eyre, Result};
-use signal_hook::consts::TERM_SIGNALS;
-use signal_hook::iterator::Signals;
+use eyre::Result;
 
 pub fn main() -> Result<()> {
     let (cmd, raw_sub_cmd) = cli::anoma_cli();
@@ -53,15 +51,10 @@ fn handle_command(cmd: cli::cmds::Anoma, raw_sub_cmd: String) -> Result<()> {
     }
 }
 
-fn handle_subcommand(
-    program: &str,
-    #[cfg(not(feature = "dev"))] sub_args: Vec<String>,
-    #[cfg(feature = "dev")] mut sub_args: Vec<String>,
-) -> Result<()> {
+fn handle_subcommand(program: &str, mut sub_args: Vec<String>) -> Result<()> {
     let env_vars = env::vars_os();
 
-    #[cfg(feature = "dev")]
-    let cmd = if env::var("CARGO").is_ok() {
+    let cmd_name = if cfg!(feature = "dev") && env::var("CARGO").is_ok() {
         // When the command is ran from inside `cargo run`, we also want to
         // call the sub-command via `cargo run` to rebuild if necessary.
         // We do this by prepending the arguments with `cargo run` arguments.
@@ -69,35 +62,86 @@ fn handle_subcommand(
             vec!["run".to_string(), format!("--bin={}", program), "--".into()];
         cargo_args.append(&mut sub_args);
         sub_args = cargo_args;
-        "cargo"
+        "cargo".into()
     } else {
-        program
+        // Get the full path to the program to be inside the parent directory of
+        // the current process
+        let anoma_path = env::current_exe()?;
+        anoma_path.parent().unwrap().join(program)
     };
-    #[cfg(not(feature = "dev"))]
-    let cmd = program;
 
-    let mut process = Command::new(cmd)
-        .args(sub_args)
-        .envs(env_vars)
-        .spawn()
-        .unwrap_or_else(|_| panic!("Couldn't run {} command.", cmd));
+    let mut cmd = Command::new(cmd_name);
+    cmd.args(sub_args).envs(env_vars);
+    exec_subcommand(program, cmd)
+}
 
-    let mut signals = Signals::new(TERM_SIGNALS).unwrap();
-    loop {
-        if let Ok(Some(exit_status)) = process.try_wait() {
-            if exit_status.success() {
-                break;
-            } else {
-                return Err(eyre!("{} command failed.", cmd));
+/// Borrowed and adapted from cargo's subcommand dispatch, which replaces the
+/// current process with the sub-command:
+/// <https://github.com/rust-lang/cargo/blob/94ca096afbf25f670e76e07dca754fcfe27134be/crates/cargo-util/src/process_builder.rs#L385>
+///
+/// Replaces the current process with the target process.
+///
+/// On Unix, this executes the process using the Unix syscall `execvp`, which
+/// will block this process, and will only return if there is an error.
+///
+/// On Windows this isn't technically possible. Instead we emulate it to the
+/// best of our ability. One aspect we fix here is that we specify a handler for
+/// the Ctrl-C handler. In doing so (and by effectively ignoring it) we should
+/// emulate proxying Ctrl-C handling to the application at hand, which will
+/// either terminate or handle it itself. According to Microsoft's documentation
+/// at <https://docs.microsoft.com/en-us/windows/console/ctrl-c-and-ctrl-break-signals>.
+/// the Ctrl-C signal is sent to all processes attached to a terminal, which
+/// should include our child process. If the child terminates then we'll reap
+/// them in Cargo pretty quickly, and if the child handles the signal then we
+/// won't terminate (and we shouldn't!) until the process itself later exits.
+pub fn exec_subcommand(program: &str, cmd: Command) -> Result<()> {
+    imp::exec_subcommand(program, cmd)
+}
+
+#[cfg(unix)]
+mod imp {
+    use std::os::unix::process::CommandExt;
+    use std::process::Command;
+
+    use eyre::{eyre, Result};
+
+    pub fn exec_subcommand(program: &str, mut cmd: Command) -> Result<()> {
+        let error = cmd.exec();
+        Err(eyre!("Command {} failed with {}.", program, error))
+    }
+}
+#[cfg(windows)]
+mod imp {
+    use std::process::Command;
+
+    use winapi::shared::minwindef::{BOOL, DWORD, FALSE, TRUE};
+    use winapi::um::consoleapi::SetConsoleCtrlHandler;
+
+    unsafe extern "system" fn ctrlc_handler(_: DWORD) -> BOOL {
+        // Do nothing; let the child process handle it.
+        TRUE
+    }
+
+    pub fn exec_subcommand(program: &str, cmd: Command) -> Result<()> {
+        unsafe {
+            if SetConsoleCtrlHandler(Some(ctrlc_handler), TRUE) == FALSE {
+                return Err(ProcessError::new(
+                    "Could not set Ctrl-C handler.",
+                    None,
+                    None,
+                )
+                .into());
             }
         }
-        for sig in signals.pending() {
-            if TERM_SIGNALS.contains(&sig) {
-                tracing::info!("Anoma received termination signal");
-                unsafe { libc::kill(process.id() as i32, libc::SIGTERM) };
-                break;
-            }
+
+        let exit = cmd
+            .status()
+            .wrap_err_with(|| eyre!("Could not execute command {}", program))?;
+
+        if exit.success() {
+            Ok(())
+        } else {
+            Err(eyre!("Command {} failed.", program))
         }
     }
-    Ok(())
 }

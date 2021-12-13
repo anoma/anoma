@@ -33,7 +33,7 @@ pub type Result<T> = std::result::Result<T, Error>;
 
 /// Gas metering in a block. Tracks the gas in a current block and a current
 /// transaction.
-#[derive(Debug, Clone)]
+#[derive(Debug, Default, Clone)]
 pub struct BlockGasMeter {
     block_gas: u64,
     transaction_gas: u64,
@@ -49,7 +49,7 @@ pub struct VpGasMeter {
 }
 
 /// Gas meter for VPs parallel runs
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Default)]
 pub struct VpsGas {
     max: Option<u64>,
     rest: Vec<u64>,
@@ -202,24 +202,6 @@ impl VpsGas {
             .unwrap_or_default()
             .checked_add(parallel_gas as u64)
             .ok_or(Error::GasOverflow)
-    }
-}
-
-impl Default for BlockGasMeter {
-    fn default() -> Self {
-        BlockGasMeter {
-            block_gas: 0,
-            transaction_gas: 0,
-        }
-    }
-}
-
-impl Default for VpsGas {
-    fn default() -> Self {
-        Self {
-            max: None,
-            rest: Vec::new(),
-        }
     }
 }
 

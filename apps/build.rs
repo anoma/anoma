@@ -58,9 +58,6 @@ fn main() {
         // TODO try to add json encoding to simplify use for user
         // .type_attribute("types.Intent", "#[derive(serde::Serialize,
         // serde::Deserialize)]")
-        .compile(
-            &[format!("{}/services.proto", PROTO_SRC)],
-            &[PROTO_SRC.into()],
-        )
+        .compile(&[format!("{}/services.proto", PROTO_SRC)], &[PROTO_SRC])
         .unwrap();
 }

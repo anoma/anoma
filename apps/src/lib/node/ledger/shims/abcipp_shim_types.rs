@@ -36,6 +36,7 @@ pub mod shim {
     pub type TxBytes = Vec<u8>;
 
     #[derive(Error, Debug)]
+    #[allow(clippy::large_enum_variant)]
     pub enum Error {
         #[error("Error converting Request from ABCI to ABCI++: {0:?}")]
         ConvertReq(Req),
@@ -229,6 +230,7 @@ pub mod shim {
             pub result: super::response::TxResult,
         }
 
+        #[derive(Debug)]
         pub struct BeginBlock {
             pub hash: BlockHash,
             pub header: Header,

@@ -430,10 +430,13 @@ mod test_process_proposal {
             tx: new_tx.to_bytes(),
         };
         let response = shell.process_proposal(request);
+        let expected_error = "Signature verification failed: signature error";
         assert_eq!(response.result.code, u32::from(ErrorCodes::InvalidSig));
-        assert_eq!(
+        assert!(
+            response.result.info.contains(expected_error),
+            "Result info {} doesn't contain the expected error {}",
             response.result.info,
-            String::from("Signature verification failed: signature error")
+            expected_error
         );
         #[cfg(feature = "ABCI")]
         {

@@ -10,7 +10,9 @@ use async_trait::async_trait;
 #[cfg(not(feature = "ABCI"))]
 use tendermint::abci::transaction;
 #[cfg(not(feature = "ABCI"))]
-use tendermint::net::Address;
+use tendermint_config::net::Address;
+#[cfg(feature = "ABCI")]
+use tendermint_config_abci::net::Address;
 #[cfg(not(feature = "ABCI"))]
 use tendermint_rpc::query::Query;
 #[cfg(not(feature = "ABCI"))]
@@ -25,8 +27,6 @@ use tendermint_rpc_abci::{
 };
 #[cfg(feature = "ABCI")]
 use tendermint_stable::abci::transaction;
-#[cfg(feature = "ABCI")]
-use tendermint_stable::net::Address;
 use thiserror::Error;
 use tokio::time::Instant;
 use websocket::result::WebSocketError;
@@ -408,13 +408,12 @@ impl Client for TendermintWebsocketClient {
         let mut websocket = self.websocket.lock().unwrap();
         let start = Instant::now();
         loop {
-            if Instant::now().duration_since(start) > self.connection_timeout {
+            let duration = Instant::now().duration_since(start);
+            if duration > self.connection_timeout {
                 tracing::error!(
                     "Websocket connection timed out while waiting for response"
                 );
-                return Err(RpcError::websocket_error(
-                    Error::ConnectionTimeout.to_string(),
-                ));
+                return Err(RpcError::web_socket_timeout(duration));
             }
             let response = match websocket
                 .recv_message()

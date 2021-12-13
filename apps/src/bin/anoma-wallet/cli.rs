@@ -210,7 +210,10 @@ fn address_find(ctx: Context, args: args::AddressFind) {
 /// Add an address to the wallet.
 fn address_add(ctx: Context, args: args::AddressAdd) {
     let mut wallet = ctx.wallet;
-    if !wallet.add_address(args.alias.clone(), args.address) {
+    if wallet
+        .add_address(args.alias.clone(), args.address)
+        .is_none()
+    {
         eprintln!("Address not added");
         cli::safe_exit(1);
     }

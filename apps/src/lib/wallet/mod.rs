@@ -274,9 +274,15 @@ impl Wallet {
     }
 
     /// Add a new address with the given alias. If the alias is already used,
-    /// will prompt for overwrite confirmation, which when declined, the address
-    /// won't be added. Return `true` if the address has been added.
-    pub fn add_address(&mut self, alias: String, address: Address) -> bool {
+    /// will ask whether the existing alias should be replaced, a different
+    /// alias is desired, or the alias creation should be cancelled. Return
+    /// the chosen alias if the address has been added, otherwise return
+    /// nothing.
+    pub fn add_address(
+        &mut self,
+        alias: Alias,
+        address: Address,
+    ) -> Option<Alias> {
         self.store.insert_address(alias, address)
     }
 
@@ -287,7 +293,7 @@ impl Wallet {
         alias: Alias,
         keypair: StoredKeypair,
         pkh: PublicKeyHash,
-    ) -> bool {
+    ) -> Option<Alias> {
         self.store.insert_keypair(alias, keypair, pkh)
     }
 }

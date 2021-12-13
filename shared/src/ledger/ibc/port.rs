@@ -2,21 +2,25 @@
 
 use borsh::BorshDeserialize;
 #[cfg(not(feature = "ABCI"))]
-use ibc::ics04_channel::context::ChannelReader;
+use ibc::core::ics04_channel::context::ChannelReader;
 #[cfg(not(feature = "ABCI"))]
-use ibc::ics05_port::capabilities::Capability;
+use ibc::core::ics05_port::capabilities::Capability;
 #[cfg(not(feature = "ABCI"))]
-use ibc::ics05_port::context::PortReader;
+use ibc::core::ics05_port::context::PortReader;
 #[cfg(not(feature = "ABCI"))]
-use ibc::ics24_host::identifier::PortId;
+use ibc::core::ics05_port::error::Error as Ics05Error;
+#[cfg(not(feature = "ABCI"))]
+use ibc::core::ics24_host::identifier::PortId;
 #[cfg(feature = "ABCI")]
-use ibc_abci::ics04_channel::context::ChannelReader;
+use ibc_abci::core::ics04_channel::context::ChannelReader;
 #[cfg(feature = "ABCI")]
-use ibc_abci::ics05_port::capabilities::Capability;
+use ibc_abci::core::ics05_port::capabilities::Capability;
 #[cfg(feature = "ABCI")]
-use ibc_abci::ics05_port::context::PortReader;
+use ibc_abci::core::ics05_port::context::PortReader;
 #[cfg(feature = "ABCI")]
-use ibc_abci::ics24_host::identifier::PortId;
+use ibc_abci::core::ics05_port::error::Error as Ics05Error;
+#[cfg(feature = "ABCI")]
+use ibc_abci::core::ics24_host::identifier::PortId;
 use thiserror::Error;
 
 use super::storage::{
@@ -42,6 +46,8 @@ pub enum Error {
 
 /// IBC port functions result
 pub type Result<T> = std::result::Result<T, Error>;
+/// ConnectionReader result
+type Ics05Result<T> = core::result::Result<T, Ics05Error>;
 
 impl<'a, DB, H> Ibc<'a, DB, H>
 where
@@ -91,12 +97,12 @@ where
                     let cap = capability(key)?;
                     let port_id = self.get_port_by_capability(&cap)?;
                     match self.lookup_module_by_port(&port_id) {
-                        Some(c) if c == cap => Ok(()),
-                        Some(_) => Err(Error::InvalidPort(format!(
+                        Ok(c) if c == cap => Ok(()),
+                        Ok(_) => Err(Error::InvalidPort(format!(
                             "The port is invalid: ID {}",
                             port_id
                         ))),
-                        None => Err(Error::NoCapability(format!(
+                        Err(_) => Err(Error::NoCapability(format!(
                             "The capability is not mapped: Index {}, Port {}",
                             cap.index(),
                             port_id
@@ -119,7 +125,12 @@ where
 
     fn capability_index(&self) -> Result<u64> {
         let key = capability_index_key();
-        Ok(self.read_counter(&key))
+        self.read_counter(&key).map_err(|e| {
+            Error::InvalidPort(format!(
+                "The capability index doesn't exist: {}",
+                e
+            ))
+        })
     }
 
     fn get_port_by_capability(&self, cap: &Capability) -> Result<PortId> {
@@ -149,17 +160,19 @@ where
     DB: 'static + ledger_storage::DB + for<'iter> ledger_storage::DBIter<'iter>,
     H: 'static + StorageHasher,
 {
-    fn lookup_module_by_port(&self, port_id: &PortId) -> Option<Capability> {
+    fn lookup_module_by_port(
+        &self,
+        port_id: &PortId,
+    ) -> Ics05Result<Capability> {
         let key = port_key(port_id);
         match self.ctx.read_post(&key) {
             Ok(Some(value)) => {
-                let index = match u64::try_from_slice(&value[..]) {
-                    Ok(i) => i,
-                    Err(_) => return None,
-                };
-                Some(Capability::from(index))
+                let index = u64::try_from_slice(&value[..])
+                    .map_err(|_| Ics05Error::implementation_specific())?;
+                Ok(Capability::from(index))
             }
-            _ => None,
+            Ok(None) => Err(Ics05Error::unknown_port(port_id.clone())),
+            Err(_) => Err(Ics05Error::implementation_specific()),
         }
     }
 

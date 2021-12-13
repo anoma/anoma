@@ -101,7 +101,7 @@ pub enum Error {
 }
 
 /// The block's state as stored in the database.
-pub struct BlockState {
+pub struct BlockStateRead {
     /// Merkle tree root
     pub root: H256,
     /// Merkle tree store
@@ -126,6 +126,32 @@ pub struct BlockState {
     pub encryption_key: Option<Vec<u8>>,
 }
 
+/// The block's state to write into the database.
+pub struct BlockStateWrite<'a> {
+    /// Merkle tree root
+    pub root: H256,
+    /// Merkle tree store
+    pub store: &'a DefaultStore<H256>,
+    /// Hash of the block
+    pub hash: &'a BlockHash,
+    /// Height of the block
+    pub height: BlockHeight,
+    /// Epoch of the block
+    pub epoch: Epoch,
+    /// Predecessor block epochs
+    pub pred_epochs: &'a Epochs,
+    /// Minimum block height at which the next epoch may start
+    pub next_epoch_min_start_height: BlockHeight,
+    /// Minimum block time at which the next epoch may start
+    pub next_epoch_min_start_time: DateTimeUtc,
+    /// Accounts' subspaces storage for arbitrary key-values
+    pub subspaces: &'a HashMap<Key, Vec<u8>>,
+    /// Established address generator
+    pub address_gen: &'a EstablishedAddressGen,
+    /// The serialization of the key used to encrypt txs during this epoch
+    pub encryption_key: Option<Vec<u8>>,
+}
+
 /// A database backend.
 pub trait DB: std::fmt::Debug {
     /// open the database from provided path
@@ -135,13 +161,13 @@ pub trait DB: std::fmt::Debug {
     fn flush(&self) -> Result<()>;
 
     /// Write a block
-    fn write_block(&mut self, state: BlockState) -> Result<()>;
+    fn write_block(&mut self, state: BlockStateWrite) -> Result<()>;
 
     /// Read the value with the given height and the key from the DB
     fn read(&self, height: BlockHeight, key: &Key) -> Result<Option<Vec<u8>>>;
 
     /// Read the last committed block
-    fn read_last_block(&mut self) -> Result<Option<BlockState>>;
+    fn read_last_block(&mut self) -> Result<Option<BlockStateRead>>;
 }
 
 /// A database prefix iterator.
@@ -203,7 +229,7 @@ where
     /// Load the full state at the last committed height, if any. Returns the
     /// Merkle root hash and the height of the committed block.
     pub fn load_last_state(&mut self) -> Result<()> {
-        if let Some(BlockState {
+        if let Some(BlockStateRead {
             root,
             store,
             hash,
@@ -251,17 +277,17 @@ where
 
     /// Persist the current block's state to the database
     pub fn commit(&mut self) -> Result<()> {
-        let state = BlockState {
+        let state = BlockStateWrite {
             root: *self.block.tree.0.root(),
-            store: self.block.tree.0.store().clone(),
-            hash: self.block.hash.clone(),
+            store: self.block.tree.0.store(),
+            hash: &self.block.hash,
             height: self.block.height,
             epoch: self.block.epoch,
-            pred_epochs: self.block.pred_epochs.clone(),
+            pred_epochs: &self.block.pred_epochs,
             next_epoch_min_start_height: self.next_epoch_min_start_height,
             next_epoch_min_start_time: self.next_epoch_min_start_time,
-            subspaces: self.block.subspaces.clone(),
-            address_gen: self.address_gen.clone(),
+            subspaces: &self.block.subspaces,
+            address_gen: &self.address_gen,
             encryption_key: self.encryption_key.clone(),
         };
         self.db.write_block(state)?;
@@ -563,13 +589,8 @@ pub mod testing {
     use super::*;
 
     /// The storage hasher used for the merkle tree.
+    #[derive(Default)]
     pub struct Sha256Hasher(Sha256);
-
-    impl Default for Sha256Hasher {
-        fn default() -> Self {
-            Self(Sha256::default())
-        }
-    }
 
     impl sparse_merkle_tree::traits::Hasher for Sha256Hasher {
         fn write_h256(&mut self, h: &H256) {

@@ -5,7 +5,7 @@ import urllib
 import urllib.request
 from urllib.request import urlopen
 
-GH_TOKEN = os.environ['GITHUB_TOKEN']
+GH_TOKEN = os.environ['GITHUB_TOKEN'] if 'GITHUB_TOKEN' in os.environ else ""
 
 GET_ISSUES_URL = 'https://api.github.com/repos/{}/{}/issues'.format('anoma', 'anoma')
 CREATE_ISSUE_URL = 'https://api.github.com/repos/{}/{}/issues'.format('anoma', 'anoma')
@@ -22,6 +22,7 @@ ISSUE_LABEL = 'udeps'
 
 def get_nightly_from_file() -> str:
     return open("../../rust-nightly-version", "r").read().strip()
+
 
 # 0 - not exist,2 already exist, else issue number
 def check_issue_status(body: str) -> int:
@@ -64,6 +65,7 @@ def format_manifest_path(path: str) -> str:
     base_path_index = path.split('/').index('anoma')
     return '/'.join(path.split('/')[base_path_index:])
 
+
 issue_template = '# Unused dependencies \n{}'
 table_header = '| Crate | Manifest Path | Package | Type |\n|----:|---------:|-------:|-------:|'
 table_row = '|{}|{}|{}|{}|'
@@ -71,13 +73,13 @@ table_row = '|{}|{}|{}|{}|'
 table = [table_header]
 
 nightly_version = get_nightly_from_file()
-command = ['cargo', '+{}'.format(nightly_version), 'udeps', '--all-features', '--locked', '--output', 'json']
-p = subprocess.Popen(command, stdout=subprocess.PIPE)
+command = ['cargo', '+{}'.format(nightly_version), 'udeps', '--output', 'json']
+p = subprocess.Popen(command, stdout=subprocess.PIPE, cwd="/usr/local/rust/project")
 output = p.stdout.read()
 retcode = p.wait()
 
 unused_deps = json.loads(output)
-if unused_deps['success'] == True:
+if unused_deps['success']:
     print("No unused dependencies found.")
     exit(0)
 
@@ -97,6 +99,10 @@ for crate in unused_deps['unused_deps'].keys():
 
 table_rendered = '\n'.join(table)
 issue_body = issue_template.format(table_rendered)
+
+if not GH_TOKEN:
+    print("Invalid github token.")
+    exit(0)
 
 issue_status = check_issue_status(issue_body)
 

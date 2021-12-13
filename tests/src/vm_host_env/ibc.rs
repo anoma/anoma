@@ -21,25 +21,27 @@ pub use anoma::types::ibc::*;
 use anoma::types::storage::Key;
 use anoma_vm_env::tx_prelude::BorshSerialize;
 #[cfg(not(feature = "ABCI"))]
-use ibc::ics02_client::client_consensus::ConsensusState;
+use ibc::core::ics02_client::client_consensus::ConsensusState;
 #[cfg(not(feature = "ABCI"))]
-use ibc::ics02_client::client_state::{AnyClientState, ClientState};
+use ibc::core::ics02_client::client_state::{AnyClientState, ClientState};
 #[cfg(not(feature = "ABCI"))]
-use ibc::ics02_client::header::Header;
+use ibc::core::ics02_client::header::Header;
 #[cfg(not(feature = "ABCI"))]
-use ibc::ics03_connection::connection::Counterparty as ConnCounterparty;
+use ibc::core::ics03_connection::connection::Counterparty as ConnCounterparty;
 #[cfg(not(feature = "ABCI"))]
-use ibc::ics03_connection::version::Version;
+use ibc::core::ics03_connection::version::Version;
 #[cfg(not(feature = "ABCI"))]
-use ibc::ics04_channel::channel::{
+use ibc::core::ics04_channel::channel::{
     ChannelEnd, Counterparty as ChanCounterparty, Order,
 };
 #[cfg(not(feature = "ABCI"))]
-use ibc::ics04_channel::packet::{Packet, Sequence};
+use ibc::core::ics04_channel::packet::{Packet, Sequence};
 #[cfg(not(feature = "ABCI"))]
-use ibc::ics23_commitment::commitment::CommitmentProofBytes;
+use ibc::core::ics23_commitment::commitment::CommitmentProofBytes;
 #[cfg(not(feature = "ABCI"))]
-use ibc::ics24_host::identifier::{ChannelId, ClientId, ConnectionId, PortId};
+use ibc::core::ics24_host::identifier::{
+    ChannelId, ClientId, ConnectionId, PortId,
+};
 #[cfg(not(feature = "ABCI"))]
 use ibc::mock::client_state::{MockClientState, MockConsensusState};
 #[cfg(not(feature = "ABCI"))]
@@ -49,25 +51,25 @@ use ibc::timestamp::Timestamp;
 #[cfg(not(feature = "ABCI"))]
 use ibc::Height;
 #[cfg(feature = "ABCI")]
-use ibc_abci::ics02_client::client_consensus::ConsensusState;
+use ibc_abci::core::ics02_client::client_consensus::ConsensusState;
 #[cfg(feature = "ABCI")]
-use ibc_abci::ics02_client::client_state::{AnyClientState, ClientState};
+use ibc_abci::core::ics02_client::client_state::{AnyClientState, ClientState};
 #[cfg(feature = "ABCI")]
-use ibc_abci::ics02_client::header::Header;
+use ibc_abci::core::ics02_client::header::Header;
 #[cfg(feature = "ABCI")]
-use ibc_abci::ics03_connection::connection::Counterparty as ConnCounterparty;
+use ibc_abci::core::ics03_connection::connection::Counterparty as ConnCounterparty;
 #[cfg(feature = "ABCI")]
-use ibc_abci::ics03_connection::version::Version;
+use ibc_abci::core::ics03_connection::version::Version;
 #[cfg(feature = "ABCI")]
-use ibc_abci::ics04_channel::channel::{
+use ibc_abci::core::ics04_channel::channel::{
     ChannelEnd, Counterparty as ChanCounterparty, Order,
 };
 #[cfg(feature = "ABCI")]
-use ibc_abci::ics04_channel::packet::{Packet, Sequence};
+use ibc_abci::core::ics04_channel::packet::{Packet, Sequence};
 #[cfg(feature = "ABCI")]
-use ibc_abci::ics23_commitment::commitment::CommitmentProofBytes;
+use ibc_abci::core::ics23_commitment::commitment::CommitmentProofBytes;
 #[cfg(feature = "ABCI")]
-use ibc_abci::ics24_host::identifier::{
+use ibc_abci::core::ics24_host::identifier::{
     ChannelId, ClientId, ConnectionId, PortId,
 };
 #[cfg(feature = "ABCI")]
@@ -152,7 +154,8 @@ pub fn tm_dummy_header() -> TmHeader {
             .expect("Creating an TmChainId shouldn't fail"),
         height: TmHeight::try_from(10_u64)
             .expect("Creating a height shouldn't fail"),
-        time: TmTime::now(),
+        time: TmTime::from_str("2021-11-01T18:14:32.024837Z")
+            .expect("Setting the time shouldn't fail"),
         last_block_id: None,
         last_commit_hash: None,
         data_hash: None,

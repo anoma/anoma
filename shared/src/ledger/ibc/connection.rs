@@ -2,53 +2,57 @@
 
 use borsh::{BorshDeserialize, BorshSerialize};
 #[cfg(not(feature = "ABCI"))]
-use ibc::ics02_client::client_consensus::{AnyConsensusState, ConsensusState};
+use ibc::clients::ics07_tendermint::consensus_state::ConsensusState as TmConsensusState;
 #[cfg(not(feature = "ABCI"))]
-use ibc::ics02_client::client_state::AnyClientState;
+use ibc::core::ics02_client::client_consensus::{
+    AnyConsensusState, ConsensusState,
+};
 #[cfg(not(feature = "ABCI"))]
-use ibc::ics02_client::context::ClientReader;
+use ibc::core::ics02_client::client_state::AnyClientState;
 #[cfg(not(feature = "ABCI"))]
-use ibc::ics02_client::height::Height;
+use ibc::core::ics02_client::context::ClientReader;
 #[cfg(not(feature = "ABCI"))]
-use ibc::ics03_connection::connection::{ConnectionEnd, Counterparty, State};
+use ibc::core::ics02_client::height::Height;
 #[cfg(not(feature = "ABCI"))]
-use ibc::ics03_connection::context::ConnectionReader;
+use ibc::core::ics03_connection::connection::{
+    ConnectionEnd, Counterparty, State,
+};
 #[cfg(not(feature = "ABCI"))]
-use ibc::ics03_connection::error::Error as Ics03Error;
+use ibc::core::ics03_connection::context::ConnectionReader;
 #[cfg(not(feature = "ABCI"))]
-use ibc::ics03_connection::handler::verify::verify_proofs;
+use ibc::core::ics03_connection::error::Error as Ics03Error;
 #[cfg(not(feature = "ABCI"))]
-use ibc::ics07_tendermint::consensus_state::ConsensusState as TendermintConsensusState;
+use ibc::core::ics03_connection::handler::verify::verify_proofs;
 #[cfg(not(feature = "ABCI"))]
-use ibc::ics23_commitment::commitment::CommitmentPrefix;
+use ibc::core::ics23_commitment::commitment::CommitmentPrefix;
 #[cfg(not(feature = "ABCI"))]
-use ibc::ics24_host::identifier::{ClientId, ConnectionId};
+use ibc::core::ics24_host::identifier::{ClientId, ConnectionId};
 #[cfg(feature = "ABCI")]
-use ibc_abci::ics02_client::client_consensus::{
+use ibc_abci::clients::ics07_tendermint::consensus_state::ConsensusState as TmConsensusState;
+#[cfg(feature = "ABCI")]
+use ibc_abci::core::ics02_client::client_consensus::{
     AnyConsensusState, ConsensusState,
 };
 #[cfg(feature = "ABCI")]
-use ibc_abci::ics02_client::client_state::AnyClientState;
+use ibc_abci::core::ics02_client::client_state::AnyClientState;
 #[cfg(feature = "ABCI")]
-use ibc_abci::ics02_client::context::ClientReader;
+use ibc_abci::core::ics02_client::context::ClientReader;
 #[cfg(feature = "ABCI")]
-use ibc_abci::ics02_client::height::Height;
+use ibc_abci::core::ics02_client::height::Height;
 #[cfg(feature = "ABCI")]
-use ibc_abci::ics03_connection::connection::{
+use ibc_abci::core::ics03_connection::connection::{
     ConnectionEnd, Counterparty, State,
 };
 #[cfg(feature = "ABCI")]
-use ibc_abci::ics03_connection::context::ConnectionReader;
+use ibc_abci::core::ics03_connection::context::ConnectionReader;
 #[cfg(feature = "ABCI")]
-use ibc_abci::ics03_connection::error::Error as Ics03Error;
+use ibc_abci::core::ics03_connection::error::Error as Ics03Error;
 #[cfg(feature = "ABCI")]
-use ibc_abci::ics03_connection::handler::verify::verify_proofs;
+use ibc_abci::core::ics03_connection::handler::verify::verify_proofs;
 #[cfg(feature = "ABCI")]
-use ibc_abci::ics07_tendermint::consensus_state::ConsensusState as TendermintConsensusState;
+use ibc_abci::core::ics23_commitment::commitment::CommitmentPrefix;
 #[cfg(feature = "ABCI")]
-use ibc_abci::ics23_commitment::commitment::CommitmentPrefix;
-#[cfg(feature = "ABCI")]
-use ibc_abci::ics24_host::identifier::{ClientId, ConnectionId};
+use ibc_abci::core::ics24_host::identifier::{ClientId, ConnectionId};
 use thiserror::Error;
 
 use super::storage::{
@@ -87,6 +91,8 @@ pub enum Error {
 
 /// IBC connection functions result
 pub type Result<T> = std::result::Result<T, Error>;
+/// ConnectionReader result
+type Ics03Result<T> = core::result::Result<T, Ics03Error>;
 
 impl<'a, DB, H> Ibc<'a, DB, H>
 where
@@ -100,7 +106,13 @@ where
     ) -> Result<()> {
         if is_connection_counter_key(key) {
             // the counter should be increased
-            if self.connection_counter_pre()? < self.connection_counter() {
+            let counter = self.connection_counter().map_err(|e| {
+                Error::InvalidConnection(format!(
+                    "The connection counter doesn't exist: {}",
+                    e
+                ))
+            })?;
+            if self.connection_counter_pre()? < counter {
                 return Ok(());
             } else {
                 return Err(Error::InvalidConnection(
@@ -110,7 +122,7 @@ where
         }
 
         let conn_id = connection_id(key)?;
-        let conn = self.connection_end(&conn_id).ok_or_else(|| {
+        let conn = self.connection_end(&conn_id).map_err(|_| {
             Error::InvalidConnection(format!(
                 "The connection doesn't exist: ID {}",
                 conn_id
@@ -150,8 +162,8 @@ where
             State::Init => {
                 let client_id = conn.client_id();
                 match ConnectionReader::client_state(self, client_id) {
-                    Some(_) => Ok(()),
-                    None => Err(Error::InvalidClient(format!(
+                    Ok(_) => Ok(()),
+                    Err(_) => Err(Error::InvalidClient(format!(
                         "The client state for the connection doesn't exist: \
                          ID {}",
                         conn_id,
@@ -337,17 +349,25 @@ where
     DB: 'static + storage::DB + for<'iter> storage::DBIter<'iter>,
     H: 'static + StorageHasher,
 {
-    fn connection_end(&self, conn_id: &ConnectionId) -> Option<ConnectionEnd> {
+    fn connection_end(
+        &self,
+        conn_id: &ConnectionId,
+    ) -> Ics03Result<ConnectionEnd> {
         let key = connection_key(conn_id);
         match self.ctx.read_post(&key) {
-            Ok(Some(value)) => ConnectionEnd::try_from_slice(&value[..]).ok(),
-            // returns None even if DB read fails
-            _ => None,
+            Ok(Some(value)) => ConnectionEnd::try_from_slice(&value[..])
+                .map_err(|_| Ics03Error::implementation_specific()),
+            Ok(None) => Err(Ics03Error::connection_not_found(conn_id.clone())),
+            Err(_) => Err(Ics03Error::implementation_specific()),
         }
     }
 
-    fn client_state(&self, client_id: &ClientId) -> Option<AnyClientState> {
+    fn client_state(
+        &self,
+        client_id: &ClientId,
+    ) -> Ics03Result<AnyClientState> {
         ClientReader::client_state(self, client_id)
+            .map_err(Ics03Error::ics02_client)
     }
 
     fn host_current_height(&self) -> Height {
@@ -375,24 +395,26 @@ where
         &self,
         client_id: &ClientId,
         height: Height,
-    ) -> Option<AnyConsensusState> {
+    ) -> Ics03Result<AnyConsensusState> {
         self.consensus_state(client_id, height)
+            .map_err(Ics03Error::ics02_client)
     }
 
     fn host_consensus_state(
         &self,
         _height: Height,
-    ) -> Option<AnyConsensusState> {
-        self.ctx
-            .storage
-            .get_block_header()
-            .0
-            .map(|h| TendermintConsensusState::from(h).wrap_any())
+    ) -> Ics03Result<AnyConsensusState> {
+        let header = match self.ctx.storage.get_block_header().0 {
+            Some(h) => h,
+            None => return Err(Ics03Error::implementation_specific()),
+        };
+        Ok(TmConsensusState::from(header).wrap_any())
     }
 
-    fn connection_counter(&self) -> u64 {
+    fn connection_counter(&self) -> Ics03Result<u64> {
         let key = connection_counter_key();
         self.read_counter(&key)
+            .map_err(|_| Ics03Error::implementation_specific())
     }
 }
 
