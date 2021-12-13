@@ -546,3 +546,392 @@ pub mod testing {
         (cache, dir)
     }
 }
+
+#[cfg(test)]
+mod test {
+    use std::cmp::max;
+
+    use byte_unit::Byte;
+    use tempfile::{tempdir, TempDir};
+    use test_log::test;
+
+    use super::*;
+    use crate::vm::WasmCacheRwAccess;
+
+    const TX_NO_OP: &str = "../wasm_for_tests/tx_no_op.wasm";
+    const TX_READ_STORAGE_KEY: &str =
+        "../wasm_for_tests/tx_read_storage_key.wasm";
+    const VP_ALWAYS_TRUE: &str = "../wasm_for_tests/vp_always_true.wasm";
+    const VP_EVAL: &str = "../wasm_for_tests/vp_eval.wasm";
+
+    #[test]
+    fn test_fetch_or_compile_valid_wasm() {
+        // Load some WASMs and find their hashes and in-memory size
+        let tx_read_storage_key = load_wasm(TX_READ_STORAGE_KEY);
+        let tx_no_op = load_wasm(TX_NO_OP);
+
+        // Create a new cache with the limit set to
+        // `max(tx_read_storage_key.size, tx_no_op.size) + 1`
+        {
+            let max_bytes = max(tx_read_storage_key.size, tx_no_op.size) + 1;
+            println!(
+                "Using cache with max_bytes {} ({})",
+                Byte::from_bytes(max_bytes as u128).get_appropriate_unit(true),
+                max_bytes
+            );
+            let (mut cache, _tmp_dir) = cache(max_bytes);
+
+            // Fetch `tx_read_storage_key`
+            {
+                let (_module, _store) =
+                    cache.fetch_or_compile(&tx_read_storage_key.code).unwrap();
+
+                let in_memory = cache.in_memory.read().unwrap();
+                assert_matches!(
+                    in_memory.peek(&tx_read_storage_key.hash),
+                    Some(_),
+                    "The module must be in memory"
+                );
+
+                let progress = cache.progress.read().unwrap();
+                assert_matches!(
+                    progress.get(&tx_read_storage_key.hash),
+                    Some(Compilation::Done),
+                    "The progress must be updated"
+                );
+
+                assert!(
+                    module_file_exists(&cache.dir, &tx_read_storage_key.hash),
+                    "The file must be written"
+                );
+            }
+
+            // Fetch `tx_no_op`. Fetching another module should get us over the
+            // limit, so the previous one should be popped from the cache
+            {
+                let (_module, _store) =
+                    cache.fetch_or_compile(&tx_no_op.code).unwrap();
+
+                let in_memory = cache.in_memory.read().unwrap();
+                assert_matches!(
+                    in_memory.peek(&tx_no_op.hash),
+                    Some(_),
+                    "The module must be in memory"
+                );
+
+                let progress = cache.progress.read().unwrap();
+                assert_matches!(
+                    progress.get(&tx_no_op.hash),
+                    Some(Compilation::Done),
+                    "The progress must be updated"
+                );
+
+                assert!(
+                    module_file_exists(&cache.dir, &tx_no_op.hash),
+                    "The file must be written"
+                );
+
+                // The previous module's file should still exist
+                assert!(
+                    module_file_exists(&cache.dir, &tx_read_storage_key.hash),
+                    "The file must be written"
+                );
+                // But it should not be in-memory
+                assert_matches!(
+                    in_memory.peek(&tx_read_storage_key.hash),
+                    None,
+                    "The module should have been popped from memory"
+                );
+            }
+
+            // Fetch `tx_read_storage_key` again
+            {
+                let (_module, _store) =
+                    cache.fetch_or_compile(&tx_read_storage_key.code).unwrap();
+
+                let in_memory = cache.in_memory.read().unwrap();
+                assert_matches!(
+                    in_memory.peek(&tx_read_storage_key.hash),
+                    Some(_),
+                    "The module must be in memory"
+                );
+
+                let progress = cache.progress.read().unwrap();
+                assert_matches!(
+                    progress.get(&tx_read_storage_key.hash),
+                    Some(Compilation::Done),
+                    "The progress must be updated"
+                );
+
+                assert!(
+                    module_file_exists(&cache.dir, &tx_read_storage_key.hash),
+                    "The file must be written"
+                );
+
+                // The previous module's file should still exist
+                assert!(
+                    module_file_exists(&cache.dir, &tx_no_op.hash),
+                    "The file must be written"
+                );
+                // But it should not be in-memory
+                assert_matches!(
+                    in_memory.peek(&tx_no_op.hash),
+                    None,
+                    "The module should have been popped from memory"
+                );
+            }
+
+            // Fetch `tx_no_op` with read/only access
+            {
+                let mut cache = cache.read_only();
+
+                // Fetching with read-only should not modify the in-memory cache
+                let (_module, _store) =
+                    cache.fetch_or_compile(&tx_no_op.code).unwrap();
+
+                let in_memory = cache.in_memory.read().unwrap();
+                assert_matches!(
+                    in_memory.peek(&tx_no_op.hash),
+                    None,
+                    "The module should not be added back to in-memory cache"
+                );
+
+                let in_memory = cache.in_memory.read().unwrap();
+                assert_matches!(
+                    in_memory.peek(&tx_read_storage_key.hash),
+                    Some(_),
+                    "The previous module must still be in memory"
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn test_fetch_or_compile_invalid_wasm() {
+        // Some random bytes
+        let invalid_wasm = vec![1_u8, 0, 8, 10, 6, 1];
+        let hash = hash_of_code(&invalid_wasm);
+        let (mut cache, _) = testing::cache::<TestCache>();
+
+        // Try to compile it
+        let error = cache
+            .fetch_or_compile(&invalid_wasm)
+            .expect_err("Compilation should fail");
+        println!("Error: {}", error);
+
+        let in_memory = cache.in_memory.read().unwrap();
+        assert_matches!(
+            in_memory.peek(&hash),
+            None,
+            "There should be no entry for this hash in memory"
+        );
+
+        let progress = cache.progress.read().unwrap();
+        assert_matches!(progress.get(&hash), None, "Any progress is removed");
+
+        assert!(
+            !module_file_exists(&cache.dir, &hash),
+            "The file must not be written"
+        );
+    }
+
+    #[test]
+    fn test_pre_compile_valid_wasm() {
+        // Load some WASMs and find their hashes and in-memory size
+        let vp_always_true = load_wasm(VP_ALWAYS_TRUE);
+        let vp_eval = load_wasm(VP_EVAL);
+
+        // Create a new cache with the limit set to
+        // `max(vp_always_true.size, vp_eval.size) + 1 + extra_bytes`
+        {
+            let max_bytes = max(vp_always_true.size, vp_eval.size) + 1;
+            println!(
+                "Using cache with max_bytes {} ({})",
+                Byte::from_bytes(max_bytes as u128).get_appropriate_unit(true),
+                max_bytes
+            );
+            let (mut cache, _tmp_dir) = cache(max_bytes);
+
+            // Pre-compile `vp_always_true`
+            {
+                cache.pre_compile(&vp_always_true.code);
+
+                let progress = cache.progress.read().unwrap();
+                assert_matches!(
+                    progress.get(&vp_always_true.hash),
+                    Some(Compilation::Done | Compilation::Compiling),
+                    "The progress must be updated"
+                );
+            }
+
+            // Now fetch it to wait for it finish compilation
+            {
+                let (_module, _store) =
+                    cache.fetch_or_compile(&vp_always_true.code).unwrap();
+
+                let in_memory = cache.in_memory.read().unwrap();
+                assert_matches!(
+                    in_memory.peek(&vp_always_true.hash),
+                    Some(_),
+                    "The module must be in memory"
+                );
+
+                let progress = cache.progress.read().unwrap();
+                assert_matches!(
+                    progress.get(&vp_always_true.hash),
+                    Some(Compilation::Done),
+                    "The progress must be updated"
+                );
+
+                assert!(
+                    module_file_exists(&cache.dir, &vp_always_true.hash),
+                    "The file must be written"
+                );
+            }
+
+            // Pre-compile `vp_eval`. Pre-compiling another module should get us
+            // over the limit, so the previous one should be popped
+            // from the cache
+            {
+                cache.pre_compile(&vp_eval.code);
+
+                let progress = cache.progress.read().unwrap();
+                assert_matches!(
+                    progress.get(&vp_eval.hash),
+                    Some(Compilation::Done | Compilation::Compiling),
+                    "The progress must be updated"
+                );
+            }
+
+            // Now fetch it to wait for it finish compilation
+            {
+                let (_module, _store) =
+                    cache.fetch_or_compile(&vp_eval.code).unwrap();
+
+                let in_memory = cache.in_memory.read().unwrap();
+                assert_matches!(
+                    in_memory.peek(&vp_eval.hash),
+                    Some(_),
+                    "The module must be in memory"
+                );
+
+                assert!(
+                    module_file_exists(&cache.dir, &vp_eval.hash),
+                    "The file must be written"
+                );
+
+                // The previous module's file should still exist
+                assert!(
+                    module_file_exists(&cache.dir, &vp_always_true.hash),
+                    "The file must be written"
+                );
+                // But it should not be in-memory
+                assert_matches!(
+                    in_memory.peek(&vp_always_true.hash),
+                    None,
+                    "The module should have been popped from memory"
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn test_pre_compile_invalid_wasm() {
+        // Some random bytes
+        let invalid_wasm = vec![1_u8];
+        let hash = hash_of_code(&invalid_wasm);
+        let (mut cache, _) = testing::cache::<TestCache>();
+
+        // Try to pre-compile it
+        {
+            cache.pre_compile(&invalid_wasm);
+            let progress = cache.progress.read().unwrap();
+            assert_matches!(
+                progress.get(&hash),
+                Some(Compilation::Done | Compilation::Compiling) | None,
+                "The progress must be updated"
+            );
+        }
+
+        // Now fetch it to wait for it finish compilation
+        {
+            let error = cache
+                .fetch_or_compile(&invalid_wasm)
+                .expect_err("Compilation should fail");
+            println!("Error: {}", error);
+
+            let in_memory = cache.in_memory.read().unwrap();
+            assert_matches!(
+                in_memory.peek(&hash),
+                None,
+                "There should be no entry for this hash in memory"
+            );
+
+            let progress = cache.progress.read().unwrap();
+            assert_matches!(
+                progress.get(&hash),
+                None,
+                "Any progress is removed"
+            );
+
+            assert!(
+                !module_file_exists(&cache.dir, &hash),
+                "The file must not be written"
+            );
+        }
+    }
+
+    /// Get the WASM code bytes, its hash and find the compiled module's size
+    fn load_wasm(file: impl AsRef<str>) -> WasmWithMeta {
+        // When `WeightScale` calls `loupe::size_of_val` in the cache, for some
+        // reason it returns 8 bytes more than the same call in here.
+        let extra_bytes = 8;
+
+        let file = file.as_ref();
+        let code = fs::read(file).unwrap();
+        let hash = hash_of_code(&code);
+        // Find the size of the compiled module
+        let size = {
+            let (mut cache, _tmp_dir) = cache(
+                // No in-memory cache needed, but must be non-zero
+                1,
+            );
+            let (module, _store) = cache.fetch_or_compile(&code).unwrap();
+            loupe::size_of_val(&module) + HASH_BYTES + extra_bytes
+        };
+        println!(
+            "Compiled module {} size including the hash: {} ({})",
+            file,
+            Byte::from_bytes(size as u128).get_appropriate_unit(true),
+            size,
+        );
+        WasmWithMeta { code, hash, size }
+    }
+
+    /// A test helper for loading WASM and finding its hash and size
+    #[derive(Clone, Debug)]
+    struct WasmWithMeta {
+        code: Vec<u8>,
+        hash: Hash,
+        /// Compiled module's in-memory size
+        size: usize,
+    }
+
+    /// A `CacheName` implementation for unit tests
+    #[derive(Clone, Debug)]
+    struct TestCache;
+    impl CacheName for TestCache {
+        fn name() -> &'static str {
+            "test"
+        }
+    }
+
+    /// A cache with a temp dir for unit tests
+    fn cache(
+        max_bytes: usize,
+    ) -> (Cache<TestCache, WasmCacheRwAccess>, TempDir) {
+        let dir = tempdir().unwrap();
+        let cache = Cache::new(dir.path(), max_bytes);
+        (cache, dir)
+    }
+}
