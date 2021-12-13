@@ -89,6 +89,7 @@ dependencies = [
  "assert_matches",
  "bech32",
  "borsh",
+ "byte-unit",
  "chrono",
  "clru",
  "ed25519-dalek",
