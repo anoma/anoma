@@ -644,7 +644,53 @@ mod test {
                 );
             }
 
-            // Fetch `tx_read_storage_key` again
+            // Reset the in-memory cache and progress and fetch
+            // `tx_read_storage_key` again, this time it should get loaded
+            // from file
+            let in_memory_cache = CLruCache::with_config(
+                CLruCacheConfig::new(NonZeroUsize::new(max_bytes).unwrap())
+                    .with_scale(ModuleCacheScale),
+            );
+            let in_memory = Arc::new(RwLock::new(in_memory_cache));
+            cache.in_memory = in_memory;
+            cache.progress = Default::default();
+            {
+                let (_module, _store) =
+                    cache.fetch_or_compile(&tx_read_storage_key.code).unwrap();
+
+                let in_memory = cache.in_memory.read().unwrap();
+                assert_matches!(
+                    in_memory.peek(&tx_read_storage_key.hash),
+                    Some(_),
+                    "The module must be in memory"
+                );
+
+                let progress = cache.progress.read().unwrap();
+                assert_matches!(
+                    progress.get(&tx_read_storage_key.hash),
+                    Some(Compilation::Done),
+                    "The progress must be updated"
+                );
+
+                assert!(
+                    module_file_exists(&cache.dir, &tx_read_storage_key.hash),
+                    "The file must be written"
+                );
+
+                // The previous module's file should still exist
+                assert!(
+                    module_file_exists(&cache.dir, &tx_no_op.hash),
+                    "The file must be written"
+                );
+                // But it should not be in-memory
+                assert_matches!(
+                    in_memory.peek(&tx_no_op.hash),
+                    None,
+                    "The module should have been popped from memory"
+                );
+            }
+
+            // Fetch `tx_read_storage_key` again, now it should be in-memory
             {
                 let (_module, _store) =
                     cache.fetch_or_compile(&tx_read_storage_key.code).unwrap();
