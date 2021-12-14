@@ -203,14 +203,14 @@ async fn run_aux(config: config::Ledger, wasm_dir: PathBuf) {
     let available_memory_bytes = sys.available_memory() * 1024;
     let available_memory = Byte::from_bytes(available_memory_bytes as u128)
         .get_appropriate_unit(true);
-    tracing::debug!("Available memory: {}", available_memory);
+    tracing::info!("Available memory: {}", available_memory);
     let block_cache_size_bytes = match config.shell.block_cache_bytes {
         Some(block_cache_bytes) => {
-            tracing::debug!("Block cache set from configuration.");
+            tracing::info!("Block cache set from configuration.");
             block_cache_bytes
         }
         None => {
-            tracing::debug!(
+            tracing::info!(
                 "Block cache size not configured, using 1/3 of available \
                  memory."
             );
@@ -219,7 +219,7 @@ async fn run_aux(config: config::Ledger, wasm_dir: PathBuf) {
     };
     let block_cache_size = Byte::from_bytes(block_cache_size_bytes as u128)
         .get_appropriate_unit(true);
-    tracing::debug!("Block cache size: {}", block_cache_size,);
+    tracing::info!("Block cache size: {}", block_cache_size,);
     let db_cache =
         rocksdb::Cache::new_lru_cache(block_cache_size_bytes as usize).unwrap();
 
