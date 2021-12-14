@@ -33,6 +33,11 @@ pub fn main() -> Result<()> {
                 );
                 gossip::run(
                     gossip_cfg,
+                    &config
+                        .ledger
+                        .shell
+                        .base_dir
+                        .join(ctx.global_config.default_chain_id.as_str()),
                     &config.wasm_dir,
                     tx_source_address,
                     tx_signing_key,

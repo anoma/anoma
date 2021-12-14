@@ -204,7 +204,6 @@ fn create_and_send_tx_data(
                 first_node.exchange.data.addr.clone(),
                 first_node.intent.clone(),
             );
-            log_string(format!("tx data: {:?}", tx_data.transfers));
             send_tx(tx_data)
         }
         Err(err) => {
