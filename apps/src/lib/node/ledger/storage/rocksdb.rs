@@ -75,7 +75,7 @@ pub fn open(
             // If not set, default to quarter of logical CPUs count
             cmp::max(1, logical_cores / 4)
         };
-    tracing::debug!(
+    tracing::info!(
         "Using {} compactions threads for RocksDB.",
         compaction_threads
     );

@@ -130,7 +130,7 @@ impl Shell {
 /// Run the ledger with an async runtime
 pub fn run(config: config::Ledger, wasm_dir: PathBuf) {
     let logical_cores = num_cpus::get();
-    tracing::debug!("Available logical cores: {}", logical_cores);
+    tracing::info!("Available logical cores: {}", logical_cores);
 
     let rayon_threads = if let Ok(num_str) = env::var(ENV_VAR_RAYON_THREADS) {
         match usize::from_str(&num_str) {
@@ -148,7 +148,7 @@ pub fn run(config: config::Ledger, wasm_dir: PathBuf) {
         // If not set, default to half of logical CPUs count
         logical_cores / 2
     };
-    tracing::debug!("Using {} threads for Rayon.", rayon_threads);
+    tracing::info!("Using {} threads for Rayon.", rayon_threads);
 
     let tokio_threads = if let Ok(num_str) = env::var(ENV_VAR_TOKIO_THREADS) {
         match usize::from_str(&num_str) {
@@ -166,7 +166,7 @@ pub fn run(config: config::Ledger, wasm_dir: PathBuf) {
         // If not set, default to half of logical CPUs count
         logical_cores / 2
     };
-    tracing::debug!("Using {} threads for Tokio.", tokio_threads);
+    tracing::info!("Using {} threads for Tokio.", tokio_threads);
 
     // Configure number of threads for rayon (used in `par_iter` when running
     // VPs)
