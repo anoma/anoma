@@ -1,3 +1,6 @@
+mod identity;
+
+use std::path::Path;
 use std::time::Duration;
 
 use libp2p::core::connection::ConnectionLimits;
@@ -12,6 +15,7 @@ use libp2p::{core, mplex, noise, PeerId, Transport, TransportError};
 use thiserror::Error;
 use tokio::sync::mpsc::Sender;
 
+pub use self::identity::Identity;
 use super::behaviour::Behaviour;
 use crate::types::MatchmakerMessage;
 
@@ -40,19 +44,20 @@ impl P2P {
     /// propagation of intents.
     pub fn new(
         config: &crate::config::IntentGossiper,
+        base_dir: impl AsRef<Path>,
         mm_sender: Option<Sender<MatchmakerMessage>>,
     ) -> Result<Self> {
-        let peer_key = Keypair::Ed25519(config.gossiper.key.clone());
-
+        let identity = Identity::load_or_gen(base_dir);
+        let peer_key = identity.key();
         // Id of the node on the libp2p network derived from the public key
-        let peer_id = PeerId::from(peer_key.public());
+        let peer_id = identity.peer_id();
 
         tracing::info!("Peer id: {:?}", peer_id.clone());
 
         // TODO remove async runtime here and hide it in `build_transport`
         let transport = {
             let rt = tokio::runtime::Runtime::new().unwrap();
-            rt.block_on(build_transport(peer_key.clone()))
+            rt.block_on(build_transport(&peer_key))
         };
 
         // create intent gossip specific behaviour
@@ -84,7 +89,7 @@ impl P2P {
 /// https://docs.libp2p.io/concepts/transport/ for more information on libp2p
 /// transport
 pub async fn build_transport(
-    peer_key: Keypair,
+    peer_key: &Keypair,
 ) -> Boxed<(PeerId, StreamMuxerBox)> {
     let transport = {
         let tcp_transport = TcpConfig::new().nodelay(true);
@@ -95,7 +100,7 @@ pub async fn build_transport(
 
     let auth_config = {
         let dh_keys = noise::Keypair::<noise::X25519Spec>::new()
-            .into_authentic(&peer_key)
+            .into_authentic(peer_key)
             .expect("Noise key generation failed. Should never happen.");
 
         noise::NoiseConfig::xx(dh_keys).into_authenticated()

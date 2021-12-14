@@ -2,7 +2,6 @@
 
 pub mod genesis;
 pub mod global;
-pub mod gossiper;
 
 use std::collections::HashSet;
 use std::fmt::Display;
@@ -14,7 +13,6 @@ use std::str::FromStr;
 
 use anoma::types::chain::ChainId;
 use anoma::types::time::Rfc3339String;
-use gossiper::Gossiper;
 use libp2p::multiaddr::{Multiaddr, Protocol};
 use libp2p::multihash::Multihash;
 use libp2p::PeerId;
@@ -117,7 +115,6 @@ pub struct IntentGossiper {
     pub topics: HashSet<String>,
     pub subscription_filter: SubscriptionFilter,
     pub rpc: Option<RpcServer>,
-    pub gossiper: Gossiper,
     pub discover_peer: Option<DiscoverPeer>,
     pub matchmaker: Option<Matchmaker>,
 }
@@ -374,7 +371,6 @@ impl Default for IntentGossiper {
             ),
 
             topics: vec!["asset_v0"].into_iter().map(String::from).collect(),
-            gossiper: Gossiper::new(),
             matchmaker: None,
             discover_peer: Some(DiscoverPeer::default()),
         }

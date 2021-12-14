@@ -30,6 +30,7 @@ use crate::config::global::GlobalConfig;
 use crate::config::{
     self, genesis, Config, IntentGossiper, PeerAddress, TendermintMode,
 };
+use crate::node::gossip;
 use crate::node::ledger::tendermint_node;
 use crate::wallet::Wallet;
 use crate::wasm_loader;
@@ -175,10 +176,9 @@ pub fn init_network(
         persistent_peers.push(peer);
         // Add a Intent gossiper bootstrap peer from the validator's IP
         let mut gossiper_config = IntentGossiper::default();
-        let peer_key = libp2p::identity::Keypair::Ed25519(
-            gossiper_config.gossiper.key.clone(),
-        );
-        let peer_id = libp2p::PeerId::from(peer_key.public());
+        // Generate P2P identity
+        let p2p_idenity = gossip::p2p::Identity::gen(&chain_dir);
+        let peer_id = p2p_idenity.peer_id();
         let ledger_addr =
             SocketAddr::from_str(config.net_address.as_ref().unwrap()).unwrap();
         let ip = ledger_addr.ip().to_string();

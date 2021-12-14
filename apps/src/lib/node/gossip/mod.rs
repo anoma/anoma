@@ -1,6 +1,6 @@
 mod behaviour;
 mod intent_gossiper;
-mod p2p;
+pub mod p2p;
 mod rpc;
 
 use std::borrow::Cow;
@@ -27,6 +27,7 @@ type Result<T> = std::result::Result<T, Error>;
 
 pub fn run(
     config: IntentGossiper,
+    base_dir: impl AsRef<Path>,
     wasm_dir: impl AsRef<Path>,
     tx_source_address: Option<Address>,
     tx_signing_key: Option<Rc<Keypair>>,
@@ -42,8 +43,9 @@ pub fn run(
 
     // Create the P2P gossip network, which can send messages directly to the
     // matchmaker, if any
-    let gossip = p2p::P2P::new(&config, intent_gossip_app.mm_sender.clone())
-        .map_err(Error::P2pInit)?;
+    let gossip =
+        p2p::P2P::new(&config, base_dir, intent_gossip_app.mm_sender.clone())
+            .map_err(Error::P2pInit)?;
 
     // Start the rpc socket, if enabled in the config
     let rpc_event_receiver = config.rpc.as_ref().map(rpc::start_rpc_server);

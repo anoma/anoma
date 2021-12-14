@@ -90,6 +90,7 @@ dependencies = [
  "bech32",
  "borsh",
  "chrono",
+ "derivative",
  "ed25519-dalek",
  "group-threshold-cryptography",
  "hex",
