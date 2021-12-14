@@ -231,23 +231,31 @@ impl WriteLog {
         DB: 'static + storage::DB + for<'iter> storage::DBIter<'iter>,
         H: StorageHasher,
     {
+        let mut batch = Storage::<DB, H>::batch();
         for (key, entry) in self.block_write_log.iter() {
             match entry {
                 StorageModification::Write { value } => {
                     storage
-                        .write(key, value.clone())
+                        .batch_write_subspace_val(
+                            &mut batch,
+                            key,
+                            value.clone(),
+                        )
                         .map_err(Error::StorageError)?;
                 }
                 StorageModification::Delete => {
-                    storage.delete(key).map_err(Error::StorageError)?;
+                    storage
+                        .batch_delete_subspace_val(&mut batch, key)
+                        .map_err(Error::StorageError)?;
                 }
                 StorageModification::InitAccount { vp } => {
                     storage
-                        .write(key, vp.clone())
+                        .batch_write_subspace_val(&mut batch, key, vp.clone())
                         .map_err(Error::StorageError)?;
                 }
             }
         }
+        storage.exec_batch(batch).map_err(Error::StorageError)?;
         if let Some(address_gen) = self.address_gen.take() {
             storage.address_gen = address_gen
         }

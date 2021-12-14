@@ -71,7 +71,7 @@ mod tests {
         let db_path =
             TempDir::new().expect("Unable to create a temporary DB directory");
         let mut storage =
-            PersistentStorage::open(db_path.path(), ChainId::default());
+            PersistentStorage::open(db_path.path(), ChainId::default(), None);
         let key =
             Key::parse("key".to_owned()).expect("cannot parse the key string");
         let value: u64 = 1;
@@ -115,7 +115,7 @@ mod tests {
         let db_path =
             TempDir::new().expect("Unable to create a temporary DB directory");
         let mut storage =
-            PersistentStorage::open(db_path.path(), ChainId::default());
+            PersistentStorage::open(db_path.path(), ChainId::default(), None);
         storage
             .begin_block(BlockHash::default(), BlockHeight(100))
             .expect("begin_block failed");
@@ -138,7 +138,7 @@ mod tests {
 
         // load the last state
         let mut storage =
-            PersistentStorage::open(db_path.path(), ChainId::default());
+            PersistentStorage::open(db_path.path(), ChainId::default(), None);
         storage
             .load_last_state()
             .expect("loading the last state failed");
@@ -157,7 +157,7 @@ mod tests {
         let db_path =
             TempDir::new().expect("Unable to create a temporary DB directory");
         let mut storage =
-            PersistentStorage::open(db_path.path(), ChainId::default());
+            PersistentStorage::open(db_path.path(), ChainId::default(), None);
         storage
             .begin_block(BlockHash::default(), BlockHeight(100))
             .expect("begin_block failed");
@@ -198,7 +198,7 @@ mod tests {
         let db_path =
             TempDir::new().expect("Unable to create a temporary DB directory");
         let mut storage =
-            PersistentStorage::open(db_path.path(), ChainId::default());
+            PersistentStorage::open(db_path.path(), ChainId::default(), None);
         storage
             .begin_block(BlockHash::default(), BlockHeight(100))
             .expect("begin_block failed");
