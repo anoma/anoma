@@ -194,24 +194,9 @@ impl<N: CacheName, A: WasmCacheAccess> Cache<N, A> {
                             match wasm::run::prepare_wasm_code(code) {
                                 Ok(code) => match compile(code) {
                                     Ok((module, store)) => {
-                                        // Update progress
-                                        let mut progress =
-                                            self.progress.write().unwrap();
-                                        progress
-                                            .insert(hash, Compilation::Done);
-
                                         // Write the file
                                         file_write_module(
                                             &self.dir, &module, &hash,
-                                        );
-
-                                        // Put into cache, ignore result if it's
-                                        // full
-                                        let mut in_memory =
-                                            self.in_memory.write().unwrap();
-                                        let _ = in_memory.put_with_weight(
-                                            hash,
-                                            module.clone(),
                                         );
 
                                         (module, store)
@@ -243,6 +228,15 @@ impl<N: CacheName, A: WasmCacheAccess> Cache<N, A> {
                                 }
                             }
                         };
+
+                    // Update progress
+                    let mut progress = self.progress.write().unwrap();
+                    progress.insert(hash, Compilation::Done);
+
+                    // Put into cache, ignore the result (fails if the module
+                    // cannot fit into the cache)
+                    let mut in_memory = self.in_memory.write().unwrap();
+                    let _ = in_memory.put_with_weight(hash, module.clone());
 
                     return Ok((module, store));
                 }
