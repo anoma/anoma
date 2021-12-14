@@ -108,6 +108,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "anoma_tx_prelude"
+version = "0.2.0"
+dependencies = [
+ "anoma_vm_env",
+]
+
+[[package]]
 name = "anoma_vm_env"
 version = "0.2.0"
 dependencies = [
@@ -125,11 +132,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "anoma_vp_prelude"
+version = "0.2.0"
+dependencies = [
+ "anoma_vm_env",
+]
+
+[[package]]
 name = "anoma_wasm"
 version = "0.2.0"
 dependencies = [
  "anoma_tests",
+ "anoma_tx_prelude",
  "anoma_vm_env",
+ "anoma_vp_prelude",
  "borsh",
  "good_lp",
  "once_cell",

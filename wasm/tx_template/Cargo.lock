@@ -108,6 +108,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "anoma_tx_prelude"
+version = "0.2.0"
+dependencies = [
+ "anoma_vm_env",
+]
+
+[[package]]
 name = "anoma_vm_env"
 version = "0.2.0"
 dependencies = [
@@ -2616,7 +2623,7 @@ name = "tx_template"
 version = "0.2.0"
 dependencies = [
  "anoma_tests",
- "anoma_vm_env",
+ "anoma_tx_prelude",
  "borsh",
  "wee_alloc",
 ]
