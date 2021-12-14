@@ -263,6 +263,12 @@
 <span id="263">263</span>
 <span id="264">264</span>
 <span id="265">265</span>
+<span id="266">266</span>
+<span id="267">267</span>
+<span id="268">268</span>
+<span id="269">269</span>
+<span id="270">270</span>
+<span id="271">271</span>
 </pre><pre class="rust"><code><span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">defaults</span>;
 <span class="kw">mod</span> <span class="ident">keys</span>;
 <span class="kw">mod</span> <span class="ident">store</span>;
@@ -492,9 +498,15 @@
     }
 
     <span class="doccomment">/// Add a new address with the given alias. If the alias is already used,</span>
-    <span class="doccomment">/// will prompt for overwrite confirmation, which when declined, the address</span>
-    <span class="doccomment">/// won&#39;t be added. Return `true` if the address has been added.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">add_address</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">alias</span>: <span class="ident">String</span>, <span class="ident">address</span>: <span class="ident">Address</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
+    <span class="doccomment">/// will ask whether the existing alias should be replaced, a different</span>
+    <span class="doccomment">/// alias is desired, or the alias creation should be cancelled. Return</span>
+    <span class="doccomment">/// the chosen alias if the address has been added, otherwise return</span>
+    <span class="doccomment">/// nothing.</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">add_address</span>(
+        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
+        <span class="ident">alias</span>: <span class="ident">Alias</span>,
+        <span class="ident">address</span>: <span class="ident">Address</span>,
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Alias</span><span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">store</span>.<span class="ident">insert_address</span>(<span class="ident">alias</span>, <span class="ident">address</span>)
     }
 
@@ -505,7 +517,7 @@
         <span class="ident">alias</span>: <span class="ident">Alias</span>,
         <span class="ident">keypair</span>: <span class="ident">StoredKeypair</span>,
         <span class="ident">pkh</span>: <span class="ident">PublicKeyHash</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Alias</span><span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">store</span>.<span class="ident">insert_keypair</span>(<span class="ident">alias</span>, <span class="ident">keypair</span>, <span class="ident">pkh</span>)
     }
 }

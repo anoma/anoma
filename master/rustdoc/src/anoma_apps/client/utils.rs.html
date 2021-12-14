@@ -737,6 +737,8 @@
 <span id="737">737</span>
 <span id="738">738</span>
 <span id="739">739</span>
+<span id="740">740</span>
+<span id="741">741</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std::collections</span>::{<span class="ident">HashMap</span>, <span class="ident">HashSet</span>};
 <span class="kw">use</span> <span class="ident">std::fs</span>::{<span class="self">self</span>, <span class="ident">File</span>, <span class="ident">OpenOptions</span>};
 <span class="kw">use</span> <span class="ident">std::io</span>::{<span class="ident">Read</span>, <span class="ident">Write</span>};
@@ -1380,8 +1382,9 @@
     <span class="kw">let</span> <span class="ident">validator_address</span> <span class="op">=</span>
         <span class="ident">address::gen_established_address</span>(<span class="string">&quot;genesis validator address&quot;</span>);
     <span class="kw">let</span> <span class="ident">validator_address_alias</span> <span class="op">=</span> <span class="ident">alias</span>.<span class="ident">clone</span>();
-    <span class="kw">if</span> <span class="op">!</span><span class="ident">wallet</span>
+    <span class="kw">if</span> <span class="ident">wallet</span>
         .<span class="ident">add_address</span>(<span class="ident">validator_address_alias</span>.<span class="ident">clone</span>(), <span class="ident">validator_address</span>.<span class="ident">clone</span>())
+        .<span class="ident">is_none</span>()
     {
         <span class="ident">cli::safe_exit</span>(<span class="number">1</span>)
     }
@@ -1389,8 +1392,9 @@
     <span class="kw">let</span> <span class="ident">rewards_address</span> <span class="op">=</span>
         <span class="ident">address::gen_established_address</span>(<span class="string">&quot;genesis validator reward address&quot;</span>);
     <span class="kw">let</span> <span class="ident">rewards_address_alias</span> <span class="op">=</span> <span class="macro">format!</span>(<span class="string">&quot;{}-rewards&quot;</span>, <span class="ident">alias</span>);
-    <span class="kw">if</span> <span class="op">!</span><span class="ident">wallet</span>
+    <span class="kw">if</span> <span class="ident">wallet</span>
         .<span class="ident">add_address</span>(<span class="ident">rewards_address_alias</span>.<span class="ident">clone</span>(), <span class="ident">rewards_address</span>.<span class="ident">clone</span>())
+        .<span class="ident">is_none</span>()
     {
         <span class="ident">cli::safe_exit</span>(<span class="number">1</span>)
     }
