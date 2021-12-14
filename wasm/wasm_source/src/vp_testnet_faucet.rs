@@ -5,8 +5,8 @@
 //!
 //! Any other storage key changes are allowed only with a valid signature.
 
-use anoma_vm_env::vp_prelude::key::ed25519::SignedTxData;
-use anoma_vm_env::vp_prelude::*;
+use anoma_vp_prelude::key::ed25519::SignedTxData;
+use anoma_vp_prelude::*;
 use once_cell::unsync::Lazy;
 
 /// Allows anyone to withdraw up to 1_000 tokens in a single tx
@@ -19,11 +19,13 @@ fn validate_tx(
     keys_changed: HashSet<storage::Key>,
     verifiers: HashSet<Address>,
 ) -> bool {
-    log_string(format!(
+    debug_log!(
         "vp_testnet_faucet called with user addr: {}, key_changed: {:?}, \
          verifiers: {:?}",
-        addr, keys_changed, verifiers
-    ));
+        addr,
+        keys_changed,
+        verifiers
+    );
 
     let signed_tx_data =
         Lazy::new(|| SignedTxData::try_from_slice(&tx_data[..]));
@@ -58,7 +60,7 @@ fn validate_tx(
             *valid_sig
         };
         if !is_valid {
-            log_string(format!("key {} modification failed vp", key));
+            debug_log!("key {} modification failed vp", key);
             return false;
         }
     }

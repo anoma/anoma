@@ -236,8 +236,8 @@ fn match_intents() -> Result<()> {
         albert, christel
     ))?;
 
-    // check that the intent vp passes evaluation
-    ledger.exp_string("eval result: true")?;
+    // check that the all VPs accept the transaction
+    ledger.exp_string("all VPs accepted apply_tx storage modification")?;
 
     Ok(())
 }

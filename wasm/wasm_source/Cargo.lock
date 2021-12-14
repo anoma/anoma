@@ -51,6 +51,7 @@ dependencies = [
  "bech32",
  "borsh",
  "chrono",
+ "derivative",
  "ed25519-dalek",
  "hex",
  "ibc",
@@ -108,6 +109,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "anoma_tx_prelude"
+version = "0.2.0"
+dependencies = [
+ "anoma_vm_env",
+]
+
+[[package]]
 name = "anoma_vm_env"
 version = "0.2.0"
 dependencies = [
@@ -125,11 +133,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "anoma_vp_prelude"
+version = "0.2.0"
+dependencies = [
+ "anoma_vm_env",
+]
+
+[[package]]
 name = "anoma_wasm"
 version = "0.2.0"
 dependencies = [
  "anoma_tests",
+ "anoma_tx_prelude",
  "anoma_vm_env",
+ "anoma_vp_prelude",
  "borsh",
  "good_lp",
  "once_cell",
@@ -581,6 +598,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ade7bff147130fe5e6d39f089c6bd49ec0250f35d70b2eebf72afdfc919f15cc"
 dependencies = [
  "darling_core",
+ "quote",
+ "syn",
+]
+
+[[package]]
+name = "derivative"
+version = "2.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "fcc3dd5e9e9c0b295d6e1e4d811fb6f157d5ffd784b8d202fc62eac8035a770b"
+dependencies = [
+ "proc-macro2",
  "quote",
  "syn",
 ]
