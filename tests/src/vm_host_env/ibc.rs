@@ -19,6 +19,7 @@ use anoma::proto::Tx;
 use anoma::types::address::{Address, InternalAddress};
 pub use anoma::types::ibc::*;
 use anoma::types::storage::Key;
+use anoma::vm::{wasm, WasmCacheRwAccess};
 use anoma_vm_env::tx_prelude::BorshSerialize;
 #[cfg(not(feature = "ABCI"))]
 use ibc::core::ics02_client::client_consensus::ConsensusState;
@@ -84,6 +85,7 @@ use ibc_abci::Height;
 use ibc_proto::ibc::core::commitment::v1::MerkleProof;
 #[cfg(feature = "ABCI")]
 use ibc_proto_abci::ibc::core::commitment::v1::MerkleProof;
+use tempfile::TempDir;
 #[cfg(not(feature = "ABCI"))]
 use tendermint::account::Id as TmAccountId;
 #[cfg(not(feature = "ABCI"))]
@@ -114,7 +116,7 @@ use tendermint_stable::time::Time as TmTime;
 use crate::tx::TestTxEnv;
 
 pub struct TestIbcVp<'a> {
-    pub ibc: Ibc<'a, MockDB, Sha256Hasher>,
+    pub ibc: Ibc<'a, MockDB, Sha256Hasher, WasmCacheRwAccess>,
     pub keys_changed: HashSet<Key>,
 }
 
@@ -132,19 +134,26 @@ impl<'a> TestIbcVp<'a> {
 pub fn init_ibc_vp_from_tx<'a>(
     tx_env: &'a TestTxEnv,
     tx: &'a Tx,
-) -> TestIbcVp<'a> {
+) -> (TestIbcVp<'a>, TempDir) {
     let keys_changed = tx_env
         .write_log
         .verifiers_changed_keys(&HashSet::new())
         .get(&Address::Internal(InternalAddress::Ibc))
         .cloned()
         .expect("no IBC address");
+    let (vp_wasm_cache, vp_cache_dir) =
+        wasm::compilation_cache::common::testing::cache();
 
-    let ctx =
-        Ctx::new(&tx_env.storage, &tx_env.write_log, tx, VpGasMeter::new(0));
+    let ctx = Ctx::new(
+        &tx_env.storage,
+        &tx_env.write_log,
+        tx,
+        VpGasMeter::new(0),
+        vp_wasm_cache,
+    );
     let ibc = Ibc { ctx };
 
-    TestIbcVp { ibc, keys_changed }
+    (TestIbcVp { ibc, keys_changed }, vp_cache_dir)
 }
 
 pub fn tm_dummy_header() -> TmHeader {

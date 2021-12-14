@@ -36,6 +36,7 @@ use crate::ledger::storage::{self as ledger_storage, StorageHasher};
 use crate::types::address::{Address, InternalAddress};
 use crate::types::storage::Key;
 use crate::types::{key, token};
+use crate::vm::WasmCacheAccess;
 
 #[allow(missing_docs)]
 #[derive(Error, Debug)]
@@ -48,23 +49,25 @@ pub enum Error {
 pub type Result<T> = std::result::Result<T, Error>;
 
 /// Proof-of-Stake validity predicate
-pub struct PosVP<'a, DB, H>
+pub struct PosVP<'a, DB, H, CA>
 where
     DB: ledger_storage::DB + for<'iter> ledger_storage::DBIter<'iter>,
     H: StorageHasher,
+    CA: WasmCacheAccess,
 {
     /// Context to interact with the host structures.
-    pub ctx: Ctx<'a, DB, H>,
+    pub ctx: Ctx<'a, DB, H, CA>,
 }
 
 // TODO this is temporarily to run PoS native VP in a new thread to avoid
 // crashing the ledger (in apps/src/lib/node/ledger/protocol/mod.rs). The
 // RefCells contained within PosVP are not thread-safe, but each thread has its
 // own instances.
-impl<DB, H> UnwindSafe for PosVP<'_, DB, H>
+impl<DB, H, CA> UnwindSafe for PosVP<'_, DB, H, CA>
 where
     DB: 'static + ledger_storage::DB + for<'iter> ledger_storage::DBIter<'iter>,
     H: 'static + StorageHasher,
+    CA: 'static + WasmCacheAccess,
 {
 }
 
@@ -72,17 +75,19 @@ where
 // crashing the ledger (in apps/src/lib/node/ledger/protocol/mod.rs). The
 // RefCells contained within PosVP are not thread-safe, but each thread has its
 // own instances.
-impl<DB, H> RefUnwindSafe for PosVP<'_, DB, H>
+impl<DB, H, CA> RefUnwindSafe for PosVP<'_, DB, H, CA>
 where
     DB: 'static + ledger_storage::DB + for<'iter> ledger_storage::DBIter<'iter>,
     H: 'static + StorageHasher,
+    CA: 'static + WasmCacheAccess,
 {
 }
 
-impl<'a, DB, H> NativeVp for PosVP<'a, DB, H>
+impl<'a, DB, H, CA> NativeVp for PosVP<'a, DB, H, CA>
 where
     DB: 'static + ledger_storage::DB + for<'iter> ledger_storage::DBIter<'iter>,
     H: 'static + StorageHasher,
+    CA: 'static + WasmCacheAccess,
 {
     type Error = Error;
 
@@ -289,10 +294,11 @@ where
     }
 }
 
-impl<D, H> PosReadOnly for PosVP<'_, D, H>
+impl<D, H, CA> PosReadOnly for PosVP<'_, D, H, CA>
 where
     D: 'static + ledger_storage::DB + for<'iter> ledger_storage::DBIter<'iter>,
     H: 'static + StorageHasher,
+    CA: 'static + WasmCacheAccess,
 {
     type Address = Address;
     type PublicKey = key::ed25519::PublicKey;

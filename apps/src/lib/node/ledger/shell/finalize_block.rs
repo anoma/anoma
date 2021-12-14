@@ -163,6 +163,8 @@ where
                 &mut self.gas_meter,
                 &mut self.write_log,
                 &self.storage,
+                &mut self.vp_wasm_cache,
+                &mut self.tx_wasm_cache,
             )
             .map_err(Error::TxApply)
             {

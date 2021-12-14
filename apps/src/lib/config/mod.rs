@@ -86,9 +86,15 @@ pub struct Ledger {
 pub struct Shell {
     pub base_dir: PathBuf,
     pub ledger_address: SocketAddr,
-    /// Block cache size in bytes.
+    /// RocksDB block cache maximum size in bytes.
     /// When not set, defaults to 1/3 of the available memory.
     pub block_cache_bytes: Option<u64>,
+    /// VP WASM compilation cache maximum size in bytes.
+    /// When not set, defaults to 1/6 of the available memory.
+    pub vp_wasm_compilation_cache_bytes: Option<u64>,
+    /// Tx WASM compilation in-memory cache maximum size in bytes.
+    /// When not set, defaults to 1/6 of the available memory.
+    pub tx_wasm_compilation_cache_bytes: Option<u64>,
     /// Use the [`Ledger::db_dir()`] method to read the value.
     db_dir: PathBuf,
     /// Use the [`Ledger::tendermint_dir()`] method to read the value.
@@ -138,6 +144,8 @@ impl Ledger {
                     26658,
                 ),
                 block_cache_bytes: None,
+                vp_wasm_compilation_cache_bytes: None,
+                tx_wasm_compilation_cache_bytes: None,
                 db_dir: DB_DIR.into(),
                 tendermint_dir: TENDERMINT_DIR.into(),
             },

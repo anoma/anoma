@@ -30,6 +30,7 @@ use super::storage::{
 use super::{Ibc, StateChange};
 use crate::ledger::storage::{self as ledger_storage, StorageHasher};
 use crate::types::storage::Key;
+use crate::vm::WasmCacheAccess;
 
 #[allow(missing_docs)]
 #[derive(Error, Debug)]
@@ -49,10 +50,11 @@ pub type Result<T> = std::result::Result<T, Error>;
 /// ConnectionReader result
 type Ics05Result<T> = core::result::Result<T, Ics05Error>;
 
-impl<'a, DB, H> Ibc<'a, DB, H>
+impl<'a, DB, H, CA> Ibc<'a, DB, H, CA>
 where
     DB: 'static + ledger_storage::DB + for<'iter> ledger_storage::DBIter<'iter>,
     H: 'static + StorageHasher,
+    CA: 'static + WasmCacheAccess,
 {
     pub(super) fn validate_port(&self, key: &Key) -> Result<()> {
         let port_id = port_id(key)?;
@@ -155,10 +157,11 @@ where
     }
 }
 
-impl<'a, DB, H> PortReader for Ibc<'a, DB, H>
+impl<'a, DB, H, CA> PortReader for Ibc<'a, DB, H, CA>
 where
     DB: 'static + ledger_storage::DB + for<'iter> ledger_storage::DBIter<'iter>,
     H: 'static + StorageHasher,
+    CA: 'static + WasmCacheAccess,
 {
     fn lookup_module_by_port(
         &self,
