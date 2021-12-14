@@ -41,11 +41,18 @@ impl AbcippShim {
         db_path: impl AsRef<Path>,
         chain_id: ChainId,
         wasm_dir: PathBuf,
+        db_cache: &rocksdb::Cache,
     ) -> (Self, AbciService) {
         let (shell_send, shell_recv) = tokio::sync::mpsc::channel(1024);
         (
             Self {
-                service: Shell::new(base_dir, db_path, chain_id, wasm_dir),
+                service: Shell::new(
+                    base_dir,
+                    db_path,
+                    chain_id,
+                    wasm_dir,
+                    Some(db_cache),
+                ),
                 begin_block_request: None,
                 block_txs: vec![],
                 shell_recv,

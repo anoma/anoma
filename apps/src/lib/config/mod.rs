@@ -86,6 +86,9 @@ pub struct Ledger {
 pub struct Shell {
     pub base_dir: PathBuf,
     pub ledger_address: SocketAddr,
+    /// Block cache size in bytes.
+    /// When not set, defaults to 1/3 of the available memory.
+    pub block_cache_bytes: Option<u64>,
     /// Use the [`Ledger::db_dir()`] method to read the value.
     db_dir: PathBuf,
     /// Use the [`Ledger::tendermint_dir()`] method to read the value.
@@ -134,6 +137,7 @@ impl Ledger {
                     IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)),
                     26658,
                 ),
+                block_cache_bytes: None,
                 db_dir: DB_DIR.into(),
                 tendermint_dir: TENDERMINT_DIR.into(),
             },
