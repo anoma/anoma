@@ -360,6 +360,9 @@ impl DB for RocksDB {
                             types::decode(bytes).map_err(Error::CodingError)?,
                         );
                     }
+                    "diffs" => {
+                        // ignore the diffs
+                    }
                     _ => unknown_key_error(path)?,
                 },
                 None => unknown_key_error(path)?,
