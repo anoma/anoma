@@ -488,7 +488,9 @@ pub fn untrusted_wasm_store(limit: Limit<BaseTunables>) -> wasmer::Store {
     // Use Singlepass compiler with the default settings
     let compiler = wasmer_compiler_singlepass::Singlepass::default();
     wasmer::Store::new_with_tunables(
-        &wasmer_engine_universal::Universal::new(compiler).engine(),
+        // TODO wasmer 2.x
+        // &wasmer_engine_universal::Universal::new(compiler).engine(),
+        &wasmer_engine_jit::JIT::new(compiler).engine(),
         limit,
     )
 }
@@ -496,10 +498,13 @@ pub fn untrusted_wasm_store(limit: Limit<BaseTunables>) -> wasmer::Store {
 /// Prepare a wasm store for trusted code.
 fn trusted_wasm_store() -> wasmer::Store {
     // TODO use LLVM compiler with native engine
+
+    // TODO wasmer 2.x
+    // wasmer::Store::new(
+    //     &wasmer_engine_universal::Universal::new(compiler).engine(),
+    // )
     let compiler = wasmer_compiler_cranelift::Cranelift::default();
-    wasmer::Store::new(
-        &wasmer_engine_universal::Universal::new(compiler).engine(),
-    )
+    wasmer::Store::new(&wasmer_engine_jit::JIT::new(compiler).engine())
 }
 
 /// Inject gas counter and stack-height limiter into the given wasm code
