@@ -13,6 +13,7 @@ use crate::proto::Tx;
 use crate::types::address::{Address, InternalAddress};
 use crate::types::storage::{BlockHash, BlockHeight, Epoch, Key};
 use crate::vm::prefix_iter::PrefixIterators;
+use crate::vm::WasmCacheAccess;
 
 #[allow(missing_docs)]
 #[derive(Error, Debug)]
@@ -47,10 +48,11 @@ pub trait NativeVp {
 /// wrapper types and `eval_runner` field. The references must not be changed
 /// when [`Ctx`] is mutable.
 #[derive(Debug)]
-pub struct Ctx<'a, DB, H>
+pub struct Ctx<'a, DB, H, CA>
 where
     DB: storage::DB + for<'iter> storage::DBIter<'iter>,
     H: StorageHasher,
+    CA: WasmCacheAccess,
 {
     /// Storage prefix iterators.
     pub iterators: RefCell<PrefixIterators<'a, DB>>,
@@ -62,12 +64,19 @@ where
     pub write_log: &'a WriteLog,
     /// The transaction code is used for signature verification
     pub tx: &'a Tx,
+    /// VP WASM compilation cache
+    #[cfg(feature = "wasm-runtime")]
+    pub vp_wasm_cache: crate::vm::wasm::VpCache<CA>,
+    /// To avoid unused parameter without "wasm-runtime" feature
+    #[cfg(not(feature = "wasm-runtime"))]
+    pub cache_access: std::marker::PhantomData<CA>,
 }
 
-impl<'a, DB, H> Ctx<'a, DB, H>
+impl<'a, DB, H, CA> Ctx<'a, DB, H, CA>
 where
     DB: 'static + storage::DB + for<'iter> storage::DBIter<'iter>,
     H: 'static + StorageHasher,
+    CA: 'static + WasmCacheAccess,
 {
     /// Initialize a new context for native VP call
     pub fn new(
@@ -75,6 +84,8 @@ where
         write_log: &'a WriteLog,
         tx: &'a Tx,
         gas_meter: VpGasMeter,
+        #[cfg(feature = "wasm-runtime")]
+        vp_wasm_cache: crate::vm::wasm::VpCache<CA>,
     ) -> Self {
         Self {
             iterators: RefCell::new(PrefixIterators::default()),
@@ -82,6 +93,10 @@ where
             storage,
             write_log,
             tx,
+            #[cfg(feature = "wasm-runtime")]
+            vp_wasm_cache,
+            #[cfg(not(feature = "wasm-runtime"))]
+            cache_access: std::marker::PhantomData,
         }
     }
 
@@ -210,7 +225,7 @@ where
     /// If the execution fails for whatever reason, this will return `false`.
     /// Otherwise returns the result of evaluation.
     pub fn eval(
-        &self,
+        &mut self,
         address: &Address,
         keys_changed: &HashSet<Key>,
         verifiers: &HashSet<Address>,
@@ -227,6 +242,7 @@ where
             let eval_runner = VpEvalWasm {
                 db: PhantomData,
                 hasher: PhantomData,
+                cache_access: PhantomData,
             };
             let mut iterators: PrefixIterators<'_, DB> =
                 PrefixIterators::default();
@@ -243,6 +259,7 @@ where
                 &mut result_buffer,
                 keys_changed,
                 &eval_runner,
+                &mut self.vp_wasm_cache,
             );
             match eval_runner.eval_native_result(ctx, vp_code, input_data) {
                 Ok(result) => result,

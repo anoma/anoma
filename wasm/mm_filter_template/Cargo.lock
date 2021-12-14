@@ -25,6 +25,7 @@ dependencies = [
  "bech32",
  "borsh",
  "chrono",
+ "clru",
  "ed25519-dalek",
  "hex",
  "itertools",
@@ -206,6 +207,11 @@ dependencies = [
  "time",
  "winapi",
 ]
+
+[[package]]
+name = "clru"
+version = "0.5.0"
+source = "git+https://github.com/marmeladema/clru-rs.git?rev=71ca566#71ca566915f21f3c308091ca7756a91b0f8b5afc"
 
 [[package]]
 name = "cpufeatures"

@@ -10,16 +10,17 @@ use wasmer::{
 
 use crate::gossip::mm::MmHost;
 use crate::ledger::storage::{self, StorageHasher};
-use crate::vm::host_env;
 use crate::vm::host_env::{
     FilterEnv, MatchmakerEnv, TxEnv, VpEnv, VpEvaluator,
 };
 use crate::vm::wasm::memory::WasmMemory;
+use crate::vm::{host_env, WasmCacheAccess};
 
-impl<DB, H> WasmerEnv for TxEnv<'_, WasmMemory, DB, H>
+impl<DB, H, CA> WasmerEnv for TxEnv<'_, WasmMemory, DB, H, CA>
 where
     DB: storage::DB + for<'iter> storage::DBIter<'iter>,
     H: StorageHasher,
+    CA: WasmCacheAccess,
 {
     fn init_with_instance(
         &mut self,
@@ -29,11 +30,12 @@ where
     }
 }
 
-impl<DB, H, EVAL> WasmerEnv for VpEnv<'_, WasmMemory, DB, H, EVAL>
+impl<DB, H, EVAL, CA> WasmerEnv for VpEnv<'_, WasmMemory, DB, H, EVAL, CA>
 where
     DB: storage::DB + for<'iter> storage::DBIter<'iter>,
     H: StorageHasher,
     EVAL: VpEvaluator,
+    CA: WasmCacheAccess,
 {
     fn init_with_instance(
         &mut self,
@@ -67,14 +69,15 @@ impl WasmerEnv for FilterEnv<WasmMemory> {
 /// Prepare imports (memory and host functions) exposed to the vm guest running
 /// transaction code
 #[allow(clippy::too_many_arguments)]
-pub fn tx_imports<DB, H>(
+pub fn tx_imports<DB, H, CA>(
     wasm_store: &Store,
     initial_memory: Memory,
-    env: TxEnv<'static, WasmMemory, DB, H>,
+    env: TxEnv<'static, WasmMemory, DB, H, CA>,
 ) -> ImportObject
 where
     DB: storage::DB + for<'iter> storage::DBIter<'iter>,
     H: StorageHasher,
+    CA: WasmCacheAccess,
 {
     wasmer::imports! {
         // default namespace
@@ -102,15 +105,16 @@ where
 
 /// Prepare imports (memory and host functions) exposed to the vm guest running
 /// validity predicate code
-pub fn vp_imports<DB, H, EVAL>(
+pub fn vp_imports<DB, H, EVAL, CA>(
     wasm_store: &Store,
     initial_memory: Memory,
-    env: VpEnv<'static, WasmMemory, DB, H, EVAL>,
+    env: VpEnv<'static, WasmMemory, DB, H, EVAL, CA>,
 ) -> ImportObject
 where
     DB: storage::DB + for<'iter> storage::DBIter<'iter>,
     H: StorageHasher,
-    EVAL: VpEvaluator<Db = DB, H = H, Eval = EVAL>,
+    EVAL: VpEvaluator<Db = DB, H = H, Eval = EVAL, CA = CA>,
+    CA: WasmCacheAccess,
 {
     wasmer::imports! {
         // default namespace

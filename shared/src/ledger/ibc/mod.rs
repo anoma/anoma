@@ -25,6 +25,7 @@ use crate::ledger::native_vp::{self, Ctx, NativeVp};
 use crate::ledger::storage::{self as ledger_storage, Storage, StorageHasher};
 use crate::types::address::{Address, InternalAddress};
 use crate::types::storage::Key;
+use crate::vm::WasmCacheAccess;
 
 #[allow(missing_docs)]
 #[derive(Error, Debug)]
@@ -53,13 +54,14 @@ pub enum Error {
 pub type Result<T> = std::result::Result<T, Error>;
 
 /// IBC VP
-pub struct Ibc<'a, DB, H>
+pub struct Ibc<'a, DB, H, CA>
 where
     DB: ledger_storage::DB + for<'iter> ledger_storage::DBIter<'iter>,
     H: StorageHasher,
+    CA: WasmCacheAccess,
 {
     /// Context to interact with the host structures.
-    pub ctx: Ctx<'a, DB, H>,
+    pub ctx: Ctx<'a, DB, H, CA>,
 }
 
 /// Initialize storage in the genesis block.
@@ -97,10 +99,11 @@ where
         .expect("Unable to write the initial capability index");
 }
 
-impl<'a, DB, H> NativeVp for Ibc<'a, DB, H>
+impl<'a, DB, H, CA> NativeVp for Ibc<'a, DB, H, CA>
 where
     DB: 'static + ledger_storage::DB + for<'iter> ledger_storage::DBIter<'iter>,
     H: 'static + StorageHasher,
+    CA: 'static + WasmCacheAccess,
 {
     type Error = Error;
 
@@ -178,10 +181,11 @@ enum StateChange {
     NotExists,
 }
 
-impl<'a, DB, H> Ibc<'a, DB, H>
+impl<'a, DB, H, CA> Ibc<'a, DB, H, CA>
 where
     DB: 'static + ledger_storage::DB + for<'iter> ledger_storage::DBIter<'iter>,
     H: 'static + StorageHasher,
+    CA: 'static + WasmCacheAccess,
 {
     fn get_state_change(&self, key: &Key) -> Result<StateChange> {
         if self.ctx.has_key_pre(key)? {
@@ -403,6 +407,7 @@ mod tests {
         PacketSendData,
     };
     use crate::types::storage::KeySeg;
+    use crate::vm::wasm;
 
     fn get_client_id() -> ClientId {
         ClientId::from_str("test_client").expect("Creating a client ID failed")
@@ -595,7 +600,8 @@ mod tests {
         let tx_data = vec![];
         let tx = Tx::new(tx_code, Some(tx_data.clone()));
         let gas_meter = VpGasMeter::new(0);
-        let ctx = Ctx::new(&storage, &write_log, &tx, gas_meter);
+        let (vp_cache, _) = wasm::compilation_cache::common::testing::cache();
+        let ctx = Ctx::new(&storage, &write_log, &tx, gas_meter, vp_cache);
 
         let mut keys_changed = HashSet::new();
         let client_state_key = client_state_key(&get_client_id());
@@ -619,7 +625,8 @@ mod tests {
         let tx_data = vec![];
         let tx = Tx::new(tx_code, Some(tx_data.clone()));
         let gas_meter = VpGasMeter::new(0);
-        let ctx = Ctx::new(&storage, &write_log, &tx, gas_meter);
+        let (vp_cache, _) = wasm::compilation_cache::common::testing::cache();
+        let ctx = Ctx::new(&storage, &write_log, &tx, gas_meter, vp_cache);
 
         let mut keys_changed = HashSet::new();
         let client_state_key = client_state_key(&get_client_id());
@@ -671,7 +678,8 @@ mod tests {
                 .expect("encoding failed");
         let tx = Tx::new(tx_code, Some(tx_data.clone()));
         let gas_meter = VpGasMeter::new(0);
-        let ctx = Ctx::new(&storage, &write_log, &tx, gas_meter);
+        let (vp_cache, _) = wasm::compilation_cache::common::testing::cache();
+        let ctx = Ctx::new(&storage, &write_log, &tx, gas_meter, vp_cache);
 
         let mut keys_changed = HashSet::new();
         keys_changed.insert(client_state_key);
@@ -710,7 +718,8 @@ mod tests {
         let tx_data = data.try_to_vec().expect("encoding failed");
         let tx = Tx::new(tx_code, Some(tx_data.clone()));
         let gas_meter = VpGasMeter::new(0);
-        let ctx = Ctx::new(&storage, &write_log, &tx, gas_meter);
+        let (vp_cache, _) = wasm::compilation_cache::common::testing::cache();
+        let ctx = Ctx::new(&storage, &write_log, &tx, gas_meter, vp_cache);
 
         let mut keys_changed = HashSet::new();
         keys_changed.insert(conn_key);
@@ -749,7 +758,8 @@ mod tests {
         let tx_data = data.try_to_vec().expect("encoding failed");
         let tx = Tx::new(tx_code, Some(tx_data.clone()));
         let gas_meter = VpGasMeter::new(0);
-        let ctx = Ctx::new(&storage, &write_log, &tx, gas_meter);
+        let (vp_cache, _) = wasm::compilation_cache::common::testing::cache();
+        let ctx = Ctx::new(&storage, &write_log, &tx, gas_meter, vp_cache);
 
         let mut keys_changed = HashSet::new();
         keys_changed.insert(conn_key);
@@ -805,7 +815,8 @@ mod tests {
         let tx_data = data.try_to_vec().expect("encoding failed");
         let tx = Tx::new(tx_code, Some(tx_data.clone()));
         let gas_meter = VpGasMeter::new(0);
-        let ctx = Ctx::new(&storage, &write_log, &tx, gas_meter);
+        let (vp_cache, _) = wasm::compilation_cache::common::testing::cache();
+        let ctx = Ctx::new(&storage, &write_log, &tx, gas_meter, vp_cache);
 
         let mut keys_changed = HashSet::new();
         keys_changed.insert(conn_key);
@@ -862,7 +873,8 @@ mod tests {
         let tx_data = data.try_to_vec().expect("encoding failed");
         let tx = Tx::new(tx_code, Some(tx_data.clone()));
         let gas_meter = VpGasMeter::new(0);
-        let ctx = Ctx::new(&storage, &write_log, &tx, gas_meter);
+        let (vp_cache, _) = wasm::compilation_cache::common::testing::cache();
+        let ctx = Ctx::new(&storage, &write_log, &tx, gas_meter, vp_cache);
 
         let mut keys_changed = HashSet::new();
         keys_changed.insert(conn_key);
@@ -909,7 +921,8 @@ mod tests {
         let tx_data = data.try_to_vec().expect("encoding failed");
         let tx = Tx::new(tx_code, Some(tx_data.clone()));
         let gas_meter = VpGasMeter::new(0);
-        let ctx = Ctx::new(&storage, &write_log, &tx, gas_meter);
+        let (vp_cache, _) = wasm::compilation_cache::common::testing::cache();
+        let ctx = Ctx::new(&storage, &write_log, &tx, gas_meter, vp_cache);
 
         let mut keys_changed = HashSet::new();
         keys_changed.insert(conn_key);
@@ -954,7 +967,8 @@ mod tests {
         let tx_data = data.try_to_vec().expect("encoding failed");
         let tx = Tx::new(tx_code, Some(tx_data.clone()));
         let gas_meter = VpGasMeter::new(0);
-        let ctx = Ctx::new(&storage, &write_log, &tx, gas_meter);
+        let (vp_cache, _) = wasm::compilation_cache::common::testing::cache();
+        let ctx = Ctx::new(&storage, &write_log, &tx, gas_meter, vp_cache);
 
         let mut keys_changed = HashSet::new();
         keys_changed.insert(channel_key);
@@ -1007,7 +1021,8 @@ mod tests {
         let tx_data = data.try_to_vec().expect("encoding failed");
         let tx = Tx::new(tx_code, Some(tx_data.clone()));
         let gas_meter = VpGasMeter::new(0);
-        let ctx = Ctx::new(&storage, &write_log, &tx, gas_meter);
+        let (vp_cache, _) = wasm::compilation_cache::common::testing::cache();
+        let ctx = Ctx::new(&storage, &write_log, &tx, gas_meter, vp_cache);
 
         let mut keys_changed = HashSet::new();
         keys_changed.insert(channel_key);
@@ -1063,7 +1078,8 @@ mod tests {
         let tx_data = data.try_to_vec().expect("encoding failed");
         let tx = Tx::new(tx_code, Some(tx_data.clone()));
         let gas_meter = VpGasMeter::new(0);
-        let ctx = Ctx::new(&storage, &write_log, &tx, gas_meter);
+        let (vp_cache, _) = wasm::compilation_cache::common::testing::cache();
+        let ctx = Ctx::new(&storage, &write_log, &tx, gas_meter, vp_cache);
 
         let mut keys_changed = HashSet::new();
         keys_changed.insert(channel_key);
@@ -1117,7 +1133,8 @@ mod tests {
         let tx_data = data.try_to_vec().expect("encoding failed");
         let tx = Tx::new(tx_code, Some(tx_data.clone()));
         let gas_meter = VpGasMeter::new(0);
-        let ctx = Ctx::new(&storage, &write_log, &tx, gas_meter);
+        let (vp_cache, _) = wasm::compilation_cache::common::testing::cache();
+        let ctx = Ctx::new(&storage, &write_log, &tx, gas_meter, vp_cache);
 
         let mut keys_changed = HashSet::new();
         keys_changed.insert(channel_key);
@@ -1142,7 +1159,8 @@ mod tests {
         let tx_data = vec![];
         let tx = Tx::new(tx_code, Some(tx_data.clone()));
         let gas_meter = VpGasMeter::new(0);
-        let ctx = Ctx::new(&storage, &write_log, &tx, gas_meter);
+        let (vp_cache, _) = wasm::compilation_cache::common::testing::cache();
+        let ctx = Ctx::new(&storage, &write_log, &tx, gas_meter, vp_cache);
 
         let mut keys_changed = HashSet::new();
         keys_changed.insert(port_key(&get_port_id()));
@@ -1168,7 +1186,8 @@ mod tests {
         let tx_data = vec![];
         let tx = Tx::new(tx_code, Some(tx_data.clone()));
         let gas_meter = VpGasMeter::new(0);
-        let ctx = Ctx::new(&storage, &write_log, &tx, gas_meter);
+        let (vp_cache, _) = wasm::compilation_cache::common::testing::cache();
+        let ctx = Ctx::new(&storage, &write_log, &tx, gas_meter, vp_cache);
 
         let mut keys_changed = HashSet::new();
         let cap_key = capability_key(index);
@@ -1232,7 +1251,8 @@ mod tests {
         let tx_data = data.try_to_vec().expect("encoding failed");
         let tx = Tx::new(tx_code, Some(tx_data.clone()));
         let gas_meter = VpGasMeter::new(0);
-        let ctx = Ctx::new(&storage, &write_log, &tx, gas_meter);
+        let (vp_cache, _) = wasm::compilation_cache::common::testing::cache();
+        let ctx = Ctx::new(&storage, &write_log, &tx, gas_meter, vp_cache);
 
         let mut keys_changed = HashSet::new();
         keys_changed.insert(seq_key);
@@ -1300,7 +1320,8 @@ mod tests {
         let tx_data = data.try_to_vec().expect("encoding failed");
         let tx = Tx::new(tx_code, Some(tx_data.clone()));
         let gas_meter = VpGasMeter::new(0);
-        let ctx = Ctx::new(&storage, &write_log, &tx, gas_meter);
+        let (vp_cache, _) = wasm::compilation_cache::common::testing::cache();
+        let ctx = Ctx::new(&storage, &write_log, &tx, gas_meter, vp_cache);
 
         let mut keys_changed = HashSet::new();
         keys_changed.insert(seq_key);
@@ -1374,7 +1395,8 @@ mod tests {
         let tx_data = data.try_to_vec().expect("encoding failed");
         let tx = Tx::new(tx_code, Some(tx_data.clone()));
         let gas_meter = VpGasMeter::new(0);
-        let ctx = Ctx::new(&storage, &write_log, &tx, gas_meter);
+        let (vp_cache, _) = wasm::compilation_cache::common::testing::cache();
+        let ctx = Ctx::new(&storage, &write_log, &tx, gas_meter, vp_cache);
 
         let mut keys_changed = HashSet::new();
         keys_changed.insert(seq_key);
@@ -1442,7 +1464,8 @@ mod tests {
         let tx_data = data.try_to_vec().expect("encoding failed");
         let tx = Tx::new(tx_code, Some(tx_data.clone()));
         let gas_meter = VpGasMeter::new(0);
-        let ctx = Ctx::new(&storage, &write_log, &tx, gas_meter);
+        let (vp_cache, _) = wasm::compilation_cache::common::testing::cache();
+        let ctx = Ctx::new(&storage, &write_log, &tx, gas_meter, vp_cache);
 
         let mut keys_changed = HashSet::new();
         keys_changed.insert(commitment_key);
@@ -1514,7 +1537,8 @@ mod tests {
         let tx_data = data.try_to_vec().expect("encoding failed");
         let tx = Tx::new(tx_code, Some(tx_data.clone()));
         let gas_meter = VpGasMeter::new(0);
-        let ctx = Ctx::new(&storage, &write_log, &tx, gas_meter);
+        let (vp_cache, _) = wasm::compilation_cache::common::testing::cache();
+        let ctx = Ctx::new(&storage, &write_log, &tx, gas_meter, vp_cache);
 
         let mut keys_changed = HashSet::new();
         keys_changed.insert(receipt_key);
@@ -1549,7 +1573,8 @@ mod tests {
         let tx_data = vec![];
         let tx = Tx::new(tx_code, Some(tx_data.clone()));
         let gas_meter = VpGasMeter::new(0);
-        let ctx = Ctx::new(&storage, &write_log, &tx, gas_meter);
+        let (vp_cache, _) = wasm::compilation_cache::common::testing::cache();
+        let ctx = Ctx::new(&storage, &write_log, &tx, gas_meter, vp_cache);
 
         let mut keys_changed = HashSet::new();
         keys_changed.insert(ack_key);

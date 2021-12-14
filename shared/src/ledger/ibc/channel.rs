@@ -83,6 +83,7 @@ use crate::types::ibc::{
     TimeoutData,
 };
 use crate::types::storage::Key;
+use crate::vm::WasmCacheAccess;
 
 #[allow(missing_docs)]
 #[derive(Error, Debug)]
@@ -118,10 +119,11 @@ pub type Result<T> = std::result::Result<T, Error>;
 /// ChannelReader result
 type Ics04Result<T> = core::result::Result<T, Ics04Error>;
 
-impl<'a, DB, H> Ibc<'a, DB, H>
+impl<'a, DB, H, CA> Ibc<'a, DB, H, CA>
 where
     DB: 'static + ledger_storage::DB + for<'iter> ledger_storage::DBIter<'iter>,
     H: 'static + StorageHasher,
+    CA: 'static + WasmCacheAccess,
 {
     pub(super) fn validate_channel(
         &self,
@@ -569,10 +571,11 @@ where
     }
 }
 
-impl<'a, DB, H> ChannelReader for Ibc<'a, DB, H>
+impl<'a, DB, H, CA> ChannelReader for Ibc<'a, DB, H, CA>
 where
     DB: 'static + ledger_storage::DB + for<'iter> ledger_storage::DBIter<'iter>,
     H: 'static + StorageHasher,
+    CA: 'static + WasmCacheAccess,
 {
     fn channel_end(
         &self,
