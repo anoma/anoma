@@ -480,7 +480,6 @@ impl DB for RocksDB {
     fn read_subspace_val(&self, key: &Key) -> Result<Option<Vec<u8>>> {
         let subspace_key =
             Key::parse("subspace").map_err(Error::KeyError)?.join(key);
-        println!("READ KEY {}", subspace_key);
         self.0
             .get(subspace_key.to_string())
             .map_err(|e| Error::DBError(e.into_string()))
