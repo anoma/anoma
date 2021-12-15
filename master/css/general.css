@@ -12,6 +12,7 @@ html {
     color: var(--fg);
     background-color: var(--bg);
     text-size-adjust: none;
+    -webkit-text-size-adjust: none;
 }
 
 body {
