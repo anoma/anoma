@@ -14,7 +14,7 @@ block heights, in practice this will be at the beginning of every epoch.
 It is important to note that the key being generated will be used to encrypt
 transactions in the epoch following the current one. This means that the 
 validator set of epoch `n+1` must participate in the DKG protocol
-during epoch `n` use the voting powers they will have during epoch `n+1` in 
+during epoch `n` using the voting powers they will have during epoch `n+1` in 
 their computations. Because of the pipelining of validator set changes, the validator sets
 and their voting powers for epoch `n+1` will be known at the beginning of
 epoch `n`. 
@@ -76,6 +76,20 @@ for user transactions be left so as not to throttle throughput. However,
 even a limit of one PVSS transcript per block will be sufficient for the
 most probable choices of epoch length and \\( W \\).
 
+A parameter called `retry_after` is passed in to the DKG state machine
+that facilitates a schedule for validators to issue (or re-issue) PVSS
+transcripts so as not to overcrowd the gossip network.
+
+This parameters specifies a number of blocks after which all DKG participants
+will reissue their PVSS transcripts if they are not already on chain. 
+The validator set is partitioned into chunks of size
+\\(\frac{1}{2}\times\\)`retry_after`. The DKG determines which partition a
+given validator is in. If the number of blocks since the DKG instance began
+reaches a validators partition, they issue a PVSS transcript. They wait
+until the next partition is reached and if their transcript has not made it
+onto the blockchain, they re-issue it. The state machine has a method for advising
+validators when to issue a PVSS transcript and when to wait.
+
 ## Aggregation
 
 During the dealing phase of the DKG protocol, PVSS transcripts observed on
@@ -113,13 +127,25 @@ needs to be stored by each node
  - The partition of the weight shares among the current validator set
  - A session keypair for the current DKG session. Used for encrypting
    PVSS transcripts and signing DKG protocol messages.
- - A list of session ids from the last completed DKG instance up until the
-   latest started (we may prune ids for failed instances however)
- - The DKG state machine associated to each of these session ids.
+ - The issued PVSS transcripts
+ - Info on the validators, including their weight, voting power, address, 
+   and public session keys
+ - The PVSS issuing schedule for a validator.
+
+However, some necessary data must be persisted in the public storage. This includes
+the following:
+ - A public key for every validator which is used for signing all relevant 
+   transactions for this protocol.
+ - The resulting encryption key
+ - The public DKG session keys.
+ 
+Furthermore, this data is kept in memory for a validator as it must be accessed often.
+This also necessitates special transactions and validity predicates for updating the
+protocol signing keys and DKG session keys.
 
 ##  The DKG state machine
-
-We first describe each new message type needed for the protocol.
+The DKG state machine can verify and process two types of messages, which are
+posted on the blockchain inside of special protocol transactions.
 - `Deal`: This message contains the PVSS transcript from a validator
   acting as a dealer
 - `Aggregate`: Add the public key from combined PVSS transcripts in the 
@@ -127,9 +153,8 @@ We first describe each new message type needed for the protocol.
 
 In Ferveo, the DKG protocol is modelled as a state machine. This allows a
 validator to initialize an instance and drive it forward by reacting to
-each of the above message in the appropriate way. All necessary state
-is persisted by this state machine. We describe the  appropriate action for
-each of the above transactions.
+each of the above message in the appropriate way.  We describe the 
+appropriate action for each of the above transactions.
 
  - `Deal`: Each validator adds every verified deal message
    it observes to the DKG state machine and when the threshold is reached,
@@ -142,7 +167,7 @@ each of the above transactions.
    that in the aggregate transaction. If validation of the aggregated key
    fails, the proposed block is rejected.
 
-While every validator must send and react to `Deal` messages, `Aggregate` / `Complain`
+While every validator must send and react to `Deal` messages, `Aggregate`
 messages must be made by the current block proposer if their current DKG 
 state machine is in the  appropriate state and/or the appropriate conditions
 are met. Thus block proposers must check the state machines of their active
@@ -162,5 +187,5 @@ We list the phase of ABCI++ in which each of the above actions takes place.
  - `Deal`: `Deal` happens when validators detect a new epoch has begun. In practice,
     this happens during or just after the [Finalize Block](https://github.com/tendermint/spec/blob/master/rfc/004-abci%2B%2B.md#delivertx-rename-to-finalizeblock) phase.
  - `Aggregate`: This is done during the [Prepare Proposal](https://github.com/tendermint/spec/blob/master/rfc/004-abci%2B%2B.md#prepare-proposal) phase 
-   `Aggregate` messages will be  included in the proposed block and 
+   `Aggregate` messages will be included in the proposed block and 
     should be verified by validators as part of their [Process Proposal](https://github.com/tendermint/spec/blob/master/rfc/004-abci%2B%2B.md#process-proposal) phase.
