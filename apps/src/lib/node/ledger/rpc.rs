@@ -6,6 +6,10 @@ use std::str::FromStr;
 use anoma::types::address::Address;
 use anoma::types::storage;
 use borsh::{BorshDeserialize, BorshSerialize};
+#[cfg(not(feature = "ABCI"))]
+use tendermint::abci::Path as AbciPath;
+#[cfg(feature = "ABCI")]
+use tendermint_stable::abci::Path as AbciPath;
 use thiserror::Error;
 
 /// RPC query path
@@ -19,6 +23,8 @@ pub enum Path {
     Value(storage::Key),
     /// Read a range of storage values with a matching key prefix
     Prefix(storage::Key),
+    /// Check if the given storage key exists
+    HasKey(storage::Key),
 }
 
 /// RPC query path
@@ -30,7 +36,9 @@ pub struct PrefixValue {
 
 #[derive(Debug, Clone)]
 pub struct BalanceQuery {
+    #[allow(dead_code)]
     owner: Option<Address>,
+    #[allow(dead_code)]
     token: Option<Address>,
 }
 
@@ -38,6 +46,7 @@ const DRY_RUN_TX_PATH: &str = "dry_run_tx";
 const EPOCH_PATH: &str = "epoch";
 const VALUE_PREFIX: &str = "value";
 const PREFIX_PREFIX: &str = "prefix";
+const HAS_KEY_PREFIX: &str = "has_key";
 
 impl Display for Path {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -49,6 +58,9 @@ impl Display for Path {
             }
             Path::Prefix(storage_key) => {
                 write!(f, "{}/{}", PREFIX_PREFIX, storage_key)
+            }
+            Path::HasKey(storage_key) => {
+                write!(f, "{}/{}", HAS_KEY_PREFIX, storage_key)
             }
         }
     }
@@ -73,18 +85,23 @@ impl FromStr for Path {
                         .map_err(PathParseError::InvalidStorageKey)?;
                     Ok(Self::Prefix(key))
                 }
+                Some((HAS_KEY_PREFIX, storage_key)) => {
+                    let key = storage::Key::parse(storage_key)
+                        .map_err(PathParseError::InvalidStorageKey)?;
+                    Ok(Self::HasKey(key))
+                }
                 _ => Err(PathParseError::InvalidPath(s.to_string())),
             },
         }
     }
 }
 
-impl From<Path> for tendermint::abci::Path {
+impl From<Path> for AbciPath {
     fn from(path: Path) -> Self {
         let path = path.to_string();
         // TODO: update in tendermint-rs to allow to construct this from owned
         // string. It's what `from_str` does anyway
-        tendermint::abci::Path::from_str(&path).unwrap()
+        AbciPath::from_str(&path).unwrap()
     }
 }
 

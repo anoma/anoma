@@ -17,10 +17,10 @@ A transaction [encoded with proto3](./encoding.md#transactions) received from AB
 For any error encountered in any of the following steps of transaction execution, the protocol MUST charge the gas used by the transaction and discard any storage changes that the transaction attempted to perform.
 
 1. Charge a base transaction [gas](#gas):
-   \\[ \verb|BASE_TRANSACTION_FEE| \\]
+   \\( \verb|BASE_TRANSACTION_FEE| \\)
 1. Decode the transaction bytes and validate the data. The field `timestamp` is required.
 1. Charge WASM compilation gas, proportional to the bytes `length` of the `code` field of the transaction (this is because the WASM code is compiled with a single-pass compiler):
-   \\[ \verb|length| * \verb|COMPILE_GAS_PER_BYTE| \\]
+   \\( \verb|length| * \verb|COMPILE_GAS_PER_BYTE| \\)
 1. [Validate the WASM code](#wasm-validation) from the `code` field of the transaction.
 1. Inject a [gas counter](#gas) into the `code`.
 1. Inject a [stack height](#stack-height-limiter) limiter into the `code`.
@@ -52,7 +52,7 @@ For all these addresses, attempt to read their validity predicate WASM code from
 Execute all validity predicates in parallel as follows:
 
 1. Charge WASM compilation gas, proportional to the bytes length of the validity predicate (same as for the transaction, WASM code is compiled with a single-pass compiler).
-1. Charge WASM compilation gas, proportional to the bytes `length` of the validity predicate (same as for the transaction, WASM code is compiled with a single-pass compiler): \\[ \verb|length| * \verb|COMPILE_GAS_PER_BYTE| \\].
+1. Charge WASM compilation gas, proportional to the bytes `length` of the validity predicate (same as for the transaction, WASM code is compiled with a single-pass compiler): \\( \verb|length| * \verb|COMPILE_GAS_PER_BYTE| \\).
 1. [Validate the WASM code](#wasm-validation) of the validity predicate.
 1. Inject a [gas counter](#gas) into the `code`.
 1. Inject a [stack height](#stack-height-limiter) limiter into the `code`.

@@ -1,29 +1,40 @@
-use std::fs::{self, File, OpenOptions};
-use std::io::{BufReader, Write};
 use std::path::{Path, PathBuf};
-use std::process::Command;
 use std::str::FromStr;
-use std::sync::mpsc::Receiver;
-use std::time::Duration;
 
-#[cfg(feature = "dev")]
+use anoma::types::address::Address;
+use anoma::types::chain::ChainId;
 use anoma::types::key::ed25519::Keypair;
+use anoma::types::time::DateTimeUtc;
 use serde_json::json;
-use signal_hook::consts::TERM_SIGNALS;
-use signal_hook::iterator::Signals;
-use tendermint::config::TendermintConfig;
+#[cfg(not(feature = "ABCI"))]
+use tendermint::Genesis;
+#[cfg(not(feature = "ABCI"))]
+use tendermint_config::net::Address as TendermintAddress;
+#[cfg(not(feature = "ABCI"))]
+use tendermint_config::Error as TendermintError;
+#[cfg(not(feature = "ABCI"))]
+use tendermint_config::TendermintConfig;
+#[cfg(feature = "ABCI")]
+use tendermint_config_abci::net::Address as TendermintAddress;
+#[cfg(feature = "ABCI")]
+use tendermint_config_abci::Error as TendermintError;
+#[cfg(feature = "ABCI")]
+use tendermint_config_abci::TendermintConfig;
+#[cfg(feature = "ABCI")]
+use tendermint_stable::Genesis;
 use thiserror::Error;
+use tokio::fs::{self, File, OpenOptions};
+use tokio::io::{AsyncReadExt, AsyncWriteExt};
+use tokio::process::Command;
 
 use crate::config;
-use crate::config::genesis::{self, Validator};
-use crate::std::sync::mpsc::Sender;
 
 #[derive(Error, Debug)]
 pub enum Error {
     #[error("Failed to initialize Tendermint: {0}")]
     Init(std::io::Error),
     #[error("Failed to load Tendermint config file: {0}")]
-    LoadConfig(tendermint::error::Error),
+    LoadConfig(TendermintError),
     #[error("Failed to open Tendermint config for writing: {0}")]
     OpenWriteConfig(std::io::Error),
     #[error("Failed to serialize Tendermint config TOML to string: {0}")]
@@ -32,164 +43,241 @@ pub enum Error {
     WriteConfig(std::io::Error),
     #[error("Failed to start up Tendermint node: {0}")]
     StartUp(std::io::Error),
+    #[error("{0}")]
+    Runtime(String),
+    #[error("Failed to convert to String: {0:?}")]
+    TendermintPath(std::ffi::OsString),
 }
 
 pub type Result<T> = std::result::Result<T, Error>;
 
+/// Check if the TENDERMINT env var has been set and use that as the
+/// location of the tendermint binary. Otherwise, assume it is on path
+///
+/// Returns an error if the env var is defined but not a valid Unicode.
+fn from_env_or_default() -> Result<String> {
+    match std::env::var("TENDERMINT") {
+        Ok(path) => {
+            tracing::info!("Using tendermint path from env variable: {}", path);
+            Ok(path)
+        }
+        Err(std::env::VarError::NotPresent) => Ok(String::from("tendermint")),
+        Err(std::env::VarError::NotUnicode(msg)) => {
+            Err(Error::TendermintPath(msg))
+        }
+    }
+}
+
 /// Run the tendermint node.
-pub fn run(
+pub async fn run(
     home_dir: PathBuf,
-    socket_address: &str,
-    kill_switch: Sender<bool>,
-    receiver: Receiver<bool>,
+    chain_id: ChainId,
+    genesis_time: DateTimeUtc,
+    ledger_address: String,
+    config: config::Tendermint,
+    abort_recv: tokio::sync::oneshot::Receiver<
+        tokio::sync::oneshot::Sender<()>,
+    >,
 ) -> Result<()> {
     let home_dir_string = home_dir.to_string_lossy().to_string();
+    let tendermint_path = from_env_or_default()?;
+    let mode = config.tendermint_mode.to_str().to_owned();
+
+    #[cfg(feature = "dev")]
+    // This has to be checked before we run tendermint init
+    let has_validator_key = {
+        let path = home_dir.join("config").join("priv_validator_key.json");
+        Path::new(&path).exists()
+    };
 
     // init and run a tendermint node child process
-    let output = Command::new("tendermint")
-        .args(&["init", "--home", &home_dir_string])
-        .output()
-        .map_err(Error::Init)?;
+    let output = if !cfg!(featuer = "ABCI") {
+        Command::new(&tendermint_path)
+            .args(&["init", &mode, "--home", &home_dir_string])
+            .output()
+            .await
+            .map_err(Error::Init)?
+    } else {
+        Command::new(&tendermint_path)
+            .args(&["init", "--home", &home_dir_string])
+            .output()
+            .await
+            .map_err(Error::Init)?
+    };
     if !output.status.success() {
         panic!("Tendermint failed to initialize with {:#?}", output);
     }
 
-    if cfg!(feature = "dev") {
-        let genesis = &genesis::genesis();
-        // override the validator key file
-        write_validator_key(
-            &home_dir,
-            &genesis.validator,
-            &genesis.validator_consensus_key,
-        );
-        write_chain_id(&home_dir, config::DEFAULT_CHAIN_ID);
-    }
-
-    update_tendermint_config(&home_dir)?;
-    let tendermint_node = Command::new("tendermint")
-        .args(&[
-            "node",
-            "--proxy_app",
-            socket_address,
-            "--home",
-            &home_dir_string,
-        ])
-        .spawn()
-        .map_err(Error::StartUp)?;
-    let pid = tendermint_node.id();
-    tracing::info!("Tendermint node started");
-    // make sure to shut down when receiving a termination signal
-    kill_on_term_signal(kill_switch.clone());
-    // shut down the anoma node if tendermint unexpectedly stops
-    monitor_process(tendermint_node, kill_switch);
-    if receiver.recv().unwrap() {
-        unsafe {
-            libc::kill(pid as i32, libc::SIGTERM);
-        };
-    }
-    Ok(())
-}
-
-/// Listens for termination signals and forwards a kill command to the
-/// tendermint node when it encounters one.
-fn kill_on_term_signal(kill_switch: Sender<bool>) {
-    let _ = std::thread::spawn(move || {
-        let mut signals = Signals::new(TERM_SIGNALS)
-            .expect("Failed to creat OS signal handlers");
-        for sig in signals.forever() {
-            if TERM_SIGNALS.contains(&sig) {
-                tracing::info!(
-                    "Received termination signal, shutting down Tendermint \
-                     node"
-                );
-                let _ = kill_switch.send(true);
-                break;
-            }
+    #[cfg(feature = "dev")]
+    {
+        let genesis = &crate::config::genesis::genesis();
+        // write the validator key file if it didn't already exist
+        if !has_validator_key {
+            write_validator_key_async(
+                &home_dir,
+                &genesis
+                    .validators
+                    .first()
+                    .expect(
+                        "There should be one genesis validator in \"dev\" mode",
+                    )
+                    .pos_data
+                    .address,
+                &crate::wallet::defaults::validator_keypair(),
+            )
+            .await;
         }
-    });
+    }
+
+    write_tm_genesis(&home_dir, chain_id, genesis_time).await;
+
+    update_tendermint_config(&home_dir, config).await?;
+
+    let mut tendermint_node = if !cfg!(feature = "ABCI") {
+        Command::new(&tendermint_path)
+            .args(&[
+                "start",
+                "--mode",
+                &mode,
+                "--proxy-app",
+                &ledger_address,
+                "--home",
+                &home_dir_string,
+            ])
+            .kill_on_drop(true)
+            .spawn()
+            .map_err(Error::StartUp)?
+    } else {
+        Command::new(&tendermint_path)
+            .args(&[
+                "start",
+                "--proxy_app",
+                &ledger_address,
+                "--home",
+                &home_dir_string,
+            ])
+            .kill_on_drop(true)
+            .spawn()
+            .map_err(Error::StartUp)?
+    };
+    tracing::info!("Tendermint node started");
+
+    tokio::select! {
+        status = tendermint_node.wait() => {
+            match status {
+                Ok(status) => {
+                    if status.success() {
+                        Ok(())
+                    } else {
+                        Err(Error::Runtime(status.to_string()))
+                    }
+                },
+                Err(err) => {
+                    Err(Error::Runtime(err.to_string()))
+                }
+            }
+        },
+        resp_sender = abort_recv => {
+            match resp_sender {
+                Ok(resp_sender) => {
+                    tracing::info!("Shutting down Tendermint node...");
+                    tendermint_node.kill().await.unwrap();
+                    resp_sender.send(()).unwrap();
+                },
+                Err(err) => {
+                    tracing::error!("The Tendermint abort sender has unexpectedly dropped: {}", err);
+                    tracing::info!("Shutting down Tendermint node...");
+                    tendermint_node.kill().await.unwrap();
+                }
+            }
+            Ok(())
+        }
+    }
 }
 
-/// Monitors the tendermint node. If it shuts down, this detects it and
-/// shuts down the anoma node
-fn monitor_process(
-    mut process: std::process::Child,
-    kill_switch: Sender<bool>,
-) {
-    std::thread::spawn(move || {
-        process.wait().expect("Tendermint was not running");
-        tracing::info!("Tendermint node is no longer running.");
-        let _ = kill_switch.send(true);
-    });
-}
-
-pub fn reset(config: config::Ledger) -> Result<()> {
+pub fn reset(tendermint_dir: impl AsRef<Path>) -> Result<()> {
+    let tendermint_path = from_env_or_default()?;
+    let tendermint_dir = tendermint_dir.as_ref().to_string_lossy();
     // reset all the Tendermint state, if any
-    Command::new("tendermint")
+    std::process::Command::new(tendermint_path)
         .args(&[
             "unsafe-reset-all",
             // NOTE: log config: https://docs.tendermint.com/master/nodes/logging.html#configuring-log-levels
             // "--log-level=\"*debug\"",
             "--home",
-            &config.tendermint.to_string_lossy(),
+            &tendermint_dir,
         ])
         .output()
         .expect("Failed to reset tendermint node's data");
-    fs::remove_dir_all(format!(
-        "{}/config",
-        &config.tendermint.to_string_lossy()
-    ))
-    .expect("Failed to reset tendermint node's config");
+    std::fs::remove_dir_all(format!("{}/config", tendermint_dir,))
+        .expect("Failed to reset tendermint node's config");
     Ok(())
 }
 
-fn update_tendermint_config(home_dir: impl AsRef<Path>) -> Result<()> {
-    let home_dir = home_dir.as_ref();
-    let path = home_dir.join("config").join("config.toml");
-    let mut config =
-        TendermintConfig::load_toml_file(&path).map_err(Error::LoadConfig)?;
-
-    // In "dev", only produce blocks when there are txs or when the AppHash
-    // changes
-    config.consensus.create_empty_blocks = !cfg!(feature = "dev");
-
-    // We set this to true as we don't want any invalid tx be re-applied. This
-    // also implies that it's not possible for an invalid tx to become valid
-    // again in the future.
-    config.mempool.keep_invalid_txs_in_cache = false;
-
-    // Bumped from the default `1_000_000`, because some WASMs can be
-    // quite large
-    config.rpc.max_body_bytes = 2_000_000;
-
-    // TODO broadcast_tx_commit shouldn't be used live;
-    config.rpc.timeout_broadcast_tx_commit = Duration::from_secs(20).into();
-
-    let mut file = OpenOptions::new()
-        .write(true)
-        .truncate(true)
-        .open(path)
-        .map_err(Error::OpenWriteConfig)?;
-    let config_str =
-        toml::to_string(&config).map_err(Error::ConfigSerializeToml)?;
-    file.write_all(config_str.as_bytes())
-        .map_err(Error::WriteConfig)
-}
-
-#[cfg(feature = "dev")]
-fn write_validator_key(
+/// Initialize validator private key for Tendermint
+pub async fn write_validator_key_async(
     home_dir: impl AsRef<Path>,
-    validator: &Validator,
-    validator_key: &Keypair,
+    address: &Address,
+    consensus_key: &Keypair,
 ) {
     let home_dir = home_dir.as_ref();
     let path = home_dir.join("config").join("priv_validator_key.json");
-    let file =
-        File::create(path).expect("Couldn't create private validator key file");
-    let pk: ed25519_dalek::PublicKey =
-        validator.pos_data.consensus_key.clone().into();
+    // Make sure the dir exists
+    let wallet_dir = path.parent().unwrap();
+    fs::create_dir_all(wallet_dir)
+        .await
+        .expect("Couldn't create private validator key directory");
+    let mut file = OpenOptions::new()
+        .create(true)
+        .write(true)
+        .truncate(true)
+        .open(&path)
+        .await
+        .expect("Couldn't create private validator key file");
+    let pk: ed25519_dalek::PublicKey = consensus_key.public.clone().into();
     let pk = base64::encode(pk.as_bytes());
-    let sk = base64::encode(validator_key.to_bytes());
-    let address = validator.pos_data.address.raw_hash().unwrap();
+    let sk = base64::encode(consensus_key.to_bytes());
+    let address = address.raw_hash().unwrap();
+    let key = json!({
+       "address": address,
+       "pub_key": {
+         "type": "tendermint/PubKeyEd25519",
+         "value": pk,
+       },
+       "priv_key": {
+         "type": "tendermint/PrivKeyEd25519",
+         "value": sk,
+      }
+    });
+    let data = serde_json::to_vec_pretty(&key)
+        .expect("Couldn't encode private validator key file");
+    file.write_all(&data[..])
+        .await
+        .expect("Couldn't write private validator key file");
+}
+
+/// Initialize validator private key for Tendermint
+pub fn write_validator_key(
+    home_dir: impl AsRef<Path>,
+    address: &Address,
+    consensus_key: &Keypair,
+) {
+    let home_dir = home_dir.as_ref();
+    let path = home_dir.join("config").join("priv_validator_key.json");
+    // Make sure the dir exists
+    let wallet_dir = path.parent().unwrap();
+    std::fs::create_dir_all(wallet_dir)
+        .expect("Couldn't create private validator key directory");
+    let file = std::fs::OpenOptions::new()
+        .create(true)
+        .write(true)
+        .truncate(true)
+        .open(&path)
+        .expect("Couldn't create private validator key file");
+    let pk: ed25519_dalek::PublicKey = consensus_key.public.clone().into();
+    let pk = base64::encode(pk.as_bytes());
+    let sk = base64::encode(consensus_key.to_bytes());
+    let address = address.raw_hash().unwrap();
     let key = json!({
        "address": address,
        "pub_key": {
@@ -205,32 +293,113 @@ fn write_validator_key(
         .expect("Couldn't write private validator key file");
 }
 
-#[cfg(feature = "dev")]
-fn write_chain_id(home_dir: impl AsRef<Path>, chain_id: impl AsRef<str>) {
+/// Initialize validator private state for Tendermint
+pub fn write_validator_state(home_dir: impl AsRef<Path>) {
+    let home_dir = home_dir.as_ref();
+    let path = home_dir.join("data").join("priv_validator_state.json");
+    // Make sure the dir exists
+    let wallet_dir = path.parent().unwrap();
+    std::fs::create_dir_all(wallet_dir)
+        .expect("Couldn't create private validator state directory");
+    let file = std::fs::OpenOptions::new()
+        .create(true)
+        .write(true)
+        .truncate(true)
+        .open(&path)
+        .expect("Couldn't create private validator state file");
+    let state = json!({
+       "height": "0",
+       "round": 0,
+       "step": 0
+    });
+    serde_json::to_writer_pretty(file, &state)
+        .expect("Couldn't write private validator state file");
+}
+
+async fn update_tendermint_config(
+    home_dir: impl AsRef<Path>,
+    tendermint_config: config::Tendermint,
+) -> Result<()> {
+    let home_dir = home_dir.as_ref();
+    let path = home_dir.join("config").join("config.toml");
+    let mut config =
+        TendermintConfig::load_toml_file(&path).map_err(Error::LoadConfig)?;
+
+    config.p2p.laddr =
+        TendermintAddress::from_str(&tendermint_config.p2p_address.to_string())
+            .unwrap();
+    config.p2p.persistent_peers = tendermint_config.p2p_persistent_peers;
+    config.p2p.pex = tendermint_config.p2p_pex;
+    config.p2p.allow_duplicate_ip = tendermint_config.p2p_allow_duplicate_ip;
+
+    // In "dev", only produce blocks when there are txs or when the AppHash
+    // changes
+    config.consensus.create_empty_blocks = true; // !cfg!(feature = "dev");
+    config.consensus.timeout_commit =
+        tendermint_config.consensus_timeout_commit;
+
+    // We set this to true as we don't want any invalid tx be re-applied. This
+    // also implies that it's not possible for an invalid tx to become valid
+    // again in the future.
+    config.mempool.keep_invalid_txs_in_cache = false;
+
+    config.rpc.laddr =
+        TendermintAddress::from_str(&tendermint_config.rpc_address.to_string())
+            .unwrap();
+    // Bumped from the default `1_000_000`, because some WASMs can be
+    // quite large
+    config.rpc.max_body_bytes = 2_000_000;
+
+    let mut file = OpenOptions::new()
+        .write(true)
+        .truncate(true)
+        .open(path)
+        .await
+        .map_err(Error::OpenWriteConfig)?;
+    let config_str =
+        toml::to_string(&config).map_err(Error::ConfigSerializeToml)?;
+    file.write_all(config_str.as_bytes())
+        .await
+        .map_err(Error::WriteConfig)
+}
+
+async fn write_tm_genesis(
+    home_dir: impl AsRef<Path>,
+    chain_id: ChainId,
+    genesis_time: DateTimeUtc,
+) {
     let home_dir = home_dir.as_ref();
     let path = home_dir.join("config").join("genesis.json");
-    let file = File::open(&path).unwrap_or_else(|err| {
+    let mut file = File::open(&path).await.unwrap_or_else(|err| {
         panic!(
             "Couldn't open the genesis file at {:?}, error: {}",
             path, err
         )
     });
-    let reader = BufReader::new(file);
-    let mut genesis: tendermint::Genesis = serde_json::from_reader(reader)
+    let mut file_contents = vec![];
+    file.read_to_end(&mut file_contents)
+        .await
+        .expect("Couldn't read Tendermint genesis file");
+    let mut genesis: Genesis = serde_json::from_slice(&file_contents[..])
         .expect("Couldn't deserialize the genesis file");
     genesis.chain_id =
-        FromStr::from_str(chain_id.as_ref()).expect("Invalid chain ID");
+        FromStr::from_str(chain_id.as_str()).expect("Invalid chain ID");
+    genesis.genesis_time = genesis_time.into();
 
-    let file = OpenOptions::new()
+    let mut file = OpenOptions::new()
         .write(true)
         .truncate(true)
         .open(&path)
+        .await
         .unwrap_or_else(|err| {
             panic!(
                 "Couldn't open the genesis file at {:?} for writing, error: {}",
                 path, err
             )
         });
-    serde_json::to_writer_pretty(file, &genesis)
-        .expect("Couldn't write the genesis file");
+    let data = serde_json::to_vec_pretty(&genesis)
+        .expect("Couldn't encode the Tendermint genesis file");
+    file.write_all(&data[..])
+        .await
+        .expect("Couldn't write the Tendermint genesis file");
 }

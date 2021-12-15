@@ -2,6 +2,21 @@
 
 The ledger depends on [Tendermint node](https://github.com/tendermint/tendermint). Running the Anoma node will also initialize and run Tendermint node. Anoma communicates with Tendermint via the ABCI.
 
+## Overview
+
+The following diagram illustrates the current boundaries between the async and blocking code.
+
+![ledger threads](ledger/ledger_threads.svg  "ledger threads")
+[Diagram on Excalidraw](https://excalidraw.com/#room=952eca1f17ac3c7b5cee,ReXYfqLLleTjVnSQM9zrjw)
+
+## Threads config
+
+Configuration for threads usage can be changed via environment variables:
+
+- `ANOMA_TOKIO_THREADS`: Defaults to 1/2 logical cores
+- `ANOMA_RAYON_THREADS`: Defaults to 1/2 logical cores.
+- `ANOMA_ROCKSDB_COMPACTION_THREADS`: Defauls to 1/4 logical core. RocksDB also uses 1 more background thread for flushing.
+
 ## Tendermint ABCI
 
 We are using the Tendermint state-machine replication engine via ABCI. It provides many useful things, such as a BFT consensus protocol, P2P layer with peer exchange, block sync and mempool layer.

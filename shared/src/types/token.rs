@@ -226,11 +226,11 @@ pub fn is_balance_key<'a>(
     key: &'a Key,
 ) -> Option<&'a Address> {
     match &key.segments[..] {
-        [DbKeySeg::AddressSeg(addr), DbKeySeg::StringSeg(key), DbKeySeg::AddressSeg(owner)]
-            if key == BALANCE_STORAGE_KEY && addr == token_addr =>
-        {
-            Some(owner)
-        }
+        [
+            DbKeySeg::AddressSeg(addr),
+            DbKeySeg::StringSeg(key),
+            DbKeySeg::AddressSeg(owner),
+        ] if key == BALANCE_STORAGE_KEY && addr == token_addr => Some(owner),
         _ => None,
     }
 }
@@ -239,11 +239,11 @@ pub fn is_balance_key<'a>(
 /// is, returns the owner.
 pub fn is_any_token_balance_key(key: &Key) -> Option<&Address> {
     match &key.segments[..] {
-        [DbKeySeg::AddressSeg(_), DbKeySeg::StringSeg(key), DbKeySeg::AddressSeg(owner)]
-            if key == BALANCE_STORAGE_KEY =>
-        {
-            Some(owner)
-        }
+        [
+            DbKeySeg::AddressSeg(_),
+            DbKeySeg::StringSeg(key),
+            DbKeySeg::AddressSeg(owner),
+        ] if key == BALANCE_STORAGE_KEY => Some(owner),
         _ => None,
     }
 }

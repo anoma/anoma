@@ -1,0 +1,25 @@
+project_url = 'https://github.com/anoma/anoma'
+
+# Settings related to components/sub-modules. Only relevant if you make use of
+# components/sub-modules.
+[components]
+
+# The title to use for the section of entries not relating to a specific
+# component.
+general_entries_title = "General"
+
+# The number of spaces to inject before each component-related entry.
+entry_indent = 2
+
+# The components themselves. Each component has a name (used when rendered
+# to Markdown) and a path relative to the project folder (i.e. relative to
+# the parent of the `.changelog` folder).
+[components.all]
+# NOTE: not using components yet
+# anoma = {name = "Anoma's main library crate", path = "shared"}
+# apps = {name = "Apps", path = "apps"}
+# docs = {name = "Documentation", path = "docs"}
+# proof_of_stake = {name = "Anoma's Proof-of-Stake crate", path = "proof_of_stake"}
+# vm_env = {name = "Anoma's WASM VM environment crate", path = "vm_env"}
+# vm_macro = {name = "Anoma's WASM VM procedural macro crate", path = "vm_macro"}
+# wasm = {name = "Anoma's default WASM transactions and validity predicates", path = "wasm/wasm_source"}

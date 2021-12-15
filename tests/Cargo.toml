@@ -1,37 +1,66 @@
 [package]
 authors = ["Heliax AG <hello@heliax.dev>"]
 description = "Anoma tests"
-edition = "2018"
+edition = "2021"
 license = "GPL-3.0"
 name = "anoma_tests"
 resolver = "2"
-version = "0.1.0"
+version = "0.2.0"
 
 [features]
-default = ["wasm-runtime"]
+default = ["wasm-runtime", "ABCI"]
 wasm-runtime = ["anoma/wasm-runtime"]
 
+ABCI = [
+  "ibc-abci",
+  "ibc-proto-abci",
+  "anoma/ibc-vp-abci",
+  "tendermint-stable",
+  "anoma/ABCI",
+  "anoma_vm_env/ABCI",
+]
+
+ABCI-plus-plus = [
+  "ibc",
+  "ibc-proto",
+  "anoma/ibc-vp",
+  "tendermint",
+  "anoma/ABCI-plus-plus",
+  "anoma_vm_env/ABCI-plus-plus",
+]
+
 [dependencies]
-anoma = {path = "../shared", features = ["testing"]}
-anoma_vm_env = {path = "../vm_env"}
+anoma = {path = "../shared", default-features = false, features = ["testing"]}
+anoma_vm_env = {path = "../vm_env", default-features = false}
+chrono = "0.4.19"
 concat-idents = "1.1.2"
-test-env-log = {version = "0.2.7", default-features = false, features = ["trace"]}
+# TODO temp fork for https://github.com/informalsystems/ibc-rs/issues/1161
+ibc = {git = "https://github.com/heliaxdev/ibc-rs", branch = "yuji/abcipp-v0.23.0", features = ["mocks", "borsh"], optional = true}
+ibc-abci = {package = "ibc", git = "https://github.com/heliaxdev/ibc-rs", branch = "yuji/rebase_v0.23.0", features = ["mocks", "borsh"], optional = true}
+ibc-proto = {git = "https://github.com/heliaxdev/ibc-rs", branch = "yuji/abcipp-v0.23.0", optional = true}
+ibc-proto-abci = {package = "ibc-proto", git = "https://github.com/heliaxdev/ibc-rs", branch = "yuji/rebase_v0.23.0", optional = true}
+serde_json = {version = "1.0.65"}
+sha2 = "0.9.3"
+test-log = {version = "0.2.7", default-features = false, features = ["trace"]}
+# temporarily using fork work-around for https://github.com/informalsystems/tendermint-rs/issues/971
+tendermint = {git = "https://github.com/heliaxdev/tendermint-rs", branch = "yuji/abcipp-v0.23.0", optional = true}
+tendermint-stable = {package = "tendermint", git = "https://github.com/heliaxdev/tendermint-rs", branch = "yuji/rebase_v0.23.0", optional = true}
 tracing = "0.1.26"
-tracing-subscriber = {version = "0.2.18", default-features = false, features = ["env-filter", "fmt"]}
-serde_json = { version = "1.0.65" }
+tracing-subscriber = {version = "0.2.25", default-features = false, features = ["env-filter", "fmt"]}
 
 [dev-dependencies]
-anoma_apps = {path = "../apps", features = ["testing"]}
+anoma_apps = {path = "../apps", default-features = false, features = ["testing"]}
 assert_cmd = "1.0.7"
 borsh = "0.9.1"
 color-eyre = "0.5.11"
+escargot = "0.5.2"
 eyre = "0.6.5"
 itertools = "0.10.0"
 libp2p = "0.38.0"
 pretty_assertions = "0.7.2"
-rexpect = "0.4.0"
+rexpect = {git = "https://github.com/heliaxdev/rexpect.git", branch = "tomas/eof-hack-fix"}
 tempfile = "3.2.0"
 
 # This is used to enable logging from tests
 [package.metadata.cargo-udeps.ignore]
-normal = ["test-env-log", "tracing-subscriber"]
+normal = ["test-log", "tracing-subscriber"]

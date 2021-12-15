@@ -1,0 +1,1 @@
+- Fix broken links ([#605](https://github.com/anoma/anoma/issues/605))

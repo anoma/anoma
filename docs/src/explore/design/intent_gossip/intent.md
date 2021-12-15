@@ -11,7 +11,7 @@ either on-chain or off-chain. It must be known by users that want to express
 similar intents. It also must be understood by some matchmaker. Otherwise, it 
 possibly won’t be  matched. The user can define its own schema and inform either 
 off-chain or on-chain. Having it on-chain allows it to easily share it with other
-participants. Please refer to [data schema](./../data-schema.md) for more
+participants. Please refer to [data schema](./../ledger/storage/data-schema.md) for more
 information about the usage of on-chain schema.
 
 ---

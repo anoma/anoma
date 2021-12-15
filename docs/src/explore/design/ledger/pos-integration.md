@@ -1,28 +1,29 @@
 # PoS integration
 
-The [PoS system](/explore/design/pos.md) is integrated into Anoma ledger at 3 different layers:
+The [PoS system](../pos.md) is integrated into Anoma ledger at 3 different layers:
 - base ledger that performs genesis initialization, validator set updates on new epoch and applies slashes when they are received from ABCI
 - an account with an internal address and a [native VP](vp.md#native-vps) that validates any changes applied by transactions to the PoS account state
 - transaction WASMs to perform various PoS actions, also available as a library code for custom made transactions
 
 The `votes_per_token` PoS system parameter must be chosen to satisfy the [Tendermint requirement](https://github.com/tendermint/spec/blob/60395941214439339cc60040944c67893b5f8145/spec/abci/apps.md#validator-updates) of `MaxTotalVotingPower = MaxInt64 / 8`.
 
-All [the data relevant to the PoS system](/explore/design/pos.md#storage) are stored under the PoS account's storage sub-space, with the following key schema (the PoS address prefix is omitted for clarity):
+All [the data relevant to the PoS system](../pos.md#storage) are stored under the PoS account's storage sub-space, with the following key schema (the PoS address prefix is omitted for clarity):
 
-- `params`: the system parameters
-- `validator/{validator_address}/consensus_key`
-- `validator/{validator_address}/state`
-- `validator/{validator_address}/total_deltas`
-- `validator/{validator_address}/voting_power`
-- `slash/{validator_address}`: a list of slashes, where each record contains epoch and slash rate
-- `bond/{bond_source}/{bond_validator}`
-- `unbond/{unbond_source}/{unbond_validator}`
-- `validator_set`
-- `total_voting_power`
+- `params` (required): the system parameters
+- for any validator, all the following fields are required:
+  - `validator/{validator_address}/consensus_key`
+  - `validator/{validator_address}/state`
+  - `validator/{validator_address}/total_deltas`
+  - `validator/{validator_address}/voting_power`
+- `slash/{validator_address}` (optional): a list of slashes, where each record contains epoch and slash rate
+- `bond/{bond_source}/{bond_validator} (optional)`
+- `unbond/{unbond_source}/{unbond_validator} (optional)`
+- `validator_set (required)`
+- `total_voting_power (required)`
 
 - standard validator metadata (these are regular storage values, not epoched data):
-  - `validator/{validator_address}/staking_reward_address`: an address that should receive staking rewards
-  - `validator/{validator_address}/address_raw_hash`: raw hash of validator's address associated with the address is used for look-up of validator address from a raw hash
+  - `validator/{validator_address}/staking_reward_address` (required): an address that should receive staking rewards
+  - `validator/{validator_address}/address_raw_hash` (required): raw hash of validator's address associated with the address is used for look-up of validator address from a raw hash
   - TBA (e.g. alias, website, description, delegation commission rate, etc.)
 
 Only XAN tokens can be staked in bonds. The tokens being staked (bonds and unbonds amounts) are kept in the PoS account under `{xan_address}/balance/{pos_address}` until they are withdrawn.
@@ -43,9 +44,9 @@ All the fees that are charged in a transaction execution (DKG transaction wrappe
 
 ## Transactions
 
-The transactions are assumed to be applied in epoch `n`. Any transaction that modifies [epoched data](/explore/design/pos.md#epoched-data) updates the structure as described in [epoched data storage](/explore/design/pos.md#storage).
+The transactions are assumed to be applied in epoch `n`. Any transaction that modifies [epoched data](../pos.md#epoched-data) updates the structure as described in [epoched data storage](../pos.md#storage).
 
-For slashing tokens, we implement a [PoS slash pool account](/explore/design/ledger/vp.md#pos-slash-pool-vp). Slashed tokens should be credited to this account and, for now, no tokens can be be debited by anyone.
+For slashing tokens, we implement a [PoS slash pool account](vp.md#pos-slash-pool-vp). Slashed tokens should be credited to this account and, for now, no tokens can be be debited by anyone.
 
 ### Validator transactions
 
@@ -149,7 +150,7 @@ Evidence for byzantine behaviour is received from Tendermint ABCI on `BeginBlock
 
 In the following description, "pre-state" is the state prior to transaction execution and "post-state" is the state posterior to it.
 
-Any changes to PoS epoched data are checked to update the structure as described in [epoched data storage](/explore/design/pos.md#storage).
+Any changes to PoS epoched data are checked to update the structure as described in [epoched data storage](../pos.md#storage).
 
 Because some key changes are expected to relate to others, the VP also accumulates some values that are checked for validity after key specific logic:
 - `balance_delta: token::Change`
@@ -163,6 +164,7 @@ Because some key changes are expected to relate to others, the VP also accumulat
 - `validator_set_pre: Option<ValidatorSets<Address>>`
 - `validator_set_post: Option<ValidatorSets<Address>>`
 - `total_voting_power_delta_by_epoch: HashMap<Epoch, VotingPowerDelta>`
+- `new_validators: HashMap<Address, NewValidator>`
 
 The accumulators are initialized to their default values (empty hash maps and hash set). The data keyed by address are using the validator addresses.
 
@@ -174,10 +176,10 @@ The validity predicate triggers a validation logic based on the storage keys mod
   ```rust,ignore
   match (pre_state, post_state) {
     (None, Some(post)) => {
-      // - check that any other sub-keys for this validator address didn't exist
-      // in a pre-state
+      // - check that all other required validator fields have been initialized
       // - check that the `state` sub-key for this validator address has been set
       // correctly, i.e. the value should be initialized at `pipeline_length` offset
+      // - insert into or update `new_validators` accumulator
     },
     (Some(pre), Some(post)) => {
       // - check that the new consensus key is different from the old consensus
@@ -190,18 +192,17 @@ The validity predicate triggers a validation logic based on the storage keys mod
   ```rust,ignore
   match (pre_state, post_state) {
     (None, Some(post)) => {
-      // - check that any other sub-keys for this validator address didn't exist
-      // in a pre-state
-      // - check that a consensus key record is also created
+      // - check that all other required validator fields have been initialized
       // - check that the `post` state is set correctly:
       //   - the state should be set to `pending` in the current epoch and `candidate` at pipeline offset
+      // - insert into or update `new_validators` accumulator
     },
     (Some(pre), Some(post)) => {
       // - check that a validator has been correctly deactivated or reactivated
       // - the `state` should only be changed at `pipeline_length` offset
       // - if the `state` becomes `inactive`, it must have been `pending` or `candidate`
       // - if the `state` becomes `pending`, it must have been `inactive`
-      // - if the `state` becomes `candidate`, it must have been `pending`
+      // - if the `state` becomes `candidate`, it must have been `pending` or `inactive`
     },
     _ => false,
   }
@@ -241,3 +242,4 @@ After the storage keys iteration, we check the accumulators:
 - Check expected voting power changes against `voting_power_by_epoch`.
 - Check expected total voting power change against `total_voting_power_delta_by_epoch`.
 - Check that the sum of bonds and unbonds deltas is equal to the balance delta.
+- Check that all the new validators have their required fields set and that they have been added to the validator set

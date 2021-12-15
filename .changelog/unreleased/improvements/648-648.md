@@ -1,0 +1,1 @@
+- Ledger: Simplified gas addition code. ([#648](https://github.com/anoma/anoma/pull/648))

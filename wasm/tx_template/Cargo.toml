@@ -1,10 +1,10 @@
 [package]
 authors = ["Heliax AG <hello@heliax.dev>"]
-edition = "2018"
+edition = "2021"
 license = "GPL-3.0"
 name = "tx_template"
 resolver = "2"
-version = "0.1.0"
+version = "0.2.0"
 
 [lib]
 crate-type = ["cdylib"]
@@ -16,6 +16,10 @@ wee_alloc = "0.4.5"
 
 [dev-dependencies]
 anoma_tests = {path = "../../tests"}
+
+[patch.crates-io]
+tendermint              = { git = "https://github.com/heliaxdev/tendermint-rs", branch = "yuji/rebase_v0.23.0" }
+tendermint-proto        = { git = "https://github.com/heliaxdev/tendermint-rs", branch = "yuji/rebase_v0.23.0" }
 
 [profile.release]
 # smaller and faster wasm (https://rustwasm.github.io/book/reference/code-size.html#compiling-with-link-time-optimizations-lto)

@@ -1,0 +1,1 @@
+- Ledger: Fixed Windows build. ([#684](https://github.com/anoma/anoma/pull/684))

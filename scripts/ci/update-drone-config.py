@@ -25,22 +25,20 @@ files_to_check = [
     'wasm/mm_template/Makefile',
     'wasm/mm_filter_template/Makefile',
     'docs/Makefile',
-    'scripts/ci/update-wasm.sh',
     'scripts/ci/pre-run.sh',
+    'scripts/ci/release.sh',
+    'scripts/ci/build-and-publish-docs.sh',
     'scripts/ci/audit.py',
     'scripts/ci/udeps.py',
+    'wasm/checksums.py'
 ]
 
 scripts_to_run = [
     'scripts/ci/pre-run.sh'
 ]
 
-# config names here will run `run_command_template_always` instead of `run_command_template`
-always_run_step_names = ["anoma-ci-build-pr", "anoma-ci-checks-pr"]
-
 check_command_template = 'echo "{}  {}" | sha256sum -c -'
 run_command_template = 'sh {}'
-run_command_template_always = 'sh {} false'
 
 boto_config = Config(
     region_name='eu-west-1',
@@ -113,15 +111,14 @@ def main():
 
     for config in drone_config:
         if 'steps' in config:
-            always_run_step = config['name'] in always_run_step_names
-            config_steps = config['steps'][0]
+            config_steps = config['steps'][1]
             if config_steps and config_steps['name'] == STEP_NAME:
                 commands = []
                 for file in files_to_check:
                     new_command = check_command_template.format(hashes[file], file)
                     commands.append(new_command)
                 for file in scripts_to_run:
-                    new_command = run_command_template.format(file) if not always_run_step else run_command_template_always.format(file)
+                    new_command = run_command_template.format(file)
                     commands.append(new_command)
                 config_steps['commands'] = commands
             new_configs.append(config)

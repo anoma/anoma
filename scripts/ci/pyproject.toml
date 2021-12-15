@@ -5,7 +5,7 @@ description = ""
 authors = ["Gianmarco Fraccaroli <gianmarco.fraccaroli@gmail.com>"]
 
 [tool.poetry.dependencies]
-python = "^3.9"
+python = "^3.8"
 boto3 = "^1.17.84"
 "ruamel.yaml" = "^0.17.7"
 

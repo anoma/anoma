@@ -3,7 +3,6 @@
 use std::collections::HashSet;
 use std::convert::TryInto;
 use std::num::TryFromIntError;
-use std::sync::{Arc, Mutex};
 
 use borsh::{BorshDeserialize, BorshSerialize};
 use thiserror::Error;
@@ -38,6 +37,8 @@ pub enum TxRuntimeError {
     UnknownAddressStorageModification(Address),
     #[error("Trying to update a validity predicate with an invalid WASM {0}")]
     UpdateVpInvalid(WasmValidationError),
+    #[error("A validity predicate of an account cannot be deleted")]
+    CannotDeleteVp,
     #[error(
         "Trying to initialize an account with an invalid validity predicate \
          WASM {0}"
@@ -374,7 +375,7 @@ where
     /// The VM memory for bi-directional data passing
     pub memory: MEM,
     /// The matchmaker's host
-    pub mm: Arc<Mutex<MM>>,
+    pub mm: MM,
 }
 
 impl<MEM, MM> Clone for MatchmakerEnv<MEM, MM>
@@ -812,6 +813,9 @@ where
     tracing::debug!("tx_delete {}", key);
 
     let key = Key::parse(key).map_err(TxRuntimeError::StorageDataError)?;
+    if key.is_validity_predicate().is_some() {
+        return Err(TxRuntimeError::CannotDeleteVp);
+    }
 
     let write_log = unsafe { env.ctx.write_log.get() };
     let (gas, _size_diff) = write_log
@@ -1495,8 +1499,7 @@ pub fn mm_remove_intents<MEM, MM>(
     let intents_id =
         HashSet::<Vec<u8>>::try_from_slice(&intents_id_bytes).unwrap();
 
-    let mm = env.mm.lock().unwrap();
-    mm.remove_intents(intents_id);
+    env.mm.remove_intents(intents_id);
 }
 
 /// Injupdate_stateaction from matchmaker's matched intents to the ledger
@@ -1513,8 +1516,7 @@ pub fn mm_send_match<MEM, MM>(
         .read_bytes(data_ptr, data_len as _)
         .expect("TODO: handle runtime errors");
 
-    let mm = env.mm.lock().unwrap();
-    mm.inject_tx(tx_data);
+    env.mm.inject_tx(tx_data);
 }
 
 /// Update matchmaker's state data
@@ -1531,8 +1533,7 @@ pub fn mm_update_state<MEM, MM>(
         .read_bytes(state_ptr, state_len as _)
         .expect("TODO: handle runtime errors");
 
-    let mm = env.mm.lock().unwrap();
-    mm.update_state(data);
+    env.mm.update_state(data);
 }
 
 /// Log a string from exposed to the wasm VM matchmaker environment. The message

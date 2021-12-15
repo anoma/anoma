@@ -2,15 +2,19 @@ use std::collections::HashMap;
 use std::fmt::{self, Display};
 use std::ops::{Index, IndexMut};
 
-use sha2::{Digest, Sha256};
+use anoma::types::transaction::{hash_tx, TxType};
+use borsh::BorshSerialize;
+#[cfg(not(feature = "ABCI"))]
 use tendermint_proto::abci::EventAttribute;
+#[cfg(feature = "ABCI")]
+use tendermint_proto_abci::abci::EventAttribute;
 
 /// Custom events that can be queried from Tendermint
 /// using a websocket client
 #[derive(Clone)]
 pub struct Event {
-    event_type: EventType,
-    attributes: HashMap<String, String>,
+    pub event_type: EventType,
+    pub attributes: HashMap<String, String>,
 }
 
 /// The two types of custom events we currently use
@@ -22,6 +26,7 @@ pub enum EventType {
     Applied,
 }
 
+#[cfg(not(feature = "ABCI"))]
 impl Display for EventType {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
@@ -32,15 +37,49 @@ impl Display for EventType {
     }
 }
 
+#[cfg(feature = "ABCI")]
+impl Display for EventType {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            EventType::Accepted => write!(f, "applied"),
+            EventType::Applied => write!(f, "applied"),
+        }?;
+        Ok(())
+    }
+}
+
 impl Event {
     /// Creates a new event with the hash and height of the transaction
     /// already filled in
-    pub fn new_tx_event(ty: EventType, tx: &[u8], height: i64) -> Self {
-        let mut event = Event {
-            event_type: ty,
-            attributes: HashMap::new(),
+    pub fn new_tx_event(tx: &TxType, height: u64) -> Self {
+        let mut event = match tx {
+            TxType::Wrapper(wrapper) => {
+                let mut event = Event {
+                    event_type: EventType::Accepted,
+                    attributes: HashMap::new(),
+                };
+                event["hash"] = if !cfg!(feature = "ABCI") {
+                    hash_tx(
+                        &wrapper
+                            .try_to_vec()
+                            .expect("Serializing wrapper should not fail"),
+                    )
+                    .to_string()
+                } else {
+                    wrapper.tx_hash.to_string()
+                };
+                event
+            }
+            TxType::Decrypted(decrypted) => {
+                let mut event = Event {
+                    event_type: EventType::Applied,
+                    attributes: HashMap::new(),
+                };
+                event["hash"] = decrypted.hash_commitment().to_string();
+                event
+            }
+            _ => unreachable!(),
         };
-        event["hash"] = hash_tx(tx);
         event["height"] = height.to_string();
         event
     }
@@ -63,8 +102,28 @@ impl IndexMut<&str> for Event {
     }
 }
 
+#[cfg(not(feature = "ABCI"))]
 /// Convert our custom event into the necessary tendermint proto type
 impl From<Event> for tendermint_proto::abci::Event {
+    fn from(event: Event) -> Self {
+        Self {
+            r#type: event.event_type.to_string(),
+            attributes: event
+                .attributes
+                .into_iter()
+                .map(|(key, value)| EventAttribute {
+                    key,
+                    value,
+                    index: true,
+                })
+                .collect(),
+        }
+    }
+}
+
+#[cfg(feature = "ABCI")]
+/// Convert our custom event into the necessary tendermint proto type
+impl From<Event> for tendermint_proto_abci::abci::Event {
     fn from(event: Event) -> Self {
         Self {
             r#type: event.event_type.to_string(),
@@ -81,21 +140,48 @@ impl From<Event> for tendermint_proto::abci::Event {
     }
 }
 
-struct Hash([u8; 32]);
+/// A thin wrapper around a HashMap for parsing event JSONs
+/// returned in tendermint subscription responses.
+#[derive(Debug)]
+pub struct Attributes(HashMap<String, String>);
 
-impl Display for Hash {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        for byte in &self.0 {
-            write!(f, "{:02X}", byte)?;
-        }
-        Ok(())
+impl Attributes {
+    /// Get a reference to the value associated with input key
+    pub fn get(&self, key: &str) -> Option<&String> {
+        self.0.get(key)
+    }
+
+    /// Get ownership of the value associated to the input key
+    pub fn take(&mut self, key: &str) -> Option<String> {
+        self.0.remove(key)
     }
 }
 
-/// Get the hash of a transaction and convert to a string
-fn hash_tx(tx_bytes: &[u8]) -> String {
-    let digest = Sha256::digest(tx_bytes);
-    let mut hash_bytes = [0u8; 32];
-    hash_bytes.copy_from_slice(&digest);
-    Hash(hash_bytes).to_string()
+impl From<&serde_json::Value> for Attributes {
+    fn from(json: &serde_json::Value) -> Self {
+        let mut attributes = HashMap::new();
+        let attrs: Vec<serde_json::Value> = serde_json::from_value(
+            json.get("attributes")
+                .expect("Tendermint event missing attributes")
+                .clone(),
+        )
+        .unwrap();
+        for attr in attrs {
+            attributes.insert(
+                serde_json::from_value(
+                    attr.get("key")
+                        .expect("Attributes JSON missing key")
+                        .clone(),
+                )
+                .unwrap(),
+                serde_json::from_value(
+                    attr.get("value")
+                        .expect("Attributes JSON missing value")
+                        .clone(),
+                )
+                .unwrap(),
+            );
+        }
+        Attributes(attributes)
+    }
 }

@@ -1,23 +1,18 @@
-use std::convert::TryFrom;
 use std::time::Duration;
 
-use anoma::proto::IntentGossipMessage;
 use libp2p::core::connection::ConnectionLimits;
 use libp2p::core::muxing::StreamMuxerBox;
 use libp2p::core::transport::Boxed;
 use libp2p::dns::DnsConfig;
-use libp2p::gossipsub::IdentTopic;
 use libp2p::identity::Keypair;
 use libp2p::swarm::SwarmBuilder;
 use libp2p::tcp::TcpConfig;
 use libp2p::websocket::WsConfig;
 use libp2p::{core, mplex, noise, PeerId, Transport, TransportError};
 use thiserror::Error;
-use tokio::sync::mpsc::Receiver;
+use tokio::sync::mpsc::Sender;
 
 use super::behaviour::Behaviour;
-use crate::proto::services::{rpc_message, RpcResponse};
-use crate::proto::{IntentMessage, SubscribeTopicMessage};
 use crate::types::MatchmakerMessage;
 
 pub type Swarm = libp2p::Swarm<Behaviour>;
@@ -45,7 +40,8 @@ impl P2P {
     /// propagation of intents.
     pub fn new(
         config: &crate::config::IntentGossiper,
-    ) -> Result<(Self, Option<Receiver<MatchmakerMessage>>)> {
+        mm_sender: Option<Sender<MatchmakerMessage>>,
+    ) -> Result<Self> {
         let peer_key = Keypair::Ed25519(config.gossiper.key.clone());
 
         // Id of the node on the libp2p network derived from the public key
@@ -60,8 +56,8 @@ impl P2P {
         };
 
         // create intent gossip specific behaviour
-        let (intent_gossip_behaviour, matchmaker_event_receiver) =
-            Behaviour::new(peer_key, config);
+        let intent_gossip_behaviour =
+            Behaviour::new(peer_key, config, mm_sender);
 
         let connection_limits = build_p2p_connections_limit();
 
@@ -79,137 +75,7 @@ impl P2P {
             .listen_on(config.address.clone())
             .map_err(Error::Listening)?;
 
-        Ok((Self(swarm), matchmaker_event_receiver))
-    }
-
-    pub async fn handle_mm_message(&mut self, mm_message: MatchmakerMessage) {
-        self.0
-            .behaviour_mut()
-            .intent_gossip_app
-            .handle_mm_message(mm_message)
-            .await
-    }
-
-    // TODO move logic to rpc module + split function
-    pub async fn handle_rpc_event(
-        &mut self,
-        event: rpc_message::Message,
-    ) -> RpcResponse {
-        match event {
-            rpc_message::Message::Intent(message) => {
-                // TODO match
-                match IntentMessage::try_from(message) {
-                    Ok(message) => {
-                        match self
-                            .0
-                            .behaviour_mut()
-                            .intent_gossip_app
-                            .apply_intent(message.intent.clone())
-                        {
-                            Ok(true) => {
-                                let gossip_message = IntentGossipMessage::new(
-                                    message.intent.clone(),
-                                );
-                                let intent_bytes = gossip_message.to_bytes();
-                                match self
-                                    .0
-                                    .behaviour_mut()
-                                    .intent_gossip_behaviour
-                                    .publish(
-                                        IdentTopic::new(message.topic),
-                                        intent_bytes,
-                                    ) {
-                                    Ok(message_id) => {
-                                        tracing::info!(
-                                            "publish intent with message_id {}",
-                                            message_id
-                                        );
-                                        RpcResponse {
-                                            result: String::from(
-                                                "Intent sent correctly",
-                                            ),
-                                        }
-                                    }
-                                    Err(err) => {
-                                        tracing::error!(
-                                            "error while publishing intent \
-                                             {:?}",
-                                            err
-                                        );
-                                        RpcResponse {
-                                            result: format!(
-                                                "Failed to publish_intent {:?}",
-                                                err
-                                            ),
-                                        }
-                                    }
-                                }
-                            }
-                            Ok(false) => RpcResponse {
-                                result: String::from(
-                                    "Failed to apply the intent",
-                                ),
-                            },
-                            Err(err) => {
-                                tracing::error!(
-                                    "error while applying the intent {:?}",
-                                    err
-                                );
-                                RpcResponse {
-                                    result: format!(
-                                        "Failed to apply the intent {:?}",
-                                        err
-                                    ),
-                                }
-                            }
-                        }
-                    }
-                    Err(_) => {
-                        let result = String::from(
-                            "rpc intent command for topic is empty",
-                        );
-                        tracing::error!("{}", result);
-                        RpcResponse { result }
-                    }
-                }
-            }
-            rpc_message::Message::Dkg(dkg_msg) => {
-                tracing::debug!("dkg not yet implemented {:?}", dkg_msg);
-                RpcResponse {
-                    result: String::from("DKG application not yet implemented"),
-                }
-            }
-            rpc_message::Message::Topic(topic_message) => {
-                let topic = SubscribeTopicMessage::from(topic_message);
-                let topic = IdentTopic::new(&topic.topic);
-                match self
-                    .0
-                    .behaviour_mut()
-                    .intent_gossip_behaviour
-                    .subscribe(&topic)
-                {
-                    Ok(true) => {
-                        let result = format!("Node subscribed to {}", topic);
-                        tracing::info!("{}", result);
-                        RpcResponse { result }
-                    }
-                    Ok(false) => {
-                        let result =
-                            format!("Node already subscribed to {}", topic);
-                        tracing::info!("{}", result);
-                        RpcResponse { result }
-                    }
-                    Err(err) => {
-                        let result = format!(
-                            "failed to subscribe to {}: {:?}",
-                            topic, err
-                        );
-                        tracing::error!("{}", result);
-                        RpcResponse { result }
-                    }
-                }
-            }
-        }
+        Ok(Self(swarm))
     }
 }
 

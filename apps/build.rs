@@ -9,8 +9,21 @@ const PROTO_SRC: &str = "./proto";
 const RUSTFMT_TOOLCHAIN_SRC: &str = "../rust-nightly-version";
 
 fn main() {
+    #[cfg(all(feature = "ABCI", feature = "ABCI-plus-plus"))]
+    compile_error!(
+        "`ABCI` and `ABCI-plus-plus` may not be used at the same time"
+    );
     // Tell Cargo that if the given file changes, to rerun this build script.
     println!("cargo:rerun-if-changed={}", PROTO_SRC);
+
+    // Tell Cargo to build when the `ANOMA_DEV` env var changes
+    println!("cargo:rerun-if-env-changed=ANOMA_DEV");
+    // Enable "dev" feature if `ANOMA_DEV` is trueish
+    if let Ok(dev) = env::var("ANOMA_DEV") {
+        if dev.to_ascii_lowercase().trim() == "true" {
+            println!("cargo:rustc-cfg=feature=\"dev\"");
+        }
+    }
 
     // The version should match the one we use in the `Makefile`
     if let Ok(rustfmt_toolchain) = read_to_string(RUSTFMT_TOOLCHAIN_SRC) {
@@ -45,9 +58,6 @@ fn main() {
         // TODO try to add json encoding to simplify use for user
         // .type_attribute("types.Intent", "#[derive(serde::Serialize,
         // serde::Deserialize)]")
-        .compile(
-            &[format!("{}/services.proto", PROTO_SRC)],
-            &[PROTO_SRC.into()],
-        )
+        .compile(&[format!("{}/services.proto", PROTO_SRC)], &[PROTO_SRC])
         .unwrap();
 }

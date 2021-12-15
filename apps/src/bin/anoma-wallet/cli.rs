@@ -50,7 +50,7 @@ fn key_and_address_gen(
     }: args::KeyAndAddressGen,
 ) {
     let mut wallet = ctx.wallet;
-    let alias = wallet.gen_key(alias, unsafe_dont_encrypt);
+    let (alias, _key) = wallet.gen_key(alias, unsafe_dont_encrypt);
     wallet.save().unwrap_or_else(|err| eprintln!("{}", err));
     println!(
         "Successfully added a key and an address with alias: \"{}\"",
@@ -109,32 +109,41 @@ fn key_list(
     }: args::KeyList,
 ) {
     let wallet = ctx.wallet;
-    let stdout = io::stdout();
-    let mut w = stdout.lock();
-    writeln!(w, "Known keys:").unwrap();
-    for (alias, (stored_keypair, pkh)) in wallet.get_keys() {
-        let encrypted = if stored_keypair.is_encrypted() {
-            "encrypted"
-        } else {
-            "not encrypted"
-        };
-        writeln!(w, "  Alias \"{}\" ({}):", alias, encrypted).unwrap();
-        if let Some(pkh) = pkh {
-            writeln!(w, "    Public key hash: {}", pkh).unwrap();
-        }
-        match stored_keypair.get(decrypt) {
-            Ok(keypair) => {
-                writeln!(w, "    Public key: {}", keypair.public).unwrap();
-                if unsafe_show_secret {
-                    writeln!(w, "    Secret key: {}", keypair.secret).unwrap();
+    let known_keys = wallet.get_keys();
+    if known_keys.is_empty() {
+        println!(
+            "No known keys. Try `key gen --alias my-key` to generate a new \
+             key."
+        );
+    } else {
+        let stdout = io::stdout();
+        let mut w = stdout.lock();
+        writeln!(w, "Known keys:").unwrap();
+        for (alias, (stored_keypair, pkh)) in known_keys {
+            let encrypted = if stored_keypair.is_encrypted() {
+                "encrypted"
+            } else {
+                "not encrypted"
+            };
+            writeln!(w, "  Alias \"{}\" ({}):", alias, encrypted).unwrap();
+            if let Some(pkh) = pkh {
+                writeln!(w, "    Public key hash: {}", pkh).unwrap();
+            }
+            match stored_keypair.get(decrypt) {
+                Ok(keypair) => {
+                    writeln!(w, "    Public key: {}", keypair.public).unwrap();
+                    if unsafe_show_secret {
+                        writeln!(w, "    Secret key: {}", keypair.secret)
+                            .unwrap();
+                    }
                 }
-            }
-            Err(DecryptionError::NotDecrypting) if !decrypt => {
-                continue;
-            }
-            Err(err) => {
-                writeln!(w, "    Couldn't decrypt the keypair: {}", err)
-                    .unwrap();
+                Err(DecryptionError::NotDecrypting) if !decrypt => {
+                    continue;
+                }
+                Err(err) => {
+                    writeln!(w, "    Couldn't decrypt the keypair: {}", err)
+                        .unwrap();
+                }
             }
         }
     }
@@ -164,11 +173,20 @@ fn key_export(ctx: Context, args::KeyExport { alias }: args::KeyExport) {
 /// List all known addresses.
 fn address_list(ctx: Context) {
     let wallet = ctx.wallet;
-    let stdout = io::stdout();
-    let mut w = stdout.lock();
-    writeln!(w, "Known addresses:").unwrap();
-    for (alias, address) in sorted(wallet.get_addresses()) {
-        writeln!(w, "  \"{}\": {}", alias, address).unwrap();
+    let known_addresses = wallet.get_addresses();
+    if known_addresses.is_empty() {
+        println!(
+            "No known addresses. Try `address gen --alias my-addr` to \
+             generate a new implicit address."
+        );
+    } else {
+        let stdout = io::stdout();
+        let mut w = stdout.lock();
+        writeln!(w, "Known addresses:").unwrap();
+        for (alias, address) in sorted(known_addresses) {
+            writeln!(w, "  \"{}\": {}", alias, address.to_pretty_string())
+                .unwrap();
+        }
     }
 }
 
@@ -176,7 +194,7 @@ fn address_list(ctx: Context) {
 fn address_find(ctx: Context, args: args::AddressFind) {
     let wallet = ctx.wallet;
     if let Some(address) = wallet.find_address(&args.alias) {
-        println!("Found address {}", address.encode());
+        println!("Found address {}", address.to_pretty_string());
     } else {
         println!(
             "No address with alias {} found. Use the command `address list` \
@@ -189,7 +207,10 @@ fn address_find(ctx: Context, args: args::AddressFind) {
 /// Add an address to the wallet.
 fn address_add(ctx: Context, args: args::AddressAdd) {
     let mut wallet = ctx.wallet;
-    if !wallet.add_address(args.alias.clone(), args.address) {
+    if wallet
+        .add_address(args.alias.clone(), args.address)
+        .is_none()
+    {
         eprintln!("Address not added");
         cli::safe_exit(1);
     }

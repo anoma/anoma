@@ -23,6 +23,7 @@ pub mod tx_host_env {
 }
 
 /// Host environment structures required for transactions.
+#[derive(Default)]
 pub struct TestTxEnv {
     pub storage: TestStorage,
     pub write_log: WriteLog,
@@ -30,19 +31,6 @@ pub struct TestTxEnv {
     pub verifiers: HashSet<Address>,
     pub gas_meter: BlockGasMeter,
     pub result_buffer: Option<Vec<u8>>,
-}
-
-impl Default for TestTxEnv {
-    fn default() -> Self {
-        Self {
-            storage: TestStorage::default(),
-            write_log: WriteLog::default(),
-            iterators: PrefixIterators::default(),
-            verifiers: HashSet::default(),
-            gas_meter: BlockGasMeter::default(),
-            result_buffer: None,
-        }
-    }
 }
 
 impl TestTxEnv {

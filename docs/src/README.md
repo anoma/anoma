@@ -1,22 +1,39 @@
 # Introduction
+Welcome to Anoma's docs!
+
+## About Anoma
+[Anoma](https://anoma.network/) is a sovereign, proof-of-stake blockchain protocol that enables private, asset-agnostic cash and private bartering among any number of parties. To learn more about the protocol, we recommend the following resources:
+- [Introduction to Anoma Medium article](https://medium.com/anomanetwork/introducing-anoma-a-blockchain-for-private-asset-agnostic-bartering-dcc47ac42d9f)
+- [Anoma's Whitepaper](https://anoma.network/papers/whitepaper.pdf)
+- [Anoma's Vision paper](https://anoma.network/papers/vision-paper.pdf)
+
+### Anoma's current testnet: Feigenbaum
+Feigenbaum is the name of Anoma's first public testnet. Find `feigenbaum` on [Github](https://github.com/anoma/anoma/releases).
+
+> ⚠️ Here lay dragons: this codebase is still experimental, try at your own risk!
+
+## About the documentation
+
+The three main sections of this book are:
+
+- [User Guide](./user-guide): explains basic concepts and interactions
+- [Exploration](./explore): documents the process of exploring the design and implementation space for Anoma
+- [Specifications](./specs): implementation independent technical specifications
+
+### The source
 
 This book is written using [mdBook](https://rust-lang.github.io/mdBook/) with [mdbook-mermaid](https://github.com/badboy/mdbook-mermaid) for diagrams, it currently lives in the [Anoma repo](https://github.com/anoma/anoma).
 
-To get started quickly, one can:
+To get started quickly, in the `docs` directory one can:
 
 ```shell
 # Install dependencies
 make dev-deps
+
 # This will open the book in your default browser and rebuild on changes
 make serve
 ```
 
 The mermaid diagrams docs can be found at <https://mermaid-js.github.io/mermaid>.
 
-The initial purpose of this document is twofold. One is to document the process of exploring the design and implementation space for Anoma. The other is to describe its technical specifications. These correspond to the [Exploration](./explore) and [Specifications](./specs) sections of this book, respectively.
-
-The Exploration section is more free-form. This is largely a cross-over of both the implementation details and the design of implementation-independent specifications.
-
-The Specification section will be completely independent of the implementation details.
-
-Contributions to the contents and the structure of this book (nothing is set in stone) should be made via pull requests. Code changes that diverge from the spec should also update this book.
+[Contributions](https://github.com/anoma/anoma/issues) to the contents and the structure of this book (nothing is set in stone) should be made via pull requests. Code changes that diverge from the spec should also update this book.

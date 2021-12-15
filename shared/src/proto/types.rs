@@ -2,6 +2,7 @@ use std::collections::hash_map::DefaultHasher;
 use std::convert::{TryFrom, TryInto};
 use std::hash::{Hash, Hasher};
 
+use borsh::{BorshDeserialize, BorshSerialize};
 use prost::Message;
 use thiserror::Error;
 
@@ -29,7 +30,7 @@ pub enum Error {
 
 pub type Result<T> = std::result::Result<T, Error>;
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, BorshSerialize, BorshDeserialize, Hash)]
 pub struct Tx {
     pub code: Vec<u8>,
     pub data: Option<Vec<u8>>,

@@ -1,10 +1,10 @@
 # WASM VM
 
-A wasm virtual machine will be used for [validity predicates](./vp.md) and [transactions code](./tx-execution.md). 
+A wasm virtual machine will be used for [validity predicates](./vp.md) and [transactions code](./tx.md). 
 
 The VM should provide:
 - an interface for compiling from higher-level languages to wasm (initially only Rust)
-- a wasm compiler, unless we use [an interpreted runtime](/explore/libraries/wasm.md)
+- a wasm compiler, unless we use [an interpreted runtime](../../libraries/wasm.md)
 - provide and inject [environments for higher-level languages for VPs and transactions](#wasm-environment)
 - pre-process wasm modules
   - check & sanitize modules
@@ -102,7 +102,7 @@ A validity predicate can read its prior state directly from storage as it is not
 The write log of each transaction included in a block and accepted by VPs is accumulated into the block write log. Once the block is committed, we apply the storage changes from the block write log to the persistent storage.
 
 ![write log](./wasm-vm/storage-write-log.svg  "storage write log")
-<https://excalidraw.com/new#room=333e1db689b083669c80,Y0i8yhvIAZCFICs753CSuA>
+[Diagram on Excalidraw](https://excalidraw.com/new#room=333e1db689b083669c80,Y0i8yhvIAZCFICs753CSuA)
 
 ## Gas metering
 

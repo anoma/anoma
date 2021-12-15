@@ -92,7 +92,16 @@ pub struct VotingPower(u64);
 pub struct VotingPowerDelta(i64);
 
 /// A genesis validator definition.
-#[derive(Debug, Clone)]
+#[derive(
+    Debug,
+    Clone,
+    BorshSerialize,
+    BorshDeserialize,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+)]
 pub struct GenesisValidator<Address, Token, PK> {
     /// Validator's address
     pub address: Address,
@@ -172,7 +181,7 @@ where
 {
     /// The `voting_power` field must be on top, because lexicographic ordering
     /// is based on the top-to-bottom declaration order and in the
-    /// `ValidatorSet` the `WeighedValidator`s these need to be sorted by
+    /// `ValidatorSet` the `WeightedValidator`s these need to be sorted by
     /// the `voting_power`.
     pub voting_power: VotingPower,
     /// Validator's address
@@ -232,7 +241,9 @@ where
 }
 
 /// Validator's state.
-#[derive(Debug, Clone, Copy, BorshDeserialize, BorshSerialize)]
+#[derive(
+    Debug, Clone, Copy, BorshDeserialize, BorshSerialize, PartialEq, Eq,
+)]
 pub enum ValidatorState {
     /// Inactive validator may not participate in the consensus.
     Inactive,

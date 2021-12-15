@@ -78,6 +78,20 @@ pub fn validator_address_raw_hash_key(raw_hash: impl AsRef<str>) -> Key {
         .expect("Cannot obtain a storage key")
 }
 
+/// Is storage key for validator's address raw hash?
+pub fn is_validator_address_raw_hash_key(key: &Key) -> Option<&str> {
+    match &key.segments[..] {
+        [
+            DbKeySeg::AddressSeg(addr),
+            DbKeySeg::StringSeg(prefix),
+            DbKeySeg::StringSeg(raw_hash),
+        ] if addr == &ADDRESS && prefix == VALIDATOR_ADDRESS_RAW_HASH => {
+            Some(raw_hash)
+        }
+        _ => None,
+    }
+}
+
 /// Storage key for validator's staking reward address.
 pub fn validator_staking_reward_address_key(validator: &Address) -> Key {
     validator_prefix(validator)
@@ -88,10 +102,14 @@ pub fn validator_staking_reward_address_key(validator: &Address) -> Key {
 /// Is storage key for validator's staking reward address?
 pub fn is_validator_staking_reward_address_key(key: &Key) -> Option<&Address> {
     match &key.segments[..] {
-        [DbKeySeg::AddressSeg(addr), DbKeySeg::StringSeg(prefix), DbKeySeg::AddressSeg(validator), DbKeySeg::StringSeg(key)]
-            if addr == &ADDRESS
-                && prefix == VALIDATOR_STORAGE_PREFIX
-                && key == VALIDATOR_STAKING_REWARD_ADDRESS_STORAGE_KEY =>
+        [
+            DbKeySeg::AddressSeg(addr),
+            DbKeySeg::StringSeg(prefix),
+            DbKeySeg::AddressSeg(validator),
+            DbKeySeg::StringSeg(key),
+        ] if addr == &ADDRESS
+            && prefix == VALIDATOR_STORAGE_PREFIX
+            && key == VALIDATOR_STAKING_REWARD_ADDRESS_STORAGE_KEY =>
         {
             Some(validator)
         }
@@ -109,10 +127,14 @@ pub fn validator_consensus_key_key(validator: &Address) -> Key {
 /// Is storage key for validator's consensus key?
 pub fn is_validator_consensus_key_key(key: &Key) -> Option<&Address> {
     match &key.segments[..] {
-        [DbKeySeg::AddressSeg(addr), DbKeySeg::StringSeg(prefix), DbKeySeg::AddressSeg(validator), DbKeySeg::StringSeg(key)]
-            if addr == &ADDRESS
-                && prefix == VALIDATOR_STORAGE_PREFIX
-                && key == VALIDATOR_CONSENSUS_KEY_STORAGE_KEY =>
+        [
+            DbKeySeg::AddressSeg(addr),
+            DbKeySeg::StringSeg(prefix),
+            DbKeySeg::AddressSeg(validator),
+            DbKeySeg::StringSeg(key),
+        ] if addr == &ADDRESS
+            && prefix == VALIDATOR_STORAGE_PREFIX
+            && key == VALIDATOR_CONSENSUS_KEY_STORAGE_KEY =>
         {
             Some(validator)
         }
@@ -130,10 +152,14 @@ pub fn validator_state_key(validator: &Address) -> Key {
 /// Is storage key for validator's state?
 pub fn is_validator_state_key(key: &Key) -> Option<&Address> {
     match &key.segments[..] {
-        [DbKeySeg::AddressSeg(addr), DbKeySeg::StringSeg(prefix), DbKeySeg::AddressSeg(validator), DbKeySeg::StringSeg(key)]
-            if addr == &ADDRESS
-                && prefix == VALIDATOR_STORAGE_PREFIX
-                && key == VALIDATOR_STATE_STORAGE_KEY =>
+        [
+            DbKeySeg::AddressSeg(addr),
+            DbKeySeg::StringSeg(prefix),
+            DbKeySeg::AddressSeg(validator),
+            DbKeySeg::StringSeg(key),
+        ] if addr == &ADDRESS
+            && prefix == VALIDATOR_STORAGE_PREFIX
+            && key == VALIDATOR_STATE_STORAGE_KEY =>
         {
             Some(validator)
         }
@@ -151,10 +177,14 @@ pub fn validator_total_deltas_key(validator: &Address) -> Key {
 /// Is storage key for validator's total deltas?
 pub fn is_validator_total_deltas_key(key: &Key) -> Option<&Address> {
     match &key.segments[..] {
-        [DbKeySeg::AddressSeg(addr), DbKeySeg::StringSeg(prefix), DbKeySeg::AddressSeg(validator), DbKeySeg::StringSeg(key)]
-            if addr == &ADDRESS
-                && prefix == VALIDATOR_STORAGE_PREFIX
-                && key == VALIDATOR_TOTAL_DELTAS_STORAGE_KEY =>
+        [
+            DbKeySeg::AddressSeg(addr),
+            DbKeySeg::StringSeg(prefix),
+            DbKeySeg::AddressSeg(validator),
+            DbKeySeg::StringSeg(key),
+        ] if addr == &ADDRESS
+            && prefix == VALIDATOR_STORAGE_PREFIX
+            && key == VALIDATOR_TOTAL_DELTAS_STORAGE_KEY =>
         {
             Some(validator)
         }
@@ -172,10 +202,14 @@ pub fn validator_voting_power_key(validator: &Address) -> Key {
 /// Is storage key for validator's voting power?
 pub fn is_validator_voting_power_key(key: &Key) -> Option<&Address> {
     match &key.segments[..] {
-        [DbKeySeg::AddressSeg(addr), DbKeySeg::StringSeg(prefix), DbKeySeg::AddressSeg(validator), DbKeySeg::StringSeg(key)]
-            if addr == &ADDRESS
-                && prefix == VALIDATOR_STORAGE_PREFIX
-                && key == VALIDATOR_VOTING_POWER_STORAGE_KEY =>
+        [
+            DbKeySeg::AddressSeg(addr),
+            DbKeySeg::StringSeg(prefix),
+            DbKeySeg::AddressSeg(validator),
+            DbKeySeg::StringSeg(key),
+        ] if addr == &ADDRESS
+            && prefix == VALIDATOR_STORAGE_PREFIX
+            && key == VALIDATOR_VOTING_POWER_STORAGE_KEY =>
         {
             Some(validator)
         }
@@ -200,11 +234,11 @@ pub fn validator_slashes_key(validator: &Address) -> Key {
 /// Is storage key for validator's slashes?
 pub fn is_validator_slashes_key(key: &Key) -> Option<&Address> {
     match &key.segments[..] {
-        [DbKeySeg::AddressSeg(addr), DbKeySeg::StringSeg(prefix), DbKeySeg::AddressSeg(validator)]
-            if addr == &ADDRESS && prefix == SLASHES_PREFIX =>
-        {
-            Some(validator)
-        }
+        [
+            DbKeySeg::AddressSeg(addr),
+            DbKeySeg::StringSeg(prefix),
+            DbKeySeg::AddressSeg(validator),
+        ] if addr == &ADDRESS && prefix == SLASHES_PREFIX => Some(validator),
         _ => None,
     }
 }
@@ -233,14 +267,15 @@ pub fn bond_key(bond_id: &BondId) -> Key {
 /// Is storage key for a bond?
 pub fn is_bond_key(key: &Key) -> Option<BondId> {
     match &key.segments[..] {
-        [DbKeySeg::AddressSeg(addr), DbKeySeg::StringSeg(prefix), DbKeySeg::AddressSeg(source), DbKeySeg::AddressSeg(validator)]
-            if addr == &ADDRESS && prefix == BOND_STORAGE_KEY =>
-        {
-            Some(BondId {
-                source: source.clone(),
-                validator: validator.clone(),
-            })
-        }
+        [
+            DbKeySeg::AddressSeg(addr),
+            DbKeySeg::StringSeg(prefix),
+            DbKeySeg::AddressSeg(source),
+            DbKeySeg::AddressSeg(validator),
+        ] if addr == &ADDRESS && prefix == BOND_STORAGE_KEY => Some(BondId {
+            source: source.clone(),
+            validator: validator.clone(),
+        }),
         _ => None,
     }
 }
@@ -269,14 +304,15 @@ pub fn unbond_key(bond_id: &BondId) -> Key {
 /// Is storage key for a unbond?
 pub fn is_unbond_key(key: &Key) -> Option<BondId> {
     match &key.segments[..] {
-        [DbKeySeg::AddressSeg(addr), DbKeySeg::StringSeg(prefix), DbKeySeg::AddressSeg(source), DbKeySeg::AddressSeg(validator)]
-            if addr == &ADDRESS && prefix == UNBOND_STORAGE_KEY =>
-        {
-            Some(BondId {
-                source: source.clone(),
-                validator: validator.clone(),
-            })
-        }
+        [
+            DbKeySeg::AddressSeg(addr),
+            DbKeySeg::StringSeg(prefix),
+            DbKeySeg::AddressSeg(source),
+            DbKeySeg::AddressSeg(validator),
+        ] if addr == &ADDRESS && prefix == UNBOND_STORAGE_KEY => Some(BondId {
+            source: source.clone(),
+            validator: validator.clone(),
+        }),
         _ => None,
     }
 }
@@ -357,6 +393,14 @@ where
     ) -> Option<ValidatorConsensusKeys> {
         let (value, _gas) =
             self.read(&validator_consensus_key_key(key)).unwrap();
+        value.map(|value| decode(value).unwrap())
+    }
+
+    fn read_validator_state(
+        &self,
+        key: &Self::Address,
+    ) -> Option<ValidatorStates> {
+        let (value, _gas) = self.read(&validator_state_key(key)).unwrap();
         value.map(|value| decode(value).unwrap())
     }
 
@@ -479,11 +523,11 @@ where
         address: &Self::Address,
         pk: &Self::PublicKey,
     ) {
-        let user_vp =
-            std::fs::read("wasm/vp_user.wasm").expect("cannot load user VP");
-        // The staking reward accounts are setup with a user VP
-        self.write(&Key::validity_predicate(address), user_vp.to_vec())
-            .unwrap();
+        // let user_vp =
+        //     std::fs::read("wasm/vp_user.wasm").expect("cannot load user VP");
+        // // The staking reward accounts are setup with a user VP
+        // self.write(&Key::validity_predicate(address), user_vp.to_vec())
+        //     .unwrap();
 
         // Write the public key
         let pk_key = key::ed25519::pk_key(address);

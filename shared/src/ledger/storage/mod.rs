@@ -9,9 +9,17 @@ use core::fmt::Debug;
 use std::collections::HashMap;
 use std::fmt::Display;
 
+use prost::Message;
 use sparse_merkle_tree::default_store::DefaultStore;
 use sparse_merkle_tree::{SparseMerkleTree, H256};
+#[cfg(not(feature = "ABCI"))]
 use tendermint::block::Header;
+#[cfg(not(feature = "ABCI"))]
+use tendermint::merkle::proof::ProofOp;
+#[cfg(feature = "ABCI")]
+use tendermint_stable::block::Header;
+#[cfg(feature = "ABCI")]
+use tendermint_stable::merkle::proof::ProofOp;
 use thiserror::Error;
 use types::MerkleTree;
 
@@ -20,9 +28,9 @@ use crate::bytes::ByteBuf;
 use crate::ledger::gas::MIN_STORAGE_GAS;
 use crate::ledger::parameters::{self, EpochDuration};
 use crate::types::address::{Address, EstablishedAddressGen};
+use crate::types::chain::{ChainId, CHAIN_ID_LENGTH};
 use crate::types::storage::{
     BlockHash, BlockHeight, DbKeySeg, Epoch, Epochs, Key, BLOCK_HASH_LENGTH,
-    CHAIN_ID_LENGTH,
 };
 use crate::types::time::DateTimeUtc;
 
@@ -39,7 +47,7 @@ where
     /// The database for the storage
     pub db: D,
     /// The ID of the chain
-    pub chain_id: String,
+    pub chain_id: ChainId,
     /// The storage for the current (yet to be committed) block
     pub block: BlockStorage<H>,
     /// The latest block header
@@ -91,7 +99,7 @@ pub enum Error {
 }
 
 /// The block's state as stored in the database.
-pub struct BlockState {
+pub struct BlockStateRead {
     /// Merkle tree root
     pub root: H256,
     /// Merkle tree store
@@ -114,19 +122,46 @@ pub struct BlockState {
     pub address_gen: EstablishedAddressGen,
 }
 
+/// The block's state to write into the database.
+pub struct BlockStateWrite<'a> {
+    /// Merkle tree root
+    pub root: H256,
+    /// Merkle tree store
+    pub store: &'a DefaultStore<H256>,
+    /// Hash of the block
+    pub hash: &'a BlockHash,
+    /// Height of the block
+    pub height: BlockHeight,
+    /// Epoch of the block
+    pub epoch: Epoch,
+    /// Predecessor block epochs
+    pub pred_epochs: &'a Epochs,
+    /// Minimum block height at which the next epoch may start
+    pub next_epoch_min_start_height: BlockHeight,
+    /// Minimum block time at which the next epoch may start
+    pub next_epoch_min_start_time: DateTimeUtc,
+    /// Accounts' subspaces storage for arbitrary key-values
+    pub subspaces: &'a HashMap<Key, Vec<u8>>,
+    /// Established address generator
+    pub address_gen: &'a EstablishedAddressGen,
+}
+
 /// A database backend.
 pub trait DB: std::fmt::Debug {
+    /// open the database from provided path
+    fn open(db_path: impl AsRef<std::path::Path>) -> Self;
+
     /// Flush data on the memory to persistent them
     fn flush(&self) -> Result<()>;
 
     /// Write a block
-    fn write_block(&mut self, state: BlockState) -> Result<()>;
+    fn write_block(&mut self, state: BlockStateWrite) -> Result<()>;
 
     /// Read the value with the given height and the key from the DB
     fn read(&self, height: BlockHeight, key: &Key) -> Result<Option<Vec<u8>>>;
 
     /// Read the last committed block
-    fn read_last_block(&mut self) -> Result<Option<BlockState>>;
+    fn read_last_block(&mut self) -> Result<Option<BlockStateRead>>;
 }
 
 /// A database prefix iterator.
@@ -156,10 +191,38 @@ where
     D: DB + for<'iter> DBIter<'iter>,
     H: StorageHasher,
 {
+    /// open up a new instance of the storage given path to db and chain id
+    pub fn open(
+        db_path: impl AsRef<std::path::Path>,
+        chain_id: ChainId,
+    ) -> Self {
+        let block = BlockStorage {
+            tree: MerkleTree::default(),
+            hash: BlockHash::default(),
+            height: BlockHeight::default(),
+            epoch: Epoch::default(),
+            pred_epochs: Epochs::default(),
+            subspaces: HashMap::default(),
+        };
+        Storage::<D, H> {
+            db: D::open(db_path),
+            chain_id,
+            block,
+            header: None,
+            last_height: BlockHeight(0),
+            last_epoch: Epoch::default(),
+            next_epoch_min_start_height: BlockHeight::default(),
+            next_epoch_min_start_time: DateTimeUtc::now(),
+            address_gen: EstablishedAddressGen::new(
+                "Privacy is a function of liberty.",
+            ),
+        }
+    }
+
     /// Load the full state at the last committed height, if any. Returns the
     /// Merkle root hash and the height of the committed block.
     pub fn load_last_state(&mut self) -> Result<()> {
-        if let Some(BlockState {
+        if let Some(BlockStateRead {
             root,
             store,
             hash,
@@ -205,17 +268,17 @@ where
 
     /// Persist the current block's state to the database
     pub fn commit(&mut self) -> Result<()> {
-        let state = BlockState {
+        let state = BlockStateWrite {
             root: *self.block.tree.0.root(),
-            store: self.block.tree.0.store().clone(),
-            hash: self.block.hash.clone(),
+            store: self.block.tree.0.store(),
+            hash: &self.block.hash,
             height: self.block.height,
             epoch: self.block.epoch,
-            pred_epochs: self.block.pred_epochs.clone(),
+            pred_epochs: &self.block.pred_epochs,
             next_epoch_min_start_height: self.next_epoch_min_start_height,
             next_epoch_min_start_time: self.next_epoch_min_start_time,
-            subspaces: self.block.subspaces.clone(),
-            address_gen: self.address_gen.clone(),
+            subspaces: &self.block.subspaces,
+            address_gen: &self.address_gen,
         };
         self.db.write_block(state)?;
         self.last_height = self.block.height;
@@ -323,14 +386,6 @@ where
         Ok((gas as _, size_diff))
     }
 
-    /// Set the chain ID.
-    /// Chain ID is not in the Merkle tree as it's tracked by Tendermint in the
-    /// block header. Hence, we don't update the tree when this is set.
-    pub fn set_chain_id(&mut self, chain_id: &str) -> Result<()> {
-        self.chain_id = chain_id.to_owned();
-        Ok(())
-    }
-
     /// Set the block header.
     /// The header is not in the Merkle tree as it's tracked by Tendermint.
     /// Hence, we don't update the tree when this is set.
@@ -368,9 +423,9 @@ where
         self.has_key(&key)
     }
 
-    /// Get the chain ID
+    /// Get the chain ID as a raw string
     pub fn get_chain_id(&self) -> (String, u64) {
-        (self.chain_id.clone(), CHAIN_ID_LENGTH as _)
+        (self.chain_id.to_string(), CHAIN_ID_LENGTH as _)
     }
 
     /// Get the current (yet to be committed) block height
@@ -381,6 +436,33 @@ where
     /// Get the current (yet to be committed) block hash
     pub fn get_block_hash(&self) -> (BlockHash, u64) {
         (self.block.hash.clone(), BLOCK_HASH_LENGTH as _)
+    }
+
+    /// Get the membership or non-membership proof
+    pub fn get_proof(&self, key: &Key) -> Result<ProofOp> {
+        let hash_key = H::hash_key(key);
+        let proof = if self.has_key(key)?.0 {
+            self.block
+                .tree
+                .0
+                .membership_proof(&hash_key)
+                .map_err(Error::MerkleTreeError)?
+        } else {
+            self.block
+                .tree
+                .0
+                .non_membership_proof(&hash_key)
+                .map_err(Error::MerkleTreeError)?
+        };
+        let mut data = vec![];
+        proof
+            .encode(&mut data)
+            .expect("Encoding proof shouldn't fail");
+        Ok(ProofOp {
+            field_type: "ics23_CommitmentProof".to_string(),
+            key: hash_key.as_slice().to_vec(),
+            data,
+        })
     }
 
     /// Get the current (yet to be committed) block epoch
@@ -497,13 +579,8 @@ pub mod testing {
     use super::*;
 
     /// The storage hasher used for the merkle tree.
+    #[derive(Default)]
     pub struct Sha256Hasher(Sha256);
-
-    impl Default for Sha256Hasher {
-        fn default() -> Self {
-            Self(Sha256::default())
-        }
-    }
 
     impl sparse_merkle_tree::traits::Hasher for Sha256Hasher {
         fn write_h256(&mut self, h: &H256) {
@@ -546,8 +623,7 @@ pub mod testing {
 
     impl Default for TestStorage {
         fn default() -> Self {
-            let chain_id = "Testing-chain-000000".to_string();
-            assert_eq!(chain_id.len(), CHAIN_ID_LENGTH);
+            let chain_id = ChainId::default();
             let tree = MerkleTree::default();
             let subspaces = HashMap::new();
             let block = BlockStorage {

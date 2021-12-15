@@ -1,12 +1,12 @@
 [package]
 authors = ["Heliax AG <hello@heliax.dev>"]
 description = "Anoma apps"
-edition = "2018"
+edition = "2021"
 license = "GPL-3.0"
 name = "anoma_apps"
 readme = "../README.md"
 resolver = "2"
-version = "0.1.0"
+version = "0.2.0"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -39,15 +39,32 @@ name = "anomaw"
 path = "src/bin/anoma-wallet/main.rs"
 
 [features]
-default = ["std", "dev"]
-# NOTE "dev" features that shouldn't be used in live networks are enabled by default for now
-dev = []
+default = ["std", "ABCI"]
+dev = ["anoma/dev"]
 std = ["ed25519-dalek/std", "rand/std", "rand_core/std"]
 # for integration tests and test utilies
-testing = []
+ABCI = [
+  "tendermint-stable",
+  "tendermint-config-abci",
+  "tendermint-proto-abci",
+  "tendermint-rpc-abci",
+  "tower-abci-old",
+  "anoma/ABCI",
+  "anoma/ibc-vp-abci",
+]
+ABCI-plus-plus = [
+  "tendermint",
+  "tendermint-config",
+  "tendermint-proto",
+  "tendermint-rpc",
+  "tower-abci",
+  "anoma/ABCI-plus-plus",
+  "anoma/ibc-vp",
+]
+testing = ["dev"]
 
 [dependencies]
-anoma = {path = "../shared", features = ["ibc-vp", "wasm-runtime", "ferveo-tpke"]}
+anoma = {path = "../shared", default-features = false, features = ["wasm-runtime", "ferveo-tpke", "rand"]}
 async-std = {version = "1.9.0", features = ["unstable"]}
 async-trait = "0.1.51"
 base64 = "0.13.0"
@@ -56,26 +73,33 @@ blake2b-rs = "0.2.0"
 borsh = "0.9.0"
 byteorder = "1.4.2"
 # https://github.com/clap-rs/clap/issues/1037
-clap = {git = "https://github.com/clap-rs/clap/", tag = "v3.0.0-beta.2", default-features = false, features = ["std", "suggestions", "color"]}
+clap = {git = "https://github.com/clap-rs/clap/", tag = "v3.0.0-beta.2", default-features = false, features = ["std", "suggestions", "color", "cargo"]}
 color-eyre = "0.5.10"
 config = "0.11.0"
+derivative = "2.2.0"
 # TODO the older versions of rand and rand_core are currently required to avoid mismatching version issue (https://github.com/dalek-cryptography/ed25519-dalek/pull/159)
 ed25519-dalek = {version = "1.0.1", default-features = false, features = ["rand", "u64_backend", "serde"]}
 eyre = "0.6.5"
+flate2 = "1.0.22"
 futures = "0.3"
 hex = "0.4.3"
 itertools = "0.10.1"
 jsonpath_lib = "0.3.0"
 libc = "0.2.97"
 libp2p = "0.38.0"
+num-derive = "0.3.3"
+num-traits = "0.2.14"
+num_cpus = "1.13.0"
 orion = "0.16.0"
-prost = "0.8.0"
-prost-types = "0.8.0"
+prost = "0.9.0"
+prost-types = "0.9.0"
 # TODO the older versions of rand and rand_core are currently required to avoid mismatching version issue (https://github.com/dalek-cryptography/ed25519-dalek/pull/159)
 rand = {version = "0.7", default-features = false}
 rand_core = {version = "0.5", default-features = false}
 rayon = "=1.5.0"
 regex = "1.4.5"
+reqwest = "0.11.4"
+rlimit = "0.5.4"
 rocksdb = "0.16.0"
 rpassword = "5.0.1"
 serde = {version = "1.0.125", features = ["derive"]}
@@ -84,30 +108,38 @@ serde_json = "1.0.62"
 serde_regex = "1.1.0"
 sha2 = "0.9.3"
 signal-hook = "0.3.9"
-sparse-merkle-tree = {git = "https://github.com/heliaxdev/sparse-merkle-tree", branch = "tomas/encoding-0.9.0b", features = ["borsh"]}
-# temporarily using fork work-around for https://github.com/informalsystems/tendermint-rs/issues/916
-# and https://github.com/anoma/anoma/issues/445
-tendermint = {git = "https://github.com/heliaxdev/tendermint-rs", branch = "tomas/lowercase-node-id"}
-tendermint-proto = {git = "https://github.com/heliaxdev/tendermint-rs", branch = "tomas/lowercase-node-id"}
-tendermint-rpc = {git = "https://github.com/heliaxdev/tendermint-rs", branch = "tomas/lowercase-node-id", features = ["http-client", "websocket-client"]}
-thiserror = "1.0.24"
+sparse-merkle-tree = {git = "https://github.com/heliaxdev/sparse-merkle-tree", branch = "yuji/prost-0.9", features = ["borsh"]}
+tar = "0.4.37"
+# temporarily using fork work-around for https://github.com/informalsystems/tendermint-rs/issues/971
+tendermint = {git = "https://github.com/heliaxdev/tendermint-rs", branch = "yuji/abcipp-v0.23.0", optional = true}
+tendermint-config = {git = "https://github.com/heliaxdev/tendermint-rs", branch = "yuji/abcipp-v0.23.0", optional = true}
+tendermint-config-abci = {package = "tendermint-config", git = "https://github.com/heliaxdev/tendermint-rs", branch = "yuji/rebase_v0.23.0", optional = true}
+tendermint-proto = {git = "https://github.com/heliaxdev/tendermint-rs", branch = "yuji/abcipp-v0.23.0", optional = true}
+tendermint-proto-abci = {package = "tendermint-proto", git = "https://github.com/heliaxdev/tendermint-rs", branch = "yuji/rebase_v0.23.0", optional = true}
+tendermint-rpc = {git = "https://github.com/heliaxdev/tendermint-rs", branch = "yuji/abcipp-v0.23.0", optional = true, features = ["http-client", "websocket-client"]}
+tendermint-rpc-abci = {package = "tendermint-rpc", git = "https://github.com/heliaxdev/tendermint-rs", branch = "yuji/rebase_v0.23.0", optional = true, features = ["http-client", "websocket-client"]}
+tendermint-stable = {package = "tendermint", git = "https://github.com/heliaxdev/tendermint-rs", branch = "yuji/rebase_v0.23.0", optional = true}
+thiserror = "1.0.30"
 tokio = {version = "1.8.2", features = ["full"]}
 toml = "0.5.8"
-tonic = "0.5.0"
+tonic = "0.6.1"
 tower = "0.4"
 # Also, using the same version of tendermint-rs as we do here.
-tower-abci = {git = "https://github.com/heliaxdev/tower-abci", branch = "tomas/tm-lowercase-node-id"}
-tracing = "0.1.26"
+# with a patch for https://github.com/penumbra-zone/tower-abci/issues/7.
+tower-abci = {git = "https://github.com/heliaxdev/tower-abci", branch = "yuji/abcipp-v0.23.0", optional = true}
+tower-abci-old = {package = "tower-abci", git = "https://github.com/heliaxdev/tower-abci", branch = "yuji/rebase_v0.23.0", optional = true}
+tracing = "0.1.29"
 tracing-log = "0.1.2"
-tracing-subscriber = "0.2.18"
+tracing-subscriber = "0.2.25"
 websocket = "0.26.2"
+winapi = "0.3.9"
 
 [dev-dependencies]
-anoma = {path = "../shared", features = ["testing", "wasm-runtime"]}
+anoma = {path = "../shared", default-features = false, features = ["testing", "wasm-runtime"]}
 cargo-watch = "7.5.0"
 proptest = "1.0.0"
 tempfile = "3.2.0"
 tokio-test = "0.4.2"
 
 [build-dependencies]
-tonic-build = "0.5.0"
+tonic-build = "0.6.0"

@@ -1,46 +1,94 @@
 //! IBC validity predicate for channel module
 
-use std::str::FromStr;
-
 use borsh::BorshDeserialize;
-use ibc::ics02_client::client_consensus::AnyConsensusState;
-use ibc::ics02_client::client_state::AnyClientState;
-use ibc::ics02_client::context::ClientReader;
-use ibc::ics02_client::height::Height;
-use ibc::ics03_connection::connection::ConnectionEnd;
-use ibc::ics03_connection::context::ConnectionReader;
-use ibc::ics04_channel::channel::{ChannelEnd, Counterparty, State};
-use ibc::ics04_channel::context::ChannelReader;
-use ibc::ics04_channel::error::{Error as Ics04Error, Kind as Ics04Kind};
-use ibc::ics04_channel::handler::verify::verify_channel_proofs;
-use ibc::ics04_channel::packet::{Receipt, Sequence};
-use ibc::ics05_port::capabilities::Capability;
-use ibc::ics05_port::context::PortReader;
-use ibc::ics24_host::identifier::{ChannelId, ClientId, ConnectionId, PortId};
-use ibc::ics24_host::Path;
+#[cfg(not(feature = "ABCI"))]
+use ibc::core::ics02_client::client_consensus::AnyConsensusState;
+#[cfg(not(feature = "ABCI"))]
+use ibc::core::ics02_client::client_state::AnyClientState;
+#[cfg(not(feature = "ABCI"))]
+use ibc::core::ics02_client::height::Height;
+#[cfg(not(feature = "ABCI"))]
+use ibc::core::ics03_connection::connection::ConnectionEnd;
+#[cfg(not(feature = "ABCI"))]
+use ibc::core::ics03_connection::context::ConnectionReader;
+#[cfg(not(feature = "ABCI"))]
+use ibc::core::ics04_channel::channel::{ChannelEnd, Counterparty, State};
+#[cfg(not(feature = "ABCI"))]
+use ibc::core::ics04_channel::context::ChannelReader;
+#[cfg(not(feature = "ABCI"))]
+use ibc::core::ics04_channel::error::Error as Ics04Error;
+#[cfg(not(feature = "ABCI"))]
+use ibc::core::ics04_channel::handler::verify::verify_channel_proofs;
+#[cfg(not(feature = "ABCI"))]
+use ibc::core::ics04_channel::packet::{Receipt, Sequence};
+#[cfg(not(feature = "ABCI"))]
+use ibc::core::ics05_port::capabilities::Capability;
+#[cfg(not(feature = "ABCI"))]
+use ibc::core::ics05_port::context::PortReader;
+#[cfg(not(feature = "ABCI"))]
+use ibc::core::ics24_host::identifier::{
+    ChannelId, ClientId, ConnectionId, PortChannelId, PortId,
+};
+#[cfg(not(feature = "ABCI"))]
 use ibc::proofs::Proofs;
+#[cfg(not(feature = "ABCI"))]
 use ibc::timestamp::Timestamp;
+#[cfg(feature = "ABCI")]
+use ibc_abci::core::ics02_client::client_consensus::AnyConsensusState;
+#[cfg(feature = "ABCI")]
+use ibc_abci::core::ics02_client::client_state::AnyClientState;
+#[cfg(feature = "ABCI")]
+use ibc_abci::core::ics02_client::height::Height;
+#[cfg(feature = "ABCI")]
+use ibc_abci::core::ics03_connection::connection::ConnectionEnd;
+#[cfg(feature = "ABCI")]
+use ibc_abci::core::ics03_connection::context::ConnectionReader;
+#[cfg(feature = "ABCI")]
+use ibc_abci::core::ics04_channel::channel::{ChannelEnd, Counterparty, State};
+#[cfg(feature = "ABCI")]
+use ibc_abci::core::ics04_channel::context::ChannelReader;
+#[cfg(feature = "ABCI")]
+use ibc_abci::core::ics04_channel::error::Error as Ics04Error;
+#[cfg(feature = "ABCI")]
+use ibc_abci::core::ics04_channel::handler::verify::verify_channel_proofs;
+#[cfg(feature = "ABCI")]
+use ibc_abci::core::ics04_channel::packet::{Receipt, Sequence};
+#[cfg(feature = "ABCI")]
+use ibc_abci::core::ics05_port::capabilities::Capability;
+#[cfg(feature = "ABCI")]
+use ibc_abci::core::ics05_port::context::PortReader;
+#[cfg(feature = "ABCI")]
+use ibc_abci::core::ics24_host::identifier::{
+    ChannelId, ClientId, ConnectionId, PortChannelId, PortId,
+};
+#[cfg(feature = "ABCI")]
+use ibc_abci::proofs::Proofs;
+#[cfg(feature = "ABCI")]
+use ibc_abci::timestamp::Timestamp;
 use sha2::Digest;
 use thiserror::Error;
 
+use super::storage::{
+    ack_key, channel_counter_key, channel_key, commitment_key,
+    is_channel_counter_key, next_sequence_ack_key, next_sequence_recv_key,
+    next_sequence_send_key, port_channel_id, receipt_key,
+    Error as IbcStorageError,
+};
 use super::{Ibc, StateChange};
 use crate::ledger::native_vp::Error as NativeVpError;
-use crate::ledger::storage::{self, StorageHasher};
-use crate::types::address::{Address, InternalAddress};
+use crate::ledger::storage::{self as ledger_storage, StorageHasher};
 use crate::types::ibc::{
     ChannelCloseConfirmData, ChannelCloseInitData, ChannelOpenAckData,
     ChannelOpenConfirmData, ChannelOpenTryData, Error as IbcDataError,
     TimeoutData,
 };
-use crate::types::storage::{DbKeySeg, Key, KeySeg};
+use crate::types::storage::Key;
 
 #[allow(missing_docs)]
 #[derive(Error, Debug)]
 pub enum Error {
     #[error("Native VP error: {0}")]
     NativeVp(NativeVpError),
-    #[error("Key error: {0}")]
-    InvalidKey(String),
     #[error("State change error: {0}")]
     InvalidStateChange(String),
     #[error("Connection error: {0}")]
@@ -61,14 +109,18 @@ pub enum Error {
     DecodingTxData(std::io::Error),
     #[error("IBC data error: {0}")]
     InvalidIbcData(IbcDataError),
+    #[error("IBC storage error: {0}")]
+    IbcStorage(IbcStorageError),
 }
 
 /// IBC channel functions result
 pub type Result<T> = std::result::Result<T, Error>;
+/// ChannelReader result
+type Ics04Result<T> = core::result::Result<T, Ics04Error>;
 
 impl<'a, DB, H> Ibc<'a, DB, H>
 where
-    DB: 'static + storage::DB + for<'iter> storage::DBIter<'iter>,
+    DB: 'static + ledger_storage::DB + for<'iter> ledger_storage::DBIter<'iter>,
     H: 'static + StorageHasher,
 {
     pub(super) fn validate_channel(
@@ -76,8 +128,13 @@ where
         key: &Key,
         tx_data: &[u8],
     ) -> Result<()> {
-        if key.is_ibc_channel_counter() {
-            if self.channel_counter_pre()? < self.channel_counter() {
+        if is_channel_counter_key(key) {
+            let counter = self.channel_counter().map_err(|_| {
+                Error::InvalidChannel(
+                    "The channel counter doesn't exist".to_owned(),
+                )
+            })?;
+            if self.channel_counter_pre()? < counter {
                 return Ok(());
             } else {
                 return Err(Error::InvalidChannel(
@@ -86,32 +143,37 @@ where
             }
         }
 
-        let port_channel_id = Self::get_port_channel_id(key)?;
-        self.authenticated_capability(&port_channel_id.0)
+        let port_channel_id = port_channel_id(key)?;
+        self.authenticated_capability(&port_channel_id.port_id)
             .map_err(|e| {
                 Error::InvalidPort(format!(
                     "The port is not authenticated: ID {}, {}",
-                    port_channel_id.0, e
+                    port_channel_id.port_id, e
                 ))
             })?;
 
-        let channel = self.channel_end(&port_channel_id).ok_or_else(|| {
-            Error::InvalidChannel(format!(
-                "The channel doesn't exist: Port {}, Channel {}",
-                port_channel_id.0, port_channel_id.1
+        let channel = self
+            .channel_end(&(
+                port_channel_id.port_id.clone(),
+                port_channel_id.channel_id.clone(),
             ))
-        })?;
+            .map_err(|_| {
+                Error::InvalidChannel(format!(
+                    "The channel doesn't exist: Port/Channel {}",
+                    port_channel_id
+                ))
+            })?;
         // check the number of hops and empty version in the channel end
         channel.validate_basic().map_err(|e| {
             Error::InvalidChannel(format!(
-                "The channel is invalid: Port {}, Channel {}, {}",
-                port_channel_id.0, port_channel_id.1, e
+                "The channel is invalid: Port/Channel {}, {}",
+                port_channel_id, e
             ))
         })?;
 
         self.validate_version(&channel)?;
 
-        match self.get_channel_state_change(port_channel_id.clone())? {
+        match self.get_channel_state_change(&port_channel_id)? {
             StateChange::Created => match channel.state() {
                 State::Init => Ok(()),
                 State::TryOpen => self.verify_channel_try_proof(
@@ -120,59 +182,28 @@ where
                     tx_data,
                 ),
                 _ => Err(Error::InvalidChannel(format!(
-                    "The channel state is invalid: Port {}, Channel {}, State \
-                     {}",
-                    port_channel_id.0,
-                    port_channel_id.1,
+                    "The channel state is invalid: Port/Channel {}, State {}",
+                    port_channel_id,
                     channel.state()
                 ))),
             },
             StateChange::Updated => self.validate_updated_channel(
-                port_channel_id,
+                &port_channel_id,
                 &channel,
                 tx_data,
             ),
             _ => Err(Error::InvalidStateChange(format!(
-                "The state change of the channel: Port {}, Channel {}",
-                port_channel_id.0, port_channel_id.1
-            ))),
-        }
-    }
-
-    pub(super) fn get_port_channel_id(
-        key: &Key,
-    ) -> Result<(PortId, ChannelId)> {
-        match &key.segments[..] {
-            [DbKeySeg::AddressSeg(addr), DbKeySeg::StringSeg(prefix), DbKeySeg::StringSeg(module0), DbKeySeg::StringSeg(port_id), DbKeySeg::StringSeg(module1), DbKeySeg::StringSeg(channel_id)]
-                if addr == &Address::Internal(InternalAddress::Ibc)
-                    && (prefix == "channelEnds"
-                        || prefix == "nextSequenceSend"
-                        || prefix == "nextSequenceRecv"
-                        || prefix == "nextSequenceAck")
-                    && module0 == "ports"
-                    && module1 == "channels" =>
-            {
-                let port_id = PortId::from_str(&port_id.raw())
-                    .map_err(|e| Error::InvalidKey(e.to_string()))?;
-                let channel_id = ChannelId::from_str(&channel_id.raw())
-                    .map_err(|e| Error::InvalidKey(e.to_string()))?;
-                Ok((port_id, channel_id))
-            }
-            _ => Err(Error::InvalidKey(format!(
-                "The key doesn't have port ID and channel ID: Key {}",
-                key
+                "The state change of the channel: Port/Channel {}",
+                port_channel_id
             ))),
         }
     }
 
     fn get_channel_state_change(
         &self,
-        port_channel_id: (PortId, ChannelId),
+        port_channel_id: &PortChannelId,
     ) -> Result<StateChange> {
-        let path =
-            Path::ChannelEnds(port_channel_id.0, port_channel_id.1).to_string();
-        let key =
-            Key::ibc_key(path).expect("Creating a key for a channel failed");
+        let key = channel_key(port_channel_id);
         self.get_state_change(&key)
             .map_err(|e| Error::InvalidStateChange(e.to_string()))
     }
@@ -202,11 +233,11 @@ where
 
     fn validate_updated_channel(
         &self,
-        port_channel_id: (PortId, ChannelId),
+        port_channel_id: &PortChannelId,
         channel: &ChannelEnd,
         tx_data: &[u8],
     ) -> Result<()> {
-        let prev_channel = self.channel_end_pre(&port_channel_id)?;
+        let prev_channel = self.channel_end_pre(port_channel_id)?;
         match channel.state() {
             State::Open => match prev_channel.state() {
                 State::Init => self.verify_channel_ack_proof(
@@ -222,7 +253,7 @@ where
                 _ => Err(Error::InvalidStateChange(format!(
                     "The state change of the channel is invalid: Port {}, \
                      Channel {}",
-                    port_channel_id.0, port_channel_id.1,
+                    port_channel_id.port_id, port_channel_id.channel_id,
                 ))),
             },
             State::Closed => {
@@ -230,7 +261,7 @@ where
                     return Err(Error::InvalidStateChange(format!(
                         "The state change of the channel is invalid: Port {}, \
                          Channel {}",
-                        port_channel_id.0, port_channel_id.1,
+                        port_channel_id.port_id, port_channel_id.channel_id,
                     )));
                 }
                 match TimeoutData::try_from_slice(tx_data) {
@@ -250,7 +281,7 @@ where
             _ => Err(Error::InvalidStateChange(format!(
                 "The state change of the channel is invalid: Port {}, Channel \
                  {}",
-                port_channel_id.0, port_channel_id.1
+                port_channel_id.port_id, port_channel_id.channel_id
             ))),
         }
     }
@@ -258,13 +289,11 @@ where
     fn validate_commitment_absence(&self, data: TimeoutData) -> Result<()> {
         // check if the commitment has been deleted
         let packet = data.packet;
-        let commitment_key = Path::Commitments {
-            port_id: packet.source_port.clone(),
-            channel_id: packet.source_channel.clone(),
-            sequence: packet.sequence,
-        };
-        let key = Key::ibc_key(commitment_key.to_string())
-            .expect("Creating a key for a channel failed");
+        let key = commitment_key(
+            &packet.source_port,
+            &packet.source_channel,
+            packet.sequence,
+        );
         let state_change = self
             .get_state_change(&key)
             .map_err(|e| Error::InvalidStateChange(e.to_string()))?;
@@ -281,12 +310,12 @@ where
 
     fn verify_channel_try_proof(
         &self,
-        port_channel_id: (PortId, ChannelId),
+        port_channel_id: PortChannelId,
         channel: &ChannelEnd,
         tx_data: &[u8],
     ) -> Result<()> {
         let data = ChannelOpenTryData::try_from_slice(tx_data)?;
-        let expected_my_side = Counterparty::new(port_channel_id.0, None);
+        let expected_my_side = Counterparty::new(port_channel_id.port_id, None);
 
         self.verify_proofs(
             channel,
@@ -298,13 +327,15 @@ where
 
     fn verify_channel_ack_proof(
         &self,
-        port_channel_id: (PortId, ChannelId),
+        port_channel_id: &PortChannelId,
         channel: &ChannelEnd,
         tx_data: &[u8],
     ) -> Result<()> {
         let data = ChannelOpenAckData::try_from_slice(tx_data)?;
-        let expected_my_side =
-            Counterparty::new(port_channel_id.0, Some(port_channel_id.1));
+        let expected_my_side = Counterparty::new(
+            port_channel_id.port_id.clone(),
+            Some(port_channel_id.channel_id.clone()),
+        );
 
         self.verify_proofs(
             channel,
@@ -316,13 +347,15 @@ where
 
     fn verify_channel_confirm_proof(
         &self,
-        port_channel_id: (PortId, ChannelId),
+        port_channel_id: &PortChannelId,
         channel: &ChannelEnd,
         tx_data: &[u8],
     ) -> Result<()> {
         let data = ChannelOpenConfirmData::try_from_slice(tx_data)?;
-        let expected_my_side =
-            Counterparty::new(port_channel_id.0, Some(port_channel_id.1));
+        let expected_my_side = Counterparty::new(
+            port_channel_id.port_id.clone(),
+            Some(port_channel_id.channel_id.clone()),
+        );
 
         self.verify_proofs(
             channel,
@@ -334,13 +367,15 @@ where
 
     fn verify_channel_close_proof(
         &self,
-        port_channel_id: (PortId, ChannelId),
+        port_channel_id: &PortChannelId,
         channel: &ChannelEnd,
         tx_data: &[u8],
     ) -> Result<()> {
         let data = ChannelCloseConfirmData::try_from_slice(tx_data)?;
-        let expected_my_side =
-            Counterparty::new(port_channel_id.0, Some(port_channel_id.1));
+        let expected_my_side = Counterparty::new(
+            port_channel_id.port_id.clone(),
+            Some(port_channel_id.channel_id.clone()),
+        );
 
         self.verify_proofs(
             channel,
@@ -389,18 +424,15 @@ where
         }
     }
 
-    fn get_sequence_pre(&self, path: Path) -> Result<Sequence> {
-        let key = Key::ibc_key(path.to_string())
-            .expect("Creating a key for a sequence shouldn't fail");
-        match self.ctx.read_pre(&key)? {
+    fn get_sequence_pre(&self, key: &Key) -> Result<Sequence> {
+        match self.ctx.read_pre(key)? {
             Some(value) => {
-                let index: u64 =
-                    storage::types::decode(value).map_err(|e| {
-                        Error::InvalidSequence(format!(
-                            "Decoding a prior sequece index failed: {}",
-                            e
-                        ))
-                    })?;
+                let index = u64::try_from_slice(&value[..]).map_err(|e| {
+                    Error::InvalidSequence(format!(
+                        "Decoding a prior sequece index failed: {}",
+                        e
+                    ))
+                })?;
                 Ok(Sequence::from(index))
             }
             // The sequence is updated for the first time. The previous sequence
@@ -409,18 +441,15 @@ where
         }
     }
 
-    fn get_sequence(&self, path: Path) -> Result<Sequence> {
-        let key = Key::ibc_key(path.to_string())
-            .expect("Creating a key for a sequence shouldn't fail");
-        match self.ctx.read_post(&key)? {
+    fn get_sequence(&self, key: &Key) -> Result<Sequence> {
+        match self.ctx.read_post(key)? {
             Some(value) => {
-                let index: u64 =
-                    storage::types::decode(value).map_err(|e| {
-                        Error::InvalidSequence(format!(
-                            "Decoding a sequece index failed: {}",
-                            e
-                        ))
-                    })?;
+                let index = u64::try_from_slice(&value).map_err(|e| {
+                    Error::InvalidSequence(format!(
+                        "Decoding a sequece index failed: {}",
+                        e
+                    ))
+                })?;
                 Ok(Sequence::from(index))
             }
             // The sequence has not been used yet
@@ -428,36 +457,32 @@ where
         }
     }
 
-    fn get_packet_info_pre(&self, path: Path) -> Result<String> {
-        let key = Key::ibc_key(path.to_string())
-            .expect("Creating a key for a packet info shouldn't fail");
-        match self.ctx.read_pre(&key)? {
-            Some(value) => storage::types::decode(value).map_err(|e| {
+    fn get_packet_info_pre(&self, key: &Key) -> Result<String> {
+        match self.ctx.read_pre(key)? {
+            Some(value) => String::try_from_slice(&value[..]).map_err(|e| {
                 Error::InvalidPacketInfo(format!(
                     "Decoding the prior packet info failed: {}",
                     e
                 ))
             }),
             None => Err(Error::InvalidPacketInfo(format!(
-                "The prior packet info doesn't exist: Path {}",
-                path
+                "The prior packet info doesn't exist: Key {}",
+                key
             ))),
         }
     }
 
-    fn get_packet_info(&self, path: Path) -> Result<String> {
-        let key = Key::ibc_key(path.to_string())
-            .expect("Creating a key for a packet info shouldn't fail");
-        match self.ctx.read_post(&key)? {
-            Some(value) => storage::types::decode(value).map_err(|e| {
+    fn get_packet_info(&self, key: &Key) -> Result<String> {
+        match self.ctx.read_post(key)? {
+            Some(value) => String::try_from_slice(&value[..]).map_err(|e| {
                 Error::InvalidPacketInfo(format!(
                     "Decoding the packet info failed: {}",
                     e
                 ))
             }),
             None => Err(Error::InvalidPacketInfo(format!(
-                "The packet info doesn't exist: Path {}",
-                path
+                "The packet info doesn't exist: Key {}",
+                key
             ))),
         }
     }
@@ -467,15 +492,13 @@ where
         channel: &ChannelEnd,
     ) -> Result<ConnectionEnd> {
         match channel.connection_hops().get(0) {
-            Some(conn_id) => {
-                match ChannelReader::connection_end(self, conn_id) {
-                    Some(conn) => Ok(conn),
-                    None => Err(Error::InvalidConnection(format!(
+            Some(conn_id) => ChannelReader::connection_end(self, conn_id)
+                .map_err(|_| {
+                    Error::InvalidConnection(format!(
                         "The connection doesn't exist: ID {}",
                         conn_id
-                    ))),
-                }
-            }
+                    ))
+                }),
             _ => Err(Error::InvalidConnection(
                 "the corresponding connection ID doesn't exist".to_owned(),
             )),
@@ -484,27 +507,21 @@ where
 
     pub(super) fn channel_end_pre(
         &self,
-        port_channel_id: &(PortId, ChannelId),
+        port_channel_id: &PortChannelId,
     ) -> Result<ChannelEnd> {
-        let path = Path::ChannelEnds(
-            port_channel_id.0.clone(),
-            port_channel_id.1.clone(),
-        )
-        .to_string();
-        let key =
-            Key::ibc_key(path).expect("Creating a key for a channel failed");
+        let key = channel_key(port_channel_id);
         match self.ctx.read_pre(&key) {
             Ok(Some(value)) => {
                 ChannelEnd::try_from_slice(&value[..]).map_err(|e| {
                     Error::InvalidChannel(format!(
-                        "Decoding the channel failed: Port {}, Channel {}, {}",
-                        port_channel_id.0, port_channel_id.1, e
+                        "Decoding the channel failed: Port/Channel {}, {}",
+                        port_channel_id, e
                     ))
                 })
             }
             Ok(None) => Err(Error::InvalidChannel(format!(
-                "The prior channel doesn't exist: Port {}, Channel {}",
-                port_channel_id.0, port_channel_id.1
+                "The prior channel doesn't exist: Port/Channel {}",
+                port_channel_id
             ))),
             Err(e) => Err(Error::InvalidChannel(format!(
                 "Reading the prior channel failed: {}",
@@ -515,46 +532,38 @@ where
 
     pub(super) fn get_next_sequence_send_pre(
         &self,
-        port_channel_id: &(PortId, ChannelId),
+        port_channel_id: &PortChannelId,
     ) -> Result<Sequence> {
-        let port_channel_id = port_channel_id.clone();
-        let path = Path::SeqSends(port_channel_id.0, port_channel_id.1);
-        self.get_sequence_pre(path)
+        let key = next_sequence_send_key(port_channel_id);
+        self.get_sequence_pre(&key)
     }
 
     pub(super) fn get_next_sequence_recv_pre(
         &self,
-        port_channel_id: &(PortId, ChannelId),
+        port_channel_id: &PortChannelId,
     ) -> Result<Sequence> {
-        let port_channel_id = port_channel_id.clone();
-        let path = Path::SeqRecvs(port_channel_id.0, port_channel_id.1);
-        self.get_sequence_pre(path)
+        let key = next_sequence_recv_key(port_channel_id);
+        self.get_sequence_pre(&key)
     }
 
     pub(super) fn get_next_sequence_ack_pre(
         &self,
-        port_channel_id: &(PortId, ChannelId),
+        port_channel_id: &PortChannelId,
     ) -> Result<Sequence> {
-        let port_channel_id = port_channel_id.clone();
-        let path = Path::SeqAcks(port_channel_id.0, port_channel_id.1);
-        self.get_sequence_pre(path)
+        let key = next_sequence_ack_key(port_channel_id);
+        self.get_sequence_pre(&key)
     }
 
     pub(super) fn get_packet_commitment_pre(
         &self,
         key: &(PortId, ChannelId, Sequence),
     ) -> Result<String> {
-        let key = key.clone();
-        let path = Path::Commitments {
-            port_id: key.0,
-            channel_id: key.1,
-            sequence: key.2,
-        };
-        self.get_packet_info_pre(path)
+        let key = commitment_key(&key.0, &key.1, key.2);
+        self.get_packet_info_pre(&key)
     }
 
     fn channel_counter_pre(&self) -> Result<u64> {
-        let key = Key::ibc_channel_counter();
+        let key = channel_counter_key();
         self.read_counter_pre(&key)
             .map_err(|e| Error::InvalidChannel(e.to_string()))
     }
@@ -562,154 +571,187 @@ where
 
 impl<'a, DB, H> ChannelReader for Ibc<'a, DB, H>
 where
-    DB: 'static + storage::DB + for<'iter> storage::DBIter<'iter>,
+    DB: 'static + ledger_storage::DB + for<'iter> ledger_storage::DBIter<'iter>,
     H: 'static + StorageHasher,
 {
     fn channel_end(
         &self,
         port_channel_id: &(PortId, ChannelId),
-    ) -> Option<ChannelEnd> {
-        let port_channel_id = port_channel_id.clone();
-        let path =
-            Path::ChannelEnds(port_channel_id.0, port_channel_id.1).to_string();
-        let key =
-            Key::ibc_key(path).expect("Creating a key for a channel failed");
+    ) -> Ics04Result<ChannelEnd> {
+        let port_channel_id = PortChannelId {
+            port_id: port_channel_id.0.clone(),
+            channel_id: port_channel_id.1.clone(),
+        };
+        let key = channel_key(&port_channel_id);
         match self.ctx.read_post(&key) {
-            Ok(Some(value)) => ChannelEnd::try_from_slice(&value[..]).ok(),
-            // returns None even if DB read fails
-            _ => None,
+            Ok(Some(value)) => ChannelEnd::try_from_slice(&value[..])
+                .map_err(|_| Ics04Error::implementation_specific()),
+            Ok(None) => Err(Ics04Error::channel_not_found(
+                port_channel_id.port_id,
+                port_channel_id.channel_id,
+            )),
+            Err(_) => Err(Ics04Error::implementation_specific()),
         }
     }
 
-    fn connection_end(&self, conn_id: &ConnectionId) -> Option<ConnectionEnd> {
+    fn connection_end(
+        &self,
+        conn_id: &ConnectionId,
+    ) -> Ics04Result<ConnectionEnd> {
         ConnectionReader::connection_end(self, conn_id)
+            .map_err(Ics04Error::ics03_connection)
     }
 
     fn connection_channels(
         &self,
         conn_id: &ConnectionId,
-    ) -> Option<Vec<(PortId, ChannelId)>> {
+    ) -> Ics04Result<Vec<(PortId, ChannelId)>> {
         let mut channels = vec![];
         let prefix = Key::parse("channelEnds/ports")
             .expect("Creating a key for the prefix shouldn't fail");
-        let mut iter = self.ctx.iter_prefix(&prefix).ok()?;
+        let mut iter = self
+            .ctx
+            .iter_prefix(&prefix)
+            .map_err(|_| Ics04Error::implementation_specific())?;
         loop {
-            let next = self.ctx.iter_post_next(&mut iter).ok()?;
+            let next = self
+                .ctx
+                .iter_post_next(&mut iter)
+                .map_err(|_| Ics04Error::implementation_specific())?;
             if let Some((key, value)) = next {
-                let channel = ChannelEnd::try_from_slice(&value[..]).ok()?;
+                let channel = ChannelEnd::try_from_slice(&value[..])
+                    .map_err(|_| Ics04Error::implementation_specific())?;
                 if let Some(id) = channel.connection_hops().get(0) {
                     if id == conn_id {
-                        let key = Key::parse(&key).ok()?;
+                        let key = Key::parse(&key).map_err(|_| {
+                            Ics04Error::implementation_specific()
+                        })?;
                         let port_channel_id =
-                            Self::get_port_channel_id(&key).ok()?;
-                        channels.push(port_channel_id);
+                            port_channel_id(&key).map_err(|_| {
+                                Ics04Error::implementation_specific()
+                            })?;
+                        channels.push((
+                            port_channel_id.port_id,
+                            port_channel_id.channel_id,
+                        ));
                     }
                 }
             } else {
                 break;
             }
         }
-        Some(channels)
+        Ok(channels)
     }
 
-    fn client_state(&self, client_id: &ClientId) -> Option<AnyClientState> {
-        ClientReader::client_state(self, client_id)
+    fn client_state(
+        &self,
+        client_id: &ClientId,
+    ) -> Ics04Result<AnyClientState> {
+        ConnectionReader::client_state(self, client_id)
+            .map_err(Ics04Error::ics03_connection)
     }
 
     fn client_consensus_state(
         &self,
         client_id: &ClientId,
         height: Height,
-    ) -> Option<AnyConsensusState> {
-        ClientReader::consensus_state(self, client_id, height)
+    ) -> Ics04Result<AnyConsensusState> {
+        ConnectionReader::client_consensus_state(self, client_id, height)
+            .map_err(Ics04Error::ics03_connection)
     }
 
     fn authenticated_capability(
         &self,
         port_id: &PortId,
-    ) -> std::result::Result<Capability, Ics04Error> {
-        match self.lookup_module_by_port(port_id) {
-            Some(cap) => {
-                if self.authenticate(&cap, port_id) {
-                    Ok(cap)
-                } else {
-                    Err(Ics04Kind::InvalidPortCapability.into())
-                }
-            }
-            None => Err(Ics04Kind::NoPortCapability(port_id.clone()).into()),
+    ) -> Ics04Result<Capability> {
+        let cap = self
+            .lookup_module_by_port(port_id)
+            .map_err(|_| Ics04Error::no_port_capability(port_id.clone()))?;
+        if self.authenticate(&cap, port_id) {
+            Ok(cap)
+        } else {
+            Err(Ics04Error::invalid_port_capability())
         }
     }
 
     fn get_next_sequence_send(
         &self,
         port_channel_id: &(PortId, ChannelId),
-    ) -> Option<Sequence> {
-        let port_channel_id = port_channel_id.clone();
-        let path = Path::SeqSends(port_channel_id.0, port_channel_id.1);
-        self.get_sequence(path).ok()
+    ) -> Ics04Result<Sequence> {
+        let port_channel_id = PortChannelId {
+            port_id: port_channel_id.0.clone(),
+            channel_id: port_channel_id.1.clone(),
+        };
+        let key = next_sequence_send_key(&port_channel_id);
+        self.get_sequence(&key).map_err(|_| {
+            Ics04Error::missing_next_send_seq((
+                port_channel_id.port_id,
+                port_channel_id.channel_id,
+            ))
+        })
     }
 
     fn get_next_sequence_recv(
         &self,
         port_channel_id: &(PortId, ChannelId),
-    ) -> Option<Sequence> {
-        let port_channel_id = port_channel_id.clone();
-        let path = Path::SeqRecvs(port_channel_id.0, port_channel_id.1);
-        self.get_sequence(path).ok()
+    ) -> Ics04Result<Sequence> {
+        let port_channel_id = PortChannelId {
+            port_id: port_channel_id.0.clone(),
+            channel_id: port_channel_id.1.clone(),
+        };
+        let key = next_sequence_recv_key(&port_channel_id);
+        self.get_sequence(&key).map_err(|_| {
+            Ics04Error::missing_next_recv_seq((
+                port_channel_id.port_id,
+                port_channel_id.channel_id,
+            ))
+        })
     }
 
     fn get_next_sequence_ack(
         &self,
         port_channel_id: &(PortId, ChannelId),
-    ) -> Option<Sequence> {
-        let port_channel_id = port_channel_id.clone();
-        let path = Path::SeqAcks(port_channel_id.0, port_channel_id.1);
-        self.get_sequence(path).ok()
+    ) -> Ics04Result<Sequence> {
+        let port_channel_id = PortChannelId {
+            port_id: port_channel_id.0.clone(),
+            channel_id: port_channel_id.1.clone(),
+        };
+        let key = next_sequence_ack_key(&port_channel_id);
+        self.get_sequence(&key).map_err(|_| {
+            Ics04Error::missing_next_ack_seq((
+                port_channel_id.port_id,
+                port_channel_id.channel_id,
+            ))
+        })
     }
 
     fn get_packet_commitment(
         &self,
         key: &(PortId, ChannelId, Sequence),
-    ) -> Option<String> {
-        let (port_id, channel_id, sequence) = key.clone();
-        let path = Path::Commitments {
-            port_id,
-            channel_id,
-            sequence,
-        };
-        self.get_packet_info(path).ok()
+    ) -> Ics04Result<String> {
+        let commitment_key = commitment_key(&key.0, &key.1, key.2);
+        self.get_packet_info(&commitment_key)
+            .map_err(|_| Ics04Error::packet_commitment_not_found(key.2))
     }
 
     fn get_packet_receipt(
         &self,
         key: &(PortId, ChannelId, Sequence),
-    ) -> Option<Receipt> {
-        let (port_id, channel_id, sequence) = key.clone();
-        let path = Path::Receipts {
-            port_id,
-            channel_id,
-            sequence,
-        };
-        let key = Key::ibc_key(path.to_string())
-            .expect("Creating a key for a packet info shouldn't fail");
-        match self.ctx.read_post(&key) {
-            Ok(Some(_)) => Some(Receipt::Ok),
-            // returns None even if DB read fails
-            _ => None,
+    ) -> Ics04Result<Receipt> {
+        let receipt_key = receipt_key(&key.0, &key.1, key.2);
+        match self.ctx.read_post(&receipt_key) {
+            Ok(Some(_)) => Ok(Receipt::Ok),
+            _ => Err(Ics04Error::packet_receipt_not_found(key.2)),
         }
     }
 
     fn get_packet_acknowledgement(
         &self,
         key: &(PortId, ChannelId, Sequence),
-    ) -> Option<String> {
-        let (port_id, channel_id, sequence) = key.clone();
-        let path = Path::Acks {
-            port_id,
-            channel_id,
-            sequence,
-        };
-        self.get_packet_info(path).ok()
+    ) -> Ics04Result<String> {
+        let ack_key = ack_key(&key.0, &key.1, key.2);
+        self.get_packet_info(&ack_key)
+            .map_err(|_| Ics04Error::packet_acknowledgement_not_found(key.2))
     }
 
     fn hash(&self, value: String) -> String {
@@ -728,15 +770,22 @@ where
         }
     }
 
-    fn channel_counter(&self) -> u64 {
-        let key = Key::ibc_channel_counter();
+    fn channel_counter(&self) -> Ics04Result<u64> {
+        let key = channel_counter_key();
         self.read_counter(&key)
+            .map_err(|_| Ics04Error::implementation_specific())
     }
 }
 
 impl From<NativeVpError> for Error {
     fn from(err: NativeVpError) -> Self {
         Self::NativeVp(err)
+    }
+}
+
+impl From<IbcStorageError> for Error {
+    fn from(err: IbcStorageError) -> Self {
+        Self::IbcStorage(err)
     }
 }
 

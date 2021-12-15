@@ -1,35 +1,110 @@
 //! IBC-related data definitions and transaction and validity-predicate helpers.
 
+use std::str::FromStr;
 use std::time::Duration;
 
 use borsh::{BorshDeserialize, BorshSerialize};
-use ibc::ics02_client::client_consensus::AnyConsensusState;
-use ibc::ics02_client::client_state::AnyClientState;
-use ibc::ics02_client::header::AnyHeader;
-use ibc::ics02_client::height::Height;
-use ibc::ics03_connection::connection::{
+#[cfg(not(feature = "ABCI"))]
+use ibc::clients::ics07_tendermint::consensus_state::ConsensusState as TmConsensusState;
+#[cfg(not(feature = "ABCI"))]
+use ibc::core::ics02_client::client_consensus::{
+    AnyConsensusState, ConsensusState,
+};
+#[cfg(not(feature = "ABCI"))]
+use ibc::core::ics02_client::client_state::{AnyClientState, ClientState};
+#[cfg(not(feature = "ABCI"))]
+use ibc::core::ics02_client::header::AnyHeader;
+#[cfg(not(feature = "ABCI"))]
+use ibc::core::ics02_client::height::Height;
+#[cfg(not(feature = "ABCI"))]
+use ibc::core::ics03_connection::connection::{
     ConnectionEnd, Counterparty as ConnCounterparty, State as ConnState,
 };
-use ibc::ics03_connection::version::Version;
-use ibc::ics04_channel::channel::{
+#[cfg(not(feature = "ABCI"))]
+use ibc::core::ics03_connection::version::Version;
+#[cfg(not(feature = "ABCI"))]
+use ibc::core::ics04_channel::channel::{
     ChannelEnd, Counterparty as ChanCounterparty, Order, State as ChanState,
 };
-use ibc::ics04_channel::packet::{Packet, Sequence};
-use ibc::ics23_commitment::commitment::CommitmentProofBytes;
-use ibc::ics24_host::identifier::{ChannelId, ClientId, ConnectionId, PortId};
-use ibc::proofs::{ConsensusProof, Proofs};
+#[cfg(not(feature = "ABCI"))]
+use ibc::core::ics04_channel::packet::{Packet, Sequence};
+#[cfg(not(feature = "ABCI"))]
+use ibc::core::ics23_commitment::commitment::{
+    CommitmentPrefix, CommitmentProofBytes,
+};
+#[cfg(not(feature = "ABCI"))]
+use ibc::core::ics24_host::identifier::{
+    ChannelId, ClientId, ConnectionId, PortChannelId, PortId,
+};
+#[cfg(not(feature = "ABCI"))]
+use ibc::mock::client_state::{MockClientState, MockConsensusState};
+#[cfg(not(feature = "ABCI"))]
+use ibc::proofs::{ConsensusProof, ProofError, Proofs};
+#[cfg(not(feature = "ABCI"))]
 use ibc::timestamp::Timestamp;
+#[cfg(feature = "ABCI")]
+use ibc_abci::clients::ics07_tendermint::consensus_state::ConsensusState as TmConsensusState;
+#[cfg(feature = "ABCI")]
+use ibc_abci::core::ics02_client::client_consensus::{
+    AnyConsensusState, ConsensusState,
+};
+#[cfg(feature = "ABCI")]
+use ibc_abci::core::ics02_client::client_state::{AnyClientState, ClientState};
+#[cfg(feature = "ABCI")]
+use ibc_abci::core::ics02_client::header::AnyHeader;
+#[cfg(feature = "ABCI")]
+use ibc_abci::core::ics02_client::height::Height;
+#[cfg(feature = "ABCI")]
+use ibc_abci::core::ics03_connection::connection::{
+    ConnectionEnd, Counterparty as ConnCounterparty, State as ConnState,
+};
+#[cfg(feature = "ABCI")]
+use ibc_abci::core::ics03_connection::version::Version;
+#[cfg(feature = "ABCI")]
+use ibc_abci::core::ics04_channel::channel::{
+    ChannelEnd, Counterparty as ChanCounterparty, Order, State as ChanState,
+};
+#[cfg(feature = "ABCI")]
+use ibc_abci::core::ics04_channel::packet::{Packet, Sequence};
+#[cfg(feature = "ABCI")]
+use ibc_abci::core::ics23_commitment::commitment::{
+    CommitmentPrefix, CommitmentProofBytes,
+};
+#[cfg(feature = "ABCI")]
+use ibc_abci::core::ics24_host::identifier::{
+    ChannelId, ClientId, ConnectionId, PortChannelId, PortId,
+};
+#[cfg(feature = "ABCI")]
+use ibc_abci::mock::client_state::{MockClientState, MockConsensusState};
+#[cfg(feature = "ABCI")]
+use ibc_abci::proofs::{ConsensusProof, ProofError, Proofs};
+#[cfg(feature = "ABCI")]
+use ibc_abci::timestamp::Timestamp;
+#[cfg(not(feature = "ABCI"))]
 use ibc_proto::ibc::core::commitment::v1::MerkleProof;
+#[cfg(feature = "ABCI")]
+use ibc_proto_abci::ibc::core::commitment::v1::MerkleProof;
 use prost::Message;
+use sha2::Digest;
 use thiserror::Error;
 
+use crate::types::address::{Address, InternalAddress};
+use crate::types::storage::KeySeg;
 use crate::types::time::{DateTimeUtc, DurationNanos};
 
 #[allow(missing_docs)]
 #[derive(Error, Debug)]
 pub enum Error {
+    #[error("Invalid client error: {0}")]
+    InvalidClient(String),
+    #[error("Invalid port error: {0}")]
+    InvalidPort(String),
     #[error("Invalid proof error: {0}")]
-    InvalidProof(String),
+    InvalidProof(ProofError),
+    #[error("Updating a client error: {0}")]
+    ClientUpdate(String),
+    #[error("Decoding MerkleProof error: {0}")]
+    DecodingMerkleProof(prost::DecodeError),
 }
 
 /// Decode result for IBC data
@@ -54,6 +129,17 @@ impl ClientCreationData {
             client_state,
             consensus_state,
         }
+    }
+
+    /// Returns a new client ID
+    pub fn client_id(&self, counter: u64) -> Result<ClientId> {
+        let client_type = self.client_state.client_type();
+        ClientId::new(client_type, counter).map_err(|e| {
+            Error::InvalidClient(format!(
+                "Creating a new client ID failed: {}",
+                e
+            ))
+        })
     }
 }
 
@@ -117,13 +203,13 @@ impl ClientUpgradeData {
     /// Returns the proof for client state
     pub fn proof_client(&self) -> Result<MerkleProof> {
         MerkleProof::decode(&self.proof_client[..])
-            .map_err(|e| Error::InvalidProof(e.to_string()))
+            .map_err(Error::DecodingMerkleProof)
     }
 
     /// Returns the proof for consensus state
     pub fn proof_consensus_state(&self) -> Result<MerkleProof> {
         MerkleProof::decode(&self.proof_consensus_state[..])
-            .map_err(|e| Error::InvalidProof(e.to_string()))
+            .map_err(Error::DecodingMerkleProof)
     }
 }
 
@@ -830,7 +916,7 @@ impl PacketAckData {
 pub struct TimeoutData {
     /// The packet
     pub packet: Packet,
-    /// The nextSequenceRecv
+    /// The nextSequenceRecv of the receipt chain
     pub sequence: Sequence,
     /// The height of the proof
     pub proof_height: Height,
@@ -839,7 +925,7 @@ pub struct TimeoutData {
 }
 
 impl TimeoutData {
-    /// Create data for packet acknowledgement
+    /// Create data for timeout
     pub fn new(
         packet: Packet,
         sequence: Sequence,
@@ -865,4 +951,129 @@ impl TimeoutData {
         )
         .map_err(Error::InvalidProof)
     }
+}
+
+/// Update a client with the given state and headers
+pub fn update_client(
+    client_state: AnyClientState,
+    headers: Vec<AnyHeader>,
+) -> Result<(AnyClientState, AnyConsensusState)> {
+    if headers.is_empty() {
+        return Err(Error::ClientUpdate("No header is given".to_owned()));
+    }
+    match client_state {
+        AnyClientState::Tendermint(cs) => {
+            let mut new_client_state = cs;
+            for header in &headers {
+                let h = match header {
+                    AnyHeader::Tendermint(h) => h,
+                    _ => {
+                        return Err(Error::ClientUpdate(
+                            "The header type is mismatched".to_owned(),
+                        ));
+                    }
+                };
+                new_client_state = new_client_state.with_header(h.clone());
+            }
+            let consensus_state = match headers.last().unwrap() {
+                AnyHeader::Tendermint(h) => TmConsensusState::from(h.clone()),
+                _ => {
+                    return Err(Error::ClientUpdate(
+                        "The header type is mismatched".to_owned(),
+                    ));
+                }
+            };
+            Ok((new_client_state.wrap_any(), consensus_state.wrap_any()))
+        }
+        AnyClientState::Mock(_) => match headers.last().unwrap() {
+            AnyHeader::Mock(h) => Ok((
+                MockClientState(*h).wrap_any(),
+                MockConsensusState::new(*h).wrap_any(),
+            )),
+            _ => Err(Error::ClientUpdate(
+                "The header type is mismatched".to_owned(),
+            )),
+        },
+    }
+}
+
+/// Returns a new connection ID
+pub fn connection_id(counter: u64) -> ConnectionId {
+    ConnectionId::new(counter)
+}
+
+/// Open the connection
+pub fn open_connection(conn: &mut ConnectionEnd) {
+    conn.set_state(ConnState::Open);
+}
+
+/// Returns a new channel ID
+pub fn channel_id(counter: u64) -> ChannelId {
+    ChannelId::new(counter)
+}
+
+/// Open the channel
+pub fn open_channel(channel: &mut ChannelEnd) {
+    channel.set_state(ChanState::Open);
+}
+
+/// Close the channel
+pub fn close_channel(channel: &mut ChannelEnd) {
+    channel.set_state(ChanState::Closed);
+}
+
+/// Returns a port ID
+pub fn port_id(id: &str) -> Result<PortId> {
+    PortId::from_str(id).map_err(|e| Error::InvalidPort(e.to_string()))
+}
+
+/// Returns a pair of port ID and channel ID
+pub fn port_channel_id(
+    port_id: PortId,
+    channel_id: ChannelId,
+) -> PortChannelId {
+    PortChannelId {
+        port_id,
+        channel_id,
+    }
+}
+
+/// Returns a sequence
+pub fn sequence(index: u64) -> Sequence {
+    Sequence::from(index)
+}
+
+/// Returns a commitment from the given packet
+pub fn commitment(packet: &Packet) -> String {
+    let input = format!(
+        "{:?},{:?},{:?}",
+        packet.timeout_timestamp, packet.timeout_height, packet.data,
+    );
+    let r = sha2::Sha256::digest(input.as_bytes());
+    format!("{:x}", r)
+}
+
+/// Returns a counterparty of a connection
+pub fn connection_counterparty(
+    client_id: ClientId,
+    conn_id: ConnectionId,
+) -> ConnCounterparty {
+    ConnCounterparty::new(client_id, Some(conn_id), commitment_prefix())
+}
+
+/// Returns a counterparty of a channel
+pub fn channel_counterparty(
+    port_id: PortId,
+    channel_id: ChannelId,
+) -> ChanCounterparty {
+    ChanCounterparty::new(port_id, Some(channel_id))
+}
+
+fn commitment_prefix() -> CommitmentPrefix {
+    let addr = Address::Internal(InternalAddress::Ibc);
+    let bytes = addr
+        .raw()
+        .try_to_vec()
+        .expect("Encoding an address string shouldn't fail");
+    CommitmentPrefix::from(bytes)
 }

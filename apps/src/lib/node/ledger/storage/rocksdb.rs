@@ -16,10 +16,14 @@
 
 use std::cmp::Ordering;
 use std::collections::HashMap;
+use std::env;
 use std::path::Path;
+use std::str::FromStr;
 
 use anoma::ledger::storage::types::PrefixIterator;
-use anoma::ledger::storage::{types, BlockState, DBIter, Error, Result, DB};
+use anoma::ledger::storage::{
+    types, BlockStateRead, BlockStateWrite, DBIter, Error, Result, DB,
+};
 use anoma::types::storage::{BlockHeight, Key, KeySeg, KEY_SEGMENT_SEPARATOR};
 use anoma::types::time::DateTimeUtc;
 use rocksdb::{
@@ -27,19 +31,55 @@ use rocksdb::{
     ReadOptions, SliceTransform, WriteBatch, WriteOptions,
 };
 
+use crate::cli;
+
 // TODO the DB schema will probably need some kind of versioning
+
+/// Env. var to set a number of Rayon global worker threads
+const ENV_VAR_ROCKSDB_COMPACTION_THREADS: &str =
+    "ANOMA_ROCKSDB_COMPACTION_THREADS";
 
 #[derive(Debug)]
 pub struct RocksDB(rocksdb::DB);
 
 /// Open RocksDB for the DB
 pub fn open(path: impl AsRef<Path>) -> Result<RocksDB> {
+    let logical_cores = num_cpus::get() as i32;
+    let compaction_threads =
+        if let Ok(num_str) = env::var(ENV_VAR_ROCKSDB_COMPACTION_THREADS) {
+            match i32::from_str(&num_str) {
+                Ok(num) if num > 0 => num,
+                _ => {
+                    eprintln!(
+                        "Invalid env. var {} value: {}. Expecting a positive \
+                         number.",
+                        ENV_VAR_ROCKSDB_COMPACTION_THREADS, num_str
+                    );
+                    cli::safe_exit(1)
+                }
+            }
+        } else {
+            // If not set, default to quarter of logical CPUs count
+            logical_cores / 4
+        };
+    tracing::debug!(
+        "Using {} compactions threads for RocksDB.",
+        compaction_threads
+    );
+
     let mut cf_opts = Options::default();
     // ! recommended initial setup https://github.com/facebook/rocksdb/wiki/Setup-Options-and-Basic-Tuning#other-general-options
     cf_opts.set_level_compaction_dynamic_level_bytes(true);
-    // compactions + flushes
-    cf_opts.set_max_background_jobs(6);
+
+    // This gives `compaction_threads` number to compaction threads and 1 thread
+    // for flush background jobs: https://github.com/facebook/rocksdb/blob/17ce1ca48be53ba29138f92dafc9c853d9241377/options/options.cc#L622
+    cf_opts.increase_parallelism(compaction_threads);
+
     cf_opts.set_bytes_per_sync(1048576);
+    set_max_open_files(&mut cf_opts);
+
+    cf_opts.set_compression_type(rocksdb::DBCompressionType::Zstd);
+    cf_opts.set_compression_options(0, 0, 0, 1024 * 1024);
     // TODO the recommended default `options.compaction_pri =
     // kMinOverlappingRatio` doesn't seem to be available in Rust
     let mut table_opts = BlockBasedOptions::default();
@@ -96,6 +136,10 @@ impl Drop for RocksDB {
 }
 
 impl DB for RocksDB {
+    fn open(db_path: impl AsRef<Path>) -> Self {
+        open(db_path).expect("cannot open the DB")
+    }
+
     fn flush(&self) -> Result<()> {
         let mut flush_opts = FlushOptions::default();
         flush_opts.set_wait(true);
@@ -104,9 +148,9 @@ impl DB for RocksDB {
             .map_err(|e| Error::DBError(e.into_string()))
     }
 
-    fn write_block(&mut self, state: BlockState) -> Result<()> {
+    fn write_block(&mut self, state: BlockStateWrite) -> Result<()> {
         let mut batch = WriteBatch::default();
-        let BlockState {
+        let BlockStateWrite {
             root,
             store,
             hash,
@@ -117,7 +161,7 @@ impl DB for RocksDB {
             next_epoch_min_start_time,
             subspaces,
             address_gen,
-        }: BlockState = state;
+        }: BlockStateWrite = state;
 
         // Epoch start height and time
         batch.put(
@@ -217,7 +261,7 @@ impl DB for RocksDB {
         }
     }
 
-    fn read_last_block(&mut self) -> Result<Option<BlockState>> {
+    fn read_last_block(&mut self) -> Result<Option<BlockStateRead>> {
         // Block height
         let height: BlockHeight;
         match self
@@ -349,7 +393,7 @@ impl DB for RocksDB {
                 Some(epoch),
                 Some(pred_epochs),
                 Some(address_gen),
-            ) => Ok(Some(BlockState {
+            ) => Ok(Some(BlockStateRead {
                 root,
                 store,
                 hash,
@@ -378,7 +422,7 @@ impl<'iter> DBIter<'iter> for RocksDB {
         prefix: &Key,
     ) -> PersistentPrefixIterator<'iter> {
         let db_prefix = format!("{}/subspace/", height.raw());
-        let prefix = format!("{}{}", db_prefix, prefix.to_string());
+        let prefix = format!("{}{}", db_prefix, prefix);
 
         let mut read_opts = ReadOptions::default();
         // don't use the prefix bloom filter
@@ -428,4 +472,63 @@ fn unknown_key_error(key: &str) -> Result<()> {
     Err(Error::UnknownKey {
         key: key.to_owned(),
     })
+}
+
+/// Try to increase NOFILE limit and set the `max_open_files` limit to it in
+/// RocksDB options.
+fn set_max_open_files(cf_opts: &mut rocksdb::Options) {
+    #[cfg(unix)]
+    imp::set_max_open_files(cf_opts);
+    // Nothing to do on non-unix
+    #[cfg(not(unix))]
+    let _ = cf_opts;
+}
+
+#[cfg(unix)]
+mod imp {
+    use std::convert::TryInto;
+
+    use rlimit::{Resource, Rlim};
+
+    const DEFAULT_NOFILE_LIMIT: Rlim = Rlim::from_raw(16384);
+
+    pub fn set_max_open_files(cf_opts: &mut rocksdb::Options) {
+        let max_open_files = match increase_nofile_limit() {
+            Ok(max_open_files) => Some(max_open_files),
+            Err(err) => {
+                tracing::error!("Failed to increase NOFILE limit: {}", err);
+                None
+            }
+        };
+        if let Some(max_open_files) =
+            max_open_files.and_then(|max| max.as_raw().try_into().ok())
+        {
+            cf_opts.set_max_open_files(max_open_files);
+        }
+    }
+
+    /// Try to increase NOFILE limit and return the current soft limit.
+    fn increase_nofile_limit() -> std::io::Result<Rlim> {
+        let (soft, hard) = Resource::NOFILE.get()?;
+        tracing::debug!("Current NOFILE limit, soft={}, hard={}", soft, hard);
+
+        let target = std::cmp::min(DEFAULT_NOFILE_LIMIT, hard);
+        if soft >= target {
+            tracing::debug!(
+                "NOFILE limit already large enough, not attempting to increase"
+            );
+            Ok(soft)
+        } else {
+            tracing::debug!("Try to increase to {}", target);
+            Resource::NOFILE.set(target, target)?;
+
+            let (soft, hard) = Resource::NOFILE.get()?;
+            tracing::debug!(
+                "Increased NOFILE limit, soft={}, hard={}",
+                soft,
+                hard
+            );
+            Ok(soft)
+        }
+    }
 }

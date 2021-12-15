@@ -2,7 +2,6 @@
 
 use std::collections::HashSet;
 use std::marker::PhantomData;
-use std::sync::{Arc, Mutex};
 
 use parity_wasm::elements;
 use pwasm_utils::{self, rules};
@@ -126,7 +125,6 @@ where
         tx_data_ptr,
         tx_data_len,
     } = memory::write_tx_inputs(memory, tx_data).map_err(Error::MemoryError)?;
-
     // Get the module's entrypoint to be called
     let apply_tx = instance
         .exports
@@ -137,9 +135,16 @@ where
             entrypoint: TX_ENTRYPOINT,
             error,
         })?;
-    apply_tx
+    match apply_tx
         .call(tx_data_ptr, tx_data_len)
-        .map_err(Error::RuntimeError)?;
+        .map_err(Error::RuntimeError)
+    {
+        Err(Error::RuntimeError(err)) => {
+            tracing::debug!("Tx WASM failed with {}", err);
+            Err(Error::RuntimeError(err))
+        }
+        _ => Ok(()),
+    }?;
 
     Ok(verifiers)
 }
@@ -361,7 +366,7 @@ pub fn matchmaker<MM>(
     data: impl AsRef<[u8]>,
     intent_id: impl AsRef<[u8]>,
     intent_data: impl AsRef<[u8]>,
-    mm: Arc<Mutex<MM>>,
+    mm: MM,
 ) -> Result<bool>
 where
     MM: 'static + MmHost,
@@ -506,7 +511,7 @@ fn get_gas_rules() -> rules::Set {
 mod tests {
     use borsh::BorshSerialize;
     use itertools::Either;
-    use test_env_log::test;
+    use test_log::test;
     use wasmer_vm::TrapCode;
 
     use super::*;

@@ -7,7 +7,6 @@ use clap::ArgMatches;
 
 use super::args;
 use super::context::{Context, FromContext};
-use crate::wallet::Wallet;
 
 // We only use static strings
 pub type App = clap::App<'static>;
@@ -23,11 +22,7 @@ pub trait Cmd: Sized {
         match Self::parse(&matches) {
             Some(cmd) => {
                 let global_args = args::Global::parse(&matches);
-                let wallet = Wallet::load_or_new(&global_args.base_dir);
-                let context = Context {
-                    global_args,
-                    wallet,
-                };
+                let context = Context::new(global_args);
                 (cmd, context)
             }
             None => {
@@ -65,6 +60,12 @@ pub struct ArgDefault<T> {
     pub r#type: PhantomData<T>,
 }
 
+pub struct ArgDefaultFromCtx<T> {
+    pub name: &'static str,
+    pub default: DefaultFn<String>,
+    pub r#type: PhantomData<T>,
+}
+
 /// This wrapper type is a workaround for "function pointers in const fn are
 /// unstable", which allows us to use this type in a const fn, because the
 /// type-checker doesn't inspect the wrapped type.
@@ -99,6 +100,17 @@ pub const fn arg_default<T>(
     default: DefaultFn<T>,
 ) -> ArgDefault<T> {
     ArgDefault {
+        name,
+        default,
+        r#type: PhantomData,
+    }
+}
+
+pub const fn arg_default_from_ctx<T>(
+    name: &'static str,
+    default: DefaultFn<String>,
+) -> ArgDefaultFromCtx<T> {
+    ArgDefaultFromCtx {
         name,
         default,
         r#type: PhantomData,
@@ -206,6 +218,24 @@ where
     }
 }
 
+impl<T> ArgDefaultFromCtx<FromContext<T>>
+where
+    T: FromStr,
+    <T as FromStr>::Err: Debug,
+{
+    pub fn def(&self) -> ClapArg {
+        ClapArg::new(self.name).long(self.name).takes_value(true)
+    }
+
+    pub fn parse(&self, matches: &ArgMatches) -> FromContext<T> {
+        let raw = parse_opt(matches, self.name).unwrap_or_else(|| {
+            let DefaultFn(default) = self.default;
+            default()
+        });
+        FromContext::new(raw)
+    }
+}
+
 impl ArgFlag {
     pub fn def(&self) -> ClapArg {
         ClapArg::new(self.name).long(self.name).takes_value(false)
@@ -231,11 +261,12 @@ where
             .unwrap_or_default()
             .map(|raw| {
                 raw.parse().unwrap_or_else(|e| {
-                    panic!(
+                    eprintln!(
                         "Failed to parse the {} argument. Raw value: {}, \
                          error: {:?}",
                         self.name, raw, e
-                    )
+                    );
+                    safe_exit(1)
                 })
             })
             .collect()
@@ -273,10 +304,11 @@ where
 {
     args.value_of(field).map(|arg| {
         arg.parse().unwrap_or_else(|e| {
-            panic!(
+            eprintln!(
                 "Failed to parse the argument {}. Raw value: {}, error: {:?}",
                 field, arg, e
-            )
+            );
+            safe_exit(1)
         })
     })
 }

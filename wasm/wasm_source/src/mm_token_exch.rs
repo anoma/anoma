@@ -1,7 +1,7 @@
 use std::collections::{HashMap, VecDeque};
 
 use anoma_vm_env::matchmaker_prelude::intent::{
-    Exchange, FungibleTokenIntent, IntentTransfers,
+    Exchange, FungibleTokenIntent, MatchedExchanges,
 };
 use anoma_vm_env::matchmaker_prelude::key::ed25519::Signed;
 use anoma_vm_env::matchmaker_prelude::{token, *};
@@ -56,7 +56,7 @@ fn create_transfer(
     }
 }
 
-fn send_tx(tx_data: IntentTransfers) {
+fn send_tx(tx_data: MatchedExchanges) {
     let tx_data_bytes = tx_data.try_to_vec().unwrap();
     send_match(tx_data_bytes);
 }
@@ -153,7 +153,7 @@ fn create_and_send_tx_data(
             let mut cycle_intents_iter = cycle_intents.into_iter();
             let first_node =
                 cycle_intents_iter.next().map(|i| &graph[i]).unwrap();
-            let mut tx_data = IntentTransfers::empty();
+            let mut tx_data = MatchedExchanges::empty();
 
             let last_node = cycle_intents_iter.fold(
                 first_node,
@@ -208,7 +208,7 @@ fn create_and_send_tx_data(
             send_tx(tx_data)
         }
         Err(err) => {
-            log_string(format!("Invalid exchange: {}.", err.to_string()));
+            log_string(format!("Invalid exchange: {}.", err));
         }
     }
 }

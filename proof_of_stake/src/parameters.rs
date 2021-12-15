@@ -15,6 +15,7 @@ pub struct PosParams {
     /// How many epochs after a committed fault a validator can be slashed.
     /// If a fault is detected in epoch `n`, it can slashed up until the end of
     /// `n + slashable_period_len` epoch.
+    /// The value must be greater or equal to `pipeline_len`.
     pub unbonding_len: u64,
     /// Used in validators' voting power calculation. Given in basis points
     /// (voting power per ten thousand tokens).

@@ -12,6 +12,6 @@ An expression of intent describes a particular trade an account agrees to.
 The matchmaker tries to match intents together. For each match it crafts a valid
 transaction and submits it to the base ledger.
 - **validity predicate (VP)**
-A [validity predicate](/explore/design/ledger/vp.html) is a piece of code
+A [validity predicate](ledger/vp.html) is a piece of code
 attached to an account that can accept or reject any state changes performed by
 a transaction in its sub-space.

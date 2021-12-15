@@ -38,16 +38,13 @@ impl Serialize for StoredKeypair {
         // String encoded, because toml doesn't support enums
         match self {
             StoredKeypair::Encrypted(encrypted) => {
-                let keypair_string = format!(
-                    "{}{}",
-                    ENCRYPTED_KEY_PREFIX,
-                    encrypted.to_string()
-                );
+                let keypair_string =
+                    format!("{}{}", ENCRYPTED_KEY_PREFIX, encrypted);
                 serde::Serialize::serialize(&keypair_string, serializer)
             }
             StoredKeypair::Raw(raw) => {
                 let keypair_string =
-                    format!("{}{}", UNENCRYPTED_KEY_PREFIX, raw.to_string());
+                    format!("{}{}", UNENCRYPTED_KEY_PREFIX, raw);
                 serde::Serialize::serialize(&keypair_string, serializer)
             }
         }
@@ -137,13 +134,24 @@ pub enum DecryptionError {
 
 impl StoredKeypair {
     /// Construct a keypair for storage. If no password is provided, the keypair
-    /// will be stored raw without encryption.
-    pub fn new(keypair: Keypair, password: Option<String>) -> Self {
+    /// will be stored raw without encryption. Returns the key for storing and a
+    /// reference-counting point to the raw key.
+    pub fn new(
+        keypair: Keypair,
+        password: Option<String>,
+    ) -> (Self, Rc<Keypair>) {
         match password {
             Some(password) => {
-                Self::Encrypted(EncryptedKeypair::new(keypair, password))
+                let keypair = Rc::new(keypair);
+                (
+                    Self::Encrypted(EncryptedKeypair::new(&keypair, password)),
+                    keypair,
+                )
             }
-            None => Self::Raw(Rc::new(keypair)),
+            None => {
+                let keypair = Rc::new(keypair);
+                (Self::Raw(keypair.clone()), keypair)
+            }
         }
     }
 
@@ -174,7 +182,7 @@ impl StoredKeypair {
 
 impl EncryptedKeypair {
     /// Encrypt a keypair and store it with its salt.
-    pub fn new(keypair: Keypair, password: String) -> Self {
+    pub fn new(keypair: &Keypair, password: String) -> Self {
         let salt = encryption_salt();
         let encryption_key = encryption_key(&salt, password);
 
