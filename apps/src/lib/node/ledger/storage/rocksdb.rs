@@ -19,7 +19,6 @@
 //!   - `address_gen`: established address generator
 
 use std::cmp::{self, Ordering};
-use std::collections::HashMap;
 use std::env;
 use std::path::Path;
 use std::str::FromStr;
