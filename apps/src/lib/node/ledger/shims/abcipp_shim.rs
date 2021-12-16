@@ -27,7 +27,7 @@ pub struct AbcippShim {
     service: Shell,
     begin_block_request: Option<BeginBlock>,
     block_txs: Vec<ProcessedTx>,
-    shell_recv: tokio::sync::mpsc::Receiver<(
+    shell_recv: std::sync::mpsc::Receiver<(
         Req,
         tokio::sync::oneshot::Sender<Result<Resp, BoxError>>,
     )>,
@@ -45,7 +45,9 @@ impl AbcippShim {
         vp_wasm_compilation_cache: u64,
         tx_wasm_compilation_cache: u64,
     ) -> (Self, AbciService) {
-        let (shell_send, shell_recv) = tokio::sync::mpsc::channel(1024);
+        // We can use an unbounded channel here, because tower-abci limits the
+        // the number of requests that can come in
+        let (shell_send, shell_recv) = std::sync::mpsc::channel();
         (
             Self {
                 service: Shell::new(
@@ -68,7 +70,7 @@ impl AbcippShim {
     /// Run the shell's blocking loop that receives messages from the
     /// [`AbciService`].
     pub fn run(mut self) {
-        while let Some((req, resp_sender)) = self.shell_recv.blocking_recv() {
+        while let Ok((req, resp_sender)) = self.shell_recv.recv() {
             let resp = match req {
                 Req::BeginBlock(block) => {
                     // we save this data to be forwarded to finalize later
@@ -161,7 +163,7 @@ impl AbcippShim {
 
 #[derive(Debug)]
 pub struct AbciService {
-    shell_send: tokio::sync::mpsc::Sender<(
+    shell_send: std::sync::mpsc::Sender<(
         Req,
         tokio::sync::oneshot::Sender<Result<Resp, BoxError>>,
     )>,
@@ -179,19 +181,19 @@ impl Service<Req> for AbciService {
         &mut self,
         _cx: &mut Context<'_>,
     ) -> Poll<Result<(), Self::Error>> {
-        // First, check if the shell is still alive
-        if self.shell_send.is_closed() {
-            return Poll::Ready(Err("The shell is closed".into()));
-        }
+        // Nothing to check as the sender's channel is unbounded
         Poll::Ready(Ok(()))
     }
 
     fn call(&mut self, req: Req) -> Self::Future {
-        let sender = self.shell_send.clone();
+        let (resp_send, recv) = tokio::sync::oneshot::channel();
+        let result = self.shell_send.send((req, resp_send));
         Box::pin(
             async move {
-                let (resp_send, recv) = tokio::sync::oneshot::channel();
-                sender.send((req, resp_send)).await?;
+                if let Err(err) = result {
+                    // The shell has shut-down
+                    return Err(err.into());
+                }
                 match recv.await {
                     Ok(resp) => resp,
                     Err(err) => {
