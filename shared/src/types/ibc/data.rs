@@ -1,5 +1,6 @@
 //! IBC-related data definitions.
 use std::convert::TryFrom;
+use std::str::FromStr;
 
 use borsh::{BorshDeserialize, BorshSerialize};
 #[cfg(not(feature = "ABCI"))]
@@ -50,6 +51,8 @@ use ibc::core::ics04_channel::msgs::timeout_on_close::MsgTimeoutOnClose;
 use ibc::core::ics04_channel::msgs::{ChannelMsg, PacketMsg};
 #[cfg(not(feature = "ABCI"))]
 use ibc::core::ics04_channel::packet::{Packet, Sequence};
+#[cfg(not(feature = "ABCI"))]
+use ibc::core::ics24_host::error::Error as ValidationError;
 #[cfg(not(feature = "ABCI"))]
 use ibc::core::ics24_host::identifier::{ChannelId, PortId};
 #[cfg(not(feature = "ABCI"))]
@@ -109,6 +112,8 @@ use ibc_abci::core::ics04_channel::msgs::{ChannelMsg, PacketMsg};
 #[cfg(feature = "ABCI")]
 use ibc_abci::core::ics04_channel::packet::{Packet, Sequence};
 #[cfg(feature = "ABCI")]
+use ibc_abci::core::ics24_host::error::ValidationError;
+#[cfg(feature = "ABCI")]
 use ibc_abci::core::ics24_host::identifier::{ChannelId, PortId};
 #[cfg(feature = "ABCI")]
 use ibc_abci::core::ics26_routing::error::Error as Ics26Error;
@@ -127,6 +132,10 @@ use crate::types::time::DateTimeUtc;
 #[allow(missing_docs)]
 #[derive(Error, Debug)]
 pub enum Error {
+    #[error("Invalid port ID: {0}")]
+    PortId(ValidationError),
+    #[error("Invalid channel ID: {0}")]
+    ChannelId(ValidationError),
     #[error("Decoding IBC data error: {0}")]
     DecodingData(prost::DecodeError),
     #[error("Decoding message error: {0}")]
@@ -142,60 +151,105 @@ pub type Result<T> = std::result::Result<T, Error>;
 #[derive(Debug, Clone, BorshSerialize, BorshDeserialize)]
 pub struct PacketSendData {
     /// The source port
-    pub source_port: PortId,
+    pub source_port: String,
     /// The source channel
-    pub source_channel: ChannelId,
+    pub source_channel: String,
     /// The destination port
-    pub destination_port: PortId,
+    pub destination_port: String,
     /// The destination channel
-    pub destination_channel: ChannelId,
+    pub destination_channel: String,
     /// The data of packet
     pub packet_data: Vec<u8>,
+    /// The timeout epoch
+    pub timeout_epoch: u64,
     /// The timeout height
-    pub timeout_height: Height,
+    pub timeout_height: u64,
     /// The timeout timestamp
     pub timeout_timestamp: Option<DateTimeUtc>,
 }
 
 impl PacketSendData {
     /// Create data for sending a packet
+    #[allow(clippy::too_many_arguments)]
     pub fn new(
-        source_port: PortId,
-        source_channel: ChannelId,
-        destination_port: PortId,
-        destination_channel: ChannelId,
+        source_port: String,
+        source_channel: String,
+        destination_port: String,
+        destination_channel: String,
         packet_data: Vec<u8>,
-        timeout_height: Height,
-        timeout_timestamp: Timestamp,
-    ) -> Self {
-        let timeout_timestamp =
-            timeout_timestamp.as_datetime().map(DateTimeUtc);
-        Self {
+        timeout_epoch: u64,
+        timeout_height: u64,
+        timeout_timestamp: Option<DateTimeUtc>,
+    ) -> Result<Self> {
+        // validation
+        PortId::from_str(&source_port).map_err(Error::PortId)?;
+        ChannelId::from_str(&source_channel).map_err(Error::ChannelId)?;
+        PortId::from_str(&destination_port).map_err(Error::PortId)?;
+        ChannelId::from_str(&destination_channel).map_err(Error::ChannelId)?;
+
+        Ok(Self {
             source_port,
             source_channel,
             destination_port,
             destination_channel,
             packet_data,
+            timeout_epoch,
             timeout_height,
             timeout_timestamp,
+        })
+    }
+
+    /// Get the source port ID
+    pub fn source_port_id(&self) -> PortId {
+        // it has already been validated
+        PortId::from_str(&self.source_port).unwrap()
+    }
+
+    /// Get the source channel ID
+    pub fn source_channel_id(&self) -> ChannelId {
+        // it has already been validated
+        ChannelId::from_str(&self.source_channel).unwrap()
+    }
+
+    /// Get the destination port ID
+    pub fn destination_port_id(&self) -> PortId {
+        // it has already been validated
+        PortId::from_str(&self.destination_port).unwrap()
+    }
+
+    /// Get the destination channel ID
+    pub fn destination_channel_id(&self) -> ChannelId {
+        // it has already been validated
+        ChannelId::from_str(&self.destination_channel).unwrap()
+    }
+
+    /// Get the timeout height
+    pub fn timeout_height(&self) -> Height {
+        Height {
+            revision_number: self.timeout_epoch,
+            revision_height: self.timeout_height,
+        }
+    }
+
+    /// Get the timeout timestamp
+    pub fn timeout_timestamp(&self) -> Timestamp {
+        match self.timeout_timestamp {
+            Some(timestamp) => Timestamp::from_datetime(timestamp.0),
+            None => Timestamp::none(),
         }
     }
 
     /// Returns a packet
     pub fn packet(&self, sequence: Sequence) -> Packet {
-        let timeout_timestamp = match self.timeout_timestamp {
-            Some(timestamp) => Timestamp::from_datetime(timestamp.0),
-            None => Timestamp::none(),
-        };
         Packet {
             sequence,
-            source_port: self.source_port.clone(),
-            source_channel: self.source_channel.clone(),
-            destination_port: self.destination_port.clone(),
-            destination_channel: self.destination_channel.clone(),
+            source_port: self.source_port_id(),
+            source_channel: self.source_channel_id(),
+            destination_port: self.destination_port_id(),
+            destination_channel: self.destination_channel_id(),
             data: self.packet_data.clone(),
-            timeout_height: self.timeout_height,
-            timeout_timestamp,
+            timeout_height: self.timeout_height(),
+            timeout_timestamp: self.timeout_timestamp(),
         }
     }
 }

@@ -1292,8 +1292,8 @@ mod tests {
             timestamp: DateTimeUtc::now(),
         };
         // increment nextSequenceSend
-        let port_id = data.source_port.clone();
-        let channel_id = data.source_channel.clone();
+        let port_id = data.source_port_id();
+        let channel_id = data.source_channel_id();
         let port_channel_id =
             ibc::port_channel_id(port_id.clone(), channel_id.clone());
         let next_seq_send_key =
@@ -1461,8 +1461,8 @@ mod tests {
             timestamp: DateTimeUtc::now(),
         };
         // increment nextSequenceSend
-        let port_id = data.source_port.clone();
-        let channel_id = data.source_channel.clone();
+        let port_id = data.source_port_id();
+        let channel_id = data.source_channel_id();
         let port_channel_id =
             ibc::port_channel_id(port_id.clone(), channel_id.clone());
         let next_seq_send_key =
@@ -1617,8 +1617,8 @@ mod tests {
         let mut data = ibc::packet_send_data(port_id, channel_id);
         ibc::set_timeout_height(&mut data);
         // increment nextSequenceSend
-        let port_id = data.source_port.clone();
-        let channel_id = data.source_channel.clone();
+        let port_id = data.source_port_id();
+        let channel_id = data.source_channel_id();
         let port_channel_id =
             ibc::port_channel_id(port_id.clone(), channel_id.clone());
         let next_seq_send_key =
@@ -1702,8 +1702,8 @@ mod tests {
         // tx (Not need to decode tx_data)
         let data = ibc::packet_send_data(port_id, channel_id);
         // increment nextSequenceSend
-        let port_id = data.source_port.clone();
-        let channel_id = data.source_channel.clone();
+        let port_id = data.source_port_id();
+        let channel_id = data.source_channel_id();
         let port_channel_id =
             ibc::port_channel_id(port_id.clone(), channel_id.clone());
         let next_seq_send_key =

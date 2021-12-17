@@ -20,6 +20,7 @@ use anoma::proto::Tx;
 use anoma::types::address::{Address, InternalAddress};
 pub use anoma::types::ibc::data::*;
 use anoma::types::storage::Key;
+use anoma::types::time::{DateTimeUtc, DurationSecs};
 use anoma::vm::{wasm, WasmCacheRwAccess};
 use anoma_vm_env::tx_prelude::BorshSerialize;
 #[cfg(not(feature = "ABCI"))]
@@ -571,21 +572,23 @@ pub fn packet_send_data(
     channel_id: ChannelId,
 ) -> PacketSendData {
     let counterparty = dummy_channel_counterparty();
-    let timestamp = chrono::Utc::now() + chrono::Duration::seconds(100);
-    let timeout_timestamp = Timestamp::from_datetime(timestamp);
+    let timeout_timestamp = Some(DateTimeUtc::now() + DurationSecs(100));
     PacketSendData::new(
-        port_id,
-        channel_id,
-        counterparty.port_id().clone(),
-        counterparty.channel_id().unwrap().clone(),
+        port_id.to_string(),
+        channel_id.to_string(),
+        counterparty.port_id().to_string(),
+        counterparty.channel_id().unwrap().to_string(),
         vec![0],
-        Height::new(1, 10),
+        1,
+        10,
         timeout_timestamp,
     )
+    .unwrap()
 }
 
 pub fn set_timeout_height(data: &mut PacketSendData) {
-    data.timeout_height = Height::new(1, 1);
+    data.timeout_epoch = 1;
+    data.timeout_height = 1;
 }
 
 pub fn msg_packet_recv(packet: Packet) -> MsgRecvPacket {

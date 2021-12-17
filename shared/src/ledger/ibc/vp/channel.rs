@@ -1,6 +1,5 @@
 //! IBC validity predicate for channel module
 
-use borsh::BorshDeserialize;
 #[cfg(not(feature = "ABCI"))]
 use ibc::core::ics02_client::client_consensus::AnyConsensusState;
 #[cfg(not(feature = "ABCI"))]
@@ -90,6 +89,10 @@ use ibc_abci::proofs::Proofs;
 #[cfg(feature = "ABCI")]
 use ibc_abci::timestamp::Timestamp;
 use sha2::Digest;
+#[cfg(not(feature = "ABCI"))]
+use tendermint_proto::Protobuf;
+#[cfg(feature = "ABCI")]
+use tendermint_proto_abci::Protobuf;
 use thiserror::Error;
 
 use super::super::handler::{
@@ -519,12 +522,13 @@ where
     fn get_sequence_pre(&self, key: &Key) -> Result<Sequence> {
         match self.ctx.read_pre(key)? {
             Some(value) => {
-                let index = u64::try_from_slice(&value[..]).map_err(|e| {
-                    Error::InvalidSequence(format!(
-                        "Decoding a prior sequece index failed: {}",
-                        e
-                    ))
+                // IBC related data is encoded without borsh
+                let index: [u8; 8] = value.try_into().map_err(|_| {
+                    Error::InvalidSequence(
+                        "Decoding the prior sequence index failed".to_string(),
+                    )
                 })?;
+                let index = u64::from_be_bytes(index);
                 Ok(Sequence::from(index))
             }
             // The sequence is updated for the first time. The previous sequence
@@ -536,12 +540,12 @@ where
     fn get_sequence(&self, key: &Key) -> Result<Sequence> {
         match self.ctx.read_post(key)? {
             Some(value) => {
-                let index = u64::try_from_slice(&value).map_err(|e| {
-                    Error::InvalidSequence(format!(
-                        "Decoding a sequece index failed: {}",
-                        e
-                    ))
+                let index: [u8; 8] = value.try_into().map_err(|_| {
+                    Error::InvalidSequence(
+                        "Decoding the sequence index failed".to_string(),
+                    )
                 })?;
+                let index = u64::from_be_bytes(index);
                 Ok(Sequence::from(index))
             }
             // The sequence has not been used yet
@@ -551,12 +555,14 @@ where
 
     fn get_packet_info_pre(&self, key: &Key) -> Result<String> {
         match self.ctx.read_pre(key)? {
-            Some(value) => String::try_from_slice(&value[..]).map_err(|e| {
-                Error::InvalidPacketInfo(format!(
-                    "Decoding the prior packet info failed: {}",
-                    e
-                ))
-            }),
+            Some(value) => std::str::from_utf8(&value[..])
+                .map_err(|e| {
+                    Error::InvalidPacketInfo(format!(
+                        "Decoding the prior packet info failed: {}",
+                        e
+                    ))
+                })
+                .map(|s| s.to_string()),
             None => Err(Error::InvalidPacketInfo(format!(
                 "The prior packet info doesn't exist: Key {}",
                 key
@@ -566,12 +572,14 @@ where
 
     fn get_packet_info(&self, key: &Key) -> Result<String> {
         match self.ctx.read_post(key)? {
-            Some(value) => String::try_from_slice(&value[..]).map_err(|e| {
-                Error::InvalidPacketInfo(format!(
-                    "Decoding the packet info failed: {}",
-                    e
-                ))
-            }),
+            Some(value) => std::str::from_utf8(&value[..])
+                .map_err(|e| {
+                    Error::InvalidPacketInfo(format!(
+                        "Decoding the packet info failed: {}",
+                        e
+                    ))
+                })
+                .map(|s| s.to_string()),
             None => Err(Error::InvalidPacketInfo(format!(
                 "The packet info doesn't exist: Key {}",
                 key
@@ -603,14 +611,12 @@ where
     ) -> Result<ChannelEnd> {
         let key = channel_key(port_channel_id);
         match self.ctx.read_pre(&key) {
-            Ok(Some(value)) => {
-                ChannelEnd::try_from_slice(&value[..]).map_err(|e| {
-                    Error::InvalidChannel(format!(
-                        "Decoding the channel failed: Port/Channel {}, {}",
-                        port_channel_id, e
-                    ))
-                })
-            }
+            Ok(Some(value)) => ChannelEnd::decode_vec(&value).map_err(|e| {
+                Error::InvalidChannel(format!(
+                    "Decoding the channel failed: Port/Channel {}, {}",
+                    port_channel_id, e
+                ))
+            }),
             Ok(None) => Err(Error::InvalidChannel(format!(
                 "The prior channel doesn't exist: Port/Channel {}",
                 port_channel_id
@@ -677,7 +683,7 @@ where
         };
         let key = channel_key(&port_channel_id);
         match self.ctx.read_post(&key) {
-            Ok(Some(value)) => ChannelEnd::try_from_slice(&value[..])
+            Ok(Some(value)) => ChannelEnd::decode_vec(&value)
                 .map_err(|_| Ics04Error::implementation_specific()),
             Ok(None) => Err(Ics04Error::channel_not_found(
                 port_channel_id.port_id,
@@ -712,7 +718,7 @@ where
                 .iter_post_next(&mut iter)
                 .map_err(|_| Ics04Error::implementation_specific())?;
             if let Some((key, value)) = next {
-                let channel = ChannelEnd::try_from_slice(&value[..])
+                let channel = ChannelEnd::decode_vec(&value)
                     .map_err(|_| Ics04Error::implementation_specific())?;
                 if let Some(id) = channel.connection_hops().get(0) {
                     if id == conn_id {

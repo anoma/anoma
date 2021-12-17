@@ -9,7 +9,6 @@ mod sequence;
 
 use std::collections::HashSet;
 
-use borsh::BorshDeserialize;
 #[cfg(not(feature = "ABCI"))]
 use ibc::core::ics02_client::context::ClientReader;
 #[cfg(not(feature = "ABCI"))]
@@ -172,12 +171,15 @@ where
 
     fn read_counter_pre(&self, key: &Key) -> Result<u64> {
         match self.ctx.read_pre(key) {
-            Ok(Some(value)) => u64::try_from_slice(&value[..]).map_err(|e| {
-                Error::CounterError(format!(
-                    "Decoding the counter failed: {}",
-                    e
-                ))
-            }),
+            Ok(Some(value)) => {
+                // IBC related data is encoded without borsh
+                let counter: [u8; 8] = value.try_into().map_err(|_| {
+                    Error::CounterError(
+                        "Decoding the counter failed".to_string(),
+                    )
+                })?;
+                Ok(u64::from_be_bytes(counter))
+            }
             Ok(None) => {
                 Err(Error::CounterError("The counter doesn't exist".to_owned()))
             }
@@ -190,12 +192,15 @@ where
 
     fn read_counter(&self, key: &Key) -> Result<u64> {
         match self.ctx.read_post(key) {
-            Ok(Some(value)) => u64::try_from_slice(&value[..]).map_err(|e| {
-                Error::CounterError(format!(
-                    "Decoding the counter failed: {}",
-                    e
-                ))
-            }),
+            Ok(Some(value)) => {
+                // IBC related data is encoded without borsh
+                let counter: [u8; 8] = value.try_into().map_err(|_| {
+                    Error::CounterError(
+                        "Decoding the counter failed".to_string(),
+                    )
+                })?;
+                Ok(u64::from_be_bytes(counter))
+            }
             Ok(None) => {
                 Err(Error::CounterError("The counter doesn't exist".to_owned()))
             }
@@ -423,6 +428,10 @@ mod tests {
     use tendermint::hash::{AppHash, Hash as TmHash};
     #[cfg(not(feature = "ABCI"))]
     use tendermint::time::Time as TmTime;
+    #[cfg(not(feature = "ABCI"))]
+    use tendermint_proto::Protobuf;
+    #[cfg(feature = "ABCI")]
+    use tendermint_proto_abci::Protobuf;
     #[cfg(feature = "ABCI")]
     use tendermint_stable::account::Id as TmAccountId;
     #[cfg(feature = "ABCI")]
@@ -458,7 +467,7 @@ mod tests {
     use crate::ledger::storage::write_log::WriteLog;
     use crate::proto::Tx;
     use crate::types::ibc::data::PacketSendData;
-    use crate::types::storage::KeySeg;
+    use crate::types::time::{DateTimeUtc, DurationSecs};
     use crate::vm::wasm;
 
     fn get_client_id() -> ClientId {
@@ -479,8 +488,7 @@ mod tests {
         // insert a mock client type
         let client_id = get_client_id();
         let client_type_key = client_type_key(&client_id);
-        let client_type =
-            ClientType::Mock.try_to_vec().expect("encoding failed");
+        let client_type = ClientType::Mock.as_str().as_bytes().to_vec();
         write_log
             .write(&client_type_key, client_type)
             .expect("write failed");
@@ -492,14 +500,14 @@ mod tests {
             timestamp: Timestamp::now(),
         };
         let client_state = MockClientState(header).wrap_any();
-        let bytes = client_state.try_to_vec().expect("encoding failed");
+        let bytes = client_state.encode_vec().expect("encoding failed");
         write_log
             .write(&client_state_key, bytes)
             .expect("write failed");
         // insert a mock consensus state
         let consensus_key = consensus_state_key(&client_id, height);
         let consensus_state = MockConsensusState::new(header).wrap_any();
-        let bytes = consensus_state.try_to_vec().expect("encoding failed");
+        let bytes = consensus_state.encode_vec().expect("encoding failed");
         write_log
             .write(&consensus_key, bytes)
             .expect("write failed");
@@ -537,11 +545,7 @@ mod tests {
     }
 
     fn get_commitment_prefix() -> CommitmentPrefix {
-        let addr = Address::Internal(InternalAddress::Ibc);
-        let bytes = addr
-            .raw()
-            .try_to_vec()
-            .expect("Encoding an address string shouldn't fail");
+        let bytes = "ibc".as_bytes().to_vec();
         CommitmentPrefix::from(bytes)
     }
 
@@ -606,12 +610,12 @@ mod tests {
     fn set_port(write_log: &mut WriteLog, index: u64) {
         let port_key = port_key(&get_port_id());
         write_log
-            .write(&port_key, index.try_to_vec().expect("encoding failed"))
+            .write(&port_key, index.to_be_bytes().to_vec())
             .expect("write failed");
         // insert to the reverse map
         let cap_key = capability_key(index);
         let port_id = get_port_id();
-        let bytes = port_id.try_to_vec().expect("encoding failed");
+        let bytes = port_id.as_str().as_bytes().to_vec();
         write_log.write(&cap_key, bytes).expect("write failed");
     }
 
@@ -619,8 +623,9 @@ mod tests {
         let (val, _) = storage.read(key).expect("read failed");
         match val {
             Some(v) => {
-                let index =
-                    u64::try_from_slice(&v[..]).expect("decoding failed");
+                // IBC related data is encoded without borsh
+                let index: [u8; 8] = v.try_into().expect("decoding failed");
+                let index = u64::from_be_bytes(index);
                 Sequence::from(index)
             }
             // The sequence has not been used yet
@@ -631,7 +636,7 @@ mod tests {
     fn increment_seq(write_log: &mut WriteLog, key: &Key, seq: Sequence) {
         let seq_num = u64::from(seq.increment());
         write_log
-            .write(key, seq_num.try_to_vec().unwrap())
+            .write(key, seq_num.to_be_bytes().to_vec())
             .expect("write failed");
     }
 
@@ -734,13 +739,13 @@ mod tests {
             signer: Signer::new("account0"),
         };
         let client_state = MockClientState(header).wrap_any();
-        let bytes = client_state.try_to_vec().expect("encoding failed");
+        let bytes = client_state.encode_vec().expect("encoding failed");
         write_log
             .write(&client_state_key, bytes)
             .expect("write failed");
         let consensus_key = consensus_state_key(&client_id, height);
         let consensus_state = MockConsensusState::new(header).wrap_any();
-        let bytes = consensus_state.try_to_vec().expect("encoding failed");
+        let bytes = consensus_state.encode_vec().expect("encoding failed");
         write_log
             .write(&consensus_key, bytes)
             .expect("write failed");
@@ -787,7 +792,7 @@ mod tests {
         let conn_id = get_connection_id();
         let conn_key = connection_key(&conn_id);
         let conn = init_connection(&msg);
-        let bytes = conn.try_to_vec().expect("encoding failed");
+        let bytes = conn.encode_vec().expect("encoding failed");
         write_log.write(&conn_key, bytes).expect("write failed");
         let event = make_open_init_connection_event(&conn_id, &msg);
         write_log.set_ibc_event(event.try_into().unwrap());
@@ -831,7 +836,7 @@ mod tests {
         // insert an Init connection
         let conn_key = connection_key(&get_connection_id());
         let conn = init_connection(&msg);
-        let bytes = conn.try_to_vec().expect("encoding failed");
+        let bytes = conn.encode_vec().expect("encoding failed");
         write_log.write(&conn_key, bytes).expect("write failed");
 
         let tx_code = vec![];
@@ -899,7 +904,7 @@ mod tests {
         let conn_id = get_connection_id();
         let conn_key = connection_key(&conn_id);
         let conn = try_connection(&msg);
-        let bytes = conn.try_to_vec().expect("encoding failed");
+        let bytes = conn.encode_vec().expect("encoding failed");
         write_log.write(&conn_key, bytes).expect("write failed");
         let event = make_open_try_connection_event(&conn_id, &msg);
         write_log.set_ibc_event(event.try_into().unwrap());
@@ -932,13 +937,13 @@ mod tests {
         // insert an Init connection
         let conn_key = connection_key(&get_connection_id());
         let conn = get_connection(ConnState::Init);
-        let bytes = conn.try_to_vec().expect("encoding failed");
+        let bytes = conn.encode_vec().expect("encoding failed");
         write_log.write(&conn_key, bytes).expect("write failed");
         write_log.commit_tx();
         write_log.commit_block(&mut storage).expect("commit failed");
         // update the connection to Open
         let conn = get_connection(ConnState::Open);
-        let bytes = conn.try_to_vec().expect("encoding failed");
+        let bytes = conn.encode_vec().expect("encoding failed");
         write_log.write(&conn_key, bytes).expect("write failed");
 
         // prepare data
@@ -1003,13 +1008,13 @@ mod tests {
         // insert a TryOpen connection
         let conn_key = connection_key(&get_connection_id());
         let conn = get_connection(ConnState::TryOpen);
-        let bytes = conn.try_to_vec().expect("encoding failed");
+        let bytes = conn.encode_vec().expect("encoding failed");
         write_log.write(&conn_key, bytes).expect("write failed");
         write_log.commit_tx();
         write_log.commit_block(&mut storage).expect("commit failed");
         // update the connection to Open
         let conn = get_connection(ConnState::Open);
-        let bytes = conn.try_to_vec().expect("encoding failed");
+        let bytes = conn.encode_vec().expect("encoding failed");
         write_log.write(&conn_key, bytes).expect("write failed");
 
         // prepare data
@@ -1062,7 +1067,7 @@ mod tests {
         // insert an opened connection
         let conn_key = connection_key(&get_connection_id());
         let conn = get_connection(ConnState::Open);
-        let bytes = conn.try_to_vec().expect("encoding failed");
+        let bytes = conn.encode_vec().expect("encoding failed");
         write_log.write(&conn_key, bytes).expect("write failed");
         write_log.commit_block(&mut storage).expect("commit failed");
 
@@ -1077,7 +1082,7 @@ mod tests {
         // insert an Init channel
         set_port(&mut write_log, 0);
         let channel_key = channel_key(&get_port_channel_id());
-        let bytes = channel.try_to_vec().expect("encoding failed");
+        let bytes = channel.encode_vec().expect("encoding failed");
         write_log.write(&channel_key, bytes).expect("write failed");
         let event = make_open_init_channel_event(&get_channel_id(), &msg);
         write_log.set_ibc_event(event.try_into().unwrap());
@@ -1109,7 +1114,7 @@ mod tests {
         // insert an opend connection
         let conn_key = connection_key(&get_connection_id());
         let conn = get_connection(ConnState::Open);
-        let bytes = conn.try_to_vec().expect("encoding failed");
+        let bytes = conn.encode_vec().expect("encoding failed");
         write_log.write(&conn_key, bytes).expect("write failed");
         write_log.commit_block(&mut storage).expect("commit failed");
 
@@ -1141,7 +1146,7 @@ mod tests {
         // insert a TryOpen channel
         set_port(&mut write_log, 0);
         let channel_key = channel_key(&get_port_channel_id());
-        let bytes = channel.try_to_vec().expect("encoding failed");
+        let bytes = channel.encode_vec().expect("encoding failed");
         write_log.write(&channel_key, bytes).expect("write failed");
         let event = make_open_try_channel_event(&get_channel_id(), &msg);
         write_log.set_ibc_event(event.try_into().unwrap());
@@ -1173,13 +1178,13 @@ mod tests {
         // insert an opend connection
         let conn_key = connection_key(&get_connection_id());
         let conn = get_connection(ConnState::Open);
-        let bytes = conn.try_to_vec().expect("encoding failed");
+        let bytes = conn.encode_vec().expect("encoding failed");
         write_log.write(&conn_key, bytes).expect("write failed");
         // insert an Init channel
         set_port(&mut write_log, 0);
         let channel_key = channel_key(&get_port_channel_id());
         let channel = get_channel(ChanState::Init, Order::Ordered);
-        let bytes = channel.try_to_vec().expect("encoding failed");
+        let bytes = channel.encode_vec().expect("encoding failed");
         write_log.write(&channel_key, bytes).expect("write failed");
         write_log.commit_tx();
         write_log.commit_block(&mut storage).expect("commit failed");
@@ -1213,7 +1218,7 @@ mod tests {
 
         // update the channel to Open
         let channel = get_channel(ChanState::Open, Order::Ordered);
-        let bytes = channel.try_to_vec().expect("encoding failed");
+        let bytes = channel.encode_vec().expect("encoding failed");
         write_log.write(&channel_key, bytes).expect("write failed");
         let event = make_open_ack_channel_event(&msg);
         write_log.set_ibc_event(event.try_into().unwrap());
@@ -1245,13 +1250,13 @@ mod tests {
         // insert an opend connection
         let conn_key = connection_key(&get_connection_id());
         let conn = get_connection(ConnState::Open);
-        let bytes = conn.try_to_vec().expect("encoding failed");
+        let bytes = conn.encode_vec().expect("encoding failed");
         write_log.write(&conn_key, bytes).expect("write failed");
         // insert a TryOpen channel
         set_port(&mut write_log, 0);
         let channel_key = channel_key(&get_port_channel_id());
         let channel = get_channel(ChanState::TryOpen, Order::Ordered);
-        let bytes = channel.try_to_vec().expect("encoding failed");
+        let bytes = channel.encode_vec().expect("encoding failed");
         write_log.write(&channel_key, bytes).expect("write failed");
         write_log.commit_tx();
         write_log.commit_block(&mut storage).expect("commit failed");
@@ -1280,7 +1285,7 @@ mod tests {
 
         // update the channel to Open
         let channel = get_channel(ChanState::Open, Order::Ordered);
-        let bytes = channel.try_to_vec().expect("encoding failed");
+        let bytes = channel.encode_vec().expect("encoding failed");
         write_log.write(&channel_key, bytes).expect("write failed");
         let event = make_open_confirm_channel_event(&msg);
         write_log.set_ibc_event(event.try_into().unwrap());
@@ -1368,30 +1373,31 @@ mod tests {
         // insert an opened connection
         let conn_key = connection_key(&get_connection_id());
         let conn = get_connection(ConnState::Open);
-        let bytes = conn.try_to_vec().expect("encoding failed");
+        let bytes = conn.encode_vec().expect("encoding failed");
         write_log.write(&conn_key, bytes).expect("write failed");
         // insert an opened channel
         set_port(&mut write_log, 0);
         let channel_key = channel_key(&get_port_channel_id());
         let channel = get_channel(ChanState::Open, Order::Ordered);
-        let bytes = channel.try_to_vec().expect("encoding failed");
+        let bytes = channel.encode_vec().expect("encoding failed");
         write_log.write(&channel_key, bytes).expect("write failed");
         write_log.commit_tx();
         write_log.commit_block(&mut storage).expect("commit failed");
 
         // prepare data
         let counterparty = get_channel_counterparty();
-        let timestamp = Utc::now() + chrono::Duration::seconds(100);
-        let timeout_timestamp = Timestamp::from_datetime(timestamp);
+        let timeout_timestamp = Some(DateTimeUtc::now() + DurationSecs(100));
         let data = PacketSendData::new(
-            get_port_id(),
-            get_channel_id(),
-            counterparty.port_id().clone(),
-            counterparty.channel_id().unwrap().clone(),
+            get_port_id().to_string(),
+            get_channel_id().to_string(),
+            counterparty.port_id().to_string(),
+            counterparty.channel_id().unwrap().to_string(),
             vec![0],
-            Height::new(1, 100),
+            1,
+            100,
             timeout_timestamp,
-        );
+        )
+        .unwrap();
 
         // get and increment the nextSequenceSend
         let seq_key = next_sequence_send_key(&get_port_channel_id());
@@ -1403,7 +1409,7 @@ mod tests {
         let commitment = hash(&packet);
         let key = commitment_key(&get_port_id(), &get_channel_id(), sequence);
         write_log
-            .write(&key, commitment.try_to_vec().expect("encoding failed"))
+            .write(&key, commitment.as_bytes().to_vec())
             .expect("write failed");
         write_log.commit_tx();
 
@@ -1433,13 +1439,13 @@ mod tests {
         // insert an opened connection
         let conn_key = connection_key(&get_connection_id());
         let conn = get_connection(ConnState::Open);
-        let bytes = conn.try_to_vec().expect("encoding failed");
+        let bytes = conn.encode_vec().expect("encoding failed");
         write_log.write(&conn_key, bytes).expect("write failed");
         // insert an opened channel
         set_port(&mut write_log, 0);
         let channel_key = channel_key(&get_port_channel_id());
         let channel = get_channel(ChanState::Open, Order::Ordered);
-        let bytes = channel.try_to_vec().expect("encoding failed");
+        let bytes = channel.encode_vec().expect("encoding failed");
         write_log.write(&channel_key, bytes).expect("write failed");
         write_log.commit_tx();
         write_log.commit_block(&mut storage).expect("commit failed");
@@ -1527,23 +1533,20 @@ mod tests {
         // insert an opened connection
         let conn_key = connection_key(&get_connection_id());
         let conn = get_connection(ConnState::Open);
-        let bytes = conn.try_to_vec().expect("encoding failed");
+        let bytes = conn.encode_vec().expect("encoding failed");
         write_log.write(&conn_key, bytes).expect("write failed");
         // insert an opened channel
         set_port(&mut write_log, 0);
         let channel_key = channel_key(&get_port_channel_id());
         let channel = get_channel(ChanState::Open, Order::Ordered);
-        let bytes = channel.try_to_vec().expect("encoding failed");
+        let bytes = channel.encode_vec().expect("encoding failed");
         write_log.write(&channel_key, bytes).expect("write failed");
         // insert a commitment
         let commitment = hash(&packet);
         let commitment_key =
             commitment_key(&get_port_id(), &get_channel_id(), sequence);
         write_log
-            .write(
-                &commitment_key,
-                commitment.try_to_vec().expect("encoding failed"),
-            )
+            .write(&commitment_key, commitment.as_bytes().to_vec())
             .expect("write failed");
         write_log.commit_tx();
         write_log.commit_block(&mut storage).expect("commit failed");
@@ -1594,30 +1597,31 @@ mod tests {
         // insert an opened connection
         let conn_key = connection_key(&get_connection_id());
         let conn = get_connection(ConnState::Open);
-        let bytes = conn.try_to_vec().expect("encoding failed");
+        let bytes = conn.encode_vec().expect("encoding failed");
         write_log.write(&conn_key, bytes).expect("write failed");
         // insert an opened channel
         set_port(&mut write_log, 0);
         let channel_key = channel_key(&get_port_channel_id());
         let channel = get_channel(ChanState::Open, Order::Ordered);
-        let bytes = channel.try_to_vec().expect("encoding failed");
+        let bytes = channel.encode_vec().expect("encoding failed");
         write_log.write(&channel_key, bytes).expect("write failed");
         write_log.commit_tx();
         write_log.commit_block(&mut storage).expect("commit failed");
 
         // prepare data
         let counterparty = get_channel_counterparty();
-        let timestamp = Utc::now() + chrono::Duration::seconds(100);
-        let timeout_timestamp = Timestamp::from_datetime(timestamp);
+        let timeout_timestamp = Some(DateTimeUtc::now() + DurationSecs(100));
         let data = PacketSendData::new(
-            get_port_id(),
-            get_channel_id(),
-            counterparty.port_id().clone(),
-            counterparty.channel_id().unwrap().clone(),
+            get_port_id().to_string(),
+            get_channel_id().to_string(),
+            counterparty.port_id().to_string(),
+            counterparty.channel_id().unwrap().to_string(),
             vec![0],
-            Height::new(1, 100),
+            1,
+            100,
             timeout_timestamp,
-        );
+        )
+        .unwrap();
 
         // make a packet
         let seq_key = next_sequence_send_key(&get_port_channel_id());
@@ -1631,10 +1635,7 @@ mod tests {
             sequence,
         );
         write_log
-            .write(
-                &commitment_key,
-                commitment.try_to_vec().expect("encoding failed"),
-            )
+            .write(&commitment_key, commitment.as_bytes().to_vec())
             .expect("write failed");
         let event = make_send_packet_event(packet);
         write_log.set_ibc_event(event.try_into().unwrap());
@@ -1665,13 +1666,13 @@ mod tests {
         // insert an opened connection
         let conn_key = connection_key(&get_connection_id());
         let conn = get_connection(ConnState::Open);
-        let bytes = conn.try_to_vec().expect("encoding failed");
+        let bytes = conn.encode_vec().expect("encoding failed");
         write_log.write(&conn_key, bytes).expect("write failed");
         // insert an opened channel
         set_port(&mut write_log, 0);
         let channel_key = channel_key(&get_port_channel_id());
         let channel = get_channel(ChanState::Open, Order::Ordered);
-        let bytes = channel.try_to_vec().expect("encoding failed");
+        let bytes = channel.encode_vec().expect("encoding failed");
         write_log.write(&channel_key, bytes).expect("write failed");
         write_log.commit_tx();
         write_log.commit_block(&mut storage).expect("commit failed");

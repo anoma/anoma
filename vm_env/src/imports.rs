@@ -12,10 +12,10 @@ use borsh::BorshDeserialize;
 /// first step reads the value into a result buffer and returns the size (if
 /// any) back to the guest, the second step reads the value from cache into a
 /// pre-allocated buffer with the obtained size.
-fn read_from_buffer<T: BorshDeserialize>(
+fn read_from_buffer(
     read_result: i64,
     result_buffer: unsafe extern "C" fn(u64),
-) -> Option<T> {
+) -> Option<Vec<u8>> {
     if HostEnvResult::is_fail(read_result) {
         None
     } else {
@@ -28,7 +28,7 @@ fn read_from_buffer<T: BorshDeserialize>(
         let target = unsafe {
             Vec::from_raw_parts(offset as _, read_result as _, read_result as _)
         };
-        T::try_from_slice(&target[..]).ok()
+        Some(target)
     }
 }
 
@@ -38,7 +38,8 @@ fn read_key_val_from_buffer<T: BorshDeserialize>(
     read_result: i64,
     result_buffer: unsafe extern "C" fn(u64),
 ) -> Option<(String, T)> {
-    let key_val: Option<KeyVal> = read_from_buffer(read_result, result_buffer);
+    let key_val = read_from_buffer(read_result, result_buffer)
+        .and_then(|t| KeyVal::try_from_slice(&t[..]).ok());
     key_val.and_then(|key_val| {
         // decode the value
         T::try_from_slice(&key_val.val)
@@ -72,6 +73,16 @@ pub mod tx {
         let read_result =
             unsafe { anoma_tx_read(key.as_ptr() as _, key.len() as _) };
         super::read_from_buffer(read_result, anoma_tx_result_buffer)
+            .and_then(|t| T::try_from_slice(&t[..]).ok())
+    }
+
+    /// Try to read a variable-length value as bytes at the given key from
+    /// storage.
+    pub fn read_bytes(key: impl AsRef<str>) -> Option<Vec<u8>> {
+        let key = key.as_ref();
+        let read_result =
+            unsafe { anoma_tx_read(key.as_ptr() as _, key.len() as _) };
+        super::read_from_buffer(read_result, anoma_tx_result_buffer)
     }
 
     /// Check if the given key is present in storage.
@@ -84,14 +95,19 @@ pub mod tx {
 
     /// Write a value at the given key to storage.
     pub fn write<T: BorshSerialize>(key: impl AsRef<str>, val: T) {
-        let key = key.as_ref();
         let buf = val.try_to_vec().unwrap();
+        write_bytes(key, buf);
+    }
+
+    /// Write a value as bytes at the given key to storage.
+    pub fn write_bytes(key: impl AsRef<str>, val: impl AsRef<[u8]>) {
+        let key = key.as_ref();
         unsafe {
             anoma_tx_write(
                 key.as_ptr() as _,
                 key.len() as _,
-                buf.as_ptr() as _,
-                buf.len() as _,
+                val.as_ref().as_ptr() as _,
+                val.as_ref().len() as _,
             )
         };
     }
@@ -319,11 +335,31 @@ pub mod vp {
         let read_result =
             unsafe { anoma_vp_read_pre(key.as_ptr() as _, key.len() as _) };
         super::read_from_buffer(read_result, anoma_vp_result_buffer)
+            .and_then(|t| T::try_from_slice(&t[..]).ok())
+    }
+
+    /// Try to read a variable-length value as bytesat the given key from
+    /// storage before transaction execution.
+    pub fn read_bytes_pre(key: impl AsRef<str>) -> Option<Vec<u8>> {
+        let key = key.as_ref();
+        let read_result =
+            unsafe { anoma_vp_read_pre(key.as_ptr() as _, key.len() as _) };
+        super::read_from_buffer(read_result, anoma_vp_result_buffer)
     }
 
     /// Try to read a variable-length value at the given key from storage after
     /// transaction execution.
     pub fn read_post<T: BorshDeserialize>(key: impl AsRef<str>) -> Option<T> {
+        let key = key.as_ref();
+        let read_result =
+            unsafe { anoma_vp_read_post(key.as_ptr() as _, key.len() as _) };
+        super::read_from_buffer(read_result, anoma_vp_result_buffer)
+            .and_then(|t| T::try_from_slice(&t[..]).ok())
+    }
+
+    /// Try to read a variable-length value as bytes at the given key from
+    /// storage after transaction execution.
+    pub fn read_bytes_post(key: impl AsRef<str>) -> Option<Vec<u8>> {
         let key = key.as_ref();
         let read_result =
             unsafe { anoma_vp_read_post(key.as_ptr() as _, key.len() as _) };

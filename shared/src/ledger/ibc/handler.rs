@@ -2,7 +2,6 @@
 
 use std::str::FromStr;
 
-use borsh::BorshSerialize;
 #[cfg(not(feature = "ABCI"))]
 use ibc::clients::ics07_tendermint::consensus_state::ConsensusState as TmConsensusState;
 #[cfg(not(feature = "ABCI"))]
@@ -216,11 +215,10 @@ use tendermint_proto_abci::Protobuf;
 use thiserror::Error;
 
 use crate::ledger::ibc::storage;
-use crate::types::address::{Address, InternalAddress};
 use crate::types::ibc::data::{
     Error as IbcDataError, IbcMessage, PacketSendData,
 };
-use crate::types::storage::{Key, KeySeg};
+use crate::types::storage::Key;
 
 #[allow(missing_docs)]
 #[derive(Error, Debug)]
@@ -638,18 +636,16 @@ pub trait IbcActions {
     /// Send a packet
     fn send_packet(&self, data: &PacketSendData) -> Result<()> {
         // get and increment the next sequence send
-        let port_channel_id = port_channel_id(
-            data.source_port.clone(),
-            data.source_channel.clone(),
-        );
+        let port_channel_id =
+            port_channel_id(data.source_port_id(), data.source_channel_id());
         let seq_key = storage::next_sequence_send_key(&port_channel_id);
         let sequence = self.get_and_inc_sequence(&seq_key)?;
 
         // store the commitment of the packet
         let packet = data.packet(sequence);
         let commitment_key = storage::commitment_key(
-            &data.source_port,
-            &data.source_channel,
+            &data.source_port_id(),
+            &data.source_channel_id(),
             packet.sequence,
         );
         let commitment = commitment(&packet);
@@ -960,12 +956,9 @@ pub fn channel_counterparty(
     ChanCounterparty::new(port_id, Some(channel_id))
 }
 
-fn commitment_prefix() -> CommitmentPrefix {
-    let addr = Address::Internal(InternalAddress::Ibc);
-    let bytes = addr
-        .raw()
-        .try_to_vec()
-        .expect("Encoding an address string shouldn't fail");
+/// Returns Anoma commitment prefix
+pub fn commitment_prefix() -> CommitmentPrefix {
+    let bytes = "ibc".as_bytes().to_vec();
     CommitmentPrefix::from(bytes)
 }
 

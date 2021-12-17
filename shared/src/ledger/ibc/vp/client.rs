@@ -1,6 +1,6 @@
 //! IBC validity predicate for client module
+use std::str::FromStr;
 
-use borsh::BorshDeserialize;
 #[cfg(not(feature = "ABCI"))]
 use ibc::core::ics02_client::client_consensus::AnyConsensusState;
 #[cfg(not(feature = "ABCI"))]
@@ -49,6 +49,10 @@ use ibc_abci::core::ics02_client::msgs::ClientMsg;
 use ibc_abci::core::ics24_host::identifier::ClientId;
 #[cfg(feature = "ABCI")]
 use ibc_abci::core::ics26_routing::msgs::Ics26Envelope;
+#[cfg(not(feature = "ABCI"))]
+use tendermint_proto::Protobuf;
+#[cfg(feature = "ABCI")]
+use tendermint_proto_abci::Protobuf;
 use thiserror::Error;
 
 use super::super::handler::{
@@ -311,13 +315,14 @@ where
     fn client_state_pre(&self, client_id: &ClientId) -> Result<AnyClientState> {
         let key = client_state_key(client_id);
         match self.ctx.read_pre(&key) {
-            Ok(Some(value)) => AnyClientState::try_from_slice(&value[..])
-                .map_err(|e| {
+            Ok(Some(value)) => {
+                AnyClientState::decode_vec(&value).map_err(|e| {
                     Error::InvalidClient(format!(
                         "Decoding the client state failed: ID {}, {}",
                         client_id, e
                     ))
-                }),
+                })
+            }
             _ => Err(Error::InvalidClient(format!(
                 "The prior client state doesn't exist: ID {}",
                 client_id
@@ -342,8 +347,12 @@ where
     fn client_type(&self, client_id: &ClientId) -> Ics02Result<ClientType> {
         let key = client_type_key(client_id);
         match self.ctx.read_post(&key) {
-            Ok(Some(value)) => ClientType::try_from_slice(&value[..])
-                .map_err(|_| Ics02Error::implementation_specific()),
+            Ok(Some(value)) => {
+                let type_str = std::str::from_utf8(&value)
+                    .map_err(|_| Ics02Error::implementation_specific())?;
+                ClientType::from_str(type_str)
+                    .map_err(|_| Ics02Error::implementation_specific())
+            }
             Ok(None) => Err(Ics02Error::client_not_found(client_id.clone())),
             Err(_) => Err(Ics02Error::implementation_specific()),
         }
@@ -355,7 +364,7 @@ where
     ) -> Ics02Result<AnyClientState> {
         let key = client_state_key(client_id);
         match self.ctx.read_post(&key) {
-            Ok(Some(value)) => AnyClientState::try_from_slice(&value[..])
+            Ok(Some(value)) => AnyClientState::decode_vec(&value)
                 .map_err(|_| Ics02Error::implementation_specific()),
             Ok(None) => Err(Ics02Error::client_not_found(client_id.clone())),
             Err(_) => Err(Ics02Error::implementation_specific()),
@@ -369,7 +378,7 @@ where
     ) -> Ics02Result<AnyConsensusState> {
         let key = consensus_state_key(client_id, height);
         match self.ctx.read_post(&key) {
-            Ok(Some(value)) => AnyConsensusState::try_from_slice(&value[..])
+            Ok(Some(value)) => AnyConsensusState::decode_vec(&value)
                 .map_err(|_| Ics02Error::implementation_specific()),
             Ok(None) => Err(Ics02Error::consensus_state_not_found(
                 client_id.clone(),
