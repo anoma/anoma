@@ -466,7 +466,7 @@ mod tests {
     use crate::ledger::storage::testing::TestStorage;
     use crate::ledger::storage::write_log::WriteLog;
     use crate::proto::Tx;
-    use crate::types::ibc::data::PacketSendData;
+    use crate::types::ibc::data::{PacketAck, PacketReceipt, PacketSendData};
     use crate::types::time::{DateTimeUtc, DurationSecs};
     use crate::vm::wasm;
 
@@ -1481,12 +1481,11 @@ mod tests {
         // insert a receipt and an ack
         let key = receipt_key(&get_port_id(), &get_channel_id(), sequence);
         write_log
-            .write(&key, 0_u64.try_to_vec().unwrap())
+            .write(&key, PacketReceipt::new().as_bytes().to_vec())
             .expect("write failed");
         let key = ack_key(&get_port_id(), &get_channel_id(), sequence);
-        write_log
-            .write(&key, "test_ack".to_owned().try_to_vec().unwrap())
-            .expect("write failed");
+        let ack = PacketAck::new().encode_to_vec();
+        write_log.write(&key, ack).expect("write failed");
         write_log.commit_tx();
 
         let tx_code = vec![];
@@ -1552,7 +1551,7 @@ mod tests {
         write_log.commit_block(&mut storage).expect("commit failed");
 
         // prepare data
-        let ack = "test_ack".try_to_vec().expect("encoding failed");
+        let ack = PacketAck::new().encode_to_vec();
         let proof_packet = CommitmentProofBytes::from(vec![0]);
         let proofs =
             Proofs::new(proof_packet, None, None, None, Height::new(1, 10))
@@ -1708,16 +1707,15 @@ mod tests {
             msg.packet.sequence,
         );
         write_log
-            .write(&receipt_key, 0_u64.try_to_vec().unwrap())
+            .write(&receipt_key, PacketReceipt::new().as_bytes().to_vec())
             .expect("write failed");
         let ack_key = ack_key(
             &msg.packet.destination_port,
             &msg.packet.destination_channel,
             msg.packet.sequence,
         );
-        write_log
-            .write(&ack_key, "test_ack".to_owned().try_to_vec().unwrap())
-            .expect("write failed");
+        let ack = PacketAck::new().encode_to_vec();
+        write_log.write(&ack_key, ack).expect("write failed");
         write_log.commit_tx();
 
         let tx_code = vec![];
@@ -1749,13 +1747,12 @@ mod tests {
         let receipt_key =
             receipt_key(&get_port_id(), &get_channel_id(), Sequence::from(1));
         write_log
-            .write(&receipt_key, 0_u64.try_to_vec().unwrap())
+            .write(&receipt_key, PacketReceipt::new().as_bytes().to_vec())
             .expect("write failed");
         let ack_key =
             ack_key(&get_port_id(), &get_channel_id(), Sequence::from(1));
-        write_log
-            .write(&ack_key, "test_ack".to_owned().try_to_vec().unwrap())
-            .expect("write failed");
+        let ack = PacketAck::new().encode_to_vec();
+        write_log.write(&ack_key, ack).expect("write failed");
         write_log.commit_tx();
 
         let tx_code = vec![];

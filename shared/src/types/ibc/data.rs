@@ -1,5 +1,6 @@
 //! IBC-related data definitions.
 use std::convert::TryFrom;
+use std::fmt::{self, Display, Formatter};
 use std::str::FromStr;
 
 use borsh::{BorshDeserialize, BorshSerialize};
@@ -49,6 +50,8 @@ use ibc::core::ics04_channel::msgs::timeout::MsgTimeout;
 use ibc::core::ics04_channel::msgs::timeout_on_close::MsgTimeoutOnClose;
 #[cfg(not(feature = "ABCI"))]
 use ibc::core::ics04_channel::msgs::{ChannelMsg, PacketMsg};
+#[cfg(not(feature = "ABCI"))]
+use ibc::core::ics04_channel::packet::Receipt;
 #[cfg(not(feature = "ABCI"))]
 use ibc::core::ics04_channel::packet::{Packet, Sequence};
 #[cfg(not(feature = "ABCI"))]
@@ -110,6 +113,8 @@ use ibc_abci::core::ics04_channel::msgs::timeout_on_close::MsgTimeoutOnClose;
 #[cfg(feature = "ABCI")]
 use ibc_abci::core::ics04_channel::msgs::{ChannelMsg, PacketMsg};
 #[cfg(feature = "ABCI")]
+use ibc_abci::core::ics04_channel::packet::Receipt;
+#[cfg(feature = "ABCI")]
 use ibc_abci::core::ics04_channel::packet::{Packet, Sequence};
 #[cfg(feature = "ABCI")]
 use ibc_abci::core::ics24_host::error::ValidationError;
@@ -123,6 +128,16 @@ use ibc_abci::core::ics26_routing::msgs::Ics26Envelope;
 use ibc_abci::downcast;
 #[cfg(feature = "ABCI")]
 use ibc_abci::timestamp::Timestamp;
+#[cfg(not(feature = "ABCI"))]
+use ibc_proto::ibc::core::channel::v1::acknowledgement::Response;
+#[cfg(not(feature = "ABCI"))]
+use ibc_proto::ibc::core::channel::v1::Acknowledgement;
+#[cfg(not(feature = "ABCI"))]
+use ibc_proto::ibc::core::channel::v1::Acknowledgement;
+#[cfg(feature = "ABCI")]
+use ibc_proto_abci::ibc::core::channel::v1::acknowledgement::Response;
+#[cfg(feature = "ABCI")]
+use ibc_proto_abci::ibc::core::channel::v1::Acknowledgement;
 use prost::Message;
 use prost_types::Any;
 use thiserror::Error;
@@ -509,5 +524,49 @@ impl IbcMessage {
                 "The message is not an ICS04 packet message".to_string(),
             )
         })
+    }
+}
+
+/// Receipt for a packet
+#[derive(Clone, Debug)]
+pub struct PacketReceipt(pub Receipt);
+
+impl PacketReceipt {
+    /// Make a new receipt
+    pub fn new() -> Self {
+        Self(Receipt::Ok)
+    }
+
+    /// Return bytes
+    pub fn as_bytes(&self) -> &[u8] {
+        // same as ibc-go
+        &[1_u8]
+    }
+}
+
+/// Acknowledgement for a packet
+#[derive(Clone, Debug)]
+pub struct PacketAck(pub Acknowledgement);
+
+// TODO temporary type. add a new type for ack to ibc-rs
+impl PacketAck {
+    /// Make a new ack
+    pub fn new() -> Self {
+        Self(Acknowledgement {
+            response: Some(Response::Result(vec![1_u8])),
+        })
+    }
+
+    /// Encode the ack
+    pub fn encode_to_vec(&self) -> Vec<u8> {
+        // TODO encode as ibc-go
+        self.0.encode_to_vec()
+    }
+}
+
+// for the string to be used by the current reader
+impl Display for PacketAck {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        write!(f, "ack")
     }
 }

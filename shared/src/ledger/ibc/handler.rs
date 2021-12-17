@@ -194,15 +194,6 @@ use ibc_abci::core::ics26_routing::msgs::Ics26Envelope;
 use ibc_abci::events::IbcEvent;
 #[cfg(feature = "ABCI")]
 use ibc_abci::mock::client_state::{MockClientState, MockConsensusState};
-#[cfg(not(feature = "ABCI"))]
-use ibc_proto::ibc::core::channel::v1::acknowledgement::Response;
-#[cfg(not(feature = "ABCI"))]
-use ibc_proto::ibc::core::channel::v1::Acknowledgement;
-#[cfg(feature = "ABCI")]
-use ibc_proto_abci::ibc::core::channel::v1::acknowledgement::Response;
-#[cfg(feature = "ABCI")]
-use ibc_proto_abci::ibc::core::channel::v1::Acknowledgement;
-use prost::Message;
 use sha2::Digest;
 #[cfg(not(feature = "ABCI"))]
 use tendermint_proto::Error as ProtoError;
@@ -216,7 +207,7 @@ use thiserror::Error;
 
 use crate::ledger::ibc::storage;
 use crate::types::ibc::data::{
-    Error as IbcDataError, IbcMessage, PacketSendData,
+    Error as IbcDataError, IbcMessage, PacketAck, PacketReceipt, PacketSendData,
 };
 use crate::types::storage::Key;
 
@@ -665,8 +656,7 @@ pub trait IbcActions {
             &msg.packet.destination_channel,
             msg.packet.sequence,
         );
-        // write 1 as a receipt
-        self.write_ibc_data(&receipt_key, vec![1_u8]);
+        self.write_ibc_data(&receipt_key, PacketReceipt::new().as_bytes());
 
         // store the ack
         let ack_key = storage::ack_key(
@@ -674,7 +664,7 @@ pub trait IbcActions {
             &msg.packet.destination_channel,
             msg.packet.sequence,
         );
-        let ack = make_acknowledgement().encode_to_vec();
+        let ack = PacketAck::new().encode_to_vec();
         self.write_ibc_data(&ack_key, ack.clone());
 
         // increment the next sequence receive
@@ -931,13 +921,6 @@ pub fn commitment(packet: &Packet) -> String {
     );
     let r = sha2::Sha256::digest(input.as_bytes());
     format!("{:x}", r)
-}
-
-/// Make a new acknowledgement
-pub fn make_acknowledgement() -> Acknowledgement {
-    Acknowledgement {
-        response: Some(Response::Result(vec![1u8])),
-    }
 }
 
 /// Returns a counterparty of a connection
