@@ -31,6 +31,12 @@ mod dkg_keys {
         }
     }
 
+    impl From<&DkgKeypair> for ferveo_common::Keypair<EllipticCurve> {
+        fn from(kp: &DkgKeypair) -> Self {
+            kp.0.clone()
+        }
+    }
+
     impl BorshSerialize for DkgKeypair {
         fn serialize<W: std::io::Write>(
             &self,
@@ -60,6 +66,12 @@ mod dkg_keys {
     impl From<ferveo_common::PublicKey<EllipticCurve>> for DkgPublicKey {
         fn from(pk: ferveo_common::PublicKey<EllipticCurve>) -> Self {
             Self(pk)
+        }
+    }
+
+    impl From<&DkgPublicKey> for ferveo_common::PublicKey<EllipticCurve> {
+        fn from(pk: &DkgPublicKey) -> Self {
+            pk.0.clone()
         }
     }
 

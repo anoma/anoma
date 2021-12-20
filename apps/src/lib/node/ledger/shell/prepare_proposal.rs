@@ -2,8 +2,10 @@
 
 #[cfg(not(feature = "ABCI"))]
 mod prepare_block {
+    use anoma::types::transaction::protocol::ProtocolTx;
+    use ferveo::Message;
+
     use super::super::*;
-    use crate::node::ledger::shims::abcipp_shim_types::shim::TxBytes;
 
     impl<D, H> Shell<D, H>
     where
@@ -27,39 +29,91 @@ mod prepare_block {
             // we'll reset again on the next proposal, until the
             // proposal is accepted
             self.gas_meter.reset();
-            // TODO: This should not be hardcoded
-            let privkey = <EllipticCurve as PairingEngine>::G2Affine::prime_subgroup_generator();
-
-            // filter in half of the new txs from Tendermint, only keeping
-            // wrappers
-            let number_of_new_txs = 1 + req.block_data.len() / 2;
-            let mut txs: Vec<TxBytes> = req
-                .block_data
-                .into_iter()
-                .take(number_of_new_txs)
-                .filter(|tx_bytes| {
-                    if let Ok(tx) = Tx::try_from(tx_bytes.as_slice()) {
-                        matches!(process_tx(tx), Ok(TxType::Wrapper(_)))
-                    } else {
-                        false
-                    }
-                })
-                .collect();
-
-            // decrypt the wrapper txs included in the previous block
-            let mut decrypted_txs = self
-                .tx_queue
-                .iter()
-                .map(|tx| {
-                    Tx::from(match tx.decrypt(privkey) {
-                        Ok(tx) => DecryptedTx::Decrypted(tx),
-                        _ => DecryptedTx::Undecryptable(tx.clone()),
+            let txs = if let ShellMode::Validator {
+                ref dkg, ref data, ..
+            } = self.mode
+            {
+                // TODO: This should not be hardcoded
+                let privkey = <EllipticCurve as PairingEngine>::G2Affine::prime_subgroup_generator();
+                let mut txs = if let Some(pvss) = req
+                    .block_data
+                    .iter()
+                    .filter(|tx_bytes| {
+                        if let Ok(tx) = Tx::try_from(tx_bytes.as_slice()) {
+                            matches!(
+                                process_tx(tx),
+                                Ok(TxType::Protocol(ProtocolTx {
+                                    tx: ProtocolTxType::DKG(Message::Deal(_)),
+                                    ..
+                                })),
+                            )
+                        } else {
+                            false
+                        }
                     })
-                    .to_bytes()
-                })
-                .collect();
+                    .next()
+                {
+                    vec![pvss.to_vec()]
+                } else {
+                    vec![]
+                };
+                // filter in half of the new txs from Tendermint, only keeping
+                // wrappers
+                let number_of_new_txs = 1 + req.block_data.len() / 2;
+                txs.append(
+                    &mut req
+                        .block_data
+                        .into_iter()
+                        .take(number_of_new_txs)
+                        .filter(|tx_bytes| {
+                            if let Ok(tx) = Tx::try_from(tx_bytes.as_slice()) {
+                                matches!(
+                                    process_tx(tx),
+                                    Ok(TxType::Wrapper(_))
+                                        | Ok(TxType::Protocol(ProtocolTx {
+                                            tx: ProtocolTxType::NewDkgKeypair(
+                                                _
+                                            ),
+                                            ..
+                                        })),
+                                )
+                            } else {
+                                false
+                            }
+                        })
+                        .collect(),
+                );
 
-            txs.append(&mut decrypted_txs);
+                // Add a single PVSS transcript if one is in the mempool
+
+                // Aggregate PVSS transcripts if DKG is in appropriate state
+                if let Ok(msg) = dkg.state_machine.aggregate() {
+                    let protocol_keypair_lock =
+                        data.keys.protocol_keypair.lock();
+                    let encrypted_key_tx = ProtocolTxType::DKG(msg)
+                        .sign(&protocol_keypair_lock)
+                        .to_bytes();
+                    txs.push(encrypted_key_tx);
+                }
+
+                // decrypt the wrapper txs included in the previous block
+                let mut decrypted_txs = self
+                    .tx_queue
+                    .iter()
+                    .map(|tx| {
+                        Tx::from(match tx.decrypt(privkey) {
+                            Ok(tx) => DecryptedTx::Decrypted(tx),
+                            _ => DecryptedTx::Undecryptable(tx.clone()),
+                        })
+                        .to_bytes()
+                    })
+                    .collect();
+
+                txs.append(&mut decrypted_txs);
+                txs
+            } else {
+                vec![]
+            };
             response::PrepareProposal { block_data: txs }
         }
     }

@@ -1,8 +1,9 @@
 //! Implementation of the `FinalizeBlock` ABCI++ method for the Shell
 
+use anoma::types::key::dkg_session_keys::DkgPublicKey;
 use anoma::types::storage::BlockHash;
 use anoma::types::transaction::EncryptionKey;
-use ferveo::DkgState;
+use ferveo::{DkgState, PvssScheduler};
 #[cfg(not(feature = "ABCI"))]
 use tendermint::block::Header;
 #[cfg(not(feature = "ABCI"))]
@@ -383,18 +384,6 @@ where
             let update = ValidatorUpdate { pub_key, power };
             response.validator_updates.push(update);
         });
-        // TODO: This is a protocol tx, refactor
-        // self.storage.encryption_key = if let DkgState::Success { final_key }
-        // = self.dkg.state_machine.state
-        // {
-        // Some(
-        // EncryptionKey(final_key)
-        // .try_to_vec()
-        // .expect("Serializing encryption key should not fail"),
-        // )
-        // } else {
-        // None
-        // };
 
         // Update evidence parameters
         let (parameters, _gas) = parameters::read(&self.storage)
@@ -411,11 +400,28 @@ where
     /// Update the DKG state machine
     ///  * At the start of a new epoch, reset state machine and update session
     ///    keys
-    ///  * issue a PVSS transcript
+    ///  * keep a counter of blocks transpired since protocol start
+    ///  * issue a PVSS transcript according to the state machines schedule
     ///  * Collect PVSS transcripts from other validators
     fn update_dkg(&mut self, new_epoch: bool) {
         if new_epoch {
             if let Err(err) = self.new_dkg_instance() {
+                // update the current encryption key to that generated in
+                // previous epoch
+                if let ShellMode::Validator { dkg, .. } = &self.mode {
+                    if let DkgState::Success { final_key } =
+                        dkg.state_machine.state
+                    {
+                        self.storage.encryption_key = Some(
+                            EncryptionKey(final_key).try_to_vec().unwrap(),
+                        );
+                    } else {
+                        // If DKG was not successful in the past epoch, we have
+                        // no new key TODO: Allow this
+                        // DKG to continue while the new one also starts
+                        self.storage.encryption_key = None;
+                    }
+                }
                 panic!(
                     "Failed to create a new DKG instance for the new epoch \
                      with error: {} \n\n\n The state of the last block has \
@@ -441,7 +447,6 @@ where
     /// sets.
     fn new_dkg_instance(&mut self) -> ShellResult<()> {
         if let ShellMode::Validator { dkg, ref data, .. } = &mut self.mode {
-            let rng = &mut ark_std::rand::prelude::StdRng::from_entropy();
             let (current_epoch, _) = self.storage.get_current_epoch();
 
             // TODO: The total weight should likely be a config, not hardcoded.
@@ -449,6 +454,7 @@ where
                 tau: current_epoch.0,
                 security_threshold: (2 ^ 12) / 3,
                 total_weight: 2 ^ 12,
+                retry_after: 32,
             };
 
             // get the new validator for the next epoch
@@ -462,9 +468,30 @@ where
                 validators
                     .active
                     .iter()
-                    .map(|val| TendermintValidator {
-                        power: val.voting_power.into(),
-                        address: val.address.to_string(),
+                    .map(|val| {
+                        let dkg_key =
+                            key::dkg_session_keys::dkg_pk_key(&val.address);
+                        let bytes = self
+                            .storage
+                            .read(&dkg_key)
+                            .expect(
+                                "DKG public key database key should be present",
+                            )
+                            .0
+                            .expect("Validator should have public dkg key");
+                        let dkg_publickey =
+                            &<DkgPublicKey as BorshDeserialize>::deserialize(
+                                &mut bytes.as_ref(),
+                            )
+                            .expect(
+                                "DKG public session key should be \
+                                 deserializable",
+                            );
+                        TendermintValidator {
+                            power: val.voting_power.into(),
+                            address: val.address.to_string(),
+                            public_key: dkg_publickey.into(),
+                        }
                     })
                     .collect(),
             );
@@ -477,27 +504,37 @@ where
             // Initiate the new state machine
             if let Some(me) = me {
                 let me = me.clone();
-                dkg.state_machine =
-                    DkgStateMachine::new(validator_set, params, me, rng)
-                        .map_err(|e| Error::DkgUpdate(e.to_string()))?;
+                dkg.state_machine = DkgStateMachine::new(
+                    validator_set,
+                    params,
+                    me,
+                    data.keys
+                        .dkg_keypair
+                        .as_ref()
+                        .expect("DKG keypair should exist for validator")
+                        .into(),
+                )
+                .map_err(|e| Error::DkgUpdate(e.to_string()))?;
             }
         }
         Ok(())
     }
 
-    /// Check if all sesssion keys have been announced. If so, broadcast
-    /// this validators PVSS transcript
+    /// Increment the counter of blocks transpired since protocol start.
+    /// If the DKG indicates that we are scheduled to deal, broadcast
+    /// this validator's PVSS transcript
     fn issue_pvss_transcript(&mut self) -> ShellResult<()> {
-        if let ShellMode::Validator { data, dkg, .. } = &mut self.mode {
+        if let ShellMode::Validator {
+            data,
+            dkg,
+            broadcast_sender,
+            ..
+        } = &mut self.mode
+        {
             let rng = &mut ark_std::rand::prelude::StdRng::from_entropy();
             let keypair = data.keys.get_protocol_keypair();
             let keypair = keypair.lock();
-            if matches!(
-                dkg.state_machine.state,
-                DkgState::Shared {
-                    accumulated_weight: 0
-                }
-            ) {
+            if dkg.state_machine.increase_block() == PvssScheduler::Issue {
                 let tx_bytes = ProtocolTxType::DKG(
                     dkg.state_machine
                         .share(rng)
@@ -505,7 +542,9 @@ where
                 )
                 .sign(keypair.borrow())
                 .to_bytes();
-                // TODO issue transaction
+                // broadcast transaction.
+                // We ignore errors here, they are handled elsewhere
+                let _ = broadcast_sender.send(tx_bytes);
             }
         }
         Ok(())

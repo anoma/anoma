@@ -240,6 +240,9 @@ where
         };
         match process_tx(req_tx.clone()) {
             Ok(TxType::Wrapper(_)) => {}
+            Ok(TxType::Protocol(_)) => {
+                return self.process_proposal(req);
+            }
             Ok(_) => {
                 return shim::response::ProcessProposal {
                     result: shim::response::TxResult {

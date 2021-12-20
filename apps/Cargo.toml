@@ -81,8 +81,8 @@ config = "0.11.0"
 derivative = "2.2.0"
 # TODO the older versions of rand and rand_core are currently required to avoid mismatching version issue (https://github.com/dalek-cryptography/ed25519-dalek/pull/159)
 ed25519-dalek = {version = "1.0.1", default-features = false, features = ["rand", "u64_backend", "serde"]}
-ferveo = {git = "https://github.com/anoma/ferveo"}
-ferveo-common = {git = "https://github.com/anoma/ferveo"}
+ferveo = {git = "https://github.com/anoma/ferveo", branch = "bat/state-guard-refactor"}
+ferveo-common = {git = "https://github.com/anoma/ferveo", branch = "bat/state-guard-refactor"}
 eyre = "0.6.5"
 flate2 = "1.0.22"
 file-lock = {git = "https://gitlab.com/batconjurer/file-lock", branch = "bat/add-readwrite-options" }

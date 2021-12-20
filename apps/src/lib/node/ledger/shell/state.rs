@@ -3,19 +3,17 @@ use std::collections::VecDeque;
 use anoma::ledger::storage::{DBIter, StorageHasher, DB};
 use anoma::types::address::Address;
 use anoma::types::key::dkg_session_keys::DkgKeypair;
-use anoma::types::transaction::WrapperTx;
+use anoma::types::transaction::{EllipticCurve, WrapperTx};
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 use ark_std::rand::SeedableRng;
 use borsh::{BorshDeserialize, BorshSerialize};
 use ferveo::dkg::{Params as DkgParams, PubliclyVerifiableDkg};
-use ferveo::{TendermintValidator, ValidatorSet};
 use tokio::sync::mpsc::UnboundedSender;
 
-use super::Shell;
+use super::{Shell, TendermintValidator, ValidatorSet};
 use crate::wallet::ValidatorData;
 
-pub type DkgStateMachine =
-    PubliclyVerifiableDkg<anoma::types::transaction::EllipticCurve>;
+pub type DkgStateMachine = PubliclyVerifiableDkg<EllipticCurve>;
 
 #[derive(Debug)]
 #[allow(clippy::large_enum_variant)]
@@ -107,9 +105,11 @@ pub(super) struct DkgInstance {
 impl Default for DkgInstance {
     fn default() -> Self {
         let rng = &mut ark_std::rand::prelude::StdRng::from_entropy();
+        let keypair = ferveo_common::Keypair::new(rng);
         let validator = TendermintValidator {
             power: 0,
             address: "".into(),
+            public_key: keypair.public(),
         };
         DkgInstance {
             state_machine: DkgStateMachine::new(
@@ -118,9 +118,10 @@ impl Default for DkgInstance {
                     tau: 0,
                     security_threshold: 0,
                     total_weight: 0,
+                    retry_after: 2,
                 },
                 validator,
-                rng,
+                keypair,
             )
             .expect("Constructing default DKG should not fail"),
         }

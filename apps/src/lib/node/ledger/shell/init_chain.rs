@@ -308,11 +308,11 @@ where
                     validator.pos_data.voting_power(&genesis.pos_params),
                 ),
                 address: validator.pos_data.address.to_string(),
+                public_key: (&validator.dkg_public_key).into(),
             })
             .collect();
 
         // Initialize the dkg state machine and initiate protocol
-        let rng = &mut ark_std::rand::prelude::StdRng::from_entropy();
         let me = validator_set.iter().find(|val| {
             if let Some(addr) = self.mode.get_validator_address() {
                 addr.to_string() == val.address
@@ -323,7 +323,7 @@ where
 
         // Start the DKG instance if this is an active validator
 
-        if let ShellMode::Validator { dkg, .. } = &mut self.mode {
+        if let ShellMode::Validator { dkg, ref data, .. } = &mut self.mode {
             let me = me
                 .expect("Could not find self in active validator set")
                 .clone();
@@ -333,9 +333,14 @@ where
                     tau: current_epoch.0,
                     security_threshold: (2 ^ 12) / 3,
                     total_weight: 2 ^ 12,
+                    retry_after: 32,
                 },
                 me,
-                rng,
+                data.keys
+                    .dkg_keypair
+                    .as_ref()
+                    .expect("Validator should have DKG session keys at genesis")
+                    .into(),
             )
             .expect("Starting DKG at genesis should not fail");
         }

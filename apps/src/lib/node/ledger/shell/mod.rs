@@ -40,7 +40,6 @@ use anoma::types::{address, key, token};
 use ark_std::rand::SeedableRng;
 use borsh::{BorshDeserialize, BorshSerialize};
 use ferveo::dkg::Params as DkgParams;
-use ferveo::{TendermintValidator, ValidatorSet};
 use num_derive::{FromPrimitive, ToPrimitive};
 use num_traits::{FromPrimitive, ToPrimitive};
 use state::{DkgStateMachine, ShellMode, TxQueue};
@@ -70,6 +69,10 @@ use crate::node::ledger::shims::abcipp_shim_types::shim::response::TxResult;
 use crate::node::ledger::{protocol, storage, tendermint_node};
 use crate::wallet::Wallet;
 use crate::wasm_loader::read_wasm;
+
+pub type TendermintValidator =
+    ferveo_common::TendermintValidator<EllipticCurve>;
+pub type ValidatorSet = ferveo_common::ValidatorSet<EllipticCurve>;
 
 #[derive(Error, Debug)]
 pub enum Error {
@@ -579,6 +582,7 @@ where
         if let ShellMode::Validator {
             data,
             next_dkg_keypair,
+            broadcast_sender,
             ..
         } = &mut self.mode
         {
@@ -602,8 +606,11 @@ where
                 &self.wasm_dir,
                 read_wasm,
             )
-            .sign(keypair.borrow());
-            // TODO: Issue tx with client
+            .sign(keypair.borrow())
+            .to_bytes();
+            // broadcast tx
+            // We ignore errors here. They are handled elsewhere
+            let _ = broadcast_sender.send(request_tx);
         }
     }
 
