@@ -6,7 +6,7 @@ license = "GPL-3.0"
 name = "anoma_apps"
 readme = "../README.md"
 resolver = "2"
-version = "0.2.0"
+version = "0.3.0"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 

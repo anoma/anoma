@@ -47,10 +47,10 @@ steps:
         echo "404295040e689276676d7f33ade9abbd09f36a7120a3389887de1d47f8895dfe 
         scripts/ci/build-and-publish-docs.sh" | sha256sum -c -
       - >-
-        echo "64abe3dc5eb578b6ce3f62a815699b94083d928f3ebc2783d1eef1e6530b2366 
+        echo "0d74ca6426ebaed9df0b87061ced2be6d71667ef70fa7681b63b61ea2c68e665 
         scripts/ci/audit.py" | sha256sum -c -
       - >-
-        echo "15d945da62e058a75ab0a01fbb721783701289702e99da947e52cd948d704bcb 
+        echo "2308b636047c8e9fe684fcb3d09ba6777636ce314cbae9d489be3a84596ab0e3 
         scripts/ci/udeps.py" | sha256sum -c -
       - >-
         echo "36e8de3f31a5f8a9e4b0f45b105cb7116def8a7204c662f129678fda2dfa0f04 
@@ -218,10 +218,10 @@ steps:
         echo "404295040e689276676d7f33ade9abbd09f36a7120a3389887de1d47f8895dfe 
         scripts/ci/build-and-publish-docs.sh" | sha256sum -c -
       - >-
-        echo "64abe3dc5eb578b6ce3f62a815699b94083d928f3ebc2783d1eef1e6530b2366 
+        echo "0d74ca6426ebaed9df0b87061ced2be6d71667ef70fa7681b63b61ea2c68e665 
         scripts/ci/audit.py" | sha256sum -c -
       - >-
-        echo "15d945da62e058a75ab0a01fbb721783701289702e99da947e52cd948d704bcb 
+        echo "2308b636047c8e9fe684fcb3d09ba6777636ce314cbae9d489be3a84596ab0e3 
         scripts/ci/udeps.py" | sha256sum -c -
       - >-
         echo "36e8de3f31a5f8a9e4b0f45b105cb7116def8a7204c662f129678fda2dfa0f04 
@@ -363,10 +363,10 @@ steps:
         echo "404295040e689276676d7f33ade9abbd09f36a7120a3389887de1d47f8895dfe 
         scripts/ci/build-and-publish-docs.sh" | sha256sum -c -
       - >-
-        echo "64abe3dc5eb578b6ce3f62a815699b94083d928f3ebc2783d1eef1e6530b2366 
+        echo "0d74ca6426ebaed9df0b87061ced2be6d71667ef70fa7681b63b61ea2c68e665 
         scripts/ci/audit.py" | sha256sum -c -
       - >-
-        echo "15d945da62e058a75ab0a01fbb721783701289702e99da947e52cd948d704bcb 
+        echo "2308b636047c8e9fe684fcb3d09ba6777636ce314cbae9d489be3a84596ab0e3 
         scripts/ci/udeps.py" | sha256sum -c -
       - >-
         echo "36e8de3f31a5f8a9e4b0f45b105cb7116def8a7204c662f129678fda2dfa0f04 
@@ -509,10 +509,10 @@ steps:
         echo "404295040e689276676d7f33ade9abbd09f36a7120a3389887de1d47f8895dfe 
         scripts/ci/build-and-publish-docs.sh" | sha256sum -c -
       - >-
-        echo "64abe3dc5eb578b6ce3f62a815699b94083d928f3ebc2783d1eef1e6530b2366 
+        echo "0d74ca6426ebaed9df0b87061ced2be6d71667ef70fa7681b63b61ea2c68e665 
         scripts/ci/audit.py" | sha256sum -c -
       - >-
-        echo "15d945da62e058a75ab0a01fbb721783701289702e99da947e52cd948d704bcb 
+        echo "2308b636047c8e9fe684fcb3d09ba6777636ce314cbae9d489be3a84596ab0e3 
         scripts/ci/udeps.py" | sha256sum -c -
       - >-
         echo "36e8de3f31a5f8a9e4b0f45b105cb7116def8a7204c662f129678fda2dfa0f04 
@@ -614,10 +614,10 @@ steps:
         echo "404295040e689276676d7f33ade9abbd09f36a7120a3389887de1d47f8895dfe 
         scripts/ci/build-and-publish-docs.sh" | sha256sum -c -
       - >-
-        echo "64abe3dc5eb578b6ce3f62a815699b94083d928f3ebc2783d1eef1e6530b2366 
+        echo "0d74ca6426ebaed9df0b87061ced2be6d71667ef70fa7681b63b61ea2c68e665 
         scripts/ci/audit.py" | sha256sum -c -
       - >-
-        echo "15d945da62e058a75ab0a01fbb721783701289702e99da947e52cd948d704bcb 
+        echo "2308b636047c8e9fe684fcb3d09ba6777636ce314cbae9d489be3a84596ab0e3 
         scripts/ci/udeps.py" | sha256sum -c -
       - >-
         echo "36e8de3f31a5f8a9e4b0f45b105cb7116def8a7204c662f129678fda2dfa0f04 
@@ -706,10 +706,10 @@ steps:
         echo "404295040e689276676d7f33ade9abbd09f36a7120a3389887de1d47f8895dfe 
         scripts/ci/build-and-publish-docs.sh" | sha256sum -c -
       - >-
-        echo "64abe3dc5eb578b6ce3f62a815699b94083d928f3ebc2783d1eef1e6530b2366 
+        echo "0d74ca6426ebaed9df0b87061ced2be6d71667ef70fa7681b63b61ea2c68e665 
         scripts/ci/audit.py" | sha256sum -c -
       - >-
-        echo "15d945da62e058a75ab0a01fbb721783701289702e99da947e52cd948d704bcb 
+        echo "2308b636047c8e9fe684fcb3d09ba6777636ce314cbae9d489be3a84596ab0e3 
         scripts/ci/udeps.py" | sha256sum -c -
       - >-
         echo "36e8de3f31a5f8a9e4b0f45b105cb7116def8a7204c662f129678fda2dfa0f04 
@@ -793,10 +793,10 @@ steps:
         echo "404295040e689276676d7f33ade9abbd09f36a7120a3389887de1d47f8895dfe 
         scripts/ci/build-and-publish-docs.sh" | sha256sum -c -
       - >-
-        echo "64abe3dc5eb578b6ce3f62a815699b94083d928f3ebc2783d1eef1e6530b2366 
+        echo "0d74ca6426ebaed9df0b87061ced2be6d71667ef70fa7681b63b61ea2c68e665 
         scripts/ci/audit.py" | sha256sum -c -
       - >-
-        echo "15d945da62e058a75ab0a01fbb721783701289702e99da947e52cd948d704bcb 
+        echo "2308b636047c8e9fe684fcb3d09ba6777636ce314cbae9d489be3a84596ab0e3 
         scripts/ci/udeps.py" | sha256sum -c -
       - >-
         echo "36e8de3f31a5f8a9e4b0f45b105cb7116def8a7204c662f129678fda2dfa0f04 
@@ -903,10 +903,10 @@ steps:
         echo "404295040e689276676d7f33ade9abbd09f36a7120a3389887de1d47f8895dfe 
         scripts/ci/build-and-publish-docs.sh" | sha256sum -c -
       - >-
-        echo "64abe3dc5eb578b6ce3f62a815699b94083d928f3ebc2783d1eef1e6530b2366 
+        echo "0d74ca6426ebaed9df0b87061ced2be6d71667ef70fa7681b63b61ea2c68e665 
         scripts/ci/audit.py" | sha256sum -c -
       - >-
-        echo "15d945da62e058a75ab0a01fbb721783701289702e99da947e52cd948d704bcb 
+        echo "2308b636047c8e9fe684fcb3d09ba6777636ce314cbae9d489be3a84596ab0e3 
         scripts/ci/udeps.py" | sha256sum -c -
       - >-
         echo "36e8de3f31a5f8a9e4b0f45b105cb7116def8a7204c662f129678fda2dfa0f04 
@@ -990,10 +990,10 @@ steps:
         echo "404295040e689276676d7f33ade9abbd09f36a7120a3389887de1d47f8895dfe 
         scripts/ci/build-and-publish-docs.sh" | sha256sum -c -
       - >-
-        echo "64abe3dc5eb578b6ce3f62a815699b94083d928f3ebc2783d1eef1e6530b2366 
+        echo "0d74ca6426ebaed9df0b87061ced2be6d71667ef70fa7681b63b61ea2c68e665 
         scripts/ci/audit.py" | sha256sum -c -
       - >-
-        echo "15d945da62e058a75ab0a01fbb721783701289702e99da947e52cd948d704bcb 
+        echo "2308b636047c8e9fe684fcb3d09ba6777636ce314cbae9d489be3a84596ab0e3 
         scripts/ci/udeps.py" | sha256sum -c -
       - >-
         echo "36e8de3f31a5f8a9e4b0f45b105cb7116def8a7204c662f129678fda2dfa0f04 
@@ -1079,10 +1079,10 @@ steps:
         echo "404295040e689276676d7f33ade9abbd09f36a7120a3389887de1d47f8895dfe 
         scripts/ci/build-and-publish-docs.sh" | sha256sum -c -
       - >-
-        echo "64abe3dc5eb578b6ce3f62a815699b94083d928f3ebc2783d1eef1e6530b2366 
+        echo "0d74ca6426ebaed9df0b87061ced2be6d71667ef70fa7681b63b61ea2c68e665 
         scripts/ci/audit.py" | sha256sum -c -
       - >-
-        echo "15d945da62e058a75ab0a01fbb721783701289702e99da947e52cd948d704bcb 
+        echo "2308b636047c8e9fe684fcb3d09ba6777636ce314cbae9d489be3a84596ab0e3 
         scripts/ci/udeps.py" | sha256sum -c -
       - >-
         echo "36e8de3f31a5f8a9e4b0f45b105cb7116def8a7204c662f129678fda2dfa0f04 
@@ -1225,10 +1225,10 @@ steps:
         echo "404295040e689276676d7f33ade9abbd09f36a7120a3389887de1d47f8895dfe 
         scripts/ci/build-and-publish-docs.sh" | sha256sum -c -
       - >-
-        echo "64abe3dc5eb578b6ce3f62a815699b94083d928f3ebc2783d1eef1e6530b2366 
+        echo "0d74ca6426ebaed9df0b87061ced2be6d71667ef70fa7681b63b61ea2c68e665 
         scripts/ci/audit.py" | sha256sum -c -
       - >-
-        echo "15d945da62e058a75ab0a01fbb721783701289702e99da947e52cd948d704bcb 
+        echo "2308b636047c8e9fe684fcb3d09ba6777636ce314cbae9d489be3a84596ab0e3 
         scripts/ci/udeps.py" | sha256sum -c -
       - >-
         echo "36e8de3f31a5f8a9e4b0f45b105cb7116def8a7204c662f129678fda2dfa0f04 
@@ -1423,10 +1423,10 @@ steps:
         echo "404295040e689276676d7f33ade9abbd09f36a7120a3389887de1d47f8895dfe 
         scripts/ci/build-and-publish-docs.sh" | sha256sum -c -
       - >-
-        echo "64abe3dc5eb578b6ce3f62a815699b94083d928f3ebc2783d1eef1e6530b2366 
+        echo "0d74ca6426ebaed9df0b87061ced2be6d71667ef70fa7681b63b61ea2c68e665 
         scripts/ci/audit.py" | sha256sum -c -
       - >-
-        echo "15d945da62e058a75ab0a01fbb721783701289702e99da947e52cd948d704bcb 
+        echo "2308b636047c8e9fe684fcb3d09ba6777636ce314cbae9d489be3a84596ab0e3 
         scripts/ci/udeps.py" | sha256sum -c -
       - >-
         echo "36e8de3f31a5f8a9e4b0f45b105cb7116def8a7204c662f129678fda2dfa0f04 
@@ -1487,6 +1487,6 @@ workspace:
   path: /usr/local/rust/anoma
 ---
 kind: signature
-hmac: 124dc1347dd5a5793e697c225f8591caf246377c583e32354a731e0d9fab5725
+hmac: db507944d1e46933ca985de1de98faba3253b94cad5d73a463bf89fcbc960b11
 
 ...
