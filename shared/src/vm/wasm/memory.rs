@@ -528,7 +528,8 @@ pub mod tests {
         // Any compiler and any engine do the job here
         let compiler = Cranelift::default();
         // TODO wasmer 2.x
-        // let engine = wasmer_engine_universal::Universal::new(compiler).engine();
+        // let engine =
+        // wasmer_engine_universal::Universal::new(compiler).engine();
         let engine = wasmer_engine_jit::JIT::new(compiler).engine();
 
         let base = BaseTunables::for_target(&Target::default());
