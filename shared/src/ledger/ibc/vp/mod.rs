@@ -1481,10 +1481,10 @@ mod tests {
         // insert a receipt and an ack
         let key = receipt_key(&get_port_id(), &get_channel_id(), sequence);
         write_log
-            .write(&key, PacketReceipt::new().as_bytes().to_vec())
+            .write(&key, PacketReceipt::default().as_bytes().to_vec())
             .expect("write failed");
         let key = ack_key(&get_port_id(), &get_channel_id(), sequence);
-        let ack = PacketAck::new().encode_to_vec();
+        let ack = PacketAck::default().encode_to_vec();
         write_log.write(&key, ack).expect("write failed");
         write_log.commit_tx();
 
@@ -1551,7 +1551,7 @@ mod tests {
         write_log.commit_block(&mut storage).expect("commit failed");
 
         // prepare data
-        let ack = PacketAck::new().encode_to_vec();
+        let ack = PacketAck::default().encode_to_vec();
         let proof_packet = CommitmentProofBytes::from(vec![0]);
         let proofs =
             Proofs::new(proof_packet, None, None, None, Height::new(1, 10))
@@ -1707,14 +1707,14 @@ mod tests {
             msg.packet.sequence,
         );
         write_log
-            .write(&receipt_key, PacketReceipt::new().as_bytes().to_vec())
+            .write(&receipt_key, PacketReceipt::default().as_bytes().to_vec())
             .expect("write failed");
         let ack_key = ack_key(
             &msg.packet.destination_port,
             &msg.packet.destination_channel,
             msg.packet.sequence,
         );
-        let ack = PacketAck::new().encode_to_vec();
+        let ack = PacketAck::default().encode_to_vec();
         write_log.write(&ack_key, ack).expect("write failed");
         write_log.commit_tx();
 
@@ -1747,11 +1747,11 @@ mod tests {
         let receipt_key =
             receipt_key(&get_port_id(), &get_channel_id(), Sequence::from(1));
         write_log
-            .write(&receipt_key, PacketReceipt::new().as_bytes().to_vec())
+            .write(&receipt_key, PacketReceipt::default().as_bytes().to_vec())
             .expect("write failed");
         let ack_key =
             ack_key(&get_port_id(), &get_channel_id(), Sequence::from(1));
-        let ack = PacketAck::new().encode_to_vec();
+        let ack = PacketAck::default().encode_to_vec();
         write_log.write(&ack_key, ack).expect("write failed");
         write_log.commit_tx();
 

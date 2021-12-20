@@ -2,6 +2,7 @@
 
 use std::str::FromStr;
 
+use borsh::BorshDeserialize;
 #[cfg(not(feature = "ABCI"))]
 use ibc::clients::ics07_tendermint::consensus_state::ConsensusState as TmConsensusState;
 #[cfg(not(feature = "ABCI"))]
@@ -209,6 +210,7 @@ use crate::ledger::ibc::storage;
 use crate::types::ibc::data::{
     Error as IbcDataError, IbcMessage, PacketAck, PacketReceipt, PacketSendData,
 };
+use crate::types::ibc::IbcEvent as AnomaIbcEvent;
 use crate::types::storage::Key;
 
 #[allow(missing_docs)]
@@ -251,7 +253,7 @@ pub trait IbcActions {
     fn delete_ibc_data(&self, key: &Key);
 
     /// Emit an IBC event
-    fn emit_ibc_event(&self, event: IbcEvent);
+    fn emit_ibc_event(&self, event: AnomaIbcEvent);
 
     /// dispatch according to ICS26 routing
     fn dispatch(&self, tx_data: &[u8]) -> Result<()> {
@@ -331,7 +333,9 @@ pub trait IbcActions {
                 .expect("encoding shouldn't fail"),
         );
 
-        let event = make_create_client_event(&client_id, msg);
+        let event = make_create_client_event(&client_id, msg)
+            .try_into()
+            .unwrap();
         self.emit_ibc_event(event);
 
         Ok(())
@@ -343,7 +347,10 @@ pub trait IbcActions {
         let client_id = msg.client_id.clone();
         let client_state_key = storage::client_state_key(&client_id);
         let value = self.read_ibc_data(&client_state_key).ok_or_else(|| {
-            Error::Client(format!("The client doesn't exist: ID {}", client_id))
+            Error::Client(format!(
+                "The client to be updated doesn't exist: ID {}",
+                client_id
+            ))
         })?;
         let client_state =
             AnyClientState::decode_vec(&value).map_err(Error::Decoding)?;
@@ -366,7 +373,9 @@ pub trait IbcActions {
                 .expect("encoding shouldn't fail"),
         );
 
-        let event = make_update_client_event(&client_id, msg);
+        let event = make_update_client_event(&client_id, msg)
+            .try_into()
+            .unwrap();
         self.emit_ibc_event(event);
 
         Ok(())
@@ -391,7 +400,9 @@ pub trait IbcActions {
                 .expect("encoding shouldn't fail"),
         );
 
-        let event = make_upgrade_client_event(&msg.client_id, msg);
+        let event = make_upgrade_client_event(&msg.client_id, msg)
+            .try_into()
+            .unwrap();
         self.emit_ibc_event(event);
 
         Ok(())
@@ -410,7 +421,9 @@ pub trait IbcActions {
             connection.encode_vec().expect("encoding shouldn't fail"),
         );
 
-        let event = make_open_init_connection_event(&conn_id, msg);
+        let event = make_open_init_connection_event(&conn_id, msg)
+            .try_into()
+            .unwrap();
         self.emit_ibc_event(event);
 
         Ok(())
@@ -429,7 +442,9 @@ pub trait IbcActions {
             connection.encode_vec().expect("encoding shouldn't fail"),
         );
 
-        let event = make_open_try_connection_event(&conn_id, msg);
+        let event = make_open_try_connection_event(&conn_id, msg)
+            .try_into()
+            .unwrap();
         self.emit_ibc_event(event);
 
         Ok(())
@@ -440,7 +455,7 @@ pub trait IbcActions {
         let conn_key = storage::connection_key(&msg.connection_id);
         let value = self.read_ibc_data(&conn_key).ok_or_else(|| {
             Error::Connection(format!(
-                "The connection doesn't exist: ID {}",
+                "The connection to be opened doesn't exist: ID {}",
                 msg.connection_id
             ))
         })?;
@@ -452,7 +467,7 @@ pub trait IbcActions {
             connection.encode_vec().expect("encoding shouldn't fail"),
         );
 
-        let event = make_open_ack_connection_event(msg);
+        let event = make_open_ack_connection_event(msg).try_into().unwrap();
         self.emit_ibc_event(event);
 
         Ok(())
@@ -463,7 +478,7 @@ pub trait IbcActions {
         let conn_key = storage::connection_key(&msg.connection_id);
         let value = self.read_ibc_data(&conn_key).ok_or_else(|| {
             Error::Connection(format!(
-                "The connection doesn't exist: ID {}",
+                "The connection to be opend doesn't exist: ID {}",
                 msg.connection_id
             ))
         })?;
@@ -475,7 +490,7 @@ pub trait IbcActions {
             connection.encode_vec().expect("encoding shouldn't fail"),
         );
 
-        let event = make_open_confirm_connection_event(msg);
+        let event = make_open_confirm_connection_event(msg).try_into().unwrap();
         self.emit_ibc_event(event);
 
         Ok(())
@@ -495,7 +510,9 @@ pub trait IbcActions {
             msg.channel.encode_vec().expect("encoding shouldn't fail"),
         );
 
-        let event = make_open_init_channel_event(&channel_id, msg);
+        let event = make_open_init_channel_event(&channel_id, msg)
+            .try_into()
+            .unwrap();
         self.emit_ibc_event(event);
 
         Ok(())
@@ -515,7 +532,9 @@ pub trait IbcActions {
             msg.channel.encode_vec().expect("encoding shouldn't fail"),
         );
 
-        let event = make_open_try_channel_event(&channel_id, msg);
+        let event = make_open_try_channel_event(&channel_id, msg)
+            .try_into()
+            .unwrap();
         self.emit_ibc_event(event);
 
         Ok(())
@@ -528,7 +547,7 @@ pub trait IbcActions {
         let channel_key = storage::channel_key(&port_channel_id);
         let value = self.read_ibc_data(&channel_key).ok_or_else(|| {
             Error::Channel(format!(
-                "The channel doesn't exist: Port/Channel {}",
+                "The channel to be opened doesn't exist: Port/Channel {}",
                 port_channel_id
             ))
         })?;
@@ -540,7 +559,7 @@ pub trait IbcActions {
             channel.encode_vec().expect("encoding shouldn't fail"),
         );
 
-        let event = make_open_ack_channel_event(msg);
+        let event = make_open_ack_channel_event(msg).try_into().unwrap();
         self.emit_ibc_event(event);
 
         Ok(())
@@ -553,7 +572,7 @@ pub trait IbcActions {
         let channel_key = storage::channel_key(&port_channel_id);
         let value = self.read_ibc_data(&channel_key).ok_or_else(|| {
             Error::Channel(format!(
-                "The channel doesn't exist: Port/Channel {}",
+                "The channel to be opened doesn't exist: Port/Channel {}",
                 port_channel_id
             ))
         })?;
@@ -565,7 +584,7 @@ pub trait IbcActions {
             channel.encode_vec().expect("encoding shouldn't fail"),
         );
 
-        let event = make_open_confirm_channel_event(msg);
+        let event = make_open_confirm_channel_event(msg).try_into().unwrap();
         self.emit_ibc_event(event);
 
         Ok(())
@@ -578,7 +597,7 @@ pub trait IbcActions {
         let channel_key = storage::channel_key(&port_channel_id);
         let value = self.read_ibc_data(&channel_key).ok_or_else(|| {
             Error::Channel(format!(
-                "The channel doesn't exist: Port/Channel {}",
+                "The channel to be closed doesn't exist: Port/Channel {}",
                 port_channel_id
             ))
         })?;
@@ -590,7 +609,7 @@ pub trait IbcActions {
             channel.encode_vec().expect("encoding shouldn't fail"),
         );
 
-        let event = make_close_init_channel_event(msg);
+        let event = make_close_init_channel_event(msg).try_into().unwrap();
         self.emit_ibc_event(event);
 
         Ok(())
@@ -606,7 +625,7 @@ pub trait IbcActions {
         let channel_key = storage::channel_key(&port_channel_id);
         let value = self.read_ibc_data(&channel_key).ok_or_else(|| {
             Error::Channel(format!(
-                "The channel doesn't exist: Port/Channel {}",
+                "The channel to be closed doesn't exist: Port/Channel {}",
                 port_channel_id
             ))
         })?;
@@ -618,7 +637,7 @@ pub trait IbcActions {
             channel.encode_vec().expect("encoding shouldn't fail"),
         );
 
-        let event = make_close_confirm_channel_event(msg);
+        let event = make_close_confirm_channel_event(msg).try_into().unwrap();
         self.emit_ibc_event(event);
 
         Ok(())
@@ -642,7 +661,7 @@ pub trait IbcActions {
         let commitment = commitment(&packet);
         self.write_ibc_data(&commitment_key, commitment.as_bytes());
 
-        let event = make_send_packet_event(packet);
+        let event = make_send_packet_event(packet).try_into().unwrap();
         self.emit_ibc_event(event);
 
         Ok(())
@@ -656,7 +675,7 @@ pub trait IbcActions {
             &msg.packet.destination_channel,
             msg.packet.sequence,
         );
-        self.write_ibc_data(&receipt_key, PacketReceipt::new().as_bytes());
+        self.write_ibc_data(&receipt_key, PacketReceipt::default().as_bytes());
 
         // store the ack
         let ack_key = storage::ack_key(
@@ -664,7 +683,7 @@ pub trait IbcActions {
             &msg.packet.destination_channel,
             msg.packet.sequence,
         );
-        let ack = PacketAck::new().encode_to_vec();
+        let ack = PacketAck::default().encode_to_vec();
         self.write_ibc_data(&ack_key, ack.clone());
 
         // increment the next sequence receive
@@ -675,7 +694,9 @@ pub trait IbcActions {
         let seq_key = storage::next_sequence_recv_key(&port_channel_id);
         self.get_and_inc_sequence(&seq_key)?;
 
-        let event = make_write_ack_event(msg.packet.clone(), ack);
+        let event = make_write_ack_event(msg.packet.clone(), ack)
+            .try_into()
+            .unwrap();
         self.emit_ibc_event(event);
 
         Ok(())
@@ -690,7 +711,7 @@ pub trait IbcActions {
         );
         self.delete_ibc_data(&commitment_key);
 
-        let event = make_ack_event(msg.packet.clone());
+        let event = make_ack_event(msg.packet.clone()).try_into().unwrap();
         self.emit_ibc_event(event);
 
         Ok(())
@@ -714,7 +735,7 @@ pub trait IbcActions {
         let channel_key = storage::channel_key(&port_channel_id);
         let value = self.read_ibc_data(&channel_key).ok_or_else(|| {
             Error::Channel(format!(
-                "The channel doesn't exist: Port/Channel {}",
+                "The channel to be closed doesn't exist: Port/Channel {}",
                 port_channel_id
             ))
         })?;
@@ -728,7 +749,7 @@ pub trait IbcActions {
             );
         }
 
-        let event = make_timeout_event(msg.packet.clone());
+        let event = make_timeout_event(msg.packet.clone()).try_into().unwrap();
         self.emit_ibc_event(event);
 
         Ok(())
@@ -752,7 +773,7 @@ pub trait IbcActions {
         let channel_key = storage::channel_key(&port_channel_id);
         let value = self.read_ibc_data(&channel_key).ok_or_else(|| {
             Error::Channel(format!(
-                "The channel doesn't exist: Port/Channel {}",
+                "The channel to be closed doesn't exist: Port/Channel {}",
                 port_channel_id
             ))
         })?;

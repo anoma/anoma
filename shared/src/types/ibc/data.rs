@@ -532,15 +532,16 @@ impl IbcMessage {
 pub struct PacketReceipt(pub Receipt);
 
 impl PacketReceipt {
-    /// Make a new receipt
-    pub fn new() -> Self {
-        Self(Receipt::Ok)
-    }
-
     /// Return bytes
     pub fn as_bytes(&self) -> &[u8] {
         // same as ibc-go
         &[1_u8]
+    }
+}
+
+impl Default for PacketReceipt {
+    fn default() -> Self {
+        Self(Receipt::Ok)
     }
 }
 
@@ -550,17 +551,18 @@ pub struct PacketAck(pub Acknowledgement);
 
 // TODO temporary type. add a new type for ack to ibc-rs
 impl PacketAck {
-    /// Make a new ack
-    pub fn new() -> Self {
-        Self(Acknowledgement {
-            response: Some(Response::Result(vec![1_u8])),
-        })
-    }
-
     /// Encode the ack
     pub fn encode_to_vec(&self) -> Vec<u8> {
         // TODO encode as ibc-go
-        self.0.encode_to_vec()
+        self.to_string().as_bytes().to_vec()
+    }
+}
+
+impl Default for PacketAck {
+    fn default() -> Self {
+        Self(Acknowledgement {
+            response: Some(Response::Result(vec![1_u8])),
+        })
     }
 }
 

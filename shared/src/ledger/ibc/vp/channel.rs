@@ -824,7 +824,7 @@ where
         key: &(PortId, ChannelId, Sequence),
     ) -> Ics04Result<Receipt> {
         let receipt_key = receipt_key(&key.0, &key.1, key.2);
-        let expect = PacketReceipt::new().as_bytes().to_vec();
+        let expect = PacketReceipt::default().as_bytes().to_vec();
         match self.ctx.read_post(&receipt_key) {
             Ok(Some(v)) if v == expect => Ok(Receipt::Ok),
             _ => Err(Ics04Error::packet_receipt_not_found(key.2)),
@@ -838,7 +838,7 @@ where
     ) -> Ics04Result<String> {
         let ack_key = ack_key(&key.0, &key.1, key.2);
         match self.ctx.read_post(&ack_key) {
-            Ok(Some(_)) => Ok(PacketAck::new().to_string()),
+            Ok(Some(_)) => Ok(PacketAck::default().to_string()),
             Ok(None) => Err(Ics04Error::packet_commitment_not_found(key.2)),
             Err(_) => Err(Ics04Error::implementation_specific()),
         }
