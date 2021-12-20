@@ -1,0 +1,1 @@
+initSidebarItems({"enum":[["Error",""],["StorageModification","A storage modification"]],"mod":[["testing","Helpers for testing with write log."]],"struct":[["WriteLog","The write log storage"]],"type":[["Result","Result for functions that may fail"]]});

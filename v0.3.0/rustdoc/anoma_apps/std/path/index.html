@@ -1,0 +1,66 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Cross-platform path manipulation."><meta name="keywords" content="rust, rustlang, rust-lang, path"><title>anoma_apps::std::path - Rust</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script id="default-settings" ></script><script src="../../../storage.js"></script><script src="../../../crates.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="shortcut icon" href="https:&#x2F;&#x2F;docs.anoma.network&#x2F;favicon.png"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc mod"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../anoma_apps/index.html'><div class='logo-container rust-logo'><img src='https:&#x2F;&#x2F;docs.anoma.network&#x2F;rustdoc-logo.png' alt='logo'></div></a><h2 class="location">Module path</h2><div class="sidebar-elems"><div class="block items"><ul><li><a href="#structs">Structs</a></li><li><a href="#enums">Enums</a></li><li><a href="#constants">Constants</a></li><li><a href="#functions">Functions</a></li></ul></div><div id="sidebar-vars" data-name="path" data-ty="mod" data-relpath="./"></div><script defer src="./sidebar-items.js"></script></div></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="18" height="18" alt="Pick another theme!" src="../../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../../settings.html" title="settings"><img width="18" height="18" alt="Change settings" src="../../../wheel.svg"></a></div></form></nav><section id="main" class="content"><h1 class="fqn"><span class="in-band">Module <a href="../../index.html">anoma_apps</a>::<wbr><a href="../index.html">std</a>::<wbr><a class="mod" href="#">path</a><button id="copy-path" onclick="copy_path(this)" title="Copy item path to clipboard"><img src="../../../clipboard.svg" width="19" height="18" alt="Copy item path"></button></span><span class="out-of-band"><span class="since" title="Stable since Rust version 1.0.0">1.0.0</span><span id="render-detail"><a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">[<span class="inner">&#x2212;</span>]</a></span><a class="srclink" href="https://doc.rust-lang.org/1.56.1/src/std/lib.rs.html#501" title="goto source code">[src]</a></span></h1><details class="rustdoc-toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><p>Cross-platform path manipulation.</p>
+<p>This module provides two types, <a href="struct.PathBuf.html" title="PathBuf"><code>PathBuf</code></a> and <a href="struct.Path.html" title="Path"><code>Path</code></a> (akin to <a href="../string/struct.String.html" title="String"><code>String</code></a>
+and <a href="https://doc.rust-lang.org/1.56.1/std/primitive.str.html" title="str"><code>str</code></a>), for working with paths abstractly. These types are thin wrappers
+around <a href="../ffi/struct.OsString.html" title="OsString"><code>OsString</code></a> and <a href="../ffi/struct.OsStr.html" title="OsStr"><code>OsStr</code></a> respectively, meaning that they work directly
+on strings according to the local platform’s path syntax.</p>
+<p>Paths can be parsed into <a href="enum.Component.html" title="Component"><code>Component</code></a>s by iterating over the structure
+returned by the <a href="struct.Path.html#method.components"><code>components</code></a> method on <a href="struct.Path.html" title="Path"><code>Path</code></a>. <a href="enum.Component.html" title="Component"><code>Component</code></a>s roughly
+correspond to the substrings between path separators (<code>/</code> or <code>\</code>). You can
+reconstruct an equivalent path from components with the <a href="struct.PathBuf.html#method.push"><code>push</code></a> method on
+<a href="struct.PathBuf.html" title="PathBuf"><code>PathBuf</code></a>; note that the paths may differ syntactically by the
+normalization described in the documentation for the <a href="struct.Path.html#method.components"><code>components</code></a> method.</p>
+<h2 id="simple-usage" class="section-header"><a href="#simple-usage">Simple usage</a></h2>
+<p>Path manipulation includes both parsing components from slices and building
+new owned paths.</p>
+<p>To parse a path, you can create a <a href="struct.Path.html" title="Path"><code>Path</code></a> slice from a <a href="https://doc.rust-lang.org/1.56.1/std/primitive.str.html" title="str"><code>str</code></a>
+slice and start asking questions:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use</span> <span class="ident">std::path::Path</span>;
+<span class="kw">use</span> <span class="ident">std::ffi::OsStr</span>;
+
+<span class="kw">let</span> <span class="ident">path</span> <span class="op">=</span> <span class="ident">Path::new</span>(<span class="string">&quot;/tmp/foo/bar.txt&quot;</span>);
+
+<span class="kw">let</span> <span class="ident">parent</span> <span class="op">=</span> <span class="ident">path</span>.<span class="ident">parent</span>();
+<span class="macro">assert_eq!</span>(<span class="ident">parent</span>, <span class="prelude-val">Some</span>(<span class="ident">Path::new</span>(<span class="string">&quot;/tmp/foo&quot;</span>)));
+
+<span class="kw">let</span> <span class="ident">file_stem</span> <span class="op">=</span> <span class="ident">path</span>.<span class="ident">file_stem</span>();
+<span class="macro">assert_eq!</span>(<span class="ident">file_stem</span>, <span class="prelude-val">Some</span>(<span class="ident">OsStr::new</span>(<span class="string">&quot;bar&quot;</span>)));
+
+<span class="kw">let</span> <span class="ident">extension</span> <span class="op">=</span> <span class="ident">path</span>.<span class="ident">extension</span>();
+<span class="macro">assert_eq!</span>(<span class="ident">extension</span>, <span class="prelude-val">Some</span>(<span class="ident">OsStr::new</span>(<span class="string">&quot;txt&quot;</span>)));</code></pre></div>
+<p>To build or modify paths, use <a href="struct.PathBuf.html" title="PathBuf"><code>PathBuf</code></a>:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use</span> <span class="ident">std::path::PathBuf</span>;
+
+<span class="comment">// This way works...</span>
+<span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">path</span> <span class="op">=</span> <span class="ident">PathBuf::from</span>(<span class="string">&quot;c:\\&quot;</span>);
+
+<span class="ident">path</span>.<span class="ident">push</span>(<span class="string">&quot;windows&quot;</span>);
+<span class="ident">path</span>.<span class="ident">push</span>(<span class="string">&quot;system32&quot;</span>);
+
+<span class="ident">path</span>.<span class="ident">set_extension</span>(<span class="string">&quot;dll&quot;</span>);
+
+<span class="comment">// ... but push is best used if you don&#39;t know everything up</span>
+<span class="comment">// front. If you do, this way is better:</span>
+<span class="kw">let</span> <span class="ident">path</span>: <span class="ident">PathBuf</span> <span class="op">=</span> [<span class="string">&quot;c:\\&quot;</span>, <span class="string">&quot;windows&quot;</span>, <span class="string">&quot;system32.dll&quot;</span>].<span class="ident">iter</span>().<span class="ident">collect</span>();</code></pre></div>
+</div></details><h2 id="structs" class="section-header"><a href="#structs">Structs</a></h2>
+<div class="item-table"><div class="item-left module-item"><a class="struct" href="struct.Ancestors.html" title="anoma_apps::std::path::Ancestors struct">Ancestors</a></div><div class="item-right docblock-short"><p>An iterator over <a href="struct.Path.html" title="Path"><code>Path</code></a> and its ancestors.</p>
+</div><div class="item-left module-item"><a class="struct" href="struct.Components.html" title="anoma_apps::std::path::Components struct">Components</a></div><div class="item-right docblock-short"><p>An iterator over the <a href="enum.Component.html" title="Component"><code>Component</code></a>s of a <a href="struct.Path.html" title="Path"><code>Path</code></a>.</p>
+</div><div class="item-left module-item"><a class="struct" href="struct.Display.html" title="anoma_apps::std::path::Display struct">Display</a></div><div class="item-right docblock-short"><p>Helper struct for safely printing paths with <a href="../macro.format.html"><code>format!</code></a> and <code>{}</code>.</p>
+</div><div class="item-left module-item"><a class="struct" href="struct.Iter.html" title="anoma_apps::std::path::Iter struct">Iter</a></div><div class="item-right docblock-short"><p>An iterator over the <a href="enum.Component.html" title="Component"><code>Component</code></a>s of a <a href="struct.Path.html" title="Path"><code>Path</code></a>, as <a href="../ffi/struct.OsStr.html" title="OsStr"><code>OsStr</code></a> slices.</p>
+</div><div class="item-left module-item"><a class="struct" href="struct.Path.html" title="anoma_apps::std::path::Path struct">Path</a></div><div class="item-right docblock-short"><p>A slice of a path (akin to <a href="https://doc.rust-lang.org/1.56.1/std/primitive.str.html" title="str"><code>str</code></a>).</p>
+</div><div class="item-left module-item"><a class="struct" href="struct.PathBuf.html" title="anoma_apps::std::path::PathBuf struct">PathBuf</a></div><div class="item-right docblock-short"><p>An owned, mutable path (akin to <a href="../string/struct.String.html" title="String"><code>String</code></a>).</p>
+</div><div class="item-left module-item"><a class="struct" href="struct.PrefixComponent.html" title="anoma_apps::std::path::PrefixComponent struct">PrefixComponent</a></div><div class="item-right docblock-short"><p>A structure wrapping a Windows path prefix as well as its unparsed string
+representation.</p>
+</div><div class="item-left module-item"><a class="struct" href="struct.StripPrefixError.html" title="anoma_apps::std::path::StripPrefixError struct">StripPrefixError</a></div><div class="item-right docblock-short"><p>An error returned from <a href="struct.Path.html#method.strip_prefix" title="Path::strip_prefix"><code>Path::strip_prefix</code></a> if the prefix was not found.</p>
+</div></div><h2 id="enums" class="section-header"><a href="#enums">Enums</a></h2>
+<div class="item-table"><div class="item-left module-item"><a class="enum" href="enum.Component.html" title="anoma_apps::std::path::Component enum">Component</a></div><div class="item-right docblock-short"><p>A single component of a path.</p>
+</div><div class="item-left module-item"><a class="enum" href="enum.Prefix.html" title="anoma_apps::std::path::Prefix enum">Prefix</a></div><div class="item-right docblock-short"><p>Windows path prefixes, e.g., <code>C:</code> or <code>\\server\share</code>.</p>
+</div></div><h2 id="constants" class="section-header"><a href="#constants">Constants</a></h2>
+<div class="item-table"><div class="item-left module-item"><a class="constant" href="constant.MAIN_SEPARATOR.html" title="anoma_apps::std::path::MAIN_SEPARATOR constant">MAIN_SEPARATOR</a></div><div class="item-right docblock-short"><p>The primary separator of path components for the current platform.</p>
+</div></div><h2 id="functions" class="section-header"><a href="#functions">Functions</a></h2>
+<div class="item-table"><div class="item-left module-item"><a class="fn" href="fn.is_separator.html" title="anoma_apps::std::path::is_separator fn">is_separator</a></div><div class="item-right docblock-short"><p>Determines whether the character is one of the permitted path
+separators for the current platform.</p>
+</div></div></section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="anoma_apps" data-search-index-js="../../../search-index.js" data-search-js="../../../search.js"></div>
+    <script src="../../../main.js"></script>
+</body></html>

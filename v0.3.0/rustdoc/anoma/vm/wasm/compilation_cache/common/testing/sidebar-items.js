@@ -1,0 +1,1 @@
+initSidebarItems({"fn":[["cache","Cache with a temp dir for testing"]]});

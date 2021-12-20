@@ -1,0 +1,67 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="The Rust Prelude"><meta name="keywords" content="rust, rustlang, rust-lang, prelude"><title>anoma_apps::std::prelude - Rust</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script id="default-settings" ></script><script src="../../../storage.js"></script><script src="../../../crates.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="shortcut icon" href="https:&#x2F;&#x2F;docs.anoma.network&#x2F;favicon.png"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc mod"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../anoma_apps/index.html'><div class='logo-container rust-logo'><img src='https:&#x2F;&#x2F;docs.anoma.network&#x2F;rustdoc-logo.png' alt='logo'></div></a><h2 class="location">Module prelude</h2><div class="sidebar-elems"><div class="block items"><ul><li><a href="#modules">Modules</a></li></ul></div><div id="sidebar-vars" data-name="prelude" data-ty="mod" data-relpath="./"></div><script defer src="./sidebar-items.js"></script></div></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="18" height="18" alt="Pick another theme!" src="../../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../../settings.html" title="settings"><img width="18" height="18" alt="Change settings" src="../../../wheel.svg"></a></div></form></nav><section id="main" class="content"><h1 class="fqn"><span class="in-band">Module <a href="../../index.html">anoma_apps</a>::<wbr><a href="../index.html">std</a>::<wbr><a class="mod" href="#">prelude</a><button id="copy-path" onclick="copy_path(this)" title="Copy item path to clipboard"><img src="../../../clipboard.svg" width="19" height="18" alt="Copy item path"></button></span><span class="out-of-band"><span class="since" title="Stable since Rust version 1.0.0">1.0.0</span><span id="render-detail"><a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">[<span class="inner">&#x2212;</span>]</a></span><a class="srclink" href="https://doc.rust-lang.org/1.56.1/src/std/lib.rs.html#377" title="goto source code">[src]</a></span></h1><details class="rustdoc-toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><h1 id="the-rust-prelude" class="section-header"><a href="#the-rust-prelude">The Rust Prelude</a></h1>
+<p>Rust comes with a variety of things in its standard library. However, if
+you had to manually import every single thing that you used, it would be
+very verbose. But importing a lot of things that a program never uses isn’t
+good either. A balance needs to be struck.</p>
+<p>The <em>prelude</em> is the list of things that Rust automatically imports into
+every Rust program. It’s kept as small as possible, and is focused on
+things, particularly traits, which are used in almost every single Rust
+program.</p>
+<h1 id="other-preludes" class="section-header"><a href="#other-preludes">Other preludes</a></h1>
+<p>Preludes can be seen as a pattern to make using multiple types more
+convenient. As such, you’ll find other preludes in the standard library,
+such as <a href="../io/prelude/index.html"><code>std::io::prelude</code></a>. Various libraries in the Rust ecosystem may
+also define their own preludes.</p>
+<p>The difference between ‘the prelude’ and these other preludes is that they
+are not automatically <code>use</code>’d, and must be imported manually. This is still
+easier than importing all of their constituent components.</p>
+<h1 id="prelude-contents" class="section-header"><a href="#prelude-contents">Prelude contents</a></h1>
+<p>The first version of the prelude is used in Rust 2015 and Rust 2018,
+and lives in <a href="v1/index.html"><code>std::prelude::v1</code></a>.
+<a href="rust_2015/index.html"><code>std::prelude::rust_2015</code></a> and <a href="rust_2018/index.html"><code>std::prelude::rust_2018</code></a> re-export this prelude.
+It re-exports the following:</p>
+<ul>
+<li><code><a href="../marker/index.html">std::marker</a>::{<a href="../marker/trait.Copy.html" title="Copy">Copy</a>, <a href="../marker/trait.Send.html" title="Send">Send</a>, <a href="../marker/trait.Sized.html" title="Sized">Sized</a>, <a href="../marker/trait.Sync.html" title="Sync">Sync</a>, <a href="../marker/trait.Unpin.html" title="Unpin">Unpin</a>}</code>,
+marker traits that indicate fundamental properties of types.</li>
+<li><code><a href="../ops/index.html">std::ops</a>::{<a href="../ops/trait.Drop.html" title="Drop">Drop</a>, <a href="../ops/trait.Fn.html" title="Fn">Fn</a>, <a href="../ops/trait.FnMut.html" title="FnMut">FnMut</a>, <a href="../ops/trait.FnOnce.html" title="FnOnce">FnOnce</a>}</code>, various
+operations for both destructors and overloading <code>()</code>.</li>
+<li><code><a href="../mem/index.html">std::mem</a>::<a href="../mem/fn.drop.html">drop</a></code>, a convenience function for explicitly
+dropping a value.</li>
+<li><code><a href="../boxed/index.html">std::boxed</a>::<a href="../boxed/struct.Box.html" title="Box">Box</a></code>, a way to allocate values on the heap.</li>
+<li><code><a href="../borrow/index.html">std::borrow</a>::<a href="../borrow/trait.ToOwned.html" title="ToOwned">ToOwned</a></code>, the conversion trait that defines
+<a href="../borrow/trait.ToOwned.html#tymethod.to_owned"><code>to_owned</code></a>, the generic method for creating an owned type from a
+borrowed type.</li>
+<li><code><a href="../clone/index.html">std::clone</a>::<a href="../clone/trait.Clone.html" title="Clone">Clone</a></code>, the ubiquitous trait that defines
+<a href="../clone/trait.Clone.html#tymethod.clone" title="Clone::clone"><code>clone</code></a>, the method for producing a copy of a value.</li>
+<li><code><a href="../cmp/index.html">std::cmp</a>::{<a href="../cmp/trait.PartialEq.html" title="PartialEq">PartialEq</a>, <a href="../cmp/trait.PartialOrd.html" title="PartialOrd">PartialOrd</a>, <a href="../cmp/trait.Eq.html" title="Eq">Eq</a>, <a href="../cmp/trait.Ord.html" title="Ord">Ord</a>}</code>, the
+comparison traits, which implement the comparison operators and are often
+seen in trait bounds.</li>
+<li><code><a href="../convert/index.html">std::convert</a>::{<a href="../convert/trait.AsRef.html" title="AsRef">AsRef</a>, <a href="../convert/trait.AsMut.html" title="AsMut">AsMut</a>, <a href="../convert/trait.Into.html" title="Into">Into</a>, <a href="../convert/trait.From.html" title="From">From</a>}</code>, generic
+conversions, used by savvy API authors to create overloaded methods.</li>
+<li><code><a href="../default/index.html">std::default</a>::<a href="../default/trait.Default.html" title="Default">Default</a></code>, types that have default values.</li>
+<li><code><a href="../iter/index.html">std::iter</a>::{<a href="../iter/trait.Iterator.html" title="Iterator">Iterator</a>, <a href="../iter/trait.Extend.html" title="Extend">Extend</a>, <a href="../iter/trait.IntoIterator.html" title="IntoIterator">IntoIterator</a>, <a href="../iter/trait.DoubleEndedIterator.html" title="DoubleEndedIterator">DoubleEndedIterator</a>, <a href="../iter/trait.ExactSizeIterator.html" title="ExactSizeIterator">ExactSizeIterator</a>}</code>,
+iterators of various
+kinds.</li>
+<li><code><a href="../option/index.html">std::option</a>::<a href="../option/enum.Option.html" title="Option">Option</a>::{<a href="../option/enum.Option.html" title="Option">self</a>, <a href="../option/enum.Option.html#variant.Some" title="Some">Some</a>, <a href="../option/enum.Option.html#variant.None" title="None">None</a>}</code>, a
+type which expresses the presence or absence of a value. This type is so
+commonly used, its variants are also exported.</li>
+<li><code><a href="../result/index.html">std::result</a>::<a href="../result/enum.Result.html" title="Result">Result</a>::{<a href="../result/enum.Result.html" title="Result">self</a>, <a href="../result/enum.Result.html#variant.Ok" title="Ok">Ok</a>, <a href="../result/enum.Result.html#variant.Err" title="Err">Err</a>}</code>, a type
+for functions that may succeed or fail. Like <a href="../option/enum.Option.html" title="Option"><code>Option</code></a>, its variants are
+exported as well.</li>
+<li><code><a href="../string/index.html">std::string</a>::{<a href="../string/struct.String.html" title="String">String</a>, <a href="../string/trait.ToString.html" title="ToString">ToString</a>}</code>, heap-allocated strings.</li>
+<li><code><a href="../vec/index.html">std::vec</a>::<a href="../vec/struct.Vec.html" title="Vec">Vec</a></code>, a growable, heap-allocated vector.</li>
+</ul>
+<p>The prelude used in Rust 2021, <a href="rust_2021/index.html"><code>std::prelude::rust_2021</code></a>, includes all of the above,
+and in addition re-exports:</p>
+<ul>
+<li><code><a href="../convert/index.html">std::convert</a>::{<a href="../convert/trait.TryFrom.html">TryFrom</a>, <a href="../convert/trait.TryInto.html">TryInto</a>}</code>,</li>
+<li><code><a href="../iter/index.html">std::iter</a>::<a href="../iter/trait.FromIterator.html">FromIterator</a></code>.</li>
+</ul>
+</div></details><h2 id="modules" class="section-header"><a href="#modules">Modules</a></h2>
+<div class="item-table"><div class="item-left module-item"><a class="mod" href="rust_2015/index.html" title="anoma_apps::std::prelude::rust_2015 mod">rust_2015</a></div><div class="item-right docblock-short"><p>The 2015 version of the prelude of The Rust Standard Library.</p>
+</div><div class="item-left module-item"><a class="mod" href="rust_2018/index.html" title="anoma_apps::std::prelude::rust_2018 mod">rust_2018</a></div><div class="item-right docblock-short"><p>The 2018 version of the prelude of The Rust Standard Library.</p>
+</div><div class="item-left module-item"><a class="mod" href="rust_2021/index.html" title="anoma_apps::std::prelude::rust_2021 mod">rust_2021</a></div><div class="item-right docblock-short"><p>The 2021 version of the prelude of The Rust Standard Library.</p>
+</div><div class="item-left module-item"><a class="mod" href="v1/index.html" title="anoma_apps::std::prelude::v1 mod">v1</a></div><div class="item-right docblock-short"><p>The first version of the prelude of The Rust Standard Library.</p>
+</div></div></section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="anoma_apps" data-search-index-js="../../../search-index.js" data-search-js="../../../search.js"></div>
+    <script src="../../../main.js"></script>
+</body></html>

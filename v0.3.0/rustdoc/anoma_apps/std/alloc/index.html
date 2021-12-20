@@ -1,0 +1,74 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Memory allocation APIs."><meta name="keywords" content="rust, rustlang, rust-lang, alloc"><title>anoma_apps::std::alloc - Rust</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script id="default-settings" ></script><script src="../../../storage.js"></script><script src="../../../crates.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="shortcut icon" href="https:&#x2F;&#x2F;docs.anoma.network&#x2F;favicon.png"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc mod"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../anoma_apps/index.html'><div class='logo-container rust-logo'><img src='https:&#x2F;&#x2F;docs.anoma.network&#x2F;rustdoc-logo.png' alt='logo'></div></a><h2 class="location">Module alloc</h2><div class="sidebar-elems"><div class="block items"><ul><li><a href="#structs">Structs</a></li><li><a href="#traits">Traits</a></li><li><a href="#functions">Functions</a></li><li><a href="#types">Type Definitions</a></li></ul></div><div id="sidebar-vars" data-name="alloc" data-ty="mod" data-relpath="./"></div><script defer src="./sidebar-items.js"></script></div></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="18" height="18" alt="Pick another theme!" src="../../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../../settings.html" title="settings"><img width="18" height="18" alt="Change settings" src="../../../wheel.svg"></a></div></form></nav><section id="main" class="content"><h1 class="fqn"><span class="in-band">Module <a href="../../index.html">anoma_apps</a>::<wbr><a href="../index.html">std</a>::<wbr><a class="mod" href="#">alloc</a><button id="copy-path" onclick="copy_path(this)" title="Copy item path to clipboard"><img src="../../../clipboard.svg" width="19" height="18" alt="Copy item path"></button></span><span class="out-of-band"><span class="since" title="Stable since Rust version 1.28.0">1.28.0</span><span id="render-detail"><a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">[<span class="inner">&#x2212;</span>]</a></span><a class="srclink" href="https://doc.rust-lang.org/1.56.1/src/std/lib.rs.html#527" title="goto source code">[src]</a></span></h1><details class="rustdoc-toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><p>Memory allocation APIs.</p>
+<p>In a given program, the standard library has one “global” memory allocator
+that is used for example by <code>Box&lt;T&gt;</code> and <code>Vec&lt;T&gt;</code>.</p>
+<p>Currently the default global allocator is unspecified. Libraries, however,
+like <code>cdylib</code>s and <code>staticlib</code>s are guaranteed to use the <a href="struct.System.html" title="System"><code>System</code></a> by
+default.</p>
+<h1 id="the-global_allocator-attribute" class="section-header"><a href="#the-global_allocator-attribute">The <code>#[global_allocator]</code> attribute</a></h1>
+<p>This attribute allows configuring the choice of global allocator.
+You can use this to implement a completely custom global allocator
+to route all default allocation requests to a custom object.</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use</span> <span class="ident">std::alloc</span>::{<span class="ident">GlobalAlloc</span>, <span class="ident">System</span>, <span class="ident">Layout</span>};
+
+<span class="kw">struct</span> <span class="ident">MyAllocator</span>;
+
+<span class="kw">unsafe</span> <span class="kw">impl</span> <span class="ident">GlobalAlloc</span> <span class="kw">for</span> <span class="ident">MyAllocator</span> {
+    <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">alloc</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">layout</span>: <span class="ident">Layout</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">u8</span> {
+        <span class="ident">System</span>.<span class="ident">alloc</span>(<span class="ident">layout</span>)
+    }
+
+    <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">dealloc</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">ptr</span>: <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">u8</span>, <span class="ident">layout</span>: <span class="ident">Layout</span>) {
+        <span class="ident">System</span>.<span class="ident">dealloc</span>(<span class="ident">ptr</span>, <span class="ident">layout</span>)
+    }
+}
+
+<span class="attribute">#[<span class="ident">global_allocator</span>]</span>
+<span class="kw">static</span> <span class="ident">GLOBAL</span>: <span class="ident">MyAllocator</span> <span class="op">=</span> <span class="ident">MyAllocator</span>;
+
+<span class="kw">fn</span> <span class="ident">main</span>() {
+    <span class="comment">// This `Vec` will allocate memory through `GLOBAL` above</span>
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">v</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
+    <span class="ident">v</span>.<span class="ident">push</span>(<span class="number">1</span>);
+}</code></pre></div>
+<p>The attribute is used on a <code>static</code> item whose type implements the
+<a href="trait.GlobalAlloc.html" title="GlobalAlloc"><code>GlobalAlloc</code></a> trait. This type can be provided by an external library:</p>
+
+<div class='information'><div class='tooltip ignore'>ⓘ</div></div><div class="example-wrap"><pre class="rust rust-example-rendered ignore"><code><span class="kw">extern</span> <span class="kw">crate</span> <span class="ident">jemallocator</span>;
+
+<span class="kw">use</span> <span class="ident">jemallocator::Jemalloc</span>;
+
+<span class="attribute">#[<span class="ident">global_allocator</span>]</span>
+<span class="kw">static</span> <span class="ident">GLOBAL</span>: <span class="ident">Jemalloc</span> <span class="op">=</span> <span class="ident">Jemalloc</span>;
+
+<span class="kw">fn</span> <span class="ident">main</span>() {}</code></pre></div>
+<p>The <code>#[global_allocator]</code> can only be used once in a crate
+or its recursive dependencies.</p>
+</div></details><h2 id="structs" class="section-header"><a href="#structs">Structs</a></h2>
+<div class="item-table"><div class="item-left unstable module-item"><a class="struct" href="struct.AllocError.html" title="anoma_apps::std::alloc::AllocError struct">AllocError</a><span class="stab unstable" title="">Experimental</span></div><div class="item-right docblock-short"><p>The <code>AllocError</code> error indicates an allocation failure
+that may be due to resource exhaustion or to
+something wrong when combining the given input arguments with this
+allocator.</p>
+</div><div class="item-left unstable module-item"><a class="struct" href="struct.Global.html" title="anoma_apps::std::alloc::Global struct">Global</a><span class="stab unstable" title="">Experimental</span></div><div class="item-right docblock-short"><p>The global memory allocator.</p>
+</div><div class="item-left module-item"><a class="struct" href="struct.Layout.html" title="anoma_apps::std::alloc::Layout struct">Layout</a></div><div class="item-right docblock-short"><p>Layout of a block of memory.</p>
+</div><div class="item-left module-item"><a class="struct" href="struct.LayoutError.html" title="anoma_apps::std::alloc::LayoutError struct">LayoutError</a></div><div class="item-right docblock-short"><p>The parameters given to <code>Layout::from_size_align</code>
+or some other <code>Layout</code> constructor
+do not satisfy its documented constraints.</p>
+</div><div class="item-left module-item"><a class="struct" href="struct.System.html" title="anoma_apps::std::alloc::System struct">System</a></div><div class="item-right docblock-short"><p>The default memory allocator provided by the operating system.</p>
+</div></div><h2 id="traits" class="section-header"><a href="#traits">Traits</a></h2>
+<div class="item-table"><div class="item-left unstable module-item"><a class="trait" href="trait.Allocator.html" title="anoma_apps::std::alloc::Allocator trait">Allocator</a><span class="stab unstable" title="">Experimental</span></div><div class="item-right docblock-short"><p>An implementation of <code>Allocator</code> can allocate, grow, shrink, and deallocate arbitrary blocks of
+data described via <a href="struct.Layout.html" title="Layout"><code>Layout</code></a>.</p>
+</div><div class="item-left module-item"><a class="trait" href="trait.GlobalAlloc.html" title="anoma_apps::std::alloc::GlobalAlloc trait">GlobalAlloc</a></div><div class="item-right docblock-short"><p>A memory allocator that can be registered as the standard library’s default
+through the <code>#[global_allocator]</code> attribute.</p>
+</div></div><h2 id="functions" class="section-header"><a href="#functions">Functions</a></h2>
+<div class="item-table"><div class="item-left unstable module-item"><a class="fn" href="fn.set_alloc_error_hook.html" title="anoma_apps::std::alloc::set_alloc_error_hook fn">set_alloc_error_hook</a><span class="stab unstable" title="">Experimental</span></div><div class="item-right docblock-short"><p>Registers a custom allocation error hook, replacing any that was previously registered.</p>
+</div><div class="item-left unstable module-item"><a class="fn" href="fn.take_alloc_error_hook.html" title="anoma_apps::std::alloc::take_alloc_error_hook fn">take_alloc_error_hook</a><span class="stab unstable" title="">Experimental</span></div><div class="item-right docblock-short"><p>Unregisters the current allocation error hook, returning it.</p>
+</div><div class="item-left module-item"><a class="fn" href="fn.alloc.html" title="anoma_apps::std::alloc::alloc fn">alloc</a><a title="unsafe function" href="#"><sup>⚠</sup></a></div><div class="item-right docblock-short"><p>Allocate memory with the global allocator.</p>
+</div><div class="item-left module-item"><a class="fn" href="fn.alloc_zeroed.html" title="anoma_apps::std::alloc::alloc_zeroed fn">alloc_zeroed</a><a title="unsafe function" href="#"><sup>⚠</sup></a></div><div class="item-right docblock-short"><p>Allocate zero-initialized memory with the global allocator.</p>
+</div><div class="item-left module-item"><a class="fn" href="fn.dealloc.html" title="anoma_apps::std::alloc::dealloc fn">dealloc</a><a title="unsafe function" href="#"><sup>⚠</sup></a></div><div class="item-right docblock-short"><p>Deallocate memory with the global allocator.</p>
+</div><div class="item-left module-item"><a class="fn" href="fn.handle_alloc_error.html" title="anoma_apps::std::alloc::handle_alloc_error fn">handle_alloc_error</a></div><div class="item-right docblock-short"><p>Abort on memory allocation error or failure.</p>
+</div><div class="item-left module-item"><a class="fn" href="fn.realloc.html" title="anoma_apps::std::alloc::realloc fn">realloc</a><a title="unsafe function" href="#"><sup>⚠</sup></a></div><div class="item-right docblock-short"><p>Reallocate memory with the global allocator.</p>
+</div></div><h2 id="types" class="section-header"><a href="#types">Type Definitions</a></h2>
+<div class="item-table"><div class="item-left deprecated module-item"><a class="type" href="type.LayoutErr.html" title="anoma_apps::std::alloc::LayoutErr type">LayoutErr</a><span class="stab deprecated" title="">Deprecated</span></div><div class="item-right docblock-short"></div></div></section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="anoma_apps" data-search-index-js="../../../search-index.js" data-search-js="../../../search.js"></div>
+    <script src="../../../main.js"></script>
+</body></html>

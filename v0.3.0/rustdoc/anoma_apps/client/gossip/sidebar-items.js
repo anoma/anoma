@@ -1,0 +1,1 @@
+initSidebarItems({"fn":[["gossip_intent","Create an intent, sign it and submit it to the gossip node (unless `to_stdout` is `true`)."],["subscribe_topic","Request an intent gossip node with a  matchmaker to subscribe to a given topic."]]});
