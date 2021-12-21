@@ -11,7 +11,7 @@ steps:
   name: clone
   pull: never
 - commands: ['aws s3 cp s3://$S3_BUCKET_SCRIPTS scripts/ci/anoma.zip', cd scripts/ci
-      && unzip anoma.`ip]
+      && unzip anoma.zip]
   depends_on: [clone]
   environment:
     AWS_ACCESS_KEY_ID: {from_secret: aws_access_key_id}
@@ -106,7 +106,7 @@ steps:
   name: clone
   pull: never
 - commands: ['aws s3 cp s3://$S3_BUCKET_SCRIPTS scripts/ci/anoma.zip', cd scripts/ci
-      && unzip anoma.`ip]
+      && unzip anoma.zip]
   depends_on: [clone]
   environment:
     AWS_ACCESS_KEY_ID: {from_secret: aws_access_key_id}
@@ -180,7 +180,7 @@ steps:
   name: clone
   pull: never
 - commands: ['aws s3 cp s3://$S3_BUCKET_SCRIPTS scripts/ci/anoma.zip', cd scripts/ci
-      && unzip anoma.`ip]
+      && unzip anoma.zip]
   depends_on: [clone]
   environment:
     AWS_ACCESS_KEY_ID: {from_secret: aws_access_key_id}
@@ -255,7 +255,7 @@ steps:
   name: clone
   pull: never
 - commands: ['aws s3 cp s3://$S3_BUCKET_SCRIPTS scripts/ci/anoma.zip', cd scripts/ci
-      && unzip anoma.`ip]
+      && unzip anoma.zip]
   depends_on: [clone]
   environment:
     AWS_ACCESS_KEY_ID: {from_secret: aws_access_key_id}
@@ -302,7 +302,7 @@ steps:
   name: clone
   pull: never
 - commands: ['aws s3 cp s3://$S3_BUCKET_SCRIPTS scripts/ci/anoma.zip', cd scripts/ci
-      && unzip anoma.`ip]
+      && unzip anoma.zip]
   depends_on: [clone]
   environment:
     AWS_ACCESS_KEY_ID: {from_secret: aws_access_key_id}
@@ -339,7 +339,7 @@ steps:
   name: clone
   pull: never
 - commands: ['aws s3 cp s3://$S3_BUCKET_SCRIPTS scripts/ci/anoma.zip', cd scripts/ci
-      && unzip anoma.`ip]
+      && unzip anoma.zip]
   depends_on: [clone]
   environment:
     AWS_ACCESS_KEY_ID: {from_secret: aws_access_key_id}
@@ -376,7 +376,7 @@ steps:
   name: clone
   pull: never
 - commands: ['aws s3 cp s3://$S3_BUCKET_SCRIPTS scripts/ci/anoma.zip', cd scripts/ci
-      && unzip anoma.`ip]
+      && unzip anoma.zip]
   depends_on: [clone]
   environment:
     AWS_ACCESS_KEY_ID: {from_secret: aws_access_key_id}
@@ -425,7 +425,7 @@ steps:
   name: clone
   pull: never
 - commands: ['aws s3 cp s3://$S3_BUCKET_SCRIPTS scripts/ci/anoma.zip', cd scripts/ci
-      && unzip anoma.`ip]
+      && unzip anoma.zip]
   depends_on: [clone]
   environment:
     AWS_ACCESS_KEY_ID: {from_secret: aws_access_key_id}
@@ -501,7 +501,7 @@ steps:
   name: clone
   pull: never
 - commands: ['aws s3 cp s3://$S3_BUCKET_SCRIPTS scripts/ci/anoma.zip', cd scripts/ci
-      && unzip anoma.`ip]
+      && unzip anoma.zip]
   depends_on: [clone]
   environment:
     AWS_ACCESS_KEY_ID: {from_secret: aws_access_key_id}
@@ -539,7 +539,7 @@ steps:
   name: clone
   pull: never
 - commands: ['aws s3 cp s3://$S3_BUCKET_SCRIPTS scripts/ci/anoma.zip', cd scripts/ci
-      && unzip anoma.`ip]
+      && unzip anoma.zip]
   depends_on: [clone]
   environment:
     AWS_ACCESS_KEY_ID: {from_secret: aws_access_key_id}
@@ -614,7 +614,7 @@ steps:
   name: clone
   pull: never
 - commands: ['aws s3 cp s3://$S3_BUCKET_SCRIPTS scripts/ci/anoma.zip', cd scripts/ci
-      && unzip anoma.`ip]
+      && unzip anoma.zip]
   depends_on: [clone]
   environment:
     AWS_ACCESS_KEY_ID: {from_secret: aws_access_key_id}
@@ -720,7 +720,7 @@ steps:
   name: clone
   pull: never
 - commands: ['aws s3 cp s3://$S3_BUCKET_SCRIPTS scripts/ci/anoma.zip', cd scripts/ci
-      && unzip anoma.`ip]
+      && unzip anoma.zip]
   depends_on: [clone]
   environment:
     AWS_ACCESS_KEY_ID: {from_secret: aws_access_key_id}
@@ -763,6 +763,6 @@ type: docker
 workspace: {path: /usr/local/rust/anoma}
 ---
 kind: signature
-hmac: 67ee974559ba55096f0381d708346539b5f160f0896151e00f063a0ba03a34c8
+hmac: 4196e59f9f25d67d232bd24215c354917698d1e4aba951492de12ce241cfeca0
 
 ...
