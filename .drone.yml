@@ -1,768 +1,1121 @@
----
-clone: {disable: true}
-environment: {GIT_LFS_SKIP_SMUDGE: '1'}
-kind: pipeline
 name: anoma-ci-wasm-pr
-node: {project: anoma}
+kind: pipeline
+node:
+  project: anoma
 steps:
-- commands: ['git clone $DRONE_GIT_HTTP_URL --quiet --branch ${DRONE_SOURCE_BRANCH:-master}
-      --single-branch .']
+- name: clone
   image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/git:latest
-  name: clone
   pull: never
-- commands: ['aws s3 cp s3://$S3_BUCKET_SCRIPTS scripts/ci/anoma.zip', cd scripts/ci
-      && unzip anoma.zip]
-  depends_on: [clone]
+  commands:
+  - git clone $DRONE_GIT_HTTP_URL --quiet --branch ${DRONE_SOURCE_BRANCH:-master}
+    --single-branch .
+- name: download-scripts
+  image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/git:latest
+  pull: never
+  commands:
+  - aws s3 cp s3://$S3_BUCKET_SCRIPTS/anoma.zip scripts/ci/anoma.zip
+  - cd scripts/ci && unzip anoma.zip
   environment:
-    AWS_ACCESS_KEY_ID: {from_secret: aws_access_key_id}
-    AWS_SECRET_ACCESS_KEY: {from_secret: aws_secret_access_key}
     S3_BUCKET_SCRIPTS: drone-ci-scripts
-  image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/git:latest
-  name: download-scripts
-  pull: never
-- depends_on: [download-scripts]
-  environment:
-    AWS_ACCESS_KEY_ID: {from_secret: aws_access_key_id}
-    AWS_SECRET_ACCESS_KEY: {from_secret: aws_secret_access_key}
+    AWS_ACCESS_KEY_ID:
+      from_secret: aws_access_key_id
+    AWS_SECRET_ACCESS_KEY:
+      from_secret: aws_secret_access_key
+  depends_on:
+  - clone
+- name: restore-cache
   image: meltwater/drone-cache:latest
-  name: restore-cache
   pull: never
   settings:
     archive_format: gzip
     backend: s3
     bucket: heliax-drone-cache-v2
     cache_key: 1-54-0/wasm/{{ checksum "wasm/wasm_source/Cargo.lock" }}
-    mount: [wasm/wasm_source/target]
+    mount:
+    - wasm/wasm_source/target
     region: eu-west-1
     restore: true
-- commands: [cp wasm/checksums.json wasm/original-checksums.json, make build-wasm-scripts]
-  depends_on: [restore-cache]
-  image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/wasm:latest
-  name: build-wasm
-  pull: never
-- commands: ['aws s3 sync wasm s3://heliax-drone-wasm-v2 --exclude "*" --include "*.wasm"
-      --exclude "*/*"', 'cp wasm/checksums.json wasm/${DRONE_COMMIT}.json', 'aws s3
-      cp wasm/${DRONE_COMMIT}.json s3://heliax-drone-wasm-v2']
-  depends_on: [build-wasm]
   environment:
-    AWS_ACCESS_KEY_ID: {from_secret: aws_access_key_id}
-    AWS_SECRET_ACCESS_KEY: {from_secret: aws_secret_access_key}
-    GITHUB_TOKEN: {from_secret: github_token}
+    AWS_ACCESS_KEY_ID:
+      from_secret: aws_access_key_id
+    AWS_SECRET_ACCESS_KEY:
+      from_secret: aws_secret_access_key
+  depends_on:
+  - download-scripts
+- name: build-wasm
+  image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/wasm:latest
+  pull: never
+  commands:
+  - cp wasm/checksums.json wasm/original-checksums.json
+  - make build-wasm-scripts
+  depends_on:
+  - restore-cache
+- name: update-wasm
   image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/git:latest
-  name: update-wasm
   pull: never
-- commands: [make test-wasm]
-  depends_on: [update-wasm]
-  image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/wasm:latest
-  name: test-wasm
-  pull: never
-- commands: [cmp -- wasm/checksums.json wasm/original-checksums.json]
-  depends_on: [update-wasm]
-  image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/wasm:latest
-  name: check-wasm
-  pull: never
-- commands: [rm -f  ./wasm/wasm_source/target/.rustc_info.json, rm -rf ./wasm/wasm_source/target/debug,
-    find ./wasm/wasm_source/target/release -maxdepth 1 -type f -delete, find ./wasm/wasm_source/target/wasm32-unknown-unknown
-      -maxdepth 1 -type f -delete]
-  depends_on: [test-wasm, check-wasm]
-  image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/wasm:latest
-  name: clean-cache
-  pull: never
-  when:
-    status: [success, failure]
-- depends_on: [clean-cache]
+  commands:
+  - aws s3 sync wasm s3://heliax-drone-wasm-v2 --exclude "*" --include "*.wasm" --exclude
+    "*/*"
+  - cp wasm/checksums.json wasm/${DRONE_COMMIT}.json
+  - aws s3 cp wasm/${DRONE_COMMIT}.json s3://heliax-drone-wasm-v2
   environment:
-    AWS_ACCESS_KEY_ID: {from_secret: aws_access_key_id}
-    AWS_SECRET_ACCESS_KEY: {from_secret: aws_secret_access_key}
-    BACKEND_OPERATION_TIMEOUT: 8m
+    AWS_ACCESS_KEY_ID:
+      from_secret: aws_access_key_id
+    AWS_SECRET_ACCESS_KEY:
+      from_secret: aws_secret_access_key
+    GITHUB_TOKEN:
+      from_secret: github_token
+  depends_on:
+  - build-wasm
+- name: test-wasm
+  image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/wasm:latest
+  pull: never
+  commands:
+  - make test-wasm
+  depends_on:
+  - update-wasm
+- name: check-wasm
+  image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/wasm:latest
+  pull: never
+  commands:
+  - cmp -- wasm/checksums.json wasm/original-checksums.json
+  depends_on:
+  - update-wasm
+- name: clean-cache
+  image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/wasm:latest
+  pull: never
+  commands:
+  - rm -f  ./wasm/wasm_source/target/.rustc_info.json
+  - rm -rf ./wasm/wasm_source/target/debug
+  - find ./wasm/wasm_source/target/release -maxdepth 1 -type f -delete
+  - find ./wasm/wasm_source/target/wasm32-unknown-unknown -maxdepth 1 -type f -delete
+  depends_on:
+  - test-wasm
+  - check-wasm
+  when:
+    status:
+    - success
+    - failure
+- name: rebuild-cache
   image: meltwater/drone-cache:latest
-  name: rebuild-cache
   pull: never
   settings:
     archive_format: gzip
     backend: s3
     bucket: heliax-drone-cache-v2
     cache_key: 1-54-0/wasm/{{ checksum "wasm/wasm_source/Cargo.lock" }}
-    mount: [wasm/wasm_source/target]
+    mount:
+    - wasm/wasm_source/target
     override: false
-    rebuild: true
     region: eu-west-1
+    rebuild: true
+  environment:
+    AWS_ACCESS_KEY_ID:
+      from_secret: aws_access_key_id
+    AWS_SECRET_ACCESS_KEY:
+      from_secret: aws_secret_access_key
+    BACKEND_OPERATION_TIMEOUT: 8m
+  depends_on:
+  - clean-cache
   when:
-    status: [success, failure]
+    status:
+    - success
+    - failure
 trigger:
-  event: [pull_request]
+  event:
+  - pull_request
 type: docker
-workspace: {path: /usr/local/rust/wasm}
+workspace:
+  path: /usr/local/rust/wasm
+environment:
+  GIT_LFS_SKIP_SMUDGE: '1'
+clone:
+  disable: true
 ---
-clone: {disable: true}
-environment: {CARGO_INCREMENTAL: '0', GIT_LFS_SKIP_SMUDGE: '1'}
-kind: pipeline
 name: anoma-ci-build-pr
-node: {project: anoma}
+kind: pipeline
+node:
+  project: anoma
 steps:
-- commands: ['git clone $DRONE_GIT_HTTP_URL --quiet --branch ${DRONE_SOURCE_BRANCH:-master}
-      --single-branch .']
+- name: clone
   image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/git:latest
-  name: clone
   pull: never
-- commands: ['aws s3 cp s3://$S3_BUCKET_SCRIPTS scripts/ci/anoma.zip', cd scripts/ci
-      && unzip anoma.zip]
-  depends_on: [clone]
+  commands:
+  - git clone $DRONE_GIT_HTTP_URL --quiet --branch ${DRONE_SOURCE_BRANCH:-master}
+    --single-branch .
+- name: download-scripts
+  image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/git:latest
+  pull: never
+  commands:
+  - aws s3 cp s3://$S3_BUCKET_SCRIPTS/anoma.zip scripts/ci/anoma.zip
+  - cd scripts/ci && unzip anoma.zip
   environment:
-    AWS_ACCESS_KEY_ID: {from_secret: aws_access_key_id}
-    AWS_SECRET_ACCESS_KEY: {from_secret: aws_secret_access_key}
     S3_BUCKET_SCRIPTS: drone-ci-scripts
-  image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/git:latest
-  name: download-scripts
+    AWS_ACCESS_KEY_ID:
+      from_secret: aws_access_key_id
+    AWS_SECRET_ACCESS_KEY:
+      from_secret: aws_secret_access_key
+  depends_on:
+  - clone
+- name: build
+  image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/anoma:latest
   pull: never
-- commands: [sccache --start-server, make build]
-  depends_on: [download-scripts]
+  commands:
+  - sccache --start-server
+  - make build
   environment:
-    AWS_ACCESS_KEY_ID: {from_secret: aws_access_key_id}
-    AWS_SECRET_ACCESS_KEY: {from_secret: aws_secret_access_key}
+    AWS_ACCESS_KEY_ID:
+      from_secret: aws_access_key_id
+    AWS_SECRET_ACCESS_KEY:
+      from_secret: aws_secret_access_key
     SCCACHE_BUCKET: heliax-drone-cache-v2
     SCCACHE_S3_KEY_PREFIX: sccache-build
+  depends_on:
+  - download-scripts
+- name: build-test
   image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/anoma:latest
-  name: build
   pull: never
-- commands: [sccache --start-server, make build-test]
-  depends_on: [build]
+  commands:
+  - sccache --start-server
+  - make build-test
   environment:
-    AWS_ACCESS_KEY_ID: {from_secret: aws_access_key_id}
-    AWS_SECRET_ACCESS_KEY: {from_secret: aws_secret_access_key}
+    AWS_ACCESS_KEY_ID:
+      from_secret: aws_access_key_id
+    AWS_SECRET_ACCESS_KEY:
+      from_secret: aws_secret_access_key
     SCCACHE_BUCKET: heliax-drone-cache-v2
     SCCACHE_S3_KEY_PREFIX: sccache-build-test
-  image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/anoma:latest
-  name: build-test
-  pull: never
-- commands: ['aws s3api head-object --bucket heliax-drone-wasm-v2 --key ${DRONE_COMMIT}.json',
-    'if [ $? -ne 0  ]; then exit 1; fi', 'aws s3 cp s3://heliax-drone-wasm-v2/${DRONE_COMMIT}.json
-      wasm', 'cp wasm/${DRONE_COMMIT}.json wasm/checksums.json', 'jq -r -c ''.[]''
-      wasm/checksums.json | parallel aws s3 cp s3://heliax-drone-wasm-v2/{} wasm']
-  depends_on: [build-test]
+  depends_on:
+  - build
+- name: download-wasm
   image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/git:latest
-  name: download-wasm
   pull: never
-- commands: [sccache --start-server, make test-unit]
-  depends_on: [download-wasm]
+  commands:
+  - aws s3api head-object --bucket heliax-drone-wasm-v2 --key ${DRONE_COMMIT}.json
+  - if [ $? -ne 0  ]; then exit 1; fi
+  - aws s3 cp s3://heliax-drone-wasm-v2/${DRONE_COMMIT}.json wasm
+  - cp wasm/${DRONE_COMMIT}.json wasm/checksums.json
+  - jq -r -c '.[]' wasm/checksums.json | parallel aws s3 cp s3://heliax-drone-wasm-v2/{}
+    wasm
+  depends_on:
+  - build-test
+- name: test-unit
+  image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/anoma:latest
+  pull: never
+  commands:
+  - sccache --start-server
+  - make test-unit
   environment:
-    AWS_ACCESS_KEY_ID: {from_secret: aws_access_key_id}
-    AWS_SECRET_ACCESS_KEY: {from_secret: aws_secret_access_key}
+    AWS_ACCESS_KEY_ID:
+      from_secret: aws_access_key_id
+    AWS_SECRET_ACCESS_KEY:
+      from_secret: aws_secret_access_key
     SCCACHE_BUCKET: heliax-drone-cache-v2
     SCCACHE_S3_KEY_PREFIX: sccache-test-unit
+  depends_on:
+  - download-wasm
+- name: test-e2e
   image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/anoma:latest
-  name: test-unit
   pull: never
-- commands: [sccache --start-server, make test-e2e]
-  depends_on: [download-wasm]
+  commands:
+  - sccache --start-server
+  - make test-e2e
   environment:
-    AWS_ACCESS_KEY_ID: {from_secret: aws_access_key_id}
-    AWS_SECRET_ACCESS_KEY: {from_secret: aws_secret_access_key}
+    AWS_ACCESS_KEY_ID:
+      from_secret: aws_access_key_id
+    AWS_SECRET_ACCESS_KEY:
+      from_secret: aws_secret_access_key
     SCCACHE_BUCKET: heliax-drone-cache-v2
     SCCACHE_S3_KEY_PREFIX: sccache-test-e2e
-  image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/anoma:latest
-  name: test-e2e
-  pull: never
+  depends_on:
+  - download-wasm
 trigger:
-  event: [pull_request]
+  event:
+  - pull_request
 type: docker
-workspace: {path: /usr/local/rust/anoma}
+workspace:
+  path: /usr/local/rust/anoma
+environment:
+  CARGO_INCREMENTAL: '0'
+  GIT_LFS_SKIP_SMUDGE: '1'
+clone:
+  disable: true
 ---
-clone: {disable: true}
-environment: {CARGO_INCREMENTAL: '0', GIT_LFS_SKIP_SMUDGE: '1'}
-kind: pipeline
 name: anoma-ci-build-abci-pr
-node: {project: anoma}
+kind: pipeline
+node:
+  project: anoma
 steps:
-- commands: ['git clone $DRONE_GIT_HTTP_URL --quiet --branch ${DRONE_SOURCE_BRANCH:-master}
-      --single-branch .']
+- name: clone
   image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/git:latest
-  name: clone
   pull: never
-- commands: ['aws s3 cp s3://$S3_BUCKET_SCRIPTS scripts/ci/anoma.zip', cd scripts/ci
-      && unzip anoma.zip]
-  depends_on: [clone]
+  commands:
+  - git clone $DRONE_GIT_HTTP_URL --quiet --branch ${DRONE_SOURCE_BRANCH:-master}
+    --single-branch .
+- name: download-scripts
+  image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/git:latest
+  pull: never
+  commands:
+  - aws s3 cp s3://$S3_BUCKET_SCRIPTS/anoma.zip scripts/ci/anoma.zip
+  - cd scripts/ci && unzip anoma.zip
   environment:
-    AWS_ACCESS_KEY_ID: {from_secret: aws_access_key_id}
-    AWS_SECRET_ACCESS_KEY: {from_secret: aws_secret_access_key}
     S3_BUCKET_SCRIPTS: drone-ci-scripts
-  image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/git:latest
-  name: download-scripts
+    AWS_ACCESS_KEY_ID:
+      from_secret: aws_access_key_id
+    AWS_SECRET_ACCESS_KEY:
+      from_secret: aws_secret_access_key
+  depends_on:
+  - clone
+- name: build
+  image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/anoma:latest
   pull: never
-- commands: [sccache --start-server, make build-abci-plus-plus]
-  depends_on: [download-scripts]
+  commands:
+  - sccache --start-server
+  - make build-abci-plus-plus
   environment:
-    AWS_ACCESS_KEY_ID: {from_secret: aws_access_key_id}
-    AWS_SECRET_ACCESS_KEY: {from_secret: aws_secret_access_key}
+    AWS_ACCESS_KEY_ID:
+      from_secret: aws_access_key_id
+    AWS_SECRET_ACCESS_KEY:
+      from_secret: aws_secret_access_key
     SCCACHE_BUCKET: heliax-drone-cache-v2
     SCCACHE_S3_KEY_PREFIX: sccache-build-abci
+  depends_on:
+  - download-scripts
+- name: build-test
   image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/anoma:latest
-  name: build
   pull: never
-- commands: [sccache --start-server, make build-test-abci-plus-plus]
-  depends_on: [build]
+  commands:
+  - sccache --start-server
+  - make build-test-abci-plus-plus
   environment:
-    AWS_ACCESS_KEY_ID: {from_secret: aws_access_key_id}
-    AWS_SECRET_ACCESS_KEY: {from_secret: aws_secret_access_key}
+    AWS_ACCESS_KEY_ID:
+      from_secret: aws_access_key_id
+    AWS_SECRET_ACCESS_KEY:
+      from_secret: aws_secret_access_key
     SCCACHE_BUCKET: heliax-drone-cache-v2
     SCCACHE_S3_KEY_PREFIX: sccache-build-test-abci
-  image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/anoma:latest
-  name: build-test
-  pull: never
-- commands: ['aws s3api head-object --bucket heliax-drone-wasm-v2 --key ${DRONE_COMMIT}.json',
-    'if [ $? -ne 0  ]; then exit 1; fi', 'aws s3 cp s3://heliax-drone-wasm-v2/${DRONE_COMMIT}.json
-      wasm', 'cp wasm/${DRONE_COMMIT}.json wasm/checksums.json', 'jq -r -c ''.[]''
-      wasm/checksums.json | parallel aws s3 cp s3://heliax-drone-wasm-v2/{} wasm']
-  depends_on: [build-test]
+  depends_on:
+  - build
+- name: download-wasm
   image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/git:latest
-  name: download-wasm
   pull: never
-- commands: [sccache --start-server, make test-unit-abci-plus-plus]
-  depends_on: [download-wasm]
+  commands:
+  - aws s3api head-object --bucket heliax-drone-wasm-v2 --key ${DRONE_COMMIT}.json
+  - if [ $? -ne 0  ]; then exit 1; fi
+  - aws s3 cp s3://heliax-drone-wasm-v2/${DRONE_COMMIT}.json wasm
+  - cp wasm/${DRONE_COMMIT}.json wasm/checksums.json
+  - jq -r -c '.[]' wasm/checksums.json | parallel aws s3 cp s3://heliax-drone-wasm-v2/{}
+    wasm
+  depends_on:
+  - build-test
+- name: test-unit
+  image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/anoma:latest
+  pull: never
+  commands:
+  - sccache --start-server
+  - make test-unit-abci-plus-plus
   environment:
-    AWS_ACCESS_KEY_ID: {from_secret: aws_access_key_id}
-    AWS_SECRET_ACCESS_KEY: {from_secret: aws_secret_access_key}
+    AWS_ACCESS_KEY_ID:
+      from_secret: aws_access_key_id
+    AWS_SECRET_ACCESS_KEY:
+      from_secret: aws_secret_access_key
     SCCACHE_BUCKET: heliax-drone-cache-v2
     SCCACHE_S3_KEY_PREFIX: sccache-test-unit-abci
+  depends_on:
+  - download-wasm
+- name: test-e2e
   image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/anoma:latest
-  name: test-unit
   pull: never
-- commands: [sccache --start-server, make test-e2e-abci-plus-plus]
-  depends_on: [download-wasm]
+  commands:
+  - sccache --start-server
+  - make test-e2e-abci-plus-plus
   environment:
-    AWS_ACCESS_KEY_ID: {from_secret: aws_access_key_id}
-    AWS_SECRET_ACCESS_KEY: {from_secret: aws_secret_access_key}
+    AWS_ACCESS_KEY_ID:
+      from_secret: aws_access_key_id
+    AWS_SECRET_ACCESS_KEY:
+      from_secret: aws_secret_access_key
     SCCACHE_BUCKET: heliax-drone-cache-v2
     SCCACHE_S3_KEY_PREFIX: sccache-test-e2e-abci
     TENDERMINT: /usr/local/bin/tendermint++
-  image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/anoma:latest
-  name: test-e2e
-  pull: never
+  depends_on:
+  - download-wasm
 trigger:
-  event: [pull_request]
+  event:
+  - pull_request
 type: docker
-workspace: {path: /usr/local/rust/abci}
+workspace:
+  path: /usr/local/rust/abci
+environment:
+  CARGO_INCREMENTAL: '0'
+  GIT_LFS_SKIP_SMUDGE: '1'
+clone:
+  disable: true
 ---
-clone: {disable: true}
-environment: {CARGO_INCREMENTAL: '0', GIT_LFS_SKIP_SMUDGE: '1'}
-kind: pipeline
 name: anoma-ci-checks-pr
-node: {project: anoma}
+kind: pipeline
+node:
+  project: anoma
 steps:
-- commands: ['git clone $DRONE_GIT_HTTP_URL --quiet --branch ${DRONE_SOURCE_BRANCH:-master}
-      --single-branch .']
+- name: clone
   image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/git:latest
-  name: clone
   pull: never
-- commands: ['aws s3 cp s3://$S3_BUCKET_SCRIPTS scripts/ci/anoma.zip', cd scripts/ci
-      && unzip anoma.zip]
-  depends_on: [clone]
+  commands:
+  - git clone $DRONE_GIT_HTTP_URL --quiet --branch ${DRONE_SOURCE_BRANCH:-master}
+    --single-branch .
+- name: download-scripts
+  image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/git:latest
+  pull: never
+  commands:
+  - aws s3 cp s3://$S3_BUCKET_SCRIPTS/anoma.zip scripts/ci/anoma.zip
+  - cd scripts/ci && unzip anoma.zip
   environment:
-    AWS_ACCESS_KEY_ID: {from_secret: aws_access_key_id}
-    AWS_SECRET_ACCESS_KEY: {from_secret: aws_secret_access_key}
     S3_BUCKET_SCRIPTS: drone-ci-scripts
-  image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/git:latest
-  name: download-scripts
+    AWS_ACCESS_KEY_ID:
+      from_secret: aws_access_key_id
+    AWS_SECRET_ACCESS_KEY:
+      from_secret: aws_secret_access_key
+  depends_on:
+  - clone
+- name: clippy
+  image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/anoma:latest
   pull: never
-- commands: [sccache --start-server, make clippy]
-  depends_on: [download-scripts]
+  commands:
+  - sccache --start-server
+  - make clippy
   environment:
-    AWS_ACCESS_KEY_ID: {from_secret: aws_access_key_id}
-    AWS_SECRET_ACCESS_KEY: {from_secret: aws_secret_access_key}
+    AWS_ACCESS_KEY_ID:
+      from_secret: aws_access_key_id
+    AWS_SECRET_ACCESS_KEY:
+      from_secret: aws_secret_access_key
     SCCACHE_BUCKET: heliax-drone-cache-v2
     SCCACHE_S3_KEY_PREFIX: sccache-clippy
+  depends_on:
+  - download-scripts
+- name: format
   image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/anoma:latest
-  name: clippy
   pull: never
-- commands: [sccache --start-server, make fmt-check]
-  depends_on: [clippy]
+  commands:
+  - sccache --start-server
+  - make fmt-check
   environment:
-    AWS_ACCESS_KEY_ID: {from_secret: aws_access_key_id}
-    AWS_SECRET_ACCESS_KEY: {from_secret: aws_secret_access_key}
+    AWS_ACCESS_KEY_ID:
+      from_secret: aws_access_key_id
+    AWS_SECRET_ACCESS_KEY:
+      from_secret: aws_secret_access_key
     SCCACHE_BUCKET: heliax-drone-cache-v2
     SCCACHE_S3_KEY_PREFIX: sccache-format
-  image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/anoma:latest
-  name: format
-  pull: never
+  depends_on:
+  - clippy
 trigger:
-  branch: [develop, master]
-  event: [push, pull_request]
+  event:
+  - push
+  - pull_request
+  branch:
+  - develop
+  - master
 type: docker
-workspace: {path: /usr/local/rust/anoma}
+workspace:
+  path: /usr/local/rust/anoma
+environment:
+  CARGO_INCREMENTAL: '0'
+  GIT_LFS_SKIP_SMUDGE: '1'
+clone:
+  disable: true
 ---
-clone: {disable: true}
-environment: {CARGO_INCREMENTAL: '0', GIT_LFS_SKIP_SMUDGE: '1'}
-kind: pipeline
 name: anoma-ci-checks-abci-pr
-node: {project: anoma}
+kind: pipeline
+node:
+  project: anoma
 steps:
-- commands: ['git clone $DRONE_GIT_HTTP_URL --quiet --branch ${DRONE_SOURCE_BRANCH:-master}
-      --single-branch .']
+- name: clone
   image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/git:latest
-  name: clone
   pull: never
-- commands: ['aws s3 cp s3://$S3_BUCKET_SCRIPTS scripts/ci/anoma.zip', cd scripts/ci
-      && unzip anoma.zip]
-  depends_on: [clone]
+  commands:
+  - git clone $DRONE_GIT_HTTP_URL --quiet --branch ${DRONE_SOURCE_BRANCH:-master}
+    --single-branch .
+- name: download-scripts
+  image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/git:latest
+  pull: never
+  commands:
+  - aws s3 cp s3://$S3_BUCKET_SCRIPTS/anoma.zip scripts/ci/anoma.zip
+  - cd scripts/ci && unzip anoma.zip
   environment:
-    AWS_ACCESS_KEY_ID: {from_secret: aws_access_key_id}
-    AWS_SECRET_ACCESS_KEY: {from_secret: aws_secret_access_key}
     S3_BUCKET_SCRIPTS: drone-ci-scripts
-  image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/git:latest
-  name: download-scripts
+    AWS_ACCESS_KEY_ID:
+      from_secret: aws_access_key_id
+    AWS_SECRET_ACCESS_KEY:
+      from_secret: aws_secret_access_key
+  depends_on:
+  - clone
+- name: clippy
+  image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/anoma:latest
   pull: never
-- commands: [sccache --start-server, make clippy-abci-plus-plus]
+  commands:
+  - sccache --start-server
+  - make clippy-abci-plus-plus
   environment:
-    AWS_ACCESS_KEY_ID: {from_secret: aws_access_key_id}
-    AWS_SECRET_ACCESS_KEY: {from_secret: aws_secret_access_key}
+    AWS_ACCESS_KEY_ID:
+      from_secret: aws_access_key_id
+    AWS_SECRET_ACCESS_KEY:
+      from_secret: aws_secret_access_key
     SCCACHE_BUCKET: heliax-drone-cache-v2
     SCCACHE_S3_KEY_PREFIX: sccache-clippy-abci
-  image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/anoma:latest
-  name: clippy
-  pull: never
 trigger:
-  branch: [develop, master]
-  event: [push, pull_request]
+  event:
+  - push
+  - pull_request
+  branch:
+  - develop
+  - master
 type: docker
-workspace: {path: /usr/local/rust/abci}
+workspace:
+  path: /usr/local/rust/abci
+environment:
+  CARGO_INCREMENTAL: '0'
+  GIT_LFS_SKIP_SMUDGE: '1'
+clone:
+  disable: true
 ---
-clone: {disable: true}
-environment: {CARGO_INCREMENTAL: '0', GIT_LFS_SKIP_SMUDGE: '1'}
-kind: pipeline
 name: anoma-ci-misc-pr
-node: {project: anoma}
+kind: pipeline
+node:
+  project: anoma
 steps:
-- commands: [git clone $DRONE_GIT_HTTP_URL ., git fetch --all, git checkout $DRONE_TARGET_BRANCH,
-    git merge $DRONE_COMMIT, CONFLICTS=$(git ls-files -u | wc -l), 'if [ "$CONFLICTS"
-      -gt 0 ]; then exit 1; fi;exit 0']
+- name: clone
   image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/git:latest
-  name: clone
   pull: never
-- commands: ['aws s3 cp s3://$S3_BUCKET_SCRIPTS scripts/ci/anoma.zip', cd scripts/ci
-      && unzip anoma.zip]
-  depends_on: [clone]
+  commands:
+  - git clone $DRONE_GIT_HTTP_URL .
+  - git fetch --all
+  - git checkout $DRONE_TARGET_BRANCH
+  - git merge $DRONE_COMMIT
+  - CONFLICTS=$(git ls-files -u | wc -l)
+  - if [ "$CONFLICTS" -gt 0 ]; then exit 1; fi;exit 0
+- name: download-scripts
+  image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/git:latest
+  pull: never
+  commands:
+  - aws s3 cp s3://$S3_BUCKET_SCRIPTS/anoma.zip scripts/ci/anoma.zip
+  - cd scripts/ci && unzip anoma.zip
   environment:
-    AWS_ACCESS_KEY_ID: {from_secret: aws_access_key_id}
-    AWS_SECRET_ACCESS_KEY: {from_secret: aws_secret_access_key}
     S3_BUCKET_SCRIPTS: drone-ci-scripts
-  image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/git:latest
-  name: download-scripts
+    AWS_ACCESS_KEY_ID:
+      from_secret: aws_access_key_id
+    AWS_SECRET_ACCESS_KEY:
+      from_secret: aws_secret_access_key
+  depends_on:
+  - clone
+- name: build-docs
+  image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/anoma:latest
   pull: never
-- commands: [sccache --start-server, sh scripts/ci/build-and-publish-docs.sh]
-  depends_on: [download-scripts]
+  commands:
+  - sccache --start-server
+  - sh scripts/ci/build-and-publish-docs.sh
   environment:
-    AWS_ACCESS_KEY_ID: {from_secret: aws_access_key_id}
-    AWS_SECRET_ACCESS_KEY: {from_secret: aws_secret_access_key}
-    GITHUB_TOKEN: {from_secret: github_token}
+    GITHUB_TOKEN:
+      from_secret: github_token
+    AWS_ACCESS_KEY_ID:
+      from_secret: aws_access_key_id
+    AWS_SECRET_ACCESS_KEY:
+      from_secret: aws_secret_access_key
     SCCACHE_BUCKET: heliax-drone-cache-v2
     SCCACHE_S3_KEY_PREFIX: sccache-docs
-  image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/anoma:latest
-  name: build-docs
-  pull: never
+  depends_on:
+  - download-scripts
 trigger:
-  event: [pull_request]
+  event:
+  - pull_request
 type: docker
-workspace: {path: /usr/local/rust/anoma}
+workspace:
+  path: /usr/local/rust/anoma
+environment:
+  CARGO_INCREMENTAL: '0'
+  GIT_LFS_SKIP_SMUDGE: '1'
+clone:
+  disable: true
 ---
-clone: {disable: true}
-environment: {CARGO_INCREMENTAL: '0', GIT_LFS_SKIP_SMUDGE: '1'}
-kind: pipeline
 name: anoma-ci-cron
-node: {project: anoma}
+kind: pipeline
+node:
+  project: anoma
 steps:
-- commands: ['git clone $DRONE_GIT_HTTP_URL --quiet --branch ${DRONE_SOURCE_BRANCH:-master}
-      --single-branch .']
+- name: clone
   image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/git:latest
-  name: clone
   pull: never
-- commands: ['aws s3 cp s3://$S3_BUCKET_SCRIPTS scripts/ci/anoma.zip', cd scripts/ci
-      && unzip anoma.zip]
-  depends_on: [clone]
+  commands:
+  - git clone $DRONE_GIT_HTTP_URL --quiet --branch ${DRONE_SOURCE_BRANCH:-master}
+    --single-branch .
+- name: download-scripts
+  image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/git:latest
+  pull: never
+  commands:
+  - aws s3 cp s3://$S3_BUCKET_SCRIPTS/anoma.zip scripts/ci/anoma.zip
+  - cd scripts/ci && unzip anoma.zip
   environment:
-    AWS_ACCESS_KEY_ID: {from_secret: aws_access_key_id}
-    AWS_SECRET_ACCESS_KEY: {from_secret: aws_secret_access_key}
     S3_BUCKET_SCRIPTS: drone-ci-scripts
-  image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/git:latest
-  name: download-scripts
-  pull: never
-- commands: ['curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py
-      | python3 -', . $HOME/.poetry/env, cargo generate-lockfile, cd scripts/ci &&
-      poetry install && poetry run python3 audit.py]
-  depends_on: [download-scripts]
-  environment:
-    GITHUB_TOKEN: {from_secret: github_token}
+    AWS_ACCESS_KEY_ID:
+      from_secret: aws_access_key_id
+    AWS_SECRET_ACCESS_KEY:
+      from_secret: aws_secret_access_key
+  depends_on:
+  - clone
+- name: audit
   image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/anoma:latest
-  name: audit
   pull: never
-- commands: [sccache --start-server, 'curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py
-      | python3 -', . $HOME/.poetry/env, cd scripts/ci && poetry install && poetry
-      run python3 udeps.py]
-  depends_on: [download-scripts]
+  commands:
+  - curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py
+    | python3 -
+  - . $HOME/.poetry/env
+  - cargo generate-lockfile
+  - cd scripts/ci && poetry install && poetry run python3 audit.py
   environment:
-    AWS_ACCESS_KEY_ID: {from_secret: aws_access_key_id}
-    AWS_SECRET_ACCESS_KEY: {from_secret: aws_secret_access_key}
-    GITHUB_TOKEN: {from_secret: github_token}
+    GITHUB_TOKEN:
+      from_secret: github_token
+  depends_on:
+  - download-scripts
+- name: udeps
+  image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/anoma:latest
+  pull: never
+  commands:
+  - sccache --start-server
+  - curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py
+    | python3 -
+  - . $HOME/.poetry/env
+  - cd scripts/ci && poetry install && poetry run python3 udeps.py
+  environment:
+    GITHUB_TOKEN:
+      from_secret: github_token
+    AWS_ACCESS_KEY_ID:
+      from_secret: aws_access_key_id
+    AWS_SECRET_ACCESS_KEY:
+      from_secret: aws_secret_access_key
     SCCACHE_BUCKET: heliax-drone-cache-v2
     SCCACHE_S3_KEY_PREFIX: sccache-udeps
-  image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/anoma:latest
-  name: udeps
-  pull: never
+  depends_on:
+  - download-scripts
 trigger:
-  cron: [audit]
-  event: [cron]
+  event:
+  - cron
+  cron:
+  - audit
 type: docker
-workspace: {path: /usr/local/rust/anoma}
+workspace:
+  path: /usr/local/rust/anoma
+environment:
+  CARGO_INCREMENTAL: '0'
+  GIT_LFS_SKIP_SMUDGE: '1'
+clone:
+  disable: true
 ---
-clone: {disable: true}
-environment: {CARGO_INCREMENTAL: '0', GIT_LFS_SKIP_SMUDGE: '1'}
-kind: pipeline
 name: anoma-ci-build-abci-master
-node: {project: anoma}
+kind: pipeline
+node:
+  project: anoma
 steps:
-- commands: ['git clone $DRONE_GIT_HTTP_URL --quiet --branch ${DRONE_SOURCE_BRANCH:-master}
-      --single-branch .']
+- name: clone
   image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/git:latest
-  name: clone
   pull: never
-- commands: ['aws s3 cp s3://$S3_BUCKET_SCRIPTS scripts/ci/anoma.zip', cd scripts/ci
-      && unzip anoma.zip]
-  depends_on: [clone]
+  commands:
+  - git clone $DRONE_GIT_HTTP_URL --quiet --branch ${DRONE_SOURCE_BRANCH:-master}
+    --single-branch .
+- name: download-scripts
+  image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/git:latest
+  pull: never
+  commands:
+  - aws s3 cp s3://$S3_BUCKET_SCRIPTS/anoma.zip scripts/ci/anoma.zip
+  - cd scripts/ci && unzip anoma.zip
   environment:
-    AWS_ACCESS_KEY_ID: {from_secret: aws_access_key_id}
-    AWS_SECRET_ACCESS_KEY: {from_secret: aws_secret_access_key}
     S3_BUCKET_SCRIPTS: drone-ci-scripts
-  image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/git:latest
-  name: download-scripts
+    AWS_ACCESS_KEY_ID:
+      from_secret: aws_access_key_id
+    AWS_SECRET_ACCESS_KEY:
+      from_secret: aws_secret_access_key
+  depends_on:
+  - clone
+- name: build
+  image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/anoma:latest
   pull: never
-- commands: [sccache --start-server, make build-abci-plus-plus]
-  depends_on: [download-scripts]
+  commands:
+  - sccache --start-server
+  - make build-abci-plus-plus
   environment:
-    AWS_ACCESS_KEY_ID: {from_secret: aws_access_key_id}
-    AWS_SECRET_ACCESS_KEY: {from_secret: aws_secret_access_key}
+    AWS_ACCESS_KEY_ID:
+      from_secret: aws_access_key_id
+    AWS_SECRET_ACCESS_KEY:
+      from_secret: aws_secret_access_key
     SCCACHE_BUCKET: heliax-drone-cache-v2
     SCCACHE_S3_KEY_PREFIX: sccache-build-abci
+  depends_on:
+  - download-scripts
+- name: build-test
   image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/anoma:latest
-  name: build
   pull: never
-- commands: [sccache --start-server, make build-test-abci-plus-plus]
-  depends_on: [build]
+  commands:
+  - sccache --start-server
+  - make build-test-abci-plus-plus
   environment:
-    AWS_ACCESS_KEY_ID: {from_secret: aws_access_key_id}
-    AWS_SECRET_ACCESS_KEY: {from_secret: aws_secret_access_key}
+    AWS_ACCESS_KEY_ID:
+      from_secret: aws_access_key_id
+    AWS_SECRET_ACCESS_KEY:
+      from_secret: aws_secret_access_key
     SCCACHE_BUCKET: heliax-drone-cache-v2
     SCCACHE_S3_KEY_PREFIX: sccache-build-test-abci
-  image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/anoma:latest
-  name: build-test
-  pull: never
-- commands: ['aws s3api head-object --bucket heliax-drone-wasm-v2 --key ${DRONE_COMMIT}.json',
-    'if [ $? -ne 0  ]; then exit 1; fi', 'aws s3 cp s3://heliax-drone-wasm-v2/${DRONE_COMMIT}.json
-      wasm', 'cp wasm/${DRONE_COMMIT}.json wasm/checksums.json', 'jq -r -c ''.[]''
-      wasm/checksums.json | parallel aws s3 cp s3://heliax-drone-wasm-v2/{} wasm']
-  depends_on: [build-test]
+  depends_on:
+  - build
+- name: download-wasm
   image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/git:latest
-  name: download-wasm
   pull: never
-- commands: [sccache --start-server, make test-unit-abci-plus-plus]
-  depends_on: [download-wasm]
+  commands:
+  - aws s3api head-object --bucket heliax-drone-wasm-v2 --key ${DRONE_COMMIT}.json
+  - if [ $? -ne 0  ]; then exit 1; fi
+  - aws s3 cp s3://heliax-drone-wasm-v2/${DRONE_COMMIT}.json wasm
+  - cp wasm/${DRONE_COMMIT}.json wasm/checksums.json
+  - jq -r -c '.[]' wasm/checksums.json | parallel aws s3 cp s3://heliax-drone-wasm-v2/{}
+    wasm
+  depends_on:
+  - build-test
+- name: test-unit
+  image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/anoma:latest
+  pull: never
+  commands:
+  - sccache --start-server
+  - make test-unit-abci-plus-plus
   environment:
-    AWS_ACCESS_KEY_ID: {from_secret: aws_access_key_id}
-    AWS_SECRET_ACCESS_KEY: {from_secret: aws_secret_access_key}
+    AWS_ACCESS_KEY_ID:
+      from_secret: aws_access_key_id
+    AWS_SECRET_ACCESS_KEY:
+      from_secret: aws_secret_access_key
     SCCACHE_BUCKET: heliax-drone-cache-v2
     SCCACHE_S3_KEY_PREFIX: sccache-test-unit-abci
+  depends_on:
+  - download-wasm
+- name: test-e2e
   image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/anoma:latest
-  name: test-unit
   pull: never
-- commands: [sccache --start-server, make test-e2e-abci-plus-plus]
-  depends_on: [download-wasm]
+  commands:
+  - sccache --start-server
+  - make test-e2e-abci-plus-plus
   environment:
-    AWS_ACCESS_KEY_ID: {from_secret: aws_access_key_id}
-    AWS_SECRET_ACCESS_KEY: {from_secret: aws_secret_access_key}
+    AWS_ACCESS_KEY_ID:
+      from_secret: aws_access_key_id
+    AWS_SECRET_ACCESS_KEY:
+      from_secret: aws_secret_access_key
     SCCACHE_BUCKET: heliax-drone-cache-v2
     SCCACHE_S3_KEY_PREFIX: sccache-test-e2e-abci
     TENDERMINT: /usr/local/bin/tendermint++
-  image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/anoma:latest
-  name: test-e2e
-  pull: never
+  depends_on:
+  - download-wasm
 trigger:
-  branch: [master]
-  event: [push]
+  event:
+  - push
+  branch:
+  - master
 type: docker
-workspace: {path: /usr/local/rust/abci}
+workspace:
+  path: /usr/local/rust/abci
+environment:
+  CARGO_INCREMENTAL: '0'
+  GIT_LFS_SKIP_SMUDGE: '1'
+clone:
+  disable: true
 ---
-clone: {disable: true}
-environment: {CARGO_INCREMENTAL: '0', GIT_LFS_SKIP_SMUDGE: '1'}
-kind: pipeline
 name: anoma-ci-docs-master
-node: {project: anoma}
+kind: pipeline
+node:
+  project: anoma
 steps:
-- commands: ['git clone $DRONE_GIT_HTTP_URL --quiet --branch ${DRONE_SOURCE_BRANCH:-master}
-      --single-branch .']
+- name: clone
   image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/git:latest
-  name: clone
   pull: never
-- commands: ['aws s3 cp s3://$S3_BUCKET_SCRIPTS scripts/ci/anoma.zip', cd scripts/ci
-      && unzip anoma.zip]
-  depends_on: [clone]
+  commands:
+  - git clone $DRONE_GIT_HTTP_URL --quiet --branch ${DRONE_SOURCE_BRANCH:-master}
+    --single-branch .
+- name: download-scripts
+  image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/git:latest
+  pull: never
+  commands:
+  - aws s3 cp s3://$S3_BUCKET_SCRIPTS/anoma.zip scripts/ci/anoma.zip
+  - cd scripts/ci && unzip anoma.zip
   environment:
-    AWS_ACCESS_KEY_ID: {from_secret: aws_access_key_id}
-    AWS_SECRET_ACCESS_KEY: {from_secret: aws_secret_access_key}
     S3_BUCKET_SCRIPTS: drone-ci-scripts
-  image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/git:latest
-  name: download-scripts
+    AWS_ACCESS_KEY_ID:
+      from_secret: aws_access_key_id
+    AWS_SECRET_ACCESS_KEY:
+      from_secret: aws_secret_access_key
+  depends_on:
+  - clone
+- name: build-docs
+  image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/anoma:latest
   pull: never
-- commands: [sccache --start-server, sh scripts/ci/build-and-publish-docs.sh]
-  depends_on: [download-scripts]
+  commands:
+  - sccache --start-server
+  - sh scripts/ci/build-and-publish-docs.sh
   environment:
-    AWS_ACCESS_KEY_ID: {from_secret: aws_access_key_id}
-    AWS_SECRET_ACCESS_KEY: {from_secret: aws_secret_access_key}
-    GITHUB_TOKEN: {from_secret: github_token}
+    GITHUB_TOKEN:
+      from_secret: github_token
+    AWS_ACCESS_KEY_ID:
+      from_secret: aws_access_key_id
+    AWS_SECRET_ACCESS_KEY:
+      from_secret: aws_secret_access_key
     SCCACHE_BUCKET: heliax-drone-cache-v2
     SCCACHE_S3_KEY_PREFIX: sccache-docs
-  image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/anoma:latest
-  name: build-docs
-  pull: never
+  depends_on:
+  - download-scripts
 trigger:
-  branch: [master]
-  event: [push]
+  event:
+  - push
+  branch:
+  - master
 type: docker
-workspace: {path: /usr/local/rust/anoma}
+workspace:
+  path: /usr/local/rust/anoma
+environment:
+  CARGO_INCREMENTAL: '0'
+  GIT_LFS_SKIP_SMUDGE: '1'
+clone:
+  disable: true
 ---
-clone: {disable: true}
-environment: {CARGO_INCREMENTAL: '0', GIT_LFS_SKIP_SMUDGE: '1'}
-kind: pipeline
 name: anoma-ci-build-master
-node: {project: anoma}
+kind: pipeline
+node:
+  project: anoma
 steps:
-- commands: ['git clone $DRONE_GIT_HTTP_URL --quiet --branch ${DRONE_SOURCE_BRANCH:-master}
-      --single-branch .']
+- name: clone
   image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/git:latest
-  name: clone
   pull: never
-- commands: ['aws s3 cp s3://$S3_BUCKET_SCRIPTS scripts/ci/anoma.zip', cd scripts/ci
-      && unzip anoma.zip]
-  depends_on: [clone]
+  commands:
+  - git clone $DRONE_GIT_HTTP_URL --quiet --branch ${DRONE_SOURCE_BRANCH:-master}
+    --single-branch .
+- name: download-scripts
+  image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/git:latest
+  pull: never
+  commands:
+  - aws s3 cp s3://$S3_BUCKET_SCRIPTS/anoma.zip scripts/ci/anoma.zip
+  - cd scripts/ci && unzip anoma.zip
   environment:
-    AWS_ACCESS_KEY_ID: {from_secret: aws_access_key_id}
-    AWS_SECRET_ACCESS_KEY: {from_secret: aws_secret_access_key}
     S3_BUCKET_SCRIPTS: drone-ci-scripts
-  image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/git:latest
-  name: download-scripts
+    AWS_ACCESS_KEY_ID:
+      from_secret: aws_access_key_id
+    AWS_SECRET_ACCESS_KEY:
+      from_secret: aws_secret_access_key
+  depends_on:
+  - clone
+- name: build
+  image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/anoma:latest
   pull: never
-- commands: [sccache --start-server, make build]
-  depends_on: [download-scripts]
+  commands:
+  - sccache --start-server
+  - make build
   environment:
-    AWS_ACCESS_KEY_ID: {from_secret: aws_access_key_id}
-    AWS_SECRET_ACCESS_KEY: {from_secret: aws_secret_access_key}
+    AWS_ACCESS_KEY_ID:
+      from_secret: aws_access_key_id
+    AWS_SECRET_ACCESS_KEY:
+      from_secret: aws_secret_access_key
     SCCACHE_BUCKET: heliax-drone-cache-v2
     SCCACHE_S3_KEY_PREFIX: sccache-build
+  depends_on:
+  - download-scripts
+- name: build-test
   image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/anoma:latest
-  name: build
   pull: never
-- commands: [sccache --start-server, make build-test]
-  depends_on: [build]
+  commands:
+  - sccache --start-server
+  - make build-test
   environment:
-    AWS_ACCESS_KEY_ID: {from_secret: aws_access_key_id}
-    AWS_SECRET_ACCESS_KEY: {from_secret: aws_secret_access_key}
+    AWS_ACCESS_KEY_ID:
+      from_secret: aws_access_key_id
+    AWS_SECRET_ACCESS_KEY:
+      from_secret: aws_secret_access_key
     SCCACHE_BUCKET: heliax-drone-cache-v2
     SCCACHE_S3_KEY_PREFIX: sccache-build-test
-  image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/anoma:latest
-  name: build-test
-  pull: never
-- commands: ['aws s3api head-object --bucket heliax-drone-wasm-v2 --key ${DRONE_COMMIT}.json',
-    'if [ $? -ne 0  ]; then exit 1; fi', 'aws s3 cp s3://heliax-drone-wasm-v2/${DRONE_COMMIT}.json
-      wasm', 'cp wasm/${DRONE_COMMIT}.json wasm/checksums.json', 'jq -r -c ''.[]''
-      wasm/checksums.json | parallel aws s3 cp s3://heliax-drone-wasm-v2/{} wasm']
-  depends_on: [build-test]
+  depends_on:
+  - build
+- name: download-wasm
   image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/git:latest
-  name: download-wasm
   pull: never
-- commands: [sccache --start-server, make test-unit]
-  depends_on: [download-wasm]
+  commands:
+  - aws s3api head-object --bucket heliax-drone-wasm-v2 --key ${DRONE_COMMIT}.json
+  - if [ $? -ne 0  ]; then exit 1; fi
+  - aws s3 cp s3://heliax-drone-wasm-v2/${DRONE_COMMIT}.json wasm
+  - cp wasm/${DRONE_COMMIT}.json wasm/checksums.json
+  - jq -r -c '.[]' wasm/checksums.json | parallel aws s3 cp s3://heliax-drone-wasm-v2/{}
+    wasm
+  depends_on:
+  - build-test
+- name: test-unit
+  image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/anoma:latest
+  pull: never
+  commands:
+  - sccache --start-server
+  - make test-unit
   environment:
-    AWS_ACCESS_KEY_ID: {from_secret: aws_access_key_id}
-    AWS_SECRET_ACCESS_KEY: {from_secret: aws_secret_access_key}
+    AWS_ACCESS_KEY_ID:
+      from_secret: aws_access_key_id
+    AWS_SECRET_ACCESS_KEY:
+      from_secret: aws_secret_access_key
     SCCACHE_BUCKET: heliax-drone-cache-v2
     SCCACHE_S3_KEY_PREFIX: sccache-test-unit
+  depends_on:
+  - download-wasm
+- name: test-e2e
   image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/anoma:latest
-  name: test-unit
   pull: never
-- commands: [sccache --start-server, make test-e2e]
-  depends_on: [download-wasm]
+  commands:
+  - sccache --start-server
+  - make test-e2e
   environment:
-    AWS_ACCESS_KEY_ID: {from_secret: aws_access_key_id}
-    AWS_SECRET_ACCESS_KEY: {from_secret: aws_secret_access_key}
+    AWS_ACCESS_KEY_ID:
+      from_secret: aws_access_key_id
+    AWS_SECRET_ACCESS_KEY:
+      from_secret: aws_secret_access_key
     SCCACHE_BUCKET: heliax-drone-cache-v2
     SCCACHE_S3_KEY_PREFIX: sccache-test-e2e
-  image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/anoma:latest
-  name: test-e2e
-  pull: never
+  depends_on:
+  - download-wasm
 trigger:
-  branch: [master]
-  event: [push]
+  event:
+  - push
+  branch:
+  - master
 type: docker
-workspace: {path: /usr/local/rust/anoma}
+workspace:
+  path: /usr/local/rust/anoma
+environment:
+  CARGO_INCREMENTAL: '0'
+  GIT_LFS_SKIP_SMUDGE: '1'
+clone:
+  disable: true
 ---
-clone: {disable: true}
-environment: {GIT_LFS_SKIP_SMUDGE: '1'}
-kind: pipeline
 name: anoma-ci-wasm-master
-node: {project: anoma}
+kind: pipeline
+node:
+  project: anoma
 steps:
-- commands: ['git clone $DRONE_GIT_HTTP_URL --quiet --branch ${DRONE_SOURCE_BRANCH:-master}
-      --single-branch .']
+- name: clone
   image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/git:latest
-  name: clone
   pull: never
-- commands: ['aws s3 cp s3://$S3_BUCKET_SCRIPTS scripts/ci/anoma.zip', cd scripts/ci
-      && unzip anoma.zip]
-  depends_on: [clone]
+  commands:
+  - git clone $DRONE_GIT_HTTP_URL --quiet --branch ${DRONE_SOURCE_BRANCH:-master}
+    --single-branch .
+- name: download-scripts
+  image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/git:latest
+  pull: never
+  commands:
+  - aws s3 cp s3://$S3_BUCKET_SCRIPTS/anoma.zip scripts/ci/anoma.zip
+  - cd scripts/ci && unzip anoma.zip
   environment:
-    AWS_ACCESS_KEY_ID: {from_secret: aws_access_key_id}
-    AWS_SECRET_ACCESS_KEY: {from_secret: aws_secret_access_key}
     S3_BUCKET_SCRIPTS: drone-ci-scripts
-  image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/git:latest
-  name: download-scripts
-  pull: never
-- depends_on: [download-scripts]
-  environment:
-    AWS_ACCESS_KEY_ID: {from_secret: aws_access_key_id}
-    AWS_SECRET_ACCESS_KEY: {from_secret: aws_secret_access_key}
+    AWS_ACCESS_KEY_ID:
+      from_secret: aws_access_key_id
+    AWS_SECRET_ACCESS_KEY:
+      from_secret: aws_secret_access_key
+  depends_on:
+  - clone
+- name: restore-cache
   image: meltwater/drone-cache:latest
-  name: restore-cache
   pull: never
   settings:
     archive_format: gzip
     backend: s3
     bucket: heliax-drone-cache-v2
     cache_key: 1-54-0/wasm/{{ checksum "wasm/wasm_source/Cargo.lock" }}
-    mount: [wasm/wasm_source/target]
+    mount:
+    - wasm/wasm_source/target
     region: eu-west-1
     restore: true
-- commands: [cp wasm/checksums.json wasm/original-checksums.json, make build-wasm-scripts]
-  depends_on: [restore-cache]
-  image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/wasm:latest
-  name: build-wasm
-  pull: never
-- commands: ['aws s3 sync wasm s3://heliax-drone-wasm-v2 --exclude "*" --include "*.wasm"
-      --exclude "*/*"', 'cp wasm/checksums.json wasm/${DRONE_COMMIT}.json', 'aws s3
-      cp wasm/${DRONE_COMMIT}.json s3://heliax-drone-wasm-v2']
-  depends_on: [build-wasm]
   environment:
-    AWS_ACCESS_KEY_ID: {from_secret: aws_access_key_id}
-    AWS_SECRET_ACCESS_KEY: {from_secret: aws_secret_access_key}
-    GITHUB_TOKEN: {from_secret: github_token}
+    AWS_ACCESS_KEY_ID:
+      from_secret: aws_access_key_id
+    AWS_SECRET_ACCESS_KEY:
+      from_secret: aws_secret_access_key
+  depends_on:
+  - download-scripts
+- name: build-wasm
+  image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/wasm:latest
+  pull: never
+  commands:
+  - cp wasm/checksums.json wasm/original-checksums.json
+  - make build-wasm-scripts
+  depends_on:
+  - restore-cache
+- name: update-wasm
   image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/git:latest
-  name: update-wasm
   pull: never
-- commands: [make test-wasm]
-  depends_on: [update-wasm]
-  image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/wasm:latest
-  name: test-wasm
-  pull: never
-- commands: [cmp -- wasm/checksums.json wasm/original-checksums.json]
-  depends_on: [update-wasm]
-  image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/wasm:latest
-  name: check-wasm
-  pull: never
-- commands: ['aws s3 sync wasm s3://heliax-anoma-wasm-v1 --acl public-read --exclude
-      "*" --include "*.wasm" --exclude "*/*"']
-  depends_on: [test-wasm, check-wasm]
+  commands:
+  - aws s3 sync wasm s3://heliax-drone-wasm-v2 --exclude "*" --include "*.wasm" --exclude
+    "*/*"
+  - cp wasm/checksums.json wasm/${DRONE_COMMIT}.json
+  - aws s3 cp wasm/${DRONE_COMMIT}.json s3://heliax-drone-wasm-v2
   environment:
-    AWS_ACCESS_KEY_ID: {from_secret: aws_access_key_id}
-    AWS_SECRET_ACCESS_KEY: {from_secret: aws_secret_access_key}
-  image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/git:latest
-  name: upload-wasm
-  pull: never
-- commands: [rm -f  ./wasm/wasm_source/target/.rustc_info.json, rm -rf ./wasm/wasm_source/target/debug,
-    find ./wasm/wasm_source/target/release -maxdepth 1 -type f -delete, find ./wasm/wasm_source/target/wasm32-unknown-unknown
-      -maxdepth 1 -type f -delete]
-  depends_on: [test-wasm, check-wasm, upload-wasm]
+    AWS_ACCESS_KEY_ID:
+      from_secret: aws_access_key_id
+    AWS_SECRET_ACCESS_KEY:
+      from_secret: aws_secret_access_key
+    GITHUB_TOKEN:
+      from_secret: github_token
+  depends_on:
+  - build-wasm
+- name: test-wasm
   image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/wasm:latest
-  name: clean-cache
   pull: never
+  commands:
+  - make test-wasm
+  depends_on:
+  - update-wasm
+- name: check-wasm
+  image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/wasm:latest
+  pull: never
+  commands:
+  - cmp -- wasm/checksums.json wasm/original-checksums.json
+  depends_on:
+  - update-wasm
+- name: upload-wasm
+  image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/git:latest
+  pull: never
+  commands:
+  - aws s3 sync wasm s3://heliax-anoma-wasm-v1 --acl public-read --exclude "*" --include
+    "*.wasm" --exclude "*/*"
+  environment:
+    AWS_ACCESS_KEY_ID:
+      from_secret: aws_access_key_id
+    AWS_SECRET_ACCESS_KEY:
+      from_secret: aws_secret_access_key
+  depends_on:
+  - test-wasm
+  - check-wasm
+- name: clean-cache
+  image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/wasm:latest
+  pull: never
+  commands:
+  - rm -f  ./wasm/wasm_source/target/.rustc_info.json
+  - rm -rf ./wasm/wasm_source/target/debug
+  - find ./wasm/wasm_source/target/release -maxdepth 1 -type f -delete
+  - find ./wasm/wasm_source/target/wasm32-unknown-unknown -maxdepth 1 -type f -delete
+  depends_on:
+  - test-wasm
+  - check-wasm
+  - upload-wasm
   when:
-    status: [success, failure]
-- depends_on: [clean-cache]
-  environment:
-    AWS_ACCESS_KEY_ID: {from_secret: aws_access_key_id}
-    AWS_SECRET_ACCESS_KEY: {from_secret: aws_secret_access_key}
-    BACKEND_OPERATION_TIMEOUT: 8m
+    status:
+    - success
+    - failure
+- name: rebuild-cache
   image: meltwater/drone-cache:latest
-  name: rebuild-cache
   pull: never
   settings:
     archive_format: gzip
     backend: s3
     bucket: heliax-drone-cache-v2
     cache_key: 1-54-0/wasm/{{ checksum "wasm/wasm_source/Cargo.lock" }}
-    mount: [wasm/wasm_source/target]
+    mount:
+    - wasm/wasm_source/target
     override: false
-    rebuild: true
     region: eu-west-1
+    rebuild: true
+  environment:
+    AWS_ACCESS_KEY_ID:
+      from_secret: aws_access_key_id
+    AWS_SECRET_ACCESS_KEY:
+      from_secret: aws_secret_access_key
+    BACKEND_OPERATION_TIMEOUT: 8m
+  depends_on:
+  - clean-cache
   when:
-    status: [success, failure]
+    status:
+    - success
+    - failure
 trigger:
-  branch: [master]
-  event: [push]
+  event:
+  - push
+  branch:
+  - master
 type: docker
-workspace: {path: /usr/local/rust/wasm}
+workspace:
+  path: /usr/local/rust/wasm
+environment:
+  GIT_LFS_SKIP_SMUDGE: '1'
+clone:
+  disable: true
 ---
-clone: {disable: true}
-environment: {CARGO_INCREMENTAL: '0', GIT_LFS_SKIP_SMUDGE: '1'}
-kind: pipeline
 name: anoma-ci-release
-node: {project: anoma}
+kind: pipeline
+node:
+  project: anoma
 steps:
-- commands: [git clone $DRONE_GIT_HTTP_URL ., git fetch --all, git checkout $DRONE_TARGET_BRANCH,
-    git merge $DRONE_COMMIT, CONFLICTS=$(git ls-files -u | wc -l), 'if [ "$CONFLICTS"
-      -gt 0 ]; then exit 1; fi;exit 0']
+- name: clone
   image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/git:latest
-  name: clone
   pull: never
-- commands: ['aws s3 cp s3://$S3_BUCKET_SCRIPTS scripts/ci/anoma.zip', cd scripts/ci
-      && unzip anoma.zip]
-  depends_on: [clone]
+  commands:
+  - git clone $DRONE_GIT_HTTP_URL .
+  - git fetch --all
+  - git checkout $DRONE_TARGET_BRANCH
+  - git merge $DRONE_COMMIT
+  - CONFLICTS=$(git ls-files -u | wc -l)
+  - if [ "$CONFLICTS" -gt 0 ]; then exit 1; fi;exit 0
+- name: download-scripts
+  image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/git:latest
+  pull: never
+  commands:
+  - aws s3 cp s3://$S3_BUCKET_SCRIPTS/anoma.zip scripts/ci/anoma.zip
+  - cd scripts/ci && unzip anoma.zip
   environment:
-    AWS_ACCESS_KEY_ID: {from_secret: aws_access_key_id}
-    AWS_SECRET_ACCESS_KEY: {from_secret: aws_secret_access_key}
     S3_BUCKET_SCRIPTS: drone-ci-scripts
-  image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/git:latest
-  name: download-scripts
+    AWS_ACCESS_KEY_ID:
+      from_secret: aws_access_key_id
+    AWS_SECRET_ACCESS_KEY:
+      from_secret: aws_secret_access_key
+  depends_on:
+  - clone
+- name: build-docs
+  image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/anoma:latest
   pull: never
-- commands: [sccache --start-server, sh scripts/ci/build-and-publish-docs.sh]
-  depends_on: [download-scripts]
+  commands:
+  - sccache --start-server
+  - sh scripts/ci/build-and-publish-docs.sh
   environment:
-    AWS_ACCESS_KEY_ID: {from_secret: aws_access_key_id}
-    AWS_SECRET_ACCESS_KEY: {from_secret: aws_secret_access_key}
-    GITHUB_TOKEN: {from_secret: github_token}
+    GITHUB_TOKEN:
+      from_secret: github_token
+    AWS_ACCESS_KEY_ID:
+      from_secret: aws_access_key_id
+    AWS_SECRET_ACCESS_KEY:
+      from_secret: aws_secret_access_key
     SCCACHE_BUCKET: heliax-drone-cache-v2
     SCCACHE_S3_KEY_PREFIX: sccache-docs
+  depends_on:
+  - download-scripts
+- name: build-package
   image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/anoma:latest
-  name: build-docs
   pull: never
-- commands: [sccache --start-server, make package]
-  depends_on: [build-and-publish-docs]
+  commands:
+  - sccache --start-server
+  - make package
   environment:
-    AWS_ACCESS_KEY_ID: {from_secret: aws_access_key_id}
-    AWS_SECRET_ACCESS_KEY: {from_secret: aws_secret_access_key}
+    AWS_ACCESS_KEY_ID:
+      from_secret: aws_access_key_id
+    AWS_SECRET_ACCESS_KEY:
+      from_secret: aws_secret_access_key
     SCCACHE_BUCKET: heliax-drone-cache-v2
     SCCACHE_S3_KEY_PREFIX: sccache-build-release
-  image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/anoma:latest
-  name: build-package
-  pull: never
-- commands: [sh scripts/ci/release.sh]
-  depends_on: [build-package]
-  environment:
-    GITHUB_TOKEN: {from_secret: github_token}
+  depends_on:
+  - build-and-publish-docs
+- name: create-release
   image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/git:latest
-  name: create-release
   pull: never
+  commands:
+  - sh scripts/ci/release.sh
+  environment:
+    GITHUB_TOKEN:
+      from_secret: github_token
+  depends_on:
+  - build-package
 trigger:
-  event: [tag]
+  event:
+  - tag
 type: docker
-workspace: {path: /usr/local/rust/anoma}
----
-kind: signature
-hmac: 4196e59f9f25d67d232bd24215c354917698d1e4aba951492de12ce241cfeca0
-
-...
+workspace:
+  path: /usr/local/rust/anoma
+environment:
+  CARGO_INCREMENTAL: '0'
+  GIT_LFS_SKIP_SMUDGE: '1'
+clone:
+  disable: true
