@@ -1,3 +1,4 @@
+---
 name: anoma-ci-wasm-pr
 kind: pipeline
 node:
@@ -1119,3 +1120,8 @@ environment:
   GIT_LFS_SKIP_SMUDGE: '1'
 clone:
   disable: true
+---
+kind: signature
+hmac: 3bd6ba1f953e781b591ef33daac7533b478fc266c7d7ce165a86257298a70055
+
+...
