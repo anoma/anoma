@@ -139,6 +139,7 @@ dependencies = [
  "anoma",
  "ark-serialize",
  "ark-std",
+ "assert_matches",
  "async-std",
  "async-trait",
  "base64 0.13.0",

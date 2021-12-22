@@ -140,10 +140,7 @@ mod protocol_txs {
                 BorshDeserialize::deserialize(buf)?;
             match variant {
                 0 => {
-                    let json = String::from_utf8(
-                        BorshDeserialize::deserialize(&mut blob.as_ref())?,
-                    )
-                    .map_err(|err| {
+                    let json = String::from_utf8(blob).map_err(|err| {
                         std::io::Error::new(ErrorKind::InvalidData, err)
                     })?;
                     Ok(ProtocolTxType::DKG(
@@ -152,13 +149,9 @@ mod protocol_txs {
                         })?,
                     ))
                 }
-                1 => {
-                    let bytes: Vec<u8> =
-                        BorshDeserialize::deserialize(&mut blob.as_ref())?;
-                    Ok(ProtocolTxType::NewDkgKeypair(
-                        BorshDeserialize::deserialize(&mut bytes.as_ref())?,
-                    ))
-                }
+                1 => Ok(ProtocolTxType::NewDkgKeypair(
+                    BorshDeserialize::deserialize(&mut blob.as_ref())?,
+                )),
                 _ => Err(std::io::Error::new(
                     ErrorKind::InvalidData,
                     "Invalid enum variant",

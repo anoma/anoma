@@ -36,21 +36,24 @@ mod prepare_block {
                 // TODO: This should not be hardcoded
                 let privkey = <EllipticCurve as PairingEngine>::G2Affine::prime_subgroup_generator();
 
+                // Add a single PVSS transcript if one is in the mempool
                 let mut txs = if let Some(pvss) =
                     req.block_data.iter().find(|tx_bytes| {
                         if let Ok(tx) = Tx::try_from(tx_bytes.as_slice()) {
-                            matches!(
-                                process_tx(tx),
+                            match process_tx(tx) {
                                 Ok(TxType::Protocol(ProtocolTx {
                                     tx: ProtocolTxType::DKG(Message::Deal(_)),
-                                    ..
-                                })),
-                            )
+                                    pk,
+                                })) => self
+                                    .get_validator_from_protocol_pk(&pk)
+                                    .is_some(),
+                                _ => false,
+                            }
                         } else {
                             false
                         }
                     }) {
-                    vec![pvss.to_vec()]
+                    vec![pvss.clone()]
                 } else {
                     vec![]
                 };
@@ -64,24 +67,22 @@ mod prepare_block {
                         .take(number_of_new_txs)
                         .filter(|tx_bytes| {
                             if let Ok(tx) = Tx::try_from(tx_bytes.as_slice()) {
-                                matches!(
-                                    process_tx(tx),
-                                    Ok(TxType::Wrapper(_))
-                                        | Ok(TxType::Protocol(ProtocolTx {
-                                            tx: ProtocolTxType::NewDkgKeypair(
-                                                _
-                                            ),
-                                            ..
-                                        })),
-                                )
+                                match process_tx(tx) {
+                                    Ok(TxType::Wrapper(_)) => true,
+                                    Ok(TxType::Protocol(ProtocolTx {
+                                        tx: ProtocolTxType::NewDkgKeypair(_),
+                                        pk,
+                                    })) => self
+                                        .get_validator_from_protocol_pk(&pk)
+                                        .is_some(),
+                                    _ => false,
+                                }
                             } else {
                                 false
                             }
                         })
                         .collect(),
                 );
-
-                // Add a single PVSS transcript if one is in the mempool
 
                 // Aggregate PVSS transcripts if DKG is in appropriate state
                 if let Ok(msg) = dkg.state_machine.aggregate() {
@@ -122,10 +123,12 @@ mod prepare_block {
         use anoma::types::transaction::Fee;
 
         use super::*;
-        use crate::node::ledger::shell::test_utils::{gen_keypair, TestShell};
+        use crate::node::ledger::shell::test_utils::{
+            gen_keypair, setup, TestShell,
+        };
 
         /// Test that if a tx from the mempool is not a
-        /// WrapperTx type, it is not included in the
+        /// WrapperTx / ProtocolTx type, it is not included in the
         /// proposed block.
         #[test]
         fn test_prepare_proposal_rejects_non_wrapper_tx() {
@@ -242,6 +245,179 @@ mod prepare_block {
                 .collect();
             // check that the order of the txs is correct
             assert_eq!(received, expected_txs);
+        }
+
+        /// If multiple pvss transcripts are provided to
+        /// [`PrepareProposal`], only one should be included
+        /// in the proposed block
+        #[test]
+        fn test_prepare_proposal_includes_at_most_one_pvss() {
+            let rng = &mut ark_std::test_rng();
+            let (mut shell, _) = setup();
+            let mut req = RequestPrepareProposal {
+                block_data: vec![],
+                block_data_size: 10,
+            };
+
+            if let ShellMode::Validator { dkg, data, .. } =
+                &mut shell.shell.mode
+            {
+                let protocol_key = data.keys.protocol_keypair.lock();
+                for _ in 0..2 {
+                    req.block_data.push(
+                        ProtocolTxType::DKG(
+                            dkg.state_machine.share(rng).expect("Test failed"),
+                        )
+                        .sign(&protocol_key)
+                        .to_bytes(),
+                    );
+                }
+            } else {
+                panic!("Test failed");
+            }
+
+            let expected = vec![req.block_data[0].clone()];
+            let received: Vec<Vec<u8>> = shell.prepare_proposal(req).block_data;
+            assert_eq!(expected, received);
+        }
+
+        /// If a protocol tx is sent by a non-validator, it is not
+        /// included in the block proposal
+        #[test]
+        fn test_exclude_protocol_txs_from_non_validators() {
+            let rng = &mut ark_std::test_rng();
+            let (mut shell, _) = setup();
+            let mut req = RequestPrepareProposal {
+                block_data: vec![],
+                block_data_size: 10,
+            };
+            let non_validator_keys = gen_keypair();
+            if let ShellMode::Validator { dkg, data, .. } =
+                &mut shell.shell.mode
+            {
+                req.block_data.push(
+                    ProtocolTxType::DKG(
+                        dkg.state_machine.share(rng).expect("Test failed"),
+                    )
+                    .sign(&non_validator_keys)
+                    .to_bytes(),
+                );
+
+                let request_data = UpdateDkgSessionKey {
+                    address: data.address.clone(),
+                    dkg_public_key: data
+                        .keys
+                        .dkg_keypair
+                        .as_ref()
+                        .unwrap()
+                        .public()
+                        .try_to_vec()
+                        .expect(
+                            "Serialization of DKG public key shouldn't fail",
+                        ),
+                };
+                req.block_data.push(
+                    ProtocolTxType::request_new_dkg_keypair(
+                        request_data,
+                        &shell.shell.wasm_dir,
+                        read_wasm,
+                    )
+                    .sign(&non_validator_keys)
+                    .to_bytes(),
+                );
+            } else {
+                panic!("Test failed");
+            }
+            let received: Vec<Vec<u8>> = shell.prepare_proposal(req).block_data;
+            assert!(received.is_empty());
+        }
+
+        /// Test that a protocol tx requesting a new
+        /// DKG session keypair can be included in a
+        /// block proposal
+        #[test]
+        fn test_new_dkg_session_keypair_tx() {
+            let (mut shell, _) = setup();
+            let mut req = RequestPrepareProposal {
+                block_data: vec![],
+                block_data_size: 10,
+            };
+
+            if let ShellMode::Validator { data, .. } = &mut shell.shell.mode {
+                let protocol_keys = data.keys.protocol_keypair.lock();
+                let request_data = UpdateDkgSessionKey {
+                    address: data.address.clone(),
+                    dkg_public_key: data
+                        .keys
+                        .dkg_keypair
+                        .as_ref()
+                        .unwrap()
+                        .public()
+                        .try_to_vec()
+                        .expect(
+                            "Serialization of DKG public key shouldn't fail",
+                        ),
+                };
+                req.block_data.push(
+                    ProtocolTxType::request_new_dkg_keypair(
+                        request_data,
+                        &shell.shell.wasm_dir,
+                        read_wasm,
+                    )
+                    .sign(&protocol_keys)
+                    .to_bytes(),
+                );
+            } else {
+                panic!("Test failed");
+            }
+
+            let expected = req.block_data.clone();
+            assert_eq!(expected, shell.prepare_proposal(req).block_data);
+        }
+
+        /// If the DKG has finished, a final key should
+        /// be aggregated and included in the proposal
+        #[test]
+        fn test_aggregate() {
+            use ferveo::DkgState;
+            let (mut shell, _) = setup();
+            let rng = &mut ark_std::test_rng();
+            let me =
+                if let ShellMode::Validator { data, .. } = &shell.shell.mode {
+                    let protocol_keys = data.keys.protocol_keypair.lock();
+                    shell
+                        .shell
+                        .get_validator_from_protocol_pk(&protocol_keys.public)
+                        .expect("Test failed")
+                } else {
+                    panic!("Test failed");
+                };
+
+            if let ShellMode::Validator { dkg, .. } = &mut shell.shell.mode {
+                let msg = dkg.state_machine.share(rng).expect("Test failed");
+                dkg.state_machine
+                    .apply_message(me, msg)
+                    .expect("Test failed");
+                assert_matches!(dkg.state_machine.state, DkgState::Dealt);
+            } else {
+                panic!("Test failed");
+            }
+
+            let response = shell
+                .prepare_proposal(RequestPrepareProposal {
+                    block_data: vec![],
+                    block_data_size: 10,
+                })
+                .block_data;
+            assert_eq!(response.len(), 1);
+            let tx = Tx::try_from(response[0].as_slice()).expect("Test failed");
+            assert_matches!(
+                process_tx(tx).expect("Test failed"),
+                TxType::Protocol(ProtocolTx {
+                    tx: ProtocolTxType::DKG(Message::Aggregate(_)),
+                    ..
+                })
+            );
         }
     }
 }
