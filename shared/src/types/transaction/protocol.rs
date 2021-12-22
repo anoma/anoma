@@ -65,6 +65,7 @@ mod protocol_txs {
     }
 
     #[derive(Clone, Debug)]
+    #[allow(clippy::large_enum_variant)]
     /// Types of protocol messages to be sent
     pub enum ProtocolTxType {
         /// Messages to be given to the DKG state machine

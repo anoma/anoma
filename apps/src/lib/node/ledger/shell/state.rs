@@ -133,12 +133,11 @@ impl borsh::ser::BorshSerialize for DkgInstance {
         &self,
         writer: &mut W,
     ) -> std::io::Result<()> {
-        let buf = Vec::<u8>::new();
-        let bytes = CanonicalSerialize::serialize(&self.state_machine, buf)
-            .map_err(|e| {
-                std::io::Error::new(std::io::ErrorKind::InvalidData, e)
-            })?;
-        BorshSerialize::serialize(&bytes, writer)
+        let mut buf = Vec::<u8>::new();
+        CanonicalSerialize::serialize(&self.state_machine, &mut buf).map_err(
+            |e| std::io::Error::new(std::io::ErrorKind::InvalidData, e),
+        )?;
+        BorshSerialize::serialize(&buf, writer)
     }
 }
 

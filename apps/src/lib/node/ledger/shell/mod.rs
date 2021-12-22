@@ -61,14 +61,13 @@ use tower_abci::{request, response};
 use tower_abci_old::{request, response};
 
 use super::rpc;
-use crate::config;
 use crate::config::{genesis, TendermintMode};
 use crate::node::ledger::events::Event;
 use crate::node::ledger::shims::abcipp_shim_types::shim;
 use crate::node::ledger::shims::abcipp_shim_types::shim::response::TxResult;
 use crate::node::ledger::{protocol, storage, tendermint_node};
-use crate::wallet::Wallet;
 use crate::wasm_loader::read_wasm;
+use crate::{config, wallet};
 
 pub type TendermintValidator =
     ferveo_common::TendermintValidator<EllipticCurve>;
@@ -229,9 +228,6 @@ where
         let chain_id = config.chain_id;
         let db_path = config.shell.db_dir(&chain_id);
         let base_dir = config.shell.base_dir;
-        let wallet_path = &base_dir.join(chain_id.as_str());
-        let genesis_path =
-            &base_dir.join(format!("{}.toml", chain_id.as_str()));
         let mode = config.tendermint.tendermint_mode;
         if !Path::new(&base_dir).is_dir() {
             std::fs::create_dir(&base_dir)
@@ -287,24 +283,48 @@ where
                 } else {
                     Default::default()
                 };
-
-                let wallet =
-                    Wallet::load_or_new_from_genesis(wallet_path, move || {
-                        genesis::genesis_config::open_genesis_config(
-                            genesis_path,
+                #[cfg(not(feature = "dev"))]
+                {
+                    let wallet_path = &base_dir.join(chain_id.as_str());
+                    let genesis_path =
+                        &base_dir.join(format!("{}.toml", chain_id.as_str()));
+                    let wallet = wallet::Wallet::load_or_new_from_genesis(
+                        wallet_path,
+                        move || {
+                            genesis::genesis_config::open_genesis_config(
+                                genesis_path,
+                            )
+                        },
+                    );
+                    wallet
+                        .take_validator_data()
+                        .map(|data| ShellMode::Validator {
+                            data,
+                            next_dkg_keypair: None,
+                            dkg,
+                            broadcast_sender,
+                        })
+                        .expect(
+                            "Validator data should have been stored in the \
+                             wallet",
                         )
-                    });
-                wallet
-                    .take_validator_data()
-                    .map(|data| ShellMode::Validator {
-                        data,
+                }
+                #[cfg(feature = "dev")]
+                {
+                    let validator_keys = wallet::defaults::validator_keys();
+                    ShellMode::Validator {
+                        data: wallet::ValidatorData {
+                            address: wallet::defaults::validator_address(),
+                            keys: wallet::ValidatorKeys {
+                                protocol_keypair: validator_keys.0,
+                                dkg_keypair: Some(validator_keys.1),
+                            },
+                        },
                         next_dkg_keypair: None,
                         dkg,
                         broadcast_sender,
-                    })
-                    .expect(
-                        "Validator data should have been stored in the wallet",
-                    )
+                    }
+                }
             }
             TendermintMode::Full => ShellMode::Full,
             TendermintMode::Seed => ShellMode::Seed,

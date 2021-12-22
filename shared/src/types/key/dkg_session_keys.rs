@@ -33,7 +33,7 @@ mod dkg_keys {
 
     impl From<&DkgKeypair> for ferveo_common::Keypair<EllipticCurve> {
         fn from(kp: &DkgKeypair) -> Self {
-            kp.0.clone()
+            kp.0
         }
     }
 
@@ -71,7 +71,7 @@ mod dkg_keys {
 
     impl From<&DkgPublicKey> for ferveo_common::PublicKey<EllipticCurve> {
         fn from(pk: &DkgPublicKey) -> Self {
-            pk.0.clone()
+            pk.0
         }
     }
 

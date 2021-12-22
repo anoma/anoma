@@ -2,19 +2,17 @@
 
 use anoma::ledger::pos;
 use anoma::types::address::Address;
-use anoma::types::key::dkg_session_keys::DkgKeypair;
 use anoma::types::key::ed25519::PublicKey;
 #[cfg(feature = "dev")]
 pub use dev::{
     addresses, albert_address, albert_keypair, bertha_address, bertha_keypair,
     christel_address, christel_keypair, daewon_address, daewon_keypair, keys,
     matchmaker_address, matchmaker_keypair, validator_address,
-    validator_keypair,
+    validator_keypair, validator_keys,
 };
 
 use crate::config::genesis::genesis_config::GenesisConfig;
-use crate::wallet::store::{Alias, Store};
-use crate::wallet::AtomicKeypair;
+use crate::wallet::store::Alias;
 
 /// The default addresses with their aliases.
 pub fn addresses_from_genesis(genesis: GenesisConfig) -> Vec<(Alias, Address)> {
@@ -65,25 +63,37 @@ pub fn addresses_from_genesis(genesis: GenesisConfig) -> Vec<(Alias, Address)> {
     addresses
 }
 
-/// Generate a new protocol signing keypair and DKG session keypair
-pub fn validator_keys() -> (AtomicKeypair, DkgKeypair) {
-    let validator_keys = Store::gen_validator_keys(None);
-    (
-        validator_keys.protocol_keypair,
-        validator_keys
-            .dkg_keypair
-            .expect("Should have generated a DKG session keypair"),
-    )
-}
-
 #[cfg(feature = "dev")]
 mod dev {
     use anoma::ledger::pos;
     use anoma::types::address::{self, Address};
+    use anoma::types::key::dkg_session_keys::DkgKeypair;
     use anoma::types::key::ed25519::Keypair;
 
     use crate::wallet::store::Alias;
     use crate::wallet::AtomicKeypair;
+
+    /// Generate a new protocol signing keypair and DKG session keypair
+    pub fn validator_keys() -> (AtomicKeypair, DkgKeypair) {
+        use borsh::BorshDeserialize;
+        let bytes: [u8; 64] = [
+            62, 180, 96, 174, 148, 94, 136, 165, 253, 164, 190, 139, 23, 218,
+            153, 90, 105, 179, 174, 178, 226, 27, 87, 62, 110, 33, 125, 37,
+            255, 3, 181, 32, 127, 107, 227, 224, 115, 250, 172, 152, 121, 173,
+            198, 57, 4, 144, 110, 82, 173, 105, 234, 172, 6, 250, 39, 232, 234,
+            181, 62, 58, 162, 82, 173, 5,
+        ];
+        let dkg_bytes = [
+            32, 0, 0, 0, 210, 193, 55, 24, 92, 233, 23, 2, 73, 204, 221, 107,
+            110, 222, 192, 136, 54, 24, 108, 236, 137, 27, 121, 142, 142, 7,
+            193, 248, 155, 56, 51, 21,
+        ];
+
+        (
+            Keypair::from_bytes(&bytes).unwrap().into(),
+            BorshDeserialize::deserialize(&mut dkg_bytes.as_ref()).unwrap(),
+        )
+    }
 
     /// The default keys with their aliases.
     pub fn keys() -> Vec<(Alias, AtomicKeypair)> {

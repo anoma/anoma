@@ -361,7 +361,7 @@ mod test_process_proposal {
         assert_eq!(response.result.code, u32::from(ErrorCodes::InvalidSig));
         assert_eq!(
             response.result.info,
-            String::from("Expected signed WrapperTx data")
+            String::from("Wrapper transactions must be signed")
         );
         #[cfg(feature = "ABCI")]
         {

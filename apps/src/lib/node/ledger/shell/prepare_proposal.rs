@@ -35,10 +35,9 @@ mod prepare_block {
             {
                 // TODO: This should not be hardcoded
                 let privkey = <EllipticCurve as PairingEngine>::G2Affine::prime_subgroup_generator();
-                let mut txs = if let Some(pvss) = req
-                    .block_data
-                    .iter()
-                    .filter(|tx_bytes| {
+
+                let mut txs = if let Some(pvss) =
+                    req.block_data.iter().find(|tx_bytes| {
                         if let Ok(tx) = Tx::try_from(tx_bytes.as_slice()) {
                             matches!(
                                 process_tx(tx),
@@ -50,9 +49,7 @@ mod prepare_block {
                         } else {
                             false
                         }
-                    })
-                    .next()
-                {
+                    }) {
                     vec![pvss.to_vec()]
                 } else {
                     vec![]
