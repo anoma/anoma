@@ -2,7 +2,8 @@
 
 use std::str::FromStr;
 
-use borsh::BorshDeserialize;
+#[cfg(not(feature = "ABCI"))]
+use ibc::applications::ics20_fungible_token_transfer::msgs::transfer::MsgTransfer;
 #[cfg(not(feature = "ABCI"))]
 use ibc::clients::ics07_tendermint::consensus_state::ConsensusState as TmConsensusState;
 #[cfg(not(feature = "ABCI"))]
@@ -99,6 +100,8 @@ use ibc::core::ics26_routing::msgs::Ics26Envelope;
 use ibc::events::IbcEvent;
 #[cfg(not(feature = "ABCI"))]
 use ibc::mock::client_state::{MockClientState, MockConsensusState};
+#[cfg(feature = "ABCI")]
+use ibc_abci::applications::ics20_fungible_token_transfer::msgs::transfer::MsgTransfer;
 #[cfg(feature = "ABCI")]
 use ibc_abci::clients::ics07_tendermint::consensus_state::ConsensusState as TmConsensusState;
 #[cfg(feature = "ABCI")]
@@ -208,7 +211,8 @@ use thiserror::Error;
 
 use crate::ledger::ibc::storage;
 use crate::types::ibc::data::{
-    Error as IbcDataError, IbcMessage, PacketAck, PacketReceipt, PacketSendData,
+    Error as IbcDataError, FungibleTokenPacketData, IbcMessage, PacketAck,
+    PacketReceipt,
 };
 use crate::types::ibc::IbcEvent as AnomaIbcEvent;
 use crate::types::storage::Key;
@@ -301,7 +305,7 @@ pub trait IbcActions {
                     self.timeout_on_close_packet(msg)
                 }
             },
-            Ics26Envelope::Ics20Msg(_ics20_msg) => todo!(),
+            Ics26Envelope::Ics20Msg(msg) => self.send_packet(msg),
         }
     }
 
@@ -644,18 +648,28 @@ pub trait IbcActions {
     }
 
     /// Send a packet
-    fn send_packet(&self, data: &PacketSendData) -> Result<()> {
+    fn send_packet(&self, msg: &MsgTransfer) -> Result<()> {
         // get and increment the next sequence send
-        let port_channel_id =
-            port_channel_id(data.source_port_id(), data.source_channel_id());
+        let port_channel_id = port_channel_id(
+            msg.source_port.clone(),
+            msg.source_channel.clone(),
+        );
         let seq_key = storage::next_sequence_send_key(&port_channel_id);
         let sequence = self.get_and_inc_sequence(&seq_key)?;
 
+        // get the channel for the destination info.
+        let channel_key = storage::channel_key(&port_channel_id);
+        let channel = self
+            .read_ibc_data(&channel_key)
+            .expect("cannot get the channel to be closed");
+        let channel =
+            ChannelEnd::decode_vec(&channel).expect("cannot get the channel");
+
         // store the commitment of the packet
-        let packet = data.packet(sequence);
+        let packet = packet_from_message(msg, sequence, channel.counterparty());
         let commitment_key = storage::commitment_key(
-            &data.source_port_id(),
-            &data.source_channel_id(),
+            &msg.source_port,
+            &msg.source_channel,
             packet.sequence,
         );
         let commitment = commitment(&packet);
@@ -932,6 +946,28 @@ pub fn port_channel_id(
 /// Returns a sequence
 pub fn sequence(index: u64) -> Sequence {
     Sequence::from(index)
+}
+
+/// Make a packet from MsgTransfer
+pub fn packet_from_message(
+    msg: &MsgTransfer,
+    sequence: Sequence,
+    counterparty: &ChanCounterparty,
+) -> Packet {
+    Packet {
+        sequence,
+        source_port: msg.source_port.clone(),
+        source_channel: msg.source_channel.clone(),
+        destination_port: counterparty.port_id.clone(),
+        destination_channel: counterparty
+            .channel_id()
+            .expect("the counterparty channel should exist")
+            .clone(),
+        data: serde_json::to_vec(&FungibleTokenPacketData::from(msg.clone()))
+            .expect("encoding the packet data shouldn't fail"),
+        timeout_height: msg.timeout_height,
+        timeout_timestamp: msg.timeout_timestamp,
+    }
 }
 
 /// Returns a commitment from the given packet

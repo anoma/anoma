@@ -280,8 +280,9 @@ mod tests {
     use std::str::FromStr;
     use std::time::Duration;
 
-    use borsh::ser::BorshSerialize;
     use chrono::Utc;
+    #[cfg(not(feature = "ABCI"))]
+    use ibc::applications::ics20_fungible_token_transfer::msgs::transfer::MsgTransfer;
     #[cfg(not(feature = "ABCI"))]
     use ibc::core::ics02_client::client_consensus::ConsensusState;
     #[cfg(not(feature = "ABCI"))]
@@ -349,6 +350,8 @@ mod tests {
     #[cfg(not(feature = "ABCI"))]
     use ibc::Height;
     #[cfg(feature = "ABCI")]
+    use ibc_abci::applications::ics20_fungible_token_transfer::msgs::transfer::MsgTransfer;
+    #[cfg(feature = "ABCI")]
     use ibc_abci::core::ics02_client::client_consensus::ConsensusState;
     #[cfg(feature = "ABCI")]
     use ibc_abci::core::ics02_client::client_state::ClientState;
@@ -414,6 +417,10 @@ mod tests {
     use ibc_abci::tx_msg::Msg;
     #[cfg(feature = "ABCI")]
     use ibc_abci::Height;
+    #[cfg(not(feature = "ABCI"))]
+    use ibc_proto::cosmos::base::v1beta1::Coin;
+    #[cfg(feature = "ABCI")]
+    use ibc_proto_abci::cosmos::base::v1beta1::Coin;
     use prost::Message;
     use sha2::Digest;
     #[cfg(not(feature = "ABCI"))]
@@ -453,7 +460,7 @@ mod tests {
         make_open_confirm_connection_event, make_open_init_channel_event,
         make_open_init_connection_event, make_open_try_channel_event,
         make_open_try_connection_event, make_send_packet_event,
-        make_update_client_event, try_connection,
+        make_update_client_event, packet_from_message, try_connection,
     };
     use super::super::storage::{
         ack_key, capability_key, channel_key, client_state_key,
@@ -466,7 +473,7 @@ mod tests {
     use crate::ledger::storage::testing::TestStorage;
     use crate::ledger::storage::write_log::WriteLog;
     use crate::proto::Tx;
-    use crate::types::ibc::data::{PacketAck, PacketReceipt, PacketSendData};
+    use crate::types::ibc::data::{PacketAck, PacketReceipt};
     use crate::types::time::{DateTimeUtc, DurationSecs};
     use crate::vm::wasm;
 
@@ -1384,27 +1391,29 @@ mod tests {
         write_log.commit_tx();
         write_log.commit_block(&mut storage).expect("commit failed");
 
-        // prepare data
-        let counterparty = get_channel_counterparty();
-        let timeout_timestamp = Some(DateTimeUtc::now() + DurationSecs(100));
-        let data = PacketSendData::new(
-            get_port_id().to_string(),
-            get_channel_id().to_string(),
-            counterparty.port_id().to_string(),
-            counterparty.channel_id().unwrap().to_string(),
-            vec![0],
-            1,
-            100,
+        // prepare a message
+        let timestamp = DateTimeUtc::now() + DurationSecs(100);
+        let timeout_timestamp = Timestamp::from_datetime(timestamp.0);
+        let msg = MsgTransfer {
+            source_port: get_port_id(),
+            source_channel: get_channel_id(),
+            token: Some(Coin {
+                denom: "XAN".to_string(),
+                amount: 100u64.to_string(),
+            }),
+            sender: Signer::new("sender"),
+            receiver: Signer::new("receiver"),
+            timeout_height: Height::new(1, 100),
             timeout_timestamp,
-        )
-        .unwrap();
+        };
 
         // get and increment the nextSequenceSend
         let seq_key = next_sequence_send_key(&get_port_channel_id());
         let sequence = get_next_seq(&storage, &seq_key);
         increment_seq(&mut write_log, &seq_key, sequence);
         // make a packet
-        let packet = data.packet(sequence);
+        let counterparty = get_channel_counterparty();
+        let packet = packet_from_message(&msg, sequence, &counterparty);
         // insert a commitment
         let commitment = hash(&packet);
         let key = commitment_key(&get_port_id(), &get_channel_id(), sequence);
@@ -1414,7 +1423,8 @@ mod tests {
         write_log.commit_tx();
 
         let tx_code = vec![];
-        let tx_data = data.try_to_vec().expect("encoding failed");
+        let mut tx_data = vec![];
+        msg.to_any().encode(&mut tx_data).expect("encoding failed");
         let tx = Tx::new(tx_code, Some(tx_data.clone()));
         let gas_meter = VpGasMeter::new(0);
         let (vp_wasm_cache, _vp_cache_dir) =
@@ -1607,25 +1617,27 @@ mod tests {
         write_log.commit_tx();
         write_log.commit_block(&mut storage).expect("commit failed");
 
-        // prepare data
-        let counterparty = get_channel_counterparty();
-        let timeout_timestamp = Some(DateTimeUtc::now() + DurationSecs(100));
-        let data = PacketSendData::new(
-            get_port_id().to_string(),
-            get_channel_id().to_string(),
-            counterparty.port_id().to_string(),
-            counterparty.channel_id().unwrap().to_string(),
-            vec![0],
-            1,
-            100,
+        // prepare a message
+        let timestamp = DateTimeUtc::now() + DurationSecs(100);
+        let timeout_timestamp = Timestamp::from_datetime(timestamp.0);
+        let msg = MsgTransfer {
+            source_port: get_port_id(),
+            source_channel: get_channel_id(),
+            token: Some(Coin {
+                denom: "XAN".to_string(),
+                amount: 100u64.to_string(),
+            }),
+            sender: Signer::new("sender"),
+            receiver: Signer::new("receiver"),
+            timeout_height: Height::new(1, 100),
             timeout_timestamp,
-        )
-        .unwrap();
+        };
 
         // make a packet
         let seq_key = next_sequence_send_key(&get_port_channel_id());
         let sequence = get_next_seq(&storage, &seq_key);
-        let packet = data.packet(sequence);
+        let counterparty = get_channel_counterparty();
+        let packet = packet_from_message(&msg, sequence, &counterparty);
         // insert a commitment
         let commitment = hash(&packet);
         let commitment_key = commitment_key(
@@ -1640,7 +1652,8 @@ mod tests {
         write_log.set_ibc_event(event.try_into().unwrap());
 
         let tx_code = vec![];
-        let tx_data = data.try_to_vec().expect("encoding failed");
+        let mut tx_data = vec![];
+        msg.to_any().encode(&mut tx_data).expect("encoding failed");
         let tx = Tx::new(tx_code, Some(tx_data.clone()));
         let gas_meter = VpGasMeter::new(0);
         let (vp_wasm_cache, _vp_cache_dir) =

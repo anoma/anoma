@@ -18,11 +18,12 @@ use anoma::ledger::storage::mockdb::MockDB;
 use anoma::ledger::storage::Sha256Hasher;
 use anoma::proto::Tx;
 use anoma::types::address::{Address, InternalAddress};
-use anoma::types::ibc::data::PacketSendData;
 use anoma::types::ibc::IbcEvent;
 use anoma::types::storage::Key;
 use anoma::types::time::{DateTimeUtc, DurationSecs};
 use anoma::vm::{wasm, WasmCacheRwAccess};
+#[cfg(not(feature = "ABCI"))]
+use ibc::applications::ics20_fungible_token_transfer::msgs::transfer::MsgTransfer;
 #[cfg(not(feature = "ABCI"))]
 use ibc::core::ics02_client::client_consensus::ConsensusState;
 #[cfg(not(feature = "ABCI"))]
@@ -94,6 +95,8 @@ use ibc::timestamp::Timestamp;
 #[cfg(not(feature = "ABCI"))]
 use ibc::Height;
 #[cfg(feature = "ABCI")]
+use ibc_abci::applications::ics20_fungible_token_transfer::msgs::transfer::MsgTransfer;
+#[cfg(feature = "ABCI")]
 use ibc_abci::core::ics02_client::client_consensus::ConsensusState;
 #[cfg(feature = "ABCI")]
 use ibc_abci::core::ics02_client::client_state::{AnyClientState, ClientState};
@@ -164,7 +167,11 @@ use ibc_abci::timestamp::Timestamp;
 #[cfg(feature = "ABCI")]
 use ibc_abci::Height;
 #[cfg(not(feature = "ABCI"))]
+use ibc_proto::cosmos::base::v1beta1::Coin;
+#[cfg(not(feature = "ABCI"))]
 use ibc_proto::ibc::core::commitment::v1::MerkleProof;
+#[cfg(feature = "ABCI")]
+use ibc_proto_abci::cosmos::base::v1beta1::Coin;
 #[cfg(feature = "ABCI")]
 use ibc_proto_abci::ibc::core::commitment::v1::MerkleProof;
 use tempfile::TempDir;
@@ -582,7 +589,7 @@ fn dummy_channel(
     )
 }
 
-fn dummy_channel_counterparty() -> ChanCounterparty {
+pub fn dummy_channel_counterparty() -> ChanCounterparty {
     let counterpart_port_id = PortId::from_str("counterpart_test_port")
         .expect("Creating a port ID failed");
     let counterpart_channel_id =
@@ -595,28 +602,25 @@ pub fn unorder_channel(channel: &mut ChannelEnd) {
     channel.ordering = Order::Unordered;
 }
 
-pub fn packet_send_data(
-    port_id: PortId,
-    channel_id: ChannelId,
-) -> PacketSendData {
-    let counterparty = dummy_channel_counterparty();
-    let timeout_timestamp = Some(DateTimeUtc::now() + DurationSecs(100));
-    PacketSendData::new(
-        port_id.to_string(),
-        channel_id.to_string(),
-        counterparty.port_id().to_string(),
-        counterparty.channel_id().unwrap().to_string(),
-        vec![0],
-        1,
-        10,
+pub fn msg_transfer(port_id: PortId, channel_id: ChannelId) -> MsgTransfer {
+    let timestamp = DateTimeUtc::now() + DurationSecs(100);
+    let timeout_timestamp = Timestamp::from_datetime(timestamp.0);
+    MsgTransfer {
+        source_port: port_id,
+        source_channel: channel_id,
+        token: Some(Coin {
+            denom: "XAN".to_string(),
+            amount: 100u64.to_string(),
+        }),
+        sender: Signer::new("sender"),
+        receiver: Signer::new("receiver"),
+        timeout_height: Height::new(1, 100),
         timeout_timestamp,
-    )
-    .unwrap()
+    }
 }
 
-pub fn set_timeout_height(data: &mut PacketSendData) {
-    data.timeout_epoch = 1;
-    data.timeout_height = 1;
+pub fn set_timeout_height(msg: &mut MsgTransfer) {
+    msg.timeout_height = Height::new(1, 1);
 }
 
 pub fn msg_packet_recv(packet: Packet) -> MsgRecvPacket {

@@ -1,6 +1,5 @@
 //! IBC validity predicate for packets
 
-use borsh::BorshDeserialize;
 #[cfg(not(feature = "ABCI"))]
 use ibc::core::ics02_client::height::Height;
 #[cfg(not(feature = "ABCI"))]
@@ -63,15 +62,15 @@ use ibc_abci::proofs::Proofs;
 use ibc_abci::timestamp::Expiry;
 use thiserror::Error;
 
-use super::super::handler::{make_send_packet_event, make_timeout_event};
+use super::super::handler::{
+    make_send_packet_event, make_timeout_event, packet_from_message,
+};
 use super::super::storage::{
     port_channel_sequence_id, Error as IbcStorageError,
 };
 use super::{Ibc, StateChange};
 use crate::ledger::storage::{self, StorageHasher};
-use crate::types::ibc::data::{
-    Error as IbcDataError, IbcMessage, PacketSendData,
-};
+use crate::types::ibc::data::{Error as IbcDataError, IbcMessage};
 use crate::types::storage::Key;
 use crate::vm::WasmCacheAccess;
 
@@ -129,8 +128,20 @@ where
         {
             StateChange::Created => {
                 // sending a packet
-                let data = PacketSendData::try_from_slice(tx_data)?;
-                let packet = data.packet(commitment_key.2);
+                let ibc_msg = IbcMessage::decode(tx_data)?;
+                let msg = ibc_msg.msg_transfer()?;
+                // make a packet
+                let channel = self
+                    .channel_end(&(
+                        commitment_key.0.clone(),
+                        commitment_key.1.clone(),
+                    ))
+                    .map_err(|e| Error::InvalidChannel(e.to_string()))?;
+                let packet = packet_from_message(
+                    &msg,
+                    commitment_key.2,
+                    channel.counterparty(),
+                );
                 let commitment = self
                     .get_packet_commitment(&commitment_key)
                     .map_err(|_| {

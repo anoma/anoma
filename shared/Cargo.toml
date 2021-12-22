@@ -92,6 +92,7 @@ rand_core = {version = "0.5", optional = true}
 rand_new = {package = "rand", version = "0.8", optional = true}
 rust_decimal = "1.14.3"
 serde = {version = "1.0.125", features = ["derive"]}
+serde_json = "1.0.62"
 sha2 = "0.9.3"
 # We switch off "blake2b" because it cannot be compiled to wasm
 sparse-merkle-tree = {git = "https://github.com/heliaxdev/sparse-merkle-tree", branch = "yuji/prost-0.9", default-features = false, features = ["std", "borsh"]}
@@ -116,7 +117,6 @@ assert_matches = "1.5.0"
 byte-unit = "4.0.13"
 pretty_assertions = "0.7.2"
 proptest = "1.0.0"
-serde_json = "1.0.62"
 test-log = {version = "0.2.7", default-features = false, features = ["trace"]}
 tracing-subscriber = {version = "0.2.25", default-features = false, features = ["env-filter", "fmt"]}
 
