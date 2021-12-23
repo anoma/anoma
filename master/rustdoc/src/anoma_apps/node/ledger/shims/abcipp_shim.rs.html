@@ -193,6 +193,19 @@
 <span id="193">193</span>
 <span id="194">194</span>
 <span id="195">195</span>
+<span id="196">196</span>
+<span id="197">197</span>
+<span id="198">198</span>
+<span id="199">199</span>
+<span id="200">200</span>
+<span id="201">201</span>
+<span id="202">202</span>
+<span id="203">203</span>
+<span id="204">204</span>
+<span id="205">205</span>
+<span id="206">206</span>
+<span id="207">207</span>
+<span id="208">208</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std::convert</span>::{<span class="ident">TryFrom</span>, <span class="ident">TryInto</span>};
 <span class="kw">use</span> <span class="ident">std::future::Future</span>;
 <span class="kw">use</span> <span class="ident">std::path</span>::{<span class="ident">Path</span>, <span class="ident">PathBuf</span>};
@@ -222,7 +235,7 @@
     <span class="ident">service</span>: <span class="ident">Shell</span>,
     <span class="ident">begin_block_request</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">BeginBlock</span><span class="op">&gt;</span>,
     <span class="ident">block_txs</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">ProcessedTx</span><span class="op">&gt;</span>,
-    <span class="ident">shell_recv</span>: <span class="ident">tokio::sync::mpsc::Receiver</span><span class="op">&lt;</span>(
+    <span class="ident">shell_recv</span>: <span class="ident">std::sync::mpsc::Receiver</span><span class="op">&lt;</span>(
         <span class="ident">Req</span>,
         <span class="ident">tokio::sync::oneshot::Sender</span><span class="op">&lt;</span><span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Resp</span>, <span class="ident">BoxError</span><span class="op">&gt;</span><span class="op">&gt;</span>,
     )<span class="op">&gt;</span>,
@@ -236,11 +249,24 @@
         <span class="ident">db_path</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span><span class="ident">Path</span><span class="op">&gt;</span>,
         <span class="ident">chain_id</span>: <span class="ident">ChainId</span>,
         <span class="ident">wasm_dir</span>: <span class="ident">PathBuf</span>,
+        <span class="ident">db_cache</span>: <span class="kw-2">&amp;</span><span class="ident">rocksdb::Cache</span>,
+        <span class="ident">vp_wasm_compilation_cache</span>: <span class="ident">u64</span>,
+        <span class="ident">tx_wasm_compilation_cache</span>: <span class="ident">u64</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> (<span class="self">Self</span>, <span class="ident">AbciService</span>) {
-        <span class="kw">let</span> (<span class="ident">shell_send</span>, <span class="ident">shell_recv</span>) <span class="op">=</span> <span class="ident">tokio::sync::mpsc::channel</span>(<span class="number">1024</span>);
+        <span class="comment">// We can use an unbounded channel here, because tower-abci limits the</span>
+        <span class="comment">// the number of requests that can come in</span>
+        <span class="kw">let</span> (<span class="ident">shell_send</span>, <span class="ident">shell_recv</span>) <span class="op">=</span> <span class="ident">std::sync::mpsc::channel</span>();
         (
             <span class="self">Self</span> {
-                <span class="ident">service</span>: <span class="ident">Shell::new</span>(<span class="ident">base_dir</span>, <span class="ident">db_path</span>, <span class="ident">chain_id</span>, <span class="ident">wasm_dir</span>),
+                <span class="ident">service</span>: <span class="ident">Shell::new</span>(
+                    <span class="ident">base_dir</span>,
+                    <span class="ident">db_path</span>,
+                    <span class="ident">chain_id</span>,
+                    <span class="ident">wasm_dir</span>,
+                    <span class="prelude-val">Some</span>(<span class="ident">db_cache</span>),
+                    <span class="ident">vp_wasm_compilation_cache</span>,
+                    <span class="ident">tx_wasm_compilation_cache</span>,
+                ),
                 <span class="ident">begin_block_request</span>: <span class="prelude-val">None</span>,
                 <span class="ident">block_txs</span>: <span class="macro">vec!</span>[],
                 <span class="ident">shell_recv</span>,
@@ -252,7 +278,7 @@
     <span class="doccomment">/// Run the shell&#39;s blocking loop that receives messages from the</span>
     <span class="doccomment">/// [`AbciService`].</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">run</span>(<span class="kw-2">mut</span> <span class="self">self</span>) {
-        <span class="kw">while</span> <span class="kw">let</span> <span class="prelude-val">Some</span>((<span class="ident">req</span>, <span class="ident">resp_sender</span>)) <span class="op">=</span> <span class="self">self</span>.<span class="ident">shell_recv</span>.<span class="ident">blocking_recv</span>() {
+        <span class="kw">while</span> <span class="kw">let</span> <span class="prelude-val">Ok</span>((<span class="ident">req</span>, <span class="ident">resp_sender</span>)) <span class="op">=</span> <span class="self">self</span>.<span class="ident">shell_recv</span>.<span class="ident">recv</span>() {
             <span class="kw">let</span> <span class="ident">resp</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">req</span> {
                 <span class="ident">Req::BeginBlock</span>(<span class="ident">block</span>) <span class="op">=</span><span class="op">&gt;</span> {
                     <span class="comment">// we save this data to be forwarded to finalize later</span>
@@ -345,7 +371,7 @@
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">AbciService</span> {
-    <span class="ident">shell_send</span>: <span class="ident">tokio::sync::mpsc::Sender</span><span class="op">&lt;</span>(
+    <span class="ident">shell_send</span>: <span class="ident">std::sync::mpsc::Sender</span><span class="op">&lt;</span>(
         <span class="ident">Req</span>,
         <span class="ident">tokio::sync::oneshot::Sender</span><span class="op">&lt;</span><span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Resp</span>, <span class="ident">BoxError</span><span class="op">&gt;</span><span class="op">&gt;</span>,
     )<span class="op">&gt;</span>,
@@ -363,19 +389,19 @@
         <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
         <span class="ident">_cx</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Context</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Poll</span><span class="op">&lt;</span><span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident"><span class="self">Self</span>::Error</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-        <span class="comment">// First, check if the shell is still alive</span>
-        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">shell_send</span>.<span class="ident">is_closed</span>() {
-            <span class="kw">return</span> <span class="ident">Poll::Ready</span>(<span class="prelude-val">Err</span>(<span class="string">&quot;The shell is closed&quot;</span>.<span class="ident">into</span>()));
-        }
+        <span class="comment">// Nothing to check as the sender&#39;s channel is unbounded</span>
         <span class="ident">Poll::Ready</span>(<span class="prelude-val">Ok</span>(()))
     }
 
     <span class="kw">fn</span> <span class="ident">call</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">req</span>: <span class="ident">Req</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident"><span class="self">Self</span>::Future</span> {
-        <span class="kw">let</span> <span class="ident">sender</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">shell_send</span>.<span class="ident">clone</span>();
+        <span class="kw">let</span> (<span class="ident">resp_send</span>, <span class="ident">recv</span>) <span class="op">=</span> <span class="ident">tokio::sync::oneshot::channel</span>();
+        <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">shell_send</span>.<span class="ident">send</span>((<span class="ident">req</span>, <span class="ident">resp_send</span>));
         <span class="ident">Box::pin</span>(
             <span class="kw">async</span> <span class="kw">move</span> {
-                <span class="kw">let</span> (<span class="ident">resp_send</span>, <span class="ident">recv</span>) <span class="op">=</span> <span class="ident">tokio::sync::oneshot::channel</span>();
-                <span class="ident">sender</span>.<span class="ident">send</span>((<span class="ident">req</span>, <span class="ident">resp_send</span>)).<span class="kw">await</span><span class="question-mark">?</span>;
+                <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Err</span>(<span class="ident">err</span>) <span class="op">=</span> <span class="ident">result</span> {
+                    <span class="comment">// The shell has shut-down</span>
+                    <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">err</span>.<span class="ident">into</span>());
+                }
                 <span class="kw">match</span> <span class="ident">recv</span>.<span class="kw">await</span> {
                     <span class="prelude-val">Ok</span>(<span class="ident">resp</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">resp</span>,
                     <span class="prelude-val">Err</span>(<span class="ident">err</span>) <span class="op">=</span><span class="op">&gt;</span> {

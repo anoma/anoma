@@ -578,11 +578,18 @@
 <span id="578">578</span>
 <span id="579">579</span>
 <span id="580">580</span>
+<span id="581">581</span>
+<span id="582">582</span>
+<span id="583">583</span>
+<span id="584">584</span>
+<span id="585">585</span>
+<span id="586">586</span>
+<span id="587">587</span>
+<span id="588">588</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Node and client configuration</span>
 
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">genesis</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">global</span>;
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">gossiper</span>;
 
 <span class="kw">use</span> <span class="ident">std::collections::HashSet</span>;
 <span class="kw">use</span> <span class="ident">std::fmt::Display</span>;
@@ -594,7 +601,6 @@
 
 <span class="kw">use</span> <span class="ident">anoma::types::chain::ChainId</span>;
 <span class="kw">use</span> <span class="ident">anoma::types::time::Rfc3339String</span>;
-<span class="kw">use</span> <span class="ident">gossiper::Gossiper</span>;
 <span class="kw">use</span> <span class="ident">libp2p::multiaddr</span>::{<span class="ident">Multiaddr</span>, <span class="ident">Protocol</span>};
 <span class="kw">use</span> <span class="ident">libp2p::multihash::Multihash</span>;
 <span class="kw">use</span> <span class="ident">libp2p::PeerId</span>;
@@ -668,6 +674,15 @@
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Shell</span> {
     <span class="kw">pub</span> <span class="ident">base_dir</span>: <span class="ident">PathBuf</span>,
     <span class="kw">pub</span> <span class="ident">ledger_address</span>: <span class="ident">SocketAddr</span>,
+    <span class="doccomment">/// RocksDB block cache maximum size in bytes.</span>
+    <span class="doccomment">/// When not set, defaults to 1/3 of the available memory.</span>
+    <span class="kw">pub</span> <span class="ident">block_cache_bytes</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span>,
+    <span class="doccomment">/// VP WASM compilation cache maximum size in bytes.</span>
+    <span class="doccomment">/// When not set, defaults to 1/6 of the available memory.</span>
+    <span class="kw">pub</span> <span class="ident">vp_wasm_compilation_cache_bytes</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span>,
+    <span class="doccomment">/// Tx WASM compilation in-memory cache maximum size in bytes.</span>
+    <span class="doccomment">/// When not set, defaults to 1/6 of the available memory.</span>
+    <span class="kw">pub</span> <span class="ident">tx_wasm_compilation_cache_bytes</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span>,
     <span class="doccomment">/// Use the [`Ledger::db_dir()`] method to read the value.</span>
     <span class="ident">db_dir</span>: <span class="ident">PathBuf</span>,
     <span class="doccomment">/// Use the [`Ledger::tendermint_dir()`] method to read the value.</span>
@@ -697,7 +712,6 @@
     <span class="kw">pub</span> <span class="ident">topics</span>: <span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>,
     <span class="kw">pub</span> <span class="ident">subscription_filter</span>: <span class="ident">SubscriptionFilter</span>,
     <span class="kw">pub</span> <span class="ident">rpc</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">RpcServer</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span> <span class="ident">gossiper</span>: <span class="ident">Gossiper</span>,
     <span class="kw">pub</span> <span class="ident">discover_peer</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">DiscoverPeer</span><span class="op">&gt;</span>,
     <span class="kw">pub</span> <span class="ident">matchmaker</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Matchmaker</span><span class="op">&gt;</span>,
 }
@@ -717,6 +731,9 @@
                     <span class="ident">IpAddr::V4</span>(<span class="ident">Ipv4Addr::new</span>(<span class="number">127</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">1</span>)),
                     <span class="number">26658</span>,
                 ),
+                <span class="ident">block_cache_bytes</span>: <span class="prelude-val">None</span>,
+                <span class="ident">vp_wasm_compilation_cache_bytes</span>: <span class="prelude-val">None</span>,
+                <span class="ident">tx_wasm_compilation_cache_bytes</span>: <span class="prelude-val">None</span>,
                 <span class="ident">db_dir</span>: <span class="ident">DB_DIR</span>.<span class="ident">into</span>(),
                 <span class="ident">tendermint_dir</span>: <span class="ident">TENDERMINT_DIR</span>.<span class="ident">into</span>(),
             },
@@ -954,7 +971,6 @@
             ),
 
             <span class="ident">topics</span>: <span class="macro">vec!</span>[<span class="string">&quot;asset_v0&quot;</span>].<span class="ident">into_iter</span>().<span class="ident">map</span>(<span class="ident">String::from</span>).<span class="ident">collect</span>(),
-            <span class="ident">gossiper</span>: <span class="ident">Gossiper::new</span>(),
             <span class="ident">matchmaker</span>: <span class="prelude-val">None</span>,
             <span class="ident">discover_peer</span>: <span class="prelude-val">Some</span>(<span class="ident">DiscoverPeer::default</span>()),
         }

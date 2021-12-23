@@ -1049,6 +1049,98 @@
 <span id="1049">1049</span>
 <span id="1050">1050</span>
 <span id="1051">1051</span>
+<span id="1052">1052</span>
+<span id="1053">1053</span>
+<span id="1054">1054</span>
+<span id="1055">1055</span>
+<span id="1056">1056</span>
+<span id="1057">1057</span>
+<span id="1058">1058</span>
+<span id="1059">1059</span>
+<span id="1060">1060</span>
+<span id="1061">1061</span>
+<span id="1062">1062</span>
+<span id="1063">1063</span>
+<span id="1064">1064</span>
+<span id="1065">1065</span>
+<span id="1066">1066</span>
+<span id="1067">1067</span>
+<span id="1068">1068</span>
+<span id="1069">1069</span>
+<span id="1070">1070</span>
+<span id="1071">1071</span>
+<span id="1072">1072</span>
+<span id="1073">1073</span>
+<span id="1074">1074</span>
+<span id="1075">1075</span>
+<span id="1076">1076</span>
+<span id="1077">1077</span>
+<span id="1078">1078</span>
+<span id="1079">1079</span>
+<span id="1080">1080</span>
+<span id="1081">1081</span>
+<span id="1082">1082</span>
+<span id="1083">1083</span>
+<span id="1084">1084</span>
+<span id="1085">1085</span>
+<span id="1086">1086</span>
+<span id="1087">1087</span>
+<span id="1088">1088</span>
+<span id="1089">1089</span>
+<span id="1090">1090</span>
+<span id="1091">1091</span>
+<span id="1092">1092</span>
+<span id="1093">1093</span>
+<span id="1094">1094</span>
+<span id="1095">1095</span>
+<span id="1096">1096</span>
+<span id="1097">1097</span>
+<span id="1098">1098</span>
+<span id="1099">1099</span>
+<span id="1100">1100</span>
+<span id="1101">1101</span>
+<span id="1102">1102</span>
+<span id="1103">1103</span>
+<span id="1104">1104</span>
+<span id="1105">1105</span>
+<span id="1106">1106</span>
+<span id="1107">1107</span>
+<span id="1108">1108</span>
+<span id="1109">1109</span>
+<span id="1110">1110</span>
+<span id="1111">1111</span>
+<span id="1112">1112</span>
+<span id="1113">1113</span>
+<span id="1114">1114</span>
+<span id="1115">1115</span>
+<span id="1116">1116</span>
+<span id="1117">1117</span>
+<span id="1118">1118</span>
+<span id="1119">1119</span>
+<span id="1120">1120</span>
+<span id="1121">1121</span>
+<span id="1122">1122</span>
+<span id="1123">1123</span>
+<span id="1124">1124</span>
+<span id="1125">1125</span>
+<span id="1126">1126</span>
+<span id="1127">1127</span>
+<span id="1128">1128</span>
+<span id="1129">1129</span>
+<span id="1130">1130</span>
+<span id="1131">1131</span>
+<span id="1132">1132</span>
+<span id="1133">1133</span>
+<span id="1134">1134</span>
+<span id="1135">1135</span>
+<span id="1136">1136</span>
+<span id="1137">1137</span>
+<span id="1138">1138</span>
+<span id="1139">1139</span>
+<span id="1140">1140</span>
+<span id="1141">1141</span>
+<span id="1142">1142</span>
+<span id="1143">1143</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Wasm runners</span>
 
 <span class="kw">use</span> <span class="ident">std::collections::HashSet</span>;
@@ -1060,6 +1152,7 @@
 <span class="kw">use</span> <span class="ident">wasmer::BaseTunables</span>;
 
 <span class="kw">use</span> <span class="ident"><span class="kw">super</span>::memory</span>::{<span class="ident">Limit</span>, <span class="ident">WasmMemory</span>};
+<span class="kw">use</span> <span class="ident"><span class="kw">super</span>::TxCache</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::gossip::mm::MmHost</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::ledger::gas</span>::{<span class="ident">BlockGasMeter</span>, <span class="ident">VpGasMeter</span>};
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::ledger::storage::write_log::WriteLog</span>;
@@ -1074,8 +1167,10 @@
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::vm::wasm::host_env</span>::{
     <span class="ident">mm_filter_imports</span>, <span class="ident">mm_imports</span>, <span class="ident">tx_imports</span>, <span class="ident">vp_imports</span>,
 };
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::vm::wasm::memory</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::vm</span>::{<span class="ident">validate_untrusted_wasm</span>, <span class="ident">WasmValidationError</span>};
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::vm::wasm</span>::{<span class="ident">memory</span>, <span class="ident">VpCache</span>};
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::vm</span>::{
+    <span class="ident">validate_untrusted_wasm</span>, <span class="ident">WasmCacheAccess</span>, <span class="ident">WasmValidationError</span>,
+};
 
 <span class="kw">const</span> <span class="ident">TX_ENTRYPOINT</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;_apply_tx&quot;</span>;
 <span class="kw">const</span> <span class="ident">VP_ENTRYPOINT</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;_validate_tx&quot;</span>;
@@ -1123,20 +1218,25 @@
 
 <span class="doccomment">/// Execute a transaction code. Returns the set verifiers addresses requested by</span>
 <span class="doccomment">/// the transaction.</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">tx</span><span class="op">&lt;</span><span class="ident">DB</span>, <span class="ident">H</span><span class="op">&gt;</span>(
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">tx</span><span class="op">&lt;</span><span class="ident">DB</span>, <span class="ident">H</span>, <span class="ident">CA</span><span class="op">&gt;</span>(
     <span class="ident">storage</span>: <span class="kw-2">&amp;</span><span class="ident">Storage</span><span class="op">&lt;</span><span class="ident">DB</span>, <span class="ident">H</span><span class="op">&gt;</span>,
     <span class="ident">write_log</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">WriteLog</span>,
     <span class="ident">gas_meter</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">BlockGasMeter</span>,
     <span class="ident">tx_code</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span>[<span class="ident">u8</span>]<span class="op">&gt;</span>,
     <span class="ident">tx_data</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span>[<span class="ident">u8</span>]<span class="op">&gt;</span>,
+    <span class="ident">vp_wasm_cache</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">VpCache</span><span class="op">&lt;</span><span class="ident">CA</span><span class="op">&gt;</span>,
+    <span class="ident">tx_wasm_cache</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">TxCache</span><span class="op">&lt;</span><span class="ident">CA</span><span class="op">&gt;</span>,
 ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span><span class="op">&gt;</span>
 <span class="kw">where</span>
     <span class="ident">DB</span>: <span class="lifetime">&#39;static</span> <span class="op">+</span> <span class="ident">storage::DB</span> <span class="op">+</span> <span class="kw">for</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span> <span class="ident">storage::DBIter</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span>,
     <span class="ident">H</span>: <span class="lifetime">&#39;static</span> <span class="op">+</span> <span class="ident">StorageHasher</span>,
+    <span class="ident">CA</span>: <span class="lifetime">&#39;static</span> <span class="op">+</span> <span class="ident">WasmCacheAccess</span>,
 {
-    <span class="kw">let</span> <span class="ident">wasm_store</span> <span class="op">=</span> <span class="ident">untrusted_wasm_store</span>(<span class="ident">memory::tx_limit</span>());
+    <span class="comment">// let wasm_store = untrusted_wasm_store(memory::tx_limit());</span>
 
     <span class="ident">validate_untrusted_wasm</span>(<span class="kw-2">&amp;</span><span class="ident">tx_code</span>).<span class="ident">map_err</span>(<span class="ident">Error::ValidationError</span>)<span class="question-mark">?</span>;
+
+    <span class="kw">let</span> (<span class="ident">module</span>, <span class="ident">store</span>) <span class="op">=</span> <span class="ident">tx_wasm_cache</span>.<span class="ident">fetch_or_compile</span>(<span class="kw-2">&amp;</span><span class="ident">tx_code</span>)<span class="question-mark">?</span>;
 
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">iterators</span>: <span class="ident">PrefixIterators</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span>, <span class="ident">DB</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">PrefixIterators::default</span>();
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">verifiers</span> <span class="op">=</span> <span class="ident">HashSet::new</span>();
@@ -1150,17 +1250,13 @@
         <span class="ident">gas_meter</span>,
         <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">verifiers</span>,
         <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">result_buffer</span>,
+        <span class="ident">vp_wasm_cache</span>,
+        <span class="ident">tx_wasm_cache</span>,
     );
 
-    <span class="kw">let</span> <span class="ident">tx_code</span> <span class="op">=</span> <span class="ident">prepare_wasm_code</span>(<span class="ident">tx_code</span>)<span class="question-mark">?</span>;
-
     <span class="kw">let</span> <span class="ident">initial_memory</span> <span class="op">=</span>
-        <span class="ident">memory::prepare_tx_memory</span>(<span class="kw-2">&amp;</span><span class="ident">wasm_store</span>).<span class="ident">map_err</span>(<span class="ident">Error::MemoryError</span>)<span class="question-mark">?</span>;
-    <span class="kw">let</span> <span class="ident">imports</span> <span class="op">=</span> <span class="ident">tx_imports</span>(<span class="kw-2">&amp;</span><span class="ident">wasm_store</span>, <span class="ident">initial_memory</span>, <span class="ident">env</span>);
-
-    <span class="comment">// Compile the wasm module</span>
-    <span class="kw">let</span> <span class="ident">module</span> <span class="op">=</span> <span class="ident">wasmer::Module::new</span>(<span class="kw-2">&amp;</span><span class="ident">wasm_store</span>, <span class="kw-2">&amp;</span><span class="ident">tx_code</span>)
-        .<span class="ident">map_err</span>(<span class="ident">Error::CompileError</span>)<span class="question-mark">?</span>;
+        <span class="ident">memory::prepare_tx_memory</span>(<span class="kw-2">&amp;</span><span class="ident">store</span>).<span class="ident">map_err</span>(<span class="ident">Error::MemoryError</span>)<span class="question-mark">?</span>;
+    <span class="kw">let</span> <span class="ident">imports</span> <span class="op">=</span> <span class="ident">tx_imports</span>(<span class="kw-2">&amp;</span><span class="ident">store</span>, <span class="ident">initial_memory</span>, <span class="ident">env</span>);
 
     <span class="comment">// Instantiate the wasm module</span>
     <span class="kw">let</span> <span class="ident">instance</span> <span class="op">=</span> <span class="ident">wasmer::Instance::new</span>(<span class="kw-2">&amp;</span><span class="ident">module</span>, <span class="kw-2">&amp;</span><span class="ident">imports</span>)
@@ -1204,7 +1300,7 @@
 <span class="doccomment">/// predicate accepted storage modifications performed by the transaction</span>
 <span class="doccomment">/// that triggered the execution.</span>
 <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy::too_many_arguments</span>)]</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">vp</span><span class="op">&lt;</span><span class="ident">DB</span>, <span class="ident">H</span><span class="op">&gt;</span>(
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">vp</span><span class="op">&lt;</span><span class="ident">DB</span>, <span class="ident">H</span>, <span class="ident">CA</span><span class="op">&gt;</span>(
     <span class="ident">vp_code</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span>[<span class="ident">u8</span>]<span class="op">&gt;</span>,
     <span class="ident">tx</span>: <span class="kw-2">&amp;</span><span class="ident">Tx</span>,
     <span class="ident">address</span>: <span class="kw-2">&amp;</span><span class="ident">Address</span>,
@@ -1213,10 +1309,12 @@
     <span class="ident">gas_meter</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">VpGasMeter</span>,
     <span class="ident">keys_changed</span>: <span class="kw-2">&amp;</span><span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">Key</span><span class="op">&gt;</span>,
     <span class="ident">verifiers</span>: <span class="kw-2">&amp;</span><span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span>,
+    <span class="kw-2">mut</span> <span class="ident">vp_wasm_cache</span>: <span class="ident">VpCache</span><span class="op">&lt;</span><span class="ident">CA</span><span class="op">&gt;</span>,
 ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span>
 <span class="kw">where</span>
     <span class="ident">DB</span>: <span class="lifetime">&#39;static</span> <span class="op">+</span> <span class="ident">storage::DB</span> <span class="op">+</span> <span class="kw">for</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span> <span class="ident">storage::DBIter</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span>,
     <span class="ident">H</span>: <span class="lifetime">&#39;static</span> <span class="op">+</span> <span class="ident">StorageHasher</span>,
+    <span class="ident">CA</span>: <span class="lifetime">&#39;static</span> <span class="op">+</span> <span class="ident">WasmCacheAccess</span>,
 {
     <span class="kw">let</span> <span class="ident">vp_code</span> <span class="op">=</span> <span class="ident">vp_code</span>.<span class="ident">as_ref</span>();
     <span class="kw">let</span> <span class="ident">input_data</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">tx</span>.<span class="ident">data</span>.<span class="ident">as_ref</span>() {
@@ -1224,15 +1322,19 @@
         <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span>[],
     };
 
-    <span class="kw">let</span> <span class="ident">wasm_store</span> <span class="op">=</span> <span class="ident">untrusted_wasm_store</span>(<span class="ident">memory::tx_limit</span>());
+    <span class="comment">// let wasm_store = untrusted_wasm_store(memory::vp_limit());</span>
 
     <span class="ident">validate_untrusted_wasm</span>(<span class="ident">vp_code</span>).<span class="ident">map_err</span>(<span class="ident">Error::ValidationError</span>)<span class="question-mark">?</span>;
+
+    <span class="comment">// Compile the wasm module</span>
+    <span class="kw">let</span> (<span class="ident">module</span>, <span class="ident">store</span>) <span class="op">=</span> <span class="ident">vp_wasm_cache</span>.<span class="ident">fetch_or_compile</span>(<span class="kw-2">&amp;</span><span class="ident">vp_code</span>)<span class="question-mark">?</span>;
 
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">iterators</span>: <span class="ident">PrefixIterators</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span>, <span class="ident">DB</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">PrefixIterators::default</span>();
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">result_buffer</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">=</span> <span class="prelude-val">None</span>;
     <span class="kw">let</span> <span class="ident">eval_runner</span> <span class="op">=</span> <span class="ident">VpEvalWasm</span> {
         <span class="ident">db</span>: <span class="ident">PhantomData</span>,
         <span class="ident">hasher</span>: <span class="ident">PhantomData</span>,
+        <span class="ident">cache_access</span>: <span class="ident">PhantomData</span>,
     };
 
     <span class="kw">let</span> <span class="ident">env</span> <span class="op">=</span> <span class="ident">VpEnv::new</span>(
@@ -1247,16 +1349,16 @@
         <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">result_buffer</span>,
         <span class="ident">keys_changed</span>,
         <span class="kw-2">&amp;</span><span class="ident">eval_runner</span>,
+        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">vp_wasm_cache</span>,
     );
 
     <span class="kw">let</span> <span class="ident">initial_memory</span> <span class="op">=</span>
-        <span class="ident">memory::prepare_vp_memory</span>(<span class="kw-2">&amp;</span><span class="ident">wasm_store</span>).<span class="ident">map_err</span>(<span class="ident">Error::MemoryError</span>)<span class="question-mark">?</span>;
-    <span class="kw">let</span> <span class="ident">imports</span> <span class="op">=</span> <span class="ident">vp_imports</span>(<span class="kw-2">&amp;</span><span class="ident">wasm_store</span>, <span class="ident">initial_memory</span>, <span class="ident">env</span>);
+        <span class="ident">memory::prepare_vp_memory</span>(<span class="kw-2">&amp;</span><span class="ident">store</span>).<span class="ident">map_err</span>(<span class="ident">Error::MemoryError</span>)<span class="question-mark">?</span>;
+    <span class="kw">let</span> <span class="ident">imports</span> <span class="op">=</span> <span class="ident">vp_imports</span>(<span class="kw-2">&amp;</span><span class="ident">store</span>, <span class="ident">initial_memory</span>, <span class="ident">env</span>);
 
     <span class="ident">run_vp</span>(
-        <span class="ident">wasm_store</span>,
+        <span class="ident">module</span>,
         <span class="ident">imports</span>,
-        <span class="ident">vp_code</span>,
         <span class="ident">input_data</span>,
         <span class="ident">address</span>,
         <span class="ident">keys_changed</span>,
@@ -1265,19 +1367,13 @@
 }
 
 <span class="kw">fn</span> <span class="ident">run_vp</span>(
-    <span class="ident">wasm_store</span>: <span class="ident">wasmer::Store</span>,
+    <span class="ident">module</span>: <span class="ident">wasmer::Module</span>,
     <span class="ident">vp_imports</span>: <span class="ident">wasmer::ImportObject</span>,
-    <span class="ident">vp_code</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>],
     <span class="ident">input_data</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>],
     <span class="ident">address</span>: <span class="kw-2">&amp;</span><span class="ident">Address</span>,
     <span class="ident">keys_changed</span>: <span class="kw-2">&amp;</span><span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">Key</span><span class="op">&gt;</span>,
     <span class="ident">verifiers</span>: <span class="kw-2">&amp;</span><span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span>,
 ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">vp_code</span> <span class="op">=</span> <span class="ident">prepare_wasm_code</span>(<span class="ident">vp_code</span>)<span class="question-mark">?</span>;
-
-    <span class="comment">// Compile the wasm module</span>
-    <span class="kw">let</span> <span class="ident">module</span> <span class="op">=</span> <span class="ident">wasmer::Module::new</span>(<span class="kw-2">&amp;</span><span class="ident">wasm_store</span>, <span class="kw-2">&amp;</span><span class="ident">vp_code</span>)
-        .<span class="ident">map_err</span>(<span class="ident">Error::CompileError</span>)<span class="question-mark">?</span>;
     <span class="kw">let</span> <span class="ident">input</span>: <span class="ident">VpInput</span> <span class="op">=</span> <span class="ident">VpInput</span> {
         <span class="ident">addr</span>: <span class="ident">address</span>,
         <span class="ident">data</span>: <span class="ident">input_data</span>,
@@ -1334,29 +1430,34 @@
 
 <span class="doccomment">/// Validity predicate wasm evaluator for `eval` host function calls.</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Default</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">VpEvalWasm</span><span class="op">&lt;</span><span class="ident">DB</span>, <span class="ident">H</span><span class="op">&gt;</span>
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">VpEvalWasm</span><span class="op">&lt;</span><span class="ident">DB</span>, <span class="ident">H</span>, <span class="ident">CA</span><span class="op">&gt;</span>
 <span class="kw">where</span>
     <span class="ident">DB</span>: <span class="ident">storage::DB</span> <span class="op">+</span> <span class="kw">for</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span> <span class="ident">storage::DBIter</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span>,
     <span class="ident">H</span>: <span class="ident">StorageHasher</span>,
+    <span class="ident">CA</span>: <span class="ident">WasmCacheAccess</span>,
 {
     <span class="doccomment">/// Phantom type for DB</span>
     <span class="kw">pub</span> <span class="ident">db</span>: <span class="ident">PhantomData</span><span class="op">&lt;</span><span class="kw-2">*</span><span class="kw">const</span> <span class="ident">DB</span><span class="op">&gt;</span>,
     <span class="doccomment">/// Phantom type for DB Hasher</span>
     <span class="kw">pub</span> <span class="ident">hasher</span>: <span class="ident">PhantomData</span><span class="op">&lt;</span><span class="kw-2">*</span><span class="kw">const</span> <span class="ident">H</span><span class="op">&gt;</span>,
+    <span class="doccomment">/// Phantom type for WASM compilation cache access</span>
+    <span class="kw">pub</span> <span class="ident">cache_access</span>: <span class="ident">PhantomData</span><span class="op">&lt;</span><span class="kw-2">*</span><span class="kw">const</span> <span class="ident">CA</span><span class="op">&gt;</span>,
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">DB</span>, <span class="ident">H</span><span class="op">&gt;</span> <span class="ident">VpEvaluator</span> <span class="kw">for</span> <span class="ident">VpEvalWasm</span><span class="op">&lt;</span><span class="ident">DB</span>, <span class="ident">H</span><span class="op">&gt;</span>
+<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">DB</span>, <span class="ident">H</span>, <span class="ident">CA</span><span class="op">&gt;</span> <span class="ident">VpEvaluator</span> <span class="kw">for</span> <span class="ident">VpEvalWasm</span><span class="op">&lt;</span><span class="ident">DB</span>, <span class="ident">H</span>, <span class="ident">CA</span><span class="op">&gt;</span>
 <span class="kw">where</span>
     <span class="ident">DB</span>: <span class="lifetime">&#39;static</span> <span class="op">+</span> <span class="ident">storage::DB</span> <span class="op">+</span> <span class="kw">for</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span> <span class="ident">storage::DBIter</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span>,
     <span class="ident">H</span>: <span class="lifetime">&#39;static</span> <span class="op">+</span> <span class="ident">StorageHasher</span>,
+    <span class="ident">CA</span>: <span class="ident">WasmCacheAccess</span>,
 {
+    <span class="kw">type</span> <span class="ident">CA</span> <span class="op">=</span> <span class="ident">CA</span>;
     <span class="kw">type</span> <span class="ident">Db</span> <span class="op">=</span> <span class="ident">DB</span>;
     <span class="kw">type</span> <span class="ident">Eval</span> <span class="op">=</span> <span class="self">Self</span>;
     <span class="kw">type</span> <span class="ident">H</span> <span class="op">=</span> <span class="ident">H</span>;
 
     <span class="kw">fn</span> <span class="ident">eval</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">ctx</span>: <span class="ident">VpCtx</span><span class="op">&lt;</span><span class="lifetime">&#39;static</span>, <span class="ident">DB</span>, <span class="ident">H</span>, <span class="self">Self</span><span class="op">&gt;</span>,
+        <span class="ident">ctx</span>: <span class="ident">VpCtx</span><span class="op">&lt;</span><span class="lifetime">&#39;static</span>, <span class="ident">DB</span>, <span class="ident">H</span>, <span class="self">Self</span>, <span class="ident">CA</span><span class="op">&gt;</span>,
         <span class="ident">vp_code</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>,
         <span class="ident">input_data</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">HostEnvResult</span> {
@@ -1370,39 +1471,43 @@
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">DB</span>, <span class="ident">H</span><span class="op">&gt;</span> <span class="ident">VpEvalWasm</span><span class="op">&lt;</span><span class="ident">DB</span>, <span class="ident">H</span><span class="op">&gt;</span>
+<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">DB</span>, <span class="ident">H</span>, <span class="ident">CA</span><span class="op">&gt;</span> <span class="ident">VpEvalWasm</span><span class="op">&lt;</span><span class="ident">DB</span>, <span class="ident">H</span>, <span class="ident">CA</span><span class="op">&gt;</span>
 <span class="kw">where</span>
     <span class="ident">DB</span>: <span class="lifetime">&#39;static</span> <span class="op">+</span> <span class="ident">storage::DB</span> <span class="op">+</span> <span class="kw">for</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span> <span class="ident">storage::DBIter</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span>,
     <span class="ident">H</span>: <span class="lifetime">&#39;static</span> <span class="op">+</span> <span class="ident">StorageHasher</span>,
+    <span class="ident">CA</span>: <span class="ident">WasmCacheAccess</span>,
 {
     <span class="doccomment">/// Evaluate the given VP.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">eval_native_result</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">ctx</span>: <span class="ident">VpCtx</span><span class="op">&lt;</span><span class="lifetime">&#39;static</span>, <span class="ident">DB</span>, <span class="ident">H</span>, <span class="self">Self</span><span class="op">&gt;</span>,
+        <span class="ident">ctx</span>: <span class="ident">VpCtx</span><span class="op">&lt;</span><span class="lifetime">&#39;static</span>, <span class="ident">DB</span>, <span class="ident">H</span>, <span class="self">Self</span>, <span class="ident">CA</span><span class="op">&gt;</span>,
         <span class="ident">vp_code</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>,
         <span class="ident">input_data</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">wasm_store</span> <span class="op">=</span> <span class="ident">untrusted_wasm_store</span>(<span class="ident">memory::tx_limit</span>());
+        <span class="comment">// let wasm_store = untrusted_wasm_store(memory::tx_limit());</span>
 
         <span class="ident">validate_untrusted_wasm</span>(<span class="kw-2">&amp;</span><span class="ident">vp_code</span>).<span class="ident">map_err</span>(<span class="ident">Error::ValidationError</span>)<span class="question-mark">?</span>;
-
-        <span class="kw">let</span> <span class="ident">initial_memory</span> <span class="op">=</span> <span class="ident">memory::prepare_vp_memory</span>(<span class="kw-2">&amp;</span><span class="ident">wasm_store</span>)
-            .<span class="ident">map_err</span>(<span class="ident">Error::MemoryError</span>)<span class="question-mark">?</span>;
 
         <span class="kw">let</span> <span class="ident">address</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">ctx</span>.<span class="ident">address</span>.<span class="ident">get</span>() };
         <span class="kw">let</span> <span class="ident">keys_changed</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">ctx</span>.<span class="ident">keys_changed</span>.<span class="ident">get</span>() };
         <span class="kw">let</span> <span class="ident">verifiers</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">ctx</span>.<span class="ident">verifiers</span>.<span class="ident">get</span>() };
+        <span class="kw">let</span> <span class="ident">vp_wasm_cache</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">ctx</span>.<span class="ident">vp_wasm_cache</span>.<span class="ident">get</span>() };
         <span class="kw">let</span> <span class="ident">env</span> <span class="op">=</span> <span class="ident">VpEnv</span> {
             <span class="ident">memory</span>: <span class="ident">WasmMemory::default</span>(),
             <span class="ident">ctx</span>,
         };
 
-        <span class="kw">let</span> <span class="ident">imports</span> <span class="op">=</span> <span class="ident">vp_imports</span>(<span class="kw-2">&amp;</span><span class="ident">wasm_store</span>, <span class="ident">initial_memory</span>, <span class="ident">env</span>);
+        <span class="comment">// Compile the wasm module</span>
+        <span class="kw">let</span> (<span class="ident">module</span>, <span class="ident">store</span>) <span class="op">=</span> <span class="ident">vp_wasm_cache</span>.<span class="ident">fetch_or_compile</span>(<span class="kw-2">&amp;</span><span class="ident">vp_code</span>)<span class="question-mark">?</span>;
+
+        <span class="kw">let</span> <span class="ident">initial_memory</span> <span class="op">=</span>
+            <span class="ident">memory::prepare_vp_memory</span>(<span class="kw-2">&amp;</span><span class="ident">store</span>).<span class="ident">map_err</span>(<span class="ident">Error::MemoryError</span>)<span class="question-mark">?</span>;
+
+        <span class="kw">let</span> <span class="ident">imports</span> <span class="op">=</span> <span class="ident">vp_imports</span>(<span class="kw-2">&amp;</span><span class="ident">store</span>, <span class="ident">initial_memory</span>, <span class="ident">env</span>);
 
         <span class="ident">run_vp</span>(
-            <span class="ident">wasm_store</span>,
+            <span class="ident">module</span>,
             <span class="ident">imports</span>,
-            <span class="kw-2">&amp;</span><span class="ident">vp_code</span>[..],
             <span class="kw-2">&amp;</span><span class="ident">input_data</span>[..],
             <span class="ident">address</span>,
             <span class="ident">keys_changed</span>,
@@ -1522,11 +1627,13 @@
 }
 
 <span class="doccomment">/// Prepare a wasm store for untrusted code.</span>
-<span class="kw">fn</span> <span class="ident">untrusted_wasm_store</span>(<span class="ident">limit</span>: <span class="ident">Limit</span><span class="op">&lt;</span><span class="ident">BaseTunables</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">wasmer::Store</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">untrusted_wasm_store</span>(<span class="ident">limit</span>: <span class="ident">Limit</span><span class="op">&lt;</span><span class="ident">BaseTunables</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">wasmer::Store</span> {
     <span class="comment">// Use Singlepass compiler with the default settings</span>
     <span class="kw">let</span> <span class="ident">compiler</span> <span class="op">=</span> <span class="ident">wasmer_compiler_singlepass::Singlepass::default</span>();
     <span class="ident">wasmer::Store::new_with_tunables</span>(
-        <span class="kw-2">&amp;</span><span class="ident">wasmer_engine_universal::Universal::new</span>(<span class="ident">compiler</span>).<span class="ident">engine</span>(),
+        <span class="comment">// TODO wasmer 2.x</span>
+        <span class="comment">// &amp;wasmer_engine_universal::Universal::new(compiler).engine(),</span>
+        <span class="kw-2">&amp;</span><span class="ident">wasmer_engine_jit::JIT::new</span>(<span class="ident">compiler</span>).<span class="ident">engine</span>(),
         <span class="ident">limit</span>,
     )
 }
@@ -1534,14 +1641,17 @@
 <span class="doccomment">/// Prepare a wasm store for trusted code.</span>
 <span class="kw">fn</span> <span class="ident">trusted_wasm_store</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">wasmer::Store</span> {
     <span class="comment">// TODO use LLVM compiler with native engine</span>
+
+    <span class="comment">// TODO wasmer 2.x</span>
+    <span class="comment">// wasmer::Store::new(</span>
+    <span class="comment">//     &amp;wasmer_engine_universal::Universal::new(compiler).engine(),</span>
+    <span class="comment">// )</span>
     <span class="kw">let</span> <span class="ident">compiler</span> <span class="op">=</span> <span class="ident">wasmer_compiler_cranelift::Cranelift::default</span>();
-    <span class="ident">wasmer::Store::new</span>(
-        <span class="kw-2">&amp;</span><span class="ident">wasmer_engine_universal::Universal::new</span>(<span class="ident">compiler</span>).<span class="ident">engine</span>(),
-    )
+    <span class="ident">wasmer::Store::new</span>(<span class="kw-2">&amp;</span><span class="ident">wasmer_engine_jit::JIT::new</span>(<span class="ident">compiler</span>).<span class="ident">engine</span>())
 }
 
 <span class="doccomment">/// Inject gas counter and stack-height limiter into the given wasm code</span>
-<span class="kw">fn</span> <span class="ident">prepare_wasm_code</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">AsRef</span><span class="op">&lt;</span>[<span class="ident">u8</span>]<span class="op">&gt;</span><span class="op">&gt;</span>(<span class="ident">code</span>: <span class="ident">T</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">prepare_wasm_code</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">AsRef</span><span class="op">&lt;</span>[<span class="ident">u8</span>]<span class="op">&gt;</span><span class="op">&gt;</span>(<span class="ident">code</span>: <span class="ident">T</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="ident">module</span>: <span class="ident">elements::Module</span> <span class="op">=</span> <span class="ident">elements::deserialize_buffer</span>(<span class="ident">code</span>.<span class="ident">as_ref</span>())
         .<span class="ident">map_err</span>(<span class="ident">Error::DeserializationError</span>)<span class="question-mark">?</span>;
     <span class="kw">let</span> <span class="ident">module</span> <span class="op">=</span>
@@ -1568,6 +1678,7 @@
     <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
     <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::ledger::storage::testing::TestStorage</span>;
     <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::types::validity_predicate::EvalVp</span>;
+    <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::vm::wasm</span>;
 
     <span class="kw">const</span> <span class="ident">TX_MEMORY_LIMIT_WASM</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;../wasm_for_tests/tx_memory_limit.wasm&quot;</span>;
     <span class="kw">const</span> <span class="ident">TX_NO_OP_WASM</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;../wasm_for_tests/tx_no_op.wasm&quot;</span>;
@@ -1593,10 +1704,7 @@
              overflow, loops {}. Got&quot;</span>,
             <span class="ident">loops</span>,
         ));
-        <span class="macro">assert_eq!</span>(
-            <span class="ident">get_trap_code</span>(<span class="kw-2">&amp;</span><span class="ident">error</span>),
-            <span class="ident">Either::Left</span>(<span class="ident">wasmer_vm::TrapCode::UnreachableCodeReached</span>),
-        );
+        <span class="ident">assert_stack_overflow</span>(<span class="kw-2">&amp;</span><span class="ident">error</span>);
 
         <span class="comment">// one less loop shouldn&#39;t go over the limit</span>
         <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">loop_in_tx_wasm</span>(<span class="ident">loops</span> <span class="op">-</span> <span class="number">1</span>);
@@ -1613,13 +1721,9 @@
         <span class="kw">let</span> <span class="ident">loops</span> <span class="op">=</span> <span class="ident">WASM_STACK_LIMIT</span> <span class="op">/</span> <span class="number">3</span> <span class="op">-</span> <span class="number">1</span>;
 
         <span class="kw">let</span> <span class="ident">error</span> <span class="op">=</span> <span class="ident">loop_in_vp_wasm</span>(<span class="ident">loops</span>).<span class="ident">expect_err</span>(
-            <span class="string">&quot;Expecting runtime error \&quot;unreachable\&quot; caused by stack-height \
-             overflow. Got&quot;</span>,
+            <span class="string">&quot;Expecting runtime error caused by stack-height overflow. Got&quot;</span>,
         );
-        <span class="macro">assert_eq!</span>(
-            <span class="ident">get_trap_code</span>(<span class="kw-2">&amp;</span><span class="ident">error</span>),
-            <span class="ident">Either::Left</span>(<span class="ident">wasmer_vm::TrapCode::UnreachableCodeReached</span>),
-        );
+        <span class="ident">assert_stack_overflow</span>(<span class="kw-2">&amp;</span><span class="ident">error</span>);
 
         <span class="comment">// one less loop shouldn&#39;t go over the limit</span>
         <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">loop_in_vp_wasm</span>(<span class="ident">loops</span> <span class="op">-</span> <span class="number">1</span>);
@@ -1644,25 +1748,36 @@
         <span class="comment">// Allocating `2^23` (8 MiB) should be below the memory limit and</span>
         <span class="comment">// shouldn&#39;t fail</span>
         <span class="kw">let</span> <span class="ident">tx_data</span> <span class="op">=</span> <span class="number">2_usize</span>.<span class="ident">pow</span>(<span class="number">23</span>).<span class="ident">try_to_vec</span>().<span class="ident">unwrap</span>();
+        <span class="kw">let</span> (<span class="kw-2">mut</span> <span class="ident">vp_cache</span>, <span class="kw">_</span>) <span class="op">=</span>
+            <span class="ident">wasm::compilation_cache::common::testing::cache</span>();
+        <span class="kw">let</span> (<span class="kw-2">mut</span> <span class="ident">tx_cache</span>, <span class="kw">_</span>) <span class="op">=</span>
+            <span class="ident">wasm::compilation_cache::common::testing::cache</span>();
         <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">tx</span>(
             <span class="kw-2">&amp;</span><span class="ident">storage</span>,
             <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">write_log</span>,
             <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">gas_meter</span>,
             <span class="ident">tx_code</span>.<span class="ident">clone</span>(),
             <span class="ident">tx_data</span>,
+            <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">vp_cache</span>,
+            <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">tx_cache</span>,
         );
         <span class="macro">assert!</span>(<span class="ident">result</span>.<span class="ident">is_ok</span>(), <span class="string">&quot;Expected success, got {:?}&quot;</span>, <span class="ident">result</span>);
 
         <span class="comment">// Allocating `2^24` (16 MiB) should be above the memory limit and</span>
         <span class="comment">// should fail</span>
         <span class="kw">let</span> <span class="ident">tx_data</span> <span class="op">=</span> <span class="number">2_usize</span>.<span class="ident">pow</span>(<span class="number">24</span>).<span class="ident">try_to_vec</span>().<span class="ident">unwrap</span>();
-        <span class="kw">let</span> <span class="ident">error</span> <span class="op">=</span>
-            <span class="ident">tx</span>(<span class="kw-2">&amp;</span><span class="ident">storage</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">write_log</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">gas_meter</span>, <span class="ident">tx_code</span>, <span class="ident">tx_data</span>)
-                .<span class="ident">expect_err</span>(<span class="string">&quot;Expected to run out of memory&quot;</span>);
-        <span class="macro">assert_eq!</span>(
-            <span class="ident">get_trap_code</span>(<span class="kw-2">&amp;</span><span class="ident">error</span>),
-            <span class="ident">Either::Left</span>(<span class="ident">wasmer_vm::TrapCode::UnreachableCodeReached</span>),
-        );
+        <span class="kw">let</span> <span class="ident">error</span> <span class="op">=</span> <span class="ident">tx</span>(
+            <span class="kw-2">&amp;</span><span class="ident">storage</span>,
+            <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">write_log</span>,
+            <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">gas_meter</span>,
+            <span class="ident">tx_code</span>,
+            <span class="ident">tx_data</span>,
+            <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">vp_cache</span>,
+            <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">tx_cache</span>,
+        )
+        .<span class="ident">expect_err</span>(<span class="string">&quot;Expected to run out of memory&quot;</span>);
+
+        <span class="ident">assert_stack_overflow</span>(<span class="kw-2">&amp;</span><span class="ident">error</span>);
     }
 
     <span class="doccomment">/// Test that when a validity predicate wasm goes over the memory limit</span>
@@ -1695,6 +1810,7 @@
         };
         <span class="kw">let</span> <span class="ident">tx_data</span> <span class="op">=</span> <span class="ident">eval_vp</span>.<span class="ident">try_to_vec</span>().<span class="ident">unwrap</span>();
         <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx::new</span>(<span class="macro">vec!</span>[], <span class="prelude-val">Some</span>(<span class="ident">tx_data</span>));
+        <span class="kw">let</span> (<span class="ident">vp_cache</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">wasm::compilation_cache::common::testing::cache</span>();
         <span class="comment">// When the `eval`ed VP doesn&#39;t run out of memory, it should return</span>
         <span class="comment">// `true`</span>
         <span class="kw">let</span> <span class="ident">passed</span> <span class="op">=</span> <span class="ident">vp</span>(
@@ -1706,6 +1822,7 @@
             <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">gas_meter</span>,
             <span class="kw-2">&amp;</span><span class="ident">keys_changed</span>,
             <span class="kw-2">&amp;</span><span class="ident">verifiers</span>,
+            <span class="ident">vp_cache</span>.<span class="ident">clone</span>(),
         )
         .<span class="ident">unwrap</span>();
         <span class="macro">assert!</span>(<span class="ident">passed</span>);
@@ -1731,6 +1848,7 @@
             <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">gas_meter</span>,
             <span class="kw-2">&amp;</span><span class="ident">keys_changed</span>,
             <span class="kw-2">&amp;</span><span class="ident">verifiers</span>,
+            <span class="ident">vp_cache</span>,
         )
         .<span class="ident">unwrap</span>();
 
@@ -1759,6 +1877,7 @@
         <span class="comment">// shouldn&#39;t fail</span>
         <span class="kw">let</span> <span class="ident">tx_data</span> <span class="op">=</span> <span class="number">2_usize</span>.<span class="ident">pow</span>(<span class="number">23</span>).<span class="ident">try_to_vec</span>().<span class="ident">unwrap</span>();
         <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx::new</span>(<span class="macro">vec!</span>[], <span class="prelude-val">Some</span>(<span class="ident">tx_data</span>));
+        <span class="kw">let</span> (<span class="ident">vp_cache</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">wasm::compilation_cache::common::testing::cache</span>();
         <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">vp</span>(
             <span class="ident">vp_code</span>.<span class="ident">clone</span>(),
             <span class="kw-2">&amp;</span><span class="ident">tx</span>,
@@ -1768,6 +1887,7 @@
             <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">gas_meter</span>,
             <span class="kw-2">&amp;</span><span class="ident">keys_changed</span>,
             <span class="kw-2">&amp;</span><span class="ident">verifiers</span>,
+            <span class="ident">vp_cache</span>.<span class="ident">clone</span>(),
         );
         <span class="macro">assert!</span>(<span class="ident">result</span>.<span class="ident">is_ok</span>(), <span class="string">&quot;Expected success, got {:?}&quot;</span>, <span class="ident">result</span>);
 
@@ -1784,13 +1904,11 @@
             <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">gas_meter</span>,
             <span class="kw-2">&amp;</span><span class="ident">keys_changed</span>,
             <span class="kw-2">&amp;</span><span class="ident">verifiers</span>,
+            <span class="ident">vp_cache</span>,
         )
         .<span class="ident">expect_err</span>(<span class="string">&quot;Expected to run out of memory&quot;</span>);
 
-        <span class="macro">assert_eq!</span>(
-            <span class="ident">get_trap_code</span>(<span class="kw-2">&amp;</span><span class="ident">error</span>),
-            <span class="ident">Either::Left</span>(<span class="ident">wasmer_vm::TrapCode::UnreachableCodeReached</span>),
-        );
+        <span class="ident">assert_stack_overflow</span>(<span class="kw-2">&amp;</span><span class="ident">error</span>);
     }
 
     <span class="doccomment">/// Test that when a transaction wasm goes over the wasm memory limit in the</span>
@@ -1810,13 +1928,33 @@
         <span class="comment">// limit and should fail</span>
         <span class="kw">let</span> <span class="ident">len</span> <span class="op">=</span> <span class="number">2_usize</span>.<span class="ident">pow</span>(<span class="number">24</span>);
         <span class="kw">let</span> <span class="ident">tx_data</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span> <span class="op">=</span> <span class="macro">vec!</span>[<span class="number">6_u8</span>; <span class="ident">len</span>];
-        <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span>
-            <span class="ident">tx</span>(<span class="kw-2">&amp;</span><span class="ident">storage</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">write_log</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">gas_meter</span>, <span class="ident">tx_no_op</span>, <span class="ident">tx_data</span>);
+        <span class="kw">let</span> (<span class="kw-2">mut</span> <span class="ident">vp_cache</span>, <span class="kw">_</span>) <span class="op">=</span>
+            <span class="ident">wasm::compilation_cache::common::testing::cache</span>();
+        <span class="kw">let</span> (<span class="kw-2">mut</span> <span class="ident">tx_cache</span>, <span class="kw">_</span>) <span class="op">=</span>
+            <span class="ident">wasm::compilation_cache::common::testing::cache</span>();
+        <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">tx</span>(
+            <span class="kw-2">&amp;</span><span class="ident">storage</span>,
+            <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">write_log</span>,
+            <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">gas_meter</span>,
+            <span class="ident">tx_no_op</span>,
+            <span class="ident">tx_data</span>,
+            <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">vp_cache</span>,
+            <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">tx_cache</span>,
+        );
+        <span class="comment">// Depending on platform, we get a different error from the running out</span>
+        <span class="comment">// of memory</span>
         <span class="kw">match</span> <span class="ident">result</span> {
+            <span class="comment">// Dylib engine error (used anywhere except mac)</span>
             <span class="prelude-val">Err</span>(<span class="ident">Error::MemoryError</span>(<span class="ident">memory::Error::MemoryOutOfBounds</span>(
                 <span class="ident">wasmer::MemoryError::CouldNotGrow</span> { .. },
-            ))) <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="comment">// as expected</span>
+            ))) <span class="op">=</span><span class="op">&gt;</span> {}
+            <span class="prelude-val">Err</span>(<span class="ident">error</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="kw">let</span> <span class="ident">trap_code</span> <span class="op">=</span> <span class="ident">get_trap_code</span>(<span class="kw-2">&amp;</span><span class="ident">error</span>);
+                <span class="comment">// Universal engine error (currently used on mac)</span>
+                <span class="macro">assert_eq!</span>(
+                    <span class="ident">trap_code</span>,
+                    <span class="ident">Either::Left</span>(<span class="ident">wasmer_vm::TrapCode::HeapAccessOutOfBounds</span>)
+                );
             }
             <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">panic!</span>(<span class="string">&quot;Expected to run out of memory, got {:?}&quot;</span>, <span class="ident">result</span>),
         }
@@ -1844,6 +1982,7 @@
         <span class="kw">let</span> <span class="ident">len</span> <span class="op">=</span> <span class="number">2_usize</span>.<span class="ident">pow</span>(<span class="number">24</span>);
         <span class="kw">let</span> <span class="ident">tx_data</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span> <span class="op">=</span> <span class="macro">vec!</span>[<span class="number">6_u8</span>; <span class="ident">len</span>];
         <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx::new</span>(<span class="macro">vec!</span>[], <span class="prelude-val">Some</span>(<span class="ident">tx_data</span>));
+        <span class="kw">let</span> (<span class="ident">vp_cache</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">wasm::compilation_cache::common::testing::cache</span>();
         <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">vp</span>(
             <span class="ident">vp_code</span>,
             <span class="kw-2">&amp;</span><span class="ident">tx</span>,
@@ -1853,12 +1992,24 @@
             <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">gas_meter</span>,
             <span class="kw-2">&amp;</span><span class="ident">keys_changed</span>,
             <span class="kw-2">&amp;</span><span class="ident">verifiers</span>,
+            <span class="ident">vp_cache</span>,
         );
+        <span class="comment">// Depending on platform, we get a different error from the running out</span>
+        <span class="comment">// of memory</span>
         <span class="kw">match</span> <span class="ident">result</span> {
+            <span class="comment">// Dylib engine error (used anywhere except mac)</span>
             <span class="prelude-val">Err</span>(<span class="ident">Error::MemoryError</span>(<span class="ident">memory::Error::MemoryOutOfBounds</span>(
                 <span class="ident">wasmer::MemoryError::CouldNotGrow</span> { .. },
             ))) <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="comment">// as expected</span>
+            }
+            <span class="prelude-val">Err</span>(<span class="ident">error</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="kw">let</span> <span class="ident">trap_code</span> <span class="op">=</span> <span class="ident">get_trap_code</span>(<span class="kw-2">&amp;</span><span class="ident">error</span>);
+                <span class="comment">// Universal engine error (currently used on mac)</span>
+                <span class="macro">assert_eq!</span>(
+                    <span class="ident">trap_code</span>,
+                    <span class="ident">Either::Left</span>(<span class="ident">wasmer_vm::TrapCode::HeapAccessOutOfBounds</span>)
+                );
             }
             <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">panic!</span>(<span class="string">&quot;Expected to run out of memory, got {:?}&quot;</span>, <span class="ident">result</span>),
         }
@@ -1888,18 +2039,22 @@
         <span class="comment">// Borsh.</span>
         <span class="ident">storage</span>.<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>, <span class="ident">value</span>.<span class="ident">try_to_vec</span>().<span class="ident">unwrap</span>()).<span class="ident">unwrap</span>();
         <span class="kw">let</span> <span class="ident">tx_data</span> <span class="op">=</span> <span class="ident">key</span>.<span class="ident">try_to_vec</span>().<span class="ident">unwrap</span>();
+        <span class="kw">let</span> (<span class="kw-2">mut</span> <span class="ident">vp_cache</span>, <span class="kw">_</span>) <span class="op">=</span>
+            <span class="ident">wasm::compilation_cache::common::testing::cache</span>();
+        <span class="kw">let</span> (<span class="kw-2">mut</span> <span class="ident">tx_cache</span>, <span class="kw">_</span>) <span class="op">=</span>
+            <span class="ident">wasm::compilation_cache::common::testing::cache</span>();
         <span class="kw">let</span> <span class="ident">error</span> <span class="op">=</span> <span class="ident">tx</span>(
             <span class="kw-2">&amp;</span><span class="ident">storage</span>,
             <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">write_log</span>,
             <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">gas_meter</span>,
             <span class="ident">tx_read_key</span>,
             <span class="ident">tx_data</span>,
+            <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">vp_cache</span>,
+            <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">tx_cache</span>,
         )
         .<span class="ident">expect_err</span>(<span class="string">&quot;Expected to run out of memory&quot;</span>);
-        <span class="macro">assert_eq!</span>(
-            <span class="ident">get_trap_code</span>(<span class="kw-2">&amp;</span><span class="ident">error</span>),
-            <span class="ident">Either::Left</span>(<span class="ident">wasmer_vm::TrapCode::UnreachableCodeReached</span>),
-        );
+
+        <span class="ident">assert_stack_overflow</span>(<span class="kw-2">&amp;</span><span class="ident">error</span>);
     }
 
     <span class="doccomment">/// Test that when a validity predicate wasm goes over the wasm memory limit</span>
@@ -1930,6 +2085,7 @@
         <span class="ident">storage</span>.<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>, <span class="ident">value</span>.<span class="ident">try_to_vec</span>().<span class="ident">unwrap</span>()).<span class="ident">unwrap</span>();
         <span class="kw">let</span> <span class="ident">tx_data</span> <span class="op">=</span> <span class="ident">key</span>.<span class="ident">try_to_vec</span>().<span class="ident">unwrap</span>();
         <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx::new</span>(<span class="macro">vec!</span>[], <span class="prelude-val">Some</span>(<span class="ident">tx_data</span>));
+        <span class="kw">let</span> (<span class="ident">vp_cache</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">wasm::compilation_cache::common::testing::cache</span>();
         <span class="kw">let</span> <span class="ident">error</span> <span class="op">=</span> <span class="ident">vp</span>(
             <span class="ident">vp_read_key</span>,
             <span class="kw-2">&amp;</span><span class="ident">tx</span>,
@@ -1939,12 +2095,11 @@
             <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">gas_meter</span>,
             <span class="kw-2">&amp;</span><span class="ident">keys_changed</span>,
             <span class="kw-2">&amp;</span><span class="ident">verifiers</span>,
+            <span class="ident">vp_cache</span>,
         )
         .<span class="ident">expect_err</span>(<span class="string">&quot;Expected to run out of memory&quot;</span>);
-        <span class="macro">assert_eq!</span>(
-            <span class="ident">get_trap_code</span>(<span class="kw-2">&amp;</span><span class="ident">error</span>),
-            <span class="ident">Either::Left</span>(<span class="ident">wasmer_vm::TrapCode::UnreachableCodeReached</span>),
-        );
+
+        <span class="ident">assert_stack_overflow</span>(<span class="kw-2">&amp;</span><span class="ident">error</span>);
     }
 
     <span class="doccomment">/// Test that when a validity predicate wasm goes over the wasm memory limit</span>
@@ -1984,6 +2139,7 @@
         };
         <span class="kw">let</span> <span class="ident">tx_data</span> <span class="op">=</span> <span class="ident">eval_vp</span>.<span class="ident">try_to_vec</span>().<span class="ident">unwrap</span>();
         <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx::new</span>(<span class="macro">vec!</span>[], <span class="prelude-val">Some</span>(<span class="ident">tx_data</span>));
+        <span class="kw">let</span> (<span class="ident">vp_cache</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">wasm::compilation_cache::common::testing::cache</span>();
         <span class="kw">let</span> <span class="ident">passed</span> <span class="op">=</span> <span class="ident">vp</span>(
             <span class="ident">vp_eval</span>,
             <span class="kw-2">&amp;</span><span class="ident">tx</span>,
@@ -1993,6 +2149,7 @@
             <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">gas_meter</span>,
             <span class="kw-2">&amp;</span><span class="ident">keys_changed</span>,
             <span class="kw-2">&amp;</span><span class="ident">verifiers</span>,
+            <span class="ident">vp_cache</span>,
         )
         .<span class="ident">unwrap</span>();
         <span class="macro">assert!</span>(<span class="op">!</span><span class="ident">passed</span>);
@@ -2037,7 +2194,19 @@
         <span class="kw">let</span> <span class="ident">storage</span> <span class="op">=</span> <span class="ident">TestStorage::default</span>();
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">write_log</span> <span class="op">=</span> <span class="ident">WriteLog::default</span>();
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">gas_meter</span> <span class="op">=</span> <span class="ident">BlockGasMeter::default</span>();
-        <span class="ident">tx</span>(<span class="kw-2">&amp;</span><span class="ident">storage</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">write_log</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">gas_meter</span>, <span class="ident">tx_code</span>, <span class="ident">tx_data</span>)
+        <span class="kw">let</span> (<span class="kw-2">mut</span> <span class="ident">vp_cache</span>, <span class="kw">_</span>) <span class="op">=</span>
+            <span class="ident">wasm::compilation_cache::common::testing::cache</span>();
+        <span class="kw">let</span> (<span class="kw-2">mut</span> <span class="ident">tx_cache</span>, <span class="kw">_</span>) <span class="op">=</span>
+            <span class="ident">wasm::compilation_cache::common::testing::cache</span>();
+        <span class="ident">tx</span>(
+            <span class="kw-2">&amp;</span><span class="ident">storage</span>,
+            <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">write_log</span>,
+            <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">gas_meter</span>,
+            <span class="ident">tx_code</span>,
+            <span class="ident">tx_data</span>,
+            <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">vp_cache</span>,
+            <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">tx_cache</span>,
+        )
     }
 
     <span class="kw">fn</span> <span class="ident">loop_in_vp_wasm</span>(<span class="ident">loops</span>: <span class="ident">u32</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span> {
@@ -2076,6 +2245,7 @@
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">gas_meter</span> <span class="op">=</span> <span class="ident">VpGasMeter::new</span>(<span class="number">0</span>);
         <span class="kw">let</span> <span class="ident">keys_changed</span> <span class="op">=</span> <span class="ident">HashSet::new</span>();
         <span class="kw">let</span> <span class="ident">verifiers</span> <span class="op">=</span> <span class="ident">HashSet::new</span>();
+        <span class="kw">let</span> (<span class="ident">vp_cache</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">wasm::compilation_cache::common::testing::cache</span>();
         <span class="ident">vp</span>(
             <span class="ident">vp_code</span>,
             <span class="kw-2">&amp;</span><span class="ident">tx</span>,
@@ -2085,6 +2255,7 @@
             <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">gas_meter</span>,
             <span class="kw-2">&amp;</span><span class="ident">keys_changed</span>,
             <span class="kw-2">&amp;</span><span class="ident">verifiers</span>,
+            <span class="ident">vp_cache</span>,
         )
     }
 
@@ -2098,6 +2269,19 @@
         } <span class="kw">else</span> {
             <span class="ident">Either::Right</span>(<span class="macro">format!</span>(<span class="string">&quot;Unexpected error {}&quot;</span>, <span class="ident">error</span>))
         }
+    }
+
+    <span class="kw">fn</span> <span class="ident">assert_stack_overflow</span>(<span class="ident">error</span>: <span class="kw-2">&amp;</span><span class="ident">Error</span>) {
+        <span class="kw">let</span> <span class="ident">trap_code</span> <span class="op">=</span> <span class="ident">get_trap_code</span>(<span class="ident">error</span>);
+        <span class="comment">// Depending on platform, we get a different error from the overflow</span>
+        <span class="macro">assert!</span>(
+            <span class="comment">// Universal engine error (currently used on mac)</span>
+            <span class="ident">trap_code</span> <span class="op">=</span><span class="op">=</span>
+            <span class="ident">Either::Left</span>(<span class="ident">wasmer_vm::TrapCode::UnreachableCodeReached</span>) <span class="op">|</span><span class="op">|</span>
+            <span class="comment">// Dylib engine error (used elsewhere)</span>
+            <span class="ident">trap_code</span> <span class="op">=</span><span class="op">=</span>
+            <span class="ident">Either::Left</span>(<span class="ident">wasmer_vm::TrapCode::StackOverflow</span>),
+        );
     }
 }
 </code></pre></div>

@@ -197,6 +197,39 @@
 <span id="197">197</span>
 <span id="198">198</span>
 <span id="199">199</span>
+<span id="200">200</span>
+<span id="201">201</span>
+<span id="202">202</span>
+<span id="203">203</span>
+<span id="204">204</span>
+<span id="205">205</span>
+<span id="206">206</span>
+<span id="207">207</span>
+<span id="208">208</span>
+<span id="209">209</span>
+<span id="210">210</span>
+<span id="211">211</span>
+<span id="212">212</span>
+<span id="213">213</span>
+<span id="214">214</span>
+<span id="215">215</span>
+<span id="216">216</span>
+<span id="217">217</span>
+<span id="218">218</span>
+<span id="219">219</span>
+<span id="220">220</span>
+<span id="221">221</span>
+<span id="222">222</span>
+<span id="223">223</span>
+<span id="224">224</span>
+<span id="225">225</span>
+<span id="226">226</span>
+<span id="227">227</span>
+<span id="228">228</span>
+<span id="229">229</span>
+<span id="230">230</span>
+<span id="231">231</span>
+<span id="232">232</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std::borrow::Borrow</span>;
 <span class="kw">use</span> <span class="ident">std::collections::HashSet</span>;
 
@@ -207,9 +240,11 @@
 <span class="kw">use</span> <span class="ident">anoma::types::address::Address</span>;
 <span class="kw">use</span> <span class="ident">anoma::types::storage::Key</span>;
 <span class="kw">use</span> <span class="ident">anoma::types</span>::{<span class="ident">key</span>, <span class="ident">token</span>};
-<span class="kw">use</span> <span class="ident">anoma::vm</span>;
 <span class="kw">use</span> <span class="ident">anoma::vm::prefix_iter::PrefixIterators</span>;
+<span class="kw">use</span> <span class="ident">anoma::vm::wasm</span>::{<span class="self">self</span>, <span class="ident">TxCache</span>, <span class="ident">VpCache</span>};
+<span class="kw">use</span> <span class="ident">anoma::vm</span>::{<span class="self">self</span>, <span class="ident">WasmCacheRwAccess</span>};
 <span class="kw">use</span> <span class="ident">anoma_vm_env::tx_prelude::BorshSerialize</span>;
+<span class="kw">use</span> <span class="ident">tempfile::TempDir</span>;
 
 <span class="doccomment">/// This module combines the native host function implementations from</span>
 <span class="doccomment">/// `native_tx_host_env` with the functions exposed to the tx wasm</span>
@@ -222,7 +257,6 @@
 }
 
 <span class="doccomment">/// Host environment structures required for transactions.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Default</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">TestTxEnv</span> {
     <span class="kw">pub</span> <span class="ident">storage</span>: <span class="ident">TestStorage</span>,
     <span class="kw">pub</span> <span class="ident">write_log</span>: <span class="ident">WriteLog</span>,
@@ -230,6 +264,31 @@
     <span class="kw">pub</span> <span class="ident">verifiers</span>: <span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span>,
     <span class="kw">pub</span> <span class="ident">gas_meter</span>: <span class="ident">BlockGasMeter</span>,
     <span class="kw">pub</span> <span class="ident">result_buffer</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span> <span class="ident">vp_wasm_cache</span>: <span class="ident">VpCache</span><span class="op">&lt;</span><span class="ident">WasmCacheRwAccess</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span> <span class="ident">vp_cache_dir</span>: <span class="ident">TempDir</span>,
+    <span class="kw">pub</span> <span class="ident">tx_wasm_cache</span>: <span class="ident">TxCache</span><span class="op">&lt;</span><span class="ident">WasmCacheRwAccess</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span> <span class="ident">tx_cache_dir</span>: <span class="ident">TempDir</span>,
+}
+<span class="kw">impl</span> <span class="ident">Default</span> <span class="kw">for</span> <span class="ident">TestTxEnv</span> {
+    <span class="kw">fn</span> <span class="ident">default</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="kw">let</span> (<span class="ident">vp_wasm_cache</span>, <span class="ident">vp_cache_dir</span>) <span class="op">=</span>
+            <span class="ident">wasm::compilation_cache::common::testing::cache</span>();
+        <span class="kw">let</span> (<span class="ident">tx_wasm_cache</span>, <span class="ident">tx_cache_dir</span>) <span class="op">=</span>
+            <span class="ident">wasm::compilation_cache::common::testing::cache</span>();
+
+        <span class="self">Self</span> {
+            <span class="ident">storage</span>: <span class="ident">TestStorage::default</span>(),
+            <span class="ident">write_log</span>: <span class="ident">WriteLog::default</span>(),
+            <span class="ident">iterators</span>: <span class="ident">PrefixIterators::default</span>(),
+            <span class="ident">gas_meter</span>: <span class="ident">BlockGasMeter::default</span>(),
+            <span class="ident">verifiers</span>: <span class="ident">HashSet::default</span>(),
+            <span class="ident">result_buffer</span>: <span class="prelude-val">None</span>,
+            <span class="ident">vp_wasm_cache</span>,
+            <span class="ident">vp_cache_dir</span>,
+            <span class="ident">tx_wasm_cache</span>,
+            <span class="ident">tx_cache_dir</span>,
+        }
+    }
 }
 
 <span class="kw">impl</span> <span class="ident">TestTxEnv</span> {
@@ -289,6 +348,10 @@
         <span class="ident">verifiers</span>,
         <span class="ident">gas_meter</span>,
         <span class="ident">result_buffer</span>,
+        <span class="ident">vp_wasm_cache</span>,
+        <span class="ident">vp_cache_dir</span>: <span class="kw">_</span>,
+        <span class="ident">tx_wasm_cache</span>,
+        <span class="ident">tx_cache_dir</span>: <span class="kw">_</span>,
     }: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">TestTxEnv</span>,
 ) {
     <span class="ident">tx_host_env::ENV</span>.<span class="ident">with</span>(<span class="op">|</span><span class="ident">env</span><span class="op">|</span> {
@@ -300,6 +363,8 @@
                 <span class="ident">verifiers</span>,
                 <span class="ident">gas_meter</span>,
                 <span class="ident">result_buffer</span>,
+                <span class="ident">vp_wasm_cache</span>,
+                <span class="ident">tx_wasm_cache</span>,
             )
         })
     });
@@ -322,7 +387,7 @@
     <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
 
     <span class="macro">thread_local!</span> {
-        <span class="kw">pub</span> <span class="kw">static</span> <span class="ident">ENV</span>: <span class="ident">RefCell</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">TxEnv</span><span class="op">&lt;</span><span class="lifetime">&#39;static</span>, <span class="ident">NativeMemory</span>, <span class="ident">MockDB</span>, <span class="ident">Sha256Hasher</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">RefCell::new</span>(<span class="prelude-val">None</span>);
+        <span class="kw">pub</span> <span class="kw">static</span> <span class="ident">ENV</span>: <span class="ident">RefCell</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">TxEnv</span><span class="op">&lt;</span><span class="lifetime">&#39;static</span>, <span class="ident">NativeMemory</span>, <span class="ident">MockDB</span>, <span class="ident">Sha256Hasher</span>, <span class="ident">WasmCacheRwAccess</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">RefCell::new</span>(<span class="prelude-val">None</span>);
     }
 
     <span class="doccomment">/// A helper macro to create implementations of the host environment</span>
@@ -390,6 +455,7 @@
         <span class="ident">code_len</span>: <span class="ident">u64</span>,
         <span class="ident">result_ptr</span>: <span class="ident">u64</span>
     ));
+    <span class="macro">native_host_fn!</span>(<span class="ident">tx_emit_ibc_event</span>(<span class="ident">event_ptr</span>: <span class="ident">u64</span>, <span class="ident">event_len</span>: <span class="ident">u64</span>));
     <span class="macro">native_host_fn!</span>(<span class="ident">tx_get_chain_id</span>(<span class="ident">result_ptr</span>: <span class="ident">u64</span>));
     <span class="macro">native_host_fn!</span>(<span class="ident">tx_get_block_height</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u64</span>);
     <span class="macro">native_host_fn!</span>(<span class="ident">tx_get_block_hash</span>(<span class="ident">result_ptr</span>: <span class="ident">u64</span>));

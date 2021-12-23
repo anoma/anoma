@@ -1,0 +1,1 @@
+initSidebarItems({"mod":[["common","WASM compilation cache. The cache is backed by in-memory LRU cache with configurable size limit and a file system cache of compiled modules (either to dynamic libs compiled via the `dylib` module, or serialized modules compiled via the `universal` module)."],["tx","Transaction WASM compilation cache"],["vp","VP WASM compilation cache"]]});

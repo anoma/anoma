@@ -252,6 +252,33 @@
 <span id="252">252</span>
 <span id="253">253</span>
 <span id="254">254</span>
+<span id="255">255</span>
+<span id="256">256</span>
+<span id="257">257</span>
+<span id="258">258</span>
+<span id="259">259</span>
+<span id="260">260</span>
+<span id="261">261</span>
+<span id="262">262</span>
+<span id="263">263</span>
+<span id="264">264</span>
+<span id="265">265</span>
+<span id="266">266</span>
+<span id="267">267</span>
+<span id="268">268</span>
+<span id="269">269</span>
+<span id="270">270</span>
+<span id="271">271</span>
+<span id="272">272</span>
+<span id="273">273</span>
+<span id="274">274</span>
+<span id="275">275</span>
+<span id="276">276</span>
+<span id="277">277</span>
+<span id="278">278</span>
+<span id="279">279</span>
+<span id="280">280</span>
+<span id="281">281</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std::collections::HashSet</span>;
 
 <span class="kw">use</span> <span class="ident">anoma::ledger::gas::VpGasMeter</span>;
@@ -261,8 +288,10 @@
 <span class="kw">use</span> <span class="ident">anoma::proto::Tx</span>;
 <span class="kw">use</span> <span class="ident">anoma::types::address</span>::{<span class="self">self</span>, <span class="ident">Address</span>};
 <span class="kw">use</span> <span class="ident">anoma::types::storage</span>::{<span class="self">self</span>, <span class="ident">Key</span>};
-<span class="kw">use</span> <span class="ident">anoma::vm</span>;
 <span class="kw">use</span> <span class="ident">anoma::vm::prefix_iter::PrefixIterators</span>;
+<span class="kw">use</span> <span class="ident">anoma::vm::wasm</span>::{<span class="self">self</span>, <span class="ident">VpCache</span>};
+<span class="kw">use</span> <span class="ident">anoma::vm</span>::{<span class="self">self</span>, <span class="ident">WasmCacheRwAccess</span>};
+<span class="kw">use</span> <span class="ident">tempfile::TempDir</span>;
 
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::tx</span>::{<span class="ident">init_tx_env</span>, <span class="ident">TestTxEnv</span>};
 
@@ -288,6 +317,8 @@
     <span class="kw">pub</span> <span class="ident">verifiers</span>: <span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span>,
     <span class="kw">pub</span> <span class="ident">eval_runner</span>: <span class="ident">native_vp_host_env::VpEval</span>,
     <span class="kw">pub</span> <span class="ident">result_buffer</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span> <span class="ident">vp_wasm_cache</span>: <span class="ident">VpCache</span><span class="op">&lt;</span><span class="ident">WasmCacheRwAccess</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span> <span class="ident">vp_cache_dir</span>: <span class="ident">TempDir</span>,
 }
 
 <span class="kw">impl</span> <span class="ident">Default</span> <span class="kw">for</span> <span class="ident">TestVpEnv</span> {
@@ -296,6 +327,9 @@
         <span class="kw">let</span> <span class="ident">eval_runner</span> <span class="op">=</span> <span class="ident">anoma::vm::wasm::run::VpEvalWasm::default</span>();
         <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;wasm-runtime&quot;</span>))]</span>
         <span class="kw">let</span> <span class="ident">eval_runner</span> <span class="op">=</span> <span class="ident">native_vp_host_env::VpEval</span>;
+
+        <span class="kw">let</span> (<span class="ident">vp_wasm_cache</span>, <span class="ident">vp_cache_dir</span>) <span class="op">=</span>
+            <span class="ident">wasm::compilation_cache::common::testing::cache</span>();
 
         <span class="self">Self</span> {
             <span class="ident">addr</span>: <span class="ident">address::testing::established_address_1</span>(),
@@ -308,6 +342,8 @@
             <span class="ident">verifiers</span>: <span class="ident">HashSet::default</span>(),
             <span class="ident">eval_runner</span>,
             <span class="ident">result_buffer</span>: <span class="prelude-val">None</span>,
+            <span class="ident">vp_wasm_cache</span>,
+            <span class="ident">vp_cache_dir</span>,
         }
     }
 }
@@ -373,6 +409,8 @@
         <span class="ident">verifiers</span>,
         <span class="ident">eval_runner</span>,
         <span class="ident">result_buffer</span>,
+        <span class="ident">vp_wasm_cache</span>,
+        <span class="ident">vp_cache_dir</span>: <span class="kw">_</span>,
     }: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">TestVpEnv</span>,
 ) {
     <span class="ident">vp_host_env::ENV</span>.<span class="ident">with</span>(<span class="op">|</span><span class="ident">env</span><span class="op">|</span> {
@@ -388,6 +426,7 @@
                 <span class="ident">result_buffer</span>,
                 <span class="ident">keys_changed</span>,
                 <span class="ident">eval_runner</span>,
+                <span class="ident">vp_wasm_cache</span>,
             )
         })
     });
@@ -404,29 +443,44 @@
     <span class="kw">use</span> <span class="ident">anoma::ledger::storage::testing::Sha256Hasher</span>;
     <span class="kw">use</span> <span class="ident">anoma::vm::host_env</span>::<span class="kw-2">*</span>;
     <span class="kw">use</span> <span class="ident">anoma::vm::memory::testing::NativeMemory</span>;
+    <span class="kw">use</span> <span class="ident">anoma::vm::WasmCacheRwAccess</span>;
     <span class="comment">// TODO replace with `std::concat_idents` once stabilized (https://github.com/rust-lang/rust/issues/29599)</span>
     <span class="kw">use</span> <span class="ident">concat_idents::concat_idents</span>;
 
     <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
 
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;wasm-runtime&quot;</span>)]</span>
-    <span class="kw">pub</span> <span class="kw">type</span> <span class="ident">VpEval</span> <span class="op">=</span> <span class="ident">anoma::vm::wasm::run::VpEvalWasm</span><span class="op">&lt;</span><span class="ident">MockDB</span>, <span class="ident">Sha256Hasher</span><span class="op">&gt;</span>;
+    <span class="kw">pub</span> <span class="kw">type</span> <span class="ident">VpEval</span> <span class="op">=</span> <span class="ident">anoma::vm::wasm::run::VpEvalWasm</span><span class="op">&lt;</span>
+        <span class="ident">MockDB</span>,
+        <span class="ident">Sha256Hasher</span>,
+        <span class="ident">WasmCacheRwAccess</span>,
+    <span class="op">&gt;</span>;
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;wasm-runtime&quot;</span>))]</span>
     <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">VpEval</span>;
 
+    <span class="kw">pub</span> <span class="kw">type</span> <span class="ident">TestVpEnv</span> <span class="op">=</span> <span class="ident">VpEnv</span><span class="op">&lt;</span>
+        <span class="lifetime">&#39;static</span>,
+        <span class="ident">NativeMemory</span>,
+        <span class="ident">MockDB</span>,
+        <span class="ident">Sha256Hasher</span>,
+        <span class="ident">VpEval</span>,
+        <span class="ident">WasmCacheRwAccess</span>,
+    <span class="op">&gt;</span>;
+
     <span class="macro">thread_local!</span> {
-        <span class="kw">pub</span> <span class="kw">static</span> <span class="ident">ENV</span>: <span class="ident">RefCell</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">VpEnv</span><span class="op">&lt;</span><span class="lifetime">&#39;static</span>, <span class="ident">NativeMemory</span>, <span class="ident">MockDB</span>, <span class="ident">Sha256Hasher</span>, <span class="ident">VpEval</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">RefCell::new</span>(<span class="prelude-val">None</span>);
+        <span class="kw">pub</span> <span class="kw">static</span> <span class="ident">ENV</span>: <span class="ident">RefCell</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">TestVpEnv</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">RefCell::new</span>(<span class="prelude-val">None</span>);
     }
 
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;wasm-runtime&quot;</span>))]</span>
     <span class="kw">impl</span> <span class="ident">VpEvaluator</span> <span class="kw">for</span> <span class="ident">VpEval</span> {
+        <span class="kw">type</span> <span class="ident">CA</span> <span class="op">=</span> <span class="ident">WasmCacheRwAccess</span>;
         <span class="kw">type</span> <span class="ident">Db</span> <span class="op">=</span> <span class="ident">MockDB</span>;
         <span class="kw">type</span> <span class="ident">Eval</span> <span class="op">=</span> <span class="ident">VpEval</span>;
         <span class="kw">type</span> <span class="ident">H</span> <span class="op">=</span> <span class="ident">Sha256Hasher</span>;
 
         <span class="kw">fn</span> <span class="ident">eval</span>(
             <span class="kw-2">&amp;</span><span class="self">self</span>,
-            <span class="ident">_ctx</span>: <span class="ident">VpCtx</span><span class="op">&lt;</span><span class="lifetime">&#39;static</span>, <span class="ident"><span class="self">Self</span>::Db</span>, <span class="ident"><span class="self">Self</span>::H</span>, <span class="ident"><span class="self">Self</span>::Eval</span><span class="op">&gt;</span>,
+            <span class="ident">_ctx</span>: <span class="ident">VpCtx</span><span class="op">&lt;</span><span class="lifetime">&#39;static</span>, <span class="ident"><span class="self">Self</span>::Db</span>, <span class="ident"><span class="self">Self</span>::H</span>, <span class="ident"><span class="self">Self</span>::Eval</span>, <span class="ident"><span class="self">Self</span>::CA</span><span class="op">&gt;</span>,
             <span class="ident">_vp_code</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>,
             <span class="ident">_input_data</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>,
         ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">anoma::types::internal::HostEnvResult</span> {

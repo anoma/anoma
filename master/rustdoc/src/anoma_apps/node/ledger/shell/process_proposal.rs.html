@@ -659,11 +659,6 @@
 <span id="659">659</span>
 <span id="660">660</span>
 <span id="661">661</span>
-<span id="662">662</span>
-<span id="663">663</span>
-<span id="664">664</span>
-<span id="665">665</span>
-<span id="666">666</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Implementation of the [&#39;VerifyHeader`], [`ProcessProposal`],</span>
 <span class="doccomment">//! and [`RevertProposal`] ABCI++ methods for the Shell</span>
 <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
@@ -780,25 +775,24 @@
                         }
                     } <span class="kw">else</span> {
                         <span class="comment">// check that the fee payer has sufficient balance</span>
-                        <span class="kw">match</span> <span class="self">self</span>.<span class="ident">get_balance</span>(<span class="kw-2">&amp;</span><span class="ident">tx</span>.<span class="ident">fee</span>.<span class="ident">token</span>, <span class="kw-2">&amp;</span><span class="ident">tx</span>.<span class="ident">fee_payer</span>()) {
-                            <span class="prelude-val">Ok</span>(<span class="ident">balance</span>) <span class="kw">if</span> <span class="ident">tx</span>.<span class="ident">fee</span>.<span class="ident">amount</span> <span class="op">&lt;</span><span class="op">=</span> <span class="ident">balance</span> <span class="op">=</span><span class="op">&gt;</span> {
-                                <span class="ident">shim::response::TxResult</span> {
-                                    <span class="ident">code</span>: <span class="ident">ErrorCodes::Ok</span>.<span class="ident">into</span>(),
-                                    <span class="ident">info</span>: <span class="string">&quot;Process proposal accepted this \
-                                           transaction&quot;</span>
-                                        .<span class="ident">into</span>(),
-                                }
+                        <span class="kw">let</span> <span class="ident">balance</span> <span class="op">=</span> <span class="self">self</span>
+                            .<span class="ident">get_balance</span>(<span class="kw-2">&amp;</span><span class="ident">tx</span>.<span class="ident">fee</span>.<span class="ident">token</span>, <span class="kw-2">&amp;</span><span class="ident">tx</span>.<span class="ident">fee_payer</span>())
+                            .<span class="ident">unwrap_or_default</span>();
+
+                        <span class="kw">if</span> <span class="ident">tx</span>.<span class="ident">fee</span>.<span class="ident">amount</span> <span class="op">&lt;</span><span class="op">=</span> <span class="ident">balance</span> {
+                            <span class="ident">shim::response::TxResult</span> {
+                                <span class="ident">code</span>: <span class="ident">ErrorCodes::Ok</span>.<span class="ident">into</span>(),
+                                <span class="ident">info</span>: <span class="string">&quot;Process proposal accepted this \
+                                       transaction&quot;</span>
+                                    .<span class="ident">into</span>(),
                             }
-                            <span class="prelude-val">Ok</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">shim::response::TxResult</span> {
+                        } <span class="kw">else</span> {
+                            <span class="ident">shim::response::TxResult</span> {
                                 <span class="ident">code</span>: <span class="ident">ErrorCodes::InvalidTx</span>.<span class="ident">into</span>(),
                                 <span class="ident">info</span>: <span class="string">&quot;The address given does not have \
                                        sufficient balance to pay fee&quot;</span>
                                     .<span class="ident">into</span>(),
-                            },
-                            <span class="prelude-val">Err</span>(<span class="ident">err</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">shim::response::TxResult</span> {
-                                <span class="ident">code</span>: <span class="ident">ErrorCodes::InvalidTx</span>.<span class="ident">into</span>(),
-                                <span class="ident">info</span>: <span class="ident">err</span>,
-                            },
+                            }
                         }
                     }
                 }
@@ -898,7 +892,7 @@
 <span class="doccomment">/// are covered by the e2e tests.</span>
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
 <span class="kw">mod</span> <span class="ident">test_process_proposal</span> {
-    <span class="kw">use</span> <span class="ident">anoma::types::address</span>::{<span class="ident">xan</span>, <span class="ident">Address</span>};
+    <span class="kw">use</span> <span class="ident">anoma::types::address::xan</span>;
     <span class="kw">use</span> <span class="ident">anoma::types::key::ed25519::SignedTxData</span>;
     <span class="kw">use</span> <span class="ident">anoma::types::storage::Epoch</span>;
     <span class="kw">use</span> <span class="ident">anoma::types::token::Amount</span>;
@@ -1036,8 +1030,8 @@
         }
     }
 
-    <span class="doccomment">/// Test that if the account submitting the tx is</span>
-    <span class="doccomment">/// not known, [`process_proposal`] rejects that tx</span>
+    <span class="doccomment">/// Test that if the account submitting the tx is not known and the fee is</span>
+    <span class="doccomment">/// non-zero, [`process_proposal`] rejects that tx</span>
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="kw">fn</span> <span class="ident">test_wrapper_unknown_address</span>() {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">shell</span> <span class="op">=</span> <span class="ident">TestShell::new</span>();
@@ -1048,7 +1042,7 @@
         );
         <span class="kw">let</span> <span class="ident">wrapper</span> <span class="op">=</span> <span class="ident">WrapperTx::new</span>(
             <span class="ident">Fee</span> {
-                <span class="ident">amount</span>: <span class="number">0</span>.<span class="ident">into</span>(),
+                <span class="ident">amount</span>: <span class="number">1</span>.<span class="ident">into</span>(),
                 <span class="ident">token</span>: <span class="ident">xan</span>(),
             },
             <span class="kw-2">&amp;</span><span class="ident">keypair</span>,
@@ -1063,14 +1057,10 @@
         };
         <span class="kw">let</span> <span class="ident">response</span> <span class="op">=</span> <span class="ident">shell</span>.<span class="ident">process_proposal</span>(<span class="ident">request</span>);
         <span class="macro">assert_eq!</span>(<span class="ident">response</span>.<span class="ident">result</span>.<span class="ident">code</span>, <span class="ident">u32::from</span>(<span class="ident">ErrorCodes::InvalidTx</span>));
-        <span class="kw">let</span> <span class="ident">source</span>: <span class="ident">Address</span> <span class="op">=</span> (<span class="kw-2">&amp;</span><span class="ident">keypair</span>.<span class="ident">public</span>).<span class="ident">into</span>();
         <span class="macro">assert_eq!</span>(
             <span class="ident">response</span>.<span class="ident">result</span>.<span class="ident">info</span>,
-            <span class="macro">format!</span>(
-                <span class="string">&quot;Unable to read token {} balance of the given address {}&quot;</span>,
-                <span class="ident">xan</span>(),
-                <span class="ident">source</span>
-            )
+            <span class="string">&quot;The address given does not have sufficient balance to pay fee&quot;</span>
+                .<span class="ident">to_string</span>(),
         );
         <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
         {

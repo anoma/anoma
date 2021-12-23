@@ -771,6 +771,7 @@
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::config</span>::{
     <span class="self">self</span>, <span class="ident">genesis</span>, <span class="ident">Config</span>, <span class="ident">IntentGossiper</span>, <span class="ident">PeerAddress</span>, <span class="ident">TendermintMode</span>,
 };
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::node::gossip</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::node::ledger::tendermint_node</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::wallet::Wallet</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::wasm_loader</span>;
@@ -916,10 +917,9 @@
         <span class="ident">persistent_peers</span>.<span class="ident">push</span>(<span class="ident">peer</span>);
         <span class="comment">// Add a Intent gossiper bootstrap peer from the validator&#39;s IP</span>
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">gossiper_config</span> <span class="op">=</span> <span class="ident">IntentGossiper::default</span>();
-        <span class="kw">let</span> <span class="ident">peer_key</span> <span class="op">=</span> <span class="ident">libp2p::identity::Keypair::Ed25519</span>(
-            <span class="ident">gossiper_config</span>.<span class="ident">gossiper</span>.<span class="ident">key</span>.<span class="ident">clone</span>(),
-        );
-        <span class="kw">let</span> <span class="ident">peer_id</span> <span class="op">=</span> <span class="ident">libp2p::PeerId::from</span>(<span class="ident">peer_key</span>.<span class="ident">public</span>());
+        <span class="comment">// Generate P2P identity</span>
+        <span class="kw">let</span> <span class="ident">p2p_idenity</span> <span class="op">=</span> <span class="ident">gossip::p2p::Identity::gen</span>(<span class="kw-2">&amp;</span><span class="ident">chain_dir</span>);
+        <span class="kw">let</span> <span class="ident">peer_id</span> <span class="op">=</span> <span class="ident">p2p_idenity</span>.<span class="ident">peer_id</span>();
         <span class="kw">let</span> <span class="ident">ledger_addr</span> <span class="op">=</span>
             <span class="ident">SocketAddr::from_str</span>(<span class="ident">config</span>.<span class="ident">net_address</span>.<span class="ident">as_ref</span>().<span class="ident">unwrap</span>()).<span class="ident">unwrap</span>();
         <span class="kw">let</span> <span class="ident">ip</span> <span class="op">=</span> <span class="ident">ledger_addr</span>.<span class="ident">ip</span>().<span class="ident">to_string</span>();

@@ -395,6 +395,12 @@
 <span id="395">395</span>
 <span id="396">396</span>
 <span id="397">397</span>
+<span id="398">398</span>
+<span id="399">399</span>
+<span id="400">400</span>
+<span id="401">401</span>
+<span id="402">402</span>
+<span id="403">403</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Proof-of-Stake native validity predicate.</span>
 
 <span class="kw">use</span> <span class="ident">std::collections::HashSet</span>;
@@ -433,6 +439,7 @@
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::types::address</span>::{<span class="ident">Address</span>, <span class="ident">InternalAddress</span>};
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::types::storage::Key</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::types</span>::{<span class="ident">key</span>, <span class="ident">token</span>};
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::vm::WasmCacheAccess</span>;
 
 <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">missing_docs</span>)]</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Error</span>, <span class="ident">Debug</span>)]</span>
@@ -445,23 +452,25 @@
 <span class="kw">pub</span> <span class="kw">type</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">std::result::Result</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">Error</span><span class="op">&gt;</span>;
 
 <span class="doccomment">/// Proof-of-Stake validity predicate</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">PosVP</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">DB</span>, <span class="ident">H</span><span class="op">&gt;</span>
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">PosVP</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">DB</span>, <span class="ident">H</span>, <span class="ident">CA</span><span class="op">&gt;</span>
 <span class="kw">where</span>
     <span class="ident">DB</span>: <span class="ident">ledger_storage::DB</span> <span class="op">+</span> <span class="kw">for</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span> <span class="ident">ledger_storage::DBIter</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span>,
     <span class="ident">H</span>: <span class="ident">StorageHasher</span>,
+    <span class="ident">CA</span>: <span class="ident">WasmCacheAccess</span>,
 {
     <span class="doccomment">/// Context to interact with the host structures.</span>
-    <span class="kw">pub</span> <span class="ident">ctx</span>: <span class="ident">Ctx</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">DB</span>, <span class="ident">H</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span> <span class="ident">ctx</span>: <span class="ident">Ctx</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">DB</span>, <span class="ident">H</span>, <span class="ident">CA</span><span class="op">&gt;</span>,
 }
 
 <span class="comment">// TODO this is temporarily to run PoS native VP in a new thread to avoid</span>
 <span class="comment">// crashing the ledger (in apps/src/lib/node/ledger/protocol/mod.rs). The</span>
 <span class="comment">// RefCells contained within PosVP are not thread-safe, but each thread has its</span>
 <span class="comment">// own instances.</span>
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">DB</span>, <span class="ident">H</span><span class="op">&gt;</span> <span class="ident">UnwindSafe</span> <span class="kw">for</span> <span class="ident">PosVP</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span>, <span class="ident">DB</span>, <span class="ident">H</span><span class="op">&gt;</span>
+<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">DB</span>, <span class="ident">H</span>, <span class="ident">CA</span><span class="op">&gt;</span> <span class="ident">UnwindSafe</span> <span class="kw">for</span> <span class="ident">PosVP</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span>, <span class="ident">DB</span>, <span class="ident">H</span>, <span class="ident">CA</span><span class="op">&gt;</span>
 <span class="kw">where</span>
     <span class="ident">DB</span>: <span class="lifetime">&#39;static</span> <span class="op">+</span> <span class="ident">ledger_storage::DB</span> <span class="op">+</span> <span class="kw">for</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span> <span class="ident">ledger_storage::DBIter</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span>,
     <span class="ident">H</span>: <span class="lifetime">&#39;static</span> <span class="op">+</span> <span class="ident">StorageHasher</span>,
+    <span class="ident">CA</span>: <span class="lifetime">&#39;static</span> <span class="op">+</span> <span class="ident">WasmCacheAccess</span>,
 {
 }
 
@@ -469,17 +478,19 @@
 <span class="comment">// crashing the ledger (in apps/src/lib/node/ledger/protocol/mod.rs). The</span>
 <span class="comment">// RefCells contained within PosVP are not thread-safe, but each thread has its</span>
 <span class="comment">// own instances.</span>
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">DB</span>, <span class="ident">H</span><span class="op">&gt;</span> <span class="ident">RefUnwindSafe</span> <span class="kw">for</span> <span class="ident">PosVP</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span>, <span class="ident">DB</span>, <span class="ident">H</span><span class="op">&gt;</span>
+<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">DB</span>, <span class="ident">H</span>, <span class="ident">CA</span><span class="op">&gt;</span> <span class="ident">RefUnwindSafe</span> <span class="kw">for</span> <span class="ident">PosVP</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span>, <span class="ident">DB</span>, <span class="ident">H</span>, <span class="ident">CA</span><span class="op">&gt;</span>
 <span class="kw">where</span>
     <span class="ident">DB</span>: <span class="lifetime">&#39;static</span> <span class="op">+</span> <span class="ident">ledger_storage::DB</span> <span class="op">+</span> <span class="kw">for</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span> <span class="ident">ledger_storage::DBIter</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span>,
     <span class="ident">H</span>: <span class="lifetime">&#39;static</span> <span class="op">+</span> <span class="ident">StorageHasher</span>,
+    <span class="ident">CA</span>: <span class="lifetime">&#39;static</span> <span class="op">+</span> <span class="ident">WasmCacheAccess</span>,
 {
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">DB</span>, <span class="ident">H</span><span class="op">&gt;</span> <span class="ident">NativeVp</span> <span class="kw">for</span> <span class="ident">PosVP</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">DB</span>, <span class="ident">H</span><span class="op">&gt;</span>
+<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">DB</span>, <span class="ident">H</span>, <span class="ident">CA</span><span class="op">&gt;</span> <span class="ident">NativeVp</span> <span class="kw">for</span> <span class="ident">PosVP</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">DB</span>, <span class="ident">H</span>, <span class="ident">CA</span><span class="op">&gt;</span>
 <span class="kw">where</span>
     <span class="ident">DB</span>: <span class="lifetime">&#39;static</span> <span class="op">+</span> <span class="ident">ledger_storage::DB</span> <span class="op">+</span> <span class="kw">for</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span> <span class="ident">ledger_storage::DBIter</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span>,
     <span class="ident">H</span>: <span class="lifetime">&#39;static</span> <span class="op">+</span> <span class="ident">StorageHasher</span>,
+    <span class="ident">CA</span>: <span class="lifetime">&#39;static</span> <span class="op">+</span> <span class="ident">WasmCacheAccess</span>,
 {
     <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">Error</span>;
 
@@ -686,10 +697,11 @@
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">D</span>, <span class="ident">H</span><span class="op">&gt;</span> <span class="ident">PosReadOnly</span> <span class="kw">for</span> <span class="ident">PosVP</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span>, <span class="ident">D</span>, <span class="ident">H</span><span class="op">&gt;</span>
+<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">D</span>, <span class="ident">H</span>, <span class="ident">CA</span><span class="op">&gt;</span> <span class="ident">PosReadOnly</span> <span class="kw">for</span> <span class="ident">PosVP</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span>, <span class="ident">D</span>, <span class="ident">H</span>, <span class="ident">CA</span><span class="op">&gt;</span>
 <span class="kw">where</span>
     <span class="ident">D</span>: <span class="lifetime">&#39;static</span> <span class="op">+</span> <span class="ident">ledger_storage::DB</span> <span class="op">+</span> <span class="kw">for</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span> <span class="ident">ledger_storage::DBIter</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span>,
     <span class="ident">H</span>: <span class="lifetime">&#39;static</span> <span class="op">+</span> <span class="ident">StorageHasher</span>,
+    <span class="ident">CA</span>: <span class="lifetime">&#39;static</span> <span class="op">+</span> <span class="ident">WasmCacheAccess</span>,
 {
     <span class="kw">type</span> <span class="ident">Address</span> <span class="op">=</span> <span class="ident">Address</span>;
     <span class="kw">type</span> <span class="ident">PublicKey</span> <span class="op">=</span> <span class="ident">key::ed25519::PublicKey</span>;

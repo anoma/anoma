@@ -559,6 +559,9 @@
 <span id="559">559</span>
 <span id="560">560</span>
 <span id="561">561</span>
+<span id="562">562</span>
+<span id="563">563</span>
+<span id="564">564</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Wasm memory is used for bi-directionally passing data between the host and a</span>
 <span class="doccomment">//! wasm instance.</span>
 
@@ -567,7 +570,6 @@
 <span class="kw">use</span> <span class="ident">std::sync::Arc</span>;
 
 <span class="kw">use</span> <span class="ident">borsh::BorshSerialize</span>;
-<span class="kw">use</span> <span class="ident">loupe::MemoryUsage</span>;
 <span class="kw">use</span> <span class="ident">thiserror::Error</span>;
 <span class="kw">use</span> <span class="ident">wasmer</span>::{
     <span class="ident">vm</span>, <span class="ident">BaseTunables</span>, <span class="ident">HostEnvInitError</span>, <span class="ident">LazyInit</span>, <span class="ident">Memory</span>, <span class="ident">MemoryError</span>,
@@ -928,10 +930,11 @@
     }
 }
 
+<span class="comment">// TODO wasmer 2.x</span>
+<span class="comment">// #[derive(loupe::MemoryUsage)]</span>
 <span class="doccomment">/// A custom [`Tunables`] to set a WASM memory limits.</span>
 <span class="doccomment">///</span>
 <span class="doccomment">/// Adapted from &lt;https://github.com/wasmerio/wasmer/blob/29d7b4a5f1c401d9a1e95086ed85878c8407ec16/examples/tunables_limit_memory.rs&gt;.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">MemoryUsage</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Limit</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Tunables</span><span class="op">&gt;</span> {
     <span class="doccomment">/// The maximum a linear memory is allowed to be (in Wasm pages, 64 KiB</span>
     <span class="doccomment">/// each). Since Wasmer ensures there is only none or one memory, this</span>
@@ -1088,7 +1091,10 @@
 
         <span class="comment">// Any compiler and any engine do the job here</span>
         <span class="kw">let</span> <span class="ident">compiler</span> <span class="op">=</span> <span class="ident">Cranelift::default</span>();
-        <span class="kw">let</span> <span class="ident">engine</span> <span class="op">=</span> <span class="ident">wasmer_engine_universal::Universal::new</span>(<span class="ident">compiler</span>).<span class="ident">engine</span>();
+        <span class="comment">// TODO wasmer 2.x</span>
+        <span class="comment">// let engine =</span>
+        <span class="comment">// wasmer_engine_universal::Universal::new(compiler).engine();</span>
+        <span class="kw">let</span> <span class="ident">engine</span> <span class="op">=</span> <span class="ident">wasmer_engine_jit::JIT::new</span>(<span class="ident">compiler</span>).<span class="ident">engine</span>();
 
         <span class="kw">let</span> <span class="ident">base</span> <span class="op">=</span> <span class="ident">BaseTunables::for_target</span>(<span class="kw-2">&amp;</span><span class="ident">Target::default</span>());
         <span class="kw">let</span> <span class="ident">limit</span> <span class="op">=</span> <span class="ident">Pages</span>(<span class="number">24</span>);

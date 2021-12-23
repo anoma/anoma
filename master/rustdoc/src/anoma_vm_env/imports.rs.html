@@ -601,6 +601,19 @@
 <span id="601">601</span>
 <span id="602">602</span>
 <span id="603">603</span>
+<span id="604">604</span>
+<span id="605">605</span>
+<span id="606">606</span>
+<span id="607">607</span>
+<span id="608">608</span>
+<span id="609">609</span>
+<span id="610">610</span>
+<span id="611">611</span>
+<span id="612">612</span>
+<span id="613">613</span>
+<span id="614">614</span>
+<span id="615">615</span>
+<span id="616">616</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std::mem::ManuallyDrop</span>;
 
 <span class="kw">use</span> <span class="ident">anoma::types::internal::HostEnvResult</span>;
@@ -659,6 +672,7 @@
     <span class="kw">use</span> <span class="ident">anoma::types::address</span>;
     <span class="kw">use</span> <span class="ident">anoma::types::address::Address</span>;
     <span class="kw">use</span> <span class="ident">anoma::types::chain::CHAIN_ID_LENGTH</span>;
+    <span class="kw">use</span> <span class="ident">anoma::types::ibc::IbcEvent</span>;
     <span class="kw">use</span> <span class="ident">anoma::types::internal::HostEnvResult</span>;
     <span class="kw">use</span> <span class="ident">anoma::types::storage</span>::{
         <span class="ident">BlockHash</span>, <span class="ident">BlockHeight</span>, <span class="ident">Epoch</span>, <span class="ident">BLOCK_HASH_LENGTH</span>,
@@ -776,6 +790,15 @@
             .<span class="ident">expect</span>(<span class="string">&quot;Decoding address created by the ledger shouldn&#39;t fail&quot;</span>)
     }
 
+    <span class="doccomment">/// Emit an IBC event. There can be only one event per transaction. On</span>
+    <span class="doccomment">/// multiple calls, only the last emitted event will be used.</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">emit_ibc_event</span>(<span class="ident">event</span>: <span class="kw-2">&amp;</span><span class="ident">IbcEvent</span>) {
+        <span class="kw">let</span> <span class="ident">event</span> <span class="op">=</span> <span class="ident">BorshSerialize::try_to_vec</span>(<span class="ident">event</span>).<span class="ident">unwrap</span>();
+        <span class="kw">unsafe</span> {
+            <span class="ident">anoma_tx_emit_ibc_event</span>(<span class="ident">event</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="kw">_</span>, <span class="ident">event</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="kw">_</span>)
+        };
+    }
+
     <span class="doccomment">/// Get the chain ID</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_chain_id</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">String</span> {
         <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">Vec::with_capacity</span>(<span class="ident">CHAIN_ID_LENGTH</span>);
@@ -866,6 +889,9 @@
 
         <span class="comment">// Initialize a new account</span>
         <span class="kw">fn</span> <span class="ident">anoma_tx_init_account</span>(<span class="ident">code_ptr</span>: <span class="ident">u64</span>, <span class="ident">code_len</span>: <span class="ident">u64</span>, <span class="ident">result_ptr</span>: <span class="ident">u64</span>);
+
+        <span class="comment">// Emit an IBC event</span>
+        <span class="kw">fn</span> <span class="ident">anoma_tx_emit_ibc_event</span>(<span class="ident">event_ptr</span>: <span class="ident">u64</span>, <span class="ident">event_len</span>: <span class="ident">u64</span>);
 
         <span class="comment">// Get the chain ID</span>
         <span class="kw">fn</span> <span class="ident">anoma_tx_get_chain_id</span>(<span class="ident">result_ptr</span>: <span class="ident">u64</span>);

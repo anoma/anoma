@@ -824,6 +824,48 @@
 <span id="824">824</span>
 <span id="825">825</span>
 <span id="826">826</span>
+<span id="827">827</span>
+<span id="828">828</span>
+<span id="829">829</span>
+<span id="830">830</span>
+<span id="831">831</span>
+<span id="832">832</span>
+<span id="833">833</span>
+<span id="834">834</span>
+<span id="835">835</span>
+<span id="836">836</span>
+<span id="837">837</span>
+<span id="838">838</span>
+<span id="839">839</span>
+<span id="840">840</span>
+<span id="841">841</span>
+<span id="842">842</span>
+<span id="843">843</span>
+<span id="844">844</span>
+<span id="845">845</span>
+<span id="846">846</span>
+<span id="847">847</span>
+<span id="848">848</span>
+<span id="849">849</span>
+<span id="850">850</span>
+<span id="851">851</span>
+<span id="852">852</span>
+<span id="853">853</span>
+<span id="854">854</span>
+<span id="855">855</span>
+<span id="856">856</span>
+<span id="857">857</span>
+<span id="858">858</span>
+<span id="859">859</span>
+<span id="860">860</span>
+<span id="861">861</span>
+<span id="862">862</span>
+<span id="863">863</span>
+<span id="864">864</span>
+<span id="865">865</span>
+<span id="866">866</span>
+<span id="867">867</span>
+<span id="868">868</span>
 </pre><pre class="rust"><code><span class="doccomment">//! The ledger shell connects the ABCI++ interface with the Anoma ledger app.</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//! Any changes applied before [`Shell::finalize_block`] might have to be</span>
@@ -861,6 +903,8 @@
     <span class="ident">EllipticCurve</span>, <span class="ident">PairingEngine</span>, <span class="ident">TxType</span>, <span class="ident">WrapperTx</span>,
 };
 <span class="kw">use</span> <span class="ident">anoma::types</span>::{<span class="ident">address</span>, <span class="ident">key</span>, <span class="ident">token</span>};
+<span class="kw">use</span> <span class="ident">anoma::vm::wasm</span>::{<span class="ident">TxCache</span>, <span class="ident">VpCache</span>};
+<span class="kw">use</span> <span class="ident">anoma::vm::WasmCacheRwAccess</span>;
 <span class="kw">use</span> <span class="ident">borsh</span>::{<span class="ident">BorshDeserialize</span>, <span class="ident">BorshSerialize</span>};
 <span class="kw">use</span> <span class="ident">num_derive</span>::{<span class="ident">FromPrimitive</span>, <span class="ident">ToPrimitive</span>};
 <span class="kw">use</span> <span class="ident">num_traits</span>::{<span class="ident">FromPrimitive</span>, <span class="ident">ToPrimitive</span>};
@@ -978,6 +1022,10 @@
     <span class="ident">wasm_dir</span>: <span class="ident">PathBuf</span>,
     <span class="doccomment">/// Wrapper txs to be decrypted in the next block proposal</span>
     <span class="ident">tx_queue</span>: <span class="ident">TxQueue</span>,
+    <span class="doccomment">/// VP WASM compilation cache</span>
+    <span class="ident">vp_wasm_cache</span>: <span class="ident">VpCache</span><span class="op">&lt;</span><span class="ident">WasmCacheRwAccess</span><span class="op">&gt;</span>,
+    <span class="doccomment">/// Tx WASM compilation cache</span>
+    <span class="ident">tx_wasm_cache</span>: <span class="ident">TxCache</span><span class="op">&lt;</span><span class="ident">WasmCacheRwAccess</span><span class="op">&gt;</span>,
 }
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Default</span>, <span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">BorshDeserialize</span>, <span class="ident">BorshSerialize</span>)]</span>
@@ -1063,12 +1111,15 @@
         <span class="ident">db_path</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span><span class="ident">Path</span><span class="op">&gt;</span>,
         <span class="ident">chain_id</span>: <span class="ident">ChainId</span>,
         <span class="ident">wasm_dir</span>: <span class="ident">PathBuf</span>,
+        <span class="ident">db_cache</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">D::Cache</span><span class="op">&gt;</span>,
+        <span class="ident">vp_wasm_compilation_cache</span>: <span class="ident">u64</span>,
+        <span class="ident">tx_wasm_compilation_cache</span>: <span class="ident">u64</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="kw">if</span> <span class="op">!</span><span class="ident">Path::new</span>(<span class="kw-2">&amp;</span><span class="ident">base_dir</span>).<span class="ident">is_dir</span>() {
             <span class="ident">std::fs::create_dir</span>(<span class="kw-2">&amp;</span><span class="ident">base_dir</span>)
                 .<span class="ident">expect</span>(<span class="string">&quot;Creating directory for Anoma should not fail&quot;</span>);
         }
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">storage</span> <span class="op">=</span> <span class="ident">Storage::open</span>(<span class="ident">db_path</span>, <span class="ident">chain_id</span>);
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">storage</span> <span class="op">=</span> <span class="ident">Storage::open</span>(<span class="ident">db_path</span>, <span class="ident">chain_id</span>.<span class="ident">clone</span>(), <span class="ident">db_cache</span>);
         <span class="ident">storage</span>
             .<span class="ident">load_last_state</span>()
             .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> {
@@ -1094,6 +1145,10 @@
             <span class="ident">Default::default</span>()
         };
 
+        <span class="kw">let</span> <span class="ident">vp_wasm_cache_dir</span> <span class="op">=</span>
+            <span class="ident">base_dir</span>.<span class="ident">join</span>(<span class="ident">chain_id</span>.<span class="ident">as_str</span>()).<span class="ident">join</span>(<span class="string">&quot;vp_wasm_cache&quot;</span>);
+        <span class="kw">let</span> <span class="ident">tx_wasm_cache_dir</span> <span class="op">=</span>
+            <span class="ident">base_dir</span>.<span class="ident">join</span>(<span class="ident">chain_id</span>.<span class="ident">as_str</span>()).<span class="ident">join</span>(<span class="string">&quot;tx_wasm_cache&quot;</span>);
         <span class="self">Self</span> {
             <span class="ident">storage</span>,
             <span class="ident">gas_meter</span>: <span class="ident">BlockGasMeter::default</span>(),
@@ -1102,6 +1157,14 @@
             <span class="ident">base_dir</span>,
             <span class="ident">wasm_dir</span>,
             <span class="ident">tx_queue</span>,
+            <span class="ident">vp_wasm_cache</span>: <span class="ident">VpCache::new</span>(
+                <span class="ident">vp_wasm_cache_dir</span>,
+                <span class="ident">vp_wasm_compilation_cache</span> <span class="kw">as</span> <span class="ident">usize</span>,
+            ),
+            <span class="ident">tx_wasm_cache</span>: <span class="ident">TxCache::new</span>(
+                <span class="ident">tx_wasm_cache_dir</span>,
+                <span class="ident">tx_wasm_compilation_cache</span> <span class="kw">as</span> <span class="ident">usize</span>,
+            ),
         }
     }
 
@@ -1332,6 +1395,8 @@
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">response</span> <span class="op">=</span> <span class="ident">response::Query::default</span>();
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">gas_meter</span> <span class="op">=</span> <span class="ident">BlockGasMeter::default</span>();
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">write_log</span> <span class="op">=</span> <span class="ident">WriteLog::default</span>();
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">vp_wasm_cache</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">vp_wasm_cache</span>.<span class="ident">read_only</span>();
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tx_wasm_cache</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">tx_wasm_cache</span>.<span class="ident">read_only</span>();
         <span class="kw">match</span> <span class="ident">Tx::try_from</span>(<span class="ident">tx_bytes</span>) {
             <span class="prelude-val">Ok</span>(<span class="ident">tx</span>) <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">TxType::Decrypted</span>(<span class="ident">DecryptedTx::Decrypted</span>(<span class="ident">tx</span>));
@@ -1341,6 +1406,8 @@
                     <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">gas_meter</span>,
                     <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">write_log</span>,
                     <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">storage</span>,
+                    <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">vp_wasm_cache</span>,
+                    <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">tx_wasm_cache</span>,
                 )
                 .<span class="ident">map_err</span>(<span class="ident">Error::TxApply</span>)
                 {
@@ -1426,12 +1493,17 @@
         <span class="doccomment">/// Create a new shell</span>
         <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
             <span class="kw">let</span> <span class="ident">base_dir</span> <span class="op">=</span> <span class="ident">tempdir</span>().<span class="ident">unwrap</span>().<span class="ident">as_ref</span>().<span class="ident">canonicalize</span>().<span class="ident">unwrap</span>();
+            <span class="kw">let</span> <span class="ident">vp_wasm_compilation_cache</span> <span class="op">=</span> <span class="number">50</span> <span class="op">*</span> <span class="number">1024</span> <span class="op">*</span> <span class="number">1024</span>; <span class="comment">// 50 kiB</span>
+            <span class="kw">let</span> <span class="ident">tx_wasm_compilation_cache</span> <span class="op">=</span> <span class="number">50</span> <span class="op">*</span> <span class="number">1024</span> <span class="op">*</span> <span class="number">1024</span>; <span class="comment">// 50 kiB</span>
             <span class="self">Self</span> {
                 <span class="ident">shell</span>: <span class="ident">Shell</span>::<span class="op">&lt;</span><span class="ident">MockDB</span>, <span class="ident">Sha256Hasher</span><span class="op">&gt;</span><span class="ident">::new</span>(
                     <span class="ident">base_dir</span>.<span class="ident">clone</span>(),
                     <span class="ident">base_dir</span>.<span class="ident">join</span>(<span class="string">&quot;db&quot;</span>).<span class="ident">join</span>(<span class="string">&quot;anoma-devchain-00000&quot;</span>),
                     <span class="ident">Default::default</span>(),
                     <span class="ident">top_level_directory</span>().<span class="ident">join</span>(<span class="string">&quot;wasm&quot;</span>),
+                    <span class="prelude-val">None</span>,
+                    <span class="ident">vp_wasm_compilation_cache</span>,
+                    <span class="ident">tx_wasm_compilation_cache</span>,
                 ),
             }
         }
@@ -1521,11 +1593,16 @@
     <span class="kw">fn</span> <span class="ident">test_tx_queue_persistence</span>() {
         <span class="kw">let</span> <span class="ident">base_dir</span> <span class="op">=</span> <span class="ident">tempdir</span>().<span class="ident">unwrap</span>().<span class="ident">as_ref</span>().<span class="ident">canonicalize</span>().<span class="ident">unwrap</span>();
         <span class="comment">// we have to use RocksDB for this test</span>
+        <span class="kw">let</span> <span class="ident">vp_wasm_compilation_cache</span> <span class="op">=</span> <span class="number">50</span> <span class="op">*</span> <span class="number">1024</span> <span class="op">*</span> <span class="number">1024</span>; <span class="comment">// 50 kiB</span>
+        <span class="kw">let</span> <span class="ident">tx_wasm_compilation_cache</span> <span class="op">=</span> <span class="number">50</span> <span class="op">*</span> <span class="number">1024</span> <span class="op">*</span> <span class="number">1024</span>; <span class="comment">// 50 kiB</span>
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">shell</span> <span class="op">=</span> <span class="ident">Shell</span>::<span class="op">&lt;</span><span class="ident">PersistentDB</span>, <span class="ident">PersistentStorageHasher</span><span class="op">&gt;</span><span class="ident">::new</span>(
             <span class="ident">base_dir</span>.<span class="ident">clone</span>(),
             <span class="ident">base_dir</span>.<span class="ident">join</span>(<span class="string">&quot;db&quot;</span>).<span class="ident">join</span>(<span class="string">&quot;anoma-devchain-00000&quot;</span>),
             <span class="ident">Default::default</span>(),
             <span class="ident">top_level_directory</span>().<span class="ident">join</span>(<span class="string">&quot;wasm&quot;</span>),
+            <span class="prelude-val">None</span>,
+            <span class="ident">vp_wasm_compilation_cache</span>,
+            <span class="ident">tx_wasm_compilation_cache</span>,
         );
         <span class="kw">let</span> <span class="ident">keypair</span> <span class="op">=</span> <span class="ident">gen_keypair</span>();
         <span class="comment">// enqueue a wrapper tx</span>
@@ -1549,7 +1626,6 @@
         <span class="kw">let</span> <span class="ident">store</span> <span class="op">=</span> <span class="ident">Default::default</span>();
         <span class="kw">let</span> <span class="ident">hash</span> <span class="op">=</span> <span class="ident">BlockHash</span>([<span class="number">0</span>; <span class="number">32</span>]);
         <span class="kw">let</span> <span class="ident">pred_epochs</span> <span class="op">=</span> <span class="ident">Default::default</span>();
-        <span class="kw">let</span> <span class="ident">subspaces</span> <span class="op">=</span> <span class="ident">Default::default</span>();
         <span class="kw">let</span> <span class="ident">address_gen</span> <span class="op">=</span> <span class="ident">EstablishedAddressGen::new</span>(<span class="string">&quot;test&quot;</span>);
         <span class="ident">shell</span>
             .<span class="ident">storage</span>
@@ -1563,7 +1639,6 @@
                 <span class="ident">pred_epochs</span>: <span class="kw-2">&amp;</span><span class="ident">pred_epochs</span>,
                 <span class="ident">next_epoch_min_start_height</span>: <span class="ident">BlockHeight</span>(<span class="number">3</span>),
                 <span class="ident">next_epoch_min_start_time</span>: <span class="ident">DateTimeUtc::now</span>(),
-                <span class="ident">subspaces</span>: <span class="kw-2">&amp;</span><span class="ident">subspaces</span>,
                 <span class="ident">address_gen</span>: <span class="kw-2">&amp;</span><span class="ident">address_gen</span>,
             })
             .<span class="ident">expect</span>(<span class="string">&quot;Test failed&quot;</span>);
@@ -1578,6 +1653,9 @@
             <span class="ident">base_dir</span>.<span class="ident">join</span>(<span class="string">&quot;db&quot;</span>).<span class="ident">join</span>(<span class="string">&quot;anoma-devchain-00000&quot;</span>),
             <span class="ident">Default::default</span>(),
             <span class="ident">top_level_directory</span>().<span class="ident">join</span>(<span class="string">&quot;wasm&quot;</span>),
+            <span class="prelude-val">None</span>,
+            <span class="ident">vp_wasm_compilation_cache</span>,
+            <span class="ident">tx_wasm_compilation_cache</span>,
         );
         <span class="macro">assert!</span>(<span class="op">!</span><span class="ident">shell</span>.<span class="ident">tx_queue</span>.<span class="ident">is_empty</span>());
     }
@@ -1589,11 +1667,16 @@
     <span class="kw">fn</span> <span class="ident">test_tx_queue_must_exist</span>() {
         <span class="kw">let</span> <span class="ident">base_dir</span> <span class="op">=</span> <span class="ident">tempdir</span>().<span class="ident">unwrap</span>().<span class="ident">as_ref</span>().<span class="ident">canonicalize</span>().<span class="ident">unwrap</span>();
         <span class="comment">// we have to use RocksDB for this test</span>
+        <span class="kw">let</span> <span class="ident">vp_wasm_compilation_cache</span> <span class="op">=</span> <span class="number">50</span> <span class="op">*</span> <span class="number">1024</span> <span class="op">*</span> <span class="number">1024</span>; <span class="comment">// 50 kiB</span>
+        <span class="kw">let</span> <span class="ident">tx_wasm_compilation_cache</span> <span class="op">=</span> <span class="number">50</span> <span class="op">*</span> <span class="number">1024</span> <span class="op">*</span> <span class="number">1024</span>; <span class="comment">// 50 kiB</span>
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">shell</span> <span class="op">=</span> <span class="ident">Shell</span>::<span class="op">&lt;</span><span class="ident">PersistentDB</span>, <span class="ident">PersistentStorageHasher</span><span class="op">&gt;</span><span class="ident">::new</span>(
             <span class="ident">base_dir</span>.<span class="ident">clone</span>(),
             <span class="ident">base_dir</span>.<span class="ident">join</span>(<span class="string">&quot;db&quot;</span>).<span class="ident">join</span>(<span class="string">&quot;anoma-devchain-00000&quot;</span>),
             <span class="ident">Default::default</span>(),
             <span class="ident">top_level_directory</span>().<span class="ident">join</span>(<span class="string">&quot;wasm&quot;</span>),
+            <span class="prelude-val">None</span>,
+            <span class="ident">vp_wasm_compilation_cache</span>,
+            <span class="ident">tx_wasm_compilation_cache</span>,
         );
         <span class="kw">let</span> <span class="ident">keypair</span> <span class="op">=</span> <span class="ident">gen_keypair</span>();
         <span class="comment">// enqueue a wrapper tx</span>
@@ -1617,7 +1700,6 @@
         <span class="kw">let</span> <span class="ident">store</span> <span class="op">=</span> <span class="ident">Default::default</span>();
         <span class="kw">let</span> <span class="ident">hash</span> <span class="op">=</span> <span class="ident">BlockHash</span>([<span class="number">0</span>; <span class="number">32</span>]);
         <span class="kw">let</span> <span class="ident">pred_epochs</span> <span class="op">=</span> <span class="ident">Default::default</span>();
-        <span class="kw">let</span> <span class="ident">subspaces</span> <span class="op">=</span> <span class="ident">Default::default</span>();
         <span class="kw">let</span> <span class="ident">address_gen</span> <span class="op">=</span> <span class="ident">EstablishedAddressGen::new</span>(<span class="string">&quot;test&quot;</span>);
         <span class="ident">shell</span>
             .<span class="ident">storage</span>
@@ -1631,7 +1713,6 @@
                 <span class="ident">pred_epochs</span>: <span class="kw-2">&amp;</span><span class="ident">pred_epochs</span>,
                 <span class="ident">next_epoch_min_start_height</span>: <span class="ident">BlockHeight</span>(<span class="number">3</span>),
                 <span class="ident">next_epoch_min_start_time</span>: <span class="ident">DateTimeUtc::now</span>(),
-                <span class="ident">subspaces</span>: <span class="kw-2">&amp;</span><span class="ident">subspaces</span>,
                 <span class="ident">address_gen</span>: <span class="kw-2">&amp;</span><span class="ident">address_gen</span>,
             })
             .<span class="ident">expect</span>(<span class="string">&quot;Test failed&quot;</span>);
@@ -1647,6 +1728,9 @@
             <span class="ident">base_dir</span>.<span class="ident">join</span>(<span class="string">&quot;db&quot;</span>).<span class="ident">join</span>(<span class="string">&quot;anoma-devchain-00000&quot;</span>),
             <span class="ident">Default::default</span>(),
             <span class="ident">top_level_directory</span>().<span class="ident">join</span>(<span class="string">&quot;wasm&quot;</span>),
+            <span class="prelude-val">None</span>,
+            <span class="ident">vp_wasm_compilation_cache</span>,
+            <span class="ident">tx_wasm_compilation_cache</span>,
         );
     }
 }

@@ -185,10 +185,23 @@
 <span id="185">185</span>
 <span id="186">186</span>
 <span id="187">187</span>
+<span id="188">188</span>
+<span id="189">189</span>
+<span id="190">190</span>
+<span id="191">191</span>
+<span id="192">192</span>
+<span id="193">193</span>
+<span id="194">194</span>
+<span id="195">195</span>
+<span id="196">196</span>
+<span id="197">197</span>
+<span id="198">198</span>
+<span id="199">199</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std::collections::HashMap</span>;
 <span class="kw">use</span> <span class="ident">std::fmt</span>::{<span class="self">self</span>, <span class="ident">Display</span>};
 <span class="kw">use</span> <span class="ident">std::ops</span>::{<span class="ident">Index</span>, <span class="ident">IndexMut</span>};
 
+<span class="kw">use</span> <span class="ident">anoma::types::ibc::IbcEvent</span>;
 <span class="kw">use</span> <span class="ident">anoma::types::transaction</span>::{<span class="ident">hash_tx</span>, <span class="ident">TxType</span>};
 <span class="kw">use</span> <span class="ident">borsh::BorshSerialize</span>;
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
@@ -211,6 +224,8 @@
     <span class="ident">Accepted</span>,
     <span class="comment">// The transaction was applied during block finalization</span>
     <span class="ident">Applied</span>,
+    <span class="comment">// The IBC transaction was applied during block finalization</span>
+    <span class="ident">Ibc</span>(<span class="ident">String</span>),
 }
 
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
@@ -219,6 +234,7 @@
         <span class="kw">match</span> <span class="self">self</span> {
             <span class="ident">EventType::Accepted</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">write!</span>(<span class="ident">f</span>, <span class="string">&quot;accepted&quot;</span>),
             <span class="ident">EventType::Applied</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">write!</span>(<span class="ident">f</span>, <span class="string">&quot;applied&quot;</span>),
+            <span class="ident">EventType::Ibc</span>(<span class="ident">t</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="macro">write!</span>(<span class="ident">f</span>, <span class="string">&quot;{}&quot;</span>, <span class="ident">t</span>),
         }<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(())
     }
@@ -230,6 +246,7 @@
         <span class="kw">match</span> <span class="self">self</span> {
             <span class="ident">EventType::Accepted</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">write!</span>(<span class="ident">f</span>, <span class="string">&quot;applied&quot;</span>),
             <span class="ident">EventType::Applied</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">write!</span>(<span class="ident">f</span>, <span class="string">&quot;applied&quot;</span>),
+            <span class="ident">EventType::Ibc</span>(<span class="ident">t</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="macro">write!</span>(<span class="ident">f</span>, <span class="string">&quot;{}&quot;</span>, <span class="ident">t</span>),
         }<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(())
     }
@@ -269,6 +286,13 @@
         };
         <span class="ident">event</span>[<span class="string">&quot;height&quot;</span>] <span class="op">=</span> <span class="ident">height</span>.<span class="ident">to_string</span>();
         <span class="ident">event</span>
+    }
+
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">merge_ibc_event</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">ibc_event</span>: <span class="kw-2">&amp;</span><span class="ident">IbcEvent</span>) {
+        <span class="self">self</span>.<span class="ident">event_type</span> <span class="op">=</span> <span class="ident">EventType::Ibc</span>(<span class="ident">ibc_event</span>.<span class="ident">event_type</span>.<span class="ident">clone</span>());
+        <span class="kw">for</span> (<span class="ident">key</span>, <span class="ident">value</span>) <span class="kw">in</span> <span class="ident">ibc_event</span>.<span class="ident">attributes</span>.<span class="ident">iter</span>() {
+            <span class="self">self</span>[<span class="ident">key</span>] <span class="op">=</span> <span class="ident">value</span>.<span class="ident">clone</span>();
+        }
     }
 }
 

@@ -386,6 +386,92 @@
 <span id="386">386</span>
 <span id="387">387</span>
 <span id="388">388</span>
+<span id="389">389</span>
+<span id="390">390</span>
+<span id="391">391</span>
+<span id="392">392</span>
+<span id="393">393</span>
+<span id="394">394</span>
+<span id="395">395</span>
+<span id="396">396</span>
+<span id="397">397</span>
+<span id="398">398</span>
+<span id="399">399</span>
+<span id="400">400</span>
+<span id="401">401</span>
+<span id="402">402</span>
+<span id="403">403</span>
+<span id="404">404</span>
+<span id="405">405</span>
+<span id="406">406</span>
+<span id="407">407</span>
+<span id="408">408</span>
+<span id="409">409</span>
+<span id="410">410</span>
+<span id="411">411</span>
+<span id="412">412</span>
+<span id="413">413</span>
+<span id="414">414</span>
+<span id="415">415</span>
+<span id="416">416</span>
+<span id="417">417</span>
+<span id="418">418</span>
+<span id="419">419</span>
+<span id="420">420</span>
+<span id="421">421</span>
+<span id="422">422</span>
+<span id="423">423</span>
+<span id="424">424</span>
+<span id="425">425</span>
+<span id="426">426</span>
+<span id="427">427</span>
+<span id="428">428</span>
+<span id="429">429</span>
+<span id="430">430</span>
+<span id="431">431</span>
+<span id="432">432</span>
+<span id="433">433</span>
+<span id="434">434</span>
+<span id="435">435</span>
+<span id="436">436</span>
+<span id="437">437</span>
+<span id="438">438</span>
+<span id="439">439</span>
+<span id="440">440</span>
+<span id="441">441</span>
+<span id="442">442</span>
+<span id="443">443</span>
+<span id="444">444</span>
+<span id="445">445</span>
+<span id="446">446</span>
+<span id="447">447</span>
+<span id="448">448</span>
+<span id="449">449</span>
+<span id="450">450</span>
+<span id="451">451</span>
+<span id="452">452</span>
+<span id="453">453</span>
+<span id="454">454</span>
+<span id="455">455</span>
+<span id="456">456</span>
+<span id="457">457</span>
+<span id="458">458</span>
+<span id="459">459</span>
+<span id="460">460</span>
+<span id="461">461</span>
+<span id="462">462</span>
+<span id="463">463</span>
+<span id="464">464</span>
+<span id="465">465</span>
+<span id="466">466</span>
+<span id="467">467</span>
+<span id="468">468</span>
+<span id="469">469</span>
+<span id="470">470</span>
+<span id="471">471</span>
+<span id="472">472</span>
+<span id="473">473</span>
+<span id="474">474</span>
 </pre><pre class="rust"><code><span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">events</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">protocol</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">rpc</span>;
@@ -400,7 +486,10 @@
 <span class="kw">use</span> <span class="ident">std::path::PathBuf</span>;
 <span class="kw">use</span> <span class="ident">std::str::FromStr</span>;
 
+<span class="kw">use</span> <span class="ident">byte_unit::Byte</span>;
 <span class="kw">use</span> <span class="ident">futures::future::TryFutureExt</span>;
+<span class="kw">use</span> <span class="ident">once_cell::unsync::Lazy</span>;
+<span class="kw">use</span> <span class="ident">sysinfo</span>::{<span class="ident">RefreshKind</span>, <span class="ident">System</span>, <span class="ident">SystemExt</span>};
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
 <span class="kw">use</span> <span class="ident">tendermint_proto::abci::CheckTxType</span>;
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
@@ -515,7 +604,7 @@
 <span class="doccomment">/// Run the ledger with an async runtime</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">run</span>(<span class="ident">config</span>: <span class="ident">config::Ledger</span>, <span class="ident">wasm_dir</span>: <span class="ident">PathBuf</span>) {
     <span class="kw">let</span> <span class="ident">logical_cores</span> <span class="op">=</span> <span class="ident">num_cpus::get</span>();
-    <span class="macro">tracing::debug!</span>(<span class="string">&quot;Available logical cores: {}&quot;</span>, <span class="ident">logical_cores</span>);
+    <span class="macro">tracing::info!</span>(<span class="string">&quot;Available logical cores: {}&quot;</span>, <span class="ident">logical_cores</span>);
 
     <span class="kw">let</span> <span class="ident">rayon_threads</span> <span class="op">=</span> <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Ok</span>(<span class="ident">num_str</span>) <span class="op">=</span> <span class="ident">env::var</span>(<span class="ident">ENV_VAR_RAYON_THREADS</span>) {
         <span class="kw">match</span> <span class="ident">usize::from_str</span>(<span class="kw-2">&amp;</span><span class="ident">num_str</span>) {
@@ -533,7 +622,7 @@
         <span class="comment">// If not set, default to half of logical CPUs count</span>
         <span class="ident">logical_cores</span> <span class="op">/</span> <span class="number">2</span>
     };
-    <span class="macro">tracing::debug!</span>(<span class="string">&quot;Using {} threads for Rayon.&quot;</span>, <span class="ident">rayon_threads</span>);
+    <span class="macro">tracing::info!</span>(<span class="string">&quot;Using {} threads for Rayon.&quot;</span>, <span class="ident">rayon_threads</span>);
 
     <span class="kw">let</span> <span class="ident">tokio_threads</span> <span class="op">=</span> <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Ok</span>(<span class="ident">num_str</span>) <span class="op">=</span> <span class="ident">env::var</span>(<span class="ident">ENV_VAR_TOKIO_THREADS</span>) {
         <span class="kw">match</span> <span class="ident">usize::from_str</span>(<span class="kw-2">&amp;</span><span class="ident">num_str</span>) {
@@ -551,7 +640,7 @@
         <span class="comment">// If not set, default to half of logical CPUs count</span>
         <span class="ident">logical_cores</span> <span class="op">/</span> <span class="number">2</span>
     };
-    <span class="macro">tracing::debug!</span>(<span class="string">&quot;Using {} threads for Tokio.&quot;</span>, <span class="ident">tokio_threads</span>);
+    <span class="macro">tracing::info!</span>(<span class="string">&quot;Using {} threads for Tokio.&quot;</span>, <span class="ident">tokio_threads</span>);
 
     <span class="comment">// Configure number of threads for rayon (used in `par_iter` when running</span>
     <span class="comment">// VPs)</span>
@@ -583,6 +672,86 @@
 <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">run_aux</span>(<span class="ident">config</span>: <span class="ident">config::Ledger</span>, <span class="ident">wasm_dir</span>: <span class="ident">PathBuf</span>) {
     <span class="comment">// Prefetch needed wasm artifacts</span>
     <span class="ident">wasm_loader::pre_fetch_wasm</span>(<span class="kw-2">&amp;</span><span class="ident">wasm_dir</span>).<span class="kw">await</span>;
+
+    <span class="comment">// Find the system available memory</span>
+    <span class="kw">let</span> <span class="ident">available_memory_bytes</span> <span class="op">=</span> <span class="ident">Lazy::new</span>(<span class="op">|</span><span class="op">|</span> {
+        <span class="kw">let</span> <span class="ident">sys</span> <span class="op">=</span> <span class="ident">System::new_with_specifics</span>(<span class="ident">RefreshKind::new</span>().<span class="ident">with_memory</span>());
+        <span class="kw">let</span> <span class="ident">available_memory_bytes</span> <span class="op">=</span> <span class="ident">sys</span>.<span class="ident">available_memory</span>() <span class="op">*</span> <span class="number">1024</span>;
+        <span class="macro">tracing::info!</span>(
+            <span class="string">&quot;Available memory: {}&quot;</span>,
+            <span class="ident">Byte::from_bytes</span>(<span class="ident">available_memory_bytes</span> <span class="kw">as</span> <span class="ident">u128</span>)
+                .<span class="ident">get_appropriate_unit</span>(<span class="bool-val">true</span>)
+        );
+        <span class="ident">available_memory_bytes</span>
+    });
+
+    <span class="comment">// Find the VP WASM compilation cache size</span>
+    <span class="kw">let</span> <span class="ident">vp_wasm_compilation_cache</span> <span class="op">=</span>
+        <span class="kw">match</span> <span class="ident">config</span>.<span class="ident">shell</span>.<span class="ident">vp_wasm_compilation_cache_bytes</span> {
+            <span class="prelude-val">Some</span>(<span class="ident">vp_wasm_compilation_cache</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="macro">tracing::info!</span>(
+                    <span class="string">&quot;VP WASM compilation cache size set from the configuration&quot;</span>
+                );
+                <span class="ident">vp_wasm_compilation_cache</span>
+            }
+            <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="macro">tracing::info!</span>(
+                    <span class="string">&quot;VP WASM compilation cache size not configured, using 1/6 \
+                     of available memory.&quot;</span>
+                );
+                <span class="kw-2">*</span><span class="ident">available_memory_bytes</span> <span class="op">/</span> <span class="number">6</span>
+            }
+        };
+    <span class="macro">tracing::info!</span>(
+        <span class="string">&quot;VP WASM compilation cache size: {}&quot;</span>,
+        <span class="ident">Byte::from_bytes</span>(<span class="ident">vp_wasm_compilation_cache</span> <span class="kw">as</span> <span class="ident">u128</span>)
+            .<span class="ident">get_appropriate_unit</span>(<span class="bool-val">true</span>)
+    );
+
+    <span class="comment">// Find the tx WASM compilation cache size</span>
+    <span class="kw">let</span> <span class="ident">tx_wasm_compilation_cache</span> <span class="op">=</span>
+        <span class="kw">match</span> <span class="ident">config</span>.<span class="ident">shell</span>.<span class="ident">tx_wasm_compilation_cache_bytes</span> {
+            <span class="prelude-val">Some</span>(<span class="ident">tx_wasm_compilation_cache</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="macro">tracing::info!</span>(
+                    <span class="string">&quot;Tx WASM compilation cache size set from the configuration&quot;</span>
+                );
+                <span class="ident">tx_wasm_compilation_cache</span>
+            }
+            <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="macro">tracing::info!</span>(
+                    <span class="string">&quot;Tx WASM compilation cache size not configured, using 1/6 \
+                     of available memory.&quot;</span>
+                );
+                <span class="kw-2">*</span><span class="ident">available_memory_bytes</span> <span class="op">/</span> <span class="number">6</span>
+            }
+        };
+    <span class="macro">tracing::info!</span>(
+        <span class="string">&quot;Tx WASM compilation cache size: {}&quot;</span>,
+        <span class="ident">Byte::from_bytes</span>(<span class="ident">tx_wasm_compilation_cache</span> <span class="kw">as</span> <span class="ident">u128</span>)
+            .<span class="ident">get_appropriate_unit</span>(<span class="bool-val">true</span>)
+    );
+
+    <span class="comment">// Setup DB cache, it must outlive the DB instance that&#39;s in the shell</span>
+    <span class="kw">let</span> <span class="ident">block_cache_size_bytes</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">config</span>.<span class="ident">shell</span>.<span class="ident">block_cache_bytes</span> {
+        <span class="prelude-val">Some</span>(<span class="ident">block_cache_bytes</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="macro">tracing::info!</span>(<span class="string">&quot;Block cache set from the configuration.&quot;</span>,);
+            <span class="ident">block_cache_bytes</span>
+        }
+        <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="macro">tracing::info!</span>(
+                <span class="string">&quot;Block cache size not configured, using 1/3 of available \
+                 memory.&quot;</span>
+            );
+            <span class="kw-2">*</span><span class="ident">available_memory_bytes</span> <span class="op">/</span> <span class="number">3</span>
+        }
+    };
+    <span class="macro">tracing::info!</span>(
+        <span class="string">&quot;RocksDB block cache size: {}&quot;</span>,
+        <span class="ident">Byte::from_bytes</span>(<span class="ident">block_cache_size_bytes</span> <span class="kw">as</span> <span class="ident">u128</span>)
+            .<span class="ident">get_appropriate_unit</span>(<span class="bool-val">true</span>)
+    );
+    <span class="kw">let</span> <span class="ident">db_cache</span> <span class="op">=</span>
+        <span class="ident">rocksdb::Cache::new_lru_cache</span>(<span class="ident">block_cache_size_bytes</span> <span class="kw">as</span> <span class="ident">usize</span>).<span class="ident">unwrap</span>();
 
     <span class="kw">let</span> <span class="ident">tendermint_dir</span> <span class="op">=</span> <span class="ident">config</span>.<span class="ident">tendermint_dir</span>();
     <span class="kw">let</span> <span class="ident">ledger_address</span> <span class="op">=</span> <span class="ident">config</span>.<span class="ident">shell</span>.<span class="ident">ledger_address</span>.<span class="ident">to_string</span>();
@@ -635,6 +804,9 @@
         <span class="ident">db_dir</span>,
         <span class="ident">config</span>.<span class="ident">chain_id</span>,
         <span class="ident">wasm_dir</span>,
+        <span class="kw-2">&amp;</span><span class="ident">db_cache</span>,
+        <span class="ident">vp_wasm_compilation_cache</span>,
+        <span class="ident">tx_wasm_compilation_cache</span>,
     );
 
     <span class="comment">// Start the ABCI server</span>

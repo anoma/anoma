@@ -501,12 +501,23 @@
 <span id="501">501</span>
 <span id="502">502</span>
 <span id="503">503</span>
+<span id="504">504</span>
+<span id="505">505</span>
+<span id="506">506</span>
+<span id="507">507</span>
+<span id="508">508</span>
+<span id="509">509</span>
+<span id="510">510</span>
+<span id="511">511</span>
+<span id="512">512</span>
+<span id="513">513</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std::collections</span>::{<span class="ident">HashMap</span>, <span class="ident">HashSet</span>};
 <span class="kw">use</span> <span class="ident">std::convert::TryFrom</span>;
 <span class="kw">use</span> <span class="ident">std::str::FromStr</span>;
 <span class="kw">use</span> <span class="ident">std::time::Duration</span>;
 
 <span class="kw">use</span> <span class="ident">anoma::ledger::gas::VpGasMeter</span>;
+<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">anoma::ledger::ibc::handler</span>::<span class="kw-2">*</span>;
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">anoma::ledger::ibc::storage</span>::{
     <span class="ident">ack_key</span>, <span class="ident">capability_index_key</span>, <span class="ident">capability_key</span>, <span class="ident">channel_counter_key</span>,
     <span class="ident">channel_key</span>, <span class="ident">client_counter_key</span>, <span class="ident">client_state_key</span>, <span class="ident">client_type_key</span>,
@@ -514,14 +525,15 @@
     <span class="ident">consensus_state_key</span>, <span class="ident">next_sequence_ack_key</span>, <span class="ident">next_sequence_recv_key</span>,
     <span class="ident">next_sequence_send_key</span>, <span class="ident">port_key</span>, <span class="ident">receipt_key</span>,
 };
-<span class="kw">use</span> <span class="ident">anoma::ledger::ibc::Ibc</span>;
+<span class="kw">use</span> <span class="ident">anoma::ledger::ibc::vp::Ibc</span>;
 <span class="kw">use</span> <span class="ident">anoma::ledger::native_vp</span>::{<span class="ident">Ctx</span>, <span class="ident">NativeVp</span>};
 <span class="kw">use</span> <span class="ident">anoma::ledger::storage::mockdb::MockDB</span>;
 <span class="kw">use</span> <span class="ident">anoma::ledger::storage::testing::Sha256Hasher</span>;
 <span class="kw">use</span> <span class="ident">anoma::proto::Tx</span>;
 <span class="kw">use</span> <span class="ident">anoma::types::address</span>::{<span class="ident">Address</span>, <span class="ident">InternalAddress</span>};
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">anoma::types::ibc</span>::<span class="kw-2">*</span>;
+<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">anoma::types::ibc::data</span>::<span class="kw-2">*</span>;
 <span class="kw">use</span> <span class="ident">anoma::types::storage::Key</span>;
+<span class="kw">use</span> <span class="ident">anoma::vm</span>::{<span class="ident">wasm</span>, <span class="ident">WasmCacheRwAccess</span>};
 <span class="kw">use</span> <span class="ident">anoma_vm_env::tx_prelude::BorshSerialize</span>;
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
 <span class="kw">use</span> <span class="ident">ibc::core::ics02_client::client_consensus::ConsensusState</span>;
@@ -587,6 +599,7 @@
 <span class="kw">use</span> <span class="ident">ibc_proto::ibc::core::commitment::v1::MerkleProof</span>;
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
 <span class="kw">use</span> <span class="ident">ibc_proto_abci::ibc::core::commitment::v1::MerkleProof</span>;
+<span class="kw">use</span> <span class="ident">tempfile::TempDir</span>;
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
 <span class="kw">use</span> <span class="ident">tendermint::account::Id</span> <span class="kw">as</span> <span class="ident">TmAccountId</span>;
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
@@ -617,7 +630,7 @@
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::tx::TestTxEnv</span>;
 
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">TestIbcVp</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-    <span class="kw">pub</span> <span class="ident">ibc</span>: <span class="ident">Ibc</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">MockDB</span>, <span class="ident">Sha256Hasher</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span> <span class="ident">ibc</span>: <span class="ident">Ibc</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">MockDB</span>, <span class="ident">Sha256Hasher</span>, <span class="ident">WasmCacheRwAccess</span><span class="op">&gt;</span>,
     <span class="kw">pub</span> <span class="ident">keys_changed</span>: <span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">Key</span><span class="op">&gt;</span>,
 }
 
@@ -625,7 +638,7 @@
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">validate</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">tx_data</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>],
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">std::result::Result</span><span class="op">&lt;</span><span class="ident">bool</span>, <span class="ident">anoma::ledger::ibc::Error</span><span class="op">&gt;</span> {
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">std::result::Result</span><span class="op">&lt;</span><span class="ident">bool</span>, <span class="ident">anoma::ledger::ibc::vp::Error</span><span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">ibc</span>
             .<span class="ident">validate_tx</span>(<span class="ident">tx_data</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">keys_changed</span>, <span class="kw-2">&amp;</span><span class="ident">HashSet::new</span>())
     }
@@ -635,19 +648,26 @@
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">init_ibc_vp_from_tx</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>(
     <span class="ident">tx_env</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">TestTxEnv</span>,
     <span class="ident">tx</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">Tx</span>,
-) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">TestIbcVp</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
+) <span class="op">-</span><span class="op">&gt;</span> (<span class="ident">TestIbcVp</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>, <span class="ident">TempDir</span>) {
     <span class="kw">let</span> <span class="ident">keys_changed</span> <span class="op">=</span> <span class="ident">tx_env</span>
         .<span class="ident">write_log</span>
         .<span class="ident">verifiers_changed_keys</span>(<span class="kw-2">&amp;</span><span class="ident">HashSet::new</span>())
         .<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">Address::Internal</span>(<span class="ident">InternalAddress::Ibc</span>))
         .<span class="ident">cloned</span>()
         .<span class="ident">expect</span>(<span class="string">&quot;no IBC address&quot;</span>);
+    <span class="kw">let</span> (<span class="ident">vp_wasm_cache</span>, <span class="ident">vp_cache_dir</span>) <span class="op">=</span>
+        <span class="ident">wasm::compilation_cache::common::testing::cache</span>();
 
-    <span class="kw">let</span> <span class="ident">ctx</span> <span class="op">=</span>
-        <span class="ident">Ctx::new</span>(<span class="kw-2">&amp;</span><span class="ident">tx_env</span>.<span class="ident">storage</span>, <span class="kw-2">&amp;</span><span class="ident">tx_env</span>.<span class="ident">write_log</span>, <span class="ident">tx</span>, <span class="ident">VpGasMeter::new</span>(<span class="number">0</span>));
+    <span class="kw">let</span> <span class="ident">ctx</span> <span class="op">=</span> <span class="ident">Ctx::new</span>(
+        <span class="kw-2">&amp;</span><span class="ident">tx_env</span>.<span class="ident">storage</span>,
+        <span class="kw-2">&amp;</span><span class="ident">tx_env</span>.<span class="ident">write_log</span>,
+        <span class="ident">tx</span>,
+        <span class="ident">VpGasMeter::new</span>(<span class="number">0</span>),
+        <span class="ident">vp_wasm_cache</span>,
+    );
     <span class="kw">let</span> <span class="ident">ibc</span> <span class="op">=</span> <span class="ident">Ibc</span> { <span class="ident">ctx</span> };
 
-    <span class="ident">TestIbcVp</span> { <span class="ident">ibc</span>, <span class="ident">keys_changed</span> }
+    (<span class="ident">TestIbcVp</span> { <span class="ident">ibc</span>, <span class="ident">keys_changed</span> }, <span class="ident">vp_cache_dir</span>)
 }
 
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">tm_dummy_header</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">TmHeader</span> {

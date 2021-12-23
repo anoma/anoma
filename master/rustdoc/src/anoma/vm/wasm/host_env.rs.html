@@ -179,6 +179,11 @@
 <span id="179">179</span>
 <span id="180">180</span>
 <span id="181">181</span>
+<span id="182">182</span>
+<span id="183">183</span>
+<span id="184">184</span>
+<span id="185">185</span>
+<span id="186">186</span>
 </pre><pre class="rust"><code><span class="doccomment">//! The wasm host environment.</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//! Here, we expose the host functions into wasm&#39;s</span>
@@ -191,16 +196,17 @@
 
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::gossip::mm::MmHost</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::ledger::storage</span>::{<span class="self">self</span>, <span class="ident">StorageHasher</span>};
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::vm::host_env</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::vm::host_env</span>::{
     <span class="ident">FilterEnv</span>, <span class="ident">MatchmakerEnv</span>, <span class="ident">TxEnv</span>, <span class="ident">VpEnv</span>, <span class="ident">VpEvaluator</span>,
 };
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::vm::wasm::memory::WasmMemory</span>;
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::vm</span>::{<span class="ident">host_env</span>, <span class="ident">WasmCacheAccess</span>};
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">DB</span>, <span class="ident">H</span><span class="op">&gt;</span> <span class="ident">WasmerEnv</span> <span class="kw">for</span> <span class="ident">TxEnv</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span>, <span class="ident">WasmMemory</span>, <span class="ident">DB</span>, <span class="ident">H</span><span class="op">&gt;</span>
+<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">DB</span>, <span class="ident">H</span>, <span class="ident">CA</span><span class="op">&gt;</span> <span class="ident">WasmerEnv</span> <span class="kw">for</span> <span class="ident">TxEnv</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span>, <span class="ident">WasmMemory</span>, <span class="ident">DB</span>, <span class="ident">H</span>, <span class="ident">CA</span><span class="op">&gt;</span>
 <span class="kw">where</span>
     <span class="ident">DB</span>: <span class="ident">storage::DB</span> <span class="op">+</span> <span class="kw">for</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span> <span class="ident">storage::DBIter</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span>,
     <span class="ident">H</span>: <span class="ident">StorageHasher</span>,
+    <span class="ident">CA</span>: <span class="ident">WasmCacheAccess</span>,
 {
     <span class="kw">fn</span> <span class="ident">init_with_instance</span>(
         <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
@@ -210,11 +216,12 @@
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">DB</span>, <span class="ident">H</span>, <span class="ident">EVAL</span><span class="op">&gt;</span> <span class="ident">WasmerEnv</span> <span class="kw">for</span> <span class="ident">VpEnv</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span>, <span class="ident">WasmMemory</span>, <span class="ident">DB</span>, <span class="ident">H</span>, <span class="ident">EVAL</span><span class="op">&gt;</span>
+<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">DB</span>, <span class="ident">H</span>, <span class="ident">EVAL</span>, <span class="ident">CA</span><span class="op">&gt;</span> <span class="ident">WasmerEnv</span> <span class="kw">for</span> <span class="ident">VpEnv</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span>, <span class="ident">WasmMemory</span>, <span class="ident">DB</span>, <span class="ident">H</span>, <span class="ident">EVAL</span>, <span class="ident">CA</span><span class="op">&gt;</span>
 <span class="kw">where</span>
     <span class="ident">DB</span>: <span class="ident">storage::DB</span> <span class="op">+</span> <span class="kw">for</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span> <span class="ident">storage::DBIter</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span>,
     <span class="ident">H</span>: <span class="ident">StorageHasher</span>,
     <span class="ident">EVAL</span>: <span class="ident">VpEvaluator</span>,
+    <span class="ident">CA</span>: <span class="ident">WasmCacheAccess</span>,
 {
     <span class="kw">fn</span> <span class="ident">init_with_instance</span>(
         <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
@@ -248,14 +255,15 @@
 <span class="doccomment">/// Prepare imports (memory and host functions) exposed to the vm guest running</span>
 <span class="doccomment">/// transaction code</span>
 <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy::too_many_arguments</span>)]</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">tx_imports</span><span class="op">&lt;</span><span class="ident">DB</span>, <span class="ident">H</span><span class="op">&gt;</span>(
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">tx_imports</span><span class="op">&lt;</span><span class="ident">DB</span>, <span class="ident">H</span>, <span class="ident">CA</span><span class="op">&gt;</span>(
     <span class="ident">wasm_store</span>: <span class="kw-2">&amp;</span><span class="ident">Store</span>,
     <span class="ident">initial_memory</span>: <span class="ident">Memory</span>,
-    <span class="ident">env</span>: <span class="ident">TxEnv</span><span class="op">&lt;</span><span class="lifetime">&#39;static</span>, <span class="ident">WasmMemory</span>, <span class="ident">DB</span>, <span class="ident">H</span><span class="op">&gt;</span>,
+    <span class="ident">env</span>: <span class="ident">TxEnv</span><span class="op">&lt;</span><span class="lifetime">&#39;static</span>, <span class="ident">WasmMemory</span>, <span class="ident">DB</span>, <span class="ident">H</span>, <span class="ident">CA</span><span class="op">&gt;</span>,
 ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">ImportObject</span>
 <span class="kw">where</span>
     <span class="ident">DB</span>: <span class="ident">storage::DB</span> <span class="op">+</span> <span class="kw">for</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span> <span class="ident">storage::DBIter</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span>,
     <span class="ident">H</span>: <span class="ident">StorageHasher</span>,
+    <span class="ident">CA</span>: <span class="ident">WasmCacheAccess</span>,
 {
     <span class="macro">wasmer::imports!</span> {
         <span class="comment">// default namespace</span>
@@ -272,6 +280,7 @@
             <span class="string">&quot;anoma_tx_insert_verifier&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Function::new_native_with_env</span>(<span class="ident">wasm_store</span>, <span class="ident">env</span>.<span class="ident">clone</span>(), <span class="ident">host_env::tx_insert_verifier</span>),
             <span class="string">&quot;anoma_tx_update_validity_predicate&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Function::new_native_with_env</span>(<span class="ident">wasm_store</span>, <span class="ident">env</span>.<span class="ident">clone</span>(), <span class="ident">host_env::tx_update_validity_predicate</span>),
             <span class="string">&quot;anoma_tx_init_account&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Function::new_native_with_env</span>(<span class="ident">wasm_store</span>, <span class="ident">env</span>.<span class="ident">clone</span>(), <span class="ident">host_env::tx_init_account</span>),
+            <span class="string">&quot;anoma_tx_emit_ibc_event&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Function::new_native_with_env</span>(<span class="ident">wasm_store</span>, <span class="ident">env</span>.<span class="ident">clone</span>(), <span class="ident">host_env::tx_emit_ibc_event</span>),
             <span class="string">&quot;anoma_tx_get_chain_id&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Function::new_native_with_env</span>(<span class="ident">wasm_store</span>, <span class="ident">env</span>.<span class="ident">clone</span>(), <span class="ident">host_env::tx_get_chain_id</span>),
             <span class="string">&quot;anoma_tx_get_block_height&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Function::new_native_with_env</span>(<span class="ident">wasm_store</span>, <span class="ident">env</span>.<span class="ident">clone</span>(), <span class="ident">host_env::tx_get_block_height</span>),
             <span class="string">&quot;anoma_tx_get_block_hash&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Function::new_native_with_env</span>(<span class="ident">wasm_store</span>, <span class="ident">env</span>.<span class="ident">clone</span>(), <span class="ident">host_env::tx_get_block_hash</span>),
@@ -283,15 +292,16 @@
 
 <span class="doccomment">/// Prepare imports (memory and host functions) exposed to the vm guest running</span>
 <span class="doccomment">/// validity predicate code</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">vp_imports</span><span class="op">&lt;</span><span class="ident">DB</span>, <span class="ident">H</span>, <span class="ident">EVAL</span><span class="op">&gt;</span>(
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">vp_imports</span><span class="op">&lt;</span><span class="ident">DB</span>, <span class="ident">H</span>, <span class="ident">EVAL</span>, <span class="ident">CA</span><span class="op">&gt;</span>(
     <span class="ident">wasm_store</span>: <span class="kw-2">&amp;</span><span class="ident">Store</span>,
     <span class="ident">initial_memory</span>: <span class="ident">Memory</span>,
-    <span class="ident">env</span>: <span class="ident">VpEnv</span><span class="op">&lt;</span><span class="lifetime">&#39;static</span>, <span class="ident">WasmMemory</span>, <span class="ident">DB</span>, <span class="ident">H</span>, <span class="ident">EVAL</span><span class="op">&gt;</span>,
+    <span class="ident">env</span>: <span class="ident">VpEnv</span><span class="op">&lt;</span><span class="lifetime">&#39;static</span>, <span class="ident">WasmMemory</span>, <span class="ident">DB</span>, <span class="ident">H</span>, <span class="ident">EVAL</span>, <span class="ident">CA</span><span class="op">&gt;</span>,
 ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">ImportObject</span>
 <span class="kw">where</span>
     <span class="ident">DB</span>: <span class="ident">storage::DB</span> <span class="op">+</span> <span class="kw">for</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span> <span class="ident">storage::DBIter</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span>,
     <span class="ident">H</span>: <span class="ident">StorageHasher</span>,
-    <span class="ident">EVAL</span>: <span class="ident">VpEvaluator</span><span class="op">&lt;</span><span class="ident">Db</span> <span class="op">=</span> <span class="ident">DB</span>, <span class="ident">H</span> <span class="op">=</span> <span class="ident">H</span>, <span class="ident">Eval</span> <span class="op">=</span> <span class="ident">EVAL</span><span class="op">&gt;</span>,
+    <span class="ident">EVAL</span>: <span class="ident">VpEvaluator</span><span class="op">&lt;</span><span class="ident">Db</span> <span class="op">=</span> <span class="ident">DB</span>, <span class="ident">H</span> <span class="op">=</span> <span class="ident">H</span>, <span class="ident">Eval</span> <span class="op">=</span> <span class="ident">EVAL</span>, <span class="ident">CA</span> <span class="op">=</span> <span class="ident">CA</span><span class="op">&gt;</span>,
+    <span class="ident">CA</span>: <span class="ident">WasmCacheAccess</span>,
 {
     <span class="macro">wasmer::imports!</span> {
         <span class="comment">// default namespace</span>

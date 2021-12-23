@@ -173,6 +173,9 @@
 <span id="173">173</span>
 <span id="174">174</span>
 <span id="175">175</span>
+<span id="176">176</span>
+<span id="177">177</span>
+<span id="178">178</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Protocol parameters</span>
 
 <span class="kw">use</span> <span class="ident">std::collections::HashSet</span>;
@@ -187,6 +190,7 @@
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::types::address</span>::{<span class="ident">Address</span>, <span class="ident">InternalAddress</span>};
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::types::storage</span>::{<span class="ident">DbKeySeg</span>, <span class="ident">Key</span>};
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::types::time::DurationSecs</span>;
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::vm::WasmCacheAccess</span>;
 
 <span class="kw">const</span> <span class="ident">ADDR</span>: <span class="ident">InternalAddress</span> <span class="op">=</span> <span class="ident">InternalAddress::Parameters</span>;
 
@@ -201,13 +205,14 @@
 <span class="kw">pub</span> <span class="kw">type</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">std::result::Result</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">Error</span><span class="op">&gt;</span>;
 
 <span class="doccomment">/// Parameters VP</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ParametersVp</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">DB</span>, <span class="ident">H</span><span class="op">&gt;</span>
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ParametersVp</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">DB</span>, <span class="ident">H</span>, <span class="ident">CA</span><span class="op">&gt;</span>
 <span class="kw">where</span>
     <span class="ident">DB</span>: <span class="ident">storage::DB</span> <span class="op">+</span> <span class="kw">for</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span> <span class="ident">storage::DBIter</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span>,
     <span class="ident">H</span>: <span class="ident">StorageHasher</span>,
+    <span class="ident">CA</span>: <span class="ident">WasmCacheAccess</span>,
 {
     <span class="doccomment">/// Context to interact with the host structures.</span>
-    <span class="kw">pub</span> <span class="ident">ctx</span>: <span class="ident">Ctx</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">DB</span>, <span class="ident">H</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span> <span class="ident">ctx</span>: <span class="ident">Ctx</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">DB</span>, <span class="ident">H</span>, <span class="ident">CA</span><span class="op">&gt;</span>,
 }
 
 <span class="doccomment">/// Protocol parameters</span>
@@ -315,10 +320,11 @@
     <span class="prelude-val">Ok</span>(<span class="ident">gas</span>)
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">DB</span>, <span class="ident">H</span><span class="op">&gt;</span> <span class="ident">NativeVp</span> <span class="kw">for</span> <span class="ident">ParametersVp</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">DB</span>, <span class="ident">H</span><span class="op">&gt;</span>
+<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">DB</span>, <span class="ident">H</span>, <span class="ident">CA</span><span class="op">&gt;</span> <span class="ident">NativeVp</span> <span class="kw">for</span> <span class="ident">ParametersVp</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">DB</span>, <span class="ident">H</span>, <span class="ident">CA</span><span class="op">&gt;</span>
 <span class="kw">where</span>
     <span class="ident">DB</span>: <span class="lifetime">&#39;static</span> <span class="op">+</span> <span class="ident">storage::DB</span> <span class="op">+</span> <span class="kw">for</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span> <span class="ident">storage::DBIter</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span>,
     <span class="ident">H</span>: <span class="lifetime">&#39;static</span> <span class="op">+</span> <span class="ident">StorageHasher</span>,
+    <span class="ident">CA</span>: <span class="lifetime">&#39;static</span> <span class="op">+</span> <span class="ident">WasmCacheAccess</span>,
 {
     <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">Error</span>;
 

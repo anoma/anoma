@@ -266,6 +266,23 @@
 <span id="266">266</span>
 <span id="267">267</span>
 <span id="268">268</span>
+<span id="269">269</span>
+<span id="270">270</span>
+<span id="271">271</span>
+<span id="272">272</span>
+<span id="273">273</span>
+<span id="274">274</span>
+<span id="275">275</span>
+<span id="276">276</span>
+<span id="277">277</span>
+<span id="278">278</span>
+<span id="279">279</span>
+<span id="280">280</span>
+<span id="281">281</span>
+<span id="282">282</span>
+<span id="283">283</span>
+<span id="284">284</span>
+<span id="285">285</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Native validity predicate interface associated with internal accounts such</span>
 <span class="doccomment">//! as the PoS and IBC modules.</span>
 <span class="kw">use</span> <span class="ident">std::cell::RefCell</span>;
@@ -281,6 +298,7 @@
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::types::address</span>::{<span class="ident">Address</span>, <span class="ident">InternalAddress</span>};
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::types::storage</span>::{<span class="ident">BlockHash</span>, <span class="ident">BlockHeight</span>, <span class="ident">Epoch</span>, <span class="ident">Key</span>};
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::vm::prefix_iter::PrefixIterators</span>;
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::vm::WasmCacheAccess</span>;
 
 <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">missing_docs</span>)]</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Error</span>, <span class="ident">Debug</span>)]</span>
@@ -315,10 +333,11 @@
 <span class="doccomment">/// wrapper types and `eval_runner` field. The references must not be changed</span>
 <span class="doccomment">/// when [`Ctx`] is mutable.</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Ctx</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">DB</span>, <span class="ident">H</span><span class="op">&gt;</span>
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Ctx</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">DB</span>, <span class="ident">H</span>, <span class="ident">CA</span><span class="op">&gt;</span>
 <span class="kw">where</span>
     <span class="ident">DB</span>: <span class="ident">storage::DB</span> <span class="op">+</span> <span class="kw">for</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span> <span class="ident">storage::DBIter</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span>,
     <span class="ident">H</span>: <span class="ident">StorageHasher</span>,
+    <span class="ident">CA</span>: <span class="ident">WasmCacheAccess</span>,
 {
     <span class="doccomment">/// Storage prefix iterators.</span>
     <span class="kw">pub</span> <span class="ident">iterators</span>: <span class="ident">RefCell</span><span class="op">&lt;</span><span class="ident">PrefixIterators</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">DB</span><span class="op">&gt;</span><span class="op">&gt;</span>,
@@ -330,12 +349,19 @@
     <span class="kw">pub</span> <span class="ident">write_log</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">WriteLog</span>,
     <span class="doccomment">/// The transaction code is used for signature verification</span>
     <span class="kw">pub</span> <span class="ident">tx</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">Tx</span>,
+    <span class="doccomment">/// VP WASM compilation cache</span>
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;wasm-runtime&quot;</span>)]</span>
+    <span class="kw">pub</span> <span class="ident">vp_wasm_cache</span>: <span class="ident"><span class="kw">crate</span>::vm::wasm::VpCache</span><span class="op">&lt;</span><span class="ident">CA</span><span class="op">&gt;</span>,
+    <span class="doccomment">/// To avoid unused parameter without &quot;wasm-runtime&quot; feature</span>
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;wasm-runtime&quot;</span>))]</span>
+    <span class="kw">pub</span> <span class="ident">cache_access</span>: <span class="ident">std::marker::PhantomData</span><span class="op">&lt;</span><span class="ident">CA</span><span class="op">&gt;</span>,
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">DB</span>, <span class="ident">H</span><span class="op">&gt;</span> <span class="ident">Ctx</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">DB</span>, <span class="ident">H</span><span class="op">&gt;</span>
+<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">DB</span>, <span class="ident">H</span>, <span class="ident">CA</span><span class="op">&gt;</span> <span class="ident">Ctx</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">DB</span>, <span class="ident">H</span>, <span class="ident">CA</span><span class="op">&gt;</span>
 <span class="kw">where</span>
     <span class="ident">DB</span>: <span class="lifetime">&#39;static</span> <span class="op">+</span> <span class="ident">storage::DB</span> <span class="op">+</span> <span class="kw">for</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span> <span class="ident">storage::DBIter</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span>,
     <span class="ident">H</span>: <span class="lifetime">&#39;static</span> <span class="op">+</span> <span class="ident">StorageHasher</span>,
+    <span class="ident">CA</span>: <span class="lifetime">&#39;static</span> <span class="op">+</span> <span class="ident">WasmCacheAccess</span>,
 {
     <span class="doccomment">/// Initialize a new context for native VP call</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(
@@ -343,6 +369,8 @@
         <span class="ident">write_log</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">WriteLog</span>,
         <span class="ident">tx</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">Tx</span>,
         <span class="ident">gas_meter</span>: <span class="ident">VpGasMeter</span>,
+        <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;wasm-runtime&quot;</span>)]</span>
+        <span class="ident">vp_wasm_cache</span>: <span class="ident"><span class="kw">crate</span>::vm::wasm::VpCache</span><span class="op">&lt;</span><span class="ident">CA</span><span class="op">&gt;</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="self">Self</span> {
             <span class="ident">iterators</span>: <span class="ident">RefCell::new</span>(<span class="ident">PrefixIterators::default</span>()),
@@ -350,6 +378,10 @@
             <span class="ident">storage</span>,
             <span class="ident">write_log</span>,
             <span class="ident">tx</span>,
+            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;wasm-runtime&quot;</span>)]</span>
+            <span class="ident">vp_wasm_cache</span>,
+            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;wasm-runtime&quot;</span>))]</span>
+            <span class="ident">cache_access</span>: <span class="ident">std::marker::PhantomData</span>,
         }
     }
 
@@ -478,7 +510,7 @@
     <span class="doccomment">/// If the execution fails for whatever reason, this will return `false`.</span>
     <span class="doccomment">/// Otherwise returns the result of evaluation.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">eval</span>(
-        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
         <span class="ident">address</span>: <span class="kw-2">&amp;</span><span class="ident">Address</span>,
         <span class="ident">keys_changed</span>: <span class="kw-2">&amp;</span><span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">Key</span><span class="op">&gt;</span>,
         <span class="ident">verifiers</span>: <span class="kw-2">&amp;</span><span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span>,
@@ -495,6 +527,7 @@
             <span class="kw">let</span> <span class="ident">eval_runner</span> <span class="op">=</span> <span class="ident">VpEvalWasm</span> {
                 <span class="ident">db</span>: <span class="ident">PhantomData</span>,
                 <span class="ident">hasher</span>: <span class="ident">PhantomData</span>,
+                <span class="ident">cache_access</span>: <span class="ident">PhantomData</span>,
             };
             <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">iterators</span>: <span class="ident">PrefixIterators</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span>, <span class="ident">DB</span><span class="op">&gt;</span> <span class="op">=</span>
                 <span class="ident">PrefixIterators::default</span>();
@@ -511,6 +544,7 @@
                 <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">result_buffer</span>,
                 <span class="ident">keys_changed</span>,
                 <span class="kw-2">&amp;</span><span class="ident">eval_runner</span>,
+                <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">vp_wasm_cache</span>,
             );
             <span class="kw">match</span> <span class="ident">eval_runner</span>.<span class="ident">eval_native_result</span>(<span class="ident">ctx</span>, <span class="ident">vp_code</span>, <span class="ident">input_data</span>) {
                 <span class="prelude-val">Ok</span>(<span class="ident">result</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">result</span>,

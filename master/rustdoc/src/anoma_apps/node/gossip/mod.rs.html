@@ -135,9 +135,11 @@
 <span id="135">135</span>
 <span id="136">136</span>
 <span id="137">137</span>
+<span id="138">138</span>
+<span id="139">139</span>
 </pre><pre class="rust"><code><span class="kw">mod</span> <span class="ident">behaviour</span>;
 <span class="kw">mod</span> <span class="ident">intent_gossiper</span>;
-<span class="kw">mod</span> <span class="ident">p2p</span>;
+<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">p2p</span>;
 <span class="kw">mod</span> <span class="ident">rpc</span>;
 
 <span class="kw">use</span> <span class="ident">std::borrow::Cow</span>;
@@ -164,6 +166,7 @@
 
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">run</span>(
     <span class="ident">config</span>: <span class="ident">IntentGossiper</span>,
+    <span class="ident">base_dir</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span><span class="ident">Path</span><span class="op">&gt;</span>,
     <span class="ident">wasm_dir</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span><span class="ident">Path</span><span class="op">&gt;</span>,
     <span class="ident">tx_source_address</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span>,
     <span class="ident">tx_signing_key</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Rc</span><span class="op">&lt;</span><span class="ident">Keypair</span><span class="op">&gt;</span><span class="op">&gt;</span>,
@@ -179,8 +182,9 @@
 
     <span class="comment">// Create the P2P gossip network, which can send messages directly to the</span>
     <span class="comment">// matchmaker, if any</span>
-    <span class="kw">let</span> <span class="ident">gossip</span> <span class="op">=</span> <span class="ident">p2p::P2P::new</span>(<span class="kw-2">&amp;</span><span class="ident">config</span>, <span class="ident">intent_gossip_app</span>.<span class="ident">mm_sender</span>.<span class="ident">clone</span>())
-        .<span class="ident">map_err</span>(<span class="ident">Error::P2pInit</span>)<span class="question-mark">?</span>;
+    <span class="kw">let</span> <span class="ident">gossip</span> <span class="op">=</span>
+        <span class="ident">p2p::P2P::new</span>(<span class="kw-2">&amp;</span><span class="ident">config</span>, <span class="ident">base_dir</span>, <span class="ident">intent_gossip_app</span>.<span class="ident">mm_sender</span>.<span class="ident">clone</span>())
+            .<span class="ident">map_err</span>(<span class="ident">Error::P2pInit</span>)<span class="question-mark">?</span>;
 
     <span class="comment">// Start the rpc socket, if enabled in the config</span>
     <span class="kw">let</span> <span class="ident">rpc_event_receiver</span> <span class="op">=</span> <span class="ident">config</span>.<span class="ident">rpc</span>.<span class="ident">as_ref</span>().<span class="ident">map</span>(<span class="ident">rpc::start_rpc_server</span>);

@@ -1611,6 +1611,53 @@
 <span id="1611">1611</span>
 <span id="1612">1612</span>
 <span id="1613">1613</span>
+<span id="1614">1614</span>
+<span id="1615">1615</span>
+<span id="1616">1616</span>
+<span id="1617">1617</span>
+<span id="1618">1618</span>
+<span id="1619">1619</span>
+<span id="1620">1620</span>
+<span id="1621">1621</span>
+<span id="1622">1622</span>
+<span id="1623">1623</span>
+<span id="1624">1624</span>
+<span id="1625">1625</span>
+<span id="1626">1626</span>
+<span id="1627">1627</span>
+<span id="1628">1628</span>
+<span id="1629">1629</span>
+<span id="1630">1630</span>
+<span id="1631">1631</span>
+<span id="1632">1632</span>
+<span id="1633">1633</span>
+<span id="1634">1634</span>
+<span id="1635">1635</span>
+<span id="1636">1636</span>
+<span id="1637">1637</span>
+<span id="1638">1638</span>
+<span id="1639">1639</span>
+<span id="1640">1640</span>
+<span id="1641">1641</span>
+<span id="1642">1642</span>
+<span id="1643">1643</span>
+<span id="1644">1644</span>
+<span id="1645">1645</span>
+<span id="1646">1646</span>
+<span id="1647">1647</span>
+<span id="1648">1648</span>
+<span id="1649">1649</span>
+<span id="1650">1650</span>
+<span id="1651">1651</span>
+<span id="1652">1652</span>
+<span id="1653">1653</span>
+<span id="1654">1654</span>
+<span id="1655">1655</span>
+<span id="1656">1656</span>
+<span id="1657">1657</span>
+<span id="1658">1658</span>
+<span id="1659">1659</span>
+<span id="1660">1660</span>
 </pre><pre class="rust"><code><span class="doccomment">//! VM host environment integration tests.</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//! You can enable logging with the `RUST_LOG` environment variable, e.g.:</span>
@@ -1632,7 +1679,8 @@
 
     <span class="kw">use</span> <span class="ident">std::panic</span>;
 
-    <span class="kw">use</span> <span class="ident">anoma::ledger::ibc</span>::{<span class="ident">init_genesis_storage</span>, <span class="ident">Error</span> <span class="kw">as</span> <span class="ident">IbcError</span>};
+    <span class="kw">use</span> <span class="ident">anoma::ledger::ibc::init_genesis_storage</span>;
+    <span class="kw">use</span> <span class="ident">anoma::ledger::ibc::vp::Error</span> <span class="kw">as</span> <span class="ident">IbcError</span>;
     <span class="kw">use</span> <span class="ident">anoma::proto::Tx</span>;
     <span class="kw">use</span> <span class="ident">anoma::types::key::ed25519::SignedTxData</span>;
     <span class="kw">use</span> <span class="ident">anoma::types::storage</span>::{<span class="self">self</span>, <span class="ident">Key</span>, <span class="ident">KeySeg</span>};
@@ -2114,7 +2162,7 @@
         <span class="ident">tx_host_env::write</span>(<span class="kw-2">&amp;</span><span class="ident">client_type_key</span>, <span class="ident">data</span>.<span class="ident">client_state</span>.<span class="ident">client_type</span>());
 
         <span class="comment">// Check should fail due to no client state</span>
-        <span class="kw">let</span> <span class="ident">ibc_vp</span> <span class="op">=</span> <span class="ident">ibc::init_ibc_vp_from_tx</span>(<span class="kw-2">&amp;</span><span class="ident">env</span>, <span class="kw-2">&amp;</span><span class="ident">tx</span>);
+        <span class="kw">let</span> (<span class="ident">ibc_vp</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">ibc::init_ibc_vp_from_tx</span>(<span class="kw-2">&amp;</span><span class="ident">env</span>, <span class="kw-2">&amp;</span><span class="ident">tx</span>);
         <span class="macro">assert!</span>(<span class="macro">matches!</span>(
             <span class="ident">ibc_vp</span>
                 .<span class="ident">validate</span>(<span class="kw-2">&amp;</span><span class="ident">tx_data</span>)
@@ -2149,10 +2197,12 @@
         <span class="kw">let</span> <span class="ident">height</span> <span class="op">=</span> <span class="ident">data</span>.<span class="ident">client_state</span>.<span class="ident">latest_height</span>();
         <span class="kw">let</span> <span class="ident">consensus_state_key</span> <span class="op">=</span>
             <span class="ident">ibc::consensus_state_key</span>(<span class="kw-2">&amp;</span><span class="ident">client_id</span>, <span class="ident">height</span>).<span class="ident">to_string</span>();
-        <span class="ident">tx_host_env::write</span>(<span class="kw-2">&amp;</span><span class="ident">consensus_state_key</span>, <span class="ident">data</span>.<span class="ident">consensus_state</span>);
+        <span class="ident">tx_host_env::write</span>(<span class="kw-2">&amp;</span><span class="ident">consensus_state_key</span>, <span class="ident">data</span>.<span class="ident">consensus_state</span>.<span class="ident">clone</span>());
+        <span class="kw">let</span> <span class="ident">event</span> <span class="op">=</span> <span class="ident">ibc::make_create_client_event</span>(<span class="kw-2">&amp;</span><span class="ident">client_id</span>, <span class="kw-2">&amp;</span><span class="ident">data</span>);
+        <span class="ident">tx_host_env::emit_ibc_event</span>(<span class="kw-2">&amp;</span><span class="ident">event</span>.<span class="ident">try_into</span>().<span class="ident">unwrap</span>());
 
         <span class="comment">// Check</span>
-        <span class="kw">let</span> <span class="ident">ibc_vp</span> <span class="op">=</span> <span class="ident">ibc::init_ibc_vp_from_tx</span>(<span class="kw-2">&amp;</span><span class="ident">env</span>, <span class="kw-2">&amp;</span><span class="ident">tx</span>);
+        <span class="kw">let</span> (<span class="ident">ibc_vp</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">ibc::init_ibc_vp_from_tx</span>(<span class="kw-2">&amp;</span><span class="ident">env</span>, <span class="kw-2">&amp;</span><span class="ident">tx</span>);
         <span class="macro">assert!</span>(
             <span class="ident">ibc_vp</span>
                 .<span class="ident">validate</span>(<span class="kw-2">&amp;</span><span class="ident">tx_data</span>)
@@ -2172,7 +2222,7 @@
             <span class="ident">timestamp</span>: <span class="ident">DateTimeUtc::now</span>(),
         };
         <span class="comment">// get and update the client without a header</span>
-        <span class="kw">let</span> <span class="ident">client_id</span> <span class="op">=</span> <span class="ident">data</span>.<span class="ident">client_id</span>;
+        <span class="kw">let</span> <span class="ident">client_id</span> <span class="op">=</span> <span class="ident">data</span>.<span class="ident">client_id</span>.<span class="ident">clone</span>();
         <span class="comment">// update the client with the same state</span>
         <span class="kw">let</span> <span class="ident">old_data</span> <span class="op">=</span> <span class="ident">ibc::client_creation_data</span>();
         <span class="kw">let</span> <span class="ident">same_client_state</span> <span class="op">=</span> <span class="ident">old_data</span>.<span class="ident">client_state</span>.<span class="ident">clone</span>();
@@ -2183,9 +2233,11 @@
         <span class="kw">let</span> <span class="ident">consensus_state_key</span> <span class="op">=</span>
             <span class="ident">ibc::consensus_state_key</span>(<span class="kw-2">&amp;</span><span class="ident">client_id</span>, <span class="ident">height</span>).<span class="ident">to_string</span>();
         <span class="ident">tx_host_env::write</span>(<span class="kw-2">&amp;</span><span class="ident">consensus_state_key</span>, <span class="ident">same_consensus_state</span>);
+        <span class="kw">let</span> <span class="ident">event</span> <span class="op">=</span> <span class="ident">ibc::make_update_client_event</span>(<span class="kw-2">&amp;</span><span class="ident">client_id</span>, <span class="kw-2">&amp;</span><span class="ident">data</span>);
+        <span class="ident">tx_host_env::emit_ibc_event</span>(<span class="kw-2">&amp;</span><span class="ident">event</span>.<span class="ident">try_into</span>().<span class="ident">unwrap</span>());
 
         <span class="comment">// Check should fail due to the invalid updating</span>
-        <span class="kw">let</span> <span class="ident">ibc_vp</span> <span class="op">=</span> <span class="ident">ibc::init_ibc_vp_from_tx</span>(<span class="kw-2">&amp;</span><span class="ident">env</span>, <span class="kw-2">&amp;</span><span class="ident">tx</span>);
+        <span class="kw">let</span> (<span class="ident">ibc_vp</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">ibc::init_ibc_vp_from_tx</span>(<span class="kw-2">&amp;</span><span class="ident">env</span>, <span class="kw-2">&amp;</span><span class="ident">tx</span>);
         <span class="macro">assert!</span>(<span class="macro">matches!</span>(
             <span class="ident">ibc_vp</span>
                 .<span class="ident">validate</span>(<span class="kw-2">&amp;</span><span class="ident">tx_data</span>)
@@ -2209,16 +2261,18 @@
         <span class="kw">let</span> <span class="ident">client_state</span> <span class="op">=</span>
             <span class="ident">tx_host_env::read</span>(<span class="kw-2">&amp;</span><span class="ident">client_state_key</span>).<span class="ident">expect</span>(<span class="string">&quot;no client state&quot;</span>);
         <span class="kw">let</span> (<span class="ident">new_client_state</span>, <span class="ident">new_consensus_state</span>) <span class="op">=</span>
-            <span class="ident">ibc::update_client</span>(<span class="ident">client_state</span>, <span class="ident">data</span>.<span class="ident">headers</span>)
+            <span class="ident">ibc::update_client</span>(<span class="ident">client_state</span>, <span class="ident">data</span>.<span class="ident">headers</span>.<span class="ident">clone</span>())
                 .<span class="ident">expect</span>(<span class="string">&quot;updating a client failed&quot;</span>);
         <span class="kw">let</span> <span class="ident">height</span> <span class="op">=</span> <span class="ident">new_client_state</span>.<span class="ident">latest_height</span>();
         <span class="ident">tx_host_env::write</span>(<span class="kw-2">&amp;</span><span class="ident">client_state_key</span>, <span class="ident">new_client_state</span>);
         <span class="kw">let</span> <span class="ident">consensus_state_key</span> <span class="op">=</span>
             <span class="ident">ibc::consensus_state_key</span>(<span class="kw-2">&amp;</span><span class="ident">client_id</span>, <span class="ident">height</span>).<span class="ident">to_string</span>();
         <span class="ident">tx_host_env::write</span>(<span class="kw-2">&amp;</span><span class="ident">consensus_state_key</span>, <span class="ident">new_consensus_state</span>);
+        <span class="kw">let</span> <span class="ident">event</span> <span class="op">=</span> <span class="ident">ibc::make_update_client_event</span>(<span class="kw-2">&amp;</span><span class="ident">client_id</span>, <span class="kw-2">&amp;</span><span class="ident">data</span>);
+        <span class="ident">tx_host_env::emit_ibc_event</span>(<span class="kw-2">&amp;</span><span class="ident">event</span>.<span class="ident">try_into</span>().<span class="ident">unwrap</span>());
 
         <span class="comment">// Check</span>
-        <span class="kw">let</span> <span class="ident">ibc_vp</span> <span class="op">=</span> <span class="ident">ibc::init_ibc_vp_from_tx</span>(<span class="kw-2">&amp;</span><span class="ident">env</span>, <span class="kw-2">&amp;</span><span class="ident">tx</span>);
+        <span class="kw">let</span> (<span class="ident">ibc_vp</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">ibc::init_ibc_vp_from_tx</span>(<span class="kw-2">&amp;</span><span class="ident">env</span>, <span class="kw-2">&amp;</span><span class="ident">tx</span>);
         <span class="macro">assert!</span>(
             <span class="ident">ibc_vp</span>
                 .<span class="ident">validate</span>(<span class="kw-2">&amp;</span><span class="ident">tx_data</span>)
@@ -2240,16 +2294,18 @@
         <span class="comment">// upgrade the client</span>
         <span class="kw">let</span> <span class="ident">client_id</span> <span class="op">=</span> <span class="ident">data</span>.<span class="ident">client_id</span>.<span class="ident">clone</span>();
         <span class="kw">let</span> <span class="ident">new_client_state</span> <span class="op">=</span> <span class="ident">data</span>.<span class="ident">client_state</span>.<span class="ident">clone</span>();
-        <span class="kw">let</span> <span class="ident">new_consensus_state</span> <span class="op">=</span> <span class="ident">data</span>.<span class="ident">consensus_state</span>;
+        <span class="kw">let</span> <span class="ident">new_consensus_state</span> <span class="op">=</span> <span class="ident">data</span>.<span class="ident">consensus_state</span>.<span class="ident">clone</span>();
         <span class="kw">let</span> <span class="ident">client_state_key</span> <span class="op">=</span> <span class="ident">ibc::client_state_key</span>(<span class="kw-2">&amp;</span><span class="ident">client_id</span>).<span class="ident">to_string</span>();
         <span class="kw">let</span> <span class="ident">height</span> <span class="op">=</span> <span class="ident">new_client_state</span>.<span class="ident">latest_height</span>();
         <span class="kw">let</span> <span class="ident">consensus_state_key</span> <span class="op">=</span>
             <span class="ident">ibc::consensus_state_key</span>(<span class="kw-2">&amp;</span><span class="ident">client_id</span>, <span class="ident">height</span>).<span class="ident">to_string</span>();
         <span class="ident">tx_host_env::write</span>(<span class="kw-2">&amp;</span><span class="ident">client_state_key</span>, <span class="ident">new_client_state</span>);
         <span class="ident">tx_host_env::write</span>(<span class="kw-2">&amp;</span><span class="ident">consensus_state_key</span>, <span class="ident">new_consensus_state</span>);
+        <span class="kw">let</span> <span class="ident">event</span> <span class="op">=</span> <span class="ident">ibc::make_upgrade_client_event</span>(<span class="kw-2">&amp;</span><span class="ident">client_id</span>, <span class="kw-2">&amp;</span><span class="ident">data</span>);
+        <span class="ident">tx_host_env::emit_ibc_event</span>(<span class="kw-2">&amp;</span><span class="ident">event</span>.<span class="ident">try_into</span>().<span class="ident">unwrap</span>());
 
         <span class="comment">// Check</span>
-        <span class="kw">let</span> <span class="ident">ibc_vp</span> <span class="op">=</span> <span class="ident">ibc::init_ibc_vp_from_tx</span>(<span class="kw-2">&amp;</span><span class="ident">env</span>, <span class="kw-2">&amp;</span><span class="ident">tx</span>);
+        <span class="kw">let</span> (<span class="ident">ibc_vp</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">ibc::init_ibc_vp_from_tx</span>(<span class="kw-2">&amp;</span><span class="ident">env</span>, <span class="kw-2">&amp;</span><span class="ident">tx</span>);
         <span class="macro">assert!</span>(
             <span class="ident">ibc_vp</span>
                 .<span class="ident">validate</span>(<span class="kw-2">&amp;</span><span class="ident">tx_data</span>)
@@ -2290,9 +2346,11 @@
         <span class="kw">let</span> <span class="ident">conn_key</span> <span class="op">=</span> <span class="ident">ibc::connection_key</span>(<span class="kw-2">&amp;</span><span class="ident">conn_id</span>).<span class="ident">to_string</span>();
         <span class="kw">let</span> <span class="ident">conn</span> <span class="op">=</span> <span class="ident">ibc::open_connection</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">data</span>.<span class="ident">connection</span>());
         <span class="ident">tx_host_env::write</span>(<span class="kw-2">&amp;</span><span class="ident">conn_key</span>, <span class="ident">conn</span>);
+        <span class="kw">let</span> <span class="ident">event</span> <span class="op">=</span> <span class="ident">ibc::make_open_init_connection_event</span>(<span class="kw-2">&amp;</span><span class="ident">conn_id</span>, <span class="kw-2">&amp;</span><span class="ident">data</span>);
+        <span class="ident">tx_host_env::emit_ibc_event</span>(<span class="kw-2">&amp;</span><span class="ident">event</span>.<span class="ident">try_into</span>().<span class="ident">unwrap</span>());
 
         <span class="comment">// Check should fail due to directly opening a connection</span>
-        <span class="kw">let</span> <span class="ident">ibc_vp</span> <span class="op">=</span> <span class="ident">ibc::init_ibc_vp_from_tx</span>(<span class="kw-2">&amp;</span><span class="ident">env</span>, <span class="kw-2">&amp;</span><span class="ident">tx</span>);
+        <span class="kw">let</span> (<span class="ident">ibc_vp</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">ibc::init_ibc_vp_from_tx</span>(<span class="kw-2">&amp;</span><span class="ident">env</span>, <span class="kw-2">&amp;</span><span class="ident">tx</span>);
         <span class="macro">assert!</span>(<span class="macro">matches!</span>(
             <span class="ident">ibc_vp</span>
                 .<span class="ident">validate</span>(<span class="kw-2">&amp;</span><span class="ident">tx_data</span>)
@@ -2320,9 +2378,11 @@
         <span class="kw">let</span> <span class="ident">conn_id</span> <span class="op">=</span> <span class="ident">ibc::connection_id</span>(<span class="ident">counter</span>);
         <span class="kw">let</span> <span class="ident">conn_key</span> <span class="op">=</span> <span class="ident">ibc::connection_key</span>(<span class="kw-2">&amp;</span><span class="ident">conn_id</span>).<span class="ident">to_string</span>();
         <span class="ident">tx_host_env::write</span>(<span class="kw-2">&amp;</span><span class="ident">conn_key</span>, <span class="ident">data</span>.<span class="ident">connection</span>());
+        <span class="kw">let</span> <span class="ident">event</span> <span class="op">=</span> <span class="ident">ibc::make_open_init_connection_event</span>(<span class="kw-2">&amp;</span><span class="ident">conn_id</span>, <span class="kw-2">&amp;</span><span class="ident">data</span>);
+        <span class="ident">tx_host_env::emit_ibc_event</span>(<span class="kw-2">&amp;</span><span class="ident">event</span>.<span class="ident">try_into</span>().<span class="ident">unwrap</span>());
 
         <span class="comment">// Check</span>
-        <span class="kw">let</span> <span class="ident">ibc_vp</span> <span class="op">=</span> <span class="ident">ibc::init_ibc_vp_from_tx</span>(<span class="kw-2">&amp;</span><span class="ident">env</span>, <span class="kw-2">&amp;</span><span class="ident">tx</span>);
+        <span class="kw">let</span> (<span class="ident">ibc_vp</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">ibc::init_ibc_vp_from_tx</span>(<span class="kw-2">&amp;</span><span class="ident">env</span>, <span class="kw-2">&amp;</span><span class="ident">tx</span>);
         <span class="macro">assert!</span>(
             <span class="ident">ibc_vp</span>
                 .<span class="ident">validate</span>(<span class="kw-2">&amp;</span><span class="ident">tx_data</span>)
@@ -2349,9 +2409,11 @@
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">conn</span> <span class="op">=</span> <span class="ident">tx_host_env::read</span>(<span class="kw-2">&amp;</span><span class="ident">conn_key</span>).<span class="ident">expect</span>(<span class="string">&quot;no connection&quot;</span>);
         <span class="ident">ibc::open_connection</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">conn</span>);
         <span class="ident">tx_host_env::write</span>(<span class="kw-2">&amp;</span><span class="ident">conn_key</span>, <span class="ident">conn</span>);
+        <span class="kw">let</span> <span class="ident">event</span> <span class="op">=</span> <span class="ident">ibc::make_open_ack_connection_event</span>(<span class="kw-2">&amp;</span><span class="ident">data</span>);
+        <span class="ident">tx_host_env::emit_ibc_event</span>(<span class="kw-2">&amp;</span><span class="ident">event</span>.<span class="ident">try_into</span>().<span class="ident">unwrap</span>());
 
         <span class="comment">// Check</span>
-        <span class="kw">let</span> <span class="ident">ibc_vp</span> <span class="op">=</span> <span class="ident">ibc::init_ibc_vp_from_tx</span>(<span class="kw-2">&amp;</span><span class="ident">env</span>, <span class="kw-2">&amp;</span><span class="ident">tx</span>);
+        <span class="kw">let</span> (<span class="ident">ibc_vp</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">ibc::init_ibc_vp_from_tx</span>(<span class="kw-2">&amp;</span><span class="ident">env</span>, <span class="kw-2">&amp;</span><span class="ident">tx</span>);
         <span class="macro">assert!</span>(
             <span class="ident">ibc_vp</span>
                 .<span class="ident">validate</span>(<span class="kw-2">&amp;</span><span class="ident">tx_data</span>)
@@ -2392,9 +2454,11 @@
         <span class="kw">let</span> <span class="ident">conn_id</span> <span class="op">=</span> <span class="ident">ibc::connection_id</span>(<span class="ident">counter</span>);
         <span class="kw">let</span> <span class="ident">conn_key</span> <span class="op">=</span> <span class="ident">ibc::connection_key</span>(<span class="kw-2">&amp;</span><span class="ident">conn_id</span>).<span class="ident">to_string</span>();
         <span class="ident">tx_host_env::write</span>(<span class="kw-2">&amp;</span><span class="ident">conn_key</span>, <span class="ident">data</span>.<span class="ident">connection</span>());
+        <span class="kw">let</span> <span class="ident">event</span> <span class="op">=</span> <span class="ident">ibc::make_open_try_connection_event</span>(<span class="kw-2">&amp;</span><span class="ident">conn_id</span>, <span class="kw-2">&amp;</span><span class="ident">data</span>);
+        <span class="ident">tx_host_env::emit_ibc_event</span>(<span class="kw-2">&amp;</span><span class="ident">event</span>.<span class="ident">try_into</span>().<span class="ident">unwrap</span>());
 
         <span class="comment">// Check</span>
-        <span class="kw">let</span> <span class="ident">ibc_vp</span> <span class="op">=</span> <span class="ident">ibc::init_ibc_vp_from_tx</span>(<span class="kw-2">&amp;</span><span class="ident">env</span>, <span class="kw-2">&amp;</span><span class="ident">tx</span>);
+        <span class="kw">let</span> (<span class="ident">ibc_vp</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">ibc::init_ibc_vp_from_tx</span>(<span class="kw-2">&amp;</span><span class="ident">env</span>, <span class="kw-2">&amp;</span><span class="ident">tx</span>);
         <span class="macro">assert!</span>(
             <span class="ident">ibc_vp</span>
                 .<span class="ident">validate</span>(<span class="kw-2">&amp;</span><span class="ident">tx_data</span>)
@@ -2421,9 +2485,11 @@
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">conn</span> <span class="op">=</span> <span class="ident">tx_host_env::read</span>(<span class="kw-2">&amp;</span><span class="ident">conn_key</span>).<span class="ident">expect</span>(<span class="string">&quot;no connection&quot;</span>);
         <span class="ident">ibc::open_connection</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">conn</span>);
         <span class="ident">tx_host_env::write</span>(<span class="kw-2">&amp;</span><span class="ident">conn_key</span>, <span class="ident">conn</span>);
+        <span class="kw">let</span> <span class="ident">event</span> <span class="op">=</span> <span class="ident">ibc::make_open_confirm_connection_event</span>(<span class="kw-2">&amp;</span><span class="ident">data</span>);
+        <span class="ident">tx_host_env::emit_ibc_event</span>(<span class="kw-2">&amp;</span><span class="ident">event</span>.<span class="ident">try_into</span>().<span class="ident">unwrap</span>());
 
         <span class="comment">// Check</span>
-        <span class="kw">let</span> <span class="ident">ibc_vp</span> <span class="op">=</span> <span class="ident">ibc::init_ibc_vp_from_tx</span>(<span class="kw-2">&amp;</span><span class="ident">env</span>, <span class="kw-2">&amp;</span><span class="ident">tx</span>);
+        <span class="kw">let</span> (<span class="ident">ibc_vp</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">ibc::init_ibc_vp_from_tx</span>(<span class="kw-2">&amp;</span><span class="ident">env</span>, <span class="kw-2">&amp;</span><span class="ident">tx</span>);
         <span class="macro">assert!</span>(
             <span class="ident">ibc_vp</span>
                 .<span class="ident">validate</span>(<span class="kw-2">&amp;</span><span class="ident">tx_data</span>)
@@ -2464,12 +2530,14 @@
         <span class="ident">tx_host_env::write</span>(<span class="kw-2">&amp;</span><span class="ident">counter_key</span>, <span class="ident">counter</span> <span class="op">+</span> <span class="number">1</span>);
         <span class="comment">// channel</span>
         <span class="kw">let</span> <span class="ident">channel_id</span> <span class="op">=</span> <span class="ident">ibc::channel_id</span>(<span class="ident">counter</span>);
-        <span class="kw">let</span> <span class="ident">port_channel_id</span> <span class="op">=</span> <span class="ident">ibc::port_channel_id</span>(<span class="ident">port_id</span>, <span class="ident">channel_id</span>);
+        <span class="kw">let</span> <span class="ident">port_channel_id</span> <span class="op">=</span> <span class="ident">ibc::port_channel_id</span>(<span class="ident">port_id</span>, <span class="ident">channel_id</span>.<span class="ident">clone</span>());
         <span class="kw">let</span> <span class="ident">channel_key</span> <span class="op">=</span> <span class="ident">ibc::channel_key</span>(<span class="kw-2">&amp;</span><span class="ident">port_channel_id</span>).<span class="ident">to_string</span>();
         <span class="ident">tx_host_env::write</span>(<span class="kw-2">&amp;</span><span class="ident">channel_key</span>, <span class="ident">data</span>.<span class="ident">channel</span>());
+        <span class="kw">let</span> <span class="ident">event</span> <span class="op">=</span> <span class="ident">ibc::make_open_init_channel_event</span>(<span class="kw-2">&amp;</span><span class="ident">channel_id</span>, <span class="kw-2">&amp;</span><span class="ident">data</span>);
+        <span class="ident">tx_host_env::emit_ibc_event</span>(<span class="kw-2">&amp;</span><span class="ident">event</span>.<span class="ident">try_into</span>().<span class="ident">unwrap</span>());
 
         <span class="comment">// Check should fail due to no port binding</span>
-        <span class="kw">let</span> <span class="ident">ibc_vp</span> <span class="op">=</span> <span class="ident">ibc::init_ibc_vp_from_tx</span>(<span class="kw-2">&amp;</span><span class="ident">env</span>, <span class="kw-2">&amp;</span><span class="ident">tx</span>);
+        <span class="kw">let</span> (<span class="ident">ibc_vp</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">ibc::init_ibc_vp_from_tx</span>(<span class="kw-2">&amp;</span><span class="ident">env</span>, <span class="kw-2">&amp;</span><span class="ident">tx</span>);
         <span class="macro">assert!</span>(<span class="macro">matches!</span>(
             <span class="ident">ibc_vp</span>
                 .<span class="ident">validate</span>(<span class="kw-2">&amp;</span><span class="ident">tx_data</span>)
@@ -2504,13 +2572,15 @@
         <span class="ident">tx_host_env::write</span>(<span class="kw-2">&amp;</span><span class="ident">counter_key</span>, <span class="ident">counter</span> <span class="op">+</span> <span class="number">1</span>);
         <span class="comment">// insert a opened channel</span>
         <span class="kw">let</span> <span class="ident">channel_id</span> <span class="op">=</span> <span class="ident">ibc::channel_id</span>(<span class="ident">counter</span>);
-        <span class="kw">let</span> <span class="ident">port_channel_id</span> <span class="op">=</span> <span class="ident">ibc::port_channel_id</span>(<span class="ident">port_id</span>, <span class="ident">channel_id</span>);
+        <span class="kw">let</span> <span class="ident">port_channel_id</span> <span class="op">=</span> <span class="ident">ibc::port_channel_id</span>(<span class="ident">port_id</span>, <span class="ident">channel_id</span>.<span class="ident">clone</span>());
         <span class="kw">let</span> <span class="ident">channel_key</span> <span class="op">=</span> <span class="ident">ibc::channel_key</span>(<span class="kw-2">&amp;</span><span class="ident">port_channel_id</span>).<span class="ident">to_string</span>();
         <span class="kw">let</span> <span class="ident">channel</span> <span class="op">=</span> <span class="ident">ibc::open_channel</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">data</span>.<span class="ident">channel</span>());
         <span class="ident">tx_host_env::write</span>(<span class="kw-2">&amp;</span><span class="ident">channel_key</span>, <span class="ident">channel</span>);
+        <span class="kw">let</span> <span class="ident">event</span> <span class="op">=</span> <span class="ident">ibc::make_open_init_channel_event</span>(<span class="kw-2">&amp;</span><span class="ident">channel_id</span>, <span class="kw-2">&amp;</span><span class="ident">data</span>);
+        <span class="ident">tx_host_env::emit_ibc_event</span>(<span class="kw-2">&amp;</span><span class="ident">event</span>.<span class="ident">try_into</span>().<span class="ident">unwrap</span>());
 
         <span class="comment">// Check should fail due to directly opening a channel</span>
-        <span class="kw">let</span> <span class="ident">ibc_vp</span> <span class="op">=</span> <span class="ident">ibc::init_ibc_vp_from_tx</span>(<span class="kw-2">&amp;</span><span class="ident">env</span>, <span class="kw-2">&amp;</span><span class="ident">tx</span>);
+        <span class="kw">let</span> (<span class="ident">ibc_vp</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">ibc::init_ibc_vp_from_tx</span>(<span class="kw-2">&amp;</span><span class="ident">env</span>, <span class="kw-2">&amp;</span><span class="ident">tx</span>);
         <span class="macro">assert!</span>(<span class="macro">matches!</span>(
             <span class="ident">ibc_vp</span>
                 .<span class="ident">validate</span>(<span class="kw-2">&amp;</span><span class="ident">tx_data</span>)
@@ -2549,9 +2619,11 @@
             <span class="ident">ibc::port_channel_id</span>(<span class="ident">port_id</span>.<span class="ident">clone</span>(), <span class="ident">channel_id</span>.<span class="ident">clone</span>());
         <span class="kw">let</span> <span class="ident">channel_key</span> <span class="op">=</span> <span class="ident">ibc::channel_key</span>(<span class="kw-2">&amp;</span><span class="ident">port_channel_id</span>).<span class="ident">to_string</span>();
         <span class="ident">tx_host_env::write</span>(<span class="kw-2">&amp;</span><span class="ident">channel_key</span>, <span class="ident">data</span>.<span class="ident">channel</span>());
+        <span class="kw">let</span> <span class="ident">event</span> <span class="op">=</span> <span class="ident">ibc::make_open_init_channel_event</span>(<span class="kw-2">&amp;</span><span class="ident">channel_id</span>, <span class="kw-2">&amp;</span><span class="ident">data</span>);
+        <span class="ident">tx_host_env::emit_ibc_event</span>(<span class="kw-2">&amp;</span><span class="ident">event</span>.<span class="ident">try_into</span>().<span class="ident">unwrap</span>());
 
         <span class="comment">// Check</span>
-        <span class="kw">let</span> <span class="ident">ibc_vp</span> <span class="op">=</span> <span class="ident">ibc::init_ibc_vp_from_tx</span>(<span class="kw-2">&amp;</span><span class="ident">env</span>, <span class="kw-2">&amp;</span><span class="ident">tx</span>);
+        <span class="kw">let</span> (<span class="ident">ibc_vp</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">ibc::init_ibc_vp_from_tx</span>(<span class="kw-2">&amp;</span><span class="ident">env</span>, <span class="kw-2">&amp;</span><span class="ident">tx</span>);
         <span class="macro">assert!</span>(
             <span class="ident">ibc_vp</span>
                 .<span class="ident">validate</span>(<span class="kw-2">&amp;</span><span class="ident">tx_data</span>)
@@ -2573,14 +2645,16 @@
         };
         <span class="comment">// update the channel</span>
         <span class="kw">let</span> <span class="ident">port_channel_id</span> <span class="op">=</span>
-            <span class="ident">ibc::port_channel_id</span>(<span class="ident">data</span>.<span class="ident">port_id</span>, <span class="ident">data</span>.<span class="ident">channel_id</span>);
+            <span class="ident">ibc::port_channel_id</span>(<span class="ident">data</span>.<span class="ident">port_id</span>.<span class="ident">clone</span>(), <span class="ident">data</span>.<span class="ident">channel_id</span>.<span class="ident">clone</span>());
         <span class="kw">let</span> <span class="ident">channel_key</span> <span class="op">=</span> <span class="ident">ibc::channel_key</span>(<span class="kw-2">&amp;</span><span class="ident">port_channel_id</span>).<span class="ident">to_string</span>();
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">channel</span> <span class="op">=</span> <span class="ident">tx_host_env::read</span>(<span class="kw-2">&amp;</span><span class="ident">channel_key</span>).<span class="ident">expect</span>(<span class="string">&quot;no channel&quot;</span>);
         <span class="ident">ibc::open_channel</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">channel</span>);
         <span class="ident">tx_host_env::write</span>(<span class="kw-2">&amp;</span><span class="ident">channel_key</span>, <span class="ident">channel</span>);
+        <span class="kw">let</span> <span class="ident">event</span> <span class="op">=</span> <span class="ident">ibc::make_open_ack_channel_event</span>(<span class="kw-2">&amp;</span><span class="ident">data</span>);
+        <span class="ident">tx_host_env::emit_ibc_event</span>(<span class="kw-2">&amp;</span><span class="ident">event</span>.<span class="ident">try_into</span>().<span class="ident">unwrap</span>());
 
         <span class="comment">// Check</span>
-        <span class="kw">let</span> <span class="ident">ibc_vp</span> <span class="op">=</span> <span class="ident">ibc::init_ibc_vp_from_tx</span>(<span class="kw-2">&amp;</span><span class="ident">env</span>, <span class="kw-2">&amp;</span><span class="ident">tx</span>);
+        <span class="kw">let</span> (<span class="ident">ibc_vp</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">ibc::init_ibc_vp_from_tx</span>(<span class="kw-2">&amp;</span><span class="ident">env</span>, <span class="kw-2">&amp;</span><span class="ident">tx</span>);
         <span class="macro">assert!</span>(
             <span class="ident">ibc_vp</span>
                 .<span class="ident">validate</span>(<span class="kw-2">&amp;</span><span class="ident">tx_data</span>)
@@ -2632,9 +2706,11 @@
             <span class="ident">ibc::port_channel_id</span>(<span class="ident">port_id</span>.<span class="ident">clone</span>(), <span class="ident">channel_id</span>.<span class="ident">clone</span>());
         <span class="kw">let</span> <span class="ident">channel_key</span> <span class="op">=</span> <span class="ident">ibc::channel_key</span>(<span class="kw-2">&amp;</span><span class="ident">port_channel_id</span>).<span class="ident">to_string</span>();
         <span class="ident">tx_host_env::write</span>(<span class="kw-2">&amp;</span><span class="ident">channel_key</span>, <span class="ident">data</span>.<span class="ident">channel</span>());
+        <span class="kw">let</span> <span class="ident">event</span> <span class="op">=</span> <span class="ident">ibc::make_open_try_channel_event</span>(<span class="kw-2">&amp;</span><span class="ident">channel_id</span>, <span class="kw-2">&amp;</span><span class="ident">data</span>);
+        <span class="ident">tx_host_env::emit_ibc_event</span>(<span class="kw-2">&amp;</span><span class="ident">event</span>.<span class="ident">try_into</span>().<span class="ident">unwrap</span>());
 
         <span class="comment">// Check</span>
-        <span class="kw">let</span> <span class="ident">ibc_vp</span> <span class="op">=</span> <span class="ident">ibc::init_ibc_vp_from_tx</span>(<span class="kw-2">&amp;</span><span class="ident">env</span>, <span class="kw-2">&amp;</span><span class="ident">tx</span>);
+        <span class="kw">let</span> (<span class="ident">ibc_vp</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">ibc::init_ibc_vp_from_tx</span>(<span class="kw-2">&amp;</span><span class="ident">env</span>, <span class="kw-2">&amp;</span><span class="ident">tx</span>);
         <span class="macro">assert!</span>(
             <span class="ident">ibc_vp</span>
                 .<span class="ident">validate</span>(<span class="kw-2">&amp;</span><span class="ident">tx_data</span>)
@@ -2656,14 +2732,16 @@
         };
         <span class="comment">// update the channel</span>
         <span class="kw">let</span> <span class="ident">port_channel_id</span> <span class="op">=</span>
-            <span class="ident">ibc::port_channel_id</span>(<span class="ident">data</span>.<span class="ident">port_id</span>, <span class="ident">data</span>.<span class="ident">channel_id</span>);
+            <span class="ident">ibc::port_channel_id</span>(<span class="ident">data</span>.<span class="ident">port_id</span>.<span class="ident">clone</span>(), <span class="ident">data</span>.<span class="ident">channel_id</span>.<span class="ident">clone</span>());
         <span class="kw">let</span> <span class="ident">channel_key</span> <span class="op">=</span> <span class="ident">ibc::channel_key</span>(<span class="kw-2">&amp;</span><span class="ident">port_channel_id</span>).<span class="ident">to_string</span>();
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">channel</span> <span class="op">=</span> <span class="ident">tx_host_env::read</span>(<span class="kw-2">&amp;</span><span class="ident">channel_key</span>).<span class="ident">expect</span>(<span class="string">&quot;no channel&quot;</span>);
         <span class="ident">ibc::open_channel</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">channel</span>);
         <span class="ident">tx_host_env::write</span>(<span class="kw-2">&amp;</span><span class="ident">channel_key</span>, <span class="ident">channel</span>);
+        <span class="kw">let</span> <span class="ident">event</span> <span class="op">=</span> <span class="ident">ibc::make_open_confirm_channel_event</span>(<span class="kw-2">&amp;</span><span class="ident">data</span>);
+        <span class="ident">tx_host_env::emit_ibc_event</span>(<span class="kw-2">&amp;</span><span class="ident">event</span>.<span class="ident">try_into</span>().<span class="ident">unwrap</span>());
 
         <span class="comment">// Check</span>
-        <span class="kw">let</span> <span class="ident">ibc_vp</span> <span class="op">=</span> <span class="ident">ibc::init_ibc_vp_from_tx</span>(<span class="kw-2">&amp;</span><span class="ident">env</span>, <span class="kw-2">&amp;</span><span class="ident">tx</span>);
+        <span class="kw">let</span> (<span class="ident">ibc_vp</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">ibc::init_ibc_vp_from_tx</span>(<span class="kw-2">&amp;</span><span class="ident">env</span>, <span class="kw-2">&amp;</span><span class="ident">tx</span>);
         <span class="macro">assert!</span>(
             <span class="ident">ibc_vp</span>
                 .<span class="ident">validate</span>(<span class="kw-2">&amp;</span><span class="ident">tx_data</span>)
@@ -2701,14 +2779,16 @@
 
         <span class="comment">// close the channel</span>
         <span class="kw">let</span> <span class="ident">port_channel_id</span> <span class="op">=</span>
-            <span class="ident">ibc::port_channel_id</span>(<span class="ident">data</span>.<span class="ident">port_id</span>, <span class="ident">data</span>.<span class="ident">channel_id</span>);
+            <span class="ident">ibc::port_channel_id</span>(<span class="ident">data</span>.<span class="ident">port_id</span>.<span class="ident">clone</span>(), <span class="ident">data</span>.<span class="ident">channel_id</span>.<span class="ident">clone</span>());
         <span class="kw">let</span> <span class="ident">channel_key</span> <span class="op">=</span> <span class="ident">ibc::channel_key</span>(<span class="kw-2">&amp;</span><span class="ident">port_channel_id</span>).<span class="ident">to_string</span>();
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">channel</span> <span class="op">=</span> <span class="ident">tx_host_env::read</span>(<span class="kw-2">&amp;</span><span class="ident">channel_key</span>).<span class="ident">expect</span>(<span class="string">&quot;no channel&quot;</span>);
         <span class="ident">ibc::close_channel</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">channel</span>);
         <span class="ident">tx_host_env::write</span>(<span class="kw-2">&amp;</span><span class="ident">channel_key</span>, <span class="ident">channel</span>);
+        <span class="kw">let</span> <span class="ident">event</span> <span class="op">=</span> <span class="ident">ibc::make_close_init_channel_event</span>(<span class="kw-2">&amp;</span><span class="ident">data</span>);
+        <span class="ident">tx_host_env::emit_ibc_event</span>(<span class="kw-2">&amp;</span><span class="ident">event</span>.<span class="ident">try_into</span>().<span class="ident">unwrap</span>());
 
         <span class="comment">// Check</span>
-        <span class="kw">let</span> <span class="ident">ibc_vp</span> <span class="op">=</span> <span class="ident">ibc::init_ibc_vp_from_tx</span>(<span class="kw-2">&amp;</span><span class="ident">env</span>, <span class="kw-2">&amp;</span><span class="ident">tx</span>);
+        <span class="kw">let</span> (<span class="ident">ibc_vp</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">ibc::init_ibc_vp_from_tx</span>(<span class="kw-2">&amp;</span><span class="ident">env</span>, <span class="kw-2">&amp;</span><span class="ident">tx</span>);
         <span class="macro">assert!</span>(
             <span class="ident">ibc_vp</span>
                 .<span class="ident">validate</span>(<span class="kw-2">&amp;</span><span class="ident">tx_data</span>)
@@ -2746,14 +2826,16 @@
 
         <span class="comment">// close the channel</span>
         <span class="kw">let</span> <span class="ident">port_channel_id</span> <span class="op">=</span>
-            <span class="ident">ibc::port_channel_id</span>(<span class="ident">data</span>.<span class="ident">port_id</span>, <span class="ident">data</span>.<span class="ident">channel_id</span>);
+            <span class="ident">ibc::port_channel_id</span>(<span class="ident">data</span>.<span class="ident">port_id</span>.<span class="ident">clone</span>(), <span class="ident">data</span>.<span class="ident">channel_id</span>.<span class="ident">clone</span>());
         <span class="kw">let</span> <span class="ident">channel_key</span> <span class="op">=</span> <span class="ident">ibc::channel_key</span>(<span class="kw-2">&amp;</span><span class="ident">port_channel_id</span>).<span class="ident">to_string</span>();
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">channel</span> <span class="op">=</span> <span class="ident">tx_host_env::read</span>(<span class="kw-2">&amp;</span><span class="ident">channel_key</span>).<span class="ident">expect</span>(<span class="string">&quot;no channel&quot;</span>);
         <span class="ident">ibc::close_channel</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">channel</span>);
         <span class="ident">tx_host_env::write</span>(<span class="kw-2">&amp;</span><span class="ident">channel_key</span>, <span class="ident">channel</span>);
+        <span class="kw">let</span> <span class="ident">event</span> <span class="op">=</span> <span class="ident">ibc::make_close_confirm_channel_event</span>(<span class="kw-2">&amp;</span><span class="ident">data</span>);
+        <span class="ident">tx_host_env::emit_ibc_event</span>(<span class="kw-2">&amp;</span><span class="ident">event</span>.<span class="ident">try_into</span>().<span class="ident">unwrap</span>());
 
         <span class="comment">// Check</span>
-        <span class="kw">let</span> <span class="ident">ibc_vp</span> <span class="op">=</span> <span class="ident">ibc::init_ibc_vp_from_tx</span>(<span class="kw-2">&amp;</span><span class="ident">env</span>, <span class="kw-2">&amp;</span><span class="ident">tx</span>);
+        <span class="kw">let</span> (<span class="ident">ibc_vp</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">ibc::init_ibc_vp_from_tx</span>(<span class="kw-2">&amp;</span><span class="ident">env</span>, <span class="kw-2">&amp;</span><span class="ident">tx</span>);
         <span class="macro">assert!</span>(
             <span class="ident">ibc_vp</span>
                 .<span class="ident">validate</span>(<span class="kw-2">&amp;</span><span class="ident">tx_data</span>)
@@ -2805,11 +2887,13 @@
                 .<span class="ident">to_string</span>();
         <span class="kw">let</span> <span class="ident">commitment</span> <span class="op">=</span> <span class="ident">ibc::commitment</span>(<span class="kw-2">&amp;</span><span class="ident">packet</span>);
         <span class="ident">tx_host_env::write</span>(<span class="kw-2">&amp;</span><span class="ident">commitment_key</span>, <span class="ident">commitment</span>);
+        <span class="kw">let</span> <span class="ident">event</span> <span class="op">=</span> <span class="ident">ibc::make_send_packet_event</span>(<span class="ident">packet</span>.<span class="ident">clone</span>());
+        <span class="ident">tx_host_env::emit_ibc_event</span>(<span class="kw-2">&amp;</span><span class="ident">event</span>.<span class="ident">try_into</span>().<span class="ident">unwrap</span>());
 
         <span class="comment">// the transaction does something before senging a packet</span>
 
         <span class="comment">// Check</span>
-        <span class="kw">let</span> <span class="ident">ibc_vp</span> <span class="op">=</span> <span class="ident">ibc::init_ibc_vp_from_tx</span>(<span class="kw-2">&amp;</span><span class="ident">env</span>, <span class="kw-2">&amp;</span><span class="ident">tx</span>);
+        <span class="kw">let</span> (<span class="ident">ibc_vp</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">ibc::init_ibc_vp_from_tx</span>(<span class="kw-2">&amp;</span><span class="ident">env</span>, <span class="kw-2">&amp;</span><span class="ident">tx</span>);
         <span class="macro">assert!</span>(
             <span class="ident">ibc_vp</span>
                 .<span class="ident">validate</span>(<span class="kw-2">&amp;</span><span class="ident">tx_data</span>)
@@ -2832,8 +2916,8 @@
 
         <span class="comment">// delete the commitment</span>
         <span class="kw">let</span> <span class="ident">packet</span> <span class="op">=</span> <span class="ident">data</span>.<span class="ident">packet</span>;
-        <span class="kw">let</span> <span class="ident">port_id</span> <span class="op">=</span> <span class="ident">packet</span>.<span class="ident">source_port</span>;
-        <span class="kw">let</span> <span class="ident">channel_id</span> <span class="op">=</span> <span class="ident">packet</span>.<span class="ident">source_channel</span>;
+        <span class="kw">let</span> <span class="ident">port_id</span> <span class="op">=</span> <span class="ident">packet</span>.<span class="ident">source_port</span>.<span class="ident">clone</span>();
+        <span class="kw">let</span> <span class="ident">channel_id</span> <span class="op">=</span> <span class="ident">packet</span>.<span class="ident">source_channel</span>.<span class="ident">clone</span>();
         <span class="kw">let</span> <span class="ident">commitment_key</span> <span class="op">=</span>
             <span class="ident">ibc::commitment_key</span>(<span class="kw-2">&amp;</span><span class="ident">port_id</span>, <span class="kw-2">&amp;</span><span class="ident">channel_id</span>, <span class="ident">packet</span>.<span class="ident">sequence</span>)
                 .<span class="ident">to_string</span>();
@@ -2843,11 +2927,13 @@
             <span class="ident">ibc::next_sequence_ack_key</span>(<span class="kw-2">&amp;</span><span class="ident">port_channel_id</span>).<span class="ident">to_string</span>();
         <span class="kw">let</span> <span class="ident">seq_index</span>: <span class="ident">u64</span> <span class="op">=</span> <span class="ident">tx_host_env::read</span>(<span class="kw-2">&amp;</span><span class="ident">next_seq_ack_key</span>).<span class="ident">unwrap_or</span>(<span class="number">1</span>);
         <span class="ident">tx_host_env::write</span>(<span class="kw-2">&amp;</span><span class="ident">next_seq_ack_key</span>, <span class="ident">seq_index</span> <span class="op">+</span> <span class="number">1</span>);
+        <span class="kw">let</span> <span class="ident">event</span> <span class="op">=</span> <span class="ident">ibc::make_ack_event</span>(<span class="ident">packet</span>);
+        <span class="ident">tx_host_env::emit_ibc_event</span>(<span class="kw-2">&amp;</span><span class="ident">event</span>.<span class="ident">try_into</span>().<span class="ident">unwrap</span>());
 
         <span class="comment">// the transaction does something after the ack</span>
 
         <span class="comment">// Check</span>
-        <span class="kw">let</span> <span class="ident">ibc_vp</span> <span class="op">=</span> <span class="ident">ibc::init_ibc_vp_from_tx</span>(<span class="kw-2">&amp;</span><span class="ident">env</span>, <span class="kw-2">&amp;</span><span class="ident">tx</span>);
+        <span class="kw">let</span> (<span class="ident">ibc_vp</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">ibc::init_ibc_vp_from_tx</span>(<span class="kw-2">&amp;</span><span class="ident">env</span>, <span class="kw-2">&amp;</span><span class="ident">tx</span>);
         <span class="macro">assert!</span>(
             <span class="ident">ibc_vp</span>
                 .<span class="ident">validate</span>(<span class="kw-2">&amp;</span><span class="ident">tx_data</span>)
@@ -2910,7 +2996,7 @@
         <span class="comment">// the transaction does something according to the packet</span>
 
         <span class="comment">// Check</span>
-        <span class="kw">let</span> <span class="ident">ibc_vp</span> <span class="op">=</span> <span class="ident">ibc::init_ibc_vp_from_tx</span>(<span class="kw-2">&amp;</span><span class="ident">env</span>, <span class="kw-2">&amp;</span><span class="ident">tx</span>);
+        <span class="kw">let</span> (<span class="ident">ibc_vp</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">ibc::init_ibc_vp_from_tx</span>(<span class="kw-2">&amp;</span><span class="ident">env</span>, <span class="kw-2">&amp;</span><span class="ident">tx</span>);
         <span class="macro">assert!</span>(
             <span class="ident">ibc_vp</span>
                 .<span class="ident">validate</span>(<span class="kw-2">&amp;</span><span class="ident">tx_data</span>)
@@ -2962,11 +3048,13 @@
                 .<span class="ident">to_string</span>();
         <span class="kw">let</span> <span class="ident">commitment</span> <span class="op">=</span> <span class="ident">ibc::commitment</span>(<span class="kw-2">&amp;</span><span class="ident">packet</span>);
         <span class="ident">tx_host_env::write</span>(<span class="kw-2">&amp;</span><span class="ident">commitment_key</span>, <span class="ident">commitment</span>);
+        <span class="kw">let</span> <span class="ident">event</span> <span class="op">=</span> <span class="ident">ibc::make_send_packet_event</span>(<span class="ident">packet</span>.<span class="ident">clone</span>());
+        <span class="ident">tx_host_env::emit_ibc_event</span>(<span class="kw-2">&amp;</span><span class="ident">event</span>.<span class="ident">try_into</span>().<span class="ident">unwrap</span>());
 
         <span class="comment">// the transaction does something before senging a packet</span>
 
         <span class="comment">// Check</span>
-        <span class="kw">let</span> <span class="ident">ibc_vp</span> <span class="op">=</span> <span class="ident">ibc::init_ibc_vp_from_tx</span>(<span class="kw-2">&amp;</span><span class="ident">env</span>, <span class="kw-2">&amp;</span><span class="ident">tx</span>);
+        <span class="kw">let</span> (<span class="ident">ibc_vp</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">ibc::init_ibc_vp_from_tx</span>(<span class="kw-2">&amp;</span><span class="ident">env</span>, <span class="kw-2">&amp;</span><span class="ident">tx</span>);
         <span class="macro">assert!</span>(
             <span class="ident">ibc_vp</span>
                 .<span class="ident">validate</span>(<span class="kw-2">&amp;</span><span class="ident">tx_data</span>)
@@ -3004,7 +3092,7 @@
         <span class="comment">// the transaction does something after the ack</span>
 
         <span class="comment">// Check</span>
-        <span class="kw">let</span> <span class="ident">ibc_vp</span> <span class="op">=</span> <span class="ident">ibc::init_ibc_vp_from_tx</span>(<span class="kw-2">&amp;</span><span class="ident">env</span>, <span class="kw-2">&amp;</span><span class="ident">tx</span>);
+        <span class="kw">let</span> (<span class="ident">ibc_vp</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">ibc::init_ibc_vp_from_tx</span>(<span class="kw-2">&amp;</span><span class="ident">env</span>, <span class="kw-2">&amp;</span><span class="ident">tx</span>);
         <span class="macro">assert!</span>(
             <span class="ident">ibc_vp</span>
                 .<span class="ident">validate</span>(<span class="kw-2">&amp;</span><span class="ident">tx_data</span>)
@@ -3061,7 +3149,7 @@
         <span class="comment">// the transaction does something according to the packet</span>
 
         <span class="comment">// Check</span>
-        <span class="kw">let</span> <span class="ident">ibc_vp</span> <span class="op">=</span> <span class="ident">ibc::init_ibc_vp_from_tx</span>(<span class="kw-2">&amp;</span><span class="ident">env</span>, <span class="kw-2">&amp;</span><span class="ident">tx</span>);
+        <span class="kw">let</span> (<span class="ident">ibc_vp</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">ibc::init_ibc_vp_from_tx</span>(<span class="kw-2">&amp;</span><span class="ident">env</span>, <span class="kw-2">&amp;</span><span class="ident">tx</span>);
         <span class="macro">assert!</span>(
             <span class="ident">ibc_vp</span>
                 .<span class="ident">validate</span>(<span class="kw-2">&amp;</span><span class="ident">tx_data</span>)
@@ -3108,6 +3196,8 @@
                 .<span class="ident">to_string</span>();
         <span class="kw">let</span> <span class="ident">commitment</span> <span class="op">=</span> <span class="ident">ibc::commitment</span>(<span class="kw-2">&amp;</span><span class="ident">packet</span>);
         <span class="ident">tx_host_env::write</span>(<span class="kw-2">&amp;</span><span class="ident">commitment_key</span>, <span class="ident">commitment</span>);
+        <span class="kw">let</span> <span class="ident">event</span> <span class="op">=</span> <span class="ident">ibc::make_send_packet_event</span>(<span class="ident">packet</span>.<span class="ident">clone</span>());
+        <span class="ident">tx_host_env::emit_ibc_event</span>(<span class="kw-2">&amp;</span><span class="ident">event</span>.<span class="ident">try_into</span>().<span class="ident">unwrap</span>());
 
         <span class="comment">// Commit</span>
         <span class="ident">env</span>.<span class="ident">write_log</span>.<span class="ident">commit_tx</span>();
@@ -3124,8 +3214,8 @@
 
         <span class="comment">// close the channel</span>
         <span class="kw">let</span> <span class="ident">packet</span> <span class="op">=</span> <span class="ident">data</span>.<span class="ident">packet</span>;
-        <span class="kw">let</span> <span class="ident">port_id</span> <span class="op">=</span> <span class="ident">packet</span>.<span class="ident">source_port</span>;
-        <span class="kw">let</span> <span class="ident">channel_id</span> <span class="op">=</span> <span class="ident">packet</span>.<span class="ident">source_channel</span>;
+        <span class="kw">let</span> <span class="ident">port_id</span> <span class="op">=</span> <span class="ident">packet</span>.<span class="ident">source_port</span>.<span class="ident">clone</span>();
+        <span class="kw">let</span> <span class="ident">channel_id</span> <span class="op">=</span> <span class="ident">packet</span>.<span class="ident">source_channel</span>.<span class="ident">clone</span>();
         <span class="kw">let</span> <span class="ident">port_channel_id</span> <span class="op">=</span>
             <span class="ident">ibc::port_channel_id</span>(<span class="ident">port_id</span>.<span class="ident">clone</span>(), <span class="ident">channel_id</span>.<span class="ident">clone</span>());
         <span class="kw">let</span> <span class="ident">channel_key</span> <span class="op">=</span> <span class="ident">ibc::channel_key</span>(<span class="kw-2">&amp;</span><span class="ident">port_channel_id</span>).<span class="ident">to_string</span>();
@@ -3137,9 +3227,11 @@
             <span class="ident">ibc::commitment_key</span>(<span class="kw-2">&amp;</span><span class="ident">port_id</span>, <span class="kw-2">&amp;</span><span class="ident">channel_id</span>, <span class="ident">packet</span>.<span class="ident">sequence</span>)
                 .<span class="ident">to_string</span>();
         <span class="ident">tx_host_env::delete</span>(<span class="kw-2">&amp;</span><span class="ident">commitment_key</span>);
+        <span class="kw">let</span> <span class="ident">event</span> <span class="op">=</span> <span class="ident">ibc::make_timeout_event</span>(<span class="ident">packet</span>);
+        <span class="ident">tx_host_env::emit_ibc_event</span>(<span class="kw-2">&amp;</span><span class="ident">event</span>.<span class="ident">try_into</span>().<span class="ident">unwrap</span>());
 
         <span class="comment">// Check</span>
-        <span class="kw">let</span> <span class="ident">ibc_vp</span> <span class="op">=</span> <span class="ident">ibc::init_ibc_vp_from_tx</span>(<span class="kw-2">&amp;</span><span class="ident">env</span>, <span class="kw-2">&amp;</span><span class="ident">tx</span>);
+        <span class="kw">let</span> (<span class="ident">ibc_vp</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">ibc::init_ibc_vp_from_tx</span>(<span class="kw-2">&amp;</span><span class="ident">env</span>, <span class="kw-2">&amp;</span><span class="ident">tx</span>);
         <span class="macro">assert!</span>(
             <span class="ident">ibc_vp</span>
                 .<span class="ident">validate</span>(<span class="kw-2">&amp;</span><span class="ident">tx_data</span>)
@@ -3185,6 +3277,8 @@
                 .<span class="ident">to_string</span>();
         <span class="kw">let</span> <span class="ident">commitment</span> <span class="op">=</span> <span class="ident">ibc::commitment</span>(<span class="kw-2">&amp;</span><span class="ident">packet</span>);
         <span class="ident">tx_host_env::write</span>(<span class="kw-2">&amp;</span><span class="ident">commitment_key</span>, <span class="ident">commitment</span>);
+        <span class="kw">let</span> <span class="ident">event</span> <span class="op">=</span> <span class="ident">ibc::make_send_packet_event</span>(<span class="ident">packet</span>.<span class="ident">clone</span>());
+        <span class="ident">tx_host_env::emit_ibc_event</span>(<span class="kw-2">&amp;</span><span class="ident">event</span>.<span class="ident">try_into</span>().<span class="ident">unwrap</span>());
 
         <span class="comment">// Commit</span>
         <span class="ident">env</span>.<span class="ident">write_log</span>.<span class="ident">commit_tx</span>();
@@ -3201,8 +3295,8 @@
 
         <span class="comment">// close the channel</span>
         <span class="kw">let</span> <span class="ident">packet</span> <span class="op">=</span> <span class="ident">data</span>.<span class="ident">packet</span>;
-        <span class="kw">let</span> <span class="ident">port_id</span> <span class="op">=</span> <span class="ident">packet</span>.<span class="ident">source_port</span>;
-        <span class="kw">let</span> <span class="ident">channel_id</span> <span class="op">=</span> <span class="ident">packet</span>.<span class="ident">source_channel</span>;
+        <span class="kw">let</span> <span class="ident">port_id</span> <span class="op">=</span> <span class="ident">packet</span>.<span class="ident">source_port</span>.<span class="ident">clone</span>();
+        <span class="kw">let</span> <span class="ident">channel_id</span> <span class="op">=</span> <span class="ident">packet</span>.<span class="ident">source_channel</span>.<span class="ident">clone</span>();
         <span class="kw">let</span> <span class="ident">port_channel_id</span> <span class="op">=</span>
             <span class="ident">ibc::port_channel_id</span>(<span class="ident">port_id</span>.<span class="ident">clone</span>(), <span class="ident">channel_id</span>.<span class="ident">clone</span>());
         <span class="kw">let</span> <span class="ident">channel_key</span> <span class="op">=</span> <span class="ident">ibc::channel_key</span>(<span class="kw-2">&amp;</span><span class="ident">port_channel_id</span>).<span class="ident">to_string</span>();
@@ -3216,7 +3310,7 @@
         <span class="ident">tx_host_env::delete</span>(<span class="kw-2">&amp;</span><span class="ident">commitment_key</span>);
 
         <span class="comment">// Check</span>
-        <span class="kw">let</span> <span class="ident">ibc_vp</span> <span class="op">=</span> <span class="ident">ibc::init_ibc_vp_from_tx</span>(<span class="kw-2">&amp;</span><span class="ident">env</span>, <span class="kw-2">&amp;</span><span class="ident">tx</span>);
+        <span class="kw">let</span> (<span class="ident">ibc_vp</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">ibc::init_ibc_vp_from_tx</span>(<span class="kw-2">&amp;</span><span class="ident">env</span>, <span class="kw-2">&amp;</span><span class="ident">tx</span>);
         <span class="macro">assert!</span>(
             <span class="ident">ibc_vp</span>
                 .<span class="ident">validate</span>(<span class="kw-2">&amp;</span><span class="ident">tx_data</span>)

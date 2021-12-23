@@ -1,1 +1,1 @@
-initSidebarItems({"enum":[["Error",""]],"fn":[["init_genesis_storage","Initialize storage in the genesis block."]],"mod":[["storage","Functions for IBC validity predicate to access the storage"]],"struct":[["Ibc","IBC VP"]],"type":[["Result","IBC functions result"]]});
+initSidebarItems({"fn":[["init_genesis_storage","Initialize storage in the genesis block."]],"mod":[["handler","Functions to handle IBC modules"],["storage","Functions for IBC-related data to access the storage"],["vp","IBC integration as a native validity predicate"]]});

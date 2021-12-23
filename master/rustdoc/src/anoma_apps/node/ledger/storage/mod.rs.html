@@ -296,7 +296,7 @@
         <span class="kw">let</span> <span class="ident">db_path</span> <span class="op">=</span>
             <span class="ident">TempDir::new</span>().<span class="ident">expect</span>(<span class="string">&quot;Unable to create a temporary DB directory&quot;</span>);
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">storage</span> <span class="op">=</span>
-            <span class="ident">PersistentStorage::open</span>(<span class="ident">db_path</span>.<span class="ident">path</span>(), <span class="ident">ChainId::default</span>());
+            <span class="ident">PersistentStorage::open</span>(<span class="ident">db_path</span>.<span class="ident">path</span>(), <span class="ident">ChainId::default</span>(), <span class="prelude-val">None</span>);
         <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span>
             <span class="ident">Key::parse</span>(<span class="string">&quot;key&quot;</span>.<span class="ident">to_owned</span>()).<span class="ident">expect</span>(<span class="string">&quot;cannot parse the key string&quot;</span>);
         <span class="kw">let</span> <span class="ident">value</span>: <span class="ident">u64</span> <span class="op">=</span> <span class="number">1</span>;
@@ -340,7 +340,7 @@
         <span class="kw">let</span> <span class="ident">db_path</span> <span class="op">=</span>
             <span class="ident">TempDir::new</span>().<span class="ident">expect</span>(<span class="string">&quot;Unable to create a temporary DB directory&quot;</span>);
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">storage</span> <span class="op">=</span>
-            <span class="ident">PersistentStorage::open</span>(<span class="ident">db_path</span>.<span class="ident">path</span>(), <span class="ident">ChainId::default</span>());
+            <span class="ident">PersistentStorage::open</span>(<span class="ident">db_path</span>.<span class="ident">path</span>(), <span class="ident">ChainId::default</span>(), <span class="prelude-val">None</span>);
         <span class="ident">storage</span>
             .<span class="ident">begin_block</span>(<span class="ident">BlockHash::default</span>(), <span class="ident">BlockHeight</span>(<span class="number">100</span>))
             .<span class="ident">expect</span>(<span class="string">&quot;begin_block failed&quot;</span>);
@@ -363,7 +363,7 @@
 
         <span class="comment">// load the last state</span>
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">storage</span> <span class="op">=</span>
-            <span class="ident">PersistentStorage::open</span>(<span class="ident">db_path</span>.<span class="ident">path</span>(), <span class="ident">ChainId::default</span>());
+            <span class="ident">PersistentStorage::open</span>(<span class="ident">db_path</span>.<span class="ident">path</span>(), <span class="ident">ChainId::default</span>(), <span class="prelude-val">None</span>);
         <span class="ident">storage</span>
             .<span class="ident">load_last_state</span>()
             .<span class="ident">expect</span>(<span class="string">&quot;loading the last state failed&quot;</span>);
@@ -382,7 +382,7 @@
         <span class="kw">let</span> <span class="ident">db_path</span> <span class="op">=</span>
             <span class="ident">TempDir::new</span>().<span class="ident">expect</span>(<span class="string">&quot;Unable to create a temporary DB directory&quot;</span>);
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">storage</span> <span class="op">=</span>
-            <span class="ident">PersistentStorage::open</span>(<span class="ident">db_path</span>.<span class="ident">path</span>(), <span class="ident">ChainId::default</span>());
+            <span class="ident">PersistentStorage::open</span>(<span class="ident">db_path</span>.<span class="ident">path</span>(), <span class="ident">ChainId::default</span>(), <span class="prelude-val">None</span>);
         <span class="ident">storage</span>
             .<span class="ident">begin_block</span>(<span class="ident">BlockHash::default</span>(), <span class="ident">BlockHeight</span>(<span class="number">100</span>))
             .<span class="ident">expect</span>(<span class="string">&quot;begin_block failed&quot;</span>);
@@ -423,7 +423,7 @@
         <span class="kw">let</span> <span class="ident">db_path</span> <span class="op">=</span>
             <span class="ident">TempDir::new</span>().<span class="ident">expect</span>(<span class="string">&quot;Unable to create a temporary DB directory&quot;</span>);
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">storage</span> <span class="op">=</span>
-            <span class="ident">PersistentStorage::open</span>(<span class="ident">db_path</span>.<span class="ident">path</span>(), <span class="ident">ChainId::default</span>());
+            <span class="ident">PersistentStorage::open</span>(<span class="ident">db_path</span>.<span class="ident">path</span>(), <span class="ident">ChainId::default</span>(), <span class="prelude-val">None</span>);
         <span class="ident">storage</span>
             .<span class="ident">begin_block</span>(<span class="ident">BlockHash::default</span>(), <span class="ident">BlockHeight</span>(<span class="number">100</span>))
             .<span class="ident">expect</span>(<span class="string">&quot;begin_block failed&quot;</span>);

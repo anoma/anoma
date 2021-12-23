@@ -976,6 +976,10 @@
 <span id="976">976</span>
 <span id="977">977</span>
 <span id="978">978</span>
+<span id="979">979</span>
+<span id="980">980</span>
+<span id="981">981</span>
+<span id="982">982</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Client RPC queries</span>
 
 <span class="kw">use</span> <span class="ident">std::borrow::Cow</span>;
@@ -1283,7 +1287,11 @@
                             <span class="kw">let</span> <span class="ident">bond_type</span>: <span class="ident">Cow</span><span class="op">&lt;</span><span class="ident">str</span><span class="op">&gt;</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">source</span> <span class="op">=</span><span class="op">=</span> <span class="ident">validator</span> {
                                 <span class="string">&quot;Self-bonds&quot;</span>.<span class="ident">into</span>()
                             } <span class="kw">else</span> {
-                                <span class="macro">format!</span>(<span class="string">&quot;Delegations from {}&quot;</span>, <span class="ident">source</span>).<span class="ident">into</span>()
+                                <span class="macro">format!</span>(
+                                    <span class="string">&quot;Delegations from {} to {}&quot;</span>,
+                                    <span class="ident">source</span>, <span class="ident">validator</span>
+                                )
+                                .<span class="ident">into</span>()
                             };
                             <span class="macro">writeln!</span>(<span class="ident">w</span>, <span class="string">&quot;{}:&quot;</span>, <span class="ident">bond_type</span>).<span class="ident">unwrap</span>();
                             <span class="kw">let</span> (<span class="ident">tot</span>, <span class="ident">tot_active</span>) <span class="op">=</span> <span class="ident">process_bonds_query</span>(

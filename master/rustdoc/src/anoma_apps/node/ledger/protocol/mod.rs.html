@@ -423,12 +423,54 @@
 <span id="423">423</span>
 <span id="424">424</span>
 <span id="425">425</span>
+<span id="426">426</span>
+<span id="427">427</span>
+<span id="428">428</span>
+<span id="429">429</span>
+<span id="430">430</span>
+<span id="431">431</span>
+<span id="432">432</span>
+<span id="433">433</span>
+<span id="434">434</span>
+<span id="435">435</span>
+<span id="436">436</span>
+<span id="437">437</span>
+<span id="438">438</span>
+<span id="439">439</span>
+<span id="440">440</span>
+<span id="441">441</span>
+<span id="442">442</span>
+<span id="443">443</span>
+<span id="444">444</span>
+<span id="445">445</span>
+<span id="446">446</span>
+<span id="447">447</span>
+<span id="448">448</span>
+<span id="449">449</span>
+<span id="450">450</span>
+<span id="451">451</span>
+<span id="452">452</span>
+<span id="453">453</span>
+<span id="454">454</span>
+<span id="455">455</span>
+<span id="456">456</span>
+<span id="457">457</span>
+<span id="458">458</span>
+<span id="459">459</span>
+<span id="460">460</span>
+<span id="461">461</span>
+<span id="462">462</span>
+<span id="463">463</span>
+<span id="464">464</span>
+<span id="465">465</span>
+<span id="466">466</span>
+<span id="467">467</span>
 </pre><pre class="rust"><code><span class="doccomment">//! The ledger&#39;s protocol</span>
 <span class="kw">use</span> <span class="ident">std::collections::HashSet</span>;
 <span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">fmt</span>, <span class="ident">panic</span>};
 
 <span class="kw">use</span> <span class="ident">anoma::ledger::gas</span>::{<span class="self">self</span>, <span class="ident">BlockGasMeter</span>, <span class="ident">VpGasMeter</span>, <span class="ident">VpsGas</span>};
-<span class="kw">use</span> <span class="ident">anoma::ledger::ibc</span>::{<span class="self">self</span>, <span class="ident">Ibc</span>};
+<span class="kw">use</span> <span class="ident">anoma::ledger::ibc::vp::Ibc</span>;
 <span class="kw">use</span> <span class="ident">anoma::ledger::native_vp</span>::{<span class="self">self</span>, <span class="ident">NativeVp</span>};
 <span class="kw">use</span> <span class="ident">anoma::ledger::parameters</span>::{<span class="self">self</span>, <span class="ident">ParametersVp</span>};
 <span class="kw">use</span> <span class="ident">anoma::ledger::pos</span>::{<span class="self">self</span>, <span class="ident">PosVP</span>};
@@ -436,9 +478,11 @@
 <span class="kw">use</span> <span class="ident">anoma::ledger::storage</span>::{<span class="ident">DBIter</span>, <span class="ident">Storage</span>, <span class="ident">StorageHasher</span>, <span class="ident">DB</span>};
 <span class="kw">use</span> <span class="ident">anoma::proto</span>::{<span class="self">self</span>, <span class="ident">Tx</span>};
 <span class="kw">use</span> <span class="ident">anoma::types::address</span>::{<span class="ident">Address</span>, <span class="ident">InternalAddress</span>};
+<span class="kw">use</span> <span class="ident">anoma::types::ibc::IbcEvent</span>;
 <span class="kw">use</span> <span class="ident">anoma::types::storage::Key</span>;
 <span class="kw">use</span> <span class="ident">anoma::types::transaction</span>::{<span class="ident">DecryptedTx</span>, <span class="ident">TxType</span>};
-<span class="kw">use</span> <span class="ident">anoma::vm</span>::{<span class="self">self</span>, <span class="ident">wasm</span>};
+<span class="kw">use</span> <span class="ident">anoma::vm::wasm</span>::{<span class="ident">TxCache</span>, <span class="ident">VpCache</span>};
+<span class="kw">use</span> <span class="ident">anoma::vm</span>::{<span class="self">self</span>, <span class="ident">wasm</span>, <span class="ident">WasmCacheAccess</span>};
 <span class="kw">use</span> <span class="ident">rayon::iter</span>::{<span class="ident">IntoParallelRefIterator</span>, <span class="ident">ParallelIterator</span>};
 <span class="kw">use</span> <span class="ident">thiserror::Error</span>;
 
@@ -459,7 +503,7 @@
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;The address {0} doesn&#39;t exist&quot;</span>)]</span>
     <span class="ident">MissingAddress</span>(<span class="ident">Address</span>),
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;IBC native VP: {0}&quot;</span>)]</span>
-    <span class="ident">IbcNativeVpError</span>(<span class="ident">ibc::Error</span>),
+    <span class="ident">IbcNativeVpError</span>(<span class="ident">anoma::ledger::ibc::vp::Error</span>),
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;PoS native VP: {0}&quot;</span>)]</span>
     <span class="ident">PosNativeVpError</span>(<span class="ident">pos::vp::Error</span>),
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;PoS native VP panicked&quot;</span>)]</span>
@@ -479,6 +523,7 @@
     <span class="kw">pub</span> <span class="ident">changed_keys</span>: <span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">Key</span><span class="op">&gt;</span>,
     <span class="kw">pub</span> <span class="ident">vps_result</span>: <span class="ident">VpsResult</span>,
     <span class="kw">pub</span> <span class="ident">initialized_accounts</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span> <span class="ident">ibc_event</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">IbcEvent</span><span class="op">&gt;</span>,
 }
 
 <span class="kw">impl</span> <span class="ident">TxResult</span> {
@@ -503,16 +548,19 @@
 <span class="doccomment">/// If the given tx is a successfully decrypted payload apply the necessary</span>
 <span class="doccomment">/// vps. Otherwise, we include the tx on chain with the gas charge added</span>
 <span class="doccomment">/// but no further validations.</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">apply_tx</span><span class="op">&lt;</span><span class="ident">D</span>, <span class="ident">H</span><span class="op">&gt;</span>(
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">apply_tx</span><span class="op">&lt;</span><span class="ident">D</span>, <span class="ident">H</span>, <span class="ident">CA</span><span class="op">&gt;</span>(
     <span class="ident">tx</span>: <span class="ident">TxType</span>,
     <span class="ident">tx_length</span>: <span class="ident">usize</span>,
     <span class="ident">block_gas_meter</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">BlockGasMeter</span>,
     <span class="ident">write_log</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">WriteLog</span>,
     <span class="ident">storage</span>: <span class="kw-2">&amp;</span><span class="ident">Storage</span><span class="op">&lt;</span><span class="ident">D</span>, <span class="ident">H</span><span class="op">&gt;</span>,
+    <span class="ident">vp_wasm_cache</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">VpCache</span><span class="op">&lt;</span><span class="ident">CA</span><span class="op">&gt;</span>,
+    <span class="ident">tx_wasm_cache</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">TxCache</span><span class="op">&lt;</span><span class="ident">CA</span><span class="op">&gt;</span>,
 ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">TxResult</span><span class="op">&gt;</span>
 <span class="kw">where</span>
-    <span class="ident">D</span>: <span class="ident">DB</span> <span class="op">+</span> <span class="kw">for</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span> <span class="ident">DBIter</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Sync</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>,
-    <span class="ident">H</span>: <span class="ident">StorageHasher</span> <span class="op">+</span> <span class="ident">Sync</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>,
+    <span class="ident">D</span>: <span class="lifetime">&#39;static</span> <span class="op">+</span> <span class="ident">DB</span> <span class="op">+</span> <span class="kw">for</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span> <span class="ident">DBIter</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Sync</span>,
+    <span class="ident">H</span>: <span class="lifetime">&#39;static</span> <span class="op">+</span> <span class="ident">StorageHasher</span> <span class="op">+</span> <span class="ident">Sync</span>,
+    <span class="ident">CA</span>: <span class="lifetime">&#39;static</span> <span class="op">+</span> <span class="ident">WasmCacheAccess</span> <span class="op">+</span> <span class="ident">Sync</span>,
 {
     <span class="comment">// Base gas cost for applying the tx</span>
     <span class="ident">block_gas_meter</span>
@@ -521,8 +569,14 @@
     <span class="kw">match</span> <span class="ident">tx</span> {
         <span class="ident">TxType::Raw</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">Error::TxTypeError</span>),
         <span class="ident">TxType::Decrypted</span>(<span class="ident">DecryptedTx::Decrypted</span>(<span class="ident">tx</span>)) <span class="op">=</span><span class="op">&gt;</span> {
-            <span class="kw">let</span> <span class="ident">verifiers</span> <span class="op">=</span>
-                <span class="ident">execute_tx</span>(<span class="kw-2">&amp;</span><span class="ident">tx</span>, <span class="ident">storage</span>, <span class="ident">block_gas_meter</span>, <span class="ident">write_log</span>)<span class="question-mark">?</span>;
+            <span class="kw">let</span> <span class="ident">verifiers</span> <span class="op">=</span> <span class="ident">execute_tx</span>(
+                <span class="kw-2">&amp;</span><span class="ident">tx</span>,
+                <span class="ident">storage</span>,
+                <span class="ident">block_gas_meter</span>,
+                <span class="ident">write_log</span>,
+                <span class="ident">vp_wasm_cache</span>,
+                <span class="ident">tx_wasm_cache</span>,
+            )<span class="question-mark">?</span>;
 
             <span class="kw">let</span> <span class="ident">vps_result</span> <span class="op">=</span> <span class="ident">check_vps</span>(
                 <span class="kw-2">&amp;</span><span class="ident">tx</span>,
@@ -530,6 +584,7 @@
                 <span class="ident">block_gas_meter</span>,
                 <span class="ident">write_log</span>,
                 <span class="kw-2">&amp;</span><span class="ident">verifiers</span>,
+                <span class="ident">vp_wasm_cache</span>,
             )<span class="question-mark">?</span>;
 
             <span class="kw">let</span> <span class="ident">gas_used</span> <span class="op">=</span> <span class="ident">block_gas_meter</span>
@@ -537,12 +592,14 @@
                 .<span class="ident">map_err</span>(<span class="ident">Error::GasError</span>)<span class="question-mark">?</span>;
             <span class="kw">let</span> <span class="ident">initialized_accounts</span> <span class="op">=</span> <span class="ident">write_log</span>.<span class="ident">get_initialized_accounts</span>();
             <span class="kw">let</span> <span class="ident">changed_keys</span> <span class="op">=</span> <span class="ident">write_log</span>.<span class="ident">get_keys</span>();
+            <span class="kw">let</span> <span class="ident">ibc_event</span> <span class="op">=</span> <span class="ident">write_log</span>.<span class="ident">take_ibc_event</span>();
 
             <span class="prelude-val">Ok</span>(<span class="ident">TxResult</span> {
                 <span class="ident">gas_used</span>,
                 <span class="ident">changed_keys</span>,
                 <span class="ident">vps_result</span>,
                 <span class="ident">initialized_accounts</span>,
+                <span class="ident">ibc_event</span>,
             })
         }
         <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> {
@@ -558,23 +615,34 @@
 }
 
 <span class="doccomment">/// Execute a transaction code. Returns verifiers requested by the transaction.</span>
-<span class="kw">fn</span> <span class="ident">execute_tx</span><span class="op">&lt;</span><span class="ident">D</span>, <span class="ident">H</span><span class="op">&gt;</span>(
+<span class="kw">fn</span> <span class="ident">execute_tx</span><span class="op">&lt;</span><span class="ident">D</span>, <span class="ident">H</span>, <span class="ident">CA</span><span class="op">&gt;</span>(
     <span class="ident">tx</span>: <span class="kw-2">&amp;</span><span class="ident">Tx</span>,
     <span class="ident">storage</span>: <span class="kw-2">&amp;</span><span class="ident">Storage</span><span class="op">&lt;</span><span class="ident">D</span>, <span class="ident">H</span><span class="op">&gt;</span>,
     <span class="ident">gas_meter</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">BlockGasMeter</span>,
     <span class="ident">write_log</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">WriteLog</span>,
+    <span class="ident">vp_wasm_cache</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">VpCache</span><span class="op">&lt;</span><span class="ident">CA</span><span class="op">&gt;</span>,
+    <span class="ident">tx_wasm_cache</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">TxCache</span><span class="op">&lt;</span><span class="ident">CA</span><span class="op">&gt;</span>,
 ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span><span class="op">&gt;</span>
 <span class="kw">where</span>
-    <span class="ident">D</span>: <span class="ident">DB</span> <span class="op">+</span> <span class="kw">for</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span> <span class="ident">DBIter</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>,
-    <span class="ident">H</span>: <span class="ident">StorageHasher</span> <span class="op">+</span> <span class="ident">Sync</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>,
+    <span class="ident">D</span>: <span class="lifetime">&#39;static</span> <span class="op">+</span> <span class="ident">DB</span> <span class="op">+</span> <span class="kw">for</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span> <span class="ident">DBIter</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Sync</span>,
+    <span class="ident">H</span>: <span class="lifetime">&#39;static</span> <span class="op">+</span> <span class="ident">StorageHasher</span> <span class="op">+</span> <span class="ident">Sync</span>,
+    <span class="ident">CA</span>: <span class="lifetime">&#39;static</span> <span class="op">+</span> <span class="ident">WasmCacheAccess</span> <span class="op">+</span> <span class="ident">Sync</span>,
 {
     <span class="ident">gas_meter</span>
         .<span class="ident">add_compiling_fee</span>(<span class="ident">tx</span>.<span class="ident">code</span>.<span class="ident">len</span>())
         .<span class="ident">map_err</span>(<span class="ident">Error::GasError</span>)<span class="question-mark">?</span>;
     <span class="kw">let</span> <span class="ident">empty</span> <span class="op">=</span> <span class="macro">vec!</span>[];
     <span class="kw">let</span> <span class="ident">tx_data</span> <span class="op">=</span> <span class="ident">tx</span>.<span class="ident">data</span>.<span class="ident">as_ref</span>().<span class="ident">unwrap_or</span>(<span class="kw-2">&amp;</span><span class="ident">empty</span>);
-    <span class="ident">wasm::run::tx</span>(<span class="ident">storage</span>, <span class="ident">write_log</span>, <span class="ident">gas_meter</span>, <span class="kw-2">&amp;</span><span class="ident">tx</span>.<span class="ident">code</span>, <span class="ident">tx_data</span>)
-        .<span class="ident">map_err</span>(<span class="ident">Error::TxRunnerError</span>)
+    <span class="ident">wasm::run::tx</span>(
+        <span class="ident">storage</span>,
+        <span class="ident">write_log</span>,
+        <span class="ident">gas_meter</span>,
+        <span class="kw-2">&amp;</span><span class="ident">tx</span>.<span class="ident">code</span>,
+        <span class="ident">tx_data</span>,
+        <span class="ident">vp_wasm_cache</span>,
+        <span class="ident">tx_wasm_cache</span>,
+    )
+    .<span class="ident">map_err</span>(<span class="ident">Error::TxRunnerError</span>)
 }
 
 <span class="doccomment">/// A validity predicate</span>
@@ -584,16 +652,18 @@
 }
 
 <span class="doccomment">/// Check the acceptance of a transaction by validity predicates</span>
-<span class="kw">fn</span> <span class="ident">check_vps</span><span class="op">&lt;</span><span class="ident">D</span>, <span class="ident">H</span><span class="op">&gt;</span>(
+<span class="kw">fn</span> <span class="ident">check_vps</span><span class="op">&lt;</span><span class="ident">D</span>, <span class="ident">H</span>, <span class="ident">CA</span><span class="op">&gt;</span>(
     <span class="ident">tx</span>: <span class="kw-2">&amp;</span><span class="ident">Tx</span>,
     <span class="ident">storage</span>: <span class="kw-2">&amp;</span><span class="ident">Storage</span><span class="op">&lt;</span><span class="ident">D</span>, <span class="ident">H</span><span class="op">&gt;</span>,
     <span class="ident">gas_meter</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">BlockGasMeter</span>,
     <span class="ident">write_log</span>: <span class="kw-2">&amp;</span><span class="ident">WriteLog</span>,
     <span class="ident">verifiers_from_tx</span>: <span class="kw-2">&amp;</span><span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span>,
+    <span class="ident">vp_wasm_cache</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">VpCache</span><span class="op">&lt;</span><span class="ident">CA</span><span class="op">&gt;</span>,
 ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">VpsResult</span><span class="op">&gt;</span>
 <span class="kw">where</span>
-    <span class="ident">D</span>: <span class="ident">DB</span> <span class="op">+</span> <span class="kw">for</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span> <span class="ident">DBIter</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Sync</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>,
-    <span class="ident">H</span>: <span class="ident">StorageHasher</span> <span class="op">+</span> <span class="ident">Sync</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>,
+    <span class="ident">D</span>: <span class="lifetime">&#39;static</span> <span class="op">+</span> <span class="ident">DB</span> <span class="op">+</span> <span class="kw">for</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span> <span class="ident">DBIter</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Sync</span>,
+    <span class="ident">H</span>: <span class="lifetime">&#39;static</span> <span class="op">+</span> <span class="ident">StorageHasher</span> <span class="op">+</span> <span class="ident">Sync</span>,
+    <span class="ident">CA</span>: <span class="lifetime">&#39;static</span> <span class="op">+</span> <span class="ident">WasmCacheAccess</span> <span class="op">+</span> <span class="ident">Sync</span>,
 {
     <span class="kw">let</span> <span class="ident">verifiers</span> <span class="op">=</span> <span class="ident">write_log</span>.<span class="ident">verifiers_changed_keys</span>(<span class="ident">verifiers_from_tx</span>);
 
@@ -626,8 +696,14 @@
 
     <span class="kw">let</span> <span class="ident">initial_gas</span> <span class="op">=</span> <span class="ident">gas_meter</span>.<span class="ident">get_current_transaction_gas</span>();
 
-    <span class="kw">let</span> <span class="ident">vps_result</span> <span class="op">=</span>
-        <span class="ident">execute_vps</span>(<span class="ident">verifiers</span>, <span class="ident">tx</span>, <span class="ident">storage</span>, <span class="ident">write_log</span>, <span class="ident">initial_gas</span>)<span class="question-mark">?</span>;
+    <span class="kw">let</span> <span class="ident">vps_result</span> <span class="op">=</span> <span class="ident">execute_vps</span>(
+        <span class="ident">verifiers</span>,
+        <span class="ident">tx</span>,
+        <span class="ident">storage</span>,
+        <span class="ident">write_log</span>,
+        <span class="ident">initial_gas</span>,
+        <span class="ident">vp_wasm_cache</span>,
+    )<span class="question-mark">?</span>;
     <span class="macro">tracing::debug!</span>(<span class="string">&quot;Total VPs gas cost {:?}&quot;</span>, <span class="ident">vps_result</span>.<span class="ident">gas_used</span>);
 
     <span class="ident">gas_meter</span>
@@ -638,16 +714,18 @@
 }
 
 <span class="doccomment">/// Execute verifiers&#39; validity predicates</span>
-<span class="kw">fn</span> <span class="ident">execute_vps</span><span class="op">&lt;</span><span class="ident">D</span>, <span class="ident">H</span><span class="op">&gt;</span>(
+<span class="kw">fn</span> <span class="ident">execute_vps</span><span class="op">&lt;</span><span class="ident">D</span>, <span class="ident">H</span>, <span class="ident">CA</span><span class="op">&gt;</span>(
     <span class="ident">verifiers</span>: <span class="ident">Vec</span><span class="op">&lt;</span>(<span class="ident">Address</span>, <span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">Key</span><span class="op">&gt;</span>, <span class="ident">Vp</span>)<span class="op">&gt;</span>,
     <span class="ident">tx</span>: <span class="kw-2">&amp;</span><span class="ident">Tx</span>,
     <span class="ident">storage</span>: <span class="kw-2">&amp;</span><span class="ident">Storage</span><span class="op">&lt;</span><span class="ident">D</span>, <span class="ident">H</span><span class="op">&gt;</span>,
     <span class="ident">write_log</span>: <span class="kw-2">&amp;</span><span class="ident">WriteLog</span>,
     <span class="ident">initial_gas</span>: <span class="ident">u64</span>,
+    <span class="ident">vp_wasm_cache</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">VpCache</span><span class="op">&lt;</span><span class="ident">CA</span><span class="op">&gt;</span>,
 ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">VpsResult</span><span class="op">&gt;</span>
 <span class="kw">where</span>
-    <span class="ident">D</span>: <span class="ident">DB</span> <span class="op">+</span> <span class="kw">for</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span> <span class="ident">DBIter</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Sync</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>,
-    <span class="ident">H</span>: <span class="ident">StorageHasher</span> <span class="op">+</span> <span class="ident">Sync</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>,
+    <span class="ident">D</span>: <span class="lifetime">&#39;static</span> <span class="op">+</span> <span class="ident">DB</span> <span class="op">+</span> <span class="kw">for</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span> <span class="ident">DBIter</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Sync</span>,
+    <span class="ident">H</span>: <span class="lifetime">&#39;static</span> <span class="op">+</span> <span class="ident">StorageHasher</span> <span class="op">+</span> <span class="ident">Sync</span>,
+    <span class="ident">CA</span>: <span class="lifetime">&#39;static</span> <span class="op">+</span> <span class="ident">WasmCacheAccess</span> <span class="op">+</span> <span class="ident">Sync</span>,
 {
     <span class="kw">let</span> <span class="ident">verifiers_addr</span> <span class="op">=</span> <span class="ident">verifiers</span>
         .<span class="ident">iter</span>()
@@ -669,11 +747,17 @@
                     <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">gas_meter</span>,
                     <span class="ident">keys</span>,
                     <span class="kw-2">&amp;</span><span class="ident">verifiers_addr</span>,
+                    <span class="ident">vp_wasm_cache</span>.<span class="ident">clone</span>(),
                 )
                 .<span class="ident">map_err</span>(<span class="ident">Error::VpRunnerError</span>),
                 <span class="ident">Vp::Native</span>(<span class="ident">internal_addr</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                    <span class="kw">let</span> <span class="ident">ctx</span> <span class="op">=</span>
-                        <span class="ident">native_vp::Ctx::new</span>(<span class="ident">storage</span>, <span class="ident">write_log</span>, <span class="ident">tx</span>, <span class="ident">gas_meter</span>);
+                    <span class="kw">let</span> <span class="ident">ctx</span> <span class="op">=</span> <span class="ident">native_vp::Ctx::new</span>(
+                        <span class="ident">storage</span>,
+                        <span class="ident">write_log</span>,
+                        <span class="ident">tx</span>,
+                        <span class="ident">gas_meter</span>,
+                        <span class="ident">vp_wasm_cache</span>.<span class="ident">clone</span>(),
+                    );
                     <span class="kw">let</span> <span class="ident">tx_data</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">tx</span>.<span class="ident">data</span>.<span class="ident">as_ref</span>() {
                         <span class="prelude-val">Some</span>(<span class="ident">data</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="ident">data</span>[..],
                         <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span>[],
