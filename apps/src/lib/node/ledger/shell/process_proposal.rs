@@ -76,10 +76,10 @@ where
                 }) => {
                     let rng =
                         &mut ark_std::rand::prelude::StdRng::from_entropy();
-                    match protocol_tx {
-                        ProtocolTxType::DKG(msg) => {
-                            if let Some(sender) = self.get_validator_from_protocol_pk(&pk) {
-                                if let ShellMode::Validator { dkg, .. } = &mut self.mode {
+                    if let Some(sender) = self.get_validator_from_protocol_pk(&pk) {
+                        if let ShellMode::Validator { dkg, .. } = &mut self.mode {
+                            match protocol_tx {
+                                ProtocolTxType::DKG(msg) => {
                                     match dkg.state_machine.verify_message(&sender,
                                                                            &msg,
                                                                            rng,
@@ -95,51 +95,51 @@ where
                                             info: err.to_string(),
                                         },
                                     }
-                                } else {
-                                    shim::response::TxResult {
-                                        code: ErrorCodes::InvalidSig.into(),
-                                        info: "Could not match signature of protocol tx to \
-                                               a public protocol key of an active validator \
-                                               set.".into()
+                                }
+                                ProtocolTxType::NewDkgKeypair(ref tx) => {
+                                    match tx.data
+                                        .as_ref()
+                                        .map(|data| <UpdateDkgSessionKey as BorshDeserialize>::deserialize(&mut data.as_ref()).and_then(
+                                            |ref update_keypair| {
+                                                <DkgPublicKey as BorshDeserialize>::deserialize(&mut update_keypair.dkg_public_key.as_ref())?;
+                                                Ok(true)
+                                            }
+                                        ).or::<bool>(Ok(false))) {
+                                        None => {
+                                            shim::response::TxResult {
+                                                code: ErrorCodes::InvalidTx.into(),
+                                                info: "The address and new DKG public session key are \
+                                                missing from the tx.".into()
+                                            }
+                                        }
+                                        Some(Ok(false)) => {
+                                            shim::response::TxResult {
+                                                code: ErrorCodes::InvalidTx.into(),
+                                                info: "The address and / or new DKG public session key were \
+                                                not deserializable.".into()
+                                            }
+                                        }
+                                        Some(Ok(true)) => {
+                                            shim::response::TxResult {
+                                                code: ErrorCodes::Ok.into(),
+                                                info: "Process proposal accepted this \
+                                                   transaction"
+                                                    .into(),
+                                            }
+                                        }
+                                        _ => unreachable!()
                                     }
                                 }
-                            } else {
-                                panic!("Process proposal called on a non-validator node.")
                             }
+                        }  else  {
+                            panic!("Process proposal called on a non-validator node.")
                         }
-                        ProtocolTxType::NewDkgKeypair(ref tx) => {
-                            match tx.data
-                                .as_ref()
-                                .map(|data| <UpdateDkgSessionKey as BorshDeserialize>::deserialize(&mut data.as_ref()).and_then(
-                                    | ref update_keypair | {
-                                        <DkgPublicKey as BorshDeserialize>::deserialize(&mut update_keypair.dkg_public_key.as_ref())?;
-                                        Ok(true)
-                                    }
-                                ).or::<bool>(Ok(false))) {
-                                None => {
-                                    shim::response::TxResult {
-                                        code: ErrorCodes::InvalidTx.into(),
-                                        info: "The address and new DKG public session key are \
-                                        missing from the tx.".into()
-                                    }
-                                }
-                                Some(Ok(false)) => {
-                                    shim::response::TxResult {
-                                        code: ErrorCodes::InvalidTx.into(),
-                                        info: "The address and / or new DKG public session key were \
-                                        not deserializable.".into()
-                                    }
-                                }
-                                Some(Ok(true)) => {
-                                    shim::response::TxResult {
-                                        code: ErrorCodes::Ok.into(),
-                                        info: "Process proposal accepted this \
-                                           transaction"
-                                            .into(),
-                                    }
-                                }
-                                _ => unreachable!(),
-                            }
+                    } else {
+                        shim::response::TxResult {
+                            code: ErrorCodes::InvalidSig.into(),
+                            info: "Could not match signature of protocol tx to \
+                            a public protocol key of an active validator \
+                            set.".into()
                         }
                     }
                 }
@@ -326,7 +326,7 @@ mod test_process_proposal {
     use tendermint_proto_abci::google::protobuf::Timestamp;
 
     use super::*;
-    use crate::node::ledger::shell::test_utils::{gen_keypair, TestShell};
+    use crate::node::ledger::shell::test_utils::{gen_keypair, setup, TestShell};
     use crate::node::ledger::shims::abcipp_shim_types::shim::request::ProcessProposal;
 
     /// Test that if a wrapper tx is not signed, it is rejected
@@ -741,5 +741,120 @@ mod test_process_proposal {
         {
             assert_eq!(response.tx, tx.to_bytes());
         }
+    }
+
+    /// Test that a valid DKG message is acceped
+    #[test]
+    fn test_valid_dkg_msgs_accepted() {
+        let (mut shell, _) = setup();
+        let rng = &mut ark_std::test_rng();
+
+        let protocol_tx = if let ShellMode::Validator { dkg, data, .. } = &mut shell.shell.mode {
+            let msg = dkg.state_machine.share(rng).expect("Test failed");
+            let protocol_keys = data.keys.protocol_keypair.lock();
+            ProtocolTxType::DKG(msg)
+                .sign(&protocol_keys)
+        } else {
+            panic!("Test failed");
+        };
+
+        let request = ProcessProposal { tx: protocol_tx.to_bytes() };
+        let response = shell.process_proposal(request);
+        assert_eq!(response.result.code, u32::from(ErrorCodes::Ok));
+    }
+
+    /// Test that a request for new DKG session keypairs
+    /// is accepted
+    #[test]
+    fn test_valid_new_dkg_keypair() {
+        let (mut shell, _) = setup();
+        let tx = if let ShellMode::Validator { data, .. } = &mut shell.shell.mode {
+            let protocol_keys = data.keys.protocol_keypair.lock();
+            let request_data = UpdateDkgSessionKey {
+                address: data.address.clone(),
+                dkg_public_key: data
+                    .keys
+                    .dkg_keypair
+                    .as_ref()
+                    .unwrap()
+                    .public()
+                    .try_to_vec()
+                    .expect(
+                        "Serialization of DKG public key shouldn't fail",
+                    ),
+            };
+            ProtocolTxType::request_new_dkg_keypair(
+                request_data,
+                &shell.shell.wasm_dir,
+                read_wasm,
+            )
+            .sign(&protocol_keys)
+            .to_bytes()
+        } else {
+            panic!("Test failed");
+        };
+        let request = ProcessProposal { tx };
+        let response = shell.process_proposal(request);
+        assert_eq!(response.result.code, u32::from(ErrorCodes::Ok));
+    }
+
+    /// If we encounter a protocol tx signed by someone who is
+    /// not a validator, reject it.
+    #[test]
+    fn test_reject_protocol_txs_from_non_validators() {
+        let (mut shell, _) = setup();
+        let rng = &mut ark_std::test_rng();
+        let non_validator_keys = gen_keypair();
+        let protocol_tx = if let ShellMode::Validator { dkg, .. } = &mut shell.shell.mode {
+            let msg = dkg.state_machine.share(rng).expect("Test failed");
+            ProtocolTxType::DKG(msg)
+                .sign(&non_validator_keys)
+        } else {
+            panic!("Test failed");
+        };
+
+        let request = ProcessProposal { tx: protocol_tx.to_bytes() };
+        let response = shell.process_proposal(request);
+        assert_eq!(response.result.code, u32::from(ErrorCodes::InvalidSig));
+
+    }
+
+    /// Test that we get the correct errors if the new keypairs / target address
+    /// are missing or is not deserializable
+    #[test]
+    fn test_malformed_dkg_keypair_tx() {
+        let (mut shell, _) = setup();
+        let (tx_1, tx_2) = if let ShellMode::Validator { data, .. } = &mut shell.shell.mode {
+            let protocol_keys = data.keys.protocol_keypair.lock();
+            let request_data: Vec<u8> = "invalid".as_bytes().to_owned();
+            let code = read_wasm(
+                shell.shell.wasm_dir
+                    .to_str()
+                    .expect("Converting path to string should not fail"),
+                "tx_update_dkg_session_keypair.wasm",
+            );
+            (
+                ProtocolTxType::NewDkgKeypair(Tx::new(
+                    code.clone(),
+                    Some(
+                        request_data.try_to_vec()
+                            .expect("Serializing request should not fail"),
+                    ),
+                ))
+                .sign(&protocol_keys)
+                .to_bytes(),
+                ProtocolTxType::NewDkgKeypair(Tx::new(code, None))
+                    .sign(&protocol_keys)
+                    .to_bytes()
+            )
+        } else {
+            panic!("Test failed");
+        };
+        let request = ProcessProposal { tx: tx_1 };
+        let response = shell.process_proposal(request);
+        assert_eq!(response.result.code, u32::from(ErrorCodes::InvalidTx));
+        let request = ProcessProposal { tx: tx_2 };
+        let response = shell.process_proposal(request);
+        assert_eq!(response.result.code, u32::from(ErrorCodes::InvalidTx));
     }
 }
