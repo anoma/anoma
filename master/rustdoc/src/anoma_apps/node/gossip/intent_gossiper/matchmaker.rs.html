@@ -249,10 +249,44 @@
 <span id="249">249</span>
 <span id="250">250</span>
 <span id="251">251</span>
+<span id="252">252</span>
+<span id="253">253</span>
+<span id="254">254</span>
+<span id="255">255</span>
+<span id="256">256</span>
+<span id="257">257</span>
+<span id="258">258</span>
+<span id="259">259</span>
+<span id="260">260</span>
+<span id="261">261</span>
+<span id="262">262</span>
+<span id="263">263</span>
+<span id="264">264</span>
+<span id="265">265</span>
+<span id="266">266</span>
+<span id="267">267</span>
+<span id="268">268</span>
+<span id="269">269</span>
+<span id="270">270</span>
+<span id="271">271</span>
+<span id="272">272</span>
+<span id="273">273</span>
+<span id="274">274</span>
+<span id="275">275</span>
+<span id="276">276</span>
+<span id="277">277</span>
+<span id="278">278</span>
+<span id="279">279</span>
+<span id="280">280</span>
+<span id="281">281</span>
+<span id="282">282</span>
+<span id="283">283</span>
+<span id="284">284</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std::collections::HashSet</span>;
 <span class="kw">use</span> <span class="ident">std::env</span>;
 <span class="kw">use</span> <span class="ident">std::path::Path</span>;
 <span class="kw">use</span> <span class="ident">std::rc::Rc</span>;
+<span class="kw">use</span> <span class="ident">std::sync::Arc</span>;
 
 <span class="kw">use</span> <span class="ident">anoma::proto</span>::{<span class="ident">Intent</span>, <span class="ident">IntentId</span>, <span class="ident">Tx</span>};
 <span class="kw">use</span> <span class="ident">anoma::types::address</span>::{<span class="ident">xan</span>, <span class="ident">Address</span>};
@@ -263,6 +297,7 @@
 <span class="kw">use</span> <span class="ident">anoma::types::transaction</span>::{<span class="ident">Fee</span>, <span class="ident">WrapperTx</span>};
 <span class="kw">use</span> <span class="ident">anoma::vm::wasm</span>;
 <span class="kw">use</span> <span class="ident">borsh</span>::{<span class="ident">BorshDeserialize</span>, <span class="ident">BorshSerialize</span>};
+<span class="kw">use</span> <span class="ident">libc::c_void</span>;
 <span class="kw">use</span> <span class="ident">libloading::Library</span>;
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
 <span class="kw">use</span> <span class="ident">tendermint_config::net</span>;
@@ -283,16 +318,14 @@
 <span class="doccomment">/// received intent.</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Matchmaker</span> {
-    <span class="doccomment">/// Matchmaker&#39;s implementation loaded from dylib</span>
-    <span class="ident">matchmaker_code</span>: <span class="ident">Library</span>,
+    <span class="doccomment">/// The loaded implementation&#39;s dylib and its state</span>
+    <span class="ident">r#impl</span>: <span class="ident">MatchmakerImpl</span>,
     <span class="doccomment">/// All valid and received intent are saved in this mempool</span>
     <span class="ident">mempool</span>: <span class="ident">IntentMempool</span>,
     <span class="doccomment">/// Possible filter that filter any received intent.</span>
     <span class="ident">filter</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Filter</span><span class="op">&gt;</span>,
     <span class="doccomment">/// The code of the transaction that is going to be send to a ledger.</span>
     <span class="ident">tx_code</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>,
-    <span class="doccomment">/// the matchmaker&#39;s state as arbitrary bytes</span>
-    <span class="ident">state</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>,
     <span class="doccomment">/// The ledger address to send any crafted transaction to</span>
     <span class="ident">ledger_address</span>: <span class="ident">net::Address</span>,
     <span class="doccomment">/// A source address for transactions created from intents.</span>
@@ -300,6 +333,23 @@
     <span class="doccomment">/// A keypair that will be used to sign transactions.</span>
     <span class="ident">tx_signing_key</span>: <span class="ident">Rc</span><span class="op">&lt;</span><span class="ident">Keypair</span><span class="op">&gt;</span>,
 }
+
+<span class="doccomment">/// The loaded implementation&#39;s dylib and its state</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
+<span class="kw">struct</span> <span class="ident">MatchmakerImpl</span> {
+    <span class="doccomment">/// The matchmaker&#39;s state as a raw mutable pointer to allow custom user</span>
+    <span class="doccomment">/// implementation in a dylib.</span>
+    <span class="doccomment">/// NOTE: The `state` field MUST be above the `library` field to ensure</span>
+    <span class="doccomment">/// that its destructor is ran before the implementation code is dropped.</span>
+    <span class="ident">state</span>: <span class="ident">MatchmakerState</span>,
+    <span class="doccomment">/// Matchmaker&#39;s implementation loaded from dylib</span>
+    <span class="ident">library</span>: <span class="ident">Library</span>,
+}
+
+<span class="doccomment">/// The matchmaker&#39;s state as a raw mutable pointer to allow custom user</span>
+<span class="doccomment">/// implementation in a dylib</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
+<span class="kw">struct</span> <span class="ident">MatchmakerState</span>(<span class="ident">Arc</span><span class="op">&lt;</span><span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">c_void</span><span class="op">&gt;</span>);
 
 <span class="doccomment">/// Matchmaker message for communication between the runner, P2P and the</span>
 <span class="doccomment">/// implementation</span>
@@ -362,16 +412,27 @@
         <span class="kw">let</span> <span class="ident">matchmaker_code</span> <span class="op">=</span>
             <span class="kw">unsafe</span> { <span class="ident">Library::new</span>(<span class="ident">matchmaker_dylib</span>).<span class="ident">unwrap</span>() };
 
+        <span class="comment">// Instantiate the matchmaker</span>
+        <span class="kw">let</span> <span class="ident">new_matchmaker</span>: <span class="ident">libloading::Symbol</span><span class="op">&lt;</span>
+            <span class="kw">unsafe</span> <span class="kw">extern</span> <span class="string">&quot;C&quot;</span> <span class="kw">fn</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">c_void</span>,
+        <span class="op">&gt;</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">matchmaker_code</span>.<span class="ident">get</span>(<span class="string">b&quot;_new_matchmaker&quot;</span>).<span class="ident">unwrap</span>() };
+
+        <span class="kw">let</span> <span class="ident">state</span> <span class="op">=</span> <span class="ident">MatchmakerState</span>(<span class="ident">Arc::new</span>(<span class="kw">unsafe</span> { <span class="ident">new_matchmaker</span>() }));
+
         <span class="kw">let</span> <span class="ident">tx_code</span> <span class="op">=</span> <span class="ident">wasm_loader::read_wasm</span>(<span class="kw-2">&amp;</span><span class="ident">wasm_dir</span>, <span class="kw-2">&amp;</span><span class="ident">config</span>.<span class="ident">tx_code</span>);
         <span class="kw">let</span> <span class="ident">filter</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">Filter</span>);
 
+        <span class="kw">let</span> <span class="ident">r#impl</span> <span class="op">=</span> <span class="ident">MatchmakerImpl</span> {
+            <span class="ident">state</span>,
+            <span class="ident">library</span>: <span class="ident">matchmaker_code</span>,
+        };
+
         <span class="prelude-val">Ok</span>((
             <span class="self">Self</span> {
+                <span class="ident">r#impl</span>,
                 <span class="ident">mempool</span>: <span class="ident">IntentMempool::new</span>(),
                 <span class="ident">filter</span>,
-                <span class="ident">matchmaker_code</span>,
                 <span class="ident">tx_code</span>,
-                <span class="ident">state</span>: <span class="ident">Vec::new</span>(),
                 <span class="ident">ledger_address</span>: <span class="ident">config</span>.<span class="ident">ledger_address</span>.<span class="ident">clone</span>(),
                 <span class="ident">tx_source_address</span>,
                 <span class="ident">tx_signing_key</span>,
@@ -401,18 +462,14 @@
 
             <span class="kw">let</span> <span class="ident">add_intent</span>: <span class="ident">libloading::Symbol</span><span class="op">&lt;</span>
                 <span class="kw">unsafe</span> <span class="kw">extern</span> <span class="string">&quot;C&quot;</span> <span class="kw">fn</span>(
-                    <span class="kw-2">&amp;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>,
+                    <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">c_void</span>,
                     <span class="kw-2">&amp;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>,
                     <span class="kw-2">&amp;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>,
                 ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">AddIntentResult</span>,
-            <span class="op">&gt;</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="self">self</span>.<span class="ident">matchmaker_code</span>.<span class="ident">get</span>(<span class="string">b&quot;add_intent&quot;</span>).<span class="ident">unwrap</span>() };
+            <span class="op">&gt;</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="self">self</span>.<span class="ident">r#impl</span>.<span class="ident">library</span>.<span class="ident">get</span>(<span class="string">b&quot;_add_intent&quot;</span>).<span class="ident">unwrap</span>() };
 
-            <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">anoma::types::key::ed25519::Signed</span>::<span class="op">&lt;</span>
-                <span class="ident">anoma::types::intent::FungibleTokenIntent</span>,
-            <span class="op">&gt;</span><span class="ident">::try_from_slice</span>(<span class="kw-2">&amp;</span><span class="ident">intent</span>.<span class="ident">data</span>)
-            .<span class="ident">unwrap</span>();
             <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="kw">unsafe</span> {
-                <span class="ident">add_intent</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">state</span>, <span class="kw-2">&amp;</span><span class="ident">intent</span>.<span class="ident">id</span>().<span class="number">0</span>, <span class="kw-2">&amp;</span><span class="ident">intent</span>.<span class="ident">data</span>)
+                <span class="ident">add_intent</span>(<span class="kw-2">*</span><span class="self">self</span>.<span class="ident">r#impl</span>.<span class="ident">state</span>.<span class="number">0</span>, <span class="kw-2">&amp;</span><span class="ident">intent</span>.<span class="ident">id</span>().<span class="number">0</span>, <span class="kw-2">&amp;</span><span class="ident">intent</span>.<span class="ident">data</span>)
             };
 
             <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">tx</span>) <span class="op">=</span> <span class="ident">result</span>.<span class="ident">tx</span> {
@@ -421,7 +478,6 @@
             <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">matched_intents</span>) <span class="op">=</span> <span class="ident">result</span>.<span class="ident">matched_intents</span> {
                 <span class="self">self</span>.<span class="ident">removed_intents</span>(<span class="ident">matched_intents</span>)
             }
-            <span class="self">self</span>.<span class="ident">state</span> <span class="op">=</span> <span class="ident">result</span>.<span class="ident">state</span>;
 
             <span class="bool-val">true</span>
         } <span class="kw">else</span> {
@@ -498,6 +554,16 @@
                 });
             }
         }
+    }
+}
+
+<span class="kw">impl</span> <span class="ident">Drop</span> <span class="kw">for</span> <span class="ident">MatchmakerImpl</span> {
+    <span class="kw">fn</span> <span class="ident">drop</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) {
+        <span class="kw">let</span> <span class="ident">drop_matchmaker</span>: <span class="ident">libloading::Symbol</span><span class="op">&lt;</span>
+            <span class="kw">unsafe</span> <span class="kw">extern</span> <span class="string">&quot;C&quot;</span> <span class="kw">fn</span>(<span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">c_void</span>),
+        <span class="op">&gt;</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="self">self</span>.<span class="ident">library</span>.<span class="ident">get</span>(<span class="string">b&quot;_drop_matchmaker&quot;</span>).<span class="ident">unwrap</span>() };
+
+        <span class="kw">unsafe</span> { <span class="ident">drop_matchmaker</span>(<span class="kw-2">*</span><span class="self">self</span>.<span class="ident">state</span>.<span class="number">0</span>) };
     }
 }
 </code></pre></div>

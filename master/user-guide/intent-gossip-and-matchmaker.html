@@ -224,19 +224,32 @@ anoma client balance --owner christel-account
 </ol>
 <h2 id="-custom-matchmaker"><a class="header" href="#-custom-matchmaker">🤝 Custom matchmaker</a></h2>
 <p>A custom matchmaker code can be built from <a href="https://github.com/anoma/anoma/tree/master/matchmaker/mm_template"><code>matchmaker/mm_template</code></a>.</p>
-<p>A matchmaker code must contain the following function, which will be called when a new intent is received:</p>
+<p>The <code>anoma_macros::Matchmaker</code> macro can be used to derive the binding code for the matchmaker runner on any custom implementation, e.g.:</p>
 <pre><pre class="playground"><code class="language-rust">
 <span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
-</span>#[no_mangle]
-fn add_intent(
-    last_state: &amp;Vec&lt;u8&gt;,
-    intent_id: &amp;Vec&lt;u8&gt;,
-    intent_data: &amp;Vec&lt;u8&gt;,
-) -&gt; AddIntentResult;
+</span>#[derive(Default, Matchmaker)]
+struct MyMatchmaker;
 <span class="boring">}
 </span></code></pre></pre>
-<p>The matchmaker can keep some state between its runs. The state can be updated via the <a href="https://docs.anoma.network/rustdoc/anoma/types/matchmaker/struct.AddIntentResult.html"><code>AddIntentResult</code></a> and received from the <code>last_state</code> argument on a next invocation. To submit a transaction from the matchmaker, add it to the <code>AddIntentResult</code> along with a hash set of the intent IDs that were matched into the transaction.</p>
+<p>This macro requires that there is a <code>Default</code> implementation (derived or custom) for the matchmaker, which can be used by the runner to instantiate the matchmaker.</p>
+<p>The matchmaker must also implement <code>AddIntent</code>, e.g.:</p>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>impl AddIntent for MyMatchmaker {
+    // This function will be called when a new intent is received
+    fn add_intent(
+        &amp;mut self,
+        _intent_id: &amp;Vec&lt;u8&gt;,
+        _intent_data: &amp;Vec&lt;u8&gt;,
+    ) -&gt; AddIntentResult {
+        AddIntentResult::default()
+    }
+}
+<span class="boring">}
+</span></code></pre></pre>
+<p>To submit a transaction from the matchmaker, add it to the <code>AddIntentResult</code> along with a hash set of the intent IDs that were matched into the transaction.</p>
 
                     </main>
 

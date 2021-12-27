@@ -369,20 +369,14 @@
 <span id="369">369</span>
 <span id="370">370</span>
 <span id="371">371</span>
-<span id="372">372</span>
-<span id="373">373</span>
-<span id="374">374</span>
-<span id="375">375</span>
-<span id="376">376</span>
-<span id="377">377</span>
-<span id="378">378</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std::collections</span>::{<span class="ident">HashMap</span>, <span class="ident">HashSet</span>, <span class="ident">VecDeque</span>};
 
 <span class="kw">use</span> <span class="ident">anoma::types::address::Address</span>;
 <span class="kw">use</span> <span class="ident">anoma::types::intent</span>::{<span class="ident">Exchange</span>, <span class="ident">FungibleTokenIntent</span>, <span class="ident">MatchedExchanges</span>};
 <span class="kw">use</span> <span class="ident">anoma::types::key::ed25519::Signed</span>;
-<span class="kw">use</span> <span class="ident">anoma::types::matchmaker::AddIntentResult</span>;
+<span class="kw">use</span> <span class="ident">anoma::types::matchmaker</span>::{<span class="ident">AddIntent</span>, <span class="ident">AddIntentResult</span>};
 <span class="kw">use</span> <span class="ident">anoma::types::token</span>;
+<span class="kw">use</span> <span class="ident">anoma_macros::Matchmaker</span>;
 <span class="kw">use</span> <span class="ident">borsh</span>::{<span class="ident">BorshDeserialize</span>, <span class="ident">BorshSerialize</span>};
 <span class="kw">use</span> <span class="ident">good_lp</span>::{
     <span class="ident">constraint</span>, <span class="ident">default_solver</span>, <span class="ident">variable</span>, <span class="ident">variables</span>, <span class="ident">Expression</span>,
@@ -390,9 +384,42 @@
 };
 <span class="kw">use</span> <span class="ident">petgraph::graph</span>::{<span class="ident">node_index</span>, <span class="ident">DiGraph</span>, <span class="ident">NodeIndex</span>};
 <span class="kw">use</span> <span class="ident">petgraph::visit</span>::{<span class="ident">depth_first_search</span>, <span class="ident">Control</span>, <span class="ident">DfsEvent</span>, <span class="ident">EdgeRef</span>};
-<span class="kw">use</span> <span class="ident">petgraph::Graph</span>;
 <span class="kw">use</span> <span class="ident">rust_decimal::prelude</span>::<span class="kw-2">*</span>;
 <span class="kw">use</span> <span class="ident">serde</span>::{<span class="ident">Deserialize</span>, <span class="ident">Serialize</span>};
+
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Default</span>, <span class="ident">Matchmaker</span>)]</span>
+<span class="kw">struct</span> <span class="ident">TokenExchange</span> {
+    <span class="ident">graph</span>: <span class="ident">DiGraph</span><span class="op">&lt;</span><span class="ident">ExchangeNode</span>, <span class="ident">Address</span><span class="op">&gt;</span>,
+}
+
+<span class="kw">impl</span> <span class="ident">AddIntent</span> <span class="kw">for</span> <span class="ident">TokenExchange</span> {
+    <span class="kw">fn</span> <span class="ident">add_intent</span>(
+        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
+        <span class="ident">intent_id</span>: <span class="kw-2">&amp;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>,
+        <span class="ident">intent_data</span>: <span class="kw-2">&amp;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>,
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">AddIntentResult</span> {
+        <span class="kw">let</span> <span class="ident">intent</span> <span class="op">=</span> <span class="ident">decode_intent_data</span>(<span class="kw-2">&amp;</span><span class="ident">intent_data</span>[..]);
+        <span class="kw">let</span> <span class="ident">exchanges</span> <span class="op">=</span> <span class="ident">intent</span>.<span class="ident">data</span>.<span class="ident">exchange</span>.<span class="ident">clone</span>();
+
+        <span class="macro">println!</span>(<span class="string">&quot;trying to match new intent&quot;</span>);
+        <span class="ident">exchanges</span>.<span class="ident">into_iter</span>().<span class="ident">for_each</span>(<span class="op">|</span><span class="ident">exchange</span><span class="op">|</span> {
+            <span class="ident">add_intent_node</span>(
+                <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">graph</span>,
+                <span class="ident">intent_id</span>.<span class="ident">to_vec</span>(),
+                <span class="ident">exchange</span>,
+                <span class="ident">intent</span>.<span class="ident">clone</span>(),
+            )
+        });
+        <span class="kw">let</span> (<span class="ident">tx</span>, <span class="ident">matched_intents</span>) <span class="op">=</span> <span class="kw">match</span> <span class="ident">try_match</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">graph</span>) {
+            <span class="prelude-val">Some</span>((<span class="ident">tx</span>, <span class="ident">matched_intents</span>)) <span class="op">=</span><span class="op">&gt;</span> (<span class="prelude-val">Some</span>(<span class="ident">tx</span>), <span class="prelude-val">Some</span>(<span class="ident">matched_intents</span>)),
+            <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> (<span class="prelude-val">None</span>, <span class="prelude-val">None</span>),
+        };
+        <span class="ident">AddIntentResult</span> {
+            <span class="ident">tx</span>,
+            <span class="ident">matched_intents</span>,
+        }
+    }
+}
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">Serialize</span>, <span class="ident">Deserialize</span>)]</span>
 <span class="kw">struct</span> <span class="ident">ExchangeNode</span> {
@@ -404,35 +431,6 @@
 <span class="kw">impl</span> <span class="ident">PartialEq</span> <span class="kw">for</span> <span class="ident">ExchangeNode</span> {
     <span class="kw">fn</span> <span class="ident">eq</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">other</span>: <span class="kw-2">&amp;</span><span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
         <span class="self">self</span>.<span class="ident">id</span> <span class="op">=</span><span class="op">=</span> <span class="ident">other</span>.<span class="ident">id</span>
-    }
-}
-
-<span class="comment">// TODO: For some reason, using `&amp;[u8]` causes the `decode_intent_data` to fail</span>
-<span class="comment">// decoding</span>
-<span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy::ptr_arg</span>)]</span>
-<span class="attribute">#[<span class="ident">no_mangle</span>]</span>
-<span class="kw">fn</span> <span class="ident">add_intent</span>(
-    <span class="ident">state</span>: <span class="kw-2">&amp;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>,
-    <span class="ident">id</span>: <span class="kw-2">&amp;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>,
-    <span class="ident">data</span>: <span class="kw-2">&amp;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>,
-) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">AddIntentResult</span> {
-    <span class="kw">let</span> <span class="ident">intent</span> <span class="op">=</span> <span class="ident">decode_intent_data</span>(<span class="kw-2">&amp;</span><span class="ident">data</span>[..]);
-    <span class="kw">let</span> <span class="ident">exchanges</span> <span class="op">=</span> <span class="ident">intent</span>.<span class="ident">data</span>.<span class="ident">exchange</span>.<span class="ident">clone</span>();
-
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">graph</span> <span class="op">=</span> <span class="ident">decode_graph</span>(<span class="ident">state</span>);
-    <span class="macro">println!</span>(<span class="string">&quot;trying to match new intent&quot;</span>);
-    <span class="ident">exchanges</span>.<span class="ident">into_iter</span>().<span class="ident">for_each</span>(<span class="op">|</span><span class="ident">exchange</span><span class="op">|</span> {
-        <span class="ident">add_intent_node</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">graph</span>, <span class="ident">id</span>.<span class="ident">to_vec</span>(), <span class="ident">exchange</span>, <span class="ident">intent</span>.<span class="ident">clone</span>())
-    });
-    <span class="kw">let</span> (<span class="ident">tx</span>, <span class="ident">matched_intents</span>) <span class="op">=</span> <span class="kw">match</span> <span class="ident">try_match</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">graph</span>) {
-        <span class="prelude-val">Some</span>((<span class="ident">tx</span>, <span class="ident">matched_intents</span>)) <span class="op">=</span><span class="op">&gt;</span> (<span class="prelude-val">Some</span>(<span class="ident">tx</span>), <span class="prelude-val">Some</span>(<span class="ident">matched_intents</span>)),
-        <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> (<span class="prelude-val">None</span>, <span class="prelude-val">None</span>),
-    };
-    <span class="kw">let</span> <span class="ident">state</span> <span class="op">=</span> <span class="ident">encode_graph</span>(<span class="kw-2">&amp;</span><span class="ident">graph</span>);
-    <span class="ident">AddIntentResult</span> {
-        <span class="ident">tx</span>,
-        <span class="ident">state</span>,
-        <span class="ident">matched_intents</span>,
     }
 }
 
@@ -741,18 +739,6 @@
 
 <span class="kw">fn</span> <span class="ident">decode_intent_data</span>(<span class="ident">bytes</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Signed</span><span class="op">&lt;</span><span class="ident">FungibleTokenIntent</span><span class="op">&gt;</span> {
     <span class="ident">Signed</span>::<span class="op">&lt;</span><span class="ident">FungibleTokenIntent</span><span class="op">&gt;</span><span class="ident">::try_from_slice</span>(<span class="ident">bytes</span>).<span class="ident">unwrap</span>()
-}
-
-<span class="kw">fn</span> <span class="ident">decode_graph</span>(<span class="ident">bytes</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">DiGraph</span><span class="op">&lt;</span><span class="ident">ExchangeNode</span>, <span class="ident">Address</span><span class="op">&gt;</span> {
-    <span class="kw">if</span> <span class="ident">bytes</span>.<span class="ident">is_empty</span>() {
-        <span class="ident">Graph::new</span>()
-    } <span class="kw">else</span> {
-        <span class="ident">serde_json::from_slice</span>(<span class="ident">bytes</span>).<span class="ident">expect</span>(<span class="string">&quot;error in json format&quot;</span>)
-    }
-}
-
-<span class="kw">fn</span> <span class="ident">encode_graph</span>(<span class="ident">graph</span>: <span class="kw-2">&amp;</span><span class="ident">DiGraph</span><span class="op">&lt;</span><span class="ident">ExchangeNode</span>, <span class="ident">Address</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span> {
-    <span class="ident">serde_json::to_vec</span>(<span class="ident">graph</span>).<span class="ident">unwrap</span>()
 }
 </code></pre></div>
 </section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../" data-current-crate="mm_token_exch" data-search-index-js="../../search-index.js" data-search-js="../../search.js"></div>
