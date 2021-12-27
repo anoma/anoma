@@ -537,55 +537,6 @@
 <span id="537">537</span>
 <span id="538">538</span>
 <span id="539">539</span>
-<span id="540">540</span>
-<span id="541">541</span>
-<span id="542">542</span>
-<span id="543">543</span>
-<span id="544">544</span>
-<span id="545">545</span>
-<span id="546">546</span>
-<span id="547">547</span>
-<span id="548">548</span>
-<span id="549">549</span>
-<span id="550">550</span>
-<span id="551">551</span>
-<span id="552">552</span>
-<span id="553">553</span>
-<span id="554">554</span>
-<span id="555">555</span>
-<span id="556">556</span>
-<span id="557">557</span>
-<span id="558">558</span>
-<span id="559">559</span>
-<span id="560">560</span>
-<span id="561">561</span>
-<span id="562">562</span>
-<span id="563">563</span>
-<span id="564">564</span>
-<span id="565">565</span>
-<span id="566">566</span>
-<span id="567">567</span>
-<span id="568">568</span>
-<span id="569">569</span>
-<span id="570">570</span>
-<span id="571">571</span>
-<span id="572">572</span>
-<span id="573">573</span>
-<span id="574">574</span>
-<span id="575">575</span>
-<span id="576">576</span>
-<span id="577">577</span>
-<span id="578">578</span>
-<span id="579">579</span>
-<span id="580">580</span>
-<span id="581">581</span>
-<span id="582">582</span>
-<span id="583">583</span>
-<span id="584">584</span>
-<span id="585">585</span>
-<span id="586">586</span>
-<span id="587">587</span>
-<span id="588">588</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Node and client configuration</span>
 
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">genesis</span>;
@@ -1034,55 +985,6 @@
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">address</span>) <span class="op">=</span> <span class="ident">rpc</span> {
             <span class="self">self</span>.<span class="ident">rpc</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">RpcServer</span> { <span class="ident">address</span> });
         }
-    }
-
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">test</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;testing&quot;</span>))]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">default_with_address</span>(
-        <span class="ident">ip</span>: <span class="ident">String</span>,
-        <span class="ident">port</span>: <span class="ident">u32</span>,
-        <span class="ident">peers_info</span>: <span class="ident">Vec</span><span class="op">&lt;</span>(<span class="ident">String</span>, <span class="ident">u32</span>, <span class="ident">PeerId</span>)<span class="op">&gt;</span>,
-        <span class="ident">mdns</span>: <span class="ident">bool</span>,
-        <span class="ident">kademlia</span>: <span class="ident">bool</span>,
-        <span class="ident">matchmaker</span>: <span class="ident">bool</span>,
-        <span class="ident">rpc</span>: <span class="ident">bool</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">gossiper_config</span> <span class="op">=</span> <span class="ident">IntentGossiper::default</span>();
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">discover_config</span> <span class="op">=</span> <span class="ident">DiscoverPeer::default</span>();
-
-        <span class="ident">gossiper_config</span>.<span class="ident">address</span> <span class="op">=</span>
-            <span class="ident">Multiaddr::from_str</span>(<span class="macro">format!</span>(<span class="string">&quot;/ip4/{}/tcp/{}&quot;</span>, <span class="ident">ip</span>, <span class="ident">port</span>).<span class="ident">as_str</span>())
-                .<span class="ident">unwrap</span>();
-
-        <span class="kw">if</span> <span class="ident">matchmaker</span> {
-            <span class="ident">gossiper_config</span>.<span class="ident">matchmaker</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">Matchmaker</span> {
-                <span class="ident">matchmaker</span>: <span class="string">&quot;../wasm/mm_token_exch.wasm&quot;</span>.<span class="ident">parse</span>().<span class="ident">unwrap</span>(),
-                <span class="ident">tx_code</span>: <span class="string">&quot;../wasm/tx_from_intent.wasm&quot;</span>.<span class="ident">parse</span>().<span class="ident">unwrap</span>(),
-                <span class="ident">ledger_address</span>: <span class="string">&quot;0.0.0.0:26657&quot;</span>.<span class="ident">parse</span>().<span class="ident">unwrap</span>(),
-                <span class="ident">filter</span>: <span class="prelude-val">None</span>,
-            })
-        }
-
-        <span class="kw">if</span> <span class="ident">rpc</span> {
-            <span class="ident">gossiper_config</span>.<span class="ident">rpc</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">RpcServer::default</span>())
-        }
-
-        <span class="kw">let</span> <span class="ident">bootstrap_peers</span>: <span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">PeerAddress</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">peers_info</span>
-            .<span class="ident">iter</span>()
-            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">info</span><span class="op">|</span> <span class="ident">PeerAddress</span> {
-                <span class="ident">address</span>: <span class="ident">Multiaddr::from_str</span>(
-                    <span class="macro">format!</span>(<span class="string">&quot;/ip4/{}/tcp/{}&quot;</span>, <span class="ident">info</span>.<span class="number">0</span>, <span class="ident">info</span>.<span class="number">1</span>).<span class="ident">as_str</span>(),
-                )
-                .<span class="ident">unwrap</span>(),
-                <span class="ident">peer_id</span>: <span class="ident">info</span>.<span class="number">2</span>,
-            })
-            .<span class="ident">collect</span>();
-        <span class="ident">discover_config</span>.<span class="ident">bootstrap_peers</span> <span class="op">=</span> <span class="ident">bootstrap_peers</span>;
-        <span class="ident">discover_config</span>.<span class="ident">mdns</span> <span class="op">=</span> <span class="ident">mdns</span>;
-        <span class="ident">discover_config</span>.<span class="ident">kademlia</span> <span class="op">=</span> <span class="ident">kademlia</span>;
-
-        <span class="ident">gossiper_config</span>.<span class="ident">discover_peer</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">discover_config</span>);
-
-        <span class="ident">gossiper_config</span>
     }
 }
 

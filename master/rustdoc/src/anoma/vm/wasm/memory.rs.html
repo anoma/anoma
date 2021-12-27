@@ -471,97 +471,6 @@
 <span id="471">471</span>
 <span id="472">472</span>
 <span id="473">473</span>
-<span id="474">474</span>
-<span id="475">475</span>
-<span id="476">476</span>
-<span id="477">477</span>
-<span id="478">478</span>
-<span id="479">479</span>
-<span id="480">480</span>
-<span id="481">481</span>
-<span id="482">482</span>
-<span id="483">483</span>
-<span id="484">484</span>
-<span id="485">485</span>
-<span id="486">486</span>
-<span id="487">487</span>
-<span id="488">488</span>
-<span id="489">489</span>
-<span id="490">490</span>
-<span id="491">491</span>
-<span id="492">492</span>
-<span id="493">493</span>
-<span id="494">494</span>
-<span id="495">495</span>
-<span id="496">496</span>
-<span id="497">497</span>
-<span id="498">498</span>
-<span id="499">499</span>
-<span id="500">500</span>
-<span id="501">501</span>
-<span id="502">502</span>
-<span id="503">503</span>
-<span id="504">504</span>
-<span id="505">505</span>
-<span id="506">506</span>
-<span id="507">507</span>
-<span id="508">508</span>
-<span id="509">509</span>
-<span id="510">510</span>
-<span id="511">511</span>
-<span id="512">512</span>
-<span id="513">513</span>
-<span id="514">514</span>
-<span id="515">515</span>
-<span id="516">516</span>
-<span id="517">517</span>
-<span id="518">518</span>
-<span id="519">519</span>
-<span id="520">520</span>
-<span id="521">521</span>
-<span id="522">522</span>
-<span id="523">523</span>
-<span id="524">524</span>
-<span id="525">525</span>
-<span id="526">526</span>
-<span id="527">527</span>
-<span id="528">528</span>
-<span id="529">529</span>
-<span id="530">530</span>
-<span id="531">531</span>
-<span id="532">532</span>
-<span id="533">533</span>
-<span id="534">534</span>
-<span id="535">535</span>
-<span id="536">536</span>
-<span id="537">537</span>
-<span id="538">538</span>
-<span id="539">539</span>
-<span id="540">540</span>
-<span id="541">541</span>
-<span id="542">542</span>
-<span id="543">543</span>
-<span id="544">544</span>
-<span id="545">545</span>
-<span id="546">546</span>
-<span id="547">547</span>
-<span id="548">548</span>
-<span id="549">549</span>
-<span id="550">550</span>
-<span id="551">551</span>
-<span id="552">552</span>
-<span id="553">553</span>
-<span id="554">554</span>
-<span id="555">555</span>
-<span id="556">556</span>
-<span id="557">557</span>
-<span id="558">558</span>
-<span id="559">559</span>
-<span id="560">560</span>
-<span id="561">561</span>
-<span id="562">562</span>
-<span id="563">563</span>
-<span id="564">564</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Wasm memory is used for bi-directionally passing data between the host and a</span>
 <span class="doccomment">//! wasm instance.</span>
 
@@ -611,10 +520,6 @@
 <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">VP_MEMORY_INIT_PAGES</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="number">100</span>; <span class="comment">// 6.4 MiB</span>
 <span class="doccomment">/// Mamixmum pages in VP memory</span>
 <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">VP_MEMORY_MAX_PAGES</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="number">200</span>; <span class="comment">// 12.8 MiB</span>
-<span class="doccomment">/// Initial pages in matchmaker memory</span>
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">MATCHMAKER_MEMORY_INIT_PAGES</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="number">400</span>; <span class="comment">// 25.6 MiB</span>
-<span class="doccomment">/// Initial pages in matchmaker filter memory</span>
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">FILTER_MEMORY_INIT_PAGES</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="number">100</span>; <span class="comment">// 6.4 MiB</span>
 
 <span class="doccomment">/// Prepare memory for instantiating a transaction module</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">prepare_tx_memory</span>(<span class="ident">store</span>: <span class="kw-2">&amp;</span><span class="ident">wasmer::Store</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">wasmer::Memory</span><span class="op">&gt;</span> {
@@ -636,22 +541,6 @@
     <span class="kw">let</span> <span class="ident">memory</span> <span class="op">=</span>
         <span class="ident">Memory::new</span>(<span class="ident">store</span>, <span class="ident">mem_type</span>).<span class="ident">map_err</span>(<span class="ident">Error::InitMemoryError</span>)<span class="question-mark">?</span>;
     <span class="prelude-val">Ok</span>(<span class="ident">memory</span>)
-}
-
-<span class="doccomment">/// Prepare memory for instantiating a matchmaker module</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">prepare_matchmaker_memory</span>(
-    <span class="ident">store</span>: <span class="kw-2">&amp;</span><span class="ident">wasmer::Store</span>,
-) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">wasmer::Memory</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">mem_type</span> <span class="op">=</span>
-        <span class="ident">wasmer::MemoryType::new</span>(<span class="ident">MATCHMAKER_MEMORY_INIT_PAGES</span>, <span class="prelude-val">None</span>, <span class="bool-val">false</span>);
-    <span class="ident">Memory::new</span>(<span class="ident">store</span>, <span class="ident">mem_type</span>).<span class="ident">map_err</span>(<span class="ident">Error::InitMemoryError</span>)
-}
-
-<span class="doccomment">/// Prepare memory for instantiating a filter module</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">prepare_filter_memory</span>(<span class="ident">store</span>: <span class="kw-2">&amp;</span><span class="ident">wasmer::Store</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">wasmer::Memory</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">mem_type</span> <span class="op">=</span>
-        <span class="ident">wasmer::MemoryType::new</span>(<span class="ident">FILTER_MEMORY_INIT_PAGES</span>, <span class="prelude-val">None</span>, <span class="bool-val">false</span>);
-    <span class="ident">Memory::new</span>(<span class="ident">store</span>, <span class="ident">mem_type</span>).<span class="ident">map_err</span>(<span class="ident">Error::InitMemoryError</span>)
 }
 
 <span class="doccomment">/// Input data for transaction wasm call</span>
@@ -744,77 +633,6 @@
         <span class="ident">keys_changed_len</span>,
         <span class="ident">verifiers_ptr</span>,
         <span class="ident">verifiers_len</span>,
-    })
-}
-
-<span class="doccomment">/// Input data for matchmaker wasm call</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">MatchmakerCallInput</span> {
-    <span class="doccomment">/// Pointer to the data</span>
-    <span class="kw">pub</span> <span class="ident">data_ptr</span>: <span class="ident">u64</span>,
-    <span class="doccomment">/// Length of the data</span>
-    <span class="kw">pub</span> <span class="ident">data_len</span>: <span class="ident">u64</span>,
-    <span class="doccomment">/// Pointer to the intent ID</span>
-    <span class="kw">pub</span> <span class="ident">intent_id_ptr</span>: <span class="ident">u64</span>,
-    <span class="doccomment">/// Length of the intent ID</span>
-    <span class="kw">pub</span> <span class="ident">intent_id_len</span>: <span class="ident">u64</span>,
-    <span class="doccomment">/// Pointer to the intent data</span>
-    <span class="kw">pub</span> <span class="ident">intent_data_ptr</span>: <span class="ident">u64</span>,
-    <span class="doccomment">/// Length of the intent data</span>
-    <span class="kw">pub</span> <span class="ident">intent_data_len</span>: <span class="ident">u64</span>,
-}
-
-<span class="doccomment">/// Write matchmaker inputs into wasm memory</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">write_matchmaker_inputs</span>(
-    <span class="ident">memory</span>: <span class="kw-2">&amp;</span><span class="ident">wasmer::Memory</span>,
-    <span class="ident">data</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span>[<span class="ident">u8</span>]<span class="op">&gt;</span>,
-    <span class="ident">intent_id</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span>[<span class="ident">u8</span>]<span class="op">&gt;</span>,
-    <span class="ident">intent_data</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span>[<span class="ident">u8</span>]<span class="op">&gt;</span>,
-) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">MatchmakerCallInput</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">data_ptr</span> <span class="op">=</span> <span class="number">0</span>;
-    <span class="kw">let</span> <span class="ident">data_len</span> <span class="op">=</span> <span class="ident">data</span>.<span class="ident">as_ref</span>().<span class="ident">len</span>() <span class="kw">as</span> <span class="kw">_</span>;
-
-    <span class="kw">let</span> <span class="ident">intent_id_ptr</span> <span class="op">=</span> <span class="ident">data_ptr</span> <span class="op">+</span> <span class="ident">data_len</span>;
-    <span class="kw">let</span> <span class="ident">intent_id_len</span> <span class="op">=</span> <span class="ident">intent_id</span>.<span class="ident">as_ref</span>().<span class="ident">len</span>() <span class="kw">as</span> <span class="kw">_</span>;
-
-    <span class="kw">let</span> <span class="ident">intent_data_ptr</span> <span class="op">=</span> <span class="ident">intent_id_ptr</span> <span class="op">+</span> <span class="ident">intent_id_len</span>;
-    <span class="kw">let</span> <span class="ident">intent_data_len</span> <span class="op">=</span> <span class="ident">intent_data</span>.<span class="ident">as_ref</span>().<span class="ident">len</span>() <span class="kw">as</span> <span class="kw">_</span>;
-
-    <span class="ident">write_memory_bytes</span>(<span class="ident">memory</span>, <span class="ident">data_ptr</span>, <span class="ident">data</span>)<span class="question-mark">?</span>;
-    <span class="ident">write_memory_bytes</span>(<span class="ident">memory</span>, <span class="ident">intent_id_ptr</span>, <span class="ident">intent_id</span>)<span class="question-mark">?</span>;
-    <span class="ident">write_memory_bytes</span>(<span class="ident">memory</span>, <span class="ident">intent_data_ptr</span>, <span class="ident">intent_data</span>)<span class="question-mark">?</span>;
-
-    <span class="prelude-val">Ok</span>(<span class="ident">MatchmakerCallInput</span> {
-        <span class="ident">data_ptr</span>,
-        <span class="ident">data_len</span>,
-        <span class="ident">intent_id_ptr</span>,
-        <span class="ident">intent_id_len</span>,
-        <span class="ident">intent_data_ptr</span>,
-        <span class="ident">intent_data_len</span>,
-    })
-}
-
-<span class="doccomment">/// Input data for matchmaker filter wasm call</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">FilterCallInput</span> {
-    <span class="doccomment">/// Pointer to the intent data</span>
-    <span class="kw">pub</span> <span class="ident">intent_data_ptr</span>: <span class="ident">u64</span>,
-    <span class="doccomment">/// Length of the intent data</span>
-    <span class="kw">pub</span> <span class="ident">intent_data_len</span>: <span class="ident">u64</span>,
-}
-
-<span class="doccomment">/// Write matchmaker filter inputs into wasm memory</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">write_filter_inputs</span>(
-    <span class="ident">memory</span>: <span class="kw-2">&amp;</span><span class="ident">wasmer::Memory</span>,
-    <span class="ident">intent_data</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span>[<span class="ident">u8</span>]<span class="op">&gt;</span>,
-) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">FilterCallInput</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">intent_data_ptr</span> <span class="op">=</span> <span class="number">0</span>;
-    <span class="kw">let</span> <span class="ident">intent_data_len</span> <span class="op">=</span> <span class="ident">intent_data</span>.<span class="ident">as_ref</span>().<span class="ident">len</span>() <span class="kw">as</span> <span class="kw">_</span>;
-
-    <span class="macro">tracing::info!</span>(<span class="string">&quot;write_data_inputs of len {}&quot;</span>, <span class="ident">intent_data_len</span>);
-    <span class="ident">write_memory_bytes</span>(<span class="ident">memory</span>, <span class="ident">intent_data_ptr</span>, <span class="ident">intent_data</span>)<span class="question-mark">?</span>;
-
-    <span class="prelude-val">Ok</span>(<span class="ident">FilterCallInput</span> {
-        <span class="ident">intent_data_ptr</span>,
-        <span class="ident">intent_data_len</span>,
     })
 }
 

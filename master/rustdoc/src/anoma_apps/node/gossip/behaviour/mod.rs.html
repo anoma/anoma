@@ -375,10 +375,10 @@
 
 <span class="kw">use</span> <span class="ident"><span class="self">self</span>::discovery::DiscoveryEvent</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">super</span>::intent_gossiper</span>;
+<span class="kw">use</span> <span class="ident"><span class="kw">super</span>::intent_gossiper::matchmaker::MatchmakerMessage</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::node::gossip::behaviour::discovery</span>::{
     <span class="ident">DiscoveryBehaviour</span>, <span class="ident">DiscoveryConfigBuilder</span>,
 };
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::types::MatchmakerMessage</span>;
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Error</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">Error</span> {

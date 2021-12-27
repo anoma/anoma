@@ -147,10 +147,10 @@
                     <main>
                         <h1 id="the-intent-gossip-and-matchmaker"><a class="header" href="#the-intent-gossip-and-matchmaker">The Intent gossip and Matchmaker</a></h1>
 <p>To run an intent gossip node with an RPC server:</p>
-<pre><code class="language-shell">anoma node gossip --rpc &quot;127.0.0.1:39111&quot;
+<pre><code class="language-shell">anoma node gossip --rpc &quot;127.0.0.1:26660&quot;
 </code></pre>
 <p>To run an intent gossip node with the intent gossip system, a token exchange matchmaker and RPC through which new intents are requested:</p>
-<pre><code class="language-shell">anoma node gossip --rpc &quot;127.0.0.1:39111&quot; --matchmaker-path wasm/mm_token_exch.wasm --tx-code-path wasm/tx_from_intent.wasm --ledger-address &quot;127.0.0.1:26657&quot; --source matchmaker --signing-key matchmaker
+<pre><code class="language-shell">anoma node gossip --rpc &quot;127.0.0.1:26660&quot; --matchmaker-path libmm_token_exch --tx-code-path wasm/tx_from_intent.wasm --ledger-address &quot;127.0.0.1:26657&quot; --source matchmaker --signing-key matchmaker
 </code></pre>
 <p>Mind that <code>matchmaker</code> should be valid key in your wallet.</p>
 <p>This pre-built matchmaker implementation is <a href="https://github.com/anoma/anoma/blob/master/wasm/wasm_source/src/mm_token_exch.rs">the fungible token exchange <code>mm_token_exch</code></a>, that is being used together with <a href="https://github.com/anoma/anoma/blob/master/wasm/wasm_source/src/lib.rs">the pre-built <code>tx_from_intent</code> transaction WASM</a> to submit transaction from matched intents to the ledger.</p>
@@ -201,16 +201,16 @@ echo '[{&quot;addr&quot;:&quot;'$CHRISTEL'&quot;,&quot;key&quot;:&quot;'$CHRISTE
 <p>Start the ledger and the matchmaker. Instruct the matchmaker to subscribe to a topic &quot;asset_v1&quot;:</p>
 <pre><code class="language-shell">anoma node ledger run
 
-anoma node gossip --rpc &quot;127.0.0.1:39111&quot; --matchmaker-path wasm/mm_token_exch.wasm --tx-code-path wasm/tx_from_intent.wasm --ledger-address &quot;127.0.0.1:26657&quot; --source mm-1 --signing-key mm-1
+anoma node gossip --rpc &quot;127.0.0.1:26660&quot; --matchmaker-path wasm/mm_token_exch.wasm --tx-code-path wasm/tx_from_intent.wasm --ledger-address &quot;127.0.0.1:26657&quot; --source mm-1 --signing-key mm-1
 
-anoma client subscribe-topic --node &quot;http://127.0.0.1:39111&quot; --topic &quot;asset_v1&quot;
+anoma client subscribe-topic --node &quot;http://127.0.0.1:26660&quot; --topic &quot;asset_v1&quot;
 </code></pre>
 </li>
 <li>
 <p>Submit the intents (the target gossip node must be running an RPC server):</p>
-<pre><code class="language-shell">anoma client intent --data-path intent.A.data --topic &quot;asset_v1&quot; --signing-key alberto --node &quot;http://127.0.0.1:39111&quot;
-anoma client intent --data-path intent.B.data --topic &quot;asset_v1&quot; --signing-key bertha --node &quot;http://127.0.0.1:39111&quot;
-anoma client intent --data-path intent.C.data --topic &quot;asset_v1&quot; --signing-key christel --node &quot;http://127.0.0.1:39111&quot;
+<pre><code class="language-shell">anoma client intent --data-path intent.A.data --topic &quot;asset_v1&quot; --signing-key alberto --node &quot;http://127.0.0.1:26660&quot;
+anoma client intent --data-path intent.B.data --topic &quot;asset_v1&quot; --signing-key bertha --node &quot;http://127.0.0.1:26660&quot;
+anoma client intent --data-path intent.C.data --topic &quot;asset_v1&quot; --signing-key christel --node &quot;http://127.0.0.1:26660&quot;
 </code></pre>
 <p>The matchmaker should find a match from these intents and submit a transaction to the ledger that performs the n-party transfers of tokens.</p>
 </li>
@@ -223,22 +223,20 @@ anoma client balance --owner christel-account
 </li>
 </ol>
 <h2 id="-custom-matchmaker"><a class="header" href="#-custom-matchmaker">🤝 Custom matchmaker</a></h2>
-<p>A custom matchmaker code can be built from <a href="https://github.com/anoma/anoma/tree/master/wasm/mm_template"><code>wasm/mm_template</code></a>.</p>
+<p>A custom matchmaker code can be built from <a href="https://github.com/anoma/anoma/tree/master/matchmaker/mm_template"><code>matchmaker/mm_template</code></a>.</p>
 <p>A matchmaker code must contain the following function, which will be called when a new intent is received:</p>
 <pre><pre class="playground"><code class="language-rust">
 <span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
-</span>use anoma_vm_env::matchmaker_prelude::*;
-
-#[matchmaker]
-fn add_intent(last_state: Vec&lt;u8&gt;, intent_id: Vec&lt;u8&gt;, intent_data: Vec&lt;u8&gt;) -&gt; bool {
-  // Returns a result of processing the intent
-  true
-}
+</span>#[no_mangle]
+fn add_intent(
+    last_state: &amp;Vec&lt;u8&gt;,
+    intent_id: &amp;Vec&lt;u8&gt;,
+    intent_data: &amp;Vec&lt;u8&gt;,
+) -&gt; AddIntentResult;
 <span class="boring">}
 </span></code></pre></pre>
-<p>The matchmaker can keep some state between its runs. The state can be updated from within the matchmaker code with <a href="https://docs.anoma.network/rustdoc/anoma_vm_env/imports/matchmaker/fn.update_state.html"><code>update_state</code> function</a> and received from the <code>last_state</code> argument.</p>
-<p>To find out about the interface available in a matchmaker and the library code used in the <code>mm_token_exch</code> implementation, please check out <a href="https://docs.anoma.network/master/rustdoc/anoma_vm_env/matchmaker_prelude/index.html">Rust docs for <code>matchmaker_prelude</code></a>.</p>
+<p>The matchmaker can keep some state between its runs. The state can be updated via the <a href="https://docs.anoma.network/rustdoc/anoma/types/matchmaker/struct.AddIntentResult.html"><code>AddIntentResult</code></a> and received from the <code>last_state</code> argument on a next invocation. To submit a transaction from the matchmaker, add it to the <code>AddIntentResult</code> along with a hash set of the intent IDs that were matched into the transaction.</p>
 
                     </main>
 

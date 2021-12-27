@@ -1,1 +1,0 @@
-initSidebarItems({"enum":[["TxType","Struct that classifies that kind of Tx based on the contents of its data."]],"fn":[["process_tx","Determines the type of the input Tx"]]});

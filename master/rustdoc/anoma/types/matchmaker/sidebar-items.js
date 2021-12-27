@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["AddIntentResult","The result of calling matchmaker’s `add_intent` function"]]});

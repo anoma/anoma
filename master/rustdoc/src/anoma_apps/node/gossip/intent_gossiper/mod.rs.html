@@ -99,8 +99,11 @@
 <span id="99"> 99</span>
 <span id="100">100</span>
 <span id="101">101</span>
+<span id="102">102</span>
+<span id="103">103</span>
+<span id="104">104</span>
 </pre><pre class="rust"><code><span class="kw">mod</span> <span class="ident">filter</span>;
-<span class="kw">mod</span> <span class="ident">matchmaker</span>;
+<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">matchmaker</span>;
 <span class="kw">mod</span> <span class="ident">mempool</span>;
 
 <span class="kw">use</span> <span class="ident">std::path::Path</span>;
@@ -113,7 +116,7 @@
 <span class="kw">use</span> <span class="ident">thiserror::Error</span>;
 <span class="kw">use</span> <span class="ident">tokio::sync::mpsc</span>::{<span class="ident">Receiver</span>, <span class="ident">Sender</span>};
 
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::types::MatchmakerMessage</span>;
+<span class="kw">use</span> <span class="ident"><span class="self">self</span>::matchmaker::MatchmakerMessage</span>;
 
 <span class="comment">// TODO split Error and Result type in two, one for Result/Error that can only</span>
 <span class="comment">// happens locally and the other that can happens locally and in the network</span>
@@ -169,20 +172,23 @@
         }
     }
 
-    <span class="doccomment">/// Apply the matchmaker logic on a new intent. Return Some(Ok(True)) if a</span>
-    <span class="doccomment">/// transaction have been crafted.</span>
-    <span class="kw">fn</span> <span class="ident">apply_matchmaker</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">intent</span>: <span class="ident">Intent</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">matchmaker</span>.<span class="ident">as_mut</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">matchmaker</span><span class="op">|</span> {
+    <span class="doccomment">/// Apply the matchmaker logic on a new intent. Return `Ok(true) if a</span>
+    <span class="doccomment">/// transaction have been crafted or if there&#39;s no matchmaker.</span>
+    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">apply_matchmaker</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">intent</span>: <span class="ident">Intent</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span> {
+        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">matchmaker</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">matchmaker</span>.<span class="ident">as_mut</span>() {
             <span class="ident">matchmaker</span>
                 .<span class="ident">try_match_intent</span>(<span class="kw-2">&amp;</span><span class="ident">intent</span>)
+                .<span class="kw">await</span>
                 .<span class="ident">map_err</span>(<span class="ident">Error::Matchmaker</span>)
-        })
+        } <span class="kw">else</span> {
+            <span class="prelude-val">Ok</span>(<span class="bool-val">true</span>)
+        }
     }
 
     <span class="comment">// Apply the logic to a new intent. It only tries to apply the matchmaker if</span>
     <span class="comment">// this one exists. If no matchmaker then returns true.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">apply_intent</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">intent</span>: <span class="ident">Intent</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">apply_matchmaker</span>(<span class="ident">intent</span>).<span class="ident">unwrap_or</span>(<span class="prelude-val">Ok</span>(<span class="bool-val">true</span>))
+    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">apply_intent</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">intent</span>: <span class="ident">Intent</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span> {
+        <span class="self">self</span>.<span class="ident">apply_matchmaker</span>(<span class="ident">intent</span>).<span class="kw">await</span>
     }
 
     <span class="doccomment">/// pass the matchmaker message to the matchmaker. If no matchmaker is</span>

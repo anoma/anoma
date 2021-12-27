@@ -40,22 +40,6 @@
 <span id="40">40</span>
 <span id="41">41</span>
 <span id="42">42</span>
-<span id="43">43</span>
-<span id="44">44</span>
-<span id="45">45</span>
-<span id="46">46</span>
-<span id="47">47</span>
-<span id="48">48</span>
-<span id="49">49</span>
-<span id="50">50</span>
-<span id="51">51</span>
-<span id="52">52</span>
-<span id="53">53</span>
-<span id="54">54</span>
-<span id="55">55</span>
-<span id="56">56</span>
-<span id="57">57</span>
-<span id="58">58</span>
 </pre><pre class="rust"><code><span class="doccomment">//! This crate contains library code for wasm. Some of the code is re-exported</span>
 <span class="doccomment">//! from the `shared` crate.</span>
 
@@ -97,22 +81,6 @@
     <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">anoma::ledger::pos</span> <span class="kw">as</span> <span class="ident">proof_of_stake</span>;
 
     <span class="kw">pub</span> <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::token::vp</span> <span class="kw">as</span> <span class="ident">token</span>;
-}
-
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">matchmaker_prelude</span> {
-    <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">anoma::types::address::Address</span>;
-    <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">anoma::types</span>::<span class="kw-2">*</span>;
-    <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">anoma_vm_macro::matchmaker</span>;
-
-    <span class="kw">pub</span> <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::imports::matchmaker</span>::<span class="kw-2">*</span>;
-}
-
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">filter_prelude</span> {
-    <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">anoma::types::address::Address</span>;
-    <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">anoma::types</span>::<span class="kw-2">*</span>;
-    <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">anoma_vm_macro::filter</span>;
-
-    <span class="kw">pub</span> <span class="kw">use</span> <span class="ident"><span class="kw">super</span>::imports::filter</span>::<span class="kw-2">*</span>;
 }
 </code></pre></div>
 </section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../" data-current-crate="anoma_vm_env" data-search-index-js="../../search-index.js" data-search-js="../../search.js"></div>

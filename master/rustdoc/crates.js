@@ -1,1 +1,1 @@
-window.ALL_CRATES = ["anoma","anoma_apps","anoma_proof_of_stake","anoma_tests","anoma_tx_prelude","anoma_vm_env","anoma_vm_macro","anoma_vp_prelude"];
+window.ALL_CRATES = ["anoma","anoma_apps","anoma_proof_of_stake","anoma_tests","anoma_tx_prelude","anoma_vm_env","anoma_vm_macro","anoma_vp_prelude","mm_template","mm_token_exch"];

@@ -2490,6 +2490,9 @@
 <span id="2490">2490</span>
 <span id="2491">2491</span>
 <span id="2492">2492</span>
+<span id="2493">2493</span>
+<span id="2494">2494</span>
+<span id="2495">2495</span>
 </pre><pre class="rust"><code><span class="doccomment">//! The CLI commands that are re-used between the executables `anoma`,</span>
 <span class="doccomment">//! `anoma-node` and `anoma-client`.</span>
 <span class="doccomment">//!</span>
@@ -4451,7 +4454,10 @@
             .<span class="ident">arg</span>(<span class="ident">PEERS</span>.<span class="ident">def</span>().<span class="ident">about</span>(<span class="string">&quot;List of peers to connect to.&quot;</span>))
             .<span class="ident">arg</span>(<span class="ident">TOPICS</span>.<span class="ident">def</span>().<span class="ident">about</span>(<span class="string">&quot;Enable a new gossip topic.&quot;</span>))
             .<span class="ident">arg</span>(<span class="ident">RPC_SOCKET_ADDR</span>.<span class="ident">def</span>().<span class="ident">about</span>(<span class="string">&quot;Enable RPC service.&quot;</span>))
-            .<span class="ident">arg</span>(<span class="ident">MATCHMAKER_PATH</span>.<span class="ident">def</span>().<span class="ident">about</span>(<span class="string">&quot;The matchmaker.&quot;</span>))
+            .<span class="ident">arg</span>(<span class="ident">MATCHMAKER_PATH</span>.<span class="ident">def</span>().<span class="ident">about</span>(
+                <span class="string">&quot;The file name of the matchmaker compiled to a dynamic \
+                 library without its extension.&quot;</span>,
+            ))
             .<span class="ident">arg</span>(
                 <span class="ident">TX_CODE_PATH</span>
                     .<span class="ident">def</span>()

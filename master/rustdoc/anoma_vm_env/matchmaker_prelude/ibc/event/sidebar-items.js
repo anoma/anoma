@@ -1,1 +1,0 @@
-initSidebarItems({"enum":[["Error",""]],"struct":[["IbcEvent","Wrapped IbcEvent"]],"type":[["Result","Conversion functions result"]]});

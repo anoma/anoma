@@ -234,58 +234,80 @@
 <span id="234">234</span>
 <span id="235">235</span>
 <span id="236">236</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std::path::Path</span>;
+<span id="237">237</span>
+<span id="238">238</span>
+<span id="239">239</span>
+<span id="240">240</span>
+<span id="241">241</span>
+<span id="242">242</span>
+<span id="243">243</span>
+<span id="244">244</span>
+<span id="245">245</span>
+<span id="246">246</span>
+<span id="247">247</span>
+<span id="248">248</span>
+<span id="249">249</span>
+<span id="250">250</span>
+<span id="251">251</span>
+</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std::collections::HashSet</span>;
+<span class="kw">use</span> <span class="ident">std::env</span>;
+<span class="kw">use</span> <span class="ident">std::path::Path</span>;
 <span class="kw">use</span> <span class="ident">std::rc::Rc</span>;
 
-<span class="kw">use</span> <span class="ident">anoma::gossip::mm::MmHost</span>;
 <span class="kw">use</span> <span class="ident">anoma::proto</span>::{<span class="ident">Intent</span>, <span class="ident">IntentId</span>, <span class="ident">Tx</span>};
 <span class="kw">use</span> <span class="ident">anoma::types::address</span>::{<span class="ident">xan</span>, <span class="ident">Address</span>};
+<span class="kw">use</span> <span class="ident">anoma::types::dylib</span>;
 <span class="kw">use</span> <span class="ident">anoma::types::intent</span>::{<span class="ident">IntentTransfers</span>, <span class="ident">MatchedExchanges</span>};
 <span class="kw">use</span> <span class="ident">anoma::types::key::ed25519::Keypair</span>;
+<span class="kw">use</span> <span class="ident">anoma::types::matchmaker::AddIntentResult</span>;
 <span class="kw">use</span> <span class="ident">anoma::types::transaction</span>::{<span class="ident">Fee</span>, <span class="ident">WrapperTx</span>};
 <span class="kw">use</span> <span class="ident">anoma::vm::wasm</span>;
 <span class="kw">use</span> <span class="ident">borsh</span>::{<span class="ident">BorshDeserialize</span>, <span class="ident">BorshSerialize</span>};
+<span class="kw">use</span> <span class="ident">libloading::Library</span>;
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
 <span class="kw">use</span> <span class="ident">tendermint_config::net</span>;
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
 <span class="kw">use</span> <span class="ident">tendermint_config_abci::net</span>;
 <span class="kw">use</span> <span class="ident">thiserror::Error</span>;
 <span class="kw">use</span> <span class="ident">tokio::sync::mpsc</span>::{<span class="ident">channel</span>, <span class="ident">Receiver</span>, <span class="ident">Sender</span>};
+<span class="kw">use</span> <span class="ident">tokio::sync::oneshot</span>;
 
 <span class="kw">use</span> <span class="ident"><span class="kw">super</span>::filter::Filter</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">super</span>::mempool</span>::{<span class="self">self</span>, <span class="ident">IntentMempool</span>};
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::cli::args</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::client::rpc</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::client::tx::broadcast_tx</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::types::MatchmakerMessage</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">config</span>, <span class="ident">wasm_loader</span>};
 
 <span class="doccomment">/// A matchmaker receive intents and tries to find a match with previously</span>
 <span class="doccomment">/// received intent.</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Matchmaker</span> {
+    <span class="doccomment">/// Matchmaker&#39;s implementation loaded from dylib</span>
+    <span class="ident">matchmaker_code</span>: <span class="ident">Library</span>,
     <span class="doccomment">/// All valid and received intent are saved in this mempool</span>
     <span class="ident">mempool</span>: <span class="ident">IntentMempool</span>,
     <span class="doccomment">/// Possible filter that filter any received intent.</span>
     <span class="ident">filter</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Filter</span><span class="op">&gt;</span>,
-    <span class="ident">matchmaker_code</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>,
     <span class="doccomment">/// The code of the transaction that is going to be send to a ledger.</span>
     <span class="ident">tx_code</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>,
     <span class="doccomment">/// the matchmaker&#39;s state as arbitrary bytes</span>
     <span class="ident">state</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>,
     <span class="doccomment">/// The ledger address to send any crafted transaction to</span>
     <span class="ident">ledger_address</span>: <span class="ident">net::Address</span>,
-    <span class="doccomment">/// The WASM host allows the WASM runtime to send messages back to this</span>
-    <span class="doccomment">/// matchmaker</span>
-    <span class="ident">wasm_host</span>: <span class="ident">WasmHost</span>,
     <span class="doccomment">/// A source address for transactions created from intents.</span>
     <span class="ident">tx_source_address</span>: <span class="ident">Address</span>,
     <span class="doccomment">/// A keypair that will be used to sign transactions.</span>
     <span class="ident">tx_signing_key</span>: <span class="ident">Rc</span><span class="op">&lt;</span><span class="ident">Keypair</span><span class="op">&gt;</span>,
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
-<span class="kw">struct</span> <span class="ident">WasmHost</span>(<span class="ident">Sender</span><span class="op">&lt;</span><span class="ident">MatchmakerMessage</span><span class="op">&gt;</span>);
+<span class="doccomment">/// Matchmaker message for communication between the runner, P2P and the</span>
+<span class="doccomment">/// implementation</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
+<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">MatchmakerMessage</span> {
+    <span class="doccomment">/// Run the matchmaker with the given intent</span>
+    <span class="ident">ApplyIntent</span>(<span class="ident">Intent</span>, <span class="ident">oneshot::Sender</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span>),
+}
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Error</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">Error</span> {
@@ -303,30 +325,6 @@
 
 <span class="kw">type</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">std::result::Result</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">Error</span><span class="op">&gt;</span>;
 
-<span class="kw">impl</span> <span class="ident">MmHost</span> <span class="kw">for</span> <span class="ident">WasmHost</span> {
-    <span class="doccomment">/// Send a message from the guest program to remove value from the mempool</span>
-    <span class="kw">fn</span> <span class="ident">remove_intents</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">intents_id</span>: <span class="ident">std::collections::HashSet</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span>) {
-        <span class="self">self</span>.<span class="number">0</span>
-            .<span class="ident">try_send</span>(<span class="ident">MatchmakerMessage::RemoveIntents</span>(<span class="ident">intents_id</span>))
-            .<span class="ident">expect</span>(<span class="string">&quot;Sending matchmaker message&quot;</span>)
-    }
-
-    <span class="doccomment">/// Send a message from the guest program to inject a new transaction to the</span>
-    <span class="doccomment">/// ledger</span>
-    <span class="kw">fn</span> <span class="ident">inject_tx</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">tx_data</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>) {
-        <span class="self">self</span>.<span class="number">0</span>
-            .<span class="ident">try_send</span>(<span class="ident">MatchmakerMessage::InjectTx</span>(<span class="ident">tx_data</span>))
-            .<span class="ident">expect</span>(<span class="string">&quot;Sending matchmaker message&quot;</span>)
-    }
-
-    <span class="doccomment">/// Send a message from the guest program to update the matchmaker state</span>
-    <span class="kw">fn</span> <span class="ident">update_state</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">state</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>) {
-        <span class="self">self</span>.<span class="number">0</span>
-            .<span class="ident">try_send</span>(<span class="ident">MatchmakerMessage::UpdateState</span>(<span class="ident">state</span>))
-            .<span class="ident">expect</span>(<span class="string">&quot;Sending matchmaker message&quot;</span>)
-    }
-}
-
 <span class="kw">impl</span> <span class="ident">Matchmaker</span> {
     <span class="doccomment">/// Create a new matchmaker based on the parameter config.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(
@@ -338,15 +336,34 @@
     {
         <span class="comment">// TODO: find a good number or maybe unlimited channel ?</span>
         <span class="kw">let</span> (<span class="ident">sender</span>, <span class="ident">receiver</span>) <span class="op">=</span> <span class="ident">channel</span>(<span class="number">100</span>);
+
+        <span class="comment">// The dylib should be built in the same directory as where Anoma</span>
+        <span class="comment">// binaries are, even when ran via `cargo run`. Anoma&#39;s pre-built</span>
+        <span class="comment">// binaries are distributed with the dylib(s) in the same directory.</span>
+        <span class="kw">let</span> <span class="ident">dylib_dir</span> <span class="op">=</span> {
+            <span class="kw">let</span> <span class="ident">anoma_path</span> <span class="op">=</span> <span class="ident">env::current_exe</span>().<span class="ident">unwrap</span>();
+            <span class="ident">anoma_path</span>
+                .<span class="ident">parent</span>()
+                .<span class="ident">map</span>(<span class="op">|</span><span class="ident">path</span><span class="op">|</span> <span class="ident">path</span>.<span class="ident">to_owned</span>())
+                .<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="op">|</span> <span class="string">&quot;.&quot;</span>.<span class="ident">into</span>())
+        };
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">matchmaker_dylib</span> <span class="op">=</span> <span class="ident">dylib_dir</span>.<span class="ident">join</span>(<span class="kw-2">&amp;</span><span class="ident">config</span>.<span class="ident">matchmaker</span>);
+        <span class="ident">matchmaker_dylib</span>.<span class="ident">set_extension</span>(<span class="ident">dylib::FILE_EXT</span>);
+        <span class="macro">tracing::info!</span>(
+            <span class="string">&quot;Running matchmaker from {}&quot;</span>,
+            <span class="ident">matchmaker_dylib</span>.<span class="ident">to_string_lossy</span>()
+        );
+        <span class="kw">if</span> <span class="op">!</span><span class="ident">matchmaker_dylib</span>.<span class="ident">exists</span>() {
+            <span class="macro">panic!</span>(
+                <span class="string">&quot;The matchmaker library couldn&#39;t not be found. Did you build \
+                 it?&quot;</span>
+            )
+        }
         <span class="kw">let</span> <span class="ident">matchmaker_code</span> <span class="op">=</span>
-            <span class="ident">wasm_loader::read_wasm</span>(<span class="kw-2">&amp;</span><span class="ident">wasm_dir</span>, <span class="kw-2">&amp;</span><span class="ident">config</span>.<span class="ident">matchmaker</span>);
+            <span class="kw">unsafe</span> { <span class="ident">Library::new</span>(<span class="ident">matchmaker_dylib</span>).<span class="ident">unwrap</span>() };
+
         <span class="kw">let</span> <span class="ident">tx_code</span> <span class="op">=</span> <span class="ident">wasm_loader::read_wasm</span>(<span class="kw-2">&amp;</span><span class="ident">wasm_dir</span>, <span class="kw-2">&amp;</span><span class="ident">config</span>.<span class="ident">tx_code</span>);
-        <span class="kw">let</span> <span class="ident">filter</span> <span class="op">=</span> <span class="ident">config</span>
-            .<span class="ident">filter</span>
-            .<span class="ident">as_ref</span>()
-            .<span class="ident">map</span>(<span class="ident">Filter::from_file</span>)
-            .<span class="ident">transpose</span>()
-            .<span class="ident">map_err</span>(<span class="ident">Error::FilterInit</span>)<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">filter</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">Filter</span>);
 
         <span class="prelude-val">Ok</span>((
             <span class="self">Self</span> {
@@ -356,7 +373,6 @@
                 <span class="ident">tx_code</span>,
                 <span class="ident">state</span>: <span class="ident">Vec::new</span>(),
                 <span class="ident">ledger_address</span>: <span class="ident">config</span>.<span class="ident">ledger_address</span>.<span class="ident">clone</span>(),
-                <span class="ident">wasm_host</span>: <span class="ident">WasmHost</span>(<span class="ident">sender</span>.<span class="ident">clone</span>()),
                 <span class="ident">tx_source_address</span>,
                 <span class="ident">tx_signing_key</span>,
             },
@@ -377,83 +393,97 @@
 
     <span class="doccomment">/// add the intent to the matchmaker mempool and tries to find a match for</span>
     <span class="doccomment">/// that intent</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">try_match_intent</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">intent</span>: <span class="kw-2">&amp;</span><span class="ident">Intent</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span> {
-        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">apply_filter</span>(<span class="ident">intent</span>)<span class="question-mark">?</span> {
+    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">try_match_intent</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">intent</span>: <span class="kw-2">&amp;</span><span class="ident">Intent</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span> {
+        <span class="prelude-val">Ok</span>(<span class="kw">if</span> <span class="self">self</span>.<span class="ident">apply_filter</span>(<span class="ident">intent</span>)<span class="question-mark">?</span> {
             <span class="self">self</span>.<span class="ident">mempool</span>
                 .<span class="ident">put</span>(<span class="ident">intent</span>.<span class="ident">clone</span>())
                 .<span class="ident">map_err</span>(<span class="ident">Error::MempoolFailed</span>)<span class="question-mark">?</span>;
-            <span class="ident">wasm::run::matchmaker</span>(
-                <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">matchmaker_code</span>.<span class="ident">clone</span>(),
-                <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">state</span>,
-                <span class="kw-2">&amp;</span><span class="ident">intent</span>.<span class="ident">id</span>().<span class="number">0</span>,
-                <span class="kw-2">&amp;</span><span class="ident">intent</span>.<span class="ident">data</span>,
-                <span class="self">self</span>.<span class="ident">wasm_host</span>.<span class="ident">clone</span>(),
-            )
-            .<span class="ident">map_err</span>(<span class="ident">Error::RunnerFailed</span>)
+
+            <span class="kw">let</span> <span class="ident">add_intent</span>: <span class="ident">libloading::Symbol</span><span class="op">&lt;</span>
+                <span class="kw">unsafe</span> <span class="kw">extern</span> <span class="string">&quot;C&quot;</span> <span class="kw">fn</span>(
+                    <span class="kw-2">&amp;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>,
+                    <span class="kw-2">&amp;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>,
+                    <span class="kw-2">&amp;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>,
+                ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">AddIntentResult</span>,
+            <span class="op">&gt;</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="self">self</span>.<span class="ident">matchmaker_code</span>.<span class="ident">get</span>(<span class="string">b&quot;add_intent&quot;</span>).<span class="ident">unwrap</span>() };
+
+            <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">anoma::types::key::ed25519::Signed</span>::<span class="op">&lt;</span>
+                <span class="ident">anoma::types::intent::FungibleTokenIntent</span>,
+            <span class="op">&gt;</span><span class="ident">::try_from_slice</span>(<span class="kw-2">&amp;</span><span class="ident">intent</span>.<span class="ident">data</span>)
+            .<span class="ident">unwrap</span>();
+            <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="kw">unsafe</span> {
+                <span class="ident">add_intent</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">state</span>, <span class="kw-2">&amp;</span><span class="ident">intent</span>.<span class="ident">id</span>().<span class="number">0</span>, <span class="kw-2">&amp;</span><span class="ident">intent</span>.<span class="ident">data</span>)
+            };
+
+            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">tx</span>) <span class="op">=</span> <span class="ident">result</span>.<span class="ident">tx</span> {
+                <span class="self">self</span>.<span class="ident">submit_tx</span>(<span class="ident">tx</span>).<span class="kw">await</span>
+            }
+            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">matched_intents</span>) <span class="op">=</span> <span class="ident">result</span>.<span class="ident">matched_intents</span> {
+                <span class="self">self</span>.<span class="ident">removed_intents</span>(<span class="ident">matched_intents</span>)
+            }
+            <span class="self">self</span>.<span class="ident">state</span> <span class="op">=</span> <span class="ident">result</span>.<span class="ident">state</span>;
+
+            <span class="bool-val">true</span>
         } <span class="kw">else</span> {
-            <span class="prelude-val">Ok</span>(<span class="bool-val">false</span>)
+            <span class="bool-val">false</span>
+        })
+    }
+
+    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">submit_tx</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">tx_data</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>) {
+        <span class="kw">let</span> <span class="ident">tx_code</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">tx_code</span>.<span class="ident">clone</span>();
+        <span class="kw">let</span> <span class="ident">matches</span> <span class="op">=</span> <span class="ident">MatchedExchanges::try_from_slice</span>(<span class="kw-2">&amp;</span><span class="ident">tx_data</span>[..]).<span class="ident">unwrap</span>();
+        <span class="kw">let</span> <span class="ident">intent_transfers</span> <span class="op">=</span> <span class="ident">IntentTransfers</span> {
+            <span class="ident">matches</span>,
+            <span class="ident">source</span>: <span class="self">self</span>.<span class="ident">tx_source_address</span>.<span class="ident">clone</span>(),
+        };
+        <span class="kw">let</span> <span class="ident">tx_data</span> <span class="op">=</span> <span class="ident">intent_transfers</span>.<span class="ident">try_to_vec</span>().<span class="ident">unwrap</span>();
+        <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">WrapperTx::new</span>(
+            <span class="ident">Fee</span> {
+                <span class="ident">amount</span>: <span class="number">0</span>.<span class="ident">into</span>(),
+                <span class="ident">token</span>: <span class="ident">xan</span>(),
+            },
+            <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">tx_signing_key</span>,
+            <span class="ident">rpc::query_epoch</span>(<span class="ident">args::Query</span> {
+                <span class="ident">ledger_address</span>: <span class="self">self</span>.<span class="ident">ledger_address</span>.<span class="ident">clone</span>(),
+            })
+            .<span class="kw">await</span>,
+            <span class="number">0</span>.<span class="ident">into</span>(),
+            <span class="ident">Tx::new</span>(<span class="ident">tx_code</span>, <span class="prelude-val">Some</span>(<span class="ident">tx_data</span>)).<span class="ident">sign</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">tx_signing_key</span>),
+        );
+
+        <span class="kw">let</span> <span class="ident">response</span> <span class="op">=</span>
+            <span class="ident">broadcast_tx</span>(<span class="self">self</span>.<span class="ident">ledger_address</span>.<span class="ident">clone</span>(), <span class="ident">tx</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">tx_signing_key</span>)
+                .<span class="kw">await</span>;
+        <span class="kw">match</span> <span class="ident">response</span> {
+            <span class="prelude-val">Ok</span>(<span class="ident">tx_response</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="macro">tracing::info!</span>(
+                    <span class="string">&quot;Injected transaction from matchmaker with result: {:#?}&quot;</span>,
+                    <span class="ident">tx_response</span>
+                );
+            }
+            <span class="prelude-val">Err</span>(<span class="ident">err</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="macro">tracing::error!</span>(
+                    <span class="string">&quot;Matchmaker error in submitting a transaction to the \
+                     ledger: {}&quot;</span>,
+                    <span class="ident">err</span>
+                );
+            }
         }
+    }
+
+    <span class="kw">fn</span> <span class="ident">removed_intents</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">intent_ids</span>: <span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span>) {
+        <span class="ident">intent_ids</span>.<span class="ident">into_iter</span>().<span class="ident">for_each</span>(<span class="op">|</span><span class="ident">intent_id</span><span class="op">|</span> {
+            <span class="self">self</span>.<span class="ident">mempool</span>.<span class="ident">remove</span>(<span class="kw-2">&amp;</span><span class="ident">IntentId::from</span>(<span class="ident">intent_id</span>));
+        });
     }
 
     <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">handle_mm_message</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">mm_message</span>: <span class="ident">MatchmakerMessage</span>) {
         <span class="kw">match</span> <span class="ident">mm_message</span> {
-            <span class="ident">MatchmakerMessage::InjectTx</span>(<span class="ident">tx_data</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="kw">let</span> <span class="ident">tx_code</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">tx_code</span>.<span class="ident">clone</span>();
-                <span class="kw">let</span> <span class="ident">matches</span> <span class="op">=</span>
-                    <span class="ident">MatchedExchanges::try_from_slice</span>(<span class="kw-2">&amp;</span><span class="ident">tx_data</span>[..]).<span class="ident">unwrap</span>();
-                <span class="kw">let</span> <span class="ident">intent_transfers</span> <span class="op">=</span> <span class="ident">IntentTransfers</span> {
-                    <span class="ident">matches</span>,
-                    <span class="ident">source</span>: <span class="self">self</span>.<span class="ident">tx_source_address</span>.<span class="ident">clone</span>(),
-                };
-                <span class="kw">let</span> <span class="ident">tx_data</span> <span class="op">=</span> <span class="ident">intent_transfers</span>.<span class="ident">try_to_vec</span>().<span class="ident">unwrap</span>();
-                <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">WrapperTx::new</span>(
-                    <span class="ident">Fee</span> {
-                        <span class="ident">amount</span>: <span class="number">0</span>.<span class="ident">into</span>(),
-                        <span class="ident">token</span>: <span class="ident">xan</span>(),
-                    },
-                    <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">tx_signing_key</span>,
-                    <span class="ident">rpc::query_epoch</span>(<span class="ident">args::Query</span> {
-                        <span class="ident">ledger_address</span>: <span class="self">self</span>.<span class="ident">ledger_address</span>.<span class="ident">clone</span>(),
-                    })
-                    .<span class="kw">await</span>,
-                    <span class="number">0</span>.<span class="ident">into</span>(),
-                    <span class="ident">Tx::new</span>(<span class="ident">tx_code</span>, <span class="prelude-val">Some</span>(<span class="ident">tx_data</span>)).<span class="ident">sign</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">tx_signing_key</span>),
-                );
-
-                <span class="kw">let</span> <span class="ident">response</span> <span class="op">=</span> <span class="ident">broadcast_tx</span>(
-                    <span class="self">self</span>.<span class="ident">ledger_address</span>.<span class="ident">clone</span>(),
-                    <span class="ident">tx</span>,
-                    <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">tx_signing_key</span>,
-                )
-                .<span class="kw">await</span>;
-                <span class="kw">match</span> <span class="ident">response</span> {
-                    <span class="prelude-val">Ok</span>(<span class="ident">tx_response</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                        <span class="macro">tracing::info!</span>(
-                            <span class="string">&quot;Injected transaction from matchmaker with \
-                             result: {:#?}&quot;</span>,
-                            <span class="ident">tx_response</span>
-                        );
-                    }
-                    <span class="prelude-val">Err</span>(<span class="ident">err</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                        <span class="macro">tracing::error!</span>(
-                            <span class="string">&quot;Matchmaker error in submitting a transaction to \
-                             the ledger: {}&quot;</span>,
-                            <span class="ident">err</span>
-                        );
-                    }
-                }
-            }
-            <span class="ident">MatchmakerMessage::RemoveIntents</span>(<span class="ident">intents_id</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="ident">intents_id</span>.<span class="ident">into_iter</span>().<span class="ident">for_each</span>(<span class="op">|</span><span class="ident">intent_id</span><span class="op">|</span> {
-                    <span class="self">self</span>.<span class="ident">mempool</span>.<span class="ident">remove</span>(<span class="kw-2">&amp;</span><span class="ident">IntentId::from</span>(<span class="ident">intent_id</span>));
-                });
-            }
-            <span class="ident">MatchmakerMessage::UpdateState</span>(<span class="ident">mm_data</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="self">self</span>.<span class="ident">state</span> <span class="op">=</span> <span class="ident">mm_data</span>;
-            }
             <span class="ident">MatchmakerMessage::ApplyIntent</span>(<span class="ident">intent</span>, <span class="ident">response_sender</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span>
-                    <span class="self">self</span>.<span class="ident">try_match_intent</span>(<span class="kw-2">&amp;</span><span class="ident">intent</span>).<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="ident">err</span><span class="op">|</span> {
+                <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="self">self</span>
+                    .<span class="ident">try_match_intent</span>(<span class="kw-2">&amp;</span><span class="ident">intent</span>)
+                    .<span class="kw">await</span>
+                    .<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="ident">err</span><span class="op">|</span> {
                         <span class="macro">tracing::error!</span>(
                             <span class="string">&quot;Matchmaker error in applying intent {}&quot;</span>,
                             <span class="ident">err</span>

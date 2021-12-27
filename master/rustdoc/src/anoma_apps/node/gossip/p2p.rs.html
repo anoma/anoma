@@ -158,7 +158,7 @@
 
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident"><span class="self">self</span>::identity::Identity</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">super</span>::behaviour::Behaviour</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::types::MatchmakerMessage</span>;
+<span class="kw">use</span> <span class="ident"><span class="kw">super</span>::intent_gossiper::matchmaker::MatchmakerMessage</span>;
 
 <span class="kw">pub</span> <span class="kw">type</span> <span class="ident">Swarm</span> <span class="op">=</span> <span class="ident">libp2p::Swarm</span><span class="op">&lt;</span><span class="ident">Behaviour</span><span class="op">&gt;</span>;
 
