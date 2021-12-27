@@ -25,6 +25,7 @@ tx_withdraw = []
 vp_testnet_faucet = ["once_cell"]
 vp_token = []
 vp_user = ["once_cell", "rust_decimal"]
+vp_validator = ["once_cell", "rust_decimal"]
 
 [dependencies]
 anoma_tx_prelude = {path = "../../tx_prelude"}
