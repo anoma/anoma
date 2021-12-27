@@ -94,6 +94,7 @@ mod protocol_txs {
         /// Create a new tx requesting a new DKG session keypair
         pub fn request_new_dkg_keypair<'a, F>(
             data: UpdateDkgSessionKey,
+            keypair: &Keypair,
             wasm_dir: &'a Path,
             wasm_loader: F,
         ) -> Self
@@ -106,13 +107,16 @@ mod protocol_txs {
                     .expect("Converting path to string should not fail"),
                 TX_NEW_DKG_KP_WASM,
             );
-            Self::NewDkgKeypair(Tx::new(
-                code,
-                Some(
-                    data.try_to_vec()
-                        .expect("Serializing request should not fail"),
-                ),
-            ))
+            Self::NewDkgKeypair(
+                Tx::new(
+                    code,
+                    Some(
+                        data.try_to_vec()
+                            .expect("Serializing request should not fail"),
+                    ),
+                )
+                .sign(keypair),
+            )
         }
     }
 

@@ -597,6 +597,7 @@ where
         }
     }
 
+
     /// Issue a tx requesting a new DKG session key
     fn request_new_dkg_session_keypair(&mut self) {
         if let ShellMode::Validator {
@@ -619,10 +620,10 @@ where
                     .expect("Serialization of DKG public key shouldn't fail"),
             };
             *next_dkg_keypair = Some(dkg_keypair);
-            let keypair = data.keys.get_protocol_keypair();
-            let keypair = keypair.lock();
+            let keypair = data.keys.get_protocol_keypair().lock();
             let request_tx = ProtocolTxType::request_new_dkg_keypair(
                 request_data,
+                &keypair,
                 &self.wasm_dir,
                 read_wasm,
             )

@@ -314,6 +314,33 @@ pub mod tx_update_vp {
     }
 }
 
+/// A tx for updating a validator's DKG public session key
+/// This tx wraps the validity predicate inside `key::ed25519::SignedTxData` as
+/// its input as declared in `shared` crate.
+#[cfg(feature = "tx_update_dkg_session_keypair")]
+pub mod tx_update_dkg_session_keypair {
+    use anoma_vm_env::tx_prelude::*;
+
+    #[transaction]
+    fn apply_tx(tx_data: Vec<u8>) {
+        let signed =
+            key::ed25519::SignedTxData::try_from_slice(&tx_data[..]).unwrap();
+        let update_dkg_keypair =
+            transaction::UpdateDkgSessionKey::try_from_slice(&signed.data.unwrap()[..])
+                .unwrap();
+        log_string(format!(
+            "update DKG keypair for: {:#?}",
+            update_dkg_keypair.address
+        ));
+        if !proof_of_stake::update_dkg_session_keypair(update_dkg_keypair) {
+            panic!(
+                "A request was made to update the DKG session keypair for a \
+                 non-validator."
+            )
+        }
+    }
+}
+
 /// A VP for a token.
 #[cfg(feature = "vp_token")]
 pub mod vp_token {

@@ -12,6 +12,7 @@ use anoma::ledger::storage::{DBIter, Storage, StorageHasher, DB};
 use anoma::proto::{self, Tx};
 use anoma::types::address::{Address, InternalAddress};
 use anoma::types::storage::Key;
+use anoma::types::transaction::protocol::{ProtocolTx, ProtocolTxType};
 use anoma::types::transaction::{DecryptedTx, TxType};
 use anoma::vm::{self, wasm};
 use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
@@ -95,7 +96,11 @@ where
         .map_err(Error::GasError)?;
     match tx {
         TxType::Raw(_) => Err(Error::TxTypeError),
-        TxType::Decrypted(DecryptedTx::Decrypted(tx)) => {
+        TxType::Protocol(ProtocolTx {
+            tx: ProtocolTxType::NewDkgKeypair(tx),
+            ..
+        })
+        | TxType::Decrypted(DecryptedTx::Decrypted(tx)) => {
             let verifiers =
                 execute_tx(&tx, storage, block_gas_meter, write_log)?;
 

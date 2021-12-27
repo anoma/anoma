@@ -142,27 +142,3 @@ pub fn is_dkg_pk_key(key: &Key) -> Option<&Address> {
 }
 
 const DKG_PK_STORAGE_KEY: &str = "dkg_pk_key";
-const DKG_KEYPAIR_STORAGE_KEY: &str = "dkg_keypair_key";
-const DKG_NEXT_KEYPAIR_STORAGE_KEY: &str = "dkg_next_keypair_key";
-const DKG_NEXT_PK_STORAGE_KEY: &str = "dkg_next_pk_key";
-
-/// The storage key for a DKG session keypair
-pub fn dkg_keypair_key(owner: &Address) -> Key {
-    Key::from(owner.to_db_key())
-        .push(&DKG_KEYPAIR_STORAGE_KEY.to_owned())
-        .expect("Cannot obtain a storage key")
-}
-
-/// The storage key for the next DKG public session key for a validator
-pub fn dkg_next_pk_key(owner: &Address) -> Key {
-    Key::from(owner.to_db_key())
-        .push(&DKG_NEXT_PK_STORAGE_KEY.to_owned())
-        .expect("Cannot obtain a storage key")
-}
-
-/// The storage key for the next DKG session keypair for a validator
-pub fn dkg_next_keypair_key(owner: &Address) -> Key {
-    Key::from(owner.to_db_key())
-        .push(&DKG_NEXT_KEYPAIR_STORAGE_KEY.to_owned())
-        .expect("Cannot obtain a storage key")
-}
