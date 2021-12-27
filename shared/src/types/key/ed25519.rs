@@ -61,7 +61,6 @@ pub struct PublicKeyHash(pub(crate) String);
 
 const PKH_HASH_LEN: usize = address::HASH_LEN;
 const PK_STORAGE_KEY: &str = "ed25519_pk";
-const PROTOCOL_PK_STORAGE_KEY: &str = "ed25519_protocol_pk";
 
 /// Obtain a storage key for user's public key.
 pub fn pk_key(owner: &Address) -> Key {
@@ -75,26 +74,6 @@ pub fn is_pk_key(key: &Key) -> Option<&Address> {
     match &key.segments[..] {
         [DbKeySeg::AddressSeg(owner), DbKeySeg::StringSeg(key)]
             if key == PK_STORAGE_KEY =>
-        {
-            Some(owner)
-        }
-        _ => None,
-    }
-}
-
-/// Obtain a storage key for user's public protocol signing key.
-pub fn protocol_pk_key(owner: &Address) -> Key {
-    Key::from(owner.to_db_key())
-        .push(&PROTOCOL_PK_STORAGE_KEY.to_owned())
-        .expect("Cannot obtain a storage key")
-}
-
-/// Check if the given storage key is a protocol public key. If it is, returns
-/// the owner.
-pub fn is_protocol_pk_key(key: &Key) -> Option<&Address> {
-    match &key.segments[..] {
-        [DbKeySeg::AddressSeg(owner), DbKeySeg::StringSeg(key)]
-            if key == PROTOCOL_PK_STORAGE_KEY =>
         {
             Some(owner)
         }

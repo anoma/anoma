@@ -39,15 +39,10 @@ fn validate_tx(
         Ok(signed_tx_data) => {
             let pk = key::ed25519::get(&addr);
             let protocol_pk = key::ed25519::get_protocol(&addr);
-            let established_sig = match pk {
+            match pk {
                 Some(pk) => verify_tx_signature(&pk, &signed_tx_data.sig),
                 None => false,
-            };
-            let protocol_sig = match protocol_pk {
-                Some(pk) => verify_tx_signature(&pk, &signed_tx_data.sig),
-                None => false,
-            };
-            established_sig || protocol_sig
+            }
         }
         _ => false,
     });

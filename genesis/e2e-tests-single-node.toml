@@ -11,7 +11,7 @@ tokens = 200000
 # Amount of the validator's genesis token balance which is not staked.
 non_staked_balance = 1000000000000
 # VP for the validator account
-validator_vp = "vp_user"
+validator_vp = "vp_validator"
 # VP for the staking reward account
 staking_reward_vp = "vp_user"
 # Public IP:port address
@@ -129,7 +129,14 @@ vp = "vp_user"
 # filename (relative to wasm path used by the node)
 filename = "vp_user.wasm"
 # SHA-256 hash of the wasm file
-sha256 = "dc7b97f0448f2369bd2401c3c1d8898f53cac8c464a8c1b1f7f81415a658625d"
+sha256 = "db02f00f1817f44db68a3dd3eaa42f8c301f892a708e7d7aa99c4fea9887f1a7"
+
+# Default validator VP
+[wasm.vp_user]
+# filename (relative to wasm path used by the node)
+filename = "vp_validator.wasm"
+# SHA-256 hash of the wasm file
+sha256 = "5e556c8e99dd38448cd7d965bd385c1c71964be44dc898de4da18611331280f9"
 
 # Token VP
 [wasm.vp_token]
