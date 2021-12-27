@@ -326,8 +326,10 @@ pub mod tx_update_dkg_session_keypair {
         let signed =
             key::ed25519::SignedTxData::try_from_slice(&tx_data[..]).unwrap();
         let update_dkg_keypair =
-            transaction::UpdateDkgSessionKey::try_from_slice(&signed.data.unwrap()[..])
-                .unwrap();
+            transaction::UpdateDkgSessionKey::try_from_slice(
+                &signed.data.unwrap()[..],
+            )
+            .unwrap();
         log_string(format!(
             "update DKG keypair for: {:#?}",
             update_dkg_keypair.address

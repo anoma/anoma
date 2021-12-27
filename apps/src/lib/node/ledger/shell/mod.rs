@@ -28,6 +28,7 @@ use anoma::ledger::storage::write_log::WriteLog;
 use anoma::ledger::storage::{DBIter, Storage, StorageHasher, DB};
 use anoma::ledger::{ibc, parameters, pos};
 use anoma::proto::{self, Tx};
+use anoma::types::chain::ChainId;
 use anoma::types::key::dkg_session_keys::DkgKeypair;
 use anoma::types::storage::{BlockHeight, Key};
 use anoma::types::time::{DateTime, DateTimeUtc, TimeZone, Utc};
@@ -68,6 +69,7 @@ use crate::node::ledger::shims::abcipp_shim_types::shim::response::TxResult;
 use crate::node::ledger::{protocol, storage, tendermint_node};
 use crate::wasm_loader::read_wasm;
 use crate::{config, wallet};
+use crate::wallet::AtomicKeypair;
 
 pub type TendermintValidator =
     ferveo_common::TendermintValidator<EllipticCurve>;
@@ -152,6 +154,8 @@ pub struct Shell<
     D: DB + for<'iter> DBIter<'iter> + Sync + 'static,
     H: StorageHasher + Sync + 'static,
 {
+    /// The id of the current chain
+    chain_id: ChainId,
     /// The persistent storage
     pub(super) storage: Storage<D, H>,
     /// Gas meter for the current block
@@ -235,7 +239,7 @@ where
         }
 
         // load last state from storage
-        let mut storage = Storage::open(db_path, chain_id);
+        let mut storage = Storage::open(db_path, chain_id.clone());
         storage
             .load_last_state()
             .map_err(|e| {
@@ -331,6 +335,7 @@ where
         };
 
         Self {
+            chain_id,
             storage,
             gas_meter: BlockGasMeter::default(),
             write_log: WriteLog::default(),
@@ -597,9 +602,41 @@ where
         }
     }
 
+    /// Lookup a validator's keypair for their established account from their wallet.
+    /// If the node is not validator, this function returns None
+    fn get_account_keypair(&self) -> Option<AtomicKeypair> {
+        let wallet_path = &self.base_dir.join(self.chain_id.as_str());
+        let genesis_path =
+            &self.base_dir.join(format!("{}.toml", self.chain_id.as_str()));
+        let mut wallet = wallet::Wallet::load_or_new_from_genesis(
+            wallet_path,
+            move || {
+                genesis::genesis_config::open_genesis_config(
+                    genesis_path,
+                )
+            });
+        self.mode.get_validator_address().map(|addr| {
+            let pk_bytes = self.storage.read(&key::ed25519::pk_key(addr))
+                .expect("A validator should have a public key associated with it's established account")
+                .0
+                .expect("A validator should have a public key associated with it's established account");
+            let pk = key::ed25519::PublicKey::deserialize(&mut pk_bytes.as_slice())
+                .expect("Validator's public key should be deserializable");
+            wallet.find_key_by_pk(&pk)
+                .expect("A validator's established keypair should be stored in its wallet")
+        })
+    }
 
     /// Issue a tx requesting a new DKG session key
     fn request_new_dkg_session_keypair(&mut self) {
+        let account_kp = if let ShellMode::Validator {..} = &self.mode {
+            Some(self.get_account_keypair()
+                .expect("A validator should have an established keypair")
+                .clone())
+        } else {
+            None
+        };
+
         if let ShellMode::Validator {
             data,
             next_dkg_keypair,
@@ -621,9 +658,13 @@ where
             };
             *next_dkg_keypair = Some(dkg_keypair);
             let keypair = data.keys.get_protocol_keypair().lock();
+            let account_keypair = account_kp.as_ref().unwrap().lock();
+
+            // Note that the inner tx is signed with the validators established keypair
+            // and the outer is signed with the protocol keypair
             let request_tx = ProtocolTxType::request_new_dkg_keypair(
                 request_data,
-                &keypair,
+                &account_keypair,
                 &self.wasm_dir,
                 read_wasm,
             )

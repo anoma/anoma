@@ -73,86 +73,88 @@ where
                         .into(),
                 },
                 TxType::Protocol(ProtocolTx {
-                    tx: protocol_tx, pk
+                    tx: protocol_tx,
+                    pk,
                 }) => {
                     let rng =
                         &mut ark_std::rand::prelude::StdRng::from_entropy();
-                    if let Some(sender) = self.get_validator_from_protocol_pk(&pk) {
-                        if let ShellMode::Validator { dkg, .. } = &mut self.mode {
-                            match protocol_tx {
-                                ProtocolTxType::DKG(msg) => {
-                                    match dkg.state_machine.verify_message(&sender,
-                                                                           &msg,
-                                                                           rng,
-                                    ) {
-                                        Ok(_) => shim::response::TxResult {
-                                            code: ErrorCodes::Ok.into(),
-                                            info: "Process proposal accepted this \
-                                           transaction"
-                                                .into(),
-                                        },
-                                        Err(err) => shim::response::TxResult {
-                                            code: ErrorCodes::InvalidTx.into(),
-                                            info: err.to_string(),
-                                        },
-                                    }
-                                }
-                                ProtocolTxType::NewDkgKeypair(ref tx) => {
-                                    match tx.data
-                                        .as_ref()
-                                        .map(|data| {
-                                            if let Ok(SignedTxData{
-                                                          data: Some(inner_data),
-                                                          ..
-                                                      }) =
-                                                key::ed25519::SignedTxData::try_from_slice(&data[..])
-                                            {
-                                                UpdateDkgSessionKey::deserialize(&mut inner_data.as_ref())
-                                                    .and_then(
-                                                        |ref update_keypair| {
-                                                            DkgPublicKey::deserialize(&mut update_keypair.dkg_public_key.as_ref())?;
-                                                            Ok(true)
-                                                    })
-                                                    .or::<bool>(Ok(false))
-                                            } else {
-                                                Ok(false)
-                                            }
-                                        }) {
-                                        None => {
-                                            shim::response::TxResult {
-                                                code: ErrorCodes::InvalidTx.into(),
-                                                info: "The address and new DKG public session key are \
-                                                missing from the tx.".into()
-                                            }
-                                        }
-                                        Some(Ok(false)) => {
-                                            shim::response::TxResult {
-                                                code: ErrorCodes::InvalidTx.into(),
-                                                info: "The address and / or new DKG public session key were \
-                                                not deserializable. This may be because the inner tx was not signed".into()
-                                            }
-                                        }
-                                        Some(Ok(true)) => {
-                                            shim::response::TxResult {
-                                                code: ErrorCodes::Ok.into(),
-                                                info: "Process proposal accepted this \
-                                                   transaction"
-                                                    .into(),
-                                            }
-                                        }
-                                        _ => unreachable!()
-                                    }
+                    if let (Some(sender), ShellMode::Validator { dkg, .. }) = (
+                        self.get_validator_from_protocol_pk(&pk),
+                        &mut self.mode,
+                    ) {
+                        match protocol_tx {
+                            ProtocolTxType::DKG(msg) => {
+                                match dkg
+                                    .state_machine
+                                    .verify_message(&sender, &msg, rng)
+                                {
+                                    Ok(_) => shim::response::TxResult {
+                                        code: ErrorCodes::Ok.into(),
+                                        info: "Process proposal accepted this \
+                                               transaction"
+                                            .into(),
+                                    },
+                                    Err(err) => shim::response::TxResult {
+                                        code: ErrorCodes::InvalidTx.into(),
+                                        info: err.to_string(),
+                                    },
                                 }
                             }
-                        }  else  {
-                            panic!("Process proposal called on a non-validator node.")
+                            ProtocolTxType::NewDkgKeypair(ref tx) => {
+                                match tx.data.as_ref().map(|data| {
+                                    if let Ok(SignedTxData {
+                                        data: Some(inner_data),
+                                        ..
+                                    }) =
+                                        SignedTxData::try_from_slice(&data[..])
+                                    {
+                                        UpdateDkgSessionKey::deserialize(
+                                            &mut inner_data.as_ref(),
+                                        )
+                                        .map_or(false, |ref update_keypair| {
+                                            DkgPublicKey::deserialize(
+                                                &mut update_keypair
+                                                    .dkg_public_key
+                                                    .as_ref(),
+                                            )
+                                            .is_ok()
+                                        })
+                                    } else {
+                                        false
+                                    }
+                                }) {
+                                    None => shim::response::TxResult {
+                                        code: ErrorCodes::InvalidTx.into(),
+                                        info: "The address and new DKG public \
+                                               session key are missing from \
+                                               the tx."
+                                            .into(),
+                                    },
+                                    Some(false) => shim::response::TxResult {
+                                        code: ErrorCodes::InvalidTx.into(),
+                                        info: "The address and / or new DKG \
+                                               public session key were not \
+                                               deserializable. This may be \
+                                               because the inner tx was not \
+                                               signed"
+                                            .into(),
+                                    },
+                                    Some(true) => shim::response::TxResult {
+                                        code: ErrorCodes::Ok.into(),
+                                        info: "Process proposal accepted this \
+                                               transaction"
+                                            .into(),
+                                    },
+                                }
+                            }
                         }
                     } else {
                         shim::response::TxResult {
                             code: ErrorCodes::InvalidSig.into(),
-                            info: "Could not match signature of protocol tx to \
-                            a public protocol key of an active validator \
-                            set.".into()
+                            info: "Could not match signature of protocol tx \
+                                   to a public protocol key of an active \
+                                   validator set."
+                                .into(),
                         }
                     }
                 }

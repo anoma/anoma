@@ -207,15 +207,22 @@ where
                                 // after then inner transaction
                                 // has been applied by the protocol
                                 let data = SignedTxData::try_from_slice(
-                                    &tx.data.as_ref().expect("This This was verified by Process Proposal")[..]
+                                    &tx.data.as_ref().expect(
+                                        "This This was verified by Process \
+                                         Proposal",
+                                    )[..],
                                 )
                                 .expect("This was verified by Process Proposal")
                                 .data
-                                .expect("This was verified by Process Proposal");
+                                .expect(
+                                    "This was verified by Process Proposal",
+                                );
                                 let UpdateDkgSessionKey {
                                     address,
                                     dkg_public_key,
-                                } = BorshDeserialize::deserialize(&mut data.as_slice())
+                                } = BorshDeserialize::deserialize(
+                                    &mut data.as_slice(),
+                                )
                                 .expect(
                                     "This was verified by Prepare Proposal",
                                 );
@@ -589,6 +596,7 @@ where
 mod test_finalize_block {
     use anoma::types::address::xan;
     use anoma::types::key::dkg_session_keys::dkg_pk_key;
+    use anoma::types::key::ed25519::SignedTxData;
     use anoma::types::storage::Epoch;
     use anoma::types::time::DateTimeUtc;
     use anoma::types::transaction::Fee;
@@ -607,7 +615,6 @@ mod test_finalize_block {
         FinalizeBlock, ProcessedTx,
     };
     use crate::wallet::{ValidatorData, ValidatorKeys};
-    use anoma::types::key::ed25519::SignedTxData;
 
     /// This is just to be used in testing. It is not
     /// a meaningful default.
