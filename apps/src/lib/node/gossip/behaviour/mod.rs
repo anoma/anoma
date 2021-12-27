@@ -23,10 +23,10 @@ use tokio::sync::oneshot::channel;
 
 use self::discovery::DiscoveryEvent;
 use super::intent_gossiper;
+use super::intent_gossiper::matchmaker::MatchmakerMessage;
 use crate::node::gossip::behaviour::discovery::{
     DiscoveryBehaviour, DiscoveryConfigBuilder,
 };
-use crate::types::MatchmakerMessage;
 
 #[derive(Error, Debug)]
 pub enum Error {

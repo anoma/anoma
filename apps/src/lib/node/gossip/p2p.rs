@@ -17,7 +17,7 @@ use tokio::sync::mpsc::Sender;
 
 pub use self::identity::Identity;
 use super::behaviour::Behaviour;
-use crate::types::MatchmakerMessage;
+use super::intent_gossiper::matchmaker::MatchmakerMessage;
 
 pub type Swarm = libp2p::Swarm<Behaviour>;
 

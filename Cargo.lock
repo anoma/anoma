@@ -127,7 +127,6 @@ dependencies = [
  "tracing-subscriber",
  "wasmer",
  "wasmer-cache",
- "wasmer-compiler-cranelift",
  "wasmer-compiler-singlepass",
  "wasmer-engine-jit",
  "wasmer-vm",
@@ -162,6 +161,7 @@ dependencies = [
  "itertools 0.10.1",
  "jsonpath_lib",
  "libc",
+ "libloading 0.7.2",
  "libp2p",
  "num-derive",
  "num-traits 0.2.14",
@@ -2210,6 +2210,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "good_lp"
+version = "1.3.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c6e4f4cb8fac5e7a7862d8647529e3cc0cd478817c28efc7031d144ac259a718"
+dependencies = [
+ "fnv",
+ "minilp",
+]
+
+[[package]]
 name = "group-threshold-cryptography"
 version = "0.1.0"
 source = "git+https://github.com/anoma/ferveo?branch=bat/workspace-cleanup#ad859d098a77ae952987ad7077c2744a9871378a"
@@ -3489,6 +3499,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a3e378b66a060d48947b590737b30a1be76706c8dd7b8ba0f2fe3989c68a853f"
 
 [[package]]
+name = "matrixmultiply"
+version = "0.2.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "916806ba0031cd542105d916a97c8572e1fa6dd79c9c51e7eb43a09ec2dd84c1"
+dependencies = [
+ "rawpointer",
+]
+
+[[package]]
 name = "maybe-uninit"
 version = "2.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3560,6 +3579,16 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn",
+]
+
+[[package]]
+name = "minilp"
+version = "0.2.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "82a7750a9e5076c660b7bec5e6457b4dbff402b9863c8d112891434e18fd5385"
+dependencies = [
+ "log 0.4.14",
+ "sprs",
 ]
 
 [[package]]
@@ -3650,6 +3679,28 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "94c7128ba23c81f6471141b90f17654f89ef44a56e14b8a4dd0fddfccd655277"
 
 [[package]]
+name = "mm_template"
+version = "0.2.0"
+dependencies = [
+ "anoma",
+ "tokio",
+]
+
+[[package]]
+name = "mm_token_exch"
+version = "0.2.0"
+dependencies = [
+ "anoma",
+ "borsh",
+ "good_lp",
+ "petgraph 0.5.1",
+ "rust_decimal",
+ "serde 1.0.130",
+ "serde_json",
+ "tokio",
+]
+
+[[package]]
 name = "more-asserts"
 version = "0.2.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3718,6 +3769,19 @@ dependencies = [
  "security-framework",
  "security-framework-sys",
  "tempfile",
+]
+
+[[package]]
+name = "ndarray"
+version = "0.13.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ac06db03ec2f46ee0ecdca1a1c34a99c0d188a0d83439b84bf0cb4b386e4ab09"
+dependencies = [
+ "matrixmultiply",
+ "num-complex",
+ "num-integer",
+ "num-traits 0.2.14",
+ "rawpointer",
 ]
 
 [[package]]
@@ -3829,6 +3893,16 @@ checksum = "f93ab6289c7b344a8a9f60f88d80aa20032336fe78da341afc91c8a2341fc75f"
 dependencies = [
  "autocfg 1.0.1",
  "num-integer",
+ "num-traits 0.2.14",
+]
+
+[[package]]
+name = "num-complex"
+version = "0.2.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b6b19411a9719e753aff12e5187b74d60d3dc449ec3f4dc21e3989c3f554bc95"
+dependencies = [
+ "autocfg 1.0.1",
  "num-traits 0.2.14",
 ]
 
@@ -4145,6 +4219,8 @@ checksum = "467d164a6de56270bd7c4d070df81d07beace25012d5103ced4e9ff08d6afdb7"
 dependencies = [
  "fixedbitset 0.2.0",
  "indexmap",
+ "serde 1.0.130",
+ "serde_derive",
 ]
 
 [[package]]
@@ -4735,6 +4811,12 @@ checksum = "d25bf25ec5ae4a3f1b92f929810509a2f53d7dca2f50b794ff57e3face536c8f"
 dependencies = [
  "rand_core 0.6.3",
 ]
+
+[[package]]
+name = "rawpointer"
+version = "0.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "60a357793950651c4ed0f3f52338f53b2f809f32d83a07f72909fa13e4c6c1e3"
 
 [[package]]
 name = "rayon"
@@ -5534,6 +5616,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6e63cff320ae2c57904679ba7cb63280a3dc4613885beafb148ee7bf9aa9042d"
 
 [[package]]
+name = "sprs"
+version = "0.7.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ec63571489873d4506683915840eeb1bb16b3198ee4894cc6f2fe3013d505e56"
+dependencies = [
+ "ndarray",
+ "num-complex",
+ "num-traits 0.1.43",
+]
+
+[[package]]
 name = "stable_deref_trait"
 version = "1.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -6043,11 +6136,10 @@ checksum = "cda74da7e1a664f795bb1f8a87ec406fb89a02522cf6e50620d016add6dbbf5c"
 
 [[package]]
 name = "tokio"
-version = "1.14.0"
+version = "1.15.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "70e992e41e0d2fb9f755b37446f20900f64446ef54874f40a60c78f021ac6144"
+checksum = "fbbf1c778ec206785635ce8ad57fe52b3009ae9e0c9f574a728f3049d3e55838"
 dependencies = [
- "autocfg 1.0.1",
  "bytes 1.1.0",
  "libc",
  "memchr",
@@ -6105,9 +6197,9 @@ dependencies = [
 
 [[package]]
 name = "tokio-macros"
-version = "1.6.0"
+version = "1.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c9efc1aba077437943f7515666aa2b882dfabfbfdf89c819ea75a8d6e9eaba5e"
+checksum = "b557f72f448c511a979e2564e55d74e6c4432fc96ff4f6241bc6bded342643b7"
 dependencies = [
  "proc-macro2",
  "quote",

@@ -22,8 +22,6 @@ files_to_check = [
     'wasm/wasm_source/Makefile',
     'wasm/vp_template/Makefile',
     'wasm/tx_template/Makefile',
-    'wasm/mm_template/Makefile',
-    'wasm/mm_filter_template/Makefile',
     'docs/Makefile',
     'scripts/ci/pre-run.sh',
     'scripts/ci/release.sh',

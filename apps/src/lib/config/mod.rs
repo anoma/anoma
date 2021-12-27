@@ -447,55 +447,6 @@ impl IntentGossiper {
             self.rpc = Some(RpcServer { address });
         }
     }
-
-    #[cfg(any(test, feature = "testing"))]
-    pub fn default_with_address(
-        ip: String,
-        port: u32,
-        peers_info: Vec<(String, u32, PeerId)>,
-        mdns: bool,
-        kademlia: bool,
-        matchmaker: bool,
-        rpc: bool,
-    ) -> Self {
-        let mut gossiper_config = IntentGossiper::default();
-        let mut discover_config = DiscoverPeer::default();
-
-        gossiper_config.address =
-            Multiaddr::from_str(format!("/ip4/{}/tcp/{}", ip, port).as_str())
-                .unwrap();
-
-        if matchmaker {
-            gossiper_config.matchmaker = Some(Matchmaker {
-                matchmaker: "../wasm/mm_token_exch.wasm".parse().unwrap(),
-                tx_code: "../wasm/tx_from_intent.wasm".parse().unwrap(),
-                ledger_address: "0.0.0.0:26657".parse().unwrap(),
-                filter: None,
-            })
-        }
-
-        if rpc {
-            gossiper_config.rpc = Some(RpcServer::default())
-        }
-
-        let bootstrap_peers: HashSet<PeerAddress> = peers_info
-            .iter()
-            .map(|info| PeerAddress {
-                address: Multiaddr::from_str(
-                    format!("/ip4/{}/tcp/{}", info.0, info.1).as_str(),
-                )
-                .unwrap(),
-                peer_id: info.2,
-            })
-            .collect();
-        discover_config.bootstrap_peers = bootstrap_peers;
-        discover_config.mdns = mdns;
-        discover_config.kademlia = kademlia;
-
-        gossiper_config.discover_peer = Some(discover_config);
-
-        gossiper_config
-    }
 }
 
 impl Default for RpcServer {

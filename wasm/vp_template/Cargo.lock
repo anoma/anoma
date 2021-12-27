@@ -62,11 +62,11 @@ dependencies = [
  "tendermint",
  "tendermint-rpc 0.23.0 (git+https://github.com/heliaxdev/tendermint-rs?branch=yuji/rebase_v0.23.0)",
  "thiserror",
+ "tokio",
  "tonic-build",
  "tracing",
  "wasmer",
  "wasmer-cache",
- "wasmer-compiler-cranelift",
  "wasmer-compiler-singlepass",
  "wasmer-engine-jit",
  "wasmer-vm",
@@ -2343,11 +2343,10 @@ checksum = "cda74da7e1a664f795bb1f8a87ec406fb89a02522cf6e50620d016add6dbbf5c"
 
 [[package]]
 name = "tokio"
-version = "1.12.0"
+version = "1.15.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c2c2416fdedca8443ae44b4527de1ea633af61d8f7169ffa6e72c5b53d24efcc"
+checksum = "fbbf1c778ec206785635ce8ad57fe52b3009ae9e0c9f574a728f3049d3e55838"
 dependencies = [
- "autocfg",
  "bytes",
  "libc",
  "memchr",
@@ -2369,9 +2368,9 @@ dependencies = [
 
 [[package]]
 name = "tokio-macros"
-version = "1.5.0"
+version = "1.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b2dd85aeaba7b68df939bd357c6afb36c87951be9e80bf9c859f2fc3e9fca0fd"
+checksum = "b557f72f448c511a979e2564e55d74e6c4432fc96ff4f6241bc6bded342643b7"
 dependencies = [
  "proc-macro2",
  "quote",

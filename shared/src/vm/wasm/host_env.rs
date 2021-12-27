@@ -8,11 +8,8 @@ use wasmer::{
     WasmerEnv,
 };
 
-use crate::gossip::mm::MmHost;
 use crate::ledger::storage::{self, StorageHasher};
-use crate::vm::host_env::{
-    FilterEnv, MatchmakerEnv, TxEnv, VpEnv, VpEvaluator,
-};
+use crate::vm::host_env::{TxEnv, VpEnv, VpEvaluator};
 use crate::vm::wasm::memory::WasmMemory;
 use crate::vm::{host_env, WasmCacheAccess};
 
@@ -37,27 +34,6 @@ where
     EVAL: VpEvaluator,
     CA: WasmCacheAccess,
 {
-    fn init_with_instance(
-        &mut self,
-        instance: &Instance,
-    ) -> std::result::Result<(), HostEnvInitError> {
-        self.memory.init_env_memory(&instance.exports)
-    }
-}
-
-impl<MM> WasmerEnv for MatchmakerEnv<WasmMemory, MM>
-where
-    MM: MmHost,
-{
-    fn init_with_instance(
-        &mut self,
-        instance: &Instance,
-    ) -> std::result::Result<(), HostEnvInitError> {
-        self.memory.init_env_memory(&instance.exports)
-    }
-}
-
-impl WasmerEnv for FilterEnv<WasmMemory> {
     fn init_with_instance(
         &mut self,
         instance: &Instance,
@@ -137,50 +113,6 @@ where
             "anoma_vp_verify_tx_signature" => Function::new_native_with_env(wasm_store, env.clone(), host_env::vp_verify_tx_signature),
             "anoma_vp_eval" => Function::new_native_with_env(wasm_store, env.clone(), host_env::vp_eval),
             "anoma_vp_log_string" => Function::new_native_with_env(wasm_store, env.clone(), host_env::vp_log_string),
-        },
-    }
-}
-
-/// Prepare imports (memory and host functions) exposed to the vm guest running
-/// matchmaker code
-pub fn mm_imports<MM>(
-    wasm_store: &Store,
-    initial_memory: Memory,
-    mm: MM,
-) -> ImportObject
-where
-    MM: 'static + MmHost,
-{
-    let env = MatchmakerEnv {
-        memory: WasmMemory::default(),
-        mm,
-    };
-    wasmer::imports! {
-        // default namespace
-        "env" => {
-            "memory" => initial_memory,
-            "anoma_mm_send_match" => Function::new_native_with_env(wasm_store, env.clone(), host_env::mm_send_match),
-            "anoma_mm_update_state" => Function::new_native_with_env(wasm_store, env.clone(), host_env::mm_update_state),
-            "anoma_mm_remove_intents" => Function::new_native_with_env(wasm_store, env.clone(), host_env::mm_remove_intents),
-            "anoma_mm_log_string" => Function::new_native_with_env(wasm_store, env, host_env::mm_log_string),
-        },
-    }
-}
-
-/// Prepare imports (memory and host functions) exposed to the vm guest running
-/// filter code
-pub fn mm_filter_imports(
-    wasm_store: &Store,
-    initial_memory: Memory,
-) -> ImportObject {
-    let env = FilterEnv {
-        memory: WasmMemory::default(),
-    };
-    wasmer::imports! {
-        // default namespace
-        "env" => {
-            "memory" => initial_memory,
-            "anoma_filter_log_string" => Function::new_native_with_env(wasm_store, env, host_env::mm_filter_log_string),
         },
     }
 }

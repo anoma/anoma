@@ -1,6 +1,3 @@
-#[cfg(feature = "mm_token_exch")]
-pub mod mm_token_exch;
-
 #[cfg(feature = "vp_user")]
 pub mod vp_user;
 
@@ -243,23 +240,5 @@ pub mod vp_token {
         );
 
         token::vp(&addr, &keys_changed, &verifiers)
-    }
-}
-
-/// Matchmaker filter for token exchange
-#[cfg(feature = "mm_filter_token_exch")]
-pub mod mm_filter_token_exch {
-    use anoma_vm_env::filter_prelude::intent::FungibleTokenIntent;
-    use anoma_vm_env::filter_prelude::*;
-
-    #[filter]
-    fn validate_intent(intent: Vec<u8>) -> bool {
-        // TODO: check if signature is valid
-        let intent = decode_intent_data(intent);
-        intent.is_some()
-    }
-
-    fn decode_intent_data(bytes: Vec<u8>) -> Option<FungibleTokenIntent> {
-        FungibleTokenIntent::try_from_slice(&bytes[..]).ok()
     }
 }

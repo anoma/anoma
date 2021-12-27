@@ -40,19 +40,3 @@ pub mod vp_prelude {
 
     pub use crate::token::vp as token;
 }
-
-pub mod matchmaker_prelude {
-    pub use anoma::types::address::Address;
-    pub use anoma::types::*;
-    pub use anoma_vm_macro::matchmaker;
-
-    pub use crate::imports::matchmaker::*;
-}
-
-pub mod filter_prelude {
-    pub use anoma::types::address::Address;
-    pub use anoma::types::*;
-    pub use anoma_vm_macro::filter;
-
-    pub use super::imports::filter::*;
-}

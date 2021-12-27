@@ -82,7 +82,7 @@ pub async fn dispatcher(
 
                         // apply intents in matchmaker
                         if let Some(intent) = maybe_intent {
-                            let mm_result: Cow<str> = match intent_gossip_app.apply_intent(intent) {
+                            let mm_result: Cow<str> = match intent_gossip_app.apply_intent(intent).await {
                                 Ok(true) => "Accepted intent".into(),
                                 Ok(false) => "Rejected intent".into(),
                                 Err(err) => format!(

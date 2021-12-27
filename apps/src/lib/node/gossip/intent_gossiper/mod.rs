@@ -1,5 +1,5 @@
 mod filter;
-mod matchmaker;
+pub mod matchmaker;
 mod mempool;
 
 use std::path::Path;
@@ -12,7 +12,7 @@ use matchmaker::Matchmaker;
 use thiserror::Error;
 use tokio::sync::mpsc::{Receiver, Sender};
 
-use crate::types::MatchmakerMessage;
+use self::matchmaker::MatchmakerMessage;
 
 // TODO split Error and Result type in two, one for Result/Error that can only
 // happens locally and the other that can happens locally and in the network
@@ -68,20 +68,23 @@ impl GossipIntent {
         }
     }
 
-    /// Apply the matchmaker logic on a new intent. Return Some(Ok(True)) if a
-    /// transaction have been crafted.
-    fn apply_matchmaker(&mut self, intent: Intent) -> Option<Result<bool>> {
-        self.matchmaker.as_mut().map(|matchmaker| {
+    /// Apply the matchmaker logic on a new intent. Return `Ok(true) if a
+    /// transaction have been crafted or if there's no matchmaker.
+    async fn apply_matchmaker(&mut self, intent: Intent) -> Result<bool> {
+        if let Some(matchmaker) = self.matchmaker.as_mut() {
             matchmaker
                 .try_match_intent(&intent)
+                .await
                 .map_err(Error::Matchmaker)
-        })
+        } else {
+            Ok(true)
+        }
     }
 
     // Apply the logic to a new intent. It only tries to apply the matchmaker if
     // this one exists. If no matchmaker then returns true.
-    pub fn apply_intent(&mut self, intent: Intent) -> Result<bool> {
-        self.apply_matchmaker(intent).unwrap_or(Ok(true))
+    pub async fn apply_intent(&mut self, intent: Intent) -> Result<bool> {
+        self.apply_matchmaker(intent).await
     }
 
     /// pass the matchmaker message to the matchmaker. If no matchmaker is

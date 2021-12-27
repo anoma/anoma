@@ -1,55 +1,62 @@
+use std::collections::HashSet;
+use std::env;
 use std::path::Path;
 use std::rc::Rc;
 
-use anoma::gossip::mm::MmHost;
 use anoma::proto::{Intent, IntentId, Tx};
 use anoma::types::address::{xan, Address};
+use anoma::types::dylib;
 use anoma::types::intent::{IntentTransfers, MatchedExchanges};
 use anoma::types::key::ed25519::Keypair;
+use anoma::types::matchmaker::AddIntentResult;
 use anoma::types::transaction::{Fee, WrapperTx};
 use anoma::vm::wasm;
 use borsh::{BorshDeserialize, BorshSerialize};
+use libloading::Library;
 #[cfg(not(feature = "ABCI"))]
 use tendermint_config::net;
 #[cfg(feature = "ABCI")]
 use tendermint_config_abci::net;
 use thiserror::Error;
 use tokio::sync::mpsc::{channel, Receiver, Sender};
+use tokio::sync::oneshot;
 
 use super::filter::Filter;
 use super::mempool::{self, IntentMempool};
 use crate::cli::args;
 use crate::client::rpc;
 use crate::client::tx::broadcast_tx;
-use crate::types::MatchmakerMessage;
 use crate::{config, wasm_loader};
 
 /// A matchmaker receive intents and tries to find a match with previously
 /// received intent.
 #[derive(Debug)]
 pub struct Matchmaker {
+    /// Matchmaker's implementation loaded from dylib
+    matchmaker_code: Library,
     /// All valid and received intent are saved in this mempool
     mempool: IntentMempool,
     /// Possible filter that filter any received intent.
     filter: Option<Filter>,
-    matchmaker_code: Vec<u8>,
     /// The code of the transaction that is going to be send to a ledger.
     tx_code: Vec<u8>,
     /// the matchmaker's state as arbitrary bytes
     state: Vec<u8>,
     /// The ledger address to send any crafted transaction to
     ledger_address: net::Address,
-    /// The WASM host allows the WASM runtime to send messages back to this
-    /// matchmaker
-    wasm_host: WasmHost,
     /// A source address for transactions created from intents.
     tx_source_address: Address,
     /// A keypair that will be used to sign transactions.
     tx_signing_key: Rc<Keypair>,
 }
 
-#[derive(Clone, Debug)]
-struct WasmHost(Sender<MatchmakerMessage>);
+/// Matchmaker message for communication between the runner, P2P and the
+/// implementation
+#[derive(Debug)]
+pub enum MatchmakerMessage {
+    /// Run the matchmaker with the given intent
+    ApplyIntent(Intent, oneshot::Sender<bool>),
+}
 
 #[derive(Error, Debug)]
 pub enum Error {
@@ -67,30 +74,6 @@ pub enum Error {
 
 type Result<T> = std::result::Result<T, Error>;
 
-impl MmHost for WasmHost {
-    /// Send a message from the guest program to remove value from the mempool
-    fn remove_intents(&self, intents_id: std::collections::HashSet<Vec<u8>>) {
-        self.0
-            .try_send(MatchmakerMessage::RemoveIntents(intents_id))
-            .expect("Sending matchmaker message")
-    }
-
-    /// Send a message from the guest program to inject a new transaction to the
-    /// ledger
-    fn inject_tx(&self, tx_data: Vec<u8>) {
-        self.0
-            .try_send(MatchmakerMessage::InjectTx(tx_data))
-            .expect("Sending matchmaker message")
-    }
-
-    /// Send a message from the guest program to update the matchmaker state
-    fn update_state(&self, state: Vec<u8>) {
-        self.0
-            .try_send(MatchmakerMessage::UpdateState(state))
-            .expect("Sending matchmaker message")
-    }
-}
-
 impl Matchmaker {
     /// Create a new matchmaker based on the parameter config.
     pub fn new(
@@ -102,15 +85,34 @@ impl Matchmaker {
     {
         // TODO: find a good number or maybe unlimited channel ?
         let (sender, receiver) = channel(100);
+
+        // The dylib should be built in the same directory as where Anoma
+        // binaries are, even when ran via `cargo run`. Anoma's pre-built
+        // binaries are distributed with the dylib(s) in the same directory.
+        let dylib_dir = {
+            let anoma_path = env::current_exe().unwrap();
+            anoma_path
+                .parent()
+                .map(|path| path.to_owned())
+                .unwrap_or_else(|| ".".into())
+        };
+        let mut matchmaker_dylib = dylib_dir.join(&config.matchmaker);
+        matchmaker_dylib.set_extension(dylib::FILE_EXT);
+        tracing::info!(
+            "Running matchmaker from {}",
+            matchmaker_dylib.to_string_lossy()
+        );
+        if !matchmaker_dylib.exists() {
+            panic!(
+                "The matchmaker library couldn't not be found. Did you build \
+                 it?"
+            )
+        }
         let matchmaker_code =
-            wasm_loader::read_wasm(&wasm_dir, &config.matchmaker);
+            unsafe { Library::new(matchmaker_dylib).unwrap() };
+
         let tx_code = wasm_loader::read_wasm(&wasm_dir, &config.tx_code);
-        let filter = config
-            .filter
-            .as_ref()
-            .map(Filter::from_file)
-            .transpose()
-            .map_err(Error::FilterInit)?;
+        let filter = Some(Filter);
 
         Ok((
             Self {
@@ -120,7 +122,6 @@ impl Matchmaker {
                 tx_code,
                 state: Vec::new(),
                 ledger_address: config.ledger_address.clone(),
-                wasm_host: WasmHost(sender.clone()),
                 tx_source_address,
                 tx_signing_key,
             },
@@ -141,83 +142,97 @@ impl Matchmaker {
 
     /// add the intent to the matchmaker mempool and tries to find a match for
     /// that intent
-    pub fn try_match_intent(&mut self, intent: &Intent) -> Result<bool> {
-        if self.apply_filter(intent)? {
+    pub async fn try_match_intent(&mut self, intent: &Intent) -> Result<bool> {
+        Ok(if self.apply_filter(intent)? {
             self.mempool
                 .put(intent.clone())
                 .map_err(Error::MempoolFailed)?;
-            wasm::run::matchmaker(
-                &self.matchmaker_code.clone(),
-                &self.state,
-                &intent.id().0,
-                &intent.data,
-                self.wasm_host.clone(),
-            )
-            .map_err(Error::RunnerFailed)
+
+            let add_intent: libloading::Symbol<
+                unsafe extern "C" fn(
+                    &Vec<u8>,
+                    &Vec<u8>,
+                    &Vec<u8>,
+                ) -> AddIntentResult,
+            > = unsafe { self.matchmaker_code.get(b"add_intent").unwrap() };
+
+            let _ = anoma::types::key::ed25519::Signed::<
+                anoma::types::intent::FungibleTokenIntent,
+            >::try_from_slice(&intent.data)
+            .unwrap();
+            let result = unsafe {
+                add_intent(&self.state, &intent.id().0, &intent.data)
+            };
+
+            if let Some(tx) = result.tx {
+                self.submit_tx(tx).await
+            }
+            if let Some(matched_intents) = result.matched_intents {
+                self.removed_intents(matched_intents)
+            }
+            self.state = result.state;
+
+            true
         } else {
-            Ok(false)
+            false
+        })
+    }
+
+    async fn submit_tx(&self, tx_data: Vec<u8>) {
+        let tx_code = self.tx_code.clone();
+        let matches = MatchedExchanges::try_from_slice(&tx_data[..]).unwrap();
+        let intent_transfers = IntentTransfers {
+            matches,
+            source: self.tx_source_address.clone(),
+        };
+        let tx_data = intent_transfers.try_to_vec().unwrap();
+        let tx = WrapperTx::new(
+            Fee {
+                amount: 0.into(),
+                token: xan(),
+            },
+            &self.tx_signing_key,
+            rpc::query_epoch(args::Query {
+                ledger_address: self.ledger_address.clone(),
+            })
+            .await,
+            0.into(),
+            Tx::new(tx_code, Some(tx_data)).sign(&self.tx_signing_key),
+        );
+
+        let response =
+            broadcast_tx(self.ledger_address.clone(), tx, &self.tx_signing_key)
+                .await;
+        match response {
+            Ok(tx_response) => {
+                tracing::info!(
+                    "Injected transaction from matchmaker with result: {:#?}",
+                    tx_response
+                );
+            }
+            Err(err) => {
+                tracing::error!(
+                    "Matchmaker error in submitting a transaction to the \
+                     ledger: {}",
+                    err
+                );
+            }
         }
+    }
+
+    fn removed_intents(&mut self, intent_ids: HashSet<Vec<u8>>) {
+        intent_ids.into_iter().for_each(|intent_id| {
+            self.mempool.remove(&IntentId::from(intent_id));
+        });
     }
 
     pub async fn handle_mm_message(&mut self, mm_message: MatchmakerMessage) {
         match mm_message {
-            MatchmakerMessage::InjectTx(tx_data) => {
-                let tx_code = self.tx_code.clone();
-                let matches =
-                    MatchedExchanges::try_from_slice(&tx_data[..]).unwrap();
-                let intent_transfers = IntentTransfers {
-                    matches,
-                    source: self.tx_source_address.clone(),
-                };
-                let tx_data = intent_transfers.try_to_vec().unwrap();
-                let tx = WrapperTx::new(
-                    Fee {
-                        amount: 0.into(),
-                        token: xan(),
-                    },
-                    &self.tx_signing_key,
-                    rpc::query_epoch(args::Query {
-                        ledger_address: self.ledger_address.clone(),
-                    })
-                    .await,
-                    0.into(),
-                    Tx::new(tx_code, Some(tx_data)).sign(&self.tx_signing_key),
-                );
-
-                let response = broadcast_tx(
-                    self.ledger_address.clone(),
-                    tx,
-                    &self.tx_signing_key,
-                )
-                .await;
-                match response {
-                    Ok(tx_response) => {
-                        tracing::info!(
-                            "Injected transaction from matchmaker with \
-                             result: {:#?}",
-                            tx_response
-                        );
-                    }
-                    Err(err) => {
-                        tracing::error!(
-                            "Matchmaker error in submitting a transaction to \
-                             the ledger: {}",
-                            err
-                        );
-                    }
-                }
-            }
-            MatchmakerMessage::RemoveIntents(intents_id) => {
-                intents_id.into_iter().for_each(|intent_id| {
-                    self.mempool.remove(&IntentId::from(intent_id));
-                });
-            }
-            MatchmakerMessage::UpdateState(mm_data) => {
-                self.state = mm_data;
-            }
             MatchmakerMessage::ApplyIntent(intent, response_sender) => {
-                let result =
-                    self.try_match_intent(&intent).unwrap_or_else(|err| {
+                let result = self
+                    .try_match_intent(&intent)
+                    .await
+                    .unwrap_or_else(|err| {
                         tracing::error!(
                             "Matchmaker error in applying intent {}",
                             err

@@ -10,7 +10,6 @@ use wasmer::BaseTunables;
 
 use super::memory::{Limit, WasmMemory};
 use super::TxCache;
-use crate::gossip::mm::MmHost;
 use crate::ledger::gas::{BlockGasMeter, VpGasMeter};
 use crate::ledger::storage::write_log::WriteLog;
 use crate::ledger::storage::{self, Storage, StorageHasher};
@@ -21,9 +20,7 @@ use crate::types::storage::Key;
 use crate::vm::host_env::{TxEnv, VpCtx, VpEnv, VpEvaluator};
 use crate::vm::prefix_iter::PrefixIterators;
 use crate::vm::types::VpInput;
-use crate::vm::wasm::host_env::{
-    mm_filter_imports, mm_imports, tx_imports, vp_imports,
-};
+use crate::vm::wasm::host_env::{tx_imports, vp_imports};
 use crate::vm::wasm::{memory, VpCache};
 use crate::vm::{
     validate_untrusted_wasm, WasmCacheAccess, WasmValidationError,
@@ -31,8 +28,6 @@ use crate::vm::{
 
 const TX_ENTRYPOINT: &str = "_apply_tx";
 const VP_ENTRYPOINT: &str = "_validate_tx";
-const MATCHMAKER_ENTRYPOINT: &str = "_match_intent";
-const FILTER_ENTRYPOINT: &str = "_validate_intent";
 const WASM_STACK_LIMIT: u32 = u16::MAX as u32;
 
 #[allow(missing_docs)]
@@ -373,116 +368,6 @@ where
     }
 }
 
-/// Execute a matchmaker code.
-pub fn matchmaker<MM>(
-    matchmaker_code: impl AsRef<[u8]>,
-    data: impl AsRef<[u8]>,
-    intent_id: impl AsRef<[u8]>,
-    intent_data: impl AsRef<[u8]>,
-    mm: MM,
-) -> Result<bool>
-where
-    MM: 'static + MmHost,
-{
-    let wasm_store = trusted_wasm_store();
-
-    // Compile the wasm module
-    let module: wasmer::Module =
-        wasmer::Module::new(&wasm_store, &matchmaker_code)
-            .map_err(Error::CompileError)?;
-
-    let initial_memory = memory::prepare_matchmaker_memory(&wasm_store)
-        .map_err(Error::MemoryError)?;
-
-    let matchmaker_imports = mm_imports(&wasm_store, initial_memory, mm);
-
-    // Instantiate the wasm module
-    let instance = wasmer::Instance::new(&module, &matchmaker_imports)
-        .map_err(Error::InstantiationError)?;
-
-    let memory = instance
-        .exports
-        .get_memory("memory")
-        .map_err(Error::MissingModuleMemory)?;
-    let memory::MatchmakerCallInput {
-        data_ptr,
-        data_len,
-        intent_id_ptr,
-        intent_id_len,
-        intent_data_ptr,
-        intent_data_len,
-    }: memory::MatchmakerCallInput =
-        memory::write_matchmaker_inputs(memory, data, intent_id, intent_data)
-            .map_err(Error::MemoryError)?;
-    let apply_matchmaker = instance
-        .exports
-        .get_function(MATCHMAKER_ENTRYPOINT)
-        .map_err(Error::MissingModuleEntrypoint)?
-        .native::<(u64, u64, u64, u64, u64, u64), u64>()
-        .map_err(|error| Error::UnexpectedModuleEntrypointInterface {
-            entrypoint: MATCHMAKER_ENTRYPOINT,
-            error,
-        })?;
-    let found_match = apply_matchmaker
-        .call(
-            data_ptr,
-            data_len,
-            intent_id_ptr,
-            intent_id_len,
-            intent_data_ptr,
-            intent_data_len,
-        )
-        .map_err(Error::RuntimeError)?;
-    Ok(found_match == 0)
-}
-
-/// Execute a matchmaker filter code to check if it accepts the given
-/// intent.
-pub fn matchmaker_filter(
-    code: impl AsRef<[u8]>,
-    intent_data: impl AsRef<[u8]>,
-) -> Result<bool> {
-    let wasm_store = trusted_wasm_store();
-
-    validate_untrusted_wasm(code.as_ref()).map_err(Error::ValidationError)?;
-
-    // Compile the wasm module
-    let module: wasmer::Module =
-        wasmer::Module::new(&wasm_store, &code).map_err(Error::CompileError)?;
-    let initial_memory = memory::prepare_filter_memory(&wasm_store)
-        .map_err(Error::MemoryError)?;
-
-    let filter_imports = mm_filter_imports(&wasm_store, initial_memory);
-
-    // Instantiate the wasm module
-    let instance = wasmer::Instance::new(&module, &filter_imports)
-        .map_err(Error::InstantiationError)?;
-
-    let memory = instance
-        .exports
-        .get_memory("memory")
-        .map_err(Error::MissingModuleMemory)?;
-    let memory::FilterCallInput {
-        intent_data_ptr,
-        intent_data_len,
-    }: memory::FilterCallInput =
-        memory::write_filter_inputs(memory, intent_data)
-            .map_err(Error::MemoryError)?;
-    let apply_filter = instance
-        .exports
-        .get_function(FILTER_ENTRYPOINT)
-        .map_err(Error::MissingModuleEntrypoint)?
-        .native::<(u64, u64), u64>()
-        .map_err(|error| Error::UnexpectedModuleEntrypointInterface {
-            entrypoint: FILTER_ENTRYPOINT,
-            error,
-        })?;
-    let found_match = apply_filter
-        .call(intent_data_ptr, intent_data_len)
-        .map_err(Error::RuntimeError)?;
-    Ok(found_match == 0)
-}
-
 /// Prepare a wasm store for untrusted code.
 pub fn untrusted_wasm_store(limit: Limit<BaseTunables>) -> wasmer::Store {
     // Use Singlepass compiler with the default settings
@@ -493,18 +378,6 @@ pub fn untrusted_wasm_store(limit: Limit<BaseTunables>) -> wasmer::Store {
         &wasmer_engine_jit::JIT::new(compiler).engine(),
         limit,
     )
-}
-
-/// Prepare a wasm store for trusted code.
-fn trusted_wasm_store() -> wasmer::Store {
-    // TODO use LLVM compiler with native engine
-
-    // TODO wasmer 2.x
-    // wasmer::Store::new(
-    //     &wasmer_engine_universal::Universal::new(compiler).engine(),
-    // )
-    let compiler = wasmer_compiler_cranelift::Cranelift::default();
-    wasmer::Store::new(&wasmer_engine_jit::JIT::new(compiler).engine())
 }
 
 /// Inject gas counter and stack-height limiter into the given wasm code

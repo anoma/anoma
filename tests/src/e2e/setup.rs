@@ -26,7 +26,7 @@ static INIT: Once = Once::new();
 const APPS_PACKAGE: &str = "anoma_apps";
 
 /// Env. var for running E2E tests in debug mode
-const ENV_VAR_DEBUG: &str = "ANOMA_E2E_DEBUG";
+pub const ENV_VAR_DEBUG: &str = "ANOMA_E2E_DEBUG";
 
 /// Env. var for keeping temporary files created by the E2E tests
 const ENV_VAR_KEEP_TEMP: &str = "ANOMA_E2E_KEEP_TEMP";

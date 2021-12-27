@@ -3,6 +3,8 @@ resolver = "2"
 
 members = [
   "apps",
+  "matchmaker/mm_template",
+  "matchmaker/mm_token_exch",
   "proof_of_stake",
   "shared",
   "tests",
