@@ -41,6 +41,7 @@ const TX_INIT_VALIDATOR_WASM: &str = "tx_init_validator.wasm";
 const TX_UPDATE_VP_WASM: &str = "tx_update_vp.wasm";
 const TX_TRANSFER_WASM: &str = "tx_transfer.wasm";
 const VP_USER_WASM: &str = "vp_user.wasm";
+const VP_VALIDATOR_WASM: &str = "vp_validator.wasm";
 const TX_BOND_WASM: &str = "tx_bond.wasm";
 const TX_UNBOND_WASM: &str = "tx_unbond.wasm";
 const TX_WITHDRAW_WASM: &str = "tx_withdraw.wasm";
@@ -194,7 +195,7 @@ pub async fn submit_init_validator(
 
     let validator_vp_code = validator_vp_code_path
         .map(|path| ctx.read_wasm(path))
-        .unwrap_or_else(|| ctx.read_wasm(VP_USER_WASM));
+        .unwrap_or_else(|| ctx.read_wasm(VP_VALIDATOR_WASM));
     // Validate the validator VP code
     if let Err(err) = vm::validate_untrusted_wasm(&validator_vp_code) {
         eprintln!(

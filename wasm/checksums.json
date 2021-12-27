@@ -7,7 +7,7 @@
     "tx_init_validator.wasm": "tx_init_validator.0ad7ced62db078c1d7a9271db5036ff55a37df666839ec05e131793c1e84cc8f.wasm",
     "tx_transfer.wasm": "tx_transfer.024f0307015bd4ee41af552df507373d86fae8a7760b7414f8d6875fdaa061c1.wasm",
     "tx_unbond.wasm": "tx_unbond.abed5fe7d7bd172c1c9183eb10269fbfc2821a095a0b4f4311c05db73333697d.wasm",
-    "tx_update_dkg_session_keypair.wasm": "tx_update_dkg_session_keypair.214e54167fa09307035da73c259e781eb17b8ededea40e34c1534664e9229997.wasm",
+    "tx_update_dkg_session_keypair.wasm": "tx_update_dkg_session_keypair.98cf900b5591f83541bd87e3411877177a3f7c69ad28626aa32254b0f7bcbec9.wasm",
     "tx_update_vp.wasm": "tx_update_vp.5a38bb314939ef870cb4a6dceb4ffeb0c078def093c939a27ab4399605060454.wasm",
     "tx_withdraw.wasm": "tx_withdraw.82a2dbdf7ae3e86a240b4e5a3d71dd748cf20c33780c163f0d6757c4076e59aa.wasm",
     "vp_testnet_faucet.wasm": "vp_testnet_faucet.34b63816a9876f8c8ae45903d17d51f5bcf301c0797a5d20f2cb663438ec582e.wasm",

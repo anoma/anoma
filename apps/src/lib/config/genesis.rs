@@ -596,6 +596,7 @@ pub fn genesis() -> Genesis {
 
     let vp_token_path = "vp_token.wasm";
     let vp_user_path = "vp_user.wasm";
+    let vp_validator_path = "vp_validator.wasm";
 
     // NOTE When the validator's key changes, tendermint must be reset with
     // `anoma reset` command. To generate a new validator, use the
@@ -622,7 +623,7 @@ pub fn genesis() -> Genesis {
         account_key: account_keypair.public,
         non_staked_balance: token::Amount::whole(100_000),
         // TODO replace with https://github.com/anoma/anoma/issues/25)
-        validator_vp_code_path: vp_user_path.into(),
+        validator_vp_code_path: vp_validator_path.into(),
         validator_vp_sha256: Default::default(),
         reward_vp_code_path: vp_user_path.into(),
         reward_vp_sha256: Default::default(),

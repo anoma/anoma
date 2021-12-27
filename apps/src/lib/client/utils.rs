@@ -704,8 +704,7 @@ fn init_genesis_validator_aux(
         },
         account_key: validator_key.public.clone(),
         non_staked_balance: token::Amount::whole(100_000),
-        // TODO replace with https://github.com/anoma/anoma/issues/25)
-        validator_vp_code_path: "wasm/vp_user.wasm".into(),
+        validator_vp_code_path: "wasm/vp_validator.wasm".into(),
         // TODO: very fake hash
         validator_vp_sha256: [0; 32],
         reward_vp_code_path: "wasm/vp_user.wasm".into(),

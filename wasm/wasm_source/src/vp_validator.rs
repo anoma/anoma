@@ -43,7 +43,7 @@ fn validate_tx(
                 Some(pk) => verify_tx_signature(&pk, &signed_tx_data.sig),
                 None => false,
             };
-            let protocol_sig =  match protocol_pk {
+            let protocol_sig = match protocol_pk {
                 Some(pk) => verify_tx_signature(&pk, &signed_tx_data.sig),
                 None => false,
             };
@@ -139,7 +139,7 @@ fn check_intent_transfers(
     signed_tx_data: &SignedTxData,
 ) -> bool {
     if let Some((raw_intent_transfers, exchange, intent)) =
-    try_decode_intent(addr, signed_tx_data)
+        try_decode_intent(addr, signed_tx_data)
     {
         log_string("check intent".to_string());
         return check_intent(addr, exchange, intent, raw_intent_transfers);

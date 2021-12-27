@@ -188,15 +188,10 @@ where
             let vp_code = vp_code_cache.get_or_insert_with(
                 validator.validator_vp_code_path.clone(),
                 || {
-                    std::fs::read(
-                        self.wasm_dir.join(&validator.validator_vp_code_path),
+                    wasm_loader::read_wasm(
+                        &self.wasm_dir,
+                        &validator.validator_vp_code_path,
                     )
-                    .unwrap_or_else(|_| {
-                        panic!(
-                            "cannot load genesis VP {}.",
-                            validator.validator_vp_code_path
-                        )
-                    })
                 },
             );
 
