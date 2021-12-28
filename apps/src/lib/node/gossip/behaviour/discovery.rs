@@ -473,25 +473,10 @@ impl NetworkBehaviour for DiscoveryBehaviour {
                     }
                     MdnsEvent::Expired(_) => {}
                 },
-                NetworkBehaviourAction::DialAddress {
-                    address,
-                    handler: _,
-                } => {
+                NetworkBehaviourAction::Dial { opts, handler: _ } => {
                     let handler = self.new_handler();
-                    return Poll::Ready(NetworkBehaviourAction::DialAddress {
-                        address,
-                        handler,
-                    });
-                }
-                NetworkBehaviourAction::DialPeer {
-                    peer_id,
-                    condition,
-                    handler: _,
-                } => {
-                    let handler = self.new_handler();
-                    return Poll::Ready(NetworkBehaviourAction::DialPeer {
-                        peer_id,
-                        condition,
+                    return Poll::Ready(NetworkBehaviourAction::Dial {
+                        opts,
                         handler,
                     });
                 }
