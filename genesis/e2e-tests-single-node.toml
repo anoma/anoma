@@ -132,7 +132,7 @@ filename = "vp_user.wasm"
 sha256 = "db02f00f1817f44db68a3dd3eaa42f8c301f892a708e7d7aa99c4fea9887f1a7"
 
 # Default validator VP
-[wasm.vp_user]
+[wasm.vp_validator]
 # filename (relative to wasm path used by the node)
 filename = "vp_validator.wasm"
 # SHA-256 hash of the wasm file
