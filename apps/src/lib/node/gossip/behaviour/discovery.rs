@@ -51,7 +51,7 @@ pub enum DiscoveryEvent {
     Disconnected(PeerId),
 
     /// This case is only use to clean the code in the poll fct
-    KademliaEvent(KademliaEvent),
+    KademliaEvent(Box<KademliaEvent>),
 }
 
 /// `DiscoveryBehaviour` configuration.
@@ -415,7 +415,9 @@ impl NetworkBehaviour for DiscoveryBehaviour {
         while let Poll::Ready(ev) = self.kademlia.poll(cx, params) {
             if let NetworkBehaviourAction::GenerateEvent(_kad_ev) = ev {
             } else {
-                return Poll::Ready(ev.map_out(DiscoveryEvent::KademliaEvent));
+                return Poll::Ready(ev.map_out(|ev| {
+                    DiscoveryEvent::KademliaEvent(Box::new(ev))
+                }));
             }
         }
 
