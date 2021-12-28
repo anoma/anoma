@@ -500,6 +500,7 @@ impl NetworkBehaviour for DiscoveryBehaviour {
                         },
                     );
                 }
+                NetworkBehaviourAction::CloseConnection { .. } => {}
             }
         }
         Poll::Pending
