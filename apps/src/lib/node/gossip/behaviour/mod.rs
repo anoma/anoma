@@ -128,6 +128,8 @@ impl TopicSubscriptionFilter for IntentGossipSubscriptionFilter {
 /// It automatically connect to newly discovered peer, except specified
 /// otherwise, and propagates intents to other peers.
 #[derive(NetworkBehaviour)]
+// Events are delegated to the `NetworkBehaviourEventProcess` impl
+#[behaviour(event_process = true)]
 pub struct Behaviour {
     pub intent_gossip_behaviour: Gossipsub,
     pub discover_behaviour: DiscoveryBehaviour,
@@ -149,7 +151,7 @@ impl Behaviour {
         config: &crate::config::IntentGossiper,
         mm_sender: Option<Sender<MatchmakerMessage>>,
     ) -> Self {
-        let peer_id = PeerId::from_public_key(key.public());
+        let peer_id = PeerId::from_public_key(&key.public());
 
         // TODO remove hardcoded value and add them to the config Except
         // validation_mode, protocol_id_prefix, message_id_fn and
@@ -332,6 +334,7 @@ impl NetworkBehaviourEventProcess<GossipsubEvent> for Behaviour {
                 peer_id: _,
                 topic: _,
             } => {}
+            GossipsubEvent::GossipsubNotSupported { .. } => {}
         }
     }
 }
