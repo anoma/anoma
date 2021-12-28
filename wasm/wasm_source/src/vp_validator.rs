@@ -1,4 +1,4 @@
-//! A basic user VP.
+//! A default validator VP.
 //!
 //! This VP currently provides a signature verification against a public key for
 //! sending tokens (receiving tokens is permissive).
