@@ -1658,6 +1658,111 @@
 <span id="1658">1658</span>
 <span id="1659">1659</span>
 <span id="1660">1660</span>
+<span id="1661">1661</span>
+<span id="1662">1662</span>
+<span id="1663">1663</span>
+<span id="1664">1664</span>
+<span id="1665">1665</span>
+<span id="1666">1666</span>
+<span id="1667">1667</span>
+<span id="1668">1668</span>
+<span id="1669">1669</span>
+<span id="1670">1670</span>
+<span id="1671">1671</span>
+<span id="1672">1672</span>
+<span id="1673">1673</span>
+<span id="1674">1674</span>
+<span id="1675">1675</span>
+<span id="1676">1676</span>
+<span id="1677">1677</span>
+<span id="1678">1678</span>
+<span id="1679">1679</span>
+<span id="1680">1680</span>
+<span id="1681">1681</span>
+<span id="1682">1682</span>
+<span id="1683">1683</span>
+<span id="1684">1684</span>
+<span id="1685">1685</span>
+<span id="1686">1686</span>
+<span id="1687">1687</span>
+<span id="1688">1688</span>
+<span id="1689">1689</span>
+<span id="1690">1690</span>
+<span id="1691">1691</span>
+<span id="1692">1692</span>
+<span id="1693">1693</span>
+<span id="1694">1694</span>
+<span id="1695">1695</span>
+<span id="1696">1696</span>
+<span id="1697">1697</span>
+<span id="1698">1698</span>
+<span id="1699">1699</span>
+<span id="1700">1700</span>
+<span id="1701">1701</span>
+<span id="1702">1702</span>
+<span id="1703">1703</span>
+<span id="1704">1704</span>
+<span id="1705">1705</span>
+<span id="1706">1706</span>
+<span id="1707">1707</span>
+<span id="1708">1708</span>
+<span id="1709">1709</span>
+<span id="1710">1710</span>
+<span id="1711">1711</span>
+<span id="1712">1712</span>
+<span id="1713">1713</span>
+<span id="1714">1714</span>
+<span id="1715">1715</span>
+<span id="1716">1716</span>
+<span id="1717">1717</span>
+<span id="1718">1718</span>
+<span id="1719">1719</span>
+<span id="1720">1720</span>
+<span id="1721">1721</span>
+<span id="1722">1722</span>
+<span id="1723">1723</span>
+<span id="1724">1724</span>
+<span id="1725">1725</span>
+<span id="1726">1726</span>
+<span id="1727">1727</span>
+<span id="1728">1728</span>
+<span id="1729">1729</span>
+<span id="1730">1730</span>
+<span id="1731">1731</span>
+<span id="1732">1732</span>
+<span id="1733">1733</span>
+<span id="1734">1734</span>
+<span id="1735">1735</span>
+<span id="1736">1736</span>
+<span id="1737">1737</span>
+<span id="1738">1738</span>
+<span id="1739">1739</span>
+<span id="1740">1740</span>
+<span id="1741">1741</span>
+<span id="1742">1742</span>
+<span id="1743">1743</span>
+<span id="1744">1744</span>
+<span id="1745">1745</span>
+<span id="1746">1746</span>
+<span id="1747">1747</span>
+<span id="1748">1748</span>
+<span id="1749">1749</span>
+<span id="1750">1750</span>
+<span id="1751">1751</span>
+<span id="1752">1752</span>
+<span id="1753">1753</span>
+<span id="1754">1754</span>
+<span id="1755">1755</span>
+<span id="1756">1756</span>
+<span id="1757">1757</span>
+<span id="1758">1758</span>
+<span id="1759">1759</span>
+<span id="1760">1760</span>
+<span id="1761">1761</span>
+<span id="1762">1762</span>
+<span id="1763">1763</span>
+<span id="1764">1764</span>
+<span id="1765">1765</span>
 </pre><pre class="rust"><code><span class="doccomment">//! VM host environment integration tests.</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//! You can enable logging with the `RUST_LOG` environment variable, e.g.:</span>
@@ -1679,6 +1784,8 @@
 
     <span class="kw">use</span> <span class="ident">std::panic</span>;
 
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
+    <span class="kw">use</span> <span class="ident">::ibc::tx_msg::Msg</span>;
     <span class="kw">use</span> <span class="ident">anoma::ledger::ibc::init_genesis_storage</span>;
     <span class="kw">use</span> <span class="ident">anoma::ledger::ibc::vp::Error</span> <span class="kw">as</span> <span class="ident">IbcError</span>;
     <span class="kw">use</span> <span class="ident">anoma::proto::Tx</span>;
@@ -1690,7 +1797,10 @@
         <span class="ident">BorshDeserialize</span>, <span class="ident">BorshSerialize</span>, <span class="ident">KeyValIterator</span>,
     };
     <span class="kw">use</span> <span class="ident">anoma_vm_env::vp_prelude</span>::{<span class="ident">PostKeyValIterator</span>, <span class="ident">PreKeyValIterator</span>};
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
+    <span class="kw">use</span> <span class="ident">ibc_abci::tx_msg::Msg</span>;
     <span class="kw">use</span> <span class="ident">itertools::Itertools</span>;
+    <span class="kw">use</span> <span class="ident">prost::Message</span>;
     <span class="kw">use</span> <span class="ident">test_log::test</span>;
 
     <span class="kw">use</span> <span class="ident"><span class="kw">super</span>::ibc</span>;
@@ -2144,8 +2254,12 @@
         <span class="ident">init_genesis_storage</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">env</span>.<span class="ident">storage</span>);
 
         <span class="comment">// Start an invalid transaction</span>
-        <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="ident">ibc::client_creation_data</span>();
-        <span class="kw">let</span> <span class="ident">tx_data</span> <span class="op">=</span> <span class="ident">data</span>.<span class="ident">try_to_vec</span>().<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
+        <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="ident">ibc::msg_create_client</span>();
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tx_data</span> <span class="op">=</span> <span class="macro">vec!</span>[];
+        <span class="ident">msg</span>.<span class="ident">clone</span>()
+            .<span class="ident">to_any</span>()
+            .<span class="ident">encode</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">tx_data</span>)
+            .<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
         <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx</span> {
             <span class="ident">code</span>: <span class="macro">vec!</span>[],
             <span class="ident">data</span>: <span class="prelude-val">Some</span>(<span class="ident">tx_data</span>.<span class="ident">clone</span>()),
@@ -2156,10 +2270,11 @@
         <span class="kw">let</span> <span class="ident">counter</span> <span class="op">=</span>
             <span class="ident">tx_host_env::read</span>(<span class="kw-2">&amp;</span><span class="ident">counter_key</span>).<span class="ident">expect</span>(<span class="string">&quot;no client counter&quot;</span>);
         <span class="ident">tx_host_env::write</span>(<span class="kw-2">&amp;</span><span class="ident">counter_key</span>, <span class="ident">counter</span> <span class="op">+</span> <span class="number">1</span>);
-        <span class="kw">let</span> <span class="ident">client_id</span> <span class="op">=</span> <span class="ident">data</span>.<span class="ident">client_id</span>(<span class="ident">counter</span>).<span class="ident">expect</span>(<span class="string">&quot;invalid client ID&quot;</span>);
+        <span class="kw">let</span> <span class="ident">client_id</span> <span class="op">=</span> <span class="ident">ibc::client_id</span>(<span class="ident">msg</span>.<span class="ident">client_state</span>.<span class="ident">client_type</span>(), <span class="ident">counter</span>)
+            .<span class="ident">expect</span>(<span class="string">&quot;invalid client ID&quot;</span>);
         <span class="comment">// only insert a client type</span>
         <span class="kw">let</span> <span class="ident">client_type_key</span> <span class="op">=</span> <span class="ident">ibc::client_type_key</span>(<span class="kw-2">&amp;</span><span class="ident">client_id</span>).<span class="ident">to_string</span>();
-        <span class="ident">tx_host_env::write</span>(<span class="kw-2">&amp;</span><span class="ident">client_type_key</span>, <span class="ident">data</span>.<span class="ident">client_state</span>.<span class="ident">client_type</span>());
+        <span class="ident">tx_host_env::write</span>(<span class="kw-2">&amp;</span><span class="ident">client_type_key</span>, <span class="ident">msg</span>.<span class="ident">client_state</span>.<span class="ident">client_type</span>());
 
         <span class="comment">// Check should fail due to no client state</span>
         <span class="kw">let</span> (<span class="ident">ibc_vp</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">ibc::init_ibc_vp_from_tx</span>(<span class="kw-2">&amp;</span><span class="ident">env</span>, <span class="kw-2">&amp;</span><span class="ident">tx</span>);
@@ -2173,8 +2288,12 @@
         <span class="ident">env</span>.<span class="ident">write_log</span>.<span class="ident">drop_tx</span>();
 
         <span class="comment">// Start a transaction to create a new client</span>
-        <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="ident">ibc::client_creation_data</span>();
-        <span class="kw">let</span> <span class="ident">tx_data</span> <span class="op">=</span> <span class="ident">data</span>.<span class="ident">try_to_vec</span>().<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
+        <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="ident">ibc::msg_create_client</span>();
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tx_data</span> <span class="op">=</span> <span class="macro">vec!</span>[];
+        <span class="ident">msg</span>.<span class="ident">clone</span>()
+            .<span class="ident">to_any</span>()
+            .<span class="ident">encode</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">tx_data</span>)
+            .<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
         <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx</span> {
             <span class="ident">code</span>: <span class="macro">vec!</span>[],
             <span class="ident">data</span>: <span class="prelude-val">Some</span>(<span class="ident">tx_data</span>.<span class="ident">clone</span>()),
@@ -2186,19 +2305,20 @@
         <span class="kw">let</span> <span class="ident">counter</span> <span class="op">=</span>
             <span class="ident">tx_host_env::read</span>(<span class="kw-2">&amp;</span><span class="ident">counter_key</span>).<span class="ident">expect</span>(<span class="string">&quot;no client counter&quot;</span>);
         <span class="ident">tx_host_env::write</span>(<span class="kw-2">&amp;</span><span class="ident">counter_key</span>, <span class="ident">counter</span> <span class="op">+</span> <span class="number">1</span>);
-        <span class="kw">let</span> <span class="ident">client_id</span> <span class="op">=</span> <span class="ident">data</span>.<span class="ident">client_id</span>(<span class="ident">counter</span>).<span class="ident">expect</span>(<span class="string">&quot;invalid client ID&quot;</span>);
+        <span class="kw">let</span> <span class="ident">client_id</span> <span class="op">=</span> <span class="ident">ibc::client_id</span>(<span class="ident">msg</span>.<span class="ident">client_state</span>.<span class="ident">client_type</span>(), <span class="ident">counter</span>)
+            .<span class="ident">expect</span>(<span class="string">&quot;invalid client ID&quot;</span>);
         <span class="comment">// client type</span>
         <span class="kw">let</span> <span class="ident">client_type_key</span> <span class="op">=</span> <span class="ident">ibc::client_type_key</span>(<span class="kw-2">&amp;</span><span class="ident">client_id</span>).<span class="ident">to_string</span>();
-        <span class="ident">tx_host_env::write</span>(<span class="kw-2">&amp;</span><span class="ident">client_type_key</span>, <span class="ident">data</span>.<span class="ident">client_state</span>.<span class="ident">client_type</span>());
+        <span class="ident">tx_host_env::write</span>(<span class="kw-2">&amp;</span><span class="ident">client_type_key</span>, <span class="ident">msg</span>.<span class="ident">client_state</span>.<span class="ident">client_type</span>());
         <span class="comment">// client state</span>
         <span class="kw">let</span> <span class="ident">client_state_key</span> <span class="op">=</span> <span class="ident">ibc::client_state_key</span>(<span class="kw-2">&amp;</span><span class="ident">client_id</span>).<span class="ident">to_string</span>();
-        <span class="ident">tx_host_env::write</span>(<span class="kw-2">&amp;</span><span class="ident">client_state_key</span>, <span class="ident">data</span>.<span class="ident">client_state</span>.<span class="ident">clone</span>());
+        <span class="ident">tx_host_env::write</span>(<span class="kw-2">&amp;</span><span class="ident">client_state_key</span>, <span class="ident">msg</span>.<span class="ident">client_state</span>.<span class="ident">clone</span>());
         <span class="comment">// consensus state</span>
-        <span class="kw">let</span> <span class="ident">height</span> <span class="op">=</span> <span class="ident">data</span>.<span class="ident">client_state</span>.<span class="ident">latest_height</span>();
+        <span class="kw">let</span> <span class="ident">height</span> <span class="op">=</span> <span class="ident">msg</span>.<span class="ident">client_state</span>.<span class="ident">latest_height</span>();
         <span class="kw">let</span> <span class="ident">consensus_state_key</span> <span class="op">=</span>
             <span class="ident">ibc::consensus_state_key</span>(<span class="kw-2">&amp;</span><span class="ident">client_id</span>, <span class="ident">height</span>).<span class="ident">to_string</span>();
-        <span class="ident">tx_host_env::write</span>(<span class="kw-2">&amp;</span><span class="ident">consensus_state_key</span>, <span class="ident">data</span>.<span class="ident">consensus_state</span>.<span class="ident">clone</span>());
-        <span class="kw">let</span> <span class="ident">event</span> <span class="op">=</span> <span class="ident">ibc::make_create_client_event</span>(<span class="kw-2">&amp;</span><span class="ident">client_id</span>, <span class="kw-2">&amp;</span><span class="ident">data</span>);
+        <span class="ident">tx_host_env::write</span>(<span class="kw-2">&amp;</span><span class="ident">consensus_state_key</span>, <span class="ident">msg</span>.<span class="ident">consensus_state</span>.<span class="ident">clone</span>());
+        <span class="kw">let</span> <span class="ident">event</span> <span class="op">=</span> <span class="ident">ibc::make_create_client_event</span>(<span class="kw-2">&amp;</span><span class="ident">client_id</span>, <span class="kw-2">&amp;</span><span class="ident">msg</span>);
         <span class="ident">tx_host_env::emit_ibc_event</span>(<span class="kw-2">&amp;</span><span class="ident">event</span>.<span class="ident">try_into</span>().<span class="ident">unwrap</span>());
 
         <span class="comment">// Check</span>
@@ -2214,17 +2334,21 @@
         <span class="ident">env</span>.<span class="ident">write_log</span>.<span class="ident">commit_block</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">env</span>.<span class="ident">storage</span>).<span class="ident">unwrap</span>();
 
         <span class="comment">// Start an invalid transaction</span>
-        <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="ident">ibc::client_update_data</span>(<span class="ident">client_id</span>);
-        <span class="kw">let</span> <span class="ident">tx_data</span> <span class="op">=</span> <span class="ident">data</span>.<span class="ident">try_to_vec</span>().<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
+        <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="ident">ibc::msg_update_client</span>(<span class="ident">client_id</span>);
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tx_data</span> <span class="op">=</span> <span class="macro">vec!</span>[];
+        <span class="ident">msg</span>.<span class="ident">clone</span>()
+            .<span class="ident">to_any</span>()
+            .<span class="ident">encode</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">tx_data</span>)
+            .<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
         <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx</span> {
             <span class="ident">code</span>: <span class="macro">vec!</span>[],
             <span class="ident">data</span>: <span class="prelude-val">Some</span>(<span class="ident">tx_data</span>.<span class="ident">clone</span>()),
             <span class="ident">timestamp</span>: <span class="ident">DateTimeUtc::now</span>(),
         };
         <span class="comment">// get and update the client without a header</span>
-        <span class="kw">let</span> <span class="ident">client_id</span> <span class="op">=</span> <span class="ident">data</span>.<span class="ident">client_id</span>.<span class="ident">clone</span>();
+        <span class="kw">let</span> <span class="ident">client_id</span> <span class="op">=</span> <span class="ident">msg</span>.<span class="ident">client_id</span>.<span class="ident">clone</span>();
         <span class="comment">// update the client with the same state</span>
-        <span class="kw">let</span> <span class="ident">old_data</span> <span class="op">=</span> <span class="ident">ibc::client_creation_data</span>();
+        <span class="kw">let</span> <span class="ident">old_data</span> <span class="op">=</span> <span class="ident">ibc::msg_create_client</span>();
         <span class="kw">let</span> <span class="ident">same_client_state</span> <span class="op">=</span> <span class="ident">old_data</span>.<span class="ident">client_state</span>.<span class="ident">clone</span>();
         <span class="kw">let</span> <span class="ident">height</span> <span class="op">=</span> <span class="ident">same_client_state</span>.<span class="ident">latest_height</span>();
         <span class="kw">let</span> <span class="ident">same_consensus_state</span> <span class="op">=</span> <span class="ident">old_data</span>.<span class="ident">consensus_state</span>;
@@ -2233,7 +2357,7 @@
         <span class="kw">let</span> <span class="ident">consensus_state_key</span> <span class="op">=</span>
             <span class="ident">ibc::consensus_state_key</span>(<span class="kw-2">&amp;</span><span class="ident">client_id</span>, <span class="ident">height</span>).<span class="ident">to_string</span>();
         <span class="ident">tx_host_env::write</span>(<span class="kw-2">&amp;</span><span class="ident">consensus_state_key</span>, <span class="ident">same_consensus_state</span>);
-        <span class="kw">let</span> <span class="ident">event</span> <span class="op">=</span> <span class="ident">ibc::make_update_client_event</span>(<span class="kw-2">&amp;</span><span class="ident">client_id</span>, <span class="kw-2">&amp;</span><span class="ident">data</span>);
+        <span class="kw">let</span> <span class="ident">event</span> <span class="op">=</span> <span class="ident">ibc::make_update_client_event</span>(<span class="kw-2">&amp;</span><span class="ident">client_id</span>, <span class="kw-2">&amp;</span><span class="ident">msg</span>);
         <span class="ident">tx_host_env::emit_ibc_event</span>(<span class="kw-2">&amp;</span><span class="ident">event</span>.<span class="ident">try_into</span>().<span class="ident">unwrap</span>());
 
         <span class="comment">// Check should fail due to the invalid updating</span>
@@ -2248,27 +2372,31 @@
         <span class="ident">env</span>.<span class="ident">write_log</span>.<span class="ident">drop_tx</span>();
 
         <span class="comment">// Start a transaction to update the client</span>
-        <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="ident">ibc::client_update_data</span>(<span class="ident">client_id</span>);
-        <span class="kw">let</span> <span class="ident">tx_data</span> <span class="op">=</span> <span class="ident">data</span>.<span class="ident">try_to_vec</span>().<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
+        <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="ident">ibc::msg_update_client</span>(<span class="ident">client_id</span>);
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tx_data</span> <span class="op">=</span> <span class="macro">vec!</span>[];
+        <span class="ident">msg</span>.<span class="ident">clone</span>()
+            .<span class="ident">to_any</span>()
+            .<span class="ident">encode</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">tx_data</span>)
+            .<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
         <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx</span> {
             <span class="ident">code</span>: <span class="macro">vec!</span>[],
             <span class="ident">data</span>: <span class="prelude-val">Some</span>(<span class="ident">tx_data</span>.<span class="ident">clone</span>()),
             <span class="ident">timestamp</span>: <span class="ident">DateTimeUtc::now</span>(),
         };
         <span class="comment">// get and update the client</span>
-        <span class="kw">let</span> <span class="ident">client_id</span> <span class="op">=</span> <span class="ident">data</span>.<span class="ident">client_id</span>.<span class="ident">clone</span>();
+        <span class="kw">let</span> <span class="ident">client_id</span> <span class="op">=</span> <span class="ident">msg</span>.<span class="ident">client_id</span>.<span class="ident">clone</span>();
         <span class="kw">let</span> <span class="ident">client_state_key</span> <span class="op">=</span> <span class="ident">ibc::client_state_key</span>(<span class="kw-2">&amp;</span><span class="ident">client_id</span>).<span class="ident">to_string</span>();
         <span class="kw">let</span> <span class="ident">client_state</span> <span class="op">=</span>
             <span class="ident">tx_host_env::read</span>(<span class="kw-2">&amp;</span><span class="ident">client_state_key</span>).<span class="ident">expect</span>(<span class="string">&quot;no client state&quot;</span>);
         <span class="kw">let</span> (<span class="ident">new_client_state</span>, <span class="ident">new_consensus_state</span>) <span class="op">=</span>
-            <span class="ident">ibc::update_client</span>(<span class="ident">client_state</span>, <span class="ident">data</span>.<span class="ident">headers</span>.<span class="ident">clone</span>())
+            <span class="ident">ibc::update_client</span>(<span class="ident">client_state</span>, <span class="ident">msg</span>.<span class="ident">header</span>.<span class="ident">clone</span>())
                 .<span class="ident">expect</span>(<span class="string">&quot;updating a client failed&quot;</span>);
         <span class="kw">let</span> <span class="ident">height</span> <span class="op">=</span> <span class="ident">new_client_state</span>.<span class="ident">latest_height</span>();
         <span class="ident">tx_host_env::write</span>(<span class="kw-2">&amp;</span><span class="ident">client_state_key</span>, <span class="ident">new_client_state</span>);
         <span class="kw">let</span> <span class="ident">consensus_state_key</span> <span class="op">=</span>
             <span class="ident">ibc::consensus_state_key</span>(<span class="kw-2">&amp;</span><span class="ident">client_id</span>, <span class="ident">height</span>).<span class="ident">to_string</span>();
         <span class="ident">tx_host_env::write</span>(<span class="kw-2">&amp;</span><span class="ident">consensus_state_key</span>, <span class="ident">new_consensus_state</span>);
-        <span class="kw">let</span> <span class="ident">event</span> <span class="op">=</span> <span class="ident">ibc::make_update_client_event</span>(<span class="kw-2">&amp;</span><span class="ident">client_id</span>, <span class="kw-2">&amp;</span><span class="ident">data</span>);
+        <span class="kw">let</span> <span class="ident">event</span> <span class="op">=</span> <span class="ident">ibc::make_update_client_event</span>(<span class="kw-2">&amp;</span><span class="ident">client_id</span>, <span class="kw-2">&amp;</span><span class="ident">msg</span>);
         <span class="ident">tx_host_env::emit_ibc_event</span>(<span class="kw-2">&amp;</span><span class="ident">event</span>.<span class="ident">try_into</span>().<span class="ident">unwrap</span>());
 
         <span class="comment">// Check</span>
@@ -2284,24 +2412,28 @@
         <span class="ident">env</span>.<span class="ident">write_log</span>.<span class="ident">commit_block</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">env</span>.<span class="ident">storage</span>).<span class="ident">unwrap</span>();
 
         <span class="comment">// Start a transaction to upgrade the client</span>
-        <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="ident">ibc::client_upgrade_data</span>(<span class="ident">client_id</span>);
-        <span class="kw">let</span> <span class="ident">tx_data</span> <span class="op">=</span> <span class="ident">data</span>.<span class="ident">try_to_vec</span>().<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
+        <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="ident">ibc::msg_upgrade_client</span>(<span class="ident">client_id</span>);
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tx_data</span> <span class="op">=</span> <span class="macro">vec!</span>[];
+        <span class="ident">msg</span>.<span class="ident">clone</span>()
+            .<span class="ident">to_any</span>()
+            .<span class="ident">encode</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">tx_data</span>)
+            .<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
         <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx</span> {
             <span class="ident">code</span>: <span class="macro">vec!</span>[],
             <span class="ident">data</span>: <span class="prelude-val">Some</span>(<span class="ident">tx_data</span>.<span class="ident">clone</span>()),
             <span class="ident">timestamp</span>: <span class="ident">DateTimeUtc::now</span>(),
         };
         <span class="comment">// upgrade the client</span>
-        <span class="kw">let</span> <span class="ident">client_id</span> <span class="op">=</span> <span class="ident">data</span>.<span class="ident">client_id</span>.<span class="ident">clone</span>();
-        <span class="kw">let</span> <span class="ident">new_client_state</span> <span class="op">=</span> <span class="ident">data</span>.<span class="ident">client_state</span>.<span class="ident">clone</span>();
-        <span class="kw">let</span> <span class="ident">new_consensus_state</span> <span class="op">=</span> <span class="ident">data</span>.<span class="ident">consensus_state</span>.<span class="ident">clone</span>();
+        <span class="kw">let</span> <span class="ident">client_id</span> <span class="op">=</span> <span class="ident">msg</span>.<span class="ident">client_id</span>.<span class="ident">clone</span>();
+        <span class="kw">let</span> <span class="ident">new_client_state</span> <span class="op">=</span> <span class="ident">msg</span>.<span class="ident">client_state</span>.<span class="ident">clone</span>();
+        <span class="kw">let</span> <span class="ident">new_consensus_state</span> <span class="op">=</span> <span class="ident">msg</span>.<span class="ident">consensus_state</span>.<span class="ident">clone</span>();
         <span class="kw">let</span> <span class="ident">client_state_key</span> <span class="op">=</span> <span class="ident">ibc::client_state_key</span>(<span class="kw-2">&amp;</span><span class="ident">client_id</span>).<span class="ident">to_string</span>();
         <span class="kw">let</span> <span class="ident">height</span> <span class="op">=</span> <span class="ident">new_client_state</span>.<span class="ident">latest_height</span>();
         <span class="kw">let</span> <span class="ident">consensus_state_key</span> <span class="op">=</span>
             <span class="ident">ibc::consensus_state_key</span>(<span class="kw-2">&amp;</span><span class="ident">client_id</span>, <span class="ident">height</span>).<span class="ident">to_string</span>();
         <span class="ident">tx_host_env::write</span>(<span class="kw-2">&amp;</span><span class="ident">client_state_key</span>, <span class="ident">new_client_state</span>);
         <span class="ident">tx_host_env::write</span>(<span class="kw-2">&amp;</span><span class="ident">consensus_state_key</span>, <span class="ident">new_consensus_state</span>);
-        <span class="kw">let</span> <span class="ident">event</span> <span class="op">=</span> <span class="ident">ibc::make_upgrade_client_event</span>(<span class="kw-2">&amp;</span><span class="ident">client_id</span>, <span class="kw-2">&amp;</span><span class="ident">data</span>);
+        <span class="kw">let</span> <span class="ident">event</span> <span class="op">=</span> <span class="ident">ibc::make_upgrade_client_event</span>(<span class="kw-2">&amp;</span><span class="ident">client_id</span>, <span class="kw-2">&amp;</span><span class="ident">msg</span>);
         <span class="ident">tx_host_env::emit_ibc_event</span>(<span class="kw-2">&amp;</span><span class="ident">event</span>.<span class="ident">try_into</span>().<span class="ident">unwrap</span>());
 
         <span class="comment">// Check</span>
@@ -2329,8 +2461,12 @@
         });
 
         <span class="comment">// Start an invalid transaction</span>
-        <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="ident">ibc::connection_open_init_data</span>(<span class="ident">client_id</span>.<span class="ident">clone</span>());
-        <span class="kw">let</span> <span class="ident">tx_data</span> <span class="op">=</span> <span class="ident">data</span>.<span class="ident">try_to_vec</span>().<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
+        <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="ident">ibc::msg_connection_open_init</span>(<span class="ident">client_id</span>.<span class="ident">clone</span>());
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tx_data</span> <span class="op">=</span> <span class="macro">vec!</span>[];
+        <span class="ident">msg</span>.<span class="ident">clone</span>()
+            .<span class="ident">to_any</span>()
+            .<span class="ident">encode</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">tx_data</span>)
+            .<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
         <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx</span> {
             <span class="ident">code</span>: <span class="macro">vec!</span>[],
             <span class="ident">data</span>: <span class="prelude-val">Some</span>(<span class="ident">tx_data</span>.<span class="ident">clone</span>()),
@@ -2344,9 +2480,10 @@
         <span class="comment">// insert a new opened connection</span>
         <span class="kw">let</span> <span class="ident">conn_id</span> <span class="op">=</span> <span class="ident">ibc::connection_id</span>(<span class="ident">counter</span>);
         <span class="kw">let</span> <span class="ident">conn_key</span> <span class="op">=</span> <span class="ident">ibc::connection_key</span>(<span class="kw-2">&amp;</span><span class="ident">conn_id</span>).<span class="ident">to_string</span>();
-        <span class="kw">let</span> <span class="ident">conn</span> <span class="op">=</span> <span class="ident">ibc::open_connection</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">data</span>.<span class="ident">connection</span>());
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">connection</span> <span class="op">=</span> <span class="ident">ibc::init_connection</span>(<span class="kw-2">&amp;</span><span class="ident">msg</span>);
+        <span class="kw">let</span> <span class="ident">conn</span> <span class="op">=</span> <span class="ident">ibc::open_connection</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">connection</span>);
         <span class="ident">tx_host_env::write</span>(<span class="kw-2">&amp;</span><span class="ident">conn_key</span>, <span class="ident">conn</span>);
-        <span class="kw">let</span> <span class="ident">event</span> <span class="op">=</span> <span class="ident">ibc::make_open_init_connection_event</span>(<span class="kw-2">&amp;</span><span class="ident">conn_id</span>, <span class="kw-2">&amp;</span><span class="ident">data</span>);
+        <span class="kw">let</span> <span class="ident">event</span> <span class="op">=</span> <span class="ident">ibc::make_open_init_connection_event</span>(<span class="kw-2">&amp;</span><span class="ident">conn_id</span>, <span class="kw-2">&amp;</span><span class="ident">msg</span>);
         <span class="ident">tx_host_env::emit_ibc_event</span>(<span class="kw-2">&amp;</span><span class="ident">event</span>.<span class="ident">try_into</span>().<span class="ident">unwrap</span>());
 
         <span class="comment">// Check should fail due to directly opening a connection</span>
@@ -2362,8 +2499,12 @@
 
         <span class="comment">// Start a transaction for ConnectionOpenInit</span>
         <span class="comment">// tx (Not need to decode tx_data)</span>
-        <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="ident">ibc::connection_open_init_data</span>(<span class="ident">client_id</span>);
-        <span class="kw">let</span> <span class="ident">tx_data</span> <span class="op">=</span> <span class="ident">data</span>.<span class="ident">try_to_vec</span>().<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
+        <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="ident">ibc::msg_connection_open_init</span>(<span class="ident">client_id</span>);
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tx_data</span> <span class="op">=</span> <span class="macro">vec!</span>[];
+        <span class="ident">msg</span>.<span class="ident">clone</span>()
+            .<span class="ident">to_any</span>()
+            .<span class="ident">encode</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">tx_data</span>)
+            .<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
         <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx</span> {
             <span class="ident">code</span>: <span class="macro">vec!</span>[],
             <span class="ident">data</span>: <span class="prelude-val">Some</span>(<span class="ident">tx_data</span>.<span class="ident">clone</span>()),
@@ -2377,8 +2518,9 @@
         <span class="comment">// new connection</span>
         <span class="kw">let</span> <span class="ident">conn_id</span> <span class="op">=</span> <span class="ident">ibc::connection_id</span>(<span class="ident">counter</span>);
         <span class="kw">let</span> <span class="ident">conn_key</span> <span class="op">=</span> <span class="ident">ibc::connection_key</span>(<span class="kw-2">&amp;</span><span class="ident">conn_id</span>).<span class="ident">to_string</span>();
-        <span class="ident">tx_host_env::write</span>(<span class="kw-2">&amp;</span><span class="ident">conn_key</span>, <span class="ident">data</span>.<span class="ident">connection</span>());
-        <span class="kw">let</span> <span class="ident">event</span> <span class="op">=</span> <span class="ident">ibc::make_open_init_connection_event</span>(<span class="kw-2">&amp;</span><span class="ident">conn_id</span>, <span class="kw-2">&amp;</span><span class="ident">data</span>);
+        <span class="kw">let</span> <span class="ident">connection</span> <span class="op">=</span> <span class="ident">ibc::init_connection</span>(<span class="kw-2">&amp;</span><span class="ident">msg</span>);
+        <span class="ident">tx_host_env::write</span>(<span class="kw-2">&amp;</span><span class="ident">conn_key</span>, <span class="ident">connection</span>);
+        <span class="kw">let</span> <span class="ident">event</span> <span class="op">=</span> <span class="ident">ibc::make_open_init_connection_event</span>(<span class="kw-2">&amp;</span><span class="ident">conn_id</span>, <span class="kw-2">&amp;</span><span class="ident">msg</span>);
         <span class="ident">tx_host_env::emit_ibc_event</span>(<span class="kw-2">&amp;</span><span class="ident">event</span>.<span class="ident">try_into</span>().<span class="ident">unwrap</span>());
 
         <span class="comment">// Check</span>
@@ -2397,19 +2539,23 @@
 
         <span class="comment">// Start the next transaction for ConnectionOpenAck</span>
         <span class="comment">// tx (Not need to decode tx_data)</span>
-        <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="ident">ibc::connection_open_ack_data</span>(<span class="ident">conn_id</span>, <span class="ident">client_state</span>);
-        <span class="kw">let</span> <span class="ident">tx_data</span> <span class="op">=</span> <span class="ident">data</span>.<span class="ident">try_to_vec</span>().<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
+        <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="ident">ibc::msg_connection_open_ack</span>(<span class="ident">conn_id</span>, <span class="ident">client_state</span>);
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tx_data</span> <span class="op">=</span> <span class="macro">vec!</span>[];
+        <span class="ident">msg</span>.<span class="ident">clone</span>()
+            .<span class="ident">to_any</span>()
+            .<span class="ident">encode</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">tx_data</span>)
+            .<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
         <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx</span> {
             <span class="ident">code</span>: <span class="macro">vec!</span>[],
             <span class="ident">data</span>: <span class="prelude-val">Some</span>(<span class="ident">tx_data</span>.<span class="ident">clone</span>()),
             <span class="ident">timestamp</span>: <span class="ident">DateTimeUtc::now</span>(),
         };
         <span class="comment">// update the connection</span>
-        <span class="kw">let</span> <span class="ident">conn_key</span> <span class="op">=</span> <span class="ident">ibc::connection_key</span>(<span class="kw-2">&amp;</span><span class="ident">data</span>.<span class="ident">conn_id</span>).<span class="ident">to_string</span>();
+        <span class="kw">let</span> <span class="ident">conn_key</span> <span class="op">=</span> <span class="ident">ibc::connection_key</span>(<span class="kw-2">&amp;</span><span class="ident">msg</span>.<span class="ident">connection_id</span>).<span class="ident">to_string</span>();
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">conn</span> <span class="op">=</span> <span class="ident">tx_host_env::read</span>(<span class="kw-2">&amp;</span><span class="ident">conn_key</span>).<span class="ident">expect</span>(<span class="string">&quot;no connection&quot;</span>);
         <span class="ident">ibc::open_connection</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">conn</span>);
         <span class="ident">tx_host_env::write</span>(<span class="kw-2">&amp;</span><span class="ident">conn_key</span>, <span class="ident">conn</span>);
-        <span class="kw">let</span> <span class="ident">event</span> <span class="op">=</span> <span class="ident">ibc::make_open_ack_connection_event</span>(<span class="kw-2">&amp;</span><span class="ident">data</span>);
+        <span class="kw">let</span> <span class="ident">event</span> <span class="op">=</span> <span class="ident">ibc::make_open_ack_connection_event</span>(<span class="kw-2">&amp;</span><span class="ident">msg</span>);
         <span class="ident">tx_host_env::emit_ibc_event</span>(<span class="kw-2">&amp;</span><span class="ident">event</span>.<span class="ident">try_into</span>().<span class="ident">unwrap</span>());
 
         <span class="comment">// Check</span>
@@ -2438,8 +2584,12 @@
 
         <span class="comment">// Start a transaction for ConnectionOpenTry</span>
         <span class="comment">// tx (Not need to decode tx_data)</span>
-        <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="ident">ibc::connection_open_try_data</span>(<span class="ident">client_id</span>, <span class="ident">client_state</span>);
-        <span class="kw">let</span> <span class="ident">tx_data</span> <span class="op">=</span> <span class="ident">data</span>.<span class="ident">try_to_vec</span>().<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
+        <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="ident">ibc::msg_connection_open_try</span>(<span class="ident">client_id</span>, <span class="ident">client_state</span>);
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tx_data</span> <span class="op">=</span> <span class="macro">vec!</span>[];
+        <span class="ident">msg</span>.<span class="ident">clone</span>()
+            .<span class="ident">to_any</span>()
+            .<span class="ident">encode</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">tx_data</span>)
+            .<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
         <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx</span> {
             <span class="ident">code</span>: <span class="macro">vec!</span>[],
             <span class="ident">data</span>: <span class="prelude-val">Some</span>(<span class="ident">tx_data</span>.<span class="ident">clone</span>()),
@@ -2453,8 +2603,9 @@
         <span class="comment">// new connection</span>
         <span class="kw">let</span> <span class="ident">conn_id</span> <span class="op">=</span> <span class="ident">ibc::connection_id</span>(<span class="ident">counter</span>);
         <span class="kw">let</span> <span class="ident">conn_key</span> <span class="op">=</span> <span class="ident">ibc::connection_key</span>(<span class="kw-2">&amp;</span><span class="ident">conn_id</span>).<span class="ident">to_string</span>();
-        <span class="ident">tx_host_env::write</span>(<span class="kw-2">&amp;</span><span class="ident">conn_key</span>, <span class="ident">data</span>.<span class="ident">connection</span>());
-        <span class="kw">let</span> <span class="ident">event</span> <span class="op">=</span> <span class="ident">ibc::make_open_try_connection_event</span>(<span class="kw-2">&amp;</span><span class="ident">conn_id</span>, <span class="kw-2">&amp;</span><span class="ident">data</span>);
+        <span class="kw">let</span> <span class="ident">connection</span> <span class="op">=</span> <span class="ident">ibc::try_connection</span>(<span class="kw-2">&amp;</span><span class="ident">msg</span>);
+        <span class="ident">tx_host_env::write</span>(<span class="kw-2">&amp;</span><span class="ident">conn_key</span>, <span class="ident">connection</span>);
+        <span class="kw">let</span> <span class="ident">event</span> <span class="op">=</span> <span class="ident">ibc::make_open_try_connection_event</span>(<span class="kw-2">&amp;</span><span class="ident">conn_id</span>, <span class="kw-2">&amp;</span><span class="ident">msg</span>);
         <span class="ident">tx_host_env::emit_ibc_event</span>(<span class="kw-2">&amp;</span><span class="ident">event</span>.<span class="ident">try_into</span>().<span class="ident">unwrap</span>());
 
         <span class="comment">// Check</span>
@@ -2473,19 +2624,23 @@
 
         <span class="comment">// Start the next transaction for ConnectionOpenConfirm</span>
         <span class="comment">// tx (Not need to decode tx_data)</span>
-        <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="ident">ibc::connection_open_confirm_data</span>(<span class="ident">conn_id</span>);
-        <span class="kw">let</span> <span class="ident">tx_data</span> <span class="op">=</span> <span class="ident">data</span>.<span class="ident">try_to_vec</span>().<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
+        <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="ident">ibc::msg_connection_open_confirm</span>(<span class="ident">conn_id</span>);
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tx_data</span> <span class="op">=</span> <span class="macro">vec!</span>[];
+        <span class="ident">msg</span>.<span class="ident">clone</span>()
+            .<span class="ident">to_any</span>()
+            .<span class="ident">encode</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">tx_data</span>)
+            .<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
         <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx</span> {
             <span class="ident">code</span>: <span class="macro">vec!</span>[],
             <span class="ident">data</span>: <span class="prelude-val">Some</span>(<span class="ident">tx_data</span>.<span class="ident">clone</span>()),
             <span class="ident">timestamp</span>: <span class="ident">DateTimeUtc::now</span>(),
         };
         <span class="comment">// update the connection</span>
-        <span class="kw">let</span> <span class="ident">conn_key</span> <span class="op">=</span> <span class="ident">ibc::connection_key</span>(<span class="kw-2">&amp;</span><span class="ident">data</span>.<span class="ident">conn_id</span>).<span class="ident">to_string</span>();
+        <span class="kw">let</span> <span class="ident">conn_key</span> <span class="op">=</span> <span class="ident">ibc::connection_key</span>(<span class="kw-2">&amp;</span><span class="ident">msg</span>.<span class="ident">connection_id</span>).<span class="ident">to_string</span>();
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">conn</span> <span class="op">=</span> <span class="ident">tx_host_env::read</span>(<span class="kw-2">&amp;</span><span class="ident">conn_key</span>).<span class="ident">expect</span>(<span class="string">&quot;no connection&quot;</span>);
         <span class="ident">ibc::open_connection</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">conn</span>);
         <span class="ident">tx_host_env::write</span>(<span class="kw-2">&amp;</span><span class="ident">conn_key</span>, <span class="ident">conn</span>);
-        <span class="kw">let</span> <span class="ident">event</span> <span class="op">=</span> <span class="ident">ibc::make_open_confirm_connection_event</span>(<span class="kw-2">&amp;</span><span class="ident">data</span>);
+        <span class="kw">let</span> <span class="ident">event</span> <span class="op">=</span> <span class="ident">ibc::make_open_confirm_connection_event</span>(<span class="kw-2">&amp;</span><span class="ident">msg</span>);
         <span class="ident">tx_host_env::emit_ibc_event</span>(<span class="kw-2">&amp;</span><span class="ident">event</span>.<span class="ident">try_into</span>().<span class="ident">unwrap</span>());
 
         <span class="comment">// Check</span>
@@ -2514,9 +2669,12 @@
 
         <span class="comment">// Start an invalid transaction</span>
         <span class="kw">let</span> <span class="ident">port_id</span> <span class="op">=</span> <span class="ident">ibc::port_id</span>(<span class="string">&quot;test_port&quot;</span>).<span class="ident">expect</span>(<span class="string">&quot;invalid port ID&quot;</span>);
-        <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span>
-            <span class="ident">ibc::channel_open_init_data</span>(<span class="ident">port_id</span>.<span class="ident">clone</span>(), <span class="ident">conn_id</span>.<span class="ident">clone</span>());
-        <span class="kw">let</span> <span class="ident">tx_data</span> <span class="op">=</span> <span class="ident">data</span>.<span class="ident">try_to_vec</span>().<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
+        <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="ident">ibc::msg_channel_open_init</span>(<span class="ident">port_id</span>.<span class="ident">clone</span>(), <span class="ident">conn_id</span>.<span class="ident">clone</span>());
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tx_data</span> <span class="op">=</span> <span class="macro">vec!</span>[];
+        <span class="ident">msg</span>.<span class="ident">clone</span>()
+            .<span class="ident">to_any</span>()
+            .<span class="ident">encode</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">tx_data</span>)
+            .<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
         <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx</span> {
             <span class="ident">code</span>: <span class="macro">vec!</span>[],
             <span class="ident">data</span>: <span class="prelude-val">Some</span>(<span class="ident">tx_data</span>.<span class="ident">clone</span>()),
@@ -2532,8 +2690,8 @@
         <span class="kw">let</span> <span class="ident">channel_id</span> <span class="op">=</span> <span class="ident">ibc::channel_id</span>(<span class="ident">counter</span>);
         <span class="kw">let</span> <span class="ident">port_channel_id</span> <span class="op">=</span> <span class="ident">ibc::port_channel_id</span>(<span class="ident">port_id</span>, <span class="ident">channel_id</span>.<span class="ident">clone</span>());
         <span class="kw">let</span> <span class="ident">channel_key</span> <span class="op">=</span> <span class="ident">ibc::channel_key</span>(<span class="kw-2">&amp;</span><span class="ident">port_channel_id</span>).<span class="ident">to_string</span>();
-        <span class="ident">tx_host_env::write</span>(<span class="kw-2">&amp;</span><span class="ident">channel_key</span>, <span class="ident">data</span>.<span class="ident">channel</span>());
-        <span class="kw">let</span> <span class="ident">event</span> <span class="op">=</span> <span class="ident">ibc::make_open_init_channel_event</span>(<span class="kw-2">&amp;</span><span class="ident">channel_id</span>, <span class="kw-2">&amp;</span><span class="ident">data</span>);
+        <span class="ident">tx_host_env::write</span>(<span class="kw-2">&amp;</span><span class="ident">channel_key</span>, <span class="ident">msg</span>.<span class="ident">channel</span>());
+        <span class="kw">let</span> <span class="ident">event</span> <span class="op">=</span> <span class="ident">ibc::make_open_init_channel_event</span>(<span class="kw-2">&amp;</span><span class="ident">channel_id</span>, <span class="kw-2">&amp;</span><span class="ident">msg</span>);
         <span class="ident">tx_host_env::emit_ibc_event</span>(<span class="kw-2">&amp;</span><span class="ident">event</span>.<span class="ident">try_into</span>().<span class="ident">unwrap</span>());
 
         <span class="comment">// Check should fail due to no port binding</span>
@@ -2549,9 +2707,12 @@
 
         <span class="comment">// Start an invalid transaction</span>
         <span class="kw">let</span> <span class="ident">port_id</span> <span class="op">=</span> <span class="ident">ibc::port_id</span>(<span class="string">&quot;test_port&quot;</span>).<span class="ident">expect</span>(<span class="string">&quot;invalid port ID&quot;</span>);
-        <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span>
-            <span class="ident">ibc::channel_open_init_data</span>(<span class="ident">port_id</span>.<span class="ident">clone</span>(), <span class="ident">conn_id</span>.<span class="ident">clone</span>());
-        <span class="kw">let</span> <span class="ident">tx_data</span> <span class="op">=</span> <span class="ident">data</span>.<span class="ident">try_to_vec</span>().<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
+        <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="ident">ibc::msg_channel_open_init</span>(<span class="ident">port_id</span>.<span class="ident">clone</span>(), <span class="ident">conn_id</span>.<span class="ident">clone</span>());
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tx_data</span> <span class="op">=</span> <span class="macro">vec!</span>[];
+        <span class="ident">msg</span>.<span class="ident">clone</span>()
+            .<span class="ident">to_any</span>()
+            .<span class="ident">encode</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">tx_data</span>)
+            .<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
         <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx</span> {
             <span class="ident">code</span>: <span class="macro">vec!</span>[],
             <span class="ident">data</span>: <span class="prelude-val">Some</span>(<span class="ident">tx_data</span>.<span class="ident">clone</span>()),
@@ -2574,9 +2735,10 @@
         <span class="kw">let</span> <span class="ident">channel_id</span> <span class="op">=</span> <span class="ident">ibc::channel_id</span>(<span class="ident">counter</span>);
         <span class="kw">let</span> <span class="ident">port_channel_id</span> <span class="op">=</span> <span class="ident">ibc::port_channel_id</span>(<span class="ident">port_id</span>, <span class="ident">channel_id</span>.<span class="ident">clone</span>());
         <span class="kw">let</span> <span class="ident">channel_key</span> <span class="op">=</span> <span class="ident">ibc::channel_key</span>(<span class="kw-2">&amp;</span><span class="ident">port_channel_id</span>).<span class="ident">to_string</span>();
-        <span class="kw">let</span> <span class="ident">channel</span> <span class="op">=</span> <span class="ident">ibc::open_channel</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">data</span>.<span class="ident">channel</span>());
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">channel</span> <span class="op">=</span> <span class="ident">msg</span>.<span class="ident">channel</span>.<span class="ident">clone</span>();
+        <span class="kw">let</span> <span class="ident">channel</span> <span class="op">=</span> <span class="ident">ibc::open_channel</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">channel</span>);
         <span class="ident">tx_host_env::write</span>(<span class="kw-2">&amp;</span><span class="ident">channel_key</span>, <span class="ident">channel</span>);
-        <span class="kw">let</span> <span class="ident">event</span> <span class="op">=</span> <span class="ident">ibc::make_open_init_channel_event</span>(<span class="kw-2">&amp;</span><span class="ident">channel_id</span>, <span class="kw-2">&amp;</span><span class="ident">data</span>);
+        <span class="kw">let</span> <span class="ident">event</span> <span class="op">=</span> <span class="ident">ibc::make_open_init_channel_event</span>(<span class="kw-2">&amp;</span><span class="ident">channel_id</span>, <span class="kw-2">&amp;</span><span class="ident">msg</span>);
         <span class="ident">tx_host_env::emit_ibc_event</span>(<span class="kw-2">&amp;</span><span class="ident">event</span>.<span class="ident">try_into</span>().<span class="ident">unwrap</span>());
 
         <span class="comment">// Check should fail due to directly opening a channel</span>
@@ -2593,8 +2755,12 @@
         <span class="comment">// Start a transaction for ChannelOpenInit</span>
         <span class="comment">// tx (Not need to decode tx_data)</span>
         <span class="kw">let</span> <span class="ident">port_id</span> <span class="op">=</span> <span class="ident">ibc::port_id</span>(<span class="string">&quot;test_port&quot;</span>).<span class="ident">expect</span>(<span class="string">&quot;invalid port ID&quot;</span>);
-        <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="ident">ibc::channel_open_init_data</span>(<span class="ident">port_id</span>.<span class="ident">clone</span>(), <span class="ident">conn_id</span>);
-        <span class="kw">let</span> <span class="ident">tx_data</span> <span class="op">=</span> <span class="ident">data</span>.<span class="ident">try_to_vec</span>().<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
+        <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="ident">ibc::msg_channel_open_init</span>(<span class="ident">port_id</span>.<span class="ident">clone</span>(), <span class="ident">conn_id</span>);
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tx_data</span> <span class="op">=</span> <span class="macro">vec!</span>[];
+        <span class="ident">msg</span>.<span class="ident">clone</span>()
+            .<span class="ident">to_any</span>()
+            .<span class="ident">encode</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">tx_data</span>)
+            .<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
         <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx</span> {
             <span class="ident">code</span>: <span class="macro">vec!</span>[],
             <span class="ident">data</span>: <span class="prelude-val">Some</span>(<span class="ident">tx_data</span>.<span class="ident">clone</span>()),
@@ -2618,8 +2784,8 @@
         <span class="kw">let</span> <span class="ident">port_channel_id</span> <span class="op">=</span>
             <span class="ident">ibc::port_channel_id</span>(<span class="ident">port_id</span>.<span class="ident">clone</span>(), <span class="ident">channel_id</span>.<span class="ident">clone</span>());
         <span class="kw">let</span> <span class="ident">channel_key</span> <span class="op">=</span> <span class="ident">ibc::channel_key</span>(<span class="kw-2">&amp;</span><span class="ident">port_channel_id</span>).<span class="ident">to_string</span>();
-        <span class="ident">tx_host_env::write</span>(<span class="kw-2">&amp;</span><span class="ident">channel_key</span>, <span class="ident">data</span>.<span class="ident">channel</span>());
-        <span class="kw">let</span> <span class="ident">event</span> <span class="op">=</span> <span class="ident">ibc::make_open_init_channel_event</span>(<span class="kw-2">&amp;</span><span class="ident">channel_id</span>, <span class="kw-2">&amp;</span><span class="ident">data</span>);
+        <span class="ident">tx_host_env::write</span>(<span class="kw-2">&amp;</span><span class="ident">channel_key</span>, <span class="ident">msg</span>.<span class="ident">channel</span>.<span class="ident">clone</span>());
+        <span class="kw">let</span> <span class="ident">event</span> <span class="op">=</span> <span class="ident">ibc::make_open_init_channel_event</span>(<span class="kw-2">&amp;</span><span class="ident">channel_id</span>, <span class="kw-2">&amp;</span><span class="ident">msg</span>);
         <span class="ident">tx_host_env::emit_ibc_event</span>(<span class="kw-2">&amp;</span><span class="ident">event</span>.<span class="ident">try_into</span>().<span class="ident">unwrap</span>());
 
         <span class="comment">// Check</span>
@@ -2636,8 +2802,12 @@
 
         <span class="comment">// Start the next transaction for ChannelOpenAck</span>
         <span class="comment">// tx (Not need to decode tx_data)</span>
-        <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="ident">ibc::channel_open_ack_data</span>(<span class="ident">port_id</span>, <span class="ident">channel_id</span>);
-        <span class="kw">let</span> <span class="ident">tx_data</span> <span class="op">=</span> <span class="ident">data</span>.<span class="ident">try_to_vec</span>().<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
+        <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="ident">ibc::msg_channel_open_ack</span>(<span class="ident">port_id</span>, <span class="ident">channel_id</span>);
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tx_data</span> <span class="op">=</span> <span class="macro">vec!</span>[];
+        <span class="ident">msg</span>.<span class="ident">clone</span>()
+            .<span class="ident">to_any</span>()
+            .<span class="ident">encode</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">tx_data</span>)
+            .<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
         <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx</span> {
             <span class="ident">code</span>: <span class="macro">vec!</span>[],
             <span class="ident">data</span>: <span class="prelude-val">Some</span>(<span class="ident">tx_data</span>.<span class="ident">clone</span>()),
@@ -2645,12 +2815,12 @@
         };
         <span class="comment">// update the channel</span>
         <span class="kw">let</span> <span class="ident">port_channel_id</span> <span class="op">=</span>
-            <span class="ident">ibc::port_channel_id</span>(<span class="ident">data</span>.<span class="ident">port_id</span>.<span class="ident">clone</span>(), <span class="ident">data</span>.<span class="ident">channel_id</span>.<span class="ident">clone</span>());
+            <span class="ident">ibc::port_channel_id</span>(<span class="ident">msg</span>.<span class="ident">port_id</span>.<span class="ident">clone</span>(), <span class="ident">msg</span>.<span class="ident">channel_id</span>.<span class="ident">clone</span>());
         <span class="kw">let</span> <span class="ident">channel_key</span> <span class="op">=</span> <span class="ident">ibc::channel_key</span>(<span class="kw-2">&amp;</span><span class="ident">port_channel_id</span>).<span class="ident">to_string</span>();
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">channel</span> <span class="op">=</span> <span class="ident">tx_host_env::read</span>(<span class="kw-2">&amp;</span><span class="ident">channel_key</span>).<span class="ident">expect</span>(<span class="string">&quot;no channel&quot;</span>);
         <span class="ident">ibc::open_channel</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">channel</span>);
         <span class="ident">tx_host_env::write</span>(<span class="kw-2">&amp;</span><span class="ident">channel_key</span>, <span class="ident">channel</span>);
-        <span class="kw">let</span> <span class="ident">event</span> <span class="op">=</span> <span class="ident">ibc::make_open_ack_channel_event</span>(<span class="kw-2">&amp;</span><span class="ident">data</span>);
+        <span class="kw">let</span> <span class="ident">event</span> <span class="op">=</span> <span class="ident">ibc::make_open_ack_channel_event</span>(<span class="kw-2">&amp;</span><span class="ident">msg</span>);
         <span class="ident">tx_host_env::emit_ibc_event</span>(<span class="kw-2">&amp;</span><span class="ident">event</span>.<span class="ident">try_into</span>().<span class="ident">unwrap</span>());
 
         <span class="comment">// Check</span>
@@ -2680,8 +2850,12 @@
         <span class="comment">// Start a transaction for ChannelOpenTry</span>
         <span class="comment">// tx (Not need to decode tx_data)</span>
         <span class="kw">let</span> <span class="ident">port_id</span> <span class="op">=</span> <span class="ident">ibc::port_id</span>(<span class="string">&quot;test_port&quot;</span>).<span class="ident">expect</span>(<span class="string">&quot;invalid port ID&quot;</span>);
-        <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="ident">ibc::channel_open_try_data</span>(<span class="ident">port_id</span>.<span class="ident">clone</span>(), <span class="ident">conn_id</span>);
-        <span class="kw">let</span> <span class="ident">tx_data</span> <span class="op">=</span> <span class="ident">data</span>.<span class="ident">try_to_vec</span>().<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
+        <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="ident">ibc::msg_channel_open_try</span>(<span class="ident">port_id</span>.<span class="ident">clone</span>(), <span class="ident">conn_id</span>);
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tx_data</span> <span class="op">=</span> <span class="macro">vec!</span>[];
+        <span class="ident">msg</span>.<span class="ident">clone</span>()
+            .<span class="ident">to_any</span>()
+            .<span class="ident">encode</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">tx_data</span>)
+            .<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
         <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx</span> {
             <span class="ident">code</span>: <span class="macro">vec!</span>[],
             <span class="ident">data</span>: <span class="prelude-val">Some</span>(<span class="ident">tx_data</span>.<span class="ident">clone</span>()),
@@ -2705,8 +2879,8 @@
         <span class="kw">let</span> <span class="ident">port_channel_id</span> <span class="op">=</span>
             <span class="ident">ibc::port_channel_id</span>(<span class="ident">port_id</span>.<span class="ident">clone</span>(), <span class="ident">channel_id</span>.<span class="ident">clone</span>());
         <span class="kw">let</span> <span class="ident">channel_key</span> <span class="op">=</span> <span class="ident">ibc::channel_key</span>(<span class="kw-2">&amp;</span><span class="ident">port_channel_id</span>).<span class="ident">to_string</span>();
-        <span class="ident">tx_host_env::write</span>(<span class="kw-2">&amp;</span><span class="ident">channel_key</span>, <span class="ident">data</span>.<span class="ident">channel</span>());
-        <span class="kw">let</span> <span class="ident">event</span> <span class="op">=</span> <span class="ident">ibc::make_open_try_channel_event</span>(<span class="kw-2">&amp;</span><span class="ident">channel_id</span>, <span class="kw-2">&amp;</span><span class="ident">data</span>);
+        <span class="ident">tx_host_env::write</span>(<span class="kw-2">&amp;</span><span class="ident">channel_key</span>, <span class="ident">msg</span>.<span class="ident">channel</span>.<span class="ident">clone</span>());
+        <span class="kw">let</span> <span class="ident">event</span> <span class="op">=</span> <span class="ident">ibc::make_open_try_channel_event</span>(<span class="kw-2">&amp;</span><span class="ident">channel_id</span>, <span class="kw-2">&amp;</span><span class="ident">msg</span>);
         <span class="ident">tx_host_env::emit_ibc_event</span>(<span class="kw-2">&amp;</span><span class="ident">event</span>.<span class="ident">try_into</span>().<span class="ident">unwrap</span>());
 
         <span class="comment">// Check</span>
@@ -2723,8 +2897,12 @@
 
         <span class="comment">// Start the next transaction for ChannelOpenConfirm</span>
         <span class="comment">// tx (Not need to decode tx_data)</span>
-        <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="ident">ibc::channel_open_confirm_data</span>(<span class="ident">port_id</span>, <span class="ident">channel_id</span>);
-        <span class="kw">let</span> <span class="ident">tx_data</span> <span class="op">=</span> <span class="ident">data</span>.<span class="ident">try_to_vec</span>().<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
+        <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="ident">ibc::msg_channel_open_confirm</span>(<span class="ident">port_id</span>, <span class="ident">channel_id</span>);
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tx_data</span> <span class="op">=</span> <span class="macro">vec!</span>[];
+        <span class="ident">msg</span>.<span class="ident">clone</span>()
+            .<span class="ident">to_any</span>()
+            .<span class="ident">encode</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">tx_data</span>)
+            .<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
         <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx</span> {
             <span class="ident">code</span>: <span class="macro">vec!</span>[],
             <span class="ident">data</span>: <span class="prelude-val">Some</span>(<span class="ident">tx_data</span>.<span class="ident">clone</span>()),
@@ -2732,12 +2910,12 @@
         };
         <span class="comment">// update the channel</span>
         <span class="kw">let</span> <span class="ident">port_channel_id</span> <span class="op">=</span>
-            <span class="ident">ibc::port_channel_id</span>(<span class="ident">data</span>.<span class="ident">port_id</span>.<span class="ident">clone</span>(), <span class="ident">data</span>.<span class="ident">channel_id</span>.<span class="ident">clone</span>());
+            <span class="ident">ibc::port_channel_id</span>(<span class="ident">msg</span>.<span class="ident">port_id</span>.<span class="ident">clone</span>(), <span class="ident">msg</span>.<span class="ident">channel_id</span>.<span class="ident">clone</span>());
         <span class="kw">let</span> <span class="ident">channel_key</span> <span class="op">=</span> <span class="ident">ibc::channel_key</span>(<span class="kw-2">&amp;</span><span class="ident">port_channel_id</span>).<span class="ident">to_string</span>();
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">channel</span> <span class="op">=</span> <span class="ident">tx_host_env::read</span>(<span class="kw-2">&amp;</span><span class="ident">channel_key</span>).<span class="ident">expect</span>(<span class="string">&quot;no channel&quot;</span>);
         <span class="ident">ibc::open_channel</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">channel</span>);
         <span class="ident">tx_host_env::write</span>(<span class="kw-2">&amp;</span><span class="ident">channel_key</span>, <span class="ident">channel</span>);
-        <span class="kw">let</span> <span class="ident">event</span> <span class="op">=</span> <span class="ident">ibc::make_open_confirm_channel_event</span>(<span class="kw-2">&amp;</span><span class="ident">data</span>);
+        <span class="kw">let</span> <span class="ident">event</span> <span class="op">=</span> <span class="ident">ibc::make_open_confirm_channel_event</span>(<span class="kw-2">&amp;</span><span class="ident">msg</span>);
         <span class="ident">tx_host_env::emit_ibc_event</span>(<span class="kw-2">&amp;</span><span class="ident">event</span>.<span class="ident">try_into</span>().<span class="ident">unwrap</span>());
 
         <span class="comment">// Check</span>
@@ -2769,8 +2947,12 @@
 
         <span class="comment">// Start a transaction to close the channel</span>
         <span class="comment">// tx (Not need to decode tx_data)</span>
-        <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="ident">ibc::channel_close_init_data</span>(<span class="ident">port_id</span>, <span class="ident">channel_id</span>);
-        <span class="kw">let</span> <span class="ident">tx_data</span> <span class="op">=</span> <span class="ident">data</span>.<span class="ident">try_to_vec</span>().<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
+        <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="ident">ibc::msg_channel_close_init</span>(<span class="ident">port_id</span>, <span class="ident">channel_id</span>);
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tx_data</span> <span class="op">=</span> <span class="macro">vec!</span>[];
+        <span class="ident">msg</span>.<span class="ident">clone</span>()
+            .<span class="ident">to_any</span>()
+            .<span class="ident">encode</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">tx_data</span>)
+            .<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
         <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx</span> {
             <span class="ident">code</span>: <span class="macro">vec!</span>[],
             <span class="ident">data</span>: <span class="prelude-val">Some</span>(<span class="ident">tx_data</span>.<span class="ident">clone</span>()),
@@ -2779,12 +2961,12 @@
 
         <span class="comment">// close the channel</span>
         <span class="kw">let</span> <span class="ident">port_channel_id</span> <span class="op">=</span>
-            <span class="ident">ibc::port_channel_id</span>(<span class="ident">data</span>.<span class="ident">port_id</span>.<span class="ident">clone</span>(), <span class="ident">data</span>.<span class="ident">channel_id</span>.<span class="ident">clone</span>());
+            <span class="ident">ibc::port_channel_id</span>(<span class="ident">msg</span>.<span class="ident">port_id</span>.<span class="ident">clone</span>(), <span class="ident">msg</span>.<span class="ident">channel_id</span>.<span class="ident">clone</span>());
         <span class="kw">let</span> <span class="ident">channel_key</span> <span class="op">=</span> <span class="ident">ibc::channel_key</span>(<span class="kw-2">&amp;</span><span class="ident">port_channel_id</span>).<span class="ident">to_string</span>();
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">channel</span> <span class="op">=</span> <span class="ident">tx_host_env::read</span>(<span class="kw-2">&amp;</span><span class="ident">channel_key</span>).<span class="ident">expect</span>(<span class="string">&quot;no channel&quot;</span>);
         <span class="ident">ibc::close_channel</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">channel</span>);
         <span class="ident">tx_host_env::write</span>(<span class="kw-2">&amp;</span><span class="ident">channel_key</span>, <span class="ident">channel</span>);
-        <span class="kw">let</span> <span class="ident">event</span> <span class="op">=</span> <span class="ident">ibc::make_close_init_channel_event</span>(<span class="kw-2">&amp;</span><span class="ident">data</span>);
+        <span class="kw">let</span> <span class="ident">event</span> <span class="op">=</span> <span class="ident">ibc::make_close_init_channel_event</span>(<span class="kw-2">&amp;</span><span class="ident">msg</span>);
         <span class="ident">tx_host_env::emit_ibc_event</span>(<span class="kw-2">&amp;</span><span class="ident">event</span>.<span class="ident">try_into</span>().<span class="ident">unwrap</span>());
 
         <span class="comment">// Check</span>
@@ -2816,8 +2998,12 @@
 
         <span class="comment">// Start a transaction to close the channel</span>
         <span class="comment">// tx (Not need to decode tx_data)</span>
-        <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="ident">ibc::channel_close_confirm_data</span>(<span class="ident">port_id</span>, <span class="ident">channel_id</span>);
-        <span class="kw">let</span> <span class="ident">tx_data</span> <span class="op">=</span> <span class="ident">data</span>.<span class="ident">try_to_vec</span>().<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
+        <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="ident">ibc::msg_channel_close_confirm</span>(<span class="ident">port_id</span>, <span class="ident">channel_id</span>);
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tx_data</span> <span class="op">=</span> <span class="macro">vec!</span>[];
+        <span class="ident">msg</span>.<span class="ident">clone</span>()
+            .<span class="ident">to_any</span>()
+            .<span class="ident">encode</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">tx_data</span>)
+            .<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
         <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx</span> {
             <span class="ident">code</span>: <span class="macro">vec!</span>[],
             <span class="ident">data</span>: <span class="prelude-val">Some</span>(<span class="ident">tx_data</span>.<span class="ident">clone</span>()),
@@ -2826,12 +3012,12 @@
 
         <span class="comment">// close the channel</span>
         <span class="kw">let</span> <span class="ident">port_channel_id</span> <span class="op">=</span>
-            <span class="ident">ibc::port_channel_id</span>(<span class="ident">data</span>.<span class="ident">port_id</span>.<span class="ident">clone</span>(), <span class="ident">data</span>.<span class="ident">channel_id</span>.<span class="ident">clone</span>());
+            <span class="ident">ibc::port_channel_id</span>(<span class="ident">msg</span>.<span class="ident">port_id</span>.<span class="ident">clone</span>(), <span class="ident">msg</span>.<span class="ident">channel_id</span>.<span class="ident">clone</span>());
         <span class="kw">let</span> <span class="ident">channel_key</span> <span class="op">=</span> <span class="ident">ibc::channel_key</span>(<span class="kw-2">&amp;</span><span class="ident">port_channel_id</span>).<span class="ident">to_string</span>();
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">channel</span> <span class="op">=</span> <span class="ident">tx_host_env::read</span>(<span class="kw-2">&amp;</span><span class="ident">channel_key</span>).<span class="ident">expect</span>(<span class="string">&quot;no channel&quot;</span>);
         <span class="ident">ibc::close_channel</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">channel</span>);
         <span class="ident">tx_host_env::write</span>(<span class="kw-2">&amp;</span><span class="ident">channel_key</span>, <span class="ident">channel</span>);
-        <span class="kw">let</span> <span class="ident">event</span> <span class="op">=</span> <span class="ident">ibc::make_close_confirm_channel_event</span>(<span class="kw-2">&amp;</span><span class="ident">data</span>);
+        <span class="kw">let</span> <span class="ident">event</span> <span class="op">=</span> <span class="ident">ibc::make_close_confirm_channel_event</span>(<span class="kw-2">&amp;</span><span class="ident">msg</span>);
         <span class="ident">tx_host_env::emit_ibc_event</span>(<span class="kw-2">&amp;</span><span class="ident">event</span>.<span class="ident">try_into</span>().<span class="ident">unwrap</span>());
 
         <span class="comment">// Check</span>
@@ -2906,8 +3092,12 @@
 
         <span class="comment">// Start the next transaction for receiving an ack</span>
         <span class="comment">// tx (Not need to decode tx_data)</span>
-        <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="ident">ibc::packet_ack_data</span>(<span class="ident">packet</span>);
-        <span class="kw">let</span> <span class="ident">tx_data</span> <span class="op">=</span> <span class="ident">data</span>.<span class="ident">try_to_vec</span>().<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
+        <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="ident">ibc::msg_packet_ack</span>(<span class="ident">packet</span>);
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tx_data</span> <span class="op">=</span> <span class="macro">vec!</span>[];
+        <span class="ident">msg</span>.<span class="ident">clone</span>()
+            .<span class="ident">to_any</span>()
+            .<span class="ident">encode</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">tx_data</span>)
+            .<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
         <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx</span> {
             <span class="ident">code</span>: <span class="macro">vec!</span>[],
             <span class="ident">data</span>: <span class="prelude-val">Some</span>(<span class="ident">tx_data</span>.<span class="ident">clone</span>()),
@@ -2915,7 +3105,7 @@
         };
 
         <span class="comment">// delete the commitment</span>
-        <span class="kw">let</span> <span class="ident">packet</span> <span class="op">=</span> <span class="ident">data</span>.<span class="ident">packet</span>;
+        <span class="kw">let</span> <span class="ident">packet</span> <span class="op">=</span> <span class="ident">msg</span>.<span class="ident">packet</span>;
         <span class="kw">let</span> <span class="ident">port_id</span> <span class="op">=</span> <span class="ident">packet</span>.<span class="ident">source_port</span>.<span class="ident">clone</span>();
         <span class="kw">let</span> <span class="ident">channel_id</span> <span class="op">=</span> <span class="ident">packet</span>.<span class="ident">source_channel</span>.<span class="ident">clone</span>();
         <span class="kw">let</span> <span class="ident">commitment_key</span> <span class="op">=</span>
@@ -2967,16 +3157,20 @@
 
         <span class="comment">// Start a transaction to receive a packet</span>
         <span class="comment">// tx (Not need to decode tx_data)</span>
-        <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="ident">ibc::packet_receipt_data</span>(<span class="ident">packet</span>);
-        <span class="kw">let</span> <span class="ident">tx_data</span> <span class="op">=</span> <span class="ident">data</span>.<span class="ident">try_to_vec</span>().<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
+        <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="ident">ibc::msg_packet_recv</span>(<span class="ident">packet</span>);
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tx_data</span> <span class="op">=</span> <span class="macro">vec!</span>[];
+        <span class="ident">msg</span>.<span class="ident">clone</span>()
+            .<span class="ident">to_any</span>()
+            .<span class="ident">encode</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">tx_data</span>)
+            .<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
         <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx</span> {
             <span class="ident">code</span>: <span class="macro">vec!</span>[],
             <span class="ident">data</span>: <span class="prelude-val">Some</span>(<span class="ident">tx_data</span>.<span class="ident">clone</span>()),
             <span class="ident">timestamp</span>: <span class="ident">DateTimeUtc::now</span>(),
         };
         <span class="comment">// increment nextSequenceRecv</span>
-        <span class="kw">let</span> <span class="ident">port_id</span> <span class="op">=</span> <span class="ident">data</span>.<span class="ident">packet</span>.<span class="ident">destination_port</span>;
-        <span class="kw">let</span> <span class="ident">channel_id</span> <span class="op">=</span> <span class="ident">data</span>.<span class="ident">packet</span>.<span class="ident">destination_channel</span>;
+        <span class="kw">let</span> <span class="ident">port_id</span> <span class="op">=</span> <span class="ident">msg</span>.<span class="ident">packet</span>.<span class="ident">destination_port</span>;
+        <span class="kw">let</span> <span class="ident">channel_id</span> <span class="op">=</span> <span class="ident">msg</span>.<span class="ident">packet</span>.<span class="ident">destination_channel</span>;
         <span class="kw">let</span> <span class="ident">port_channel_id</span> <span class="op">=</span>
             <span class="ident">ibc::port_channel_id</span>(<span class="ident">port_id</span>.<span class="ident">clone</span>(), <span class="ident">channel_id</span>.<span class="ident">clone</span>());
         <span class="kw">let</span> <span class="ident">next_seq_recv_key</span> <span class="op">=</span>
@@ -2985,11 +3179,11 @@
         <span class="ident">tx_host_env::write</span>(<span class="kw-2">&amp;</span><span class="ident">next_seq_recv_key</span>, <span class="ident">seq_index</span> <span class="op">+</span> <span class="number">1</span>);
         <span class="comment">// receipt</span>
         <span class="kw">let</span> <span class="ident">receipt_key</span> <span class="op">=</span>
-            <span class="ident">ibc::receipt_key</span>(<span class="kw-2">&amp;</span><span class="ident">port_id</span>, <span class="kw-2">&amp;</span><span class="ident">channel_id</span>, <span class="ident">data</span>.<span class="ident">packet</span>.<span class="ident">sequence</span>)
+            <span class="ident">ibc::receipt_key</span>(<span class="kw-2">&amp;</span><span class="ident">port_id</span>, <span class="kw-2">&amp;</span><span class="ident">channel_id</span>, <span class="ident">msg</span>.<span class="ident">packet</span>.<span class="ident">sequence</span>)
                 .<span class="ident">to_string</span>();
         <span class="ident">tx_host_env::write</span>(<span class="kw-2">&amp;</span><span class="ident">receipt_key</span>, <span class="number">0_u64</span>);
         <span class="comment">// ack</span>
-        <span class="kw">let</span> <span class="ident">ack_key</span> <span class="op">=</span> <span class="ident">ibc::ack_key</span>(<span class="kw-2">&amp;</span><span class="ident">port_id</span>, <span class="kw-2">&amp;</span><span class="ident">channel_id</span>, <span class="ident">data</span>.<span class="ident">packet</span>.<span class="ident">sequence</span>)
+        <span class="kw">let</span> <span class="ident">ack_key</span> <span class="op">=</span> <span class="ident">ibc::ack_key</span>(<span class="kw-2">&amp;</span><span class="ident">port_id</span>, <span class="kw-2">&amp;</span><span class="ident">channel_id</span>, <span class="ident">msg</span>.<span class="ident">packet</span>.<span class="ident">sequence</span>)
             .<span class="ident">to_string</span>();
         <span class="ident">tx_host_env::write</span>(<span class="kw-2">&amp;</span><span class="ident">ack_key</span>, <span class="string">&quot;ack&quot;</span>.<span class="ident">try_to_vec</span>().<span class="ident">unwrap</span>());
 
@@ -3067,8 +3261,12 @@
 
         <span class="comment">// Start the next transaction for receiving an ack</span>
         <span class="comment">// tx (Not need to decode tx_data)</span>
-        <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="ident">ibc::packet_ack_data</span>(<span class="ident">packet</span>);
-        <span class="kw">let</span> <span class="ident">tx_data</span> <span class="op">=</span> <span class="ident">data</span>.<span class="ident">try_to_vec</span>().<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
+        <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="ident">ibc::msg_packet_ack</span>(<span class="ident">packet</span>);
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tx_data</span> <span class="op">=</span> <span class="macro">vec!</span>[];
+        <span class="ident">msg</span>.<span class="ident">clone</span>()
+            .<span class="ident">to_any</span>()
+            .<span class="ident">encode</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">tx_data</span>)
+            .<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
         <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx</span> {
             <span class="ident">code</span>: <span class="macro">vec!</span>[],
             <span class="ident">data</span>: <span class="prelude-val">Some</span>(<span class="ident">tx_data</span>.<span class="ident">clone</span>()),
@@ -3076,7 +3274,7 @@
         };
 
         <span class="comment">// delete the commitment</span>
-        <span class="kw">let</span> <span class="ident">packet</span> <span class="op">=</span> <span class="ident">data</span>.<span class="ident">packet</span>;
+        <span class="kw">let</span> <span class="ident">packet</span> <span class="op">=</span> <span class="ident">msg</span>.<span class="ident">packet</span>;
         <span class="kw">let</span> <span class="ident">port_id</span> <span class="op">=</span> <span class="ident">packet</span>.<span class="ident">source_port</span>;
         <span class="kw">let</span> <span class="ident">channel_id</span> <span class="op">=</span> <span class="ident">packet</span>.<span class="ident">source_channel</span>;
         <span class="kw">let</span> <span class="ident">commitment_key</span> <span class="op">=</span>
@@ -3126,8 +3324,12 @@
 
         <span class="comment">// Start a transaction to receive a packet</span>
         <span class="comment">// tx (Not need to decode tx_data)</span>
-        <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="ident">ibc::packet_receipt_data</span>(<span class="ident">packet</span>);
-        <span class="kw">let</span> <span class="ident">tx_data</span> <span class="op">=</span> <span class="ident">data</span>.<span class="ident">try_to_vec</span>().<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
+        <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="ident">ibc::msg_packet_recv</span>(<span class="ident">packet</span>);
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tx_data</span> <span class="op">=</span> <span class="macro">vec!</span>[];
+        <span class="ident">msg</span>.<span class="ident">clone</span>()
+            .<span class="ident">to_any</span>()
+            .<span class="ident">encode</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">tx_data</span>)
+            .<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
         <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx</span> {
             <span class="ident">code</span>: <span class="macro">vec!</span>[],
             <span class="ident">data</span>: <span class="prelude-val">Some</span>(<span class="ident">tx_data</span>.<span class="ident">clone</span>()),
@@ -3135,14 +3337,14 @@
         };
         <span class="comment">// not need to increment nextSequenceRecv</span>
         <span class="comment">// receipt</span>
-        <span class="kw">let</span> <span class="ident">port_id</span> <span class="op">=</span> <span class="ident">data</span>.<span class="ident">packet</span>.<span class="ident">destination_port</span>.<span class="ident">clone</span>();
-        <span class="kw">let</span> <span class="ident">channel_id</span> <span class="op">=</span> <span class="ident">data</span>.<span class="ident">packet</span>.<span class="ident">destination_channel</span>.<span class="ident">clone</span>();
+        <span class="kw">let</span> <span class="ident">port_id</span> <span class="op">=</span> <span class="ident">msg</span>.<span class="ident">packet</span>.<span class="ident">destination_port</span>.<span class="ident">clone</span>();
+        <span class="kw">let</span> <span class="ident">channel_id</span> <span class="op">=</span> <span class="ident">msg</span>.<span class="ident">packet</span>.<span class="ident">destination_channel</span>.<span class="ident">clone</span>();
         <span class="kw">let</span> <span class="ident">receipt_key</span> <span class="op">=</span>
-            <span class="ident">ibc::receipt_key</span>(<span class="kw-2">&amp;</span><span class="ident">port_id</span>, <span class="kw-2">&amp;</span><span class="ident">channel_id</span>, <span class="ident">data</span>.<span class="ident">packet</span>.<span class="ident">sequence</span>)
+            <span class="ident">ibc::receipt_key</span>(<span class="kw-2">&amp;</span><span class="ident">port_id</span>, <span class="kw-2">&amp;</span><span class="ident">channel_id</span>, <span class="ident">msg</span>.<span class="ident">packet</span>.<span class="ident">sequence</span>)
                 .<span class="ident">to_string</span>();
         <span class="ident">tx_host_env::write</span>(<span class="kw-2">&amp;</span><span class="ident">receipt_key</span>, <span class="number">0_u64</span>);
         <span class="comment">// ack</span>
-        <span class="kw">let</span> <span class="ident">ack_key</span> <span class="op">=</span> <span class="ident">ibc::ack_key</span>(<span class="kw-2">&amp;</span><span class="ident">port_id</span>, <span class="kw-2">&amp;</span><span class="ident">channel_id</span>, <span class="ident">data</span>.<span class="ident">packet</span>.<span class="ident">sequence</span>)
+        <span class="kw">let</span> <span class="ident">ack_key</span> <span class="op">=</span> <span class="ident">ibc::ack_key</span>(<span class="kw-2">&amp;</span><span class="ident">port_id</span>, <span class="kw-2">&amp;</span><span class="ident">channel_id</span>, <span class="ident">msg</span>.<span class="ident">packet</span>.<span class="ident">sequence</span>)
             .<span class="ident">to_string</span>();
         <span class="ident">tx_host_env::write</span>(<span class="kw-2">&amp;</span><span class="ident">ack_key</span>, <span class="string">&quot;ack&quot;</span>.<span class="ident">try_to_vec</span>().<span class="ident">unwrap</span>());
 
@@ -3204,8 +3406,12 @@
         <span class="ident">env</span>.<span class="ident">write_log</span>.<span class="ident">commit_block</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">env</span>.<span class="ident">storage</span>).<span class="ident">unwrap</span>();
 
         <span class="comment">// Start a transaction to notify the timeout</span>
-        <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="ident">ibc::timeout_data</span>(<span class="ident">packet</span>, <span class="ident">ibc::sequence</span>(<span class="number">1</span>));
-        <span class="kw">let</span> <span class="ident">tx_data</span> <span class="op">=</span> <span class="ident">data</span>.<span class="ident">try_to_vec</span>().<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
+        <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="ident">ibc::msg_timeout</span>(<span class="ident">packet</span>, <span class="ident">ibc::sequence</span>(<span class="number">1</span>));
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tx_data</span> <span class="op">=</span> <span class="macro">vec!</span>[];
+        <span class="ident">msg</span>.<span class="ident">clone</span>()
+            .<span class="ident">to_any</span>()
+            .<span class="ident">encode</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">tx_data</span>)
+            .<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
         <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx</span> {
             <span class="ident">code</span>: <span class="macro">vec!</span>[],
             <span class="ident">data</span>: <span class="prelude-val">Some</span>(<span class="ident">tx_data</span>.<span class="ident">clone</span>()),
@@ -3213,7 +3419,7 @@
         };
 
         <span class="comment">// close the channel</span>
-        <span class="kw">let</span> <span class="ident">packet</span> <span class="op">=</span> <span class="ident">data</span>.<span class="ident">packet</span>;
+        <span class="kw">let</span> <span class="ident">packet</span> <span class="op">=</span> <span class="ident">msg</span>.<span class="ident">packet</span>;
         <span class="kw">let</span> <span class="ident">port_id</span> <span class="op">=</span> <span class="ident">packet</span>.<span class="ident">source_port</span>.<span class="ident">clone</span>();
         <span class="kw">let</span> <span class="ident">channel_id</span> <span class="op">=</span> <span class="ident">packet</span>.<span class="ident">source_channel</span>.<span class="ident">clone</span>();
         <span class="kw">let</span> <span class="ident">port_channel_id</span> <span class="op">=</span>
@@ -3285,8 +3491,12 @@
         <span class="ident">env</span>.<span class="ident">write_log</span>.<span class="ident">commit_block</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">env</span>.<span class="ident">storage</span>).<span class="ident">unwrap</span>();
 
         <span class="comment">// Start a transaction to notify the timing-out on closed</span>
-        <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="ident">ibc::timeout_data</span>(<span class="ident">packet</span>, <span class="ident">ibc::sequence</span>(<span class="number">1</span>));
-        <span class="kw">let</span> <span class="ident">tx_data</span> <span class="op">=</span> <span class="ident">data</span>.<span class="ident">try_to_vec</span>().<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
+        <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="ident">ibc::msg_timeout_on_close</span>(<span class="ident">packet</span>, <span class="ident">ibc::sequence</span>(<span class="number">1</span>));
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tx_data</span> <span class="op">=</span> <span class="macro">vec!</span>[];
+        <span class="ident">msg</span>.<span class="ident">clone</span>()
+            .<span class="ident">to_any</span>()
+            .<span class="ident">encode</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">tx_data</span>)
+            .<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
         <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx</span> {
             <span class="ident">code</span>: <span class="macro">vec!</span>[],
             <span class="ident">data</span>: <span class="prelude-val">Some</span>(<span class="ident">tx_data</span>.<span class="ident">clone</span>()),
@@ -3294,7 +3504,7 @@
         };
 
         <span class="comment">// close the channel</span>
-        <span class="kw">let</span> <span class="ident">packet</span> <span class="op">=</span> <span class="ident">data</span>.<span class="ident">packet</span>;
+        <span class="kw">let</span> <span class="ident">packet</span> <span class="op">=</span> <span class="ident">msg</span>.<span class="ident">packet</span>;
         <span class="kw">let</span> <span class="ident">port_id</span> <span class="op">=</span> <span class="ident">packet</span>.<span class="ident">source_port</span>.<span class="ident">clone</span>();
         <span class="kw">let</span> <span class="ident">channel_id</span> <span class="op">=</span> <span class="ident">packet</span>.<span class="ident">source_channel</span>.<span class="ident">clone</span>();
         <span class="kw">let</span> <span class="ident">port_channel_id</span> <span class="op">=</span>

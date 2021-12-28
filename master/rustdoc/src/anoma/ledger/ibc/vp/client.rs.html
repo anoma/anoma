@@ -453,29 +453,6 @@
 <span id="453">453</span>
 <span id="454">454</span>
 <span id="455">455</span>
-<span id="456">456</span>
-<span id="457">457</span>
-<span id="458">458</span>
-<span id="459">459</span>
-<span id="460">460</span>
-<span id="461">461</span>
-<span id="462">462</span>
-<span id="463">463</span>
-<span id="464">464</span>
-<span id="465">465</span>
-<span id="466">466</span>
-<span id="467">467</span>
-<span id="468">468</span>
-<span id="469">469</span>
-<span id="470">470</span>
-<span id="471">471</span>
-<span id="472">472</span>
-<span id="473">473</span>
-<span id="474">474</span>
-<span id="475">475</span>
-<span id="476">476</span>
-<span id="477">477</span>
-<span id="478">478</span>
 </pre><pre class="rust"><code><span class="doccomment">//! IBC validity predicate for client module</span>
 
 <span class="kw">use</span> <span class="ident">borsh::BorshDeserialize</span>;
@@ -494,7 +471,15 @@
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
 <span class="kw">use</span> <span class="ident">ibc::core::ics02_client::height::Height</span>;
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
+<span class="kw">use</span> <span class="ident">ibc::core::ics02_client::msgs::update_client::MsgUpdateAnyClient</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
+<span class="kw">use</span> <span class="ident">ibc::core::ics02_client::msgs::upgrade_client::MsgUpgradeAnyClient</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
+<span class="kw">use</span> <span class="ident">ibc::core::ics02_client::msgs::ClientMsg</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
 <span class="kw">use</span> <span class="ident">ibc::core::ics24_host::identifier::ClientId</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
+<span class="kw">use</span> <span class="ident">ibc::core::ics26_routing::msgs::Ics26Envelope</span>;
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
 <span class="kw">use</span> <span class="ident">ibc_abci::core::ics02_client::client_consensus::AnyConsensusState</span>;
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
@@ -510,7 +495,15 @@
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
 <span class="kw">use</span> <span class="ident">ibc_abci::core::ics02_client::height::Height</span>;
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
+<span class="kw">use</span> <span class="ident">ibc_abci::core::ics02_client::msgs::update_client::MsgUpdateAnyClient</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
+<span class="kw">use</span> <span class="ident">ibc_abci::core::ics02_client::msgs::upgrade_client::MsgUpgradeAnyClient</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
+<span class="kw">use</span> <span class="ident">ibc_abci::core::ics02_client::msgs::ClientMsg</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
 <span class="kw">use</span> <span class="ident">ibc_abci::core::ics24_host::identifier::ClientId</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
+<span class="kw">use</span> <span class="ident">ibc_abci::core::ics26_routing::msgs::Ics26Envelope</span>;
 <span class="kw">use</span> <span class="ident">thiserror::Error</span>;
 
 <span class="kw">use</span> <span class="ident"><span class="kw">super</span>::<span class="kw">super</span>::handler</span>::{
@@ -522,10 +515,7 @@
 };
 <span class="kw">use</span> <span class="kw">super</span>::{<span class="ident">Ibc</span>, <span class="ident">StateChange</span>};
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::ledger::storage</span>::{<span class="self">self</span>, <span class="ident">StorageHasher</span>};
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::types::ibc::data</span>::{
-    <span class="ident">ClientCreationData</span>, <span class="ident">ClientUpdateData</span>, <span class="ident">ClientUpgradeData</span>,
-    <span class="ident">Error</span> <span class="kw">as</span> <span class="ident">IbcDataError</span>,
-};
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::types::ibc::data</span>::{<span class="ident">Error</span> <span class="kw">as</span> <span class="ident">IbcDataError</span>, <span class="ident">IbcMessage</span>};
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::vm::WasmCacheAccess</span>;
 
 <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">missing_docs</span>)]</span>
@@ -593,7 +583,8 @@
         <span class="ident">client_id</span>: <span class="kw-2">&amp;</span><span class="ident">ClientId</span>,
         <span class="ident">tx_data</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>],
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="ident">ClientCreationData::try_from_slice</span>(<span class="ident">tx_data</span>)<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">ibc_msg</span> <span class="op">=</span> <span class="ident">IbcMessage::decode</span>(<span class="ident">tx_data</span>)<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="ident">ibc_msg</span>.<span class="ident">msg_create_any_client</span>()<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">client_type</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">client_type</span>(<span class="ident">client_id</span>).<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> {
             <span class="ident">Error::InvalidClient</span>(<span class="macro">format!</span>(
                 <span class="string">&quot;The client type doesn&#39;t exist: ID {}&quot;</span>,
@@ -623,7 +614,7 @@
             ));
         }
 
-        <span class="kw">let</span> <span class="ident">event</span> <span class="op">=</span> <span class="ident">make_create_client_event</span>(<span class="ident">client_id</span>, <span class="kw-2">&amp;</span><span class="ident">data</span>);
+        <span class="kw">let</span> <span class="ident">event</span> <span class="op">=</span> <span class="ident">make_create_client_event</span>(<span class="ident">client_id</span>, <span class="kw-2">&amp;</span><span class="ident">msg</span>);
         <span class="self">self</span>.<span class="ident">check_emitted_event</span>(<span class="ident">event</span>)
             .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">Error::IbcEvent</span>(<span class="ident">e</span>.<span class="ident">to_string</span>()))
     }
@@ -634,28 +625,30 @@
         <span class="ident">tx_data</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>],
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="comment">// check the type of data in tx_data</span>
-        <span class="kw">match</span> <span class="ident">ClientUpdateData::try_from_slice</span>(<span class="ident">tx_data</span>) {
-            <span class="prelude-val">Ok</span>(<span class="ident">data</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="comment">// &quot;UpdateClient&quot;</span>
-                <span class="self">self</span>.<span class="ident">verify_update_client</span>(<span class="ident">client_id</span>, <span class="ident">data</span>)
+        <span class="kw">let</span> <span class="ident">ibc_msg</span> <span class="op">=</span> <span class="ident">IbcMessage::decode</span>(<span class="ident">tx_data</span>)<span class="question-mark">?</span>;
+        <span class="kw">match</span> <span class="ident">ibc_msg</span>.<span class="number">0</span> {
+            <span class="ident">Ics26Envelope::Ics2Msg</span>(<span class="ident">ClientMsg::UpdateClient</span>(<span class="ident">msg</span>)) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="self">self</span>.<span class="ident">verify_update_client</span>(<span class="ident">client_id</span>, <span class="ident">msg</span>)
             }
-            <span class="prelude-val">Err</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="comment">// &quot;UpgradeClient&quot;</span>
-                <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="ident">ClientUpgradeData::try_from_slice</span>(<span class="ident">tx_data</span>)<span class="question-mark">?</span>;
-                <span class="self">self</span>.<span class="ident">verify_upgrade_client</span>(<span class="ident">client_id</span>, <span class="ident">data</span>)
+            <span class="ident">Ics26Envelope::Ics2Msg</span>(<span class="ident">ClientMsg::UpgradeClient</span>(<span class="ident">msg</span>)) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="self">self</span>.<span class="ident">verify_upgrade_client</span>(<span class="ident">client_id</span>, <span class="ident">msg</span>)
             }
+            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">Error::InvalidStateChange</span>(<span class="macro">format!</span>(
+                <span class="string">&quot;The state change of the client is invalid: ID {}&quot;</span>,
+                <span class="ident">client_id</span>
+            ))),
         }
     }
 
     <span class="kw">fn</span> <span class="ident">verify_update_client</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">client_id</span>: <span class="kw-2">&amp;</span><span class="ident">ClientId</span>,
-        <span class="ident">data</span>: <span class="ident">ClientUpdateData</span>,
+        <span class="ident">msg</span>: <span class="ident">MsgUpdateAnyClient</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="kw">if</span> <span class="ident">data</span>.<span class="ident">client_id</span> <span class="op">!</span><span class="op">=</span> <span class="kw-2">*</span><span class="ident">client_id</span> {
+        <span class="kw">if</span> <span class="ident">msg</span>.<span class="ident">client_id</span> <span class="op">!</span><span class="op">=</span> <span class="kw-2">*</span><span class="ident">client_id</span> {
             <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error::InvalidClient</span>(<span class="macro">format!</span>(
                 <span class="string">&quot;The client ID is mismatched: {} in the tx data, {} in the key&quot;</span>,
-                <span class="ident">data</span>.<span class="ident">client_id</span>, <span class="ident">client_id</span>,
+                <span class="ident">msg</span>.<span class="ident">client_id</span>, <span class="ident">client_id</span>,
             )));
         }
 
@@ -677,44 +670,31 @@
             })<span class="question-mark">?</span>;
         <span class="comment">// check the prior states</span>
         <span class="kw">let</span> <span class="ident">prev_client_state</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">client_state_pre</span>(<span class="ident">client_id</span>)<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">prev_consensus_state</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">consensus_state_pre</span>(
-            <span class="ident">client_id</span>,
-            <span class="ident">prev_client_state</span>.<span class="ident">latest_height</span>(),
-        )<span class="question-mark">?</span>;
 
         <span class="kw">let</span> <span class="ident">client</span> <span class="op">=</span> <span class="ident">AnyClient::from_client_type</span>(<span class="ident">client_state</span>.<span class="ident">client_type</span>());
-        <span class="kw">let</span> <span class="ident">updated</span> <span class="op">=</span> <span class="ident">data</span>.<span class="ident">headers</span>.<span class="ident">iter</span>().<span class="ident">try_fold</span>(
-            (<span class="ident">prev_client_state</span>, <span class="ident">prev_consensus_state</span>),
-            <span class="op">|</span>(<span class="ident">new_client_state</span>, <span class="kw">_</span>), <span class="ident">header</span><span class="op">|</span> {
-                <span class="ident">client</span>.<span class="ident">check_header_and_update_state</span>(
-                    <span class="self">self</span>,
-                    <span class="ident">client_id</span>.<span class="ident">clone</span>(),
-                    <span class="ident">new_client_state</span>,
-                    <span class="ident">header</span>.<span class="ident">clone</span>(),
-                )
-            },
-        );
-        <span class="kw">match</span> <span class="ident">updated</span> {
-            <span class="prelude-val">Ok</span>((<span class="ident">new_client_state</span>, <span class="ident">new_consensus_state</span>)) <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="kw">if</span> <span class="ident">new_client_state</span> <span class="op">!</span><span class="op">=</span> <span class="ident">client_state</span>
-                    <span class="op">|</span><span class="op">|</span> <span class="ident">new_consensus_state</span> <span class="op">!</span><span class="op">=</span> <span class="ident">consensus_state</span>
-                {
-                    <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error::InvalidClient</span>(
-                        <span class="string">&quot;The updated client state or consensus state is \
-                         unexpected&quot;</span>
-                            .<span class="ident">to_owned</span>(),
-                    ));
-                }
-            }
-            <span class="prelude-val">Err</span>(<span class="ident">e</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error::InvalidHeader</span>(<span class="macro">format!</span>(
+        <span class="kw">let</span> (<span class="ident">new_client_state</span>, <span class="ident">new_consensus_state</span>) <span class="op">=</span> <span class="ident">client</span>
+            .<span class="ident">check_header_and_update_state</span>(
+                <span class="self">self</span>,
+                <span class="ident">client_id</span>.<span class="ident">clone</span>(),
+                <span class="ident">prev_client_state</span>,
+                <span class="ident">msg</span>.<span class="ident">header</span>.<span class="ident">clone</span>(),
+            )
+            .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> {
+                <span class="ident">Error::InvalidHeader</span>(<span class="macro">format!</span>(
                     <span class="string">&quot;The header is invalid: ID {}, {}&quot;</span>,
                     <span class="ident">client_id</span>, <span class="ident">e</span>,
-                )));
-            }
+                ))
+            })<span class="question-mark">?</span>;
+        <span class="kw">if</span> <span class="ident">new_client_state</span> <span class="op">!</span><span class="op">=</span> <span class="ident">client_state</span>
+            <span class="op">|</span><span class="op">|</span> <span class="ident">new_consensus_state</span> <span class="op">!</span><span class="op">=</span> <span class="ident">consensus_state</span>
+        {
+            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error::InvalidClient</span>(
+                <span class="string">&quot;The updated client state or consensus state is unexpected&quot;</span>
+                    .<span class="ident">to_owned</span>(),
+            ));
         }
 
-        <span class="kw">let</span> <span class="ident">event</span> <span class="op">=</span> <span class="ident">make_update_client_event</span>(<span class="ident">client_id</span>, <span class="kw-2">&amp;</span><span class="ident">data</span>);
+        <span class="kw">let</span> <span class="ident">event</span> <span class="op">=</span> <span class="ident">make_update_client_event</span>(<span class="ident">client_id</span>, <span class="kw-2">&amp;</span><span class="ident">msg</span>);
         <span class="self">self</span>.<span class="ident">check_emitted_event</span>(<span class="ident">event</span>)
             .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">Error::IbcEvent</span>(<span class="ident">e</span>.<span class="ident">to_string</span>()))
     }
@@ -722,12 +702,12 @@
     <span class="kw">fn</span> <span class="ident">verify_upgrade_client</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">client_id</span>: <span class="kw-2">&amp;</span><span class="ident">ClientId</span>,
-        <span class="ident">data</span>: <span class="ident">ClientUpgradeData</span>,
+        <span class="ident">msg</span>: <span class="ident">MsgUpgradeAnyClient</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="kw">if</span> <span class="ident">data</span>.<span class="ident">client_id</span> <span class="op">!</span><span class="op">=</span> <span class="kw-2">*</span><span class="ident">client_id</span> {
+        <span class="kw">if</span> <span class="ident">msg</span>.<span class="ident">client_id</span> <span class="op">!</span><span class="op">=</span> <span class="kw-2">*</span><span class="ident">client_id</span> {
             <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error::InvalidClient</span>(<span class="macro">format!</span>(
                 <span class="string">&quot;The client ID is mismatched: {} in the tx data, {} in the key&quot;</span>,
-                <span class="ident">data</span>.<span class="ident">client_id</span>, <span class="ident">client_id</span>,
+                <span class="ident">msg</span>.<span class="ident">client_id</span>, <span class="ident">client_id</span>,
             )));
         }
 
@@ -749,10 +729,6 @@
             })<span class="question-mark">?</span>;
 
         <span class="comment">// verify the given states</span>
-        <span class="kw">let</span> <span class="ident">client_state</span> <span class="op">=</span> <span class="ident">data</span>.<span class="ident">client_state</span>.<span class="ident">clone</span>();
-        <span class="kw">let</span> <span class="ident">consensus_state</span> <span class="op">=</span> <span class="ident">data</span>.<span class="ident">consensus_state</span>.<span class="ident">clone</span>();
-        <span class="kw">let</span> <span class="ident">client_proof</span> <span class="op">=</span> <span class="ident">data</span>.<span class="ident">proof_client</span>()<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">consensus_proof</span> <span class="op">=</span> <span class="ident">data</span>.<span class="ident">proof_consensus_state</span>()<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">client_type</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">client_type</span>(<span class="ident">client_id</span>).<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> {
             <span class="ident">Error::InvalidClient</span>(<span class="macro">format!</span>(
                 <span class="string">&quot;The client type doesn&#39;t exist: ID {}&quot;</span>,
@@ -761,10 +737,10 @@
         })<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">client</span> <span class="op">=</span> <span class="ident">AnyClient::from_client_type</span>(<span class="ident">client_type</span>);
         <span class="kw">match</span> <span class="ident">client</span>.<span class="ident">verify_upgrade_and_update_state</span>(
-            <span class="kw-2">&amp;</span><span class="ident">client_state</span>,
-            <span class="kw-2">&amp;</span><span class="ident">consensus_state</span>,
-            <span class="ident">client_proof</span>,
-            <span class="ident">consensus_proof</span>,
+            <span class="kw-2">&amp;</span><span class="ident">msg</span>.<span class="ident">client_state</span>,
+            <span class="kw-2">&amp;</span><span class="ident">msg</span>.<span class="ident">consensus_state</span>,
+            <span class="ident">msg</span>.<span class="ident">proof_upgrade_client</span>.<span class="ident">clone</span>(),
+            <span class="ident">msg</span>.<span class="ident">proof_upgrade_consensus_state</span>.<span class="ident">clone</span>(),
         ) {
             <span class="prelude-val">Ok</span>((<span class="ident">new_client_state</span>, <span class="ident">new_consensus_state</span>)) <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">if</span> <span class="ident">new_client_state</span> <span class="op">!</span><span class="op">=</span> <span class="ident">client_state_post</span>
@@ -782,7 +758,7 @@
             }
         }
 
-        <span class="kw">let</span> <span class="ident">event</span> <span class="op">=</span> <span class="ident">make_upgrade_client_event</span>(<span class="ident">client_id</span>, <span class="kw-2">&amp;</span><span class="ident">data</span>);
+        <span class="kw">let</span> <span class="ident">event</span> <span class="op">=</span> <span class="ident">make_upgrade_client_event</span>(<span class="ident">client_id</span>, <span class="kw-2">&amp;</span><span class="ident">msg</span>);
         <span class="self">self</span>.<span class="ident">check_emitted_event</span>(<span class="ident">event</span>)
             .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">Error::IbcEvent</span>(<span class="ident">e</span>.<span class="ident">to_string</span>()))
     }
@@ -808,28 +784,6 @@
         <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">client_counter_key</span>();
         <span class="self">self</span>.<span class="ident">read_counter_pre</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>)
             .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">Error::InvalidClient</span>(<span class="ident">e</span>.<span class="ident">to_string</span>()))
-    }
-
-    <span class="kw">fn</span> <span class="ident">consensus_state_pre</span>(
-        <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">client_id</span>: <span class="kw-2">&amp;</span><span class="ident">ClientId</span>,
-        <span class="ident">height</span>: <span class="ident">Height</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">AnyConsensusState</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">consensus_state_key</span>(<span class="ident">client_id</span>, <span class="ident">height</span>);
-        <span class="kw">match</span> <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">read_pre</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>) {
-            <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="ident">value</span>)) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">AnyConsensusState::try_from_slice</span>(<span class="kw-2">&amp;</span><span class="ident">value</span>[..])
-                .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> {
-                    <span class="ident">Error::InvalidClient</span>(<span class="macro">format!</span>(
-                        <span class="string">&quot;Decoding the consensus state failed: ID {}, Height \
-                         {}, {}&quot;</span>,
-                        <span class="ident">client_id</span>, <span class="ident">height</span>, <span class="ident">e</span>
-                    ))
-                }),
-            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">Error::InvalidClient</span>(<span class="macro">format!</span>(
-                <span class="string">&quot;The prior consensus state doesn&#39;t exist: ID {}, Height {}&quot;</span>,
-                <span class="ident">client_id</span>, <span class="ident">height</span>
-            ))),
-        }
     }
 }
 

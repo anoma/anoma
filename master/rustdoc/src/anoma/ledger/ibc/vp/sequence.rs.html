@@ -239,6 +239,16 @@
 <span id="239">239</span>
 <span id="240">240</span>
 <span id="241">241</span>
+<span id="242">242</span>
+<span id="243">243</span>
+<span id="244">244</span>
+<span id="245">245</span>
+<span id="246">246</span>
+<span id="247">247</span>
+<span id="248">248</span>
+<span id="249">249</span>
+<span id="250">250</span>
+<span id="251">251</span>
 </pre><pre class="rust"><code><span class="doccomment">//! IBC validity predicate for sequences</span>
 
 <span class="kw">use</span> <span class="ident">borsh::BorshDeserialize</span>;
@@ -260,7 +270,7 @@
 <span class="kw">use</span> <span class="ident"><span class="kw">super</span>::Ibc</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::ledger::storage</span>::{<span class="self">self</span> <span class="kw">as</span> <span class="ident">ledger_storage</span>, <span class="ident">StorageHasher</span>};
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::types::ibc::data</span>::{
-    <span class="ident">PacketAckData</span>, <span class="ident">PacketReceiptData</span>, <span class="ident">PacketSendData</span>,
+    <span class="ident">Error</span> <span class="kw">as</span> <span class="ident">IbcDataError</span>, <span class="ident">IbcMessage</span>, <span class="ident">PacketSendData</span>,
 };
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::types::storage::Key</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::vm::WasmCacheAccess</span>;
@@ -278,6 +288,8 @@
     <span class="ident">InvalidPacket</span>(<span class="ident">String</span>),
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Decoding TX data error: {0}&quot;</span>)]</span>
     <span class="ident">DecodingTxData</span>(<span class="ident">std::io::Error</span>),
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;IBC data error: {0}&quot;</span>)]</span>
+    <span class="ident">InvalidIbcData</span>(<span class="ident">IbcDataError</span>),
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;IBC storage error: {0}&quot;</span>)]</span>
     <span class="ident">IbcStorage</span>(<span class="ident">IbcStorageError</span>),
 }
@@ -348,8 +360,9 @@
         <span class="ident">tx_data</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>],
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">port_channel_id</span> <span class="op">=</span> <span class="ident">port_channel_id</span>(<span class="ident">key</span>)<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="ident">PacketReceiptData::try_from_slice</span>(<span class="ident">tx_data</span>)<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">packet</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">data</span>.<span class="ident">packet</span>;
+        <span class="kw">let</span> <span class="ident">ibc_msg</span> <span class="op">=</span> <span class="ident">IbcMessage::decode</span>(<span class="ident">tx_data</span>)<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="ident">ibc_msg</span>.<span class="ident">msg_recv_packet</span>()<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">packet</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">msg</span>.<span class="ident">packet</span>;
         <span class="kw">let</span> <span class="ident">next_seq_pre</span> <span class="op">=</span> <span class="self">self</span>
             .<span class="ident">get_next_sequence_recv_pre</span>(<span class="kw-2">&amp;</span><span class="ident">port_channel_id</span>)
             .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">Error::InvalidSequence</span>(<span class="ident">e</span>.<span class="ident">to_string</span>()))<span class="question-mark">?</span>;
@@ -405,8 +418,9 @@
         <span class="ident">tx_data</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>],
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">port_channel_id</span> <span class="op">=</span> <span class="ident">port_channel_id</span>(<span class="ident">key</span>)<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="ident">PacketAckData::try_from_slice</span>(<span class="ident">tx_data</span>)<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">packet</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">data</span>.<span class="ident">packet</span>;
+        <span class="kw">let</span> <span class="ident">ibc_msg</span> <span class="op">=</span> <span class="ident">IbcMessage::decode</span>(<span class="ident">tx_data</span>)<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="ident">ibc_msg</span>.<span class="ident">msg_acknowledgement</span>()<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">packet</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">msg</span>.<span class="ident">packet</span>;
         <span class="kw">let</span> <span class="ident">next_seq_pre</span> <span class="op">=</span> <span class="self">self</span>
             .<span class="ident">get_next_sequence_ack_pre</span>(<span class="kw-2">&amp;</span><span class="ident">port_channel_id</span>)
             .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">Error::InvalidSequence</span>(<span class="ident">e</span>.<span class="ident">to_string</span>()))<span class="question-mark">?</span>;
@@ -472,6 +486,12 @@
 <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">IbcStorageError</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Error</span> {
     <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">err</span>: <span class="ident">IbcStorageError</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="ident"><span class="self">Self</span>::IbcStorage</span>(<span class="ident">err</span>)
+    }
+}
+
+<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">IbcDataError</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Error</span> {
+    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">err</span>: <span class="ident">IbcDataError</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="ident"><span class="self">Self</span>::InvalidIbcData</span>(<span class="ident">err</span>)
     }
 }
 

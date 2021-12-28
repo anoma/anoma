@@ -724,6 +724,19 @@
 <span id="724">724</span>
 <span id="725">725</span>
 <span id="726">726</span>
+<span id="727">727</span>
+<span id="728">728</span>
+<span id="729">729</span>
+<span id="730">730</span>
+<span id="731">731</span>
+<span id="732">732</span>
+<span id="733">733</span>
+<span id="734">734</span>
+<span id="735">735</span>
+<span id="736">736</span>
+<span id="737">737</span>
+<span id="738">738</span>
+<span id="739">739</span>
 </pre><pre class="rust"><code><span class="doccomment">//! IBC validity predicate for packets</span>
 
 <span class="kw">use</span> <span class="ident">borsh::BorshDeserialize</span>;
@@ -744,11 +757,15 @@
     <span class="ident">verify_packet_recv_proofs</span>,
 };
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
+<span class="kw">use</span> <span class="ident">ibc::core::ics04_channel::msgs::PacketMsg</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
 <span class="kw">use</span> <span class="ident">ibc::core::ics04_channel::packet</span>::{<span class="ident">Packet</span>, <span class="ident">Sequence</span>};
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
 <span class="kw">use</span> <span class="ident">ibc::core::ics24_host::identifier</span>::{
     <span class="ident">ChannelId</span>, <span class="ident">ClientId</span>, <span class="ident">PortChannelId</span>, <span class="ident">PortId</span>,
 };
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
+<span class="kw">use</span> <span class="ident">ibc::core::ics26_routing::msgs::Ics26Envelope</span>;
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
 <span class="kw">use</span> <span class="ident">ibc::proofs::Proofs</span>;
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
@@ -770,11 +787,15 @@
     <span class="ident">verify_packet_recv_proofs</span>,
 };
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
+<span class="kw">use</span> <span class="ident">ibc_abci::core::ics04_channel::msgs::PacketMsg</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
 <span class="kw">use</span> <span class="ident">ibc_abci::core::ics04_channel::packet</span>::{<span class="ident">Packet</span>, <span class="ident">Sequence</span>};
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
 <span class="kw">use</span> <span class="ident">ibc_abci::core::ics24_host::identifier</span>::{
     <span class="ident">ChannelId</span>, <span class="ident">ClientId</span>, <span class="ident">PortChannelId</span>, <span class="ident">PortId</span>,
 };
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
+<span class="kw">use</span> <span class="ident">ibc_abci::core::ics26_routing::msgs::Ics26Envelope</span>;
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
 <span class="kw">use</span> <span class="ident">ibc_abci::proofs::Proofs</span>;
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
@@ -788,8 +809,7 @@
 <span class="kw">use</span> <span class="kw">super</span>::{<span class="ident">Ibc</span>, <span class="ident">StateChange</span>};
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::ledger::storage</span>::{<span class="self">self</span>, <span class="ident">StorageHasher</span>};
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::types::ibc::data</span>::{
-    <span class="ident">Error</span> <span class="kw">as</span> <span class="ident">IbcDataError</span>, <span class="ident">PacketAckData</span>, <span class="ident">PacketReceiptData</span>, <span class="ident">PacketSendData</span>,
-    <span class="ident">TimeoutData</span>,
+    <span class="ident">Error</span> <span class="kw">as</span> <span class="ident">IbcDataError</span>, <span class="ident">IbcMessage</span>, <span class="ident">PacketSendData</span>,
 };
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::types::storage::Key</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::vm::WasmCacheAccess</span>;
@@ -886,28 +906,26 @@
                 <span class="kw">match</span> <span class="ident">channel</span>.<span class="ident">state</span>() {
                     <span class="ident">State::Open</span> <span class="op">=</span><span class="op">&gt;</span> {
                         <span class="comment">// &quot;PacketAcknowledgement&quot;</span>
-                        <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="ident">PacketAckData::try_from_slice</span>(<span class="ident">tx_data</span>)<span class="question-mark">?</span>;
+                        <span class="kw">let</span> <span class="ident">ibc_msg</span> <span class="op">=</span> <span class="ident">IbcMessage::decode</span>(<span class="ident">tx_data</span>)<span class="question-mark">?</span>;
+                        <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="ident">ibc_msg</span>.<span class="ident">msg_acknowledgement</span>()<span class="question-mark">?</span>;
                         <span class="kw">let</span> <span class="ident">commitment_pre</span> <span class="op">=</span> <span class="self">self</span>
                             .<span class="ident">get_packet_commitment_pre</span>(<span class="kw-2">&amp;</span><span class="ident">commitment_key</span>)
                             .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">Error::InvalidPacket</span>(<span class="ident">e</span>.<span class="ident">to_string</span>()))<span class="question-mark">?</span>;
                         <span class="self">self</span>.<span class="ident">validate_packet_commitment</span>(
-                            <span class="kw-2">&amp;</span><span class="ident">data</span>.<span class="ident">packet</span>,
+                            <span class="kw-2">&amp;</span><span class="ident">msg</span>.<span class="ident">packet</span>,
                             <span class="ident">commitment_pre</span>,
                         )
                         .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">Error::InvalidPacket</span>(<span class="ident">e</span>.<span class="ident">to_string</span>()))<span class="question-mark">?</span>;
-                        <span class="self">self</span>.<span class="ident">validate_ack_packet</span>(
-                            <span class="kw-2">&amp;</span><span class="ident">commitment_key</span>,
-                            <span class="kw-2">&amp;</span><span class="ident">data</span>.<span class="ident">packet</span>,
-                        )<span class="question-mark">?</span>;
+                        <span class="self">self</span>.<span class="ident">validate_ack_packet</span>(<span class="kw-2">&amp;</span><span class="ident">commitment_key</span>, <span class="kw-2">&amp;</span><span class="ident">msg</span>.<span class="ident">packet</span>)<span class="question-mark">?</span>;
                         <span class="kw">let</span> <span class="ident">port_channel_id</span> <span class="op">=</span> <span class="ident">PortChannelId</span> {
                             <span class="ident">port_id</span>: <span class="ident">commitment_key</span>.<span class="number">0</span>,
                             <span class="ident">channel_id</span>: <span class="ident">commitment_key</span>.<span class="number">1</span>,
                         };
                         <span class="self">self</span>.<span class="ident">verify_ack_proof</span>(
                             <span class="kw-2">&amp;</span><span class="ident">port_channel_id</span>,
-                            <span class="kw-2">&amp;</span><span class="ident">data</span>.<span class="ident">packet</span>,
-                            <span class="ident">data</span>.<span class="ident">ack</span>.<span class="ident">clone</span>(),
-                            <span class="kw-2">&amp;</span><span class="ident">data</span>.<span class="ident">proofs</span>()<span class="question-mark">?</span>,
+                            <span class="kw-2">&amp;</span><span class="ident">msg</span>.<span class="ident">packet</span>,
+                            <span class="ident">msg</span>.<span class="ident">acknowledgement</span>.<span class="ident">clone</span>(),
+                            <span class="kw-2">&amp;</span><span class="ident">msg</span>.<span class="ident">proofs</span>,
                         )
                     }
                     <span class="ident">State::Closed</span> <span class="op">=</span><span class="op">&gt;</span> {
@@ -937,18 +955,15 @@
         {
             <span class="ident">StateChange::Created</span> <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">let</span> <span class="ident">receipt_key</span> <span class="op">=</span> <span class="ident">port_channel_sequence_id</span>(<span class="ident">key</span>)<span class="question-mark">?</span>;
-                <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="ident">PacketReceiptData::try_from_slice</span>(<span class="ident">tx_data</span>)<span class="question-mark">?</span>;
-                <span class="kw">let</span> <span class="ident">packet</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">data</span>.<span class="ident">packet</span>;
+                <span class="kw">let</span> <span class="ident">ibc_msg</span> <span class="op">=</span> <span class="ident">IbcMessage::decode</span>(<span class="ident">tx_data</span>)<span class="question-mark">?</span>;
+                <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="ident">ibc_msg</span>.<span class="ident">msg_recv_packet</span>()<span class="question-mark">?</span>;
+                <span class="kw">let</span> <span class="ident">packet</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">msg</span>.<span class="ident">packet</span>;
                 <span class="self">self</span>.<span class="ident">validate_recv_packet</span>(<span class="kw-2">&amp;</span><span class="ident">receipt_key</span>, <span class="ident">packet</span>)<span class="question-mark">?</span>;
                 <span class="kw">let</span> <span class="ident">port_channel_id</span> <span class="op">=</span> <span class="ident">PortChannelId</span> {
                     <span class="ident">port_id</span>: <span class="ident">receipt_key</span>.<span class="number">0</span>,
                     <span class="ident">channel_id</span>: <span class="ident">receipt_key</span>.<span class="number">1</span>,
                 };
-                <span class="self">self</span>.<span class="ident">verify_recv_proof</span>(
-                    <span class="kw-2">&amp;</span><span class="ident">port_channel_id</span>,
-                    <span class="ident">packet</span>,
-                    <span class="kw-2">&amp;</span><span class="ident">data</span>.<span class="ident">proofs</span>()<span class="question-mark">?</span>,
-                )
+                <span class="self">self</span>.<span class="ident">verify_recv_proof</span>(<span class="kw-2">&amp;</span><span class="ident">port_channel_id</span>, <span class="ident">packet</span>, <span class="kw-2">&amp;</span><span class="ident">msg</span>.<span class="ident">proofs</span>)
             }
             <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">Error::InvalidStateChange</span>(
                 <span class="string">&quot;The state change of the receipt is invalid&quot;</span>.<span class="ident">to_owned</span>(),
@@ -1265,8 +1280,22 @@
         <span class="ident">commitment_key</span>: <span class="kw-2">&amp;</span>(<span class="ident">PortId</span>, <span class="ident">ChannelId</span>, <span class="ident">Sequence</span>),
         <span class="ident">tx_data</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>],
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="ident">TimeoutData::try_from_slice</span>(<span class="ident">tx_data</span>)<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">packet</span> <span class="op">=</span> <span class="ident">data</span>.<span class="ident">packet</span>.<span class="ident">clone</span>();
+        <span class="kw">let</span> <span class="ident">ibc_msg</span> <span class="op">=</span> <span class="ident">IbcMessage::decode</span>(<span class="ident">tx_data</span>)<span class="question-mark">?</span>;
+        <span class="kw">let</span> (<span class="ident">packet</span>, <span class="ident">proofs</span>, <span class="ident">next_sequence_recv</span>) <span class="op">=</span> <span class="kw">match</span> <span class="ident">ibc_msg</span>.<span class="number">0</span> {
+            <span class="ident">Ics26Envelope::Ics4PacketMsg</span>(<span class="ident">PacketMsg::ToPacket</span>(<span class="ident">msg</span>)) <span class="op">=</span><span class="op">&gt;</span> {
+                (<span class="ident">msg</span>.<span class="ident">packet</span>, <span class="ident">msg</span>.<span class="ident">proofs</span>, <span class="ident">msg</span>.<span class="ident">next_sequence_recv</span>)
+            }
+            <span class="ident">Ics26Envelope::Ics4PacketMsg</span>(<span class="ident">PacketMsg::ToClosePacket</span>(<span class="ident">msg</span>)) <span class="op">=</span><span class="op">&gt;</span> {
+                (<span class="ident">msg</span>.<span class="ident">packet</span>, <span class="ident">msg</span>.<span class="ident">proofs</span>, <span class="ident">msg</span>.<span class="ident">next_sequence_recv</span>)
+            }
+            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error::InvalidChannel</span>(<span class="macro">format!</span>(
+                    <span class="string">&quot;Unexpected message was given for timeout: Port/Channel \
+                     {}/{}&quot;</span>,
+                    <span class="ident">commitment_key</span>.<span class="number">0</span>, <span class="ident">commitment_key</span>.<span class="number">1</span>,
+                )));
+            }
+        };
         <span class="comment">// deleted commitment should be for the packet sent from this channel</span>
         <span class="kw">let</span> <span class="ident">commitment</span> <span class="op">=</span> <span class="self">self</span>
             .<span class="ident">get_packet_commitment_pre</span>(<span class="ident">commitment_key</span>)
@@ -1311,7 +1340,7 @@
         <span class="kw">let</span> <span class="ident">client_id</span> <span class="op">=</span> <span class="ident">connection</span>.<span class="ident">client_id</span>().<span class="ident">clone</span>();
 
         <span class="comment">// check if the packet actually timed out</span>
-        <span class="kw">match</span> <span class="self">self</span>.<span class="ident">check_timeout</span>(<span class="kw-2">&amp;</span><span class="ident">client_id</span>, <span class="ident">data</span>.<span class="ident">proof_height</span>, <span class="kw-2">&amp;</span><span class="ident">packet</span>) {
+        <span class="kw">match</span> <span class="self">self</span>.<span class="ident">check_timeout</span>(<span class="kw-2">&amp;</span><span class="ident">client_id</span>, <span class="ident">proofs</span>.<span class="ident">height</span>(), <span class="kw-2">&amp;</span><span class="ident">packet</span>) {
             <span class="prelude-val">Ok</span>(()) <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="comment">// &quot;TimedoutOnClose&quot; because the packet didn&#39;t time out</span>
                 <span class="comment">// check that the counterpart channel has been closed</span>
@@ -1341,7 +1370,7 @@
                     <span class="kw-2">&amp;</span><span class="ident">channel</span>,
                     <span class="kw-2">&amp;</span><span class="ident">connection</span>,
                     <span class="kw-2">&amp;</span><span class="ident">expected_channel</span>,
-                    <span class="kw-2">&amp;</span><span class="ident">data</span>.<span class="ident">proofs</span>()<span class="question-mark">?</span>,
+                    <span class="kw-2">&amp;</span><span class="ident">proofs</span>,
                 )
                 .<span class="ident">map_err</span>(<span class="ident">Error::ProofVerificationFailure</span>)<span class="question-mark">?</span>;
             }
@@ -1360,7 +1389,7 @@
                     <span class="ident">port_channel_id</span>
                 )));
             }
-            <span class="kw">if</span> <span class="ident">packet</span>.<span class="ident">sequence</span> <span class="op">&lt;</span> <span class="ident">data</span>.<span class="ident">sequence</span> {
+            <span class="kw">if</span> <span class="ident">packet</span>.<span class="ident">sequence</span> <span class="op">&lt;</span> <span class="ident">next_sequence_recv</span> {
                 <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error::InvalidPacket</span>(
                     <span class="string">&quot;The sequence is invalid. The packet might have been \
                      already received&quot;</span>
@@ -1371,18 +1400,15 @@
                 <span class="self">self</span>,
                 <span class="ident">client_id</span>,
                 <span class="ident">packet</span>,
-                <span class="ident">data</span>.<span class="ident">sequence</span>,
-                <span class="kw-2">&amp;</span><span class="ident">data</span>.<span class="ident">proofs</span>()<span class="question-mark">?</span>,
+                <span class="ident">next_sequence_recv</span>,
+                <span class="kw-2">&amp;</span><span class="ident">proofs</span>,
             ) {
                 <span class="prelude-val">Ok</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(()),
                 <span class="prelude-val">Err</span>(<span class="ident">e</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">Error::ProofVerificationFailure</span>(<span class="ident">e</span>)),
             }
         } <span class="kw">else</span> {
             <span class="kw">match</span> <span class="ident">verify_packet_receipt_absence</span>(
-                <span class="self">self</span>,
-                <span class="ident">client_id</span>,
-                <span class="ident">packet</span>,
-                <span class="kw-2">&amp;</span><span class="ident">data</span>.<span class="ident">proofs</span>()<span class="question-mark">?</span>,
+                <span class="self">self</span>, <span class="ident">client_id</span>, <span class="ident">packet</span>, <span class="kw-2">&amp;</span><span class="ident">proofs</span>,
             ) {
                 <span class="prelude-val">Ok</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(()),
                 <span class="prelude-val">Err</span>(<span class="ident">e</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">Error::ProofVerificationFailure</span>(<span class="ident">e</span>)),

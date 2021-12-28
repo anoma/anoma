@@ -511,6 +511,140 @@
 <span id="511">511</span>
 <span id="512">512</span>
 <span id="513">513</span>
+<span id="514">514</span>
+<span id="515">515</span>
+<span id="516">516</span>
+<span id="517">517</span>
+<span id="518">518</span>
+<span id="519">519</span>
+<span id="520">520</span>
+<span id="521">521</span>
+<span id="522">522</span>
+<span id="523">523</span>
+<span id="524">524</span>
+<span id="525">525</span>
+<span id="526">526</span>
+<span id="527">527</span>
+<span id="528">528</span>
+<span id="529">529</span>
+<span id="530">530</span>
+<span id="531">531</span>
+<span id="532">532</span>
+<span id="533">533</span>
+<span id="534">534</span>
+<span id="535">535</span>
+<span id="536">536</span>
+<span id="537">537</span>
+<span id="538">538</span>
+<span id="539">539</span>
+<span id="540">540</span>
+<span id="541">541</span>
+<span id="542">542</span>
+<span id="543">543</span>
+<span id="544">544</span>
+<span id="545">545</span>
+<span id="546">546</span>
+<span id="547">547</span>
+<span id="548">548</span>
+<span id="549">549</span>
+<span id="550">550</span>
+<span id="551">551</span>
+<span id="552">552</span>
+<span id="553">553</span>
+<span id="554">554</span>
+<span id="555">555</span>
+<span id="556">556</span>
+<span id="557">557</span>
+<span id="558">558</span>
+<span id="559">559</span>
+<span id="560">560</span>
+<span id="561">561</span>
+<span id="562">562</span>
+<span id="563">563</span>
+<span id="564">564</span>
+<span id="565">565</span>
+<span id="566">566</span>
+<span id="567">567</span>
+<span id="568">568</span>
+<span id="569">569</span>
+<span id="570">570</span>
+<span id="571">571</span>
+<span id="572">572</span>
+<span id="573">573</span>
+<span id="574">574</span>
+<span id="575">575</span>
+<span id="576">576</span>
+<span id="577">577</span>
+<span id="578">578</span>
+<span id="579">579</span>
+<span id="580">580</span>
+<span id="581">581</span>
+<span id="582">582</span>
+<span id="583">583</span>
+<span id="584">584</span>
+<span id="585">585</span>
+<span id="586">586</span>
+<span id="587">587</span>
+<span id="588">588</span>
+<span id="589">589</span>
+<span id="590">590</span>
+<span id="591">591</span>
+<span id="592">592</span>
+<span id="593">593</span>
+<span id="594">594</span>
+<span id="595">595</span>
+<span id="596">596</span>
+<span id="597">597</span>
+<span id="598">598</span>
+<span id="599">599</span>
+<span id="600">600</span>
+<span id="601">601</span>
+<span id="602">602</span>
+<span id="603">603</span>
+<span id="604">604</span>
+<span id="605">605</span>
+<span id="606">606</span>
+<span id="607">607</span>
+<span id="608">608</span>
+<span id="609">609</span>
+<span id="610">610</span>
+<span id="611">611</span>
+<span id="612">612</span>
+<span id="613">613</span>
+<span id="614">614</span>
+<span id="615">615</span>
+<span id="616">616</span>
+<span id="617">617</span>
+<span id="618">618</span>
+<span id="619">619</span>
+<span id="620">620</span>
+<span id="621">621</span>
+<span id="622">622</span>
+<span id="623">623</span>
+<span id="624">624</span>
+<span id="625">625</span>
+<span id="626">626</span>
+<span id="627">627</span>
+<span id="628">628</span>
+<span id="629">629</span>
+<span id="630">630</span>
+<span id="631">631</span>
+<span id="632">632</span>
+<span id="633">633</span>
+<span id="634">634</span>
+<span id="635">635</span>
+<span id="636">636</span>
+<span id="637">637</span>
+<span id="638">638</span>
+<span id="639">639</span>
+<span id="640">640</span>
+<span id="641">641</span>
+<span id="642">642</span>
+<span id="643">643</span>
+<span id="644">644</span>
+<span id="645">645</span>
+<span id="646">646</span>
+<span id="647">647</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std::collections</span>::{<span class="ident">HashMap</span>, <span class="ident">HashSet</span>};
 <span class="kw">use</span> <span class="ident">std::convert::TryFrom</span>;
 <span class="kw">use</span> <span class="ident">std::str::FromStr</span>;
@@ -542,13 +676,49 @@
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
 <span class="kw">use</span> <span class="ident">ibc::core::ics02_client::header::Header</span>;
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
+<span class="kw">use</span> <span class="ident">ibc::core::ics02_client::msgs::create_client::MsgCreateAnyClient</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
+<span class="kw">use</span> <span class="ident">ibc::core::ics02_client::msgs::update_client::MsgUpdateAnyClient</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
+<span class="kw">use</span> <span class="ident">ibc::core::ics02_client::msgs::upgrade_client::MsgUpgradeAnyClient</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
 <span class="kw">use</span> <span class="ident">ibc::core::ics03_connection::connection::Counterparty</span> <span class="kw">as</span> <span class="ident">ConnCounterparty</span>;
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
+<span class="kw">use</span> <span class="ident">ibc::core::ics03_connection::msgs::conn_open_ack::MsgConnectionOpenAck</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
+<span class="kw">use</span> <span class="ident">ibc::core::ics03_connection::msgs::conn_open_confirm::MsgConnectionOpenConfirm</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
+<span class="kw">use</span> <span class="ident">ibc::core::ics03_connection::msgs::conn_open_init::MsgConnectionOpenInit</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
+<span class="kw">use</span> <span class="ident">ibc::core::ics03_connection::msgs::conn_open_try::MsgConnectionOpenTry</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
 <span class="kw">use</span> <span class="ident">ibc::core::ics03_connection::version::Version</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
+<span class="kw">use</span> <span class="ident">ibc::core::ics04_channel::channel::State</span> <span class="kw">as</span> <span class="ident">ChanState</span>;
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
 <span class="kw">use</span> <span class="ident">ibc::core::ics04_channel::channel</span>::{
     <span class="ident">ChannelEnd</span>, <span class="ident">Counterparty</span> <span class="kw">as</span> <span class="ident">ChanCounterparty</span>, <span class="ident">Order</span>,
 };
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
+<span class="kw">use</span> <span class="ident">ibc::core::ics04_channel::msgs::acknowledgement::MsgAcknowledgement</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
+<span class="kw">use</span> <span class="ident">ibc::core::ics04_channel::msgs::chan_close_confirm::MsgChannelCloseConfirm</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
+<span class="kw">use</span> <span class="ident">ibc::core::ics04_channel::msgs::chan_close_init::MsgChannelCloseInit</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
+<span class="kw">use</span> <span class="ident">ibc::core::ics04_channel::msgs::chan_open_ack::MsgChannelOpenAck</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
+<span class="kw">use</span> <span class="ident">ibc::core::ics04_channel::msgs::chan_open_confirm::MsgChannelOpenConfirm</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
+<span class="kw">use</span> <span class="ident">ibc::core::ics04_channel::msgs::chan_open_init::MsgChannelOpenInit</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
+<span class="kw">use</span> <span class="ident">ibc::core::ics04_channel::msgs::chan_open_try::MsgChannelOpenTry</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
+<span class="kw">use</span> <span class="ident">ibc::core::ics04_channel::msgs::recv_packet::MsgRecvPacket</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
+<span class="kw">use</span> <span class="ident">ibc::core::ics04_channel::msgs::timeout::MsgTimeout</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
+<span class="kw">use</span> <span class="ident">ibc::core::ics04_channel::msgs::timeout_on_close::MsgTimeoutOnClose</span>;
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
 <span class="kw">use</span> <span class="ident">ibc::core::ics04_channel::packet</span>::{<span class="ident">Packet</span>, <span class="ident">Sequence</span>};
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
@@ -562,6 +732,10 @@
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
 <span class="kw">use</span> <span class="ident">ibc::mock::header::MockHeader</span>;
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
+<span class="kw">use</span> <span class="ident">ibc::proofs</span>::{<span class="ident">ConsensusProof</span>, <span class="ident">Proofs</span>};
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
+<span class="kw">use</span> <span class="ident">ibc::signer::Signer</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
 <span class="kw">use</span> <span class="ident">ibc::timestamp::Timestamp</span>;
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
 <span class="kw">use</span> <span class="ident">ibc::Height</span>;
@@ -572,13 +746,49 @@
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
 <span class="kw">use</span> <span class="ident">ibc_abci::core::ics02_client::header::Header</span>;
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
+<span class="kw">use</span> <span class="ident">ibc_abci::core::ics02_client::msgs::create_client::MsgCreateAnyClient</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
+<span class="kw">use</span> <span class="ident">ibc_abci::core::ics02_client::msgs::update_client::MsgUpdateAnyClient</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
+<span class="kw">use</span> <span class="ident">ibc_abci::core::ics02_client::msgs::upgrade_client::MsgUpgradeAnyClient</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
 <span class="kw">use</span> <span class="ident">ibc_abci::core::ics03_connection::connection::Counterparty</span> <span class="kw">as</span> <span class="ident">ConnCounterparty</span>;
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
+<span class="kw">use</span> <span class="ident">ibc_abci::core::ics03_connection::msgs::conn_open_ack::MsgConnectionOpenAck</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
+<span class="kw">use</span> <span class="ident">ibc_abci::core::ics03_connection::msgs::conn_open_confirm::MsgConnectionOpenConfirm</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
+<span class="kw">use</span> <span class="ident">ibc_abci::core::ics03_connection::msgs::conn_open_init::MsgConnectionOpenInit</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
+<span class="kw">use</span> <span class="ident">ibc_abci::core::ics03_connection::msgs::conn_open_try::MsgConnectionOpenTry</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
 <span class="kw">use</span> <span class="ident">ibc_abci::core::ics03_connection::version::Version</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
+<span class="kw">use</span> <span class="ident">ibc_abci::core::ics04_channel::channel::State</span> <span class="kw">as</span> <span class="ident">ChanState</span>;
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
 <span class="kw">use</span> <span class="ident">ibc_abci::core::ics04_channel::channel</span>::{
     <span class="ident">ChannelEnd</span>, <span class="ident">Counterparty</span> <span class="kw">as</span> <span class="ident">ChanCounterparty</span>, <span class="ident">Order</span>,
 };
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
+<span class="kw">use</span> <span class="ident">ibc_abci::core::ics04_channel::msgs::acknowledgement::MsgAcknowledgement</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
+<span class="kw">use</span> <span class="ident">ibc_abci::core::ics04_channel::msgs::chan_close_confirm::MsgChannelCloseConfirm</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
+<span class="kw">use</span> <span class="ident">ibc_abci::core::ics04_channel::msgs::chan_close_init::MsgChannelCloseInit</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
+<span class="kw">use</span> <span class="ident">ibc_abci::core::ics04_channel::msgs::chan_open_ack::MsgChannelOpenAck</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
+<span class="kw">use</span> <span class="ident">ibc_abci::core::ics04_channel::msgs::chan_open_confirm::MsgChannelOpenConfirm</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
+<span class="kw">use</span> <span class="ident">ibc_abci::core::ics04_channel::msgs::chan_open_init::MsgChannelOpenInit</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
+<span class="kw">use</span> <span class="ident">ibc_abci::core::ics04_channel::msgs::chan_open_try::MsgChannelOpenTry</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
+<span class="kw">use</span> <span class="ident">ibc_abci::core::ics04_channel::msgs::recv_packet::MsgRecvPacket</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
+<span class="kw">use</span> <span class="ident">ibc_abci::core::ics04_channel::msgs::timeout::MsgTimeout</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
+<span class="kw">use</span> <span class="ident">ibc_abci::core::ics04_channel::msgs::timeout_on_close::MsgTimeoutOnClose</span>;
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
 <span class="kw">use</span> <span class="ident">ibc_abci::core::ics04_channel::packet</span>::{<span class="ident">Packet</span>, <span class="ident">Sequence</span>};
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
@@ -591,6 +801,10 @@
 <span class="kw">use</span> <span class="ident">ibc_abci::mock::client_state</span>::{<span class="ident">MockClientState</span>, <span class="ident">MockConsensusState</span>};
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
 <span class="kw">use</span> <span class="ident">ibc_abci::mock::header::MockHeader</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
+<span class="kw">use</span> <span class="ident">ibc_abci::proofs</span>::{<span class="ident">ConsensusProof</span>, <span class="ident">Proofs</span>};
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
+<span class="kw">use</span> <span class="ident">ibc_abci::signer::Signer</span>;
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
 <span class="kw">use</span> <span class="ident">ibc_abci::timestamp::Timestamp</span>;
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
@@ -697,12 +911,13 @@
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">prepare_client</span>() <span class="op">-</span><span class="op">&gt;</span> (<span class="ident">ClientId</span>, <span class="ident">AnyClientState</span>, <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">Key</span>, <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span>) {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">writes</span> <span class="op">=</span> <span class="ident">HashMap::new</span>();
 
-    <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="ident">client_creation_data</span>();
+    <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="ident">msg_create_client</span>();
     <span class="comment">// client state</span>
-    <span class="kw">let</span> <span class="ident">client_state</span> <span class="op">=</span> <span class="ident">data</span>.<span class="ident">client_state</span>.<span class="ident">clone</span>();
-    <span class="kw">let</span> <span class="ident">client_id</span> <span class="op">=</span> <span class="ident">data</span>.<span class="ident">client_id</span>(<span class="number">0</span>).<span class="ident">expect</span>(<span class="string">&quot;invalid client ID&quot;</span>);
+    <span class="kw">let</span> <span class="ident">client_state</span> <span class="op">=</span> <span class="ident">msg</span>.<span class="ident">client_state</span>.<span class="ident">clone</span>();
+    <span class="kw">let</span> <span class="ident">client_id</span> <span class="op">=</span>
+        <span class="ident">client_id</span>(<span class="ident">client_state</span>.<span class="ident">client_type</span>(), <span class="number">0</span>).<span class="ident">expect</span>(<span class="string">&quot;invalid client ID&quot;</span>);
     <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">client_state_key</span>(<span class="kw-2">&amp;</span><span class="ident">client_id</span>);
-    <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="ident">data</span>.<span class="ident">client_state</span>.<span class="ident">try_to_vec</span>().<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
+    <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="ident">msg</span>.<span class="ident">client_state</span>.<span class="ident">try_to_vec</span>().<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
     <span class="ident">writes</span>.<span class="ident">insert</span>(<span class="ident">key</span>, <span class="ident">bytes</span>);
     <span class="comment">// client type</span>
     <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">client_type_key</span>(<span class="kw-2">&amp;</span><span class="ident">client_id</span>);
@@ -712,7 +927,7 @@
     <span class="comment">// consensus state</span>
     <span class="kw">let</span> <span class="ident">height</span> <span class="op">=</span> <span class="ident">client_state</span>.<span class="ident">latest_height</span>();
     <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">consensus_state_key</span>(<span class="kw-2">&amp;</span><span class="ident">client_id</span>, <span class="ident">height</span>);
-    <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="ident">data</span>.<span class="ident">consensus_state</span>.<span class="ident">try_to_vec</span>().<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
+    <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="ident">msg</span>.<span class="ident">consensus_state</span>.<span class="ident">try_to_vec</span>().<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
     <span class="ident">writes</span>.<span class="ident">insert</span>(<span class="ident">key</span>, <span class="ident">bytes</span>);
     <span class="comment">// client counter</span>
     <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">client_counter_key</span>();
@@ -729,8 +944,8 @@
 
     <span class="kw">let</span> <span class="ident">conn_id</span> <span class="op">=</span> <span class="ident">connection_id</span>(<span class="number">0</span>);
     <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">connection_key</span>(<span class="kw-2">&amp;</span><span class="ident">conn_id</span>);
-    <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="ident">connection_open_init_data</span>(<span class="ident">client_id</span>.<span class="ident">clone</span>());
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">conn</span> <span class="op">=</span> <span class="ident">data</span>.<span class="ident">connection</span>();
+    <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="ident">msg_connection_open_init</span>(<span class="ident">client_id</span>.<span class="ident">clone</span>());
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">conn</span> <span class="op">=</span> <span class="ident">init_connection</span>(<span class="kw-2">&amp;</span><span class="ident">msg</span>);
     <span class="ident">open_connection</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">conn</span>);
     <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="ident">conn</span>.<span class="ident">try_to_vec</span>().<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
     <span class="ident">writes</span>.<span class="ident">insert</span>(<span class="ident">key</span>, <span class="ident">bytes</span>);
@@ -759,8 +974,8 @@
     <span class="kw">let</span> <span class="ident">channel_id</span> <span class="op">=</span> <span class="ident">channel_id</span>(<span class="number">0</span>);
     <span class="kw">let</span> <span class="ident">port_channel_id</span> <span class="op">=</span> <span class="ident">port_channel_id</span>(<span class="ident">port_id</span>.<span class="ident">clone</span>(), <span class="ident">channel_id</span>.<span class="ident">clone</span>());
     <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">channel_key</span>(<span class="kw-2">&amp;</span><span class="ident">port_channel_id</span>);
-    <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="ident">channel_open_init_data</span>(<span class="ident">port_id</span>.<span class="ident">clone</span>(), <span class="ident">conn_id</span>.<span class="ident">clone</span>());
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">channel</span> <span class="op">=</span> <span class="ident">data</span>.<span class="ident">channel</span>();
+    <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="ident">msg_channel_open_init</span>(<span class="ident">port_id</span>.<span class="ident">clone</span>(), <span class="ident">conn_id</span>.<span class="ident">clone</span>());
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">channel</span> <span class="op">=</span> <span class="ident">msg</span>.<span class="ident">channel</span>;
     <span class="ident">open_channel</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">channel</span>);
     <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="ident">channel</span>.<span class="ident">try_to_vec</span>().<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
     <span class="ident">writes</span>.<span class="ident">insert</span>(<span class="ident">key</span>, <span class="ident">bytes</span>);
@@ -768,7 +983,7 @@
     (<span class="ident">port_id</span>, <span class="ident">channel_id</span>, <span class="ident">writes</span>)
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">client_creation_data</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">ClientCreationData</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">msg_create_client</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">MsgCreateAnyClient</span> {
     <span class="kw">let</span> <span class="ident">height</span> <span class="op">=</span> <span class="ident">Height::new</span>(<span class="number">1</span>, <span class="number">10</span>);
     <span class="kw">let</span> <span class="ident">header</span> <span class="op">=</span> <span class="ident">MockHeader</span> {
         <span class="ident">height</span>,
@@ -776,19 +991,28 @@
     };
     <span class="kw">let</span> <span class="ident">client_state</span> <span class="op">=</span> <span class="ident">MockClientState</span>(<span class="ident">header</span>).<span class="ident">wrap_any</span>();
     <span class="kw">let</span> <span class="ident">consensus_state</span> <span class="op">=</span> <span class="ident">MockConsensusState::new</span>(<span class="ident">header</span>).<span class="ident">wrap_any</span>();
-    <span class="ident">ClientCreationData::new</span>(<span class="ident">client_state</span>, <span class="ident">consensus_state</span>)
+    <span class="ident">MsgCreateAnyClient</span> {
+        <span class="ident">client_state</span>,
+        <span class="ident">consensus_state</span>,
+        <span class="ident">signer</span>: <span class="ident">Signer::new</span>(<span class="string">&quot;test&quot;</span>),
+    }
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">client_update_data</span>(<span class="ident">client_id</span>: <span class="ident">ClientId</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">ClientUpdateData</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">msg_update_client</span>(<span class="ident">client_id</span>: <span class="ident">ClientId</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">MsgUpdateAnyClient</span> {
     <span class="kw">let</span> <span class="ident">height</span> <span class="op">=</span> <span class="ident">Height::new</span>(<span class="number">1</span>, <span class="number">11</span>);
     <span class="kw">let</span> <span class="ident">header</span> <span class="op">=</span> <span class="ident">MockHeader</span> {
         <span class="ident">height</span>,
         <span class="ident">timestamp</span>: <span class="ident">Timestamp::now</span>(),
-    };
-    <span class="ident">ClientUpdateData::new</span>(<span class="ident">client_id</span>, <span class="macro">vec!</span>[<span class="ident">header</span>.<span class="ident">wrap_any</span>()])
+    }
+    .<span class="ident">wrap_any</span>();
+    <span class="ident">MsgUpdateAnyClient</span> {
+        <span class="ident">client_id</span>,
+        <span class="ident">header</span>,
+        <span class="ident">signer</span>: <span class="ident">Signer::new</span>(<span class="string">&quot;test&quot;</span>),
+    }
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">client_upgrade_data</span>(<span class="ident">client_id</span>: <span class="ident">ClientId</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">ClientUpgradeData</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">msg_upgrade_client</span>(<span class="ident">client_id</span>: <span class="ident">ClientId</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">MsgUpgradeAnyClient</span> {
     <span class="kw">let</span> <span class="ident">height</span> <span class="op">=</span> <span class="ident">Height::new</span>(<span class="number">0</span>, <span class="number">1</span>);
     <span class="kw">let</span> <span class="ident">header</span> <span class="op">=</span> <span class="ident">MockHeader</span> {
         <span class="ident">height</span>,
@@ -796,75 +1020,84 @@
     };
     <span class="kw">let</span> <span class="ident">client_state</span> <span class="op">=</span> <span class="ident">MockClientState</span>(<span class="ident">header</span>).<span class="ident">wrap_any</span>();
     <span class="kw">let</span> <span class="ident">consensus_state</span> <span class="op">=</span> <span class="ident">MockConsensusState::new</span>(<span class="ident">header</span>).<span class="ident">wrap_any</span>();
-    <span class="kw">let</span> <span class="ident">client_proof</span> <span class="op">=</span>
+    <span class="kw">let</span> <span class="ident">proof_upgrade_client</span> <span class="op">=</span>
         <span class="ident">MerkleProof::try_from</span>(<span class="ident">CommitmentProofBytes::from</span>(<span class="macro">vec!</span>[])).<span class="ident">unwrap</span>();
-    <span class="kw">let</span> <span class="ident">consensus_proof</span> <span class="op">=</span>
+    <span class="kw">let</span> <span class="ident">proof_upgrade_consensus_state</span> <span class="op">=</span>
         <span class="ident">MerkleProof::try_from</span>(<span class="ident">CommitmentProofBytes::from</span>(<span class="macro">vec!</span>[])).<span class="ident">unwrap</span>();
-    <span class="ident">ClientUpgradeData::new</span>(
+    <span class="ident">MsgUpgradeAnyClient</span> {
         <span class="ident">client_id</span>,
         <span class="ident">client_state</span>,
         <span class="ident">consensus_state</span>,
-        <span class="ident">client_proof</span>,
-        <span class="ident">consensus_proof</span>,
-    )
+        <span class="ident">proof_upgrade_client</span>,
+        <span class="ident">proof_upgrade_consensus_state</span>,
+        <span class="ident">signer</span>: <span class="ident">Signer::new</span>(<span class="string">&quot;test&quot;</span>),
+    }
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">connection_open_init_data</span>(
-    <span class="ident">client_id</span>: <span class="ident">ClientId</span>,
-) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">ConnectionOpenInitData</span> {
-    <span class="ident">ConnectionOpenInitData::new</span>(
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">msg_connection_open_init</span>(<span class="ident">client_id</span>: <span class="ident">ClientId</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">MsgConnectionOpenInit</span> {
+    <span class="ident">MsgConnectionOpenInit</span> {
         <span class="ident">client_id</span>,
-        <span class="ident">dummy_connection_counterparty</span>(),
-        <span class="ident">Version::default</span>(),
-        <span class="ident">Duration::new</span>(<span class="number">100</span>, <span class="number">0</span>),
-    )
+        <span class="ident">counterparty</span>: <span class="ident">dummy_connection_counterparty</span>(),
+        <span class="ident">version</span>: <span class="ident">Version::default</span>(),
+        <span class="ident">delay_period</span>: <span class="ident">Duration::new</span>(<span class="number">100</span>, <span class="number">0</span>),
+        <span class="ident">signer</span>: <span class="ident">Signer::new</span>(<span class="string">&quot;test&quot;</span>),
+    }
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">connection_open_try_data</span>(
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">msg_connection_open_try</span>(
     <span class="ident">client_id</span>: <span class="ident">ClientId</span>,
     <span class="ident">client_state</span>: <span class="ident">AnyClientState</span>,
-) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">ConnectionOpenTryData</span> {
-    <span class="ident">ConnectionOpenTryData::new</span>(
+) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">MsgConnectionOpenTry</span> {
+    <span class="ident">MsgConnectionOpenTry</span> {
+        <span class="ident">previous_connection_id</span>: <span class="prelude-val">None</span>,
         <span class="ident">client_id</span>,
-        <span class="ident">client_state</span>,
-        <span class="ident">dummy_connection_counterparty</span>(),
-        <span class="macro">vec!</span>[<span class="ident">Version::default</span>()],
-        <span class="ident">Height::new</span>(<span class="number">1</span>, <span class="number">10</span>),
-        <span class="macro">vec!</span>[<span class="number">0</span>].<span class="ident">into</span>(),
-        <span class="macro">vec!</span>[<span class="number">0</span>].<span class="ident">into</span>(),
-        <span class="macro">vec!</span>[<span class="number">0</span>].<span class="ident">into</span>(),
-        <span class="ident">Duration::new</span>(<span class="number">100</span>, <span class="number">0</span>),
-    )
+        <span class="ident">client_state</span>: <span class="prelude-val">Some</span>(<span class="ident">client_state</span>),
+        <span class="ident">counterparty</span>: <span class="ident">dummy_connection_counterparty</span>(),
+        <span class="ident">counterparty_versions</span>: <span class="macro">vec!</span>[<span class="ident">Version::default</span>()],
+        <span class="ident">proofs</span>: <span class="ident">dummy_proofs</span>(),
+        <span class="ident">delay_period</span>: <span class="ident">Duration::new</span>(<span class="number">100</span>, <span class="number">0</span>),
+        <span class="ident">signer</span>: <span class="ident">Signer::new</span>(<span class="string">&quot;test&quot;</span>),
+    }
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">connection_open_ack_data</span>(
-    <span class="ident">conn_id</span>: <span class="ident">ConnectionId</span>,
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">msg_connection_open_ack</span>(
+    <span class="ident">connection_id</span>: <span class="ident">ConnectionId</span>,
     <span class="ident">client_state</span>: <span class="ident">AnyClientState</span>,
-) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">ConnectionOpenAckData</span> {
-    <span class="kw">let</span> <span class="ident">counterparty_id</span> <span class="op">=</span> <span class="ident">ConnectionId::from_str</span>(<span class="string">&quot;counterpart_test_connection&quot;</span>)
-        .<span class="ident">expect</span>(<span class="string">&quot;Creating a connection ID failed&quot;</span>);
-    <span class="ident">ConnectionOpenAckData::new</span>(
-        <span class="ident">conn_id</span>,
-        <span class="ident">counterparty_id</span>,
-        <span class="ident">client_state</span>,
-        <span class="ident">Height::new</span>(<span class="number">1</span>, <span class="number">10</span>),
-        <span class="macro">vec!</span>[<span class="number">0</span>].<span class="ident">into</span>(),
-        <span class="macro">vec!</span>[<span class="number">0</span>].<span class="ident">into</span>(),
-        <span class="macro">vec!</span>[<span class="number">0</span>].<span class="ident">into</span>(),
-        <span class="ident">Version::default</span>(),
-    )
+) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">MsgConnectionOpenAck</span> {
+    <span class="kw">let</span> <span class="ident">counterparty_connection_id</span> <span class="op">=</span>
+        <span class="ident">ConnectionId::from_str</span>(<span class="string">&quot;counterpart_test_connection&quot;</span>)
+            .<span class="ident">expect</span>(<span class="string">&quot;Creating a connection ID failed&quot;</span>);
+    <span class="ident">MsgConnectionOpenAck</span> {
+        <span class="ident">connection_id</span>,
+        <span class="ident">counterparty_connection_id</span>,
+        <span class="ident">client_state</span>: <span class="prelude-val">Some</span>(<span class="ident">client_state</span>),
+        <span class="ident">proofs</span>: <span class="ident">dummy_proofs</span>(),
+        <span class="ident">version</span>: <span class="ident">Version::default</span>(),
+        <span class="ident">signer</span>: <span class="ident">Signer::new</span>(<span class="string">&quot;test&quot;</span>),
+    }
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">connection_open_confirm_data</span>(
-    <span class="ident">conn_id</span>: <span class="ident">ConnectionId</span>,
-) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">ConnectionOpenConfirmData</span> {
-    <span class="ident">ConnectionOpenConfirmData::new</span>(
-        <span class="ident">conn_id</span>,
-        <span class="ident">Height::new</span>(<span class="number">1</span>, <span class="number">10</span>),
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">msg_connection_open_confirm</span>(
+    <span class="ident">connection_id</span>: <span class="ident">ConnectionId</span>,
+) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">MsgConnectionOpenConfirm</span> {
+    <span class="ident">MsgConnectionOpenConfirm</span> {
+        <span class="ident">connection_id</span>,
+        <span class="ident">proofs</span>: <span class="ident">dummy_proofs</span>(),
+        <span class="ident">signer</span>: <span class="ident">Signer::new</span>(<span class="string">&quot;test&quot;</span>),
+    }
+}
+
+<span class="kw">fn</span> <span class="ident">dummy_proofs</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Proofs</span> {
+    <span class="kw">let</span> <span class="ident">height</span> <span class="op">=</span> <span class="ident">Height::new</span>(<span class="number">1</span>, <span class="number">10</span>);
+    <span class="kw">let</span> <span class="ident">consensus_proof</span> <span class="op">=</span> <span class="ident">ConsensusProof::new</span>(<span class="macro">vec!</span>[<span class="number">0</span>].<span class="ident">into</span>(), <span class="ident">height</span>).<span class="ident">unwrap</span>();
+    <span class="ident">Proofs::new</span>(
         <span class="macro">vec!</span>[<span class="number">0</span>].<span class="ident">into</span>(),
-        <span class="macro">vec!</span>[<span class="number">0</span>].<span class="ident">into</span>(),
-        <span class="macro">vec!</span>[<span class="number">0</span>].<span class="ident">into</span>(),
+        <span class="prelude-val">Some</span>(<span class="macro">vec!</span>[<span class="number">0</span>].<span class="ident">into</span>()),
+        <span class="prelude-val">Some</span>(<span class="ident">consensus_proof</span>),
+        <span class="prelude-val">None</span>,
+        <span class="ident">height</span>,
     )
+    .<span class="ident">unwrap</span>()
 }
 
 <span class="kw">fn</span> <span class="ident">dummy_connection_counterparty</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">ConnCounterparty</span> {
@@ -876,85 +1109,94 @@
     <span class="ident">connection_counterparty</span>(<span class="ident">counterpart_client_id</span>, <span class="ident">counterpart_conn_id</span>)
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">channel_open_init_data</span>(
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">msg_channel_open_init</span>(
     <span class="ident">port_id</span>: <span class="ident">PortId</span>,
     <span class="ident">conn_id</span>: <span class="ident">ConnectionId</span>,
-) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">ChannelOpenInitData</span> {
-    <span class="ident">ChannelOpenInitData::new</span>(
+) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">MsgChannelOpenInit</span> {
+    <span class="ident">MsgChannelOpenInit</span> {
         <span class="ident">port_id</span>,
-        <span class="ident">Order::Ordered</span>,
-        <span class="ident">dummy_channel_counterparty</span>(),
-        <span class="macro">vec!</span>[<span class="ident">conn_id</span>],
-        <span class="ident">Order::Ordered</span>.<span class="ident">to_string</span>(),
-    )
+        <span class="ident">channel</span>: <span class="ident">dummy_channel</span>(<span class="ident">ChanState::Init</span>, <span class="ident">Order::Ordered</span>, <span class="ident">conn_id</span>),
+        <span class="ident">signer</span>: <span class="ident">Signer::new</span>(<span class="string">&quot;test&quot;</span>),
+    }
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">channel_open_try_data</span>(
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">msg_channel_open_try</span>(
     <span class="ident">port_id</span>: <span class="ident">PortId</span>,
     <span class="ident">conn_id</span>: <span class="ident">ConnectionId</span>,
-) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">ChannelOpenTryData</span> {
-    <span class="ident">ChannelOpenTryData::new</span>(
+) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">MsgChannelOpenTry</span> {
+    <span class="ident">MsgChannelOpenTry</span> {
         <span class="ident">port_id</span>,
-        <span class="ident">Order::Ordered</span>,
+        <span class="ident">previous_channel_id</span>: <span class="prelude-val">None</span>,
+        <span class="ident">channel</span>: <span class="ident">dummy_channel</span>(<span class="ident">ChanState::TryOpen</span>, <span class="ident">Order::Ordered</span>, <span class="ident">conn_id</span>),
+        <span class="ident">counterparty_version</span>: <span class="ident">Order::Ordered</span>.<span class="ident">to_string</span>(),
+        <span class="ident">proofs</span>: <span class="ident">dummy_proofs</span>(),
+        <span class="ident">signer</span>: <span class="ident">Signer::new</span>(<span class="string">&quot;test&quot;</span>),
+    }
+}
+
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">msg_channel_open_ack</span>(
+    <span class="ident">port_id</span>: <span class="ident">PortId</span>,
+    <span class="ident">channel_id</span>: <span class="ident">ChannelId</span>,
+) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">MsgChannelOpenAck</span> {
+    <span class="ident">MsgChannelOpenAck</span> {
+        <span class="ident">port_id</span>,
+        <span class="ident">channel_id</span>,
+        <span class="ident">counterparty_channel_id</span>: <span class="ident">dummy_channel_counterparty</span>()
+            .<span class="ident">channel_id</span>()
+            .<span class="ident">unwrap</span>()
+            .<span class="ident">clone</span>(),
+        <span class="ident">counterparty_version</span>: <span class="ident">Order::Ordered</span>.<span class="ident">to_string</span>(),
+        <span class="ident">proofs</span>: <span class="ident">dummy_proofs</span>(),
+        <span class="ident">signer</span>: <span class="ident">Signer::new</span>(<span class="string">&quot;test&quot;</span>),
+    }
+}
+
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">msg_channel_open_confirm</span>(
+    <span class="ident">port_id</span>: <span class="ident">PortId</span>,
+    <span class="ident">channel_id</span>: <span class="ident">ChannelId</span>,
+) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">MsgChannelOpenConfirm</span> {
+    <span class="ident">MsgChannelOpenConfirm</span> {
+        <span class="ident">port_id</span>,
+        <span class="ident">channel_id</span>,
+        <span class="ident">proofs</span>: <span class="ident">dummy_proofs</span>(),
+        <span class="ident">signer</span>: <span class="ident">Signer::new</span>(<span class="string">&quot;test&quot;</span>),
+    }
+}
+
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">msg_channel_close_init</span>(
+    <span class="ident">port_id</span>: <span class="ident">PortId</span>,
+    <span class="ident">channel_id</span>: <span class="ident">ChannelId</span>,
+) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">MsgChannelCloseInit</span> {
+    <span class="ident">MsgChannelCloseInit</span> {
+        <span class="ident">port_id</span>,
+        <span class="ident">channel_id</span>,
+        <span class="ident">signer</span>: <span class="ident">Signer::new</span>(<span class="string">&quot;test&quot;</span>),
+    }
+}
+
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">msg_channel_close_confirm</span>(
+    <span class="ident">port_id</span>: <span class="ident">PortId</span>,
+    <span class="ident">channel_id</span>: <span class="ident">ChannelId</span>,
+) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">MsgChannelCloseConfirm</span> {
+    <span class="ident">MsgChannelCloseConfirm</span> {
+        <span class="ident">port_id</span>,
+        <span class="ident">channel_id</span>,
+        <span class="ident">proofs</span>: <span class="ident">dummy_proofs</span>(),
+        <span class="ident">signer</span>: <span class="ident">Signer::new</span>(<span class="string">&quot;test&quot;</span>),
+    }
+}
+
+<span class="kw">fn</span> <span class="ident">dummy_channel</span>(
+    <span class="ident">state</span>: <span class="ident">ChanState</span>,
+    <span class="ident">order</span>: <span class="ident">Order</span>,
+    <span class="ident">connection_id</span>: <span class="ident">ConnectionId</span>,
+) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">ChannelEnd</span> {
+    <span class="ident">ChannelEnd::new</span>(
+        <span class="ident">state</span>,
+        <span class="ident">order</span>,
         <span class="ident">dummy_channel_counterparty</span>(),
-        <span class="macro">vec!</span>[<span class="ident">conn_id</span>],
-        <span class="ident">Order::Ordered</span>.<span class="ident">to_string</span>(),
-        <span class="ident">Order::Ordered</span>.<span class="ident">to_string</span>(),
-        <span class="ident">Height::new</span>(<span class="number">1</span>, <span class="number">10</span>),
-        <span class="macro">vec!</span>[<span class="number">0</span>].<span class="ident">into</span>(),
-        <span class="macro">vec!</span>[<span class="number">0</span>].<span class="ident">into</span>(),
-        <span class="macro">vec!</span>[<span class="number">0</span>].<span class="ident">into</span>(),
-    )
-}
-
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">channel_open_ack_data</span>(
-    <span class="ident">port_id</span>: <span class="ident">PortId</span>,
-    <span class="ident">channel_id</span>: <span class="ident">ChannelId</span>,
-) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">ChannelOpenAckData</span> {
-    <span class="ident">ChannelOpenAckData::new</span>(
-        <span class="ident">port_id</span>,
-        <span class="ident">channel_id</span>,
-        <span class="ident">dummy_channel_counterparty</span>().<span class="ident">channel_id</span>().<span class="ident">unwrap</span>().<span class="ident">clone</span>(),
-        <span class="ident">Order::Ordered</span>.<span class="ident">to_string</span>(),
-        <span class="ident">Height::new</span>(<span class="number">1</span>, <span class="number">10</span>),
-        <span class="macro">vec!</span>[<span class="number">0</span>].<span class="ident">into</span>(),
-        <span class="macro">vec!</span>[<span class="number">0</span>].<span class="ident">into</span>(),
-        <span class="macro">vec!</span>[<span class="number">0</span>].<span class="ident">into</span>(),
-    )
-}
-
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">channel_open_confirm_data</span>(
-    <span class="ident">port_id</span>: <span class="ident">PortId</span>,
-    <span class="ident">channel_id</span>: <span class="ident">ChannelId</span>,
-) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">ChannelOpenConfirmData</span> {
-    <span class="ident">ChannelOpenConfirmData::new</span>(
-        <span class="ident">port_id</span>,
-        <span class="ident">channel_id</span>,
-        <span class="ident">Height::new</span>(<span class="number">1</span>, <span class="number">10</span>),
-        <span class="macro">vec!</span>[<span class="number">0</span>].<span class="ident">into</span>(),
-        <span class="macro">vec!</span>[<span class="number">0</span>].<span class="ident">into</span>(),
-        <span class="macro">vec!</span>[<span class="number">0</span>].<span class="ident">into</span>(),
-    )
-}
-
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">channel_close_init_data</span>(
-    <span class="ident">port_id</span>: <span class="ident">PortId</span>,
-    <span class="ident">channel_id</span>: <span class="ident">ChannelId</span>,
-) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">ChannelCloseInitData</span> {
-    <span class="ident">ChannelCloseInitData::new</span>(<span class="ident">port_id</span>, <span class="ident">channel_id</span>)
-}
-
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">channel_close_confirm_data</span>(
-    <span class="ident">port_id</span>: <span class="ident">PortId</span>,
-    <span class="ident">channel_id</span>: <span class="ident">ChannelId</span>,
-) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">ChannelCloseConfirmData</span> {
-    <span class="ident">ChannelCloseConfirmData::new</span>(
-        <span class="ident">port_id</span>,
-        <span class="ident">channel_id</span>,
-        <span class="ident">Height::new</span>(<span class="number">1</span>, <span class="number">10</span>),
-        <span class="macro">vec!</span>[<span class="number">0</span>].<span class="ident">into</span>(),
-        <span class="macro">vec!</span>[<span class="number">0</span>].<span class="ident">into</span>(),
-        <span class="macro">vec!</span>[<span class="number">0</span>].<span class="ident">into</span>(),
+        <span class="macro">vec!</span>[<span class="ident">connection_id</span>],
+        <span class="ident">order</span>.<span class="ident">to_string</span>(),
     )
 }
 
@@ -993,12 +1235,21 @@
     <span class="ident">data</span>.<span class="ident">timeout_height</span> <span class="op">=</span> <span class="ident">Height::new</span>(<span class="number">1</span>, <span class="number">1</span>);
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">packet_receipt_data</span>(<span class="ident">packet</span>: <span class="ident">Packet</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">PacketReceiptData</span> {
-    <span class="ident">PacketReceiptData::new</span>(<span class="ident">packet</span>, <span class="ident">Height::new</span>(<span class="number">1</span>, <span class="number">10</span>), <span class="macro">vec!</span>[<span class="number">0</span>].<span class="ident">into</span>())
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">msg_packet_recv</span>(<span class="ident">packet</span>: <span class="ident">Packet</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">MsgRecvPacket</span> {
+    <span class="ident">MsgRecvPacket</span> {
+        <span class="ident">packet</span>,
+        <span class="ident">proofs</span>: <span class="ident">dummy_proofs</span>(),
+        <span class="ident">signer</span>: <span class="ident">Signer::new</span>(<span class="string">&quot;test&quot;</span>),
+    }
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">packet_ack_data</span>(<span class="ident">packet</span>: <span class="ident">Packet</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">PacketAckData</span> {
-    <span class="ident">PacketAckData::new</span>(<span class="ident">packet</span>, <span class="macro">vec!</span>[<span class="number">0</span>], <span class="ident">Height::new</span>(<span class="number">1</span>, <span class="number">10</span>), <span class="macro">vec!</span>[<span class="number">0</span>].<span class="ident">into</span>())
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">msg_packet_ack</span>(<span class="ident">packet</span>: <span class="ident">Packet</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">MsgAcknowledgement</span> {
+    <span class="ident">MsgAcknowledgement</span> {
+        <span class="ident">packet</span>,
+        <span class="ident">acknowledgement</span>: <span class="macro">vec!</span>[<span class="number">0</span>],
+        <span class="ident">proofs</span>: <span class="ident">dummy_proofs</span>(),
+        <span class="ident">signer</span>: <span class="ident">Signer::new</span>(<span class="string">&quot;test&quot;</span>),
+    }
 }
 
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">received_packet</span>(
@@ -1021,8 +1272,25 @@
     }
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">timeout_data</span>(<span class="ident">packet</span>: <span class="ident">Packet</span>, <span class="ident">next_seq_recv</span>: <span class="ident">Sequence</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">TimeoutData</span> {
-    <span class="ident">TimeoutData::new</span>(<span class="ident">packet</span>, <span class="ident">next_seq_recv</span>, <span class="ident">Height::new</span>(<span class="number">1</span>, <span class="number">10</span>), <span class="macro">vec!</span>[<span class="number">0</span>].<span class="ident">into</span>())
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">msg_timeout</span>(<span class="ident">packet</span>: <span class="ident">Packet</span>, <span class="ident">next_sequence_recv</span>: <span class="ident">Sequence</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">MsgTimeout</span> {
+    <span class="ident">MsgTimeout</span> {
+        <span class="ident">packet</span>,
+        <span class="ident">next_sequence_recv</span>,
+        <span class="ident">proofs</span>: <span class="ident">dummy_proofs</span>(),
+        <span class="ident">signer</span>: <span class="ident">Signer::new</span>(<span class="string">&quot;test&quot;</span>),
+    }
+}
+
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">msg_timeout_on_close</span>(
+    <span class="ident">packet</span>: <span class="ident">Packet</span>,
+    <span class="ident">next_sequence_recv</span>: <span class="ident">Sequence</span>,
+) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">MsgTimeoutOnClose</span> {
+    <span class="ident">MsgTimeoutOnClose</span> {
+        <span class="ident">packet</span>,
+        <span class="ident">next_sequence_recv</span>,
+        <span class="ident">proofs</span>: <span class="ident">dummy_proofs</span>(),
+        <span class="ident">signer</span>: <span class="ident">Signer::new</span>(<span class="string">&quot;test&quot;</span>),
+    }
 }
 </code></pre></div>
 </section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="anoma_tests" data-search-index-js="../../../search-index.js" data-search-js="../../../search.js"></div>

@@ -475,6 +475,73 @@
 <span id="475">475</span>
 <span id="476">476</span>
 <span id="477">477</span>
+<span id="478">478</span>
+<span id="479">479</span>
+<span id="480">480</span>
+<span id="481">481</span>
+<span id="482">482</span>
+<span id="483">483</span>
+<span id="484">484</span>
+<span id="485">485</span>
+<span id="486">486</span>
+<span id="487">487</span>
+<span id="488">488</span>
+<span id="489">489</span>
+<span id="490">490</span>
+<span id="491">491</span>
+<span id="492">492</span>
+<span id="493">493</span>
+<span id="494">494</span>
+<span id="495">495</span>
+<span id="496">496</span>
+<span id="497">497</span>
+<span id="498">498</span>
+<span id="499">499</span>
+<span id="500">500</span>
+<span id="501">501</span>
+<span id="502">502</span>
+<span id="503">503</span>
+<span id="504">504</span>
+<span id="505">505</span>
+<span id="506">506</span>
+<span id="507">507</span>
+<span id="508">508</span>
+<span id="509">509</span>
+<span id="510">510</span>
+<span id="511">511</span>
+<span id="512">512</span>
+<span id="513">513</span>
+<span id="514">514</span>
+<span id="515">515</span>
+<span id="516">516</span>
+<span id="517">517</span>
+<span id="518">518</span>
+<span id="519">519</span>
+<span id="520">520</span>
+<span id="521">521</span>
+<span id="522">522</span>
+<span id="523">523</span>
+<span id="524">524</span>
+<span id="525">525</span>
+<span id="526">526</span>
+<span id="527">527</span>
+<span id="528">528</span>
+<span id="529">529</span>
+<span id="530">530</span>
+<span id="531">531</span>
+<span id="532">532</span>
+<span id="533">533</span>
+<span id="534">534</span>
+<span id="535">535</span>
+<span id="536">536</span>
+<span id="537">537</span>
+<span id="538">538</span>
+<span id="539">539</span>
+<span id="540">540</span>
+<span id="541">541</span>
+<span id="542">542</span>
+<span id="543">543</span>
+<span id="544">544</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Functions to handle IBC modules</span>
 
 <span class="kw">use</span> <span class="ident">std::str::FromStr</span>;
@@ -499,6 +566,12 @@
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
 <span class="kw">use</span> <span class="ident">ibc::core::ics02_client::height::Height</span>;
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
+<span class="kw">use</span> <span class="ident">ibc::core::ics02_client::msgs::create_client::MsgCreateAnyClient</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
+<span class="kw">use</span> <span class="ident">ibc::core::ics02_client::msgs::update_client::MsgUpdateAnyClient</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
+<span class="kw">use</span> <span class="ident">ibc::core::ics02_client::msgs::upgrade_client::MsgUpgradeAnyClient</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
 <span class="kw">use</span> <span class="ident">ibc::core::ics03_connection::connection</span>::{
     <span class="ident">ConnectionEnd</span>, <span class="ident">Counterparty</span> <span class="kw">as</span> <span class="ident">ConnCounterparty</span>, <span class="ident">State</span> <span class="kw">as</span> <span class="ident">ConnState</span>,
 };
@@ -508,6 +581,14 @@
     <span class="ident">OpenConfirm</span> <span class="kw">as</span> <span class="ident">ConnOpenConfirm</span>, <span class="ident">OpenInit</span> <span class="kw">as</span> <span class="ident">ConnOpenInit</span>,
     <span class="ident">OpenTry</span> <span class="kw">as</span> <span class="ident">ConnOpenTry</span>,
 };
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
+<span class="kw">use</span> <span class="ident">ibc::core::ics03_connection::msgs::conn_open_ack::MsgConnectionOpenAck</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
+<span class="kw">use</span> <span class="ident">ibc::core::ics03_connection::msgs::conn_open_confirm::MsgConnectionOpenConfirm</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
+<span class="kw">use</span> <span class="ident">ibc::core::ics03_connection::msgs::conn_open_init::MsgConnectionOpenInit</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
+<span class="kw">use</span> <span class="ident">ibc::core::ics03_connection::msgs::conn_open_try::MsgConnectionOpenTry</span>;
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
 <span class="kw">use</span> <span class="ident">ibc::core::ics04_channel::channel</span>::{
     <span class="ident">ChannelEnd</span>, <span class="ident">Counterparty</span> <span class="kw">as</span> <span class="ident">ChanCounterparty</span>, <span class="ident">State</span> <span class="kw">as</span> <span class="ident">ChanState</span>,
@@ -520,6 +601,18 @@
     <span class="ident">OpenInit</span> <span class="kw">as</span> <span class="ident">ChanOpenInit</span>, <span class="ident">OpenTry</span> <span class="kw">as</span> <span class="ident">ChanOpenTry</span>, <span class="ident">SendPacket</span>,
     <span class="ident">TimeoutPacket</span>, <span class="ident">WriteAcknowledgement</span>,
 };
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
+<span class="kw">use</span> <span class="ident">ibc::core::ics04_channel::msgs::chan_close_confirm::MsgChannelCloseConfirm</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
+<span class="kw">use</span> <span class="ident">ibc::core::ics04_channel::msgs::chan_close_init::MsgChannelCloseInit</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
+<span class="kw">use</span> <span class="ident">ibc::core::ics04_channel::msgs::chan_open_ack::MsgChannelOpenAck</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
+<span class="kw">use</span> <span class="ident">ibc::core::ics04_channel::msgs::chan_open_confirm::MsgChannelOpenConfirm</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
+<span class="kw">use</span> <span class="ident">ibc::core::ics04_channel::msgs::chan_open_init::MsgChannelOpenInit</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
+<span class="kw">use</span> <span class="ident">ibc::core::ics04_channel::msgs::chan_open_try::MsgChannelOpenTry</span>;
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
 <span class="kw">use</span> <span class="ident">ibc::core::ics04_channel::packet</span>::{<span class="ident">Packet</span>, <span class="ident">Sequence</span>};
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
@@ -553,6 +646,12 @@
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
 <span class="kw">use</span> <span class="ident">ibc_abci::core::ics02_client::height::Height</span>;
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
+<span class="kw">use</span> <span class="ident">ibc_abci::core::ics02_client::msgs::create_client::MsgCreateAnyClient</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
+<span class="kw">use</span> <span class="ident">ibc_abci::core::ics02_client::msgs::update_client::MsgUpdateAnyClient</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
+<span class="kw">use</span> <span class="ident">ibc_abci::core::ics02_client::msgs::upgrade_client::MsgUpgradeAnyClient</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
 <span class="kw">use</span> <span class="ident">ibc_abci::core::ics03_connection::connection</span>::{
     <span class="ident">ConnectionEnd</span>, <span class="ident">Counterparty</span> <span class="kw">as</span> <span class="ident">ConnCounterparty</span>, <span class="ident">State</span> <span class="kw">as</span> <span class="ident">ConnState</span>,
 };
@@ -562,6 +661,14 @@
     <span class="ident">OpenConfirm</span> <span class="kw">as</span> <span class="ident">ConnOpenConfirm</span>, <span class="ident">OpenInit</span> <span class="kw">as</span> <span class="ident">ConnOpenInit</span>,
     <span class="ident">OpenTry</span> <span class="kw">as</span> <span class="ident">ConnOpenTry</span>,
 };
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
+<span class="kw">use</span> <span class="ident">ibc_abci::core::ics03_connection::msgs::conn_open_ack::MsgConnectionOpenAck</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
+<span class="kw">use</span> <span class="ident">ibc_abci::core::ics03_connection::msgs::conn_open_confirm::MsgConnectionOpenConfirm</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
+<span class="kw">use</span> <span class="ident">ibc_abci::core::ics03_connection::msgs::conn_open_init::MsgConnectionOpenInit</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
+<span class="kw">use</span> <span class="ident">ibc_abci::core::ics03_connection::msgs::conn_open_try::MsgConnectionOpenTry</span>;
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
 <span class="kw">use</span> <span class="ident">ibc_abci::core::ics04_channel::channel</span>::{
     <span class="ident">ChannelEnd</span>, <span class="ident">Counterparty</span> <span class="kw">as</span> <span class="ident">ChanCounterparty</span>, <span class="ident">State</span> <span class="kw">as</span> <span class="ident">ChanState</span>,
@@ -574,6 +681,18 @@
     <span class="ident">OpenInit</span> <span class="kw">as</span> <span class="ident">ChanOpenInit</span>, <span class="ident">OpenTry</span> <span class="kw">as</span> <span class="ident">ChanOpenTry</span>, <span class="ident">SendPacket</span>,
     <span class="ident">TimeoutPacket</span>, <span class="ident">WriteAcknowledgement</span>,
 };
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
+<span class="kw">use</span> <span class="ident">ibc_abci::core::ics04_channel::msgs::chan_close_confirm::MsgChannelCloseConfirm</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
+<span class="kw">use</span> <span class="ident">ibc_abci::core::ics04_channel::msgs::chan_close_init::MsgChannelCloseInit</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
+<span class="kw">use</span> <span class="ident">ibc_abci::core::ics04_channel::msgs::chan_open_ack::MsgChannelOpenAck</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
+<span class="kw">use</span> <span class="ident">ibc_abci::core::ics04_channel::msgs::chan_open_confirm::MsgChannelOpenConfirm</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
+<span class="kw">use</span> <span class="ident">ibc_abci::core::ics04_channel::msgs::chan_open_init::MsgChannelOpenInit</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
+<span class="kw">use</span> <span class="ident">ibc_abci::core::ics04_channel::msgs::chan_open_try::MsgChannelOpenTry</span>;
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
 <span class="kw">use</span> <span class="ident">ibc_abci::core::ics04_channel::packet</span>::{<span class="ident">Packet</span>, <span class="ident">Sequence</span>};
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
@@ -592,12 +711,13 @@
 <span class="kw">use</span> <span class="ident">thiserror::Error</span>;
 
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::types::address</span>::{<span class="ident">Address</span>, <span class="ident">InternalAddress</span>};
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::types::ibc::data</span>::<span class="kw-2">*</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::types::storage::KeySeg</span>;
 
 <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">missing_docs</span>)]</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Error</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">Error</span> {
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Invalid client error: {0}&quot;</span>)]</span>
+    <span class="ident">ClientId</span>(<span class="ident">Ics24Error</span>),
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Invalid port error: {0}&quot;</span>)]</span>
     <span class="ident">PortId</span>(<span class="ident">Ics24Error</span>),
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Updating a client error: {0}&quot;</span>)]</span>
@@ -610,39 +730,23 @@
 <span class="doccomment">/// Update a client with the given state and headers</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">update_client</span>(
     <span class="ident">client_state</span>: <span class="ident">AnyClientState</span>,
-    <span class="ident">headers</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">AnyHeader</span><span class="op">&gt;</span>,
+    <span class="ident">header</span>: <span class="ident">AnyHeader</span>,
 ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="ident">AnyClientState</span>, <span class="ident">AnyConsensusState</span>)<span class="op">&gt;</span> {
-    <span class="kw">if</span> <span class="ident">headers</span>.<span class="ident">is_empty</span>() {
-        <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error::ClientUpdate</span>(<span class="string">&quot;No header is given&quot;</span>.<span class="ident">to_owned</span>()));
-    }
     <span class="kw">match</span> <span class="ident">client_state</span> {
-        <span class="ident">AnyClientState::Tendermint</span>(<span class="ident">cs</span>) <span class="op">=</span><span class="op">&gt;</span> {
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">new_client_state</span> <span class="op">=</span> <span class="ident">cs</span>;
-            <span class="kw">for</span> <span class="ident">header</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="ident">headers</span> {
-                <span class="kw">let</span> <span class="ident">h</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">header</span> {
-                    <span class="ident">AnyHeader::Tendermint</span>(<span class="ident">h</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">h</span>,
-                    <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> {
-                        <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error::ClientUpdate</span>(
-                            <span class="string">&quot;The header type is mismatched&quot;</span>.<span class="ident">to_owned</span>(),
-                        ));
-                    }
-                };
-                <span class="ident">new_client_state</span> <span class="op">=</span> <span class="ident">new_client_state</span>.<span class="ident">with_header</span>(<span class="ident">h</span>.<span class="ident">clone</span>());
+        <span class="ident">AnyClientState::Tendermint</span>(<span class="ident">cs</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="ident">header</span> {
+            <span class="ident">AnyHeader::Tendermint</span>(<span class="ident">h</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="kw">let</span> <span class="ident">new_client_state</span> <span class="op">=</span> <span class="ident">cs</span>.<span class="ident">with_header</span>(<span class="ident">h</span>.<span class="ident">clone</span>()).<span class="ident">wrap_any</span>();
+                <span class="kw">let</span> <span class="ident">new_consensus_state</span> <span class="op">=</span> <span class="ident">TmConsensusState::from</span>(<span class="ident">h</span>).<span class="ident">wrap_any</span>();
+                <span class="prelude-val">Ok</span>((<span class="ident">new_client_state</span>, <span class="ident">new_consensus_state</span>))
             }
-            <span class="kw">let</span> <span class="ident">consensus_state</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">headers</span>.<span class="ident">last</span>().<span class="ident">unwrap</span>() {
-                <span class="ident">AnyHeader::Tendermint</span>(<span class="ident">h</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">TmConsensusState::from</span>(<span class="ident">h</span>.<span class="ident">clone</span>()),
-                <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> {
-                    <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error::ClientUpdate</span>(
-                        <span class="string">&quot;The header type is mismatched&quot;</span>.<span class="ident">to_owned</span>(),
-                    ));
-                }
-            };
-            <span class="prelude-val">Ok</span>((<span class="ident">new_client_state</span>.<span class="ident">wrap_any</span>(), <span class="ident">consensus_state</span>.<span class="ident">wrap_any</span>()))
-        }
-        <span class="ident">AnyClientState::Mock</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="ident">headers</span>.<span class="ident">last</span>().<span class="ident">unwrap</span>() {
+            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">Error::ClientUpdate</span>(
+                <span class="string">&quot;The header type is mismatched&quot;</span>.<span class="ident">to_owned</span>(),
+            )),
+        },
+        <span class="ident">AnyClientState::Mock</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="ident">header</span> {
             <span class="ident">AnyHeader::Mock</span>(<span class="ident">h</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>((
-                <span class="ident">MockClientState</span>(<span class="kw-2">*</span><span class="ident">h</span>).<span class="ident">wrap_any</span>(),
-                <span class="ident">MockConsensusState::new</span>(<span class="kw-2">*</span><span class="ident">h</span>).<span class="ident">wrap_any</span>(),
+                <span class="ident">MockClientState</span>(<span class="ident">h</span>).<span class="ident">wrap_any</span>(),
+                <span class="ident">MockConsensusState::new</span>(<span class="ident">h</span>).<span class="ident">wrap_any</span>(),
             )),
             <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">Error::ClientUpdate</span>(
                 <span class="string">&quot;The header type is mismatched&quot;</span>.<span class="ident">to_owned</span>(),
@@ -651,9 +755,36 @@
     }
 }
 
+<span class="doccomment">/// Returns a new client ID</span>
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">client_id</span>(<span class="ident">client_type</span>: <span class="ident">ClientType</span>, <span class="ident">counter</span>: <span class="ident">u64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ClientId</span><span class="op">&gt;</span> {
+    <span class="ident">ClientId::new</span>(<span class="ident">client_type</span>, <span class="ident">counter</span>).<span class="ident">map_err</span>(<span class="ident">Error::ClientId</span>)
+}
+
 <span class="doccomment">/// Returns a new connection ID</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">connection_id</span>(<span class="ident">counter</span>: <span class="ident">u64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">ConnectionId</span> {
     <span class="ident">ConnectionId::new</span>(<span class="ident">counter</span>)
+}
+
+<span class="doccomment">/// Make a connection end from the init message</span>
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">init_connection</span>(<span class="ident">msg</span>: <span class="kw-2">&amp;</span><span class="ident">MsgConnectionOpenInit</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">ConnectionEnd</span> {
+    <span class="ident">ConnectionEnd::new</span>(
+        <span class="ident">ConnState::Init</span>,
+        <span class="ident">msg</span>.<span class="ident">client_id</span>.<span class="ident">clone</span>(),
+        <span class="ident">msg</span>.<span class="ident">counterparty</span>.<span class="ident">clone</span>(),
+        <span class="macro">vec!</span>[<span class="ident">msg</span>.<span class="ident">version</span>.<span class="ident">clone</span>()],
+        <span class="ident">msg</span>.<span class="ident">delay_period</span>,
+    )
+}
+
+<span class="doccomment">/// Make a connection end from the try message</span>
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">try_connection</span>(<span class="ident">msg</span>: <span class="kw-2">&amp;</span><span class="ident">MsgConnectionOpenTry</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">ConnectionEnd</span> {
+    <span class="ident">ConnectionEnd::new</span>(
+        <span class="ident">ConnState::TryOpen</span>,
+        <span class="ident">msg</span>.<span class="ident">client_id</span>.<span class="ident">clone</span>(),
+        <span class="ident">msg</span>.<span class="ident">counterparty</span>.<span class="ident">clone</span>(),
+        <span class="ident">msg</span>.<span class="ident">counterparty_versions</span>.<span class="ident">clone</span>(),
+        <span class="ident">msg</span>.<span class="ident">delay_period</span>,
+    )
 }
 
 <span class="doccomment">/// Open the connection</span>
@@ -735,12 +866,12 @@
 <span class="doccomment">/// Makes CreateClient event</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">make_create_client_event</span>(
     <span class="ident">client_id</span>: <span class="kw-2">&amp;</span><span class="ident">ClientId</span>,
-    <span class="ident">data</span>: <span class="kw-2">&amp;</span><span class="ident">ClientCreationData</span>,
+    <span class="ident">msg</span>: <span class="kw-2">&amp;</span><span class="ident">MsgCreateAnyClient</span>,
 ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">IbcEvent</span> {
     <span class="kw">let</span> <span class="ident">attributes</span> <span class="op">=</span> <span class="ident">ClientAttributes</span> {
         <span class="ident">client_id</span>: <span class="ident">client_id</span>.<span class="ident">clone</span>(),
-        <span class="ident">client_type</span>: <span class="ident">data</span>.<span class="ident">client_state</span>.<span class="ident">client_type</span>(),
-        <span class="ident">consensus_height</span>: <span class="ident">data</span>.<span class="ident">client_state</span>.<span class="ident">latest_height</span>(),
+        <span class="ident">client_type</span>: <span class="ident">msg</span>.<span class="ident">client_state</span>.<span class="ident">client_type</span>(),
+        <span class="ident">consensus_height</span>: <span class="ident">msg</span>.<span class="ident">client_state</span>.<span class="ident">latest_height</span>(),
         ..<span class="ident">Default::default</span>()
     };
     <span class="ident">IbcEvent::CreateClient</span>(<span class="ident">CreateClient::from</span>(<span class="ident">attributes</span>))
@@ -749,17 +880,12 @@
 <span class="doccomment">/// Makes UpdateClient event</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">make_update_client_event</span>(
     <span class="ident">client_id</span>: <span class="kw-2">&amp;</span><span class="ident">ClientId</span>,
-    <span class="ident">data</span>: <span class="kw-2">&amp;</span><span class="ident">ClientUpdateData</span>,
+    <span class="ident">msg</span>: <span class="kw-2">&amp;</span><span class="ident">MsgUpdateAnyClient</span>,
 ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">IbcEvent</span> {
-    <span class="kw">let</span> (<span class="ident">client_type</span>, <span class="ident">consensus_height</span>) <span class="op">=</span> <span class="kw">match</span> <span class="ident">data</span>.<span class="ident">headers</span>.<span class="ident">last</span>() {
-        <span class="prelude-val">Some</span>(<span class="ident">header</span>) <span class="op">=</span><span class="op">&gt;</span> (<span class="ident">header</span>.<span class="ident">client_type</span>(), <span class="ident">header</span>.<span class="ident">height</span>()),
-        <span class="comment">// set default values</span>
-        <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> (<span class="ident">ClientType::Tendermint</span>, <span class="ident">Height::default</span>()),
-    };
     <span class="kw">let</span> <span class="ident">attributes</span> <span class="op">=</span> <span class="ident">ClientAttributes</span> {
         <span class="ident">client_id</span>: <span class="ident">client_id</span>.<span class="ident">clone</span>(),
-        <span class="ident">client_type</span>,
-        <span class="ident">consensus_height</span>,
+        <span class="ident">client_type</span>: <span class="ident">msg</span>.<span class="ident">header</span>.<span class="ident">client_type</span>(),
+        <span class="ident">consensus_height</span>: <span class="ident">msg</span>.<span class="ident">header</span>.<span class="ident">height</span>(),
         ..<span class="ident">Default::default</span>()
     };
     <span class="ident">IbcEvent::UpdateClient</span>(<span class="ident">UpdateClient::from</span>(<span class="ident">attributes</span>))
@@ -768,12 +894,12 @@
 <span class="doccomment">/// Makes UpgradeClient event</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">make_upgrade_client_event</span>(
     <span class="ident">client_id</span>: <span class="kw-2">&amp;</span><span class="ident">ClientId</span>,
-    <span class="ident">data</span>: <span class="kw-2">&amp;</span><span class="ident">ClientUpgradeData</span>,
+    <span class="ident">msg</span>: <span class="kw-2">&amp;</span><span class="ident">MsgUpgradeAnyClient</span>,
 ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">IbcEvent</span> {
     <span class="kw">let</span> <span class="ident">attributes</span> <span class="op">=</span> <span class="ident">ClientAttributes</span> {
         <span class="ident">client_id</span>: <span class="ident">client_id</span>.<span class="ident">clone</span>(),
-        <span class="ident">client_type</span>: <span class="ident">data</span>.<span class="ident">client_state</span>.<span class="ident">client_type</span>(),
-        <span class="ident">consensus_height</span>: <span class="ident">data</span>.<span class="ident">client_state</span>.<span class="ident">latest_height</span>(),
+        <span class="ident">client_type</span>: <span class="ident">msg</span>.<span class="ident">client_state</span>.<span class="ident">client_type</span>(),
+        <span class="ident">consensus_height</span>: <span class="ident">msg</span>.<span class="ident">client_state</span>.<span class="ident">latest_height</span>(),
         ..<span class="ident">Default::default</span>()
     };
     <span class="ident">IbcEvent::UpgradeClient</span>(<span class="ident">UpgradeClient::from</span>(<span class="ident">attributes</span>))
@@ -782,13 +908,13 @@
 <span class="doccomment">/// Makes OpenInitConnection event</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">make_open_init_connection_event</span>(
     <span class="ident">conn_id</span>: <span class="kw-2">&amp;</span><span class="ident">ConnectionId</span>,
-    <span class="ident">data</span>: <span class="kw-2">&amp;</span><span class="ident">ConnectionOpenInitData</span>,
+    <span class="ident">msg</span>: <span class="kw-2">&amp;</span><span class="ident">MsgConnectionOpenInit</span>,
 ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">IbcEvent</span> {
     <span class="kw">let</span> <span class="ident">attributes</span> <span class="op">=</span> <span class="ident">ConnectionAttributes</span> {
         <span class="ident">connection_id</span>: <span class="prelude-val">Some</span>(<span class="ident">conn_id</span>.<span class="ident">clone</span>()),
-        <span class="ident">client_id</span>: <span class="ident">data</span>.<span class="ident">client_id</span>.<span class="ident">clone</span>(),
-        <span class="ident">counterparty_connection_id</span>: <span class="ident">data</span>.<span class="ident">counterparty</span>.<span class="ident">connection_id</span>().<span class="ident">cloned</span>(),
-        <span class="ident">counterparty_client_id</span>: <span class="ident">data</span>.<span class="ident">counterparty</span>.<span class="ident">client_id</span>().<span class="ident">clone</span>(),
+        <span class="ident">client_id</span>: <span class="ident">msg</span>.<span class="ident">client_id</span>.<span class="ident">clone</span>(),
+        <span class="ident">counterparty_connection_id</span>: <span class="ident">msg</span>.<span class="ident">counterparty</span>.<span class="ident">connection_id</span>().<span class="ident">cloned</span>(),
+        <span class="ident">counterparty_client_id</span>: <span class="ident">msg</span>.<span class="ident">counterparty</span>.<span class="ident">client_id</span>().<span class="ident">clone</span>(),
         ..<span class="ident">Default::default</span>()
     };
     <span class="ident">IbcEvent::OpenInitConnection</span>(<span class="ident">ConnOpenInit::from</span>(<span class="ident">attributes</span>))
@@ -797,25 +923,25 @@
 <span class="doccomment">/// Makes OpenTryConnection event</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">make_open_try_connection_event</span>(
     <span class="ident">conn_id</span>: <span class="kw-2">&amp;</span><span class="ident">ConnectionId</span>,
-    <span class="ident">data</span>: <span class="kw-2">&amp;</span><span class="ident">ConnectionOpenTryData</span>,
+    <span class="ident">msg</span>: <span class="kw-2">&amp;</span><span class="ident">MsgConnectionOpenTry</span>,
 ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">IbcEvent</span> {
     <span class="kw">let</span> <span class="ident">attributes</span> <span class="op">=</span> <span class="ident">ConnectionAttributes</span> {
         <span class="ident">connection_id</span>: <span class="prelude-val">Some</span>(<span class="ident">conn_id</span>.<span class="ident">clone</span>()),
-        <span class="ident">client_id</span>: <span class="ident">data</span>.<span class="ident">client_id</span>.<span class="ident">clone</span>(),
-        <span class="ident">counterparty_connection_id</span>: <span class="ident">data</span>.<span class="ident">counterparty</span>.<span class="ident">connection_id</span>().<span class="ident">cloned</span>(),
-        <span class="ident">counterparty_client_id</span>: <span class="ident">data</span>.<span class="ident">counterparty</span>.<span class="ident">client_id</span>().<span class="ident">clone</span>(),
+        <span class="ident">client_id</span>: <span class="ident">msg</span>.<span class="ident">client_id</span>.<span class="ident">clone</span>(),
+        <span class="ident">counterparty_connection_id</span>: <span class="ident">msg</span>.<span class="ident">counterparty</span>.<span class="ident">connection_id</span>().<span class="ident">cloned</span>(),
+        <span class="ident">counterparty_client_id</span>: <span class="ident">msg</span>.<span class="ident">counterparty</span>.<span class="ident">client_id</span>().<span class="ident">clone</span>(),
         ..<span class="ident">Default::default</span>()
     };
     <span class="ident">IbcEvent::OpenTryConnection</span>(<span class="ident">ConnOpenTry::from</span>(<span class="ident">attributes</span>))
 }
 
 <span class="doccomment">/// Makes OpenAckConnection event</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">make_open_ack_connection_event</span>(
-    <span class="ident">data</span>: <span class="kw-2">&amp;</span><span class="ident">ConnectionOpenAckData</span>,
-) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">IbcEvent</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">make_open_ack_connection_event</span>(<span class="ident">msg</span>: <span class="kw-2">&amp;</span><span class="ident">MsgConnectionOpenAck</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">IbcEvent</span> {
     <span class="kw">let</span> <span class="ident">attributes</span> <span class="op">=</span> <span class="ident">ConnectionAttributes</span> {
-        <span class="ident">connection_id</span>: <span class="prelude-val">Some</span>(<span class="ident">data</span>.<span class="ident">conn_id</span>.<span class="ident">clone</span>()),
-        <span class="ident">counterparty_connection_id</span>: <span class="prelude-val">Some</span>(<span class="ident">data</span>.<span class="ident">counterpart_conn_id</span>.<span class="ident">clone</span>()),
+        <span class="ident">connection_id</span>: <span class="prelude-val">Some</span>(<span class="ident">msg</span>.<span class="ident">connection_id</span>.<span class="ident">clone</span>()),
+        <span class="ident">counterparty_connection_id</span>: <span class="prelude-val">Some</span>(
+            <span class="ident">msg</span>.<span class="ident">counterparty_connection_id</span>.<span class="ident">clone</span>(),
+        ),
         ..<span class="ident">Default::default</span>()
     };
     <span class="ident">IbcEvent::OpenAckConnection</span>(<span class="ident">ConnOpenAck::from</span>(<span class="ident">attributes</span>))
@@ -823,10 +949,10 @@
 
 <span class="doccomment">/// Makes OpenConfirmConnection event</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">make_open_confirm_connection_event</span>(
-    <span class="ident">data</span>: <span class="kw-2">&amp;</span><span class="ident">ConnectionOpenConfirmData</span>,
+    <span class="ident">msg</span>: <span class="kw-2">&amp;</span><span class="ident">MsgConnectionOpenConfirm</span>,
 ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">IbcEvent</span> {
     <span class="kw">let</span> <span class="ident">attributes</span> <span class="op">=</span> <span class="ident">ConnectionAttributes</span> {
-        <span class="ident">connection_id</span>: <span class="prelude-val">Some</span>(<span class="ident">data</span>.<span class="ident">conn_id</span>.<span class="ident">clone</span>()),
+        <span class="ident">connection_id</span>: <span class="prelude-val">Some</span>(<span class="ident">msg</span>.<span class="ident">connection_id</span>.<span class="ident">clone</span>()),
         ..<span class="ident">Default::default</span>()
     };
     <span class="ident">IbcEvent::OpenConfirmConnection</span>(<span class="ident">ConnOpenConfirm::from</span>(<span class="ident">attributes</span>))
@@ -835,18 +961,22 @@
 <span class="doccomment">/// Makes OpenInitChannel event</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">make_open_init_channel_event</span>(
     <span class="ident">channel_id</span>: <span class="kw-2">&amp;</span><span class="ident">ChannelId</span>,
-    <span class="ident">data</span>: <span class="kw-2">&amp;</span><span class="ident">ChannelOpenInitData</span>,
+    <span class="ident">msg</span>: <span class="kw-2">&amp;</span><span class="ident">MsgChannelOpenInit</span>,
 ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">IbcEvent</span> {
-    <span class="kw">let</span> <span class="ident">connection_id</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">data</span>.<span class="ident">connection_hops</span>.<span class="ident">get</span>(<span class="number">0</span>) {
+    <span class="kw">let</span> <span class="ident">connection_id</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">msg</span>.<span class="ident">channel</span>.<span class="ident">connection_hops</span>().<span class="ident">get</span>(<span class="number">0</span>) {
         <span class="prelude-val">Some</span>(<span class="ident">c</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">c</span>.<span class="ident">clone</span>(),
         <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ConnectionId::default</span>(),
     };
     <span class="kw">let</span> <span class="ident">attributes</span> <span class="op">=</span> <span class="ident">ChannelAttributes</span> {
-        <span class="ident">port_id</span>: <span class="ident">data</span>.<span class="ident">port_id</span>.<span class="ident">clone</span>(),
+        <span class="ident">port_id</span>: <span class="ident">msg</span>.<span class="ident">port_id</span>.<span class="ident">clone</span>(),
         <span class="ident">channel_id</span>: <span class="prelude-val">Some</span>(<span class="ident">channel_id</span>.<span class="ident">clone</span>()),
         <span class="ident">connection_id</span>,
-        <span class="ident">counterparty_port_id</span>: <span class="ident">data</span>.<span class="ident">counterparty</span>.<span class="ident">port_id</span>().<span class="ident">clone</span>(),
-        <span class="ident">counterparty_channel_id</span>: <span class="ident">data</span>.<span class="ident">counterparty</span>.<span class="ident">channel_id</span>().<span class="ident">cloned</span>(),
+        <span class="ident">counterparty_port_id</span>: <span class="ident">msg</span>.<span class="ident">channel</span>.<span class="ident">counterparty</span>().<span class="ident">port_id</span>().<span class="ident">clone</span>(),
+        <span class="ident">counterparty_channel_id</span>: <span class="ident">msg</span>
+            .<span class="ident">channel</span>
+            .<span class="ident">counterparty</span>()
+            .<span class="ident">channel_id</span>()
+            .<span class="ident">cloned</span>(),
         ..<span class="ident">Default::default</span>()
     };
     <span class="ident">IbcEvent::OpenInitChannel</span>(<span class="ident">ChanOpenInit::from</span>(<span class="ident">attributes</span>))
@@ -855,29 +985,33 @@
 <span class="doccomment">/// Makes OpenTryChannel event</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">make_open_try_channel_event</span>(
     <span class="ident">channel_id</span>: <span class="kw-2">&amp;</span><span class="ident">ChannelId</span>,
-    <span class="ident">data</span>: <span class="kw-2">&amp;</span><span class="ident">ChannelOpenTryData</span>,
+    <span class="ident">msg</span>: <span class="kw-2">&amp;</span><span class="ident">MsgChannelOpenTry</span>,
 ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">IbcEvent</span> {
-    <span class="kw">let</span> <span class="ident">connection_id</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">data</span>.<span class="ident">connection_hops</span>.<span class="ident">get</span>(<span class="number">0</span>) {
+    <span class="kw">let</span> <span class="ident">connection_id</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">msg</span>.<span class="ident">channel</span>.<span class="ident">connection_hops</span>().<span class="ident">get</span>(<span class="number">0</span>) {
         <span class="prelude-val">Some</span>(<span class="ident">c</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">c</span>.<span class="ident">clone</span>(),
         <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ConnectionId::default</span>(),
     };
     <span class="kw">let</span> <span class="ident">attributes</span> <span class="op">=</span> <span class="ident">ChannelAttributes</span> {
-        <span class="ident">port_id</span>: <span class="ident">data</span>.<span class="ident">port_id</span>.<span class="ident">clone</span>(),
+        <span class="ident">port_id</span>: <span class="ident">msg</span>.<span class="ident">port_id</span>.<span class="ident">clone</span>(),
         <span class="ident">channel_id</span>: <span class="prelude-val">Some</span>(<span class="ident">channel_id</span>.<span class="ident">clone</span>()),
         <span class="ident">connection_id</span>,
-        <span class="ident">counterparty_port_id</span>: <span class="ident">data</span>.<span class="ident">counterparty</span>.<span class="ident">port_id</span>().<span class="ident">clone</span>(),
-        <span class="ident">counterparty_channel_id</span>: <span class="ident">data</span>.<span class="ident">counterparty</span>.<span class="ident">channel_id</span>().<span class="ident">cloned</span>(),
+        <span class="ident">counterparty_port_id</span>: <span class="ident">msg</span>.<span class="ident">channel</span>.<span class="ident">counterparty</span>().<span class="ident">port_id</span>().<span class="ident">clone</span>(),
+        <span class="ident">counterparty_channel_id</span>: <span class="ident">msg</span>
+            .<span class="ident">channel</span>
+            .<span class="ident">counterparty</span>()
+            .<span class="ident">channel_id</span>()
+            .<span class="ident">cloned</span>(),
         ..<span class="ident">Default::default</span>()
     };
     <span class="ident">IbcEvent::OpenTryChannel</span>(<span class="ident">ChanOpenTry::from</span>(<span class="ident">attributes</span>))
 }
 
 <span class="doccomment">/// Makes OpenAckChannel event</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">make_open_ack_channel_event</span>(<span class="ident">data</span>: <span class="kw-2">&amp;</span><span class="ident">ChannelOpenAckData</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">IbcEvent</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">make_open_ack_channel_event</span>(<span class="ident">msg</span>: <span class="kw-2">&amp;</span><span class="ident">MsgChannelOpenAck</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">IbcEvent</span> {
     <span class="kw">let</span> <span class="ident">attributes</span> <span class="op">=</span> <span class="ident">ChannelAttributes</span> {
-        <span class="ident">port_id</span>: <span class="ident">data</span>.<span class="ident">port_id</span>.<span class="ident">clone</span>(),
-        <span class="ident">channel_id</span>: <span class="prelude-val">Some</span>(<span class="ident">data</span>.<span class="ident">channel_id</span>.<span class="ident">clone</span>()),
-        <span class="ident">counterparty_channel_id</span>: <span class="prelude-val">Some</span>(<span class="ident">data</span>.<span class="ident">counterpart_channel_id</span>.<span class="ident">clone</span>()),
+        <span class="ident">port_id</span>: <span class="ident">msg</span>.<span class="ident">port_id</span>.<span class="ident">clone</span>(),
+        <span class="ident">channel_id</span>: <span class="prelude-val">Some</span>(<span class="ident">msg</span>.<span class="ident">channel_id</span>.<span class="ident">clone</span>()),
+        <span class="ident">counterparty_channel_id</span>: <span class="prelude-val">Some</span>(<span class="ident">msg</span>.<span class="ident">counterparty_channel_id</span>.<span class="ident">clone</span>()),
         ..<span class="ident">Default::default</span>()
     };
     <span class="ident">IbcEvent::OpenAckChannel</span>(<span class="ident">ChanOpenAck::from</span>(<span class="ident">attributes</span>))
@@ -885,21 +1019,21 @@
 
 <span class="doccomment">/// Makes OpenConfirmChannel event</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">make_open_confirm_channel_event</span>(
-    <span class="ident">data</span>: <span class="kw-2">&amp;</span><span class="ident">ChannelOpenConfirmData</span>,
+    <span class="ident">msg</span>: <span class="kw-2">&amp;</span><span class="ident">MsgChannelOpenConfirm</span>,
 ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">IbcEvent</span> {
     <span class="kw">let</span> <span class="ident">attributes</span> <span class="op">=</span> <span class="ident">ChannelAttributes</span> {
-        <span class="ident">port_id</span>: <span class="ident">data</span>.<span class="ident">port_id</span>.<span class="ident">clone</span>(),
-        <span class="ident">channel_id</span>: <span class="prelude-val">Some</span>(<span class="ident">data</span>.<span class="ident">channel_id</span>.<span class="ident">clone</span>()),
+        <span class="ident">port_id</span>: <span class="ident">msg</span>.<span class="ident">port_id</span>.<span class="ident">clone</span>(),
+        <span class="ident">channel_id</span>: <span class="prelude-val">Some</span>(<span class="ident">msg</span>.<span class="ident">channel_id</span>.<span class="ident">clone</span>()),
         ..<span class="ident">Default::default</span>()
     };
     <span class="ident">IbcEvent::OpenConfirmChannel</span>(<span class="ident">ChanOpenConfirm::from</span>(<span class="ident">attributes</span>))
 }
 
 <span class="doccomment">/// Makes CloseInitChannel event</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">make_close_init_channel_event</span>(<span class="ident">data</span>: <span class="kw-2">&amp;</span><span class="ident">ChannelCloseInitData</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">IbcEvent</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">make_close_init_channel_event</span>(<span class="ident">msg</span>: <span class="kw-2">&amp;</span><span class="ident">MsgChannelCloseInit</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">IbcEvent</span> {
     <span class="kw">let</span> <span class="ident">attributes</span> <span class="op">=</span> <span class="ident">ChannelAttributes</span> {
-        <span class="ident">port_id</span>: <span class="ident">data</span>.<span class="ident">port_id</span>.<span class="ident">clone</span>(),
-        <span class="ident">channel_id</span>: <span class="prelude-val">Some</span>(<span class="ident">data</span>.<span class="ident">channel_id</span>.<span class="ident">clone</span>()),
+        <span class="ident">port_id</span>: <span class="ident">msg</span>.<span class="ident">port_id</span>.<span class="ident">clone</span>(),
+        <span class="ident">channel_id</span>: <span class="prelude-val">Some</span>(<span class="ident">msg</span>.<span class="ident">channel_id</span>.<span class="ident">clone</span>()),
         ..<span class="ident">Default::default</span>()
     };
     <span class="ident">IbcEvent::CloseInitChannel</span>(<span class="ident">ChanCloseInit::from</span>(<span class="ident">attributes</span>))
@@ -907,11 +1041,11 @@
 
 <span class="doccomment">/// Makes CloseConfirmChannel event</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">make_close_confirm_channel_event</span>(
-    <span class="ident">data</span>: <span class="kw-2">&amp;</span><span class="ident">ChannelCloseConfirmData</span>,
+    <span class="ident">msg</span>: <span class="kw-2">&amp;</span><span class="ident">MsgChannelCloseConfirm</span>,
 ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">IbcEvent</span> {
     <span class="kw">let</span> <span class="ident">attributes</span> <span class="op">=</span> <span class="ident">ChannelAttributes</span> {
-        <span class="ident">port_id</span>: <span class="ident">data</span>.<span class="ident">port_id</span>.<span class="ident">clone</span>(),
-        <span class="ident">channel_id</span>: <span class="prelude-val">Some</span>(<span class="ident">data</span>.<span class="ident">channel_id</span>.<span class="ident">clone</span>()),
+        <span class="ident">port_id</span>: <span class="ident">msg</span>.<span class="ident">port_id</span>.<span class="ident">clone</span>(),
+        <span class="ident">channel_id</span>: <span class="prelude-val">Some</span>(<span class="ident">msg</span>.<span class="ident">channel_id</span>.<span class="ident">clone</span>()),
         ..<span class="ident">Default::default</span>()
     };
     <span class="ident">IbcEvent::CloseConfirmChannel</span>(<span class="ident">ChanCloseConfirm::from</span>(<span class="ident">attributes</span>))
