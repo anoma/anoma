@@ -98,7 +98,7 @@ num-derive = "0.3.3"
 num-traits = "0.2.14"
 num_cpus = "1.13.0"
 once_cell = "1.8.0"
-orion = "0.16.0"
+orion = "0.17.0"
 prost = "0.9.0"
 prost-types = "0.9.0"
 # TODO the older versions of rand and rand_core are currently required to avoid mismatching version issue (https://github.com/dalek-cryptography/ed25519-dalek/pull/159)
@@ -107,18 +107,18 @@ rand_core = {version = "0.5", default-features = false}
 rayon = "=1.5.1"
 regex = "1.4.5"
 reqwest = "0.11.4"
-rlimit = "0.5.4"
-rocksdb = "0.16.0"
+rlimit = "0.6.2"
+rocksdb = "0.17.0"
 rpassword = "5.0.1"
 serde = {version = "1.0.125", features = ["derive"]}
 serde_bytes = "0.11.5"
 serde_json = "1.0.62"
 serde_regex = "1.1.0"
-sha2 = "0.9.3"
+sha2 = "0.10.0"
 signal-hook = "0.3.9"
 sparse-merkle-tree = {git = "https://github.com/heliaxdev/sparse-merkle-tree", branch = "yuji/prost-0.9", features = ["borsh"]}
 # sysinfo with disabled multithread feature
-sysinfo = {version = "=0.21.1", default-features = false}
+sysinfo = {version = "0.22.4", default-features = false}
 tar = "0.4.37"
 # temporarily using fork work-around for https://github.com/informalsystems/tendermint-rs/issues/971
 tendermint = {git = "https://github.com/heliaxdev/tendermint-rs", branch = "yuji/abcipp-v0.23.0", optional = true}
@@ -140,13 +140,13 @@ tower-abci = {git = "https://github.com/heliaxdev/tower-abci", branch = "yuji/ab
 tower-abci-old = {package = "tower-abci", git = "https://github.com/heliaxdev/tower-abci", branch = "yuji/rebase_v0.23.0", optional = true}
 tracing = "0.1.29"
 tracing-log = "0.1.2"
-tracing-subscriber = "0.2.25"
+tracing-subscriber = "=0.2.25"
 websocket = "0.26.2"
 winapi = "0.3.9"
 
 [dev-dependencies]
 anoma = {path = "../shared", default-features = false, features = ["testing", "wasm-runtime"]}
-cargo-watch = "7.5.0"
+cargo-watch = "8.1.1"
 proptest = "1.0.0"
 tempfile = "3.2.0"
 tokio-test = "0.4.2"

@@ -40,25 +40,25 @@ ibc-abci = {package = "ibc", git = "https://github.com/heliaxdev/ibc-rs", branch
 ibc-proto = {git = "https://github.com/heliaxdev/ibc-rs", branch = "yuji/abcipp-v0.23.0", optional = true}
 ibc-proto-abci = {package = "ibc-proto", git = "https://github.com/heliaxdev/ibc-rs", branch = "yuji/rebase_v0.23.0", optional = true}
 serde_json = {version = "1.0.65"}
-sha2 = "0.9.3"
+sha2 = "0.10.0"
 test-log = {version = "0.2.7", default-features = false, features = ["trace"]}
 # temporarily using fork work-around for https://github.com/informalsystems/tendermint-rs/issues/971
 tempfile = "3.2.0"
 tendermint = {git = "https://github.com/heliaxdev/tendermint-rs", branch = "yuji/abcipp-v0.23.0", optional = true}
 tendermint-stable = {package = "tendermint", git = "https://github.com/heliaxdev/tendermint-rs", branch = "yuji/rebase_v0.23.0", optional = true}
 tracing = "0.1.26"
-tracing-subscriber = {version = "0.2.25", default-features = false, features = ["env-filter", "fmt"]}
+tracing-subscriber = {version = "=0.2.25", default-features = false, features = ["env-filter", "fmt"]}
 
 [dev-dependencies]
 anoma_apps = {path = "../apps", default-features = false, features = ["testing"]}
-assert_cmd = "1.0.7"
+assert_cmd = "2.0.2"
 borsh = "0.9.1"
 color-eyre = "0.5.11"
 escargot = "0.5.2"
 eyre = "0.6.5"
 itertools = "0.10.0"
 libp2p = "0.41.0"
-pretty_assertions = "0.7.2"
+pretty_assertions = "1.0.0"
 rexpect = {git = "https://github.com/heliaxdev/rexpect.git", branch = "tomas/eof-hack-fix"}
 
 # This is used to enable logging from tests

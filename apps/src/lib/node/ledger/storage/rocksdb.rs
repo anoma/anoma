@@ -730,9 +730,9 @@ fn set_max_open_files(cf_opts: &mut rocksdb::Options) {
 mod imp {
     use std::convert::TryInto;
 
-    use rlimit::{Resource, Rlim};
+    use rlimit::Resource;
 
-    const DEFAULT_NOFILE_LIMIT: Rlim = Rlim::from_raw(16384);
+    const DEFAULT_NOFILE_LIMIT: u64 = 16384;
 
     pub fn set_max_open_files(cf_opts: &mut rocksdb::Options) {
         let max_open_files = match increase_nofile_limit() {
@@ -743,14 +743,14 @@ mod imp {
             }
         };
         if let Some(max_open_files) =
-            max_open_files.and_then(|max| max.as_raw().try_into().ok())
+            max_open_files.and_then(|max| max.try_into().ok())
         {
             cf_opts.set_max_open_files(max_open_files);
         }
     }
 
     /// Try to increase NOFILE limit and return the current soft limit.
-    fn increase_nofile_limit() -> std::io::Result<Rlim> {
+    fn increase_nofile_limit() -> std::io::Result<u64> {
         let (soft, hard) = Resource::NOFILE.get()?;
         tracing::debug!("Current NOFILE limit, soft={}, hard={}", soft, hard);
 

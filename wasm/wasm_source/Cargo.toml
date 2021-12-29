@@ -37,7 +37,7 @@ wee_alloc = "0.4.5"
 anoma_tests = {path = "../../tests"}
 proptest = "1.0.0"
 tracing = "0.1.29"
-tracing-subscriber = {version = "0.2.25", default-features = false, features = ["env-filter", "fmt"]}
+tracing-subscriber = {version = "=0.2.25", default-features = false, features = ["env-filter", "fmt"]}
 
 [patch.crates-io]
 tendermint = {git = "https://github.com/heliaxdev/tendermint-rs", branch = "yuji/rebase_v0.23.0"}

@@ -4,8 +4,9 @@ use std::env;
 use color_eyre::eyre::Result;
 use eyre::WrapErr;
 use tracing_log::LogTracer;
-use tracing_subscriber::filter::{Directive, EnvFilter};
+use tracing_subscriber::filter::Directive;
 use tracing_subscriber::fmt::Subscriber;
+use tracing_subscriber::EnvFilter;
 
 pub const ENV_KEY: &str = "ANOMA_LOG";
 
