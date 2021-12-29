@@ -142,7 +142,6 @@ tracing = "0.1.29"
 tracing-log = "0.1.2"
 tracing-subscriber = "=0.2.25"
 websocket = "0.26.2"
-winapi = "0.3.9"
 
 [dev-dependencies]
 anoma = {path = "../shared", default-features = false, features = ["testing", "wasm-runtime"]}

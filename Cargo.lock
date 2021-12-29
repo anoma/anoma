@@ -210,7 +210,6 @@ dependencies = [
  "tracing-log 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "tracing-subscriber",
  "websocket",
- "winapi 0.3.9",
 ]
 
 [[package]]
