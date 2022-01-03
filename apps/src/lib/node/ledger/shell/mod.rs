@@ -67,9 +67,9 @@ use crate::node::ledger::events::Event;
 use crate::node::ledger::shims::abcipp_shim_types::shim;
 use crate::node::ledger::shims::abcipp_shim_types::shim::response::TxResult;
 use crate::node::ledger::{protocol, storage, tendermint_node};
+use crate::wallet::AtomicKeypair;
 use crate::wasm_loader::read_wasm;
 use crate::{config, wallet};
-use crate::wallet::AtomicKeypair;
 
 pub type TendermintValidator =
     ferveo_common::TendermintValidator<EllipticCurve>;
@@ -602,37 +602,47 @@ where
         }
     }
 
-    /// Lookup a validator's keypair for their established account from their wallet.
-    /// If the node is not validator, this function returns None
+    /// Lookup a validator's keypair for their established account from their
+    /// wallet. If the node is not validator, this function returns None
     fn get_account_keypair(&self) -> Option<AtomicKeypair> {
         let wallet_path = &self.base_dir.join(self.chain_id.as_str());
-        let genesis_path =
-            &self.base_dir.join(format!("{}.toml", self.chain_id.as_str()));
-        let mut wallet = wallet::Wallet::load_or_new_from_genesis(
-            wallet_path,
-            move || {
-                genesis::genesis_config::open_genesis_config(
-                    genesis_path,
-                )
+        let genesis_path = &self
+            .base_dir
+            .join(format!("{}.toml", self.chain_id.as_str()));
+        let mut wallet =
+            wallet::Wallet::load_or_new_from_genesis(wallet_path, move || {
+                genesis::genesis_config::open_genesis_config(genesis_path)
             });
         self.mode.get_validator_address().map(|addr| {
-            let pk_bytes = self.storage.read(&key::ed25519::pk_key(addr))
-                .expect("A validator should have a public key associated with it's established account")
+            let pk_bytes = self
+                .storage
+                .read(&key::ed25519::pk_key(addr))
+                .expect(
+                    "A validator should have a public key associated with \
+                     it's established account",
+                )
                 .0
-                .expect("A validator should have a public key associated with it's established account");
-            let pk = key::ed25519::PublicKey::deserialize(&mut pk_bytes.as_slice())
-                .expect("Validator's public key should be deserializable");
-            wallet.find_key_by_pk(&pk)
-                .expect("A validator's established keypair should be stored in its wallet")
+                .expect(
+                    "A validator should have a public key associated with \
+                     it's established account",
+                );
+            let pk =
+                key::ed25519::PublicKey::deserialize(&mut pk_bytes.as_slice())
+                    .expect("Validator's public key should be deserializable");
+            wallet.find_key_by_pk(&pk).expect(
+                "A validator's established keypair should be stored in its \
+                 wallet",
+            )
         })
     }
 
     /// Issue a tx requesting a new DKG session key
     fn request_new_dkg_session_keypair(&mut self) {
-        let account_kp = if let ShellMode::Validator {..} = &self.mode {
-            Some(self.get_account_keypair()
-                .expect("A validator should have an established keypair")
-                .clone())
+        let account_kp = if let ShellMode::Validator { .. } = &self.mode {
+            Some(
+                self.get_account_keypair()
+                    .expect("A validator should have an established keypair"),
+            )
         } else {
             None
         };
@@ -660,8 +670,9 @@ where
             let keypair = data.keys.get_protocol_keypair().lock();
             let account_keypair = account_kp.as_ref().unwrap().lock();
 
-            // Note that the inner tx is signed with the validators established keypair
-            // and the outer is signed with the protocol keypair
+            // Note that the inner tx is signed with the validators established
+            // keypair and the outer is signed with the protocol
+            // keypair
             let request_tx = ProtocolTxType::request_new_dkg_keypair(
                 request_data,
                 &account_keypair,

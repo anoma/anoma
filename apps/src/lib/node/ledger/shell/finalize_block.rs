@@ -446,12 +446,10 @@ where
             // update the current encryption key to that generated in
             // previous epoch
             if let ShellMode::Validator { dkg, .. } = &self.mode {
-                if let DkgState::Success { final_key } =
-                dkg.state_machine.state
+                if let DkgState::Success { final_key } = dkg.state_machine.state
                 {
-                    self.storage.encryption_key = Some(
-                        EncryptionKey(final_key).try_to_vec().unwrap(),
-                    );
+                    self.storage.encryption_key =
+                        Some(EncryptionKey(final_key).try_to_vec().unwrap());
                 } else {
                     // If DKG was not successful in the past epoch, we have
                     // no new key TODO: Allow this
@@ -594,13 +592,13 @@ where
 /// are covered by the e2e tests.
 #[cfg(test)]
 mod test_finalize_block {
-    use ark_std::Zero;
     use anoma::types::address::xan;
     use anoma::types::key::dkg_session_keys::dkg_pk_key;
     use anoma::types::key::ed25519::SignedTxData;
     use anoma::types::storage::Epoch;
     use anoma::types::time::DateTimeUtc;
     use anoma::types::transaction::Fee;
+    use ark_std::Zero;
     #[cfg(not(feature = "ABCI"))]
     use tendermint::block::header::Version;
     #[cfg(not(feature = "ABCI"))]
@@ -1568,29 +1566,34 @@ mod test_finalize_block {
             panic!("Test failed");
         }
 
-        // check that after new epoch, the new dkg keypair is in the dkg state machine
+        // check that after new epoch, the new dkg keypair is in the dkg state
+        // machine
         let mut req = FinalizeBlock::default();
         req.header.height = 11u32.into();
-        //std::thread::sleep(std::time::Duration::from_secs(60));
+        // std::thread::sleep(std::time::Duration::from_secs(60));
         req.header.time = Time::from(DateTimeUtc::now());
         shell.finalize_block(req).expect("Test failed");
         if let ShellMode::Validator {
             dkg,
-            data: ValidatorData {
-                keys:
-                ValidatorKeys {
-                    dkg_keypair: Some(kp),
+            data:
+                ValidatorData {
+                    keys:
+                        ValidatorKeys {
+                            dkg_keypair: Some(kp),
+                            ..
+                        },
                     ..
                 },
-                ..
-            },
             ..
-        } = &shell.shell.mode {
-            assert_eq!(&DkgKeypair::from(dkg.state_machine.session_keypair.clone()), kp);
+        } = &shell.shell.mode
+        {
+            assert_eq!(
+                &DkgKeypair::from(dkg.state_machine.session_keypair),
+                kp
+            );
         } else {
             panic!("Test failed");
         }
-
     }
 
     /// Test that if a tx requesting a new DKG session keypair
@@ -1615,8 +1618,7 @@ mod test_finalize_block {
         };
         let (mut shell, mut receiver) = setup();
         if let ShellMode::Validator {
-            next_dkg_keypair,
-            ..
+            next_dkg_keypair, ..
         } = &shell.shell.mode
         {
             // ensure no new session keypair is queued
@@ -1675,16 +1677,16 @@ mod test_finalize_block {
                     }),
                 ..
             }) => {
-                let SignedTxData {
-                    data,
-                    ..
-                } = BorshDeserialize::deserialize(&mut data.as_slice())
-                    .expect("Test failed");
+                let SignedTxData { data, .. } =
+                    BorshDeserialize::deserialize(&mut data.as_slice())
+                        .expect("Test failed");
                 let UpdateDkgSessionKey {
                     address,
                     dkg_public_key,
-                } = BorshDeserialize::deserialize(&mut data.expect("Test failed").as_slice())
-                    .expect("Test failed");
+                } = BorshDeserialize::deserialize(
+                    &mut data.expect("Test failed").as_slice(),
+                )
+                .expect("Test failed");
                 let dkg_public_key: DkgPublicKey =
                     BorshDeserialize::deserialize(
                         &mut dkg_public_key.as_slice(),
@@ -1789,7 +1791,10 @@ mod test_finalize_block {
                 .expect("Test failed")
                 .value
                 .as_str();
-            assert_eq!(code, String::from(ErrorCodes::WasmRuntimeError).as_str());
+            assert_eq!(
+                code,
+                String::from(ErrorCodes::WasmRuntimeError).as_str()
+            );
         }
         #[cfg(feature = "ABCI")]
         {
@@ -1860,12 +1865,9 @@ mod test_finalize_block {
         let (mut shell, _) = setup();
 
         // set the DKG state machine to a success state
-        if let ShellMode::Validator {
-            dkg,
-            ..
-        } = &mut shell.shell.mode {
+        if let ShellMode::Validator { dkg, .. } = &mut shell.shell.mode {
             dkg.state_machine.state = DkgState::Success {
-                final_key: <EllipticCurve as PairingEngine>::G1Affine::zero()
+                final_key: <EllipticCurve as PairingEngine>::G1Affine::zero(),
             }
         }
         // check that there is no encryption key yet
@@ -1874,26 +1876,27 @@ mod test_finalize_block {
         // start a new epoch
         let mut req = FinalizeBlock::default();
         req.header.height = 11u32.into();
-        //std::thread::sleep(std::time::Duration::from_secs(60));
+        // std::thread::sleep(std::time::Duration::from_secs(60));
         req.header.time = Time::from(DateTimeUtc::now());
         shell.finalize_block(req).expect("Test failed");
 
         // check that the encryption key in storage got updated
-        let expect = EncryptionKey(<EllipticCurve as PairingEngine>::G1Affine::zero())
-            .try_to_vec()
-            .expect("Test failed");
-        assert_eq!(
-            shell.shell.storage.encryption_key,
-            Some(expect),
-        );
+        let expect =
+            EncryptionKey(<EllipticCurve as PairingEngine>::G1Affine::zero())
+                .try_to_vec()
+                .expect("Test failed");
+        assert_eq!(shell.shell.storage.encryption_key, Some(expect),);
         use super::super::state::DkgInstance;
         // check that a new dkg instance was created
         assert_matches!(
             shell.shell.mode,
             ShellMode::Validator {
                 dkg: DkgInstance {
-                    state_machine: DkgStateMachine{
-                        state: DkgState::Sharing {accumulated_weight: 0,  block: 1},
+                    state_machine: DkgStateMachine {
+                        state: DkgState::Sharing {
+                            accumulated_weight: 0,
+                            block: 1
+                        },
                         ..
                     }
                 },
@@ -1912,22 +1915,19 @@ mod test_finalize_block {
         // start a new epoch
         let mut req = FinalizeBlock::default();
         req.header.height = 11u32.into();
-        //std::thread::sleep(std::time::Duration::from_secs(60));
+        // std::thread::sleep(std::time::Duration::from_secs(60));
         req.header.time = Time::from(DateTimeUtc::now());
         shell.finalize_block(req).expect("Test failed");
 
         let tx_bytes =
-            tokio_test::block_on(async move {receiver.recv().await.unwrap()});
+            tokio_test::block_on(async move { receiver.recv().await.unwrap() });
         let tx = Tx::try_from(tx_bytes.as_slice()).expect("Test failed");
         assert_matches!(
             process_tx(tx).unwrap(),
-            TxType::Protocol(
-                ProtocolTx{
-                    tx: ProtocolTxType::DKG(Message::Deal(_)),
-                    ..
-                }
-            )
+            TxType::Protocol(ProtocolTx {
+                tx: ProtocolTxType::DKG(Message::Deal(_)),
+                ..
+            })
         );
-
     }
 }
