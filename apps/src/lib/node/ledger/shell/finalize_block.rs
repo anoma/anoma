@@ -936,15 +936,34 @@ mod test_finalize_block {
             })
             .expect("Test failed");
         assert_eq!(events.len(), 1);
-        assert_eq!(events[0].r#type, "accepted");
-        let code = events[0]
-            .attributes
-            .iter()
-            .find(|attr| attr.key.as_str() == "code")
-            .expect("Test failed")
-            .value
-            .as_str();
-        assert_eq!(code, String::from(ErrorCodes::InvalidSig).as_str());
+
+        #[cfg(not(feature = "ABCI"))]
+        {
+            assert_eq!(events[0].r#type, "accepted");
+            let code = events[0]
+                .attributes
+                .iter()
+                .find(|attr| attr.key.as_str() == "code")
+                .expect("Test failed")
+                .value
+                .as_str();
+            assert_eq!(code, String::from(ErrorCodes::InvalidSig).as_str());
+        }
+        #[cfg(feature = "ABCI")]
+        {
+            assert_eq!(events[0].r#type, "applied");
+            let code = events[0]
+                .attributes
+                .iter()
+                .find(|attr| attr.key == "code".as_bytes())
+                .expect("Test failed")
+                .value
+                .clone();
+            assert_eq!(
+                String::from_utf8(code).expect("Test failed"),
+                String::from(ErrorCodes::InvalidSig)
+            );
+        }
     }
 
     /// Test that if a protocol tx is rejected by [`process_proposal`] that
@@ -978,14 +997,31 @@ mod test_finalize_block {
             .expect("Test failed");
         assert_eq!(events.len(), 1);
         assert_eq!(events[0].r#type, "applied");
-        let code = events[0]
-            .attributes
-            .iter()
-            .find(|attr| attr.key.as_str() == "code")
-            .expect("Test failed")
-            .value
-            .as_str();
-        assert_eq!(code, String::from(ErrorCodes::InvalidSig).as_str());
+        #[cfg(not(feature = "ABCI"))]
+        {
+            let code = events[0]
+                .attributes
+                .iter()
+                .find(|attr| attr.key.as_str() == "code")
+                .expect("Test failed")
+                .value
+                .as_str();
+            assert_eq!(code, String::from(ErrorCodes::InvalidSig).as_str());
+        }
+        #[cfg(feature = "ABCI")]
+        {
+            let code = events[0]
+                .attributes
+                .iter()
+                .find(|attr| attr.key == "code".as_bytes())
+                .expect("Test failed")
+                .value
+                .clone();
+            assert_eq!(
+                String::from_utf8(code).expect("Test failed"),
+                String::from(ErrorCodes::InvalidSig)
+            );
+        }
     }
 
     /// Test that if a protocol tx is signed by a non-validator,
@@ -1019,14 +1055,31 @@ mod test_finalize_block {
             .expect("Test failed");
         assert_eq!(events.len(), 1);
         assert_eq!(events[0].r#type, "applied");
-        let code = events[0]
-            .attributes
-            .iter()
-            .find(|attr| attr.key.as_str() == "code")
-            .expect("Test failed")
-            .value
-            .as_str();
-        assert_eq!(code, String::from(ErrorCodes::InvalidSig).as_str());
+        #[cfg(not(feature = "ABCI"))]
+        {
+            let code = events[0]
+                .attributes
+                .iter()
+                .find(|attr| attr.key.as_str() == "code")
+                .expect("Test failed")
+                .value
+                .as_str();
+            assert_eq!(code, String::from(ErrorCodes::InvalidSig).as_str());
+        }
+        #[cfg(feature = "ABCI")]
+        {
+            let code = events[0]
+                .attributes
+                .iter()
+                .find(|attr| attr.key == "code".as_bytes())
+                .expect("Test failed")
+                .value
+                .clone();
+            assert_eq!(
+                String::from_utf8(code).expect("Test failed"),
+                String::from(ErrorCodes::InvalidSig)
+            );
+        }
     }
 
     /// Test that the wrapper txs are queued in the order they
@@ -1444,14 +1497,31 @@ mod test_finalize_block {
         assert_eq!(response.len(), 1);
         let event = response.remove(0);
         assert_eq!(event.r#type, "applied");
-        let code = event
-            .attributes
-            .iter()
-            .find(|attr| attr.key.as_str() == "code")
-            .expect("Test failed")
-            .value
-            .as_str();
-        assert_eq!(code, String::from(ErrorCodes::Ok).as_str());
+        #[cfg(not(feature = "ABCI"))]
+        {
+            let code = event
+                .attributes
+                .iter()
+                .find(|attr| attr.key.as_str() == "code")
+                .expect("Test failed")
+                .value
+                .as_str();
+            assert_eq!(code, String::from(ErrorCodes::Ok).as_str());
+        }
+        #[cfg(feature = "ABCI")]
+        {
+            let code = event
+                .attributes
+                .iter()
+                .find(|attr| attr.key == "code".as_bytes())
+                .expect("Test failed")
+                .value
+                .clone();
+            assert_eq!(
+                String::from_utf8(code).expect("Test failed"),
+                String::from(ErrorCodes::Ok)
+            );
+        }
 
         // check that there is no next keypair now
         assert_matches!(
@@ -1566,14 +1636,32 @@ mod test_finalize_block {
         assert_eq!(response.len(), 1);
         let event = response.remove(0);
         assert_eq!(event.r#type, "applied");
-        let code = event
-            .attributes
-            .iter()
-            .find(|attr| attr.key.as_str() == "code")
-            .expect("Test failed")
-            .value
-            .as_str();
-        assert_eq!(code, String::from(ErrorCodes::Ok).as_str());
+        #[cfg(not(feature = "ABCI"))]
+        {
+            let code = event
+                .attributes
+                .iter()
+                .find(|attr| attr.key.as_str() == "code")
+                .expect("Test failed")
+                .value
+                .as_str();
+            assert_eq!(code, String::from(ErrorCodes::Ok).as_str());
+        }
+        #[cfg(feature = "ABCI")]
+        {
+            let code = event
+                .attributes
+                .iter()
+                .find(|attr| attr.key == "code".as_bytes())
+                .expect("Test failed")
+                .value
+                .clone();
+            assert_eq!(
+                String::from_utf8(code).expect("Test failed"),
+                String::from(ErrorCodes::Ok)
+            );
+        }
+
         let tx_bytes =
             tokio_test::block_on(async move { receiver.recv().await.unwrap() });
         let tx =
@@ -1692,14 +1780,31 @@ mod test_finalize_block {
         assert_eq!(response.len(), 1);
         let event = response.remove(0);
         assert_eq!(event.r#type, "applied");
-        let code = event
-            .attributes
-            .iter()
-            .find(|attr| attr.key.as_str() == "code")
-            .expect("Test failed")
-            .value
-            .as_str();
-        assert_eq!(code, String::from(ErrorCodes::WasmRuntimeError).as_str());
+        #[cfg(not(feature = "ABCI"))]
+        {
+            let code = event
+                .attributes
+                .iter()
+                .find(|attr| attr.key.as_str() == "code")
+                .expect("Test failed")
+                .value
+                .as_str();
+            assert_eq!(code, String::from(ErrorCodes::WasmRuntimeError).as_str());
+        }
+        #[cfg(feature = "ABCI")]
+        {
+            let code = event
+                .attributes
+                .iter()
+                .find(|attr| attr.key == "code".as_bytes())
+                .expect("Test failed")
+                .value
+                .clone();
+            assert_eq!(
+                String::from_utf8(code).expect("Test failed"),
+                String::from(ErrorCodes::WasmRuntimeError)
+            );
+        }
 
         // check that the session keypair queue is unchanged
         assert_matches!(
