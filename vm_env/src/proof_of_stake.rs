@@ -105,16 +105,10 @@ pub fn update_dkg_session_keypair(
         address,
         dkg_public_key,
     }: UpdateDkgSessionKey,
-) -> bool {
+) {
     let dkg_key = dkg_pk_key(&address);
     // This acts as a check that the issuing address is a validator
-    if key::dkg_session_keys::is_dkg_pk_key(&dkg_key).is_some() {
-        // write the new announced public key to storage
-        tx::write(dkg_key.to_string(), dkg_public_key);
-        true
-    } else {
-        false
-    }
+    tx::write_bytes(dkg_key.to_string(), dkg_public_key);
 }
 
 /// Proof of Stake system. This struct integrates and gives access to

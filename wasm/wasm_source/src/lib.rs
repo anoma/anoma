@@ -332,14 +332,9 @@ pub mod tx_update_dkg_session_keypair {
             .unwrap();
         log_string(format!(
             "update DKG keypair for: {:#?}",
-            update_dkg_keypair.address
+            &update_dkg_keypair.address
         ));
-        if !proof_of_stake::update_dkg_session_keypair(update_dkg_keypair) {
-            panic!(
-                "A request was made to update the DKG session keypair for a \
-                 non-validator."
-            )
-        }
+        proof_of_stake::update_dkg_session_keypair(update_dkg_keypair);
     }
 }
 

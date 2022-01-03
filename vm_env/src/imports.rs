@@ -95,6 +95,19 @@ pub mod tx {
         };
     }
 
+    /// Write a serialized value at the given key to storage.
+    pub fn write_bytes(key: impl AsRef<str>, buf: Vec<u8>) {
+        let key = key.as_ref();
+        unsafe {
+            anoma_tx_write(
+                key.as_ptr() as _,
+                key.len() as _,
+                buf.as_ptr() as _,
+                buf.len() as _,
+            )
+        };
+    }
+
     /// Delete a value at the given key from storage.
     pub fn delete(key: impl AsRef<str>) {
         let key = key.as_ref();

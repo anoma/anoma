@@ -438,29 +438,29 @@ where
 
     /// Update the DKG state machine
     ///  * At the start of a new epoch, reset state machine and update session
-    ///    keys
+    ///    keys and store new encryption key
     ///  * keep a counter of blocks transpired since protocol start
     ///  * issue a PVSS transcript according to the state machines schedule
-    ///  * Collect PVSS transcripts from other validators
     fn update_dkg(&mut self, new_epoch: bool) {
         if new_epoch {
-            if let Err(err) = self.new_dkg_instance() {
-                // update the current encryption key to that generated in
-                // previous epoch
-                if let ShellMode::Validator { dkg, .. } = &self.mode {
-                    if let DkgState::Success { final_key } =
-                        dkg.state_machine.state
-                    {
-                        self.storage.encryption_key = Some(
-                            EncryptionKey(final_key).try_to_vec().unwrap(),
-                        );
-                    } else {
-                        // If DKG was not successful in the past epoch, we have
-                        // no new key TODO: Allow this
-                        // DKG to continue while the new one also starts
-                        self.storage.encryption_key = None;
-                    }
+            // update the current encryption key to that generated in
+            // previous epoch
+            if let ShellMode::Validator { dkg, .. } = &self.mode {
+                if let DkgState::Success { final_key } =
+                dkg.state_machine.state
+                {
+                    self.storage.encryption_key = Some(
+                        EncryptionKey(final_key).try_to_vec().unwrap(),
+                    );
+                } else {
+                    // If DKG was not successful in the past epoch, we have
+                    // no new key TODO: Allow this
+                    // DKG to continue while the new one also starts
+                    self.storage.encryption_key = None;
                 }
+            }
+
+            if let Err(err) = self.new_dkg_instance() {
                 panic!(
                     "Failed to create a new DKG instance for the new epoch \
                      with error: {} \n\n\n The state of the last block has \
@@ -594,6 +594,7 @@ where
 /// are covered by the e2e tests.
 #[cfg(test)]
 mod test_finalize_block {
+    use ark_std::Zero;
     use anoma::types::address::xan;
     use anoma::types::key::dkg_session_keys::dkg_pk_key;
     use anoma::types::key::ed25519::SignedTxData;
@@ -1356,6 +1357,8 @@ mod test_finalize_block {
     #[test]
     fn test_new_dkg_keypair() {
         let (mut shell, mut receiver) = setup();
+
+        // assert we are a validator
         assert_matches!(
             shell.shell.mode,
             ShellMode::Validator {
@@ -1364,11 +1367,13 @@ mod test_finalize_block {
             }
         );
 
+        // request a new dkg session keypair
         shell.shell.request_new_dkg_session_keypair();
 
         // test that the request is broadcast
         let tx_bytes =
             tokio_test::block_on(async move { receiver.recv().await.unwrap() });
+
         // test that we received the expected request
         let tx =
             process_tx(Tx::try_from(tx_bytes.as_slice()).expect("Test failed"))
@@ -1425,6 +1430,7 @@ mod test_finalize_block {
                 info: "".into(),
             },
         };
+
         let mut response = shell
             .finalize_block(FinalizeBlock {
                 txs: vec![processed_tx],
@@ -1432,6 +1438,8 @@ mod test_finalize_block {
                 ..Default::default()
             })
             .expect("Test failed");
+        // this commits the block and changes the storage
+        shell.commit();
         // check that the tx was applied
         assert_eq!(response.len(), 1);
         let event = response.remove(0);
@@ -1453,6 +1461,7 @@ mod test_finalize_block {
                 ..
             }
         );
+
         // check that the session public key in storage still matches local
         // state
         let dkg_pk = shell
@@ -1488,6 +1497,30 @@ mod test_finalize_block {
         } else {
             panic!("Test failed");
         }
+
+        // check that after new epoch, the new dkg keypair is in the dkg state machine
+        let mut req = FinalizeBlock::default();
+        req.header.height = 11u32.into();
+        //std::thread::sleep(std::time::Duration::from_secs(60));
+        req.header.time = Time::from(DateTimeUtc::now());
+        shell.finalize_block(req).expect("Test failed");
+        if let ShellMode::Validator {
+            dkg,
+            data: ValidatorData {
+                keys:
+                ValidatorKeys {
+                    dkg_keypair: Some(kp),
+                    ..
+                },
+                ..
+            },
+            ..
+        } = &shell.shell.mode {
+            assert_eq!(&DkgKeypair::from(dkg.state_machine.session_keypair.clone()), kp);
+        } else {
+            panic!("Test failed");
+        }
+
     }
 
     /// Test that if a tx requesting a new DKG session keypair
@@ -1496,40 +1529,28 @@ mod test_finalize_block {
     #[test]
     fn test_next_dkg_keypair_is_none() {
         let (mut shell, mut receiver) = setup();
-        let processed_tx = if let ShellMode::Validator {
-            data,
+        // request a new dkg session keypair
+        shell.shell.request_new_dkg_session_keypair();
+
+        // test that the request is broadcast
+        let tx_bytes =
+            tokio_test::block_on(async move { receiver.recv().await.unwrap() });
+        // the tx to submit to finalize block
+        let processed_tx = ProcessedTx {
+            tx: tx_bytes,
+            result: TxResult {
+                code: ErrorCodes::Ok.into(),
+                info: "".into(),
+            },
+        };
+        let (mut shell, mut receiver) = setup();
+        if let ShellMode::Validator {
             next_dkg_keypair,
             ..
         } = &shell.shell.mode
         {
             // ensure no new session keypair is queued
             assert_matches!(next_dkg_keypair, None);
-            let protocol_keys = data.keys.protocol_keypair.lock();
-            let request_data = UpdateDkgSessionKey {
-                address: data.address.clone(),
-                dkg_public_key: data
-                    .keys
-                    .dkg_keypair
-                    .as_ref()
-                    .unwrap()
-                    .public()
-                    .try_to_vec()
-                    .expect("Serialization of DKG public key shouldn't fail"),
-            };
-            ProcessedTx {
-                tx: ProtocolTxType::request_new_dkg_keypair(
-                    request_data,
-                    &protocol_keys,
-                    &shell.shell.wasm_dir,
-                    read_wasm,
-                )
-                .sign(&protocol_keys)
-                .to_bytes(),
-                result: TxResult {
-                    code: ErrorCodes::Ok.into(),
-                    info: "".into(),
-                },
-            }
         } else {
             panic!("Test failed");
         };
@@ -1537,7 +1558,7 @@ mod test_finalize_block {
         let mut response = shell
             .finalize_block(FinalizeBlock {
                 txs: vec![processed_tx],
-                reject_all_decrypted: true,
+                reject_all_decrypted: false,
                 ..Default::default()
             })
             .expect("Test failed");
@@ -1553,7 +1574,6 @@ mod test_finalize_block {
             .value
             .as_str();
         assert_eq!(code, String::from(ErrorCodes::Ok).as_str());
-
         let tx_bytes =
             tokio_test::block_on(async move { receiver.recv().await.unwrap() });
         let tx =
@@ -1567,10 +1587,15 @@ mod test_finalize_block {
                     }),
                 ..
             }) => {
+                let SignedTxData {
+                    data,
+                    ..
+                } = BorshDeserialize::deserialize(&mut data.as_slice())
+                    .expect("Test failed");
                 let UpdateDkgSessionKey {
                     address,
                     dkg_public_key,
-                } = BorshDeserialize::deserialize(&mut data.as_slice())
+                } = BorshDeserialize::deserialize(&mut data.expect("Test failed").as_slice())
                     .expect("Test failed");
                 let dkg_public_key: DkgPublicKey =
                     BorshDeserialize::deserialize(
@@ -1614,7 +1639,7 @@ mod test_finalize_block {
             ..
         } = &mut shell.shell.mode
         {
-            // ensure no new session keypair is queued
+            // ensure a new session keypair is queued
             *next_dkg_keypair = Some(
                 ferveo_common::Keypair::<EllipticCurve>::new(
                     &mut ark_std::rand::prelude::StdRng::from_entropy(),
@@ -1659,7 +1684,7 @@ mod test_finalize_block {
         let mut response = shell
             .finalize_block(FinalizeBlock {
                 txs: vec![processed_tx],
-                reject_all_decrypted: true,
+                reject_all_decrypted: false,
                 ..Default::default()
             })
             .expect("Test failed");
@@ -1719,5 +1744,85 @@ mod test_finalize_block {
         } else {
             panic!("Test failed");
         }
+    }
+
+    /// Test that at the the end of an epoch, if the DKG state
+    /// machine has finished successfully, the new key
+    /// is added to storage and the dkg state machine
+    /// is reset.
+    #[test]
+    fn test_new_encryption_key() {
+        let (mut shell, _) = setup();
+
+        // set the DKG state machine to a success state
+        if let ShellMode::Validator {
+            dkg,
+            ..
+        } = &mut shell.shell.mode {
+            dkg.state_machine.state = DkgState::Success {
+                final_key: <EllipticCurve as PairingEngine>::G1Affine::zero()
+            }
+        }
+        // check that there is no encryption key yet
+        assert_matches!(shell.shell.storage.encryption_key, None);
+
+        // start a new epoch
+        let mut req = FinalizeBlock::default();
+        req.header.height = 11u32.into();
+        //std::thread::sleep(std::time::Duration::from_secs(60));
+        req.header.time = Time::from(DateTimeUtc::now());
+        shell.finalize_block(req).expect("Test failed");
+
+        // check that the encryption key in storage got updated
+        let expect = EncryptionKey(<EllipticCurve as PairingEngine>::G1Affine::zero())
+            .try_to_vec()
+            .expect("Test failed");
+        assert_eq!(
+            shell.shell.storage.encryption_key,
+            Some(expect),
+        );
+        use super::super::state::DkgInstance;
+        // check that a new dkg instance was created
+        assert_matches!(
+            shell.shell.mode,
+            ShellMode::Validator {
+                dkg: DkgInstance {
+                    state_machine: DkgStateMachine{
+                        state: DkgState::Sharing {accumulated_weight: 0,  block: 1},
+                        ..
+                    }
+                },
+                ..
+            }
+        )
+    }
+
+    /// Test that when a new epoch starts, a new
+    /// pvss transcript is broadcast
+    #[test]
+    fn test_pvss_transcript_issued() {
+        use ferveo::dkg::pv::Message;
+        let (mut shell, mut receiver) = setup();
+
+        // start a new epoch
+        let mut req = FinalizeBlock::default();
+        req.header.height = 11u32.into();
+        //std::thread::sleep(std::time::Duration::from_secs(60));
+        req.header.time = Time::from(DateTimeUtc::now());
+        shell.finalize_block(req).expect("Test failed");
+
+        let tx_bytes =
+            tokio_test::block_on(async move {receiver.recv().await.unwrap()});
+        let tx = Tx::try_from(tx_bytes.as_slice()).expect("Test failed");
+        assert_matches!(
+            process_tx(tx).unwrap(),
+            TxType::Protocol(
+                ProtocolTx{
+                    tx: ProtocolTxType::DKG(Message::Deal(_)),
+                    ..
+                }
+            )
+        );
+
     }
 }

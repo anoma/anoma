@@ -820,6 +820,10 @@ mod test_utils {
             }
         }
 
+        pub fn commit(&mut self) {
+            let _ = self.shell.commit();
+        }
+
         /// Add a wrapper tx to the queue of txs to be decrypted
         /// in the current block proposal
         pub fn enqueue_tx(&mut self, wrapper: WrapperTx) {
