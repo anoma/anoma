@@ -1,6 +1,5 @@
 use std::convert::TryFrom;
 use std::net::SocketAddr;
-use std::thread;
 
 use anoma::proto::{Intent, IntentGossipMessage};
 use libp2p::gossipsub::IdentTopic;
@@ -48,7 +47,6 @@ impl RpcService for Rpc {
     }
 }
 
-#[tokio::main]
 pub async fn rpc_server(
     addr: SocketAddr,
     inject_message: Sender<(
@@ -64,17 +62,16 @@ pub async fn rpc_server(
 /// Start a rpc server in it's own thread. The used address to listen is in the
 /// `config` argument. All received event by the rpc are send to the channel
 /// return by this function.
-pub fn start_rpc_server(
+pub async fn start_rpc_server(
     config: &RpcServer,
-) -> mpsc::Receiver<(
-    rpc_message::Message,
-    tokio::sync::oneshot::Sender<RpcResponse>,
-)> {
+    rpc_sender: mpsc::Sender<(
+        rpc_message::Message,
+        tokio::sync::oneshot::Sender<RpcResponse>,
+    )>,
+) {
     let addr = config.address;
-    let (rpc_sender, rpc_receiver) = mpsc::channel(100);
-    thread::spawn(move || rpc_server(addr, rpc_sender).unwrap());
     tracing::info!("RPC started at {}", config.address);
-    rpc_receiver
+    rpc_server(addr, rpc_sender).await.unwrap();
 }
 
 pub async fn handle_rpc_event(

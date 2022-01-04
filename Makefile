@@ -1,9 +1,4 @@
 package = anoma
-version = $(shell git describe --dirty --broken)
-platform = $(shell uname -s)-$(shell uname -m)
-package-name = anoma-$(version)-$(platform)
-
-bin = anoma anomac anoman anomaw
 
 cargo := $(env) cargo
 rustup := $(env) rustup
@@ -15,7 +10,7 @@ nightly := $(shell cat rust-nightly-version)
 # Path to the wasm source for the provided txs and VPs
 wasms := wasm/wasm_source
 # Paths for all the wasm templates
-wasm_templates := wasm/tx_template wasm/vp_template wasm/mm_template wasm/mm_filter_template
+wasm_templates := wasm/tx_template wasm/vp_template
 
 # TODO upgrade libp2p
 audit-ignores += RUSTSEC-2021-0076
@@ -39,12 +34,7 @@ check-release:
 	$(cargo) check --release --package anoma_apps
 
 package: build-release
-	mkdir -p $(package-name)/wasm && \
-	cd target/release && ln $(bin) ../../$(package-name) && \
-	cd ../.. && \
-	ln wasm/checksums.json $(package-name)/wasm && \
-	tar -c -z -f $(package-name).tar.gz $(package-name) && \
-	rm -rf $(package-name)
+	scripts/make-package.sh
 
 build-release-image-docker:
 	docker build -t anoma-build - < docker/anoma-build/Dockerfile
@@ -60,6 +50,9 @@ check:
 	$(cargo) check && \
 	make -C $(wasms) check && \
 	$(foreach wasm,$(wasm_templates),$(check-wasm) && ) true
+
+check-abci-plus-plus:
+	$(cargo) check --no-default-features --features "ABCI-plus-plus"
 
 clippy-wasm = $(cargo) +$(nightly) clippy --manifest-path $(wasm)/Cargo.toml --all-targets -- -D warnings
 
@@ -120,7 +113,6 @@ reset-ledger:
 reset-ledger-abci-plus-plus:
 	# runs the node
 	$(cargo) run --bin anoman --no-default-features --features "ABCI-plus-plus" -- ledger reset
-
 
 audit:
 	$(cargo) audit $(foreach ignore,$(audit-ignores), --ignore $(ignore))
@@ -218,6 +210,9 @@ opt-wasm:
 
 clean-wasm-scripts:
 	make -C $(wasms) clean
+
+publish-wasm:
+	aws s3 sync wasm s3://heliax-anoma-wasm-v1 --acl public-read --exclude "*" --include "*.wasm" --exclude "*/*"
 
 dev-deps:
 	$(rustup) toolchain install $(nightly)

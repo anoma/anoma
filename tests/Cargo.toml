@@ -5,7 +5,7 @@ edition = "2021"
 license = "GPL-3.0"
 name = "anoma_tests"
 resolver = "2"
-version = "0.2.0"
+version = "0.3.0"
 
 [features]
 default = ["wasm-runtime", "ABCI"]
@@ -14,18 +14,20 @@ wasm-runtime = ["anoma/wasm-runtime"]
 ABCI = [
   "ibc-abci",
   "ibc-proto-abci",
-  "anoma/ibc-vp-abci",
   "tendermint-stable",
+  "tendermint-proto-abci",
   "anoma/ABCI",
+  "anoma/ibc-vp-abci",
   "anoma_vm_env/ABCI",
 ]
 
 ABCI-plus-plus = [
   "ibc",
   "ibc-proto",
-  "anoma/ibc-vp",
   "tendermint",
+  "tendermint-proto",
   "anoma/ABCI-plus-plus",
+  "anoma/ibc-vp",
   "anoma_vm_env/ABCI-plus-plus",
 ]
 
@@ -39,12 +41,16 @@ ibc = {git = "https://github.com/heliaxdev/ibc-rs", branch = "yuji/abcipp-v0.23.
 ibc-abci = {package = "ibc", git = "https://github.com/heliaxdev/ibc-rs", branch = "yuji/rebase_v0.23.0", features = ["mocks", "borsh"], optional = true}
 ibc-proto = {git = "https://github.com/heliaxdev/ibc-rs", branch = "yuji/abcipp-v0.23.0", optional = true}
 ibc-proto-abci = {package = "ibc-proto", git = "https://github.com/heliaxdev/ibc-rs", branch = "yuji/rebase_v0.23.0", optional = true}
+prost = "0.9.0"
 serde_json = {version = "1.0.65"}
 sha2 = "0.9.3"
 test-log = {version = "0.2.7", default-features = false, features = ["trace"]}
 # temporarily using fork work-around for https://github.com/informalsystems/tendermint-rs/issues/971
+tempfile = "3.2.0"
 tendermint = {git = "https://github.com/heliaxdev/tendermint-rs", branch = "yuji/abcipp-v0.23.0", optional = true}
 tendermint-stable = {package = "tendermint", git = "https://github.com/heliaxdev/tendermint-rs", branch = "yuji/rebase_v0.23.0", optional = true}
+tendermint-proto = {git = "https://github.com/heliaxdev/tendermint-rs", branch = "yuji/abcipp-v0.23.0", optional = true}
+tendermint-proto-abci = {package = "tendermint-proto", git = "https://github.com/heliaxdev/tendermint-rs", branch = "yuji/rebase_v0.23.0", optional = true}
 tracing = "0.1.26"
 tracing-subscriber = {version = "0.2.25", default-features = false, features = ["env-filter", "fmt"]}
 
@@ -59,7 +65,6 @@ itertools = "0.10.0"
 libp2p = "0.38.0"
 pretty_assertions = "0.7.2"
 rexpect = {git = "https://github.com/heliaxdev/rexpect.git", branch = "tomas/eof-hack-fix"}
-tempfile = "3.2.0"
 
 # This is used to enable logging from tests
 [package.metadata.cargo-udeps.ignore]

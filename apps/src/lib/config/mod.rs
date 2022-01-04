@@ -2,7 +2,6 @@
 
 pub mod genesis;
 pub mod global;
-pub mod gossiper;
 
 use std::collections::HashSet;
 use std::fmt::Display;
@@ -14,7 +13,6 @@ use std::str::FromStr;
 
 use anoma::types::chain::ChainId;
 use anoma::types::time::Rfc3339String;
-use gossiper::Gossiper;
 use libp2p::multiaddr::{Multiaddr, Protocol};
 use libp2p::multihash::Multihash;
 use libp2p::PeerId;
@@ -88,6 +86,15 @@ pub struct Ledger {
 pub struct Shell {
     pub base_dir: PathBuf,
     pub ledger_address: SocketAddr,
+    /// RocksDB block cache maximum size in bytes.
+    /// When not set, defaults to 1/3 of the available memory.
+    pub block_cache_bytes: Option<u64>,
+    /// VP WASM compilation cache maximum size in bytes.
+    /// When not set, defaults to 1/6 of the available memory.
+    pub vp_wasm_compilation_cache_bytes: Option<u64>,
+    /// Tx WASM compilation in-memory cache maximum size in bytes.
+    /// When not set, defaults to 1/6 of the available memory.
+    pub tx_wasm_compilation_cache_bytes: Option<u64>,
     /// Use the [`Ledger::db_dir()`] method to read the value.
     db_dir: PathBuf,
     /// Use the [`Ledger::tendermint_dir()`] method to read the value.
@@ -117,7 +124,6 @@ pub struct IntentGossiper {
     pub topics: HashSet<String>,
     pub subscription_filter: SubscriptionFilter,
     pub rpc: Option<RpcServer>,
-    pub gossiper: Gossiper,
     pub discover_peer: Option<DiscoverPeer>,
     pub matchmaker: Option<Matchmaker>,
 }
@@ -137,6 +143,9 @@ impl Ledger {
                     IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)),
                     26658,
                 ),
+                block_cache_bytes: None,
+                vp_wasm_compilation_cache_bytes: None,
+                tx_wasm_compilation_cache_bytes: None,
                 db_dir: DB_DIR.into(),
                 tendermint_dir: TENDERMINT_DIR.into(),
             },
@@ -374,7 +383,6 @@ impl Default for IntentGossiper {
             ),
 
             topics: vec!["asset_v0"].into_iter().map(String::from).collect(),
-            gossiper: Gossiper::new(),
             matchmaker: None,
             discover_peer: Some(DiscoverPeer::default()),
         }
@@ -438,55 +446,6 @@ impl IntentGossiper {
         if let Some(address) = rpc {
             self.rpc = Some(RpcServer { address });
         }
-    }
-
-    #[cfg(any(test, feature = "testing"))]
-    pub fn default_with_address(
-        ip: String,
-        port: u32,
-        peers_info: Vec<(String, u32, PeerId)>,
-        mdns: bool,
-        kademlia: bool,
-        matchmaker: bool,
-        rpc: bool,
-    ) -> Self {
-        let mut gossiper_config = IntentGossiper::default();
-        let mut discover_config = DiscoverPeer::default();
-
-        gossiper_config.address =
-            Multiaddr::from_str(format!("/ip4/{}/tcp/{}", ip, port).as_str())
-                .unwrap();
-
-        if matchmaker {
-            gossiper_config.matchmaker = Some(Matchmaker {
-                matchmaker: "../wasm/mm_token_exch.wasm".parse().unwrap(),
-                tx_code: "../wasm/tx_from_intent.wasm".parse().unwrap(),
-                ledger_address: "0.0.0.0:26657".parse().unwrap(),
-                filter: None,
-            })
-        }
-
-        if rpc {
-            gossiper_config.rpc = Some(RpcServer::default())
-        }
-
-        let bootstrap_peers: HashSet<PeerAddress> = peers_info
-            .iter()
-            .map(|info| PeerAddress {
-                address: Multiaddr::from_str(
-                    format!("/ip4/{}/tcp/{}", info.0, info.1).as_str(),
-                )
-                .unwrap(),
-                peer_id: info.2,
-            })
-            .collect();
-        discover_config.bootstrap_peers = bootstrap_peers;
-        discover_config.mdns = mdns;
-        discover_config.kademlia = kademlia;
-
-        gossiper_config.discover_peer = Some(discover_config);
-
-        gossiper_config
     }
 }
 

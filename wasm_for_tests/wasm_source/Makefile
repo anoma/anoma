@@ -17,7 +17,9 @@ wasms += vp_read_storage_key
 
 
 # Build all wasms
-all: $(wasms)
+all: 
+	make $(wasms)
+	make opt-wasm
 
 # `cargo check` all wasms
 check:
@@ -65,4 +67,8 @@ clean:
 deps:
 	$(rustup) target add wasm32-unknown-unknown
 
-.PHONY : all check test clippy fmt fmt-check clean deps
+# this command needs wasm-opt installed
+opt-wasm:
+	@for file in $(shell ls ../*.wasm); do wasm-opt -Oz -o $${file} $${file}; done
+
+.PHONY : all check test clippy fmt fmt-check clean deps opt-wasm

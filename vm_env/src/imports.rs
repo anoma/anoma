@@ -56,6 +56,7 @@ pub mod tx {
     use anoma::types::address;
     use anoma::types::address::Address;
     use anoma::types::chain::CHAIN_ID_LENGTH;
+    use anoma::types::ibc::IbcEvent;
     use anoma::types::internal::HostEnvResult;
     use anoma::types::storage::{
         BlockHash, BlockHeight, Epoch, BLOCK_HASH_LENGTH,
@@ -195,6 +196,15 @@ pub mod tx {
             .expect("Decoding address created by the ledger shouldn't fail")
     }
 
+    /// Emit an IBC event. There can be only one event per transaction. On
+    /// multiple calls, only the last emitted event will be used.
+    pub fn emit_ibc_event(event: &IbcEvent) {
+        let event = BorshSerialize::try_to_vec(event).unwrap();
+        unsafe {
+            anoma_tx_emit_ibc_event(event.as_ptr() as _, event.len() as _)
+        };
+    }
+
     /// Get the chain ID
     pub fn get_chain_id() -> String {
         let result = Vec::with_capacity(CHAIN_ID_LENGTH);
@@ -285,6 +295,9 @@ pub mod tx {
 
         // Initialize a new account
         fn anoma_tx_init_account(code_ptr: u64, code_len: u64, result_ptr: u64);
+
+        // Emit an IBC event
+        fn anoma_tx_emit_ibc_event(event_ptr: u64, event_len: u64);
 
         // Get the chain ID
         fn anoma_tx_get_chain_id(result_ptr: u64);
@@ -545,81 +558,5 @@ pub mod vp {
             input_data_ptr: u64,
             input_data_len: u64,
         ) -> i64;
-    }
-}
-
-/// Matchmaker environment imports
-pub mod matchmaker {
-    use std::collections::HashSet;
-
-    pub use borsh::{BorshDeserialize, BorshSerialize};
-
-    /// Send a transaction with the `tx_data` and the `tx_code` to the ledger
-    /// given in matchmaker parameters (`--tx-code-path` and
-    /// `--ledger-address`).
-    pub fn send_match(tx_data: Vec<u8>) {
-        unsafe {
-            anoma_mm_send_match(tx_data.as_ptr() as _, tx_data.len() as _)
-        };
-    }
-
-    /// Update the matchmaker state. This state will be pass on the next run of
-    /// the matchmaker.
-    pub fn update_state(state: Vec<u8>) {
-        unsafe { anoma_mm_update_state(state.as_ptr() as _, state.len() as _) };
-    }
-
-    /// Remove the intents from the matchmaker intent mempool, to call when they
-    /// are fulfilled or outdated.
-    pub fn remove_intents(intents_id: HashSet<Vec<u8>>) {
-        let intents_id_bytes = intents_id.try_to_vec().unwrap();
-        unsafe {
-            anoma_mm_remove_intents(
-                intents_id_bytes.as_ptr() as _,
-                intents_id_bytes.len() as _,
-            )
-        };
-    }
-
-    /// Log a string. The message will be printed at the `tracing::Level::Info`.
-    pub fn log_string<T: AsRef<str>>(msg: T) {
-        let msg = msg.as_ref();
-        unsafe {
-            anoma_mm_log_string(msg.as_ptr() as _, msg.len() as _);
-        }
-    }
-
-    /// These host functions are implemented in the Anoma's [`host_env`]
-    /// module. The environment provides calls to them via this C interface.
-    extern "C" {
-        // Inject a transaction from matchmaker's matched intents to the ledger
-        fn anoma_mm_send_match(data_ptr: u64, data_len: u64);
-
-        fn anoma_mm_update_state(state_ptr: u64, state_len: u64);
-
-        fn anoma_mm_remove_intents(intents_id_ptr: u64, intents_id_len: u64);
-
-        // Requires a node running with "Info" log level
-        fn anoma_mm_log_string(str_ptr: u64, str_len: u64);
-    }
-}
-
-/// Filter environment imports
-pub mod filter {
-    pub use borsh::{BorshDeserialize, BorshSerialize};
-
-    /// Log a string. The message will be printed at the `tracing::Level::Info`.
-    pub fn log_string<T: AsRef<str>>(msg: T) {
-        let msg = msg.as_ref();
-        unsafe {
-            anoma_filter_log_string(msg.as_ptr() as _, msg.len() as _);
-        }
-    }
-
-    /// These host functions are implemented in the Anoma's [`host_env`]
-    /// module. The environment provides calls to them via this C interface.
-    extern "C" {
-        // Requires a node running with "Info" log level
-        fn anoma_filter_log_string(str_ptr: u64, str_len: u64);
     }
 }

@@ -8,18 +8,16 @@ use wasmer::{
     WasmerEnv,
 };
 
-use crate::gossip::mm::MmHost;
 use crate::ledger::storage::{self, StorageHasher};
-use crate::vm::host_env;
-use crate::vm::host_env::{
-    FilterEnv, MatchmakerEnv, TxEnv, VpEnv, VpEvaluator,
-};
+use crate::vm::host_env::{TxEnv, VpEnv, VpEvaluator};
 use crate::vm::wasm::memory::WasmMemory;
+use crate::vm::{host_env, WasmCacheAccess};
 
-impl<DB, H> WasmerEnv for TxEnv<'_, WasmMemory, DB, H>
+impl<DB, H, CA> WasmerEnv for TxEnv<'_, WasmMemory, DB, H, CA>
 where
     DB: storage::DB + for<'iter> storage::DBIter<'iter>,
     H: StorageHasher,
+    CA: WasmCacheAccess,
 {
     fn init_with_instance(
         &mut self,
@@ -29,33 +27,13 @@ where
     }
 }
 
-impl<DB, H, EVAL> WasmerEnv for VpEnv<'_, WasmMemory, DB, H, EVAL>
+impl<DB, H, EVAL, CA> WasmerEnv for VpEnv<'_, WasmMemory, DB, H, EVAL, CA>
 where
     DB: storage::DB + for<'iter> storage::DBIter<'iter>,
     H: StorageHasher,
     EVAL: VpEvaluator,
+    CA: WasmCacheAccess,
 {
-    fn init_with_instance(
-        &mut self,
-        instance: &Instance,
-    ) -> std::result::Result<(), HostEnvInitError> {
-        self.memory.init_env_memory(&instance.exports)
-    }
-}
-
-impl<MM> WasmerEnv for MatchmakerEnv<WasmMemory, MM>
-where
-    MM: MmHost,
-{
-    fn init_with_instance(
-        &mut self,
-        instance: &Instance,
-    ) -> std::result::Result<(), HostEnvInitError> {
-        self.memory.init_env_memory(&instance.exports)
-    }
-}
-
-impl WasmerEnv for FilterEnv<WasmMemory> {
     fn init_with_instance(
         &mut self,
         instance: &Instance,
@@ -67,14 +45,15 @@ impl WasmerEnv for FilterEnv<WasmMemory> {
 /// Prepare imports (memory and host functions) exposed to the vm guest running
 /// transaction code
 #[allow(clippy::too_many_arguments)]
-pub fn tx_imports<DB, H>(
+pub fn tx_imports<DB, H, CA>(
     wasm_store: &Store,
     initial_memory: Memory,
-    env: TxEnv<'static, WasmMemory, DB, H>,
+    env: TxEnv<'static, WasmMemory, DB, H, CA>,
 ) -> ImportObject
 where
     DB: storage::DB + for<'iter> storage::DBIter<'iter>,
     H: StorageHasher,
+    CA: WasmCacheAccess,
 {
     wasmer::imports! {
         // default namespace
@@ -91,6 +70,7 @@ where
             "anoma_tx_insert_verifier" => Function::new_native_with_env(wasm_store, env.clone(), host_env::tx_insert_verifier),
             "anoma_tx_update_validity_predicate" => Function::new_native_with_env(wasm_store, env.clone(), host_env::tx_update_validity_predicate),
             "anoma_tx_init_account" => Function::new_native_with_env(wasm_store, env.clone(), host_env::tx_init_account),
+            "anoma_tx_emit_ibc_event" => Function::new_native_with_env(wasm_store, env.clone(), host_env::tx_emit_ibc_event),
             "anoma_tx_get_chain_id" => Function::new_native_with_env(wasm_store, env.clone(), host_env::tx_get_chain_id),
             "anoma_tx_get_block_height" => Function::new_native_with_env(wasm_store, env.clone(), host_env::tx_get_block_height),
             "anoma_tx_get_block_hash" => Function::new_native_with_env(wasm_store, env.clone(), host_env::tx_get_block_hash),
@@ -102,15 +82,16 @@ where
 
 /// Prepare imports (memory and host functions) exposed to the vm guest running
 /// validity predicate code
-pub fn vp_imports<DB, H, EVAL>(
+pub fn vp_imports<DB, H, EVAL, CA>(
     wasm_store: &Store,
     initial_memory: Memory,
-    env: VpEnv<'static, WasmMemory, DB, H, EVAL>,
+    env: VpEnv<'static, WasmMemory, DB, H, EVAL, CA>,
 ) -> ImportObject
 where
     DB: storage::DB + for<'iter> storage::DBIter<'iter>,
     H: StorageHasher,
-    EVAL: VpEvaluator<Db = DB, H = H, Eval = EVAL>,
+    EVAL: VpEvaluator<Db = DB, H = H, Eval = EVAL, CA = CA>,
+    CA: WasmCacheAccess,
 {
     wasmer::imports! {
         // default namespace
@@ -132,50 +113,6 @@ where
             "anoma_vp_verify_tx_signature" => Function::new_native_with_env(wasm_store, env.clone(), host_env::vp_verify_tx_signature),
             "anoma_vp_eval" => Function::new_native_with_env(wasm_store, env.clone(), host_env::vp_eval),
             "anoma_vp_log_string" => Function::new_native_with_env(wasm_store, env.clone(), host_env::vp_log_string),
-        },
-    }
-}
-
-/// Prepare imports (memory and host functions) exposed to the vm guest running
-/// matchmaker code
-pub fn mm_imports<MM>(
-    wasm_store: &Store,
-    initial_memory: Memory,
-    mm: MM,
-) -> ImportObject
-where
-    MM: 'static + MmHost,
-{
-    let env = MatchmakerEnv {
-        memory: WasmMemory::default(),
-        mm,
-    };
-    wasmer::imports! {
-        // default namespace
-        "env" => {
-            "memory" => initial_memory,
-            "anoma_mm_send_match" => Function::new_native_with_env(wasm_store, env.clone(), host_env::mm_send_match),
-            "anoma_mm_update_state" => Function::new_native_with_env(wasm_store, env.clone(), host_env::mm_update_state),
-            "anoma_mm_remove_intents" => Function::new_native_with_env(wasm_store, env.clone(), host_env::mm_remove_intents),
-            "anoma_mm_log_string" => Function::new_native_with_env(wasm_store, env, host_env::mm_log_string),
-        },
-    }
-}
-
-/// Prepare imports (memory and host functions) exposed to the vm guest running
-/// filter code
-pub fn mm_filter_imports(
-    wasm_store: &Store,
-    initial_memory: Memory,
-) -> ImportObject {
-    let env = FilterEnv {
-        memory: WasmMemory::default(),
-    };
-    wasmer::imports! {
-        // default namespace
-        "env" => {
-            "memory" => initial_memory,
-            "anoma_filter_log_string" => Function::new_native_with_env(wasm_store, env, host_env::mm_filter_log_string),
         },
     }
 }

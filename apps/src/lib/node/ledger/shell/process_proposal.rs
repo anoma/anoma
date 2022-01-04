@@ -203,25 +203,24 @@ where
                         }
                     } else {
                         // check that the fee payer has sufficient balance
-                        match self.get_balance(&tx.fee.token, &tx.fee_payer()) {
-                            Ok(balance) if tx.fee.amount <= balance => {
-                                shim::response::TxResult {
-                                    code: ErrorCodes::Ok.into(),
-                                    info: "Process proposal accepted this \
-                                           transaction"
-                                        .into(),
-                                }
+                        let balance = self
+                            .get_balance(&tx.fee.token, &tx.fee_payer())
+                            .unwrap_or_default();
+
+                        if tx.fee.amount <= balance {
+                            shim::response::TxResult {
+                                code: ErrorCodes::Ok.into(),
+                                info: "Process proposal accepted this \
+                                       transaction"
+                                    .into(),
                             }
-                            Ok(_) => shim::response::TxResult {
+                        } else {
+                            shim::response::TxResult {
                                 code: ErrorCodes::InvalidTx.into(),
                                 info: "The address given does not have \
                                        sufficient balance to pay fee"
                                     .into(),
-                            },
-                            Err(err) => shim::response::TxResult {
-                                code: ErrorCodes::InvalidTx.into(),
-                                info: err,
-                            },
+                            }
                         }
                     }
                 }
@@ -324,7 +323,7 @@ where
 /// are covered by the e2e tests.
 #[cfg(test)]
 mod test_process_proposal {
-    use anoma::types::address::{xan, Address};
+    use anoma::types::address::xan;
     use anoma::types::chain::ChainId;
     use anoma::types::key::ed25519::SignedTxData;
     use anoma::types::storage::Epoch;
@@ -465,8 +464,8 @@ mod test_process_proposal {
         }
     }
 
-    /// Test that if the account submitting the tx is
-    /// not known, [`process_proposal`] rejects that tx
+    /// Test that if the account submitting the tx is not known and the fee is
+    /// non-zero, [`process_proposal`] rejects that tx
     #[test]
     fn test_wrapper_unknown_address() {
         let (mut shell, _) = TestShell::new();
@@ -478,7 +477,7 @@ mod test_process_proposal {
         );
         let wrapper = WrapperTx::new(
             Fee {
-                amount: 0.into(),
+                amount: 1.into(),
                 token: xan(),
             },
             &keypair,
@@ -493,14 +492,10 @@ mod test_process_proposal {
         };
         let response = shell.process_proposal(request);
         assert_eq!(response.result.code, u32::from(ErrorCodes::InvalidTx));
-        let source: Address = (&keypair.public).into();
         assert_eq!(
             response.result.info,
-            format!(
-                "Unable to read token {} balance of the given address {}",
-                xan(),
-                source
-            )
+            "The address given does not have sufficient balance to pay fee"
+                .to_string(),
         );
         #[cfg(feature = "ABCI")]
         {

@@ -1,0 +1,22 @@
+[package]
+authors = ["Heliax AG <hello@heliax.dev>"]
+description = "Anoma matchmaker template for a custom matchmaker implementation"
+edition = "2021"
+license = "GPL-3.0"
+name = "mm_template"
+readme = "../../README.md"
+resolver = "2"
+version = "0.2.0"
+
+[lib]
+crate-type = ["dylib"]
+
+[features]
+default = ["ABCI"]
+
+ABCI = ["anoma/ABCI"]
+
+[dependencies]
+anoma = {path = "../../shared", default-features = false}
+anoma_macros = {path = "../../macros"}
+tokio = {version = "1.15.0", features = ["sync"]}

@@ -1,6 +1,15 @@
 # Storage
 
-We can make use of the Tendermint's finality property to split the storage into immutable and mutable parts, where only the data at the current level is mutable. It should be possible to have the mutable state in-memory only and write to DB only once a block is finalized, which combined with batch writes would most likely be quite efficient (this can also be done asynchronously).
+By default, we persist all the historical data for the predecessor blocks to be able to replay the whole chain and to be able to support Tendermint's rollback command (that allows to rollback the state to the predecessor block, which is useful recovering from a corrupt state). For values that change on every block, we can simply prefix their storage key with the block height.
+
+However, for the accounts storage it is reasonable to expect that in each block only a small subset of the data will be updated, so we can avoid persisting values that haven't changed from the predecessor block. To achieve that:
+
+- The latest value is written into and read from its storage key without any height prefix
+- If the previous value is overwritten or deleted at block height `n`, we store the diff (old and new value) under `n` prefix (the height at which it's been changed from this value)
+
+Note that when there are multiple updates of a value with the same storage key in the same block, only the last value will be persisted to the block.
+
+The block's mutable metadata is permanently in-memory and batch written to DB once a block is finalized.
 
 ```mermaid
 graph LR
@@ -12,6 +21,8 @@ graph LR
     LNL ===== L0[level 0]
   end
 ```
+
+The accounts storage data are written and read directly to/from the DB and the DB layer manages its cache.
 
 ## In-memory (mutable state)
 
@@ -33,7 +44,7 @@ It may be advantageous if the data columns keys are not hashed to preserve order
 
 ## DB (immutable state)
 
-The immutable state doesn't have the same requirements as the mutable. This means that a different data structures or memory layout may perform better (subject to benchmarks). The state trees in the immutable blocks should take advantage of its properties for optimization. For example, it can save storage space by sharing common data and/or delta compression. 
+The immutable state doesn't have the same requirements as the mutable. This means that a different data structures or memory layout may perform better (subject to benchmarks). The state trees in the immutable blocks should take advantage of its properties for optimization. For example, it can save storage space by sharing common data and/or delta compression.
 
 It's very likely that different settings for immutable storage will be provided in future, similar to e.g. [Tezos history modes](https://tezos.gitlab.io/user/history_modes.html).
 
@@ -95,39 +106,3 @@ The persistent DB implementation (e.g. RocksDB).
 ### DB keys
 
 The DB keys are composed of key segments. A key segment can be an `Address` which starts with `#` (there can be multiple addresses involved in a key) or any user defined non-empty utf-8 string (maybe limited to only alphanumerical characters). Also, `/` and `?` are reserved. `/` is used as a separator for segments. `?` is reserved for a validity predicate and the key segment `?` can be specified only by the specific API.
-
-In the DB storage, the keys would be prefixed by the block height and the space type. This would be hidden from the wasm environment, which only operates at the current block height. For example, when the block height is `123` and the key specified by the storage is `#my_address_hash/balance/token`, the actual key for the persistent DB implementation would be `123/subspace/#my_address_hash/balance/token`.
-
-This could roughly be implemented as:
-
-```
-struct Key {
-    segments: Vec<DbKeySeg>
-}
-
-impl Key {
-    fn parse(string: String) -> Result<Self, Error> {..}
-    fn push(&self, other: &KeySeg) -> Self {..}
-    fn join(&self, other: &Key) -> Self {..}
-    fn into_string(&self) -> String;
-    // find addresses included in the key, used to find which validity-predicates should be triggered by a key space change
-    fn find_addresses(&self) -> Vec<Address> {..}
-}
-
-// Provide a trait so that we can define new pre-defined key segment types inside wasm environment and also ad-hoc key segments defined by wasm users
-trait KeySeg {
-    fn parse(string: String) -> Result<Self, Error>;
-    fn to_string(&self) -> String;
-    fn to_db_key(&self) -> DbKeySeg;
-}
-
-enum DbKeySeg {
-    AddressSeg(Address),
-    StringSeg(String),
-}
-
-impl KeySeg for DbKeySeg {..}
-impl KeySeg for BlockHeight {..}
-```
-
-Then the storage API functions (read/write/delete) should only accept the keys with this `Key` type.

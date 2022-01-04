@@ -13,7 +13,10 @@ use std::net::SocketAddr;
 use std::path::PathBuf;
 use std::str::FromStr;
 
+use byte_unit::Byte;
 use futures::future::TryFutureExt;
+use once_cell::unsync::Lazy;
+use sysinfo::{RefreshKind, System, SystemExt};
 #[cfg(not(feature = "ABCI"))]
 use tendermint_proto::abci::CheckTxType;
 #[cfg(feature = "ABCI")]
@@ -130,7 +133,7 @@ impl Shell {
 /// Run the ledger with an async runtime
 pub fn run(config: config::Ledger, wasm_dir: PathBuf) {
     let logical_cores = num_cpus::get();
-    tracing::debug!("Available logical cores: {}", logical_cores);
+    tracing::info!("Available logical cores: {}", logical_cores);
 
     let rayon_threads = if let Ok(num_str) = env::var(ENV_VAR_RAYON_THREADS) {
         match usize::from_str(&num_str) {
@@ -148,7 +151,7 @@ pub fn run(config: config::Ledger, wasm_dir: PathBuf) {
         // If not set, default to half of logical CPUs count
         logical_cores / 2
     };
-    tracing::debug!("Using {} threads for Rayon.", rayon_threads);
+    tracing::info!("Using {} threads for Rayon.", rayon_threads);
 
     let tokio_threads = if let Ok(num_str) = env::var(ENV_VAR_TOKIO_THREADS) {
         match usize::from_str(&num_str) {
@@ -166,7 +169,7 @@ pub fn run(config: config::Ledger, wasm_dir: PathBuf) {
         // If not set, default to half of logical CPUs count
         logical_cores / 2
     };
-    tracing::debug!("Using {} threads for Tokio.", tokio_threads);
+    tracing::info!("Using {} threads for Tokio.", tokio_threads);
 
     // Configure number of threads for rayon (used in `par_iter` when running
     // VPs)
@@ -198,6 +201,86 @@ pub fn reset(config: config::Ledger) -> Result<(), shell::Error> {
 async fn run_aux(config: config::Ledger, wasm_dir: PathBuf) {
     // Prefetch needed wasm artifacts
     wasm_loader::pre_fetch_wasm(&wasm_dir).await;
+
+    // Find the system available memory
+    let available_memory_bytes = Lazy::new(|| {
+        let sys = System::new_with_specifics(RefreshKind::new().with_memory());
+        let available_memory_bytes = sys.available_memory() * 1024;
+        tracing::info!(
+            "Available memory: {}",
+            Byte::from_bytes(available_memory_bytes as u128)
+                .get_appropriate_unit(true)
+        );
+        available_memory_bytes
+    });
+
+    // Find the VP WASM compilation cache size
+    let vp_wasm_compilation_cache =
+        match config.shell.vp_wasm_compilation_cache_bytes {
+            Some(vp_wasm_compilation_cache) => {
+                tracing::info!(
+                    "VP WASM compilation cache size set from the configuration"
+                );
+                vp_wasm_compilation_cache
+            }
+            None => {
+                tracing::info!(
+                    "VP WASM compilation cache size not configured, using 1/6 \
+                     of available memory."
+                );
+                *available_memory_bytes / 6
+            }
+        };
+    tracing::info!(
+        "VP WASM compilation cache size: {}",
+        Byte::from_bytes(vp_wasm_compilation_cache as u128)
+            .get_appropriate_unit(true)
+    );
+
+    // Find the tx WASM compilation cache size
+    let tx_wasm_compilation_cache =
+        match config.shell.tx_wasm_compilation_cache_bytes {
+            Some(tx_wasm_compilation_cache) => {
+                tracing::info!(
+                    "Tx WASM compilation cache size set from the configuration"
+                );
+                tx_wasm_compilation_cache
+            }
+            None => {
+                tracing::info!(
+                    "Tx WASM compilation cache size not configured, using 1/6 \
+                     of available memory."
+                );
+                *available_memory_bytes / 6
+            }
+        };
+    tracing::info!(
+        "Tx WASM compilation cache size: {}",
+        Byte::from_bytes(tx_wasm_compilation_cache as u128)
+            .get_appropriate_unit(true)
+    );
+
+    // Setup DB cache, it must outlive the DB instance that's in the shell
+    let block_cache_size_bytes = match config.shell.block_cache_bytes {
+        Some(block_cache_bytes) => {
+            tracing::info!("Block cache set from the configuration.",);
+            block_cache_bytes
+        }
+        None => {
+            tracing::info!(
+                "Block cache size not configured, using 1/3 of available \
+                 memory."
+            );
+            *available_memory_bytes / 3
+        }
+    };
+    tracing::info!(
+        "RocksDB block cache size: {}",
+        Byte::from_bytes(block_cache_size_bytes as u128)
+            .get_appropriate_unit(true)
+    );
+    let db_cache =
+        rocksdb::Cache::new_lru_cache(block_cache_size_bytes as usize).unwrap();
 
     let tendermint_dir = config.tendermint_dir();
     let ledger_address = config.shell.ledger_address.to_string();
@@ -281,8 +364,14 @@ async fn run_aux(config: config::Ledger, wasm_dir: PathBuf) {
 
     // Construct our ABCI application.
     let ledger_address = config.shell.ledger_address;
-    let (shell, abci_service) =
-        AbcippShim::new(config, wasm_dir, broadcaster_sender);
+    let (shell, abci_service) = AbcippShim::new(
+        config,
+        wasm_dir,
+        broadcaster_sender,
+        &db_cache,
+        vp_wasm_compilation_cache,
+        tx_wasm_compilation_cache,
+    );
 
     // Start the ABCI server
     let abci = tokio::spawn(async move {

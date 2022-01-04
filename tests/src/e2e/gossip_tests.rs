@@ -9,13 +9,16 @@
 //! To keep the temporary files created by a test, use env var
 //! `ANOMA_E2E_KEEP_TEMP=true`.
 
+use std::env;
 use std::fs::OpenOptions;
 use std::path::PathBuf;
 
 use color_eyre::eyre::Result;
+use escargot::CargoBuild;
 use serde_json::json;
 use setup::constants::*;
 
+use super::setup::ENV_VAR_DEBUG;
 use crate::e2e::helpers::find_address;
 use crate::e2e::setup::{self, Bin, Who};
 use crate::{run, run_as};
@@ -65,6 +68,34 @@ fn run_gossip() -> Result<()> {
 #[test]
 fn match_intents() -> Result<()> {
     let test = setup::single_node_net()?;
+
+    // Make sure that the default matchmaker is built
+    println!("Building the matchmaker \"mm_token_exch\" implementation...");
+    let run_debug = match env::var(ENV_VAR_DEBUG) {
+        Ok(val) => val.to_ascii_lowercase() != "false",
+        _ => false,
+    };
+    let manifest_path = test
+        .working_dir
+        .join("matchmaker")
+        .join("mm_token_exch")
+        .join("Cargo.toml");
+    let cmd = if !cfg!(feature = "ABCI") {
+        CargoBuild::new()
+            .manifest_path(manifest_path)
+            .no_default_features()
+            .features("ABCI-plus-plus")
+    } else {
+        CargoBuild::new()
+            .manifest_path(manifest_path)
+            .features("ABCI")
+    };
+    let cmd = if run_debug { cmd } else { cmd.release() };
+    let msgs = cmd.exec().unwrap();
+    for msg in msgs {
+        msg.unwrap();
+    }
+    println!("Done building the matchmaker.");
 
     let mut ledger =
         run_as!(test, Who::Validator(0), Bin::Node, &["ledger"], Some(20),)?;
@@ -236,8 +267,8 @@ fn match_intents() -> Result<()> {
         albert, christel
     ))?;
 
-    // check that the intent vp passes evaluation
-    ledger.exp_string("eval result: true")?;
+    // check that the all VPs accept the transaction
+    ledger.exp_string("all VPs accepted apply_tx storage modification")?;
 
     Ok(())
 }

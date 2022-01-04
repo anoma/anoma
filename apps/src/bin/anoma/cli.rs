@@ -114,6 +114,7 @@ mod imp {
 mod imp {
     use std::process::Command;
 
+    use eyre::{eyre, Result, WrapErr};
     use winapi::shared::minwindef::{BOOL, DWORD, FALSE, TRUE};
     use winapi::um::consoleapi::SetConsoleCtrlHandler;
 
@@ -122,15 +123,10 @@ mod imp {
         TRUE
     }
 
-    pub fn exec_subcommand(program: &str, cmd: Command) -> Result<()> {
+    pub fn exec_subcommand(program: &str, mut cmd: Command) -> Result<()> {
         unsafe {
             if SetConsoleCtrlHandler(Some(ctrlc_handler), TRUE) == FALSE {
-                return Err(ProcessError::new(
-                    "Could not set Ctrl-C handler.",
-                    None,
-                    None,
-                )
-                .into());
+                return Err(eyre!("Could not set Ctrl-C handler."));
             }
         }
 

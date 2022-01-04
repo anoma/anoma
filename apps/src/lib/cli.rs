@@ -1967,7 +1967,10 @@ pub mod args {
             .arg(PEERS.def().about("List of peers to connect to."))
             .arg(TOPICS.def().about("Enable a new gossip topic."))
             .arg(RPC_SOCKET_ADDR.def().about("Enable RPC service."))
-            .arg(MATCHMAKER_PATH.def().about("The matchmaker."))
+            .arg(MATCHMAKER_PATH.def().about(
+                "The file name of the matchmaker compiled to a dynamic \
+                 library without its extension.",
+            ))
             .arg(
                 TX_CODE_PATH
                     .def()

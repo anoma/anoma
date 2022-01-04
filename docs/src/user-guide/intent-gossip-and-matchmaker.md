@@ -3,13 +3,13 @@
 To run an intent gossip node with an RPC server:
 
 ```shell
-anoma node gossip --rpc "127.0.0.1:39111"
+anoma node gossip --rpc "127.0.0.1:26660"
 ```
 
 To run an intent gossip node with the intent gossip system, a token exchange matchmaker and RPC through which new intents are requested:
 
 ```shell
-anoma node gossip --rpc "127.0.0.1:39111" --matchmaker-path wasm/mm_token_exch.wasm --tx-code-path wasm/tx_from_intent.wasm --ledger-address "127.0.0.1:26657" --source matchmaker --signing-key matchmaker
+anoma node gossip --rpc "127.0.0.1:26660" --matchmaker-path libmm_token_exch --tx-code-path wasm/tx_from_intent.wasm --ledger-address "127.0.0.1:26657" --source matchmaker --signing-key matchmaker
 ```
 
 Mind that `matchmaker` should be valid key in your wallet.
@@ -67,17 +67,17 @@ This pre-built matchmaker implementation is [the fungible token exchange `mm_tok
    ```shell
    anoma node ledger run
    
-   anoma node gossip --rpc "127.0.0.1:39111" --matchmaker-path wasm/mm_token_exch.wasm --tx-code-path wasm/tx_from_intent.wasm --ledger-address "127.0.0.1:26657" --source mm-1 --signing-key mm-1
+   anoma node gossip --rpc "127.0.0.1:26660" --matchmaker-path wasm/mm_token_exch.wasm --tx-code-path wasm/tx_from_intent.wasm --ledger-address "127.0.0.1:26657" --source mm-1 --signing-key mm-1
    
-   anoma client subscribe-topic --node "http://127.0.0.1:39111" --topic "asset_v1"
+   anoma client subscribe-topic --node "http://127.0.0.1:26660" --topic "asset_v1"
    ```
 
 5) Submit the intents (the target gossip node must be running an RPC server):
 
    ```shell
-   anoma client intent --data-path intent.A.data --topic "asset_v1" --signing-key alberto --node "http://127.0.0.1:39111"
-   anoma client intent --data-path intent.B.data --topic "asset_v1" --signing-key bertha --node "http://127.0.0.1:39111"
-   anoma client intent --data-path intent.C.data --topic "asset_v1" --signing-key christel --node "http://127.0.0.1:39111"
+   anoma client intent --data-path intent.A.data --topic "asset_v1" --signing-key alberto --node "http://127.0.0.1:26660"
+   anoma client intent --data-path intent.B.data --topic "asset_v1" --signing-key bertha --node "http://127.0.0.1:26660"
+   anoma client intent --data-path intent.C.data --topic "asset_v1" --signing-key christel --node "http://127.0.0.1:26660"
    ```
 
    The matchmaker should find a match from these intents and submit a transaction to the ledger that performs the n-party transfers of tokens.
@@ -92,20 +92,30 @@ This pre-built matchmaker implementation is [the fungible token exchange `mm_tok
 
 ## 🤝 Custom matchmaker
 
-A custom matchmaker code can be built from [`wasm/mm_template`](https://github.com/anoma/anoma/tree/master/wasm/mm_template).
+A custom matchmaker code can be built from [`matchmaker/mm_template`](https://github.com/anoma/anoma/tree/master/matchmaker/mm_template).
 
-A matchmaker code must contain the following function, which will be called when a new intent is received:
+The `anoma_macros::Matchmaker` macro can be used to derive the binding code for the matchmaker runner on any custom implementation, e.g.:
 
 ```rust
-use anoma_vm_env::matchmaker_prelude::*;
+#[derive(Default, Matchmaker)]
+struct MyMatchmaker;
+```
 
-#[matchmaker]
-fn add_intent(last_state: Vec<u8>, intent_id: Vec<u8>, intent_data: Vec<u8>) -> bool {
-  // Returns a result of processing the intent
-  true
+This macro requires that there is a `Default` implementation (derived or custom) for the matchmaker, which can be used by the runner to instantiate the matchmaker.
+
+The matchmaker must also implement `AddIntent`, e.g.:
+
+```rust
+impl AddIntent for MyMatchmaker {
+    // This function will be called when a new intent is received
+    fn add_intent(
+        &mut self,
+        _intent_id: &Vec<u8>,
+        _intent_data: &Vec<u8>,
+    ) -> AddIntentResult {
+        AddIntentResult::default()
+    }
 }
 ```
 
-The matchmaker can keep some state between its runs. The state can be updated from within the matchmaker code with [`update_state` function](https://docs.anoma.network/rustdoc/anoma_vm_env/imports/matchmaker/fn.update_state.html) and received from the `last_state` argument.
-
-To find out about the interface available in a matchmaker and the library code used in the `mm_token_exch` implementation, please check out [Rust docs for `matchmaker_prelude`](https://docs.anoma.network/master/rustdoc/anoma_vm_env/matchmaker_prelude/index.html).
+To submit a transaction from the matchmaker, add it to the `AddIntentResult` along with a hash set of the intent IDs that were matched into the transaction.

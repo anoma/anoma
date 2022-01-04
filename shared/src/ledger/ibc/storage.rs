@@ -1,30 +1,31 @@
-//! Functions for IBC validity predicate to access the storage
+//! Functions for IBC-related data to access the storage
 
+#[cfg(any(feature = "ibc-vp", feature = "ibc-vp-abci"))]
 use std::str::FromStr;
 
-#[cfg(not(feature = "ABCI"))]
+#[cfg(all(not(feature = "ABCI"), feature = "ibc-vp"))]
 use ibc::core::ics02_client::height::Height;
-#[cfg(not(feature = "ABCI"))]
+#[cfg(all(not(feature = "ABCI"), feature = "ibc-vp"))]
 use ibc::core::ics04_channel::packet::Sequence;
-#[cfg(not(feature = "ABCI"))]
+#[cfg(all(not(feature = "ABCI"), feature = "ibc-vp"))]
 use ibc::core::ics05_port::capabilities::Capability;
-#[cfg(not(feature = "ABCI"))]
+#[cfg(all(not(feature = "ABCI"), feature = "ibc-vp"))]
 use ibc::core::ics24_host::identifier::{
     ChannelId, ClientId, ConnectionId, PortChannelId, PortId,
 };
-#[cfg(not(feature = "ABCI"))]
+#[cfg(all(not(feature = "ABCI"), feature = "ibc-vp"))]
 use ibc::core::ics24_host::Path;
-#[cfg(feature = "ABCI")]
+#[cfg(all(feature = "ABCI", feature = "ibc-vp-abci"))]
 use ibc_abci::core::ics02_client::height::Height;
-#[cfg(feature = "ABCI")]
+#[cfg(all(feature = "ABCI", feature = "ibc-vp-abci"))]
 use ibc_abci::core::ics04_channel::packet::Sequence;
-#[cfg(feature = "ABCI")]
+#[cfg(all(feature = "ABCI", feature = "ibc-vp-abci"))]
 use ibc_abci::core::ics05_port::capabilities::Capability;
-#[cfg(feature = "ABCI")]
+#[cfg(all(feature = "ABCI", feature = "ibc-vp-abci"))]
 use ibc_abci::core::ics24_host::identifier::{
     ChannelId, ClientId, ConnectionId, PortChannelId, PortId,
 };
-#[cfg(feature = "ABCI")]
+#[cfg(all(feature = "ABCI", feature = "ibc-vp-abci"))]
 use ibc_abci::core::ics24_host::Path;
 use thiserror::Error;
 
@@ -35,6 +36,7 @@ const CLIENTS_COUNTER: &str = "clients/counter";
 const CONNECTIONS_COUNTER: &str = "connections/counter";
 const CHANNELS_COUNTER: &str = "channelEnds/counter";
 const CAPABILITIES_INDEX: &str = "capabilities/index";
+#[cfg(any(feature = "ibc-vp", feature = "ibc-vp-abci"))]
 const CAPABILITIES: &str = "capabilities";
 
 #[allow(missing_docs)]
@@ -65,6 +67,7 @@ pub enum IbcPrefix {
     Commitment,
     Receipt,
     Ack,
+    Event,
     Unknown,
 }
 
@@ -86,6 +89,7 @@ pub fn ibc_prefix(key: &Key) -> IbcPrefix {
                 "commitments" => IbcPrefix::Commitment,
                 "receipts" => IbcPrefix::Receipt,
                 "acks" => IbcPrefix::Ack,
+                "event" => IbcPrefix::Event,
                 _ => IbcPrefix::Unknown,
             }
         }
@@ -148,6 +152,7 @@ pub fn capability_index_key() -> Key {
         .expect("Creating a key for the capability index shouldn't fail")
 }
 
+#[cfg(any(feature = "ibc-vp", feature = "ibc-vp-abci"))]
 /// Returns a key for the client type
 pub fn client_type_key(client_id: &ClientId) -> Key {
     let path = Path::ClientType(client_id.clone());
@@ -155,6 +160,7 @@ pub fn client_type_key(client_id: &ClientId) -> Key {
         .expect("Creating a key for the client state shouldn't fail")
 }
 
+#[cfg(any(feature = "ibc-vp", feature = "ibc-vp-abci"))]
 /// Returns a key for the client state
 pub fn client_state_key(client_id: &ClientId) -> Key {
     let path = Path::ClientState(client_id.clone());
@@ -162,6 +168,7 @@ pub fn client_state_key(client_id: &ClientId) -> Key {
         .expect("Creating a key for the client state shouldn't fail")
 }
 
+#[cfg(any(feature = "ibc-vp", feature = "ibc-vp-abci"))]
 /// Returns a key for the consensus state
 pub fn consensus_state_key(client_id: &ClientId, height: Height) -> Key {
     let path = Path::ClientConsensusState {
@@ -173,6 +180,7 @@ pub fn consensus_state_key(client_id: &ClientId, height: Height) -> Key {
         .expect("Creating a key for the consensus state shouldn't fail")
 }
 
+#[cfg(any(feature = "ibc-vp", feature = "ibc-vp-abci"))]
 /// Returns a key for the connection end
 pub fn connection_key(conn_id: &ConnectionId) -> Key {
     let path = Path::Connections(conn_id.clone());
@@ -180,6 +188,7 @@ pub fn connection_key(conn_id: &ConnectionId) -> Key {
         .expect("Creating a key for the connection shouldn't fail")
 }
 
+#[cfg(any(feature = "ibc-vp", feature = "ibc-vp-abci"))]
 /// Returns a key for the channel end
 pub fn channel_key(port_channel_id: &PortChannelId) -> Key {
     let path = Path::ChannelEnds(
@@ -190,6 +199,7 @@ pub fn channel_key(port_channel_id: &PortChannelId) -> Key {
         .expect("Creating a key for the channel shouldn't fail")
 }
 
+#[cfg(any(feature = "ibc-vp", feature = "ibc-vp-abci"))]
 /// Returns a key for the port
 pub fn port_key(port_id: &PortId) -> Key {
     let path = Path::Ports(port_id.clone());
@@ -197,12 +207,14 @@ pub fn port_key(port_id: &PortId) -> Key {
         .expect("Creating a key for the port shouldn't fail")
 }
 
+#[cfg(any(feature = "ibc-vp", feature = "ibc-vp-abci"))]
 /// Returns a key of the reversed map for IBC capabilities
 pub fn capability_key(index: u64) -> Key {
     let path = format!("{}/{}", CAPABILITIES, index);
     ibc_key(path).expect("Creating a key for a capability shouldn't fail")
 }
 
+#[cfg(any(feature = "ibc-vp", feature = "ibc-vp-abci"))]
 /// Returns a key for nextSequenceSend
 pub fn next_sequence_send_key(port_channel_id: &PortChannelId) -> Key {
     let path = Path::SeqSends(
@@ -213,6 +225,7 @@ pub fn next_sequence_send_key(port_channel_id: &PortChannelId) -> Key {
         .expect("Creating a key for nextSequenceSend shouldn't fail")
 }
 
+#[cfg(any(feature = "ibc-vp", feature = "ibc-vp-abci"))]
 /// Returns a key for nextSequenceRecv
 pub fn next_sequence_recv_key(port_channel_id: &PortChannelId) -> Key {
     let path = Path::SeqRecvs(
@@ -223,6 +236,7 @@ pub fn next_sequence_recv_key(port_channel_id: &PortChannelId) -> Key {
         .expect("Creating a key for nextSequenceRecv shouldn't fail")
 }
 
+#[cfg(any(feature = "ibc-vp", feature = "ibc-vp-abci"))]
 /// Returns a key for nextSequenceAck
 pub fn next_sequence_ack_key(port_channel_id: &PortChannelId) -> Key {
     let path = Path::SeqAcks(
@@ -233,6 +247,7 @@ pub fn next_sequence_ack_key(port_channel_id: &PortChannelId) -> Key {
         .expect("Creating a key for nextSequenceAck shouldn't fail")
 }
 
+#[cfg(any(feature = "ibc-vp", feature = "ibc-vp-abci"))]
 /// Returns a key for the commitment
 pub fn commitment_key(
     port_id: &PortId,
@@ -248,6 +263,7 @@ pub fn commitment_key(
         .expect("Creating a key for the commitment shouldn't fail")
 }
 
+#[cfg(any(feature = "ibc-vp", feature = "ibc-vp-abci"))]
 /// Returns a key for the receipt
 pub fn receipt_key(
     port_id: &PortId,
@@ -263,6 +279,7 @@ pub fn receipt_key(
         .expect("Creating a key for the receipt shouldn't fail")
 }
 
+#[cfg(any(feature = "ibc-vp", feature = "ibc-vp-abci"))]
 /// Returns a key for the ack
 pub fn ack_key(
     port_id: &PortId,
@@ -278,6 +295,7 @@ pub fn ack_key(
         .expect("Creating a key for the ack shouldn't fail")
 }
 
+#[cfg(any(feature = "ibc-vp", feature = "ibc-vp-abci"))]
 /// Returns a client ID from the given client key `#IBC/clients/<client_id>`
 pub fn client_id(key: &Key) -> Result<ClientId> {
     match &key.segments[..] {
@@ -299,6 +317,7 @@ pub fn client_id(key: &Key) -> Result<ClientId> {
     }
 }
 
+#[cfg(any(feature = "ibc-vp", feature = "ibc-vp-abci"))]
 /// Returns a connection ID from the given connection key
 /// `#IBC/connections/<conn_id>`
 pub fn connection_id(key: &Key) -> Result<ConnectionId> {
@@ -320,6 +339,7 @@ pub fn connection_id(key: &Key) -> Result<ConnectionId> {
     }
 }
 
+#[cfg(any(feature = "ibc-vp", feature = "ibc-vp-abci"))]
 /// Returns a pair of port ID and channel ID from the given channel/sequence key
 /// `#IBC/<prefix>/ports/<port_id>/channels/<channel_id>`
 pub fn port_channel_id(key: &Key) -> Result<PortChannelId> {
@@ -355,6 +375,7 @@ pub fn port_channel_id(key: &Key) -> Result<PortChannelId> {
     }
 }
 
+#[cfg(any(feature = "ibc-vp", feature = "ibc-vp-abci"))]
 /// Returns a tuple of port ID, channel ID and Sequence from the given packet
 /// info key `#IBC/<info_prefix>/ports/<port_id>/channels/<channel_id>/
 /// sequences/<sequence>`
@@ -395,6 +416,7 @@ pub fn port_channel_sequence_id(
     }
 }
 
+#[cfg(any(feature = "ibc-vp", feature = "ibc-vp-abci"))]
 /// Returns a port ID from the given port key `#IBC/ports/<port_id>`
 pub fn port_id(key: &Key) -> Result<PortId> {
     match &key.segments[..] {
@@ -416,6 +438,7 @@ pub fn port_id(key: &Key) -> Result<PortId> {
     }
 }
 
+#[cfg(any(feature = "ibc-vp", feature = "ibc-vp-abci"))]
 /// Returns a capability from the given capability key
 /// `#IBC/capabilities/<index>`
 pub fn capability(key: &Key) -> Result<Capability> {

@@ -38,6 +38,8 @@ use anoma::types::transaction::{
     EllipticCurve, PairingEngine, TxType, UpdateDkgSessionKey, WrapperTx,
 };
 use anoma::types::{address, key, token};
+use anoma::vm::wasm::{TxCache, VpCache};
+use anoma::vm::WasmCacheRwAccess;
 use ark_std::rand::SeedableRng;
 use borsh::{BorshDeserialize, BorshSerialize};
 use ferveo::dkg::Params as DkgParams;
@@ -173,6 +175,10 @@ pub struct Shell<
     mode: ShellMode,
     /// Wrapper txs to be decrypted in the next block proposal
     tx_queue: TxQueue,
+    /// VP WASM compilation cache
+    vp_wasm_cache: VpCache<WasmCacheRwAccess>,
+    /// Tx WASM compilation cache
+    tx_wasm_cache: TxCache<WasmCacheRwAccess>,
 }
 
 impl<D, H> Drop for Shell<D, H>
@@ -228,6 +234,9 @@ where
         config: config::Ledger,
         wasm_dir: PathBuf,
         broadcast_sender: UnboundedSender<Vec<u8>>,
+        db_cache: Option<&D::Cache>,
+        vp_wasm_compilation_cache: u64,
+        tx_wasm_compilation_cache: u64,
     ) -> Self {
         let chain_id = config.chain_id;
         let db_path = config.shell.db_dir(&chain_id);
@@ -237,9 +246,8 @@ where
             std::fs::create_dir(&base_dir)
                 .expect("Creating directory for Anoma should not fail");
         }
-
         // load last state from storage
-        let mut storage = Storage::open(db_path, chain_id.clone());
+        let mut storage = Storage::open(db_path, chain_id.clone(), db_cache);
         storage
             .load_last_state()
             .map_err(|e| {
@@ -266,6 +274,10 @@ where
             Default::default()
         };
 
+        let vp_wasm_cache_dir =
+            base_dir.join(chain_id.as_str()).join("vp_wasm_cache");
+        let tx_wasm_cache_dir =
+            base_dir.join(chain_id.as_str()).join("tx_wasm_cache");
         // load in keys and address from wallet if mode is set to `Validator`
         let mode = match mode {
             TendermintMode::Validator => {
@@ -344,6 +356,14 @@ where
             wasm_dir,
             mode,
             tx_queue,
+            vp_wasm_cache: VpCache::new(
+                vp_wasm_cache_dir,
+                vp_wasm_compilation_cache as usize,
+            ),
+            tx_wasm_cache: TxCache::new(
+                tx_wasm_cache_dir,
+                tx_wasm_compilation_cache as usize,
+            ),
         }
     }
 
@@ -574,6 +594,8 @@ where
         let mut response = response::Query::default();
         let mut gas_meter = BlockGasMeter::default();
         let mut write_log = WriteLog::default();
+        let mut vp_wasm_cache = self.vp_wasm_cache.read_only();
+        let mut tx_wasm_cache = self.tx_wasm_cache.read_only();
         match Tx::try_from(tx_bytes) {
             Ok(tx) => {
                 let tx = TxType::Decrypted(DecryptedTx::Decrypted(tx));
@@ -583,6 +605,8 @@ where
                     &mut gas_meter,
                     &mut write_log,
                     &self.storage,
+                    &mut vp_wasm_cache,
+                    &mut tx_wasm_cache,
                 )
                 .map_err(Error::TxApply)
                 {
@@ -771,6 +795,8 @@ mod test_utils {
         pub fn new() -> (Self, UnboundedReceiver<Vec<u8>>) {
             let (sender, receiver) = tokio::sync::mpsc::unbounded_channel();
             let base_dir = tempdir().unwrap().as_ref().canonicalize().unwrap();
+            let vp_wasm_compilation_cache = 50 * 1024 * 1024; // 50 kiB
+            let tx_wasm_compilation_cache = 50 * 1024 * 1024; // 50 kiB
             (
                 Self {
                     shell: Shell::<MockDB, Sha256Hasher>::new(
@@ -781,6 +807,9 @@ mod test_utils {
                         ),
                         top_level_directory().join("wasm"),
                         sender,
+                        None,
+                        vp_wasm_compilation_cache,
+                        tx_wasm_compilation_cache,
                     ),
                 },
                 receiver,
@@ -877,6 +906,8 @@ mod test_utils {
         let base_dir = tempdir().unwrap().as_ref().canonicalize().unwrap();
         // we have to use RocksDB for this test
         let (sender, _) = tokio::sync::mpsc::unbounded_channel();
+        let vp_wasm_compilation_cache = 50 * 1024 * 1024; // 50 kiB
+        let tx_wasm_compilation_cache = 50 * 1024 * 1024; // 50 kiB
         let mut shell = Shell::<PersistentDB, PersistentStorageHasher>::new(
             config::Ledger::new(
                 base_dir.clone(),
@@ -885,6 +916,9 @@ mod test_utils {
             ),
             top_level_directory().join("wasm"),
             sender.clone(),
+            None,
+            vp_wasm_compilation_cache,
+            tx_wasm_compilation_cache,
         );
         let keypair = gen_keypair();
         // enqueue a wrapper tx
@@ -908,7 +942,6 @@ mod test_utils {
         let store = Default::default();
         let hash = BlockHash([0; 32]);
         let pred_epochs = Default::default();
-        let subspaces = Default::default();
         let address_gen = EstablishedAddressGen::new("test");
         shell
             .storage
@@ -922,7 +955,6 @@ mod test_utils {
                 pred_epochs: &pred_epochs,
                 next_epoch_min_start_height: BlockHeight(3),
                 next_epoch_min_start_time: DateTimeUtc::now(),
-                subspaces: &subspaces,
                 address_gen: &address_gen,
                 encryption_key: None,
             })
@@ -941,6 +973,9 @@ mod test_utils {
             ),
             top_level_directory().join("wasm"),
             sender,
+            None,
+            vp_wasm_compilation_cache,
+            tx_wasm_compilation_cache,
         );
         assert!(!shell.tx_queue.is_empty());
     }
@@ -952,6 +987,8 @@ mod test_utils {
     fn test_tx_queue_must_exist() {
         let base_dir = tempdir().unwrap().as_ref().canonicalize().unwrap();
         // we have to use RocksDB for this test
+        let vp_wasm_compilation_cache = 50 * 1024 * 1024; // 50 kiB
+        let tx_wasm_compilation_cache = 50 * 1024 * 1024; // 50 kiB
         let (sender, _) = tokio::sync::mpsc::unbounded_channel();
         let mut shell = Shell::<PersistentDB, PersistentStorageHasher>::new(
             config::Ledger::new(
@@ -961,6 +998,9 @@ mod test_utils {
             ),
             top_level_directory().join("wasm"),
             sender.clone(),
+            None,
+            vp_wasm_compilation_cache,
+            tx_wasm_compilation_cache,
         );
         let keypair = gen_keypair();
         // enqueue a wrapper tx
@@ -984,7 +1024,6 @@ mod test_utils {
         let store = Default::default();
         let hash = BlockHash([0; 32]);
         let pred_epochs = Default::default();
-        let subspaces = Default::default();
         let address_gen = EstablishedAddressGen::new("test");
         shell
             .storage
@@ -998,7 +1037,6 @@ mod test_utils {
                 pred_epochs: &pred_epochs,
                 next_epoch_min_start_height: BlockHeight(3),
                 next_epoch_min_start_time: DateTimeUtc::now(),
-                subspaces: &subspaces,
                 address_gen: &address_gen,
                 encryption_key: None,
             })
@@ -1018,6 +1056,9 @@ mod test_utils {
             ),
             top_level_directory().join("wasm"),
             sender,
+            None,
+            vp_wasm_compilation_cache,
+            tx_wasm_compilation_cache,
         );
     }
 }

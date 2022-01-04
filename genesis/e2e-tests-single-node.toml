@@ -18,8 +18,9 @@ staking_reward_vp = "vp_user"
 net_address = "127.0.0.1:26656"
 # This has to be an alias of one of the established accounts
 matchmaker_account = "matchmaker"
-# A matchmaker WASM program
-matchmaker_code = "wasm/mm_token_exch.wasm"
+# A matchmaker dylib program's name (the platform specific extension 
+# `(dll|dylib|so)` is added by Anoma)
+matchmaker_code = "libmm_token_exch"
 # A transaction WASM code used by the matchmaker
 matchmaker_tx = "wasm/tx_from_intent.wasm"
 

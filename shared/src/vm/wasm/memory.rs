@@ -6,7 +6,6 @@ use std::str::Utf8Error;
 use std::sync::Arc;
 
 use borsh::BorshSerialize;
-use loupe::MemoryUsage;
 use thiserror::Error;
 use wasmer::{
     vm, BaseTunables, HostEnvInitError, LazyInit, Memory, MemoryError,
@@ -48,10 +47,6 @@ pub const TX_MEMORY_MAX_PAGES: u32 = 200; // 12.8 MiB
 pub const VP_MEMORY_INIT_PAGES: u32 = 100; // 6.4 MiB
 /// Mamixmum pages in VP memory
 pub const VP_MEMORY_MAX_PAGES: u32 = 200; // 12.8 MiB
-/// Initial pages in matchmaker memory
-pub const MATCHMAKER_MEMORY_INIT_PAGES: u32 = 400; // 25.6 MiB
-/// Initial pages in matchmaker filter memory
-pub const FILTER_MEMORY_INIT_PAGES: u32 = 100; // 6.4 MiB
 
 /// Prepare memory for instantiating a transaction module
 pub fn prepare_tx_memory(store: &wasmer::Store) -> Result<wasmer::Memory> {
@@ -73,22 +68,6 @@ pub fn prepare_vp_memory(store: &wasmer::Store) -> Result<wasmer::Memory> {
     let memory =
         Memory::new(store, mem_type).map_err(Error::InitMemoryError)?;
     Ok(memory)
-}
-
-/// Prepare memory for instantiating a matchmaker module
-pub fn prepare_matchmaker_memory(
-    store: &wasmer::Store,
-) -> Result<wasmer::Memory> {
-    let mem_type =
-        wasmer::MemoryType::new(MATCHMAKER_MEMORY_INIT_PAGES, None, false);
-    Memory::new(store, mem_type).map_err(Error::InitMemoryError)
-}
-
-/// Prepare memory for instantiating a filter module
-pub fn prepare_filter_memory(store: &wasmer::Store) -> Result<wasmer::Memory> {
-    let mem_type =
-        wasmer::MemoryType::new(FILTER_MEMORY_INIT_PAGES, None, false);
-    Memory::new(store, mem_type).map_err(Error::InitMemoryError)
 }
 
 /// Input data for transaction wasm call
@@ -181,77 +160,6 @@ pub fn write_vp_inputs(
         keys_changed_len,
         verifiers_ptr,
         verifiers_len,
-    })
-}
-
-/// Input data for matchmaker wasm call
-pub struct MatchmakerCallInput {
-    /// Pointer to the data
-    pub data_ptr: u64,
-    /// Length of the data
-    pub data_len: u64,
-    /// Pointer to the intent ID
-    pub intent_id_ptr: u64,
-    /// Length of the intent ID
-    pub intent_id_len: u64,
-    /// Pointer to the intent data
-    pub intent_data_ptr: u64,
-    /// Length of the intent data
-    pub intent_data_len: u64,
-}
-
-/// Write matchmaker inputs into wasm memory
-pub fn write_matchmaker_inputs(
-    memory: &wasmer::Memory,
-    data: impl AsRef<[u8]>,
-    intent_id: impl AsRef<[u8]>,
-    intent_data: impl AsRef<[u8]>,
-) -> Result<MatchmakerCallInput> {
-    let data_ptr = 0;
-    let data_len = data.as_ref().len() as _;
-
-    let intent_id_ptr = data_ptr + data_len;
-    let intent_id_len = intent_id.as_ref().len() as _;
-
-    let intent_data_ptr = intent_id_ptr + intent_id_len;
-    let intent_data_len = intent_data.as_ref().len() as _;
-
-    write_memory_bytes(memory, data_ptr, data)?;
-    write_memory_bytes(memory, intent_id_ptr, intent_id)?;
-    write_memory_bytes(memory, intent_data_ptr, intent_data)?;
-
-    Ok(MatchmakerCallInput {
-        data_ptr,
-        data_len,
-        intent_id_ptr,
-        intent_id_len,
-        intent_data_ptr,
-        intent_data_len,
-    })
-}
-
-/// Input data for matchmaker filter wasm call
-pub struct FilterCallInput {
-    /// Pointer to the intent data
-    pub intent_data_ptr: u64,
-    /// Length of the intent data
-    pub intent_data_len: u64,
-}
-
-/// Write matchmaker filter inputs into wasm memory
-pub fn write_filter_inputs(
-    memory: &wasmer::Memory,
-    intent_data: impl AsRef<[u8]>,
-) -> Result<FilterCallInput> {
-    let intent_data_ptr = 0;
-    let intent_data_len = intent_data.as_ref().len() as _;
-
-    tracing::info!("write_data_inputs of len {}", intent_data_len);
-    write_memory_bytes(memory, intent_data_ptr, intent_data)?;
-
-    Ok(FilterCallInput {
-        intent_data_ptr,
-        intent_data_len,
     })
 }
 
@@ -367,10 +275,11 @@ impl VmMemory for WasmMemory {
     }
 }
 
+// TODO wasmer 2.x
+// #[derive(loupe::MemoryUsage)]
 /// A custom [`Tunables`] to set a WASM memory limits.
 ///
 /// Adapted from <https://github.com/wasmerio/wasmer/blob/29d7b4a5f1c401d9a1e95086ed85878c8407ec16/examples/tunables_limit_memory.rs>.
-#[derive(MemoryUsage)]
 pub struct Limit<T: Tunables> {
     /// The maximum a linear memory is allowed to be (in Wasm pages, 64 KiB
     /// each). Since Wasmer ensures there is only none or one memory, this
@@ -527,7 +436,10 @@ pub mod tests {
 
         // Any compiler and any engine do the job here
         let compiler = Cranelift::default();
-        let engine = wasmer_engine_universal::Universal::new(compiler).engine();
+        // TODO wasmer 2.x
+        // let engine =
+        // wasmer_engine_universal::Universal::new(compiler).engine();
+        let engine = wasmer_engine_jit::JIT::new(compiler).engine();
 
         let base = BaseTunables::for_target(&Target::default());
         let limit = Pages(24);

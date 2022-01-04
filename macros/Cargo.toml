@@ -1,0 +1,14 @@
+[package]
+authors = ["Heliax AG <hello@heliax.dev>"]
+edition = "2021"
+license = "GPL-3.0"
+name = "anoma_macros"
+resolver = "2"
+version = "0.3.0"
+
+[lib]
+proc-macro = true
+
+[dependencies]
+quote = "1.0"
+syn = "1.0"

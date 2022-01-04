@@ -4,7 +4,7 @@ edition = "2021"
 license = "GPL-3.0"
 name = "anoma_wasm_for_tests"
 resolver = "2"
-version = "0.2.0"
+version = "0.3.0"
 
 [lib]
 crate-type = ["cdylib"]
@@ -23,8 +23,10 @@ vp_memory_limit = []
 vp_read_storage_key = []
 
 [dependencies]
+anoma_tx_prelude = {path = "../../tx_prelude"}
 anoma_vm_env = {path = "../../vm_env"}
-borsh = "0.9.0"
+anoma_vp_prelude = {path = "../../vp_prelude"}
+borsh = "0.9.1"
 wee_alloc = "0.4.5"
 
 [dev-dependencies]

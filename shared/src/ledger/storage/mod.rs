@@ -6,7 +6,6 @@ pub mod types;
 pub mod write_log;
 
 use core::fmt::Debug;
-use std::collections::HashMap;
 use std::fmt::Display;
 
 use prost::Message;
@@ -79,8 +78,6 @@ pub struct BlockStorage<H: StorageHasher> {
     pub epoch: Epoch,
     /// Predecessor block epochs
     pub pred_epochs: Epochs,
-    /// Accounts' subspaces storage for arbitrary key-values
-    pub subspaces: HashMap<Key, Vec<u8>>,
 }
 
 #[allow(missing_docs)]
@@ -118,8 +115,6 @@ pub struct BlockStateRead {
     pub next_epoch_min_start_height: BlockHeight,
     /// Minimum block time at which the next epoch may start
     pub next_epoch_min_start_time: DateTimeUtc,
-    /// Accounts' subspaces storage for arbitrary key-values
-    pub subspaces: HashMap<Key, Vec<u8>>,
     /// Established address generator
     pub address_gen: EstablishedAddressGen,
     /// The serialization of the key used to encrypt txs during this epoch
@@ -144,8 +139,6 @@ pub struct BlockStateWrite<'a> {
     pub next_epoch_min_start_height: BlockHeight,
     /// Minimum block time at which the next epoch may start
     pub next_epoch_min_start_time: DateTimeUtc,
-    /// Accounts' subspaces storage for arbitrary key-values
-    pub subspaces: &'a HashMap<Key, Vec<u8>>,
     /// Established address generator
     pub address_gen: &'a EstablishedAddressGen,
     /// The serialization of the key used to encrypt txs during this epoch
@@ -154,20 +147,74 @@ pub struct BlockStateWrite<'a> {
 
 /// A database backend.
 pub trait DB: std::fmt::Debug {
-    /// open the database from provided path
-    fn open(db_path: impl AsRef<std::path::Path>) -> Self;
+    /// A DB's cache
+    type Cache;
+    /// A handle for batch writes
+    type WriteBatch: DBWriteBatch;
+
+    /// Open the database from provided path
+    fn open(
+        db_path: impl AsRef<std::path::Path>,
+        cache: Option<&Self::Cache>,
+    ) -> Self;
 
     /// Flush data on the memory to persistent them
     fn flush(&self) -> Result<()>;
 
-    /// Write a block
+    /// Read the last committed block's metadata
+    fn read_last_block(&mut self) -> Result<Option<BlockStateRead>>;
+
+    /// Write block's metadata
     fn write_block(&mut self, state: BlockStateWrite) -> Result<()>;
 
-    /// Read the value with the given height and the key from the DB
-    fn read(&self, height: BlockHeight, key: &Key) -> Result<Option<Vec<u8>>>;
+    /// Read the latest value for account subspace key from the DB
+    fn read_subspace_val(&self, key: &Key) -> Result<Option<Vec<u8>>>;
 
-    /// Read the last committed block
-    fn read_last_block(&mut self) -> Result<Option<BlockStateRead>>;
+    /// Write the value with the given height and account subspace key to the
+    /// DB. Returns the size difference from previous value, if any, or the
+    /// size of the value otherwise.
+    fn write_subspace_val(
+        &mut self,
+        height: BlockHeight,
+        key: &Key,
+        value: impl AsRef<[u8]>,
+    ) -> Result<i64>;
+
+    /// Delete the value with the given height and account subspace key from the
+    /// DB. Returns the size of the removed value, if any, 0 if no previous
+    /// value was found.
+    fn delete_subspace_val(
+        &mut self,
+        height: BlockHeight,
+        key: &Key,
+    ) -> Result<i64>;
+
+    /// Start write batch.
+    fn batch() -> Self::WriteBatch;
+
+    /// Execute write batch.
+    fn exec_batch(&mut self, batch: Self::WriteBatch) -> Result<()>;
+
+    /// Batch write the value with the given height and account subspace key to
+    /// the DB. Returns the size difference from previous value, if any, or
+    /// the size of the value otherwise.
+    fn batch_write_subspace_val(
+        &self,
+        batch: &mut Self::WriteBatch,
+        height: BlockHeight,
+        key: &Key,
+        value: impl AsRef<[u8]>,
+    ) -> Result<i64>;
+
+    /// Batch delete the value with the given height and account subspace key
+    /// from the DB. Returns the size of the removed value, if any, 0 if no
+    /// previous value was found.
+    fn batch_delete_subspace_val(
+        &self,
+        batch: &mut Self::WriteBatch,
+        height: BlockHeight,
+        key: &Key,
+    ) -> Result<i64>;
 }
 
 /// A database prefix iterator.
@@ -175,12 +222,21 @@ pub trait DBIter<'iter> {
     /// The concrete type of the iterator
     type PrefixIter: Debug + Iterator<Item = (String, Vec<u8>, u64)>;
 
-    /// Read key value pairs with the given prefix from the DB
-    fn iter_prefix(
-        &'iter self,
-        height: BlockHeight,
-        prefix: &Key,
-    ) -> Self::PrefixIter;
+    /// Read account subspace key value pairs with the given prefix from the DB
+    fn iter_prefix(&'iter self, prefix: &Key) -> Self::PrefixIter;
+}
+
+/// Atomic batch write.
+pub trait DBWriteBatch {
+    /// Insert a value into the database under the given key.
+    fn put<K, V>(&mut self, key: K, value: V)
+    where
+        K: AsRef<[u8]>,
+        V: AsRef<[u8]>;
+
+    /// Removes the database entry for key. Does nothing if the key was not
+    /// found.
+    fn delete<K: AsRef<[u8]>>(&mut self, key: K);
 }
 
 /// The root hash of the merkle tree as bytes
@@ -201,6 +257,7 @@ where
     pub fn open(
         db_path: impl AsRef<std::path::Path>,
         chain_id: ChainId,
+        cache: Option<&D::Cache>,
     ) -> Self {
         let block = BlockStorage {
             tree: MerkleTree::default(),
@@ -208,10 +265,9 @@ where
             height: BlockHeight::default(),
             epoch: Epoch::default(),
             pred_epochs: Epochs::default(),
-            subspaces: HashMap::default(),
         };
         Storage::<D, H> {
-            db: D::open(db_path),
+            db: D::open(db_path, cache),
             chain_id,
             block,
             header: None,
@@ -238,7 +294,6 @@ where
             pred_epochs,
             next_epoch_min_start_height,
             next_epoch_min_start_time,
-            subspaces,
             address_gen,
             encryption_key,
         }) = self.db.read_last_block()?
@@ -248,7 +303,6 @@ where
             self.block.height = height;
             self.block.epoch = epoch;
             self.block.pred_epochs = pred_epochs;
-            self.block.subspaces = subspaces;
             self.last_height = height;
             self.last_epoch = epoch;
             self.next_epoch_min_start_height = next_epoch_min_start_height;
@@ -286,7 +340,6 @@ where
             pred_epochs: &self.block.pred_epochs,
             next_epoch_min_start_height: self.next_epoch_min_start_height,
             next_epoch_min_start_time: self.next_epoch_min_start_time,
-            subspaces: &self.block.subspaces,
             address_gen: &self.address_gen,
             encryption_key: self.encryption_key.clone(),
         };
@@ -333,18 +386,13 @@ where
 
     /// Returns a value from the specified subspace and the gas cost
     pub fn read(&self, key: &Key) -> Result<(Option<Vec<u8>>, u64)> {
-        tracing::debug!("storage read key {}", key,);
+        tracing::debug!("storage read key {}", key);
         let (present, gas) = self.has_key(key)?;
         if !present {
             return Ok((None, gas));
         }
 
-        if let Some(v) = self.block.subspaces.get(key) {
-            let gas = key.len() + v.len();
-            return Ok((Some(v.to_vec()), gas as _));
-        }
-
-        match self.db.read(self.last_height, key)? {
+        match self.db.read_subspace_val(key)? {
             Some(v) => {
                 let gas = key.len() + v.len();
                 Ok((Some(v), gas as _))
@@ -358,42 +406,38 @@ where
         &self,
         prefix: &Key,
     ) -> (<D as DBIter<'_>>::PrefixIter, u64) {
-        (
-            self.db.iter_prefix(self.last_height, prefix),
-            prefix.len() as _,
-        )
+        (self.db.iter_prefix(prefix), prefix.len() as _)
     }
 
     /// Write a value to the specified subspace and returns the gas cost and the
     /// size difference
-    pub fn write(&mut self, key: &Key, value: Vec<u8>) -> Result<(u64, i64)> {
+    pub fn write(
+        &mut self,
+        key: &Key,
+        value: impl AsRef<[u8]>,
+    ) -> Result<(u64, i64)> {
         tracing::debug!("storage write key {}", key,);
         self.update_tree(H::hash_key(key), H::hash_value(&value))?;
 
-        let len = value.len();
+        let len = value.as_ref().len();
         let gas = key.len() + len;
-        let size_diff = match self.block.subspaces.insert(key.clone(), value) {
-            Some(prev) => len as i64 - prev.len() as i64,
-            None => len as i64,
-        };
+        let size_diff =
+            self.db.write_subspace_val(self.last_height, key, value)?;
         Ok((gas as _, size_diff))
     }
 
     /// Delete the specified subspace and returns the gas cost and the size
     /// difference
     pub fn delete(&mut self, key: &Key) -> Result<(u64, i64)> {
-        let mut size_diff = 0;
+        let mut deleted_bytes_len = 0;
         if self.has_key(key)?.0 {
             // update the merkle tree with a zero as a tombstone
             self.update_tree(H::hash_key(key), H256::zero())?;
-
-            size_diff -= match self.block.subspaces.remove(key) {
-                Some(prev) => prev.len() as i64,
-                None => 0,
-            };
+            deleted_bytes_len =
+                self.db.delete_subspace_val(self.last_height, key)?;
         }
-        let gas = key.len() + (-size_diff as usize);
-        Ok((gas as _, size_diff))
+        let gas = key.len() + deleted_bytes_len as usize;
+        Ok((gas as _, deleted_bytes_len))
     }
 
     /// Set the block header.
@@ -567,6 +611,44 @@ where
             H::hash_value(&types::encode(&self.block.epoch)),
         )
     }
+
+    /// Start write batch.
+    fn batch() -> D::WriteBatch {
+        D::batch()
+    }
+
+    /// Execute write batch.
+    fn exec_batch(&mut self, batch: D::WriteBatch) -> Result<()> {
+        self.db.exec_batch(batch)
+    }
+
+    /// Batch write the value with the given height and account subspace key to
+    /// the DB. Returns the size difference from previous value, if any, or
+    /// the size of the value otherwise.
+    fn batch_write_subspace_val(
+        &mut self,
+        batch: &mut D::WriteBatch,
+        key: &Key,
+        value: impl AsRef<[u8]>,
+    ) -> Result<i64> {
+        let value = value.as_ref();
+        self.update_tree(H::hash_key(key), H::hash_value(&value))?;
+        self.db
+            .batch_write_subspace_val(batch, self.last_height, key, value)
+    }
+
+    /// Batch delete the value with the given height and account subspace key
+    /// from the DB. Returns the size of the removed value, if any, 0 if no
+    /// previous value was found.
+    fn batch_delete_subspace_val(
+        &mut self,
+        batch: &mut D::WriteBatch,
+        key: &Key,
+    ) -> Result<i64> {
+        self.update_tree(H::hash_key(key), H256::zero())?;
+        self.db
+            .batch_delete_subspace_val(batch, self.last_height, key)
+    }
 }
 
 /// The storage hasher used for the merkle tree.
@@ -635,14 +717,12 @@ pub mod testing {
         fn default() -> Self {
             let chain_id = ChainId::default();
             let tree = MerkleTree::default();
-            let subspaces = HashMap::new();
             let block = BlockStorage {
                 tree,
                 hash: BlockHash::default(),
                 height: BlockHeight::default(),
                 epoch: Epoch::default(),
                 pred_epochs: Epochs::default(),
-                subspaces,
             };
             Self {
                 db: MockDB::default(),

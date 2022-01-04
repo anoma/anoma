@@ -4,7 +4,7 @@ edition = "2021"
 license = "GPL-3.0"
 name = "anoma_wasm"
 resolver = "2"
-version = "0.2.0"
+version = "0.3.0"
 
 [lib]
 crate-type = ["cdylib"]
@@ -12,8 +12,6 @@ crate-type = ["cdylib"]
 # The features should be used individually to build the selected wasm.
 # Newly added wasms should also be added into the Makefile `$(wasms)` list.
 [features]
-mm_filter_token_exch = []
-mm_token_exch = ["petgraph", "serde", "serde_json", "good_lp", "rust_decimal"]
 tx_bond = []
 tx_from_intent = []
 tx_init_account = []
@@ -28,14 +26,12 @@ vp_token = []
 vp_user = ["once_cell", "rust_decimal"]
 
 [dependencies]
+anoma_tx_prelude = {path = "../../tx_prelude"}
 anoma_vm_env = {path = "../../vm_env"}
+anoma_vp_prelude = {path = "../../vp_prelude"}
 borsh = "0.9.0"
-good_lp = {version = "*", features = ["minilp"], default-features = false, optional = true}
 once_cell = {version = "1.8.0", optional = true}
-petgraph = {version = "0.5.1", features = ["serde-1"], optional = true}
 rust_decimal = {version = "1.14.3", optional = true}
-serde = {version = "1.0.125", optional = true}
-serde_json = {version = "1.0.64", optional = true}
 wee_alloc = "0.4.5"
 
 [dev-dependencies]
@@ -45,11 +41,11 @@ tracing = "0.1.29"
 tracing-subscriber = {version = "0.2.25", default-features = false, features = ["env-filter", "fmt"]}
 
 [patch.crates-io]
-tendermint              = { git = "https://github.com/heliaxdev/tendermint-rs", branch = "yuji/rebase_v0.23.0" }
-tendermint-rpc          = { git = "https://github.com/heliaxdev/tendermint-rs", branch = "yuji/rebase_v0.23.0" }
-tendermint-proto        = { git = "https://github.com/heliaxdev/tendermint-rs", branch = "yuji/rebase_v0.23.0" }
-tendermint-light-client = { git = "https://github.com/heliaxdev/tendermint-rs", branch = "yuji/rebase_v0.23.0" }
-tendermint-testgen      = { git = "https://github.com/heliaxdev/tendermint-rs", branch = "yuji/rebase_v0.23.0" }
+tendermint = {git = "https://github.com/heliaxdev/tendermint-rs", branch = "yuji/rebase_v0.23.0"}
+tendermint-light-client = {git = "https://github.com/heliaxdev/tendermint-rs", branch = "yuji/rebase_v0.23.0"}
+tendermint-proto = {git = "https://github.com/heliaxdev/tendermint-rs", branch = "yuji/rebase_v0.23.0"}
+tendermint-rpc = {git = "https://github.com/heliaxdev/tendermint-rs", branch = "yuji/rebase_v0.23.0"}
+tendermint-testgen = {git = "https://github.com/heliaxdev/tendermint-rs", branch = "yuji/rebase_v0.23.0"}
 
 [profile.release]
 # smaller and faster wasm (https://rustwasm.github.io/book/reference/code-size.html#compiling-with-link-time-optimizations-lto)

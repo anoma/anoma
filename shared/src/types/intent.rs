@@ -5,6 +5,7 @@ use std::convert::TryFrom;
 use std::io::ErrorKind;
 
 use borsh::{BorshDeserialize, BorshSerialize};
+use derivative::Derivative;
 use rust_decimal::prelude::*;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
@@ -41,6 +42,7 @@ pub struct FungibleTokenIntent {
     PartialEq,
     Hash,
     PartialOrd,
+    Derivative,
 )]
 /// The definition of an intent exchange
 pub struct Exchange {
@@ -57,6 +59,7 @@ pub struct Exchange {
     /// The amount of token to be bought
     pub min_buy: token::Amount,
     /// The vp code
+    #[derivative(Debug = "ignore")]
     pub vp: Option<Vec<u8>>,
 }
 

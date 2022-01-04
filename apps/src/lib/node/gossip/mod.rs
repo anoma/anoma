@@ -1,6 +1,6 @@
 mod behaviour;
 mod intent_gossiper;
-mod p2p;
+pub mod p2p;
 mod rpc;
 
 use std::borrow::Cow;
@@ -8,12 +8,11 @@ use std::path::Path;
 
 use anoma::types::address::Address;
 use thiserror::Error;
-use tokio::sync::{mpsc, oneshot};
+use tokio::sync::mpsc;
 
 use self::intent_gossiper::GossipIntent;
 use self::p2p::P2P;
 use crate::config::IntentGossiper;
-use crate::proto::services::{rpc_message, RpcResponse};
 use crate::wallet::AtomicKeypair;
 
 #[derive(Error, Debug)]
@@ -26,6 +25,7 @@ type Result<T> = std::result::Result<T, Error>;
 
 pub fn run(
     config: IntentGossiper,
+    base_dir: impl AsRef<Path>,
     wasm_dir: impl AsRef<Path>,
     tx_source_address: Option<Address>,
     tx_signing_key: Option<AtomicKeypair>,
@@ -41,13 +41,11 @@ pub fn run(
 
     // Create the P2P gossip network, which can send messages directly to the
     // matchmaker, if any
-    let gossip = p2p::P2P::new(&config, intent_gossip_app.mm_sender.clone())
-        .map_err(Error::P2pInit)?;
+    let gossip =
+        p2p::P2P::new(&config, base_dir, intent_gossip_app.mm_sender.clone())
+            .map_err(Error::P2pInit)?;
 
-    // Start the rpc socket, if enabled in the config
-    let rpc_event_receiver = config.rpc.as_ref().map(rpc::start_rpc_server);
-
-    dispatcher(gossip, intent_gossip_app, rpc_event_receiver)
+    dispatcher(gossip, intent_gossip_app, config)
 }
 
 // loop over all possible event. The event can be from the rpc, a matchmaker
@@ -58,10 +56,17 @@ pub fn run(
 pub async fn dispatcher(
     mut gossip: P2P,
     mut intent_gossip_app: GossipIntent,
-    rpc_receiver: Option<
-        mpsc::Receiver<(rpc_message::Message, oneshot::Sender<RpcResponse>)>,
-    >,
+    config: IntentGossiper,
 ) -> Result<()> {
+    // Start the rpc socket, if enabled in the config
+    let rpc_receiver = config.rpc.map(|rpc_config| {
+        let (rpc_sender, rpc_receiver) = mpsc::channel(100);
+        tokio::spawn(async move {
+            rpc::start_rpc_server(&rpc_config, rpc_sender).await
+        });
+        rpc_receiver
+    });
+
     // TODO find a nice way to refactor here
     match (rpc_receiver, intent_gossip_app.mm_receiver.take()) {
         (Some(mut rpc_receiver), Some(mut mm_receiver)) => {
@@ -79,7 +84,7 @@ pub async fn dispatcher(
 
                         // apply intents in matchmaker
                         if let Some(intent) = maybe_intent {
-                            let mm_result: Cow<str> = match intent_gossip_app.apply_intent(intent) {
+                            let mm_result: Cow<str> = match intent_gossip_app.apply_intent(intent).await {
                                 Ok(true) => "Accepted intent".into(),
                                 Ok(false) => "Rejected intent".into(),
                                 Err(err) => format!(

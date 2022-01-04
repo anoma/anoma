@@ -2,6 +2,7 @@ use std::collections::HashMap;
 use std::fmt::{self, Display};
 use std::ops::{Index, IndexMut};
 
+use anoma::types::ibc::IbcEvent;
 use anoma::types::transaction::{hash_tx, TxType};
 use borsh::BorshSerialize;
 #[cfg(not(feature = "ABCI"))]
@@ -24,6 +25,8 @@ pub enum EventType {
     Accepted,
     // The transaction was applied during block finalization
     Applied,
+    // The IBC transaction was applied during block finalization
+    Ibc(String),
 }
 
 #[cfg(not(feature = "ABCI"))]
@@ -32,6 +35,7 @@ impl Display for EventType {
         match self {
             EventType::Accepted => write!(f, "accepted"),
             EventType::Applied => write!(f, "applied"),
+            EventType::Ibc(t) => write!(f, "{}", t),
         }?;
         Ok(())
     }
@@ -43,6 +47,7 @@ impl Display for EventType {
         match self {
             EventType::Accepted => write!(f, "applied"),
             EventType::Applied => write!(f, "applied"),
+            EventType::Ibc(t) => write!(f, "{}", t),
         }?;
         Ok(())
     }
@@ -94,6 +99,13 @@ impl Event {
         };
         event["height"] = height.to_string();
         event
+    }
+
+    pub fn merge_ibc_event(&mut self, ibc_event: &IbcEvent) {
+        self.event_type = EventType::Ibc(ibc_event.event_type.clone());
+        for (key, value) in ibc_event.attributes.iter() {
+            self[key] = value.clone();
+        }
     }
 }
 

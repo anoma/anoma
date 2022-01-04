@@ -5,24 +5,28 @@
 //! - `height`: the last committed block height
 //! - `epoch_start_height`: block height at which the current epoch started
 //! - `epoch_start_time`: block time at which the current epoch started
+//! - `subspace`: any byte data associated with accounts
+//! - `history/subspace`: list of block heights at which any given subspace key
+//!   has changed
 //! - `h`: for each block at height `h`:
 //!   - `tree`: merkle tree
 //!     - `root`: root hash
 //!     - `store`: the tree's store
 //!   - `hash`: block hash
 //!   - `epoch`: block epoch
-//!   - `subspace`: any byte data associated with accounts
+//!   - `subspace`: historical values of accounts data, only set at heights at
+//!     which the data has changed
 //!   - `address_gen`: established address generator
 
-use std::cmp::Ordering;
-use std::collections::HashMap;
+use std::cmp::{self, Ordering};
 use std::env;
 use std::path::Path;
 use std::str::FromStr;
 
 use anoma::ledger::storage::types::PrefixIterator;
 use anoma::ledger::storage::{
-    types, BlockStateRead, BlockStateWrite, DBIter, Error, Result, DB,
+    types, BlockStateRead, BlockStateWrite, DBIter, DBWriteBatch, Error,
+    Result, DB,
 };
 use anoma::types::storage::{BlockHeight, Key, KeySeg, KEY_SEGMENT_SEPARATOR};
 use anoma::types::time::DateTimeUtc;
@@ -39,11 +43,19 @@ use crate::cli;
 const ENV_VAR_ROCKSDB_COMPACTION_THREADS: &str =
     "ANOMA_ROCKSDB_COMPACTION_THREADS";
 
+/// RocksDB handle
 #[derive(Debug)]
 pub struct RocksDB(rocksdb::DB);
 
+/// DB Handle for batch writes.
+#[derive(Default)]
+pub struct RocksDBWriteBatch(WriteBatch);
+
 /// Open RocksDB for the DB
-pub fn open(path: impl AsRef<Path>) -> Result<RocksDB> {
+pub fn open(
+    path: impl AsRef<Path>,
+    cache: Option<&rocksdb::Cache>,
+) -> Result<RocksDB> {
     let logical_cores = num_cpus::get() as i32;
     let compaction_threads =
         if let Ok(num_str) = env::var(ENV_VAR_ROCKSDB_COMPACTION_THREADS) {
@@ -60,9 +72,9 @@ pub fn open(path: impl AsRef<Path>) -> Result<RocksDB> {
             }
         } else {
             // If not set, default to quarter of logical CPUs count
-            logical_cores / 4
+            cmp::max(1, logical_cores / 4)
         };
-    tracing::debug!(
+    tracing::info!(
         "Using {} compactions threads for RocksDB.",
         compaction_threads
     );
@@ -86,6 +98,9 @@ pub fn open(path: impl AsRef<Path>) -> Result<RocksDB> {
     table_opts.set_block_size(16 * 1024);
     table_opts.set_cache_index_and_filter_blocks(true);
     table_opts.set_pin_l0_filter_and_index_blocks_in_cache(true);
+    if let Some(cache) = cache {
+        table_opts.set_block_cache(cache);
+    }
     // latest format versions https://github.com/facebook/rocksdb/blob/d1c510baecc1aef758f91f786c4fbee3bc847a63/include/rocksdb/table.h#L394
     table_opts.set_format_version(5);
     cf_opts.set_block_based_table_factory(&table_opts);
@@ -97,6 +112,7 @@ pub fn open(path: impl AsRef<Path>) -> Result<RocksDB> {
     let extractor = SliceTransform::create_fixed_prefix(20);
     cf_opts.set_prefix_extractor(extractor);
     // TODO use column families
+
     rocksdb::DB::open_cf_descriptors(&cf_opts, path, vec![])
         .map(RocksDB)
         .map_err(|e| Error::DBError(e.into_string()))
@@ -135,9 +151,95 @@ impl Drop for RocksDB {
     }
 }
 
+impl RocksDB {
+    /// Persist the diff of an account subspace key-val under the height where
+    /// it was changed.
+    fn write_subspace_diff(
+        &mut self,
+        height: BlockHeight,
+        key: &Key,
+        old_value: Option<&[u8]>,
+        new_value: Option<&[u8]>,
+    ) -> Result<()> {
+        let key_prefix = Key::from(height.to_db_key())
+            .push(&"diffs".to_owned())
+            .map_err(Error::KeyError)?;
+
+        if let Some(old_value) = old_value {
+            let old_val_key = key_prefix
+                .push(&"old".to_owned())
+                .map_err(Error::KeyError)?
+                .join(key)
+                .to_string();
+            self.0
+                .put(old_val_key, old_value)
+                .map_err(|e| Error::DBError(e.into_string()))?;
+        }
+
+        if let Some(new_value) = new_value {
+            let new_val_key = key_prefix
+                .push(&"new".to_owned())
+                .map_err(Error::KeyError)?
+                .join(key)
+                .to_string();
+            self.0
+                .put(new_val_key, new_value)
+                .map_err(|e| Error::DBError(e.into_string()))?;
+        }
+        Ok(())
+    }
+
+    /// Persist the diff of an account subspace key-val under the height where
+    /// it was changed in a batch write.
+    fn batch_write_subspace_diff(
+        batch: &mut RocksDBWriteBatch,
+        height: BlockHeight,
+        key: &Key,
+        old_value: Option<&[u8]>,
+        new_value: Option<&[u8]>,
+    ) -> Result<()> {
+        let key_prefix = Key::from(height.to_db_key())
+            .push(&"diffs".to_owned())
+            .map_err(Error::KeyError)?;
+
+        if let Some(old_value) = old_value {
+            let old_val_key = key_prefix
+                .push(&"old".to_owned())
+                .map_err(Error::KeyError)?
+                .join(key)
+                .to_string();
+            batch.0.put(old_val_key, old_value);
+        }
+
+        if let Some(new_value) = new_value {
+            let new_val_key = key_prefix
+                .push(&"new".to_owned())
+                .map_err(Error::KeyError)?
+                .join(key)
+                .to_string();
+            batch.0.put(new_val_key, new_value);
+        }
+        Ok(())
+    }
+
+    fn exec_batch(&mut self, batch: WriteBatch) -> Result<()> {
+        let mut write_opts = WriteOptions::default();
+        write_opts.disable_wal(true);
+        self.0
+            .write_opt(batch, &write_opts)
+            .map_err(|e| Error::DBError(e.into_string()))
+    }
+}
+
 impl DB for RocksDB {
-    fn open(db_path: impl AsRef<Path>) -> Self {
-        open(db_path).expect("cannot open the DB")
+    type Cache = rocksdb::Cache;
+    type WriteBatch = RocksDBWriteBatch;
+
+    fn open(
+        db_path: impl AsRef<std::path::Path>,
+        cache: Option<&Self::Cache>,
+    ) -> Self {
+        open(db_path, cache).expect("cannot open the DB")
     }
 
     fn flush(&self) -> Result<()> {
@@ -146,127 +248,6 @@ impl DB for RocksDB {
         self.0
             .flush_opt(&flush_opts)
             .map_err(|e| Error::DBError(e.into_string()))
-    }
-
-    fn write_block(&mut self, state: BlockStateWrite) -> Result<()> {
-        let mut batch = WriteBatch::default();
-        let BlockStateWrite {
-            root,
-            store,
-            hash,
-            height,
-            epoch,
-            pred_epochs,
-            next_epoch_min_start_height,
-            next_epoch_min_start_time,
-            subspaces,
-            address_gen,
-            encryption_key,
-        }: BlockStateWrite = state;
-
-        // Epoch start height and time
-        batch.put(
-            "next_epoch_min_start_height",
-            types::encode(&next_epoch_min_start_height),
-        );
-        batch.put(
-            "next_epoch_min_start_time",
-            types::encode(&next_epoch_min_start_time),
-        );
-
-        let prefix_key = Key::from(height.to_db_key());
-        // Merkle tree
-        {
-            let prefix_key = prefix_key
-                .push(&"tree".to_owned())
-                .map_err(Error::KeyError)?;
-            // Merkle root hash
-            {
-                let key = prefix_key
-                    .push(&"root".to_owned())
-                    .map_err(Error::KeyError)?;
-                batch.put(key.to_string(), &root.as_slice());
-            }
-            // Tree's store
-            {
-                let key = prefix_key
-                    .push(&"store".to_owned())
-                    .map_err(Error::KeyError)?;
-                batch.put(key.to_string(), types::encode(&store));
-            }
-        }
-        // Block hash
-        {
-            let key = prefix_key
-                .push(&"hash".to_owned())
-                .map_err(Error::KeyError)?;
-            batch.put(key.to_string(), types::encode(&hash));
-        }
-        // Block epoch
-        {
-            let key = prefix_key
-                .push(&"epoch".to_owned())
-                .map_err(Error::KeyError)?;
-            batch.put(key.to_string(), types::encode(&epoch));
-        }
-        // Predecessor block epochs
-        {
-            let key = prefix_key
-                .push(&"pred_epochs".to_owned())
-                .map_err(Error::KeyError)?;
-            batch.put(key.to_string(), types::encode(&pred_epochs));
-        }
-        // SubSpace
-        {
-            let subspace_prefix = prefix_key
-                .push(&"subspace".to_owned())
-                .map_err(Error::KeyError)?;
-            subspaces.iter().for_each(|(key, value)| {
-                let key = subspace_prefix.join(key);
-                batch.put(key.to_string(), value);
-            });
-        }
-        // Address gen
-        {
-            let key = prefix_key
-                .push(&"address_gen".to_owned())
-                .map_err(Error::KeyError)?;
-            batch.put(key.to_string(), types::encode(&address_gen));
-        }
-        // Encryption key
-        {
-            let key = prefix_key
-                .push(&"encryption_key".to_owned())
-                .map_err(Error::KeyError)?;
-            batch.put(key.to_string(), types::encode(&encryption_key));
-        }
-        let mut write_opts = WriteOptions::default();
-        write_opts.disable_wal(true);
-        self.0
-            .write_opt(batch, &write_opts)
-            .map_err(|e| Error::DBError(e.into_string()))?;
-
-        // Block height - write after everything else is written
-        // NOTE for async writes, we need to take care that all previous heights
-        // are known when updating this
-        self.0
-            .put_opt("height", types::encode(&height), &write_opts)
-            .map_err(|e| Error::DBError(e.into_string()))
-    }
-
-    fn read(&self, height: BlockHeight, key: &Key) -> Result<Option<Vec<u8>>> {
-        let key = Key::from(height.to_db_key())
-            .push(&"subspace".to_owned())
-            .map_err(Error::KeyError)?
-            .join(key);
-        match self
-            .0
-            .get(key.to_string())
-            .map_err(|e| Error::DBError(e.into_string()))?
-        {
-            Some(bytes) => Ok(Some(bytes)),
-            None => Ok(None),
-        }
     }
 
     fn read_last_block(&mut self) -> Result<Option<BlockStateRead>> {
@@ -326,7 +307,6 @@ impl DB for RocksDB {
         let mut pred_epochs = None;
         let mut address_gen = None;
         let mut encryption_key = None;
-        let mut subspaces: HashMap<Key, Vec<u8>> = HashMap::new();
         for (key, bytes) in self.0.iterator_opt(
             IteratorMode::From(prefix.as_bytes(), Direction::Forward),
             read_opts,
@@ -376,14 +356,6 @@ impl DB for RocksDB {
                             types::decode(bytes).map_err(Error::CodingError)?,
                         )
                     }
-                    "subspace" => {
-                        let key = Key::parse_db_key(path).map_err(|e| {
-                            Error::Temporary {
-                                error: e.to_string(),
-                            }
-                        })?;
-                        subspaces.insert(key, bytes.to_vec());
-                    }
                     "address_gen" => {
                         address_gen = Some(
                             types::decode(bytes).map_err(Error::CodingError)?,
@@ -425,7 +397,6 @@ impl DB for RocksDB {
                 pred_epochs,
                 next_epoch_min_start_height,
                 next_epoch_min_start_time,
-                subspaces,
                 address_gen,
                 encryption_key,
             })),
@@ -435,6 +406,264 @@ impl DB for RocksDB {
             }),
         }
     }
+
+    fn write_block(&mut self, state: BlockStateWrite) -> Result<()> {
+        let mut batch = WriteBatch::default();
+        let BlockStateWrite {
+            root,
+            store,
+            hash,
+            height,
+            epoch,
+            pred_epochs,
+            next_epoch_min_start_height,
+            next_epoch_min_start_time,
+            address_gen,
+            encryption_key,
+        }: BlockStateWrite = state;
+
+        // Epoch start height and time
+        batch.put(
+            "next_epoch_min_start_height",
+            types::encode(&next_epoch_min_start_height),
+        );
+        batch.put(
+            "next_epoch_min_start_time",
+            types::encode(&next_epoch_min_start_time),
+        );
+
+        let prefix_key = Key::from(height.to_db_key());
+        // Merkle tree
+        {
+            let prefix_key = prefix_key
+                .push(&"tree".to_owned())
+                .map_err(Error::KeyError)?;
+            // Merkle root hash
+            {
+                let key = prefix_key
+                    .push(&"root".to_owned())
+                    .map_err(Error::KeyError)?;
+                batch.put(key.to_string(), &root.as_slice());
+            }
+            // Tree's store
+            {
+                let key = prefix_key
+                    .push(&"store".to_owned())
+                    .map_err(Error::KeyError)?;
+                batch.put(key.to_string(), types::encode(&store));
+            }
+        }
+        // Block hash
+        {
+            let key = prefix_key
+                .push(&"hash".to_owned())
+                .map_err(Error::KeyError)?;
+            batch.put(key.to_string(), types::encode(&hash));
+        }
+        // Block epoch
+        {
+            let key = prefix_key
+                .push(&"epoch".to_owned())
+                .map_err(Error::KeyError)?;
+            batch.put(key.to_string(), types::encode(&epoch));
+        }
+        // Predecessor block epochs
+        {
+            let key = prefix_key
+                .push(&"pred_epochs".to_owned())
+                .map_err(Error::KeyError)?;
+            batch.put(key.to_string(), types::encode(&pred_epochs));
+        }
+        // Address gen
+        {
+            let key = prefix_key
+                .push(&"address_gen".to_owned())
+                .map_err(Error::KeyError)?;
+            batch.put(key.to_string(), types::encode(&address_gen));
+        }
+        // Encryption key
+        {
+            let key = prefix_key
+                .push(&"encryption_key".to_owned())
+                .map_err(Error::KeyError)?;
+            batch.put(key.to_string(), types::encode(&encryption_key));
+        }
+        self.exec_batch(batch)?;
+
+        // Block height - write after everything else is written
+        // NOTE for async writes, we need to take care that all previous heights
+        // are known when updating this
+        let mut write_opts = WriteOptions::default();
+        write_opts.disable_wal(true);
+        self.0
+            .put_opt("height", types::encode(&height), &write_opts)
+            .map_err(|e| Error::DBError(e.into_string()))
+    }
+
+    fn read_subspace_val(&self, key: &Key) -> Result<Option<Vec<u8>>> {
+        let subspace_key =
+            Key::parse("subspace").map_err(Error::KeyError)?.join(key);
+        self.0
+            .get(subspace_key.to_string())
+            .map_err(|e| Error::DBError(e.into_string()))
+    }
+
+    fn write_subspace_val(
+        &mut self,
+        height: BlockHeight,
+        key: &Key,
+        value: impl AsRef<[u8]>,
+    ) -> Result<i64> {
+        let value = value.as_ref();
+        let subspace_key =
+            Key::parse("subspace").map_err(Error::KeyError)?.join(key);
+        let size_diff = match self
+            .0
+            .get(subspace_key.to_string())
+            .map_err(|e| Error::DBError(e.into_string()))?
+        {
+            Some(prev_value) => {
+                let size_diff = value.len() as i64 - prev_value.len() as i64;
+                self.write_subspace_diff(
+                    height,
+                    key,
+                    Some(&prev_value),
+                    Some(value),
+                )?;
+                size_diff
+            }
+            None => {
+                self.write_subspace_diff(height, key, None, Some(value))?;
+                value.len() as i64
+            }
+        };
+
+        // Write the new key-val
+        self.0
+            .put(&subspace_key.to_string(), value)
+            .map_err(|e| Error::DBError(e.into_string()))?;
+
+        Ok(size_diff)
+    }
+
+    fn delete_subspace_val(
+        &mut self,
+        height: BlockHeight,
+        key: &Key,
+    ) -> Result<i64> {
+        let subspace_key =
+            Key::parse("subspace").map_err(Error::KeyError)?.join(key);
+
+        // Check the length of previous value, if any
+        let prev_len = match self
+            .0
+            .get(key.to_string())
+            .map_err(|e| Error::DBError(e.into_string()))?
+        {
+            Some(prev_value) => {
+                let prev_len = prev_value.len() as i64;
+                self.write_subspace_diff(height, key, Some(&prev_value), None)?;
+                prev_len
+            }
+            None => 0,
+        };
+
+        // Delete the key-val
+        self.0
+            .delete(subspace_key.to_string())
+            .map_err(|e| Error::DBError(e.into_string()))?;
+
+        Ok(prev_len)
+    }
+
+    fn batch() -> Self::WriteBatch {
+        RocksDBWriteBatch::default()
+    }
+
+    fn exec_batch(&mut self, batch: Self::WriteBatch) -> Result<()> {
+        self.exec_batch(batch.0)
+    }
+
+    fn batch_write_subspace_val(
+        &self,
+        batch: &mut Self::WriteBatch,
+        height: BlockHeight,
+        key: &Key,
+        value: impl AsRef<[u8]>,
+    ) -> Result<i64> {
+        let value = value.as_ref();
+        let subspace_key =
+            Key::parse("subspace").map_err(Error::KeyError)?.join(key);
+        let size_diff = match self
+            .0
+            .get(subspace_key.to_string())
+            .map_err(|e| Error::DBError(e.into_string()))?
+        {
+            Some(old_value) => {
+                let size_diff = value.len() as i64 - old_value.len() as i64;
+                // Persist the previous value
+                Self::batch_write_subspace_diff(
+                    batch,
+                    height,
+                    key,
+                    Some(&old_value),
+                    Some(value),
+                )?;
+                size_diff
+            }
+            None => {
+                Self::batch_write_subspace_diff(
+                    batch,
+                    height,
+                    key,
+                    None,
+                    Some(value),
+                )?;
+                value.len() as i64
+            }
+        };
+
+        // Write the new key-val
+        batch.put(&subspace_key.to_string(), value);
+
+        Ok(size_diff)
+    }
+
+    fn batch_delete_subspace_val(
+        &self,
+        batch: &mut Self::WriteBatch,
+        height: BlockHeight,
+        key: &Key,
+    ) -> Result<i64> {
+        let subspace_key =
+            Key::parse("subspace").map_err(Error::KeyError)?.join(key);
+
+        // Check the length of previous value, if any
+        let prev_len = match self
+            .0
+            .get(key.to_string())
+            .map_err(|e| Error::DBError(e.into_string()))?
+        {
+            Some(prev_value) => {
+                let prev_len = prev_value.len() as i64;
+                // Persist the previous value
+                Self::batch_write_subspace_diff(
+                    batch,
+                    height,
+                    key,
+                    Some(&prev_value),
+                    None,
+                )?;
+                prev_len
+            }
+            None => 0,
+        };
+
+        // Delete the key-val
+        batch.delete(subspace_key.to_string());
+
+        Ok(prev_len)
+    }
 }
 
 impl<'iter> DBIter<'iter> for RocksDB {
@@ -442,10 +671,9 @@ impl<'iter> DBIter<'iter> for RocksDB {
 
     fn iter_prefix(
         &'iter self,
-        height: BlockHeight,
         prefix: &Key,
     ) -> PersistentPrefixIterator<'iter> {
-        let db_prefix = format!("{}/subspace/", height.raw());
+        let db_prefix = "subspace/".to_owned();
         let prefix = format!("{}{}", db_prefix, prefix);
 
         let mut read_opts = ReadOptions::default();
@@ -489,6 +717,20 @@ impl<'a> Iterator for PersistentPrefixIterator<'a> {
             }
             None => None,
         }
+    }
+}
+
+impl DBWriteBatch for RocksDBWriteBatch {
+    fn put<K, V>(&mut self, key: K, value: V)
+    where
+        K: AsRef<[u8]>,
+        V: AsRef<[u8]>,
+    {
+        self.0.put(key, value)
+    }
+
+    fn delete<K: AsRef<[u8]>>(&mut self, key: K) {
+        self.0.delete(key)
     }
 }
 

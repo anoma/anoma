@@ -4,6 +4,7 @@ use std::str::FromStr;
 use std::time::Duration;
 
 use anoma::ledger::gas::VpGasMeter;
+pub use anoma::ledger::ibc::handler::*;
 pub use anoma::ledger::ibc::storage::{
     ack_key, capability_index_key, capability_key, channel_counter_key,
     channel_key, client_counter_key, client_state_key, client_type_key,
@@ -11,14 +12,15 @@ pub use anoma::ledger::ibc::storage::{
     consensus_state_key, next_sequence_ack_key, next_sequence_recv_key,
     next_sequence_send_key, port_key, receipt_key,
 };
-use anoma::ledger::ibc::Ibc;
+use anoma::ledger::ibc::vp::Ibc;
 use anoma::ledger::native_vp::{Ctx, NativeVp};
 use anoma::ledger::storage::mockdb::MockDB;
 use anoma::ledger::storage::testing::Sha256Hasher;
 use anoma::proto::Tx;
 use anoma::types::address::{Address, InternalAddress};
-pub use anoma::types::ibc::*;
+pub use anoma::types::ibc::data::*;
 use anoma::types::storage::Key;
+use anoma::vm::{wasm, WasmCacheRwAccess};
 use anoma_vm_env::tx_prelude::BorshSerialize;
 #[cfg(not(feature = "ABCI"))]
 use ibc::core::ics02_client::client_consensus::ConsensusState;
@@ -27,13 +29,49 @@ use ibc::core::ics02_client::client_state::{AnyClientState, ClientState};
 #[cfg(not(feature = "ABCI"))]
 use ibc::core::ics02_client::header::Header;
 #[cfg(not(feature = "ABCI"))]
+use ibc::core::ics02_client::msgs::create_client::MsgCreateAnyClient;
+#[cfg(not(feature = "ABCI"))]
+use ibc::core::ics02_client::msgs::update_client::MsgUpdateAnyClient;
+#[cfg(not(feature = "ABCI"))]
+use ibc::core::ics02_client::msgs::upgrade_client::MsgUpgradeAnyClient;
+#[cfg(not(feature = "ABCI"))]
 use ibc::core::ics03_connection::connection::Counterparty as ConnCounterparty;
 #[cfg(not(feature = "ABCI"))]
+use ibc::core::ics03_connection::msgs::conn_open_ack::MsgConnectionOpenAck;
+#[cfg(not(feature = "ABCI"))]
+use ibc::core::ics03_connection::msgs::conn_open_confirm::MsgConnectionOpenConfirm;
+#[cfg(not(feature = "ABCI"))]
+use ibc::core::ics03_connection::msgs::conn_open_init::MsgConnectionOpenInit;
+#[cfg(not(feature = "ABCI"))]
+use ibc::core::ics03_connection::msgs::conn_open_try::MsgConnectionOpenTry;
+#[cfg(not(feature = "ABCI"))]
 use ibc::core::ics03_connection::version::Version;
+#[cfg(not(feature = "ABCI"))]
+use ibc::core::ics04_channel::channel::State as ChanState;
 #[cfg(not(feature = "ABCI"))]
 use ibc::core::ics04_channel::channel::{
     ChannelEnd, Counterparty as ChanCounterparty, Order,
 };
+#[cfg(not(feature = "ABCI"))]
+use ibc::core::ics04_channel::msgs::acknowledgement::MsgAcknowledgement;
+#[cfg(not(feature = "ABCI"))]
+use ibc::core::ics04_channel::msgs::chan_close_confirm::MsgChannelCloseConfirm;
+#[cfg(not(feature = "ABCI"))]
+use ibc::core::ics04_channel::msgs::chan_close_init::MsgChannelCloseInit;
+#[cfg(not(feature = "ABCI"))]
+use ibc::core::ics04_channel::msgs::chan_open_ack::MsgChannelOpenAck;
+#[cfg(not(feature = "ABCI"))]
+use ibc::core::ics04_channel::msgs::chan_open_confirm::MsgChannelOpenConfirm;
+#[cfg(not(feature = "ABCI"))]
+use ibc::core::ics04_channel::msgs::chan_open_init::MsgChannelOpenInit;
+#[cfg(not(feature = "ABCI"))]
+use ibc::core::ics04_channel::msgs::chan_open_try::MsgChannelOpenTry;
+#[cfg(not(feature = "ABCI"))]
+use ibc::core::ics04_channel::msgs::recv_packet::MsgRecvPacket;
+#[cfg(not(feature = "ABCI"))]
+use ibc::core::ics04_channel::msgs::timeout::MsgTimeout;
+#[cfg(not(feature = "ABCI"))]
+use ibc::core::ics04_channel::msgs::timeout_on_close::MsgTimeoutOnClose;
 #[cfg(not(feature = "ABCI"))]
 use ibc::core::ics04_channel::packet::{Packet, Sequence};
 #[cfg(not(feature = "ABCI"))]
@@ -47,6 +85,10 @@ use ibc::mock::client_state::{MockClientState, MockConsensusState};
 #[cfg(not(feature = "ABCI"))]
 use ibc::mock::header::MockHeader;
 #[cfg(not(feature = "ABCI"))]
+use ibc::proofs::{ConsensusProof, Proofs};
+#[cfg(not(feature = "ABCI"))]
+use ibc::signer::Signer;
+#[cfg(not(feature = "ABCI"))]
 use ibc::timestamp::Timestamp;
 #[cfg(not(feature = "ABCI"))]
 use ibc::Height;
@@ -57,13 +99,49 @@ use ibc_abci::core::ics02_client::client_state::{AnyClientState, ClientState};
 #[cfg(feature = "ABCI")]
 use ibc_abci::core::ics02_client::header::Header;
 #[cfg(feature = "ABCI")]
+use ibc_abci::core::ics02_client::msgs::create_client::MsgCreateAnyClient;
+#[cfg(feature = "ABCI")]
+use ibc_abci::core::ics02_client::msgs::update_client::MsgUpdateAnyClient;
+#[cfg(feature = "ABCI")]
+use ibc_abci::core::ics02_client::msgs::upgrade_client::MsgUpgradeAnyClient;
+#[cfg(feature = "ABCI")]
 use ibc_abci::core::ics03_connection::connection::Counterparty as ConnCounterparty;
 #[cfg(feature = "ABCI")]
+use ibc_abci::core::ics03_connection::msgs::conn_open_ack::MsgConnectionOpenAck;
+#[cfg(feature = "ABCI")]
+use ibc_abci::core::ics03_connection::msgs::conn_open_confirm::MsgConnectionOpenConfirm;
+#[cfg(feature = "ABCI")]
+use ibc_abci::core::ics03_connection::msgs::conn_open_init::MsgConnectionOpenInit;
+#[cfg(feature = "ABCI")]
+use ibc_abci::core::ics03_connection::msgs::conn_open_try::MsgConnectionOpenTry;
+#[cfg(feature = "ABCI")]
 use ibc_abci::core::ics03_connection::version::Version;
+#[cfg(feature = "ABCI")]
+use ibc_abci::core::ics04_channel::channel::State as ChanState;
 #[cfg(feature = "ABCI")]
 use ibc_abci::core::ics04_channel::channel::{
     ChannelEnd, Counterparty as ChanCounterparty, Order,
 };
+#[cfg(feature = "ABCI")]
+use ibc_abci::core::ics04_channel::msgs::acknowledgement::MsgAcknowledgement;
+#[cfg(feature = "ABCI")]
+use ibc_abci::core::ics04_channel::msgs::chan_close_confirm::MsgChannelCloseConfirm;
+#[cfg(feature = "ABCI")]
+use ibc_abci::core::ics04_channel::msgs::chan_close_init::MsgChannelCloseInit;
+#[cfg(feature = "ABCI")]
+use ibc_abci::core::ics04_channel::msgs::chan_open_ack::MsgChannelOpenAck;
+#[cfg(feature = "ABCI")]
+use ibc_abci::core::ics04_channel::msgs::chan_open_confirm::MsgChannelOpenConfirm;
+#[cfg(feature = "ABCI")]
+use ibc_abci::core::ics04_channel::msgs::chan_open_init::MsgChannelOpenInit;
+#[cfg(feature = "ABCI")]
+use ibc_abci::core::ics04_channel::msgs::chan_open_try::MsgChannelOpenTry;
+#[cfg(feature = "ABCI")]
+use ibc_abci::core::ics04_channel::msgs::recv_packet::MsgRecvPacket;
+#[cfg(feature = "ABCI")]
+use ibc_abci::core::ics04_channel::msgs::timeout::MsgTimeout;
+#[cfg(feature = "ABCI")]
+use ibc_abci::core::ics04_channel::msgs::timeout_on_close::MsgTimeoutOnClose;
 #[cfg(feature = "ABCI")]
 use ibc_abci::core::ics04_channel::packet::{Packet, Sequence};
 #[cfg(feature = "ABCI")]
@@ -77,6 +155,10 @@ use ibc_abci::mock::client_state::{MockClientState, MockConsensusState};
 #[cfg(feature = "ABCI")]
 use ibc_abci::mock::header::MockHeader;
 #[cfg(feature = "ABCI")]
+use ibc_abci::proofs::{ConsensusProof, Proofs};
+#[cfg(feature = "ABCI")]
+use ibc_abci::signer::Signer;
+#[cfg(feature = "ABCI")]
 use ibc_abci::timestamp::Timestamp;
 #[cfg(feature = "ABCI")]
 use ibc_abci::Height;
@@ -84,6 +166,7 @@ use ibc_abci::Height;
 use ibc_proto::ibc::core::commitment::v1::MerkleProof;
 #[cfg(feature = "ABCI")]
 use ibc_proto_abci::ibc::core::commitment::v1::MerkleProof;
+use tempfile::TempDir;
 #[cfg(not(feature = "ABCI"))]
 use tendermint::account::Id as TmAccountId;
 #[cfg(not(feature = "ABCI"))]
@@ -114,7 +197,7 @@ use tendermint_stable::time::Time as TmTime;
 use crate::tx::TestTxEnv;
 
 pub struct TestIbcVp<'a> {
-    pub ibc: Ibc<'a, MockDB, Sha256Hasher>,
+    pub ibc: Ibc<'a, MockDB, Sha256Hasher, WasmCacheRwAccess>,
     pub keys_changed: HashSet<Key>,
 }
 
@@ -122,7 +205,7 @@ impl<'a> TestIbcVp<'a> {
     pub fn validate(
         &self,
         tx_data: &[u8],
-    ) -> std::result::Result<bool, anoma::ledger::ibc::Error> {
+    ) -> std::result::Result<bool, anoma::ledger::ibc::vp::Error> {
         self.ibc
             .validate_tx(tx_data, &self.keys_changed, &HashSet::new())
     }
@@ -132,19 +215,26 @@ impl<'a> TestIbcVp<'a> {
 pub fn init_ibc_vp_from_tx<'a>(
     tx_env: &'a TestTxEnv,
     tx: &'a Tx,
-) -> TestIbcVp<'a> {
+) -> (TestIbcVp<'a>, TempDir) {
     let keys_changed = tx_env
         .write_log
         .verifiers_changed_keys(&HashSet::new())
         .get(&Address::Internal(InternalAddress::Ibc))
         .cloned()
         .expect("no IBC address");
+    let (vp_wasm_cache, vp_cache_dir) =
+        wasm::compilation_cache::common::testing::cache();
 
-    let ctx =
-        Ctx::new(&tx_env.storage, &tx_env.write_log, tx, VpGasMeter::new(0));
+    let ctx = Ctx::new(
+        &tx_env.storage,
+        &tx_env.write_log,
+        tx,
+        VpGasMeter::new(0),
+        vp_wasm_cache,
+    );
     let ibc = Ibc { ctx };
 
-    TestIbcVp { ibc, keys_changed }
+    (TestIbcVp { ibc, keys_changed }, vp_cache_dir)
 }
 
 pub fn tm_dummy_header() -> TmHeader {
@@ -174,12 +264,13 @@ pub fn tm_dummy_header() -> TmHeader {
 pub fn prepare_client() -> (ClientId, AnyClientState, HashMap<Key, Vec<u8>>) {
     let mut writes = HashMap::new();
 
-    let data = client_creation_data();
+    let msg = msg_create_client();
     // client state
-    let client_state = data.client_state.clone();
-    let client_id = data.client_id(0).expect("invalid client ID");
+    let client_state = msg.client_state.clone();
+    let client_id =
+        client_id(client_state.client_type(), 0).expect("invalid client ID");
     let key = client_state_key(&client_id);
-    let bytes = data.client_state.try_to_vec().expect("encoding failed");
+    let bytes = msg.client_state.try_to_vec().expect("encoding failed");
     writes.insert(key, bytes);
     // client type
     let key = client_type_key(&client_id);
@@ -189,7 +280,7 @@ pub fn prepare_client() -> (ClientId, AnyClientState, HashMap<Key, Vec<u8>>) {
     // consensus state
     let height = client_state.latest_height();
     let key = consensus_state_key(&client_id, height);
-    let bytes = data.consensus_state.try_to_vec().expect("encoding failed");
+    let bytes = msg.consensus_state.try_to_vec().expect("encoding failed");
     writes.insert(key, bytes);
     // client counter
     let key = client_counter_key();
@@ -206,8 +297,8 @@ pub fn prepare_opened_connection(
 
     let conn_id = connection_id(0);
     let key = connection_key(&conn_id);
-    let data = connection_open_init_data(client_id.clone());
-    let mut conn = data.connection();
+    let msg = msg_connection_open_init(client_id.clone());
+    let mut conn = init_connection(&msg);
     open_connection(&mut conn);
     let bytes = conn.try_to_vec().expect("encoding failed");
     writes.insert(key, bytes);
@@ -236,8 +327,8 @@ pub fn prepare_opened_channel(
     let channel_id = channel_id(0);
     let port_channel_id = port_channel_id(port_id.clone(), channel_id.clone());
     let key = channel_key(&port_channel_id);
-    let data = channel_open_init_data(port_id.clone(), conn_id.clone());
-    let mut channel = data.channel();
+    let msg = msg_channel_open_init(port_id.clone(), conn_id.clone());
+    let mut channel = msg.channel;
     open_channel(&mut channel);
     let bytes = channel.try_to_vec().expect("encoding failed");
     writes.insert(key, bytes);
@@ -245,7 +336,7 @@ pub fn prepare_opened_channel(
     (port_id, channel_id, writes)
 }
 
-pub fn client_creation_data() -> ClientCreationData {
+pub fn msg_create_client() -> MsgCreateAnyClient {
     let height = Height::new(1, 10);
     let header = MockHeader {
         height,
@@ -253,19 +344,28 @@ pub fn client_creation_data() -> ClientCreationData {
     };
     let client_state = MockClientState(header).wrap_any();
     let consensus_state = MockConsensusState::new(header).wrap_any();
-    ClientCreationData::new(client_state, consensus_state)
+    MsgCreateAnyClient {
+        client_state,
+        consensus_state,
+        signer: Signer::new("test"),
+    }
 }
 
-pub fn client_update_data(client_id: ClientId) -> ClientUpdateData {
+pub fn msg_update_client(client_id: ClientId) -> MsgUpdateAnyClient {
     let height = Height::new(1, 11);
     let header = MockHeader {
         height,
         timestamp: Timestamp::now(),
-    };
-    ClientUpdateData::new(client_id, vec![header.wrap_any()])
+    }
+    .wrap_any();
+    MsgUpdateAnyClient {
+        client_id,
+        header,
+        signer: Signer::new("test"),
+    }
 }
 
-pub fn client_upgrade_data(client_id: ClientId) -> ClientUpgradeData {
+pub fn msg_upgrade_client(client_id: ClientId) -> MsgUpgradeAnyClient {
     let height = Height::new(0, 1);
     let header = MockHeader {
         height,
@@ -273,75 +373,84 @@ pub fn client_upgrade_data(client_id: ClientId) -> ClientUpgradeData {
     };
     let client_state = MockClientState(header).wrap_any();
     let consensus_state = MockConsensusState::new(header).wrap_any();
-    let client_proof =
+    let proof_upgrade_client =
         MerkleProof::try_from(CommitmentProofBytes::from(vec![])).unwrap();
-    let consensus_proof =
+    let proof_upgrade_consensus_state =
         MerkleProof::try_from(CommitmentProofBytes::from(vec![])).unwrap();
-    ClientUpgradeData::new(
+    MsgUpgradeAnyClient {
         client_id,
         client_state,
         consensus_state,
-        client_proof,
-        consensus_proof,
-    )
+        proof_upgrade_client,
+        proof_upgrade_consensus_state,
+        signer: Signer::new("test"),
+    }
 }
 
-pub fn connection_open_init_data(
-    client_id: ClientId,
-) -> ConnectionOpenInitData {
-    ConnectionOpenInitData::new(
+pub fn msg_connection_open_init(client_id: ClientId) -> MsgConnectionOpenInit {
+    MsgConnectionOpenInit {
         client_id,
-        dummy_connection_counterparty(),
-        Version::default(),
-        Duration::new(100, 0),
-    )
+        counterparty: dummy_connection_counterparty(),
+        version: Version::default(),
+        delay_period: Duration::new(100, 0),
+        signer: Signer::new("test"),
+    }
 }
 
-pub fn connection_open_try_data(
+pub fn msg_connection_open_try(
     client_id: ClientId,
     client_state: AnyClientState,
-) -> ConnectionOpenTryData {
-    ConnectionOpenTryData::new(
+) -> MsgConnectionOpenTry {
+    MsgConnectionOpenTry {
+        previous_connection_id: None,
         client_id,
-        client_state,
-        dummy_connection_counterparty(),
-        vec![Version::default()],
-        Height::new(1, 10),
-        vec![0].into(),
-        vec![0].into(),
-        vec![0].into(),
-        Duration::new(100, 0),
-    )
+        client_state: Some(client_state),
+        counterparty: dummy_connection_counterparty(),
+        counterparty_versions: vec![Version::default()],
+        proofs: dummy_proofs(),
+        delay_period: Duration::new(100, 0),
+        signer: Signer::new("test"),
+    }
 }
 
-pub fn connection_open_ack_data(
-    conn_id: ConnectionId,
+pub fn msg_connection_open_ack(
+    connection_id: ConnectionId,
     client_state: AnyClientState,
-) -> ConnectionOpenAckData {
-    let counterparty_id = ConnectionId::from_str("counterpart_test_connection")
-        .expect("Creating a connection ID failed");
-    ConnectionOpenAckData::new(
-        conn_id,
-        counterparty_id,
-        client_state,
-        Height::new(1, 10),
-        vec![0].into(),
-        vec![0].into(),
-        vec![0].into(),
-        Version::default(),
-    )
+) -> MsgConnectionOpenAck {
+    let counterparty_connection_id =
+        ConnectionId::from_str("counterpart_test_connection")
+            .expect("Creating a connection ID failed");
+    MsgConnectionOpenAck {
+        connection_id,
+        counterparty_connection_id,
+        client_state: Some(client_state),
+        proofs: dummy_proofs(),
+        version: Version::default(),
+        signer: Signer::new("test"),
+    }
 }
 
-pub fn connection_open_confirm_data(
-    conn_id: ConnectionId,
-) -> ConnectionOpenConfirmData {
-    ConnectionOpenConfirmData::new(
-        conn_id,
-        Height::new(1, 10),
+pub fn msg_connection_open_confirm(
+    connection_id: ConnectionId,
+) -> MsgConnectionOpenConfirm {
+    MsgConnectionOpenConfirm {
+        connection_id,
+        proofs: dummy_proofs(),
+        signer: Signer::new("test"),
+    }
+}
+
+fn dummy_proofs() -> Proofs {
+    let height = Height::new(1, 10);
+    let consensus_proof = ConsensusProof::new(vec![0].into(), height).unwrap();
+    Proofs::new(
         vec![0].into(),
-        vec![0].into(),
-        vec![0].into(),
+        Some(vec![0].into()),
+        Some(consensus_proof),
+        None,
+        height,
     )
+    .unwrap()
 }
 
 fn dummy_connection_counterparty() -> ConnCounterparty {
@@ -353,85 +462,94 @@ fn dummy_connection_counterparty() -> ConnCounterparty {
     connection_counterparty(counterpart_client_id, counterpart_conn_id)
 }
 
-pub fn channel_open_init_data(
+pub fn msg_channel_open_init(
     port_id: PortId,
     conn_id: ConnectionId,
-) -> ChannelOpenInitData {
-    ChannelOpenInitData::new(
+) -> MsgChannelOpenInit {
+    MsgChannelOpenInit {
         port_id,
-        Order::Ordered,
-        dummy_channel_counterparty(),
-        vec![conn_id],
-        Order::Ordered.to_string(),
-    )
+        channel: dummy_channel(ChanState::Init, Order::Ordered, conn_id),
+        signer: Signer::new("test"),
+    }
 }
 
-pub fn channel_open_try_data(
+pub fn msg_channel_open_try(
     port_id: PortId,
     conn_id: ConnectionId,
-) -> ChannelOpenTryData {
-    ChannelOpenTryData::new(
+) -> MsgChannelOpenTry {
+    MsgChannelOpenTry {
         port_id,
-        Order::Ordered,
+        previous_channel_id: None,
+        channel: dummy_channel(ChanState::TryOpen, Order::Ordered, conn_id),
+        counterparty_version: Order::Ordered.to_string(),
+        proofs: dummy_proofs(),
+        signer: Signer::new("test"),
+    }
+}
+
+pub fn msg_channel_open_ack(
+    port_id: PortId,
+    channel_id: ChannelId,
+) -> MsgChannelOpenAck {
+    MsgChannelOpenAck {
+        port_id,
+        channel_id,
+        counterparty_channel_id: dummy_channel_counterparty()
+            .channel_id()
+            .unwrap()
+            .clone(),
+        counterparty_version: Order::Ordered.to_string(),
+        proofs: dummy_proofs(),
+        signer: Signer::new("test"),
+    }
+}
+
+pub fn msg_channel_open_confirm(
+    port_id: PortId,
+    channel_id: ChannelId,
+) -> MsgChannelOpenConfirm {
+    MsgChannelOpenConfirm {
+        port_id,
+        channel_id,
+        proofs: dummy_proofs(),
+        signer: Signer::new("test"),
+    }
+}
+
+pub fn msg_channel_close_init(
+    port_id: PortId,
+    channel_id: ChannelId,
+) -> MsgChannelCloseInit {
+    MsgChannelCloseInit {
+        port_id,
+        channel_id,
+        signer: Signer::new("test"),
+    }
+}
+
+pub fn msg_channel_close_confirm(
+    port_id: PortId,
+    channel_id: ChannelId,
+) -> MsgChannelCloseConfirm {
+    MsgChannelCloseConfirm {
+        port_id,
+        channel_id,
+        proofs: dummy_proofs(),
+        signer: Signer::new("test"),
+    }
+}
+
+fn dummy_channel(
+    state: ChanState,
+    order: Order,
+    connection_id: ConnectionId,
+) -> ChannelEnd {
+    ChannelEnd::new(
+        state,
+        order,
         dummy_channel_counterparty(),
-        vec![conn_id],
-        Order::Ordered.to_string(),
-        Order::Ordered.to_string(),
-        Height::new(1, 10),
-        vec![0].into(),
-        vec![0].into(),
-        vec![0].into(),
-    )
-}
-
-pub fn channel_open_ack_data(
-    port_id: PortId,
-    channel_id: ChannelId,
-) -> ChannelOpenAckData {
-    ChannelOpenAckData::new(
-        port_id,
-        channel_id,
-        dummy_channel_counterparty().channel_id().unwrap().clone(),
-        Order::Ordered.to_string(),
-        Height::new(1, 10),
-        vec![0].into(),
-        vec![0].into(),
-        vec![0].into(),
-    )
-}
-
-pub fn channel_open_confirm_data(
-    port_id: PortId,
-    channel_id: ChannelId,
-) -> ChannelOpenConfirmData {
-    ChannelOpenConfirmData::new(
-        port_id,
-        channel_id,
-        Height::new(1, 10),
-        vec![0].into(),
-        vec![0].into(),
-        vec![0].into(),
-    )
-}
-
-pub fn channel_close_init_data(
-    port_id: PortId,
-    channel_id: ChannelId,
-) -> ChannelCloseInitData {
-    ChannelCloseInitData::new(port_id, channel_id)
-}
-
-pub fn channel_close_confirm_data(
-    port_id: PortId,
-    channel_id: ChannelId,
-) -> ChannelCloseConfirmData {
-    ChannelCloseConfirmData::new(
-        port_id,
-        channel_id,
-        Height::new(1, 10),
-        vec![0].into(),
-        vec![0].into(),
-        vec![0].into(),
+        vec![connection_id],
+        order.to_string(),
     )
 }
 
@@ -470,12 +588,21 @@ pub fn set_timeout_height(data: &mut PacketSendData) {
     data.timeout_height = Height::new(1, 1);
 }
 
-pub fn packet_receipt_data(packet: Packet) -> PacketReceiptData {
-    PacketReceiptData::new(packet, Height::new(1, 10), vec![0].into())
+pub fn msg_packet_recv(packet: Packet) -> MsgRecvPacket {
+    MsgRecvPacket {
+        packet,
+        proofs: dummy_proofs(),
+        signer: Signer::new("test"),
+    }
 }
 
-pub fn packet_ack_data(packet: Packet) -> PacketAckData {
-    PacketAckData::new(packet, vec![0], Height::new(1, 10), vec![0].into())
+pub fn msg_packet_ack(packet: Packet) -> MsgAcknowledgement {
+    MsgAcknowledgement {
+        packet,
+        acknowledgement: vec![0],
+        proofs: dummy_proofs(),
+        signer: Signer::new("test"),
+    }
 }
 
 pub fn received_packet(
@@ -498,6 +625,23 @@ pub fn received_packet(
     }
 }
 
-pub fn timeout_data(packet: Packet, next_seq_recv: Sequence) -> TimeoutData {
-    TimeoutData::new(packet, next_seq_recv, Height::new(1, 10), vec![0].into())
+pub fn msg_timeout(packet: Packet, next_sequence_recv: Sequence) -> MsgTimeout {
+    MsgTimeout {
+        packet,
+        next_sequence_recv,
+        proofs: dummy_proofs(),
+        signer: Signer::new("test"),
+    }
+}
+
+pub fn msg_timeout_on_close(
+    packet: Packet,
+    next_sequence_recv: Sequence,
+) -> MsgTimeoutOnClose {
+    MsgTimeoutOnClose {
+        packet,
+        next_sequence_recv,
+        proofs: dummy_proofs(),
+        signer: Signer::new("test"),
+    }
 }

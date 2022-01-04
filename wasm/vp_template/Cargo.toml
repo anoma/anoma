@@ -4,13 +4,13 @@ edition = "2021"
 license = "GPL-3.0"
 name = "vp_template"
 resolver = "2"
-version = "0.2.0"
+version = "0.3.0"
 
 [lib]
 crate-type = ["cdylib"]
 
 [dependencies]
-anoma_vm_env = {path = "../../vm_env"}
+anoma_vp_prelude = {path = "../../vp_prelude"}
 borsh = "0.9.0"
 wee_alloc = "0.4.5"
 

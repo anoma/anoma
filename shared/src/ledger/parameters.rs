@@ -12,6 +12,7 @@ use crate::ledger::storage::{self, Storage, StorageHasher};
 use crate::types::address::{Address, InternalAddress};
 use crate::types::storage::{DbKeySeg, Key};
 use crate::types::time::DurationSecs;
+use crate::vm::WasmCacheAccess;
 
 const ADDR: InternalAddress = InternalAddress::Parameters;
 
@@ -26,13 +27,14 @@ pub enum Error {
 pub type Result<T> = std::result::Result<T, Error>;
 
 /// Parameters VP
-pub struct ParametersVp<'a, DB, H>
+pub struct ParametersVp<'a, DB, H, CA>
 where
     DB: storage::DB + for<'iter> storage::DBIter<'iter>,
     H: StorageHasher,
+    CA: WasmCacheAccess,
 {
     /// Context to interact with the host structures.
-    pub ctx: Ctx<'a, DB, H>,
+    pub ctx: Ctx<'a, DB, H, CA>,
 }
 
 /// Protocol parameters
@@ -140,10 +142,11 @@ where
     Ok(gas)
 }
 
-impl<'a, DB, H> NativeVp for ParametersVp<'a, DB, H>
+impl<'a, DB, H, CA> NativeVp for ParametersVp<'a, DB, H, CA>
 where
     DB: 'static + storage::DB + for<'iter> storage::DBIter<'iter>,
     H: 'static + StorageHasher,
+    CA: 'static + WasmCacheAccess,
 {
     type Error = Error;
 

@@ -7,6 +7,7 @@ use thiserror::Error;
 
 use crate::ledger::storage::{self, Storage, StorageHasher};
 use crate::types::address::{Address, EstablishedAddressGen};
+use crate::types::ibc::IbcEvent;
 use crate::types::storage::Key;
 
 #[allow(missing_docs)]
@@ -55,6 +56,8 @@ pub struct WriteLog {
     block_write_log: HashMap<Key, StorageModification>,
     /// The storage modifications for the current transaction
     tx_write_log: HashMap<Key, StorageModification>,
+    /// The IBC event for the current transaction
+    ibc_event: Option<IbcEvent>,
 }
 
 impl Default for WriteLog {
@@ -63,6 +66,7 @@ impl Default for WriteLog {
             address_gen: None,
             block_write_log: HashMap::with_capacity(100_000),
             tx_write_log: HashMap::with_capacity(100),
+            ibc_event: None,
         }
     }
 }
@@ -164,6 +168,16 @@ impl WriteLog {
         (addr, gas)
     }
 
+    /// Set an IBC event and return the gas cost.
+    pub fn set_ibc_event(&mut self, event: IbcEvent) -> u64 {
+        let len = event
+            .attributes
+            .iter()
+            .fold(0, |acc, (k, v)| acc + k.len() + v.len());
+        self.ibc_event = Some(event);
+        len as _
+    }
+
     /// Get the storage keys changed and accounts keys initialized in the
     /// current transaction. The account keys point to the validity predicates
     /// of the newly created accounts.
@@ -204,6 +218,16 @@ impl WriteLog {
             .collect()
     }
 
+    /// Take the IBC event of the current transaction
+    pub fn take_ibc_event(&mut self) -> Option<IbcEvent> {
+        self.ibc_event.take()
+    }
+
+    /// Get the IBC event of the current transaction
+    pub fn get_ibc_event(&self) -> Option<&IbcEvent> {
+        self.ibc_event.as_ref()
+    }
+
     /// Commit the current transaction's write log to the block when it's
     /// accepted by all the triggered validity predicates. Starts a new
     /// transaction write log.
@@ -231,23 +255,31 @@ impl WriteLog {
         DB: 'static + storage::DB + for<'iter> storage::DBIter<'iter>,
         H: StorageHasher,
     {
+        let mut batch = Storage::<DB, H>::batch();
         for (key, entry) in self.block_write_log.iter() {
             match entry {
                 StorageModification::Write { value } => {
                     storage
-                        .write(key, value.clone())
+                        .batch_write_subspace_val(
+                            &mut batch,
+                            key,
+                            value.clone(),
+                        )
                         .map_err(Error::StorageError)?;
                 }
                 StorageModification::Delete => {
-                    storage.delete(key).map_err(Error::StorageError)?;
+                    storage
+                        .batch_delete_subspace_val(&mut batch, key)
+                        .map_err(Error::StorageError)?;
                 }
                 StorageModification::InitAccount { vp } => {
                     storage
-                        .write(key, vp.clone())
+                        .batch_write_subspace_val(&mut batch, key, vp.clone())
                         .map_err(Error::StorageError)?;
                 }
             }
         }
+        storage.exec_batch(batch).map_err(Error::StorageError)?;
         if let Some(address_gen) = self.address_gen.take() {
             storage.address_gen = address_gen
         }
