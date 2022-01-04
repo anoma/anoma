@@ -296,6 +296,7 @@ impl NetworkBehaviour for DiscoveryBehaviour {
     }
 
     fn inject_connected(&mut self, peer_id: &PeerId) {
+        tracing::debug!("Injecting connected peer {}", peer_id);
         self.peers.insert(*peer_id);
         self.pending_events
             .push_back(DiscoveryEvent::Connected(*peer_id));
@@ -304,6 +305,7 @@ impl NetworkBehaviour for DiscoveryBehaviour {
     }
 
     fn inject_disconnected(&mut self, peer_id: &PeerId) {
+        tracing::debug!("Injecting disconnected peer {}", peer_id);
         self.peers.remove(peer_id);
         self.pending_events
             .push_back(DiscoveryEvent::Disconnected(*peer_id));
@@ -317,6 +319,7 @@ impl NetworkBehaviour for DiscoveryBehaviour {
         conn: &ConnectionId,
         endpoint: &ConnectedPoint,
     ) {
+        tracing::debug!("Injecting connection established for peer ID {}", peer_id);
         self.num_connections += 1;
 
         self.kademlia
@@ -329,6 +332,7 @@ impl NetworkBehaviour for DiscoveryBehaviour {
         conn: &ConnectionId,
         endpoint: &ConnectedPoint,
     ) {
+        tracing::debug!("Injecting connection closed for peer ID {}", peer_id);
         self.num_connections -= 1;
 
         self.kademlia
@@ -416,6 +420,7 @@ impl NetworkBehaviour for DiscoveryBehaviour {
 
         // Poll Kademlia return every other event except kad event
         while let Poll::Ready(ev) = self.kademlia.poll(cx, params) {
+            tracing::debug!("Kademlia event {:#?}", ev);
             if let NetworkBehaviourAction::GenerateEvent(_kad_ev) = ev {
             } else {
                 return Poll::Ready(ev.map_out(DiscoveryEvent::KademliaEvent));
@@ -428,6 +433,7 @@ impl NetworkBehaviour for DiscoveryBehaviour {
         // TODO: explain a bit more the logic happening here
         if let Some(next_kad_random_query) = self.next_kad_random_query.as_mut()
         {
+            tracing::debug!("Kademlia random query {:#?}", next_kad_random_query);
             while next_kad_random_query.poll_next_unpin(cx).is_ready() {
                 if self.num_connections < self.discovery_max {
                     let random_peer_id = PeerId::random();
