@@ -319,7 +319,12 @@ impl NetworkBehaviour for DiscoveryBehaviour {
         conn: &ConnectionId,
         endpoint: &ConnectedPoint,
     ) {
-        tracing::debug!("Injecting connection established for peer ID {}", peer_id);
+        tracing::debug!(
+            "Injecting connection established for peer ID {} with endpoint \
+             {:#?}",
+            peer_id,
+            endpoint
+        );
         self.num_connections += 1;
 
         self.kademlia
@@ -433,7 +438,10 @@ impl NetworkBehaviour for DiscoveryBehaviour {
         // TODO: explain a bit more the logic happening here
         if let Some(next_kad_random_query) = self.next_kad_random_query.as_mut()
         {
-            tracing::debug!("Kademlia random query {:#?}", next_kad_random_query);
+            tracing::debug!(
+                "Kademlia random query {:#?}",
+                next_kad_random_query
+            );
             while next_kad_random_query.poll_next_unpin(cx).is_ready() {
                 if self.num_connections < self.discovery_max {
                     let random_peer_id = PeerId::random();
