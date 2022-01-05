@@ -170,6 +170,8 @@ impl Behaviour {
             .max_transmit_size(16 * 1024 * 1024)
             .validate_messages()
             .mesh_outbound_min(1)
+            // TODO bootstrap peers should not be part of the mesh, so all the
+            // `.mesh` args should be set to 0 https://github.com/libp2p/specs/blob/70d7fda47dda88d828b4db72775c1602de57e91b/pubsub/gossipsub/gossipsub-v1.1.md#recommendations-for-network-operators
             .mesh_n_low(2)
             .mesh_n(3)
             .mesh_n_high(6)
