@@ -21,7 +21,6 @@ use tendermint_config::net;
 use tendermint_config_abci::net;
 use thiserror::Error;
 use tokio::sync::mpsc::{channel, Receiver, Sender};
-use tokio::sync::oneshot;
 
 use super::filter::Filter;
 use super::mempool::{self, IntentMempool};
@@ -72,7 +71,7 @@ struct MatchmakerState(Arc<*mut c_void>);
 #[derive(Debug)]
 pub enum MatchmakerMessage {
     /// Run the matchmaker with the given intent
-    ApplyIntent(Intent, oneshot::Sender<bool>),
+    ApplyIntent(Intent, std::sync::mpsc::Sender<bool>),
 }
 
 #[derive(Error, Debug)]

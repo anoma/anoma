@@ -21,7 +21,6 @@ use libp2p::swarm::NetworkBehaviourEventProcess;
 use libp2p::{NetworkBehaviour, PeerId};
 use thiserror::Error;
 use tokio::sync::mpsc::Sender;
-use tokio::sync::oneshot::channel;
 
 use self::discovery::DiscoveryEvent;
 use super::intent_gossiper;
@@ -254,7 +253,7 @@ impl Behaviour {
     /// is rejected. If the matchmaker fails the message is only ignore
     fn handle_intent(&mut self, intent: Intent) -> MessageAcceptance {
         if let Some(sender) = &self.mm_sender {
-            let (response_sender, mut response_receiver) = channel::<bool>();
+            let (response_sender, response_receiver) = std::sync::mpsc::channel::<bool>();
             sender
                 .try_send(MatchmakerMessage::ApplyIntent(
                     intent,
@@ -266,7 +265,7 @@ impl Behaviour {
                         err
                     );
                 });
-            return match response_receiver.try_recv() {
+            return match response_receiver.recv() {
                 Ok(true) => MessageAcceptance::Accept,
                 Ok(false) => MessageAcceptance::Reject,
                 Err(err) => {
