@@ -16,6 +16,7 @@ use libp2p::gossipsub::{
 };
 use libp2p::identify::{Identify, IdentifyConfig, IdentifyEvent};
 use libp2p::identity::Keypair;
+use libp2p::ping::{Ping, PingEvent, PingFailure, PingSuccess};
 use libp2p::swarm::NetworkBehaviourEventProcess;
 use libp2p::{NetworkBehaviour, PeerId};
 use thiserror::Error;
@@ -38,6 +39,9 @@ pub struct Behaviour {
     pub discover_behaviour: DiscoveryBehaviour,
     /// The identify protocol allows establishing P2P connections via Kademlia
     identify: Identify,
+    /// Responds to inbound pings and periodically sends outbound pings on
+    /// every established connection
+    ping: Ping,
     #[behaviour(ignore)]
     pub mm_sender: Option<Sender<MatchmakerMessage>>,
 }
@@ -241,6 +245,7 @@ impl Behaviour {
                 "anoma/id/anoma/id/1.0.0".into(),
                 public_key,
             )),
+            ping: Ping::default(),
             mm_sender,
         }
     }
@@ -377,6 +382,39 @@ impl NetworkBehaviourEventProcess<IdentifyEvent> for Behaviour {
                     "Error while attempting to identify the remote peer {}: \
                      {},",
                     peer_id,
+                    error
+                );
+            }
+        }
+    }
+}
+
+impl NetworkBehaviourEventProcess<PingEvent> for Behaviour {
+    fn inject_event(&mut self, event: PingEvent) {
+        match event.result {
+            Ok(PingSuccess::Ping { rtt }) => {
+                tracing::debug!(
+                    "PingSuccess::Ping rtt to {} is {} ms",
+                    event.peer.to_base58(),
+                    rtt.as_millis()
+                );
+            }
+            Ok(PingSuccess::Pong) => {
+                tracing::debug!(
+                    "PingSuccess::Pong from {}",
+                    event.peer.to_base58()
+                );
+            }
+            Err(PingFailure::Timeout) => {
+                tracing::warn!(
+                    "PingFailure::Timeout {}",
+                    event.peer.to_base58()
+                );
+            }
+            Err(PingFailure::Other { error }) => {
+                tracing::warn!(
+                    "PingFailure::Other {}: {}",
+                    event.peer.to_base58(),
                     error
                 );
             }
