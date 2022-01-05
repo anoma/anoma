@@ -14,6 +14,7 @@ use libp2p::gossipsub::{
     MessageAcceptance, MessageAuthenticity, MessageId, TopicHash,
     ValidationMode,
 };
+use libp2p::identify::{Identify, IdentifyConfig, IdentifyEvent};
 use libp2p::identity::Keypair;
 use libp2p::swarm::NetworkBehaviourEventProcess;
 use libp2p::{NetworkBehaviour, PeerId};
@@ -27,6 +28,19 @@ use super::intent_gossiper::matchmaker::MatchmakerMessage;
 use crate::node::gossip::behaviour::discovery::{
     DiscoveryBehaviour, DiscoveryConfigBuilder,
 };
+
+/// Behaviour is composed of a `DiscoveryBehaviour` and an GossipsubBehaviour`.
+/// It automatically connect to newly discovered peer, except specified
+/// otherwise, and propagates intents to other peers.
+#[derive(NetworkBehaviour)]
+pub struct Behaviour {
+    pub intent_gossip_behaviour: Gossipsub,
+    pub discover_behaviour: DiscoveryBehaviour,
+    /// The identify protocol allows establishing P2P connections via Kademlia
+    identify: Identify,
+    #[behaviour(ignore)]
+    pub mm_sender: Option<Sender<MatchmakerMessage>>,
+}
 
 #[derive(Error, Debug)]
 pub enum Error {
@@ -124,17 +138,6 @@ impl TopicSubscriptionFilter for IntentGossipSubscriptionFilter {
     }
 }
 
-/// Behaviour is composed of a `DiscoveryBehaviour` and an GossipsubBehaviour`.
-/// It automatically connect to newly discovered peer, except specified
-/// otherwise, and propagates intents to other peers.
-#[derive(NetworkBehaviour)]
-pub struct Behaviour {
-    pub intent_gossip_behaviour: Gossipsub,
-    pub discover_behaviour: DiscoveryBehaviour,
-    #[behaviour(ignore)]
-    pub mm_sender: Option<Sender<MatchmakerMessage>>,
-}
-
 /// [message_id] use the hash of the message data as an id
 pub fn message_id(message: &GossipsubMessage) -> MessageId {
     let mut hasher = DefaultHasher::new();
@@ -149,7 +152,8 @@ impl Behaviour {
         config: &crate::config::IntentGossiper,
         mm_sender: Option<Sender<MatchmakerMessage>>,
     ) -> Self {
-        let peer_id = PeerId::from_public_key(key.public());
+        let public_key = key.public();
+        let peer_id = PeerId::from_public_key(public_key.clone());
 
         // TODO remove hardcoded value and add them to the config Except
         // validation_mode, protocol_id_prefix, message_id_fn and
@@ -233,6 +237,10 @@ impl Behaviour {
         Self {
             intent_gossip_behaviour,
             discover_behaviour,
+            identify: Identify::new(IdentifyConfig::new(
+                "anoma/id/anoma/id/1.0.0".into(),
+                public_key,
+            )),
             mm_sender,
         }
     }
@@ -347,6 +355,31 @@ impl NetworkBehaviourEventProcess<DiscoveryEvent> for Behaviour {
                 tracing::info!("Peer disconnected: {:?}", peer)
             }
             _ => {}
+        }
+    }
+}
+
+impl NetworkBehaviourEventProcess<IdentifyEvent> for Behaviour {
+    fn inject_event(&mut self, event: IdentifyEvent) {
+        match event {
+            IdentifyEvent::Received { peer_id, info } => {
+                tracing::debug!("Identified Peer {}", peer_id);
+                tracing::debug!("protocol_version {}", info.protocol_version);
+                tracing::debug!("agent_version {}", info.agent_version);
+                tracing::debug!("listening_ addresses {:?}", info.listen_addrs);
+                tracing::debug!("observed_address {}", info.observed_addr);
+                tracing::debug!("protocols {:?}", info.protocols);
+            }
+            IdentifyEvent::Sent { .. } => (),
+            IdentifyEvent::Pushed { .. } => (),
+            IdentifyEvent::Error { peer_id, error } => {
+                tracing::error!(
+                    "Error while attempting to identify the remote peer {}: \
+                     {},",
+                    peer_id,
+                    error
+                );
+            }
         }
     }
 }
