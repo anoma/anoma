@@ -253,7 +253,8 @@ impl Behaviour {
     /// is rejected. If the matchmaker fails the message is only ignore
     fn handle_intent(&mut self, intent: Intent) -> MessageAcceptance {
         if let Some(sender) = &self.mm_sender {
-            let (response_sender, response_receiver) = std::sync::mpsc::channel::<bool>();
+            let (response_sender, response_receiver) =
+                std::sync::mpsc::channel::<bool>();
             sender
                 .try_send(MatchmakerMessage::ApplyIntent(
                     intent,
@@ -370,9 +371,21 @@ impl NetworkBehaviourEventProcess<IdentifyEvent> for Behaviour {
                 tracing::debug!("Identified Peer {}", peer_id);
                 tracing::debug!("protocol_version {}", info.protocol_version);
                 tracing::debug!("agent_version {}", info.agent_version);
-                tracing::debug!("listening_ addresses {:?}", info.listen_addrs);
+                tracing::debug!("listening_addresses {:?}", info.listen_addrs);
                 tracing::debug!("observed_address {}", info.observed_addr);
                 tracing::debug!("protocols {:?}", info.protocols);
+                if let Some(kad) = self.discover_behaviour.kademlia.as_mut() {
+                    // Only the first address is the public IP, the others
+                    // seem to be private
+                    if let Some(addr) = info.listen_addrs.first() {
+                        tracing::debug!(
+                            "Routing updated peer ID: {}, address: {}",
+                            peer_id,
+                            addr
+                        );
+                        let _update = kad.add_address(&peer_id, addr.clone());
+                    }
+                }
             }
             IdentifyEvent::Sent { .. } => (),
             IdentifyEvent::Pushed { .. } => (),

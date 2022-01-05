@@ -141,7 +141,7 @@ pub struct DiscoveryBehaviour {
     /// bootstrap nodes and reserved nodes.
     user_defined: Vec<PeerAddress>,
     /// Kademlia discovery.
-    kademlia: Toggle<Kademlia<MemoryStore>>,
+    pub kademlia: Toggle<Kademlia<MemoryStore>>,
     /// Discovers nodes on the local network.
     mdns: Toggle<Mdns>,
     /// Stream that fires when we need to perform the next random Kademlia
