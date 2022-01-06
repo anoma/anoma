@@ -196,6 +196,10 @@ pub fn init_network(
             )
             .unwrap()
         };
+        if let Some(discover) = gossiper_config.discover_peer.as_mut() {
+            // Disable mDNS local network peer discovery on the validator nodes
+            discover.mdns = false;
+        }
         let intent_peer = PeerAddress {
             address: intent_peer_address,
             peer_id,
