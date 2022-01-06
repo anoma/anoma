@@ -254,6 +254,10 @@ pub fn init_network(
             &config.matchmaker_tx,
         ) {
             (Some(account), Some(mm_code), Some(tx_code)) => {
+                if config.intent_gossip_bootstrap.unwrap_or_default() {
+                    eprintln!("A bootstrap node cannot run matchmakers");
+                    cli::safe_exit(1)
+                }
                 match established_accounts.as_ref().and_then(|e| e.get(account))
                 {
                     Some(matchmaker) => {
@@ -302,10 +306,20 @@ pub fn init_network(
 
         // Store the gossip config
         gossiper_configs.insert(name.clone(), gossiper_config);
-        bootstrap_peers.insert(intent_peer);
+        if config.intent_gossip_bootstrap.unwrap_or_default() {
+            bootstrap_peers.insert(intent_peer);
+        }
 
         wallet.save().unwrap();
     });
+
+    if bootstrap_peers.is_empty() && config.validator.len() > 1 {
+        tracing::warn!(
+            "At least 1 validator with `intent_gossip_bootstrap = true` is \
+             needed to established connection between the intent gossiper \
+             nodes"
+        );
+    }
 
     // Create a wallet for all accounts other than validators
     let mut wallet =
