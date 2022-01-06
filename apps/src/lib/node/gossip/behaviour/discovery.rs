@@ -202,7 +202,7 @@ impl DiscoveryBehaviour {
             kademlia_disjoint_query_paths,
         } = config;
 
-        let mut peers = HashSet::new();
+        let mut peers = HashSet::with_capacity(user_defined.len());
 
         // Kademlia config
         let kademlia_opt = if enable_kademlia {
