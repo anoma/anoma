@@ -232,7 +232,9 @@ pub struct PeerAddress {
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct DiscoverPeer {
     pub max_discovery_peers: u64,
+    /// Toggle Kademlia remote peer discovery, on by default
     pub kademlia: bool,
+    /// Toggle local network mDNS peer discovery, off by default
     pub mdns: bool,
 }
 
@@ -501,15 +503,11 @@ impl<'de> Deserialize<'de> for PeerAddress {
 }
 
 impl Default for DiscoverPeer {
-    /// default configuration for discovering peer.
-    /// max_discovery_peers: 16,
-    /// kademlia: true,
-    /// mdns: true,
     fn default() -> Self {
         Self {
             max_discovery_peers: 16,
             kademlia: true,
-            mdns: true,
+            mdns: false,
         }
     }
 }
