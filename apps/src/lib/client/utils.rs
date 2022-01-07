@@ -116,7 +116,7 @@ pub fn init_network(
         Vec::with_capacity(config.validator.len());
     // Intent gossiper config bootstrap peers where we'll add the address for
     // each validator's node
-    let mut bootstrap_peers: HashSet<PeerAddress> =
+    let mut seed_peers: HashSet<PeerAddress> =
         HashSet::with_capacity(config.validator.len());
     let mut gossiper_configs: HashMap<String, IntentGossiper> =
         HashMap::with_capacity(config.validator.len());
@@ -311,13 +311,13 @@ pub fn init_network(
         // Store the gossip config
         gossiper_configs.insert(name.clone(), gossiper_config);
         if config.intent_gossip_bootstrap.unwrap_or_default() {
-            bootstrap_peers.insert(intent_peer);
+            seed_peers.insert(intent_peer);
         }
 
         wallet.save().unwrap();
     });
 
-    if bootstrap_peers.is_empty() && config.validator.len() > 1 {
+    if seed_peers.is_empty() && config.validator.len() > 1 {
         tracing::warn!(
             "At least 1 validator with `intent_gossip_bootstrap = true` is \
              needed to established connection between the intent gossiper \
@@ -502,9 +502,7 @@ pub fn init_network(
 
             // Configure the intent gossiper
             config.intent_gossiper = gossiper_configs.remove(name).unwrap();
-            if let Some(discover) = &mut config.intent_gossiper.discover_peer {
-                discover.bootstrap_peers = bootstrap_peers.clone();
-            }
+            config.intent_gossiper.seed_peers = seed_peers.clone();
             config.intent_gossiper.rpc = Some(config::RpcServer {
                 address: SocketAddr::new(
                     IpAddr::V4(if localhost {
@@ -539,9 +537,7 @@ pub fn init_network(
             .set_ip(IpAddr::V4(Ipv4Addr::new(0, 0, 0, 0)));
     }
     config.ledger.genesis_time = genesis.genesis_time.into();
-    if let Some(discover) = &mut config.intent_gossiper.discover_peer {
-        discover.bootstrap_peers = bootstrap_peers;
-    }
+    config.intent_gossiper.seed_peers = seed_peers;
     config
         .write(&global_args.base_dir, &chain_id, true)
         .unwrap();

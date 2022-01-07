@@ -223,20 +223,19 @@ impl Behaviour {
         let discover_behaviour = {
             // TODO: check that bootstrap_peers are in multiaddr (otherwise it
             // fails silently)
-            let discover_config = if let Some(discover_config) =
-                &config.discover_peer
-            {
-                DiscoveryConfigBuilder::default()
-                    .with_user_defined(discover_config.bootstrap_peers.clone())
-                    .discovery_limit(discover_config.max_discovery_peers)
-                    .with_kademlia(discover_config.kademlia)
-                    .with_mdns(discover_config.mdns)
-                    .use_kademlia_disjoint_query_paths(true)
-                    .build()
-                    .unwrap()
-            } else {
-                DiscoveryConfigBuilder::default().build().unwrap()
-            };
+            let discover_config =
+                if let Some(discover_config) = &config.discover_peer {
+                    DiscoveryConfigBuilder::default()
+                        .with_user_defined(config.seed_peers.clone())
+                        .discovery_limit(discover_config.max_discovery_peers)
+                        .with_kademlia(discover_config.kademlia)
+                        .with_mdns(discover_config.mdns)
+                        .use_kademlia_disjoint_query_paths(true)
+                        .build()
+                        .unwrap()
+                } else {
+                    DiscoveryConfigBuilder::default().build().unwrap()
+                };
             DiscoveryBehaviour::new(peer_id, discover_config).unwrap()
         };
         Self {
