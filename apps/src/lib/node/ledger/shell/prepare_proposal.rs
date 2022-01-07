@@ -86,11 +86,13 @@ mod prepare_block {
 
                 // Aggregate PVSS transcripts if DKG is in appropriate state
                 if let Ok(msg) = dkg.state_machine.aggregate() {
-                    let protocol_keypair_lock =
-                        data.keys.protocol_keypair.lock();
-                    let encrypted_key_tx = ProtocolTxType::DKG(msg)
-                        .sign(&protocol_keypair_lock)
-                        .to_bytes();
+                    let encrypted_key_tx = {
+                        let protocol_keypair_lock =
+                            data.keys.protocol_keypair.lock();
+                        ProtocolTxType::DKG(msg)
+                            .sign(&protocol_keypair_lock)
+                            .to_bytes()
+                    };
                     txs.push(encrypted_key_tx);
                 }
 

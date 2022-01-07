@@ -333,12 +333,14 @@ pub async fn submit_init_validator(
         ctx.wallet.save().unwrap_or_else(|err| eprintln!("{}", err));
 
         let tendermint_home = ctx.config.ledger.tendermint_dir();
-        let consensus_key_mutex = consensus_key.lock();
-        tendermint_node::write_validator_key(
-            &tendermint_home,
-            &validator_address,
-            consensus_key_mutex.borrow(),
-        );
+        {
+            let consensus_key_mutex = consensus_key.lock();
+            tendermint_node::write_validator_key(
+                &tendermint_home,
+                &validator_address,
+                consensus_key_mutex.borrow(),
+            );
+        }
         tendermint_node::write_validator_state(tendermint_home);
 
         println!();
@@ -652,9 +654,10 @@ async fn sign_tx(
 ) -> (Context, TxBroadcastData) {
     let (tx, keypair) = if let Some(signing_key) = &args.signing_key {
         let signing_key = ctx.get_cached(signing_key);
-        let signing_key_mutex = signing_key.lock();
-        let tx = tx.sign(signing_key_mutex.borrow());
-        drop(signing_key_mutex);
+        let tx = {
+            let signing_key_mutex = signing_key.lock();
+            tx.sign(signing_key_mutex.borrow())
+        };
         (tx, signing_key)
     } else if let Some(signer) = args.signer.as_ref().or(default) {
         let signer = ctx.get(signer);
@@ -664,9 +667,10 @@ async fn sign_tx(
             args.ledger_address.clone(),
         )
         .await;
-        let signing_key_mutex = signing_key.lock();
-        let tx = tx.sign(signing_key_mutex.borrow());
-        drop(signing_key_mutex);
+        let tx = {
+            let signing_key_mutex = signing_key.lock();
+            tx.sign(signing_key_mutex.borrow())
+        };
         (tx, signing_key)
     } else {
         panic!(

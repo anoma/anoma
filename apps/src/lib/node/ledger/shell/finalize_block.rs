@@ -575,15 +575,17 @@ where
         {
             let rng = &mut ark_std::rand::prelude::StdRng::from_entropy();
             let keypair = data.keys.get_protocol_keypair();
-            let keypair = keypair.lock();
             if dkg.state_machine.increase_block() == PvssScheduler::Issue {
-                let tx_bytes = ProtocolTxType::DKG(
-                    dkg.state_machine
-                        .share(rng)
-                        .map_err(|err| Error::DkgUpdate(err.to_string()))?,
-                )
-                .sign(keypair.borrow())
-                .to_bytes();
+                let tx_bytes = {
+                    let keypair = keypair.lock();
+                    ProtocolTxType::DKG(
+                        dkg.state_machine
+                            .share(rng)
+                            .map_err(|err| Error::DkgUpdate(err.to_string()))?,
+                    )
+                        .sign(keypair.borrow())
+                        .to_bytes()
+                };
                 // broadcast transaction.
                 // We ignore errors here, they are handled elsewhere
                 let _ = broadcast_sender.send(tx_bytes);
@@ -1741,7 +1743,7 @@ mod test_finalize_block {
                 )
                 .into(),
             );
-            let protocol_keys = data.keys.protocol_keypair.lock();
+
             let request_data = UpdateDkgSessionKey {
                 address: data.address.clone(),
                 dkg_public_key: next_dkg_keypair
@@ -1751,12 +1753,12 @@ mod test_finalize_block {
                     .try_to_vec()
                     .expect("Serialization of DKG public key shouldn't fail"),
             };
-
+            let protocol_keys = data.keys.protocol_keypair.lock();
             let mut request = ProtocolTxType::request_new_dkg_keypair(
-                request_data,
-                &protocol_keys,
-                &shell.shell.wasm_dir,
-                read_wasm,
+                    request_data,
+                    &protocol_keys,
+                    &shell.shell.wasm_dir,
+                    read_wasm,
             );
             // put in wasm that won't run correctly
             match &mut request {

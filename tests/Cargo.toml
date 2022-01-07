@@ -18,6 +18,7 @@ ABCI = [
   "tendermint-proto-abci",
   "anoma/ABCI",
   "anoma/ibc-vp-abci",
+  "anoma_apps/ABCI",
   "anoma_vm_env/ABCI",
 ]
 
@@ -28,11 +29,13 @@ ABCI-plus-plus = [
   "tendermint-proto",
   "anoma/ABCI-plus-plus",
   "anoma/ibc-vp",
+  "anoma_apps/ABCI-plus-plus",
   "anoma_vm_env/ABCI-plus-plus",
 ]
 
 [dependencies]
 anoma = {path = "../shared", default-features = false, features = ["testing"]}
+anoma_apps = {path = "../apps", default-features = false, features = ["testing"]}
 anoma_vm_env = {path = "../vm_env", default-features = false}
 chrono = "0.4.19"
 concat-idents = "1.1.2"
@@ -55,7 +58,6 @@ tracing = "0.1.26"
 tracing-subscriber = {version = "0.2.25", default-features = false, features = ["env-filter", "fmt"]}
 
 [dev-dependencies]
-anoma_apps = {path = "../apps", default-features = false, features = ["testing"]}
 assert_cmd = "1.0.7"
 borsh = "0.9.1"
 color-eyre = "0.5.11"

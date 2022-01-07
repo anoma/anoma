@@ -162,11 +162,12 @@ impl Store {
         match FileLock::lock(
             wallet_file.to_str().unwrap(),
             true,
-            FileOptions::new().write(true),
-        ) {
+            FileOptions::new().read(true).write(false),
+        )
+        {
             Ok(mut filelock) => {
                 let mut store = Vec::<u8>::new();
-                filelock.file.read(&mut store).map_err(|err| {
+                filelock.file.read_to_end(&mut store).map_err(|err| {
                     LoadStoreError::ReadWallet(
                         store_dir.to_str().unwrap().into(),
                         err.to_string(),

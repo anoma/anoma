@@ -7,7 +7,6 @@ use std::sync::Once;
 use std::{env, fs, mem, thread, time};
 
 use anoma::types::chain::ChainId;
-use anoma::types::key::ed25519::{Keypair, PublicKey, SecretKey};
 use anoma_apps::client::utils;
 use anoma_apps::config::genesis::genesis_config::{self, GenesisConfig};
 use anoma_apps::{config, wallet};
@@ -145,34 +144,6 @@ pub fn network(
         wallet::wallet_file(chain_dir.clone()),
     )
     .unwrap();
-    let mut wallet = wallet::Wallet::load_or_new(&chain_dir);
-    wallet.insert_keypair(
-        constants::BERTHA_KEY.into(),
-        wallet::StoredKeypair::Raw(Keypair {
-            public: PublicKey::from_str("20000000ddfaeb3984ddbfc7851e66e3658e538a18d58ce5fed99302753cebad4993b37a").unwrap(),
-            secret: SecretKey::from_str("20000000a8f9bfd600736b3ff17a026c232592bec873fd593e9a8b68a17538911be7c3e7").unwrap(),
-        }.into()),
-        PublicKey::from_str("20000000ddfaeb3984ddbfc7851e66e3658e538a18d58ce5fed99302753cebad4993b37a").unwrap().into(),
-    );
-    wallet.save().expect("Saving wallet should succeed");
-    let mut validator_wallet = wallet::Wallet::load_or_new(
-        &chain_dir
-            .join("setup")
-            .join("validator-0")
-            .join(config::DEFAULT_BASE_DIR)
-            .join(net.chain_id.as_str()),
-    );
-    validator_wallet.insert_keypair(
-        constants::MATCHMAKER_KEY.into(),
-        wallet::StoredKeypair::Raw(Keypair {
-            public: PublicKey::from_str("2000000032dbf8a7cab9deebc9a394d574d5a1407305a1c3f6bb953f50cd036586b01b0c").unwrap(),
-            secret: SecretKey::from_str("2000000034afc284494621022874fcf365c3bcb45749eabe43a9c3acf9bc0332759ac889").unwrap(),
-        }.into()),
-        PublicKey::from_str("2000000032dbf8a7cab9deebc9a394d574d5a1407305a1c3f6bb953f50cd036586b01b0c").unwrap().into(),
-    );
-    validator_wallet
-        .save()
-        .expect("Saving wallet should succeed");
 
     Ok(Test {
         working_dir,

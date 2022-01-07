@@ -239,21 +239,24 @@ pub fn init_network(
             validator_keys.protocol_keypair.public().to_string(),
         ));
         config.dkg_public_key = Some(genesis_config::HexString(
-            validator_keys.dkg_keypair.unwrap().public().to_string(),
+            validator_keys.dkg_keypair.as_ref().unwrap().public().to_string(),
         ));
         // Generate account and reward addresses
         let address = address::gen_established_address("validator account");
+        wallet.add_validator_data(address.clone(), validator_keys);
         let reward_address =
             address::gen_established_address("validator reward account");
         config.address = Some(address.to_string());
         config.staking_reward_address = Some(reward_address.to_string());
-        let consensus_keypair = consensus_keypair.lock();
-        // Write consensus key for Tendermint
-        tendermint_node::write_validator_key(
-            &tm_home_dir,
-            &address,
-            consensus_keypair.borrow(),
-        );
+        {
+            let consensus_keypair_mutex = consensus_keypair.lock();
+            // Write consensus key for Tendermint
+            tendermint_node::write_validator_key(
+                &tm_home_dir,
+                &address,
+                consensus_keypair_mutex.borrow(),
+            );
+        }
 
         // Write keypairs to wallet
         wallet.add_address(name.clone(), address);
@@ -315,7 +318,6 @@ pub fn init_network(
         // Store the gossip config
         gossiper_configs.insert(name.clone(), gossiper_config);
         bootstrap_peers.insert(intent_peer);
-
         wallet.save().unwrap();
     });
 
@@ -697,12 +699,15 @@ fn init_genesis_validator_aux(
     wallet.save().unwrap_or_else(|err| eprintln!("{}", err));
 
     let tendermint_home = &config.ledger.tendermint_dir();
-    let consensus_key_mutex = consensus_key.lock();
-    tendermint_node::write_validator_key(
-        tendermint_home,
-        &validator_address,
-        consensus_key_mutex.borrow(),
-    );
+    {
+        let consensus_key_mutex = consensus_key.lock();
+        tendermint_node::write_validator_key(
+            tendermint_home,
+            &validator_address,
+            consensus_key_mutex.borrow(),
+        );
+    }
+
     tendermint_node::write_validator_state(tendermint_home);
 
     println!();

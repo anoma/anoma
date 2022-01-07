@@ -192,12 +192,14 @@ impl StoredKeypair {
     ) -> (Self, AtomicKeypair) {
         match password {
             Some(password) => {
-                let keypair_mutex = keypair.lock();
-                let encrypted = Self::Encrypted(EncryptedKeypair::new(
-                    keypair_mutex.borrow(),
-                    password,
-                ));
-                drop(keypair_mutex);
+
+                let encrypted = {
+                    let keypair_mutex = keypair.lock();
+                    Self::Encrypted(EncryptedKeypair::new(
+                        keypair_mutex.borrow(),
+                        password,
+                    ))
+                };
                 (encrypted, keypair)
             }
             None => (Self::Raw(keypair.clone()), keypair),
