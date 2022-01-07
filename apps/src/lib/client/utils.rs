@@ -258,7 +258,7 @@ pub fn init_network(
             &config.matchmaker_tx,
         ) {
             (Some(account), Some(mm_code), Some(tx_code)) => {
-                if config.intent_gossip_bootstrap.unwrap_or_default() {
+                if config.intent_gossip_seed.unwrap_or_default() {
                     eprintln!("A bootstrap node cannot run matchmakers");
                     cli::safe_exit(1)
                 }
@@ -310,7 +310,7 @@ pub fn init_network(
 
         // Store the gossip config
         gossiper_configs.insert(name.clone(), gossiper_config);
-        if config.intent_gossip_bootstrap.unwrap_or_default() {
+        if config.intent_gossip_seed.unwrap_or_default() {
             seed_peers.insert(intent_peer);
         }
 
@@ -319,9 +319,8 @@ pub fn init_network(
 
     if seed_peers.is_empty() && config.validator.len() > 1 {
         tracing::warn!(
-            "At least 1 validator with `intent_gossip_bootstrap = true` is \
-             needed to established connection between the intent gossiper \
-             nodes"
+            "At least 1 validator with `intent_gossip_seed = true` is needed \
+             to established connection between the intent gossiper nodes"
         );
     }
 

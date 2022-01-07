@@ -53,7 +53,7 @@ pub fn add_validators(num: u8, mut genesis: GenesisConfig) -> GenesisConfig {
     // Clone the first validator before modifying it
     let other_validators = validator_0.clone();
     // Set the first validator to be a bootstrap node to enable P2P connectivity
-    validator_0.intent_gossip_bootstrap = Some(true);
+    validator_0.intent_gossip_seed = Some(true);
     // A bootstrap node doesn't participate in the gossipsub protocol for
     // gossiping intents, so we remove its matchmaker
     validator_0.matchmaker_account = None;
@@ -66,7 +66,7 @@ pub fn add_validators(num: u8, mut genesis: GenesisConfig) -> GenesisConfig {
     for ix in 0..num {
         let mut validator = other_validators.clone();
         // Only the first validator is bootstrap
-        validator.intent_gossip_bootstrap = None;
+        validator.intent_gossip_seed = None;
         let mut net_address = net_address_0;
         // 5 ports for each validator
         net_address.set_port(net_address_port_0 + 5 * (ix as u16 + 1));
