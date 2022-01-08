@@ -7,10 +7,8 @@ pub mod storage;
 pub mod tendermint_node;
 
 use std::convert::TryInto;
-use std::env;
 use std::net::SocketAddr;
 use std::path::PathBuf;
-use std::str::FromStr;
 
 use byte_unit::Byte;
 use futures::future::TryFutureExt;
@@ -27,10 +25,11 @@ use tower_abci::{response, split, Server};
 use tower_abci_old::{response, split, Server};
 
 use self::shims::abcipp_shim::AbciService;
+use crate::config::utils::num_of_threads;
 use crate::node::ledger::shell::{Error, MempoolTxType, Shell};
 use crate::node::ledger::shims::abcipp_shim::AbcippShim;
 use crate::node::ledger::shims::abcipp_shim_types::shim::{Request, Response};
-use crate::{cli, config, wasm_loader};
+use crate::{config, wasm_loader};
 
 /// Env. var to set a number of Tokio RT worker threads
 const ENV_VAR_TOKIO_THREADS: &str = "ANOMA_TOKIO_THREADS";
@@ -132,40 +131,18 @@ pub fn run(config: config::Ledger, wasm_dir: PathBuf) {
     let logical_cores = num_cpus::get();
     tracing::info!("Available logical cores: {}", logical_cores);
 
-    let rayon_threads = if let Ok(num_str) = env::var(ENV_VAR_RAYON_THREADS) {
-        match usize::from_str(&num_str) {
-            Ok(num) if num > 0 => num,
-            _ => {
-                eprintln!(
-                    "Invalid env. var {} value: {}. Expecting a positive \
-                     number.",
-                    ENV_VAR_RAYON_THREADS, num_str
-                );
-                cli::safe_exit(1)
-            }
-        }
-    } else {
+    let rayon_threads = num_of_threads(
+        ENV_VAR_RAYON_THREADS,
         // If not set, default to half of logical CPUs count
-        logical_cores / 2
-    };
+        logical_cores / 2,
+    );
     tracing::info!("Using {} threads for Rayon.", rayon_threads);
 
-    let tokio_threads = if let Ok(num_str) = env::var(ENV_VAR_TOKIO_THREADS) {
-        match usize::from_str(&num_str) {
-            Ok(num) if num > 0 => num,
-            _ => {
-                eprintln!(
-                    "Invalid env. var {} value: {}. Expecting a positive \
-                     number.",
-                    ENV_VAR_TOKIO_THREADS, num_str
-                );
-                cli::safe_exit(1)
-            }
-        }
-    } else {
+    let tokio_threads = num_of_threads(
+        ENV_VAR_TOKIO_THREADS,
         // If not set, default to half of logical CPUs count
-        logical_cores / 2
-    };
+        logical_cores / 2,
+    );
     tracing::info!("Using {} threads for Tokio.", tokio_threads);
 
     // Configure number of threads for rayon (used in `par_iter` when running

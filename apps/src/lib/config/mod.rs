@@ -2,6 +2,7 @@
 
 pub mod genesis;
 pub mod global;
+pub mod utils;
 
 use std::collections::HashSet;
 use std::fmt::Display;

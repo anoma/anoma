@@ -26,10 +26,8 @@
 //!     - `new/{dyn}`: value set in block height `h`
 //!     - `old/{dyn}`: value from predecessor block height
 
-use std::cmp::{self, Ordering};
-use std::env;
+use std::cmp::Ordering;
 use std::path::Path;
-use std::str::FromStr;
 
 use anoma::ledger::storage::types::PrefixIterator;
 use anoma::ledger::storage::{
@@ -45,7 +43,7 @@ use rocksdb::{
     ReadOptions, SliceTransform, WriteBatch, WriteOptions,
 };
 
-use crate::cli;
+use crate::config::utils::num_of_threads;
 
 // TODO the DB schema will probably need some kind of versioning
 
@@ -66,24 +64,12 @@ pub fn open(
     path: impl AsRef<Path>,
     cache: Option<&rocksdb::Cache>,
 ) -> Result<RocksDB> {
-    let logical_cores = num_cpus::get() as i32;
-    let compaction_threads =
-        if let Ok(num_str) = env::var(ENV_VAR_ROCKSDB_COMPACTION_THREADS) {
-            match i32::from_str(&num_str) {
-                Ok(num) if num > 0 => num,
-                _ => {
-                    eprintln!(
-                        "Invalid env. var {} value: {}. Expecting a positive \
-                         number.",
-                        ENV_VAR_ROCKSDB_COMPACTION_THREADS, num_str
-                    );
-                    cli::safe_exit(1)
-                }
-            }
-        } else {
-            // If not set, default to quarter of logical CPUs count
-            cmp::max(1, logical_cores / 4)
-        };
+    let logical_cores = num_cpus::get();
+    let compaction_threads = num_of_threads(
+        ENV_VAR_ROCKSDB_COMPACTION_THREADS,
+        // If not set, default to quarter of logical CPUs count
+        logical_cores / 4,
+    ) as i32;
     tracing::info!(
         "Using {} compactions threads for RocksDB.",
         compaction_threads
