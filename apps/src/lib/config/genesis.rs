@@ -137,6 +137,10 @@ pub mod genesis_config {
         pub matchmaker_code: Option<String>,
         /// Path to a transaction WASM code used by the matchmaker, if any
         pub matchmaker_tx: Option<String>,
+        /// Is this validator running a seed intent gossip node? A seed node is
+        /// not part of the gossipsub where intents are being propagated and
+        /// hence cannot run matchmakers
+        pub intent_gossip_seed: Option<bool>,
     }
 
     #[derive(Clone, Debug, Deserialize, Serialize)]

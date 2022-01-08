@@ -42,16 +42,31 @@ pub struct Network {
     chain_id: ChainId,
 }
 
-/// Add `num` validators to the genesis config.
+/// Add `num` validators to the genesis config. Note that called from inside
+/// the [`network`]'s first argument's closure, there is 1 validator already
+/// present to begin with, so e.g. `add_validators(1, _)` will configure a
+/// network with 2 validators.
+///
 /// INVARIANT: Do not call this function more than once on the same config.
 pub fn add_validators(num: u8, mut genesis: GenesisConfig) -> GenesisConfig {
-    let validator_0 = genesis.validator.get("validator-0").unwrap().clone();
+    let validator_0 = genesis.validator.get_mut("validator-0").unwrap();
+    // Clone the first validator before modifying it
+    let other_validators = validator_0.clone();
+    // Set the first validator to be a bootstrap node to enable P2P connectivity
+    validator_0.intent_gossip_seed = Some(true);
+    // A bootstrap node doesn't participate in the gossipsub protocol for
+    // gossiping intents, so we remove its matchmaker
+    validator_0.matchmaker_account = None;
+    validator_0.matchmaker_code = None;
+    validator_0.matchmaker_tx = None;
     let net_address_0 =
         SocketAddr::from_str(validator_0.net_address.as_ref().unwrap())
             .unwrap();
     let net_address_port_0 = net_address_0.port();
     for ix in 0..num {
-        let mut validator = validator_0.clone();
+        let mut validator = other_validators.clone();
+        // Only the first validator is bootstrap
+        validator.intent_gossip_seed = None;
         let mut net_address = net_address_0;
         // 5 ports for each validator
         net_address.set_port(net_address_port_0 + 5 * (ix as u16 + 1));

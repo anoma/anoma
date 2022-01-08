@@ -14,12 +14,13 @@ use libp2p::gossipsub::{
     MessageAcceptance, MessageAuthenticity, MessageId, TopicHash,
     ValidationMode,
 };
+use libp2p::identify::{Identify, IdentifyConfig, IdentifyEvent};
 use libp2p::identity::Keypair;
+use libp2p::ping::{Ping, PingEvent, PingFailure, PingSuccess};
 use libp2p::swarm::NetworkBehaviourEventProcess;
 use libp2p::{NetworkBehaviour, PeerId};
 use thiserror::Error;
 use tokio::sync::mpsc::Sender;
-use tokio::sync::oneshot::channel;
 
 use self::discovery::DiscoveryEvent;
 use super::intent_gossiper;
@@ -27,6 +28,22 @@ use crate::node::gossip::behaviour::discovery::{
     DiscoveryBehaviour, DiscoveryConfigBuilder,
 };
 use crate::types::MatchmakerMessage;
+
+/// Behaviour is composed of a `DiscoveryBehaviour` and an GossipsubBehaviour`.
+/// It automatically connect to newly discovered peer, except specified
+/// otherwise, and propagates intents to other peers.
+#[derive(NetworkBehaviour)]
+pub struct Behaviour {
+    pub intent_gossip_behaviour: Gossipsub,
+    pub discover_behaviour: DiscoveryBehaviour,
+    /// The identify protocol allows establishing P2P connections via Kademlia
+    identify: Identify,
+    /// Responds to inbound pings and periodically sends outbound pings on
+    /// every established connection
+    ping: Ping,
+    #[behaviour(ignore)]
+    pub mm_sender: Option<Sender<MatchmakerMessage>>,
+}
 
 #[derive(Error, Debug)]
 pub enum Error {
@@ -124,17 +141,6 @@ impl TopicSubscriptionFilter for IntentGossipSubscriptionFilter {
     }
 }
 
-/// Behaviour is composed of a `DiscoveryBehaviour` and an GossipsubBehaviour`.
-/// It automatically connect to newly discovered peer, except specified
-/// otherwise, and propagates intents to other peers.
-#[derive(NetworkBehaviour)]
-pub struct Behaviour {
-    pub intent_gossip_behaviour: Gossipsub,
-    pub discover_behaviour: DiscoveryBehaviour,
-    #[behaviour(ignore)]
-    pub mm_sender: Option<Sender<MatchmakerMessage>>,
-}
-
 /// [message_id] use the hash of the message data as an id
 pub fn message_id(message: &GossipsubMessage) -> MessageId {
     let mut hasher = DefaultHasher::new();
@@ -149,7 +155,8 @@ impl Behaviour {
         config: &crate::config::IntentGossiper,
         mm_sender: Option<Sender<MatchmakerMessage>>,
     ) -> Self {
-        let peer_id = PeerId::from_public_key(key.public());
+        let public_key = key.public();
+        let peer_id = PeerId::from_public_key(public_key.clone());
 
         // TODO remove hardcoded value and add them to the config Except
         // validation_mode, protocol_id_prefix, message_id_fn and
@@ -163,6 +170,8 @@ impl Behaviour {
             .max_transmit_size(16 * 1024 * 1024)
             .validate_messages()
             .mesh_outbound_min(1)
+            // TODO bootstrap peers should not be part of the mesh, so all the
+            // `.mesh` args should be set to 0 https://github.com/libp2p/specs/blob/70d7fda47dda88d828b4db72775c1602de57e91b/pubsub/gossipsub/gossipsub-v1.1.md#recommendations-for-network-operators
             .mesh_n_low(2)
             .mesh_n(3)
             .mesh_n_high(6)
@@ -214,25 +223,29 @@ impl Behaviour {
         let discover_behaviour = {
             // TODO: check that bootstrap_peers are in multiaddr (otherwise it
             // fails silently)
-            let discover_config = if let Some(discover_config) =
-                &config.discover_peer
-            {
-                DiscoveryConfigBuilder::default()
-                    .with_user_defined(discover_config.bootstrap_peers.clone())
-                    .discovery_limit(discover_config.max_discovery_peers)
-                    .with_kademlia(discover_config.kademlia)
-                    .with_mdns(discover_config.mdns)
-                    .use_kademlia_disjoint_query_paths(true)
-                    .build()
-                    .unwrap()
-            } else {
-                DiscoveryConfigBuilder::default().build().unwrap()
-            };
+            let discover_config =
+                if let Some(discover_config) = &config.discover_peer {
+                    DiscoveryConfigBuilder::default()
+                        .with_user_defined(config.seed_peers.clone())
+                        .discovery_limit(discover_config.max_discovery_peers)
+                        .with_kademlia(discover_config.kademlia)
+                        .with_mdns(discover_config.mdns)
+                        .use_kademlia_disjoint_query_paths(true)
+                        .build()
+                        .unwrap()
+                } else {
+                    DiscoveryConfigBuilder::default().build().unwrap()
+                };
             DiscoveryBehaviour::new(peer_id, discover_config).unwrap()
         };
         Self {
             intent_gossip_behaviour,
             discover_behaviour,
+            identify: Identify::new(IdentifyConfig::new(
+                "anoma/id/anoma/id/1.0.0".into(),
+                public_key,
+            )),
+            ping: Ping::default(),
             mm_sender,
         }
     }
@@ -241,7 +254,8 @@ impl Behaviour {
     /// is rejected. If the matchmaker fails the message is only ignore
     fn handle_intent(&mut self, intent: Intent) -> MessageAcceptance {
         if let Some(sender) = &self.mm_sender {
-            let (response_sender, mut response_receiver) = channel::<bool>();
+            let (response_sender, response_receiver) =
+                std::sync::mpsc::channel::<bool>();
             sender
                 .try_send(MatchmakerMessage::ApplyIntent(
                     intent,
@@ -253,7 +267,7 @@ impl Behaviour {
                         err
                     );
                 });
-            return match response_receiver.try_recv() {
+            return match response_receiver.recv() {
                 Ok(true) => MessageAcceptance::Accept,
                 Ok(false) => MessageAcceptance::Reject,
                 Err(err) => {
@@ -347,6 +361,76 @@ impl NetworkBehaviourEventProcess<DiscoveryEvent> for Behaviour {
                 tracing::info!("Peer disconnected: {:?}", peer)
             }
             _ => {}
+        }
+    }
+}
+
+impl NetworkBehaviourEventProcess<IdentifyEvent> for Behaviour {
+    fn inject_event(&mut self, event: IdentifyEvent) {
+        match event {
+            IdentifyEvent::Received { peer_id, info } => {
+                tracing::debug!("Identified Peer {}", peer_id);
+                tracing::debug!("protocol_version {}", info.protocol_version);
+                tracing::debug!("agent_version {}", info.agent_version);
+                tracing::debug!("listening_addresses {:?}", info.listen_addrs);
+                tracing::debug!("observed_address {}", info.observed_addr);
+                tracing::debug!("protocols {:?}", info.protocols);
+                if let Some(kad) = self.discover_behaviour.kademlia.as_mut() {
+                    // Only the first address is the public IP, the others
+                    // seem to be private
+                    if let Some(addr) = info.listen_addrs.first() {
+                        tracing::debug!(
+                            "Routing updated peer ID: {}, address: {}",
+                            peer_id,
+                            addr
+                        );
+                        let _update = kad.add_address(&peer_id, addr.clone());
+                    }
+                }
+            }
+            IdentifyEvent::Sent { .. } => (),
+            IdentifyEvent::Pushed { .. } => (),
+            IdentifyEvent::Error { peer_id, error } => {
+                tracing::error!(
+                    "Error while attempting to identify the remote peer {}: \
+                     {},",
+                    peer_id,
+                    error
+                );
+            }
+        }
+    }
+}
+
+impl NetworkBehaviourEventProcess<PingEvent> for Behaviour {
+    fn inject_event(&mut self, event: PingEvent) {
+        match event.result {
+            Ok(PingSuccess::Ping { rtt }) => {
+                tracing::debug!(
+                    "PingSuccess::Ping rtt to {} is {} ms",
+                    event.peer.to_base58(),
+                    rtt.as_millis()
+                );
+            }
+            Ok(PingSuccess::Pong) => {
+                tracing::debug!(
+                    "PingSuccess::Pong from {}",
+                    event.peer.to_base58()
+                );
+            }
+            Err(PingFailure::Timeout) => {
+                tracing::warn!(
+                    "PingFailure::Timeout {}",
+                    event.peer.to_base58()
+                );
+            }
+            Err(PingFailure::Other { error }) => {
+                tracing::warn!(
+                    "PingFailure::Other {}: {}",
+                    event.peer.to_base58(),
+                    error
+                );
+            }
         }
     }
 }
