@@ -9,11 +9,13 @@
 pub mod context;
 mod utils;
 
-use clap::{crate_authors, crate_version, AppSettings, ArgMatches};
+use clap::{crate_authors, AppSettings, ArgMatches};
 pub use utils::safe_exit;
 use utils::*;
 
 pub use self::context::Context;
+
+include!("../../version.rs");
 
 const APP_NAME: &str = "Anoma";
 
@@ -2457,7 +2459,7 @@ pub fn anoma_wallet_cli() -> (cmds::AnomaWallet, Context) {
 
 fn anoma_app() -> App {
     let app = App::new(APP_NAME)
-        .version(crate_version!())
+        .version(anoma_version())
         .author(crate_authors!("\n"))
         .about("Anoma command line interface.")
         .setting(AppSettings::SubcommandRequiredElseHelp);
@@ -2466,7 +2468,7 @@ fn anoma_app() -> App {
 
 fn anoma_node_app() -> App {
     let app = App::new(APP_NAME)
-        .version(crate_version!())
+        .version(anoma_version())
         .author(crate_authors!("\n"))
         .about("Anoma node command line interface.")
         .setting(AppSettings::SubcommandRequiredElseHelp);
@@ -2475,7 +2477,7 @@ fn anoma_node_app() -> App {
 
 fn anoma_client_app() -> App {
     let app = App::new(APP_NAME)
-        .version(crate_version!())
+        .version(anoma_version())
         .author(crate_authors!("\n"))
         .about("Anoma client command line interface.")
         .setting(AppSettings::SubcommandRequiredElseHelp);
@@ -2484,7 +2486,7 @@ fn anoma_client_app() -> App {
 
 fn anoma_wallet_app() -> App {
     let app = App::new(APP_NAME)
-        .version(crate_version!())
+        .version(anoma_version())
         .author(crate_authors!("\n"))
         .about("Anoma wallet command line interface.")
         .setting(AppSettings::SubcommandRequiredElseHelp);

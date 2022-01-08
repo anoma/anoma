@@ -146,4 +146,5 @@ tempfile = "3.2.0"
 tokio-test = "0.4.2"
 
 [build-dependencies]
+git2 = "0.13.25"
 tonic-build = "0.6.0"
