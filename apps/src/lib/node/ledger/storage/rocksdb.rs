@@ -5,6 +5,9 @@
 //! - `height`: the last committed block height
 //! - `epoch_start_height`: block height at which the current epoch started
 //! - `epoch_start_time`: block time at which the current epoch started
+//! - `tx_queue`: txs to be decrypted in the next block
+//! - `pred`: predecessor values of the top-level keys of the same name
+//!   - `tx_queue`
 //! - `subspace`: any byte data associated with accounts
 //! - `history/subspace`: list of block heights at which any given subspace key
 //!   has changed
@@ -28,7 +31,9 @@ use anoma::ledger::storage::{
     types, BlockStateRead, BlockStateWrite, DBIter, DBWriteBatch, Error,
     Result, DB,
 };
-use anoma::types::storage::{BlockHeight, Key, KeySeg, KEY_SEGMENT_SEPARATOR};
+use anoma::types::storage::{
+    BlockHeight, Key, KeySeg, TxQueue, KEY_SEGMENT_SEPARATOR,
+};
 use anoma::types::time::DateTimeUtc;
 use rocksdb::{
     BlockBasedOptions, Direction, FlushOptions, IteratorMode, Options,
@@ -302,6 +307,17 @@ impl DB for RocksDB {
                 return Ok(None);
             }
         };
+        let tx_queue: TxQueue = match self
+            .0
+            .get("tx_queue")
+            .map_err(|e| Error::DBError(e.into_string()))?
+        {
+            Some(bytes) => types::decode(bytes).map_err(Error::CodingError)?,
+            None => {
+                tracing::error!("Couldn't load tx queue from the DB");
+                return Ok(None);
+            }
+        };
 
         // Load data at the height
         let prefix = format!("{}/", height.raw());
@@ -392,6 +408,7 @@ impl DB for RocksDB {
                 next_epoch_min_start_height,
                 next_epoch_min_start_time,
                 address_gen,
+                tx_queue,
             })),
             _ => Err(Error::Temporary {
                 error: "Essential data couldn't be read from the DB"
@@ -412,6 +429,7 @@ impl DB for RocksDB {
             next_epoch_min_start_height,
             next_epoch_min_start_time,
             address_gen,
+            tx_queue,
         }: BlockStateWrite = state;
 
         // Epoch start height and time
@@ -423,6 +441,16 @@ impl DB for RocksDB {
             "next_epoch_min_start_time",
             types::encode(&next_epoch_min_start_time),
         );
+        // Tx queue
+        if let Some(pred_tx_queue) = self
+            .0
+            .get("tx_queue")
+            .map_err(|e| Error::DBError(e.into_string()))?
+        {
+            // Write the predecessor value for rollback
+            batch.put("pred/tx_queue", pred_tx_queue);
+        }
+        batch.put("tx_queue", types::encode(&tx_queue));
 
         let prefix_key = Key::from(height.to_db_key());
         // Merkle tree

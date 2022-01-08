@@ -9,6 +9,8 @@ use super::{
     BlockStateRead, BlockStateWrite, DBIter, DBWriteBatch, Error, Result, DB,
 };
 use crate::ledger::storage::types::{self, KVBytes, PrefixIterator};
+#[cfg(feature = "ferveo-tpke")]
+use crate::types::storage::TxQueue;
 use crate::types::storage::{BlockHeight, Key, KeySeg, KEY_SEGMENT_SEPARATOR};
 use crate::types::time::DateTimeUtc;
 
@@ -68,6 +70,11 @@ impl DB for MockDB {
                 }
                 None => return Ok(None),
             };
+        #[cfg(feature = "ferveo-tpke")]
+        let tx_queue: TxQueue = match self.0.borrow().get("tx_queue") {
+            Some(bytes) => types::decode(bytes).map_err(Error::CodingError)?,
+            None => return Ok(None),
+        };
 
         // Load data at the height
         let prefix = format!("{}/", height.raw());
@@ -148,6 +155,8 @@ impl DB for MockDB {
                 next_epoch_min_start_height,
                 next_epoch_min_start_time,
                 address_gen,
+                #[cfg(feature = "ferveo-tpke")]
+                tx_queue,
             })),
             _ => Err(Error::Temporary {
                 error: "Essential data couldn't be read from the DB"
@@ -167,6 +176,8 @@ impl DB for MockDB {
             next_epoch_min_start_height,
             next_epoch_min_start_time,
             address_gen,
+            #[cfg(feature = "ferveo-tpke")]
+            tx_queue,
         }: BlockStateWrite = state;
 
         // Epoch start height and time
@@ -178,6 +189,12 @@ impl DB for MockDB {
             "next_epoch_min_start_time".into(),
             types::encode(&next_epoch_min_start_time),
         );
+        #[cfg(feature = "ferveo-tpke")]
+        {
+            self.0
+                .borrow_mut()
+                .insert("tx_queue".into(), types::encode(&tx_queue));
+        }
 
         let prefix_key = Key::from(height.to_db_key());
         // Merkle tree

@@ -29,14 +29,14 @@ fn run_gossip() -> Result<()> {
         setup::network(|genesis| setup::add_validators(1, genesis), None)?;
 
     let mut cmd =
-        run_as!(test, Who::Validator(0), Bin::Node, &["gossip"], Some(20),)?;
+        run_as!(test, Who::Validator(0), Bin::Node, &["gossip"], Some(40))?;
     // Node without peers
     cmd.exp_regex(r"Peer id: PeerId\(.*\)")?;
 
     drop(cmd);
 
     let mut first_node =
-        run_as!(test, Who::Validator(0), Bin::Node, &["gossip"], Some(20),)?;
+        run_as!(test, Who::Validator(0), Bin::Node, &["gossip"], Some(40))?;
     let (_unread, matched) = first_node.exp_regex(r"Peer id: PeerId\(.*\)")?;
     let first_node_peer_id = matched
         .trim()
@@ -48,7 +48,7 @@ fn run_gossip() -> Result<()> {
         .1;
 
     let mut second_node =
-        run_as!(test, Who::Validator(1), Bin::Node, &["gossip"], Some(20),)?;
+        run_as!(test, Who::Validator(1), Bin::Node, &["gossip"], Some(40))?;
 
     second_node.exp_regex(r"Peer id: PeerId\(.*\)")?;
     second_node.exp_string(&format!(
@@ -67,7 +67,7 @@ fn match_intents() -> Result<()> {
     let test = setup::single_node_net()?;
 
     let mut ledger =
-        run_as!(test, Who::Validator(0), Bin::Node, &["ledger"], Some(20),)?;
+        run_as!(test, Who::Validator(0), Bin::Node, &["ledger"], Some(40))?;
     ledger.exp_string("Anoma ledger node started")?;
     ledger.exp_string("No state could be found")?;
     // Wait to commit a block
@@ -134,7 +134,7 @@ fn match_intents() -> Result<()> {
             "--signing-key",
             "matchmaker-key",
         ],
-        Some(20),
+        Some(40)
     )?;
 
     // Wait gossip to start

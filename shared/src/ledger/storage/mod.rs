@@ -28,6 +28,8 @@ use crate::ledger::gas::MIN_STORAGE_GAS;
 use crate::ledger::parameters::{self, EpochDuration};
 use crate::types::address::{Address, EstablishedAddressGen};
 use crate::types::chain::{ChainId, CHAIN_ID_LENGTH};
+#[cfg(feature = "ferveo-tpke")]
+use crate::types::storage::TxQueue;
 use crate::types::storage::{
     BlockHash, BlockHeight, DbKeySeg, Epoch, Epochs, Key, BLOCK_HASH_LENGTH,
 };
@@ -61,6 +63,9 @@ where
     pub next_epoch_min_start_time: DateTimeUtc,
     /// The current established address generator
     pub address_gen: EstablishedAddressGen,
+    /// Wrapper txs to be decrypted in the next block proposal
+    #[cfg(feature = "ferveo-tpke")]
+    pub tx_queue: TxQueue,
 }
 
 /// The block storage data
@@ -115,6 +120,9 @@ pub struct BlockStateRead {
     pub next_epoch_min_start_time: DateTimeUtc,
     /// Established address generator
     pub address_gen: EstablishedAddressGen,
+    /// Wrapper txs to be decrypted in the next block proposal
+    #[cfg(feature = "ferveo-tpke")]
+    pub tx_queue: TxQueue,
 }
 
 /// The block's state to write into the database.
@@ -137,6 +145,9 @@ pub struct BlockStateWrite<'a> {
     pub next_epoch_min_start_time: DateTimeUtc,
     /// Established address generator
     pub address_gen: &'a EstablishedAddressGen,
+    /// Wrapper txs to be decrypted in the next block proposal
+    #[cfg(feature = "ferveo-tpke")]
+    pub tx_queue: &'a TxQueue,
 }
 
 /// A database backend.
@@ -272,6 +283,8 @@ where
             address_gen: EstablishedAddressGen::new(
                 "Privacy is a function of liberty.",
             ),
+            #[cfg(feature = "ferveo-tpke")]
+            tx_queue: TxQueue::default(),
         }
     }
 
@@ -288,6 +301,8 @@ where
             next_epoch_min_start_height,
             next_epoch_min_start_time,
             address_gen,
+            #[cfg(feature = "ferveo-tpke")]
+            tx_queue,
         }) = self.db.read_last_block()?
         {
             self.block.tree = MerkleTree(SparseMerkleTree::new(root, store));
@@ -300,6 +315,10 @@ where
             self.next_epoch_min_start_height = next_epoch_min_start_height;
             self.next_epoch_min_start_time = next_epoch_min_start_time;
             self.address_gen = address_gen;
+            #[cfg(feature = "ferveo-tpke")]
+            {
+                self.tx_queue = tx_queue;
+            }
             tracing::debug!("Loaded storage from DB");
         } else {
             tracing::info!("No state could be found");
@@ -332,6 +351,8 @@ where
             next_epoch_min_start_height: self.next_epoch_min_start_height,
             next_epoch_min_start_time: self.next_epoch_min_start_time,
             address_gen: &self.address_gen,
+            #[cfg(feature = "ferveo-tpke")]
+            tx_queue: &self.tx_queue,
         };
         self.db.write_block(state)?;
         self.last_height = self.block.height;
@@ -726,6 +747,8 @@ pub mod testing {
                 address_gen: EstablishedAddressGen::new(
                     "Test address generator seed",
                 ),
+                #[cfg(feature = "ferveo-tpke")]
+                tx_queue: TxQueue::default(),
             }
         }
     }

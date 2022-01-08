@@ -9,6 +9,8 @@ use borsh::{BorshDeserialize, BorshSerialize};
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
+#[cfg(feature = "ferveo-tpke")]
+use super::transaction::WrapperTx;
 use crate::bytes::ByteBuf;
 use crate::types::address::{self, Address};
 
@@ -543,6 +545,57 @@ impl Epochs {
             return Some(epoch);
         }
         None
+    }
+}
+
+#[cfg(feature = "ferveo-tpke")]
+#[derive(Default, Debug, Clone, BorshDeserialize, BorshSerialize)]
+/// Wrapper txs to be decrypted in the next block proposal
+pub struct TxQueue {
+    /// Index of next wrapper_tx to fetch from storage
+    next_wrapper: usize,
+    /// The actual wrappers
+    queue: std::collections::VecDeque<WrapperTx>,
+}
+
+#[cfg(feature = "ferveo-tpke")]
+impl TxQueue {
+    /// Add a new wrapper at the back of the queue
+    pub fn push(&mut self, wrapper: WrapperTx) {
+        self.queue.push_back(wrapper);
+    }
+
+    /// Remove the wrapper at the head of the queue
+    pub fn pop(&mut self) -> Option<WrapperTx> {
+        self.queue.pop_front()
+    }
+
+    /// Iterate lazily over the queue. Finds the next value and advances the
+    /// lazy iterator.
+    #[allow(dead_code)]
+    pub fn lazy_next(&mut self) -> Option<&WrapperTx> {
+        let next = self.queue.get(self.next_wrapper);
+        if self.next_wrapper < self.queue.len() {
+            self.next_wrapper += 1;
+        }
+        next
+    }
+
+    /// Reset the iterator to the head of the queue
+    pub fn rewind(&mut self) {
+        self.next_wrapper = 0;
+    }
+
+    /// Get an iterator over the queue
+    #[allow(dead_code)]
+    pub fn iter(&self) -> impl std::iter::Iterator<Item = &WrapperTx> {
+        self.queue.iter()
+    }
+
+    /// Check if there are any txs in the queue
+    #[allow(dead_code)]
+    pub fn is_empty(&self) -> bool {
+        self.queue.is_empty()
     }
 }
 

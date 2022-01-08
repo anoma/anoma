@@ -113,7 +113,7 @@ where
                 // if the rejected tx was decrypted, remove it
                 // from the queue of txs to be processed
                 if let TxType::Decrypted(_) = &tx_type {
-                    self.tx_queue.pop();
+                    self.storage.tx_queue.pop();
                 }
                 continue;
             }
@@ -121,7 +121,7 @@ where
             let mut tx_result = match &tx_type {
                 TxType::Wrapper(_wrapper) => {
                     if !cfg!(feature = "ABCI") {
-                        self.tx_queue.push(_wrapper.clone());
+                        self.storage.tx_queue.push(_wrapper.clone());
                     }
                     Event::new_tx_event(&tx_type, height.0)
                 }
@@ -144,7 +144,7 @@ where
                     }
                     // We remove the corresponding wrapper tx from the queue
                     if !cfg!(feature = "ABCI") {
-                        self.tx_queue.pop();
+                        self.storage.tx_queue.pop();
                     }
                     Event::new_tx_event(&tx_type, height.0)
                 }
@@ -226,7 +226,7 @@ where
             .gas_meter
             .finalize_transaction()
             .map_err(|_| Error::GasOverflow)?;
-        self.reset_queue();
+        self.reset_tx_queue_iter();
         Ok(response)
     }
 

@@ -121,7 +121,7 @@ impl AbcippShim {
                     if out_of_order {
                         // The wrapper txs will need to be decrypted again
                         // and included in the proposed block after the current
-                        self.service.reset_queue();
+                        self.service.reset_tx_queue_iter();
                     }
                     let begin_block_request =
                         self.begin_block_request.take().unwrap();

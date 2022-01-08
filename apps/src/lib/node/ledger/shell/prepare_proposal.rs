@@ -48,6 +48,7 @@ mod prepare_block {
 
             // decrypt the wrapper txs included in the previous block
             let mut decrypted_txs = self
+                .storage
                 .tx_queue
                 .iter()
                 .map(|tx| {
