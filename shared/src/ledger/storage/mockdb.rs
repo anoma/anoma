@@ -39,7 +39,7 @@ impl DB for MockDB {
         Self::default()
     }
 
-    fn flush(&self) -> Result<()> {
+    fn flush(&self, _wait: bool) -> Result<()> {
         Ok(())
     }
 

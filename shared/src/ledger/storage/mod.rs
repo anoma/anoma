@@ -153,7 +153,7 @@ pub trait DB: std::fmt::Debug {
     ) -> Self;
 
     /// Flush data on the memory to persistent them
-    fn flush(&self) -> Result<()>;
+    fn flush(&self, wait: bool) -> Result<()>;
 
     /// Read the last committed block's metadata
     fn read_last_block(&mut self) -> Result<Option<BlockStateRead>>;

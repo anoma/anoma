@@ -107,6 +107,7 @@ pub fn open(
 
     cf_opts.create_missing_column_families(true);
     cf_opts.create_if_missing(true);
+    cf_opts.set_atomic_flush(true);
 
     cf_opts.set_comparator("key_comparator", key_comparator);
     let extractor = SliceTransform::create_fixed_prefix(20);
@@ -147,11 +148,19 @@ fn key_comparator(a: &[u8], b: &[u8]) -> Ordering {
 
 impl Drop for RocksDB {
     fn drop(&mut self) {
-        self.flush().expect("flush failed");
+        self.flush(true).expect("flush failed");
     }
 }
 
 impl RocksDB {
+    fn flush(&self, wait: bool) -> Result<()> {
+        let mut flush_opts = FlushOptions::default();
+        flush_opts.set_wait(wait);
+        self.0
+            .flush_opt(&flush_opts)
+            .map_err(|e| Error::DBError(e.into_string()))
+    }
+
     /// Persist the diff of an account subspace key-val under the height where
     /// it was changed.
     fn write_subspace_diff(
@@ -242,9 +251,9 @@ impl DB for RocksDB {
         open(db_path, cache).expect("cannot open the DB")
     }
 
-    fn flush(&self) -> Result<()> {
+    fn flush(&self, wait: bool) -> Result<()> {
         let mut flush_opts = FlushOptions::default();
-        flush_opts.set_wait(true);
+        flush_opts.set_wait(wait);
         self.0
             .flush_opt(&flush_opts)
             .map_err(|e| Error::DBError(e.into_string()))
@@ -464,16 +473,15 @@ impl DB for RocksDB {
                 .map_err(Error::KeyError)?;
             batch.put(key.to_string(), types::encode(&address_gen));
         }
+
+        // Block height
+        batch.put("height", types::encode(&height));
+
+        // Write the batch
         self.exec_batch(batch)?;
 
-        // Block height - write after everything else is written
-        // NOTE for async writes, we need to take care that all previous heights
-        // are known when updating this
-        let mut write_opts = WriteOptions::default();
-        write_opts.disable_wal(true);
-        self.0
-            .put_opt("height", types::encode(&height), &write_opts)
-            .map_err(|e| Error::DBError(e.into_string()))
+        // Flush without waiting
+        self.flush(false)
     }
 
     fn read_subspace_val(&self, key: &Key) -> Result<Option<Vec<u8>>> {
