@@ -9,6 +9,7 @@ mkShell {
     llvmPackages.libclang
     protobuf
     crate2nix
+    openssl
     # Needed at runtime
     tendermint
   ] ++ lib.optionals stdenv.isDarwin [ darwin.apple_sdk.frameworks.Security ];
