@@ -47,9 +47,6 @@ pub async fn join_network(
     global_args: args::Global,
     args::JoinNetwork { chain_id }: args::JoinNetwork,
 ) {
-    let chain_dir = global_args.base_dir.join(chain_id.as_str());
-    fs::create_dir_all(&chain_dir).expect("Couldn't create chain directory");
-
     let release_filename = format!("{}.tar.gz", chain_id);
     let release_url =
         format!("{}/{}/{}", RELEASE_PREFIX, chain_id, release_filename);
@@ -64,6 +61,14 @@ pub async fn join_network(
     decoder.read_to_string(&mut tar).unwrap();
     let mut archive = tar::Archive::new(tar.as_bytes());
     archive.unpack(".").unwrap();
+
+    // If the base-dir is not the default, move the network config into it
+    let base_dir_name = global_args.base_dir.file_name();
+    if let Some(base_dir_name) = base_dir_name {
+        if base_dir_name != config::DEFAULT_BASE_DIR {
+            tokio::fs::rename(".anoma", base_dir_name).await.unwrap();
+        }
+    }
 
     println!("Successfully configured for chain ID {}", chain_id);
 }
