@@ -39,10 +39,9 @@ check-release:
 	$(cargo) check --release --package anoma_apps
 
 package: build-release
-	mkdir -p $(package-name)/wasm && \
+	mkdir -p $(package-name) && \
 	cd target/release && ln $(bin) ../../$(package-name) && \
 	cd ../.. && \
-	ln wasm/checksums.json $(package-name)/wasm && \
 	tar -c -z -f $(package-name).tar.gz $(package-name) && \
 	rm -rf $(package-name)
 
