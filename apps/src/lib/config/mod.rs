@@ -117,6 +117,9 @@ pub struct Tendermint {
     /// height
     pub consensus_timeout_commit: Timeout,
     pub tendermint_mode: TendermintMode,
+    pub instrumentation_prometheus: bool,
+    pub instrumentation_prometheus_listen_addr: SocketAddr,
+    pub instrumentation_namespace: String,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -164,6 +167,12 @@ impl Ledger {
                 p2p_allow_duplicate_ip: false,
                 consensus_timeout_commit: Timeout::from_str("1s").unwrap(),
                 tendermint_mode: mode,
+                instrumentation_prometheus: false,
+                instrumentation_prometheus_listen_addr: SocketAddr::new(
+                    IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)),
+                    26661,
+                ),
+                instrumentation_namespace: "anoman_tm".to_string(),
             },
         }
     }
@@ -309,7 +318,8 @@ impl Config {
     }
 
     /// Read the config from a file, or generate a default one and write it to
-    /// a file if it doesn't already exist.
+    /// a file if it doesn't already exist. Keys that are expected but not set
+    /// in the config file are filled in with default values.
     pub fn read(
         base_dir: &Path,
         chain_id: &ChainId,
@@ -320,9 +330,21 @@ impl Config {
         if !file_path.exists() {
             return Self::generate(base_dir, chain_id, mode, true);
         };
+        let defaults = config::Config::try_from(&Self::new(
+            base_dir,
+            chain_id.clone(),
+            mode,
+        ))
+        .map_err(Error::ReadError)?;
         let mut config = config::Config::new();
         config
-            .merge(config::File::with_name(file_name))
+            .merge(defaults)
+            .and_then(|c| c.merge(config::File::with_name(file_name)))
+            .and_then(|c| {
+                c.merge(
+                    config::Environment::with_prefix("anoma").separator("__"),
+                )
+            })
             .map_err(Error::ReadError)?;
         config.try_into().map_err(Error::DeserializationError)
     }

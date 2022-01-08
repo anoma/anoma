@@ -350,6 +350,14 @@ async fn update_tendermint_config(
     // quite large
     config.rpc.max_body_bytes = 2_000_000;
 
+    config.instrumentation.prometheus =
+        tendermint_config.instrumentation_prometheus;
+    config.instrumentation.prometheus_listen_addr = tendermint_config
+        .instrumentation_prometheus_listen_addr
+        .to_string();
+    config.instrumentation.namespace =
+        tendermint_config.instrumentation_namespace;
+
     let mut file = OpenOptions::new()
         .write(true)
         .truncate(true)
