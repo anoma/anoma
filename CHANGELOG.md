@@ -1,5 +1,53 @@
 # CHANGELOG
 
+## v0.3.1
+
+Anoma 0.3.1 - first maintenance release in the 0.3.x series. Protocol
+compatible with 0.3.0, but changes the on-disk storage format - nodes
+will need to resync from scratch.
+
+### BUG FIXES
+
+- Fix the `anoma client utils join-network` to respect `--base-dir` argument, if
+  specified ([#723](https://github.com/anoma/anoma/issues/723))
+- Ledger: Fix an issue in the default thread count usage calculation that
+  was previously causing it to crash for a target with a single logical core.
+  ([#726](https://github.com/anoma/anoma/pull/726))
+- Ledger: write storage diffs from the correct current block height and ignore
+  these on loading last known block's state from persisted state on disk.
+  ([#732](https://github.com/anoma/anoma/pull/732))
+- Ledger: Handle Unix and Windows interrupt and termination signals to shut down
+  cleanly. ([#768](https://github.com/anoma/anoma/issues/768))
+
+### IMPROVEMENTS
+
+- Ledger: enable atomic commits in RocksDB and explicitly flush blocks without
+  waiting ([#372](https://github.com/anoma/anoma/issues/372))
+- Fix the `anoma client utils join-network` to respect `--base-dir` argument, if
+  specified ([#711](https://github.com/anoma/anoma/issues/711))
+- Ledger: Write predecessor block's values to be able to integrate Tendermint's
+  rollback helper command. ([#729](https://github.com/anoma/anoma/pull/729))
+- Include a more accurate build version from git describe in help output version
+  strings. ([#733](https://github.com/anoma/anoma/pull/733))
+- Ledger: Updated wasmer dependency to [v2.1.1](https://github.com/wasmerio/wasmer/releases/tag/2.1.1).
+  ([#756](https://github.com/anoma/anoma/pull/756))
+- Config: Enable setting config values via environment variables, add
+  variables for configuring Tendermint instrumentation and allow missing
+  values in the config file (filled in with defaults defined in the code)
+  ([#774](https://github.com/anoma/anoma/pull/774))
+- Gossip: Enable peer discovery with libp2p Kademlia and Identify
+  protocol and allow to keep the established peer connections open.
+  ([#775](https://github.com/anoma/anoma/pull/775))
+
+### MISCELLANEOUS
+
+- Adds missing nix-shell openssl dependency.
+  ([#694](https://github.com/anoma/anoma/pull/694))
+- Don't include wasm checksums in the package, since the network configuration
+  mechanisms now handle this. ([#731](https://github.com/anoma/anoma/pull/731))
+- Force non-dev build for make clippy.
+  ([#783](https://github.com/anoma/anoma/pull/783))
+
 ## v0.3.0
 
 Anoma 0.3.0
