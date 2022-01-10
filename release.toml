@@ -1,4 +1,4 @@
-allow-branch               = ["master"]
+allow-branch               = ["master", "maint-*"]
 consolidate-commits        = true
 disable-push               = true
 disable-publish            = true
