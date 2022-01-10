@@ -3,23 +3,28 @@
 //! The current storage tree is:
 //! - `chain_id`
 //! - `height`: the last committed block height
-//! - `epoch_start_height`: block height at which the current epoch started
-//! - `epoch_start_time`: block time at which the current epoch started
 //! - `tx_queue`: txs to be decrypted in the next block
 //! - `pred`: predecessor values of the top-level keys of the same name
 //!   - `tx_queue`
-//! - `subspace`: any byte data associated with accounts
-//! - `history/subspace`: list of block heights at which any given subspace key
-//!   has changed
+//! - `next_epoch_min_start_height`: minimum block height from which the next
+//!   epoch can start
+//! - `next_epoch_min_start_time`: minimum block time from which the next epoch
+//!   can start
+//! - `pred`: predecessor values of the top-level keys of the same name
+//!   - `next_epoch_min_start_height`
+//!   - `next_epoch_min_start_time`
+//! - `subspace`: accounts sub-spaces
+//!   - `{address}/{dyn}`: any byte data associated with accounts
 //! - `h`: for each block at height `h`:
 //!   - `tree`: merkle tree
 //!     - `root`: root hash
 //!     - `store`: the tree's store
 //!   - `hash`: block hash
 //!   - `epoch`: block epoch
-//!   - `subspace`: historical values of accounts data, only set at heights at
-//!     which the data has changed
 //!   - `address_gen`: established address generator
+//!   - `diffs`: diffs in account subspaces' key-vals
+//!     - `new/{dyn}`: value set in block height `h`
+//!     - `old/{dyn}`: value from predecessor block height
 
 use std::cmp::{self, Ordering};
 use std::env;
@@ -433,10 +438,27 @@ impl DB for RocksDB {
         }: BlockStateWrite = state;
 
         // Epoch start height and time
+        if let Some(current_value) =
+            self.0
+                .get("next_epoch_min_start_height")
+                .map_err(|e| Error::DBError(e.into_string()))?
+        {
+            // Write the predecessor value for rollback
+            batch.put("pred/next_epoch_min_start_height", current_value);
+        }
         batch.put(
             "next_epoch_min_start_height",
             types::encode(&next_epoch_min_start_height),
         );
+
+        if let Some(current_value) = self
+            .0
+            .get("next_epoch_min_start_time")
+            .map_err(|e| Error::DBError(e.into_string()))?
+        {
+            // Write the predecessor value for rollback
+            batch.put("pred/next_epoch_min_start_time", current_value);
+        }
         batch.put(
             "next_epoch_min_start_time",
             types::encode(&next_epoch_min_start_time),
