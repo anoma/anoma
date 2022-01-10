@@ -526,8 +526,7 @@ pub mod tests {
 
         // Any compiler and any engine do the job here
         let compiler = Cranelift::default();
-        let engine =
-        wasmer_engine_universal::Universal::new(compiler).engine();
+        let engine = wasmer_engine_universal::Universal::new(compiler).engine();
 
         let base = BaseTunables::for_target(&Target::default());
         let limit = Pages(24);
