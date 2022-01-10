@@ -376,6 +376,9 @@ impl DB for RocksDB {
                             types::decode(bytes).map_err(Error::CodingError)?,
                         );
                     }
+                    "diffs" => {
+                        // ignore the diffs
+                    }
                     _ => unknown_key_error(path)?,
                 },
                 None => unknown_key_error(path)?,
@@ -816,5 +819,64 @@ mod imp {
             );
             Ok(soft)
         }
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use anoma::types::address::EstablishedAddressGen;
+    use anoma::types::storage::{BlockHash, Epoch, Epochs};
+    use sparse_merkle_tree::default_store::DefaultStore;
+    use sparse_merkle_tree::H256;
+    use tempfile::tempdir;
+
+    use super::*;
+
+    /// Test that a block written can be loaded back from DB.
+    #[test]
+    fn test_load_state() {
+        let dir = tempdir().unwrap();
+        let mut db = open(dir.path(), None).unwrap();
+
+        let mut batch = RocksDB::batch();
+        let last_height = BlockHeight::default();
+        db.batch_write_subspace_val(
+            &mut batch,
+            last_height,
+            &Key::parse("test").unwrap(),
+            vec![1_u8, 1, 1, 1],
+        )
+        .unwrap();
+        db.exec_batch(batch.0).unwrap();
+
+        let root = H256::zero();
+        let store = DefaultStore::default();
+        let hash = BlockHash::default();
+        let epoch = Epoch::default();
+        let pred_epochs = Epochs::default();
+        let height = BlockHeight::default();
+        let next_epoch_min_start_height = BlockHeight::default();
+        let next_epoch_min_start_time = DateTimeUtc::now();
+        let address_gen = EstablishedAddressGen::new("whatever");
+        let tx_queue = TxQueue::default();
+        let block = BlockStateWrite {
+            root,
+            store: &store,
+            hash: &hash,
+            height,
+            epoch,
+            pred_epochs: &pred_epochs,
+            next_epoch_min_start_height,
+            next_epoch_min_start_time,
+            address_gen: &address_gen,
+            tx_queue: &tx_queue,
+        };
+
+        db.write_block(block).unwrap();
+
+        let _state = db
+            .read_last_block()
+            .expect("Should be able to read last block")
+            .expect("Block should have been written");
     }
 }

@@ -645,7 +645,7 @@ where
         let value = value.as_ref();
         self.update_tree(H::hash_key(key), H::hash_value(&value))?;
         self.db
-            .batch_write_subspace_val(batch, self.last_height, key, value)
+            .batch_write_subspace_val(batch, self.block.height, key, value)
     }
 
     /// Batch delete the value with the given height and account subspace key
@@ -658,7 +658,7 @@ where
     ) -> Result<i64> {
         self.update_tree(H::hash_key(key), H256::zero())?;
         self.db
-            .batch_delete_subspace_val(batch, self.last_height, key)
+            .batch_delete_subspace_val(batch, self.block.height, key)
     }
 }
 
