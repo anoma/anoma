@@ -120,6 +120,7 @@ pub fn network(
         Some(5),
         &working_dir,
         &base_dir,
+        "validator",
         format!("{}:{}", std::file!(), std::line!()),
     )?;
 
@@ -299,17 +300,18 @@ impl Test {
         I: IntoIterator<Item = S>,
         S: AsRef<OsStr>,
     {
-        let base_dir = match who {
-            Who::NonValidator => self.base_dir.path().to_owned(),
-            Who::Validator(index) => self
+        let (base_dir, mode) = match who {
+            Who::NonValidator => (self.base_dir.path().to_owned(), "full"),
+            Who::Validator(index) => (self
                 .base_dir
                 .path()
                 .join(self.net.chain_id.as_str())
                 .join(utils::NET_ACCOUNTS_DIR)
                 .join(format!("validator-{}", index))
                 .join(config::DEFAULT_BASE_DIR),
+                "validator")
         };
-        run_cmd(bin, args, timeout_sec, &self.working_dir, &base_dir, loc)
+        run_cmd(bin, args, timeout_sec, &self.working_dir, &base_dir, mode, loc)
     }
 }
 
@@ -436,6 +438,7 @@ pub fn run_cmd<I, S>(
     timeout_sec: Option<u64>,
     working_dir: impl AsRef<Path>,
     base_dir: impl AsRef<Path>,
+    mode: &str,
     loc: String,
 ) -> Result<AnomaCmd>
 where
@@ -483,7 +486,7 @@ where
     let mut cmd = cmd.run().unwrap().command();
     cmd.env("ANOMA_LOG", "anoma=debug")
         .current_dir(working_dir)
-        .args(&["--base-dir", &base_dir.as_ref().to_string_lossy()])
+        .args(&["--base-dir", &base_dir.as_ref().to_string_lossy(), "--mode", mode])
         .args(args);
     let cmd_str = format!("{:?}", cmd);
 

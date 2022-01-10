@@ -304,6 +304,7 @@ where
                     let wallet_path = &base_dir.join(chain_id.as_str());
                     let genesis_path =
                         &base_dir.join(format!("{}.toml", chain_id.as_str()));
+                    tracing::debug!("{}", wallet_path.as_path().to_str().unwrap());
                     let wallet = wallet::Wallet::load_or_new_from_genesis(
                         wallet_path,
                         move || {

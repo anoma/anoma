@@ -1203,6 +1203,7 @@ pub mod args {
             let base_dir = BASE_DIR.parse(matches);
             let wasm_dir = WASM_DIR.parse(matches);
             let mode = TendermintMode::from(MODE.parse(matches));
+            println!("Ledger running in mode: {}", mode.to_str());
             Global {
                 chain_id,
                 base_dir,

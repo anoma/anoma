@@ -17,7 +17,7 @@ impl Broadcaster {
     /// over the given url.
     pub fn new(url: &str, receiver: UnboundedReceiver<Vec<u8>>) -> Self {
         Self {
-            client: HttpClient::new(url).unwrap(),
+            client: HttpClient::new(format!("http://{}", url).as_str()).unwrap(),
             receiver,
         }
     }
@@ -38,6 +38,7 @@ impl Broadcaster {
         &mut self,
         abort_recv: tokio::sync::oneshot::Receiver<()>,
     ) {
+        tracing::info!("Starting broadcaster.");
         tokio::select! {
             _ = self.run_loop() => {
                 tracing::error!("Broadcaster unexpectedly shut down.");
