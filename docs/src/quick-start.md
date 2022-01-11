@@ -23,16 +23,15 @@ This guide also assumes that the user has a basic knowledge of the terminal and 
 
 To pull the latest Anoma executables on Linux (at time of writing, this is [Anoma v.0.3.1](https://github.com/anoma/anoma/releases/tag/v0.3.1)):
 
-```shell
-$ wget https://github.com/anoma/anoma/releases/download/v0.3.1/anoma-v0.3.1-Linux-x86_64.tar.gz
+```
+$ curl -LO https://github.com/anoma/anoma/releases/download/v0.3.1/anoma-v0.3.1-Linux-x86_64.tar.gz
 
-➜ 2022-01-06 22:13:01 (12.0 MB/s) - 'anoma-v0.3.1-Linux-x86_64.tar.gz' saved [25169169/25169169]
+➜ 2022-01-06 22:13:01 (12.0 MB/s) - 'anoma-v0.3.0-Linux-x86_64.tar.gz' saved [25169169/25169169]
 ```
 
 or on Mac:
-
-```shell
-$ wget https://github.com/anoma/anoma/releases/download/v0.3.1/anoma-v0.3.1-Darwin-x86_64.tar.gz 
+```
+$ curl -LO https://github.com/anoma/anoma/releases/download/v0.3.1/anoma-v0.3.0-Darwin-x86_64.tar.gz 
 ```
 
 Extract them with:
