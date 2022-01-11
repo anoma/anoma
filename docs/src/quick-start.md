@@ -45,7 +45,7 @@ and change directory with:
 
 `$ cd anoma-v0.3.1-[platform]`
 
-Remember to replace `[platform]` with your platform (without brackets). This could be 'Linux-x86_64' for example.
+Remember to replace `[platform]` with your platform (without brackets). This could be 'Linux-x86_64' for Linux or 'Darwin-x86_64' for Mac.
 
 ## Configure
 
