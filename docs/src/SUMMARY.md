@@ -1,6 +1,7 @@
 # Summary
 
 - [Introduction](./README.md)
+- [Quick Start](./quick-start.md)
 - [User Guide](./user-guide/README.md)
   - [Install](./user-guide/install.md)
   - [Getting started](./user-guide/getting-started.md)
