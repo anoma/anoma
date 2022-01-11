@@ -21,31 +21,31 @@ This guide also assumes that the user has a basic knowledge of the terminal and 
 
 ## Install Anoma
 
-To pull the latest Anoma executables on Linux (at time of writing, this is Anoma v.0.3.0):
+To pull the latest Anoma executables on Linux (at time of writing, this is [Anoma v.0.3.1](https://github.com/anoma/anoma/releases/tag/v0.3.1)):
 
 ```shell
-$ wget https://github.com/anoma/anoma/releases/download/v0.3.0/anoma-v0.3.0-Linux-x86_64.tar.gz
+$ wget https://github.com/anoma/anoma/releases/download/v0.3.1/anoma-v0.3.1-Linux-x86_64.tar.gz
 
-➜ 2022-01-06 22:13:01 (12.0 MB/s) - 'anoma-v0.3.0-Linux-x86_64.tar.gz' saved [25169169/25169169]
+➜ 2022-01-06 22:13:01 (12.0 MB/s) - 'anoma-v0.3.1-Linux-x86_64.tar.gz' saved [25169169/25169169]
 ```
 
 or on Mac:
 
 ```shell
-$ wget https://github.com/anoma/anoma/releases/download/v0.3.0/anoma-v0.3.0-Darwin-x86_64.tar.gz 
+$ wget https://github.com/anoma/anoma/releases/download/v0.3.1/anoma-v0.3.1-Darwin-x86_64.tar.gz 
 ```
 
 Extract them with:
 
 ```shell
-$ tar -x -z -f anoma-v0.3.0-[platform].tar.gz
+$ tar -x -z -f anoma-v0.3.1-[platform].tar.gz
 ```
 
 and change directory with:
 
-`$ cd anoma-v0.3.0-[platform]`
+`$ cd anoma-v0.3.1-[platform]`
 
-Remember to replace [platform] with your platform (without brackets). This could be 'Linux-x86_64' for example.
+Remember to replace `[platform]` with your platform (without brackets). This could be 'Linux-x86_64' for example.
 
 ## Configure
 
@@ -60,13 +60,11 @@ $ ./anomac utils join-network --chain-id=anoma-testnet-0.0.a1d4bbfafa49
 
 ## Run
 
-We recommend this step with tmux, as you can keep the node running without needing the terminal open permanently. If not, skip to the subsequent step. 
+We recommend this step with tmux, as you can keep the node running without needing the terminal open permanently. If not, skip to the subsequent step.
 
 ```shell
 $ tmux
-```
 
-```shell
 # inside the tmux/or not
 
 $ ./anoman ledger
@@ -137,7 +135,7 @@ Transaction applied with result: {
 To get the balance of your account "example-established":
 
 ```shell
-$ anomac balance --owner example-established
+$ ./anomac balance --owner example-established
 ```
 
 ## Setting up the validator node
