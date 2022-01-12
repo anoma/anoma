@@ -456,10 +456,21 @@ apt-get install -y make git-core libssl-dev pkg-config libclang-12-dev
 <p>To start a local Anoma ledger node, run:</p>
 <pre><code class="language-shell">anoma ledger
 </code></pre>
+<p>Note that you need to have <a href="user-guide/./getting-started.html">joined a network</a> before you start the ledger. It throws an error if no network has been configured.</p>
 <p>The node will attempt to connect to the persistent validator nodes and other peers in the network, and synchronize to the latest block.</p>
 <p>By default, the ledger will store its configuration and state in the <code>.anoma</code> directory relative to the current working directory. You can use the <code>--base-dir</code> CLI global argument or <code>ANOMA_BASE_DIR</code> environment variable to change it.</p>
-<p>If not found on start up, the ledger will generate a configuration file at <code>.anoma/config.toml</code>.</p>
 <p>The ledger also needs access to the built WASM files that are used in the genesis block. These files are included in release and shouldn't be modified, otherwise your node will fail with a consensus error on the genesis block. By default, these are expected to be in the <code>wasm</code> directory, relative to the current working directory. This can also be set with the <code>--wasm-dir</code> CLI global argument, <code>ANOMA_WASM_DIR</code> environment variable or the configuration file.</p>
+<p>The ledger configuration is stored in <code>.anoma/{chain_id}/config.toml</code> (with
+default <code>--base-dir</code>). It is created when you join the network. You can modify
+that file to change the configuration of your node. All values can also be set
+via environment variables. Names of the recognized environment variables are
+derived from the configuration keys by: uppercase every letter of the key,
+insert <code>.</code> or <code>__</code> for each nested value and prepend <code>ANOMA_</code>. For example,
+option <code>p2p_pex</code> in <code>[ledger.tendermint]</code> can be set by
+<code>ANOMA_LEDGER__TENDERMINT__P2P_PEX=true|false</code> or
+<code>ANOMA_LEDGER.TENDERMINT.P2P_PEX=true|false</code> in the environment (Note: only the
+double underscore form can be used in Bash, because Bash doesn't allow dots in
+environment variable names).</p>
 <h2 id="-initialize-an-account"><a class="header" href="#-initialize-an-account">📝 Initialize an account</a></h2>
 <p>If you already have a key in your wallet, you can skip this step and use it in the following commands. Otherwise, generate a new key now:</p>
 <pre><code class="language-shell">anoma wallet key gen --alias my-key
@@ -684,10 +695,10 @@ fn apply_tx(tx_data: Vec&lt;u8&gt;) {
 <p>Optionally, you can also attach some data to the transaction from a file with the <code>--data-path</code> argument.</p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="the-intent-gossip-and-matchmaker"><a class="header" href="#the-intent-gossip-and-matchmaker">The Intent gossip and Matchmaker</a></h1>
 <p>To run an intent gossip node with an RPC server:</p>
-<pre><code class="language-shell">anoma node gossip --rpc &quot;127.0.0.1:26660&quot;
+<pre><code class="language-shell">anoma node gossip --rpc &quot;127.0.0.1:39111&quot;
 </code></pre>
 <p>To run an intent gossip node with the intent gossip system, a token exchange matchmaker and RPC through which new intents are requested:</p>
-<pre><code class="language-shell">anoma node gossip --rpc &quot;127.0.0.1:26660&quot; --matchmaker-path libmm_token_exch --tx-code-path wasm/tx_from_intent.wasm --ledger-address &quot;127.0.0.1:26657&quot; --source matchmaker --signing-key matchmaker
+<pre><code class="language-shell">anoma node gossip --rpc &quot;127.0.0.1:39111&quot; --matchmaker-path wasm/mm_token_exch.wasm --tx-code-path wasm/tx_from_intent.wasm --ledger-address &quot;127.0.0.1:26657&quot; --source matchmaker --signing-key matchmaker
 </code></pre>
 <p>Mind that <code>matchmaker</code> should be valid key in your wallet.</p>
 <p>This pre-built matchmaker implementation is <a href="https://github.com/anoma/anoma/blob/master/wasm/wasm_source/src/mm_token_exch.rs">the fungible token exchange <code>mm_token_exch</code></a>, that is being used together with <a href="https://github.com/anoma/anoma/blob/master/wasm/wasm_source/src/lib.rs">the pre-built <code>tx_from_intent</code> transaction WASM</a> to submit transaction from matched intents to the ledger.</p>
@@ -738,16 +749,16 @@ echo '[{&quot;addr&quot;:&quot;'$CHRISTEL'&quot;,&quot;key&quot;:&quot;'$CHRISTE
 <p>Start the ledger and the matchmaker. Instruct the matchmaker to subscribe to a topic &quot;asset_v1&quot;:</p>
 <pre><code class="language-shell">anoma node ledger run
 
-anoma node gossip --rpc &quot;127.0.0.1:26660&quot; --matchmaker-path wasm/mm_token_exch.wasm --tx-code-path wasm/tx_from_intent.wasm --ledger-address &quot;127.0.0.1:26657&quot; --source mm-1 --signing-key mm-1
+anoma node gossip --rpc &quot;127.0.0.1:39111&quot; --matchmaker-path wasm/mm_token_exch.wasm --tx-code-path wasm/tx_from_intent.wasm --ledger-address &quot;127.0.0.1:26657&quot; --source mm-1 --signing-key mm-1
 
-anoma client subscribe-topic --node &quot;http://127.0.0.1:26660&quot; --topic &quot;asset_v1&quot;
+anoma client subscribe-topic --node &quot;http://127.0.0.1:39111&quot; --topic &quot;asset_v1&quot;
 </code></pre>
 </li>
 <li>
 <p>Submit the intents (the target gossip node must be running an RPC server):</p>
-<pre><code class="language-shell">anoma client intent --data-path intent.A.data --topic &quot;asset_v1&quot; --signing-key alberto --node &quot;http://127.0.0.1:26660&quot;
-anoma client intent --data-path intent.B.data --topic &quot;asset_v1&quot; --signing-key bertha --node &quot;http://127.0.0.1:26660&quot;
-anoma client intent --data-path intent.C.data --topic &quot;asset_v1&quot; --signing-key christel --node &quot;http://127.0.0.1:26660&quot;
+<pre><code class="language-shell">anoma client intent --data-path intent.A.data --topic &quot;asset_v1&quot; --signing-key alberto --node &quot;http://127.0.0.1:39111&quot;
+anoma client intent --data-path intent.B.data --topic &quot;asset_v1&quot; --signing-key bertha --node &quot;http://127.0.0.1:39111&quot;
+anoma client intent --data-path intent.C.data --topic &quot;asset_v1&quot; --signing-key christel --node &quot;http://127.0.0.1:39111&quot;
 </code></pre>
 <p>The matchmaker should find a match from these intents and submit a transaction to the ledger that performs the n-party transfers of tokens.</p>
 </li>
@@ -760,33 +771,22 @@ anoma client balance --owner christel-account
 </li>
 </ol>
 <h2 id="-custom-matchmaker"><a class="header" href="#-custom-matchmaker">🤝 Custom matchmaker</a></h2>
-<p>A custom matchmaker code can be built from <a href="https://github.com/anoma/anoma/tree/master/matchmaker/mm_template"><code>matchmaker/mm_template</code></a>.</p>
-<p>The <code>anoma_macros::Matchmaker</code> macro can be used to derive the binding code for the matchmaker runner on any custom implementation, e.g.:</p>
+<p>A custom matchmaker code can be built from <a href="https://github.com/anoma/anoma/tree/master/wasm/mm_template"><code>wasm/mm_template</code></a>.</p>
+<p>A matchmaker code must contain the following function, which will be called when a new intent is received:</p>
 <pre><pre class="playground"><code class="language-rust">
 <span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
-</span>#[derive(Default, Matchmaker)]
-struct MyMatchmaker;
-<span class="boring">}
-</span></code></pre></pre>
-<p>This macro requires that there is a <code>Default</code> implementation (derived or custom) for the matchmaker, which can be used by the runner to instantiate the matchmaker.</p>
-<p>The matchmaker must also implement <code>AddIntent</code>, e.g.:</p>
-<pre><pre class="playground"><code class="language-rust">
-<span class="boring">#![allow(unused)]
-</span><span class="boring">fn main() {
-</span>impl AddIntent for MyMatchmaker {
-    // This function will be called when a new intent is received
-    fn add_intent(
-        &amp;mut self,
-        _intent_id: &amp;Vec&lt;u8&gt;,
-        _intent_data: &amp;Vec&lt;u8&gt;,
-    ) -&gt; AddIntentResult {
-        AddIntentResult::default()
-    }
+</span>use anoma_vm_env::matchmaker_prelude::*;
+
+#[matchmaker]
+fn add_intent(last_state: Vec&lt;u8&gt;, intent_id: Vec&lt;u8&gt;, intent_data: Vec&lt;u8&gt;) -&gt; bool {
+  // Returns a result of processing the intent
+  true
 }
 <span class="boring">}
 </span></code></pre></pre>
-<p>To submit a transaction from the matchmaker, add it to the <code>AddIntentResult</code> along with a hash set of the intent IDs that were matched into the transaction.</p>
+<p>The matchmaker can keep some state between its runs. The state can be updated from within the matchmaker code with <a href="https://docs.anoma.network/rustdoc/anoma_vm_env/imports/matchmaker/fn.update_state.html"><code>update_state</code> function</a> and received from the <code>last_state</code> argument.</p>
+<p>To find out about the interface available in a matchmaker and the library code used in the <code>mm_token_exch</code> implementation, please check out <a href="https://docs.anoma.network/master/rustdoc/anoma_vm_env/matchmaker_prelude/index.html">Rust docs for <code>matchmaker_prelude</code></a>.</p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="exploration"><a class="header" href="#exploration">Exploration</a></h1>
 <p>This section documents the process of exploring the design and implementation space for Anoma. Ideally, the captured information should provide an overview of the explored space and help to guide further decisions.</p>
 <p>The content of this section is more free-form. This is largely a cross-over of both the implementation details and the design of implementation-independent specifications.</p>
