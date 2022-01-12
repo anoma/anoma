@@ -737,6 +737,10 @@
 <span id="737">737</span>
 <span id="738">738</span>
 <span id="739">739</span>
+<span id="740">740</span>
+<span id="741">741</span>
+<span id="742">742</span>
+<span id="743">743</span>
 </pre><pre class="rust"><code><span class="doccomment">//! The parameters used for the chain&#39;s genesis</span>
 
 <span class="kw">use</span> <span class="ident">std::collections::HashMap</span>;
@@ -876,6 +880,10 @@
         <span class="kw">pub</span> <span class="ident">matchmaker_code</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>,
         <span class="doccomment">/// Path to a transaction WASM code used by the matchmaker, if any</span>
         <span class="kw">pub</span> <span class="ident">matchmaker_tx</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>,
+        <span class="doccomment">/// Is this validator running a seed intent gossip node? A seed node is</span>
+        <span class="doccomment">/// not part of the gossipsub where intents are being propagated and</span>
+        <span class="doccomment">/// hence cannot run matchmakers</span>
+        <span class="kw">pub</span> <span class="ident">intent_gossip_seed</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span>,
     }
 
     <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">Deserialize</span>, <span class="ident">Serialize</span>)]</span>

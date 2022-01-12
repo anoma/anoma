@@ -505,6 +505,20 @@
 <span id="505">505</span>
 <span id="506">506</span>
 <span id="507">507</span>
+<span id="508">508</span>
+<span id="509">509</span>
+<span id="510">510</span>
+<span id="511">511</span>
+<span id="512">512</span>
+<span id="513">513</span>
+<span id="514">514</span>
+<span id="515">515</span>
+<span id="516">516</span>
+<span id="517">517</span>
+<span id="518">518</span>
+<span id="519">519</span>
+<span id="520">520</span>
+<span id="521">521</span>
 </pre><pre class="rust"><code><span class="comment">// This file is almost identical to this</span>
 <span class="comment">// https://github.com/webb-tools/anonima/blob/main/network/src/discovery.rs</span>
 <span class="comment">// appropriate affiliation needs to be added here original header :</span>
@@ -648,7 +662,7 @@
     <span class="doccomment">/// bootstrap nodes and reserved nodes.</span>
     <span class="ident">user_defined</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">PeerAddress</span><span class="op">&gt;</span>,
     <span class="doccomment">/// Kademlia discovery.</span>
-    <span class="ident">kademlia</span>: <span class="ident">Toggle</span><span class="op">&lt;</span><span class="ident">Kademlia</span><span class="op">&lt;</span><span class="ident">MemoryStore</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span> <span class="ident">kademlia</span>: <span class="ident">Toggle</span><span class="op">&lt;</span><span class="ident">Kademlia</span><span class="op">&lt;</span><span class="ident">MemoryStore</span><span class="op">&gt;</span><span class="op">&gt;</span>,
     <span class="doccomment">/// Discovers nodes on the local network.</span>
     <span class="ident">mdns</span>: <span class="ident">Toggle</span><span class="op">&lt;</span><span class="ident">Mdns</span><span class="op">&gt;</span>,
     <span class="doccomment">/// Stream that fires when we need to perform the next random Kademlia</span>
@@ -709,7 +723,7 @@
             <span class="ident">kademlia_disjoint_query_paths</span>,
         } <span class="op">=</span> <span class="ident">config</span>;
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">peers</span> <span class="op">=</span> <span class="ident">HashSet::new</span>();
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">peers</span> <span class="op">=</span> <span class="ident">HashSet::with_capacity</span>(<span class="ident">user_defined</span>.<span class="ident">len</span>());
 
         <span class="comment">// Kademlia config</span>
         <span class="kw">let</span> <span class="ident">kademlia_opt</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">enable_kademlia</span> {
@@ -803,6 +817,7 @@
     }
 
     <span class="kw">fn</span> <span class="ident">inject_connected</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">peer_id</span>: <span class="kw-2">&amp;</span><span class="ident">PeerId</span>) {
+        <span class="macro">tracing::debug!</span>(<span class="string">&quot;Injecting connected peer {}&quot;</span>, <span class="ident">peer_id</span>);
         <span class="self">self</span>.<span class="ident">peers</span>.<span class="ident">insert</span>(<span class="kw-2">*</span><span class="ident">peer_id</span>);
         <span class="self">self</span>.<span class="ident">pending_events</span>
             .<span class="ident">push_back</span>(<span class="ident">DiscoveryEvent::Connected</span>(<span class="kw-2">*</span><span class="ident">peer_id</span>));
@@ -811,6 +826,7 @@
     }
 
     <span class="kw">fn</span> <span class="ident">inject_disconnected</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">peer_id</span>: <span class="kw-2">&amp;</span><span class="ident">PeerId</span>) {
+        <span class="macro">tracing::debug!</span>(<span class="string">&quot;Injecting disconnected peer {}&quot;</span>, <span class="ident">peer_id</span>);
         <span class="self">self</span>.<span class="ident">peers</span>.<span class="ident">remove</span>(<span class="ident">peer_id</span>);
         <span class="self">self</span>.<span class="ident">pending_events</span>
             .<span class="ident">push_back</span>(<span class="ident">DiscoveryEvent::Disconnected</span>(<span class="kw-2">*</span><span class="ident">peer_id</span>));
@@ -824,6 +840,12 @@
         <span class="ident">conn</span>: <span class="kw-2">&amp;</span><span class="ident">ConnectionId</span>,
         <span class="ident">endpoint</span>: <span class="kw-2">&amp;</span><span class="ident">ConnectedPoint</span>,
     ) {
+        <span class="macro">tracing::debug!</span>(
+            <span class="string">&quot;Injecting connection established for peer ID {} with endpoint \
+             {:#?}&quot;</span>,
+            <span class="ident">peer_id</span>,
+            <span class="ident">endpoint</span>
+        );
         <span class="self">self</span>.<span class="ident">num_connections</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
 
         <span class="self">self</span>.<span class="ident">kademlia</span>
@@ -836,6 +858,7 @@
         <span class="ident">conn</span>: <span class="kw-2">&amp;</span><span class="ident">ConnectionId</span>,
         <span class="ident">endpoint</span>: <span class="kw-2">&amp;</span><span class="ident">ConnectedPoint</span>,
     ) {
+        <span class="macro">tracing::debug!</span>(<span class="string">&quot;Injecting connection closed for peer ID {}&quot;</span>, <span class="ident">peer_id</span>);
         <span class="self">self</span>.<span class="ident">num_connections</span> <span class="op">-</span><span class="op">=</span> <span class="number">1</span>;
 
         <span class="self">self</span>.<span class="ident">kademlia</span>
@@ -923,6 +946,7 @@
 
         <span class="comment">// Poll Kademlia return every other event except kad event</span>
         <span class="kw">while</span> <span class="kw">let</span> <span class="ident">Poll::Ready</span>(<span class="ident">ev</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">kademlia</span>.<span class="ident">poll</span>(<span class="ident">cx</span>, <span class="ident">params</span>) {
+            <span class="macro">tracing::debug!</span>(<span class="string">&quot;Kademlia event {:#?}&quot;</span>, <span class="ident">ev</span>);
             <span class="kw">if</span> <span class="kw">let</span> <span class="ident">NetworkBehaviourAction::GenerateEvent</span>(<span class="ident">_kad_ev</span>) <span class="op">=</span> <span class="ident">ev</span> {
             } <span class="kw">else</span> {
                 <span class="kw">return</span> <span class="ident">Poll::Ready</span>(<span class="ident">ev</span>.<span class="ident">map_out</span>(<span class="ident">DiscoveryEvent::KademliaEvent</span>));
@@ -935,6 +959,10 @@
         <span class="comment">// TODO: explain a bit more the logic happening here</span>
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">next_kad_random_query</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">next_kad_random_query</span>.<span class="ident">as_mut</span>()
         {
+            <span class="macro">tracing::debug!</span>(
+                <span class="string">&quot;Kademlia random query {:#?}&quot;</span>,
+                <span class="ident">next_kad_random_query</span>
+            );
             <span class="kw">while</span> <span class="ident">next_kad_random_query</span>.<span class="ident">poll_next_unpin</span>(<span class="ident">cx</span>).<span class="ident">is_ready</span>() {
                 <span class="kw">if</span> <span class="self">self</span>.<span class="ident">num_connections</span> <span class="op">&lt;</span> <span class="self">self</span>.<span class="ident">discovery_max</span> {
                     <span class="kw">let</span> <span class="ident">random_peer_id</span> <span class="op">=</span> <span class="ident">PeerId::random</span>();

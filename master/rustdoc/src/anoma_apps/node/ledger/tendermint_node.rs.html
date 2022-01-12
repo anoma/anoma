@@ -403,6 +403,14 @@
 <span id="403">403</span>
 <span id="404">404</span>
 <span id="405">405</span>
+<span id="406">406</span>
+<span id="407">407</span>
+<span id="408">408</span>
+<span id="409">409</span>
+<span id="410">410</span>
+<span id="411">411</span>
+<span id="412">412</span>
+<span id="413">413</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std::path</span>::{<span class="ident">Path</span>, <span class="ident">PathBuf</span>};
 <span class="kw">use</span> <span class="ident">std::str::FromStr</span>;
 
@@ -754,6 +762,14 @@
     <span class="comment">// Bumped from the default `1_000_000`, because some WASMs can be</span>
     <span class="comment">// quite large</span>
     <span class="ident">config</span>.<span class="ident">rpc</span>.<span class="ident">max_body_bytes</span> <span class="op">=</span> <span class="number">2_000_000</span>;
+
+    <span class="ident">config</span>.<span class="ident">instrumentation</span>.<span class="ident">prometheus</span> <span class="op">=</span>
+        <span class="ident">tendermint_config</span>.<span class="ident">instrumentation_prometheus</span>;
+    <span class="ident">config</span>.<span class="ident">instrumentation</span>.<span class="ident">prometheus_listen_addr</span> <span class="op">=</span> <span class="ident">tendermint_config</span>
+        .<span class="ident">instrumentation_prometheus_listen_addr</span>
+        .<span class="ident">to_string</span>();
+    <span class="ident">config</span>.<span class="ident">instrumentation</span>.<span class="ident">namespace</span> <span class="op">=</span>
+        <span class="ident">tendermint_config</span>.<span class="ident">instrumentation_namespace</span>;
 
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">file</span> <span class="op">=</span> <span class="ident">OpenOptions::new</span>()
         .<span class="ident">write</span>(<span class="bool-val">true</span>)

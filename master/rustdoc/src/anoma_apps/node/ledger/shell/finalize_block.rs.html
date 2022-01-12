@@ -1068,7 +1068,7 @@
                 <span class="comment">// if the rejected tx was decrypted, remove it</span>
                 <span class="comment">// from the queue of txs to be processed</span>
                 <span class="kw">if</span> <span class="kw">let</span> <span class="ident">TxType::Decrypted</span>(<span class="kw">_</span>) <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">tx_type</span> {
-                    <span class="self">self</span>.<span class="ident">tx_queue</span>.<span class="ident">pop</span>();
+                    <span class="self">self</span>.<span class="ident">storage</span>.<span class="ident">tx_queue</span>.<span class="ident">pop</span>();
                 }
                 <span class="kw">continue</span>;
             }
@@ -1076,7 +1076,7 @@
             <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tx_result</span> <span class="op">=</span> <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="ident">tx_type</span> {
                 <span class="ident">TxType::Wrapper</span>(<span class="ident">_wrapper</span>) <span class="op">=</span><span class="op">&gt;</span> {
                     <span class="kw">if</span> <span class="op">!</span><span class="macro">cfg!</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>) {
-                        <span class="self">self</span>.<span class="ident">tx_queue</span>.<span class="ident">push</span>(<span class="ident">_wrapper</span>.<span class="ident">clone</span>());
+                        <span class="self">self</span>.<span class="ident">storage</span>.<span class="ident">tx_queue</span>.<span class="ident">push</span>(<span class="ident">_wrapper</span>.<span class="ident">clone</span>());
                     }
                     <span class="ident">Event::new_tx_event</span>(<span class="kw-2">&amp;</span><span class="ident">tx_type</span>, <span class="ident">height</span>.<span class="number">0</span>)
                 }
@@ -1099,7 +1099,7 @@
                     }
                     <span class="comment">// We remove the corresponding wrapper tx from the queue</span>
                     <span class="kw">if</span> <span class="op">!</span><span class="macro">cfg!</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>) {
-                        <span class="self">self</span>.<span class="ident">tx_queue</span>.<span class="ident">pop</span>();
+                        <span class="self">self</span>.<span class="ident">storage</span>.<span class="ident">tx_queue</span>.<span class="ident">pop</span>();
                     }
                     <span class="ident">Event::new_tx_event</span>(<span class="kw-2">&amp;</span><span class="ident">tx_type</span>, <span class="ident">height</span>.<span class="number">0</span>)
                 }
@@ -1184,7 +1184,7 @@
             .<span class="ident">gas_meter</span>
             .<span class="ident">finalize_transaction</span>()
             .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">Error::GasOverflow</span>)<span class="question-mark">?</span>;
-        <span class="self">self</span>.<span class="ident">reset_queue</span>();
+        <span class="self">self</span>.<span class="ident">reset_tx_queue_iter</span>();
         <span class="prelude-val">Ok</span>(<span class="ident">response</span>)
     }
 

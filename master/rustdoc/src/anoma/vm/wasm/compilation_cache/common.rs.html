@@ -976,13 +976,6 @@
 <span id="976">976</span>
 <span id="977">977</span>
 <span id="978">978</span>
-<span id="979">979</span>
-<span id="980">980</span>
-<span id="981">981</span>
-<span id="982">982</span>
-<span id="983">983</span>
-<span id="984">984</span>
-<span id="985">985</span>
 </pre><pre class="rust"><code><span class="doccomment">//! WASM compilation cache.</span>
 <span class="doccomment">//! The cache is backed by in-memory LRU cache with configurable size</span>
 <span class="doccomment">//! limit and a file system cache of compiled modules (either to dynamic libs</span>
@@ -1052,10 +1045,7 @@
         <span class="comment">// elements, so we use the size of the module as its scale</span>
         <span class="comment">// and subtract 1 from it to negate the increment of the cache length.</span>
 
-        <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="ident">value</span>.<span class="ident">serialize</span>().<span class="ident">unwrap</span>();
-        <span class="comment">// TODO wasmer 2.x</span>
-        <span class="comment">// let size = loupe::size_of_val(&amp;value) + HASH_BYTES;</span>
-        <span class="kw">let</span> <span class="ident">size</span> <span class="op">=</span> <span class="ident">bytes</span>.<span class="ident">len</span>() <span class="op">+</span> <span class="ident">HASH_BYTES</span>;
+        <span class="kw">let</span> <span class="ident">size</span> <span class="op">=</span> <span class="ident">loupe::size_of_val</span>(<span class="kw-2">&amp;</span><span class="ident">value</span>) <span class="op">+</span> <span class="ident">HASH_BYTES</span>;
         <span class="macro">tracing::debug!</span>(
             <span class="string">&quot;WASM module hash {}, size including the hash {}&quot;</span>,
             <span class="ident">key</span>.<span class="ident">to_string</span>(),
@@ -1478,39 +1468,38 @@
     }
 }
 
-<span class="comment">// TODO wasmer 2.x</span>
 <span class="doccomment">/// A dynamic library engine compilation.</span>
-<span class="comment">// mod dylib {</span>
-<span class="comment">//     use super::*;</span>
+<span class="kw">mod</span> <span class="ident">dylib</span> {
+    <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
 
-<span class="comment">//     #[allow(dead_code)]</span>
-<span class="comment">//     #[cfg(windows)]</span>
-<span class="comment">//     pub const FILE_EXT: &amp;str = &quot;dll&quot;;</span>
-<span class="comment">//     #[allow(dead_code)]</span>
-<span class="comment">//     #[cfg(all(not(unix), target_os = &quot;macos&quot;))]</span>
-<span class="comment">//     pub const FILE_EXT: &amp;str = &quot;dylib&quot;;</span>
-<span class="comment">//     #[allow(dead_code)]</span>
-<span class="comment">//     #[cfg(all(unix, not(target_os = &quot;macos&quot;)))]</span>
-<span class="comment">//     pub const FILE_EXT: &amp;str = &quot;so&quot;;</span>
+    <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">dead_code</span>)]</span>
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">windows</span>)]</span>
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">FILE_EXT</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;dll&quot;</span>;
+    <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">dead_code</span>)]</span>
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">all</span>(<span class="ident">not</span>(<span class="ident">unix</span>), <span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;macos&quot;</span>))]</span>
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">FILE_EXT</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;dylib&quot;</span>;
+    <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">dead_code</span>)]</span>
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">all</span>(<span class="ident">unix</span>, <span class="ident">not</span>(<span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;macos&quot;</span>)))]</span>
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">FILE_EXT</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;so&quot;</span>;
 
-<span class="comment">//     /// Compile wasm to a dynamic library</span>
-<span class="comment">//     #[allow(dead_code)]</span>
-<span class="comment">//     pub fn compile(</span>
-<span class="comment">//         code: impl AsRef&lt;[u8]&gt;,</span>
-<span class="comment">//     ) -&gt; Result&lt;(Module, Store), wasmer::CompileError&gt; {</span>
-<span class="comment">//         let store = store();</span>
-<span class="comment">//         let module = Module::new(&amp;store, code.as_ref())?;</span>
-<span class="comment">//         Ok((module, store))</span>
-<span class="comment">//     }</span>
+    <span class="doccomment">/// Compile wasm to a dynamic library</span>
+    <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">dead_code</span>)]</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">compile</span>(
+        <span class="ident">code</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span>[<span class="ident">u8</span>]<span class="op">&gt;</span>,
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="ident">Module</span>, <span class="ident">Store</span>), <span class="ident">wasmer::CompileError</span><span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="ident">store</span> <span class="op">=</span> <span class="ident">store</span>();
+        <span class="kw">let</span> <span class="ident">module</span> <span class="op">=</span> <span class="ident">Module::new</span>(<span class="kw-2">&amp;</span><span class="ident">store</span>, <span class="ident">code</span>.<span class="ident">as_ref</span>())<span class="question-mark">?</span>;
+        <span class="prelude-val">Ok</span>((<span class="ident">module</span>, <span class="ident">store</span>))
+    }
 
-<span class="comment">//     /// Dylib WASM store</span>
-<span class="comment">//     #[allow(dead_code)]</span>
-<span class="comment">//     pub fn store() -&gt; Store {</span>
-<span class="comment">//         let compiler = wasmer_compiler_singlepass::Singlepass::default();</span>
-<span class="comment">//         let engine = wasmer_engine_dylib::Dylib::new(compiler).engine();</span>
-<span class="comment">//         Store::new_with_tunables(&amp;engine, memory::vp_limit())</span>
-<span class="comment">//     }</span>
-<span class="comment">// }</span>
+    <span class="doccomment">/// Dylib WASM store</span>
+    <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">dead_code</span>)]</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">store</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Store</span> {
+        <span class="kw">let</span> <span class="ident">compiler</span> <span class="op">=</span> <span class="ident">wasmer_compiler_singlepass::Singlepass::default</span>();
+        <span class="kw">let</span> <span class="ident">engine</span> <span class="op">=</span> <span class="ident">wasmer_engine_dylib::Dylib::new</span>(<span class="ident">compiler</span>).<span class="ident">engine</span>();
+        <span class="ident">Store::new_with_tunables</span>(<span class="kw-2">&amp;</span><span class="ident">engine</span>, <span class="ident">memory::vp_limit</span>())
+    }
+}
 
 <span class="doccomment">/// Testing helpers</span>
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">test</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;testing&quot;</span>))]</span>
@@ -1927,10 +1916,7 @@
                 <span class="number">1</span>,
             );
             <span class="kw">let</span> (<span class="ident">module</span>, <span class="ident">_store</span>) <span class="op">=</span> <span class="ident">cache</span>.<span class="ident">fetch_or_compile</span>(<span class="kw-2">&amp;</span><span class="ident">code</span>).<span class="ident">unwrap</span>();
-            <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="ident">module</span>.<span class="ident">serialize</span>().<span class="ident">unwrap</span>();
-            <span class="comment">// TODO wasmer 2.x</span>
-            <span class="comment">// loupe::size_of_val(&amp;module) + HASH_BYTES + extra_bytes</span>
-            <span class="ident">bytes</span>.<span class="ident">len</span>() <span class="op">+</span> <span class="ident">HASH_BYTES</span> <span class="op">+</span> <span class="ident">extra_bytes</span>
+            <span class="ident">loupe::size_of_val</span>(<span class="kw-2">&amp;</span><span class="ident">module</span>) <span class="op">+</span> <span class="ident">HASH_BYTES</span> <span class="op">+</span> <span class="ident">extra_bytes</span>
         };
         <span class="macro">println!</span>(
             <span class="string">&quot;Compiled module {} size including the hash: {} ({})&quot;</span>,

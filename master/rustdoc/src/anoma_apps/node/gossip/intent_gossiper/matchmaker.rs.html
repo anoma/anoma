@@ -281,7 +281,6 @@
 <span id="281">281</span>
 <span id="282">282</span>
 <span id="283">283</span>
-<span id="284">284</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std::collections::HashSet</span>;
 <span class="kw">use</span> <span class="ident">std::env</span>;
 <span class="kw">use</span> <span class="ident">std::path::Path</span>;
@@ -305,7 +304,6 @@
 <span class="kw">use</span> <span class="ident">tendermint_config_abci::net</span>;
 <span class="kw">use</span> <span class="ident">thiserror::Error</span>;
 <span class="kw">use</span> <span class="ident">tokio::sync::mpsc</span>::{<span class="ident">channel</span>, <span class="ident">Receiver</span>, <span class="ident">Sender</span>};
-<span class="kw">use</span> <span class="ident">tokio::sync::oneshot</span>;
 
 <span class="kw">use</span> <span class="ident"><span class="kw">super</span>::filter::Filter</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">super</span>::mempool</span>::{<span class="self">self</span>, <span class="ident">IntentMempool</span>};
@@ -356,7 +354,7 @@
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">MatchmakerMessage</span> {
     <span class="doccomment">/// Run the matchmaker with the given intent</span>
-    <span class="ident">ApplyIntent</span>(<span class="ident">Intent</span>, <span class="ident">oneshot::Sender</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span>),
+    <span class="ident">ApplyIntent</span>(<span class="ident">Intent</span>, <span class="ident">std::sync::mpsc::Sender</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span>),
 }
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Error</span>, <span class="ident">Debug</span>)]</span>

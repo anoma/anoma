@@ -329,7 +329,7 @@
                     <span class="kw">if</span> <span class="ident">out_of_order</span> {
                         <span class="comment">// The wrapper txs will need to be decrypted again</span>
                         <span class="comment">// and included in the proposed block after the current</span>
-                        <span class="self">self</span>.<span class="ident">service</span>.<span class="ident">reset_queue</span>();
+                        <span class="self">self</span>.<span class="ident">service</span>.<span class="ident">reset_tx_queue_iter</span>();
                     }
                     <span class="kw">let</span> <span class="ident">begin_block_request</span> <span class="op">=</span>
                         <span class="self">self</span>.<span class="ident">begin_block_request</span>.<span class="ident">take</span>().<span class="ident">unwrap</span>();

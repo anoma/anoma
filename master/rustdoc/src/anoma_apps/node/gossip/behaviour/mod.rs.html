@@ -350,6 +350,90 @@
 <span id="350">350</span>
 <span id="351">351</span>
 <span id="352">352</span>
+<span id="353">353</span>
+<span id="354">354</span>
+<span id="355">355</span>
+<span id="356">356</span>
+<span id="357">357</span>
+<span id="358">358</span>
+<span id="359">359</span>
+<span id="360">360</span>
+<span id="361">361</span>
+<span id="362">362</span>
+<span id="363">363</span>
+<span id="364">364</span>
+<span id="365">365</span>
+<span id="366">366</span>
+<span id="367">367</span>
+<span id="368">368</span>
+<span id="369">369</span>
+<span id="370">370</span>
+<span id="371">371</span>
+<span id="372">372</span>
+<span id="373">373</span>
+<span id="374">374</span>
+<span id="375">375</span>
+<span id="376">376</span>
+<span id="377">377</span>
+<span id="378">378</span>
+<span id="379">379</span>
+<span id="380">380</span>
+<span id="381">381</span>
+<span id="382">382</span>
+<span id="383">383</span>
+<span id="384">384</span>
+<span id="385">385</span>
+<span id="386">386</span>
+<span id="387">387</span>
+<span id="388">388</span>
+<span id="389">389</span>
+<span id="390">390</span>
+<span id="391">391</span>
+<span id="392">392</span>
+<span id="393">393</span>
+<span id="394">394</span>
+<span id="395">395</span>
+<span id="396">396</span>
+<span id="397">397</span>
+<span id="398">398</span>
+<span id="399">399</span>
+<span id="400">400</span>
+<span id="401">401</span>
+<span id="402">402</span>
+<span id="403">403</span>
+<span id="404">404</span>
+<span id="405">405</span>
+<span id="406">406</span>
+<span id="407">407</span>
+<span id="408">408</span>
+<span id="409">409</span>
+<span id="410">410</span>
+<span id="411">411</span>
+<span id="412">412</span>
+<span id="413">413</span>
+<span id="414">414</span>
+<span id="415">415</span>
+<span id="416">416</span>
+<span id="417">417</span>
+<span id="418">418</span>
+<span id="419">419</span>
+<span id="420">420</span>
+<span id="421">421</span>
+<span id="422">422</span>
+<span id="423">423</span>
+<span id="424">424</span>
+<span id="425">425</span>
+<span id="426">426</span>
+<span id="427">427</span>
+<span id="428">428</span>
+<span id="429">429</span>
+<span id="430">430</span>
+<span id="431">431</span>
+<span id="432">432</span>
+<span id="433">433</span>
+<span id="434">434</span>
+<span id="435">435</span>
+<span id="436">436</span>
 </pre><pre class="rust"><code><span class="kw">mod</span> <span class="ident">discovery</span>;
 <span class="kw">use</span> <span class="ident">std::collections::hash_map::DefaultHasher</span>;
 <span class="kw">use</span> <span class="ident">std::convert::TryFrom</span>;
@@ -366,12 +450,13 @@
     <span class="ident">MessageAcceptance</span>, <span class="ident">MessageAuthenticity</span>, <span class="ident">MessageId</span>, <span class="ident">TopicHash</span>,
     <span class="ident">ValidationMode</span>,
 };
+<span class="kw">use</span> <span class="ident">libp2p::identify</span>::{<span class="ident">Identify</span>, <span class="ident">IdentifyConfig</span>, <span class="ident">IdentifyEvent</span>};
 <span class="kw">use</span> <span class="ident">libp2p::identity::Keypair</span>;
+<span class="kw">use</span> <span class="ident">libp2p::ping</span>::{<span class="ident">Ping</span>, <span class="ident">PingEvent</span>, <span class="ident">PingFailure</span>, <span class="ident">PingSuccess</span>};
 <span class="kw">use</span> <span class="ident">libp2p::swarm::NetworkBehaviourEventProcess</span>;
 <span class="kw">use</span> <span class="ident">libp2p</span>::{<span class="ident">NetworkBehaviour</span>, <span class="ident">PeerId</span>};
 <span class="kw">use</span> <span class="ident">thiserror::Error</span>;
 <span class="kw">use</span> <span class="ident">tokio::sync::mpsc::Sender</span>;
-<span class="kw">use</span> <span class="ident">tokio::sync::oneshot::channel</span>;
 
 <span class="kw">use</span> <span class="ident"><span class="self">self</span>::discovery::DiscoveryEvent</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">super</span>::intent_gossiper</span>;
@@ -379,6 +464,22 @@
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::node::gossip::behaviour::discovery</span>::{
     <span class="ident">DiscoveryBehaviour</span>, <span class="ident">DiscoveryConfigBuilder</span>,
 };
+
+<span class="doccomment">/// Behaviour is composed of a `DiscoveryBehaviour` and an GossipsubBehaviour`.</span>
+<span class="doccomment">/// It automatically connect to newly discovered peer, except specified</span>
+<span class="doccomment">/// otherwise, and propagates intents to other peers.</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">NetworkBehaviour</span>)]</span>
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Behaviour</span> {
+    <span class="kw">pub</span> <span class="ident">intent_gossip_behaviour</span>: <span class="ident">Gossipsub</span>,
+    <span class="kw">pub</span> <span class="ident">discover_behaviour</span>: <span class="ident">DiscoveryBehaviour</span>,
+    <span class="doccomment">/// The identify protocol allows establishing P2P connections via Kademlia</span>
+    <span class="ident">identify</span>: <span class="ident">Identify</span>,
+    <span class="doccomment">/// Responds to inbound pings and periodically sends outbound pings on</span>
+    <span class="doccomment">/// every established connection</span>
+    <span class="ident">ping</span>: <span class="ident">Ping</span>,
+    <span class="attribute">#[<span class="ident">behaviour</span>(<span class="ident">ignore</span>)]</span>
+    <span class="kw">pub</span> <span class="ident">mm_sender</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Sender</span><span class="op">&lt;</span><span class="ident">MatchmakerMessage</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+}
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Error</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">Error</span> {
@@ -476,17 +577,6 @@
     }
 }
 
-<span class="doccomment">/// Behaviour is composed of a `DiscoveryBehaviour` and an GossipsubBehaviour`.</span>
-<span class="doccomment">/// It automatically connect to newly discovered peer, except specified</span>
-<span class="doccomment">/// otherwise, and propagates intents to other peers.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">NetworkBehaviour</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Behaviour</span> {
-    <span class="kw">pub</span> <span class="ident">intent_gossip_behaviour</span>: <span class="ident">Gossipsub</span>,
-    <span class="kw">pub</span> <span class="ident">discover_behaviour</span>: <span class="ident">DiscoveryBehaviour</span>,
-    <span class="attribute">#[<span class="ident">behaviour</span>(<span class="ident">ignore</span>)]</span>
-    <span class="kw">pub</span> <span class="ident">mm_sender</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Sender</span><span class="op">&lt;</span><span class="ident">MatchmakerMessage</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-}
-
 <span class="doccomment">/// [message_id] use the hash of the message data as an id</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">message_id</span>(<span class="ident">message</span>: <span class="kw-2">&amp;</span><span class="ident">GossipsubMessage</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">MessageId</span> {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">hasher</span> <span class="op">=</span> <span class="ident">DefaultHasher::new</span>();
@@ -501,7 +591,8 @@
         <span class="ident">config</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="kw">crate</span>::config::IntentGossiper</span>,
         <span class="ident">mm_sender</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Sender</span><span class="op">&lt;</span><span class="ident">MatchmakerMessage</span><span class="op">&gt;</span><span class="op">&gt;</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
-        <span class="kw">let</span> <span class="ident">peer_id</span> <span class="op">=</span> <span class="ident">PeerId::from_public_key</span>(<span class="ident">key</span>.<span class="ident">public</span>());
+        <span class="kw">let</span> <span class="ident">public_key</span> <span class="op">=</span> <span class="ident">key</span>.<span class="ident">public</span>();
+        <span class="kw">let</span> <span class="ident">peer_id</span> <span class="op">=</span> <span class="ident">PeerId::from_public_key</span>(<span class="ident">public_key</span>.<span class="ident">clone</span>());
 
         <span class="comment">// TODO remove hardcoded value and add them to the config Except</span>
         <span class="comment">// validation_mode, protocol_id_prefix, message_id_fn and</span>
@@ -515,6 +606,8 @@
             .<span class="ident">max_transmit_size</span>(<span class="number">16</span> <span class="op">*</span> <span class="number">1024</span> <span class="op">*</span> <span class="number">1024</span>)
             .<span class="ident">validate_messages</span>()
             .<span class="ident">mesh_outbound_min</span>(<span class="number">1</span>)
+            <span class="comment">// TODO bootstrap peers should not be part of the mesh, so all the</span>
+            <span class="comment">// `.mesh` args should be set to 0 https://github.com/libp2p/specs/blob/70d7fda47dda88d828b4db72775c1602de57e91b/pubsub/gossipsub/gossipsub-v1.1.md#recommendations-for-network-operators</span>
             .<span class="ident">mesh_n_low</span>(<span class="number">2</span>)
             .<span class="ident">mesh_n</span>(<span class="number">3</span>)
             .<span class="ident">mesh_n_high</span>(<span class="number">6</span>)
@@ -566,25 +659,29 @@
         <span class="kw">let</span> <span class="ident">discover_behaviour</span> <span class="op">=</span> {
             <span class="comment">// TODO: check that bootstrap_peers are in multiaddr (otherwise it</span>
             <span class="comment">// fails silently)</span>
-            <span class="kw">let</span> <span class="ident">discover_config</span> <span class="op">=</span> <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">discover_config</span>) <span class="op">=</span>
-                <span class="kw-2">&amp;</span><span class="ident">config</span>.<span class="ident">discover_peer</span>
-            {
-                <span class="ident">DiscoveryConfigBuilder::default</span>()
-                    .<span class="ident">with_user_defined</span>(<span class="ident">discover_config</span>.<span class="ident">bootstrap_peers</span>.<span class="ident">clone</span>())
-                    .<span class="ident">discovery_limit</span>(<span class="ident">discover_config</span>.<span class="ident">max_discovery_peers</span>)
-                    .<span class="ident">with_kademlia</span>(<span class="ident">discover_config</span>.<span class="ident">kademlia</span>)
-                    .<span class="ident">with_mdns</span>(<span class="ident">discover_config</span>.<span class="ident">mdns</span>)
-                    .<span class="ident">use_kademlia_disjoint_query_paths</span>(<span class="bool-val">true</span>)
-                    .<span class="ident">build</span>()
-                    .<span class="ident">unwrap</span>()
-            } <span class="kw">else</span> {
-                <span class="ident">DiscoveryConfigBuilder::default</span>().<span class="ident">build</span>().<span class="ident">unwrap</span>()
-            };
+            <span class="kw">let</span> <span class="ident">discover_config</span> <span class="op">=</span>
+                <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">discover_config</span>) <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">config</span>.<span class="ident">discover_peer</span> {
+                    <span class="ident">DiscoveryConfigBuilder::default</span>()
+                        .<span class="ident">with_user_defined</span>(<span class="ident">config</span>.<span class="ident">seed_peers</span>.<span class="ident">clone</span>())
+                        .<span class="ident">discovery_limit</span>(<span class="ident">discover_config</span>.<span class="ident">max_discovery_peers</span>)
+                        .<span class="ident">with_kademlia</span>(<span class="ident">discover_config</span>.<span class="ident">kademlia</span>)
+                        .<span class="ident">with_mdns</span>(<span class="ident">discover_config</span>.<span class="ident">mdns</span>)
+                        .<span class="ident">use_kademlia_disjoint_query_paths</span>(<span class="bool-val">true</span>)
+                        .<span class="ident">build</span>()
+                        .<span class="ident">unwrap</span>()
+                } <span class="kw">else</span> {
+                    <span class="ident">DiscoveryConfigBuilder::default</span>().<span class="ident">build</span>().<span class="ident">unwrap</span>()
+                };
             <span class="ident">DiscoveryBehaviour::new</span>(<span class="ident">peer_id</span>, <span class="ident">discover_config</span>).<span class="ident">unwrap</span>()
         };
         <span class="self">Self</span> {
             <span class="ident">intent_gossip_behaviour</span>,
             <span class="ident">discover_behaviour</span>,
+            <span class="ident">identify</span>: <span class="ident">Identify::new</span>(<span class="ident">IdentifyConfig::new</span>(
+                <span class="string">&quot;anoma/id/anoma/id/1.0.0&quot;</span>.<span class="ident">into</span>(),
+                <span class="ident">public_key</span>,
+            )),
+            <span class="ident">ping</span>: <span class="ident">Ping::default</span>(),
             <span class="ident">mm_sender</span>,
         }
     }
@@ -593,7 +690,8 @@
     <span class="doccomment">/// is rejected. If the matchmaker fails the message is only ignore</span>
     <span class="kw">fn</span> <span class="ident">handle_intent</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">intent</span>: <span class="ident">Intent</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">MessageAcceptance</span> {
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">sender</span>) <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">mm_sender</span> {
-            <span class="kw">let</span> (<span class="ident">response_sender</span>, <span class="kw-2">mut</span> <span class="ident">response_receiver</span>) <span class="op">=</span> <span class="ident">channel</span>::<span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span>();
+            <span class="kw">let</span> (<span class="ident">response_sender</span>, <span class="ident">response_receiver</span>) <span class="op">=</span>
+                <span class="ident">std::sync::mpsc::channel</span>::<span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span>();
             <span class="ident">sender</span>
                 .<span class="ident">try_send</span>(<span class="ident">MatchmakerMessage::ApplyIntent</span>(
                     <span class="ident">intent</span>,
@@ -605,7 +703,7 @@
                         <span class="ident">err</span>
                     );
                 });
-            <span class="kw">return</span> <span class="kw">match</span> <span class="ident">response_receiver</span>.<span class="ident">try_recv</span>() {
+            <span class="kw">return</span> <span class="kw">match</span> <span class="ident">response_receiver</span>.<span class="ident">recv</span>() {
                 <span class="prelude-val">Ok</span>(<span class="bool-val">true</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">MessageAcceptance::Accept</span>,
                 <span class="prelude-val">Ok</span>(<span class="bool-val">false</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">MessageAcceptance::Reject</span>,
                 <span class="prelude-val">Err</span>(<span class="ident">err</span>) <span class="op">=</span><span class="op">&gt;</span> {
@@ -699,6 +797,76 @@
                 <span class="macro">tracing::info!</span>(<span class="string">&quot;Peer disconnected: {:?}&quot;</span>, <span class="ident">peer</span>)
             }
             <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> {}
+        }
+    }
+}
+
+<span class="kw">impl</span> <span class="ident">NetworkBehaviourEventProcess</span><span class="op">&lt;</span><span class="ident">IdentifyEvent</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Behaviour</span> {
+    <span class="kw">fn</span> <span class="ident">inject_event</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">event</span>: <span class="ident">IdentifyEvent</span>) {
+        <span class="kw">match</span> <span class="ident">event</span> {
+            <span class="ident">IdentifyEvent::Received</span> { <span class="ident">peer_id</span>, <span class="ident">info</span> } <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="macro">tracing::debug!</span>(<span class="string">&quot;Identified Peer {}&quot;</span>, <span class="ident">peer_id</span>);
+                <span class="macro">tracing::debug!</span>(<span class="string">&quot;protocol_version {}&quot;</span>, <span class="ident">info</span>.<span class="ident">protocol_version</span>);
+                <span class="macro">tracing::debug!</span>(<span class="string">&quot;agent_version {}&quot;</span>, <span class="ident">info</span>.<span class="ident">agent_version</span>);
+                <span class="macro">tracing::debug!</span>(<span class="string">&quot;listening_addresses {:?}&quot;</span>, <span class="ident">info</span>.<span class="ident">listen_addrs</span>);
+                <span class="macro">tracing::debug!</span>(<span class="string">&quot;observed_address {}&quot;</span>, <span class="ident">info</span>.<span class="ident">observed_addr</span>);
+                <span class="macro">tracing::debug!</span>(<span class="string">&quot;protocols {:?}&quot;</span>, <span class="ident">info</span>.<span class="ident">protocols</span>);
+                <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">kad</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">discover_behaviour</span>.<span class="ident">kademlia</span>.<span class="ident">as_mut</span>() {
+                    <span class="comment">// Only the first address is the public IP, the others</span>
+                    <span class="comment">// seem to be private</span>
+                    <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">addr</span>) <span class="op">=</span> <span class="ident">info</span>.<span class="ident">listen_addrs</span>.<span class="ident">first</span>() {
+                        <span class="macro">tracing::debug!</span>(
+                            <span class="string">&quot;Routing updated peer ID: {}, address: {}&quot;</span>,
+                            <span class="ident">peer_id</span>,
+                            <span class="ident">addr</span>
+                        );
+                        <span class="kw">let</span> <span class="ident">_update</span> <span class="op">=</span> <span class="ident">kad</span>.<span class="ident">add_address</span>(<span class="kw-2">&amp;</span><span class="ident">peer_id</span>, <span class="ident">addr</span>.<span class="ident">clone</span>());
+                    }
+                }
+            }
+            <span class="ident">IdentifyEvent::Sent</span> { .. } <span class="op">=</span><span class="op">&gt;</span> (),
+            <span class="ident">IdentifyEvent::Pushed</span> { .. } <span class="op">=</span><span class="op">&gt;</span> (),
+            <span class="ident">IdentifyEvent::Error</span> { <span class="ident">peer_id</span>, <span class="ident">error</span> } <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="macro">tracing::error!</span>(
+                    <span class="string">&quot;Error while attempting to identify the remote peer {}: \
+                     {},&quot;</span>,
+                    <span class="ident">peer_id</span>,
+                    <span class="ident">error</span>
+                );
+            }
+        }
+    }
+}
+
+<span class="kw">impl</span> <span class="ident">NetworkBehaviourEventProcess</span><span class="op">&lt;</span><span class="ident">PingEvent</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Behaviour</span> {
+    <span class="kw">fn</span> <span class="ident">inject_event</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">event</span>: <span class="ident">PingEvent</span>) {
+        <span class="kw">match</span> <span class="ident">event</span>.<span class="ident">result</span> {
+            <span class="prelude-val">Ok</span>(<span class="ident">PingSuccess::Ping</span> { <span class="ident">rtt</span> }) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="macro">tracing::debug!</span>(
+                    <span class="string">&quot;PingSuccess::Ping rtt to {} is {} ms&quot;</span>,
+                    <span class="ident">event</span>.<span class="ident">peer</span>.<span class="ident">to_base58</span>(),
+                    <span class="ident">rtt</span>.<span class="ident">as_millis</span>()
+                );
+            }
+            <span class="prelude-val">Ok</span>(<span class="ident">PingSuccess::Pong</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="macro">tracing::debug!</span>(
+                    <span class="string">&quot;PingSuccess::Pong from {}&quot;</span>,
+                    <span class="ident">event</span>.<span class="ident">peer</span>.<span class="ident">to_base58</span>()
+                );
+            }
+            <span class="prelude-val">Err</span>(<span class="ident">PingFailure::Timeout</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="macro">tracing::warn!</span>(
+                    <span class="string">&quot;PingFailure::Timeout {}&quot;</span>,
+                    <span class="ident">event</span>.<span class="ident">peer</span>.<span class="ident">to_base58</span>()
+                );
+            }
+            <span class="prelude-val">Err</span>(<span class="ident">PingFailure::Other</span> { <span class="ident">error</span> }) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="macro">tracing::warn!</span>(
+                    <span class="string">&quot;PingFailure::Other {}: {}&quot;</span>,
+                    <span class="ident">event</span>.<span class="ident">peer</span>.<span class="ident">to_base58</span>(),
+                    <span class="ident">error</span>
+                );
+            }
         }
     }
 }

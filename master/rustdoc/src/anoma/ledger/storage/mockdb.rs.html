@@ -422,6 +422,23 @@
 <span id="422">422</span>
 <span id="423">423</span>
 <span id="424">424</span>
+<span id="425">425</span>
+<span id="426">426</span>
+<span id="427">427</span>
+<span id="428">428</span>
+<span id="429">429</span>
+<span id="430">430</span>
+<span id="431">431</span>
+<span id="432">432</span>
+<span id="433">433</span>
+<span id="434">434</span>
+<span id="435">435</span>
+<span id="436">436</span>
+<span id="437">437</span>
+<span id="438">438</span>
+<span id="439">439</span>
+<span id="440">440</span>
+<span id="441">441</span>
 </pre><pre class="rust"><code><span class="doccomment">//! DB mock for testing</span>
 
 <span class="kw">use</span> <span class="ident">std::cell::RefCell</span>;
@@ -433,6 +450,8 @@
     <span class="ident">BlockStateRead</span>, <span class="ident">BlockStateWrite</span>, <span class="ident">DBIter</span>, <span class="ident">DBWriteBatch</span>, <span class="ident">Error</span>, <span class="prelude-ty">Result</span>, <span class="ident">DB</span>,
 };
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::ledger::storage::types</span>::{<span class="self">self</span>, <span class="ident">KVBytes</span>, <span class="ident">PrefixIterator</span>};
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ferveo-tpke&quot;</span>)]</span>
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::types::storage::TxQueue</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::types::storage</span>::{<span class="ident">BlockHeight</span>, <span class="ident">Key</span>, <span class="ident">KeySeg</span>, <span class="ident">KEY_SEGMENT_SEPARATOR</span>};
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::types::time::DateTimeUtc</span>;
 
@@ -463,7 +482,7 @@
         <span class="ident"><span class="self">Self</span>::default</span>()
     }
 
-    <span class="kw">fn</span> <span class="ident">flush</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">flush</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">_wait</span>: <span class="ident">bool</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="prelude-val">Ok</span>(())
     }
 
@@ -492,6 +511,11 @@
                 }
                 <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>),
             };
+        <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ferveo-tpke&quot;</span>)]</span>
+        <span class="kw">let</span> <span class="ident">tx_queue</span>: <span class="ident">TxQueue</span> <span class="op">=</span> <span class="kw">match</span> <span class="self">self</span>.<span class="number">0</span>.<span class="ident">borrow</span>().<span class="ident">get</span>(<span class="string">&quot;tx_queue&quot;</span>) {
+            <span class="prelude-val">Some</span>(<span class="ident">bytes</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">types::decode</span>(<span class="ident">bytes</span>).<span class="ident">map_err</span>(<span class="ident">Error::CodingError</span>)<span class="question-mark">?</span>,
+            <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>),
+        };
 
         <span class="comment">// Load data at the height</span>
         <span class="kw">let</span> <span class="ident">prefix</span> <span class="op">=</span> <span class="macro">format!</span>(<span class="string">&quot;{}/&quot;</span>, <span class="ident">height</span>.<span class="ident">raw</span>());
@@ -572,6 +596,8 @@
                 <span class="ident">next_epoch_min_start_height</span>,
                 <span class="ident">next_epoch_min_start_time</span>,
                 <span class="ident">address_gen</span>,
+                <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ferveo-tpke&quot;</span>)]</span>
+                <span class="ident">tx_queue</span>,
             })),
             <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">Error::Temporary</span> {
                 <span class="ident">error</span>: <span class="string">&quot;Essential data couldn&#39;t be read from the DB&quot;</span>
@@ -591,6 +617,8 @@
             <span class="ident">next_epoch_min_start_height</span>,
             <span class="ident">next_epoch_min_start_time</span>,
             <span class="ident">address_gen</span>,
+            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ferveo-tpke&quot;</span>)]</span>
+            <span class="ident">tx_queue</span>,
         }: <span class="ident">BlockStateWrite</span> <span class="op">=</span> <span class="ident">state</span>;
 
         <span class="comment">// Epoch start height and time</span>
@@ -602,6 +630,12 @@
             <span class="string">&quot;next_epoch_min_start_time&quot;</span>.<span class="ident">into</span>(),
             <span class="ident">types::encode</span>(<span class="kw-2">&amp;</span><span class="ident">next_epoch_min_start_time</span>),
         );
+        <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ferveo-tpke&quot;</span>)]</span>
+        {
+            <span class="self">self</span>.<span class="number">0</span>
+                .<span class="ident">borrow_mut</span>()
+                .<span class="ident">insert</span>(<span class="string">&quot;tx_queue&quot;</span>.<span class="ident">into</span>(), <span class="ident">types::encode</span>(<span class="kw-2">&amp;</span><span class="ident">tx_queue</span>));
+        }
 
         <span class="kw">let</span> <span class="ident">prefix_key</span> <span class="op">=</span> <span class="ident">Key::from</span>(<span class="ident">height</span>.<span class="ident">to_db_key</span>());
         <span class="comment">// Merkle tree</span>

@@ -855,7 +855,7 @@
                 })
                 .<span class="ident">to_bytes</span>();
                 <span class="comment">// we are not checking that txs are out of order</span>
-                <span class="self">self</span>.<span class="ident">tx_queue</span>.<span class="ident">push</span>(<span class="ident">wrapper</span>);
+                <span class="self">self</span>.<span class="ident">storage</span>.<span class="ident">tx_queue</span>.<span class="ident">push</span>(<span class="ident">wrapper</span>);
                 <span class="comment">// check the decoded tx</span>
                 <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">decoded_resp</span> <span class="op">=</span>
                     <span class="self">self</span>.<span class="ident">process_proposal</span>(<span class="ident">shim::request::ProcessProposal</span> {
@@ -948,7 +948,7 @@
         <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
         {
             <span class="macro">assert_eq!</span>(<span class="ident">response</span>.<span class="ident">tx</span>, <span class="ident">tx</span>);
-            <span class="macro">assert!</span>(<span class="ident">shell</span>.<span class="ident">shell</span>.<span class="ident">tx_queue</span>.<span class="ident">is_empty</span>())
+            <span class="macro">assert!</span>(<span class="ident">shell</span>.<span class="ident">shell</span>.<span class="ident">storage</span>.<span class="ident">tx_queue</span>.<span class="ident">is_empty</span>())
         }
     }
 
@@ -1026,7 +1026,7 @@
         <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
         {
             <span class="macro">assert_eq!</span>(<span class="ident">response</span>.<span class="ident">tx</span>, <span class="ident">new_tx</span>.<span class="ident">to_bytes</span>());
-            <span class="macro">assert!</span>(<span class="ident">shell</span>.<span class="ident">shell</span>.<span class="ident">tx_queue</span>.<span class="ident">is_empty</span>())
+            <span class="macro">assert!</span>(<span class="ident">shell</span>.<span class="ident">shell</span>.<span class="ident">storage</span>.<span class="ident">tx_queue</span>.<span class="ident">is_empty</span>())
         }
     }
 
@@ -1065,7 +1065,7 @@
         <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
         {
             <span class="macro">assert_eq!</span>(<span class="ident">response</span>.<span class="ident">tx</span>, <span class="ident">wrapper</span>.<span class="ident">to_bytes</span>());
-            <span class="macro">assert!</span>(<span class="ident">shell</span>.<span class="ident">shell</span>.<span class="ident">tx_queue</span>.<span class="ident">is_empty</span>())
+            <span class="macro">assert!</span>(<span class="ident">shell</span>.<span class="ident">shell</span>.<span class="ident">storage</span>.<span class="ident">tx_queue</span>.<span class="ident">is_empty</span>())
         }
     }
 
@@ -1117,7 +1117,7 @@
         <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
         {
             <span class="macro">assert_eq!</span>(<span class="ident">response</span>.<span class="ident">tx</span>, <span class="ident">wrapper</span>.<span class="ident">to_bytes</span>());
-            <span class="macro">assert!</span>(<span class="ident">shell</span>.<span class="ident">shell</span>.<span class="ident">tx_queue</span>.<span class="ident">is_empty</span>())
+            <span class="macro">assert!</span>(<span class="ident">shell</span>.<span class="ident">shell</span>.<span class="ident">storage</span>.<span class="ident">tx_queue</span>.<span class="ident">is_empty</span>())
         }
     }
 
@@ -1264,7 +1264,7 @@
                         <span class="ident">hash_tx</span>(<span class="ident">inner</span>.<span class="ident">try_to_vec</span>().<span class="ident">unwrap</span>().<span class="ident">as_ref</span>()),
                         <span class="ident">hash_tx</span>(<span class="ident">wrapper</span>.<span class="ident">try_to_vec</span>().<span class="ident">unwrap</span>().<span class="ident">as_ref</span>())
                     );
-                    <span class="macro">assert!</span>(<span class="ident">shell</span>.<span class="ident">shell</span>.<span class="ident">tx_queue</span>.<span class="ident">is_empty</span>())
+                    <span class="macro">assert!</span>(<span class="ident">shell</span>.<span class="ident">shell</span>.<span class="ident">storage</span>.<span class="ident">tx_queue</span>.<span class="ident">is_empty</span>())
                 }
                 <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">panic!</span>(<span class="string">&quot;Test failed&quot;</span>),
             }

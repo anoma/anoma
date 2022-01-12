@@ -772,6 +772,59 @@
 <span id="772">772</span>
 <span id="773">773</span>
 <span id="774">774</span>
+<span id="775">775</span>
+<span id="776">776</span>
+<span id="777">777</span>
+<span id="778">778</span>
+<span id="779">779</span>
+<span id="780">780</span>
+<span id="781">781</span>
+<span id="782">782</span>
+<span id="783">783</span>
+<span id="784">784</span>
+<span id="785">785</span>
+<span id="786">786</span>
+<span id="787">787</span>
+<span id="788">788</span>
+<span id="789">789</span>
+<span id="790">790</span>
+<span id="791">791</span>
+<span id="792">792</span>
+<span id="793">793</span>
+<span id="794">794</span>
+<span id="795">795</span>
+<span id="796">796</span>
+<span id="797">797</span>
+<span id="798">798</span>
+<span id="799">799</span>
+<span id="800">800</span>
+<span id="801">801</span>
+<span id="802">802</span>
+<span id="803">803</span>
+<span id="804">804</span>
+<span id="805">805</span>
+<span id="806">806</span>
+<span id="807">807</span>
+<span id="808">808</span>
+<span id="809">809</span>
+<span id="810">810</span>
+<span id="811">811</span>
+<span id="812">812</span>
+<span id="813">813</span>
+<span id="814">814</span>
+<span id="815">815</span>
+<span id="816">816</span>
+<span id="817">817</span>
+<span id="818">818</span>
+<span id="819">819</span>
+<span id="820">820</span>
+<span id="821">821</span>
+<span id="822">822</span>
+<span id="823">823</span>
+<span id="824">824</span>
+<span id="825">825</span>
+<span id="826">826</span>
+<span id="827">827</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Storage types</span>
 <span class="kw">use</span> <span class="ident">std::convert</span>::{<span class="ident">TryFrom</span>, <span class="ident">TryInto</span>};
 <span class="kw">use</span> <span class="ident">std::fmt::Display</span>;
@@ -783,6 +836,8 @@
 <span class="kw">use</span> <span class="ident">serde</span>::{<span class="ident">Deserialize</span>, <span class="ident">Serialize</span>};
 <span class="kw">use</span> <span class="ident">thiserror::Error</span>;
 
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ferveo-tpke&quot;</span>)]</span>
+<span class="kw">use</span> <span class="ident"><span class="kw">super</span>::transaction::WrapperTx</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::bytes::ByteBuf</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::types::address</span>::{<span class="self">self</span>, <span class="ident">Address</span>};
 
@@ -1317,6 +1372,57 @@
             <span class="kw">return</span> <span class="prelude-val">Some</span>(<span class="ident">epoch</span>);
         }
         <span class="prelude-val">None</span>
+    }
+}
+
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ferveo-tpke&quot;</span>)]</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Default</span>, <span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">BorshDeserialize</span>, <span class="ident">BorshSerialize</span>)]</span>
+<span class="doccomment">/// Wrapper txs to be decrypted in the next block proposal</span>
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">TxQueue</span> {
+    <span class="doccomment">/// Index of next wrapper_tx to fetch from storage</span>
+    <span class="ident">next_wrapper</span>: <span class="ident">usize</span>,
+    <span class="doccomment">/// The actual wrappers</span>
+    <span class="ident">queue</span>: <span class="ident">std::collections::VecDeque</span><span class="op">&lt;</span><span class="ident">WrapperTx</span><span class="op">&gt;</span>,
+}
+
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ferveo-tpke&quot;</span>)]</span>
+<span class="kw">impl</span> <span class="ident">TxQueue</span> {
+    <span class="doccomment">/// Add a new wrapper at the back of the queue</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">push</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">wrapper</span>: <span class="ident">WrapperTx</span>) {
+        <span class="self">self</span>.<span class="ident">queue</span>.<span class="ident">push_back</span>(<span class="ident">wrapper</span>);
+    }
+
+    <span class="doccomment">/// Remove the wrapper at the head of the queue</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">pop</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">WrapperTx</span><span class="op">&gt;</span> {
+        <span class="self">self</span>.<span class="ident">queue</span>.<span class="ident">pop_front</span>()
+    }
+
+    <span class="doccomment">/// Iterate lazily over the queue. Finds the next value and advances the</span>
+    <span class="doccomment">/// lazy iterator.</span>
+    <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">dead_code</span>)]</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">lazy_next</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">WrapperTx</span><span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="ident">next</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">queue</span>.<span class="ident">get</span>(<span class="self">self</span>.<span class="ident">next_wrapper</span>);
+        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">next_wrapper</span> <span class="op">&lt;</span> <span class="self">self</span>.<span class="ident">queue</span>.<span class="ident">len</span>() {
+            <span class="self">self</span>.<span class="ident">next_wrapper</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
+        }
+        <span class="ident">next</span>
+    }
+
+    <span class="doccomment">/// Reset the iterator to the head of the queue</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">rewind</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) {
+        <span class="self">self</span>.<span class="ident">next_wrapper</span> <span class="op">=</span> <span class="number">0</span>;
+    }
+
+    <span class="doccomment">/// Get an iterator over the queue</span>
+    <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">dead_code</span>)]</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">iter</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">impl</span> <span class="ident">std::iter::Iterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">WrapperTx</span><span class="op">&gt;</span> {
+        <span class="self">self</span>.<span class="ident">queue</span>.<span class="ident">iter</span>()
+    }
+
+    <span class="doccomment">/// Check if there are any txs in the queue</span>
+    <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">dead_code</span>)]</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_empty</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
+        <span class="self">self</span>.<span class="ident">queue</span>.<span class="ident">is_empty</span>()
     }
 }
 

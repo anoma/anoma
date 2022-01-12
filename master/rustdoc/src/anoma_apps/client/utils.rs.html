@@ -739,6 +739,24 @@
 <span id="739">739</span>
 <span id="740">740</span>
 <span id="741">741</span>
+<span id="742">742</span>
+<span id="743">743</span>
+<span id="744">744</span>
+<span id="745">745</span>
+<span id="746">746</span>
+<span id="747">747</span>
+<span id="748">748</span>
+<span id="749">749</span>
+<span id="750">750</span>
+<span id="751">751</span>
+<span id="752">752</span>
+<span id="753">753</span>
+<span id="754">754</span>
+<span id="755">755</span>
+<span id="756">756</span>
+<span id="757">757</span>
+<span id="758">758</span>
+<span id="759">759</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std::collections</span>::{<span class="ident">HashMap</span>, <span class="ident">HashSet</span>};
 <span class="kw">use</span> <span class="ident">std::fs</span>::{<span class="self">self</span>, <span class="ident">File</span>, <span class="ident">OpenOptions</span>};
 <span class="kw">use</span> <span class="ident">std::io</span>::{<span class="ident">Read</span>, <span class="ident">Write</span>};
@@ -788,9 +806,6 @@
     <span class="ident">global_args</span>: <span class="ident">args::Global</span>,
     <span class="ident">args::JoinNetwork</span> { <span class="ident">chain_id</span> }: <span class="ident">args::JoinNetwork</span>,
 ) {
-    <span class="kw">let</span> <span class="ident">chain_dir</span> <span class="op">=</span> <span class="ident">global_args</span>.<span class="ident">base_dir</span>.<span class="ident">join</span>(<span class="ident">chain_id</span>.<span class="ident">as_str</span>());
-    <span class="ident">fs::create_dir_all</span>(<span class="kw-2">&amp;</span><span class="ident">chain_dir</span>).<span class="ident">expect</span>(<span class="string">&quot;Couldn&#39;t create chain directory&quot;</span>);
-
     <span class="kw">let</span> <span class="ident">release_filename</span> <span class="op">=</span> <span class="macro">format!</span>(<span class="string">&quot;{}.tar.gz&quot;</span>, <span class="ident">chain_id</span>);
     <span class="kw">let</span> <span class="ident">release_url</span> <span class="op">=</span>
         <span class="macro">format!</span>(<span class="string">&quot;{}/{}/{}&quot;</span>, <span class="ident">RELEASE_PREFIX</span>, <span class="ident">chain_id</span>, <span class="ident">release_filename</span>);
@@ -805,6 +820,14 @@
     <span class="ident">decoder</span>.<span class="ident">read_to_string</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">tar</span>).<span class="ident">unwrap</span>();
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">archive</span> <span class="op">=</span> <span class="ident">tar::Archive::new</span>(<span class="ident">tar</span>.<span class="ident">as_bytes</span>());
     <span class="ident">archive</span>.<span class="ident">unpack</span>(<span class="string">&quot;.&quot;</span>).<span class="ident">unwrap</span>();
+
+    <span class="comment">// If the base-dir is not the default, move the network config into it</span>
+    <span class="kw">let</span> <span class="ident">base_dir_name</span> <span class="op">=</span> <span class="ident">global_args</span>.<span class="ident">base_dir</span>.<span class="ident">file_name</span>();
+    <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">base_dir_name</span>) <span class="op">=</span> <span class="ident">base_dir_name</span> {
+        <span class="kw">if</span> <span class="ident">base_dir_name</span> <span class="op">!</span><span class="op">=</span> <span class="ident">config::DEFAULT_BASE_DIR</span> {
+            <span class="ident">tokio::fs::rename</span>(<span class="string">&quot;.anoma&quot;</span>, <span class="ident">base_dir_name</span>).<span class="kw">await</span>.<span class="ident">unwrap</span>();
+        }
+    }
 
     <span class="macro">println!</span>(<span class="string">&quot;Successfully configured for chain ID {}&quot;</span>, <span class="ident">chain_id</span>);
 }
@@ -857,7 +880,7 @@
         <span class="ident">Vec::with_capacity</span>(<span class="ident">config</span>.<span class="ident">validator</span>.<span class="ident">len</span>());
     <span class="comment">// Intent gossiper config bootstrap peers where we&#39;ll add the address for</span>
     <span class="comment">// each validator&#39;s node</span>
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">bootstrap_peers</span>: <span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">PeerAddress</span><span class="op">&gt;</span> <span class="op">=</span>
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">seed_peers</span>: <span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">PeerAddress</span><span class="op">&gt;</span> <span class="op">=</span>
         <span class="ident">HashSet::with_capacity</span>(<span class="ident">config</span>.<span class="ident">validator</span>.<span class="ident">len</span>());
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">gossiper_configs</span>: <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">String</span>, <span class="ident">IntentGossiper</span><span class="op">&gt;</span> <span class="op">=</span>
         <span class="ident">HashMap::with_capacity</span>(<span class="ident">config</span>.<span class="ident">validator</span>.<span class="ident">len</span>());
@@ -937,6 +960,10 @@
             )
             .<span class="ident">unwrap</span>()
         };
+        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">discover</span>) <span class="op">=</span> <span class="ident">gossiper_config</span>.<span class="ident">discover_peer</span>.<span class="ident">as_mut</span>() {
+            <span class="comment">// Disable mDNS local network peer discovery on the validator nodes</span>
+            <span class="ident">discover</span>.<span class="ident">mdns</span> <span class="op">=</span> <span class="bool-val">false</span>;
+        }
         <span class="kw">let</span> <span class="ident">intent_peer</span> <span class="op">=</span> <span class="ident">PeerAddress</span> {
             <span class="ident">address</span>: <span class="ident">intent_peer_address</span>,
             <span class="ident">peer_id</span>,
@@ -995,6 +1022,10 @@
             <span class="kw-2">&amp;</span><span class="ident">config</span>.<span class="ident">matchmaker_tx</span>,
         ) {
             (<span class="prelude-val">Some</span>(<span class="ident">account</span>), <span class="prelude-val">Some</span>(<span class="ident">mm_code</span>), <span class="prelude-val">Some</span>(<span class="ident">tx_code</span>)) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="kw">if</span> <span class="ident">config</span>.<span class="ident">intent_gossip_seed</span>.<span class="ident">unwrap_or_default</span>() {
+                    <span class="macro">eprintln!</span>(<span class="string">&quot;A bootstrap node cannot run matchmakers&quot;</span>);
+                    <span class="ident">cli::safe_exit</span>(<span class="number">1</span>)
+                }
                 <span class="kw">match</span> <span class="ident">established_accounts</span>.<span class="ident">as_ref</span>().<span class="ident">and_then</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">e</span>.<span class="ident">get</span>(<span class="ident">account</span>))
                 {
                     <span class="prelude-val">Some</span>(<span class="ident">matchmaker</span>) <span class="op">=</span><span class="op">&gt;</span> {
@@ -1043,10 +1074,19 @@
 
         <span class="comment">// Store the gossip config</span>
         <span class="ident">gossiper_configs</span>.<span class="ident">insert</span>(<span class="ident">name</span>.<span class="ident">clone</span>(), <span class="ident">gossiper_config</span>);
-        <span class="ident">bootstrap_peers</span>.<span class="ident">insert</span>(<span class="ident">intent_peer</span>);
+        <span class="kw">if</span> <span class="ident">config</span>.<span class="ident">intent_gossip_seed</span>.<span class="ident">unwrap_or_default</span>() {
+            <span class="ident">seed_peers</span>.<span class="ident">insert</span>(<span class="ident">intent_peer</span>);
+        }
 
         <span class="ident">wallet</span>.<span class="ident">save</span>().<span class="ident">unwrap</span>();
     });
+
+    <span class="kw">if</span> <span class="ident">seed_peers</span>.<span class="ident">is_empty</span>() <span class="op">&amp;&amp;</span> <span class="ident">config</span>.<span class="ident">validator</span>.<span class="ident">len</span>() <span class="op">&gt;</span> <span class="number">1</span> {
+        <span class="macro">tracing::warn!</span>(
+            <span class="string">&quot;At least 1 validator with `intent_gossip_seed = true` is needed \
+             to established connection between the intent gossiper nodes&quot;</span>
+        );
+    }
 
     <span class="comment">// Create a wallet for all accounts other than validators</span>
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">wallet</span> <span class="op">=</span>
@@ -1225,9 +1265,7 @@
 
             <span class="comment">// Configure the intent gossiper</span>
             <span class="ident">config</span>.<span class="ident">intent_gossiper</span> <span class="op">=</span> <span class="ident">gossiper_configs</span>.<span class="ident">remove</span>(<span class="ident">name</span>).<span class="ident">unwrap</span>();
-            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">discover</span>) <span class="op">=</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">config</span>.<span class="ident">intent_gossiper</span>.<span class="ident">discover_peer</span> {
-                <span class="ident">discover</span>.<span class="ident">bootstrap_peers</span> <span class="op">=</span> <span class="ident">bootstrap_peers</span>.<span class="ident">clone</span>();
-            }
+            <span class="ident">config</span>.<span class="ident">intent_gossiper</span>.<span class="ident">seed_peers</span> <span class="op">=</span> <span class="ident">seed_peers</span>.<span class="ident">clone</span>();
             <span class="ident">config</span>.<span class="ident">intent_gossiper</span>.<span class="ident">rpc</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">config::RpcServer</span> {
                 <span class="ident">address</span>: <span class="ident">SocketAddr::new</span>(
                     <span class="ident">IpAddr::V4</span>(<span class="kw">if</span> <span class="ident">localhost</span> {
@@ -1262,9 +1300,7 @@
             .<span class="ident">set_ip</span>(<span class="ident">IpAddr::V4</span>(<span class="ident">Ipv4Addr::new</span>(<span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>)));
     }
     <span class="ident">config</span>.<span class="ident">ledger</span>.<span class="ident">genesis_time</span> <span class="op">=</span> <span class="ident">genesis</span>.<span class="ident">genesis_time</span>.<span class="ident">into</span>();
-    <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">discover</span>) <span class="op">=</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">config</span>.<span class="ident">intent_gossiper</span>.<span class="ident">discover_peer</span> {
-        <span class="ident">discover</span>.<span class="ident">bootstrap_peers</span> <span class="op">=</span> <span class="ident">bootstrap_peers</span>;
-    }
+    <span class="ident">config</span>.<span class="ident">intent_gossiper</span>.<span class="ident">seed_peers</span> <span class="op">=</span> <span class="ident">seed_peers</span>;
     <span class="ident">config</span>
         .<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="ident">global_args</span>.<span class="ident">base_dir</span>, <span class="kw-2">&amp;</span><span class="ident">chain_id</span>, <span class="bool-val">true</span>)
         .<span class="ident">unwrap</span>();
