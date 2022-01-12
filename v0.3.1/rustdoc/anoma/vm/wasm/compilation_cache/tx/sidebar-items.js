@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["Name","Tx cache name"]],"type":[["TxCache","Tx WASM compilation cache handle. Thread-safe."]]});

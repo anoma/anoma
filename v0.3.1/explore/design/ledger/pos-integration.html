@@ -1,0 +1,501 @@
+<!DOCTYPE HTML>
+<html lang="en" class="sidebar-visible no-js light">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>PoS integration - Anoma - DOCS</title>
+        <!-- Custom HTML head -->
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        <link rel="icon" href="../../../favicon.svg">
+        <link rel="shortcut icon" href="../../../favicon.png">
+        <link rel="stylesheet" href="../../../css/variables.css">
+        <link rel="stylesheet" href="../../../css/general.css">
+        <link rel="stylesheet" href="../../../css/chrome.css">
+        <link rel="stylesheet" href="../../../css/print.css" media="print">
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../../../FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="../../../fonts/fonts.css">
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="../../../highlight.css">
+        <link rel="stylesheet" href="../../../tomorrow-night.css">
+        <link rel="stylesheet" href="../../../ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+        <link rel="stylesheet" href="../../../assets/custom.css">
+        <!-- MathJax -->
+        <script async type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    </head>
+    <body>
+        <!-- Provide site root to javascript -->
+        <script type="text/javascript">
+            var path_to_root = "../../../";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script type="text/javascript">
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script type="text/javascript">
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add('js');
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script type="text/javascript">
+            var html = document.querySelector('html');
+            var sidebar = 'hidden';
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded "><a href="../../../index.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="../../../quick-start.html"><strong aria-hidden="true">2.</strong> Quick Start</a></li><li class="chapter-item expanded "><a href="../../../user-guide/index.html"><strong aria-hidden="true">3.</strong> User Guide</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../../../user-guide/install.html"><strong aria-hidden="true">3.1.</strong> Install</a></li><li class="chapter-item expanded "><a href="../../../user-guide/getting-started.html"><strong aria-hidden="true">3.2.</strong> Getting started</a></li><li class="chapter-item expanded "><a href="../../../user-guide/wallet.html"><strong aria-hidden="true">3.3.</strong> The Wallet</a></li><li class="chapter-item expanded "><a href="../../../user-guide/ledger.html"><strong aria-hidden="true">3.4.</strong> The Ledger</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../../../user-guide/ledger/pos.html"><strong aria-hidden="true">3.4.1.</strong> Interact with PoS</a></li><li class="chapter-item expanded "><a href="../../../user-guide/ledger/customize.html"><strong aria-hidden="true">3.4.2.</strong> Customize</a></li></ol></li><li class="chapter-item expanded "><a href="../../../user-guide/intent-gossip-and-matchmaker.html"><strong aria-hidden="true">3.5.</strong> The Intent gossip and Matchmaker</a></li></ol></li><li class="chapter-item expanded "><a href="../../../explore/index.html"><strong aria-hidden="true">4.</strong> Exploration</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../../../explore/design/index.html"><strong aria-hidden="true">4.1.</strong> Design</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../../../explore/design/overview.html"><strong aria-hidden="true">4.1.1.</strong> Overview</a></li><li class="chapter-item expanded "><a href="../../../explore/design/gossip.html"><strong aria-hidden="true">4.1.2.</strong> Gossip network</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../../../explore/design/intent_gossip/intent_gossip.html"><strong aria-hidden="true">4.1.2.1.</strong> Intent gossip</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../../../explore/design/intent_gossip/intent.html"><strong aria-hidden="true">4.1.2.1.1.</strong> Intent</a></li><li class="chapter-item expanded "><a href="../../../explore/design/intent_gossip/topic.html"><strong aria-hidden="true">4.1.2.1.2.</strong> Topic</a></li><li class="chapter-item expanded "><a href="../../../explore/design/intent_gossip/incentive.html"><strong aria-hidden="true">4.1.2.1.3.</strong> Incentive</a></li><li class="chapter-item expanded "><a href="../../../explore/design/intent_gossip/matchmaker.html"><strong aria-hidden="true">4.1.2.1.4.</strong> Matchmaker</a></li><li class="chapter-item expanded "><a href="../../../explore/design/intent_gossip/fungible_token.html"><strong aria-hidden="true">4.1.2.1.5.</strong> Fungible token</a></li></ol></li><li class="chapter-item expanded "><a href="../../../explore/design/dkg.html"><strong aria-hidden="true">4.1.2.2.</strong> Distributed key generation gossip</a></li></ol></li><li class="chapter-item expanded "><a href="../../../explore/design/ledger.html"><strong aria-hidden="true">4.1.3.</strong> The ledger</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../../../explore/design/ledger/parameters.html"><strong aria-hidden="true">4.1.3.1.</strong> Parameters</a></li><li class="chapter-item expanded "><a href="../../../explore/design/ledger/epochs.html"><strong aria-hidden="true">4.1.3.2.</strong> Epochs</a></li><li class="chapter-item expanded "><a href="../../../explore/design/ledger/accounts.html"><strong aria-hidden="true">4.1.3.3.</strong> Accounts</a></li><li class="chapter-item expanded "><a href="../../../explore/design/ledger/vp.html"><strong aria-hidden="true">4.1.3.4.</strong> Validity predicates</a></li><li class="chapter-item expanded "><a href="../../../explore/design/ledger/tx.html"><strong aria-hidden="true">4.1.3.5.</strong> Transactions</a></li><li class="chapter-item expanded "><a href="../../../explore/design/ledger/wasm-vm.html"><strong aria-hidden="true">4.1.3.6.</strong> WASM VM</a></li><li class="chapter-item expanded "><a href="../../../explore/design/ledger/front-running.html"><strong aria-hidden="true">4.1.3.7.</strong> Front-running prevention</a></li><li class="chapter-item expanded "><a href="../../../explore/design/ledger/fractal-scaling.html"><strong aria-hidden="true">4.1.3.8.</strong> Fractal scaling</a></li><li class="chapter-item expanded "><a href="../../../explore/design/upgrade-system.html"><strong aria-hidden="true">4.1.3.9.</strong> Upgrade system</a></li><li class="chapter-item expanded "><a href="../../../explore/design/ledger/storage.html"><strong aria-hidden="true">4.1.3.10.</strong> Storage</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../../../explore/design/ledger/storage/data-schema.html"><strong aria-hidden="true">4.1.3.10.1.</strong> Data schema</a></li></ol></li><li class="chapter-item expanded "><a href="../../../explore/design/ledger/pos-integration.html" class="active"><strong aria-hidden="true">4.1.3.11.</strong> PoS integration</a></li></ol></li><li class="chapter-item expanded "><a href="../../../explore/design/crypto-primitives.html"><strong aria-hidden="true">4.1.4.</strong> Crypto primitives</a></li><li class="chapter-item expanded "><a href="../../../explore/design/actors.html"><strong aria-hidden="true">4.1.5.</strong> Actors</a></li><li class="chapter-item expanded "><a href="../../../explore/design/pos.html"><strong aria-hidden="true">4.1.6.</strong> Proof of Stake system</a></li></ol></li><li class="chapter-item expanded "><a href="../../../explore/prototypes/index.html"><strong aria-hidden="true">4.2.</strong> Prototypes</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../../../explore/prototypes/base-ledger.html"><strong aria-hidden="true">4.2.1.</strong> Base ledger</a></li><li class="chapter-item expanded "><a href="../../../explore/prototypes/gossip-layer.html"><strong aria-hidden="true">4.2.2.</strong> Gossip layer</a></li></ol></li><li class="chapter-item expanded "><a href="../../../explore/libraries/index.html"><strong aria-hidden="true">4.3.</strong> Libraries &amp; Tools</a></li><li><ol class="section"><li class="chapter-item expanded "><div><strong aria-hidden="true">4.3.1.</strong> Cryptography</div></li><li class="chapter-item expanded "><a href="../../../explore/libraries/network.html"><strong aria-hidden="true">4.3.2.</strong> network</a></li><li class="chapter-item expanded "><a href="../../../explore/libraries/cli.html"><strong aria-hidden="true">4.3.3.</strong> Command-line interface</a></li><li class="chapter-item expanded "><a href="../../../explore/libraries/db.html"><strong aria-hidden="true">4.3.4.</strong> Database</a></li><li class="chapter-item expanded "><a href="../../../explore/libraries/logging.html"><strong aria-hidden="true">4.3.5.</strong> Logging</a></li><li class="chapter-item expanded "><div><strong aria-hidden="true">4.3.6.</strong> Networking</div></li><li class="chapter-item expanded "><a href="../../../explore/libraries/packaging.html"><strong aria-hidden="true">4.3.7.</strong> Packaging</a></li><li class="chapter-item expanded "><a href="../../../explore/libraries/serialization.html"><strong aria-hidden="true">4.3.8.</strong> Serialization</a></li><li class="chapter-item expanded "><a href="../../../explore/libraries/wasm.html"><strong aria-hidden="true">4.3.9.</strong> WASM runtime</a></li><li class="chapter-item expanded "><a href="../../../explore/libraries/errors.html"><strong aria-hidden="true">4.3.10.</strong> Error handling</a></li></ol></li><li class="chapter-item expanded "><a href="../../../explore/design/glossary.html"><strong aria-hidden="true">4.4.</strong> Glossary</a></li><li class="chapter-item expanded "><a href="../../../explore/resources/index.html"><strong aria-hidden="true">4.5.</strong> Resources</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../../../explore/resources/ide.html"><strong aria-hidden="true">4.5.1.</strong> IDE</a></li></ol></li></ol></li><li class="chapter-item expanded "><a href="../../../specs/index.html"><strong aria-hidden="true">5.</strong> Specifications</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../../../specs/overview.html"><strong aria-hidden="true">5.1.</strong> Overview</a></li><li class="chapter-item expanded "><a href="../../../specs/ledger.html"><strong aria-hidden="true">5.2.</strong> The ledger</a></li><li class="chapter-item expanded "><div><strong aria-hidden="true">5.3.</strong> Trade system</div></li><li class="chapter-item expanded "><div><strong aria-hidden="true">5.4.</strong> Intent gossip system</div></li><li class="chapter-item expanded "><div><strong aria-hidden="true">5.5.</strong> Fractal scaling</div></li><li class="chapter-item expanded "><div><strong aria-hidden="true">5.6.</strong> Upgrade system</div></li><li class="chapter-item expanded "><a href="../../../specs/encoding.html"><strong aria-hidden="true">5.7.</strong> Encoding</a></li></ol></li><li class="chapter-item expanded "><a href="../../../archive/index.html"><strong aria-hidden="true">6.</strong> Archive</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../../../archive/domain-name-addresses.html"><strong aria-hidden="true">6.1.</strong> Domain name addresses</a></li></ol></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky bordered">
+                    <div class="left-buttons">
+                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </button>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light (default)</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">Anoma - DOCS</h1>
+
+                    <div class="right-buttons">
+                        <a href="../../../print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script type="text/javascript">
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="pos-integration"><a class="header" href="#pos-integration">PoS integration</a></h1>
+<p>The <a href="../pos.html">PoS system</a> is integrated into Anoma ledger at 3 different layers:</p>
+<ul>
+<li>base ledger that performs genesis initialization, validator set updates on new epoch and applies slashes when they are received from ABCI</li>
+<li>an account with an internal address and a <a href="vp.html#native-vps">native VP</a> that validates any changes applied by transactions to the PoS account state</li>
+<li>transaction WASMs to perform various PoS actions, also available as a library code for custom made transactions</li>
+</ul>
+<p>The <code>votes_per_token</code> PoS system parameter must be chosen to satisfy the <a href="https://github.com/tendermint/spec/blob/60395941214439339cc60040944c67893b5f8145/spec/abci/apps.md#validator-updates">Tendermint requirement</a> of <code>MaxTotalVotingPower = MaxInt64 / 8</code>.</p>
+<p>All <a href="../pos.html#storage">the data relevant to the PoS system</a> are stored under the PoS account's storage sub-space, with the following key schema (the PoS address prefix is omitted for clarity):</p>
+<ul>
+<li>
+<p><code>params</code> (required): the system parameters</p>
+</li>
+<li>
+<p>for any validator, all the following fields are required:</p>
+<ul>
+<li><code>validator/{validator_address}/consensus_key</code></li>
+<li><code>validator/{validator_address}/state</code></li>
+<li><code>validator/{validator_address}/total_deltas</code></li>
+<li><code>validator/{validator_address}/voting_power</code></li>
+</ul>
+</li>
+<li>
+<p><code>slash/{validator_address}</code> (optional): a list of slashes, where each record contains epoch and slash rate</p>
+</li>
+<li>
+<p><code>bond/{bond_source}/{bond_validator} (optional)</code></p>
+</li>
+<li>
+<p><code>unbond/{unbond_source}/{unbond_validator} (optional)</code></p>
+</li>
+<li>
+<p><code>validator_set (required)</code></p>
+</li>
+<li>
+<p><code>total_voting_power (required)</code></p>
+</li>
+<li>
+<p>standard validator metadata (these are regular storage values, not epoched data):</p>
+<ul>
+<li><code>validator/{validator_address}/staking_reward_address</code> (required): an address that should receive staking rewards</li>
+<li><code>validator/{validator_address}/address_raw_hash</code> (required): raw hash of validator's address associated with the address is used for look-up of validator address from a raw hash</li>
+<li>TBA (e.g. alias, website, description, delegation commission rate, etc.)</li>
+</ul>
+</li>
+</ul>
+<p>Only XAN tokens can be staked in bonds. The tokens being staked (bonds and unbonds amounts) are kept in the PoS account under <code>{xan_address}/balance/{pos_address}</code> until they are withdrawn.</p>
+<h2 id="initialization"><a class="header" href="#initialization">Initialization</a></h2>
+<p>The PoS system is initialized via the shell on chain initialization. The genesis validator set is given in the genesis configuration. On genesis initialization, all the epoched data is set to be immediately active for the current (the very first) epoch.</p>
+<h2 id="staking-rewards-and-transaction-fees"><a class="header" href="#staking-rewards-and-transaction-fees">Staking rewards and transaction fees</a></h2>
+<p>Staking rewards for validators are rewarded in Tendermint's method <code>BeginBlock</code> in the base ledger. A validator must specify a <code>validator/{validator_address}/staking_reward_address</code> for its rewards to be credited to this address.</p>
+<p>To a validator who proposed a block (<code>block.header.proposer_address</code>), the system rewards tokens based on the <code>block_proposer_reward</code> PoS parameter and each validator that voted on a block (<code>block.last_commit_info.validator</code> who <code>signed_last_block</code>) receives <code>block_vote_reward</code>.</p>
+<p>All the fees that are charged in a transaction execution (DKG transaction wrapper fee and transactions applied in a block) are transferred into a fee pool, which is another special account controlled by the PoS module. Note that the fee pool account may contain tokens other than the staking token XAN.</p>
+<ul>
+<li>TODO describe the fee pool, related to <a href="https://github.com/anomanetwork/anoma/issues/48">https://github.com/anomanetwork/anoma/issues/48</a>, <a href="https://github.com/anomanetwork/anoma/issues/51">https://github.com/anomanetwork/anoma/issues/51</a> and <a href="https://github.com/anomanetwork/anoma/issues/72">https://github.com/anomanetwork/anoma/issues/72</a></li>
+</ul>
+<h2 id="transactions"><a class="header" href="#transactions">Transactions</a></h2>
+<p>The transactions are assumed to be applied in epoch <code>n</code>. Any transaction that modifies <a href="../pos.html#epoched-data">epoched data</a> updates the structure as described in <a href="../pos.html#storage">epoched data storage</a>.</p>
+<p>For slashing tokens, we implement a <a href="vp.html#pos-slash-pool-vp">PoS slash pool account</a>. Slashed tokens should be credited to this account and, for now, no tokens can be be debited by anyone.</p>
+<h3 id="validator-transactions"><a class="header" href="#validator-transactions">Validator transactions</a></h3>
+<p>The validator transactions are assumed to be applied with an account address <code>validator_address</code>.</p>
+<ul>
+<li><code>become_validator(consensus_key, staking_reward_address)</code>:
+<ul>
+<li>creates a record in <code>validator/{validator_address}/consensus_key</code> in epoch <code>n + pipeline_length</code></li>
+<li>creates a record in <code>validator/{validator_address}/staking_reward_address</code></li>
+<li>sets <code>validator/{validator_address}/state</code> for to <code>pending</code> in the current epoch and <code>candidate</code> in epoch <code>n + pipeline_length</code></li>
+</ul>
+</li>
+<li><code>deactivate</code>:
+<ul>
+<li>sets <code>validator/{validator_address}/state</code> for to <code>inactive</code> in epoch <code>n + pipeline_length</code></li>
+</ul>
+</li>
+<li><code>reactivate</code>:
+<ul>
+<li>sets <code>validator/{validator_address}/state</code> for to <code>pending</code> in the current epoch and <code>candidate</code> in epoch <code>n + pipeline_length</code></li>
+</ul>
+</li>
+<li><code>self_bond(amount)</code>:
+<ul>
+<li>let <code>bond = read(bond/{validator_address}/{validator_address}/delta)</code></li>
+<li>if <code>bond</code> exist, update it with the new bond amount in epoch <code>n + pipeline_length</code></li>
+<li>else, create a new record with bond amount in epoch <code>n + pipeline_length</code></li>
+<li>debit the token <code>amount</code> from the <code>validator_address</code> and credit it to the PoS account</li>
+<li>add the <code>amount</code> to <code>validator/{validator_address}/total_deltas</code> in epoch <code>n + pipeline_length</code></li>
+<li>update the <code>validator/{validator_address}/voting_power</code> in epoch <code>n + pipeline_length</code></li>
+<li>update the <code>total_voting_power</code> in epoch <code>n + pipeline_length</code></li>
+<li>update <code>validator_set</code> in epoch <code>n + pipeline_length</code></li>
+</ul>
+</li>
+<li><code>unbond(amount)</code>:
+<ul>
+<li>let <code>bond = read(bond/{validator_address}/{validator_address}/delta)</code></li>
+<li>if <code>bond</code> doesn't exist, panic</li>
+<li>let <code>pre_unbond = read(unbond/{validator_address}/{validator_address}/delta)</code></li>
+<li>if <code>total(bond) - total(pre_unbond) &lt; amount</code>, panic</li>
+<li>decrement the <code>bond</code> deltas starting from the rightmost value (a bond in a future-most epoch) until whole <code>amount</code> is decremented</li>
+<li>for each decremented <code>bond</code> value write a new <code>unbond</code> with the key set to the epoch of the source value</li>
+<li>decrement the <code>amount</code> from <code>validator/{validator_address}/total_deltas</code> in epoch <code>n + unbonding_length</code></li>
+<li>update the <code>validator/{validator_address}/voting_power</code> in epoch <code>n + unbonding_length</code></li>
+<li>update the <code>total_voting_power</code> in epoch <code>n + unbonding_length</code></li>
+<li>update <code>validator_set</code> in epoch <code>n + unbonding_length</code></li>
+</ul>
+</li>
+<li><code>withdraw_unbonds</code>:
+<ul>
+<li>let <code>unbond = read(unbond/{validator_address}/{validator_address}/delta)</code></li>
+<li>if <code>unbond</code> doesn't exist, panic</li>
+<li>if no <code>unbond</code> value is found for epochs &lt;= <code>n</code>, panic</li>
+<li>for each <code>((bond_start, bond_end), amount) in unbond where unbond.epoch &lt;= n</code>:
+<ul>
+<li>let <code>amount_after_slash = amount</code></li>
+<li>for each <code>slash in read(slash/{validator_address})</code>:
+<ul>
+<li>if <code>bond_start &lt;= slash.epoch &amp;&amp; slash.epoch &lt;= bond_end)</code>, <code>amount_after_slash *= (10_000 - slash.rate) / 10_000</code></li>
+</ul>
+</li>
+<li>credit the <code>amount_after_slash</code> to the <code>validator_address</code> and debit the whole <code>amount</code> (before slash, if any) from the PoS account</li>
+<li>burn the slashed tokens (<code>amount - amount_after_slash</code>), if not zero</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><code>change_consensus_key</code>:
+<ul>
+<li>creates a record in <code>validator/{validator_address}/consensus_key</code> in epoch <code>n + pipeline_length</code></li>
+</ul>
+</li>
+</ul>
+<p>For <code>self_bond</code>, <code>unbond</code>, <code>withdraw_unbonds</code>, <code>become_validator</code> and <code>change_consensus_key</code> the transaction must be signed with the validator's public key. Additionally, for <code>become_validator</code> and <code>change_consensus_key</code> we must attach a signature with the validator's consensus key to verify its ownership. Note that for <code>self_bond</code>, signature verification is also performed because there are tokens debited from the validator's account.</p>
+<h3 id="delegator-transactions"><a class="header" href="#delegator-transactions">Delegator transactions</a></h3>
+<p>The delegator transactions are assumed to be applied with an account address <code>delegator_address</code>.</p>
+<ul>
+<li><code>delegate(validator_address, amount)</code>:
+<ul>
+<li>let <code>bond = read(bond/{delegator_address}/{validator_address}/delta)</code></li>
+<li>if <code>bond</code> exist, update it with the new bond amount in epoch <code>n + pipeline_length</code></li>
+<li>else, create a new record with bond amount in epoch <code>n + pipeline_length</code></li>
+<li>debit the token <code>amount</code> from the <code>delegator_address</code> and credit it to the PoS account</li>
+<li>add the <code>amount</code> to <code>validator/{validator_address}/total_deltas</code> in epoch <code>n + pipeline_length</code></li>
+<li>update the <code>validator/{validator_address}/voting_power</code> in epoch <code>n + pipeline_length</code></li>
+<li>update the <code>total_voting_power</code> in epoch <code>n + pipeline_length</code></li>
+<li>update <code>validator_set</code> in epoch <code>n + pipeline_length</code></li>
+</ul>
+</li>
+<li><code>undelegate(validator_address, amount)</code>:
+<ul>
+<li>let <code>bond = read(bond/{delegator_address}/{validator_address}/delta)</code></li>
+<li>if <code>bond</code> doesn't exist, panic</li>
+<li>let <code>pre_unbond = read(unbond/{delegator_address}/{validator_address}/delta)</code></li>
+<li>if <code>total(bond) - total(pre_unbond) &lt; amount</code>, panic</li>
+<li>decrement the <code>bond</code> deltas starting from the rightmost value (a bond in a future-most epoch) until whole <code>amount</code> is decremented</li>
+<li>for each decremented <code>bond</code> value write a new <code>unbond</code> with the key set to the epoch of the source value</li>
+<li>decrement the <code>amount</code> from <code>validator/{validator_address}/total_deltas</code> in epoch <code>n + unbonding_length</code></li>
+<li>update the <code>validator/{validator_address}/voting_power</code> in epoch <code>n + unbonding_length</code></li>
+<li>update the <code>total_voting_power</code> in epoch <code>n + unbonding_length</code></li>
+<li>update <code>validator_set</code> in epoch <code>n + unbonding_length</code></li>
+</ul>
+</li>
+<li><code>redelegate(src_validator_address, dest_validator_address, amount)</code>:
+<ul>
+<li><code>undelegate(src_validator_address, amount)</code></li>
+<li><code>delegate(dest_validator_address, amount)</code> but set in epoch <code>n + unbonding_length</code> instead of <code>n + pipeline_length</code></li>
+</ul>
+</li>
+<li><code>withdraw_unbonds</code>:
+<ul>
+<li>for each <code>validator_address in iter_prefix(unbond/{delegator_address})</code>:
+<ul>
+<li>let <code>unbond = read(unbond/{validator_address}/{validator_address}/delta)</code></li>
+<li>if no <code>unbond</code> value is found for epochs &lt;= <code>n</code>, <code>continue</code> to the next <code>validator_address</code></li>
+<li>for each <code>((bond_start, bond_end), amount)</code> in epochs &lt;= <code>n</code>:
+<ul>
+<li>let <code>amount_after_slash = amount</code></li>
+<li>for each <code>slash in read(slash/{validator_address})</code>:
+<ul>
+<li>if <code>bond_start &lt;= slash.epoch &amp;&amp; slash.epoch &lt;= bond_end)</code>, <code>amount_after_slash *= (10_000 - slash.rate) / 10_000</code></li>
+</ul>
+</li>
+<li>credit the <code>amount_after_slash</code> to the <code>delegator_address</code> and debit the whole <code>amount</code> (before slash, if any) from the PoS account</li>
+<li>burn the slashed tokens (<code>amount - amount_after_slash</code>), if not zero</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p>For <code>delegate</code>, <code>undelegate</code>, <code>redelegate</code> and <code>withdraw_unbonds</code> the transaction must be signed with the delegator's public key. Note that for <code>delegate</code>, signature verification is also performed because there are tokens debited from the delegator's account.</p>
+<h2 id="slashing"><a class="header" href="#slashing">Slashing</a></h2>
+<p>Evidence for byzantine behaviour is received from Tendermint ABCI on <code>BeginBlock</code>. For each evidence:</p>
+<ul>
+<li>append the <code>evidence</code> into <code>slash/{evidence.validator_address}</code></li>
+<li>calculate the slashed amount from deltas in and before the <code>evidence.epoch</code> in <code>validator/{validator_address}/total_deltas</code> for the <code>evidence.validator_address</code> and the slash rate</li>
+<li>deduct the slashed amount from the <code>validator/{validator_address}/total_deltas</code> at <code>pipeline_length</code> offset</li>
+<li>update the <code>validator/{validator_address}/voting_power</code> for the <code>evidence.validator_address</code> in and after epoch <code>n + pipeline_length</code></li>
+<li>update the <code>total_voting_power</code> in and after epoch <code>n + pipeline_length</code></li>
+<li>update <code>validator_set</code> in and after epoch <code>n + pipeline_length</code></li>
+</ul>
+<h2 id="validity-predicate"><a class="header" href="#validity-predicate">Validity predicate</a></h2>
+<p>In the following description, &quot;pre-state&quot; is the state prior to transaction execution and &quot;post-state&quot; is the state posterior to it.</p>
+<p>Any changes to PoS epoched data are checked to update the structure as described in <a href="../pos.html#storage">epoched data storage</a>.</p>
+<p>Because some key changes are expected to relate to others, the VP also accumulates some values that are checked for validity after key specific logic:</p>
+<ul>
+<li><code>balance_delta: token::Change</code></li>
+<li><code>bond_delta: HashMap&lt;Address, token::Change&gt;</code></li>
+<li><code>unbond_delta: HashMap&lt;Address, token::Change&gt;</code></li>
+<li><code>total_deltas: HashMap&lt;Address, token::Change&gt;</code></li>
+<li><code>total_stake_by_epoch: HashMap&lt;Epoch, HashMap&lt;Address, token::Amount&gt;&gt;</code></li>
+<li><code>expected_voting_power_by_epoch: HashMap&lt;Epoch, HashMap&lt;Address, VotingPower&gt;&gt;</code>: calculated from the validator's total deltas</li>
+<li><code>expected_total_voting_power_delta_by_epoch: HashMap&lt;Epoch, VotingPowerDelta&gt;</code>: calculated from the validator's total deltas</li>
+<li><code>voting_power_by_epoch: HashMap&lt;Epoch, &lt;HashMap&lt;Address, VotingPower&gt;&gt;</code></li>
+<li><code>validator_set_pre: Option&lt;ValidatorSets&lt;Address&gt;&gt;</code></li>
+<li><code>validator_set_post: Option&lt;ValidatorSets&lt;Address&gt;&gt;</code></li>
+<li><code>total_voting_power_delta_by_epoch: HashMap&lt;Epoch, VotingPowerDelta&gt;</code></li>
+<li><code>new_validators: HashMap&lt;Address, NewValidator&gt;</code></li>
+</ul>
+<p>The accumulators are initialized to their default values (empty hash maps and hash set). The data keyed by address are using the validator addresses.</p>
+<p>For any updated epoched data, the <code>last_update</code> field must be set to the current epoch.</p>
+<p>The validity predicate triggers a validation logic based on the storage keys modified by a transaction:</p>
+<ul>
+<li><code>validator/{validator_address}/consensus_key</code>:
+<pre><code class="language-rust ignore">match (pre_state, post_state) {
+  (None, Some(post)) =&gt; {
+    // - check that all other required validator fields have been initialized
+    // - check that the `state` sub-key for this validator address has been set
+    // correctly, i.e. the value should be initialized at `pipeline_length` offset
+    // - insert into or update `new_validators` accumulator
+  },
+  (Some(pre), Some(post)) =&gt; {
+    // - check that the new consensus key is different from the old consensus
+    // key and that it has been set correctly, i.e. the value can only be changed at `pipeline_length` offset
+  },
+  _ =&gt; false,
+}
+</code></pre>
+</li>
+<li><code>validator/{validator_address}/state</code>:
+<pre><code class="language-rust ignore">match (pre_state, post_state) {
+  (None, Some(post)) =&gt; {
+    // - check that all other required validator fields have been initialized
+    // - check that the `post` state is set correctly:
+    //   - the state should be set to `pending` in the current epoch and `candidate` at pipeline offset
+    // - insert into or update `new_validators` accumulator
+  },
+  (Some(pre), Some(post)) =&gt; {
+    // - check that a validator has been correctly deactivated or reactivated
+    // - the `state` should only be changed at `pipeline_length` offset
+    // - if the `state` becomes `inactive`, it must have been `pending` or `candidate`
+    // - if the `state` becomes `pending`, it must have been `inactive`
+    // - if the `state` becomes `candidate`, it must have been `pending` or `inactive`
+  },
+  _ =&gt; false,
+}
+</code></pre>
+</li>
+<li><code>validator/{validator_address}/total_deltas</code>:
+<ul>
+<li>find the difference between the pre-state and post-state values and add it to the <code>total_deltas</code> accumulator and update <code>total_stake_by_epoch</code>, <code>expected_voting_power_by_epoch</code> and <code>expected_total_voting_power_delta_by_epoch</code></li>
+</ul>
+</li>
+<li><code>validator/{validator_address}/voting_power</code>:
+<ul>
+<li>find the difference between the pre-state and post-state value and insert it into the <code>voting_power_by_epoch</code> accumulator</li>
+</ul>
+</li>
+<li><code>bond/{bond_source}/{bond_validator}/delta</code>:
+<ul>
+<li>for each difference between the post-state and pre-state values:
+<ul>
+<li>if the difference is not in epoch <code>n</code> or <code>n + pipeline_length</code>, panic</li>
+<li>find slashes for the <code>bond_validator</code>, if any, and apply them to the delta value</li>
+<li>add it to the <code>bond_delta</code> accumulator</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><code>unbond/{unbond_source}/{unbond_validator}/deltas</code>:
+<ul>
+<li>for each difference between the post-state and pre-state values:
+<ul>
+<li>if the difference is not in epoch <code>n</code> or <code>n + unboding_length</code>, panic</li>
+<li>find slashes for the <code>bond_validator</code>, if any, and apply them to the delta value</li>
+<li>add it to the <code>unbond_delta</code> accumulator</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><code>validator_set</code>:
+<ul>
+<li>set the accumulators <code>validator_set_pre</code> and <code>validator_set_post</code></li>
+</ul>
+</li>
+<li><code>total_voting_power</code>:
+<ul>
+<li>find the difference between the post-state and pre-state</li>
+<li>add it to the <code>total_voting_power_delta_by_epoch</code> accumulator</li>
+</ul>
+</li>
+<li>PoS account's balance:
+<ul>
+<li>find the difference between the post-state and pre-state</li>
+<li>add it to the <code>balance_delta</code> accumulator</li>
+</ul>
+</li>
+</ul>
+<p>No other storage key changes are permitted by the VP.</p>
+<p>After the storage keys iteration, we check the accumulators:</p>
+<ul>
+<li>For each <code>total_deltas</code>, there must be the same delta value in <code>bond_delta</code>.</li>
+<li>For each <code>bond_delta</code>, there must be validator's change in <code>total_deltas</code>.</li>
+<li>Check that all positive <code>unbond_delta</code> also have a <code>total_deltas</code> update. Negative unbond delta is from withdrawing, which removes tokens from unbond, but doesn't affect total deltas.</li>
+<li>Check validator sets updates against validator total stakes.</li>
+<li>Check voting power changes against validator total stakes.</li>
+<li>Check expected voting power changes against <code>voting_power_by_epoch</code>.</li>
+<li>Check expected total voting power change against <code>total_voting_power_delta_by_epoch</code>.</li>
+<li>Check that the sum of bonds and unbonds deltas is equal to the balance delta.</li>
+<li>Check that all the new validators have their required fields set and that they have been added to the validator set</li>
+</ul>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../../../explore/design/ledger/storage/data-schema.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+                            <a rel="next" href="../../../explore/design/crypto-primitives.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../../../explore/design/ledger/storage/data-schema.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+                    <a rel="next" href="../../../explore/design/crypto-primitives.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+            </nav>
+
+        </div>
+
+        <script type="text/javascript">
+            window.playground_copyable = true;
+        </script>
+        <script src="../../../elasticlunr.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../../mark.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../../searcher.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../../clipboard.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../../highlight.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../../book.js" type="text/javascript" charset="utf-8"></script>
+
+        <!-- Custom JS scripts -->
+        <script type="text/javascript" src="../../../assets/mermaid.min.js"></script>
+        <script type="text/javascript" src="../../../assets/mermaid-init.js"></script>
+    </body>
+</html>

@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["Name","VP cache name"]],"type":[["VpCache","VP WASM compilation cache handle. Thread-safe."]]});

@@ -1,0 +1,351 @@
+<!DOCTYPE HTML>
+<html lang="en" class="sidebar-visible no-js light">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>The ledger - Anoma - DOCS</title>
+        <!-- Custom HTML head -->
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        <link rel="icon" href="../favicon.svg">
+        <link rel="shortcut icon" href="../favicon.png">
+        <link rel="stylesheet" href="../css/variables.css">
+        <link rel="stylesheet" href="../css/general.css">
+        <link rel="stylesheet" href="../css/chrome.css">
+        <link rel="stylesheet" href="../css/print.css" media="print">
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="../fonts/fonts.css">
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="../highlight.css">
+        <link rel="stylesheet" href="../tomorrow-night.css">
+        <link rel="stylesheet" href="../ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+        <link rel="stylesheet" href="../assets/custom.css">
+        <!-- MathJax -->
+        <script async type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    </head>
+    <body>
+        <!-- Provide site root to javascript -->
+        <script type="text/javascript">
+            var path_to_root = "../";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script type="text/javascript">
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script type="text/javascript">
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add('js');
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script type="text/javascript">
+            var html = document.querySelector('html');
+            var sidebar = 'hidden';
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded "><a href="../index.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="../quick-start.html"><strong aria-hidden="true">2.</strong> Quick Start</a></li><li class="chapter-item expanded "><a href="../user-guide/index.html"><strong aria-hidden="true">3.</strong> User Guide</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../user-guide/install.html"><strong aria-hidden="true">3.1.</strong> Install</a></li><li class="chapter-item expanded "><a href="../user-guide/getting-started.html"><strong aria-hidden="true">3.2.</strong> Getting started</a></li><li class="chapter-item expanded "><a href="../user-guide/wallet.html"><strong aria-hidden="true">3.3.</strong> The Wallet</a></li><li class="chapter-item expanded "><a href="../user-guide/ledger.html"><strong aria-hidden="true">3.4.</strong> The Ledger</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../user-guide/ledger/pos.html"><strong aria-hidden="true">3.4.1.</strong> Interact with PoS</a></li><li class="chapter-item expanded "><a href="../user-guide/ledger/customize.html"><strong aria-hidden="true">3.4.2.</strong> Customize</a></li></ol></li><li class="chapter-item expanded "><a href="../user-guide/intent-gossip-and-matchmaker.html"><strong aria-hidden="true">3.5.</strong> The Intent gossip and Matchmaker</a></li></ol></li><li class="chapter-item expanded "><a href="../explore/index.html"><strong aria-hidden="true">4.</strong> Exploration</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../explore/design/index.html"><strong aria-hidden="true">4.1.</strong> Design</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../explore/design/overview.html"><strong aria-hidden="true">4.1.1.</strong> Overview</a></li><li class="chapter-item expanded "><a href="../explore/design/gossip.html"><strong aria-hidden="true">4.1.2.</strong> Gossip network</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../explore/design/intent_gossip/intent_gossip.html"><strong aria-hidden="true">4.1.2.1.</strong> Intent gossip</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../explore/design/intent_gossip/intent.html"><strong aria-hidden="true">4.1.2.1.1.</strong> Intent</a></li><li class="chapter-item expanded "><a href="../explore/design/intent_gossip/topic.html"><strong aria-hidden="true">4.1.2.1.2.</strong> Topic</a></li><li class="chapter-item expanded "><a href="../explore/design/intent_gossip/incentive.html"><strong aria-hidden="true">4.1.2.1.3.</strong> Incentive</a></li><li class="chapter-item expanded "><a href="../explore/design/intent_gossip/matchmaker.html"><strong aria-hidden="true">4.1.2.1.4.</strong> Matchmaker</a></li><li class="chapter-item expanded "><a href="../explore/design/intent_gossip/fungible_token.html"><strong aria-hidden="true">4.1.2.1.5.</strong> Fungible token</a></li></ol></li><li class="chapter-item expanded "><a href="../explore/design/dkg.html"><strong aria-hidden="true">4.1.2.2.</strong> Distributed key generation gossip</a></li></ol></li><li class="chapter-item expanded "><a href="../explore/design/ledger.html"><strong aria-hidden="true">4.1.3.</strong> The ledger</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../explore/design/ledger/parameters.html"><strong aria-hidden="true">4.1.3.1.</strong> Parameters</a></li><li class="chapter-item expanded "><a href="../explore/design/ledger/epochs.html"><strong aria-hidden="true">4.1.3.2.</strong> Epochs</a></li><li class="chapter-item expanded "><a href="../explore/design/ledger/accounts.html"><strong aria-hidden="true">4.1.3.3.</strong> Accounts</a></li><li class="chapter-item expanded "><a href="../explore/design/ledger/vp.html"><strong aria-hidden="true">4.1.3.4.</strong> Validity predicates</a></li><li class="chapter-item expanded "><a href="../explore/design/ledger/tx.html"><strong aria-hidden="true">4.1.3.5.</strong> Transactions</a></li><li class="chapter-item expanded "><a href="../explore/design/ledger/wasm-vm.html"><strong aria-hidden="true">4.1.3.6.</strong> WASM VM</a></li><li class="chapter-item expanded "><a href="../explore/design/ledger/front-running.html"><strong aria-hidden="true">4.1.3.7.</strong> Front-running prevention</a></li><li class="chapter-item expanded "><a href="../explore/design/ledger/fractal-scaling.html"><strong aria-hidden="true">4.1.3.8.</strong> Fractal scaling</a></li><li class="chapter-item expanded "><a href="../explore/design/upgrade-system.html"><strong aria-hidden="true">4.1.3.9.</strong> Upgrade system</a></li><li class="chapter-item expanded "><a href="../explore/design/ledger/storage.html"><strong aria-hidden="true">4.1.3.10.</strong> Storage</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../explore/design/ledger/storage/data-schema.html"><strong aria-hidden="true">4.1.3.10.1.</strong> Data schema</a></li></ol></li><li class="chapter-item expanded "><a href="../explore/design/ledger/pos-integration.html"><strong aria-hidden="true">4.1.3.11.</strong> PoS integration</a></li></ol></li><li class="chapter-item expanded "><a href="../explore/design/crypto-primitives.html"><strong aria-hidden="true">4.1.4.</strong> Crypto primitives</a></li><li class="chapter-item expanded "><a href="../explore/design/actors.html"><strong aria-hidden="true">4.1.5.</strong> Actors</a></li><li class="chapter-item expanded "><a href="../explore/design/pos.html"><strong aria-hidden="true">4.1.6.</strong> Proof of Stake system</a></li></ol></li><li class="chapter-item expanded "><a href="../explore/prototypes/index.html"><strong aria-hidden="true">4.2.</strong> Prototypes</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../explore/prototypes/base-ledger.html"><strong aria-hidden="true">4.2.1.</strong> Base ledger</a></li><li class="chapter-item expanded "><a href="../explore/prototypes/gossip-layer.html"><strong aria-hidden="true">4.2.2.</strong> Gossip layer</a></li></ol></li><li class="chapter-item expanded "><a href="../explore/libraries/index.html"><strong aria-hidden="true">4.3.</strong> Libraries &amp; Tools</a></li><li><ol class="section"><li class="chapter-item expanded "><div><strong aria-hidden="true">4.3.1.</strong> Cryptography</div></li><li class="chapter-item expanded "><a href="../explore/libraries/network.html"><strong aria-hidden="true">4.3.2.</strong> network</a></li><li class="chapter-item expanded "><a href="../explore/libraries/cli.html"><strong aria-hidden="true">4.3.3.</strong> Command-line interface</a></li><li class="chapter-item expanded "><a href="../explore/libraries/db.html"><strong aria-hidden="true">4.3.4.</strong> Database</a></li><li class="chapter-item expanded "><a href="../explore/libraries/logging.html"><strong aria-hidden="true">4.3.5.</strong> Logging</a></li><li class="chapter-item expanded "><div><strong aria-hidden="true">4.3.6.</strong> Networking</div></li><li class="chapter-item expanded "><a href="../explore/libraries/packaging.html"><strong aria-hidden="true">4.3.7.</strong> Packaging</a></li><li class="chapter-item expanded "><a href="../explore/libraries/serialization.html"><strong aria-hidden="true">4.3.8.</strong> Serialization</a></li><li class="chapter-item expanded "><a href="../explore/libraries/wasm.html"><strong aria-hidden="true">4.3.9.</strong> WASM runtime</a></li><li class="chapter-item expanded "><a href="../explore/libraries/errors.html"><strong aria-hidden="true">4.3.10.</strong> Error handling</a></li></ol></li><li class="chapter-item expanded "><a href="../explore/design/glossary.html"><strong aria-hidden="true">4.4.</strong> Glossary</a></li><li class="chapter-item expanded "><a href="../explore/resources/index.html"><strong aria-hidden="true">4.5.</strong> Resources</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../explore/resources/ide.html"><strong aria-hidden="true">4.5.1.</strong> IDE</a></li></ol></li></ol></li><li class="chapter-item expanded "><a href="../specs/index.html"><strong aria-hidden="true">5.</strong> Specifications</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../specs/overview.html"><strong aria-hidden="true">5.1.</strong> Overview</a></li><li class="chapter-item expanded "><a href="../specs/ledger.html" class="active"><strong aria-hidden="true">5.2.</strong> The ledger</a></li><li class="chapter-item expanded "><div><strong aria-hidden="true">5.3.</strong> Trade system</div></li><li class="chapter-item expanded "><div><strong aria-hidden="true">5.4.</strong> Intent gossip system</div></li><li class="chapter-item expanded "><div><strong aria-hidden="true">5.5.</strong> Fractal scaling</div></li><li class="chapter-item expanded "><div><strong aria-hidden="true">5.6.</strong> Upgrade system</div></li><li class="chapter-item expanded "><a href="../specs/encoding.html"><strong aria-hidden="true">5.7.</strong> Encoding</a></li></ol></li><li class="chapter-item expanded "><a href="../archive/index.html"><strong aria-hidden="true">6.</strong> Archive</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../archive/domain-name-addresses.html"><strong aria-hidden="true">6.1.</strong> Domain name addresses</a></li></ol></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky bordered">
+                    <div class="left-buttons">
+                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </button>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light (default)</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">Anoma - DOCS</h1>
+
+                    <div class="right-buttons">
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script type="text/javascript">
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="the-ledger"><a class="header" href="#the-ledger">The ledger</a></h1>
+<h2 id="the-protocol"><a class="header" href="#the-protocol">The protocol</a></h2>
+<ul>
+<li>TODO describe DKG transactions</li>
+<li>TODO DKG transactions will include replay protection (this is because we can simply check a counter against the source (i.e. gas payer) of the transaction before the transactions order is committed to by the DKG protocol, which could affect the expected counter order for sources with multiple queued transactions)</li>
+</ul>
+<h3 id="transactions"><a class="header" href="#transactions">Transactions</a></h3>
+<p>A transaction <a href="./encoding.html#transactions">encoded with proto3</a> received from ABCI <code>DeliverTx</code> method is executed in two main steps:</p>
+<ol>
+<li><a href="#transaction-execution">Transaction execution</a></li>
+<li><a href="#validity-predicates-check">Validity predicates check</a></li>
+</ol>
+<h4 id="transaction-execution"><a class="header" href="#transaction-execution">Transaction execution</a></h4>
+<p>For any error encountered in any of the following steps of transaction execution, the protocol MUST charge the gas used by the transaction and discard any storage changes that the transaction attempted to perform.</p>
+<ol>
+<li>Charge a base transaction <a href="#gas">gas</a>:
+\( \verb|BASE_TRANSACTION_FEE| \)</li>
+<li>Decode the transaction bytes and validate the data. The field <code>timestamp</code> is required.</li>
+<li>Charge WASM compilation gas, proportional to the bytes <code>length</code> of the <code>code</code> field of the transaction (this is because the WASM code is compiled with a single-pass compiler):
+\( \verb|length| * \verb|COMPILE_GAS_PER_BYTE| \)</li>
+<li><a href="#wasm-validation">Validate the WASM code</a> from the <code>code</code> field of the transaction.</li>
+<li>Inject a <a href="#gas">gas counter</a> into the <code>code</code>.</li>
+<li>Inject a <a href="#stack-height-limiter">stack height</a> limiter into the <code>code</code>.</li>
+<li>Compile the transaction <code>code</code> with a single-pass compiler (for example, <a href="https://medium.com/wasmer/a-webassembly-compiler-tale-9ef37aa3b537">the Wasmer runtime single-pass compiler</a>). The compilation computational complexity MUST be linear in proportion to the <code>code</code> size.</li>
+<li>Initialize the WASM linear memory with descriptor having the initial memory size equal to <a href="#wasm-constants"><code>TX_MEMORY_INIT_PAGES</code></a> and maximum memory size to <a href="#wasm-constants"><code>TX_MEMORY_MAX_PAGES</code></a>.</li>
+<li>Instantiate the WASM module with imported <a href="#transaction-host-environment-functions">transaction host environment functions</a> and the instantiated WASM memory.</li>
+<li>Write the transaction's <code>data</code> into the memory exported from the WASM module instance.</li>
+<li>Attempt to call the module's entrypoint function. The entrypoint MUST have signature:
+<pre><code class="language-wat">func (param i64 i64)
+</code></pre>
+The first argument is the offset to the <code>data</code> input written into the memory and the second argument is its bytes length.</li>
+</ol>
+<p>If the transaction executed successfully, it is followed <a href="#validity-predicates-check">Validity predicates check</a>.</p>
+<h4 id="validity-predicates-check"><a class="header" href="#validity-predicates-check">Validity predicates check</a></h4>
+<p>For the transaction to be valid, all the triggered validity predicates must accept it.</p>
+<p>First, the addresses whose validity predicates should be triggered by the transaction are determined. In this process, the addresses get associated with a set of modified storage keys that are relevant to the address:</p>
+<ol>
+<li>
+<p>The addresses set by the transaction (see <code>insert_verifier</code> in <a href="#transaction-host-environment-functions">transaction host environment functions</a>) are associated with <em>all</em> the modified storage keys.</p>
+<p>TODO - <a href="https://github.com/anoma/anoma/issues/292">https://github.com/anoma/anoma/issues/292</a></p>
+</li>
+<li>
+<p>The storage keys that were modified by the transaction are associated with the addresses included in the storage keys. Note that a storage key may contain more than one address, in which case all its addresses are associated with this key. </p>
+</li>
+<li>
+<p>All these addresses are additionally associated with the storage key to the validity predicates of any newly initialized accounts' by the transaction (see <code>init_account</code> in <a href="#transaction-host-environment-functions">transaction host environment functions</a>).</p>
+</li>
+</ol>
+<p>For all these addresses, attempt to read their validity predicate WASM code from the storage. For each validity predicate look-up, charge storage read gas and WASM compilation gas, proportional to the bytes length of the validity predicate. If any of the validity predicates look-ups fails, or any validity rejects the transaction or fails anywhere in the execution, the whole transaction is rejected. If the transaction is rejected, the protocol MUST charge the gas used by the transaction and discard any storage changes that the transaction attempted to perform.</p>
+<p>Execute all validity predicates in parallel as follows:</p>
+<ol>
+<li>Charge WASM compilation gas, proportional to the bytes length of the validity predicate (same as for the transaction, WASM code is compiled with a single-pass compiler).</li>
+<li>Charge WASM compilation gas, proportional to the bytes <code>length</code> of the validity predicate (same as for the transaction, WASM code is compiled with a single-pass compiler): \( \verb|length| * \verb|COMPILE_GAS_PER_BYTE| \).</li>
+<li><a href="#wasm-validation">Validate the WASM code</a> of the validity predicate.</li>
+<li>Inject a <a href="#gas">gas counter</a> into the <code>code</code>.</li>
+<li>Inject a <a href="#stack-height-limiter">stack height</a> limiter into the <code>code</code>.</li>
+<li>Compile the validity predicate with single-pass compiler. The compilation computational complexity MUST be linear in proportion to its bytes size.</li>
+<li>Initialize the WASM linear memory with descriptor having the initial memory size equal to <a href="#wasm-constants"><code>VP_MEMORY_INIT_PAGES</code></a> and maximum memory size to <a href="#wasm-constants"><code>VP_MEMORY_MAX_PAGES</code></a>.</li>
+<li>Instantiate the WASM module with imported <a href="#validity-predicate-host-environment-functions">validity predicate host environment functions</a> and the instantiated WASM memory.</li>
+<li>Write the address of the validity predicate’s owner, the transaction <code>data</code>, the modified storage keys encoded with Borsh, and all the triggered validity predicates owners' addresses encoded with Borsh into the memory exported from the WASM module instance.</li>
+<li>Attempt to call the module's entrypoint function. The entrypoint MUST have signature:
+<pre><code class="language-wat">func (param i64 i64 i64 i64 i64 i64 i64 i64) (result i64))
+</code></pre>
+<ul>
+<li>The first argument is the offset to the owner’s address written into the memory, the second argument is its bytes length</li>
+<li>The third is the offset of the transaction’s <code>data</code> and fourth is it’s bytes length</li>
+<li>The fifth is the offset of the modified storage keys and sixth is its bytes length</li>
+<li>The seventh is the offset of the triggered validity predicates owners' addresses and eighth is its bytes length</li>
+</ul>
+</li>
+</ol>
+<h4 id="gas"><a class="header" href="#gas">Gas</a></h4>
+<h5 id="gas-constants"><a class="header" href="#gas-constants">Gas constants</a></h5>
+<p>The gas constants are currently chosen arbitrarily and are subject to change following gas accounting estimations.</p>
+<table><thead><tr><th>Name</th><th>Value</th></tr></thead><tbody>
+<tr><td><code>COMPILE_GAS_PER_BYTE</code></td><td>1</td></tr>
+<tr><td><code>BASE_TRANSACTION_FEE</code></td><td>2</td></tr>
+<tr><td><code>PARALLEL_GAS_DIVIDER</code></td><td>10</td></tr>
+<tr><td><code>MIN_STORAGE_GAS</code></td><td>1</td></tr>
+</tbody></table>
+<ul>
+<li>TODO describe gas accounting, wasm gas counter, limits, what happens if we go over limits and how gas relates to fees</li>
+</ul>
+<h4 id="webassembly-wasm"><a class="header" href="#webassembly-wasm">WebAssembly (WASM)</a></h4>
+<h5 id="wasm-constants"><a class="header" href="#wasm-constants">WASM constants</a></h5>
+<table><thead><tr><th>Name</th><th>Unit</th><th>Value</th></tr></thead><tbody>
+<tr><td><code>PAGE</code> (as defined in the WASM spec)</td><td>kiB</td><td>64</td></tr>
+<tr><td><code>TX_MEMORY_INIT_PAGES</code></td><td>number of <code>PAGE</code>s</td><td>100</td></tr>
+<tr><td><code>TX_MEMORY_MAX_PAGES</code></td><td>number of <code>PAGE</code>s</td><td>200</td></tr>
+<tr><td><code>VP_MEMORY_INIT_PAGES</code></td><td>number of <code>PAGE</code>s</td><td>100</td></tr>
+<tr><td><code>VP_MEMORY_MAX_PAGES</code></td><td>number of <code>PAGE</code>s</td><td>200</td></tr>
+<tr><td><code>WASM_STACK_LIMIT</code></td><td>stack depth</td><td>65535</td></tr>
+</tbody></table>
+<p>The WASM instantiation, the types, instructions, validation and execution of WASM modules MUST conform to the <a href="https://webassembly.github.io/spec/core/intro/index.html">WebAssembly specification</a>.</p>
+<h5 id="wasm-validation"><a class="header" href="#wasm-validation">WASM validation</a></h5>
+<p>The WebAssembly code is REQUIRED to only use deterministic instructions. Furthermore, it MUST NOT use features from any of the following WebAssembly proposals:</p>
+<ul>
+<li>The reference types proposal</li>
+<li>The multi-value proposal</li>
+<li>The bulk memory operations proposal</li>
+<li>The module linking proposal</li>
+<li>The SIMD proposal</li>
+<li>The threads proposal</li>
+<li>The tail-call proposal</li>
+<li>The multi memory proposal</li>
+<li>The exception handling proposal</li>
+<li>The memory64 proposal</li>
+</ul>
+<h5 id="stack-height-limiter"><a class="header" href="#stack-height-limiter">Stack height limiter</a></h5>
+<p>To make stack overflows deterministic, set the upper bound of the stack size to <a href="#wasm-constants"><code>WASM_STACK_LIMIT</code></a>. If the stack height exceeds the limit then execution MUST abort.</p>
+<!--
+cargo test test_tx_stack_limiter
+cargo test test_vp_stack_limiter
+-->
+<h5 id="wasm-memory"><a class="header" href="#wasm-memory">WASM memory</a></h5>
+<ul>
+<li>TODO memory read/write gas costs</li>
+</ul>
+<h5 id="transaction-host-environment-functions"><a class="header" href="#transaction-host-environment-functions">Transaction host environment functions</a></h5>
+<p>The following functions from the host ledger are made available in transaction's WASM code. They MAY be imported in the WASM module as shown bellow and MUST be provided by the ledger's WASM runtime:</p>
+<pre><code class="language-wat">(import &quot;env&quot; &quot;gas&quot; (func (param i32)))
+(import &quot;env&quot; &quot;anoma_tx_read&quot; (func (param i64 i64) (result i64)))
+(import &quot;env&quot; &quot;anoma_tx_result_buffer&quot; (func (param i64)))
+(import &quot;env&quot; &quot;anoma_tx_has_key&quot; (func (param i64 i64) (result i64)))
+(import &quot;env&quot; &quot;anoma_tx_write&quot; (func (param i64 i64 i64 i64)))
+(import &quot;env&quot; &quot;anoma_tx_delete&quot; (func (param i64 i64)))
+(import &quot;env&quot; &quot;anoma_tx_iter_prefix&quot; (func (param i64 i64) (result i64)))
+(import &quot;env&quot; &quot;anoma_tx_iter_next&quot; (func (param i64) (result i64)))
+(import &quot;env&quot; &quot;anoma_tx_insert_verifier&quot; (func (param i64 i64)))
+(import &quot;env&quot; &quot;anoma_tx_update_validity_predicate&quot; (func (param i64 i64 i64 i64)))
+(import &quot;env&quot; &quot;anoma_tx_init_account&quot; (func (param i64 i64 i64)))
+(import &quot;env&quot; &quot;anoma_tx_get_chain_id&quot; (func (param i64)))
+(import &quot;env&quot; &quot;anoma_tx_get_block_height&quot; (func (param ) (result i64)))
+(import &quot;env&quot; &quot;anoma_tx_get_block_hash&quot; (func (param i64)))
+(import &quot;env&quot; &quot;anoma_tx_log_string&quot; (func (param i64 i64)))
+</code></pre>
+<p>Additionally, the WASM module MUST export its memory as shown:</p>
+<pre><code class="language-wat">(export &quot;memory&quot; (memory 0))
+</code></pre>
+<ul>
+<li><code>anoma_tx_init_account</code> TODO newly created accounts' validity predicates aren't used until the block is committed (i.e. only the transaction that created the account may write into its storage in the block in which its being applied).</li>
+<li>TODO describe functions in detail</li>
+</ul>
+<h5 id="validity-predicate-host-environment-functions"><a class="header" href="#validity-predicate-host-environment-functions">Validity predicate host environment functions</a></h5>
+<p>The following functions from the host ledger are made available in validity predicate's WASM code. They MAY be imported in the WASM module as shown bellow and MUST be provided by the ledger's WASM runtime.</p>
+<pre><code class="language-wat">(import &quot;env&quot; &quot;gas&quot; (func (param i32)))
+(import &quot;env&quot; &quot;anoma_vp_read_pre&quot; (func (param i64 i64) (result i64)))
+(import &quot;env&quot; &quot;anoma_vp_read_post&quot; (func (param i64 i64) (result i64)))
+(import &quot;env&quot; &quot;anoma_vp_result_buffer&quot; (func (param i64)))
+(import &quot;env&quot; &quot;anoma_vp_has_key_pre&quot; (func (param i64 i64) (result i64)))
+(import &quot;env&quot; &quot;anoma_vp_has_key_post&quot; (func (param i64 i64) (result i64)))
+(import &quot;env&quot; &quot;anoma_vp_iter_prefix&quot; (func (param i64 i64) (result i64)))
+(import &quot;env&quot; &quot;anoma_vp_iter_pre_next&quot; (func (param i64) (result i64)))
+(import &quot;env&quot; &quot;anoma_vp_iter_post_next&quot; (func (param i64) (result i64)))
+(import &quot;env&quot; &quot;anoma_vp_get_chain_id&quot; (func (param i64)))
+(import &quot;env&quot; &quot;anoma_vp_get_block_height&quot; (func (param ) (result i64)))
+(import &quot;env&quot; &quot;anoma_vp_get_block_hash&quot; (func (param i64)))
+(import &quot;env&quot; &quot;anoma_vp_verify_tx_signature&quot; (func (param i64 i64 i64 i64) (result i64)))
+(import &quot;env&quot; &quot;anoma_vp_eval&quot; (func (param i64 i64 i64 i64) (result i64)))
+</code></pre>
+<ul>
+<li>TODO describe functions in detail</li>
+</ul>
+<p>Additionally, the WASM module MUST export its memory as shown:</p>
+<pre><code class="language-wat">(export &quot;memory&quot; (memory 0))
+</code></pre>
+<h3 id="storage"><a class="header" href="#storage">Storage</a></h3>
+<ul>
+<li>TODO</li>
+</ul>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../specs/overview.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+                            <a rel="next" href="../specs/encoding.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../specs/overview.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+                    <a rel="next" href="../specs/encoding.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+            </nav>
+
+        </div>
+
+        <script type="text/javascript">
+            window.playground_copyable = true;
+        </script>
+        <script src="../elasticlunr.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../mark.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../searcher.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../clipboard.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../highlight.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../book.js" type="text/javascript" charset="utf-8"></script>
+
+        <!-- Custom JS scripts -->
+        <script type="text/javascript" src="../assets/mermaid.min.js"></script>
+        <script type="text/javascript" src="../assets/mermaid-init.js"></script>
+    </body>
+</html>

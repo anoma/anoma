@@ -1,0 +1,122 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Sets the MXCSR register with the 32-bit unsigned integer value."><meta name="keywords" content="rust, rustlang, rust-lang, _mm_setcsr"><title>_mm_setcsr in anoma_apps::std::arch::x86_64 - Rust</title><link rel="stylesheet" type="text/css" href="../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../../ayu.css" disabled ><script id="default-settings" ></script><script src="../../../../storage.js"></script><script src="../../../../crates.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="shortcut icon" href="https:&#x2F;&#x2F;docs.anoma.network&#x2F;favicon.png"><style type="text/css">#crate-search{background-image:url("../../../../down-arrow.svg");}</style></head><body class="rustdoc fn"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../../anoma_apps/index.html'><div class='logo-container rust-logo'><img src='https:&#x2F;&#x2F;docs.anoma.network&#x2F;rustdoc-logo.png' alt='logo'></div></a><div class="sidebar-elems"><h2 class="location">Other items in<br><a href="../../../index.html">anoma_apps</a>::<wbr><a href="../../index.html">std</a>::<wbr><a href="../index.html">arch</a>::<wbr><a href="index.html">x86_64</a></h2><div id="sidebar-vars" data-name="_mm_setcsr" data-ty="fn" data-relpath=""></div><script defer src="sidebar-items.js"></script></div></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="18" height="18" alt="Pick another theme!" src="../../../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../../../settings.html" title="settings"><img width="18" height="18" alt="Change settings" src="../../../../wheel.svg"></a></div></form></nav><section id="main" class="content"><h1 class="fqn"><span class="in-band">Function <a href="../../../index.html">anoma_apps</a>::<wbr><a href="../../index.html">std</a>::<wbr><a href="../index.html">arch</a>::<wbr><a href="index.html">x86_64</a>::<wbr><a class="fn" href="#">_mm_setcsr</a><button id="copy-path" onclick="copy_path(this)" title="Copy item path to clipboard"><img src="../../../../clipboard.svg" width="19" height="18" alt="Copy item path"></button></span><span class="out-of-band"><span class="since" title="Stable since Rust version 1.27.0">1.27.0</span><span id="render-detail"><a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">[<span class="inner">&#x2212;</span>]</a></span><a class="srclink" href="https://doc.rust-lang.org/1.56.1/src/core/up/up/stdarch/crates/core_arch/src/x86/sse.rs.html#1515" title="goto source code">[src]</a></span></h1><pre class="rust fn"><code>pub unsafe fn _mm_setcsr(val: <a class="primitive" href="https://doc.rust-lang.org/1.56.1/std/primitive.u32.html">u32</a>)</code></pre><div class="item-info"><div class="stab portability">This is supported on <strong>x86-64 and target feature <code>sse</code></strong> only.</div></div><details class="rustdoc-toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><p>Sets the MXCSR register with the 32-bit unsigned integer value.</p>
+<p>This register constrols how SIMD instructions handle floating point
+operations. Modifying this register only affects the current thread.</p>
+<p>It contains several groups of flags:</p>
+<ul>
+<li>
+<p><em>Exception flags</em> report which exceptions occurred since last they were
+reset.</p>
+</li>
+<li>
+<p><em>Masking flags</em> can be used to mask (ignore) certain exceptions. By
+default
+these flags are all set to 1, so all exceptions are masked. When an
+an exception is masked, the processor simply sets the exception flag and
+continues the operation. If the exception is unmasked, the flag is also set
+but additionally an exception handler is invoked.</p>
+</li>
+<li>
+<p><em>Rounding mode flags</em> control the rounding mode of floating point
+instructions.</p>
+</li>
+<li>
+<p>The <em>denormals-are-zero mode flag</em> turns all numbers which would be
+denormalized (exponent bits are all zeros) into zeros.</p>
+</li>
+</ul>
+<h2 id="exception-flags" class="section-header"><a href="#exception-flags">Exception Flags</a></h2>
+<ul>
+<li>
+<p><code>_MM_EXCEPT_INVALID</code>: An invalid operation was performed (e.g., dividing
+Infinity by Infinity).</p>
+</li>
+<li>
+<p><code>_MM_EXCEPT_DENORM</code>: An operation attempted to operate on a denormalized
+number. Mainly this can cause loss of precision.</p>
+</li>
+<li>
+<p><code>_MM_EXCEPT_DIV_ZERO</code>: Division by zero occured.</p>
+</li>
+<li>
+<p><code>_MM_EXCEPT_OVERFLOW</code>: A numeric overflow exception occured, i.e., a
+result was too large to be represented (e.g., an <code>f32</code> with absolute
+value
+greater than <code>2^128</code>).</p>
+</li>
+<li>
+<p><code>_MM_EXCEPT_UNDERFLOW</code>: A numeric underflow exception occured, i.e., a
+result was too small to be represented in a normalized way (e.g., an
+<code>f32</code>
+with absulte value smaller than <code>2^-126</code>.)</p>
+</li>
+<li>
+<p><code>_MM_EXCEPT_INEXACT</code>: An inexact-result exception occured (a.k.a.
+precision exception). This means some precision was lost due to rounding.
+For example, the fraction <code>1/3</code> cannot be represented accurately in a
+32 or 64 bit float and computing it would cause this exception to be
+raised. Precision exceptions are very common, so they are usually masked.</p>
+</li>
+</ul>
+<p>Exception flags can be read and set using the convenience functions
+<code>_MM_GET_EXCEPTION_STATE</code> and <code>_MM_SET_EXCEPTION_STATE</code>. For example, to
+check if an operation caused some overflow:</p>
+
+<div class='information'><div class='tooltip ignore'>ⓘ</div></div><div class="example-wrap"><pre class="rust rust-example-rendered ignore"><code><span class="ident">_MM_SET_EXCEPTION_STATE</span>(<span class="number">0</span>); <span class="comment">// clear all exception flags</span>
+                            <span class="comment">// perform calculations</span>
+<span class="kw">if</span> <span class="ident">_MM_GET_EXCEPTION_STATE</span>() <span class="op">&amp;</span> <span class="ident">_MM_EXCEPT_OVERFLOW</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
+    <span class="comment">// handle overflow</span>
+}</code></pre></div>
+<h2 id="masking-flags" class="section-header"><a href="#masking-flags">Masking Flags</a></h2>
+<p>There is one masking flag for each exception flag: <code>_MM_MASK_INVALID</code>,
+<code>_MM_MASK_DENORM</code>, <code>_MM_MASK_DIV_ZERO</code>, <code>_MM_MASK_OVERFLOW</code>,
+<code>_MM_MASK_UNDERFLOW</code>, <code>_MM_MASK_INEXACT</code>.</p>
+<p>A single masking bit can be set via</p>
+
+<div class='information'><div class='tooltip ignore'>ⓘ</div></div><div class="example-wrap"><pre class="rust rust-example-rendered ignore"><code><span class="ident">_MM_SET_EXCEPTION_MASK</span>(<span class="ident">_MM_MASK_UNDERFLOW</span>);</code></pre></div>
+<p>However, since mask bits are by default all set to 1, it is more common to
+want to <em>disable</em> certain bits. For example, to unmask the underflow
+exception, use:</p>
+
+<div class='information'><div class='tooltip ignore'>ⓘ</div></div><div class="example-wrap"><pre class="rust rust-example-rendered ignore"><code><span class="ident">_mm_setcsr</span>(<span class="ident">_mm_getcsr</span>() <span class="op">&amp;</span> <span class="op">!</span><span class="ident">_MM_MASK_UNDERFLOW</span>); <span class="comment">// unmask underflow</span>
+<span class="ident">exception</span></code></pre></div>
+<p>Warning: an unmasked exception will cause an exception handler to be
+called.
+The standard handler will simply terminate the process. So, in this case
+any underflow exception would terminate the current process with something
+like <code>signal: 8, SIGFPE: erroneous arithmetic operation</code>.</p>
+<h2 id="rounding-mode" class="section-header"><a href="#rounding-mode">Rounding Mode</a></h2>
+<p>The rounding mode is describe using two bits. It can be read and set using
+the convenience wrappers <code>_MM_GET_ROUNDING_MODE()</code> and
+<code>_MM_SET_ROUNDING_MODE(mode)</code>.</p>
+<p>The rounding modes are:</p>
+<ul>
+<li>
+<p><code>_MM_ROUND_NEAREST</code>: (default) Round to closest to the infinite precision
+value. If two values are equally close, round to even (i.e., least
+significant bit will be zero).</p>
+</li>
+<li>
+<p><code>_MM_ROUND_DOWN</code>: Round toward negative Infinity.</p>
+</li>
+<li>
+<p><code>_MM_ROUND_UP</code>: Round toward positive Infinity.</p>
+</li>
+<li>
+<p><code>_MM_ROUND_TOWARD_ZERO</code>: Round towards zero (truncate).</p>
+</li>
+</ul>
+<p>Example:</p>
+
+<div class='information'><div class='tooltip ignore'>ⓘ</div></div><div class="example-wrap"><pre class="rust rust-example-rendered ignore"><code><span class="ident">_MM_SET_ROUNDING_MODE</span>(<span class="ident">_MM_ROUND_DOWN</span>)</code></pre></div>
+<h2 id="denormals-are-zeroflush-to-zero-mode" class="section-header"><a href="#denormals-are-zeroflush-to-zero-mode">Denormals-are-zero/Flush-to-zero Mode</a></h2>
+<p>If this bit is set, values that would be denormalized will be set to zero
+instead. This is turned off by default.</p>
+<p>You can read and enable/disable this mode via the helper functions
+<code>_MM_GET_FLUSH_ZERO_MODE()</code> and <code>_MM_SET_FLUSH_ZERO_MODE()</code>:</p>
+
+<div class='information'><div class='tooltip ignore'>ⓘ</div></div><div class="example-wrap"><pre class="rust rust-example-rendered ignore"><code><span class="ident">_MM_SET_FLUSH_ZERO_MODE</span>(<span class="ident">_MM_FLUSH_ZERO_OFF</span>); <span class="comment">// turn off (default)</span>
+<span class="ident">_MM_SET_FLUSH_ZERO_MODE</span>(<span class="ident">_MM_FLUSH_ZERO_ON</span>); <span class="comment">// turn on</span></code></pre></div>
+<p><a href="https://software.intel.com/sites/landingpage/IntrinsicsGuide/#text=_mm_setcsr">Intel’s documentation</a></p>
+</div></details></section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="anoma_apps" data-search-index-js="../../../../search-index.js" data-search-js="../../../../search.js"></div>
+    <script src="../../../../main.js"></script>
+</body></html>
