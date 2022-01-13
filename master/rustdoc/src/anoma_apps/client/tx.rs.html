@@ -1011,6 +1011,12 @@
 <span id="1011">1011</span>
 <span id="1012">1012</span>
 <span id="1013">1013</span>
+<span id="1014">1014</span>
+<span id="1015">1015</span>
+<span id="1016">1016</span>
+<span id="1017">1017</span>
+<span id="1018">1018</span>
+<span id="1019">1019</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std::borrow::Cow</span>;
 <span class="kw">use</span> <span class="ident">std::convert::TryFrom</span>;
 
@@ -1906,12 +1912,12 @@
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Serialize</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">TxResponse</span> {
-    <span class="ident">info</span>: <span class="ident">String</span>,
-    <span class="ident">height</span>: <span class="ident">String</span>,
-    <span class="ident">hash</span>: <span class="ident">String</span>,
-    <span class="ident">code</span>: <span class="ident">String</span>,
-    <span class="ident">gas_used</span>: <span class="ident">String</span>,
-    <span class="ident">initialized_accounts</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span> <span class="ident">info</span>: <span class="ident">String</span>,
+    <span class="kw">pub</span> <span class="ident">height</span>: <span class="ident">String</span>,
+    <span class="kw">pub</span> <span class="ident">hash</span>: <span class="ident">String</span>,
+    <span class="kw">pub</span> <span class="ident">code</span>: <span class="ident">String</span>,
+    <span class="kw">pub</span> <span class="ident">gas_used</span>: <span class="ident">String</span>,
+    <span class="kw">pub</span> <span class="ident">initialized_accounts</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span>,
 }
 
 <span class="doccomment">/// Parse the JSON payload received from a subscription</span>
@@ -1963,10 +1969,14 @@
         <span class="kw">let</span> <span class="ident">tx_hash_json</span> <span class="op">=</span> <span class="ident">serde_json::Value::String</span>(<span class="ident">tx_hash</span>.<span class="ident">clone</span>());
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">selector</span> <span class="op">=</span> <span class="ident">jsonpath::selector</span>(<span class="kw-2">&amp;</span><span class="ident">json</span>);
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">index</span> <span class="op">=</span> <span class="number">0</span>;
+        <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
+        <span class="kw">let</span> <span class="ident">evt_key</span> <span class="op">=</span> <span class="string">&quot;applied&quot;</span>;
+        <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
+        <span class="kw">let</span> <span class="ident">evt_key</span> <span class="op">=</span> <span class="string">&quot;accepted&quot;</span>;
         <span class="comment">// Find the tx with a matching hash</span>
         <span class="kw">let</span> <span class="ident">hash</span> <span class="op">=</span> <span class="kw">loop</span> {
             <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Ok</span>(<span class="ident">hash</span>) <span class="op">=</span>
-                <span class="ident">selector</span>(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;$.events.[&#39;applied.hash&#39;][{}]&quot;</span>, <span class="ident">index</span>))
+                <span class="ident">selector</span>(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;$.events.[&#39;{}.hash&#39;][{}]&quot;</span>, <span class="ident">evt_key</span>, <span class="ident">index</span>))
             {
                 <span class="kw">let</span> <span class="ident">hash</span> <span class="op">=</span> <span class="ident">hash</span>[<span class="number">0</span>].<span class="ident">clone</span>();
                 <span class="kw">if</span> <span class="ident">hash</span> <span class="op">=</span><span class="op">=</span> <span class="ident">tx_hash_json</span> {
@@ -1983,18 +1993,20 @@
             }
         };
         <span class="kw">let</span> <span class="ident">info</span> <span class="op">=</span>
-            <span class="ident">selector</span>(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;$.events.[&#39;applied.info&#39;][{}]&quot;</span>, <span class="ident">index</span>)).<span class="ident">unwrap</span>();
+            <span class="ident">selector</span>(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;$.events.[&#39;{}.info&#39;][{}]&quot;</span>, <span class="ident">evt_key</span>, <span class="ident">index</span>))
+                .<span class="ident">unwrap</span>();
         <span class="kw">let</span> <span class="ident">height</span> <span class="op">=</span>
-            <span class="ident">selector</span>(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;$.events.[&#39;applied.height&#39;][{}]&quot;</span>, <span class="ident">index</span>))
+            <span class="ident">selector</span>(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;$.events.[&#39;{}.height&#39;][{}]&quot;</span>, <span class="ident">evt_key</span>, <span class="ident">index</span>))
                 .<span class="ident">unwrap</span>();
         <span class="kw">let</span> <span class="ident">code</span> <span class="op">=</span>
-            <span class="ident">selector</span>(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;$.events.[&#39;applied.code&#39;][{}]&quot;</span>, <span class="ident">index</span>)).<span class="ident">unwrap</span>();
+            <span class="ident">selector</span>(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;$.events.[&#39;{}.code&#39;][{}]&quot;</span>, <span class="ident">evt_key</span>, <span class="ident">index</span>))
+                .<span class="ident">unwrap</span>();
         <span class="kw">let</span> <span class="ident">gas_used</span> <span class="op">=</span>
-            <span class="ident">selector</span>(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;$.events.[&#39;applied.gas_used&#39;][{}]&quot;</span>, <span class="ident">index</span>))
+            <span class="ident">selector</span>(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;$.events.[&#39;{}.gas_used&#39;][{}]&quot;</span>, <span class="ident">evt_key</span>, <span class="ident">index</span>))
                 .<span class="ident">unwrap</span>();
         <span class="kw">let</span> <span class="ident">initialized_accounts</span> <span class="op">=</span> <span class="ident">selector</span>(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
-            <span class="string">&quot;$.events.[&#39;applied.initialized_accounts&#39;][{}]&quot;</span>,
-            <span class="ident">index</span>
+            <span class="string">&quot;$.events.[&#39;{}.initialized_accounts&#39;][{}]&quot;</span>,
+            <span class="ident">evt_key</span>, <span class="ident">index</span>
         ));
         <span class="kw">let</span> <span class="ident">initialized_accounts</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">initialized_accounts</span> {
             <span class="prelude-val">Ok</span>(<span class="ident">values</span>) <span class="kw">if</span> <span class="op">!</span><span class="ident">values</span>.<span class="ident">is_empty</span>() <span class="op">=</span><span class="op">&gt;</span> {

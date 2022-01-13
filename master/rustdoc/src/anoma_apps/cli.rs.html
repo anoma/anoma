@@ -2495,6 +2495,55 @@
 <span id="2495">2495</span>
 <span id="2496">2496</span>
 <span id="2497">2497</span>
+<span id="2498">2498</span>
+<span id="2499">2499</span>
+<span id="2500">2500</span>
+<span id="2501">2501</span>
+<span id="2502">2502</span>
+<span id="2503">2503</span>
+<span id="2504">2504</span>
+<span id="2505">2505</span>
+<span id="2506">2506</span>
+<span id="2507">2507</span>
+<span id="2508">2508</span>
+<span id="2509">2509</span>
+<span id="2510">2510</span>
+<span id="2511">2511</span>
+<span id="2512">2512</span>
+<span id="2513">2513</span>
+<span id="2514">2514</span>
+<span id="2515">2515</span>
+<span id="2516">2516</span>
+<span id="2517">2517</span>
+<span id="2518">2518</span>
+<span id="2519">2519</span>
+<span id="2520">2520</span>
+<span id="2521">2521</span>
+<span id="2522">2522</span>
+<span id="2523">2523</span>
+<span id="2524">2524</span>
+<span id="2525">2525</span>
+<span id="2526">2526</span>
+<span id="2527">2527</span>
+<span id="2528">2528</span>
+<span id="2529">2529</span>
+<span id="2530">2530</span>
+<span id="2531">2531</span>
+<span id="2532">2532</span>
+<span id="2533">2533</span>
+<span id="2534">2534</span>
+<span id="2535">2535</span>
+<span id="2536">2536</span>
+<span id="2537">2537</span>
+<span id="2538">2538</span>
+<span id="2539">2539</span>
+<span id="2540">2540</span>
+<span id="2541">2541</span>
+<span id="2542">2542</span>
+<span id="2543">2543</span>
+<span id="2544">2544</span>
+<span id="2545">2545</span>
+<span id="2546">2546</span>
 </pre><pre class="rust"><code><span class="doccomment">//! The CLI commands that are re-used between the executables `anoma`,</span>
 <span class="doccomment">//! `anoma-node` and `anoma-client`.</span>
 <span class="doccomment">//!</span>
@@ -2651,6 +2700,7 @@
                 .<span class="ident">subcommand</span>(<span class="ident">QueryBonds::def</span>().<span class="ident">display_order</span>(<span class="number">3</span>))
                 .<span class="ident">subcommand</span>(<span class="ident">QueryVotingPower::def</span>().<span class="ident">display_order</span>(<span class="number">3</span>))
                 .<span class="ident">subcommand</span>(<span class="ident">QuerySlashes::def</span>().<span class="ident">display_order</span>(<span class="number">3</span>))
+                .<span class="ident">subcommand</span>(<span class="ident">QueryResult::def</span>().<span class="ident">display_order</span>(<span class="number">3</span>))
                 <span class="comment">// Intents</span>
                 .<span class="ident">subcommand</span>(<span class="ident">Intent::def</span>().<span class="ident">display_order</span>(<span class="number">4</span>))
                 .<span class="ident">subcommand</span>(<span class="ident">SubscribeTopic::def</span>().<span class="ident">display_order</span>(<span class="number">4</span>))
@@ -2675,6 +2725,7 @@
             <span class="kw">let</span> <span class="ident">query_voting_power</span> <span class="op">=</span>
                 <span class="ident"><span class="self">Self</span>::parse_with_ctx</span>(<span class="ident">matches</span>, <span class="ident">QueryVotingPower</span>);
             <span class="kw">let</span> <span class="ident">query_slashes</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::parse_with_ctx</span>(<span class="ident">matches</span>, <span class="ident">QuerySlashes</span>);
+            <span class="kw">let</span> <span class="ident">query_result</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::parse_with_ctx</span>(<span class="ident">matches</span>, <span class="ident">QueryResult</span>);
             <span class="kw">let</span> <span class="ident">intent</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::parse_with_ctx</span>(<span class="ident">matches</span>, <span class="ident">Intent</span>);
             <span class="kw">let</span> <span class="ident">subscribe_topic</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::parse_with_ctx</span>(<span class="ident">matches</span>, <span class="ident">SubscribeTopic</span>);
             <span class="kw">let</span> <span class="ident">utils</span> <span class="op">=</span> <span class="ident">SubCmd::parse</span>(<span class="ident">matches</span>).<span class="ident">map</span>(<span class="ident"><span class="self">Self</span>::WithoutContext</span>);
@@ -2691,6 +2742,7 @@
                 .<span class="ident">or</span>(<span class="ident">query_bonds</span>)
                 .<span class="ident">or</span>(<span class="ident">query_voting_power</span>)
                 .<span class="ident">or</span>(<span class="ident">query_slashes</span>)
+                .<span class="ident">or</span>(<span class="ident">query_result</span>)
                 .<span class="ident">or</span>(<span class="ident">intent</span>)
                 .<span class="ident">or</span>(<span class="ident">subscribe_topic</span>)
                 .<span class="ident">or</span>(<span class="ident">utils</span>)
@@ -2731,6 +2783,7 @@
         <span class="comment">// Ledger cmds</span>
         <span class="ident">TxCustom</span>(<span class="ident">TxCustom</span>),
         <span class="ident">TxTransfer</span>(<span class="ident">TxTransfer</span>),
+        <span class="ident">QueryResult</span>(<span class="ident">QueryResult</span>),
         <span class="ident">TxUpdateVp</span>(<span class="ident">TxUpdateVp</span>),
         <span class="ident">TxInitAccount</span>(<span class="ident">TxInitAccount</span>),
         <span class="ident">TxInitValidator</span>(<span class="ident">TxInitValidator</span>),
@@ -3169,6 +3222,25 @@
         <span class="kw">fn</span> <span class="ident">def</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">App</span> {
             <span class="ident">App::new</span>(<span class="ident"><span class="self">Self</span>::CMD</span>)
                 .<span class="ident">about</span>(<span class="string">&quot;Generate the default configuration file.&quot;</span>)
+        }
+    }
+
+    <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
+    <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">QueryResult</span>(<span class="kw">pub</span> <span class="ident">args::QueryResult</span>);
+
+    <span class="kw">impl</span> <span class="ident">SubCmd</span> <span class="kw">for</span> <span class="ident">QueryResult</span> {
+        <span class="kw">const</span> <span class="ident">CMD</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;tx-result&quot;</span>;
+
+        <span class="kw">fn</span> <span class="ident">parse</span>(<span class="ident">matches</span>: <span class="kw-2">&amp;</span><span class="ident">ArgMatches</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
+            <span class="ident">matches</span>
+                .<span class="ident">subcommand_matches</span>(<span class="ident"><span class="self">Self</span>::CMD</span>)
+                .<span class="ident">map</span>(<span class="op">|</span><span class="ident">matches</span><span class="op">|</span> <span class="ident">QueryResult</span>(<span class="ident">args::QueryResult::parse</span>(<span class="ident">matches</span>)))
+        }
+
+        <span class="kw">fn</span> <span class="ident">def</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">App</span> {
+            <span class="ident">App::new</span>(<span class="ident"><span class="self">Self</span>::CMD</span>)
+                .<span class="ident">about</span>(<span class="string">&quot;Query the result of a transaction.&quot;</span>)
+                .<span class="ident">add_args</span>::<span class="op">&lt;</span><span class="ident">args::QueryResult</span><span class="op">&gt;</span>()
         }
     }
 
@@ -3672,6 +3744,7 @@
     <span class="kw">const</span> <span class="ident">TOPIC</span>: <span class="ident">Arg</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">arg</span>(<span class="string">&quot;topic&quot;</span>);
     <span class="kw">const</span> <span class="ident">TOPICS</span>: <span class="ident">ArgMulti</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">TOPIC</span>.<span class="ident">multi</span>();
     <span class="kw">const</span> <span class="ident">TX_CODE_PATH</span>: <span class="ident">ArgOpt</span><span class="op">&lt;</span><span class="ident">PathBuf</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">arg_opt</span>(<span class="string">&quot;tx-code-path&quot;</span>);
+    <span class="kw">const</span> <span class="ident">TX_HASH</span>: <span class="ident">Arg</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">arg</span>(<span class="string">&quot;tx-hash&quot;</span>);
     <span class="kw">const</span> <span class="ident">UNSAFE_DONT_ENCRYPT</span>: <span class="ident">ArgFlag</span> <span class="op">=</span> <span class="ident">flag</span>(<span class="string">&quot;unsafe-dont-encrypt&quot;</span>);
     <span class="kw">const</span> <span class="ident">UNSAFE_SHOW_SECRET</span>: <span class="ident">ArgFlag</span> <span class="op">=</span> <span class="ident">flag</span>(<span class="string">&quot;unsafe-show-secret&quot;</span>);
     <span class="kw">const</span> <span class="ident">VALIDATOR</span>: <span class="ident">Arg</span><span class="op">&lt;</span><span class="ident">WalletAddress</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">arg</span>(<span class="string">&quot;validator&quot;</span>);
@@ -3731,6 +3804,31 @@
                     <span class="string">&quot;The mode in which to run Anoma. Options are \n\t * \
                      Validator (default)\n\t * Full\n\t * Seed&quot;</span>,
                 ))
+        }
+    }
+
+    <span class="doccomment">/// Transaction associated results arguments</span>
+    <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
+    <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">QueryResult</span> {
+        <span class="doccomment">/// Common query args</span>
+        <span class="kw">pub</span> <span class="ident">query</span>: <span class="ident">Query</span>,
+        <span class="doccomment">/// Hash of transaction to lookup</span>
+        <span class="kw">pub</span> <span class="ident">tx_hash</span>: <span class="ident">String</span>,
+    }
+
+    <span class="kw">impl</span> <span class="ident">Args</span> <span class="kw">for</span> <span class="ident">QueryResult</span> {
+        <span class="kw">fn</span> <span class="ident">parse</span>(<span class="ident">matches</span>: <span class="kw-2">&amp;</span><span class="ident">ArgMatches</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+            <span class="kw">let</span> <span class="ident">query</span> <span class="op">=</span> <span class="ident">Query::parse</span>(<span class="ident">matches</span>);
+            <span class="kw">let</span> <span class="ident">tx_hash</span> <span class="op">=</span> <span class="ident">TX_HASH</span>.<span class="ident">parse</span>(<span class="ident">matches</span>);
+            <span class="self">Self</span> { <span class="ident">query</span>, <span class="ident">tx_hash</span> }
+        }
+
+        <span class="kw">fn</span> <span class="ident">def</span>(<span class="ident">app</span>: <span class="ident">App</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">App</span> {
+            <span class="ident">app</span>.<span class="ident">add_args</span>::<span class="op">&lt;</span><span class="ident">Query</span><span class="op">&gt;</span>().<span class="ident">arg</span>(
+                <span class="ident">TX_HASH</span>
+                    .<span class="ident">def</span>()
+                    .<span class="ident">about</span>(<span class="string">&quot;The hash of the transaction being looked up.&quot;</span>),
+            )
         }
     }
 
