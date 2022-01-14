@@ -459,22 +459,22 @@ steps:
     SCCACHE_S3_KEY_PREFIX: sccache-test-unit-abci
   depends_on:
   - download-wasm
-- name: test-e2e
-  image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/anoma:latest
-  pull: never
-  commands:
-  - sccache --start-server
-  - make test-e2e-abci-plus-plus
-  environment:
-    AWS_ACCESS_KEY_ID:
-      from_secret: aws_access_key_id
-    AWS_SECRET_ACCESS_KEY:
-      from_secret: aws_secret_access_key
-    SCCACHE_BUCKET: heliax-drone-cache-v2
-    SCCACHE_S3_KEY_PREFIX: sccache-test-e2e-abci
-    TENDERMINT: /usr/local/bin/tendermint++
-  depends_on:
-  - download-wasm
+# - name: test-e2e
+#   image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/anoma:latest
+#   pull: never
+#   commands:
+#   - sccache --start-server
+#   - make test-e2e-abci-plus-plus
+#   environment:
+#     AWS_ACCESS_KEY_ID:
+#       from_secret: aws_access_key_id
+#     AWS_SECRET_ACCESS_KEY:
+#       from_secret: aws_secret_access_key
+#     SCCACHE_BUCKET: heliax-drone-cache-v2
+#     SCCACHE_S3_KEY_PREFIX: sccache-test-e2e-abci
+#     TENDERMINT: /usr/local/bin/tendermint++
+#   depends_on:
+#   - download-wasm
 trigger:
   event:
   - pull_request
@@ -816,22 +816,22 @@ steps:
     SCCACHE_S3_KEY_PREFIX: sccache-test-unit-abci
   depends_on:
   - download-wasm
-- name: test-e2e
-  image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/anoma:latest
-  pull: never
-  commands:
-  - sccache --start-server
-  - make test-e2e-abci-plus-plus
-  environment:
-    AWS_ACCESS_KEY_ID:
-      from_secret: aws_access_key_id
-    AWS_SECRET_ACCESS_KEY:
-      from_secret: aws_secret_access_key
-    SCCACHE_BUCKET: heliax-drone-cache-v2
-    SCCACHE_S3_KEY_PREFIX: sccache-test-e2e-abci
-    TENDERMINT: /usr/local/bin/tendermint++
-  depends_on:
-  - download-wasm
+# - name: test-e2e
+#   image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/anoma:latest
+#   pull: never
+#   commands:
+#   - sccache --start-server
+#   - make test-e2e-abci-plus-plus
+#   environment:
+#     AWS_ACCESS_KEY_ID:
+#       from_secret: aws_access_key_id
+#     AWS_SECRET_ACCESS_KEY:
+#       from_secret: aws_secret_access_key
+#     SCCACHE_BUCKET: heliax-drone-cache-v2
+#     SCCACHE_S3_KEY_PREFIX: sccache-test-e2e-abci
+#     TENDERMINT: /usr/local/bin/tendermint++
+#   depends_on:
+#   - download-wasm
 trigger:
   event:
   - push
