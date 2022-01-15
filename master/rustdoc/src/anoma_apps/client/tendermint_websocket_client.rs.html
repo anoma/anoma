@@ -742,6 +742,11 @@
 <span id="742">742</span>
 <span id="743">743</span>
 <span id="744">744</span>
+<span id="745">745</span>
+<span id="746">746</span>
+<span id="747">747</span>
+<span id="748">748</span>
+<span id="749">749</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std::collections::HashMap</span>;
 <span class="kw">use</span> <span class="ident">std::convert::TryFrom</span>;
 <span class="kw">use</span> <span class="ident">std::fmt</span>::{<span class="ident">Display</span>, <span class="ident">Formatter</span>};
@@ -749,6 +754,7 @@
 <span class="kw">use</span> <span class="ident">std::sync</span>::{<span class="ident">Arc</span>, <span class="ident">Mutex</span>};
 <span class="kw">use</span> <span class="ident">std::time::Duration</span>;
 
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
 <span class="kw">use</span> <span class="ident">anoma::types::transaction</span>::{<span class="ident">hash_tx</span> <span class="kw">as</span> <span class="ident">hash_tx_bytes</span>, <span class="ident">Hash</span>};
 <span class="kw">use</span> <span class="ident">async_trait::async_trait</span>;
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
@@ -769,8 +775,6 @@
 <span class="kw">use</span> <span class="ident">tendermint_rpc_abci</span>::{
     <span class="ident">Client</span>, <span class="ident">Error</span> <span class="kw">as</span> <span class="ident">RpcError</span>, <span class="ident">Request</span>, <span class="ident">Response</span>, <span class="ident">SimpleRequest</span>,
 };
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
-<span class="kw">use</span> <span class="ident">tendermint_stable::abci::transaction</span>;
 <span class="kw">use</span> <span class="ident">thiserror::Error</span>;
 <span class="kw">use</span> <span class="ident">tokio::time::Instant</span>;
 <span class="kw">use</span> <span class="ident">websocket::result::WebSocketError</span>;
@@ -1201,6 +1205,7 @@
     }
 }
 
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">hash_tx</span>(<span class="ident">tx_bytes</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">transaction::Hash</span> {
     <span class="kw">let</span> <span class="ident">Hash</span>(<span class="ident">hash_bytes</span>) <span class="op">=</span> <span class="ident">hash_tx_bytes</span>(<span class="ident">tx_bytes</span>);
     <span class="ident">transaction::Hash::new</span>(<span class="ident">hash_bytes</span>)
@@ -1227,7 +1232,10 @@
 <span class="kw">mod</span> <span class="ident">test_tendermint_websocket_client</span> {
     <span class="kw">use</span> <span class="ident">std::time::Duration</span>;
 
+    <span class="kw">use</span> <span class="ident">anoma::types::transaction::hash_tx</span> <span class="kw">as</span> <span class="ident">hash_tx_bytes</span>;
     <span class="kw">use</span> <span class="ident">serde</span>::{<span class="ident">Deserialize</span>, <span class="ident">Serialize</span>};
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
+    <span class="kw">use</span> <span class="ident">tendermint::abci::transaction</span>;
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
     <span class="kw">use</span> <span class="ident">tendermint_rpc::endpoint::abci_info::AbciInfo</span>;
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
@@ -1240,6 +1248,8 @@
     <span class="kw">use</span> <span class="ident">tendermint_rpc_abci::query</span>::{<span class="ident">EventType</span>, <span class="ident">Query</span>};
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
     <span class="kw">use</span> <span class="ident">tendermint_rpc_abci::Client</span>;
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
+    <span class="kw">use</span> <span class="ident">tendermint_stable::abci::transaction</span>;
     <span class="kw">use</span> <span class="ident">websocket::sync::Server</span>;
     <span class="kw">use</span> <span class="ident">websocket</span>::{<span class="ident">Message</span>, <span class="ident">OwnedMessage</span>};
 
@@ -1311,8 +1321,8 @@
                     <span class="comment">// Mock a subscription result returning on the wire before</span>
                     <span class="comment">// the simple request result</span>
                     <span class="kw">let</span> <span class="ident">info</span> <span class="op">=</span> <span class="ident">AbciInfo</span> {
-                        <span class="ident">last_block_app_hash</span>: <span class="ident"><span class="kw">super</span>::hash_tx</span>(
-                            <span class="string">&quot;Testing&quot;</span>.<span class="ident">as_bytes</span>(),
+                        <span class="ident">last_block_app_hash</span>: <span class="ident">transaction::Hash::new</span>(
+                            <span class="ident">hash_tx_bytes</span>(<span class="string">&quot;Testing&quot;</span>.<span class="ident">as_bytes</span>()).<span class="number">0</span>,
                         )
                         .<span class="ident">as_ref</span>()
                         .<span class="ident">into</span>(),

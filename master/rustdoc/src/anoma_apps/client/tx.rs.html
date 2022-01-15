@@ -1017,6 +1017,52 @@
 <span id="1017">1017</span>
 <span id="1018">1018</span>
 <span id="1019">1019</span>
+<span id="1020">1020</span>
+<span id="1021">1021</span>
+<span id="1022">1022</span>
+<span id="1023">1023</span>
+<span id="1024">1024</span>
+<span id="1025">1025</span>
+<span id="1026">1026</span>
+<span id="1027">1027</span>
+<span id="1028">1028</span>
+<span id="1029">1029</span>
+<span id="1030">1030</span>
+<span id="1031">1031</span>
+<span id="1032">1032</span>
+<span id="1033">1033</span>
+<span id="1034">1034</span>
+<span id="1035">1035</span>
+<span id="1036">1036</span>
+<span id="1037">1037</span>
+<span id="1038">1038</span>
+<span id="1039">1039</span>
+<span id="1040">1040</span>
+<span id="1041">1041</span>
+<span id="1042">1042</span>
+<span id="1043">1043</span>
+<span id="1044">1044</span>
+<span id="1045">1045</span>
+<span id="1046">1046</span>
+<span id="1047">1047</span>
+<span id="1048">1048</span>
+<span id="1049">1049</span>
+<span id="1050">1050</span>
+<span id="1051">1051</span>
+<span id="1052">1052</span>
+<span id="1053">1053</span>
+<span id="1054">1054</span>
+<span id="1055">1055</span>
+<span id="1056">1056</span>
+<span id="1057">1057</span>
+<span id="1058">1058</span>
+<span id="1059">1059</span>
+<span id="1060">1060</span>
+<span id="1061">1061</span>
+<span id="1062">1062</span>
+<span id="1063">1063</span>
+<span id="1064">1064</span>
+<span id="1065">1065</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std::borrow::Cow</span>;
 <span class="kw">use</span> <span class="ident">std::convert::TryFrom</span>;
 
@@ -1031,6 +1077,7 @@
 <span class="kw">use</span> <span class="ident">anoma</span>::{<span class="ident">ledger</span>, <span class="ident">vm</span>};
 <span class="kw">use</span> <span class="ident">async_std::io</span>::{<span class="self">self</span>, <span class="ident">WriteExt</span>};
 <span class="kw">use</span> <span class="ident">borsh::BorshSerialize</span>;
+<span class="kw">use</span> <span class="ident">itertools::Either</span>::<span class="kw-2">*</span>;
 <span class="kw">use</span> <span class="ident">jsonpath_lib</span> <span class="kw">as</span> <span class="ident">jsonpath</span>;
 <span class="kw">use</span> <span class="ident">serde::Serialize</span>;
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
@@ -1038,9 +1085,13 @@
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
 <span class="kw">use</span> <span class="ident">tendermint_config_abci::net::Address</span> <span class="kw">as</span> <span class="ident">TendermintAddress</span>;
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
+<span class="kw">use</span> <span class="ident">tendermint_rpc::endpoint::broadcast::tx_sync::Response</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
 <span class="kw">use</span> <span class="ident">tendermint_rpc::query</span>::{<span class="ident">EventType</span>, <span class="ident">Query</span>};
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
 <span class="kw">use</span> <span class="ident">tendermint_rpc</span>::{<span class="ident">Client</span>, <span class="ident">HttpClient</span>};
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
+<span class="kw">use</span> <span class="ident">tendermint_rpc_abci::endpoint::broadcast::tx_sync::Response</span>;
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
 <span class="kw">use</span> <span class="ident">tendermint_rpc_abci::query</span>::{<span class="ident">EventType</span>, <span class="ident">Query</span>};
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
@@ -1049,9 +1100,12 @@
 <span class="kw">use</span> <span class="kw">super</span>::{<span class="ident">rpc</span>, <span class="ident">signing</span>};
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::cli::context::WalletAddress</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::cli</span>::{<span class="ident">args</span>, <span class="ident">safe_exit</span>, <span class="ident">Context</span>};
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::client::tendermint_websocket_client::hash_tx</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::client::tendermint_websocket_client</span>::{
-    <span class="ident">hash_tx</span>, <span class="ident">Error</span>, <span class="ident">TendermintWebsocketClient</span>, <span class="ident">WebSocketAddress</span>,
+    <span class="ident">Error</span>, <span class="ident">TendermintWebsocketClient</span>, <span class="ident">WebSocketAddress</span>,
 };
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::node::ledger::events</span>::{<span class="ident">Attributes</span>, <span class="ident">EventType</span> <span class="kw">as</span> <span class="ident">TmEventType</span>};
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::node::ledger::tendermint_node</span>;
 
@@ -1072,7 +1126,7 @@
     <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx::new</span>(<span class="ident">tx_code</span>, <span class="ident">data</span>);
     <span class="kw">let</span> (<span class="ident">ctx</span>, <span class="ident">tx</span>, <span class="ident">keypair</span>) <span class="op">=</span> <span class="ident">sign_tx</span>(<span class="ident">ctx</span>, <span class="ident">tx</span>, <span class="kw-2">&amp;</span><span class="ident">args</span>.<span class="ident">tx</span>, <span class="prelude-val">None</span>).<span class="kw">await</span>;
     <span class="kw">let</span> (<span class="ident">ctx</span>, <span class="ident">initialized_accounts</span>) <span class="op">=</span>
-        <span class="ident">submit_tx</span>(<span class="ident">ctx</span>, <span class="kw-2">&amp;</span><span class="ident">args</span>.<span class="ident">tx</span>, <span class="ident">tx</span>, <span class="kw-2">&amp;</span><span class="ident">keypair</span>).<span class="kw">await</span>;
+        <span class="ident">process_tx</span>(<span class="ident">ctx</span>, <span class="kw-2">&amp;</span><span class="ident">args</span>.<span class="ident">tx</span>, <span class="ident">tx</span>, <span class="kw-2">&amp;</span><span class="ident">keypair</span>).<span class="kw">await</span>;
     <span class="ident">save_initialized_accounts</span>(<span class="ident">ctx</span>, <span class="kw-2">&amp;</span><span class="ident">args</span>.<span class="ident">tx</span>, <span class="ident">initialized_accounts</span>).<span class="kw">await</span>;
 }
 
@@ -1128,7 +1182,7 @@
 
     <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx::new</span>(<span class="ident">tx_code</span>, <span class="prelude-val">Some</span>(<span class="ident">data</span>));
     <span class="kw">let</span> (<span class="ident">ctx</span>, <span class="ident">tx</span>, <span class="ident">keypair</span>) <span class="op">=</span> <span class="ident">sign_tx</span>(<span class="ident">ctx</span>, <span class="ident">tx</span>, <span class="kw-2">&amp;</span><span class="ident">args</span>.<span class="ident">tx</span>, <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="ident">args</span>.<span class="ident">addr</span>)).<span class="kw">await</span>;
-    <span class="ident">submit_tx</span>(<span class="ident">ctx</span>, <span class="kw-2">&amp;</span><span class="ident">args</span>.<span class="ident">tx</span>, <span class="ident">tx</span>, <span class="kw-2">&amp;</span><span class="ident">keypair</span>).<span class="kw">await</span>;
+    <span class="ident">process_tx</span>(<span class="ident">ctx</span>, <span class="kw-2">&amp;</span><span class="ident">args</span>.<span class="ident">tx</span>, <span class="ident">tx</span>, <span class="kw-2">&amp;</span><span class="ident">keypair</span>).<span class="kw">await</span>;
 }
 
 <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">submit_init_account</span>(<span class="kw-2">mut</span> <span class="ident">ctx</span>: <span class="ident">Context</span>, <span class="ident">args</span>: <span class="ident">args::TxInitAccount</span>) {
@@ -1156,7 +1210,7 @@
     <span class="kw">let</span> (<span class="ident">ctx</span>, <span class="ident">tx</span>, <span class="ident">keypair</span>) <span class="op">=</span>
         <span class="ident">sign_tx</span>(<span class="ident">ctx</span>, <span class="ident">tx</span>, <span class="kw-2">&amp;</span><span class="ident">args</span>.<span class="ident">tx</span>, <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="ident">args</span>.<span class="ident">source</span>)).<span class="kw">await</span>;
     <span class="kw">let</span> (<span class="ident">ctx</span>, <span class="ident">initialized_accounts</span>) <span class="op">=</span>
-        <span class="ident">submit_tx</span>(<span class="ident">ctx</span>, <span class="kw-2">&amp;</span><span class="ident">args</span>.<span class="ident">tx</span>, <span class="ident">tx</span>, <span class="kw-2">&amp;</span><span class="ident">keypair</span>).<span class="kw">await</span>;
+        <span class="ident">process_tx</span>(<span class="ident">ctx</span>, <span class="kw-2">&amp;</span><span class="ident">args</span>.<span class="ident">tx</span>, <span class="ident">tx</span>, <span class="kw-2">&amp;</span><span class="ident">keypair</span>).<span class="kw">await</span>;
     <span class="ident">save_initialized_accounts</span>(<span class="ident">ctx</span>, <span class="kw-2">&amp;</span><span class="ident">args</span>.<span class="ident">tx</span>, <span class="ident">initialized_accounts</span>).<span class="kw">await</span>;
 }
 
@@ -1252,7 +1306,7 @@
     <span class="kw">let</span> (<span class="ident">ctx</span>, <span class="ident">tx</span>, <span class="ident">keypair</span>) <span class="op">=</span> <span class="ident">sign_tx</span>(<span class="ident">ctx</span>, <span class="ident">tx</span>, <span class="kw-2">&amp;</span><span class="ident">tx_args</span>, <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="ident">source</span>)).<span class="kw">await</span>;
 
     <span class="kw">let</span> (<span class="kw-2">mut</span> <span class="ident">ctx</span>, <span class="ident">initialized_accounts</span>) <span class="op">=</span>
-        <span class="ident">submit_tx</span>(<span class="ident">ctx</span>, <span class="kw-2">&amp;</span><span class="ident">tx_args</span>, <span class="ident">tx</span>, <span class="kw-2">&amp;</span><span class="ident">keypair</span>).<span class="kw">await</span>;
+        <span class="ident">process_tx</span>(<span class="ident">ctx</span>, <span class="kw-2">&amp;</span><span class="ident">tx_args</span>, <span class="ident">tx</span>, <span class="kw-2">&amp;</span><span class="ident">keypair</span>).<span class="kw">await</span>;
     <span class="kw">if</span> <span class="op">!</span><span class="ident">tx_args</span>.<span class="ident">dry_run</span> {
         <span class="kw">let</span> (<span class="ident">validator_address_alias</span>, <span class="ident">validator_address</span>, <span class="ident">rewards_address_alias</span>) <span class="op">=</span>
             <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="ident">initialized_accounts</span>[..] {
@@ -1428,7 +1482,7 @@
     <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Tx::new</span>(<span class="ident">tx_code</span>, <span class="prelude-val">Some</span>(<span class="ident">data</span>));
     <span class="kw">let</span> (<span class="ident">ctx</span>, <span class="ident">tx</span>, <span class="ident">keypair</span>) <span class="op">=</span>
         <span class="ident">sign_tx</span>(<span class="ident">ctx</span>, <span class="ident">tx</span>, <span class="kw-2">&amp;</span><span class="ident">args</span>.<span class="ident">tx</span>, <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="ident">args</span>.<span class="ident">source</span>)).<span class="kw">await</span>;
-    <span class="ident">submit_tx</span>(<span class="ident">ctx</span>, <span class="kw-2">&amp;</span><span class="ident">args</span>.<span class="ident">tx</span>, <span class="ident">tx</span>, <span class="kw-2">&amp;</span><span class="ident">keypair</span>).<span class="kw">await</span>;
+    <span class="ident">process_tx</span>(<span class="ident">ctx</span>, <span class="kw-2">&amp;</span><span class="ident">args</span>.<span class="ident">tx</span>, <span class="ident">tx</span>, <span class="kw-2">&amp;</span><span class="ident">keypair</span>).<span class="kw">await</span>;
 }
 
 <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">submit_bond</span>(<span class="ident">ctx</span>: <span class="ident">Context</span>, <span class="ident">args</span>: <span class="ident">args::Bond</span>) {
@@ -1495,7 +1549,7 @@
     <span class="kw">let</span> <span class="ident">default_signer</span> <span class="op">=</span> <span class="ident">args</span>.<span class="ident">source</span>.<span class="ident">as_ref</span>().<span class="ident">unwrap_or</span>(<span class="kw-2">&amp;</span><span class="ident">args</span>.<span class="ident">validator</span>);
     <span class="kw">let</span> (<span class="ident">ctx</span>, <span class="ident">tx</span>, <span class="ident">keypair</span>) <span class="op">=</span>
         <span class="ident">sign_tx</span>(<span class="ident">ctx</span>, <span class="ident">tx</span>, <span class="kw-2">&amp;</span><span class="ident">args</span>.<span class="ident">tx</span>, <span class="prelude-val">Some</span>(<span class="ident">default_signer</span>)).<span class="kw">await</span>;
-    <span class="ident">submit_tx</span>(<span class="ident">ctx</span>, <span class="kw-2">&amp;</span><span class="ident">args</span>.<span class="ident">tx</span>, <span class="ident">tx</span>, <span class="kw-2">&amp;</span><span class="ident">keypair</span>).<span class="kw">await</span>;
+    <span class="ident">process_tx</span>(<span class="ident">ctx</span>, <span class="kw-2">&amp;</span><span class="ident">args</span>.<span class="ident">tx</span>, <span class="ident">tx</span>, <span class="kw-2">&amp;</span><span class="ident">keypair</span>).<span class="kw">await</span>;
 }
 
 <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">submit_unbond</span>(<span class="ident">ctx</span>: <span class="ident">Context</span>, <span class="ident">args</span>: <span class="ident">args::Unbond</span>) {
@@ -1565,7 +1619,7 @@
     <span class="kw">let</span> <span class="ident">default_signer</span> <span class="op">=</span> <span class="ident">args</span>.<span class="ident">source</span>.<span class="ident">as_ref</span>().<span class="ident">unwrap_or</span>(<span class="kw-2">&amp;</span><span class="ident">args</span>.<span class="ident">validator</span>);
     <span class="kw">let</span> (<span class="ident">ctx</span>, <span class="ident">tx</span>, <span class="ident">keypair</span>) <span class="op">=</span>
         <span class="ident">sign_tx</span>(<span class="ident">ctx</span>, <span class="ident">tx</span>, <span class="kw-2">&amp;</span><span class="ident">args</span>.<span class="ident">tx</span>, <span class="prelude-val">Some</span>(<span class="ident">default_signer</span>)).<span class="kw">await</span>;
-    <span class="ident">submit_tx</span>(<span class="ident">ctx</span>, <span class="kw-2">&amp;</span><span class="ident">args</span>.<span class="ident">tx</span>, <span class="ident">tx</span>, <span class="kw-2">&amp;</span><span class="ident">keypair</span>).<span class="kw">await</span>;
+    <span class="ident">process_tx</span>(<span class="ident">ctx</span>, <span class="kw-2">&amp;</span><span class="ident">args</span>.<span class="ident">tx</span>, <span class="ident">tx</span>, <span class="kw-2">&amp;</span><span class="ident">keypair</span>).<span class="kw">await</span>;
 }
 
 <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">submit_withdraw</span>(<span class="ident">ctx</span>: <span class="ident">Context</span>, <span class="ident">args</span>: <span class="ident">args::Withdraw</span>) {
@@ -1635,7 +1689,7 @@
     <span class="kw">let</span> <span class="ident">default_signer</span> <span class="op">=</span> <span class="ident">args</span>.<span class="ident">source</span>.<span class="ident">as_ref</span>().<span class="ident">unwrap_or</span>(<span class="kw-2">&amp;</span><span class="ident">args</span>.<span class="ident">validator</span>);
     <span class="kw">let</span> (<span class="ident">ctx</span>, <span class="ident">tx</span>, <span class="ident">keypair</span>) <span class="op">=</span>
         <span class="ident">sign_tx</span>(<span class="ident">ctx</span>, <span class="ident">tx</span>, <span class="kw-2">&amp;</span><span class="ident">args</span>.<span class="ident">tx</span>, <span class="prelude-val">Some</span>(<span class="ident">default_signer</span>)).<span class="kw">await</span>;
-    <span class="ident">submit_tx</span>(<span class="ident">ctx</span>, <span class="kw-2">&amp;</span><span class="ident">args</span>.<span class="ident">tx</span>, <span class="ident">tx</span>, <span class="kw-2">&amp;</span><span class="ident">keypair</span>).<span class="kw">await</span>;
+    <span class="ident">process_tx</span>(<span class="ident">ctx</span>, <span class="kw-2">&amp;</span><span class="ident">args</span>.<span class="ident">tx</span>, <span class="ident">tx</span>, <span class="kw-2">&amp;</span><span class="ident">keypair</span>).<span class="kw">await</span>;
 }
 
 <span class="doccomment">/// Sign a transaction with a given signing key or public key of a given signer.</span>
@@ -1671,7 +1725,7 @@
 
 <span class="doccomment">/// Submit transaction and wait for result. Returns a list of addresses</span>
 <span class="doccomment">/// initialized in the transaction if any. In dry run, this is always empty.</span>
-<span class="kw">async</span> <span class="kw">fn</span> <span class="ident">submit_tx</span>(
+<span class="kw">async</span> <span class="kw">fn</span> <span class="ident">process_tx</span>(
     <span class="ident">ctx</span>: <span class="ident">Context</span>,
     <span class="ident">args</span>: <span class="kw-2">&amp;</span><span class="ident">args::Tx</span>,
     <span class="ident">tx</span>: <span class="ident">Tx</span>,
@@ -1705,9 +1759,19 @@
             <span class="ident">args</span>.<span class="ident">gas_limit</span>.<span class="ident">clone</span>(),
             <span class="ident">tx</span>,
         );
-        <span class="kw">match</span> <span class="ident">broadcast_tx</span>(<span class="ident">args</span>.<span class="ident">ledger_address</span>.<span class="ident">clone</span>(), <span class="ident">tx</span>, <span class="ident">keypair</span>).<span class="kw">await</span> {
-            <span class="prelude-val">Ok</span>(<span class="ident">result</span>) <span class="op">=</span><span class="op">&gt;</span> (<span class="ident">ctx</span>, <span class="ident">result</span>.<span class="ident">initialized_accounts</span>),
-            <span class="prelude-val">Err</span>(<span class="ident">err</span>) <span class="op">=</span><span class="op">&gt;</span> {
+        <span class="comment">// Either broadcast or submit transaction and collect result into</span>
+        <span class="comment">// sum type</span>
+        <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">args</span>.<span class="ident">broadcast_only</span> {
+            <span class="ident">Left</span>(<span class="ident">broadcast_tx</span>(<span class="ident">args</span>.<span class="ident">ledger_address</span>.<span class="ident">clone</span>(), <span class="ident">tx</span>, <span class="ident">keypair</span>).<span class="kw">await</span>)
+        } <span class="kw">else</span> {
+            <span class="ident">Right</span>(<span class="ident">submit_tx</span>(<span class="ident">args</span>.<span class="ident">ledger_address</span>.<span class="ident">clone</span>(), <span class="ident">tx</span>, <span class="ident">keypair</span>).<span class="kw">await</span>)
+        };
+        <span class="comment">// Return result based on executed operation, otherwise deal with</span>
+        <span class="comment">// the encountered errors uniformly</span>
+        <span class="kw">match</span> <span class="ident">result</span> {
+            <span class="ident">Right</span>(<span class="prelude-val">Ok</span>(<span class="ident">result</span>)) <span class="op">=</span><span class="op">&gt;</span> (<span class="ident">ctx</span>, <span class="ident">result</span>.<span class="ident">initialized_accounts</span>),
+            <span class="ident">Left</span>(<span class="prelude-val">Ok</span>(<span class="kw">_</span>)) <span class="op">=</span><span class="op">&gt;</span> (<span class="ident">ctx</span>, <span class="ident">Vec::default</span>()),
+            <span class="ident">Right</span>(<span class="prelude-val">Err</span>(<span class="ident">err</span>)) <span class="op">|</span> <span class="ident">Left</span>(<span class="prelude-val">Err</span>(<span class="ident">err</span>)) <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="macro">eprintln!</span>(
                     <span class="string">&quot;Encountered error while broadcasting transaction: {}&quot;</span>,
                     <span class="ident">err</span>
@@ -1777,31 +1841,36 @@
     }
 }
 
-<span class="doccomment">/// Broadcast a transaction to be included in the blockchain.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// Checks that</span>
-<span class="doccomment">/// 1. The tx has been successfully included into the mempool of a validator</span>
-<span class="doccomment">/// 2. The tx with encrypted payload has been included on the blockchain</span>
-<span class="doccomment">/// 3. The decrypted payload of the tx has been included on the blockchain.</span>
+<span class="doccomment">/// Extract the wrapper transaction&#39;s hash and, if in ABCI++ mode, the inner</span>
+<span class="doccomment">/// transaction&#39;s hash. Useful for determining when parts of the given</span>
+<span class="doccomment">/// tranasaction make it on-chain.</span>
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">tx_hashes</span>(<span class="ident">tx</span>: <span class="kw-2">&amp;</span><span class="ident">WrapperTx</span>) <span class="op">-</span><span class="op">&gt;</span> (<span class="ident">String</span>, <span class="ident">String</span>) {
+    <span class="kw">let</span> <span class="ident">tx_hash</span> <span class="op">=</span> <span class="ident">tx</span>.<span class="ident">tx_hash</span>.<span class="ident">to_string</span>();
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
+    <span class="kw">return</span> (<span class="ident">hash_tx</span>(<span class="kw-2">&amp;</span><span class="ident">tx</span>.<span class="ident">try_to_vec</span>().<span class="ident">unwrap</span>()).<span class="ident">to_string</span>(), <span class="ident">tx_hash</span>);
+    <span class="comment">// In the case of ABCI, proceed as if inner and wrapper transaction</span>
+    <span class="comment">// are synonymous</span>
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
+    <span class="kw">return</span> (<span class="ident">tx_hash</span>.<span class="ident">clone</span>(), <span class="ident">tx_hash</span>);
+}
+
+<span class="doccomment">/// Broadcast a transaction to be included in the blockchain and checks that</span>
+<span class="doccomment">/// the tx has been successfully included into the mempool of a validator</span>
 <span class="doccomment">///</span>
 <span class="doccomment">/// In the case of errors in any of those stages, an error message is returned</span>
 <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">broadcast_tx</span>(
     <span class="ident">address</span>: <span class="ident">TendermintAddress</span>,
     <span class="ident">tx</span>: <span class="ident">WrapperTx</span>,
     <span class="ident">keypair</span>: <span class="kw-2">&amp;</span><span class="ident">Keypair</span>,
-) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">TxResponse</span>, <span class="ident">Error</span><span class="op">&gt;</span> {
-    <span class="comment">// We use this to determine when the wrapper tx makes it on-chain</span>
-    <span class="kw">let</span> <span class="ident">wrapper_tx_hash</span> <span class="op">=</span> <span class="kw">if</span> <span class="op">!</span><span class="macro">cfg!</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>) {
-        <span class="ident">hash_tx</span>(<span class="kw-2">&amp;</span><span class="ident">tx</span>.<span class="ident">try_to_vec</span>().<span class="ident">unwrap</span>()).<span class="ident">to_string</span>()
-    } <span class="kw">else</span> {
-        <span class="ident">tx</span>.<span class="ident">tx_hash</span>.<span class="ident">to_string</span>()
-    };
-    <span class="comment">// We use this to determine when the decrypted inner tx makes it on-chain</span>
-    <span class="kw">let</span> <span class="ident">decrypted_tx_hash</span> <span class="op">=</span> <span class="kw">if</span> <span class="op">!</span><span class="macro">cfg!</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>) {
-        <span class="prelude-val">Some</span>(<span class="ident">tx</span>.<span class="ident">tx_hash</span>.<span class="ident">to_string</span>())
-    } <span class="kw">else</span> {
-        <span class="prelude-val">None</span>
-    };
+) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Response</span>, <span class="ident">Error</span><span class="op">&gt;</span> {
+    <span class="comment">// These can later be used to determine when parts of the tx make it</span>
+    <span class="comment">// on-chain</span>
+    <span class="kw">let</span> (<span class="ident">wrapper_tx_hash</span>, <span class="ident">_decrypted_tx_hash</span>) <span class="op">=</span> <span class="ident">tx_hashes</span>(<span class="kw-2">&amp;</span><span class="ident">tx</span>);
+
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">wrapper_tx_subscription</span> <span class="op">=</span> <span class="ident">TendermintWebsocketClient::open</span>(
+        <span class="ident">WebSocketAddress::try_from</span>(<span class="ident">address</span>.<span class="ident">clone</span>())<span class="question-mark">?</span>,
+        <span class="prelude-val">None</span>,
+    )<span class="question-mark">?</span>;
 
     <span class="comment">// we sign all txs</span>
     <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">tx</span>
@@ -1809,102 +1878,124 @@
         .<span class="ident">expect</span>(<span class="string">&quot;Signing of the wrapper transaction should not fail&quot;</span>);
     <span class="kw">let</span> <span class="ident">tx_bytes</span> <span class="op">=</span> <span class="ident">tx</span>.<span class="ident">to_bytes</span>();
 
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">wrapper_tx_subscription</span> <span class="op">=</span> <span class="ident">TendermintWebsocketClient::open</span>(
-        <span class="ident">WebSocketAddress::try_from</span>(<span class="ident">address</span>.<span class="ident">clone</span>())<span class="question-mark">?</span>,
-        <span class="prelude-val">None</span>,
-    )<span class="question-mark">?</span>;
-
-    <span class="comment">// It is better to subscribe to the transaction before it is broadcast</span>
-    <span class="comment">//</span>
-    <span class="comment">// Note that the `applied.hash` key comes from a custom event</span>
-    <span class="comment">// created by the shell</span>
-    <span class="kw">let</span> <span class="ident">query</span> <span class="op">=</span> <span class="kw">if</span> <span class="op">!</span><span class="macro">cfg!</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>) {
-        <span class="ident">Query::from</span>(<span class="ident">EventType::NewBlock</span>)
-            .<span class="ident">and_eq</span>(<span class="string">&quot;accepted.hash&quot;</span>, <span class="ident">wrapper_tx_hash</span>.<span class="ident">as_str</span>())
-    } <span class="kw">else</span> {
-        <span class="ident">Query::from</span>(<span class="ident">EventType::NewBlock</span>)
-            .<span class="ident">and_eq</span>(<span class="string">&quot;applied.hash&quot;</span>, <span class="ident">wrapper_tx_hash</span>.<span class="ident">as_str</span>())
-    };
-    <span class="ident">wrapper_tx_subscription</span>.<span class="ident">subscribe</span>(<span class="ident">query</span>)<span class="question-mark">?</span>;
-
-    <span class="comment">// If we are using ABCI++, we also subscribe to the event emitted</span>
-    <span class="comment">// when the encrypted payload makes its way onto the blockchain</span>
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">decrypted_tx_subscription</span> <span class="op">=</span> <span class="kw">if</span> <span class="op">!</span><span class="macro">cfg!</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>) {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">decrypted_tx_subscription</span> <span class="op">=</span> <span class="ident">TendermintWebsocketClient::open</span>(
-            <span class="ident">WebSocketAddress::try_from</span>(<span class="ident">address</span>)<span class="question-mark">?</span>,
-            <span class="prelude-val">None</span>,
-        )<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">query</span> <span class="op">=</span> <span class="ident">Query::from</span>(<span class="ident">EventType::NewBlock</span>).<span class="ident">and_eq</span>(
-            <span class="string">&quot;applied.hash&quot;</span>,
-            <span class="ident">decrypted_tx_hash</span>.<span class="ident">as_ref</span>().<span class="ident">unwrap</span>().<span class="ident">as_str</span>(),
-        );
-        <span class="ident">decrypted_tx_subscription</span>.<span class="ident">subscribe</span>(<span class="ident">query</span>)<span class="question-mark">?</span>;
-        <span class="prelude-val">Some</span>(<span class="ident">decrypted_tx_subscription</span>)
-    } <span class="kw">else</span> {
-        <span class="prelude-val">None</span>
-    };
-
     <span class="kw">let</span> <span class="ident">response</span> <span class="op">=</span> <span class="ident">wrapper_tx_subscription</span>
         .<span class="ident">broadcast_tx_sync</span>(<span class="ident">tx_bytes</span>.<span class="ident">into</span>())
         .<span class="kw">await</span>
         .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">err</span><span class="op">|</span> <span class="ident">Error::Response</span>(<span class="macro">format!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="ident">err</span>)))<span class="question-mark">?</span>;
 
-    <span class="kw">let</span> <span class="ident">parsed</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">response</span>.<span class="ident">code</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span>.<span class="ident">into</span>() {
+    <span class="ident">wrapper_tx_subscription</span>.<span class="ident">close</span>();
+
+    <span class="kw">if</span> <span class="ident">response</span>.<span class="ident">code</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span>.<span class="ident">into</span>() {
         <span class="macro">println!</span>(<span class="string">&quot;Transaction added to mempool: {:?}&quot;</span>, <span class="ident">response</span>);
-        <span class="kw">let</span> <span class="ident">parsed</span> <span class="op">=</span> <span class="kw">if</span> <span class="op">!</span><span class="macro">cfg!</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>) {
-            <span class="ident">parse</span>(
-                <span class="ident">wrapper_tx_subscription</span>.<span class="ident">receive_response</span>()<span class="question-mark">?</span>,
-                <span class="ident">TmEventType::Accepted</span>,
-                <span class="kw-2">&amp;</span><span class="ident">wrapper_tx_hash</span>.<span class="ident">to_string</span>(),
-            )
-        } <span class="kw">else</span> {
-            <span class="ident">TxResponse::find_tx</span>(
-                <span class="ident">wrapper_tx_subscription</span>.<span class="ident">receive_response</span>()<span class="question-mark">?</span>,
-                <span class="ident">wrapper_tx_hash</span>,
-            )
-        };
-        <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
+        <span class="comment">// Print the transaction identifiers to enable the extraction of</span>
+        <span class="comment">// acceptance/application results later</span>
+        <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
         {
+            <span class="macro">println!</span>(<span class="string">&quot;Wrapper transaction hash: {:?}&quot;</span>, <span class="ident">wrapper_tx_hash</span>);
+            <span class="macro">println!</span>(<span class="string">&quot;Inner transaction hash: {:?}&quot;</span>, <span class="ident">_decrypted_tx_hash</span>);
+        }
+        <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
+        <span class="macro">println!</span>(<span class="string">&quot;Transaction hash: {:?}&quot;</span>, <span class="ident">wrapper_tx_hash</span>);
+        <span class="prelude-val">Ok</span>(<span class="ident">response</span>)
+    } <span class="kw">else</span> {
+        <span class="prelude-val">Err</span>(<span class="ident">Error::Response</span>(<span class="ident">response</span>.<span class="ident">log</span>.<span class="ident">to_string</span>()))
+    }
+}
+
+<span class="doccomment">/// Submits a transaction to the blockchain.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// Checks that</span>
+<span class="doccomment">/// 1. The tx has been successfully included into the mempool of a validator</span>
+<span class="doccomment">/// 2. The tx with encrypted payload has been included on the blockchain</span>
+<span class="doccomment">/// 3. The decrypted payload of the tx has been included on the blockchain.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// In the case of errors in any of those stages, an error message is returned</span>
+<span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">submit_tx</span>(
+    <span class="ident">address</span>: <span class="ident">TendermintAddress</span>,
+    <span class="ident">tx</span>: <span class="ident">WrapperTx</span>,
+    <span class="ident">keypair</span>: <span class="kw-2">&amp;</span><span class="ident">Keypair</span>,
+) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">TxResponse</span>, <span class="ident">Error</span><span class="op">&gt;</span> {
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">wrapper_tx_subscription</span> <span class="op">=</span> <span class="ident">TendermintWebsocketClient::open</span>(
+        <span class="ident">WebSocketAddress::try_from</span>(<span class="ident">address</span>.<span class="ident">clone</span>())<span class="question-mark">?</span>,
+        <span class="prelude-val">None</span>,
+    )<span class="question-mark">?</span>;
+
+    <span class="comment">// We use these to determine when parts of the tx make it on-chain</span>
+    <span class="kw">let</span> (<span class="ident">wrapper_tx_hash</span>, <span class="ident">_decrypted_tx_hash</span>) <span class="op">=</span> <span class="ident">tx_hashes</span>(<span class="kw-2">&amp;</span><span class="ident">tx</span>);
+    <span class="comment">// It is better to subscribe to the transaction before it is broadcast</span>
+    <span class="comment">//</span>
+    <span class="comment">// Note that the `applied.hash` key comes from a custom event</span>
+    <span class="comment">// created by the shell</span>
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
+    <span class="kw">let</span> <span class="ident">query_key</span> <span class="op">=</span> <span class="string">&quot;accepted.hash&quot;</span>;
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
+    <span class="kw">let</span> <span class="ident">query_key</span> <span class="op">=</span> <span class="string">&quot;applied.hash&quot;</span>;
+    <span class="kw">let</span> <span class="ident">query</span> <span class="op">=</span> <span class="ident">Query::from</span>(<span class="ident">EventType::NewBlock</span>)
+        .<span class="ident">and_eq</span>(<span class="ident">query_key</span>, <span class="ident">wrapper_tx_hash</span>.<span class="ident">as_str</span>());
+    <span class="ident">wrapper_tx_subscription</span>.<span class="ident">subscribe</span>(<span class="ident">query</span>)<span class="question-mark">?</span>;
+
+    <span class="comment">// If we are using ABCI++, we also subscribe to the event emitted</span>
+    <span class="comment">// when the encrypted payload makes its way onto the blockchain</span>
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">decrypted_tx_subscription</span> <span class="op">=</span> {
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">decrypted_tx_subscription</span> <span class="op">=</span> <span class="ident">TendermintWebsocketClient::open</span>(
+            <span class="ident">WebSocketAddress::try_from</span>(<span class="ident">address</span>.<span class="ident">clone</span>())<span class="question-mark">?</span>,
+            <span class="prelude-val">None</span>,
+        )<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">query</span> <span class="op">=</span> <span class="ident">Query::from</span>(<span class="ident">EventType::NewBlock</span>)
+            .<span class="ident">and_eq</span>(<span class="string">&quot;applied.hash&quot;</span>, <span class="ident">_decrypted_tx_hash</span>.<span class="ident">as_str</span>());
+        <span class="ident">decrypted_tx_subscription</span>.<span class="ident">subscribe</span>(<span class="ident">query</span>)<span class="question-mark">?</span>;
+        <span class="ident">decrypted_tx_subscription</span>
+    };
+    <span class="comment">// Broadcast the supplied transaction</span>
+    <span class="ident">broadcast_tx</span>(<span class="ident">address</span>, <span class="ident">tx</span>, <span class="ident">keypair</span>).<span class="kw">await</span><span class="question-mark">?</span>;
+
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
+    <span class="kw">let</span> <span class="ident">parsed</span> <span class="op">=</span> {
+        <span class="kw">let</span> <span class="ident">parsed</span> <span class="op">=</span> <span class="ident">TxResponse::find_tx</span>(
+            <span class="ident">wrapper_tx_subscription</span>.<span class="ident">receive_response</span>()<span class="question-mark">?</span>,
+            <span class="ident">wrapper_tx_hash</span>,
+        );
+        <span class="macro">println!</span>(
+            <span class="string">&quot;Transaction applied with result: {}&quot;</span>,
+            <span class="ident">serde_json::to_string_pretty</span>(<span class="kw-2">&amp;</span><span class="ident">parsed</span>).<span class="ident">unwrap</span>()
+        );
+        <span class="prelude-val">Ok</span>(<span class="ident">parsed</span>)
+    };
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
+    <span class="kw">let</span> <span class="ident">parsed</span> <span class="op">=</span> {
+        <span class="kw">let</span> <span class="ident">parsed</span> <span class="op">=</span> <span class="ident">parse</span>(
+            <span class="ident">wrapper_tx_subscription</span>.<span class="ident">receive_response</span>()<span class="question-mark">?</span>,
+            <span class="ident">TmEventType::Accepted</span>,
+            <span class="kw-2">&amp;</span><span class="ident">wrapper_tx_hash</span>.<span class="ident">to_string</span>(),
+        );
+        <span class="macro">println!</span>(
+            <span class="string">&quot;Transaction accepted with result: {}&quot;</span>,
+            <span class="ident">serde_json::to_string_pretty</span>(<span class="kw-2">&amp;</span><span class="ident">parsed</span>).<span class="ident">unwrap</span>()
+        );
+        <span class="comment">// The transaction is now on chain. We wait for it to be decrypted</span>
+        <span class="comment">// and applied</span>
+        <span class="kw">if</span> <span class="ident">parsed</span>.<span class="ident">code</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span>.<span class="ident">to_string</span>() {
+            <span class="kw">let</span> <span class="ident">parsed</span> <span class="op">=</span> <span class="ident">parse</span>(
+                <span class="ident">decrypted_tx_subscription</span>.<span class="ident">receive_response</span>()<span class="question-mark">?</span>,
+                <span class="ident">TmEventType::Applied</span>,
+                <span class="ident">_decrypted_tx_hash</span>.<span class="ident">as_str</span>(),
+            );
             <span class="macro">println!</span>(
                 <span class="string">&quot;Transaction applied with result: {}&quot;</span>,
                 <span class="ident">serde_json::to_string_pretty</span>(<span class="kw-2">&amp;</span><span class="ident">parsed</span>).<span class="ident">unwrap</span>()
             );
             <span class="prelude-val">Ok</span>(<span class="ident">parsed</span>)
+        } <span class="kw">else</span> {
+            <span class="prelude-val">Ok</span>(<span class="ident">parsed</span>)
         }
-        <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
-        {
-            <span class="macro">println!</span>(
-                <span class="string">&quot;Transaction accepted with result: {}&quot;</span>,
-                <span class="ident">serde_json::to_string_pretty</span>(<span class="kw-2">&amp;</span><span class="ident">parsed</span>).<span class="ident">unwrap</span>()
-            );
-            <span class="comment">// The transaction is now on chain. We wait for it to be decrypted</span>
-            <span class="comment">// and applied</span>
-            <span class="kw">if</span> <span class="ident">parsed</span>.<span class="ident">code</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span>.<span class="ident">to_string</span>() {
-                <span class="kw">let</span> <span class="ident">parsed</span> <span class="op">=</span> <span class="ident">parse</span>(
-                    <span class="ident">decrypted_tx_subscription</span>
-                        .<span class="ident">as_ref</span>()
-                        .<span class="ident">unwrap</span>()
-                        .<span class="ident">receive_response</span>()<span class="question-mark">?</span>,
-                    <span class="ident">TmEventType::Applied</span>,
-                    <span class="ident">decrypted_tx_hash</span>.<span class="ident">as_ref</span>().<span class="ident">unwrap</span>(),
-                );
-                <span class="macro">println!</span>(
-                    <span class="string">&quot;Transaction applied with result: {}&quot;</span>,
-                    <span class="ident">serde_json::to_string_pretty</span>(<span class="kw-2">&amp;</span><span class="ident">parsed</span>).<span class="ident">unwrap</span>()
-                );
-                <span class="prelude-val">Ok</span>(<span class="ident">parsed</span>)
-            } <span class="kw">else</span> {
-                <span class="prelude-val">Ok</span>(<span class="ident">parsed</span>)
-            }
-        }
-    } <span class="kw">else</span> {
-        <span class="prelude-val">Err</span>(<span class="ident">Error::Response</span>(<span class="ident">response</span>.<span class="ident">log</span>.<span class="ident">to_string</span>()))
     };
     <span class="ident">wrapper_tx_subscription</span>.<span class="ident">unsubscribe</span>()<span class="question-mark">?</span>;
     <span class="ident">wrapper_tx_subscription</span>.<span class="ident">close</span>();
-    <span class="kw">if</span> <span class="op">!</span><span class="macro">cfg!</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>) {
-        <span class="ident">decrypted_tx_subscription</span>.<span class="ident">as_mut</span>().<span class="ident">unwrap</span>().<span class="ident">unsubscribe</span>()<span class="question-mark">?</span>;
-        <span class="ident">decrypted_tx_subscription</span>.<span class="ident">as_mut</span>().<span class="ident">unwrap</span>().<span class="ident">close</span>();
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
+    {
+        <span class="ident">decrypted_tx_subscription</span>.<span class="ident">unsubscribe</span>()<span class="question-mark">?</span>;
+        <span class="ident">decrypted_tx_subscription</span>.<span class="ident">close</span>();
     }
 
     <span class="ident">parsed</span>
@@ -1924,6 +2015,7 @@
 <span class="doccomment">///</span>
 <span class="doccomment">/// Searches for custom events emitted from the ledger and converts</span>
 <span class="doccomment">/// them back to thin wrapper around a hashmap for further parsing.</span>
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
 <span class="kw">fn</span> <span class="ident">parse</span>(
     <span class="ident">json</span>: <span class="ident">serde_json::Value</span>,
     <span class="ident">event_type</span>: <span class="ident">TmEventType</span>,

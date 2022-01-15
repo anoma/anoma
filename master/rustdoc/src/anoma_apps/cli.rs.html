@@ -2544,6 +2544,15 @@
 <span id="2544">2544</span>
 <span id="2545">2545</span>
 <span id="2546">2546</span>
+<span id="2547">2547</span>
+<span id="2548">2548</span>
+<span id="2549">2549</span>
+<span id="2550">2550</span>
+<span id="2551">2551</span>
+<span id="2552">2552</span>
+<span id="2553">2553</span>
+<span id="2554">2554</span>
+<span id="2555">2555</span>
 </pre><pre class="rust"><code><span class="doccomment">//! The CLI commands that are re-used between the executables `anoma`,</span>
 <span class="doccomment">//! `anoma-node` and `anoma-client`.</span>
 <span class="doccomment">//!</span>
@@ -3683,6 +3692,7 @@
             <span class="prelude-val">Err</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">config::DEFAULT_BASE_DIR</span>.<span class="ident">into</span>(),
         }),
     );
+    <span class="kw">const</span> <span class="ident">BROADCAST_ONLY</span>: <span class="ident">ArgFlag</span> <span class="op">=</span> <span class="ident">flag</span>(<span class="string">&quot;broadcast-only&quot;</span>);
     <span class="kw">const</span> <span class="ident">CHAIN_ID</span>: <span class="ident">Arg</span><span class="op">&lt;</span><span class="ident">ChainId</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">arg</span>(<span class="string">&quot;chain-id&quot;</span>);
     <span class="kw">const</span> <span class="ident">CHAIN_ID_OPT</span>: <span class="ident">ArgOpt</span><span class="op">&lt;</span><span class="ident">ChainId</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">CHAIN_ID</span>.<span class="ident">opt</span>();
     <span class="kw">const</span> <span class="ident">CHAIN_ID_PREFIX</span>: <span class="ident">Arg</span><span class="op">&lt;</span><span class="ident">ChainIdPrefix</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">arg</span>(<span class="string">&quot;chain-prefix&quot;</span>);
@@ -4595,6 +4605,8 @@
         <span class="kw">pub</span> <span class="ident">dry_run</span>: <span class="ident">bool</span>,
         <span class="doccomment">/// Submit the transaction even if it doesn&#39;t pass client checks</span>
         <span class="kw">pub</span> <span class="ident">force</span>: <span class="ident">bool</span>,
+        <span class="doccomment">/// Do not wait for the transaction to be added to the blockchain</span>
+        <span class="kw">pub</span> <span class="ident">broadcast_only</span>: <span class="ident">bool</span>,
         <span class="doccomment">/// The address of the ledger node as host:port</span>
         <span class="kw">pub</span> <span class="ident">ledger_address</span>: <span class="ident">TendermintAddress</span>,
         <span class="doccomment">/// If any new account is initialized by the tx, use the given alias to</span>
@@ -4621,6 +4633,10 @@
             )
             .<span class="ident">arg</span>(<span class="ident">FORCE</span>.<span class="ident">def</span>().<span class="ident">about</span>(
                 <span class="string">&quot;Submit the transaction even if it doesn&#39;t pass client checks.&quot;</span>,
+            ))
+            .<span class="ident">arg</span>(<span class="ident">BROADCAST_ONLY</span>.<span class="ident">def</span>().<span class="ident">about</span>(
+                <span class="string">&quot;Do not wait for the transaction to be applied. This will \
+                 return once the transaction is added to the mempool.&quot;</span>,
             ))
             .<span class="ident">arg</span>(<span class="ident">LEDGER_ADDRESS_DEFAULT</span>.<span class="ident">def</span>().<span class="ident">about</span>(<span class="ident">LEDGER_ADDRESS_ABOUT</span>))
             .<span class="ident">arg</span>(<span class="ident">ALIAS_OPT</span>.<span class="ident">def</span>().<span class="ident">about</span>(
@@ -4662,6 +4678,7 @@
         <span class="kw">fn</span> <span class="ident">parse</span>(<span class="ident">matches</span>: <span class="kw-2">&amp;</span><span class="ident">ArgMatches</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
             <span class="kw">let</span> <span class="ident">dry_run</span> <span class="op">=</span> <span class="ident">DRY_RUN_TX</span>.<span class="ident">parse</span>(<span class="ident">matches</span>);
             <span class="kw">let</span> <span class="ident">force</span> <span class="op">=</span> <span class="ident">FORCE</span>.<span class="ident">parse</span>(<span class="ident">matches</span>);
+            <span class="kw">let</span> <span class="ident">broadcast_only</span> <span class="op">=</span> <span class="ident">BROADCAST_ONLY</span>.<span class="ident">parse</span>(<span class="ident">matches</span>);
             <span class="kw">let</span> <span class="ident">ledger_address</span> <span class="op">=</span> <span class="ident">LEDGER_ADDRESS_DEFAULT</span>.<span class="ident">parse</span>(<span class="ident">matches</span>);
             <span class="kw">let</span> <span class="ident">initialized_account_alias</span> <span class="op">=</span> <span class="ident">ALIAS_OPT</span>.<span class="ident">parse</span>(<span class="ident">matches</span>);
             <span class="kw">let</span> <span class="ident">fee_amount</span> <span class="op">=</span> <span class="ident">FEE_AMOUNT</span>.<span class="ident">parse</span>(<span class="ident">matches</span>);
@@ -4673,6 +4690,7 @@
             <span class="self">Self</span> {
                 <span class="ident">dry_run</span>,
                 <span class="ident">force</span>,
+                <span class="ident">broadcast_only</span>,
                 <span class="ident">ledger_address</span>,
                 <span class="ident">initialized_account_alias</span>,
                 <span class="ident">fee_amount</span>,

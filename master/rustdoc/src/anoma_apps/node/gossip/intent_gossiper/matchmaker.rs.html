@@ -309,7 +309,7 @@
 <span class="kw">use</span> <span class="ident"><span class="kw">super</span>::mempool</span>::{<span class="self">self</span>, <span class="ident">IntentMempool</span>};
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::cli::args</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::client::rpc</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::client::tx::broadcast_tx</span>;
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::client::tx::submit_tx</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">config</span>, <span class="ident">wasm_loader</span>};
 
 <span class="doccomment">/// A matchmaker receive intents and tries to find a match with previously</span>
@@ -506,7 +506,7 @@
         );
 
         <span class="kw">let</span> <span class="ident">response</span> <span class="op">=</span>
-            <span class="ident">broadcast_tx</span>(<span class="self">self</span>.<span class="ident">ledger_address</span>.<span class="ident">clone</span>(), <span class="ident">tx</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">tx_signing_key</span>)
+            <span class="ident">submit_tx</span>(<span class="self">self</span>.<span class="ident">ledger_address</span>.<span class="ident">clone</span>(), <span class="ident">tx</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">tx_signing_key</span>)
                 .<span class="kw">await</span>;
         <span class="kw">match</span> <span class="ident">response</span> {
             <span class="prelude-val">Ok</span>(<span class="ident">tx_response</span>) <span class="op">=</span><span class="op">&gt;</span> {
