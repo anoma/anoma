@@ -825,6 +825,29 @@
 <span id="825">825</span>
 <span id="826">826</span>
 <span id="827">827</span>
+<span id="828">828</span>
+<span id="829">829</span>
+<span id="830">830</span>
+<span id="831">831</span>
+<span id="832">832</span>
+<span id="833">833</span>
+<span id="834">834</span>
+<span id="835">835</span>
+<span id="836">836</span>
+<span id="837">837</span>
+<span id="838">838</span>
+<span id="839">839</span>
+<span id="840">840</span>
+<span id="841">841</span>
+<span id="842">842</span>
+<span id="843">843</span>
+<span id="844">844</span>
+<span id="845">845</span>
+<span id="846">846</span>
+<span id="847">847</span>
+<span id="848">848</span>
+<span id="849">849</span>
+<span id="850">850</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Storage types</span>
 <span class="kw">use</span> <span class="ident">std::convert</span>::{<span class="ident">TryFrom</span>, <span class="ident">TryInto</span>};
 <span class="kw">use</span> <span class="ident">std::fmt::Display</span>;
@@ -1106,6 +1129,29 @@
             })<span class="question-mark">?</span>,
         };
         <span class="prelude-val">Ok</span>(<span class="ident">key</span>)
+    }
+
+    <span class="doccomment">/// Returns a sub key without the first segment</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">sub_key</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
+        <span class="kw">match</span> <span class="self">self</span>.<span class="ident">segments</span>.<span class="ident">split_first</span>() {
+            <span class="prelude-val">Some</span>((<span class="kw">_</span>, <span class="ident">rest</span>)) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="kw">if</span> <span class="ident">rest</span>.<span class="ident">is_empty</span>() {
+                    <span class="prelude-val">Err</span>(<span class="ident">Error::Temporary</span> {
+                        <span class="ident">error</span>: <span class="macro">format!</span>(
+                            <span class="string">&quot;The key doesn&#39;t have the sub segments: {}&quot;</span>,
+                            <span class="self">self</span>
+                        ),
+                    })
+                } <span class="kw">else</span> {
+                    <span class="prelude-val">Ok</span>(<span class="self">Self</span> {
+                        <span class="ident">segments</span>: <span class="ident">rest</span>.<span class="ident">to_vec</span>(),
+                    })
+                }
+            }
+            <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">Error::Temporary</span> {
+                <span class="ident">error</span>: <span class="string">&quot;The key is empty&quot;</span>.<span class="ident">to_owned</span>(),
+            }),
+        }
     }
 }
 

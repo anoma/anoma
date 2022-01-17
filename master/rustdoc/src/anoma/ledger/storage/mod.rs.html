@@ -796,137 +796,42 @@
 <span id="796">796</span>
 <span id="797">797</span>
 <span id="798">798</span>
-<span id="799">799</span>
-<span id="800">800</span>
-<span id="801">801</span>
-<span id="802">802</span>
-<span id="803">803</span>
-<span id="804">804</span>
-<span id="805">805</span>
-<span id="806">806</span>
-<span id="807">807</span>
-<span id="808">808</span>
-<span id="809">809</span>
-<span id="810">810</span>
-<span id="811">811</span>
-<span id="812">812</span>
-<span id="813">813</span>
-<span id="814">814</span>
-<span id="815">815</span>
-<span id="816">816</span>
-<span id="817">817</span>
-<span id="818">818</span>
-<span id="819">819</span>
-<span id="820">820</span>
-<span id="821">821</span>
-<span id="822">822</span>
-<span id="823">823</span>
-<span id="824">824</span>
-<span id="825">825</span>
-<span id="826">826</span>
-<span id="827">827</span>
-<span id="828">828</span>
-<span id="829">829</span>
-<span id="830">830</span>
-<span id="831">831</span>
-<span id="832">832</span>
-<span id="833">833</span>
-<span id="834">834</span>
-<span id="835">835</span>
-<span id="836">836</span>
-<span id="837">837</span>
-<span id="838">838</span>
-<span id="839">839</span>
-<span id="840">840</span>
-<span id="841">841</span>
-<span id="842">842</span>
-<span id="843">843</span>
-<span id="844">844</span>
-<span id="845">845</span>
-<span id="846">846</span>
-<span id="847">847</span>
-<span id="848">848</span>
-<span id="849">849</span>
-<span id="850">850</span>
-<span id="851">851</span>
-<span id="852">852</span>
-<span id="853">853</span>
-<span id="854">854</span>
-<span id="855">855</span>
-<span id="856">856</span>
-<span id="857">857</span>
-<span id="858">858</span>
-<span id="859">859</span>
-<span id="860">860</span>
-<span id="861">861</span>
-<span id="862">862</span>
-<span id="863">863</span>
-<span id="864">864</span>
-<span id="865">865</span>
-<span id="866">866</span>
-<span id="867">867</span>
-<span id="868">868</span>
-<span id="869">869</span>
-<span id="870">870</span>
-<span id="871">871</span>
-<span id="872">872</span>
-<span id="873">873</span>
-<span id="874">874</span>
-<span id="875">875</span>
-<span id="876">876</span>
-<span id="877">877</span>
-<span id="878">878</span>
-<span id="879">879</span>
-<span id="880">880</span>
-<span id="881">881</span>
-<span id="882">882</span>
-<span id="883">883</span>
-<span id="884">884</span>
-<span id="885">885</span>
-<span id="886">886</span>
-<span id="887">887</span>
-<span id="888">888</span>
-<span id="889">889</span>
-<span id="890">890</span>
-<span id="891">891</span>
-<span id="892">892</span>
-<span id="893">893</span>
-<span id="894">894</span>
-<span id="895">895</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Ledger&#39;s state storage with key-value backed store and a merkle tree</span>
 
+<span class="kw">mod</span> <span class="ident">merkle_tree</span>;
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">test</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;testing&quot;</span>))]</span>
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">mockdb</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">types</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">write_log</span>;
 
 <span class="kw">use</span> <span class="ident">core::fmt::Debug</span>;
-<span class="kw">use</span> <span class="ident">std::fmt::Display</span>;
 
-<span class="kw">use</span> <span class="ident">prost::Message</span>;
-<span class="kw">use</span> <span class="ident">sparse_merkle_tree::default_store::DefaultStore</span>;
-<span class="kw">use</span> <span class="ident">sparse_merkle_tree</span>::{<span class="ident">SparseMerkleTree</span>, <span class="ident">H256</span>};
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
 <span class="kw">use</span> <span class="ident">tendermint::block::Header</span>;
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
-<span class="kw">use</span> <span class="ident">tendermint::merkle::proof::ProofOp</span>;
+<span class="kw">use</span> <span class="ident">tendermint::merkle::proof::Proof</span>;
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
 <span class="kw">use</span> <span class="ident">tendermint_stable::block::Header</span>;
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
-<span class="kw">use</span> <span class="ident">tendermint_stable::merkle::proof::ProofOp</span>;
+<span class="kw">use</span> <span class="ident">tendermint_stable::merkle::proof::Proof</span>;
 <span class="kw">use</span> <span class="ident">thiserror::Error</span>;
-<span class="kw">use</span> <span class="ident">types::MerkleTree</span>;
 
 <span class="kw">use</span> <span class="ident"><span class="kw">super</span>::parameters::Parameters</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::bytes::ByteBuf</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::ledger::gas::MIN_STORAGE_GAS</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::ledger::parameters</span>::{<span class="self">self</span>, <span class="ident">EpochDuration</span>};
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::types::address</span>::{<span class="ident">Address</span>, <span class="ident">EstablishedAddressGen</span>};
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::ledger::storage::merkle_tree</span>::{
+    <span class="ident">Error</span> <span class="kw">as</span> <span class="ident">MerkleTreeError</span>, <span class="ident">MerkleRoot</span>,
+};
+<span class="kw">pub</span> <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::ledger::storage::merkle_tree</span>::{
+    <span class="ident">MerkleTree</span>, <span class="ident">MerkleTreeStoresRead</span>, <span class="ident">MerkleTreeStoresWrite</span>, <span class="ident">Sha256Hasher</span>,
+    <span class="ident">StorageHasher</span>, <span class="ident">StoreType</span>,
+};
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::types::address</span>::{<span class="ident">Address</span>, <span class="ident">EstablishedAddressGen</span>, <span class="ident">InternalAddress</span>};
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::types::chain</span>::{<span class="ident">ChainId</span>, <span class="ident">CHAIN_ID_LENGTH</span>};
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ferveo-tpke&quot;</span>)]</span>
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::types::storage::TxQueue</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::types::storage</span>::{
-    <span class="ident">BlockHash</span>, <span class="ident">BlockHeight</span>, <span class="ident">DbKeySeg</span>, <span class="ident">Epoch</span>, <span class="ident">Epochs</span>, <span class="ident">Key</span>, <span class="ident">BLOCK_HASH_LENGTH</span>,
+    <span class="ident">BlockHash</span>, <span class="ident">BlockHeight</span>, <span class="ident">Epoch</span>, <span class="ident">Epochs</span>, <span class="ident">Key</span>, <span class="ident">KeySeg</span>, <span class="ident">BLOCK_HASH_LENGTH</span>,
 };
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::types::time::DateTimeUtc</span>;
 
@@ -990,17 +895,15 @@
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Coding error: {0}&quot;</span>)]</span>
     <span class="ident">CodingError</span>(<span class="ident">types::Error</span>),
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Merkle tree error: {0}&quot;</span>)]</span>
-    <span class="ident">MerkleTreeError</span>(<span class="ident">sparse_merkle_tree::error::Error</span>),
+    <span class="ident">MerkleTreeError</span>(<span class="ident">MerkleTreeError</span>),
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Merkle tree error: {0}&quot;</span>)]</span>
     <span class="ident">DBError</span>(<span class="ident">String</span>),
 }
 
 <span class="doccomment">/// The block&#39;s state as stored in the database.</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">BlockStateRead</span> {
-    <span class="doccomment">/// Merkle tree root</span>
-    <span class="kw">pub</span> <span class="ident">root</span>: <span class="ident">H256</span>,
-    <span class="doccomment">/// Merkle tree store</span>
-    <span class="kw">pub</span> <span class="ident">store</span>: <span class="ident">DefaultStore</span><span class="op">&lt;</span><span class="ident">H256</span><span class="op">&gt;</span>,
+    <span class="doccomment">/// Merkle tree stores</span>
+    <span class="kw">pub</span> <span class="ident">merkle_tree_stores</span>: <span class="ident">MerkleTreeStoresRead</span>,
     <span class="doccomment">/// Hash of the block</span>
     <span class="kw">pub</span> <span class="ident">hash</span>: <span class="ident">BlockHash</span>,
     <span class="doccomment">/// Height of the block</span>
@@ -1022,10 +925,8 @@
 
 <span class="doccomment">/// The block&#39;s state to write into the database.</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">BlockStateWrite</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-    <span class="doccomment">/// Merkle tree root</span>
-    <span class="kw">pub</span> <span class="ident">root</span>: <span class="ident">H256</span>,
-    <span class="doccomment">/// Merkle tree store</span>
-    <span class="kw">pub</span> <span class="ident">store</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">DefaultStore</span><span class="op">&lt;</span><span class="ident">H256</span><span class="op">&gt;</span>,
+    <span class="doccomment">/// Merkle tree stores</span>
+    <span class="kw">pub</span> <span class="ident">merkle_tree_stores</span>: <span class="ident">MerkleTreeStoresWrite</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>,
     <span class="doccomment">/// Hash of the block</span>
     <span class="kw">pub</span> <span class="ident">hash</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">BlockHash</span>,
     <span class="doccomment">/// Height of the block</span>
@@ -1139,15 +1040,6 @@
     <span class="kw">fn</span> <span class="ident">delete</span><span class="op">&lt;</span><span class="ident">K</span>: <span class="ident">AsRef</span><span class="op">&lt;</span>[<span class="ident">u8</span>]<span class="op">&gt;</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">key</span>: <span class="ident">K</span>);
 }
 
-<span class="doccomment">/// The root hash of the merkle tree as bytes</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">MerkleRoot</span>(<span class="kw">pub</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>);
-
-<span class="kw">impl</span> <span class="ident">Display</span> <span class="kw">for</span> <span class="ident">MerkleRoot</span> {
-    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">std::fmt::Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">std::fmt::Result</span> {
-        <span class="macro">write!</span>(<span class="ident">f</span>, <span class="string">&quot;{}&quot;</span>, <span class="ident">ByteBuf</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>))
-    }
-}
-
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">D</span>, <span class="ident">H</span><span class="op">&gt;</span> <span class="ident">Storage</span><span class="op">&lt;</span><span class="ident">D</span>, <span class="ident">H</span><span class="op">&gt;</span>
 <span class="kw">where</span>
     <span class="ident">D</span>: <span class="ident">DB</span> <span class="op">+</span> <span class="kw">for</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span> <span class="ident">DBIter</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span>,
@@ -1187,8 +1079,7 @@
     <span class="doccomment">/// Merkle root hash and the height of the committed block.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">load_last_state</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">BlockStateRead</span> {
-            <span class="ident">root</span>,
-            <span class="ident">store</span>,
+            <span class="ident">merkle_tree_stores</span>,
             <span class="ident">hash</span>,
             <span class="ident">height</span>,
             <span class="ident">epoch</span>,
@@ -1200,7 +1091,7 @@
             <span class="ident">tx_queue</span>,
         }) <span class="op">=</span> <span class="self">self</span>.<span class="ident">db</span>.<span class="ident">read_last_block</span>()<span class="question-mark">?</span>
         {
-            <span class="self">self</span>.<span class="ident">block</span>.<span class="ident">tree</span> <span class="op">=</span> <span class="ident">MerkleTree</span>(<span class="ident">SparseMerkleTree::new</span>(<span class="ident">root</span>, <span class="ident">store</span>));
+            <span class="self">self</span>.<span class="ident">block</span>.<span class="ident">tree</span> <span class="op">=</span> <span class="ident">MerkleTree::new</span>(<span class="ident">merkle_tree_stores</span>);
             <span class="self">self</span>.<span class="ident">block</span>.<span class="ident">hash</span> <span class="op">=</span> <span class="ident">hash</span>;
             <span class="self">self</span>.<span class="ident">block</span>.<span class="ident">height</span> <span class="op">=</span> <span class="ident">height</span>;
             <span class="self">self</span>.<span class="ident">block</span>.<span class="ident">epoch</span> <span class="op">=</span> <span class="ident">epoch</span>;
@@ -1225,10 +1116,7 @@
     <span class="doccomment">/// no block exists, returns None.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_state</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span>(<span class="ident">MerkleRoot</span>, <span class="ident">u64</span>)<span class="op">&gt;</span> {
         <span class="kw">if</span> <span class="self">self</span>.<span class="ident">block</span>.<span class="ident">height</span>.<span class="number">0</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
-            <span class="prelude-val">Some</span>((
-                <span class="ident">MerkleRoot</span>(<span class="self">self</span>.<span class="ident">block</span>.<span class="ident">tree</span>.<span class="number">0</span>.<span class="ident">root</span>().<span class="ident">as_slice</span>().<span class="ident">to_vec</span>()),
-                <span class="self">self</span>.<span class="ident">block</span>.<span class="ident">height</span>.<span class="number">0</span>,
-            ))
+            <span class="prelude-val">Some</span>((<span class="self">self</span>.<span class="ident">block</span>.<span class="ident">tree</span>.<span class="ident">root</span>(), <span class="self">self</span>.<span class="ident">block</span>.<span class="ident">height</span>.<span class="number">0</span>))
         } <span class="kw">else</span> {
             <span class="prelude-val">None</span>
         }
@@ -1237,8 +1125,7 @@
     <span class="doccomment">/// Persist the current block&#39;s state to the database</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">commit</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">state</span> <span class="op">=</span> <span class="ident">BlockStateWrite</span> {
-            <span class="ident">root</span>: <span class="kw-2">*</span><span class="self">self</span>.<span class="ident">block</span>.<span class="ident">tree</span>.<span class="number">0</span>.<span class="ident">root</span>(),
-            <span class="ident">store</span>: <span class="self">self</span>.<span class="ident">block</span>.<span class="ident">tree</span>.<span class="number">0</span>.<span class="ident">store</span>(),
+            <span class="ident">merkle_tree_stores</span>: <span class="self">self</span>.<span class="ident">block</span>.<span class="ident">tree</span>.<span class="ident">stores</span>(),
             <span class="ident">hash</span>: <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">block</span>.<span class="ident">hash</span>,
             <span class="ident">height</span>: <span class="self">self</span>.<span class="ident">block</span>.<span class="ident">height</span>,
             <span class="ident">epoch</span>: <span class="self">self</span>.<span class="ident">block</span>.<span class="ident">epoch</span>,
@@ -1257,37 +1144,13 @@
 
     <span class="doccomment">/// Find the root hash of the merkle tree</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">merkle_root</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">MerkleRoot</span> {
-        <span class="ident">MerkleRoot</span>(<span class="self">self</span>.<span class="ident">block</span>.<span class="ident">tree</span>.<span class="number">0</span>.<span class="ident">root</span>().<span class="ident">as_slice</span>().<span class="ident">to_vec</span>())
-    }
-
-    <span class="doccomment">/// Update the merkle tree with a storage key-value.</span>
-    <span class="comment">// TODO Enforce or check invariant (it should catch newly added storage</span>
-    <span class="comment">// fields too) that every function that changes storage, except for data</span>
-    <span class="comment">// from Tendermint&#39;s block header should call this function to update the</span>
-    <span class="comment">// Merkle tree.</span>
-    <span class="kw">fn</span> <span class="ident">update_tree</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">key</span>: <span class="ident">H256</span>, <span class="ident">value</span>: <span class="ident">H256</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">block</span>
-            .<span class="ident">tree</span>
-            .<span class="number">0</span>
-            .<span class="ident">update</span>(<span class="ident">key</span>, <span class="ident">value</span>)
-            .<span class="ident">map_err</span>(<span class="ident">Error::MerkleTreeError</span>)<span class="question-mark">?</span>;
-        <span class="prelude-val">Ok</span>(())
+        <span class="self">self</span>.<span class="ident">block</span>.<span class="ident">tree</span>.<span class="ident">root</span>()
     }
 
     <span class="doccomment">/// Check if the given key is present in storage. Returns the result and the</span>
     <span class="doccomment">/// gas cost.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">has_key</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">Key</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="ident">bool</span>, <span class="ident">u64</span>)<span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">gas</span> <span class="op">=</span> <span class="ident">key</span>.<span class="ident">len</span>();
-        <span class="prelude-val">Ok</span>((
-            <span class="op">!</span><span class="self">self</span>
-                .<span class="ident">block</span>
-                .<span class="ident">tree</span>
-                .<span class="number">0</span>
-                .<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">H::hash_key</span>(<span class="ident">key</span>))
-                .<span class="ident">map_err</span>(<span class="ident">Error::MerkleTreeError</span>)<span class="question-mark">?</span>
-                .<span class="ident">is_zero</span>(),
-            <span class="ident">gas</span> <span class="kw">as</span> <span class="kw">_</span>,
-        ))
+        <span class="prelude-val">Ok</span>((<span class="self">self</span>.<span class="ident">block</span>.<span class="ident">tree</span>.<span class="ident">has_key</span>(<span class="ident">key</span>)<span class="question-mark">?</span>, <span class="ident">key</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="kw">_</span>))
     }
 
     <span class="doccomment">/// Returns a value from the specified subspace and the gas cost</span>
@@ -1320,10 +1183,10 @@
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">write</span>(
         <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
         <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">Key</span>,
-        <span class="ident">value</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span>[<span class="ident">u8</span>]<span class="op">&gt;</span>,
+        <span class="ident">value</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span>[<span class="ident">u8</span>]<span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Clone</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="ident">u64</span>, <span class="ident">i64</span>)<span class="op">&gt;</span> {
         <span class="macro">tracing::debug!</span>(<span class="string">&quot;storage write key {}&quot;</span>, <span class="ident">key</span>,);
-        <span class="self">self</span>.<span class="ident">update_tree</span>(<span class="ident">H::hash_key</span>(<span class="ident">key</span>), <span class="ident">H::hash_value</span>(<span class="kw-2">&amp;</span><span class="ident">value</span>))<span class="question-mark">?</span>;
+        <span class="self">self</span>.<span class="ident">block</span>.<span class="ident">tree</span>.<span class="ident">update</span>(<span class="ident">key</span>, <span class="ident">value</span>.<span class="ident">clone</span>())<span class="question-mark">?</span>;
 
         <span class="kw">let</span> <span class="ident">len</span> <span class="op">=</span> <span class="ident">value</span>.<span class="ident">as_ref</span>().<span class="ident">len</span>();
         <span class="kw">let</span> <span class="ident">gas</span> <span class="op">=</span> <span class="ident">key</span>.<span class="ident">len</span>() <span class="op">+</span> <span class="ident">len</span>;
@@ -1337,8 +1200,7 @@
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">delete</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">Key</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="ident">u64</span>, <span class="ident">i64</span>)<span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">deleted_bytes_len</span> <span class="op">=</span> <span class="number">0</span>;
         <span class="kw">if</span> <span class="self">self</span>.<span class="ident">has_key</span>(<span class="ident">key</span>)<span class="question-mark">?</span>.<span class="number">0</span> {
-            <span class="comment">// update the merkle tree with a zero as a tombstone</span>
-            <span class="self">self</span>.<span class="ident">update_tree</span>(<span class="ident">H::hash_key</span>(<span class="ident">key</span>), <span class="ident">H256::zero</span>())<span class="question-mark">?</span>;
+            <span class="self">self</span>.<span class="ident">block</span>.<span class="ident">tree</span>.<span class="ident">delete</span>(<span class="ident">key</span>)<span class="question-mark">?</span>;
             <span class="ident">deleted_bytes_len</span> <span class="op">=</span>
                 <span class="self">self</span>.<span class="ident">db</span>.<span class="ident">delete_subspace_val</span>(<span class="self">self</span>.<span class="ident">last_height</span>, <span class="ident">key</span>)<span class="question-mark">?</span>;
         }
@@ -1398,31 +1260,18 @@
         (<span class="self">self</span>.<span class="ident">block</span>.<span class="ident">hash</span>.<span class="ident">clone</span>(), <span class="ident">BLOCK_HASH_LENGTH</span> <span class="kw">as</span> <span class="kw">_</span>)
     }
 
-    <span class="doccomment">/// Get the membership or non-membership proof</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_proof</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">Key</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ProofOp</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">hash_key</span> <span class="op">=</span> <span class="ident">H::hash_key</span>(<span class="ident">key</span>);
-        <span class="kw">let</span> <span class="ident">proof</span> <span class="op">=</span> <span class="kw">if</span> <span class="self">self</span>.<span class="ident">has_key</span>(<span class="ident">key</span>)<span class="question-mark">?</span>.<span class="number">0</span> {
-            <span class="self">self</span>.<span class="ident">block</span>
-                .<span class="ident">tree</span>
-                .<span class="number">0</span>
-                .<span class="ident">membership_proof</span>(<span class="kw-2">&amp;</span><span class="ident">hash_key</span>)
-                .<span class="ident">map_err</span>(<span class="ident">Error::MerkleTreeError</span>)<span class="question-mark">?</span>
-        } <span class="kw">else</span> {
-            <span class="self">self</span>.<span class="ident">block</span>
-                .<span class="ident">tree</span>
-                .<span class="number">0</span>
-                .<span class="ident">non_membership_proof</span>(<span class="kw-2">&amp;</span><span class="ident">hash_key</span>)
-                .<span class="ident">map_err</span>(<span class="ident">Error::MerkleTreeError</span>)<span class="question-mark">?</span>
-        };
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">data</span> <span class="op">=</span> <span class="macro">vec!</span>[];
-        <span class="ident">proof</span>
-            .<span class="ident">encode</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">data</span>)
-            .<span class="ident">expect</span>(<span class="string">&quot;Encoding proof shouldn&#39;t fail&quot;</span>);
-        <span class="prelude-val">Ok</span>(<span class="ident">ProofOp</span> {
-            <span class="ident">field_type</span>: <span class="string">&quot;ics23_CommitmentProof&quot;</span>.<span class="ident">to_string</span>(),
-            <span class="ident">key</span>: <span class="ident">hash_key</span>.<span class="ident">as_slice</span>().<span class="ident">to_vec</span>(),
-            <span class="ident">data</span>,
-        })
+    <span class="doccomment">/// Get the existence proof</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_existence_proof</span>(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">Key</span>,
+        <span class="ident">value</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>,
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Proof</span><span class="op">&gt;</span> {
+        <span class="prelude-val">Ok</span>(<span class="self">self</span>.<span class="ident">block</span>.<span class="ident">tree</span>.<span class="ident">get_existence_proof</span>(<span class="ident">key</span>, <span class="ident">value</span>)<span class="question-mark">?</span>)
+    }
+
+    <span class="doccomment">/// Get the non-existence proof</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_non_existence_proof</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">Key</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Proof</span><span class="op">&gt;</span> {
+        <span class="prelude-val">Ok</span>(<span class="self">self</span>.<span class="ident">block</span>.<span class="ident">tree</span>.<span class="ident">get_non_existence_proof</span>(<span class="ident">key</span>)<span class="question-mark">?</span>)
     }
 
     <span class="doccomment">/// Get the current (yet to be committed) block epoch</span>
@@ -1494,28 +1343,30 @@
 
     <span class="doccomment">/// Update the merkle tree with epoch data</span>
     <span class="kw">fn</span> <span class="ident">update_epoch_in_merkle_tree</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">update_tree</span>(
-            <span class="ident">H::hash_key</span>(<span class="kw-2">&amp;</span><span class="ident">Key</span> {
-                <span class="ident">segments</span>: <span class="macro">vec!</span>[<span class="ident">DbKeySeg::StringSeg</span>(
-                    <span class="string">&quot;epoch_start_height&quot;</span>.<span class="ident">into</span>(),
-                )],
-            }),
-            <span class="ident">H::hash_value</span>(<span class="kw-2">&amp;</span><span class="ident">types::encode</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">next_epoch_min_start_height</span>)),
-        )<span class="question-mark">?</span>;
-        <span class="self">self</span>.<span class="ident">update_tree</span>(
-            <span class="ident">H::hash_key</span>(<span class="kw-2">&amp;</span><span class="ident">Key</span> {
-                <span class="ident">segments</span>: <span class="macro">vec!</span>[<span class="ident">DbKeySeg::StringSeg</span>(
-                    <span class="string">&quot;epoch_start_height&quot;</span>.<span class="ident">into</span>(),
-                )],
-            }),
-            <span class="ident">H::hash_value</span>(<span class="kw-2">&amp;</span><span class="ident">types::encode</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">next_epoch_min_start_time</span>)),
-        )<span class="question-mark">?</span>;
-        <span class="self">self</span>.<span class="ident">update_tree</span>(
-            <span class="ident">H::hash_key</span>(<span class="kw-2">&amp;</span><span class="ident">Key</span> {
-                <span class="ident">segments</span>: <span class="macro">vec!</span>[<span class="ident">DbKeySeg::StringSeg</span>(<span class="string">&quot;current_epoch&quot;</span>.<span class="ident">into</span>())],
-            }),
-            <span class="ident">H::hash_value</span>(<span class="kw-2">&amp;</span><span class="ident">types::encode</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">block</span>.<span class="ident">epoch</span>)),
-        )
+        <span class="kw">let</span> <span class="ident">key_prefix</span>: <span class="ident">Key</span> <span class="op">=</span>
+            <span class="ident">Address::Internal</span>(<span class="ident">InternalAddress::PoS</span>).<span class="ident">to_db_key</span>().<span class="ident">into</span>();
+
+        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">key_prefix</span>
+            .<span class="ident">push</span>(<span class="kw-2">&amp;</span><span class="string">&quot;epoch_start_height&quot;</span>.<span class="ident">to_string</span>())
+            .<span class="ident">map_err</span>(<span class="ident">Error::KeyError</span>)<span class="question-mark">?</span>;
+        <span class="self">self</span>.<span class="ident">block</span>
+            .<span class="ident">tree</span>
+            .<span class="ident">update</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>, <span class="ident">types::encode</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">next_epoch_min_start_height</span>))<span class="question-mark">?</span>;
+
+        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">key_prefix</span>
+            .<span class="ident">push</span>(<span class="kw-2">&amp;</span><span class="string">&quot;epoch_start_time&quot;</span>.<span class="ident">to_string</span>())
+            .<span class="ident">map_err</span>(<span class="ident">Error::KeyError</span>)<span class="question-mark">?</span>;
+        <span class="self">self</span>.<span class="ident">block</span>
+            .<span class="ident">tree</span>
+            .<span class="ident">update</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>, <span class="ident">types::encode</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">next_epoch_min_start_time</span>))<span class="question-mark">?</span>;
+
+        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">key_prefix</span>
+            .<span class="ident">push</span>(<span class="kw-2">&amp;</span><span class="string">&quot;current_epoch&quot;</span>.<span class="ident">to_string</span>())
+            .<span class="ident">map_err</span>(<span class="ident">Error::KeyError</span>)<span class="question-mark">?</span>;
+        <span class="self">self</span>.<span class="ident">block</span>
+            .<span class="ident">tree</span>
+            .<span class="ident">update</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>, <span class="ident">types::encode</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">block</span>.<span class="ident">epoch</span>))<span class="question-mark">?</span>;
+        <span class="prelude-val">Ok</span>(())
     }
 
     <span class="doccomment">/// Start write batch.</span>
@@ -1538,7 +1389,7 @@
         <span class="ident">value</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span>[<span class="ident">u8</span>]<span class="op">&gt;</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">i64</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">value</span>.<span class="ident">as_ref</span>();
-        <span class="self">self</span>.<span class="ident">update_tree</span>(<span class="ident">H::hash_key</span>(<span class="ident">key</span>), <span class="ident">H::hash_value</span>(<span class="kw-2">&amp;</span><span class="ident">value</span>))<span class="question-mark">?</span>;
+        <span class="self">self</span>.<span class="ident">block</span>.<span class="ident">tree</span>.<span class="ident">update</span>(<span class="ident">key</span>, <span class="ident">value</span>)<span class="question-mark">?</span>;
         <span class="self">self</span>.<span class="ident">db</span>
             .<span class="ident">batch_write_subspace_val</span>(<span class="ident">batch</span>, <span class="self">self</span>.<span class="ident">block</span>.<span class="ident">height</span>, <span class="ident">key</span>, <span class="ident">value</span>)
     }
@@ -1551,70 +1402,25 @@
         <span class="ident">batch</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">D::WriteBatch</span>,
         <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">Key</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">i64</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">update_tree</span>(<span class="ident">H::hash_key</span>(<span class="ident">key</span>), <span class="ident">H256::zero</span>())<span class="question-mark">?</span>;
+        <span class="self">self</span>.<span class="ident">block</span>.<span class="ident">tree</span>.<span class="ident">delete</span>(<span class="ident">key</span>)<span class="question-mark">?</span>;
         <span class="self">self</span>.<span class="ident">db</span>
             .<span class="ident">batch_delete_subspace_val</span>(<span class="ident">batch</span>, <span class="self">self</span>.<span class="ident">block</span>.<span class="ident">height</span>, <span class="ident">key</span>)
     }
 }
 
-<span class="doccomment">/// The storage hasher used for the merkle tree.</span>
-<span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">StorageHasher</span>: <span class="ident">sparse_merkle_tree::traits::Hasher</span> <span class="op">+</span> <span class="ident">Default</span> {
-    <span class="doccomment">/// Hash a storage key</span>
-    <span class="kw">fn</span> <span class="ident">hash_key</span>(<span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">Key</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">H256</span>;
-    <span class="doccomment">/// Hash a storage value</span>
-    <span class="kw">fn</span> <span class="ident">hash_value</span>(<span class="ident">value</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span>[<span class="ident">u8</span>]<span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">H256</span>;
+<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">MerkleTreeError</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Error</span> {
+    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">error</span>: <span class="ident">MerkleTreeError</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="ident"><span class="self">Self</span>::MerkleTreeError</span>(<span class="ident">error</span>)
+    }
 }
 
 <span class="doccomment">/// Helpers for testing components that depend on storage</span>
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">test</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;testing&quot;</span>))]</span>
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">testing</span> {
-    <span class="kw">use</span> <span class="ident">std::convert::TryInto</span>;
-
-    <span class="kw">use</span> <span class="ident">sha2</span>::{<span class="ident">Digest</span>, <span class="ident">Sha256</span>};
-    <span class="kw">use</span> <span class="ident">sparse_merkle_tree::H256</span>;
+    <span class="kw">use</span> <span class="ident">merkle_tree::Sha256Hasher</span>;
 
     <span class="kw">use</span> <span class="ident"><span class="kw">super</span>::mockdb::MockDB</span>;
     <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
-
-    <span class="doccomment">/// The storage hasher used for the merkle tree.</span>
-    <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Default</span>)]</span>
-    <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Sha256Hasher</span>(<span class="ident">Sha256</span>);
-
-    <span class="kw">impl</span> <span class="ident">sparse_merkle_tree::traits::Hasher</span> <span class="kw">for</span> <span class="ident">Sha256Hasher</span> {
-        <span class="kw">fn</span> <span class="ident">write_h256</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">h</span>: <span class="kw-2">&amp;</span><span class="ident">H256</span>) {
-            <span class="self">self</span>.<span class="number">0</span>.<span class="ident">update</span>(<span class="ident">h</span>.<span class="ident">as_slice</span>());
-        }
-
-        <span class="kw">fn</span> <span class="ident">finish</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">H256</span> {
-            <span class="kw">let</span> <span class="ident">hash</span> <span class="op">=</span> <span class="self">self</span>.<span class="number">0</span>.<span class="ident">finalize</span>();
-            <span class="kw">let</span> <span class="ident">bytes</span>: [<span class="ident">u8</span>; <span class="number">32</span>] <span class="op">=</span> <span class="ident">hash</span>.<span class="ident">as_slice</span>().<span class="ident">try_into</span>().<span class="ident">expect</span>(
-                <span class="string">&quot;Sha256 output conversion to fixed array shouldn&#39;t fail&quot;</span>,
-            );
-            <span class="ident">bytes</span>.<span class="ident">into</span>()
-        }
-    }
-
-    <span class="kw">impl</span> <span class="ident">StorageHasher</span> <span class="kw">for</span> <span class="ident">Sha256Hasher</span> {
-        <span class="kw">fn</span> <span class="ident">hash_key</span>(<span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">Key</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">H256</span> {
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">hasher</span> <span class="op">=</span> <span class="ident">Sha256::new</span>();
-            <span class="ident">hasher</span>.<span class="ident">update</span>(<span class="kw-2">&amp;</span><span class="ident">types::encode</span>(<span class="ident">key</span>));
-            <span class="kw">let</span> <span class="ident">hash</span> <span class="op">=</span> <span class="ident">hasher</span>.<span class="ident">finalize</span>();
-            <span class="kw">let</span> <span class="ident">bytes</span>: [<span class="ident">u8</span>; <span class="number">32</span>] <span class="op">=</span> <span class="ident">hash</span>.<span class="ident">as_slice</span>().<span class="ident">try_into</span>().<span class="ident">expect</span>(
-                <span class="string">&quot;Sha256 output conversion to fixed array shouldn&#39;t fail&quot;</span>,
-            );
-            <span class="ident">bytes</span>.<span class="ident">into</span>()
-        }
-
-        <span class="kw">fn</span> <span class="ident">hash_value</span>(<span class="ident">value</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span>[<span class="ident">u8</span>]<span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">H256</span> {
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">hasher</span> <span class="op">=</span> <span class="ident">Sha256::new</span>();
-            <span class="ident">hasher</span>.<span class="ident">update</span>(<span class="ident">value</span>.<span class="ident">as_ref</span>());
-            <span class="kw">let</span> <span class="ident">hash</span> <span class="op">=</span> <span class="ident">hasher</span>.<span class="ident">finalize</span>();
-            <span class="kw">let</span> <span class="ident">bytes</span>: [<span class="ident">u8</span>; <span class="number">32</span>] <span class="op">=</span> <span class="ident">hash</span>.<span class="ident">as_slice</span>().<span class="ident">try_into</span>().<span class="ident">expect</span>(
-                <span class="string">&quot;Sha256 output conversion to fixed array shouldn&#39;t fail&quot;</span>,
-            );
-            <span class="ident">bytes</span>.<span class="ident">into</span>()
-        }
-    }
 
     <span class="doccomment">/// Storage with a mock DB for testing</span>
     <span class="kw">pub</span> <span class="kw">type</span> <span class="ident">TestStorage</span> <span class="op">=</span> <span class="ident">Storage</span><span class="op">&lt;</span><span class="ident">MockDB</span>, <span class="ident">Sha256Hasher</span><span class="op">&gt;</span>;

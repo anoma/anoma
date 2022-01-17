@@ -240,6 +240,39 @@
 <li>end the current block</li>
 <li>commit the current block (persist to storage)</li>
 </ul>
+<h3 id="storagemerkle_tree-module"><a class="header" href="#storagemerkle_tree-module"><code>storage/merkle_tree</code> module</a></h3>
+<p>It consists of one Sparse Merkle Tree (base tree) and multiple Sparse Merkle Trees (subtrees). The base tree stores the store type and the root of each subtree as a key-value pair. Each subtree has the hashed key-value pairs for each data.</p>
+<pre class="mermaid">graph TD
+  subgraph &quot;Merkle tree&quot;
+    subgraph &quot;Base tree&quot;
+      R[Root] --&gt; I0
+      R --&gt; I1
+      I0 --&gt; L0[Subtree 0]
+      I0 --&gt; L1[Subtree 1]
+      I1 --&gt; L2[Subtree 2]
+      I1 --&gt; L3[Subtree 3]
+    end
+    subgraph &quot;Subtree 1&quot;
+      L1 --&gt; SR[Subroot]
+      SR --&gt; SI0
+      SR --&gt; SI1
+      SI0 --&gt; SI00
+      SI0 --&gt; SI01
+      SI1 --&gt; SI10
+      SI1 --&gt; SI11
+      SI00 --&gt; SL000
+      SI00 --&gt; SL001
+      SI01 --&gt; SL010
+      SI01 --&gt; SL011
+      SI10 --&gt; SL100
+      SI10 --&gt; SL101
+      SI11 --&gt; SL110
+      SI11 --&gt; SL111
+    end
+  end
+</pre>
+<p>The first segment of a <a href="#db-keys">DB key</a> is used as a key in the base tree and the sub key (without the first segment) specifies the leaf of the subtree.</p>
+<p>A proof of the key-value pair in the Merkle tree should be made of two proofs for the base tree and the subtree. Merkle root is the root of the base tree. In the proof verification, the sub root is calculated with the subtree's proof at first. Then, the root is calculated with the base tree's proof and the calculated sub root as a value, and the calculated root is compared with the Merkle root.</p>
 <h3 id="storagedb-module"><a class="header" href="#storagedb-module"><code>storage/db</code> module</a></h3>
 <p>The persistent DB implementation (e.g. RocksDB).</p>
 <h3 id="db-keys"><a class="header" href="#db-keys">DB keys</a></h3>

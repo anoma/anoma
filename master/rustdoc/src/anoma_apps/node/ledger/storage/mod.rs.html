@@ -214,15 +214,6 @@
 <span id="214">214</span>
 <span id="215">215</span>
 <span id="216">216</span>
-<span id="217">217</span>
-<span id="218">218</span>
-<span id="219">219</span>
-<span id="220">220</span>
-<span id="221">221</span>
-<span id="222">222</span>
-<span id="223">223</span>
-<span id="224">224</span>
-<span id="225">225</span>
 </pre><pre class="rust"><code><span class="doccomment">//! The storage module handles both the current state in-memory and the stored</span>
 <span class="doccomment">//! state in DB.</span>
 
@@ -230,8 +221,7 @@
 
 <span class="kw">use</span> <span class="ident">std::fmt</span>;
 
-<span class="kw">use</span> <span class="ident">anoma::ledger::storage</span>::{<span class="ident">types</span>, <span class="ident">Storage</span>, <span class="ident">StorageHasher</span>};
-<span class="kw">use</span> <span class="ident">anoma::types::storage::Key</span>;
+<span class="kw">use</span> <span class="ident">anoma::ledger::storage</span>::{<span class="ident">Storage</span>, <span class="ident">StorageHasher</span>};
 <span class="kw">use</span> <span class="ident">blake2b_rs</span>::{<span class="ident">Blake2b</span>, <span class="ident">Blake2bBuilder</span>};
 <span class="kw">use</span> <span class="ident">sparse_merkle_tree::blake2b::Blake2bHasher</span>;
 <span class="kw">use</span> <span class="ident">sparse_merkle_tree::traits::Hasher</span>;
@@ -255,15 +245,7 @@
 }
 
 <span class="kw">impl</span> <span class="ident">StorageHasher</span> <span class="kw">for</span> <span class="ident">PersistentStorageHasher</span> {
-    <span class="kw">fn</span> <span class="ident">hash_key</span>(<span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">Key</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">H256</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">buf</span> <span class="op">=</span> [<span class="number">0u8</span>; <span class="number">32</span>];
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">hasher</span> <span class="op">=</span> <span class="ident">new_blake2b</span>();
-        <span class="ident">hasher</span>.<span class="ident">update</span>(<span class="kw-2">&amp;</span><span class="ident">types::encode</span>(<span class="ident">key</span>));
-        <span class="ident">hasher</span>.<span class="ident">finalize</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">buf</span>);
-        <span class="ident">buf</span>.<span class="ident">into</span>()
-    }
-
-    <span class="kw">fn</span> <span class="ident">hash_value</span>(<span class="ident">value</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span>[<span class="ident">u8</span>]<span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">H256</span> {
+    <span class="kw">fn</span> <span class="ident">hash</span>(<span class="ident">value</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span>[<span class="ident">u8</span>]<span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">H256</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">buf</span> <span class="op">=</span> [<span class="number">0u8</span>; <span class="number">32</span>];
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">hasher</span> <span class="op">=</span> <span class="ident">new_blake2b</span>();
         <span class="ident">hasher</span>.<span class="ident">update</span>(<span class="ident">value</span>.<span class="ident">as_ref</span>());
@@ -286,7 +268,7 @@
 <span class="kw">mod</span> <span class="ident">tests</span> {
     <span class="kw">use</span> <span class="ident">anoma::ledger::storage::types</span>;
     <span class="kw">use</span> <span class="ident">anoma::types::chain::ChainId</span>;
-    <span class="kw">use</span> <span class="ident">anoma::types::storage</span>::{<span class="ident">BlockHash</span>, <span class="ident">BlockHeight</span>};
+    <span class="kw">use</span> <span class="ident">anoma::types::storage</span>::{<span class="ident">BlockHash</span>, <span class="ident">BlockHeight</span>, <span class="ident">Key</span>};
     <span class="kw">use</span> <span class="ident">tempfile::TempDir</span>;
 
     <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
