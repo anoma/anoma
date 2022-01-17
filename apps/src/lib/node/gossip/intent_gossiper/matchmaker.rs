@@ -125,14 +125,15 @@ impl Matchmaker {
             )
         }
         let matchmaker_code =
-            unsafe { Library::new(matchmaker_dylib).unwrap() };
+            unsafe { Library::new(matchmaker_dylib) }.unwrap();
 
         // Instantiate the matchmaker
         let new_matchmaker: libloading::Symbol<
             unsafe extern "C" fn() -> *mut c_void,
-        > = unsafe { matchmaker_code.get(b"_new_matchmaker").unwrap() };
+        > = unsafe { matchmaker_code.get(b"_new_matchmaker") }.unwrap();
 
-        let state = MatchmakerState(Arc::new(unsafe { new_matchmaker() }));
+        let new_state = unsafe { new_matchmaker() };
+        let state = MatchmakerState(Arc::new(new_state));
 
         let tx_code = wasm_loader::read_wasm(&wasm_dir, &config.tx_code);
         let filter = Some(Filter);
@@ -183,9 +184,9 @@ impl Matchmaker {
                 ) -> AddIntentResult,
             > = unsafe { self.r#impl.library.get(b"_add_intent").unwrap() };
 
-            let result = unsafe {
-                add_intent(*self.r#impl.state.0, &intent.id().0, &intent.data)
-            };
+            let state = *self.r#impl.state.0;
+            let result =
+                unsafe { add_intent(state, &intent.id().0, &intent.data) };
 
             if let Some(tx) = result.tx {
                 self.submit_tx(tx).await

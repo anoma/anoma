@@ -5,8 +5,7 @@ mod rocksdb;
 
 use std::fmt;
 
-use anoma::ledger::storage::{types, Storage, StorageHasher};
-use anoma::types::storage::Key;
+use anoma::ledger::storage::{Storage, StorageHasher};
 use blake2b_rs::{Blake2b, Blake2bBuilder};
 use sparse_merkle_tree::blake2b::Blake2bHasher;
 use sparse_merkle_tree::traits::Hasher;
@@ -30,15 +29,7 @@ impl Hasher for PersistentStorageHasher {
 }
 
 impl StorageHasher for PersistentStorageHasher {
-    fn hash_key(key: &Key) -> H256 {
-        let mut buf = [0u8; 32];
-        let mut hasher = new_blake2b();
-        hasher.update(&types::encode(key));
-        hasher.finalize(&mut buf);
-        buf.into()
-    }
-
-    fn hash_value(value: impl AsRef<[u8]>) -> H256 {
+    fn hash(value: impl AsRef<[u8]>) -> H256 {
         let mut buf = [0u8; 32];
         let mut hasher = new_blake2b();
         hasher.update(value.as_ref());
@@ -61,7 +52,7 @@ fn new_blake2b() -> Blake2b {
 mod tests {
     use anoma::ledger::storage::types;
     use anoma::types::chain::ChainId;
-    use anoma::types::storage::{BlockHash, BlockHeight};
+    use anoma::types::storage::{BlockHash, BlockHeight, Key};
     use tempfile::TempDir;
 
     use super::*;

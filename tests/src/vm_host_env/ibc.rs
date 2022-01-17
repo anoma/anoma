@@ -15,7 +15,7 @@ pub use anoma::ledger::ibc::storage::{
 use anoma::ledger::ibc::vp::Ibc;
 use anoma::ledger::native_vp::{Ctx, NativeVp};
 use anoma::ledger::storage::mockdb::MockDB;
-use anoma::ledger::storage::testing::Sha256Hasher;
+use anoma::ledger::storage::Sha256Hasher;
 use anoma::proto::Tx;
 use anoma::types::address::{Address, InternalAddress};
 pub use anoma::types::ibc::data::*;

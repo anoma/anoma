@@ -99,6 +99,44 @@ An API made visible only to the shell module (e.g. `pub ( in SimplePath )` - htt
 - end the current block
 - commit the current block (persist to storage)
 
+### `storage/merkle_tree` module
+It consists of one Sparse Merkle Tree (base tree) and multiple Sparse Merkle Trees (subtrees). The base tree stores the store type and the root of each subtree as a key-value pair. Each subtree has the hashed key-value pairs for each data.
+
+```mermaid
+graph TD
+  subgraph "Merkle tree"
+    subgraph "Base tree"
+      R[Root] --> I0
+      R --> I1
+      I0 --> L0[Subtree 0]
+      I0 --> L1[Subtree 1]
+      I1 --> L2[Subtree 2]
+      I1 --> L3[Subtree 3]
+    end
+    subgraph "Subtree 1"
+      L1 --> SR[Subroot]
+      SR --> SI0
+      SR --> SI1
+      SI0 --> SI00
+      SI0 --> SI01
+      SI1 --> SI10
+      SI1 --> SI11
+      SI00 --> SL000
+      SI00 --> SL001
+      SI01 --> SL010
+      SI01 --> SL011
+      SI10 --> SL100
+      SI10 --> SL101
+      SI11 --> SL110
+      SI11 --> SL111
+    end
+  end
+```
+
+The first segment of a [DB key](#db-keys) is used as a key in the base tree and the sub key (without the first segment) specifies the leaf of the subtree.
+
+A proof of the key-value pair in the Merkle tree should be made of two proofs for the base tree and the subtree. Merkle root is the root of the base tree. In the proof verification, the sub root is calculated with the subtree's proof at first. Then, the root is calculated with the base tree's proof and the calculated sub root as a value, and the calculated root is compared with the Merkle root.
+
 ### `storage/db` module
 
 The persistent DB implementation (e.g. RocksDB).

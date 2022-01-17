@@ -14,7 +14,7 @@ Download the source code from [github anoma repo](https://github.com/anoma/anoma
 ```shell
 git clone https://github.com/anoma/anoma.git
 ```
-To build from source you will have to install some dependecies:
+To build from source you will have to install some dependencies:
 - rust
 - clang
 - openssl

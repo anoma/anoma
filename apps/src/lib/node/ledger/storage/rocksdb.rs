@@ -28,11 +28,12 @@
 
 use std::cmp::Ordering;
 use std::path::Path;
+use std::str::FromStr;
 
 use anoma::ledger::storage::types::PrefixIterator;
 use anoma::ledger::storage::{
     types, BlockStateRead, BlockStateWrite, DBIter, DBWriteBatch, Error,
-    Result, DB,
+    MerkleTreeStoresRead, Result, StoreType, DB,
 };
 use anoma::types::storage::{
     BlockHeight, Key, KeySeg, TxQueue, KEY_SEGMENT_SEPARATOR,
@@ -316,8 +317,7 @@ impl DB for RocksDB {
         read_opts.set_total_order_seek(false);
         let next_height_prefix = format!("{}/", height.next_height().raw());
         read_opts.set_iterate_upper_bound(next_height_prefix);
-        let mut root = None;
-        let mut store = None;
+        let mut merkle_tree_stores = MerkleTreeStoresRead::default();
         let mut hash = None;
         let mut epoch = None;
         let mut pred_epochs = None;
@@ -339,21 +339,22 @@ impl DB for RocksDB {
             match segments.get(1) {
                 Some(prefix) => match *prefix {
                     "tree" => match segments.get(2) {
-                        Some(smt) => match *smt {
-                            "root" => {
-                                root = Some(
+                        Some(s) => {
+                            let st = StoreType::from_str(s)?;
+                            match segments.get(3) {
+                                Some(&"root") => merkle_tree_stores.set_root(
+                                    &st,
                                     types::decode(bytes)
                                         .map_err(Error::CodingError)?,
-                                )
-                            }
-                            "store" => {
-                                store = Some(
+                                ),
+                                Some(&"store") => merkle_tree_stores.set_store(
+                                    &st,
                                     types::decode(bytes)
                                         .map_err(Error::CodingError)?,
-                                )
+                                ),
+                                _ => unknown_key_error(path)?,
                             }
-                            _ => unknown_key_error(path)?,
-                        },
+                        }
                         None => unknown_key_error(path)?,
                     },
                     "hash" => {
@@ -384,26 +385,20 @@ impl DB for RocksDB {
                 None => unknown_key_error(path)?,
             }
         }
-        match (root, store, hash, epoch, pred_epochs, address_gen) {
-            (
-                Some(root),
-                Some(store),
-                Some(hash),
-                Some(epoch),
-                Some(pred_epochs),
-                Some(address_gen),
-            ) => Ok(Some(BlockStateRead {
-                root,
-                store,
-                hash,
-                height,
-                epoch,
-                pred_epochs,
-                next_epoch_min_start_height,
-                next_epoch_min_start_time,
-                address_gen,
-                tx_queue,
-            })),
+        match (hash, epoch, pred_epochs, address_gen) {
+            (Some(hash), Some(epoch), Some(pred_epochs), Some(address_gen)) => {
+                Ok(Some(BlockStateRead {
+                    merkle_tree_stores,
+                    hash,
+                    height,
+                    epoch,
+                    pred_epochs,
+                    next_epoch_min_start_height,
+                    next_epoch_min_start_time,
+                    address_gen,
+                    tx_queue,
+                }))
+            }
             _ => Err(Error::Temporary {
                 error: "Essential data couldn't be read from the DB"
                     .to_string(),
@@ -414,8 +409,7 @@ impl DB for RocksDB {
     fn write_block(&mut self, state: BlockStateWrite) -> Result<()> {
         let mut batch = WriteBatch::default();
         let BlockStateWrite {
-            root,
-            store,
+            merkle_tree_stores,
             hash,
             height,
             epoch,
@@ -469,19 +463,24 @@ impl DB for RocksDB {
             let prefix_key = prefix_key
                 .push(&"tree".to_owned())
                 .map_err(Error::KeyError)?;
-            // Merkle root hash
-            {
-                let key = prefix_key
+            for st in StoreType::iter() {
+                let prefix_key = prefix_key
+                    .push(&st.to_string())
+                    .map_err(Error::KeyError)?;
+                let root_key = prefix_key
                     .push(&"root".to_owned())
                     .map_err(Error::KeyError)?;
-                batch.put(key.to_string(), &root.as_slice());
-            }
-            // Tree's store
-            {
-                let key = prefix_key
+                batch.put(
+                    root_key.to_string(),
+                    types::encode(merkle_tree_stores.root(st)),
+                );
+                let store_key = prefix_key
                     .push(&"store".to_owned())
                     .map_err(Error::KeyError)?;
-                batch.put(key.to_string(), types::encode(&store));
+                batch.put(
+                    store_key.to_string(),
+                    types::encode(merkle_tree_stores.store(st)),
+                );
             }
         }
         // Block hash
@@ -824,10 +823,9 @@ mod imp {
 
 #[cfg(test)]
 mod test {
+    use anoma::ledger::storage::{MerkleTree, Sha256Hasher};
     use anoma::types::address::EstablishedAddressGen;
     use anoma::types::storage::{BlockHash, Epoch, Epochs};
-    use sparse_merkle_tree::default_store::DefaultStore;
-    use sparse_merkle_tree::H256;
     use tempfile::tempdir;
 
     use super::*;
@@ -849,8 +847,8 @@ mod test {
         .unwrap();
         db.exec_batch(batch.0).unwrap();
 
-        let root = H256::zero();
-        let store = DefaultStore::default();
+        let merkle_tree = MerkleTree::<Sha256Hasher>::default();
+        let merkle_tree_stores = merkle_tree.stores();
         let hash = BlockHash::default();
         let epoch = Epoch::default();
         let pred_epochs = Epochs::default();
@@ -860,8 +858,7 @@ mod test {
         let address_gen = EstablishedAddressGen::new("whatever");
         let tx_queue = TxQueue::default();
         let block = BlockStateWrite {
-            root,
-            store: &store,
+            merkle_tree_stores,
             hash: &hash,
             height,
             epoch,

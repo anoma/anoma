@@ -39,8 +39,12 @@ const SINGLE_NODE_NET_GENESIS: &str = "genesis/e2e-tests-single-node.toml";
 /// An E2E test network.
 #[derive(Debug)]
 pub struct Network {
-    chain_id: ChainId,
+    pub chain_id: ChainId,
 }
+
+/// Offset the ports used in the network configuration by 1000 for ABCI++ to
+/// avoid shared resources
+pub const ABCI_PLUS_PLUS_PORT_OFFSET: u16 = 1000;
 
 /// Add `num` validators to the genesis config. Note that called from inside
 /// the [`network`]'s first argument's closure, there is 1 validator already
@@ -69,7 +73,16 @@ pub fn add_validators(num: u8, mut genesis: GenesisConfig) -> GenesisConfig {
         validator.intent_gossip_seed = None;
         let mut net_address = net_address_0;
         // 5 ports for each validator
-        net_address.set_port(net_address_port_0 + 5 * (ix as u16 + 1));
+        let first_port = net_address_port_0
+            + 5 * (ix as u16 + 1)
+            + if cfg!(feature = "ABCI") {
+                0
+            } else {
+                // The ABCI++ ports at `26670 + ABCI_PLUS_PLUS_PORT_OFFSET`,
+                // see `network`
+                ABCI_PLUS_PLUS_PORT_OFFSET
+            };
+        net_address.set_port(first_port);
         validator.net_address = Some(net_address.to_string());
         let name = format!("validator-{}", ix + 1);
         genesis.validator.insert(name, validator);
@@ -96,9 +109,22 @@ pub fn network(
     let base_dir = tempdir().unwrap();
 
     // Open the source genesis file
-    let genesis = genesis_config::open_genesis_config(
+    let mut genesis = genesis_config::open_genesis_config(
         working_dir.join(SINGLE_NODE_NET_GENESIS),
     );
+
+    if !cfg!(feature = "ABCI") {
+        // The ABCI ports start at `26670`, ABCI++ at `26670 +
+        // ABCI_PLUS_PLUS_PORT_OFFSET`to avoid using shared resources with ABCI
+        // feature if running at the same time.
+        let validator_0 = genesis.validator.get_mut("validator-0").unwrap();
+        let mut net_address_0 =
+            SocketAddr::from_str(validator_0.net_address.as_ref().unwrap())
+                .unwrap();
+        let current_port = net_address_0.port();
+        net_address_0.set_port(current_port + ABCI_PLUS_PLUS_PORT_OFFSET);
+        validator_0.net_address = Some(net_address_0.to_string());
+    };
 
     // Run the provided function on it
     let genesis = update_genesis(genesis);
@@ -164,6 +190,7 @@ pub fn network(
         working_dir,
         base_dir,
         net,
+        genesis,
     })
 }
 
@@ -180,6 +207,7 @@ pub struct Test {
     pub working_dir: PathBuf,
     pub base_dir: TempDir,
     pub net: Network,
+    pub genesis: GenesisConfig,
 }
 
 impl Drop for Test {
@@ -314,6 +342,11 @@ impl Test {
         I: IntoIterator<Item = S>,
         S: AsRef<OsStr>,
     {
+        let base_dir = self.get_base_dir(&who);
+        run_cmd(bin, args, timeout_sec, &self.working_dir, &base_dir, loc)
+    }
+
+    pub fn get_base_dir(&self, who: &Who) -> PathBuf {
         let base_dir = match who {
             Who::NonValidator => self.base_dir.path().to_owned(),
             Who::Validator(index) => self
@@ -324,7 +357,7 @@ impl Test {
                 .join(format!("validator-{}", index))
                 .join(config::DEFAULT_BASE_DIR),
         };
-        run_cmd(bin, args, timeout_sec, &self.working_dir, &base_dir, loc)
+        base_dir
     }
 }
 

@@ -5,6 +5,10 @@
 * Building from source requires at least 16GB of ram available and 4 core cpu,
 * Free disk space of at least 60GB,
 * Intel i3 or better will suffice.
+* Tendermint 0.34.x pre-installed 
+
+To install the correct version of Tendermint, download any of the pre-built binaries for versions 0.34.x [here](https://github.com/tendermint/tendermint/releases) and install it using the instructions on the [Tendermint guide](https://docs.tendermint.com/master/introduction/install.html}, or use a script on the Anoma repo 
+`scripts/install/get_tendermint.sh` This is used by the `make install` command (if you’re installing from the source).
 
 At the moment we are not supporting windows.
 
@@ -70,6 +74,7 @@ $ ./anoma ledger
 
 # can detach the tmux (Ctrl-B then D)
 ```
+This should sync your node to the ledger and will take a while (depending on your computer). Subsequent commands (generating an account, etc.)  are unlikely to work until it is fully synced. Enquire the current block height with other participants to make sure you are synced in order to proceed.
 
 ## Account
 

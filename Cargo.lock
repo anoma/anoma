@@ -100,6 +100,7 @@ dependencies = [
  "ibc 0.8.0 (git+https://github.com/heliaxdev/ibc-rs?branch=yuji/rebase_v0.23.0)",
  "ibc-proto 0.12.0 (git+https://github.com/heliaxdev/ibc-rs?branch=yuji/abcipp-v0.23.0)",
  "ibc-proto 0.12.0 (git+https://github.com/heliaxdev/ibc-rs?branch=yuji/rebase_v0.23.0)",
+ "ics23",
  "itertools 0.10.3",
  "loupe",
  "parity-wasm",

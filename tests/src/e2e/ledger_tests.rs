@@ -21,7 +21,9 @@ use borsh::BorshSerialize;
 use color_eyre::eyre::Result;
 use setup::constants::*;
 
-use crate::e2e::helpers::{find_address, find_voting_power, get_epoch};
+use crate::e2e::helpers::{
+    find_address, find_voting_power, get_actor_rpc, get_epoch,
+};
 use crate::e2e::setup::{self, sleep, Bin, Who};
 use crate::{run, run_as};
 
@@ -185,76 +187,87 @@ fn ledger_txs_and_queries() -> Result<()> {
     let tx_no_op = wasm_abs_path(TX_NO_OP_WASM);
     let tx_no_op = tx_no_op.to_string_lossy();
 
+    let validator_one_rpc = get_actor_rpc(&test, &Who::Validator(0));
+
     let txs_args = vec![
-            // 2. Submit a token transfer tx
-            vec![
-                "transfer",
-                "--source",
-                BERTHA,
-                "--target",
-                ALBERT,
-                "--token",
-                XAN,
-                "--amount",
-                "10.1",
-                "--fee-amount",
-                "0",
-                "--gas-limit",
-                "0",
-                "--fee-token",
-                XAN,
-            ],
-            // 3. Submit a transaction to update an account's validity
-            // predicate
-            vec![
-                "update",
-                 "--address",
-                 BERTHA,
-                 "--code-path",
-                 &vp_user,
-                 "--fee-amount",
-                 "0",
-                 "--gas-limit",
-                 "0",
-                 "--fee-token",
-                 XAN,
-            ],
-            // 4. Submit a custom tx
-            vec![
-                "tx",
-                "--signer",
-                BERTHA,
-                "--code-path",
-                &tx_no_op,
-                "--data-path",
-                "README.md",
-                "--fee-amount",
-                "0",
-                "--gas-limit",
-                "0",
-                "--fee-token",
-                XAN,
-            ],
-            // 5. Submit a tx to initialize a new account
-            vec![
-                "init-account", 
-                "--source", 
-                BERTHA,
-                "--public-key", 
-                // Value obtained from `anoma::types::key::ed25519::tests::gen_keypair`
-                "200000001be519a321e29020fa3cbfbfd01bd5e92db134305609270b71dace25b5a21168",
-                "--code-path",
-                &vp_user,
-                "--alias",
-                "test-account",
-                "--fee-amount",
-                "0",
-                "--gas-limit",
-                "0",
-                "--fee-token",
-                XAN,
-            ],
-        ];
+        // 2. Submit a token transfer tx
+        vec![
+            "transfer",
+            "--source",
+            BERTHA,
+            "--target",
+            ALBERT,
+            "--token",
+            XAN,
+            "--amount",
+            "10.1",
+            "--fee-amount",
+            "0",
+            "--gas-limit",
+            "0",
+            "--fee-token",
+            XAN,
+            "--ledger-address",
+            &validator_one_rpc
+        ],
+        // 3. Submit a transaction to update an account's validity
+        // predicate
+        vec![
+            "update",
+             "--address",
+             BERTHA,
+             "--code-path",
+             &vp_user,
+             "--fee-amount",
+             "0",
+             "--gas-limit",
+             "0",
+             "--fee-token",
+             XAN,
+            "--ledger-address",
+            &validator_one_rpc
+        ],
+        // 4. Submit a custom tx
+        vec![
+            "tx",
+            "--signer",
+            BERTHA,
+            "--code-path",
+            &tx_no_op,
+            "--data-path",
+            "README.md",
+            "--fee-amount",
+            "0",
+            "--gas-limit",
+            "0",
+            "--fee-token",
+            XAN,
+            "--ledger-address",
+            &validator_one_rpc
+        ],
+        // 5. Submit a tx to initialize a new account
+        vec![
+            "init-account",
+            "--source",
+            BERTHA,
+            "--public-key",
+            // Value obtained from `anoma::types::key::ed25519::tests::gen_keypair`
+            "200000001be519a321e29020fa3cbfbfd01bd5e92db134305609270b71dace25b5a21168",
+            "--code-path",
+            &vp_user,
+            "--alias",
+            "test-account",
+            "--fee-amount",
+            "0",
+            "--gas-limit",
+            "0",
+            "--fee-token",
+            XAN,
+            "--ledger-address",
+            &validator_one_rpc
+        ],
+    ];
+
     for tx_args in &txs_args {
         for &dry_run in &[true, false] {
             let tx_args = if dry_run {
@@ -278,7 +291,15 @@ fn ledger_txs_and_queries() -> Result<()> {
     let query_args_and_expected_response = vec![
         // 6. Query token balance
         (
-            vec!["balance", "--owner", BERTHA, "--token", XAN],
+            vec![
+                "balance",
+                "--owner",
+                BERTHA,
+                "--token",
+                XAN,
+                "--ledger-address",
+                &validator_one_rpc,
+            ],
             // expect a decimal
             r"XAN: \d+(\.\d+)?",
         ),
@@ -332,6 +353,8 @@ fn invalid_transactions() -> Result<()> {
     let tx_wasm_path = tx_wasm_path.to_string_lossy();
     let tx_data_path = tx_data_path.to_string_lossy();
 
+    let validator_one_rpc = get_actor_rpc(&test, &Who::Validator(0));
+
     let tx_args = vec![
         "tx",
         "--code-path",
@@ -346,6 +369,8 @@ fn invalid_transactions() -> Result<()> {
         "0",
         "--fee-token",
         XAN,
+        "--ledger-address",
+        &validator_one_rpc,
     ];
 
     let mut client = run!(test, Bin::Client, tx_args, Some(40))?;
@@ -401,6 +426,8 @@ fn invalid_transactions() -> Result<()> {
         // Force to ignore client check that fails on the balance check of the
         // source address
         "--force",
+        "--ledger-address",
+        &validator_one_rpc,
     ];
 
     let mut client = run!(test, Bin::Client, tx_args, Some(40))?;
@@ -460,6 +487,9 @@ fn pos_bonds() -> Result<()> {
     } else {
         ledger.exp_string("Started node")?;
     }
+
+    let validator_one_rpc = get_actor_rpc(&test, &Who::Validator(0));
+
     // 2. Submit a self-bond for the genesis validator
     let tx_args = vec![
         "bond",
@@ -473,6 +503,8 @@ fn pos_bonds() -> Result<()> {
         "0",
         "--fee-token",
         XAN,
+        "--ledger-address",
+        &validator_one_rpc,
     ];
     let mut client =
         run_as!(test, Who::Validator(0), Bin::Client, tx_args, Some(40))?;
@@ -494,6 +526,8 @@ fn pos_bonds() -> Result<()> {
         "0",
         "--fee-token",
         XAN,
+        "--ledger-address",
+        &validator_one_rpc,
     ];
     let mut client = run!(test, Bin::Client, tx_args, Some(40))?;
     client.exp_string("Transaction is valid.")?;
@@ -512,6 +546,8 @@ fn pos_bonds() -> Result<()> {
         "0",
         "--fee-token",
         XAN,
+        "--ledger-address",
+        &validator_one_rpc,
     ];
     let mut client =
         run_as!(test, Who::Validator(0), Bin::Client, tx_args, Some(40))?;
@@ -533,13 +569,15 @@ fn pos_bonds() -> Result<()> {
         "0",
         "--fee-token",
         XAN,
+        "--ledger-address",
+        &validator_one_rpc,
     ];
     let mut client = run!(test, Bin::Client, tx_args, Some(40))?;
     client.exp_string("Transaction is valid.")?;
     client.assert_success();
 
     // 6. Wait for the unbonding epoch
-    let epoch = get_epoch(&test)?;
+    let epoch = get_epoch(&test, &validator_one_rpc)?;
     let earliest_withdrawal_epoch = epoch + unbonding_len;
     println!(
         "Current epoch: {}, earliest epoch for withdrawal: {}",
@@ -554,7 +592,7 @@ fn pos_bonds() -> Result<()> {
                 earliest_withdrawal_epoch
             );
         }
-        let epoch = get_epoch(&test)?;
+        let epoch = get_epoch(&test, &validator_one_rpc)?;
         if epoch >= earliest_withdrawal_epoch {
             break;
         }
@@ -571,6 +609,8 @@ fn pos_bonds() -> Result<()> {
         "0",
         "--fee-token",
         XAN,
+        "--ledger-address",
+        &validator_one_rpc,
     ];
     let mut client =
         run_as!(test, Who::Validator(0), Bin::Client, tx_args, Some(40))?;
@@ -590,6 +630,8 @@ fn pos_bonds() -> Result<()> {
         "0",
         "--fee-token",
         XAN,
+        "--ledger-address",
+        &validator_one_rpc,
     ];
     let mut client = run!(test, Bin::Client, tx_args, Some(40))?;
     client.exp_string("Transaction is valid.")?;
@@ -641,6 +683,8 @@ fn pos_init_validator() -> Result<()> {
         ledger.exp_string("Started node")?;
     }
 
+    let validator_one_rpc = get_actor_rpc(&test, &Who::Validator(0));
+
     // 2. Initialize a new validator account
     let new_validator = "new-validator";
     let new_validator_key = format!("{}-key", new_validator);
@@ -657,6 +701,8 @@ fn pos_init_validator() -> Result<()> {
         "0",
         "--fee-token",
         XAN,
+        "--ledger-address",
+        &validator_one_rpc,
     ];
     let mut client = run!(test, Bin::Client, tx_args, Some(40))?;
     client.exp_string("Transaction is valid.")?;
@@ -680,6 +726,8 @@ fn pos_init_validator() -> Result<()> {
         "0",
         "--fee-token",
         XAN,
+        "--ledger-address",
+        &validator_one_rpc,
     ];
     let mut client = run!(test, Bin::Client, tx_args, Some(40))?;
     client.exp_string("Transaction is valid.")?;
@@ -699,6 +747,8 @@ fn pos_init_validator() -> Result<()> {
         "0",
         "--fee-token",
         XAN,
+        "--ledger-address",
+        &validator_one_rpc,
     ];
     let mut client = run!(test, Bin::Client, tx_args, Some(40))?;
     client.exp_string("Transaction is valid.")?;
@@ -721,6 +771,8 @@ fn pos_init_validator() -> Result<()> {
         "0",
         "--fee-token",
         XAN,
+        "--ledger-address",
+        &validator_one_rpc,
     ];
     let mut client = run!(test, Bin::Client, tx_args, Some(40))?;
     client.exp_string("Transaction is valid.")?;
@@ -739,6 +791,8 @@ fn pos_init_validator() -> Result<()> {
         "0",
         "--fee-token",
         XAN,
+        "--ledger-address",
+        &validator_one_rpc,
     ];
     let mut client = run!(test, Bin::Client, tx_args, Some(40))?;
     client.exp_string("Transaction is valid.")?;
@@ -746,7 +800,7 @@ fn pos_init_validator() -> Result<()> {
 
     // 6. Wait for the pipeline epoch when the validator's voting power should
     // be non-zero
-    let epoch = get_epoch(&test)?;
+    let epoch = get_epoch(&test, &validator_one_rpc)?;
     let earliest_update_epoch = epoch + pipeline_len;
     println!(
         "Current epoch: {}, earliest epoch with updated voting power: {}",
@@ -758,14 +812,15 @@ fn pos_init_validator() -> Result<()> {
         if Instant::now().duration_since(start) > loop_timeout {
             panic!("Timed out waiting for epoch: {}", earliest_update_epoch);
         }
-        let epoch = get_epoch(&test)?;
+        let epoch = get_epoch(&test, &validator_one_rpc)?;
         if epoch >= earliest_update_epoch {
             break;
         }
     }
 
     // 7. Check the new validator's voting power
-    let voting_power = find_voting_power(&test, new_validator)?;
+    let voting_power =
+        find_voting_power(&test, new_validator, &validator_one_rpc)?;
     assert_eq!(voting_power, 11);
 
     Ok(())
@@ -797,6 +852,8 @@ fn ledger_many_txs_in_a_block() -> Result<()> {
     // Wait to commit a block
     ledger.exp_regex(r"Committed block hash.*, height: [0-9]+")?;
 
+    let validator_one_rpc = Arc::new(get_actor_rpc(&test, &Who::Validator(0)));
+
     // A token transfer tx args
     let tx_args = Arc::new(vec![
         "transfer",
@@ -814,6 +871,7 @@ fn ledger_many_txs_in_a_block() -> Result<()> {
         "0",
         "--fee-token",
         XAN,
+        "--ledger-address",
     ]);
 
     // 2. Spawn threads each submitting token transfer tx
@@ -823,9 +881,12 @@ fn ledger_many_txs_in_a_block() -> Result<()> {
         .into_iter()
         .map(|_| {
             let test = Arc::clone(&test);
+            let validator_one_rpc = Arc::clone(&validator_one_rpc);
             let tx_args = Arc::clone(&tx_args);
             std::thread::spawn(move || {
-                let mut client = run!(*test, Bin::Client, &*tx_args, Some(40))?;
+                let mut args = (*tx_args).clone();
+                args.push(&*validator_one_rpc);
+                let mut client = run!(*test, Bin::Client, args, Some(40))?;
                 if !cfg!(feature = "ABCI") {
                     client.exp_string("Transaction accepted")?;
                 }

@@ -1,37 +1,39 @@
 //! Ledger's state storage with key-value backed store and a merkle tree
 
+mod merkle_tree;
 #[cfg(any(test, feature = "testing"))]
 pub mod mockdb;
 pub mod types;
 pub mod write_log;
 
 use core::fmt::Debug;
-use std::fmt::Display;
 
-use prost::Message;
-use sparse_merkle_tree::default_store::DefaultStore;
-use sparse_merkle_tree::{SparseMerkleTree, H256};
 #[cfg(not(feature = "ABCI"))]
 use tendermint::block::Header;
 #[cfg(not(feature = "ABCI"))]
-use tendermint::merkle::proof::ProofOp;
+use tendermint::merkle::proof::Proof;
 #[cfg(feature = "ABCI")]
 use tendermint_stable::block::Header;
 #[cfg(feature = "ABCI")]
-use tendermint_stable::merkle::proof::ProofOp;
+use tendermint_stable::merkle::proof::Proof;
 use thiserror::Error;
-use types::MerkleTree;
 
 use super::parameters::Parameters;
-use crate::bytes::ByteBuf;
 use crate::ledger::gas::MIN_STORAGE_GAS;
 use crate::ledger::parameters::{self, EpochDuration};
-use crate::types::address::{Address, EstablishedAddressGen};
+use crate::ledger::storage::merkle_tree::{
+    Error as MerkleTreeError, MerkleRoot,
+};
+pub use crate::ledger::storage::merkle_tree::{
+    MerkleTree, MerkleTreeStoresRead, MerkleTreeStoresWrite, Sha256Hasher,
+    StorageHasher, StoreType,
+};
+use crate::types::address::{Address, EstablishedAddressGen, InternalAddress};
 use crate::types::chain::{ChainId, CHAIN_ID_LENGTH};
 #[cfg(feature = "ferveo-tpke")]
 use crate::types::storage::TxQueue;
 use crate::types::storage::{
-    BlockHash, BlockHeight, DbKeySeg, Epoch, Epochs, Key, BLOCK_HASH_LENGTH,
+    BlockHash, BlockHeight, Epoch, Epochs, Key, KeySeg, BLOCK_HASH_LENGTH,
 };
 use crate::types::time::DateTimeUtc;
 
@@ -95,17 +97,15 @@ pub enum Error {
     #[error("Coding error: {0}")]
     CodingError(types::Error),
     #[error("Merkle tree error: {0}")]
-    MerkleTreeError(sparse_merkle_tree::error::Error),
+    MerkleTreeError(MerkleTreeError),
     #[error("Merkle tree error: {0}")]
     DBError(String),
 }
 
 /// The block's state as stored in the database.
 pub struct BlockStateRead {
-    /// Merkle tree root
-    pub root: H256,
-    /// Merkle tree store
-    pub store: DefaultStore<H256>,
+    /// Merkle tree stores
+    pub merkle_tree_stores: MerkleTreeStoresRead,
     /// Hash of the block
     pub hash: BlockHash,
     /// Height of the block
@@ -127,10 +127,8 @@ pub struct BlockStateRead {
 
 /// The block's state to write into the database.
 pub struct BlockStateWrite<'a> {
-    /// Merkle tree root
-    pub root: H256,
-    /// Merkle tree store
-    pub store: &'a DefaultStore<H256>,
+    /// Merkle tree stores
+    pub merkle_tree_stores: MerkleTreeStoresWrite<'a>,
     /// Hash of the block
     pub hash: &'a BlockHash,
     /// Height of the block
@@ -244,15 +242,6 @@ pub trait DBWriteBatch {
     fn delete<K: AsRef<[u8]>>(&mut self, key: K);
 }
 
-/// The root hash of the merkle tree as bytes
-pub struct MerkleRoot(pub Vec<u8>);
-
-impl Display for MerkleRoot {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", ByteBuf(&self.0))
-    }
-}
-
 impl<D, H> Storage<D, H>
 where
     D: DB + for<'iter> DBIter<'iter>,
@@ -292,8 +281,7 @@ where
     /// Merkle root hash and the height of the committed block.
     pub fn load_last_state(&mut self) -> Result<()> {
         if let Some(BlockStateRead {
-            root,
-            store,
+            merkle_tree_stores,
             hash,
             height,
             epoch,
@@ -305,7 +293,7 @@ where
             tx_queue,
         }) = self.db.read_last_block()?
         {
-            self.block.tree = MerkleTree(SparseMerkleTree::new(root, store));
+            self.block.tree = MerkleTree::new(merkle_tree_stores);
             self.block.hash = hash;
             self.block.height = height;
             self.block.epoch = epoch;
@@ -330,10 +318,7 @@ where
     /// no block exists, returns None.
     pub fn get_state(&self) -> Option<(MerkleRoot, u64)> {
         if self.block.height.0 != 0 {
-            Some((
-                MerkleRoot(self.block.tree.0.root().as_slice().to_vec()),
-                self.block.height.0,
-            ))
+            Some((self.block.tree.root(), self.block.height.0))
         } else {
             None
         }
@@ -342,8 +327,7 @@ where
     /// Persist the current block's state to the database
     pub fn commit(&mut self) -> Result<()> {
         let state = BlockStateWrite {
-            root: *self.block.tree.0.root(),
-            store: self.block.tree.0.store(),
+            merkle_tree_stores: self.block.tree.stores(),
             hash: &self.block.hash,
             height: self.block.height,
             epoch: self.block.epoch,
@@ -362,37 +346,13 @@ where
 
     /// Find the root hash of the merkle tree
     pub fn merkle_root(&self) -> MerkleRoot {
-        MerkleRoot(self.block.tree.0.root().as_slice().to_vec())
-    }
-
-    /// Update the merkle tree with a storage key-value.
-    // TODO Enforce or check invariant (it should catch newly added storage
-    // fields too) that every function that changes storage, except for data
-    // from Tendermint's block header should call this function to update the
-    // Merkle tree.
-    fn update_tree(&mut self, key: H256, value: H256) -> Result<()> {
-        self.block
-            .tree
-            .0
-            .update(key, value)
-            .map_err(Error::MerkleTreeError)?;
-        Ok(())
+        self.block.tree.root()
     }
 
     /// Check if the given key is present in storage. Returns the result and the
     /// gas cost.
     pub fn has_key(&self, key: &Key) -> Result<(bool, u64)> {
-        let gas = key.len();
-        Ok((
-            !self
-                .block
-                .tree
-                .0
-                .get(&H::hash_key(key))
-                .map_err(Error::MerkleTreeError)?
-                .is_zero(),
-            gas as _,
-        ))
+        Ok((self.block.tree.has_key(key)?, key.len() as _))
     }
 
     /// Returns a value from the specified subspace and the gas cost
@@ -425,10 +385,10 @@ where
     pub fn write(
         &mut self,
         key: &Key,
-        value: impl AsRef<[u8]>,
+        value: impl AsRef<[u8]> + Clone,
     ) -> Result<(u64, i64)> {
         tracing::debug!("storage write key {}", key,);
-        self.update_tree(H::hash_key(key), H::hash_value(&value))?;
+        self.block.tree.update(key, value.clone())?;
 
         let len = value.as_ref().len();
         let gas = key.len() + len;
@@ -442,8 +402,7 @@ where
     pub fn delete(&mut self, key: &Key) -> Result<(u64, i64)> {
         let mut deleted_bytes_len = 0;
         if self.has_key(key)?.0 {
-            // update the merkle tree with a zero as a tombstone
-            self.update_tree(H::hash_key(key), H256::zero())?;
+            self.block.tree.delete(key)?;
             deleted_bytes_len =
                 self.db.delete_subspace_val(self.last_height, key)?;
         }
@@ -503,31 +462,18 @@ where
         (self.block.hash.clone(), BLOCK_HASH_LENGTH as _)
     }
 
-    /// Get the membership or non-membership proof
-    pub fn get_proof(&self, key: &Key) -> Result<ProofOp> {
-        let hash_key = H::hash_key(key);
-        let proof = if self.has_key(key)?.0 {
-            self.block
-                .tree
-                .0
-                .membership_proof(&hash_key)
-                .map_err(Error::MerkleTreeError)?
-        } else {
-            self.block
-                .tree
-                .0
-                .non_membership_proof(&hash_key)
-                .map_err(Error::MerkleTreeError)?
-        };
-        let mut data = vec![];
-        proof
-            .encode(&mut data)
-            .expect("Encoding proof shouldn't fail");
-        Ok(ProofOp {
-            field_type: "ics23_CommitmentProof".to_string(),
-            key: hash_key.as_slice().to_vec(),
-            data,
-        })
+    /// Get the existence proof
+    pub fn get_existence_proof(
+        &self,
+        key: &Key,
+        value: Vec<u8>,
+    ) -> Result<Proof> {
+        Ok(self.block.tree.get_existence_proof(key, value)?)
+    }
+
+    /// Get the non-existence proof
+    pub fn get_non_existence_proof(&self, key: &Key) -> Result<Proof> {
+        Ok(self.block.tree.get_non_existence_proof(key)?)
     }
 
     /// Get the current (yet to be committed) block epoch
@@ -599,28 +545,30 @@ where
 
     /// Update the merkle tree with epoch data
     fn update_epoch_in_merkle_tree(&mut self) -> Result<()> {
-        self.update_tree(
-            H::hash_key(&Key {
-                segments: vec![DbKeySeg::StringSeg(
-                    "epoch_start_height".into(),
-                )],
-            }),
-            H::hash_value(&types::encode(&self.next_epoch_min_start_height)),
-        )?;
-        self.update_tree(
-            H::hash_key(&Key {
-                segments: vec![DbKeySeg::StringSeg(
-                    "epoch_start_height".into(),
-                )],
-            }),
-            H::hash_value(&types::encode(&self.next_epoch_min_start_time)),
-        )?;
-        self.update_tree(
-            H::hash_key(&Key {
-                segments: vec![DbKeySeg::StringSeg("current_epoch".into())],
-            }),
-            H::hash_value(&types::encode(&self.block.epoch)),
-        )
+        let key_prefix: Key =
+            Address::Internal(InternalAddress::PoS).to_db_key().into();
+
+        let key = key_prefix
+            .push(&"epoch_start_height".to_string())
+            .map_err(Error::KeyError)?;
+        self.block
+            .tree
+            .update(&key, types::encode(&self.next_epoch_min_start_height))?;
+
+        let key = key_prefix
+            .push(&"epoch_start_time".to_string())
+            .map_err(Error::KeyError)?;
+        self.block
+            .tree
+            .update(&key, types::encode(&self.next_epoch_min_start_time))?;
+
+        let key = key_prefix
+            .push(&"current_epoch".to_string())
+            .map_err(Error::KeyError)?;
+        self.block
+            .tree
+            .update(&key, types::encode(&self.block.epoch))?;
+        Ok(())
     }
 
     /// Start write batch.
@@ -643,7 +591,7 @@ where
         value: impl AsRef<[u8]>,
     ) -> Result<i64> {
         let value = value.as_ref();
-        self.update_tree(H::hash_key(key), H::hash_value(&value))?;
+        self.block.tree.update(key, value)?;
         self.db
             .batch_write_subspace_val(batch, self.block.height, key, value)
     }
@@ -656,70 +604,25 @@ where
         batch: &mut D::WriteBatch,
         key: &Key,
     ) -> Result<i64> {
-        self.update_tree(H::hash_key(key), H256::zero())?;
+        self.block.tree.delete(key)?;
         self.db
             .batch_delete_subspace_val(batch, self.block.height, key)
     }
 }
 
-/// The storage hasher used for the merkle tree.
-pub trait StorageHasher: sparse_merkle_tree::traits::Hasher + Default {
-    /// Hash a storage key
-    fn hash_key(key: &Key) -> H256;
-    /// Hash a storage value
-    fn hash_value(value: impl AsRef<[u8]>) -> H256;
+impl From<MerkleTreeError> for Error {
+    fn from(error: MerkleTreeError) -> Self {
+        Self::MerkleTreeError(error)
+    }
 }
 
 /// Helpers for testing components that depend on storage
 #[cfg(any(test, feature = "testing"))]
 pub mod testing {
-    use std::convert::TryInto;
-
-    use sha2::{Digest, Sha256};
-    use sparse_merkle_tree::H256;
+    use merkle_tree::Sha256Hasher;
 
     use super::mockdb::MockDB;
     use super::*;
-
-    /// The storage hasher used for the merkle tree.
-    #[derive(Default)]
-    pub struct Sha256Hasher(Sha256);
-
-    impl sparse_merkle_tree::traits::Hasher for Sha256Hasher {
-        fn write_h256(&mut self, h: &H256) {
-            self.0.update(h.as_slice());
-        }
-
-        fn finish(self) -> H256 {
-            let hash = self.0.finalize();
-            let bytes: [u8; 32] = hash.as_slice().try_into().expect(
-                "Sha256 output conversion to fixed array shouldn't fail",
-            );
-            bytes.into()
-        }
-    }
-
-    impl StorageHasher for Sha256Hasher {
-        fn hash_key(key: &Key) -> H256 {
-            let mut hasher = Sha256::new();
-            hasher.update(&types::encode(key));
-            let hash = hasher.finalize();
-            let bytes: [u8; 32] = hash.as_slice().try_into().expect(
-                "Sha256 output conversion to fixed array shouldn't fail",
-            );
-            bytes.into()
-        }
-
-        fn hash_value(value: impl AsRef<[u8]>) -> H256 {
-            let mut hasher = Sha256::new();
-            hasher.update(value.as_ref());
-            let hash = hasher.finalize();
-            let bytes: [u8; 32] = hash.as_slice().try_into().expect(
-                "Sha256 output conversion to fixed array shouldn't fail",
-            );
-            bytes.into()
-        }
-    }
 
     /// Storage with a mock DB for testing
     pub type TestStorage = Storage<MockDB, Sha256Hasher>;

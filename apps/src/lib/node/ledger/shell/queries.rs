@@ -8,13 +8,13 @@ use anoma::types::storage::Key;
 use anoma::types::token::{self, Amount};
 use borsh::{BorshDeserialize, BorshSerialize};
 #[cfg(not(feature = "ABCI"))]
-use tendermint_proto::crypto::ProofOps;
+use tendermint_proto::crypto::{ProofOp, ProofOps};
 #[cfg(not(feature = "ABCI"))]
 use tendermint_proto::google::protobuf;
 #[cfg(not(feature = "ABCI"))]
 use tendermint_proto::types::EvidenceParams;
 #[cfg(feature = "ABCI")]
-use tendermint_proto_abci::crypto::ProofOps;
+use tendermint_proto_abci::crypto::{ProofOp, ProofOps};
 #[cfg(feature = "ABCI")]
 use tendermint_proto_abci::google::protobuf;
 #[cfg(feature = "ABCI")]
@@ -92,34 +92,50 @@ where
         key: &Key,
         is_proven: bool,
     ) -> response::Query {
-        let proof_ops = if is_proven {
-            match self.storage.get_proof(key) {
-                Ok(proof_op) => Some(ProofOps {
-                    ops: vec![proof_op.into()],
-                }),
-                Err(err) => {
-                    return response::Query {
-                        code: 2,
-                        info: format!("Storage error: {}", err),
-                        ..Default::default()
-                    };
+        match self.storage.read(key) {
+            Ok((Some(value), _gas)) => {
+                let proof_ops = if is_proven {
+                    match self.storage.get_existence_proof(key, value.clone()) {
+                        Ok(proof) => Some(proof.into()),
+                        Err(err) => {
+                            return response::Query {
+                                code: 2,
+                                info: format!("Storage error: {}", err),
+                                ..Default::default()
+                            };
+                        }
+                    }
+                } else {
+                    None
+                };
+                response::Query {
+                    value,
+                    proof_ops,
+                    ..Default::default()
                 }
             }
-        } else {
-            None
-        };
-        match self.storage.read(key) {
-            Ok((Some(value), _gas)) => response::Query {
-                value,
-                proof_ops,
-                ..Default::default()
-            },
-            Ok((None, _gas)) => response::Query {
-                code: 1,
-                info: format!("No value found for key: {}", key),
-                proof_ops,
-                ..Default::default()
-            },
+            Ok((None, _gas)) => {
+                let proof_ops = if is_proven {
+                    match self.storage.get_non_existence_proof(key) {
+                        Ok(proof) => Some(proof.into()),
+                        Err(err) => {
+                            return response::Query {
+                                code: 2,
+                                info: format!("Storage error: {}", err),
+                                ..Default::default()
+                            };
+                        }
+                    }
+                } else {
+                    None
+                };
+                response::Query {
+                    code: 1,
+                    info: format!("No value found for key: {}", key),
+                    proof_ops,
+                    ..Default::default()
+                }
+            }
             Err(err) => response::Query {
                 code: 2,
                 info: format!("Storage error: {}", err),
@@ -158,9 +174,19 @@ where
                 Ok(values) => {
                     let proof_ops = if is_proven {
                         let mut ops = vec![];
-                        for PrefixValue { key, value: _ } in &values {
-                            match self.storage.get_proof(key) {
-                                Ok(p) => ops.push(p.into()),
+                        for PrefixValue { key, value } in &values {
+                            match self
+                                .storage
+                                .get_existence_proof(key, value.clone())
+                            {
+                                Ok(p) => {
+                                    let mut cur_ops: Vec<ProofOp> = p
+                                        .ops
+                                        .into_iter()
+                                        .map(|op| op.into())
+                                        .collect();
+                                    ops.append(&mut cur_ops);
+                                }
                                 Err(err) => {
                                     return response::Query {
                                         code: 2,

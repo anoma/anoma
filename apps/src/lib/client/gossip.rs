@@ -72,16 +72,24 @@ pub async fn gossip_intent(
         let topic = topic.expect(
             "The topic must be defined to submit the intent to a gossip node.",
         );
-        let mut client = RpcServiceClient::connect(node_addr).await.unwrap();
 
-        let intent = anoma::proto::Intent::new(data_bytes);
-        let message: services::RpcMessage =
-            RpcMessage::new_intent(intent, topic).into();
-        let response = client
-            .send_message(message)
-            .await
-            .expect("failed to send message and/or receive rpc response");
-        println!("{:#?}", response);
+        match RpcServiceClient::connect(node_addr.clone()).await {
+            Ok(mut client) => {
+                let intent = anoma::proto::Intent::new(data_bytes);
+                let message: services::RpcMessage =
+                    RpcMessage::new_intent(intent, topic).into();
+                let response = client.send_message(message).await.expect(
+                    "Failed to send message and/or receive rpc response",
+                );
+                println!("{:#?}", response);
+            }
+            Err(e) => {
+                eprintln!(
+                    "Error connecting RPC client to {}: {}",
+                    node_addr, e
+                );
+            }
+        };
     }
 }
 

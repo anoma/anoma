@@ -2,15 +2,31 @@
 
 ## Unreleased
 
+### BUG FIXES
+
+- Matchmaker: Fix a matchmaker's state management via a raw pointer
+  that was causing segfaults in the matchmaker in release build.
+  ([#806](https://github.com/anoma/anoma/pull/806))
+
 ### FEATURES
 
+- Client/Ledger: Added a flag  to allow to indicate that client should exit once
+  the transaction is in mempool without waiting for it to be applied in a block.
+  ([#403](https://github.com/anoma/anoma/issues/403))
 - Ledger: Emit and validate IBC events from transactions.
   ([#480](https://github.com/anoma/anoma/issues/480))
+- Add `anomac tx-result` command to query the result of a transaction given a
+  transaction hash. ([#634](https://github.com/anoma/anoma/issues/634))
 - Ledger: Use IBC messages from ibc-rs crate to be used in the relayer.
   ([#699](https://github.com/anoma/anoma/issues/699))
 
 ### IMPROVEMENTS
 
+- Ledger: Two-layer merkle tree for the IBC proof verification
+  ([#671](https://github.com/anoma/anoma/issues/671))
+- Testing: Increments network configuration ports used for E2E
+  tests and ABCI++ enabled E2E tests to avoid sharing resources.
+  ([#717](https://github.com/anoma/anoma/issues/717))
 - Matchmaker: compiling and loading matchmakers to and from dylib instead of
   WASM ([#718](https://github.com/anoma/anoma/pull/718))
 - Matchmaker: re-purpose the matchmaker macro to manage state of a custom

@@ -14,8 +14,10 @@ non_staked_balance = 1000000000000
 validator_vp = "vp_user"
 # VP for the staking reward account
 staking_reward_vp = "vp_user"
-# Public IP:port address
-net_address = "127.0.0.1:26656"
+# Public IP:port address.
+# We set the port to be the default+1000, so that if a local node was running at 
+# the same time as the E2E tests, it wouldn't affect them.
+net_address = "127.0.0.1:27656"
 # This has to be an alias of one of the established accounts
 matchmaker_account = "matchmaker"
 # A matchmaker dylib program's name (the platform specific extension 

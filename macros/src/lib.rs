@@ -124,12 +124,24 @@ pub fn validity_predicate(
     TokenStream::from(gen)
 }
 
-/// Generate WASM binding for matchmaker main entrypoint function.
+/// Derive dynamic library binding for a matchmaker implementation.
 ///
-/// This macro expects a function with signature:
+/// This macro requires that the data structure implements
+/// [`std::default::Default`] that is used to instantiate the matchmaker and
+/// `anoma::types::matchmaker::AddIntent` to implement a custom matchmaker
+/// algorithm.
+///
+/// # Examples
 ///
 /// ```compiler_fail
-/// fn match_intent(matchmaker_data:Vec<u8>, intent_id: Vec<u8>, intent: Vec<u8>) -> bool
+/// use anoma::types::matchmaker::AddIntent;
+/// use anoma_macros::Matchmaker;
+///
+/// #[derive(Default, Matchmaker)]
+/// struct Matchmaker;
+///
+/// impl AddIntent for Matchmaker {
+/// }
 /// ```
 #[proc_macro_derive(Matchmaker)]
 pub fn matchmaker(input: TokenStream) -> TokenStream {
@@ -148,9 +160,8 @@ pub fn matchmaker(input: TokenStream) -> TokenStream {
         #[no_mangle]
         #[automatically_derived]
         fn _new_matchmaker() -> *mut std::ffi::c_void {
-            let mut state = #ident::default();
-            let state_ptr = &mut state as *mut #ident as *mut std::ffi::c_void;
-            std::mem::forget(state);
+            let state = Box::new(#ident::default());
+            let state_ptr = Box::into_raw(state) as *mut std::ffi::c_void;
             state_ptr
         }
 
@@ -159,8 +170,7 @@ pub fn matchmaker(input: TokenStream) -> TokenStream {
         #[automatically_derived]
         fn _drop_matchmaker(state_ptr: *mut std::ffi::c_void) {
             // The state will be dropped on going out of scope
-            let _state: #ident =
-                unsafe { std::ptr::read(state_ptr as *mut #ident) };
+            let _state = unsafe { Box::from_raw(state_ptr as *mut #ident) };
         }
 
         /// Ask the matchmaker to process a new intent

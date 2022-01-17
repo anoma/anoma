@@ -280,6 +280,29 @@ impl Key {
         };
         Ok(key)
     }
+
+    /// Returns a sub key without the first segment
+    pub fn sub_key(&self) -> Result<Self> {
+        match self.segments.split_first() {
+            Some((_, rest)) => {
+                if rest.is_empty() {
+                    Err(Error::Temporary {
+                        error: format!(
+                            "The key doesn't have the sub segments: {}",
+                            self
+                        ),
+                    })
+                } else {
+                    Ok(Self {
+                        segments: rest.to_vec(),
+                    })
+                }
+            }
+            None => Err(Error::Temporary {
+                error: "The key is empty".to_owned(),
+            }),
+        }
+    }
 }
 
 impl Display for Key {
