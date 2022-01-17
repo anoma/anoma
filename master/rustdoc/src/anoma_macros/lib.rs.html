@@ -224,6 +224,16 @@
 <span id="224">224</span>
 <span id="225">225</span>
 <span id="226">226</span>
+<span id="227">227</span>
+<span id="228">228</span>
+<span id="229">229</span>
+<span id="230">230</span>
+<span id="231">231</span>
+<span id="232">232</span>
+<span id="233">233</span>
+<span id="234">234</span>
+<span id="235">235</span>
+<span id="236">236</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Anoma macros for generating WASM binding code for transactions, validity</span>
 <span class="doccomment">//! predicates and matchmaker.</span>
 
@@ -350,12 +360,24 @@
     <span class="ident">TokenStream::from</span>(<span class="ident">gen</span>)
 }
 
-<span class="doccomment">/// Generate WASM binding for matchmaker main entrypoint function.</span>
+<span class="doccomment">/// Derive dynamic library binding for a matchmaker implementation.</span>
 <span class="doccomment">///</span>
-<span class="doccomment">/// This macro expects a function with signature:</span>
+<span class="doccomment">/// This macro requires that the data structure implements</span>
+<span class="doccomment">/// [`std::default::Default`] that is used to instantiate the matchmaker and</span>
+<span class="doccomment">/// `anoma::types::matchmaker::AddIntent` to implement a custom matchmaker</span>
+<span class="doccomment">/// algorithm.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// # Examples</span>
 <span class="doccomment">///</span>
 <span class="doccomment">/// ```compiler_fail</span>
-<span class="doccomment">/// fn match_intent(matchmaker_data:Vec&lt;u8&gt;, intent_id: Vec&lt;u8&gt;, intent: Vec&lt;u8&gt;) -&gt; bool</span>
+<span class="doccomment">/// use anoma::types::matchmaker::AddIntent;</span>
+<span class="doccomment">/// use anoma_macros::Matchmaker;</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// #[derive(Default, Matchmaker)]</span>
+<span class="doccomment">/// struct Matchmaker;</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// impl AddIntent for Matchmaker {</span>
+<span class="doccomment">/// }</span>
 <span class="doccomment">/// ```</span>
 <span class="attribute">#[<span class="ident">proc_macro_derive</span>(<span class="ident">Matchmaker</span>)]</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">matchmaker</span>(<span class="ident">input</span>: <span class="ident">TokenStream</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">TokenStream</span> {
@@ -374,9 +396,8 @@
         <span class="attribute">#[<span class="ident">no_mangle</span>]</span>
         <span class="attribute">#[<span class="ident">automatically_derived</span>]</span>
         <span class="kw">fn</span> <span class="ident">_new_matchmaker</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">std::ffi::c_void</span> {
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">state</span> <span class="op">=</span> #<span class="ident">ident::default</span>();
-            <span class="kw">let</span> <span class="ident">state_ptr</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">state</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw-2">mut</span> #<span class="ident">ident</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">std::ffi::c_void</span>;
-            <span class="ident">std::mem::forget</span>(<span class="ident">state</span>);
+            <span class="kw">let</span> <span class="ident">state</span> <span class="op">=</span> <span class="ident">Box::new</span>(#<span class="ident">ident::default</span>());
+            <span class="kw">let</span> <span class="ident">state_ptr</span> <span class="op">=</span> <span class="ident">Box::into_raw</span>(<span class="ident">state</span>) <span class="kw">as</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">std::ffi::c_void</span>;
             <span class="ident">state_ptr</span>
         }
 
@@ -385,8 +406,7 @@
         <span class="attribute">#[<span class="ident">automatically_derived</span>]</span>
         <span class="kw">fn</span> <span class="ident">_drop_matchmaker</span>(<span class="ident">state_ptr</span>: <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">std::ffi::c_void</span>) {
             <span class="comment">// The state will be dropped on going out of scope</span>
-            <span class="kw">let</span> <span class="ident">_state</span>: #<span class="ident">ident</span> <span class="op">=</span>
-                <span class="kw">unsafe</span> { <span class="ident">std::ptr::read</span>(<span class="ident">state_ptr</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw-2">mut</span> #<span class="ident">ident</span>) };
+            <span class="kw">let</span> <span class="ident">_state</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">Box::from_raw</span>(<span class="ident">state_ptr</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw-2">mut</span> #<span class="ident">ident</span>) };
         }
 
         <span class="doccomment">/// Ask the matchmaker to process a new intent</span>

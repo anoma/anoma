@@ -281,6 +281,7 @@
 <span id="281">281</span>
 <span id="282">282</span>
 <span id="283">283</span>
+<span id="284">284</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std::collections::HashSet</span>;
 <span class="kw">use</span> <span class="ident">std::env</span>;
 <span class="kw">use</span> <span class="ident">std::path::Path</span>;
@@ -408,14 +409,15 @@
             )
         }
         <span class="kw">let</span> <span class="ident">matchmaker_code</span> <span class="op">=</span>
-            <span class="kw">unsafe</span> { <span class="ident">Library::new</span>(<span class="ident">matchmaker_dylib</span>).<span class="ident">unwrap</span>() };
+            <span class="kw">unsafe</span> { <span class="ident">Library::new</span>(<span class="ident">matchmaker_dylib</span>) }.<span class="ident">unwrap</span>();
 
         <span class="comment">// Instantiate the matchmaker</span>
         <span class="kw">let</span> <span class="ident">new_matchmaker</span>: <span class="ident">libloading::Symbol</span><span class="op">&lt;</span>
             <span class="kw">unsafe</span> <span class="kw">extern</span> <span class="string">&quot;C&quot;</span> <span class="kw">fn</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">c_void</span>,
-        <span class="op">&gt;</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">matchmaker_code</span>.<span class="ident">get</span>(<span class="string">b&quot;_new_matchmaker&quot;</span>).<span class="ident">unwrap</span>() };
+        <span class="op">&gt;</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">matchmaker_code</span>.<span class="ident">get</span>(<span class="string">b&quot;_new_matchmaker&quot;</span>) }.<span class="ident">unwrap</span>();
 
-        <span class="kw">let</span> <span class="ident">state</span> <span class="op">=</span> <span class="ident">MatchmakerState</span>(<span class="ident">Arc::new</span>(<span class="kw">unsafe</span> { <span class="ident">new_matchmaker</span>() }));
+        <span class="kw">let</span> <span class="ident">new_state</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">new_matchmaker</span>() };
+        <span class="kw">let</span> <span class="ident">state</span> <span class="op">=</span> <span class="ident">MatchmakerState</span>(<span class="ident">Arc::new</span>(<span class="ident">new_state</span>));
 
         <span class="kw">let</span> <span class="ident">tx_code</span> <span class="op">=</span> <span class="ident">wasm_loader::read_wasm</span>(<span class="kw-2">&amp;</span><span class="ident">wasm_dir</span>, <span class="kw-2">&amp;</span><span class="ident">config</span>.<span class="ident">tx_code</span>);
         <span class="kw">let</span> <span class="ident">filter</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">Filter</span>);
@@ -466,9 +468,9 @@
                 ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">AddIntentResult</span>,
             <span class="op">&gt;</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="self">self</span>.<span class="ident">r#impl</span>.<span class="ident">library</span>.<span class="ident">get</span>(<span class="string">b&quot;_add_intent&quot;</span>).<span class="ident">unwrap</span>() };
 
-            <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="kw">unsafe</span> {
-                <span class="ident">add_intent</span>(<span class="kw-2">*</span><span class="self">self</span>.<span class="ident">r#impl</span>.<span class="ident">state</span>.<span class="number">0</span>, <span class="kw-2">&amp;</span><span class="ident">intent</span>.<span class="ident">id</span>().<span class="number">0</span>, <span class="kw-2">&amp;</span><span class="ident">intent</span>.<span class="ident">data</span>)
-            };
+            <span class="kw">let</span> <span class="ident">state</span> <span class="op">=</span> <span class="kw-2">*</span><span class="self">self</span>.<span class="ident">r#impl</span>.<span class="ident">state</span>.<span class="number">0</span>;
+            <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span>
+                <span class="kw">unsafe</span> { <span class="ident">add_intent</span>(<span class="ident">state</span>, <span class="kw-2">&amp;</span><span class="ident">intent</span>.<span class="ident">id</span>().<span class="number">0</span>, <span class="kw-2">&amp;</span><span class="ident">intent</span>.<span class="ident">data</span>) };
 
             <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">tx</span>) <span class="op">=</span> <span class="ident">result</span>.<span class="ident">tx</span> {
                 <span class="self">self</span>.<span class="ident">submit_tx</span>(<span class="ident">tx</span>).<span class="kw">await</span>

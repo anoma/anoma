@@ -109,6 +109,14 @@
 <span id="109">109</span>
 <span id="110">110</span>
 <span id="111">111</span>
+<span id="112">112</span>
+<span id="113">113</span>
+<span id="114">114</span>
+<span id="115">115</span>
+<span id="116">116</span>
+<span id="117">117</span>
+<span id="118">118</span>
+<span id="119">119</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std::collections::HashSet</span>;
 <span class="kw">use</span> <span class="ident">std::io::Write</span>;
 
@@ -183,16 +191,24 @@
         <span class="kw">let</span> <span class="ident">topic</span> <span class="op">=</span> <span class="ident">topic</span>.<span class="ident">expect</span>(
             <span class="string">&quot;The topic must be defined to submit the intent to a gossip node.&quot;</span>,
         );
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">client</span> <span class="op">=</span> <span class="ident">RpcServiceClient::connect</span>(<span class="ident">node_addr</span>).<span class="kw">await</span>.<span class="ident">unwrap</span>();
 
-        <span class="kw">let</span> <span class="ident">intent</span> <span class="op">=</span> <span class="ident">anoma::proto::Intent::new</span>(<span class="ident">data_bytes</span>);
-        <span class="kw">let</span> <span class="ident">message</span>: <span class="ident">services::RpcMessage</span> <span class="op">=</span>
-            <span class="ident">RpcMessage::new_intent</span>(<span class="ident">intent</span>, <span class="ident">topic</span>).<span class="ident">into</span>();
-        <span class="kw">let</span> <span class="ident">response</span> <span class="op">=</span> <span class="ident">client</span>
-            .<span class="ident">send_message</span>(<span class="ident">message</span>)
-            .<span class="kw">await</span>
-            .<span class="ident">expect</span>(<span class="string">&quot;failed to send message and/or receive rpc response&quot;</span>);
-        <span class="macro">println!</span>(<span class="string">&quot;{:#?}&quot;</span>, <span class="ident">response</span>);
+        <span class="kw">match</span> <span class="ident">RpcServiceClient::connect</span>(<span class="ident">node_addr</span>.<span class="ident">clone</span>()).<span class="kw">await</span> {
+            <span class="prelude-val">Ok</span>(<span class="kw-2">mut</span> <span class="ident">client</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="kw">let</span> <span class="ident">intent</span> <span class="op">=</span> <span class="ident">anoma::proto::Intent::new</span>(<span class="ident">data_bytes</span>);
+                <span class="kw">let</span> <span class="ident">message</span>: <span class="ident">services::RpcMessage</span> <span class="op">=</span>
+                    <span class="ident">RpcMessage::new_intent</span>(<span class="ident">intent</span>, <span class="ident">topic</span>).<span class="ident">into</span>();
+                <span class="kw">let</span> <span class="ident">response</span> <span class="op">=</span> <span class="ident">client</span>.<span class="ident">send_message</span>(<span class="ident">message</span>).<span class="kw">await</span>.<span class="ident">expect</span>(
+                    <span class="string">&quot;Failed to send message and/or receive rpc response&quot;</span>,
+                );
+                <span class="macro">println!</span>(<span class="string">&quot;{:#?}&quot;</span>, <span class="ident">response</span>);
+            }
+            <span class="prelude-val">Err</span>(<span class="ident">e</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="macro">eprintln!</span>(
+                    <span class="string">&quot;Error connecting RPC client to {}: {}&quot;</span>,
+                    <span class="ident">node_addr</span>, <span class="ident">e</span>
+                );
+            }
+        };
     }
 }
 
