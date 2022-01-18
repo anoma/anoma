@@ -173,6 +173,23 @@ apt-get install -y make git-core libssl-dev pkg-config libclang-12-dev
 <p>Last, to build and install anoma you can run the following command:</p>
 <pre><code class="language-bash">make install
 </code></pre>
+<h2 id="nix"><a class="header" href="#nix">Nix</a></h2>
+<p>If you have <a href="https://nixos.org/">Nix</a>, you can get Anoma easily as a flake. For
+this to work, make sure that you have Nix 2.4 or later and that you have
+<code>experimental-features = nix-command flakes</code> in your <code>~/.config/nix/nix.conf</code>.</p>
+<pre><code class="language-shell"># Install to user profile
+nix profile install github:anoma/anoma/&lt;revision&gt;
+
+# Run without installing
+nix run github:anoma/anoma/&lt;revision&gt; -- --help
+
+# Enter a shell where anoma executables are available
+nix run github:anoma/anoma/&lt;revision&gt;
+</code></pre>
+<p>Set <code>&lt;revision&gt;</code> to the git tag, branch or hash you want.</p>
+<p>With Nix versions older than 2.4, use this command instead:</p>
+<pre><code class="language-shell">nix-env -f https://github.com/anoma/anoma/archive/&lt;revision&gt;.tar.gz -iA default
+</code></pre>
 <h2 id="github-release"><a class="header" href="#github-release">Github release</a></h2>
 <p>Go to <a href="https://github.com/anoma/anoma/releases">anoma github release page</a> and download the last release.</p>
 <h2 id="docker"><a class="header" href="#docker">Docker</a></h2>
