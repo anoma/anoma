@@ -269,6 +269,19 @@
 <span id="269">269</span>
 <span id="270">270</span>
 <span id="271">271</span>
+<span id="272">272</span>
+<span id="273">273</span>
+<span id="274">274</span>
+<span id="275">275</span>
+<span id="276">276</span>
+<span id="277">277</span>
+<span id="278">278</span>
+<span id="279">279</span>
+<span id="280">280</span>
+<span id="281">281</span>
+<span id="282">282</span>
+<span id="283">283</span>
+<span id="284">284</span>
 </pre><pre class="rust"><code><span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">defaults</span>;
 <span class="kw">mod</span> <span class="ident">keys</span>;
 <span class="kw">mod</span> <span class="ident">store</span>;
@@ -362,8 +375,21 @@
             <span class="macro">println!</span>(<span class="string">&quot;Warning: The keypair will NOT be encrypted.&quot;</span>);
             <span class="prelude-val">None</span>
         } <span class="kw">else</span> {
-            <span class="prelude-val">Some</span>(<span class="ident">read_password</span>(<span class="string">&quot;Enter encryption password: &quot;</span>))
+            <span class="prelude-val">Some</span>(<span class="ident">read_password</span>(<span class="string">&quot;Enter your encryption password: &quot;</span>))
         };
+        <span class="comment">// Bis repetita for confirmation.</span>
+        <span class="kw">let</span> <span class="ident">pwd</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">unsafe_dont_encrypt</span> {
+            <span class="prelude-val">None</span>
+        } <span class="kw">else</span> {
+            <span class="prelude-val">Some</span>(<span class="ident">read_password</span>(
+                <span class="string">&quot;To confirm, please enter the same encryption password once \
+                 more: &quot;</span>,
+            ))
+        };
+        <span class="kw">if</span> <span class="ident">pwd</span> <span class="op">!</span><span class="op">=</span> <span class="ident">password</span> {
+            <span class="macro">eprintln!</span>(<span class="string">&quot;Your two inputs do not match!&quot;</span>);
+            <span class="ident">cli::safe_exit</span>(<span class="number">1</span>)
+        }
         <span class="kw">let</span> (<span class="ident">alias</span>, <span class="ident">key</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">store</span>.<span class="ident">gen_key</span>(<span class="ident">alias</span>, <span class="ident">password</span>);
         <span class="comment">// Cache the newly added key</span>
         <span class="self">self</span>.<span class="ident">decrypted_key_cache</span>.<span class="ident">insert</span>(<span class="ident">alias</span>.<span class="ident">clone</span>(), <span class="ident">key</span>.<span class="ident">clone</span>());
