@@ -255,7 +255,10 @@ where
         match process_tx(req_tx.clone()) {
             Ok(TxType::Wrapper(_)) => {}
             Ok(TxType::Protocol(_)) => {
-                return self.process_proposal(req);
+                let tx_bytes = req.tx.clone();
+                let mut response = self.process_proposal(req);
+                response.tx = tx_bytes;
+                return response;
             }
             Ok(_) => {
                 return shim::response::ProcessProposal {

@@ -47,9 +47,7 @@ fn run_ledger() -> Result<()> {
             run_as!(test, Who::NonValidator, Bin::Node, args, Some(20))?;
         ledger.exp_string("Anoma ledger node started")?;
         if !cfg!(feature = "ABCI") {
-            ledger.exp_string(
-                "This node is a validator (NOT in the active validator set)",
-            )?;
+            ledger.exp_string("This node is a fullnode")?;
         } else {
             ledger.exp_string("This node is not a validator")?;
         }
@@ -100,7 +98,7 @@ fn test_anoma_shuts_down_if_tendermint_dies() -> Result<()> {
 /// 5. Reset the ledger's state
 /// 6. Run the ledger again, it should start from fresh state
 #[test]
-fn run_leger_load_state_and_reset() -> Result<()> {
+fn run_ledger_load_state_and_reset() -> Result<()> {
     let test = setup::single_node_net()?;
 
     // 1. Run the ledger node

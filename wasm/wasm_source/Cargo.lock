@@ -1739,7 +1739,7 @@ dependencies = [
 [[package]]
 name = "ferveo"
 version = "0.1.1"
-source = "git+https://github.com/anoma/ferveo?branch=bat/state-guard-refactor#caef6ef73dd43a9952d783fcf18abb893b36635f"
+source = "git+https://github.com/anoma/ferveo?branch=bat/ferveo-common-canonical-serialize#ab6701666e3b05bd783ce0309025e842fa83e4c1"
 dependencies = [
  "anyhow",
  "ark-bls12-381",
@@ -1757,7 +1757,7 @@ dependencies = [
  "ed25519-dalek",
  "either",
  "ferveo-common",
- "group-threshold-cryptography 0.1.0 (git+https://github.com/anoma/ferveo?branch=bat/state-guard-refactor)",
+ "group-threshold-cryptography 0.1.0 (git+https://github.com/anoma/ferveo?branch=bat/ferveo-common-canonical-serialize)",
  "hex",
  "itertools 0.10.1",
  "measure_time",
@@ -1768,7 +1768,7 @@ dependencies = [
  "serde 1.0.130",
  "serde_bytes",
  "serde_json",
- "subproductdomain 0.1.0 (git+https://github.com/anoma/ferveo?branch=bat/state-guard-refactor)",
+ "subproductdomain 0.1.0 (git+https://github.com/anoma/ferveo?branch=bat/ferveo-common-canonical-serialize)",
  "subtle 2.4.0",
  "zeroize",
 ]
@@ -1776,7 +1776,7 @@ dependencies = [
 [[package]]
 name = "ferveo-common"
 version = "0.1.0"
-source = "git+https://github.com/anoma/ferveo?branch=bat/state-guard-refactor#caef6ef73dd43a9952d783fcf18abb893b36635f"
+source = "git+https://github.com/anoma/ferveo?branch=bat/ferveo-common-canonical-serialize#ab6701666e3b05bd783ce0309025e842fa83e4c1"
 dependencies = [
  "anyhow",
  "ark-ec",
@@ -2122,7 +2122,7 @@ dependencies = [
 [[package]]
 name = "group-threshold-cryptography"
 version = "0.1.0"
-source = "git+https://github.com/anoma/ferveo?branch=bat/state-guard-refactor#caef6ef73dd43a9952d783fcf18abb893b36635f"
+source = "git+https://github.com/anoma/ferveo?branch=bat/ferveo-common-canonical-serialize#ab6701666e3b05bd783ce0309025e842fa83e4c1"
 dependencies = [
  "anyhow",
  "ark-bls12-381",
@@ -2139,7 +2139,7 @@ dependencies = [
  "rand 0.8.4",
  "rand_core 0.6.3",
  "rayon",
- "subproductdomain 0.1.0 (git+https://github.com/anoma/ferveo?branch=bat/state-guard-refactor)",
+ "subproductdomain 0.1.0 (git+https://github.com/anoma/ferveo?branch=bat/ferveo-common-canonical-serialize)",
  "thiserror",
 ]
 
@@ -5402,7 +5402,7 @@ checksum = "73473c0e59e6d5812c5dfe2a064a6444949f089e20eec9a2e5506596494e4623"
 [[package]]
 name = "subproductdomain"
 version = "0.1.0"
-source = "git+https://github.com/anoma/ferveo?branch=bat/state-guard-refactor#caef6ef73dd43a9952d783fcf18abb893b36635f"
+source = "git+https://github.com/anoma/ferveo?branch=bat/ferveo-common-canonical-serialize#ab6701666e3b05bd783ce0309025e842fa83e4c1"
 dependencies = [
  "anyhow",
  "ark-ec",

@@ -12,6 +12,7 @@ mod prepare_proposal;
 mod process_proposal;
 mod queries;
 mod state;
+mod update_dkg;
 
 use std::borrow::Borrow;
 use std::convert::{TryFrom, TryInto};
@@ -304,7 +305,10 @@ where
                     let wallet_path = &base_dir.join(chain_id.as_str());
                     let genesis_path =
                         &base_dir.join(format!("{}.toml", chain_id.as_str()));
-                    tracing::debug!("{}", wallet_path.as_path().to_str().unwrap());
+                    tracing::debug!(
+                        "{}",
+                        wallet_path.as_path().to_str().unwrap()
+                    );
                     let wallet = wallet::Wallet::load_or_new_from_genesis(
                         wallet_path,
                         move || {
@@ -567,6 +571,8 @@ where
             root,
             self.storage.last_height,
         );
+        // update the DKG state machine
+        self.update_dkg();
         response.data = root.0;
         response
     }
@@ -706,6 +712,8 @@ where
             )
             .sign(keypair.borrow())
             .to_bytes();
+
+            tracing::info!("Requesting new DKG session keypair");
             // broadcast tx
             // We ignore errors here. They are handled elsewhere
             let _ = broadcast_sender.send(request_tx);
@@ -744,6 +752,10 @@ mod test_utils {
     use anoma::types::transaction::Fee;
     use tempfile::tempdir;
     #[cfg(not(feature = "ABCI"))]
+    use tendermint::block::{header::Version, Header};
+    #[cfg(not(feature = "ABCI"))]
+    use tendermint::{Hash, Time};
+    #[cfg(not(feature = "ABCI"))]
     use tendermint_proto::abci::{
         Event as TmEvent, RequestInitChain, ResponsePrepareProposal,
     };
@@ -753,6 +765,10 @@ mod test_utils {
     use tendermint_proto_abci::abci::{Event as TmEvent, RequestInitChain};
     #[cfg(feature = "ABCI")]
     use tendermint_proto_abci::google::protobuf::Timestamp;
+    #[cfg(feature = "ABCI")]
+    use tendermint_stable::block::{header::Version, Header};
+    #[cfg(feature = "ABCI")]
+    use tendermint_stable::{Hash, Time};
     use tokio::sync::mpsc::UnboundedReceiver;
 
     use super::*;
@@ -897,6 +913,41 @@ mod test_utils {
             ..Default::default()
         });
         (test, receiver)
+    }
+
+    /// This is just to be used in testing. It is not
+    /// a meaningful default.
+    impl Default for FinalizeBlock {
+        fn default() -> Self {
+            FinalizeBlock {
+                hash: BlockHash([0u8; 32]),
+                header: Header {
+                    version: Version { block: 0, app: 0 },
+                    chain_id: String::from("test")
+                        .try_into()
+                        .expect("Should not fail"),
+                    height: 0u64.try_into().expect("Should not fail"),
+                    time: Time::from(DateTimeUtc::now()),
+                    last_block_id: None,
+                    last_commit_hash: None,
+                    data_hash: None,
+                    validators_hash: Hash::None,
+                    next_validators_hash: Hash::None,
+                    consensus_hash: Hash::None,
+                    app_hash: Vec::<u8>::new()
+                        .try_into()
+                        .expect("Should not fail"),
+                    last_results_hash: None,
+                    evidence_hash: None,
+                    proposer_address: vec![0u8; 20]
+                        .try_into()
+                        .expect("Should not fail"),
+                },
+                byzantine_validators: vec![],
+                txs: vec![],
+                reject_all_decrypted: false,
+            }
+        }
     }
 
     /// We test that on shell shutdown, the tx queue gets

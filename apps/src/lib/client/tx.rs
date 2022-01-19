@@ -46,10 +46,19 @@ const TX_BOND_WASM: &str = "tx_bond.wasm";
 const TX_UNBOND_WASM: &str = "tx_unbond.wasm";
 const TX_WITHDRAW_WASM: &str = "tx_withdraw.wasm";
 
-pub struct TxBroadcastData {
-    pub tx: Tx,
-    pub wrapper_hash: String,
-    pub decrypted_hash: Option<String>,
+/// Data needed for broadcasting a tx and
+/// monitoring its progress on chain
+///
+/// Txs may be either a dry run or else
+/// they should be encrypted and included
+/// in a wrapper.
+pub enum TxBroadcastData {
+    DryRun(Tx),
+    Wrapper {
+        tx: Tx,
+        wrapper_hash: String,
+        decrypted_hash: Option<String>,
+    },
 }
 
 pub async fn submit_custom(ctx: Context, args: args::TxCustom) {
@@ -203,12 +212,8 @@ pub async fn submit_init_validator(
     let dkg_key = validator_keys
         .dkg_keypair
         .as_ref()
-        .map(|kp| {
-            kp.public()
-                .try_to_vec()
-                .expect("Serializing DKG public key shouldn't fail")
-        })
-        .expect("DKG sessions keys should have been created");
+        .expect("DKG sessions keys should have been created")
+        .public();
 
     ctx.wallet.save().unwrap_or_else(|err| eprintln!("{}", err));
 
@@ -644,8 +649,10 @@ pub async fn submit_withdraw(ctx: Context, args: args::Withdraw) {
 /// If no explicit signer given, use the `default`. If no `default` is given,
 /// panics.
 ///
-/// Then the tx, is put in a wrapper and returned along with hashes needed
-/// for monitoring the tx on chain.
+/// If this is not a dry run, the tx is put in a wrapper and returned along with
+/// hashes needed for monitoring the tx on chain.
+///
+/// If it is a dry run, it is not put in a wrapper, but returned as is.
 async fn sign_tx(
     mut ctx: Context,
     tx: Tx,
@@ -683,7 +690,11 @@ async fn sign_tx(
     })
     .await;
     let keypair = keypair.lock();
-    let broadcast_data = sign_wrapper(&ctx, args, epoch, tx, &keypair);
+    let broadcast_data = if args.dry_run {
+        TxBroadcastData::DryRun(tx)
+    } else {
+        sign_wrapper(&ctx, args, epoch, tx, &keypair)
+    };
     (ctx, broadcast_data)
 }
 
@@ -721,7 +732,7 @@ fn sign_wrapper(
         None
     };
 
-    TxBroadcastData {
+    TxBroadcastData::Wrapper {
         tx: tx
             .sign(keypair)
             .expect("Wrapper tx signing keypair should be correct"),
@@ -748,8 +759,15 @@ async fn submit_tx(
     // println!("HTTP request body: {}", request_body);
 
     if args.dry_run {
-        rpc::dry_run_tx(&args.ledger_address, to_broadcast.tx.to_bytes()).await;
-        (ctx, vec![])
+        if let TxBroadcastData::DryRun(tx) = to_broadcast {
+            rpc::dry_run_tx(&args.ledger_address, tx.to_bytes()).await;
+            (ctx, vec![])
+        } else {
+            panic!(
+                "Expected a dry-run transaction, received a wrapper \
+                 transaction instead"
+            );
+        }
     } else {
         match broadcast_tx(args.ledger_address.clone(), to_broadcast).await {
             Ok(result) => (ctx, result.initialized_accounts),
@@ -833,12 +851,16 @@ async fn save_initialized_accounts(
 /// In the case of errors in any of those stages, an error message is returned
 pub async fn broadcast_tx(
     address: TendermintAddress,
-    TxBroadcastData {
-        tx,
-        wrapper_hash,
-        decrypted_hash,
-    }: TxBroadcastData,
+    to_broadcast: TxBroadcastData,
 ) -> Result<TxResponse, Error> {
+    let (tx, wrapper_hash, decrypted_hash) = match to_broadcast {
+        TxBroadcastData::Wrapper {
+            tx,
+            wrapper_hash,
+            decrypted_hash,
+        } => (tx, wrapper_hash, decrypted_hash),
+        _ => panic!("Cannot broadcast a dry-run transaction"),
+    };
     let tx_bytes = tx.to_bytes();
     let mut wrapper_tx_subscription = TendermintWebsocketClient::open(
         WebSocketAddress::try_from(address.clone())?,

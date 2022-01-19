@@ -239,7 +239,12 @@ pub fn init_network(
             validator_keys.protocol_keypair.public().to_string(),
         ));
         config.dkg_public_key = Some(genesis_config::HexString(
-            validator_keys.dkg_keypair.as_ref().unwrap().public().to_string(),
+            validator_keys
+                .dkg_keypair
+                .as_ref()
+                .unwrap()
+                .public()
+                .to_string(),
         ));
         // Generate account and reward addresses
         let address = address::gen_established_address("validator account");

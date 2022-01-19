@@ -126,7 +126,7 @@ pub struct InitValidator {
     /// Public key used to sign protocol transactions
     pub protocol_key: PublicKey,
     /// Serialization of the public session key used in the DKG
-    pub dkg_key: Vec<u8>,
+    pub dkg_key: DkgPublicKey,
     /// The VP code for validator account
     pub validator_vp_code: Vec<u8>,
     /// The VP code for validator's staking reward account
@@ -459,3 +459,5 @@ pub mod tx_types {
 
 #[cfg(feature = "ferveo-tpke")]
 pub use tx_types::*;
+
+use crate::types::key::dkg_session_keys::DkgPublicKey;

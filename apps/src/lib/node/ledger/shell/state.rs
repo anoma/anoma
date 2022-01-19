@@ -46,6 +46,14 @@ impl ShellMode {
             _ => None,
         }
     }
+
+    /// Set the flag on the DKG state machine that a new epoch
+    /// began and it should be updated
+    pub fn set_update_dkg(&mut self) {
+        if let ShellMode::Validator { dkg, .. } = self {
+            dkg.update = true;
+        }
+    }
 }
 
 #[derive(Default, Debug, Clone, BorshDeserialize, BorshSerialize)]
@@ -100,6 +108,7 @@ impl TxQueue {
 #[derive(Debug)]
 pub(super) struct DkgInstance {
     pub state_machine: DkgStateMachine,
+    pub update: bool,
 }
 
 impl Default for DkgInstance {
@@ -124,6 +133,7 @@ impl Default for DkgInstance {
                 keypair,
             )
             .expect("Constructing default DKG should not fail"),
+            update: false,
         }
     }
 }
@@ -137,18 +147,20 @@ impl borsh::ser::BorshSerialize for DkgInstance {
         CanonicalSerialize::serialize(&self.state_machine, &mut buf).map_err(
             |e| std::io::Error::new(std::io::ErrorKind::InvalidData, e),
         )?;
-        BorshSerialize::serialize(&buf, writer)
+        BorshSerialize::serialize(&(buf, self.update), writer)
     }
 }
 
 impl borsh::de::BorshDeserialize for DkgInstance {
     fn deserialize(buf: &mut &[u8]) -> std::io::Result<Self> {
-        let state_machine: Vec<u8> = BorshDeserialize::deserialize(buf)?;
+        let (state_machine, update): (Vec<u8>, bool) =
+            BorshDeserialize::deserialize(buf)?;
         Ok(DkgInstance {
             state_machine: CanonicalDeserialize::deserialize(&*state_machine)
                 .map_err(|err| {
                 std::io::Error::new(std::io::ErrorKind::InvalidData, err)
             })?,
+            update,
         })
     }
 }

@@ -192,7 +192,6 @@ impl StoredKeypair {
     ) -> (Self, AtomicKeypair) {
         match password {
             Some(password) => {
-
                 let encrypted = {
                     let keypair_mutex = keypair.lock();
                     Self::Encrypted(EncryptedKeypair::new(

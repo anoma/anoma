@@ -302,16 +302,25 @@ impl Test {
     {
         let (base_dir, mode) = match who {
             Who::NonValidator => (self.base_dir.path().to_owned(), "full"),
-            Who::Validator(index) => (self
-                .base_dir
-                .path()
-                .join(self.net.chain_id.as_str())
-                .join(utils::NET_ACCOUNTS_DIR)
-                .join(format!("validator-{}", index))
-                .join(config::DEFAULT_BASE_DIR),
-                "validator")
+            Who::Validator(index) => (
+                self.base_dir
+                    .path()
+                    .join(self.net.chain_id.as_str())
+                    .join(utils::NET_ACCOUNTS_DIR)
+                    .join(format!("validator-{}", index))
+                    .join(config::DEFAULT_BASE_DIR),
+                "validator",
+            ),
         };
-        run_cmd(bin, args, timeout_sec, &self.working_dir, &base_dir, mode, loc)
+        run_cmd(
+            bin,
+            args,
+            timeout_sec,
+            &self.working_dir,
+            &base_dir,
+            mode,
+            loc,
+        )
     }
 }
 
@@ -486,7 +495,12 @@ where
     let mut cmd = cmd.run().unwrap().command();
     cmd.env("ANOMA_LOG", "anoma=debug")
         .current_dir(working_dir)
-        .args(&["--base-dir", &base_dir.as_ref().to_string_lossy(), "--mode", mode])
+        .args(&[
+            "--base-dir",
+            &base_dir.as_ref().to_string_lossy(),
+            "--mode",
+            mode,
+        ])
         .args(args);
     let cmd_str = format!("{:?}", cmd);
 

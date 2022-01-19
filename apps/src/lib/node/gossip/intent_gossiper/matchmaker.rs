@@ -214,17 +214,16 @@ impl Matchmaker {
         .await;
         let to_broadcast = {
             let tx_signing_key = self.tx_signing_key.lock();
-            let tx =
-                WrapperTx::new(
-                    Fee {
-                        amount: 0.into(),
-                        token: xan(),
-                    },
-                    &tx_signing_key,
-                    epoch,
-                    0.into(),
-                    Tx::new(tx_code, Some(tx_data)).sign(&tx_signing_key),
-                );
+            let tx = WrapperTx::new(
+                Fee {
+                    amount: 0.into(),
+                    token: xan(),
+                },
+                &tx_signing_key,
+                epoch,
+                0.into(),
+                Tx::new(tx_code, Some(tx_data)).sign(&tx_signing_key),
+            );
 
             let wrapper_hash = if !cfg!(feature = "ABCI") {
                 hash_tx(&tx.try_to_vec().unwrap()).to_string()
@@ -237,7 +236,7 @@ impl Matchmaker {
             } else {
                 None
             };
-            TxBroadcastData {
+            TxBroadcastData::Wrapper {
                 tx: tx
                     .sign(&tx_signing_key)
                     .expect("Wrapper tx signing keypair should be correct"),

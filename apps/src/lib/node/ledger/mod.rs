@@ -195,9 +195,10 @@ pub fn reset(config: config::Ledger) -> Result<(), shell::Error> {
     shell::reset(config)
 }
 
-/// Runs three concurrent tasks: A tendermint node, a shell which contains an ABCI,
-/// server for talking to the tendermint node, and a broadcaster so that the ledger
-/// may submit txs to the chain. All must be alive for correct functioning.
+/// Runs three concurrent tasks: A tendermint node, a shell which contains an
+/// ABCI, server for talking to the tendermint node, and a broadcaster so that
+/// the ledger may submit txs to the chain. All must be alive for correct
+/// functioning.
 async fn run_aux(config: config::Ledger, wasm_dir: PathBuf) {
     // Prefetch needed wasm artifacts
     wasm_loader::pre_fetch_wasm(&wasm_dir).await;

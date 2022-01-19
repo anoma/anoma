@@ -163,8 +163,7 @@ impl Store {
             wallet_file.to_str().unwrap(),
             true,
             FileOptions::new().read(true).write(false),
-        )
-        {
+        ) {
             Ok(mut filelock) => {
                 let mut store = Vec::<u8>::new();
                 filelock.file.read_to_end(&mut store).map_err(|err| {

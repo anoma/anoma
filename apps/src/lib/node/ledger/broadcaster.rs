@@ -17,7 +17,8 @@ impl Broadcaster {
     /// over the given url.
     pub fn new(url: &str, receiver: UnboundedReceiver<Vec<u8>>) -> Self {
         Self {
-            client: HttpClient::new(format!("http://{}", url).as_str()).unwrap(),
+            client: HttpClient::new(format!("http://{}", url).as_str())
+                .unwrap(),
             receiver,
         }
     }
