@@ -33,6 +33,8 @@ use crate::node::gossip::behaviour::discovery::{
 /// It automatically connect to newly discovered peer, except specified
 /// otherwise, and propagates intents to other peers.
 #[derive(NetworkBehaviour)]
+// Events are delegated to the `NetworkBehaviourEventProcess` impl
+#[behaviour(event_process = true)]
 pub struct Behaviour {
     pub intent_gossip_behaviour: Gossipsub,
     pub discover_behaviour: DiscoveryBehaviour,
@@ -156,7 +158,7 @@ impl Behaviour {
         mm_sender: Option<Sender<MatchmakerMessage>>,
     ) -> Self {
         let public_key = key.public();
-        let peer_id = PeerId::from_public_key(public_key.clone());
+        let peer_id = PeerId::from_public_key(&public_key);
 
         // TODO remove hardcoded value and add them to the config Except
         // validation_mode, protocol_id_prefix, message_id_fn and
@@ -346,6 +348,7 @@ impl NetworkBehaviourEventProcess<GossipsubEvent> for Behaviour {
                 peer_id: _,
                 topic: _,
             } => {}
+            GossipsubEvent::GossipsubNotSupported { .. } => {}
         }
     }
 }
@@ -422,6 +425,12 @@ impl NetworkBehaviourEventProcess<PingEvent> for Behaviour {
                 tracing::warn!(
                     "PingFailure::Timeout {}",
                     event.peer.to_base58()
+                );
+            }
+            Err(PingFailure::Unsupported) => {
+                tracing::warn!(
+                    "PingFailure::Unsupported {}",
+                    event.peer.to_base58(),
                 );
             }
             Err(PingFailure::Other { error }) => {
