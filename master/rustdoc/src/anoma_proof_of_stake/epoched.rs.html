@@ -1241,9 +1241,6 @@
 <span id="1241">1241</span>
 <span id="1242">1242</span>
 <span id="1243">1243</span>
-<span id="1244">1244</span>
-<span id="1245">1245</span>
-<span id="1246">1246</span>
 </pre><pre class="rust"><code><span class="doccomment">//! [`Epoched`] and [`EpochedDelta`] are structures for data that is set for</span>
 <span class="doccomment">//! future epochs at a given [`EpochOffset`].</span>
 
@@ -2038,12 +2035,11 @@
 
         <span class="kw">fn</span> <span class="ident">apply_concrete</span>(
             (<span class="ident">params</span>, <span class="kw-2">mut</span> <span class="ident">data</span>): <span class="ident"><span class="self">Self</span>::ConcreteState</span>,
-            <span class="ident">transition</span>: <span class="kw-2">&amp;</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Abstract</span> <span class="kw">as</span> <span class="ident">AbstractStateMachine</span><span class="op">&gt;</span><span class="ident">::Transition</span>,
+            <span class="ident">transition</span>: <span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Abstract</span> <span class="kw">as</span> <span class="ident">AbstractStateMachine</span><span class="op">&gt;</span><span class="ident">::Transition</span>,
         ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident"><span class="self">Self</span>::ConcreteState</span> {
             <span class="kw">let</span> <span class="ident">offset</span> <span class="op">=</span> <span class="ident">Offset::value</span>(<span class="kw-2">&amp;</span><span class="ident">params</span>) <span class="kw">as</span> <span class="ident">usize</span>;
             <span class="kw">match</span> <span class="ident">transition</span> {
                 <span class="ident">EpochedTransition::Get</span>(<span class="ident">epoch</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                    <span class="kw">let</span> <span class="ident">epoch</span> <span class="op">=</span> <span class="kw-2">*</span><span class="ident">epoch</span>;
                     <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">data</span>.<span class="ident">get</span>(<span class="ident">epoch</span>);
                     <span class="comment">// Post-conditions</span>
                     <span class="kw">let</span> <span class="ident">last_update</span> <span class="op">=</span> <span class="ident">data</span>.<span class="ident">last_update</span>;
@@ -2089,22 +2085,22 @@
                     }
                 }
                 <span class="ident">EpochedTransition::Set</span> { <span class="ident">value</span>, <span class="ident">epoch</span> } <span class="op">=</span><span class="op">&gt;</span> {
-                    <span class="kw">let</span> <span class="ident">current_before_update</span> <span class="op">=</span> <span class="ident">data</span>.<span class="ident">get</span>(<span class="kw-2">*</span><span class="ident">epoch</span>).<span class="ident">copied</span>();
+                    <span class="kw">let</span> <span class="ident">current_before_update</span> <span class="op">=</span> <span class="ident">data</span>.<span class="ident">get</span>(<span class="ident">epoch</span>).<span class="ident">copied</span>();
                     <span class="kw">let</span> <span class="ident">epochs_up_to_offset</span> <span class="op">=</span>
-                        (<span class="kw-2">*</span><span class="ident">epoch</span> <span class="op">+</span> <span class="number">1_u64</span>).<span class="ident">iter_range</span>(<span class="ident">offset</span> <span class="kw">as</span> <span class="ident">u64</span> <span class="op">-</span> <span class="number">1</span>);
+                        (<span class="ident">epoch</span> <span class="op">+</span> <span class="number">1_u64</span>).<span class="ident">iter_range</span>(<span class="ident">offset</span> <span class="kw">as</span> <span class="ident">u64</span> <span class="op">-</span> <span class="number">1</span>);
                     <span class="comment">// Find the values in epochs up to the offset</span>
                     <span class="kw">let</span> <span class="ident">range_before_update</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">epochs_up_to_offset</span>
                         .<span class="ident">clone</span>()
                         .<span class="ident">map</span>(<span class="op">|</span><span class="ident">epoch</span><span class="op">|</span> <span class="ident">data</span>.<span class="ident">get</span>(<span class="ident">epoch</span>).<span class="ident">copied</span>())
                         .<span class="ident">collect</span>();
 
-                    <span class="ident">data</span>.<span class="ident">set</span>(<span class="kw-2">*</span><span class="ident">value</span>, <span class="kw-2">*</span><span class="ident">epoch</span>, <span class="kw-2">&amp;</span><span class="ident">params</span>);
+                    <span class="ident">data</span>.<span class="ident">set</span>(<span class="ident">value</span>, <span class="ident">epoch</span>, <span class="kw-2">&amp;</span><span class="ident">params</span>);
 
                     <span class="comment">// Post-conditions</span>
-                    <span class="macro">assert_eq!</span>(<span class="ident">data</span>.<span class="ident">last_update</span>, <span class="kw-2">*</span><span class="ident">epoch</span>);
+                    <span class="macro">assert_eq!</span>(<span class="ident">data</span>.<span class="ident">last_update</span>, <span class="ident">epoch</span>);
                     <span class="macro">assert_eq!</span>(
                         <span class="ident">data</span>.<span class="ident">data</span>[<span class="ident">offset</span> <span class="kw">as</span> <span class="ident">usize</span>],
-                        <span class="prelude-val">Some</span>(<span class="kw-2">*</span><span class="ident">value</span>),
+                        <span class="prelude-val">Some</span>(<span class="ident">value</span>),
                         <span class="string">&quot;The value at offset must be updated&quot;</span>
                     );
                     <span class="macro">assert!</span>(
@@ -2113,7 +2109,7 @@
                          offset&quot;</span>
                     );
                     <span class="macro">assert_eq!</span>(
-                        <span class="ident">data</span>.<span class="ident">get</span>(<span class="kw-2">*</span><span class="ident">epoch</span>),
+                        <span class="ident">data</span>.<span class="ident">get</span>(<span class="ident">epoch</span>),
                         <span class="ident">current_before_update</span>.<span class="ident">as_ref</span>(),
                         <span class="string">&quot;The current value must not change&quot;</span>
                     );
@@ -2132,17 +2128,17 @@
                     <span class="ident">offset</span>: <span class="ident">update_offset</span>,
                 }) <span class="op">=</span><span class="op">&gt;</span> {
                     <span class="kw">let</span> <span class="ident">update_offset_val</span> <span class="op">=</span> <span class="ident">update_offset</span>.<span class="ident">value</span>(<span class="kw-2">&amp;</span><span class="ident">params</span>);
-                    <span class="kw">let</span> <span class="ident">current_before_update</span> <span class="op">=</span> <span class="ident">data</span>.<span class="ident">get</span>(<span class="kw-2">*</span><span class="ident">epoch</span>).<span class="ident">copied</span>();
-                    <span class="kw">let</span> <span class="ident">next_epoch</span>: <span class="ident">u64</span> <span class="op">=</span> (<span class="kw-2">*</span><span class="ident">epoch</span> <span class="op">+</span> <span class="number">1_u64</span>).<span class="ident">into</span>();
+                    <span class="kw">let</span> <span class="ident">current_before_update</span> <span class="op">=</span> <span class="ident">data</span>.<span class="ident">get</span>(<span class="ident">epoch</span>).<span class="ident">copied</span>();
+                    <span class="kw">let</span> <span class="ident">next_epoch</span>: <span class="ident">u64</span> <span class="op">=</span> (<span class="ident">epoch</span> <span class="op">+</span> <span class="number">1_u64</span>).<span class="ident">into</span>();
                     <span class="kw">let</span> <span class="ident">epoch_at_update_offset</span>: <span class="ident">u64</span> <span class="op">=</span>
-                        (<span class="kw-2">*</span><span class="ident">epoch</span> <span class="op">+</span> <span class="ident">update_offset_val</span>).<span class="ident">into</span>();
+                        (<span class="ident">epoch</span> <span class="op">+</span> <span class="ident">update_offset_val</span>).<span class="ident">into</span>();
                     <span class="comment">// Find the values in epochs before the offset</span>
                     <span class="kw">let</span> <span class="ident">range_up_to_offset_before_update</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span> <span class="op">=</span> (<span class="ident">next_epoch</span>
                         ..<span class="ident">epoch_at_update_offset</span>)
                         .<span class="ident">map</span>(<span class="op">|</span><span class="ident">i</span>: <span class="ident">u64</span><span class="op">|</span> <span class="ident">data</span>.<span class="ident">get</span>(<span class="ident">Epoch::from</span>(<span class="ident">i</span>)).<span class="ident">copied</span>())
                         .<span class="ident">collect</span>();
                     <span class="kw">let</span> <span class="ident">epoch_after_offset</span>: <span class="ident">u64</span> <span class="op">=</span> <span class="ident">epoch_at_update_offset</span> <span class="op">+</span> <span class="number">1</span>;
-                    <span class="kw">let</span> <span class="ident">epoch_at_offset</span>: <span class="ident">u64</span> <span class="op">=</span> (<span class="kw-2">*</span><span class="ident">epoch</span> <span class="op">+</span> <span class="ident">offset</span>).<span class="ident">into</span>();
+                    <span class="kw">let</span> <span class="ident">epoch_at_offset</span>: <span class="ident">u64</span> <span class="op">=</span> (<span class="ident">epoch</span> <span class="op">+</span> <span class="ident">offset</span>).<span class="ident">into</span>();
                     <span class="comment">// Find the values in epochs after the offset</span>
                     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">range_from_offset_before_update</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span> <span class="op">=</span>
                         (<span class="ident">epoch_after_offset</span>..<span class="ident">epoch_at_offset</span>)
@@ -2154,13 +2150,13 @@
 
                     <span class="ident">data</span>.<span class="ident">update_from_offset</span>(
                         <span class="op">|</span><span class="ident">val</span>, <span class="ident">epoch</span><span class="op">|</span> <span class="ident">update_value</span>(<span class="ident">val</span>, <span class="ident">epoch</span>),
-                        <span class="kw-2">*</span><span class="ident">epoch</span>,
-                        <span class="kw-2">*</span><span class="ident">update_offset</span>,
+                        <span class="ident">epoch</span>,
+                        <span class="ident">update_offset</span>,
                         <span class="kw-2">&amp;</span><span class="ident">params</span>,
                     );
 
                     <span class="comment">// Post-conditions</span>
-                    <span class="macro">assert_eq!</span>(<span class="ident">data</span>.<span class="ident">last_update</span>, <span class="kw-2">*</span><span class="ident">epoch</span>);
+                    <span class="macro">assert_eq!</span>(<span class="ident">data</span>.<span class="ident">last_update</span>, <span class="ident">epoch</span>);
                     <span class="comment">// Update all the values with the update function</span>
                     <span class="kw">let</span> <span class="ident">range_from_offset_before_update</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span> <span class="op">=</span>
                         <span class="ident">range_from_offset_before_update</span>
@@ -2182,7 +2178,7 @@
                         <span class="string">&quot;The values in epochs from the offset must be updated&quot;</span>
                     );
                     <span class="macro">assert_eq!</span>(
-                        <span class="ident">data</span>.<span class="ident">get</span>(<span class="kw-2">*</span><span class="ident">epoch</span>),
+                        <span class="ident">data</span>.<span class="ident">get</span>(<span class="ident">epoch</span>),
                         <span class="ident">current_before_update</span>.<span class="ident">as_ref</span>(),
                         <span class="string">&quot;The current value must not change&quot;</span>
                     );
@@ -2334,12 +2330,11 @@
 
         <span class="kw">fn</span> <span class="ident">apply_concrete</span>(
             (<span class="ident">params</span>, <span class="kw-2">mut</span> <span class="ident">data</span>): <span class="ident"><span class="self">Self</span>::ConcreteState</span>,
-            <span class="ident">transition</span>: <span class="kw-2">&amp;</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Abstract</span> <span class="kw">as</span> <span class="ident">AbstractStateMachine</span><span class="op">&gt;</span><span class="ident">::Transition</span>,
+            <span class="ident">transition</span>: <span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Abstract</span> <span class="kw">as</span> <span class="ident">AbstractStateMachine</span><span class="op">&gt;</span><span class="ident">::Transition</span>,
         ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident"><span class="self">Self</span>::ConcreteState</span> {
             <span class="kw">let</span> <span class="ident">offset</span> <span class="op">=</span> <span class="ident">Offset::value</span>(<span class="kw-2">&amp;</span><span class="ident">params</span>) <span class="kw">as</span> <span class="ident">usize</span>;
             <span class="kw">match</span> <span class="ident">transition</span> {
                 <span class="ident">EpochedDeltaTransition::Get</span>(<span class="ident">epoch</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                    <span class="kw">let</span> <span class="ident">epoch</span> <span class="op">=</span> <span class="kw-2">*</span><span class="ident">epoch</span>;
                     <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">data</span>.<span class="ident">get</span>(<span class="ident">epoch</span>);
                     <span class="comment">// Post-conditions</span>
                     <span class="kw">let</span> <span class="ident">last_update</span> <span class="op">=</span> <span class="ident">data</span>.<span class="ident">last_update</span>;
@@ -2382,26 +2377,25 @@
                     <span class="ident">value</span>: <span class="ident">change</span>,
                     <span class="ident">epoch</span>,
                 } <span class="op">=</span><span class="op">&gt;</span> {
-                    <span class="kw">let</span> <span class="ident">current_value_before_update</span> <span class="op">=</span> <span class="ident">data</span>.<span class="ident">get</span>(<span class="kw-2">*</span><span class="ident">epoch</span>);
+                    <span class="kw">let</span> <span class="ident">current_value_before_update</span> <span class="op">=</span> <span class="ident">data</span>.<span class="ident">get</span>(<span class="ident">epoch</span>);
                     <span class="kw">let</span> <span class="ident">value_at_offset_before_update</span> <span class="op">=</span>
-                        <span class="ident">data</span>.<span class="ident">get</span>(<span class="kw-2">*</span><span class="ident">epoch</span> <span class="op">+</span> <span class="ident">offset</span>);
+                        <span class="ident">data</span>.<span class="ident">get</span>(<span class="ident">epoch</span> <span class="op">+</span> <span class="ident">offset</span>);
                     <span class="kw">let</span> <span class="ident">epochs_up_to_offset</span> <span class="op">=</span>
-                        (<span class="kw-2">*</span><span class="ident">epoch</span> <span class="op">+</span> <span class="number">1_u64</span>).<span class="ident">iter_range</span>(<span class="ident">offset</span> <span class="kw">as</span> <span class="ident">u64</span> <span class="op">-</span> <span class="number">1</span>);
+                        (<span class="ident">epoch</span> <span class="op">+</span> <span class="number">1_u64</span>).<span class="ident">iter_range</span>(<span class="ident">offset</span> <span class="kw">as</span> <span class="ident">u64</span> <span class="op">-</span> <span class="number">1</span>);
                     <span class="comment">// Find the values in epochs before the offset</span>
                     <span class="kw">let</span> <span class="ident">range_before_update</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">epochs_up_to_offset</span>
                         .<span class="ident">clone</span>()
                         .<span class="ident">map</span>(<span class="op">|</span><span class="ident">epoch</span><span class="op">|</span> <span class="ident">data</span>.<span class="ident">get</span>(<span class="ident">epoch</span>))
                         .<span class="ident">collect</span>();
 
-                    <span class="ident">data</span>.<span class="ident">add</span>(<span class="kw-2">*</span><span class="ident">change</span>, <span class="kw-2">*</span><span class="ident">epoch</span>, <span class="kw-2">&amp;</span><span class="ident">params</span>);
+                    <span class="ident">data</span>.<span class="ident">add</span>(<span class="ident">change</span>, <span class="ident">epoch</span>, <span class="kw-2">&amp;</span><span class="ident">params</span>);
 
                     <span class="comment">// Post-conditions</span>
-                    <span class="macro">assert_eq!</span>(<span class="ident">data</span>.<span class="ident">last_update</span>, <span class="kw-2">*</span><span class="ident">epoch</span>);
-                    <span class="kw">let</span> <span class="ident">value_at_offset_after_update</span> <span class="op">=</span>
-                        <span class="ident">data</span>.<span class="ident">get</span>(<span class="kw-2">*</span><span class="ident">epoch</span> <span class="op">+</span> <span class="ident">offset</span>);
+                    <span class="macro">assert_eq!</span>(<span class="ident">data</span>.<span class="ident">last_update</span>, <span class="ident">epoch</span>);
+                    <span class="kw">let</span> <span class="ident">value_at_offset_after_update</span> <span class="op">=</span> <span class="ident">data</span>.<span class="ident">get</span>(<span class="ident">epoch</span> <span class="op">+</span> <span class="ident">offset</span>);
                     <span class="macro">assert_eq!</span>(
                         <span class="ident">value_at_offset_after_update</span>.<span class="ident">unwrap_or_default</span>(),
-                        <span class="kw-2">*</span><span class="ident">change</span>
+                        <span class="ident">change</span>
                             <span class="op">+</span> <span class="ident">value_at_offset_before_update</span>.<span class="ident">unwrap_or_default</span>(),
                         <span class="string">&quot;The value at the offset must have increased by the \
                          change&quot;</span>
@@ -2412,7 +2406,7 @@
                          offset&quot;</span>
                     );
                     <span class="macro">assert_eq!</span>(
-                        <span class="ident">data</span>.<span class="ident">get</span>(<span class="kw-2">*</span><span class="ident">epoch</span>),
+                        <span class="ident">data</span>.<span class="ident">get</span>(<span class="ident">epoch</span>),
                         <span class="ident">current_value_before_update</span>,
                         <span class="string">&quot;The current value must not change&quot;</span>
                     );
