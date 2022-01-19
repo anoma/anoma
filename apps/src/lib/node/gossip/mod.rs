@@ -9,6 +9,7 @@ use std::rc::Rc;
 
 use anoma::types::address::Address;
 use anoma::types::key::ed25519::Keypair;
+use futures::StreamExt;
 use thiserror::Error;
 use tokio::sync::mpsc;
 
