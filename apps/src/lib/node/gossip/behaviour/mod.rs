@@ -203,6 +203,7 @@ impl Behaviour {
             Gossipsub::new_with_subscription_filter(
                 MessageAuthenticity::Signed(key),
                 gossipsub_config,
+                None,
                 filter,
             )
             .unwrap();
