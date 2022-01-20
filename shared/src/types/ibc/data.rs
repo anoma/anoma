@@ -110,8 +110,6 @@ use ibc_abci::downcast;
 use ibc_proto::ibc::core::channel::v1::acknowledgement::Response;
 #[cfg(not(feature = "ABCI"))]
 use ibc_proto::ibc::core::channel::v1::Acknowledgement;
-#[cfg(not(feature = "ABCI"))]
-use ibc_proto::ibc::core::channel::v1::Acknowledgement;
 #[cfg(feature = "ABCI")]
 use ibc_proto_abci::ibc::core::channel::v1::acknowledgement::Response;
 #[cfg(feature = "ABCI")]

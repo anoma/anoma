@@ -69,6 +69,7 @@ dependencies = [
  "rand_core 0.5.1",
  "rust_decimal",
  "serde",
+ "serde_json",
  "sha2",
  "sparse-merkle-tree",
  "tempfile",

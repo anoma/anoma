@@ -38,7 +38,7 @@ mod tests {
     use itertools::Itertools;
     use prost::Message;
     #[cfg(not(feature = "ABCI"))]
-    use tendermint_proto::ProtoBuf;
+    use tendermint_proto::Protobuf;
     #[cfg(feature = "ABCI")]
     use tendermint_proto_abci::Protobuf;
     use test_log::test;
