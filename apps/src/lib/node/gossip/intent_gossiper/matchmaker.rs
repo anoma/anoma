@@ -212,54 +212,68 @@ impl Matchmaker {
             ledger_address: self.ledger_address.clone(),
         })
         .await;
-        let to_broadcast = {
-            let tx_signing_key = self.tx_signing_key.lock();
-            let tx = WrapperTx::new(
-                Fee {
-                    amount: 0.into(),
-                    token: xan(),
-                },
-                &tx_signing_key,
-                epoch,
-                0.into(),
-                Tx::new(tx_code, Some(tx_data)).sign(&tx_signing_key),
+
+        if let Some(_encryption_key) = rpc::query_encryption_key(args::Query {
+            ledger_address: self.ledger_address.clone(),
+        })
+        .await {
+            let to_broadcast = {
+                let tx_signing_key = self.tx_signing_key.lock();
+                let tx = WrapperTx::new(
+                    Fee {
+                        amount: 0.into(),
+                        token: xan(),
+                    },
+                    &tx_signing_key,
+                    epoch,
+                    0.into(),
+                    Tx::new(tx_code, Some(tx_data)).sign(&tx_signing_key),
+                    //TODO: Actually use the fetched encryption key
+                    Default::default(),
+                );
+
+                let wrapper_hash = if !cfg!(feature = "ABCI") {
+                    hash_tx(&tx.try_to_vec().unwrap()).to_string()
+                } else {
+                    tx.tx_hash.to_string()
+                };
+
+                let decrypted_hash = if !cfg!(feature = "ABCI") {
+                    Some(tx.tx_hash.to_string())
+                } else {
+                    None
+                };
+                TxBroadcastData::Wrapper {
+                    tx: tx
+                        .sign(&tx_signing_key)
+                        .expect("Wrapper tx signing keypair should be correct"),
+                    wrapper_hash,
+                    decrypted_hash,
+                }
+            };
+
+            let response =
+                broadcast_tx(self.ledger_address.clone(), to_broadcast).await;
+            match response {
+                Ok(tx_response) => {
+                    tracing::info!(
+                        "Injected transaction from matchmaker with result: {:#?}",
+                        tx_response
+                    );
+                }
+                Err(err) => {
+                    tracing::error!(
+                        "Matchmaker error in submitting a transaction to the \
+                         ledger: {}",
+                        err
+                    );
+                }
+            }
+        } else {
+            tracing::error!(
+                "Not encryption key exists for the current epoch. Matchmaker \
+                cannot submit any transaction this epoch."
             );
-
-            let wrapper_hash = if !cfg!(feature = "ABCI") {
-                hash_tx(&tx.try_to_vec().unwrap()).to_string()
-            } else {
-                tx.tx_hash.to_string()
-            };
-
-            let decrypted_hash = if !cfg!(feature = "ABCI") {
-                Some(tx.tx_hash.to_string())
-            } else {
-                None
-            };
-            TxBroadcastData::Wrapper {
-                tx: tx
-                    .sign(&tx_signing_key)
-                    .expect("Wrapper tx signing keypair should be correct"),
-                wrapper_hash,
-                decrypted_hash,
-            }
-        };
-        let response =
-            broadcast_tx(self.ledger_address.clone(), to_broadcast).await;
-        match response {
-            Ok(tx_response) => {
-                tracing::info!(
-                    "Injected transaction from matchmaker with result: {:#?}",
-                    tx_response
-                );
-            }
-            Err(err) => {
-                tracing::error!(
-                    "Matchmaker error in submitting a transaction to the \
-                     ledger: {}",
-                    err
-                );
-            }
         }
     }
 

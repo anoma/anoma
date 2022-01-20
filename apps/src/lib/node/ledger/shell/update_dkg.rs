@@ -22,9 +22,14 @@ where
             if dkg.update {
                 if let DkgState::Success { final_key } = dkg.state_machine.state
                 {
+                    tracing::info!("Storing the newly created encryption key from the DKG.");
                     self.storage.encryption_key =
                         Some(EncryptionKey(final_key).try_to_vec().unwrap());
                 } else {
+                    tracing::debug!(
+                        "The DKG did not complete in the previous epoch. \
+                        Encrypting transactions is not possible this epoch."
+                    );
                     // If DKG was not successful in the past epoch, we have
                     // no new key TODO: Allow this
                     // DKG to continue while the new one also starts
@@ -129,6 +134,7 @@ where
                 .map_err(|e| Error::DkgUpdate(e.to_string()))?;
                 dkg.update = false;
             }
+            tracing::info!("A new DKG instance has been started.")
         }
         Ok(())
     }

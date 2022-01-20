@@ -19,6 +19,8 @@ pub enum Path {
     DryRunTx,
     /// Epoch of the last committed block
     Epoch,
+    /// Current encryption key used for encrypting transactions
+    EncryptionKey,
     /// Read a storage value with exact storage key
     Value(storage::Key),
     /// Read a range of storage values with a matching key prefix
@@ -44,6 +46,7 @@ pub struct BalanceQuery {
 
 const DRY_RUN_TX_PATH: &str = "dry_run_tx";
 const EPOCH_PATH: &str = "epoch";
+const ENCRYPTION_KEY_PATH: &str = "encryption_key";
 const VALUE_PREFIX: &str = "value";
 const PREFIX_PREFIX: &str = "prefix";
 const HAS_KEY_PREFIX: &str = "has_key";
@@ -53,6 +56,7 @@ impl Display for Path {
         match self {
             Path::DryRunTx => write!(f, "{}", DRY_RUN_TX_PATH),
             Path::Epoch => write!(f, "{}", EPOCH_PATH),
+            Path::EncryptionKey => write!(f, "{}", ENCRYPTION_KEY_PATH),
             Path::Value(storage_key) => {
                 write!(f, "{}/{}", VALUE_PREFIX, storage_key)
             }
@@ -74,6 +78,7 @@ impl FromStr for Path {
         match path.as_str() {
             DRY_RUN_TX_PATH => Ok(Self::DryRunTx),
             EPOCH_PATH => Ok(Self::Epoch),
+            ENCRYPTION_KEY_PATH => Ok(Self::EncryptionKey),
             _ => match path.split_once("/") {
                 Some((VALUE_PREFIX, storage_key)) => {
                     let key = storage::Key::parse(storage_key)

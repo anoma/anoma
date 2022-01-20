@@ -170,6 +170,7 @@ mod prepare_block {
                         Epoch(0),
                         0.into(),
                         tx,
+                        Default::default(),
                     )
                     .try_to_vec()
                     .expect("Test failed"),
@@ -219,6 +220,7 @@ mod prepare_block {
                     Epoch(0),
                     0.into(),
                     tx,
+                    Default::default(),
                 );
                 let wrapper = wrapper_tx.sign(&keypair).expect("Test failed");
                 shell.enqueue_tx(wrapper_tx);

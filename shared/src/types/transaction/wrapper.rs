@@ -189,10 +189,9 @@ pub mod wrapper_tx {
             epoch: Epoch,
             gas_limit: GasLimit,
             tx: Tx,
+            encryption_key: EncryptionKey,
         ) -> WrapperTx {
-            // TODO: Look up current public key from storage
-            let pubkey = EncryptionKey(<EllipticCurve as PairingEngine>::G1Affine::prime_subgroup_generator());
-            let inner_tx = EncryptedTx::encrypt(&tx.to_bytes(), pubkey);
+            let inner_tx = EncryptedTx::encrypt(&tx.to_bytes(), encryption_key);
             Self {
                 fee,
                 pk: keypair.public.clone(),
@@ -363,6 +362,7 @@ pub mod wrapper_tx {
                 Epoch(0),
                 0.into(),
                 tx.clone(),
+                Default::default(),
             );
             assert!(wrapper.validate_ciphertext());
             let privkey = <EllipticCurve as PairingEngine>::G2Affine::prime_subgroup_generator();
@@ -388,6 +388,7 @@ pub mod wrapper_tx {
                 Epoch(0),
                 0.into(),
                 tx,
+                Default::default(),
             );
             // give a incorrect commitment to the decrypted contents of the tx
             wrapper.tx_hash = Hash([0u8; 32]);
@@ -419,6 +420,7 @@ pub mod wrapper_tx {
                 Epoch(0),
                 0.into(),
                 tx,
+                Default::default(),
             )
             .sign(&keypair)
             .expect("Test failed");

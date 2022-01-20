@@ -6,9 +6,7 @@ use anoma::proto::Tx;
 use anoma::types::address::Address;
 use anoma::types::key::ed25519::Keypair;
 use anoma::types::storage::Epoch;
-use anoma::types::transaction::{
-    pos, Fee, InitAccount, InitValidator, UpdateVp, WrapperTx,
-};
+use anoma::types::transaction::{pos, Fee, InitAccount, InitValidator, UpdateVp, WrapperTx};
 use anoma::types::{address, token};
 use anoma::{ledger, vm};
 use async_std::io::{self, WriteExt};
@@ -693,7 +691,7 @@ async fn sign_tx(
     let broadcast_data = if args.dry_run {
         TxBroadcastData::DryRun(tx)
     } else {
-        sign_wrapper(&ctx, args, epoch, tx, &keypair)
+        sign_wrapper(&ctx, args, epoch, tx, &keypair).await
     };
     (ctx, broadcast_data)
 }
@@ -701,43 +699,55 @@ async fn sign_tx(
 /// Create a wrapper tx from a normal tx. Get the hash of the
 /// wrapper and its payload which is needed for monitoring its
 /// progress on chain.
-fn sign_wrapper(
+async fn sign_wrapper(
     ctx: &Context,
     args: &args::Tx,
     epoch: Epoch,
     tx: Tx,
     keypair: &Keypair,
 ) -> TxBroadcastData {
-    let tx = WrapperTx::new(
-        Fee {
-            amount: args.fee_amount,
-            token: ctx.get(&args.fee_token),
-        },
-        keypair,
-        epoch,
-        args.gas_limit.clone(),
-        tx,
-    );
+    if let Some(_encryption_key) = rpc::query_encryption_key(args::Query {
+        ledger_address: args.ledger_address.clone(),
+    })
+    .await {
+        let tx = WrapperTx::new(
+            Fee {
+                amount: args.fee_amount,
+                token: ctx.get(&args.fee_token),
+            },
+            keypair,
+            epoch,
+            args.gas_limit.clone(),
+            tx,
+            //TODO: Actually use the fetched encryption key
+            Default::default(),
+        );
 
-    // We use this to determine when the wrapper tx makes it on-chain
-    let wrapper_hash = if !cfg!(feature = "ABCI") {
-        hash_tx(&tx.try_to_vec().unwrap()).to_string()
-    } else {
-        tx.tx_hash.to_string()
-    };
-    // We use this to determine when the decrypted inner tx makes it on-chain
-    let decrypted_hash = if !cfg!(feature = "ABCI") {
-        Some(tx.tx_hash.to_string())
-    } else {
-        None
-    };
+        // We use this to determine when the wrapper tx makes it on-chain
+        let wrapper_hash = if !cfg!(feature = "ABCI") {
+            hash_tx(&tx.try_to_vec().unwrap()).to_string()
+        } else {
+            tx.tx_hash.to_string()
+        };
+        // We use this to determine when the decrypted inner tx makes it on-chain
+        let decrypted_hash = if !cfg!(feature = "ABCI") {
+            Some(tx.tx_hash.to_string())
+        } else {
+            None
+        };
 
-    TxBroadcastData::Wrapper {
-        tx: tx
-            .sign(keypair)
-            .expect("Wrapper tx signing keypair should be correct"),
-        wrapper_hash,
-        decrypted_hash,
+        TxBroadcastData::Wrapper {
+            tx: tx
+                .sign(keypair)
+                .expect("Wrapper tx signing keypair should be correct"),
+            wrapper_hash,
+            decrypted_hash,
+        }
+    } else {
+        panic!(
+            "An encryption key was not found for the current epoch.\
+             Transactions can not be sent."
+        );
     }
 }
 

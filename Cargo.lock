@@ -96,7 +96,7 @@ dependencies = [
  "ed25519-dalek",
  "ferveo",
  "ferveo-common",
- "group-threshold-cryptography 0.1.0 (git+https://github.com/anoma/ferveo)",
+ "group-threshold-cryptography",
  "hex",
  "ibc 0.8.0 (git+https://github.com/heliaxdev/ibc-rs?branch=yuji/abcipp-v0.23.0)",
  "ibc 0.8.0 (git+https://github.com/heliaxdev/ibc-rs?branch=yuji/rebase_v0.23.0)",
@@ -1943,7 +1943,7 @@ dependencies = [
 [[package]]
 name = "ferveo"
 version = "0.1.1"
-source = "git+https://github.com/anoma/ferveo?branch=bat/ferveo-common-canonical-serialize#ab6701666e3b05bd783ce0309025e842fa83e4c1"
+source = "git+https://github.com/anoma/ferveo#8363c33d1cf79f93ce9fa89d4b5fe998a5a78c26"
 dependencies = [
  "anyhow",
  "ark-bls12-381",
@@ -1961,7 +1961,7 @@ dependencies = [
  "ed25519-dalek",
  "either",
  "ferveo-common",
- "group-threshold-cryptography 0.1.0 (git+https://github.com/anoma/ferveo?branch=bat/ferveo-common-canonical-serialize)",
+ "group-threshold-cryptography",
  "hex",
  "itertools 0.10.3",
  "measure_time",
@@ -1972,7 +1972,7 @@ dependencies = [
  "serde 1.0.133",
  "serde_bytes",
  "serde_json",
- "subproductdomain 0.1.0 (git+https://github.com/anoma/ferveo?branch=bat/ferveo-common-canonical-serialize)",
+ "subproductdomain",
  "subtle 2.4.1",
  "zeroize",
 ]
@@ -1980,7 +1980,7 @@ dependencies = [
 [[package]]
 name = "ferveo-common"
 version = "0.1.0"
-source = "git+https://github.com/anoma/ferveo?branch=bat/ferveo-common-canonical-serialize#ab6701666e3b05bd783ce0309025e842fa83e4c1"
+source = "git+https://github.com/anoma/ferveo#8363c33d1cf79f93ce9fa89d4b5fe998a5a78c26"
 dependencies = [
  "anyhow",
  "ark-ec",
@@ -2363,30 +2363,6 @@ dependencies = [
 [[package]]
 name = "group-threshold-cryptography"
 version = "0.1.0"
-source = "git+https://github.com/anoma/ferveo?branch=bat/ferveo-common-canonical-serialize#ab6701666e3b05bd783ce0309025e842fa83e4c1"
-dependencies = [
- "anyhow",
- "ark-bls12-381",
- "ark-ec",
- "ark-ff",
- "ark-poly",
- "ark-serialize",
- "ark-std",
- "blake2b_simd",
- "chacha20 0.8.1",
- "hex",
- "itertools 0.10.3",
- "miracl_core",
- "rand 0.8.4",
- "rand_core 0.6.3",
- "rayon",
- "subproductdomain 0.1.0 (git+https://github.com/anoma/ferveo?branch=bat/ferveo-common-canonical-serialize)",
- "thiserror",
-]
-
-[[package]]
-name = "group-threshold-cryptography"
-version = "0.1.0"
 source = "git+https://github.com/anoma/ferveo#2a35d56cacf740bc92478b6be2ebee83a54f4dcc"
 dependencies = [
  "anyhow",
@@ -2404,7 +2380,7 @@ dependencies = [
  "rand 0.8.4",
  "rand_core 0.6.3",
  "rayon",
- "subproductdomain 0.1.0 (git+https://github.com/anoma/ferveo)",
+ "subproductdomain",
  "thiserror",
 ]
 
@@ -5955,19 +5931,6 @@ name = "strsim"
 version = "0.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "73473c0e59e6d5812c5dfe2a064a6444949f089e20eec9a2e5506596494e4623"
-
-[[package]]
-name = "subproductdomain"
-version = "0.1.0"
-source = "git+https://github.com/anoma/ferveo?branch=bat/ferveo-common-canonical-serialize#ab6701666e3b05bd783ce0309025e842fa83e4c1"
-dependencies = [
- "anyhow",
- "ark-ec",
- "ark-ff",
- "ark-poly",
- "ark-serialize",
- "ark-std",
-]
 
 [[package]]
 name = "subproductdomain"

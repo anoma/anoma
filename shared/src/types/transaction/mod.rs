@@ -361,6 +361,7 @@ pub mod tx_types {
                 Epoch(0),
                 0.into(),
                 tx.clone(),
+                Default::default(),
             )
             .sign(&keypair)
             .expect("Test failed");
@@ -395,6 +396,7 @@ pub mod tx_types {
                 Epoch(0),
                 0.into(),
                 tx,
+                Default::default(),
             );
 
             let tx = Tx::new(

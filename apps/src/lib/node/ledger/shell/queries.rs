@@ -48,6 +48,13 @@ where
                         ..Default::default()
                     }
                 }
+                Path::EncryptionKey => {
+                    let value = anoma::ledger::storage::types::encode(&self.storage.encryption_key);
+                    response::Query {
+                        value,
+                        ..Default::default()
+                    }
+                }
                 Path::Value(storage_key) => {
                     self.read_storage_value(&storage_key, query.prove)
                 }

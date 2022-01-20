@@ -367,6 +367,7 @@ mod test_process_proposal {
             Epoch(0),
             0.into(),
             tx,
+            Default::default(),
         );
         let tx = Tx::new(
             vec![],
@@ -408,6 +409,7 @@ mod test_process_proposal {
             Epoch(0),
             0.into(),
             tx,
+            Default::default(),
         )
         .sign(&keypair)
         .expect("Test failed");
@@ -487,6 +489,7 @@ mod test_process_proposal {
             Epoch(0),
             0.into(),
             tx,
+            Default::default(),
         )
         .sign(&keypair)
         .expect("Test failed");
@@ -536,6 +539,7 @@ mod test_process_proposal {
             Epoch(0),
             0.into(),
             tx,
+            Default::default(),
         )
         .sign(&keypair)
         .expect("Test failed");
@@ -581,6 +585,7 @@ mod test_process_proposal {
                 Epoch(0),
                 0.into(),
                 tx.clone(),
+                Default::default(),
             );
             shell.enqueue_tx(wrapper);
             txs.push(Tx::from(TxType::Decrypted(DecryptedTx::Decrypted(tx))));
@@ -627,6 +632,7 @@ mod test_process_proposal {
             Epoch(0),
             0.into(),
             tx,
+            Default::default(),
         );
         shell.enqueue_tx(wrapper.clone());
 
@@ -673,6 +679,7 @@ mod test_process_proposal {
             Epoch(0),
             0.into(),
             tx,
+            Default::default(),
         );
         wrapper.tx_hash = Hash([0; 32]);
 

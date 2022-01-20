@@ -479,6 +479,7 @@ mod test_finalize_block {
                 Epoch(0),
                 0.into(),
                 raw_tx.clone(),
+                Default::default(),
             );
             let tx = wrapper.sign(&keypair).expect("Test failed");
             if i > 1 {
@@ -558,6 +559,7 @@ mod test_finalize_block {
                 Epoch(0),
                 0.into(),
                 raw_tx.clone(),
+                Default::default(),
             );
             let tx = wrapper.sign(&keypair).expect("Test failed");
             if i > 1 {
@@ -620,6 +622,7 @@ mod test_finalize_block {
             Epoch(0),
             0.into(),
             raw_tx.clone(),
+            Default::default(),
         );
 
         let processed_tx = ProcessedTx {
@@ -718,6 +721,7 @@ mod test_finalize_block {
                     Epoch(0),
                     0.into(),
                     Tx::new(vec![], None),
+                    Default::default(),
                 ))
                 .try_to_vec()
                 .expect("Test failed"),
@@ -917,6 +921,7 @@ mod test_finalize_block {
                 Epoch(0),
                 0.into(),
                 raw_tx.clone(),
+                Default::default(),
             );
             shell.enqueue_tx(wrapper_tx);
             processed_txs.push(ProcessedTx {
@@ -947,6 +952,7 @@ mod test_finalize_block {
                 Epoch(0),
                 0.into(),
                 raw_tx.clone(),
+                Default::default(),
             );
             let wrapper = wrapper_tx.sign(&keypair).expect("Test failed");
             valid_txs.push(wrapper_tx);
@@ -1075,6 +1081,7 @@ mod test_finalize_block {
             Epoch(0),
             0.into(),
             raw_tx,
+            Default::default(),
         );
         let wrapper = wrapper_tx.sign(&keypair).expect("Test failed");
         valid_txs.push(wrapper_tx);
@@ -1104,6 +1111,7 @@ mod test_finalize_block {
                 Epoch(0),
                 0.into(),
                 raw_tx.clone(),
+                Default::default(),
             );
             // add the corresponding wrapper tx to the queue
             shell.enqueue_tx(wrapper.clone());

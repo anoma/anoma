@@ -11,12 +11,18 @@ pub mod encrypted_tx {
     use serde::{Deserialize, Serialize};
     use tpke::{encrypt, Ciphertext};
 
-    use crate::types::transaction::EllipticCurve;
+    use crate::types::transaction::{EllipticCurve, AffineCurve};
 
     pub type G1 = <EllipticCurve as PairingEngine>::G1Affine;
     /// An encryption key for txs
     #[derive(Debug, Clone)]
     pub struct EncryptionKey(pub G1);
+
+    impl Default for EncryptionKey {
+        fn default() -> Self {
+            Self(G1::prime_subgroup_generator())
+        }
+    }
 
     impl borsh::ser::BorshSerialize for EncryptionKey {
         fn serialize<W: Write>(&self, writer: &mut W) -> std::io::Result<()> {

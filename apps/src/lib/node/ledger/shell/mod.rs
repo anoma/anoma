@@ -987,6 +987,7 @@ mod test_utils {
             Epoch(0),
             0.into(),
             tx,
+            Default::default(),
         );
         shell.tx_queue.push(wrapper);
         // Artificially increase the block height so that chain
@@ -1069,6 +1070,7 @@ mod test_utils {
             Epoch(0),
             0.into(),
             tx,
+            Default::default(),
         );
         shell.tx_queue.push(wrapper);
         // Artificially increase the block height so that chain
