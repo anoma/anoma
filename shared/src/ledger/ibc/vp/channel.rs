@@ -524,10 +524,10 @@ where
     fn get_sequence_pre(&self, key: &Key) -> Result<Sequence> {
         match self.ctx.read_pre(key)? {
             Some(value) => {
-                // IBC related data is encoded without borsh
+                // As ibc-go, u64 like a counter is encoded with big-endian
                 let index: [u8; 8] = value.try_into().map_err(|_| {
                     Error::InvalidSequence(
-                        "Decoding the prior sequence index failed".to_string(),
+                        "Encoding the prior sequence index failed".to_string(),
                     )
                 })?;
                 let index = u64::from_be_bytes(index);
@@ -542,9 +542,10 @@ where
     fn get_sequence(&self, key: &Key) -> Result<Sequence> {
         match self.ctx.read_post(key)? {
             Some(value) => {
+                // As ibc-go, u64 like a counter is encoded with big-endian
                 let index: [u8; 8] = value.try_into().map_err(|_| {
                     Error::InvalidSequence(
-                        "Decoding the sequence index failed".to_string(),
+                        "Encoding the sequence index failed".to_string(),
                     )
                 })?;
                 let index = u64::from_be_bytes(index);

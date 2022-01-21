@@ -217,6 +217,8 @@ use crate::types::ibc::data::{
 use crate::types::ibc::IbcEvent as AnomaIbcEvent;
 use crate::types::storage::Key;
 
+const COMMITMENT_PREFIX: &[u8] = b"ibc";
+
 #[allow(missing_docs)]
 #[derive(Error, Debug)]
 pub enum Error {
@@ -998,8 +1000,7 @@ pub fn channel_counterparty(
 
 /// Returns Anoma commitment prefix
 pub fn commitment_prefix() -> CommitmentPrefix {
-    let bytes = "ibc".as_bytes().to_vec();
-    CommitmentPrefix::from(bytes)
+    CommitmentPrefix::from(COMMITMENT_PREFIX.to_vec())
 }
 
 /// Makes CreateClient event

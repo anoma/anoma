@@ -172,10 +172,10 @@ where
     fn read_counter_pre(&self, key: &Key) -> Result<u64> {
         match self.ctx.read_pre(key) {
             Ok(Some(value)) => {
-                // IBC related data is encoded without borsh
+                // As ibc-go, u64 like a counter is encoded with big-endian
                 let counter: [u8; 8] = value.try_into().map_err(|_| {
                     Error::CounterError(
-                        "Decoding the counter failed".to_string(),
+                        "Encoding the counter failed".to_string(),
                     )
                 })?;
                 Ok(u64::from_be_bytes(counter))
@@ -193,10 +193,10 @@ where
     fn read_counter(&self, key: &Key) -> Result<u64> {
         match self.ctx.read_post(key) {
             Ok(Some(value)) => {
-                // IBC related data is encoded without borsh
+                // As ibc-go, u64 like a counter is encoded with big-endian
                 let counter: [u8; 8] = value.try_into().map_err(|_| {
                     Error::CounterError(
-                        "Decoding the counter failed".to_string(),
+                        "Encoding the counter failed".to_string(),
                     )
                 })?;
                 Ok(u64::from_be_bytes(counter))
@@ -328,9 +328,7 @@ mod tests {
     #[cfg(not(feature = "ABCI"))]
     use ibc::core::ics04_channel::packet::{Packet, Sequence};
     #[cfg(not(feature = "ABCI"))]
-    use ibc::core::ics23_commitment::commitment::{
-        CommitmentPrefix, CommitmentProofBytes,
-    };
+    use ibc::core::ics23_commitment::commitment::CommitmentProofBytes;
     #[cfg(not(feature = "ABCI"))]
     use ibc::core::ics24_host::identifier::{
         ChannelId, ClientId, ConnectionId, PortChannelId, PortId,
@@ -396,9 +394,7 @@ mod tests {
     #[cfg(feature = "ABCI")]
     use ibc_abci::core::ics04_channel::packet::{Packet, Sequence};
     #[cfg(feature = "ABCI")]
-    use ibc_abci::core::ics23_commitment::commitment::{
-        CommitmentPrefix, CommitmentProofBytes,
-    };
+    use ibc_abci::core::ics23_commitment::commitment::CommitmentProofBytes;
     #[cfg(feature = "ABCI")]
     use ibc_abci::core::ics24_host::identifier::{
         ChannelId, ClientId, ConnectionId, PortChannelId, PortId,
@@ -455,12 +451,13 @@ mod tests {
     use tendermint_stable::time::Time as TmTime;
 
     use super::super::handler::{
-        init_connection, make_create_client_event, make_open_ack_channel_event,
-        make_open_ack_connection_event, make_open_confirm_channel_event,
-        make_open_confirm_connection_event, make_open_init_channel_event,
-        make_open_init_connection_event, make_open_try_channel_event,
-        make_open_try_connection_event, make_send_packet_event,
-        make_update_client_event, packet_from_message, try_connection,
+        commitment_prefix, init_connection, make_create_client_event,
+        make_open_ack_channel_event, make_open_ack_connection_event,
+        make_open_confirm_channel_event, make_open_confirm_connection_event,
+        make_open_init_channel_event, make_open_init_connection_event,
+        make_open_try_channel_event, make_open_try_connection_event,
+        make_send_packet_event, make_update_client_event, packet_from_message,
+        try_connection,
     };
     use super::super::storage::{
         ack_key, capability_key, channel_key, client_state_key,
@@ -551,11 +548,6 @@ mod tests {
         ConnectionId::new(0)
     }
 
-    fn get_commitment_prefix() -> CommitmentPrefix {
-        let bytes = "ibc".as_bytes().to_vec();
-        CommitmentPrefix::from(bytes)
-    }
-
     fn get_port_channel_id() -> PortChannelId {
         PortChannelId {
             port_id: get_port_id(),
@@ -591,7 +583,7 @@ mod tests {
         ConnCounterparty::new(
             counterpart_client_id,
             Some(counterpart_conn_id),
-            get_commitment_prefix(),
+            commitment_prefix(),
         )
     }
 

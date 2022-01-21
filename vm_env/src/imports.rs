@@ -67,7 +67,8 @@ pub mod tx {
     #[derive(Debug)]
     pub struct KeyValIterator<T>(pub u64, pub PhantomData<T>);
 
-    /// Try to read a variable-length value at the given key from storage.
+    /// Try to read a Borsh encoded variable-length value at the given key from
+    /// storage.
     pub fn read<T: BorshDeserialize>(key: impl AsRef<str>) -> Option<T> {
         let key = key.as_ref();
         let read_result =
@@ -93,7 +94,7 @@ pub mod tx {
         HostEnvResult::is_success(found)
     }
 
-    /// Write a value at the given key to storage.
+    /// Write a value to be encoded with Borsh at the given key to storage.
     pub fn write<T: BorshSerialize>(key: impl AsRef<str>, val: T) {
         let buf = val.try_to_vec().unwrap();
         write_bytes(key, buf);
@@ -328,8 +329,8 @@ pub mod vp {
 
     pub struct PostKeyValIterator<T>(pub u64, pub PhantomData<T>);
 
-    /// Try to read a variable-length value at the given key from storage before
-    /// transaction execution.
+    /// Try to read a Borsh encoded variable-length value at the given key from
+    /// storage before transaction execution.
     pub fn read_pre<T: BorshDeserialize>(key: impl AsRef<str>) -> Option<T> {
         let key = key.as_ref();
         let read_result =
@@ -347,8 +348,8 @@ pub mod vp {
         super::read_from_buffer(read_result, anoma_vp_result_buffer)
     }
 
-    /// Try to read a variable-length value at the given key from storage after
-    /// transaction execution.
+    /// Try to read a Borsh encoded variable-length value at the given key from
+    /// storage after transaction execution.
     pub fn read_post<T: BorshDeserialize>(key: impl AsRef<str>) -> Option<T> {
         let key = key.as_ref();
         let read_result =
