@@ -6,10 +6,10 @@ use std::time::Duration;
 use libp2p::core::connection::ConnectionLimits;
 use libp2p::core::muxing::StreamMuxerBox;
 use libp2p::core::transport::Boxed;
-use libp2p::dns::DnsConfig;
+use libp2p::dns::TokioDnsConfig;
 use libp2p::identity::Keypair;
 use libp2p::swarm::SwarmBuilder;
-use libp2p::tcp::TcpConfig;
+use libp2p::tcp::TokioTcpConfig;
 use libp2p::websocket::WsConfig;
 use libp2p::{core, mplex, noise, PeerId, Transport, TransportError};
 use thiserror::Error;
@@ -92,8 +92,8 @@ pub async fn build_transport(
     peer_key: &Keypair,
 ) -> Boxed<(PeerId, StreamMuxerBox)> {
     let transport = {
-        let tcp_transport = TcpConfig::new().nodelay(true);
-        let dns_tcp_transport = DnsConfig::system(tcp_transport).await.unwrap();
+        let tcp_transport = TokioTcpConfig::new().nodelay(true);
+        let dns_tcp_transport = TokioDnsConfig::system(tcp_transport).unwrap();
         let ws_dns_tcp_transport = WsConfig::new(dns_tcp_transport.clone());
         dns_tcp_transport.or_transport(ws_dns_tcp_transport)
     };
