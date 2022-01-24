@@ -357,6 +357,14 @@ impl AnomaCmd {
             status
         );
     }
+    // Assert that the process exited with failure
+    pub fn assert_failure(&self) {
+        let status = self.session.process.wait().unwrap();
+        assert_ne!(
+            WaitStatus::Exited(self.session.process.child_pid, 0),
+            status
+        );
+    }
 
     /// Wait until provided string is seen on stdout of child process.
     /// Return the yet unread output (without the matched string)

@@ -16,6 +16,22 @@ where
     ///  * keep a counter of blocks transpired since protocol start
     ///  * issue a PVSS transcript according to the state machines schedule
     pub fn update_dkg(&mut self) {
+        if cfg!(feature = "ABCI") {
+            let me = if let ShellMode::Validator {data, ..} = &self.mode {
+                self.get_validator_from_protocol_pk(&data.keys.protocol_keypair.public())
+            } else {
+                None
+            };
+            if let ShellMode::Validator{dkg, .. } = &mut self.mode {
+                if let Ok(msg) = dkg.state_machine.aggregate() {
+                    dkg.state_machine.apply_message(
+                        me.expect("Validator should know it's own public key"),
+                        msg
+                    )
+                    .expect("Applying one's own DKG message should not fail");
+                }
+            }
+        }
         // update the current encryption key to that generated in
         // previous epoch if a new epoch has started
         if let ShellMode::Validator { dkg, .. } = &self.mode {
@@ -26,7 +42,7 @@ where
                     self.storage.encryption_key =
                         Some(EncryptionKey(final_key).try_to_vec().unwrap());
                 } else {
-                    tracing::debug!(
+                    tracing::warn!(
                         "The DKG did not complete in the previous epoch. \
                         Encrypting transactions is not possible this epoch."
                     );
@@ -35,16 +51,16 @@ where
                     // DKG to continue while the new one also starts
                     self.storage.encryption_key = None;
                 }
-            }
 
-            if let Err(err) = self.new_dkg_instance() {
-                panic!(
-                    "Failed to create a new DKG instance for the new epoch \
+                if let Err(err) = self.new_dkg_instance() {
+                    panic!(
+                        "Failed to create a new DKG instance for the new epoch \
                      with error: {} \n\n\n The state of the last block has \
                      been persisted, so it is safe to shut down and resolve \
                      the issue.",
-                    err,
-                )
+                        err,
+                    )
+                }
             }
         }
         if let Err(err) = self.issue_pvss_transcript() {
@@ -95,7 +111,6 @@ where
                             )
                             .0
                             .expect("Validator should have public dkg key");
-                        tracing::debug!("DKG PK BYTES: {:?}", &bytes);
                         let dkg_publickey =
                             &<DkgPublicKey as BorshDeserialize>::deserialize(
                                 &mut bytes.as_ref(),

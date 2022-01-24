@@ -744,10 +744,11 @@ async fn sign_wrapper(
             decrypted_hash,
         }
     } else {
-        panic!(
-            "An encryption key was not found for the current epoch.\
+        eprintln!(
+            "An encryption key was not found for the current epoch. \
              Transactions can not be sent."
         );
+        safe_exit(1)
     }
 }
 

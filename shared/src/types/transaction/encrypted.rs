@@ -15,7 +15,7 @@ pub mod encrypted_tx {
 
     pub type G1 = <EllipticCurve as PairingEngine>::G1Affine;
     /// An encryption key for txs
-    #[derive(Debug, Clone)]
+    #[derive(Debug, Clone, PartialEq)]
     pub struct EncryptionKey(pub G1);
 
     impl Default for EncryptionKey {

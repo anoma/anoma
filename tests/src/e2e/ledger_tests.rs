@@ -179,6 +179,9 @@ fn ledger_txs_and_queries() -> Result<()> {
         ledger.exp_string("Started node")?;
     }
 
+    // Wait for the first DKG round to finish
+    ledger.exp_string("Storing the newly created encryption key from the DKG.")?;
+
     let vp_user = wasm_abs_path(VP_USER_WASM);
     let vp_user = vp_user.to_string_lossy();
     let tx_no_op = wasm_abs_path(TX_NO_OP_WASM);
@@ -294,10 +297,11 @@ fn ledger_txs_and_queries() -> Result<()> {
 
 /// In this test we:
 /// 1. Run the ledger node
-/// 2. Submit an invalid transaction (disallowed by state machine)
-/// 3. Shut down the ledger
-/// 4. Restart the ledger
-/// 5. Submit and invalid transactions (malformed)
+/// 2. Submit a valid ransaction before encryption key is created
+/// 3. Submit an invalid transaction (disallowed by state machine)
+/// 4. Shut down the ledger
+/// 5. Restart the ledger
+/// 6. Submit and invalid transactions (malformed)
 #[test]
 fn invalid_transactions() -> Result<()> {
     let test = setup::single_node_net()?;
@@ -311,10 +315,37 @@ fn invalid_transactions() -> Result<()> {
     } else {
         ledger.exp_string("Started node")?;
     }
-    // Wait to commit a block
-    ledger.exp_regex(r"Committed block hash.*, height: [0-9]+")?;
 
-    // 2. Submit a an invalid transaction (trying to mint tokens should fail
+    // 2. Submit a valid transaction before encryption key is created
+    let tx_args = vec![
+        "transfer",
+        "--source",
+        BERTHA,
+        "--target",
+        ALBERT,
+        "--token",
+        XAN,
+        "--amount",
+        "10.1",
+        "--fee-amount",
+        "0",
+        "--gas-limit",
+        "0",
+        "--fee-token",
+        XAN,
+    ];
+    let mut client = run!(test, Bin::Client, tx_args, Some(20))?;
+    // transaction should be rejected
+    client.exp_string(
+        "An encryption key was not found for the current epoch. \
+             Transactions can not be sent.")?;
+    // client process should exit with error code
+    client.assert_failure();
+
+    // Wait for the first DKG round to finish
+    ledger.exp_string("Storing the newly created encryption key from the DKG.")?;
+
+    // 3. Submit a an invalid transaction (trying to mint tokens should fail
     // in the token's VP)
     let tx_data_path = test.base_dir.path().join("tx.data");
     let transfer = token::Transfer {
@@ -361,7 +392,7 @@ fn invalid_transactions() -> Result<()> {
     // Wait to commit a block
     ledger.exp_regex(r"Committed block hash.*, height: [0-9]+")?;
 
-    // 3. Shut it down
+    // 4. Shut it down
     ledger.send_control('c')?;
     // Wait for the node to stop running to finish writing the state and tx
     // queue
@@ -370,7 +401,7 @@ fn invalid_transactions() -> Result<()> {
     ledger.exp_eof()?;
     drop(ledger);
 
-    // 4. Restart the ledger
+    // 5. Restart the ledger
     let mut ledger =
         run_as!(test, Who::Validator(0), Bin::Node, &["ledger"], Some(20))?;
 
@@ -379,7 +410,7 @@ fn invalid_transactions() -> Result<()> {
     // There should be previous state now
     ledger.exp_string("Last state root hash:")?;
 
-    // 5. Submit an invalid transactions (invalid token address)
+    // 6. Submit an invalid transactions (invalid token address)
     let tx_args = vec![
         "transfer",
         "--source",
@@ -430,25 +461,29 @@ fn invalid_transactions() -> Result<()> {
 #[test]
 fn pos_bonds() -> Result<()> {
     let unbonding_len = 2;
-    let test = setup::network(
-        |genesis| {
-            let parameters = ParametersConfig {
-                min_num_of_blocks: 2,
-                min_duration: 1,
-            };
-            let pos_params = PosParamsConfig {
-                pipeline_len: 1,
-                unbonding_len,
-                ..genesis.pos_params
-            };
-            GenesisConfig {
-                parameters,
-                pos_params,
-                ..genesis
-            }
-        },
-        None,
-    )?;
+    let test =if !cfg!(feature = "ABCI") {
+        setup::single_node_net()?
+    } else {
+         setup::network(
+            |genesis| {
+                let parameters = ParametersConfig {
+                    min_num_of_blocks: 2,
+                    min_duration: 1,
+                };
+                let pos_params = PosParamsConfig {
+                    pipeline_len: 1,
+                    unbonding_len,
+                    ..genesis.pos_params
+                };
+                GenesisConfig {
+                    parameters,
+                    pos_params,
+                    ..genesis
+                }
+            },
+            None,
+        )?
+    };
 
     // 1. Run the ledger node
     let mut ledger =
@@ -460,6 +495,9 @@ fn pos_bonds() -> Result<()> {
     } else {
         ledger.exp_string("Started node")?;
     }
+    // Wait for the first DKG round to finish
+    ledger.exp_string("Storing the newly created encryption key from the DKG.")?;
+
     // 2. Submit a self-bond for the genesis validator
     let tx_args = vec![
         "bond",
@@ -640,6 +678,8 @@ fn pos_init_validator() -> Result<()> {
     } else {
         ledger.exp_string("Started node")?;
     }
+    // Wait for the first DKG round to finish
+    ledger.exp_string("Storing the newly created encryption key from the DKG.")?;
 
     // 2. Initialize a new validator account
     let new_validator = "new-validator";
@@ -785,7 +825,7 @@ fn ledger_many_txs_in_a_block() -> Result<()> {
 
     // 1. Run the ledger node
     let mut ledger =
-        run_as!(*test, Who::Validator(0), Bin::Node, &["ledger"], Some(20))?;
+        run_as!(*test, Who::Validator(0), Bin::Node, &["ledger"], Some(50))?;
 
     ledger.exp_string("Anoma ledger node started")?;
     if !cfg!(feature = "ABCI") {
@@ -793,9 +833,8 @@ fn ledger_many_txs_in_a_block() -> Result<()> {
     } else {
         ledger.exp_string("Started node")?;
     }
-
-    // Wait to commit a block
-    ledger.exp_regex(r"Committed block hash.*, height: [0-9]+")?;
+    // Wait for the first DKG round to finish
+    ledger.exp_string("Storing the newly created encryption key from the DKG.")?;
 
     // A token transfer tx args
     let tx_args = Arc::new(vec![

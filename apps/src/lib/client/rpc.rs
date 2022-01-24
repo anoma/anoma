@@ -71,12 +71,14 @@ pub async fn query_encryption_key(args: args::Query) -> Option<EncryptionKey> {
         .await
         .unwrap();
     match response.code {
-        Code::Ok => match Option::<EncryptionKey>::try_from_slice(&response.value[..]) {
-            Ok(encryption_key) => {
+        Code::Ok => match Option::<Vec<u8>>::try_from_slice(&response.value[..]) {
+            Ok(Some(encryption_key)) => {
                 println!("Current encryption key: {:?}", encryption_key);
-                return encryption_key;
+                return BorshDeserialize::try_from_slice(&encryption_key[..]).ok();
             }
-
+            Ok(None) => {
+                return None;
+            }
             Err(err) => {
                 eprintln!("Error decoding the encryption key value: {}", err)
             }

@@ -183,6 +183,12 @@ where
                                 if let ShellMode::Validator { dkg, .. } =
                                     &mut self.mode
                                 {
+                                    if let Ok(serde_json::Value::Object(map)) = serde_json::to_value(&msg) {
+                                        tracing::info!(
+                                            "Applying DKG message: {}",
+                                            map.keys().next().unwrap()
+                                        );
+                                    }
                                     if let Err(err) = dkg
                                         .state_machine
                                         .apply_message(sender, msg.clone())
@@ -337,8 +343,8 @@ where
 
         if new_epoch {
             self.update_epoch(&mut response);
+            self.mode.set_update_dkg();
         }
-        self.mode.set_update_dkg();
 
         response.gas_used = self
             .gas_meter
