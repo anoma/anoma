@@ -1,13 +1,13 @@
 {
-    "tx_bond.wasm": "tx_bond.1bcf9f5d6a4d14f2eccf752802e0413d9528abc1ff94655516acec53062c5777.wasm",
-    "tx_from_intent.wasm": "tx_from_intent.2a0c73f7eba4a51a3f0dbb23420602af54cf91a3021cc20fb54874433c443257.wasm",
-    "tx_init_account.wasm": "tx_init_account.c7777f0d47896b6d9d751a1d6c65da6a2f9025de2fbbf750f538b7610562208b.wasm",
-    "tx_init_validator.wasm": "tx_init_validator.6eabce50a679868af8abc492032cb9553026243ef8194156d294441ea99a159c.wasm",
+    "tx_bond.wasm": "tx_bond.5a068b8bfdcd2a395a435f08cc5d4867b714243c67e89f950633ceb3827eb53f.wasm",
+    "tx_from_intent.wasm": "tx_from_intent.74221ad2c5ae181e107e69b7eaf653e5d944f3b8157046ee3f2845f56ae2c938.wasm",
+    "tx_init_account.wasm": "tx_init_account.c5c765689cec9ed26c8e653de3a686eebb08536c79f24a8546da55f11df39ead.wasm",
+    "tx_init_validator.wasm": "tx_init_validator.78d3205c8a3fd23669f76ca221191c870caa605f78972b615baec685ee69c525.wasm",
     "tx_transfer.wasm": "tx_transfer.72416a31799f9fbfcb8fb98bbeff5fbd256158dc54bad14ee17e80943e3a0289.wasm",
-    "tx_unbond.wasm": "tx_unbond.69312ecdb9dd86fe9d8ecb2a5338ef086b7e59c9c2b69a8d5a5e22b04f7fc91d.wasm",
+    "tx_unbond.wasm": "tx_unbond.c8cbb492159e5e6636e45d8506c3493197f1656cbe020ce3616d9a8b97808db6.wasm",
     "tx_update_vp.wasm": "tx_update_vp.db60fc50083f4f27a447a80f246800352395771d82e7fc6e2c3cf8234cc510fb.wasm",
-    "tx_withdraw.wasm": "tx_withdraw.889db718b6f5668637adeefbbd0208cc2b2707f3498eabbaceee6adc8c697698.wasm",
-    "vp_testnet_faucet.wasm": "vp_testnet_faucet.b13c47a98c409cbeef55cdaa60115610fe9fc1759018d9c15b83246576b8f3a5.wasm",
+    "tx_withdraw.wasm": "tx_withdraw.7201dd1e4132d9eea18081a73edbf2f29dacafea46c7a0bb444ab251e91132b3.wasm",
+    "vp_testnet_faucet.wasm": "vp_testnet_faucet.c91de46fcd5f1a7fdd60590cb1775075f3abf7af84637cdd30dd5722e02e20db.wasm",
     "vp_token.wasm": "vp_token.3af9e1de082e73b814f1987b2c68d4ec97d649b81c31226891f7ef196c59a796.wasm",
-    "vp_user.wasm": "vp_user.c43e4cf794f9514bce2b12442284e6be4bd3758dee80886f518d024c4700d830.wasm"
+    "vp_user.wasm": "vp_user.9a0db49d6845ddfe277b2766d5c6206ae41846c3b6a88f85acc84afe87f23a0c.wasm"
 }
