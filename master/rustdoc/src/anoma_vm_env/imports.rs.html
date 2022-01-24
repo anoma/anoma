@@ -538,6 +538,43 @@
 <span id="538">538</span>
 <span id="539">539</span>
 <span id="540">540</span>
+<span id="541">541</span>
+<span id="542">542</span>
+<span id="543">543</span>
+<span id="544">544</span>
+<span id="545">545</span>
+<span id="546">546</span>
+<span id="547">547</span>
+<span id="548">548</span>
+<span id="549">549</span>
+<span id="550">550</span>
+<span id="551">551</span>
+<span id="552">552</span>
+<span id="553">553</span>
+<span id="554">554</span>
+<span id="555">555</span>
+<span id="556">556</span>
+<span id="557">557</span>
+<span id="558">558</span>
+<span id="559">559</span>
+<span id="560">560</span>
+<span id="561">561</span>
+<span id="562">562</span>
+<span id="563">563</span>
+<span id="564">564</span>
+<span id="565">565</span>
+<span id="566">566</span>
+<span id="567">567</span>
+<span id="568">568</span>
+<span id="569">569</span>
+<span id="570">570</span>
+<span id="571">571</span>
+<span id="572">572</span>
+<span id="573">573</span>
+<span id="574">574</span>
+<span id="575">575</span>
+<span id="576">576</span>
+<span id="577">577</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std::mem::ManuallyDrop</span>;
 
 <span class="kw">use</span> <span class="ident">anoma::types::internal::HostEnvResult</span>;
@@ -552,10 +589,10 @@
 <span class="doccomment">/// first step reads the value into a result buffer and returns the size (if</span>
 <span class="doccomment">/// any) back to the guest, the second step reads the value from cache into a</span>
 <span class="doccomment">/// pre-allocated buffer with the obtained size.</span>
-<span class="kw">fn</span> <span class="ident">read_from_buffer</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">BorshDeserialize</span><span class="op">&gt;</span>(
+<span class="kw">fn</span> <span class="ident">read_from_buffer</span>(
     <span class="ident">read_result</span>: <span class="ident">i64</span>,
     <span class="ident">result_buffer</span>: <span class="kw">unsafe</span> <span class="kw">extern</span> <span class="string">&quot;C&quot;</span> <span class="kw">fn</span>(<span class="ident">u64</span>),
-) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
+) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span> {
     <span class="kw">if</span> <span class="ident">HostEnvResult::is_fail</span>(<span class="ident">read_result</span>) {
         <span class="prelude-val">None</span>
     } <span class="kw">else</span> {
@@ -568,7 +605,7 @@
         <span class="kw">let</span> <span class="ident">target</span> <span class="op">=</span> <span class="kw">unsafe</span> {
             <span class="ident">Vec::from_raw_parts</span>(<span class="ident">offset</span> <span class="kw">as</span> <span class="kw">_</span>, <span class="ident">read_result</span> <span class="kw">as</span> <span class="kw">_</span>, <span class="ident">read_result</span> <span class="kw">as</span> <span class="kw">_</span>)
         };
-        <span class="ident">T::try_from_slice</span>(<span class="kw-2">&amp;</span><span class="ident">target</span>[..]).<span class="ident">ok</span>()
+        <span class="prelude-val">Some</span>(<span class="ident">target</span>)
     }
 }
 
@@ -578,7 +615,8 @@
     <span class="ident">read_result</span>: <span class="ident">i64</span>,
     <span class="ident">result_buffer</span>: <span class="kw">unsafe</span> <span class="kw">extern</span> <span class="string">&quot;C&quot;</span> <span class="kw">fn</span>(<span class="ident">u64</span>),
 ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span>(<span class="ident">String</span>, <span class="ident">T</span>)<span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">key_val</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">KeyVal</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">read_from_buffer</span>(<span class="ident">read_result</span>, <span class="ident">result_buffer</span>);
+    <span class="kw">let</span> <span class="ident">key_val</span> <span class="op">=</span> <span class="ident">read_from_buffer</span>(<span class="ident">read_result</span>, <span class="ident">result_buffer</span>)
+        .<span class="ident">and_then</span>(<span class="op">|</span><span class="ident">t</span><span class="op">|</span> <span class="ident">KeyVal::try_from_slice</span>(<span class="kw-2">&amp;</span><span class="ident">t</span>[..]).<span class="ident">ok</span>());
     <span class="ident">key_val</span>.<span class="ident">and_then</span>(<span class="op">|</span><span class="ident">key_val</span><span class="op">|</span> {
         <span class="comment">// decode the value</span>
         <span class="ident">T::try_from_slice</span>(<span class="kw-2">&amp;</span><span class="ident">key_val</span>.<span class="ident">val</span>)
@@ -606,8 +644,19 @@
     <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
     <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">KeyValIterator</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="kw">pub</span> <span class="ident">u64</span>, <span class="kw">pub</span> <span class="ident">PhantomData</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>);
 
-    <span class="doccomment">/// Try to read a variable-length value at the given key from storage.</span>
+    <span class="doccomment">/// Try to read a Borsh encoded variable-length value at the given key from</span>
+    <span class="doccomment">/// storage.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">read</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">BorshDeserialize</span><span class="op">&gt;</span>(<span class="ident">key</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span><span class="ident">str</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">key</span>.<span class="ident">as_ref</span>();
+        <span class="kw">let</span> <span class="ident">read_result</span> <span class="op">=</span>
+            <span class="kw">unsafe</span> { <span class="ident">anoma_tx_read</span>(<span class="ident">key</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="kw">_</span>, <span class="ident">key</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="kw">_</span>) };
+        <span class="ident"><span class="kw">super</span>::read_from_buffer</span>(<span class="ident">read_result</span>, <span class="ident">anoma_tx_result_buffer</span>)
+            .<span class="ident">and_then</span>(<span class="op">|</span><span class="ident">t</span><span class="op">|</span> <span class="ident">T::try_from_slice</span>(<span class="kw-2">&amp;</span><span class="ident">t</span>[..]).<span class="ident">ok</span>())
+    }
+
+    <span class="doccomment">/// Try to read a variable-length value as bytes at the given key from</span>
+    <span class="doccomment">/// storage.</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">read_bytes</span>(<span class="ident">key</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span><span class="ident">str</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">key</span>.<span class="ident">as_ref</span>();
         <span class="kw">let</span> <span class="ident">read_result</span> <span class="op">=</span>
             <span class="kw">unsafe</span> { <span class="ident">anoma_tx_read</span>(<span class="ident">key</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="kw">_</span>, <span class="ident">key</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="kw">_</span>) };
@@ -622,16 +671,21 @@
         <span class="ident">HostEnvResult::is_success</span>(<span class="ident">found</span>)
     }
 
-    <span class="doccomment">/// Write a value at the given key to storage.</span>
+    <span class="doccomment">/// Write a value to be encoded with Borsh at the given key to storage.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">write</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">BorshSerialize</span><span class="op">&gt;</span>(<span class="ident">key</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span><span class="ident">str</span><span class="op">&gt;</span>, <span class="ident">val</span>: <span class="ident">T</span>) {
-        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">key</span>.<span class="ident">as_ref</span>();
         <span class="kw">let</span> <span class="ident">buf</span> <span class="op">=</span> <span class="ident">val</span>.<span class="ident">try_to_vec</span>().<span class="ident">unwrap</span>();
+        <span class="ident">write_bytes</span>(<span class="ident">key</span>, <span class="ident">buf</span>);
+    }
+
+    <span class="doccomment">/// Write a value as bytes at the given key to storage.</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">write_bytes</span>(<span class="ident">key</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span><span class="ident">str</span><span class="op">&gt;</span>, <span class="ident">val</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span>[<span class="ident">u8</span>]<span class="op">&gt;</span>) {
+        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">key</span>.<span class="ident">as_ref</span>();
         <span class="kw">unsafe</span> {
             <span class="ident">anoma_tx_write</span>(
                 <span class="ident">key</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="kw">_</span>,
                 <span class="ident">key</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="kw">_</span>,
-                <span class="ident">buf</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="kw">_</span>,
-                <span class="ident">buf</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="kw">_</span>,
+                <span class="ident">val</span>.<span class="ident">as_ref</span>().<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="kw">_</span>,
+                <span class="ident">val</span>.<span class="ident">as_ref</span>().<span class="ident">len</span>() <span class="kw">as</span> <span class="kw">_</span>,
             )
         };
     }
@@ -852,18 +906,38 @@
 
     <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">PostKeyValIterator</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="kw">pub</span> <span class="ident">u64</span>, <span class="kw">pub</span> <span class="ident">PhantomData</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>);
 
-    <span class="doccomment">/// Try to read a variable-length value at the given key from storage before</span>
-    <span class="doccomment">/// transaction execution.</span>
+    <span class="doccomment">/// Try to read a Borsh encoded variable-length value at the given key from</span>
+    <span class="doccomment">/// storage before transaction execution.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">read_pre</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">BorshDeserialize</span><span class="op">&gt;</span>(<span class="ident">key</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span><span class="ident">str</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">key</span>.<span class="ident">as_ref</span>();
+        <span class="kw">let</span> <span class="ident">read_result</span> <span class="op">=</span>
+            <span class="kw">unsafe</span> { <span class="ident">anoma_vp_read_pre</span>(<span class="ident">key</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="kw">_</span>, <span class="ident">key</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="kw">_</span>) };
+        <span class="ident"><span class="kw">super</span>::read_from_buffer</span>(<span class="ident">read_result</span>, <span class="ident">anoma_vp_result_buffer</span>)
+            .<span class="ident">and_then</span>(<span class="op">|</span><span class="ident">t</span><span class="op">|</span> <span class="ident">T::try_from_slice</span>(<span class="kw-2">&amp;</span><span class="ident">t</span>[..]).<span class="ident">ok</span>())
+    }
+
+    <span class="doccomment">/// Try to read a variable-length value as bytesat the given key from</span>
+    <span class="doccomment">/// storage before transaction execution.</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">read_bytes_pre</span>(<span class="ident">key</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span><span class="ident">str</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">key</span>.<span class="ident">as_ref</span>();
         <span class="kw">let</span> <span class="ident">read_result</span> <span class="op">=</span>
             <span class="kw">unsafe</span> { <span class="ident">anoma_vp_read_pre</span>(<span class="ident">key</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="kw">_</span>, <span class="ident">key</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="kw">_</span>) };
         <span class="ident"><span class="kw">super</span>::read_from_buffer</span>(<span class="ident">read_result</span>, <span class="ident">anoma_vp_result_buffer</span>)
     }
 
-    <span class="doccomment">/// Try to read a variable-length value at the given key from storage after</span>
-    <span class="doccomment">/// transaction execution.</span>
+    <span class="doccomment">/// Try to read a Borsh encoded variable-length value at the given key from</span>
+    <span class="doccomment">/// storage after transaction execution.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">read_post</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">BorshDeserialize</span><span class="op">&gt;</span>(<span class="ident">key</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span><span class="ident">str</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">key</span>.<span class="ident">as_ref</span>();
+        <span class="kw">let</span> <span class="ident">read_result</span> <span class="op">=</span>
+            <span class="kw">unsafe</span> { <span class="ident">anoma_vp_read_post</span>(<span class="ident">key</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="kw">_</span>, <span class="ident">key</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="kw">_</span>) };
+        <span class="ident"><span class="kw">super</span>::read_from_buffer</span>(<span class="ident">read_result</span>, <span class="ident">anoma_vp_result_buffer</span>)
+            .<span class="ident">and_then</span>(<span class="op">|</span><span class="ident">t</span><span class="op">|</span> <span class="ident">T::try_from_slice</span>(<span class="kw-2">&amp;</span><span class="ident">t</span>[..]).<span class="ident">ok</span>())
+    }
+
+    <span class="doccomment">/// Try to read a variable-length value as bytes at the given key from</span>
+    <span class="doccomment">/// storage after transaction execution.</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">read_bytes_post</span>(<span class="ident">key</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span><span class="ident">str</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">key</span>.<span class="ident">as_ref</span>();
         <span class="kw">let</span> <span class="ident">read_result</span> <span class="op">=</span>
             <span class="kw">unsafe</span> { <span class="ident">anoma_vp_read_post</span>(<span class="ident">key</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="kw">_</span>, <span class="ident">key</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="kw">_</span>) };

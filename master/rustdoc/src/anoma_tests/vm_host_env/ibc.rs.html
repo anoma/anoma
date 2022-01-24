@@ -645,6 +645,41 @@
 <span id="645">645</span>
 <span id="646">646</span>
 <span id="647">647</span>
+<span id="648">648</span>
+<span id="649">649</span>
+<span id="650">650</span>
+<span id="651">651</span>
+<span id="652">652</span>
+<span id="653">653</span>
+<span id="654">654</span>
+<span id="655">655</span>
+<span id="656">656</span>
+<span id="657">657</span>
+<span id="658">658</span>
+<span id="659">659</span>
+<span id="660">660</span>
+<span id="661">661</span>
+<span id="662">662</span>
+<span id="663">663</span>
+<span id="664">664</span>
+<span id="665">665</span>
+<span id="666">666</span>
+<span id="667">667</span>
+<span id="668">668</span>
+<span id="669">669</span>
+<span id="670">670</span>
+<span id="671">671</span>
+<span id="672">672</span>
+<span id="673">673</span>
+<span id="674">674</span>
+<span id="675">675</span>
+<span id="676">676</span>
+<span id="677">677</span>
+<span id="678">678</span>
+<span id="679">679</span>
+<span id="680">680</span>
+<span id="681">681</span>
+<span id="682">682</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std::collections</span>::{<span class="ident">HashMap</span>, <span class="ident">HashSet</span>};
 <span class="kw">use</span> <span class="ident">std::convert::TryFrom</span>;
 <span class="kw">use</span> <span class="ident">std::str::FromStr</span>;
@@ -665,10 +700,12 @@
 <span class="kw">use</span> <span class="ident">anoma::ledger::storage::Sha256Hasher</span>;
 <span class="kw">use</span> <span class="ident">anoma::proto::Tx</span>;
 <span class="kw">use</span> <span class="ident">anoma::types::address</span>::{<span class="ident">Address</span>, <span class="ident">InternalAddress</span>};
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">anoma::types::ibc::data</span>::<span class="kw-2">*</span>;
+<span class="kw">use</span> <span class="ident">anoma::types::ibc::IbcEvent</span>;
 <span class="kw">use</span> <span class="ident">anoma::types::storage::Key</span>;
+<span class="kw">use</span> <span class="ident">anoma::types::time</span>::{<span class="ident">DateTimeUtc</span>, <span class="ident">DurationSecs</span>};
 <span class="kw">use</span> <span class="ident">anoma::vm</span>::{<span class="ident">wasm</span>, <span class="ident">WasmCacheRwAccess</span>};
-<span class="kw">use</span> <span class="ident">anoma_vm_env::tx_prelude::BorshSerialize</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
+<span class="kw">use</span> <span class="ident">ibc::applications::ics20_fungible_token_transfer::msgs::transfer::MsgTransfer</span>;
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
 <span class="kw">use</span> <span class="ident">ibc::core::ics02_client::client_consensus::ConsensusState</span>;
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
@@ -740,6 +777,8 @@
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
 <span class="kw">use</span> <span class="ident">ibc::Height</span>;
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
+<span class="kw">use</span> <span class="ident">ibc_abci::applications::ics20_fungible_token_transfer::msgs::transfer::MsgTransfer</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
 <span class="kw">use</span> <span class="ident">ibc_abci::core::ics02_client::client_consensus::ConsensusState</span>;
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
 <span class="kw">use</span> <span class="ident">ibc_abci::core::ics02_client::client_state</span>::{<span class="ident">AnyClientState</span>, <span class="ident">ClientState</span>};
@@ -810,7 +849,11 @@
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
 <span class="kw">use</span> <span class="ident">ibc_abci::Height</span>;
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
+<span class="kw">use</span> <span class="ident">ibc_proto::cosmos::base::v1beta1::Coin</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
 <span class="kw">use</span> <span class="ident">ibc_proto::ibc::core::commitment::v1::MerkleProof</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
+<span class="kw">use</span> <span class="ident">ibc_proto_abci::cosmos::base::v1beta1::Coin</span>;
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
 <span class="kw">use</span> <span class="ident">ibc_proto_abci::ibc::core::commitment::v1::MerkleProof</span>;
 <span class="kw">use</span> <span class="ident">tempfile::TempDir</span>;
@@ -826,6 +869,10 @@
 <span class="kw">use</span> <span class="ident">tendermint::hash</span>::{<span class="ident">AppHash</span>, <span class="ident">Hash</span> <span class="kw">as</span> <span class="ident">TmHash</span>};
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
 <span class="kw">use</span> <span class="ident">tendermint::time::Time</span> <span class="kw">as</span> <span class="ident">TmTime</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
+<span class="kw">use</span> <span class="ident">tendermint_proto::Protobuf</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
+<span class="kw">use</span> <span class="ident">tendermint_proto_abci::Protobuf</span>;
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
 <span class="kw">use</span> <span class="ident">tendermint_stable::account::Id</span> <span class="kw">as</span> <span class="ident">TmAccountId</span>;
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
@@ -841,7 +888,7 @@
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
 <span class="kw">use</span> <span class="ident">tendermint_stable::time::Time</span> <span class="kw">as</span> <span class="ident">TmTime</span>;
 
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::tx::TestTxEnv</span>;
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::tx</span>::<span class="kw-2">*</span>;
 
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">TestIbcVp</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
     <span class="kw">pub</span> <span class="ident">ibc</span>: <span class="ident">Ibc</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">MockDB</span>, <span class="ident">Sha256Hasher</span>, <span class="ident">WasmCacheRwAccess</span><span class="op">&gt;</span>,
@@ -855,6 +902,30 @@
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">std::result::Result</span><span class="op">&lt;</span><span class="ident">bool</span>, <span class="ident">anoma::ledger::ibc::vp::Error</span><span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">ibc</span>
             .<span class="ident">validate_tx</span>(<span class="ident">tx_data</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">keys_changed</span>, <span class="kw-2">&amp;</span><span class="ident">HashSet::new</span>())
+    }
+}
+
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">TestIbcActions</span>;
+
+<span class="kw">impl</span> <span class="ident">IbcActions</span> <span class="kw">for</span> <span class="ident">TestIbcActions</span> {
+    <span class="doccomment">/// Read IBC-related data</span>
+    <span class="kw">fn</span> <span class="ident">read_ibc_data</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">Key</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+        <span class="ident">tx_host_env::read_bytes</span>(<span class="ident">key</span>.<span class="ident">to_string</span>())
+    }
+
+    <span class="doccomment">/// Write IBC-related data</span>
+    <span class="kw">fn</span> <span class="ident">write_ibc_data</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">Key</span>, <span class="ident">data</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span>[<span class="ident">u8</span>]<span class="op">&gt;</span>) {
+        <span class="ident">tx_host_env::write_bytes</span>(<span class="ident">key</span>.<span class="ident">to_string</span>(), <span class="ident">data</span>)
+    }
+
+    <span class="doccomment">/// Delete IBC-related data</span>
+    <span class="kw">fn</span> <span class="ident">delete_ibc_data</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">Key</span>) {
+        <span class="ident">tx_host_env::delete</span>(<span class="ident">key</span>.<span class="ident">to_string</span>())
+    }
+
+    <span class="doccomment">/// Emit an IBC event</span>
+    <span class="kw">fn</span> <span class="ident">emit_ibc_event</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">event</span>: <span class="ident">IbcEvent</span>) {
+        <span class="ident">tx_host_env::emit_ibc_event</span>(<span class="kw-2">&amp;</span><span class="ident">event</span>)
     }
 }
 
@@ -917,21 +988,21 @@
     <span class="kw">let</span> <span class="ident">client_id</span> <span class="op">=</span>
         <span class="ident">client_id</span>(<span class="ident">client_state</span>.<span class="ident">client_type</span>(), <span class="number">0</span>).<span class="ident">expect</span>(<span class="string">&quot;invalid client ID&quot;</span>);
     <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">client_state_key</span>(<span class="kw-2">&amp;</span><span class="ident">client_id</span>);
-    <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="ident">msg</span>.<span class="ident">client_state</span>.<span class="ident">try_to_vec</span>().<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
+    <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="ident">msg</span>.<span class="ident">client_state</span>.<span class="ident">encode_vec</span>().<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
     <span class="ident">writes</span>.<span class="ident">insert</span>(<span class="ident">key</span>, <span class="ident">bytes</span>);
     <span class="comment">// client type</span>
     <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">client_type_key</span>(<span class="kw-2">&amp;</span><span class="ident">client_id</span>);
     <span class="kw">let</span> <span class="ident">client_type</span> <span class="op">=</span> <span class="ident">client_state</span>.<span class="ident">client_type</span>();
-    <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="ident">client_type</span>.<span class="ident">try_to_vec</span>().<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
+    <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="ident">client_type</span>.<span class="ident">as_str</span>().<span class="ident">as_bytes</span>().<span class="ident">to_vec</span>();
     <span class="ident">writes</span>.<span class="ident">insert</span>(<span class="ident">key</span>, <span class="ident">bytes</span>);
     <span class="comment">// consensus state</span>
     <span class="kw">let</span> <span class="ident">height</span> <span class="op">=</span> <span class="ident">client_state</span>.<span class="ident">latest_height</span>();
     <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">consensus_state_key</span>(<span class="kw-2">&amp;</span><span class="ident">client_id</span>, <span class="ident">height</span>);
-    <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="ident">msg</span>.<span class="ident">consensus_state</span>.<span class="ident">try_to_vec</span>().<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
+    <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="ident">msg</span>.<span class="ident">consensus_state</span>.<span class="ident">encode_vec</span>().<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
     <span class="ident">writes</span>.<span class="ident">insert</span>(<span class="ident">key</span>, <span class="ident">bytes</span>);
     <span class="comment">// client counter</span>
     <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">client_counter_key</span>();
-    <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="number">1_u64</span>.<span class="ident">try_to_vec</span>().<span class="ident">unwrap</span>();
+    <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="number">1_u64</span>.<span class="ident">to_be_bytes</span>().<span class="ident">to_vec</span>();
     <span class="ident">writes</span>.<span class="ident">insert</span>(<span class="ident">key</span>, <span class="ident">bytes</span>);
 
     (<span class="ident">client_id</span>, <span class="ident">client_state</span>, <span class="ident">writes</span>)
@@ -947,11 +1018,11 @@
     <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="ident">msg_connection_open_init</span>(<span class="ident">client_id</span>.<span class="ident">clone</span>());
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">conn</span> <span class="op">=</span> <span class="ident">init_connection</span>(<span class="kw-2">&amp;</span><span class="ident">msg</span>);
     <span class="ident">open_connection</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">conn</span>);
-    <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="ident">conn</span>.<span class="ident">try_to_vec</span>().<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
+    <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="ident">conn</span>.<span class="ident">encode_vec</span>().<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
     <span class="ident">writes</span>.<span class="ident">insert</span>(<span class="ident">key</span>, <span class="ident">bytes</span>);
     <span class="comment">// connection counter</span>
     <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">connection_counter_key</span>();
-    <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="number">1_u64</span>.<span class="ident">try_to_vec</span>().<span class="ident">unwrap</span>();
+    <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="number">1_u64</span>.<span class="ident">to_be_bytes</span>().<span class="ident">to_vec</span>();
     <span class="ident">writes</span>.<span class="ident">insert</span>(<span class="ident">key</span>, <span class="ident">bytes</span>);
 
     (<span class="ident">conn_id</span>, <span class="ident">writes</span>)
@@ -965,10 +1036,10 @@
     <span class="comment">// port</span>
     <span class="kw">let</span> <span class="ident">port_id</span> <span class="op">=</span> <span class="ident">port_id</span>(<span class="string">&quot;test_port&quot;</span>).<span class="ident">expect</span>(<span class="string">&quot;invalid port ID&quot;</span>);
     <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">port_key</span>(<span class="kw-2">&amp;</span><span class="ident">port_id</span>);
-    <span class="ident">writes</span>.<span class="ident">insert</span>(<span class="ident">key</span>, <span class="number">0_u64</span>.<span class="ident">try_to_vec</span>().<span class="ident">unwrap</span>());
+    <span class="ident">writes</span>.<span class="ident">insert</span>(<span class="ident">key</span>, <span class="number">0_u64</span>.<span class="ident">to_be_bytes</span>().<span class="ident">to_vec</span>());
     <span class="comment">// capability</span>
     <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">capability_key</span>(<span class="number">0</span>);
-    <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="ident">port_id</span>.<span class="ident">try_to_vec</span>().<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
+    <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="ident">port_id</span>.<span class="ident">as_bytes</span>().<span class="ident">to_vec</span>();
     <span class="ident">writes</span>.<span class="ident">insert</span>(<span class="ident">key</span>, <span class="ident">bytes</span>);
     <span class="comment">// channel</span>
     <span class="kw">let</span> <span class="ident">channel_id</span> <span class="op">=</span> <span class="ident">channel_id</span>(<span class="number">0</span>);
@@ -977,7 +1048,7 @@
     <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="ident">msg_channel_open_init</span>(<span class="ident">port_id</span>.<span class="ident">clone</span>(), <span class="ident">conn_id</span>.<span class="ident">clone</span>());
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">channel</span> <span class="op">=</span> <span class="ident">msg</span>.<span class="ident">channel</span>;
     <span class="ident">open_channel</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">channel</span>);
-    <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="ident">channel</span>.<span class="ident">try_to_vec</span>().<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
+    <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="ident">channel</span>.<span class="ident">encode_vec</span>().<span class="ident">expect</span>(<span class="string">&quot;encoding failed&quot;</span>);
     <span class="ident">writes</span>.<span class="ident">insert</span>(<span class="ident">key</span>, <span class="ident">bytes</span>);
 
     (<span class="ident">port_id</span>, <span class="ident">channel_id</span>, <span class="ident">writes</span>)
@@ -1200,7 +1271,7 @@
     )
 }
 
-<span class="kw">fn</span> <span class="ident">dummy_channel_counterparty</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">ChanCounterparty</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">dummy_channel_counterparty</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">ChanCounterparty</span> {
     <span class="kw">let</span> <span class="ident">counterpart_port_id</span> <span class="op">=</span> <span class="ident">PortId::from_str</span>(<span class="string">&quot;counterpart_test_port&quot;</span>)
         .<span class="ident">expect</span>(<span class="string">&quot;Creating a port ID failed&quot;</span>);
     <span class="kw">let</span> <span class="ident">counterpart_channel_id</span> <span class="op">=</span>
@@ -1213,26 +1284,25 @@
     <span class="ident">channel</span>.<span class="ident">ordering</span> <span class="op">=</span> <span class="ident">Order::Unordered</span>;
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">packet_send_data</span>(
-    <span class="ident">port_id</span>: <span class="ident">PortId</span>,
-    <span class="ident">channel_id</span>: <span class="ident">ChannelId</span>,
-) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">PacketSendData</span> {
-    <span class="kw">let</span> <span class="ident">counterparty</span> <span class="op">=</span> <span class="ident">dummy_channel_counterparty</span>();
-    <span class="kw">let</span> <span class="ident">timestamp</span> <span class="op">=</span> <span class="ident">chrono::Utc::now</span>() <span class="op">+</span> <span class="ident">chrono::Duration::seconds</span>(<span class="number">100</span>);
-    <span class="kw">let</span> <span class="ident">timeout_timestamp</span> <span class="op">=</span> <span class="ident">Timestamp::from_datetime</span>(<span class="ident">timestamp</span>);
-    <span class="ident">PacketSendData::new</span>(
-        <span class="ident">port_id</span>,
-        <span class="ident">channel_id</span>,
-        <span class="ident">counterparty</span>.<span class="ident">port_id</span>().<span class="ident">clone</span>(),
-        <span class="ident">counterparty</span>.<span class="ident">channel_id</span>().<span class="ident">unwrap</span>().<span class="ident">clone</span>(),
-        <span class="macro">vec!</span>[<span class="number">0</span>],
-        <span class="ident">Height::new</span>(<span class="number">1</span>, <span class="number">10</span>),
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">msg_transfer</span>(<span class="ident">port_id</span>: <span class="ident">PortId</span>, <span class="ident">channel_id</span>: <span class="ident">ChannelId</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">MsgTransfer</span> {
+    <span class="kw">let</span> <span class="ident">timestamp</span> <span class="op">=</span> <span class="ident">DateTimeUtc::now</span>() <span class="op">+</span> <span class="ident">DurationSecs</span>(<span class="number">100</span>);
+    <span class="kw">let</span> <span class="ident">timeout_timestamp</span> <span class="op">=</span> <span class="ident">Timestamp::from_datetime</span>(<span class="ident">timestamp</span>.<span class="number">0</span>);
+    <span class="ident">MsgTransfer</span> {
+        <span class="ident">source_port</span>: <span class="ident">port_id</span>,
+        <span class="ident">source_channel</span>: <span class="ident">channel_id</span>,
+        <span class="ident">token</span>: <span class="prelude-val">Some</span>(<span class="ident">Coin</span> {
+            <span class="ident">denom</span>: <span class="string">&quot;XAN&quot;</span>.<span class="ident">to_string</span>(),
+            <span class="ident">amount</span>: <span class="number">100u64</span>.<span class="ident">to_string</span>(),
+        }),
+        <span class="ident">sender</span>: <span class="ident">Signer::new</span>(<span class="string">&quot;sender&quot;</span>),
+        <span class="ident">receiver</span>: <span class="ident">Signer::new</span>(<span class="string">&quot;receiver&quot;</span>),
+        <span class="ident">timeout_height</span>: <span class="ident">Height::new</span>(<span class="number">1</span>, <span class="number">100</span>),
         <span class="ident">timeout_timestamp</span>,
-    )
+    }
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set_timeout_height</span>(<span class="ident">data</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">PacketSendData</span>) {
-    <span class="ident">data</span>.<span class="ident">timeout_height</span> <span class="op">=</span> <span class="ident">Height::new</span>(<span class="number">1</span>, <span class="number">1</span>);
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set_timeout_height</span>(<span class="ident">msg</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">MsgTransfer</span>) {
+    <span class="ident">msg</span>.<span class="ident">timeout_height</span> <span class="op">=</span> <span class="ident">Height::new</span>(<span class="number">1</span>, <span class="number">1</span>);
 }
 
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">msg_packet_recv</span>(<span class="ident">packet</span>: <span class="ident">Packet</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">MsgRecvPacket</span> {

@@ -891,11 +891,8 @@
 <span id="891">891</span>
 <span id="892">892</span>
 <span id="893">893</span>
-<span id="894">894</span>
-<span id="895">895</span>
 </pre><pre class="rust"><code><span class="doccomment">//! IBC validity predicate for channel module</span>
 
-<span class="kw">use</span> <span class="ident">borsh::BorshDeserialize</span>;
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
 <span class="kw">use</span> <span class="ident">ibc::core::ics02_client::client_consensus::AnyConsensusState</span>;
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
@@ -985,6 +982,10 @@
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
 <span class="kw">use</span> <span class="ident">ibc_abci::timestamp::Timestamp</span>;
 <span class="kw">use</span> <span class="ident">sha2::Digest</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
+<span class="kw">use</span> <span class="ident">tendermint_proto::Protobuf</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>)]</span>
+<span class="kw">use</span> <span class="ident">tendermint_proto_abci::Protobuf</span>;
 <span class="kw">use</span> <span class="ident">thiserror::Error</span>;
 
 <span class="kw">use</span> <span class="ident"><span class="kw">super</span>::<span class="kw">super</span>::handler</span>::{
@@ -1001,7 +1002,9 @@
 <span class="kw">use</span> <span class="kw">super</span>::{<span class="ident">Ibc</span>, <span class="ident">StateChange</span>};
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::ledger::native_vp::Error</span> <span class="kw">as</span> <span class="ident">NativeVpError</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::ledger::storage</span>::{<span class="self">self</span> <span class="kw">as</span> <span class="ident">ledger_storage</span>, <span class="ident">StorageHasher</span>};
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::types::ibc::data</span>::{<span class="ident">Error</span> <span class="kw">as</span> <span class="ident">IbcDataError</span>, <span class="ident">IbcMessage</span>};
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::types::ibc::data</span>::{
+    <span class="ident">Error</span> <span class="kw">as</span> <span class="ident">IbcDataError</span>, <span class="ident">IbcMessage</span>, <span class="ident">PacketAck</span>, <span class="ident">PacketReceipt</span>,
+};
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::types::storage::Key</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::vm::WasmCacheAccess</span>;
 
@@ -1414,12 +1417,13 @@
     <span class="kw">fn</span> <span class="ident">get_sequence_pre</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">Key</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Sequence</span><span class="op">&gt;</span> {
         <span class="kw">match</span> <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">read_pre</span>(<span class="ident">key</span>)<span class="question-mark">?</span> {
             <span class="prelude-val">Some</span>(<span class="ident">value</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="kw">let</span> <span class="ident">index</span> <span class="op">=</span> <span class="ident">u64::try_from_slice</span>(<span class="kw-2">&amp;</span><span class="ident">value</span>[..]).<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> {
-                    <span class="ident">Error::InvalidSequence</span>(<span class="macro">format!</span>(
-                        <span class="string">&quot;Decoding a prior sequece index failed: {}&quot;</span>,
-                        <span class="ident">e</span>
-                    ))
+                <span class="comment">// As ibc-go, u64 like a counter is encoded with big-endian</span>
+                <span class="kw">let</span> <span class="ident">index</span>: [<span class="ident">u8</span>; <span class="number">8</span>] <span class="op">=</span> <span class="ident">value</span>.<span class="ident">try_into</span>().<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> {
+                    <span class="ident">Error::InvalidSequence</span>(
+                        <span class="string">&quot;Encoding the prior sequence index failed&quot;</span>.<span class="ident">to_string</span>(),
+                    )
                 })<span class="question-mark">?</span>;
+                <span class="kw">let</span> <span class="ident">index</span> <span class="op">=</span> <span class="ident">u64::from_be_bytes</span>(<span class="ident">index</span>);
                 <span class="prelude-val">Ok</span>(<span class="ident">Sequence::from</span>(<span class="ident">index</span>))
             }
             <span class="comment">// The sequence is updated for the first time. The previous sequence</span>
@@ -1431,46 +1435,17 @@
     <span class="kw">fn</span> <span class="ident">get_sequence</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">Key</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Sequence</span><span class="op">&gt;</span> {
         <span class="kw">match</span> <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">read_post</span>(<span class="ident">key</span>)<span class="question-mark">?</span> {
             <span class="prelude-val">Some</span>(<span class="ident">value</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="kw">let</span> <span class="ident">index</span> <span class="op">=</span> <span class="ident">u64::try_from_slice</span>(<span class="kw-2">&amp;</span><span class="ident">value</span>).<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> {
-                    <span class="ident">Error::InvalidSequence</span>(<span class="macro">format!</span>(
-                        <span class="string">&quot;Decoding a sequece index failed: {}&quot;</span>,
-                        <span class="ident">e</span>
-                    ))
+                <span class="comment">// As ibc-go, u64 like a counter is encoded with big-endian</span>
+                <span class="kw">let</span> <span class="ident">index</span>: [<span class="ident">u8</span>; <span class="number">8</span>] <span class="op">=</span> <span class="ident">value</span>.<span class="ident">try_into</span>().<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> {
+                    <span class="ident">Error::InvalidSequence</span>(
+                        <span class="string">&quot;Encoding the sequence index failed&quot;</span>.<span class="ident">to_string</span>(),
+                    )
                 })<span class="question-mark">?</span>;
+                <span class="kw">let</span> <span class="ident">index</span> <span class="op">=</span> <span class="ident">u64::from_be_bytes</span>(<span class="ident">index</span>);
                 <span class="prelude-val">Ok</span>(<span class="ident">Sequence::from</span>(<span class="ident">index</span>))
             }
             <span class="comment">// The sequence has not been used yet</span>
             <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="ident">Sequence::from</span>(<span class="number">1</span>)),
-        }
-    }
-
-    <span class="kw">fn</span> <span class="ident">get_packet_info_pre</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">Key</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> {
-        <span class="kw">match</span> <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">read_pre</span>(<span class="ident">key</span>)<span class="question-mark">?</span> {
-            <span class="prelude-val">Some</span>(<span class="ident">value</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">String::try_from_slice</span>(<span class="kw-2">&amp;</span><span class="ident">value</span>[..]).<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> {
-                <span class="ident">Error::InvalidPacketInfo</span>(<span class="macro">format!</span>(
-                    <span class="string">&quot;Decoding the prior packet info failed: {}&quot;</span>,
-                    <span class="ident">e</span>
-                ))
-            }),
-            <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">Error::InvalidPacketInfo</span>(<span class="macro">format!</span>(
-                <span class="string">&quot;The prior packet info doesn&#39;t exist: Key {}&quot;</span>,
-                <span class="ident">key</span>
-            ))),
-        }
-    }
-
-    <span class="kw">fn</span> <span class="ident">get_packet_info</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">Key</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> {
-        <span class="kw">match</span> <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">read_post</span>(<span class="ident">key</span>)<span class="question-mark">?</span> {
-            <span class="prelude-val">Some</span>(<span class="ident">value</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">String::try_from_slice</span>(<span class="kw-2">&amp;</span><span class="ident">value</span>[..]).<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> {
-                <span class="ident">Error::InvalidPacketInfo</span>(<span class="macro">format!</span>(
-                    <span class="string">&quot;Decoding the packet info failed: {}&quot;</span>,
-                    <span class="ident">e</span>
-                ))
-            }),
-            <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">Error::InvalidPacketInfo</span>(<span class="macro">format!</span>(
-                <span class="string">&quot;The packet info doesn&#39;t exist: Key {}&quot;</span>,
-                <span class="ident">key</span>
-            ))),
         }
     }
 
@@ -1498,14 +1473,12 @@
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ChannelEnd</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">channel_key</span>(<span class="ident">port_channel_id</span>);
         <span class="kw">match</span> <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">read_pre</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>) {
-            <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="ident">value</span>)) <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="ident">ChannelEnd::try_from_slice</span>(<span class="kw-2">&amp;</span><span class="ident">value</span>[..]).<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> {
-                    <span class="ident">Error::InvalidChannel</span>(<span class="macro">format!</span>(
-                        <span class="string">&quot;Decoding the channel failed: Port/Channel {}, {}&quot;</span>,
-                        <span class="ident">port_channel_id</span>, <span class="ident">e</span>
-                    ))
-                })
-            }
+            <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="ident">value</span>)) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ChannelEnd::decode_vec</span>(<span class="kw-2">&amp;</span><span class="ident">value</span>).<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> {
+                <span class="ident">Error::InvalidChannel</span>(<span class="macro">format!</span>(
+                    <span class="string">&quot;Decoding the channel failed: Port/Channel {}, {}&quot;</span>,
+                    <span class="ident">port_channel_id</span>, <span class="ident">e</span>
+                ))
+            }),
             <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">Error::InvalidChannel</span>(<span class="macro">format!</span>(
                 <span class="string">&quot;The prior channel doesn&#39;t exist: Port/Channel {}&quot;</span>,
                 <span class="ident">port_channel_id</span>
@@ -1546,7 +1519,20 @@
         <span class="ident">key</span>: <span class="kw-2">&amp;</span>(<span class="ident">PortId</span>, <span class="ident">ChannelId</span>, <span class="ident">Sequence</span>),
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">commitment_key</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>.<span class="number">0</span>, <span class="kw-2">&amp;</span><span class="ident">key</span>.<span class="number">1</span>, <span class="ident">key</span>.<span class="number">2</span>);
-        <span class="self">self</span>.<span class="ident">get_packet_info_pre</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>)
+        <span class="kw">match</span> <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">read_pre</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>)<span class="question-mark">?</span> {
+            <span class="prelude-val">Some</span>(<span class="ident">value</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">std::str::from_utf8</span>(<span class="kw-2">&amp;</span><span class="ident">value</span>[..])
+                .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> {
+                    <span class="ident">Error::InvalidPacketInfo</span>(<span class="macro">format!</span>(
+                        <span class="string">&quot;Decoding the prior packet info failed: {}&quot;</span>,
+                        <span class="ident">e</span>
+                    ))
+                })
+                .<span class="ident">map</span>(<span class="op">|</span><span class="ident">s</span><span class="op">|</span> <span class="ident">s</span>.<span class="ident">to_string</span>()),
+            <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">Error::InvalidPacketInfo</span>(<span class="macro">format!</span>(
+                <span class="string">&quot;The prior packet info doesn&#39;t exist: Key {}&quot;</span>,
+                <span class="ident">key</span>
+            ))),
+        }
     }
 
     <span class="kw">fn</span> <span class="ident">channel_counter_pre</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span> {
@@ -1572,7 +1558,7 @@
         };
         <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">channel_key</span>(<span class="kw-2">&amp;</span><span class="ident">port_channel_id</span>);
         <span class="kw">match</span> <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">read_post</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>) {
-            <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="ident">value</span>)) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ChannelEnd::try_from_slice</span>(<span class="kw-2">&amp;</span><span class="ident">value</span>[..])
+            <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="ident">value</span>)) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ChannelEnd::decode_vec</span>(<span class="kw-2">&amp;</span><span class="ident">value</span>)
                 .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">Ics04Error::implementation_specific</span>()),
             <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">Ics04Error::channel_not_found</span>(
                 <span class="ident">port_channel_id</span>.<span class="ident">port_id</span>,
@@ -1607,7 +1593,7 @@
                 .<span class="ident">iter_post_next</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">iter</span>)
                 .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">Ics04Error::implementation_specific</span>())<span class="question-mark">?</span>;
             <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>((<span class="ident">key</span>, <span class="ident">value</span>)) <span class="op">=</span> <span class="ident">next</span> {
-                <span class="kw">let</span> <span class="ident">channel</span> <span class="op">=</span> <span class="ident">ChannelEnd::try_from_slice</span>(<span class="kw-2">&amp;</span><span class="ident">value</span>[..])
+                <span class="kw">let</span> <span class="ident">channel</span> <span class="op">=</span> <span class="ident">ChannelEnd::decode_vec</span>(<span class="kw-2">&amp;</span><span class="ident">value</span>)
                     .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">Ics04Error::implementation_specific</span>())<span class="question-mark">?</span>;
                 <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">id</span>) <span class="op">=</span> <span class="ident">channel</span>.<span class="ident">connection_hops</span>().<span class="ident">get</span>(<span class="number">0</span>) {
                     <span class="kw">if</span> <span class="ident">id</span> <span class="op">=</span><span class="op">=</span> <span class="ident">conn_id</span> {
@@ -1718,8 +1704,13 @@
         <span class="ident">key</span>: <span class="kw-2">&amp;</span>(<span class="ident">PortId</span>, <span class="ident">ChannelId</span>, <span class="ident">Sequence</span>),
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Ics04Result</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">commitment_key</span> <span class="op">=</span> <span class="ident">commitment_key</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>.<span class="number">0</span>, <span class="kw-2">&amp;</span><span class="ident">key</span>.<span class="number">1</span>, <span class="ident">key</span>.<span class="number">2</span>);
-        <span class="self">self</span>.<span class="ident">get_packet_info</span>(<span class="kw-2">&amp;</span><span class="ident">commitment_key</span>)
-            .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">Ics04Error::packet_commitment_not_found</span>(<span class="ident">key</span>.<span class="number">2</span>))
+        <span class="kw">match</span> <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">read_post</span>(<span class="kw-2">&amp;</span><span class="ident">commitment_key</span>) {
+            <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="ident">value</span>)) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">std::str::from_utf8</span>(<span class="kw-2">&amp;</span><span class="ident">value</span>)
+                .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">Ics04Error::implementation_specific</span>())
+                .<span class="ident">map</span>(<span class="op">|</span><span class="ident">s</span><span class="op">|</span> <span class="ident">s</span>.<span class="ident">to_string</span>()),
+            <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">Ics04Error::packet_commitment_not_found</span>(<span class="ident">key</span>.<span class="number">2</span>)),
+            <span class="prelude-val">Err</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">Ics04Error::implementation_specific</span>()),
+        }
     }
 
     <span class="kw">fn</span> <span class="ident">get_packet_receipt</span>(
@@ -1727,19 +1718,24 @@
         <span class="ident">key</span>: <span class="kw-2">&amp;</span>(<span class="ident">PortId</span>, <span class="ident">ChannelId</span>, <span class="ident">Sequence</span>),
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Ics04Result</span><span class="op">&lt;</span><span class="ident">Receipt</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">receipt_key</span> <span class="op">=</span> <span class="ident">receipt_key</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>.<span class="number">0</span>, <span class="kw-2">&amp;</span><span class="ident">key</span>.<span class="number">1</span>, <span class="ident">key</span>.<span class="number">2</span>);
+        <span class="kw">let</span> <span class="ident">expect</span> <span class="op">=</span> <span class="ident">PacketReceipt::default</span>().<span class="ident">as_bytes</span>().<span class="ident">to_vec</span>();
         <span class="kw">match</span> <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">read_post</span>(<span class="kw-2">&amp;</span><span class="ident">receipt_key</span>) {
-            <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="kw">_</span>)) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="ident">Receipt::Ok</span>),
+            <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="ident">v</span>)) <span class="kw">if</span> <span class="ident">v</span> <span class="op">=</span><span class="op">=</span> <span class="ident">expect</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="ident">Receipt::Ok</span>),
             <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">Ics04Error::packet_receipt_not_found</span>(<span class="ident">key</span>.<span class="number">2</span>)),
         }
     }
 
+    <span class="comment">// TODO should return Vec&lt;u8&gt; or Acknowledgment. fix in ibc-rs?</span>
     <span class="kw">fn</span> <span class="ident">get_packet_acknowledgement</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">key</span>: <span class="kw-2">&amp;</span>(<span class="ident">PortId</span>, <span class="ident">ChannelId</span>, <span class="ident">Sequence</span>),
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Ics04Result</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">ack_key</span> <span class="op">=</span> <span class="ident">ack_key</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>.<span class="number">0</span>, <span class="kw-2">&amp;</span><span class="ident">key</span>.<span class="number">1</span>, <span class="ident">key</span>.<span class="number">2</span>);
-        <span class="self">self</span>.<span class="ident">get_packet_info</span>(<span class="kw-2">&amp;</span><span class="ident">ack_key</span>)
-            .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">Ics04Error::packet_acknowledgement_not_found</span>(<span class="ident">key</span>.<span class="number">2</span>))
+        <span class="kw">match</span> <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">read_post</span>(<span class="kw-2">&amp;</span><span class="ident">ack_key</span>) {
+            <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="kw">_</span>)) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="ident">PacketAck::default</span>().<span class="ident">to_string</span>()),
+            <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">Ics04Error::packet_commitment_not_found</span>(<span class="ident">key</span>.<span class="number">2</span>)),
+            <span class="prelude-val">Err</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">Ics04Error::implementation_specific</span>()),
+        }
     }
 
     <span class="kw">fn</span> <span class="ident">hash</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">value</span>: <span class="ident">String</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">String</span> {

@@ -1,1 +1,1 @@
-initSidebarItems({"enum":[["Error",""]],"struct":[["IbcMessage","IBC Message"],["PacketSendData","Data for sending a packet"]],"type":[["Result","Decode result for IBC data"]]});
+initSidebarItems({"enum":[["Error",""]],"struct":[["FungibleTokenPacketData","Data to transfer a token"],["IbcMessage","IBC Message"],["PacketAck","Acknowledgement for a packet"],["PacketReceipt","Receipt for a packet"]],"type":[["Result","Decode result for IBC data"]]});

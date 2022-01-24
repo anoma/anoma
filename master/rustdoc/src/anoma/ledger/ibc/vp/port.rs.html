@@ -192,9 +192,17 @@
 <span id="192">192</span>
 <span id="193">193</span>
 <span id="194">194</span>
+<span id="195">195</span>
+<span id="196">196</span>
+<span id="197">197</span>
+<span id="198">198</span>
+<span id="199">199</span>
+<span id="200">200</span>
+<span id="201">201</span>
+<span id="202">202</span>
 </pre><pre class="rust"><code><span class="doccomment">//! IBC validity predicate for port module</span>
+<span class="kw">use</span> <span class="ident">std::str::FromStr</span>;
 
-<span class="kw">use</span> <span class="ident">borsh::BorshDeserialize</span>;
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
 <span class="kw">use</span> <span class="ident">ibc::core::ics04_channel::context::ChannelReader</span>;
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ABCI&quot;</span>))]</span>
@@ -333,7 +341,13 @@
         <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">capability_key</span>(<span class="ident">cap</span>.<span class="ident">index</span>());
         <span class="kw">match</span> <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">read_post</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>) {
             <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="ident">value</span>)) <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="ident">PortId::try_from_slice</span>(<span class="kw-2">&amp;</span><span class="ident">value</span>[..]).<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> {
+                <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="ident">std::str::from_utf8</span>(<span class="kw-2">&amp;</span><span class="ident">value</span>).<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> {
+                    <span class="ident">Error::InvalidPort</span>(<span class="macro">format!</span>(
+                        <span class="string">&quot;Decoding the port ID failed: {}&quot;</span>,
+                        <span class="ident">e</span>
+                    ))
+                })<span class="question-mark">?</span>;
+                <span class="ident">PortId::from_str</span>(<span class="ident">id</span>).<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> {
                     <span class="ident">Error::InvalidPort</span>(<span class="macro">format!</span>(
                         <span class="string">&quot;Decoding the port ID failed: {}&quot;</span>,
                         <span class="ident">e</span>
@@ -364,8 +378,10 @@
         <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">port_key</span>(<span class="ident">port_id</span>);
         <span class="kw">match</span> <span class="self">self</span>.<span class="ident">ctx</span>.<span class="ident">read_post</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>) {
             <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="ident">value</span>)) <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="kw">let</span> <span class="ident">index</span> <span class="op">=</span> <span class="ident">u64::try_from_slice</span>(<span class="kw-2">&amp;</span><span class="ident">value</span>[..])
+                <span class="kw">let</span> <span class="ident">index</span>: [<span class="ident">u8</span>; <span class="number">8</span>] <span class="op">=</span> <span class="ident">value</span>
+                    .<span class="ident">try_into</span>()
                     .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">Ics05Error::implementation_specific</span>())<span class="question-mark">?</span>;
+                <span class="kw">let</span> <span class="ident">index</span> <span class="op">=</span> <span class="ident">u64::from_be_bytes</span>(<span class="ident">index</span>);
                 <span class="prelude-val">Ok</span>(<span class="ident">Capability::from</span>(<span class="ident">index</span>))
             }
             <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">Ics05Error::unknown_port</span>(<span class="ident">port_id</span>.<span class="ident">clone</span>())),

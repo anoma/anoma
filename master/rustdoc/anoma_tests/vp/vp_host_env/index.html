@@ -40,10 +40,14 @@ execution.</p>
 </div><div class="item-left module-item"><a class="fn" href="fn.iter_prefix_post.html" title="anoma_tests::vp::vp_host_env::iter_prefix_post fn">iter_prefix_post</a></div><div class="item-right docblock-short"><p>Get an iterator with the given prefix after transaction execution</p>
 </div><div class="item-left module-item"><a class="fn" href="fn.iter_prefix_pre.html" title="anoma_tests::vp::vp_host_env::iter_prefix_pre fn">iter_prefix_pre</a></div><div class="item-right docblock-short"><p>Get an iterator with the given prefix before transaction execution</p>
 </div><div class="item-left module-item"><a class="fn" href="fn.log_string.html" title="anoma_tests::vp::vp_host_env::log_string fn">log_string</a></div><div class="item-right docblock-short"><p>Log a string. The message will be printed at the <code>tracing::Level::Info</code>.</p>
-</div><div class="item-left module-item"><a class="fn" href="fn.read_post.html" title="anoma_tests::vp::vp_host_env::read_post fn">read_post</a></div><div class="item-right docblock-short"><p>Try to read a variable-length value at the given key from storage after
-transaction execution.</p>
-</div><div class="item-left module-item"><a class="fn" href="fn.read_pre.html" title="anoma_tests::vp::vp_host_env::read_pre fn">read_pre</a></div><div class="item-right docblock-short"><p>Try to read a variable-length value at the given key from storage before
-transaction execution.</p>
+</div><div class="item-left module-item"><a class="fn" href="fn.read_bytes_post.html" title="anoma_tests::vp::vp_host_env::read_bytes_post fn">read_bytes_post</a></div><div class="item-right docblock-short"><p>Try to read a variable-length value as bytes at the given key from
+storage after transaction execution.</p>
+</div><div class="item-left module-item"><a class="fn" href="fn.read_bytes_pre.html" title="anoma_tests::vp::vp_host_env::read_bytes_pre fn">read_bytes_pre</a></div><div class="item-right docblock-short"><p>Try to read a variable-length value as bytesat the given key from
+storage before transaction execution.</p>
+</div><div class="item-left module-item"><a class="fn" href="fn.read_post.html" title="anoma_tests::vp::vp_host_env::read_post fn">read_post</a></div><div class="item-right docblock-short"><p>Try to read a Borsh encoded variable-length value at the given key from
+storage after transaction execution.</p>
+</div><div class="item-left module-item"><a class="fn" href="fn.read_pre.html" title="anoma_tests::vp::vp_host_env::read_pre fn">read_pre</a></div><div class="item-right docblock-short"><p>Try to read a Borsh encoded variable-length value at the given key from
+storage before transaction execution.</p>
 </div><div class="item-left module-item"><a class="fn" href="fn.verify_tx_signature.html" title="anoma_tests::vp::vp_host_env::verify_tx_signature fn">verify_tx_signature</a></div><div class="item-right docblock-short"><p>Verify a transaction signature. The signature is expected to have been
 produced on the encoded transaction <a href="../../../anoma/proto/types/struct.Tx.html" title="anoma::proto::Tx"><code>anoma::proto::Tx</code></a>
 using <a href="key/ed25519/fn.sign_tx.html" title="anoma::types::key::ed25519::sign_tx"><code>anoma::types::key::ed25519::sign_tx</code></a>.</p>

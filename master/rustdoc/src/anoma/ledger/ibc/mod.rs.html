@@ -48,6 +48,8 @@
 <span id="48">48</span>
 <span id="49">49</span>
 <span id="50">50</span>
+<span id="51">51</span>
+<span id="52">52</span>
 </pre><pre class="rust"><code><span class="doccomment">//! IBC integration</span>
 
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ibc-vp&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ibc-vp-abci&quot;</span>))]</span>
@@ -56,7 +58,6 @@
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ibc-vp&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ibc-vp-abci&quot;</span>))]</span>
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">vp</span>;
 
-<span class="kw">use</span> <span class="ident">borsh::BorshSerialize</span>;
 <span class="kw">use</span> <span class="ident">storage</span>::{
     <span class="ident">capability_index_key</span>, <span class="ident">channel_counter_key</span>, <span class="ident">client_counter_key</span>,
     <span class="ident">connection_counter_key</span>,
@@ -70,30 +71,33 @@
     <span class="ident">DB</span>: <span class="ident">ledger_storage::DB</span> <span class="op">+</span> <span class="kw">for</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span> <span class="ident">ledger_storage::DBIter</span><span class="op">&lt;</span><span class="lifetime">&#39;iter</span><span class="op">&gt;</span>,
     <span class="ident">H</span>: <span class="ident">StorageHasher</span>,
 {
+    <span class="comment">// In ibc-go, u64 like a counter is encoded with big-endian:</span>
+    <span class="comment">// https://github.com/cosmos/ibc-go/blob/89ffaafb5956a5ea606e1f1bf249c880bea802ed/modules/core/04-channel/keeper/keeper.go#L115</span>
+
     <span class="comment">// the client counter</span>
     <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">client_counter_key</span>();
-    <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="number">0_u64</span>.<span class="ident">try_to_vec</span>().<span class="ident">unwrap</span>();
+    <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="number">0_u64</span>.<span class="ident">to_be_bytes</span>().<span class="ident">to_vec</span>();
     <span class="ident">storage</span>
         .<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>, <span class="ident">value</span>)
         .<span class="ident">expect</span>(<span class="string">&quot;Unable to write the initial client counter&quot;</span>);
 
     <span class="comment">// the connection counter</span>
     <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">connection_counter_key</span>();
-    <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="number">0_u64</span>.<span class="ident">try_to_vec</span>().<span class="ident">unwrap</span>();
+    <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="number">0_u64</span>.<span class="ident">to_be_bytes</span>().<span class="ident">to_vec</span>();
     <span class="ident">storage</span>
         .<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>, <span class="ident">value</span>)
         .<span class="ident">expect</span>(<span class="string">&quot;Unable to write the initial connection counter&quot;</span>);
 
     <span class="comment">// the channel counter</span>
     <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">channel_counter_key</span>();
-    <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="number">0_u64</span>.<span class="ident">try_to_vec</span>().<span class="ident">unwrap</span>();
+    <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="number">0_u64</span>.<span class="ident">to_be_bytes</span>().<span class="ident">to_vec</span>();
     <span class="ident">storage</span>
         .<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>, <span class="ident">value</span>)
         .<span class="ident">expect</span>(<span class="string">&quot;Unable to write the initial channel counter&quot;</span>);
 
     <span class="comment">// the capability index</span>
     <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">capability_index_key</span>();
-    <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="number">0_u64</span>.<span class="ident">try_to_vec</span>().<span class="ident">unwrap</span>();
+    <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="number">0_u64</span>.<span class="ident">to_be_bytes</span>().<span class="ident">to_vec</span>();
     <span class="ident">storage</span>
         .<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>, <span class="ident">value</span>)
         .<span class="ident">expect</span>(<span class="string">&quot;Unable to write the initial capability index&quot;</span>);

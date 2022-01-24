@@ -46,9 +46,13 @@ multiple calls, only the last emitted event will be used.</p>
 the transaction will be rejected.</p>
 </div><div class="item-left module-item"><a class="fn" href="fn.iter_prefix.html" title="anoma_tx_prelude::iter_prefix fn">iter_prefix</a></div><div class="item-right docblock-short"><p>Get an iterator with the given prefix.</p>
 </div><div class="item-left module-item"><a class="fn" href="fn.log_string.html" title="anoma_tx_prelude::log_string fn">log_string</a></div><div class="item-right docblock-short"><p>Log a string. The message will be printed at the <code>tracing::Level::Info</code>.</p>
-</div><div class="item-left module-item"><a class="fn" href="fn.read.html" title="anoma_tx_prelude::read fn">read</a></div><div class="item-right docblock-short"><p>Try to read a variable-length value at the given key from storage.</p>
+</div><div class="item-left module-item"><a class="fn" href="fn.read.html" title="anoma_tx_prelude::read fn">read</a></div><div class="item-right docblock-short"><p>Try to read a Borsh encoded variable-length value at the given key from
+storage.</p>
+</div><div class="item-left module-item"><a class="fn" href="fn.read_bytes.html" title="anoma_tx_prelude::read_bytes fn">read_bytes</a></div><div class="item-right docblock-short"><p>Try to read a variable-length value as bytes at the given key from
+storage.</p>
 </div><div class="item-left module-item"><a class="fn" href="fn.update_validity_predicate.html" title="anoma_tx_prelude::update_validity_predicate fn">update_validity_predicate</a></div><div class="item-right docblock-short"><p>Update a validity predicate</p>
-</div><div class="item-left module-item"><a class="fn" href="fn.write.html" title="anoma_tx_prelude::write fn">write</a></div><div class="item-right docblock-short"><p>Write a value at the given key to storage.</p>
+</div><div class="item-left module-item"><a class="fn" href="fn.write.html" title="anoma_tx_prelude::write fn">write</a></div><div class="item-right docblock-short"><p>Write a value to be encoded with Borsh at the given key to storage.</p>
+</div><div class="item-left module-item"><a class="fn" href="fn.write_bytes.html" title="anoma_tx_prelude::write_bytes fn">write_bytes</a></div><div class="item-right docblock-short"><p>Write a value as bytes at the given key to storage.</p>
 </div></div><h2 id="attributes" class="section-header"><a href="#attributes">Attribute Macros</a></h2>
 <div class="item-table"><div class="item-left module-item"><a class="attr" href="attr.transaction.html" title="anoma_tx_prelude::transaction attr">transaction</a></div><div class="item-right docblock-short"><p>Generate WASM binding for a transaction main entrypoint function.</p>
 </div></div><h2 id="derives" class="section-header"><a href="#derives">Derive Macros</a></h2>
