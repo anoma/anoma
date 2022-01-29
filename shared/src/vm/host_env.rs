@@ -1488,6 +1488,40 @@ where
     Ok(HostEnvResult::from(verify_tx_sig(&pk, tx, &sig).is_ok()).to_i64())
 }
 
+#[cfg(feature = "masp")]
+/// Verify a ShieldedTransaction.
+pub fn vp_verify_masp<MEM, DB, H, EVAL, CA>(
+    env: &VpEnv<MEM, DB, H, EVAL, CA>,
+    tx_ptr: u64,
+    tx_len: u64,
+) -> vp_env::Result<i64>
+where
+    MEM: VmMemory,
+    DB: storage::DB + for<'iter> storage::DBIter<'iter>,
+    H: StorageHasher,
+    EVAL: VpEvaluator,
+    CA: WasmCacheAccess,
+{
+    use crate::types::masp::*;
+    let gas_meter = unsafe { env.ctx.gas_meter.get() };
+    let (tx_bytes, gas) = env
+        .memory
+        .read_bytes(tx_ptr, tx_len as _)
+        .map_err(|e| vp_env::RuntimeError::MemoryError(Box::new(e)))?;
+    vp_env::add_gas(gas_meter, gas)?;
+    let shielded_tx_bytes: ShieldedTransactionBytes =
+        BorshDeserialize::try_from_slice(tx_bytes.as_slice()).unwrap();
+    let shielded_tx: ShieldedTransaction = shielded_tx_bytes.into();
+    // Placeholder parameters
+    let parameters: PreparedVerifyingKey<Bls12> =
+        crate::ledger::masp::load_groth_params().1;
+    Ok(HostEnvResult::from(crate::ledger::masp::verify_shielded_tx(
+        &shielded_tx,
+        &parameters,
+    ))
+    .to_i64())
+}
+
 /// Log a string from exposed to the wasm VM Tx environment. The message will be
 /// printed at the [`tracing::Level::INFO`]. This function is for development
 /// only.
