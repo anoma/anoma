@@ -49,8 +49,7 @@ pub enum StorageModification {
         vp: Vec<u8>,
     },
     /// Temporary value. This value will be never written to the storage. After
-    /// writing a temporary value, it can't be mutated with [`write`] or
-    /// [`delete`].
+    /// writing a temporary value, it can't be mutated with normal write.
     Temp {
         /// Value bytes
         value: Vec<u8>,
