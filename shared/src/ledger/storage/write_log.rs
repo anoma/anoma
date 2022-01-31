@@ -15,8 +15,8 @@ use crate::types::storage::Key;
 pub enum Error {
     #[error("Storage error applying a write log: {0}")]
     StorageError(storage::Error),
-    #[error("Trying to mutate a temporary value")]
-    MutateTemporaryValue,
+    #[error("Trying to update a temporary value")]
+    UpdateTemporaryValue,
     #[error(
         "Trying to update a validity predicate that a new account that's not \
          yet committed to storage"
@@ -113,6 +113,8 @@ impl WriteLog {
     /// Write a key and a value and return the gas cost and the size difference
     /// Fails with [`Error::UpdateVpOfNewAccount`] when attempting to update a
     /// validity predicate of a new account that's not yet committed to storage.
+    /// Fails with [`Error::UpdateTemporaryValue`] when attempting to update a
+    /// temporary value.
     pub fn write(&mut self, key: &Key, value: Vec<u8>) -> Result<(u64, i64)> {
         let len = value.len();
         let gas = key.len() + len;
@@ -129,7 +131,7 @@ impl WriteLog {
                     return Err(Error::UpdateVpOfNewAccount);
                 }
                 StorageModification::Temp { .. } => {
-                    return Err(Error::MutateTemporaryValue);
+                    return Err(Error::UpdateTemporaryValue);
                 }
             },
             // set just the length of the value because we don't know if
@@ -142,6 +144,8 @@ impl WriteLog {
     /// Write a key and a value and return the gas cost and the size difference
     /// Fails with [`Error::UpdateVpOfNewAccount`] when attempting to update a
     /// validity predicate of a new account that's not yet committed to storage.
+    /// Fails with [`Error::WriteTempAfterDelete`] when attempting to update a
+    /// temporary value after deleting.
     pub fn write_temp(
         &mut self,
         key: &Key,
@@ -192,9 +196,7 @@ impl WriteLog {
                 StorageModification::InitAccount { .. } => {
                     return Err(Error::DeleteVp);
                 }
-                StorageModification::Temp { .. } => {
-                    return Err(Error::MutateTemporaryValue);
-                }
+                StorageModification::Temp { ref value } => value.len() as i64,
             },
             // set 0 because we don't know if the previous value exists on the
             // storage
