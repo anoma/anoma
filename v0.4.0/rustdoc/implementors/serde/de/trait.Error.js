@@ -1,0 +1,3 @@
+(function() {var implementors = {};
+implementors["anoma_apps"] = [{"text":"impl <a class=\"trait\" href=\"https://docs.rs/serde/1.0.136/serde/de/trait.Error.html\" title=\"trait serde::de::Error\">Error</a> for <a class=\"enum\" href=\"anoma_apps/config/enum.SerdeError.html\" title=\"enum anoma_apps::config::SerdeError\">SerdeError</a>","synthetic":false,"types":["anoma_apps::config::SerdeError"]}];
+if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()

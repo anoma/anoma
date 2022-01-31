@@ -1,0 +1,1 @@
+initSidebarItems({"type":[["TestStorage","Storage with a mock DB for testing"]]});

@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["IntentGossiper","Intent gossiper handle can be cloned and is thread safe."],["MatchmakersServer","A server for connected matchmakers that can receive intents from the intent gossiper node and send back the results from their filter, if any, or from trying to match them."]]});

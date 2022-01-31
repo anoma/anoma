@@ -1,0 +1,3 @@
+(function() {var implementors = {};
+implementors["anoma"] = [{"text":"impl <a class=\"trait\" href=\"https://doc.rust-lang.org/1.56.1/core/ops/arith/trait.SubAssign.html\" title=\"trait core::ops::arith::SubAssign\">SubAssign</a>&lt;<a class=\"struct\" href=\"anoma/types/token/struct.Amount.html\" title=\"struct anoma::types::token::Amount\">Amount</a>&gt; for <a class=\"struct\" href=\"anoma/types/token/struct.Amount.html\" title=\"struct anoma::types::token::Amount\">Amount</a>","synthetic":false,"types":["anoma::types::token::Amount"]}];
+if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()

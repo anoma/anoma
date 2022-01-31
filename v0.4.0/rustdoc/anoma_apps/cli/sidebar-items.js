@@ -1,0 +1,1 @@
+initSidebarItems({"enum":[["AnomaClient",""]],"fn":[["anoma_cli",""],["anoma_client_cli",""],["anoma_node_cli",""],["anoma_version",""],["anoma_wallet_cli",""],["safe_exit","A helper to exit after flushing output, borrowed from `clap::util` module."]],"mod":[["args",""],["cmds",""],["context","CLI input types can be used for command arguments"]]});

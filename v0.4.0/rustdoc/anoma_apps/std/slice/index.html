@@ -1,0 +1,114 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="A dynamically-sized view into a contiguous sequence, `[T]`."><meta name="keywords" content="rust, rustlang, rust-lang, slice"><title>anoma_apps::std::slice - Rust</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script id="default-settings" ></script><script src="../../../storage.js"></script><script src="../../../crates.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="shortcut icon" href="https:&#x2F;&#x2F;docs.anoma.network&#x2F;favicon.png"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc mod"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../anoma_apps/index.html'><div class='logo-container rust-logo'><img src='https:&#x2F;&#x2F;docs.anoma.network&#x2F;rustdoc-logo.png' alt='logo'></div></a><h2 class="location">Module slice</h2><div class="sidebar-elems"><div class="block items"><ul><li><a href="#structs">Structs</a></li><li><a href="#traits">Traits</a></li><li><a href="#functions">Functions</a></li></ul></div><div id="sidebar-vars" data-name="slice" data-ty="mod" data-relpath="./"></div><script defer src="./sidebar-items.js"></script></div></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="18" height="18" alt="Pick another theme!" src="../../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../../settings.html" title="settings"><img width="18" height="18" alt="Change settings" src="../../../wheel.svg"></a></div></form></nav><section id="main" class="content"><h1 class="fqn"><span class="in-band">Module <a href="../../index.html">anoma_apps</a>::<wbr><a href="../index.html">std</a>::<wbr><a class="mod" href="#">slice</a><button id="copy-path" onclick="copy_path(this)" title="Copy item path to clipboard"><img src="../../../clipboard.svg" width="19" height="18" alt="Copy item path"></button></span><span class="out-of-band"><span class="since" title="Stable since Rust version 1.0.0">1.0.0</span><span id="render-detail"><a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">[<span class="inner">&#x2212;</span>]</a></span><a class="srclink" href="https://doc.rust-lang.org/1.56.1/src/alloc/lib.rs.html#184" title="goto source code">[src]</a></span></h1><details class="rustdoc-toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><p>A dynamically-sized view into a contiguous sequence, <code>[T]</code>.</p>
+<p><em><a href="https://doc.rust-lang.org/1.56.1/std/primitive.slice.html">See also the slice primitive type</a>.</em></p>
+<p>Slices are a view into a block of memory represented as a pointer and a
+length.</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="comment">// slicing a Vec</span>
+<span class="kw">let</span> <span class="ident">vec</span> <span class="op">=</span> <span class="macro">vec!</span>[<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>];
+<span class="kw">let</span> <span class="ident">int_slice</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">vec</span>[..];
+<span class="comment">// coercing an array to a slice</span>
+<span class="kw">let</span> <span class="ident">str_slice</span>: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span><span class="ident">str</span>] <span class="op">=</span> <span class="kw-2">&amp;</span>[<span class="string">&quot;one&quot;</span>, <span class="string">&quot;two&quot;</span>, <span class="string">&quot;three&quot;</span>];</code></pre></div>
+<p>Slices are either mutable or shared. The shared slice type is <code>&amp;[T]</code>,
+while the mutable slice type is <code>&amp;mut [T]</code>, where <code>T</code> represents the element
+type. For example, you can mutate the block of memory that a mutable slice
+points to:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">let</span> <span class="ident">x</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> [<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>];
+<span class="ident">x</span>[<span class="number">1</span>] <span class="op">=</span> <span class="number">7</span>;
+<span class="macro">assert_eq!</span>(<span class="ident">x</span>, <span class="kw-2">&amp;</span>[<span class="number">1</span>, <span class="number">7</span>, <span class="number">3</span>]);</code></pre></div>
+<p>Here are some of the things this module contains:</p>
+<h2 id="structs" class="section-header"><a href="#structs">Structs</a></h2>
+<p>There are several structs that are useful for slices, such as <a href="struct.Iter.html" title="Iter"><code>Iter</code></a>, which
+represents iteration over a slice.</p>
+<h2 id="trait-implementations-1" class="section-header"><a href="#trait-implementations-1">Trait Implementations</a></h2>
+<p>There are several implementations of common traits for slices. Some examples
+include:</p>
+<ul>
+<li><a href="../clone/trait.Clone.html" title="Clone"><code>Clone</code></a></li>
+<li><a href="../cmp/trait.Eq.html" title="Eq"><code>Eq</code></a>, <a href="../cmp/trait.Ord.html" title="Ord"><code>Ord</code></a> - for slices whose element type are <a href="../cmp/trait.Eq.html" title="Eq"><code>Eq</code></a> or <a href="../cmp/trait.Ord.html" title="Ord"><code>Ord</code></a>.</li>
+<li><a href="../hash/trait.Hash.html"><code>Hash</code></a> - for slices whose element type is <a href="../hash/trait.Hash.html"><code>Hash</code></a>.</li>
+</ul>
+<h2 id="iteration" class="section-header"><a href="#iteration">Iteration</a></h2>
+<p>The slices implement <code>IntoIterator</code>. The iterator yields references to the
+slice elements.</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">let</span> <span class="ident">numbers</span> <span class="op">=</span> <span class="kw-2">&amp;</span>[<span class="number">0</span>, <span class="number">1</span>, <span class="number">2</span>];
+<span class="kw">for</span> <span class="ident">n</span> <span class="kw">in</span> <span class="ident">numbers</span> {
+    <span class="macro">println!</span>(<span class="string">&quot;{} is a number!&quot;</span>, <span class="ident">n</span>);
+}</code></pre></div>
+<p>The mutable slice yields mutable references to the elements:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">scores</span> <span class="op">=</span> [<span class="number">7</span>, <span class="number">8</span>, <span class="number">9</span>];
+<span class="kw">for</span> <span class="ident">score</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">scores</span>[..] {
+    <span class="kw-2">*</span><span class="ident">score</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
+}</code></pre></div>
+<p>This iterator yields mutable references to the slice’s elements, so while
+the element type of the slice is <code>i32</code>, the element type of the iterator is
+<code>&amp;mut i32</code>.</p>
+<ul>
+<li><a href="https://doc.rust-lang.org/1.56.1/std/primitive.slice.html#method.iter"><code>.iter</code></a> and <a href="https://doc.rust-lang.org/1.56.1/std/primitive.slice.html#method.iter_mut"><code>.iter_mut</code></a> are the explicit methods to return the default
+iterators.</li>
+<li>Further methods that return iterators are <a href="https://doc.rust-lang.org/1.56.1/std/primitive.slice.html#method.split"><code>.split</code></a>, <a href="https://doc.rust-lang.org/1.56.1/std/primitive.slice.html#method.splitn"><code>.splitn</code></a>,
+<a href="https://doc.rust-lang.org/1.56.1/std/primitive.slice.html#method.chunks"><code>.chunks</code></a>, <a href="https://doc.rust-lang.org/1.56.1/std/primitive.slice.html#method.windows"><code>.windows</code></a> and more.</li>
+</ul>
+</div></details><h2 id="structs-1" class="section-header"><a href="#structs-1">Structs</a></h2>
+<div class="item-table"><div class="item-left unstable module-item"><a class="struct" href="struct.ArrayChunks.html" title="anoma_apps::std::slice::ArrayChunks struct">ArrayChunks</a><span class="stab unstable" title="">Experimental</span></div><div class="item-right docblock-short"><p>An iterator over a slice in (non-overlapping) chunks (<code>N</code> elements at a
+time), starting at the beginning of the slice.</p>
+</div><div class="item-left unstable module-item"><a class="struct" href="struct.ArrayChunksMut.html" title="anoma_apps::std::slice::ArrayChunksMut struct">ArrayChunksMut</a><span class="stab unstable" title="">Experimental</span></div><div class="item-right docblock-short"><p>An iterator over a slice in (non-overlapping) mutable chunks (<code>N</code> elements
+at a time), starting at the beginning of the slice.</p>
+</div><div class="item-left unstable module-item"><a class="struct" href="struct.ArrayWindows.html" title="anoma_apps::std::slice::ArrayWindows struct">ArrayWindows</a><span class="stab unstable" title="">Experimental</span></div><div class="item-right docblock-short"><p>A windowed iterator over a slice in overlapping chunks (<code>N</code> elements at a
+time), starting at the beginning of the slice</p>
+</div><div class="item-left unstable module-item"><a class="struct" href="struct.GroupBy.html" title="anoma_apps::std::slice::GroupBy struct">GroupBy</a><span class="stab unstable" title="">Experimental</span></div><div class="item-right docblock-short"><p>An iterator over slice in (non-overlapping) chunks separated by a predicate.</p>
+</div><div class="item-left unstable module-item"><a class="struct" href="struct.GroupByMut.html" title="anoma_apps::std::slice::GroupByMut struct">GroupByMut</a><span class="stab unstable" title="">Experimental</span></div><div class="item-right docblock-short"><p>An iterator over slice in (non-overlapping) mutable chunks separated
+by a predicate.</p>
+</div><div class="item-left module-item"><a class="struct" href="struct.Chunks.html" title="anoma_apps::std::slice::Chunks struct">Chunks</a></div><div class="item-right docblock-short"><p>An iterator over a slice in (non-overlapping) chunks (<code>chunk_size</code> elements at a
+time), starting at the beginning of the slice.</p>
+</div><div class="item-left module-item"><a class="struct" href="struct.ChunksExact.html" title="anoma_apps::std::slice::ChunksExact struct">ChunksExact</a></div><div class="item-right docblock-short"><p>An iterator over a slice in (non-overlapping) chunks (<code>chunk_size</code> elements at a
+time), starting at the beginning of the slice.</p>
+</div><div class="item-left module-item"><a class="struct" href="struct.ChunksExactMut.html" title="anoma_apps::std::slice::ChunksExactMut struct">ChunksExactMut</a></div><div class="item-right docblock-short"><p>An iterator over a slice in (non-overlapping) mutable chunks (<code>chunk_size</code>
+elements at a time), starting at the beginning of the slice.</p>
+</div><div class="item-left module-item"><a class="struct" href="struct.ChunksMut.html" title="anoma_apps::std::slice::ChunksMut struct">ChunksMut</a></div><div class="item-right docblock-short"><p>An iterator over a slice in (non-overlapping) mutable chunks (<code>chunk_size</code>
+elements at a time), starting at the beginning of the slice.</p>
+</div><div class="item-left module-item"><a class="struct" href="struct.Iter.html" title="anoma_apps::std::slice::Iter struct">Iter</a></div><div class="item-right docblock-short"><p>Immutable slice iterator</p>
+</div><div class="item-left module-item"><a class="struct" href="struct.IterMut.html" title="anoma_apps::std::slice::IterMut struct">IterMut</a></div><div class="item-right docblock-short"><p>Mutable slice iterator.</p>
+</div><div class="item-left module-item"><a class="struct" href="struct.RChunks.html" title="anoma_apps::std::slice::RChunks struct">RChunks</a></div><div class="item-right docblock-short"><p>An iterator over a slice in (non-overlapping) chunks (<code>chunk_size</code> elements at a
+time), starting at the end of the slice.</p>
+</div><div class="item-left module-item"><a class="struct" href="struct.RChunksExact.html" title="anoma_apps::std::slice::RChunksExact struct">RChunksExact</a></div><div class="item-right docblock-short"><p>An iterator over a slice in (non-overlapping) chunks (<code>chunk_size</code> elements at a
+time), starting at the end of the slice.</p>
+</div><div class="item-left module-item"><a class="struct" href="struct.RChunksExactMut.html" title="anoma_apps::std::slice::RChunksExactMut struct">RChunksExactMut</a></div><div class="item-right docblock-short"><p>An iterator over a slice in (non-overlapping) mutable chunks (<code>chunk_size</code>
+elements at a time), starting at the end of the slice.</p>
+</div><div class="item-left module-item"><a class="struct" href="struct.RChunksMut.html" title="anoma_apps::std::slice::RChunksMut struct">RChunksMut</a></div><div class="item-right docblock-short"><p>An iterator over a slice in (non-overlapping) mutable chunks (<code>chunk_size</code>
+elements at a time), starting at the end of the slice.</p>
+</div><div class="item-left module-item"><a class="struct" href="struct.RSplit.html" title="anoma_apps::std::slice::RSplit struct">RSplit</a></div><div class="item-right docblock-short"><p>An iterator over subslices separated by elements that match a predicate
+function, starting from the end of the slice.</p>
+</div><div class="item-left module-item"><a class="struct" href="struct.RSplitMut.html" title="anoma_apps::std::slice::RSplitMut struct">RSplitMut</a></div><div class="item-right docblock-short"><p>An iterator over the subslices of the vector which are separated
+by elements that match <code>pred</code>, starting from the end of the slice.</p>
+</div><div class="item-left module-item"><a class="struct" href="struct.RSplitN.html" title="anoma_apps::std::slice::RSplitN struct">RSplitN</a></div><div class="item-right docblock-short"><p>An iterator over subslices separated by elements that match a
+predicate function, limited to a given number of splits, starting
+from the end of the slice.</p>
+</div><div class="item-left module-item"><a class="struct" href="struct.RSplitNMut.html" title="anoma_apps::std::slice::RSplitNMut struct">RSplitNMut</a></div><div class="item-right docblock-short"><p>An iterator over subslices separated by elements that match a
+predicate function, limited to a given number of splits, starting
+from the end of the slice.</p>
+</div><div class="item-left module-item"><a class="struct" href="struct.Split.html" title="anoma_apps::std::slice::Split struct">Split</a></div><div class="item-right docblock-short"><p>An iterator over subslices separated by elements that match a predicate
+function.</p>
+</div><div class="item-left module-item"><a class="struct" href="struct.SplitMut.html" title="anoma_apps::std::slice::SplitMut struct">SplitMut</a></div><div class="item-right docblock-short"><p>An iterator over the mutable subslices of the vector which are separated
+by elements that match <code>pred</code>.</p>
+</div><div class="item-left module-item"><a class="struct" href="struct.SplitN.html" title="anoma_apps::std::slice::SplitN struct">SplitN</a></div><div class="item-right docblock-short"><p>An iterator over subslices separated by elements that match a predicate
+function, limited to a given number of splits.</p>
+</div><div class="item-left module-item"><a class="struct" href="struct.SplitNMut.html" title="anoma_apps::std::slice::SplitNMut struct">SplitNMut</a></div><div class="item-right docblock-short"><p>An iterator over subslices separated by elements that match a predicate
+function, limited to a given number of splits.</p>
+</div><div class="item-left module-item"><a class="struct" href="struct.Windows.html" title="anoma_apps::std::slice::Windows struct">Windows</a></div><div class="item-right docblock-short"><p>An iterator over overlapping subslices of length <code>size</code>.</p>
+</div></div><h2 id="traits" class="section-header"><a href="#traits">Traits</a></h2>
+<div class="item-table"><div class="item-left unstable module-item"><a class="trait" href="trait.Concat.html" title="anoma_apps::std::slice::Concat trait">Concat</a><span class="stab unstable" title="">Experimental</span></div><div class="item-right docblock-short"><p>Helper trait for <a href="https://doc.rust-lang.org/1.56.1/std/primitive.slice.html#method.concat"><code>[T]::concat</code></a>.</p>
+</div><div class="item-left unstable module-item"><a class="trait" href="trait.Join.html" title="anoma_apps::std::slice::Join trait">Join</a><span class="stab unstable" title="">Experimental</span></div><div class="item-right docblock-short"><p>Helper trait for <a href="https://doc.rust-lang.org/1.56.1/std/primitive.slice.html#method.join"><code>[T]::join</code></a></p>
+</div><div class="item-left module-item"><a class="trait" href="trait.SliceIndex.html" title="anoma_apps::std::slice::SliceIndex trait">SliceIndex</a></div><div class="item-right docblock-short"><p>A helper trait used for indexing operations.</p>
+</div></div><h2 id="functions" class="section-header"><a href="#functions">Functions</a></h2>
+<div class="item-table"><div class="item-left unstable module-item"><a class="fn" href="fn.range.html" title="anoma_apps::std::slice::range fn">range</a><span class="stab unstable" title="">Experimental</span></div><div class="item-right docblock-short"><p>Performs bounds-checking of a range.</p>
+</div><div class="item-left module-item"><a class="fn" href="fn.from_mut.html" title="anoma_apps::std::slice::from_mut fn">from_mut</a></div><div class="item-right docblock-short"><p>Converts a reference to T into a slice of length 1 (without copying).</p>
+</div><div class="item-left module-item"><a class="fn" href="fn.from_raw_parts.html" title="anoma_apps::std::slice::from_raw_parts fn">from_raw_parts</a><a title="unsafe function" href="#"><sup>⚠</sup></a></div><div class="item-right docblock-short"><p>Forms a slice from a pointer and a length.</p>
+</div><div class="item-left module-item"><a class="fn" href="fn.from_raw_parts_mut.html" title="anoma_apps::std::slice::from_raw_parts_mut fn">from_raw_parts_mut</a><a title="unsafe function" href="#"><sup>⚠</sup></a></div><div class="item-right docblock-short"><p>Performs the same functionality as <a href="fn.from_raw_parts.html" title="from_raw_parts"><code>from_raw_parts</code></a>, except that a
+mutable slice is returned.</p>
+</div><div class="item-left module-item"><a class="fn" href="fn.from_ref.html" title="anoma_apps::std::slice::from_ref fn">from_ref</a></div><div class="item-right docblock-short"><p>Converts a reference to T into a slice of length 1 (without copying).</p>
+</div></div></section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="anoma_apps" data-search-index-js="../../../search-index.js" data-search-js="../../../search.js"></div>
+    <script src="../../../main.js"></script>
+</body></html>
