@@ -141,14 +141,11 @@ where
             // sink zone
             let target = Address::Internal(InternalAddress::IbcBurn);
             let target_key = token::balance_key(&token, &target);
-            let post = match self.ctx.read_temp(&target_key)? {
-                Some(v) => {
-                    Amount::try_from_slice(&v).map_err(Error::Decoding)?
-                }
-                None => Amount::default(),
-            };
+            let post =
+                try_decode_token_amount(self.ctx.read_temp(&target_key)?)?
+                    .unwrap_or_default();
             // the previous balance of the burn address should be zero
-            post.change() - Amount::default().change()
+            post.change()
         } else {
             // source zone
             let target =
@@ -157,18 +154,11 @@ where
                     msg.source_channel.to_string(),
                 ));
             let target_key = token::balance_key(&token, &target);
-            let pre = match self.ctx.read_pre(&target_key)? {
-                Some(v) => {
-                    Amount::try_from_slice(&v).map_err(Error::Decoding)?
-                }
-                None => Amount::default(),
-            };
-            let post = match self.ctx.read_post(&target_key)? {
-                Some(v) => {
-                    Amount::try_from_slice(&v).map_err(Error::Decoding)?
-                }
-                None => Amount::default(),
-            };
+            let pre = try_decode_token_amount(self.ctx.read_pre(&target_key)?)?
+                .unwrap_or_default();
+            let post =
+                try_decode_token_amount(self.ctx.read_post(&target_key)?)?
+                    .unwrap_or_default();
             post.change() - pre.change()
         };
 
@@ -204,29 +194,19 @@ where
                     packet.destination_channel.to_string(),
                 ));
             let source_key = token::balance_key(&token, &source);
-            let pre = match self.ctx.read_pre(&source_key)? {
-                Some(v) => {
-                    Amount::try_from_slice(&v).map_err(Error::Decoding)?
-                }
-                None => Amount::default(),
-            };
-            let post = match self.ctx.read_post(&source_key)? {
-                Some(v) => {
-                    Amount::try_from_slice(&v).map_err(Error::Decoding)?
-                }
-                None => Amount::default(),
-            };
+            let pre = try_decode_token_amount(self.ctx.read_pre(&source_key)?)?
+                .unwrap_or_default();
+            let post =
+                try_decode_token_amount(self.ctx.read_post(&source_key)?)?
+                    .unwrap_or_default();
             pre.change() - post.change()
         } else {
             // the sender is the source
             let source = Address::Internal(InternalAddress::IbcMint);
             let source_key = token::balance_key(&token, &source);
-            let post = match self.ctx.read_temp(&source_key)? {
-                Some(v) => {
-                    Amount::try_from_slice(&v).map_err(Error::Decoding)?
-                }
-                None => Amount::default(),
-            };
+            let post =
+                try_decode_token_amount(self.ctx.read_temp(&source_key)?)?
+                    .unwrap_or_default();
             // the previous balance of the mint address should be the maximum
             Amount::max().change() - post.change()
         };
@@ -260,12 +240,9 @@ where
             // sink zone: mint the token for the refund
             let source = Address::Internal(InternalAddress::IbcMint);
             let source_key = token::balance_key(&token, &source);
-            let post = match self.ctx.read_post(&source_key)? {
-                Some(v) => {
-                    Amount::try_from_slice(&v).map_err(Error::Decoding)?
-                }
-                None => Amount::default(),
-            };
+            let post =
+                try_decode_token_amount(self.ctx.read_temp(&source_key)?)?
+                    .unwrap_or_default();
             // the previous balance of the mint address should be the maximum
             Amount::max().change() - post.change()
         } else {
@@ -276,18 +253,11 @@ where
                     packet.source_channel.to_string(),
                 ));
             let source_key = token::balance_key(&token, &source);
-            let pre = match self.ctx.read_pre(&source_key)? {
-                Some(v) => {
-                    Amount::try_from_slice(&v).map_err(Error::Decoding)?
-                }
-                None => Amount::default(),
-            };
-            let post = match self.ctx.read_post(&source_key)? {
-                Some(v) => {
-                    Amount::try_from_slice(&v).map_err(Error::Decoding)?
-                }
-                None => Amount::default(),
-            };
+            let pre = try_decode_token_amount(self.ctx.read_pre(&source_key)?)?
+                .unwrap_or_default();
+            let post =
+                try_decode_token_amount(self.ctx.read_post(&source_key)?)?
+                    .unwrap_or_default();
             pre.change() - post.change()
         };
 
@@ -306,4 +276,14 @@ impl From<native_vp::Error> for Error {
     fn from(err: native_vp::Error) -> Self {
         Self::NativeVpError(err)
     }
+}
+
+fn try_decode_token_amount(
+    bytes: Option<Vec<u8>>,
+) -> Result<Option<token::Amount>> {
+    if let Some(bytes) = bytes {
+        let tokens = Amount::try_from_slice(&bytes).map_err(Error::Decoding)?;
+        return Ok(Some(tokens));
+    }
+    Ok(None)
 }
