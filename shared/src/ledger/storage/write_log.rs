@@ -15,6 +15,8 @@ use crate::types::storage::Key;
 pub enum Error {
     #[error("Storage error applying a write log: {0}")]
     StorageError(storage::Error),
+    #[error("Trying to mutate a temporary value")]
+    MutateTemporaryValue,
     #[error(
         "Trying to update a validity predicate that a new account that's not \
          yet committed to storage"
@@ -22,6 +24,8 @@ pub enum Error {
     UpdateVpOfNewAccount,
     #[error("Trying to delete a validity predicate")]
     DeleteVp,
+    #[error("Trying to write a temporary value after deleting")]
+    WriteTempAfterDelete,
 }
 
 /// Result for functions that may fail
@@ -43,6 +47,13 @@ pub enum StorageModification {
     InitAccount {
         /// Validity predicate bytes
         vp: Vec<u8>,
+    },
+    /// Temporary value. This value will be never written to the storage. After
+    /// writing a temporary value, it can't be mutated with [`write`] or
+    /// [`delete`].
+    Temp {
+        /// Value bytes
+        value: Vec<u8>,
     },
 }
 
@@ -89,6 +100,9 @@ impl WriteLog {
                     StorageModification::InitAccount { ref vp } => {
                         key.len() + vp.len()
                     }
+                    StorageModification::Temp { ref value } => {
+                        key.len() + value.len()
+                    }
                 };
                 (Some(v), gas as _)
             }
@@ -113,6 +127,44 @@ impl WriteLog {
                 StorageModification::Delete => len as i64,
                 StorageModification::InitAccount { .. } => {
                     return Err(Error::UpdateVpOfNewAccount);
+                }
+                StorageModification::Temp { .. } => {
+                    return Err(Error::MutateTemporaryValue);
+                }
+            },
+            // set just the length of the value because we don't know if
+            // the previous value exists on the storage
+            None => len as i64,
+        };
+        Ok((gas as _, size_diff))
+    }
+
+    /// Write a key and a value and return the gas cost and the size difference
+    /// Fails with [`Error::UpdateVpOfNewAccount`] when attempting to update a
+    /// validity predicate of a new account that's not yet committed to storage.
+    pub fn write_temp(
+        &mut self,
+        key: &Key,
+        value: Vec<u8>,
+    ) -> Result<(u64, i64)> {
+        let len = value.len();
+        let gas = key.len() + len;
+        let size_diff = match self
+            .tx_write_log
+            .insert(key.clone(), StorageModification::Temp { value })
+        {
+            Some(prev) => match prev {
+                StorageModification::Write { ref value } => {
+                    len as i64 - value.len() as i64
+                }
+                StorageModification::Delete => {
+                    return Err(Error::WriteTempAfterDelete);
+                }
+                StorageModification::InitAccount { .. } => {
+                    return Err(Error::UpdateVpOfNewAccount);
+                }
+                StorageModification::Temp { ref value } => {
+                    len as i64 - value.len() as i64
                 }
             },
             // set just the length of the value because we don't know if
@@ -139,6 +191,9 @@ impl WriteLog {
                 StorageModification::Delete => 0,
                 StorageModification::InitAccount { .. } => {
                     return Err(Error::DeleteVp);
+                }
+                StorageModification::Temp { .. } => {
+                    return Err(Error::MutateTemporaryValue);
                 }
             },
             // set 0 because we don't know if the previous value exists on the
@@ -281,6 +336,8 @@ impl WriteLog {
                         .batch_write_subspace_val(&mut batch, key, vp.clone())
                         .map_err(Error::StorageError)?;
                 }
+                // temporary value isn't persisted
+                StorageModification::Temp { .. } => {}
             }
         }
         storage.exec_batch(batch).map_err(Error::StorageError)?;
@@ -501,6 +558,8 @@ mod tests {
             Key::parse("key2".to_owned()).expect("cannot parse the key string");
         let key3 =
             Key::parse("key3".to_owned()).expect("cannot parse the key string");
+        let key4 =
+            Key::parse("key4".to_owned()).expect("cannot parse the key string");
 
         // initialize an account
         let vp1 = "vp1".as_bytes().to_vec();
@@ -512,6 +571,7 @@ mod tests {
         write_log.write(&key1, val1.clone()).unwrap();
         write_log.write(&key2, val1.clone()).unwrap();
         write_log.write(&key3, val1.clone()).unwrap();
+        write_log.write_temp(&key4, val1.clone()).unwrap();
         write_log.commit_tx();
 
         // these values are not written due to drop_tx
@@ -539,6 +599,8 @@ mod tests {
         assert!(value.is_none());
         let (value, _) = storage.read(&key3).expect("read failed");
         assert_eq!(value.expect("no read value"), val3);
+        let (value, _) = storage.read(&key4).expect("read failed");
+        assert_eq!(value, None);
     }
 
     prop_compose! {
@@ -655,6 +717,8 @@ pub mod testing {
                 Just(StorageModification::Delete),
                 any::<Vec<u8>>()
                     .prop_map(|vp| StorageModification::InitAccount { vp }),
+                any::<Vec<u8>>()
+                    .prop_map(|value| StorageModification::Temp { value }),
             ]
             .boxed()
         } else {
@@ -662,6 +726,8 @@ pub mod testing {
                 any::<Vec<u8>>()
                     .prop_map(|value| StorageModification::Write { value }),
                 Just(StorageModification::Delete),
+                any::<Vec<u8>>()
+                    .prop_map(|value| StorageModification::Temp { value }),
             ]
             .boxed()
         }
