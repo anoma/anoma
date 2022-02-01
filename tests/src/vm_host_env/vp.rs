@@ -71,6 +71,17 @@ impl TestVpEnv {
     pub fn all_touched_storage_keys(&self) -> HashSet<Key> {
         self.write_log.get_keys()
     }
+
+    pub fn get_verifiers(&self) -> HashSet<Address> {
+        let mut verifiers: HashSet<Address> = self
+            .write_log
+            .verifiers_changed_keys(&HashSet::default())
+            .keys()
+            .cloned()
+            .collect();
+        verifiers.extend(self.verifiers.clone());
+        verifiers
+    }
 }
 
 /// Initialize the host environment inside the [`vp_host_env`] module by running
@@ -96,10 +107,13 @@ pub fn init_vp_env_from_tx(
     let verifiers = verifiers_changed_keys.keys().cloned().collect();
     let keys_changed = verifiers_changed_keys
         .get(&addr)
-        .expect(
-            "The VP for the given address has not been triggered by the \
-             transaction",
-        )
+        .unwrap_or_else(|| {
+            panic!(
+                "The VP for the given address has not been triggered by the \
+                 transaction, {:#?}",
+                verifiers_changed_keys
+            )
+        })
         .to_owned();
 
     let mut vp_env = TestVpEnv {

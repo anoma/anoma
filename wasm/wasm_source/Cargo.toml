@@ -13,6 +13,7 @@ crate-type = ["cdylib"]
 # Newly added wasms should also be added into the Makefile `$(wasms)` list.
 [features]
 tx_bond = []
+tx_create_nft = []
 tx_from_intent = []
 tx_init_account = []
 tx_init_validator = []
@@ -20,6 +21,7 @@ tx_transfer = []
 tx_unbond = []
 tx_update_vp = []
 tx_withdraw = []
+vp_nft = []
 vp_testnet_faucet = ["once_cell"]
 vp_token = []
 vp_user = ["once_cell", "rust_decimal"]
@@ -34,6 +36,7 @@ rust_decimal = {version = "1.14.3", optional = true}
 wee_alloc = "0.4.5"
 
 [dev-dependencies]
+anoma = {path = "../../shared"}
 anoma_tests = {path = "../../tests"}
 proptest = "1.0.0"
 tracing = "0.1.29"

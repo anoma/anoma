@@ -27,6 +27,12 @@ pub async fn main() -> Result<()> {
                 Sub::TxInitValidator(TxInitValidator(args)) => {
                     tx::submit_init_validator(ctx, args).await;
                 }
+                Sub::TxNftCreate(TxNftCreate(args)) => {
+                    tx::submit_create_nft(ctx, args).await;
+                }
+                Sub::TxNftMint(TxNftMint(args)) => {
+                    tx::submit_mint_nft(ctx, args).await;
+                }
                 Sub::Bond(Bond(args)) => {
                     tx::submit_bond(ctx, args).await;
                 }

@@ -1,13 +1,17 @@
 {
-    "tx_bond.wasm": "tx_bond.5a068b8bfdcd2a395a435f08cc5d4867b714243c67e89f950633ceb3827eb53f.wasm",
-    "tx_from_intent.wasm": "tx_from_intent.74221ad2c5ae181e107e69b7eaf653e5d944f3b8157046ee3f2845f56ae2c938.wasm",
-    "tx_init_account.wasm": "tx_init_account.c5c765689cec9ed26c8e653de3a686eebb08536c79f24a8546da55f11df39ead.wasm",
-    "tx_init_validator.wasm": "tx_init_validator.78d3205c8a3fd23669f76ca221191c870caa605f78972b615baec685ee69c525.wasm",
-    "tx_transfer.wasm": "tx_transfer.72416a31799f9fbfcb8fb98bbeff5fbd256158dc54bad14ee17e80943e3a0289.wasm",
-    "tx_unbond.wasm": "tx_unbond.c8cbb492159e5e6636e45d8506c3493197f1656cbe020ce3616d9a8b97808db6.wasm",
+    "mm_filter_token_exch.wasm": "mm_filter_token_exch.16005dcf62879378af2f474f73daea16632942dd88d26ac589d114c359e3b21a.wasm",
+    "mm_token_exch.wasm": "mm_token_exch.dcbea716e77bc678b18923ffcfd01a0775f30552dce13a1dc91c34ef0855651c.wasm",
+    "tx_bond.wasm": "tx_bond.cc43712fe65eb1dab6aaef763525f44822191824625dd50c671921836794924f.wasm",
+    "tx_create_nft.wasm": "tx_create_nft.6e84ffb4388687a77a4482a0b88bf88bb6282b4c1be24715065ab30ae941ff65.wasm",
+    "tx_from_intent.wasm": "tx_from_intent.04d476eef3250c539ee82d6db86046611cdaddb43729110b509fc37be505a331.wasm",
+    "tx_init_account.wasm": "tx_init_account.c9ddaf0af396e10de967fc37981d1731b9a5a8d96e3ea46092fbc579f3c09c3f.wasm",
+    "tx_init_validator.wasm": "tx_init_validator.c4b436a39ffbbdb6ddb809a778f51cc0f5a57e9ed07d48de9733b6fcff60db3d.wasm",
+    "tx_transfer.wasm": "tx_transfer.fbc240b229aa94993c349dccf3cce32ab6a51bdc6b3361893e6dae649517f9df.wasm",
+    "tx_unbond.wasm": "tx_unbond.3a43dc7a5a6dc539381ec645f02e9560010938e79da43a5f64f57682336929a4.wasm",
     "tx_update_vp.wasm": "tx_update_vp.db60fc50083f4f27a447a80f246800352395771d82e7fc6e2c3cf8234cc510fb.wasm",
-    "tx_withdraw.wasm": "tx_withdraw.7201dd1e4132d9eea18081a73edbf2f29dacafea46c7a0bb444ab251e91132b3.wasm",
-    "vp_testnet_faucet.wasm": "vp_testnet_faucet.c91de46fcd5f1a7fdd60590cb1775075f3abf7af84637cdd30dd5722e02e20db.wasm",
-    "vp_token.wasm": "vp_token.3af9e1de082e73b814f1987b2c68d4ec97d649b81c31226891f7ef196c59a796.wasm",
-    "vp_user.wasm": "vp_user.9a0db49d6845ddfe277b2766d5c6206ae41846c3b6a88f85acc84afe87f23a0c.wasm"
+    "tx_withdraw.wasm": "tx_withdraw.f72b2eef0fbdf865571d44be9f1cc0c04e30b8f47e832a2403c20d8aec7bb735.wasm",
+    "vp_nft.wasm": "vp_nft.0dbbaea289583b15ce899db9176df19497a0366b83a3be3c02a026876f9139b7.wasm",
+    "vp_testnet_faucet.wasm": "vp_testnet_faucet.a7cccae4f7c71af010ba67157b28ff181b6d0bc63355037139f3b771f5d0a422.wasm",
+    "vp_token.wasm": "vp_token.94ae7c4baeb16285d91d57cefa058a97e627e9cdc3042a5af2c8b9ea406e3786.wasm",
+    "vp_user.wasm": "vp_user.87e650c5f35581b321c06655883dc27f5d1a55e2b324aeaa79068df24b81f128.wasm"
 }

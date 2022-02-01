@@ -151,6 +151,7 @@ dependencies = [
 name = "anoma_wasm"
 version = "0.3.0"
 dependencies = [
+ "anoma",
  "anoma_tests",
  "anoma_tx_prelude",
  "anoma_vm_env",
