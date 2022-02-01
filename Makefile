@@ -225,11 +225,14 @@ dev-deps:
 	$(rustup) toolchain install $(nightly)
 	$(rustup) target add wasm32-unknown-unknown
 	$(rustup) component add rustfmt clippy miri --toolchain $(nightly)
-	$(cargo) install cargo-watch unclog
+	$(cargo) install cargo-watch unclog cargo-tarpaulin
 
 test-miri:
 	$(cargo) +$(nightly) miri setup
 	$(cargo) +$(nightly) clean
 	MIRIFLAGS="-Zmiri-disable-isolation" $(cargo) +$(nightly) miri test
 
-.PHONY : build check build-release clippy install run-ledger run-gossip reset-ledger test test-debug fmt watch clean build-doc doc build-wasm-scripts-docker build-wasm-scripts clean-wasm-scripts dev-deps test-miri
+test-coverage:
+	$(cargo) tarpaulin -v --out Html -- --skip e2e
+
+.PHONY : build check build-release clippy install run-ledger run-gossip reset-ledger test test-debug fmt watch clean build-doc doc build-wasm-scripts-docker build-wasm-scripts clean-wasm-scripts dev-deps test-miri test-coverage

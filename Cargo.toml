@@ -3,21 +3,21 @@ resolver = "2"
 
 members = [
   "apps",
-  "matchmaker/mm_template",
   "matchmaker/mm_token_exch",
   "proof_of_stake",
   "shared",
   "tests",
-  "tx_prelude",
-  "vm_env",
   "macros",
-  "vp_prelude",
 ]
 
 # wasm packages have to be built separately
 exclude = [
+  "vm_env",
+  "matchmaker/mm_template",
   "wasm",
   "wasm_for_tests",
+  "vp_prelude",
+  "tx_prelude",
 ]
 
 [patch.crates-io]

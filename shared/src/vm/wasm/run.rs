@@ -421,6 +421,7 @@ mod tests {
     /// Test that when a transaction wasm goes over the stack-height limit, the
     /// execution is aborted.
     #[test]
+    #[cfg(not(tarpaulin))]
     fn test_tx_stack_limiter() {
         // Because each call into `$loop` inside the wasm consumes 3 stack
         // heights, this should hit the stack limit. If we were to subtract
@@ -442,6 +443,7 @@ mod tests {
     /// Test that when a VP wasm goes over the stack-height limit, the execution
     /// is aborted.
     #[test]
+    #[cfg(not(tarpaulin))]
     fn test_vp_stack_limiter() {
         // Because each call into `$loop` inside the wasm consumes 3 stack
         // heights, this should hit the stack limit. If we were to subtract
@@ -461,6 +463,7 @@ mod tests {
     /// Test that when a transaction wasm goes over the memory limit inside the
     /// wasm execution, the execution is aborted.
     #[test]
+    #[cfg(not(tarpaulin))]
     fn test_tx_memory_limiter_in_guest() {
         let storage = TestStorage::default();
         let mut write_log = WriteLog::default();
@@ -512,6 +515,7 @@ mod tests {
     /// inside the wasm execution when calling `eval` host function, the `eval`
     /// fails and hence returns `false`.
     #[test]
+    #[cfg(not(tarpaulin))]
     fn test_vp_memory_limiter_in_guest_calling_eval() {
         let mut storage = TestStorage::default();
         let addr = storage.address_gen.generate_address("rng seed");
@@ -586,6 +590,7 @@ mod tests {
     /// Test that when a validity predicate wasm goes over the memory limit
     /// inside the wasm execution, the execution is aborted.
     #[test]
+    #[cfg(not(tarpaulin))]
     fn test_vp_memory_limiter_in_guest() {
         let mut storage = TestStorage::default();
         let addr = storage.address_gen.generate_address("rng seed");
@@ -642,6 +647,7 @@ mod tests {
     /// Test that when a transaction wasm goes over the wasm memory limit in the
     /// host input, the execution fails.
     #[test]
+    #[cfg(not(tarpaulin))]
     fn test_tx_memory_limiter_in_host_input() {
         let storage = TestStorage::default();
         let mut write_log = WriteLog::default();
@@ -691,6 +697,7 @@ mod tests {
     /// Test that when a validity predicate wasm goes over the wasm memory limit
     /// in the host input, the execution fails.
     #[test]
+    #[cfg(not(tarpaulin))]
     fn test_vp_memory_limiter_in_host_input() {
         let mut storage = TestStorage::default();
         let addr = storage.address_gen.generate_address("rng seed");
@@ -747,6 +754,7 @@ mod tests {
     /// value returned from host environment call during wasm execution, the
     /// execution is aborted.
     #[test]
+    #[cfg(not(tarpaulin))]
     fn test_tx_memory_limiter_in_host_env() {
         let mut storage = TestStorage::default();
         let mut write_log = WriteLog::default();
@@ -789,6 +797,7 @@ mod tests {
     /// in the value returned from host environment call during wasm
     /// execution, the execution is aborted.
     #[test]
+    #[cfg(not(tarpaulin))]
     fn test_vp_memory_limiter_in_host_env() {
         let mut storage = TestStorage::default();
         let addr = storage.address_gen.generate_address("rng seed");
@@ -835,6 +844,7 @@ mod tests {
     /// inside the wasm execution calling `eval` host function, the `eval` fails
     /// and hence returns `false`.
     #[test]
+    #[cfg(not(tarpaulin))]
     fn test_vp_memory_limiter_in_host_env_inside_guest_calling_eval() {
         let mut storage = TestStorage::default();
         let addr = storage.address_gen.generate_address("rng seed");
