@@ -136,6 +136,19 @@ pub async fn run(
     update_tendermint_config(&home_dir, config).await?;
 
     let mut tendermint_node = if !cfg!(feature = "ABCI") {
+        tracing::info!(
+            "Path: {}, args: {:?}",
+            &tendermint_path,
+            &[
+                "start",
+                "--mode",
+                &mode,
+                "--proxy-app",
+                &ledger_address,
+                "--home",
+                &home_dir_string,
+            ]
+        );
         Command::new(&tendermint_path)
             .args(&[
                 "start",

@@ -11,7 +11,7 @@ pub mod encrypted_tx {
     use serde::{Deserialize, Serialize};
     use tpke::{encrypt, Ciphertext};
 
-    use crate::types::transaction::{EllipticCurve, AffineCurve};
+    use crate::types::transaction::{AffineCurve, EllipticCurve};
 
     pub type G1 = <EllipticCurve as PairingEngine>::G1Affine;
     /// An encryption key for txs

@@ -9,11 +9,13 @@
 pub mod context;
 mod utils;
 
-use clap::{crate_authors, crate_version, AppSettings, ArgMatches};
+use clap::{crate_authors, AppSettings, ArgMatches};
 pub use utils::safe_exit;
 use utils::*;
 
 pub use self::context::Context;
+
+include!("../../version.rs");
 
 const APP_NAME: &str = "Anoma";
 
@@ -152,6 +154,7 @@ pub mod cmds {
                 .subcommand(QueryBonds::def().display_order(3))
                 .subcommand(QueryVotingPower::def().display_order(3))
                 .subcommand(QuerySlashes::def().display_order(3))
+                .subcommand(QueryResult::def().display_order(3))
                 // Intents
                 .subcommand(Intent::def().display_order(4))
                 .subcommand(SubscribeTopic::def().display_order(4))
@@ -176,6 +179,7 @@ pub mod cmds {
             let query_voting_power =
                 Self::parse_with_ctx(matches, QueryVotingPower);
             let query_slashes = Self::parse_with_ctx(matches, QuerySlashes);
+            let query_result = Self::parse_with_ctx(matches, QueryResult);
             let intent = Self::parse_with_ctx(matches, Intent);
             let subscribe_topic = Self::parse_with_ctx(matches, SubscribeTopic);
             let utils = SubCmd::parse(matches).map(Self::WithoutContext);
@@ -192,6 +196,7 @@ pub mod cmds {
                 .or(query_bonds)
                 .or(query_voting_power)
                 .or(query_slashes)
+                .or(query_result)
                 .or(intent)
                 .or(subscribe_topic)
                 .or(utils)
@@ -232,6 +237,7 @@ pub mod cmds {
         // Ledger cmds
         TxCustom(TxCustom),
         TxTransfer(TxTransfer),
+        QueryResult(QueryResult),
         TxUpdateVp(TxUpdateVp),
         TxInitAccount(TxInitAccount),
         TxInitValidator(TxInitValidator),
@@ -674,6 +680,25 @@ pub mod cmds {
     }
 
     #[derive(Clone, Debug)]
+    pub struct QueryResult(pub args::QueryResult);
+
+    impl SubCmd for QueryResult {
+        const CMD: &'static str = "tx-result";
+
+        fn parse(matches: &ArgMatches) -> Option<Self> {
+            matches
+                .subcommand_matches(Self::CMD)
+                .map(|matches| QueryResult(args::QueryResult::parse(matches)))
+        }
+
+        fn def() -> App {
+            App::new(Self::CMD)
+                .about("Query the result of a transaction.")
+                .add_args::<args::QueryResult>()
+        }
+    }
+
+    #[derive(Clone, Debug)]
     pub struct TxCustom(pub args::TxCustom);
 
     impl SubCmd for TxCustom {
@@ -1112,6 +1137,7 @@ pub mod args {
             Err(_) => config::DEFAULT_BASE_DIR.into(),
         }),
     );
+    const BROADCAST_ONLY: ArgFlag = flag("broadcast-only");
     const CHAIN_ID: Arg<ChainId> = arg("chain-id");
     const CHAIN_ID_OPT: ArgOpt<ChainId> = CHAIN_ID.opt();
     const CHAIN_ID_PREFIX: Arg<ChainIdPrefix> = arg("chain-prefix");
@@ -1174,6 +1200,7 @@ pub mod args {
     const TOPIC: Arg<String> = arg("topic");
     const TOPICS: ArgMulti<String> = TOPIC.multi();
     const TX_CODE_PATH: ArgOpt<PathBuf> = arg_opt("tx-code-path");
+    const TX_HASH: Arg<String> = arg("tx-hash");
     const UNSAFE_DONT_ENCRYPT: ArgFlag = flag("unsafe-dont-encrypt");
     const UNSAFE_SHOW_SECRET: ArgFlag = flag("unsafe-show-secret");
     const VALIDATOR: Arg<WalletAddress> = arg("validator");
@@ -1233,6 +1260,31 @@ pub mod args {
                     "The mode in which to run Anoma. Options are \n\t * \
                      Validator (default)\n\t * Full\n\t * Seed",
                 ))
+        }
+    }
+
+    /// Transaction associated results arguments
+    #[derive(Clone, Debug)]
+    pub struct QueryResult {
+        /// Common query args
+        pub query: Query,
+        /// Hash of transaction to lookup
+        pub tx_hash: String,
+    }
+
+    impl Args for QueryResult {
+        fn parse(matches: &ArgMatches) -> Self {
+            let query = Query::parse(matches);
+            let tx_hash = TX_HASH.parse(matches);
+            Self { query, tx_hash }
+        }
+
+        fn def(app: App) -> App {
+            app.add_args::<Query>().arg(
+                TX_HASH
+                    .def()
+                    .about("The hash of the transaction being looked up."),
+            )
         }
     }
 
@@ -2006,6 +2058,8 @@ pub mod args {
         pub dry_run: bool,
         /// Submit the transaction even if it doesn't pass client checks
         pub force: bool,
+        /// Do not wait for the transaction to be added to the blockchain
+        pub broadcast_only: bool,
         /// The address of the ledger node as host:port
         pub ledger_address: TendermintAddress,
         /// If any new account is initialized by the tx, use the given alias to
@@ -2032,6 +2086,10 @@ pub mod args {
             )
             .arg(FORCE.def().about(
                 "Submit the transaction even if it doesn't pass client checks.",
+            ))
+            .arg(BROADCAST_ONLY.def().about(
+                "Do not wait for the transaction to be applied. This will \
+                 return once the transaction is added to the mempool.",
             ))
             .arg(LEDGER_ADDRESS_DEFAULT.def().about(LEDGER_ADDRESS_ABOUT))
             .arg(ALIAS_OPT.def().about(
@@ -2073,6 +2131,7 @@ pub mod args {
         fn parse(matches: &ArgMatches) -> Self {
             let dry_run = DRY_RUN_TX.parse(matches);
             let force = FORCE.parse(matches);
+            let broadcast_only = BROADCAST_ONLY.parse(matches);
             let ledger_address = LEDGER_ADDRESS_DEFAULT.parse(matches);
             let initialized_account_alias = ALIAS_OPT.parse(matches);
             let fee_amount = FEE_AMOUNT.parse(matches);
@@ -2084,6 +2143,7 @@ pub mod args {
             Self {
                 dry_run,
                 force,
+                broadcast_only,
                 ledger_address,
                 initialized_account_alias,
                 fee_amount,
@@ -2468,7 +2528,7 @@ pub fn anoma_wallet_cli() -> (cmds::AnomaWallet, Context) {
 
 fn anoma_app() -> App {
     let app = App::new(APP_NAME)
-        .version(crate_version!())
+        .version(anoma_version())
         .author(crate_authors!("\n"))
         .about("Anoma command line interface.")
         .setting(AppSettings::SubcommandRequiredElseHelp);
@@ -2477,7 +2537,7 @@ fn anoma_app() -> App {
 
 fn anoma_node_app() -> App {
     let app = App::new(APP_NAME)
-        .version(crate_version!())
+        .version(anoma_version())
         .author(crate_authors!("\n"))
         .about("Anoma node command line interface.")
         .setting(AppSettings::SubcommandRequiredElseHelp);
@@ -2486,7 +2546,7 @@ fn anoma_node_app() -> App {
 
 fn anoma_client_app() -> App {
     let app = App::new(APP_NAME)
-        .version(crate_version!())
+        .version(anoma_version())
         .author(crate_authors!("\n"))
         .about("Anoma client command line interface.")
         .setting(AppSettings::SubcommandRequiredElseHelp);
@@ -2495,7 +2555,7 @@ fn anoma_client_app() -> App {
 
 fn anoma_wallet_app() -> App {
     let app = App::new(APP_NAME)
-        .version(crate_version!())
+        .version(anoma_version())
         .author(crate_authors!("\n"))
         .about("Anoma wallet command line interface.")
         .setting(AppSettings::SubcommandRequiredElseHelp);

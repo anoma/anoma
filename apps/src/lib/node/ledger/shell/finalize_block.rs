@@ -183,7 +183,9 @@ where
                                 if let ShellMode::Validator { dkg, .. } =
                                     &mut self.mode
                                 {
-                                    if let Ok(serde_json::Value::Object(map)) = serde_json::to_value(&msg) {
+                                    if let Ok(serde_json::Value::Object(map)) =
+                                        serde_json::to_value(&msg)
+                                    {
                                         tracing::info!(
                                             "Applying DKG message: {}",
                                             map.keys().next().unwrap()

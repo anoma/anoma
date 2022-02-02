@@ -49,7 +49,9 @@ where
                     }
                 }
                 Path::EncryptionKey => {
-                    let value = anoma::ledger::storage::types::encode(&self.storage.encryption_key);
+                    let value = anoma::ledger::storage::types::encode(
+                        &self.storage.encryption_key,
+                    );
                     response::Query {
                         value,
                         ..Default::default()

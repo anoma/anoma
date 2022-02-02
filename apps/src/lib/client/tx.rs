@@ -4,13 +4,15 @@ use std::convert::TryFrom;
 use anoma::ledger::pos::{BondId, Bonds, Unbonds};
 use anoma::proto::Tx;
 use anoma::types::address::Address;
-use anoma::types::key::ed25519::Keypair;
 use anoma::types::storage::Epoch;
-use anoma::types::transaction::{pos, Fee, InitAccount, InitValidator, UpdateVp, WrapperTx};
+use anoma::types::transaction::{
+    pos, Fee, InitAccount, InitValidator, UpdateVp, WrapperTx,
+};
 use anoma::types::{address, token};
 use anoma::{ledger, vm};
 use async_std::io::{self, WriteExt};
 use borsh::BorshSerialize;
+use itertools::Either::*;
 use jsonpath_lib as jsonpath;
 use serde::Serialize;
 #[cfg(not(feature = "ABCI"))]
@@ -18,9 +20,13 @@ use tendermint_config::net::Address as TendermintAddress;
 #[cfg(feature = "ABCI")]
 use tendermint_config_abci::net::Address as TendermintAddress;
 #[cfg(not(feature = "ABCI"))]
+use tendermint_rpc::endpoint::broadcast::tx_sync::Response;
+#[cfg(not(feature = "ABCI"))]
 use tendermint_rpc::query::{EventType, Query};
 #[cfg(not(feature = "ABCI"))]
 use tendermint_rpc::{Client, HttpClient};
+#[cfg(feature = "ABCI")]
+use tendermint_rpc_abci::endpoint::broadcast::tx_sync::Response;
 #[cfg(feature = "ABCI")]
 use tendermint_rpc_abci::query::{EventType, Query};
 #[cfg(feature = "ABCI")]
@@ -32,8 +38,10 @@ use crate::cli::{args, safe_exit, Context};
 use crate::client::tendermint_websocket_client::{
     hash_tx, Error, TendermintWebsocketClient, WebSocketAddress,
 };
+#[cfg(not(feature = "ABCI"))]
 use crate::node::ledger::events::{Attributes, EventType as TmEventType};
 use crate::node::ledger::tendermint_node;
+use crate::wallet::AtomicKeypair;
 
 const TX_INIT_ACCOUNT_WASM: &str = "tx_init_account.wasm";
 const TX_INIT_VALIDATOR_WASM: &str = "tx_init_validator.wasm";
@@ -62,11 +70,11 @@ pub enum TxBroadcastData {
 pub async fn submit_custom(ctx: Context, args: args::TxCustom) {
     let tx_code = ctx.read_wasm(args.code_path);
     let data = args.data_path.map(|data_path| {
-        std::fs::read(data_path).expect("Expected a file at given data path")
+        std::fs::read(data_path).expect("Exected a file at given data path")
     });
     let tx = Tx::new(tx_code, data);
     let (ctx, tx) = sign_tx(ctx, tx, &args.tx, None).await;
-    let (ctx, initialized_accounts) = submit_tx(ctx, &args.tx, tx).await;
+    let (ctx, initialized_accounts) = process_tx(ctx, &args.tx, tx).await;
     save_initialized_accounts(ctx, &args.tx, initialized_accounts).await;
 }
 
@@ -122,7 +130,7 @@ pub async fn submit_update_vp(ctx: Context, args: args::TxUpdateVp) {
 
     let tx = Tx::new(tx_code, Some(data));
     let (ctx, tx) = sign_tx(ctx, tx, &args.tx, Some(&args.addr)).await;
-    submit_tx(ctx, &args.tx, tx).await;
+    process_tx(ctx, &args.tx, tx).await;
 }
 
 pub async fn submit_init_account(mut ctx: Context, args: args::TxInitAccount) {
@@ -148,7 +156,7 @@ pub async fn submit_init_account(mut ctx: Context, args: args::TxInitAccount) {
 
     let tx = Tx::new(tx_code, Some(data));
     let (ctx, tx) = sign_tx(ctx, tx, &args.tx, Some(&args.source)).await;
-    let (ctx, initialized_accounts) = submit_tx(ctx, &args.tx, tx).await;
+    let (ctx, initialized_accounts) = process_tx(ctx, &args.tx, tx).await;
     save_initialized_accounts(ctx, &args.tx, initialized_accounts).await;
 }
 
@@ -256,7 +264,7 @@ pub async fn submit_init_validator(
     let data = data.try_to_vec().expect("Encoding tx data shouldn't fail");
     let tx = Tx::new(tx_code, Some(data));
     let (ctx, tx) = sign_tx(ctx, tx, &tx_args, Some(&source)).await;
-    let (mut ctx, initialized_accounts) = submit_tx(ctx, &tx_args, tx).await;
+    let (mut ctx, initialized_accounts) = process_tx(ctx, &tx_args, tx).await;
     if !tx_args.dry_run {
         let (validator_address_alias, validator_address, rewards_address_alias) =
             match &initialized_accounts[..] {
@@ -436,7 +444,7 @@ pub async fn submit_transfer(ctx: Context, args: args::TxTransfer) {
 
     let tx = Tx::new(tx_code, Some(data));
     let (ctx, tx) = sign_tx(ctx, tx, &args.tx, Some(&args.source)).await;
-    submit_tx(ctx, &args.tx, tx).await;
+    process_tx(ctx, &args.tx, tx).await;
 }
 
 pub async fn submit_bond(ctx: Context, args: args::Bond) {
@@ -502,7 +510,7 @@ pub async fn submit_bond(ctx: Context, args: args::Bond) {
     let tx = Tx::new(tx_code, Some(data));
     let default_signer = args.source.as_ref().unwrap_or(&args.validator);
     let (ctx, tx) = sign_tx(ctx, tx, &args.tx, Some(default_signer)).await;
-    submit_tx(ctx, &args.tx, tx).await;
+    process_tx(ctx, &args.tx, tx).await;
 }
 
 pub async fn submit_unbond(ctx: Context, args: args::Unbond) {
@@ -571,7 +579,7 @@ pub async fn submit_unbond(ctx: Context, args: args::Unbond) {
     let tx = Tx::new(tx_code, Some(data));
     let default_signer = args.source.as_ref().unwrap_or(&args.validator);
     let (ctx, tx) = sign_tx(ctx, tx, &args.tx, Some(default_signer)).await;
-    submit_tx(ctx, &args.tx, tx).await;
+    process_tx(ctx, &args.tx, tx).await;
 }
 
 pub async fn submit_withdraw(ctx: Context, args: args::Withdraw) {
@@ -640,7 +648,7 @@ pub async fn submit_withdraw(ctx: Context, args: args::Withdraw) {
     let tx = Tx::new(tx_code, Some(data));
     let default_signer = args.source.as_ref().unwrap_or(&args.validator);
     let (ctx, tx) = sign_tx(ctx, tx, &args.tx, Some(default_signer)).await;
-    submit_tx(ctx, &args.tx, tx).await;
+    process_tx(ctx, &args.tx, tx).await;
 }
 
 /// Sign a transaction with a given signing key or public key of a given signer.
@@ -687,7 +695,6 @@ async fn sign_tx(
         ledger_address: args.ledger_address.clone(),
     })
     .await;
-    let keypair = keypair.lock();
     let broadcast_data = if args.dry_run {
         TxBroadcastData::DryRun(tx)
     } else {
@@ -704,24 +711,28 @@ async fn sign_wrapper(
     args: &args::Tx,
     epoch: Epoch,
     tx: Tx,
-    keypair: &Keypair,
+    keypair: &AtomicKeypair,
 ) -> TxBroadcastData {
     if let Some(_encryption_key) = rpc::query_encryption_key(args::Query {
         ledger_address: args.ledger_address.clone(),
     })
-    .await {
-        let tx = WrapperTx::new(
-            Fee {
-                amount: args.fee_amount,
-                token: ctx.get(&args.fee_token),
-            },
-            keypair,
-            epoch,
-            args.gas_limit.clone(),
-            tx,
-            //TODO: Actually use the fetched encryption key
-            Default::default(),
-        );
+    .await
+    {
+        let tx = {
+            let keypair = keypair.lock();
+            WrapperTx::new(
+                Fee {
+                    amount: args.fee_amount,
+                    token: ctx.get(&args.fee_token),
+                },
+                &keypair,
+                epoch,
+                args.gas_limit.clone(),
+                tx,
+                // TODO: Actually use the fetched encryption key
+                Default::default(),
+            )
+        };
 
         // We use this to determine when the wrapper tx makes it on-chain
         let wrapper_hash = if !cfg!(feature = "ABCI") {
@@ -729,16 +740,17 @@ async fn sign_wrapper(
         } else {
             tx.tx_hash.to_string()
         };
-        // We use this to determine when the decrypted inner tx makes it on-chain
+        // We use this to determine when the decrypted inner tx makes it
+        // on-chain
         let decrypted_hash = if !cfg!(feature = "ABCI") {
             Some(tx.tx_hash.to_string())
         } else {
             None
         };
-
+        let keypair = keypair.lock();
         TxBroadcastData::Wrapper {
             tx: tx
-                .sign(keypair)
+                .sign(&keypair)
                 .expect("Wrapper tx signing keypair should be correct"),
             wrapper_hash,
             decrypted_hash,
@@ -754,7 +766,7 @@ async fn sign_wrapper(
 
 /// Submit transaction and wait for result. Returns a list of addresses
 /// initialized in the transaction if any. In dry run, this is always empty.
-async fn submit_tx(
+async fn process_tx(
     ctx: Context,
     args: &args::Tx,
     to_broadcast: TxBroadcastData,
@@ -780,9 +792,19 @@ async fn submit_tx(
             );
         }
     } else {
-        match broadcast_tx(args.ledger_address.clone(), to_broadcast).await {
-            Ok(result) => (ctx, result.initialized_accounts),
-            Err(err) => {
+        // Either broadcast or submit transaction and collect result into
+        // sum type
+        let result = if args.broadcast_only {
+            Left(broadcast_tx(args.ledger_address.clone(), &to_broadcast).await)
+        } else {
+            Right(submit_tx(args.ledger_address.clone(), to_broadcast).await)
+        };
+        // Return result based on executed operation, otherwise deal with
+        // the encountered errors uniformly
+        match result {
+            Right(Ok(result)) => (ctx, result.initialized_accounts),
+            Left(Ok(_)) => (ctx, Vec::default()),
+            Right(Err(err)) | Left(Err(err)) => {
                 eprintln!(
                     "Encountered error while broadcasting transaction: {}",
                     err
@@ -852,6 +874,51 @@ async fn save_initialized_accounts(
     }
 }
 
+/// Broadcast a transaction to be included in the blockchain and checks that
+/// the tx has been successfully included into the mempool of a validator
+///
+/// In the case of errors in any of those stages, an error message is returned
+pub async fn broadcast_tx(
+    address: TendermintAddress,
+    to_broadcast: &TxBroadcastData,
+) -> Result<Response, Error> {
+    let (tx, wrapper_tx_hash, _decrypted_tx_hash) = match to_broadcast {
+        TxBroadcastData::Wrapper {
+            tx,
+            wrapper_hash,
+            decrypted_hash,
+        } => (tx, wrapper_hash, decrypted_hash),
+        _ => panic!("Cannot broadcast a dry-run transaction"),
+    };
+    let mut wrapper_tx_subscription = TendermintWebsocketClient::open(
+        WebSocketAddress::try_from(address.clone())?,
+        None,
+    )?;
+
+    let response = wrapper_tx_subscription
+        .broadcast_tx_sync(tx.to_bytes().into())
+        .await
+        .map_err(|err| Error::Response(format!("{:?}", err)))?;
+
+    wrapper_tx_subscription.close();
+
+    if response.code == 0.into() {
+        println!("Transaction added to mempool: {:?}", response);
+        // Print the transaction identifiers to enable the extraction of
+        // acceptance/application results later
+        #[cfg(not(feature = "ABCI"))]
+        {
+            println!("Wrapper transaction hash: {:?}", wrapper_tx_hash);
+            println!("Inner transaction hash: {:?}", _decrypted_tx_hash);
+        }
+        #[cfg(feature = "ABCI")]
+        println!("Transaction hash: {:?}", wrapper_tx_hash);
+        Ok(response)
+    } else {
+        Err(Error::Response(response.log.to_string()))
+    }
+}
+
 /// Broadcast a transaction to be included in the blockchain.
 ///
 /// Checks that
@@ -860,11 +927,11 @@ async fn save_initialized_accounts(
 /// 3. The decrypted payload of the tx has been included on the blockchain.
 ///
 /// In the case of errors in any of those stages, an error message is returned
-pub async fn broadcast_tx(
+pub async fn submit_tx(
     address: TendermintAddress,
     to_broadcast: TxBroadcastData,
 ) -> Result<TxResponse, Error> {
-    let (tx, wrapper_hash, decrypted_hash) = match to_broadcast {
+    let (_, wrapper_hash, _decrypted_hash) = match &to_broadcast {
         TxBroadcastData::Wrapper {
             tx,
             wrapper_hash,
@@ -872,7 +939,6 @@ pub async fn broadcast_tx(
         } => (tx, wrapper_hash, decrypted_hash),
         _ => panic!("Cannot broadcast a dry-run transaction"),
     };
-    let tx_bytes = tx.to_bytes();
     let mut wrapper_tx_subscription = TendermintWebsocketClient::open(
         WebSocketAddress::try_from(address.clone())?,
         None,
@@ -882,91 +948,78 @@ pub async fn broadcast_tx(
     //
     // Note that the `applied.hash` key comes from a custom event
     // created by the shell
-    let query = if !cfg!(feature = "ABCI") {
-        Query::from(EventType::NewBlock)
-            .and_eq("accepted.hash", wrapper_hash.as_str())
-    } else {
-        Query::from(EventType::NewBlock)
-            .and_eq("applied.hash", wrapper_hash.as_str())
-    };
+    #[cfg(not(feature = "ABCI"))]
+    let query_key = "accepted.hash";
+    #[cfg(feature = "ABCI")]
+    let query_key = "applied.hash";
+    let query = Query::from(EventType::NewBlock)
+        .and_eq(query_key, wrapper_hash.as_str());
     wrapper_tx_subscription.subscribe(query)?;
 
     // If we are using ABCI++, we also subscribe to the event emitted
     // when the encrypted payload makes its way onto the blockchain
-    let mut decrypted_tx_subscription = if !cfg!(feature = "ABCI") {
+    #[cfg(not(feature = "ABCI"))]
+    let mut decrypted_tx_subscription = {
         let mut decrypted_tx_subscription = TendermintWebsocketClient::open(
-            WebSocketAddress::try_from(address)?,
+            WebSocketAddress::try_from(address.clone())?,
             None,
         )?;
         let query = Query::from(EventType::NewBlock)
-            .and_eq("applied.hash", decrypted_hash.as_ref().unwrap().as_str());
+            .and_eq("applied.hash", _decrypted_hash.as_ref().unwrap().as_str());
         decrypted_tx_subscription.subscribe(query)?;
-        Some(decrypted_tx_subscription)
-    } else {
-        None
+        decrypted_tx_subscription
     };
+    // Broadcast the supplied transaction
+    broadcast_tx(address, &to_broadcast).await?;
 
-    let response = wrapper_tx_subscription
-        .broadcast_tx_sync(tx_bytes.into())
-        .await
-        .map_err(|err| Error::Response(format!("{:?}", err)))?;
-
-    let parsed = if response.code == 0.into() {
-        println!("Transaction added to mempool: {:?}", response);
-        let parsed = if !cfg!(feature = "ABCI") {
-            parse(
-                wrapper_tx_subscription.receive_response()?,
-                TmEventType::Accepted,
-                &wrapper_hash.to_string(),
-            )
-        } else {
-            TxResponse::find_tx(
-                wrapper_tx_subscription.receive_response()?,
-                wrapper_hash,
-            )
-        };
-        #[cfg(feature = "ABCI")]
-        {
+    #[cfg(not(feature = "ABCI"))]
+    let parsed = {
+        let parsed = parse(
+            wrapper_tx_subscription.receive_response()?,
+            TmEventType::Accepted,
+            &wrapper_hash.to_string(),
+        );
+        println!(
+            "Transaction accepted with result: {}",
+            serde_json::to_string_pretty(&parsed).unwrap()
+        );
+        // The transaction is now on chain. We wait for it to be decrypted
+        // and applied
+        if parsed.code == 0.to_string() {
+            let parsed = parse(
+                decrypted_tx_subscription.receive_response()?,
+                TmEventType::Applied,
+                _decrypted_hash.as_ref().unwrap(),
+            );
             println!(
                 "Transaction applied with result: {}",
                 serde_json::to_string_pretty(&parsed).unwrap()
             );
             Ok(parsed)
+        } else {
+            Ok(parsed)
         }
-        #[cfg(not(feature = "ABCI"))]
-        {
-            println!(
-                "Transaction accepted with result: {}",
-                serde_json::to_string_pretty(&parsed).unwrap()
-            );
-            // The transaction is now on chain. We wait for it to be decrypted
-            // and applied
-            if parsed.code == 0.to_string() {
-                let parsed = parse(
-                    decrypted_tx_subscription
-                        .as_ref()
-                        .unwrap()
-                        .receive_response()?,
-                    TmEventType::Applied,
-                    decrypted_hash.as_ref().unwrap(),
-                );
-                println!(
-                    "Transaction applied with result: {}",
-                    serde_json::to_string_pretty(&parsed).unwrap()
-                );
-                Ok(parsed)
-            } else {
-                Ok(parsed)
-            }
-        }
-    } else {
-        Err(Error::Response(response.log.to_string()))
     };
+
+    #[cfg(feature = "ABCI")]
+    let parsed = {
+        let parsed = TxResponse::find_tx(
+            wrapper_tx_subscription.receive_response()?,
+            wrapper_hash,
+        );
+        println!(
+            "Transaction applied with result: {}",
+            serde_json::to_string_pretty(&parsed).unwrap()
+        );
+        Ok(parsed)
+    };
+
     wrapper_tx_subscription.unsubscribe()?;
     wrapper_tx_subscription.close();
-    if !cfg!(feature = "ABCI") {
-        decrypted_tx_subscription.as_mut().unwrap().unsubscribe()?;
-        decrypted_tx_subscription.as_mut().unwrap().close();
+    #[cfg(not(feature = "ABCI"))]
+    {
+        decrypted_tx_subscription.unsubscribe()?;
+        decrypted_tx_subscription.close();
     }
 
     parsed
@@ -974,18 +1027,19 @@ pub async fn broadcast_tx(
 
 #[derive(Debug, Serialize)]
 pub struct TxResponse {
-    info: String,
-    height: String,
-    hash: String,
-    code: String,
-    gas_used: String,
-    initialized_accounts: Vec<Address>,
+    pub info: String,
+    pub height: String,
+    pub hash: String,
+    pub code: String,
+    pub gas_used: String,
+    pub initialized_accounts: Vec<Address>,
 }
 
 /// Parse the JSON payload received from a subscription
 ///
 /// Searches for custom events emitted from the ledger and converts
 /// them back to thin wrapper around a hashmap for further parsing.
+#[cfg(not(feature = "ABCI"))]
 fn parse(
     json: serde_json::Value,
     event_type: TmEventType,
@@ -1027,8 +1081,8 @@ fn parse(
 }
 
 impl TxResponse {
-    pub fn find_tx(json: serde_json::Value, tx_hash: String) -> Self {
-        let tx_hash_json = serde_json::Value::String(tx_hash.clone());
+    pub fn find_tx(json: serde_json::Value, tx_hash: &str) -> Self {
+        let tx_hash_json = serde_json::Value::String(tx_hash.to_string());
         let mut selector = jsonpath::selector(&json);
         let mut index = 0;
         // Find the tx with a matching hash

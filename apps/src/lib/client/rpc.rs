@@ -13,8 +13,8 @@ use anoma::ledger::pos::{
 use anoma::types::address::Address;
 use anoma::types::key::ed25519;
 use anoma::types::storage::Epoch;
-use anoma::types::{address, storage, token};
 use anoma::types::transaction::EncryptionKey;
+use anoma::types::{address, storage, token};
 use borsh::BorshDeserialize;
 use itertools::Itertools;
 #[cfg(not(feature = "ABCI"))]
@@ -24,13 +24,26 @@ use tendermint_config::net::Address as TendermintAddress;
 #[cfg(feature = "ABCI")]
 use tendermint_config_abci::net::Address as TendermintAddress;
 #[cfg(not(feature = "ABCI"))]
+use tendermint_rpc::error::Error as TError;
+#[cfg(not(feature = "ABCI"))]
+use tendermint_rpc::query::Query;
+#[cfg(not(feature = "ABCI"))]
 use tendermint_rpc::{Client, HttpClient};
+#[cfg(not(feature = "ABCI"))]
+use tendermint_rpc::{Order, SubscriptionClient, WebSocketClient};
+#[cfg(feature = "ABCI")]
+use tendermint_rpc_abci::error::Error as TError;
+#[cfg(feature = "ABCI")]
+use tendermint_rpc_abci::query::Query;
 #[cfg(feature = "ABCI")]
 use tendermint_rpc_abci::{Client, HttpClient};
+#[cfg(feature = "ABCI")]
+use tendermint_rpc_abci::{Order, SubscriptionClient, WebSocketClient};
 #[cfg(feature = "ABCI")]
 use tendermint_stable::abci::Code;
 
 use crate::cli::{self, args, Context};
+use crate::client::tx::TxResponse;
 use crate::node::ledger::rpc::{Path, PrefixValue};
 
 /// Query the epoch of the last committed block
@@ -71,18 +84,26 @@ pub async fn query_encryption_key(args: args::Query) -> Option<EncryptionKey> {
         .await
         .unwrap();
     match response.code {
-        Code::Ok => match Option::<Vec<u8>>::try_from_slice(&response.value[..]) {
-            Ok(Some(encryption_key)) => {
-                println!("Current encryption key: {:?}", encryption_key);
-                return BorshDeserialize::try_from_slice(&encryption_key[..]).ok();
+        Code::Ok => {
+            match Option::<Vec<u8>>::try_from_slice(&response.value[..]) {
+                Ok(Some(encryption_key)) => {
+                    println!("Current encryption key: {:?}", encryption_key);
+                    return BorshDeserialize::try_from_slice(
+                        &encryption_key[..],
+                    )
+                    .ok();
+                }
+                Ok(None) => {
+                    return None;
+                }
+                Err(err) => {
+                    eprintln!(
+                        "Error decoding the encryption key value: {}",
+                        err
+                    )
+                }
             }
-            Ok(None) => {
-                return None;
-            }
-            Err(err) => {
-                eprintln!("Error decoding the encryption key value: {}", err)
-            }
-        },
+        }
         Code::Err(err) => eprintln!(
             "Error in the query {} (error code {})",
             response.info, err
@@ -1010,4 +1031,164 @@ pub async fn query_has_storage_key(
         }
     }
     cli::safe_exit(1)
+}
+
+/// Represents a query for an event pertaining to the specified transaction
+
+#[derive(Debug, Clone)]
+pub enum TxEventQuery {
+    Accepted(String),
+    Applied(String),
+}
+
+impl TxEventQuery {
+    /// The event type to which this event query pertains
+    fn event_type(&self) -> &'static str {
+        match self {
+            TxEventQuery::Accepted(_tx_hash) => "accepted",
+            TxEventQuery::Applied(_tx_hash) => "applied",
+        }
+    }
+
+    /// The transaction to which this event query pertains
+    fn tx_hash(&self) -> &String {
+        match self {
+            TxEventQuery::Accepted(tx_hash) => tx_hash,
+            TxEventQuery::Applied(tx_hash) => tx_hash,
+        }
+    }
+}
+
+/// Transaction event queries are semantically a subset of general queries
+
+impl From<TxEventQuery> for Query {
+    fn from(tx_query: TxEventQuery) -> Self {
+        match tx_query {
+            TxEventQuery::Accepted(tx_hash) => {
+                Query::default().and_eq("accepted.hash", tx_hash)
+            }
+            TxEventQuery::Applied(tx_hash) => {
+                Query::default().and_eq("applied.hash", tx_hash)
+            }
+        }
+    }
+}
+
+/// Lookup the full response accompanying the specified transaction event
+
+pub async fn query_tx_response(
+    ledger_address: &TendermintAddress,
+    tx_query: TxEventQuery,
+) -> Result<TxResponse, TError> {
+    // Connect to the Tendermint server holding the transactions
+    let (client, driver) = WebSocketClient::new(ledger_address.clone()).await?;
+    let driver_handle = tokio::spawn(async move { driver.run().await });
+    // Find all blocks that apply a transaction with the specified hash
+    let blocks = &client
+        .block_search(Query::from(tx_query.clone()), 1, 255, Order::Ascending)
+        .await
+        .expect("Unable to query for transaction with given hash")
+        .blocks;
+    // Get the block results corresponding to a block to which
+    // the specified transaction belongs
+    let block = &blocks
+        .get(0)
+        .ok_or_else(|| {
+            TError::server(
+                "Unable to find a block applying the given transaction"
+                    .to_string(),
+            )
+        })?
+        .block;
+    let response_block_results = client
+        .block_results(block.header.height)
+        .await
+        .expect("Unable to retrieve block containing transaction");
+    // Search for the event where the specified transaction is
+    // applied to the blockchain
+    let query_event_opt =
+        response_block_results.end_block_events.and_then(|events| {
+            (&events)
+                .iter()
+                .find(|event| {
+                    event.type_str == tx_query.event_type()
+                        && (&event.attributes).iter().any(|tag| {
+                            tag.key.as_ref() == "hash"
+                                && tag.value.as_ref() == tx_query.tx_hash()
+                        })
+                })
+                .cloned()
+        });
+    let query_event = query_event_opt.ok_or_else(|| {
+        TError::server(
+            "Unable to find the event corresponding to the specified \
+             transaction"
+                .to_string(),
+        )
+    })?;
+    // Reformat the event attributes so as to ease value extraction
+    let event_map: std::collections::HashMap<&str, &str> = (&query_event
+        .attributes)
+        .iter()
+        .map(|tag| (tag.key.as_ref(), tag.value.as_ref()))
+        .collect();
+    // Summarize the transaction results that we were searching for
+    let result = TxResponse {
+        info: event_map["info"].to_string(),
+        height: event_map["height"].to_string(),
+        hash: event_map["hash"].to_string(),
+        code: event_map["code"].to_string(),
+        gas_used: event_map["gas_used"].to_string(),
+        initialized_accounts: serde_json::from_str(
+            event_map["initialized_accounts"],
+        )
+        .unwrap_or_default(),
+    };
+    // Signal to the driver to terminate.
+    client.close()?;
+    // Await the driver's termination to ensure proper connection closure.
+    let _ = driver_handle.await.unwrap_or_else(|x| {
+        eprintln!("{}", x);
+        cli::safe_exit(1)
+    });
+    Ok(result)
+}
+
+/// Lookup the results of applying the specified transaction to the
+/// blockchain.
+
+pub async fn query_result(_ctx: Context, args: args::QueryResult) {
+    // First try looking up application event pertaining to given hash.
+    let tx_response = query_tx_response(
+        &args.query.ledger_address,
+        TxEventQuery::Applied(args.tx_hash.clone()),
+    )
+    .await;
+    match tx_response {
+        Ok(result) => {
+            println!(
+                "Transaction was applied with result: {}",
+                serde_json::to_string_pretty(&result).unwrap()
+            )
+        }
+        Err(err1) => {
+            // If this fails then instead look for an acceptance event.
+            let tx_response = query_tx_response(
+                &args.query.ledger_address,
+                TxEventQuery::Accepted(args.tx_hash),
+            )
+            .await;
+            match tx_response {
+                Ok(result) => println!(
+                    "Transaction was accepted with result: {}",
+                    serde_json::to_string_pretty(&result).unwrap()
+                ),
+                Err(err2) => {
+                    // Print the errors that caused the lookups to fail
+                    eprintln!("{}\n{}", err1, err2);
+                    cli::safe_exit(1)
+                }
+            }
+        }
+    }
 }

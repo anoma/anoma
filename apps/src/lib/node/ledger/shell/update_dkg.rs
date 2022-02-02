@@ -17,18 +17,25 @@ where
     ///  * issue a PVSS transcript according to the state machines schedule
     pub fn update_dkg(&mut self) {
         if cfg!(feature = "ABCI") {
-            let me = if let ShellMode::Validator {data, ..} = &self.mode {
-                self.get_validator_from_protocol_pk(&data.keys.protocol_keypair.public())
+            let me = if let ShellMode::Validator { data, .. } = &self.mode {
+                self.get_validator_from_protocol_pk(
+                    &data.keys.protocol_keypair.public(),
+                )
             } else {
                 None
             };
-            if let ShellMode::Validator{dkg, .. } = &mut self.mode {
+            if let ShellMode::Validator { dkg, .. } = &mut self.mode {
                 if let Ok(msg) = dkg.state_machine.aggregate() {
-                    dkg.state_machine.apply_message(
-                        me.expect("Validator should know it's own public key"),
-                        msg
-                    )
-                    .expect("Applying one's own DKG message should not fail");
+                    dkg.state_machine
+                        .apply_message(
+                            me.expect(
+                                "Validator should know it's own public key",
+                            ),
+                            msg,
+                        )
+                        .expect(
+                            "Applying one's own DKG message should not fail",
+                        );
                 }
             }
         }
@@ -38,13 +45,16 @@ where
             if dkg.update {
                 if let DkgState::Success { final_key } = dkg.state_machine.state
                 {
-                    tracing::info!("Storing the newly created encryption key from the DKG.");
+                    tracing::info!(
+                        "Storing the newly created encryption key from the \
+                         DKG."
+                    );
                     self.storage.encryption_key =
                         Some(EncryptionKey(final_key).try_to_vec().unwrap());
                 } else {
                     tracing::warn!(
                         "The DKG did not complete in the previous epoch. \
-                        Encrypting transactions is not possible this epoch."
+                         Encrypting transactions is not possible this epoch."
                     );
                     // If DKG was not successful in the past epoch, we have
                     // no new key TODO: Allow this
@@ -54,10 +64,10 @@ where
 
                 if let Err(err) = self.new_dkg_instance() {
                     panic!(
-                        "Failed to create a new DKG instance for the new epoch \
-                     with error: {} \n\n\n The state of the last block has \
-                     been persisted, so it is safe to shut down and resolve \
-                     the issue.",
+                        "Failed to create a new DKG instance for the new \
+                         epoch with error: {} \n\n\n The state of the last \
+                         block has been persisted, so it is safe to shut down \
+                         and resolve the issue.",
                         err,
                     )
                 }

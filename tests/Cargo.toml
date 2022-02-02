@@ -61,12 +61,13 @@ tracing-subscriber = {version = "0.2.25", default-features = false, features = [
 assert_cmd = "1.0.7"
 borsh = "0.9.1"
 color-eyre = "0.5.11"
-escargot = "0.5.2"
+# NOTE: enable "print" feature to see output from builds ran by e2e tests
+escargot = {version = "0.5.7"} # , features = ["print"]}
+expectrl = {git = "https://github.com/heliaxdev/expectrl.git", branch = "tomas/expect-eager"}
 eyre = "0.6.5"
 itertools = "0.10.0"
 libp2p = "0.38.0"
 pretty_assertions = "0.7.2"
-rexpect = {git = "https://github.com/heliaxdev/rexpect.git", branch = "tomas/eof-hack-fix"}
 
 # This is used to enable logging from tests
 [package.metadata.cargo-udeps.ignore]

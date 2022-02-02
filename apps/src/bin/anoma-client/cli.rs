@@ -52,6 +52,9 @@ pub async fn main() -> Result<()> {
                 Sub::QuerySlashes(QuerySlashes(args)) => {
                     rpc::query_slashes(ctx, args).await;
                 }
+                Sub::QueryResult(QueryResult(args)) => {
+                    rpc::query_result(ctx, args).await;
+                }
                 // Gossip cmds
                 Sub::Intent(Intent(args)) => {
                     gossip::gossip_intent(ctx, args).await;

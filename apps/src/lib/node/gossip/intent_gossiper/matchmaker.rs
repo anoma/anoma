@@ -25,7 +25,7 @@ use super::filter::Filter;
 use super::mempool::{self, IntentMempool};
 use crate::cli::args;
 use crate::client::rpc;
-use crate::client::tx::{broadcast_tx, TxBroadcastData};
+use crate::client::tx::{submit_tx, TxBroadcastData};
 use crate::wallet::AtomicKeypair;
 use crate::{config, wasm_loader};
 
@@ -216,7 +216,8 @@ impl Matchmaker {
         if let Some(_encryption_key) = rpc::query_encryption_key(args::Query {
             ledger_address: self.ledger_address.clone(),
         })
-        .await {
+        .await
+        {
             let to_broadcast = {
                 let tx_signing_key = self.tx_signing_key.lock();
                 let tx = WrapperTx::new(
@@ -228,7 +229,7 @@ impl Matchmaker {
                     epoch,
                     0.into(),
                     Tx::new(tx_code, Some(tx_data)).sign(&tx_signing_key),
-                    //TODO: Actually use the fetched encryption key
+                    // TODO: Actually use the fetched encryption key
                     Default::default(),
                 );
 
@@ -253,11 +254,12 @@ impl Matchmaker {
             };
 
             let response =
-                broadcast_tx(self.ledger_address.clone(), to_broadcast).await;
+                submit_tx(self.ledger_address.clone(), to_broadcast).await;
             match response {
                 Ok(tx_response) => {
                     tracing::info!(
-                        "Injected transaction from matchmaker with result: {:#?}",
+                        "Injected transaction from matchmaker with result: \
+                         {:#?}",
                         tx_response
                     );
                 }
@@ -272,7 +274,7 @@ impl Matchmaker {
         } else {
             tracing::error!(
                 "Not encryption key exists for the current epoch. Matchmaker \
-                cannot submit any transaction this epoch."
+                 cannot submit any transaction this epoch."
             );
         }
     }

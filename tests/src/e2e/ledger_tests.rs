@@ -21,7 +21,9 @@ use borsh::BorshSerialize;
 use color_eyre::eyre::Result;
 use setup::constants::*;
 
-use crate::e2e::helpers::{find_address, find_voting_power, get_epoch};
+use crate::e2e::helpers::{
+    find_address, find_voting_power, get_actor_rpc, get_epoch,
+};
 use crate::e2e::setup::{self, sleep, Bin, Who};
 use crate::{run, run_as};
 
@@ -36,7 +38,7 @@ fn run_ledger() -> Result<()> {
     // Start the ledger as a validator
     for args in &cmd_combinations {
         let mut ledger =
-            run_as!(test, Who::Validator(0), Bin::Node, args, Some(20))?;
+            run_as!(test, Who::Validator(0), Bin::Node, args, Some(40))?;
         ledger.exp_string("Anoma ledger node started")?;
         ledger.exp_string("This node is a validator")?;
     }
@@ -44,7 +46,7 @@ fn run_ledger() -> Result<()> {
     // Start the ledger as a non-validator
     for args in &cmd_combinations {
         let mut ledger =
-            run_as!(test, Who::NonValidator, Bin::Node, args, Some(20))?;
+            run_as!(test, Who::NonValidator, Bin::Node, args, Some(40))?;
         ledger.exp_string("Anoma ledger node started")?;
         if !cfg!(feature = "ABCI") {
             ledger.exp_string("This node is a fullnode")?;
@@ -67,7 +69,7 @@ fn test_anoma_shuts_down_if_tendermint_dies() -> Result<()> {
 
     // 1. Run the ledger node
     let mut ledger =
-        run_as!(test, Who::Validator(0), Bin::Node, &["ledger"], Some(20))?;
+        run_as!(test, Who::Validator(0), Bin::Node, &["ledger"], Some(40))?;
 
     ledger.exp_string("Anoma ledger node started")?;
 
@@ -103,7 +105,7 @@ fn run_ledger_load_state_and_reset() -> Result<()> {
 
     // 1. Run the ledger node
     let mut ledger =
-        run_as!(test, Who::Validator(0), Bin::Node, &["ledger"], Some(20))?;
+        run_as!(test, Who::Validator(0), Bin::Node, &["ledger"], Some(40))?;
 
     ledger.exp_string("Anoma ledger node started")?;
     // There should be no previous state
@@ -122,7 +124,7 @@ fn run_ledger_load_state_and_reset() -> Result<()> {
 
     // 3. Run the ledger again, it should load its previous state
     let mut ledger =
-        run_as!(test, Who::Validator(0), Bin::Node, &["ledger"], Some(20))?;
+        run_as!(test, Who::Validator(0), Bin::Node, &["ledger"], Some(40))?;
 
     ledger.exp_string("Anoma ledger node started")?;
 
@@ -147,7 +149,7 @@ fn run_ledger_load_state_and_reset() -> Result<()> {
 
     // 6. Run the ledger again, it should start from fresh state
     let mut session =
-        run_as!(test, Who::Validator(0), Bin::Node, &["ledger"], Some(20))?;
+        run_as!(test, Who::Validator(0), Bin::Node, &["ledger"], Some(40))?;
 
     session.exp_string("Anoma ledger node started")?;
 
@@ -170,7 +172,7 @@ fn ledger_txs_and_queries() -> Result<()> {
 
     // 1. Run the ledger node
     let mut ledger =
-        run_as!(test, Who::Validator(0), Bin::Node, &["ledger"], Some(20))?;
+        run_as!(test, Who::Validator(0), Bin::Node, &["ledger"], Some(40))?;
 
     ledger.exp_string("Anoma ledger node started")?;
     if !cfg!(feature = "ABCI") {
@@ -180,12 +182,16 @@ fn ledger_txs_and_queries() -> Result<()> {
     }
 
     // Wait for the first DKG round to finish
-    ledger.exp_string("Storing the newly created encryption key from the DKG.")?;
+    ledger
+        .exp_string("Storing the newly created encryption key from the DKG.")?;
+    let _live_ledger = ledger.give_up_control();
 
     let vp_user = wasm_abs_path(VP_USER_WASM);
     let vp_user = vp_user.to_string_lossy();
     let tx_no_op = wasm_abs_path(TX_NO_OP_WASM);
     let tx_no_op = tx_no_op.to_string_lossy();
+
+    let validator_one_rpc = get_actor_rpc(&test, &Who::Validator(0));
 
     let txs_args = vec![
             // 2. Submit a token transfer tx
@@ -205,6 +211,8 @@ fn ledger_txs_and_queries() -> Result<()> {
                 "0",
                 "--fee-token",
                 XAN,
+                "--ledger-address",
+                &validator_one_rpc,
             ],
             // 3. Submit a transaction to update an account's validity
             // predicate
@@ -220,6 +228,8 @@ fn ledger_txs_and_queries() -> Result<()> {
                  "0",
                  "--fee-token",
                  XAN,
+                "--ledger-address",
+                &validator_one_rpc,
             ],
             // 4. Submit a custom tx
             vec![
@@ -236,6 +246,8 @@ fn ledger_txs_and_queries() -> Result<()> {
                 "0",
                 "--fee-token",
                 XAN,
+                "--ledger-address",
+                &validator_one_rpc,
             ],
             // 5. Submit a tx to initialize a new account
             vec![
@@ -255,6 +267,8 @@ fn ledger_txs_and_queries() -> Result<()> {
                 "0",
                 "--fee-token",
                 XAN,
+                "--ledger-address",
+                &validator_one_rpc,
             ],
         ];
     for tx_args in &txs_args {
@@ -264,7 +278,7 @@ fn ledger_txs_and_queries() -> Result<()> {
             } else {
                 tx_args.clone()
             };
-            let mut client = run!(test, Bin::Client, tx_args, Some(20))?;
+            let mut client = run!(test, Bin::Client, tx_args, Some(40))?;
 
             if !dry_run {
                 if !cfg!(feature = "ABCI") {
@@ -280,13 +294,21 @@ fn ledger_txs_and_queries() -> Result<()> {
     let query_args_and_expected_response = vec![
         // 6. Query token balance
         (
-            vec!["balance", "--owner", BERTHA, "--token", XAN],
+            vec![
+                "balance",
+                "--owner",
+                BERTHA,
+                "--token",
+                XAN,
+                "--ledger-address",
+                &validator_one_rpc,
+            ],
             // expect a decimal
             r"XAN: \d+(\.\d+)?",
         ),
     ];
     for (query_args, expected) in &query_args_and_expected_response {
-        let mut client = run!(test, Bin::Client, query_args, Some(20))?;
+        let mut client = run!(test, Bin::Client, query_args, Some(40))?;
         client.exp_regex(expected)?;
 
         client.assert_success();
@@ -297,7 +319,7 @@ fn ledger_txs_and_queries() -> Result<()> {
 
 /// In this test we:
 /// 1. Run the ledger node
-/// 2. Submit a valid ransaction before encryption key is created
+/// 2. Submit a valid transaction before encryption key is created
 /// 3. Submit an invalid transaction (disallowed by state machine)
 /// 4. Shut down the ledger
 /// 5. Restart the ledger
@@ -308,13 +330,14 @@ fn invalid_transactions() -> Result<()> {
 
     // 1. Run the ledger node
     let mut ledger =
-        run_as!(test, Who::Validator(0), Bin::Node, &["ledger"], Some(20))?;
+        run_as!(test, Who::Validator(0), Bin::Node, &["ledger"], Some(40))?;
     ledger.exp_string("Anoma ledger node started")?;
     if !cfg!(feature = "ABCI") {
         ledger.exp_string("started node")?;
     } else {
         ledger.exp_string("Started node")?;
     }
+    let validator_one_rpc = get_actor_rpc(&test, &Who::Validator(0));
 
     // 2. Submit a valid transaction before encryption key is created
     let tx_args = vec![
@@ -333,17 +356,22 @@ fn invalid_transactions() -> Result<()> {
         "0",
         "--fee-token",
         XAN,
+        "--ledger-address",
+        &validator_one_rpc,
     ];
     let mut client = run!(test, Bin::Client, tx_args, Some(20))?;
     // transaction should be rejected
     client.exp_string(
-        "An encryption key was not found for the current epoch. \
-             Transactions can not be sent.")?;
+        "An encryption key was not found for the current epoch. Transactions \
+         can not be sent.",
+    )?;
     // client process should exit with error code
     client.assert_failure();
 
     // Wait for the first DKG round to finish
-    ledger.exp_string("Storing the newly created encryption key from the DKG.")?;
+    ledger
+        .exp_string("Storing the newly created encryption key from the DKG.")?;
+    let live_ledger = ledger.give_up_control();
 
     // 3. Submit a an invalid transaction (trying to mint tokens should fail
     // in the token's VP)
@@ -376,9 +404,11 @@ fn invalid_transactions() -> Result<()> {
         "0",
         "--fee-token",
         XAN,
+        "--ledger-address",
+        &validator_one_rpc,
     ];
 
-    let mut client = run!(test, Bin::Client, tx_args, Some(20))?;
+    let mut client = run!(test, Bin::Client, tx_args, Some(40))?;
     if !cfg!(feature = "ABCI") {
         client.exp_string("Transaction accepted")?;
     }
@@ -387,6 +417,7 @@ fn invalid_transactions() -> Result<()> {
     client.exp_string(r#""code": "1"#)?;
 
     client.assert_success();
+    let mut ledger = live_ledger.gain_control();
     ledger.exp_string("some VPs rejected apply_tx storage modification")?;
 
     // Wait to commit a block
@@ -403,7 +434,7 @@ fn invalid_transactions() -> Result<()> {
 
     // 5. Restart the ledger
     let mut ledger =
-        run_as!(test, Who::Validator(0), Bin::Node, &["ledger"], Some(20))?;
+        run_as!(test, Who::Validator(0), Bin::Node, &["ledger"], Some(40))?;
 
     ledger.exp_string("Anoma ledger node started")?;
 
@@ -432,12 +463,15 @@ fn invalid_transactions() -> Result<()> {
         // Force to ignore client check that fails on the balance check of the
         // source address
         "--force",
+        "--ledger-address",
+        &validator_one_rpc,
     ];
 
-    let mut client = run!(test, Bin::Client, tx_args, Some(20))?;
+    let mut client = run!(test, Bin::Client, tx_args, Some(40))?;
     if !cfg!(feature = "ABCI") {
         client.exp_string("Transaction accepted")?;
     }
+
     client.exp_string("Transaction applied")?;
 
     client.exp_string("Error trying to apply a transaction")?;
@@ -461,10 +495,10 @@ fn invalid_transactions() -> Result<()> {
 #[test]
 fn pos_bonds() -> Result<()> {
     let unbonding_len = 2;
-    let test =if !cfg!(feature = "ABCI") {
+    let test = if !cfg!(feature = "ABCI") {
         setup::single_node_net()?
     } else {
-         setup::network(
+        setup::network(
             |genesis| {
                 let parameters = ParametersConfig {
                     min_num_of_blocks: 2,
@@ -487,7 +521,7 @@ fn pos_bonds() -> Result<()> {
 
     // 1. Run the ledger node
     let mut ledger =
-        run_as!(test, Who::Validator(0), Bin::Node, &["ledger"], Some(20))?;
+        run_as!(test, Who::Validator(0), Bin::Node, &["ledger"], Some(40))?;
 
     ledger.exp_string("Anoma ledger node started")?;
     if !cfg!(feature = "ABCI") {
@@ -496,7 +530,11 @@ fn pos_bonds() -> Result<()> {
         ledger.exp_string("Started node")?;
     }
     // Wait for the first DKG round to finish
-    ledger.exp_string("Storing the newly created encryption key from the DKG.")?;
+    ledger
+        .exp_string("Storing the newly created encryption key from the DKG.")?;
+    // stop reading logs from the ledger to save on memory.
+    let _live_ledger = ledger.give_up_control();
+    let validator_one_rpc = get_actor_rpc(&test, &Who::Validator(0));
 
     // 2. Submit a self-bond for the genesis validator
     let tx_args = vec![
@@ -511,9 +549,11 @@ fn pos_bonds() -> Result<()> {
         "0",
         "--fee-token",
         XAN,
+        "--ledger-address",
+        &validator_one_rpc,
     ];
     let mut client =
-        run_as!(test, Who::Validator(0), Bin::Client, tx_args, Some(20))?;
+        run_as!(test, Who::Validator(0), Bin::Client, tx_args, Some(40))?;
     client.exp_string("Transaction is valid.")?;
     client.assert_success();
 
@@ -532,8 +572,10 @@ fn pos_bonds() -> Result<()> {
         "0",
         "--fee-token",
         XAN,
+        "--ledger-address",
+        &validator_one_rpc,
     ];
-    let mut client = run!(test, Bin::Client, tx_args, Some(20))?;
+    let mut client = run!(test, Bin::Client, tx_args, Some(40))?;
     client.exp_string("Transaction is valid.")?;
     client.assert_success();
 
@@ -550,9 +592,11 @@ fn pos_bonds() -> Result<()> {
         "0",
         "--fee-token",
         XAN,
+        "--ledger-address",
+        &validator_one_rpc,
     ];
     let mut client =
-        run_as!(test, Who::Validator(0), Bin::Client, tx_args, Some(20))?;
+        run_as!(test, Who::Validator(0), Bin::Client, tx_args, Some(40))?;
     client.exp_string("Transaction is valid.")?;
     client.assert_success();
 
@@ -571,13 +615,15 @@ fn pos_bonds() -> Result<()> {
         "0",
         "--fee-token",
         XAN,
+        "--ledger-address",
+        &validator_one_rpc,
     ];
-    let mut client = run!(test, Bin::Client, tx_args, Some(20))?;
+    let mut client = run!(test, Bin::Client, tx_args, Some(40))?;
     client.exp_string("Transaction is valid.")?;
     client.assert_success();
 
     // 6. Wait for the unbonding epoch
-    let epoch = get_epoch(&test)?;
+    let epoch = get_epoch(&test, &validator_one_rpc)?;
     let earliest_withdrawal_epoch = epoch + unbonding_len;
     println!(
         "Current epoch: {}, earliest epoch for withdrawal: {}",
@@ -592,7 +638,7 @@ fn pos_bonds() -> Result<()> {
                 earliest_withdrawal_epoch
             );
         }
-        let epoch = get_epoch(&test)?;
+        let epoch = get_epoch(&test, &validator_one_rpc)?;
         if epoch >= earliest_withdrawal_epoch {
             break;
         }
@@ -609,9 +655,11 @@ fn pos_bonds() -> Result<()> {
         "0",
         "--fee-token",
         XAN,
+        "--ledger-address",
+        &validator_one_rpc,
     ];
     let mut client =
-        run_as!(test, Who::Validator(0), Bin::Client, tx_args, Some(20))?;
+        run_as!(test, Who::Validator(0), Bin::Client, tx_args, Some(40))?;
     client.exp_string("Transaction is valid.")?;
     client.assert_success();
 
@@ -628,8 +676,10 @@ fn pos_bonds() -> Result<()> {
         "0",
         "--fee-token",
         XAN,
+        "--ledger-address",
+        &validator_one_rpc,
     ];
-    let mut client = run!(test, Bin::Client, tx_args, Some(20))?;
+    let mut client = run!(test, Bin::Client, tx_args, Some(40))?;
     client.exp_string("Transaction is valid.")?;
     client.assert_success();
 
@@ -670,7 +720,7 @@ fn pos_init_validator() -> Result<()> {
 
     // 1. Run the ledger node
     let mut ledger =
-        run_as!(test, Who::Validator(0), Bin::Node, &["ledger"], Some(20))?;
+        run_as!(test, Who::Validator(0), Bin::Node, &["ledger"], Some(40))?;
 
     ledger.exp_string("Anoma ledger node started")?;
     if !cfg!(feature = "ABCI") {
@@ -679,7 +729,10 @@ fn pos_init_validator() -> Result<()> {
         ledger.exp_string("Started node")?;
     }
     // Wait for the first DKG round to finish
-    ledger.exp_string("Storing the newly created encryption key from the DKG.")?;
+    ledger
+        .exp_string("Storing the newly created encryption key from the DKG.")?;
+    let _live_ledger = ledger.give_up_control();
+    let validator_one_rpc = get_actor_rpc(&test, &Who::Validator(0));
 
     // 2. Initialize a new validator account
     let new_validator = "new-validator";
@@ -697,8 +750,10 @@ fn pos_init_validator() -> Result<()> {
         "0",
         "--fee-token",
         XAN,
+        "--ledger-address",
+        &validator_one_rpc,
     ];
-    let mut client = run!(test, Bin::Client, tx_args, Some(20))?;
+    let mut client = run!(test, Bin::Client, tx_args, Some(40))?;
     client.exp_string("Transaction is valid.")?;
     client.assert_success();
 
@@ -720,8 +775,10 @@ fn pos_init_validator() -> Result<()> {
         "0",
         "--fee-token",
         XAN,
+        "--ledger-address",
+        &validator_one_rpc,
     ];
-    let mut client = run!(test, Bin::Client, tx_args, Some(20))?;
+    let mut client = run!(test, Bin::Client, tx_args, Some(40))?;
     client.exp_string("Transaction is valid.")?;
     client.assert_success();
     //     Then self-bond the tokens:
@@ -739,8 +796,10 @@ fn pos_init_validator() -> Result<()> {
         "0",
         "--fee-token",
         XAN,
+        "--ledger-address",
+        &validator_one_rpc,
     ];
-    let mut client = run!(test, Bin::Client, tx_args, Some(20))?;
+    let mut client = run!(test, Bin::Client, tx_args, Some(40))?;
     client.exp_string("Transaction is valid.")?;
     client.assert_success();
 
@@ -761,8 +820,10 @@ fn pos_init_validator() -> Result<()> {
         "0",
         "--fee-token",
         XAN,
+        "--ledger-address",
+        &validator_one_rpc,
     ];
-    let mut client = run!(test, Bin::Client, tx_args, Some(20))?;
+    let mut client = run!(test, Bin::Client, tx_args, Some(40))?;
     client.exp_string("Transaction is valid.")?;
     client.assert_success();
 
@@ -779,14 +840,16 @@ fn pos_init_validator() -> Result<()> {
         "0",
         "--fee-token",
         XAN,
+        "--ledger-address",
+        &validator_one_rpc,
     ];
-    let mut client = run!(test, Bin::Client, tx_args, Some(20))?;
+    let mut client = run!(test, Bin::Client, tx_args, Some(40))?;
     client.exp_string("Transaction is valid.")?;
     client.assert_success();
 
     // 6. Wait for the pipeline epoch when the validator's voting power should
     // be non-zero
-    let epoch = get_epoch(&test)?;
+    let epoch = get_epoch(&test, &validator_one_rpc)?;
     let earliest_update_epoch = epoch + pipeline_len;
     println!(
         "Current epoch: {}, earliest epoch with updated voting power: {}",
@@ -798,14 +861,15 @@ fn pos_init_validator() -> Result<()> {
         if Instant::now().duration_since(start) > loop_timeout {
             panic!("Timed out waiting for epoch: {}", earliest_update_epoch);
         }
-        let epoch = get_epoch(&test)?;
+        let epoch = get_epoch(&test, &validator_one_rpc)?;
         if epoch >= earliest_update_epoch {
             break;
         }
     }
 
     // 7. Check the new validator's voting power
-    let voting_power = find_voting_power(&test, new_validator)?;
+    let voting_power =
+        find_voting_power(&test, new_validator, &validator_one_rpc)?;
     assert_eq!(voting_power, 11);
 
     Ok(())
@@ -825,7 +889,7 @@ fn ledger_many_txs_in_a_block() -> Result<()> {
 
     // 1. Run the ledger node
     let mut ledger =
-        run_as!(*test, Who::Validator(0), Bin::Node, &["ledger"], Some(50))?;
+        run_as!(*test, Who::Validator(0), Bin::Node, &["ledger"], Some(60))?;
 
     ledger.exp_string("Anoma ledger node started")?;
     if !cfg!(feature = "ABCI") {
@@ -834,7 +898,11 @@ fn ledger_many_txs_in_a_block() -> Result<()> {
         ledger.exp_string("Started node")?;
     }
     // Wait for the first DKG round to finish
-    ledger.exp_string("Storing the newly created encryption key from the DKG.")?;
+    ledger
+        .exp_string("Storing the newly created encryption key from the DKG.")?;
+    let _live_ledger = ledger.give_up_control();
+
+    let validator_one_rpc = Arc::new(get_actor_rpc(&test, &Who::Validator(0)));
 
     // A token transfer tx args
     let tx_args = Arc::new(vec![
@@ -853,6 +921,7 @@ fn ledger_many_txs_in_a_block() -> Result<()> {
         "0",
         "--fee-token",
         XAN,
+        "--ledger-address",
     ]);
 
     // 2. Spawn threads each submitting token transfer tx
@@ -862,9 +931,12 @@ fn ledger_many_txs_in_a_block() -> Result<()> {
         .into_iter()
         .map(|_| {
             let test = Arc::clone(&test);
+            let validator_one_rpc = Arc::clone(&validator_one_rpc);
             let tx_args = Arc::clone(&tx_args);
             std::thread::spawn(move || {
-                let mut client = run!(*test, Bin::Client, &*tx_args, Some(30))?;
+                let mut args = (*tx_args).clone();
+                args.push(&*validator_one_rpc);
+                let mut client = run!(*test, Bin::Client, args, Some(40))?;
                 if !cfg!(feature = "ABCI") {
                     client.exp_string("Transaction accepted")?;
                 }
