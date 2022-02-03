@@ -118,7 +118,6 @@ fn run_ledger_load_state_and_reset() -> Result<()> {
     // Wait for the node to stop running to finish writing the state and tx
     // queue
     ledger.exp_string("Anoma ledger node has shut down.")?;
-    ledger.exp_string("Transaction queue has been stored.")?;
     ledger.exp_eof()?;
     drop(ledger);
 
@@ -428,7 +427,6 @@ fn invalid_transactions() -> Result<()> {
     // Wait for the node to stop running to finish writing the state and tx
     // queue
     ledger.exp_string("Anoma ledger node has shut down.")?;
-    ledger.exp_string("Transaction queue has been stored.")?;
     ledger.exp_eof()?;
     drop(ledger);
 
