@@ -33,6 +33,7 @@ pub fn find_address(test: &Test, alias: impl AsRef<str>) -> Result<Address> {
     Ok(address)
 }
 
+/// Find the address of the intent gossiper node's RPC endpoint.
 pub fn get_actor_rpc(test: &Test, who: &Who) -> String {
     let base_dir = test.get_base_dir(who);
     let tendermint_mode = match who {
@@ -41,6 +42,17 @@ pub fn get_actor_rpc(test: &Test, who: &Who) -> String {
     };
     let config = Config::load(&base_dir, &test.net.chain_id, tendermint_mode);
     config.ledger.tendermint.rpc_address.to_string()
+}
+
+/// Find the address of the intent gossiper node's matchmakers server.
+pub fn get_gossiper_mm_server(test: &Test, who: &Who) -> String {
+    let base_dir = test.get_base_dir(who);
+    let tendermint_mode = match who {
+        Who::NonValidator => TendermintMode::Full,
+        Who::Validator(_) => TendermintMode::Validator,
+    };
+    let config = Config::load(&base_dir, &test.net.chain_id, tendermint_mode);
+    config.intent_gossiper.matchmakers_server_addr.to_string()
 }
 
 /// Find the address of an account by its alias from the wallet

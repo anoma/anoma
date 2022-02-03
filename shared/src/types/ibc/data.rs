@@ -1,11 +1,9 @@
 //! IBC-related data definitions.
 use std::convert::TryFrom;
+use std::fmt::{self, Display, Formatter};
 
-use borsh::{BorshDeserialize, BorshSerialize};
 #[cfg(not(feature = "ABCI"))]
 use ibc::applications::ics20_fungible_token_transfer::msgs::transfer::MsgTransfer;
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics02_client::height::Height;
 #[cfg(not(feature = "ABCI"))]
 use ibc::core::ics02_client::msgs::create_client::MsgCreateAnyClient;
 #[cfg(not(feature = "ABCI"))]
@@ -49,21 +47,15 @@ use ibc::core::ics04_channel::msgs::timeout_on_close::MsgTimeoutOnClose;
 #[cfg(not(feature = "ABCI"))]
 use ibc::core::ics04_channel::msgs::{ChannelMsg, PacketMsg};
 #[cfg(not(feature = "ABCI"))]
-use ibc::core::ics04_channel::packet::{Packet, Sequence};
-#[cfg(not(feature = "ABCI"))]
-use ibc::core::ics24_host::identifier::{ChannelId, PortId};
+use ibc::core::ics04_channel::packet::Receipt;
 #[cfg(not(feature = "ABCI"))]
 use ibc::core::ics26_routing::error::Error as Ics26Error;
 #[cfg(not(feature = "ABCI"))]
 use ibc::core::ics26_routing::msgs::Ics26Envelope;
 #[cfg(not(feature = "ABCI"))]
 use ibc::downcast;
-#[cfg(not(feature = "ABCI"))]
-use ibc::timestamp::Timestamp;
 #[cfg(feature = "ABCI")]
 use ibc_abci::applications::ics20_fungible_token_transfer::msgs::transfer::MsgTransfer;
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics02_client::height::Height;
 #[cfg(feature = "ABCI")]
 use ibc_abci::core::ics02_client::msgs::create_client::MsgCreateAnyClient;
 #[cfg(feature = "ABCI")]
@@ -107,22 +99,24 @@ use ibc_abci::core::ics04_channel::msgs::timeout_on_close::MsgTimeoutOnClose;
 #[cfg(feature = "ABCI")]
 use ibc_abci::core::ics04_channel::msgs::{ChannelMsg, PacketMsg};
 #[cfg(feature = "ABCI")]
-use ibc_abci::core::ics04_channel::packet::{Packet, Sequence};
-#[cfg(feature = "ABCI")]
-use ibc_abci::core::ics24_host::identifier::{ChannelId, PortId};
+use ibc_abci::core::ics04_channel::packet::Receipt;
 #[cfg(feature = "ABCI")]
 use ibc_abci::core::ics26_routing::error::Error as Ics26Error;
 #[cfg(feature = "ABCI")]
 use ibc_abci::core::ics26_routing::msgs::Ics26Envelope;
 #[cfg(feature = "ABCI")]
 use ibc_abci::downcast;
+#[cfg(not(feature = "ABCI"))]
+use ibc_proto::ibc::core::channel::v1::acknowledgement::Response;
+#[cfg(not(feature = "ABCI"))]
+use ibc_proto::ibc::core::channel::v1::Acknowledgement;
 #[cfg(feature = "ABCI")]
-use ibc_abci::timestamp::Timestamp;
+use ibc_proto_abci::ibc::core::channel::v1::acknowledgement::Response;
+#[cfg(feature = "ABCI")]
+use ibc_proto_abci::ibc::core::channel::v1::Acknowledgement;
 use prost::Message;
 use prost_types::Any;
 use thiserror::Error;
-
-use crate::types::time::DateTimeUtc;
 
 #[allow(missing_docs)]
 #[derive(Error, Debug)]
@@ -137,68 +131,6 @@ pub enum Error {
 
 /// Decode result for IBC data
 pub type Result<T> = std::result::Result<T, Error>;
-
-/// Data for sending a packet
-#[derive(Debug, Clone, BorshSerialize, BorshDeserialize)]
-pub struct PacketSendData {
-    /// The source port
-    pub source_port: PortId,
-    /// The source channel
-    pub source_channel: ChannelId,
-    /// The destination port
-    pub destination_port: PortId,
-    /// The destination channel
-    pub destination_channel: ChannelId,
-    /// The data of packet
-    pub packet_data: Vec<u8>,
-    /// The timeout height
-    pub timeout_height: Height,
-    /// The timeout timestamp
-    pub timeout_timestamp: Option<DateTimeUtc>,
-}
-
-impl PacketSendData {
-    /// Create data for sending a packet
-    pub fn new(
-        source_port: PortId,
-        source_channel: ChannelId,
-        destination_port: PortId,
-        destination_channel: ChannelId,
-        packet_data: Vec<u8>,
-        timeout_height: Height,
-        timeout_timestamp: Timestamp,
-    ) -> Self {
-        let timeout_timestamp =
-            timeout_timestamp.as_datetime().map(DateTimeUtc);
-        Self {
-            source_port,
-            source_channel,
-            destination_port,
-            destination_channel,
-            packet_data,
-            timeout_height,
-            timeout_timestamp,
-        }
-    }
-
-    /// Returns a packet
-    pub fn packet(&self, sequence: Sequence) -> Packet {
-        let timeout_timestamp = match self.timeout_timestamp {
-            Some(timestamp) => Timestamp::from_datetime(timestamp.0),
-            None => Timestamp::none(),
-        };
-        Packet {
-            sequence,
-            source_port: self.source_port.clone(),
-            source_channel: self.source_channel.clone(),
-            destination_port: self.destination_port.clone(),
-            destination_channel: self.destination_channel.clone(),
-            data: self.packet_data.clone(),
-            timeout_height: self.timeout_height,
-            timeout_timestamp,
-        }
-    }
-}
 
 /// IBC Message
 #[derive(Debug, Clone)]
@@ -455,5 +387,84 @@ impl IbcMessage {
                 "The message is not an ICS04 packet message".to_string(),
             )
         })
+    }
+}
+
+/// Receipt for a packet
+#[derive(Clone, Debug)]
+pub struct PacketReceipt(pub Receipt);
+
+impl PacketReceipt {
+    /// Return bytes
+    pub fn as_bytes(&self) -> &[u8] {
+        // same as ibc-go
+        &[1_u8]
+    }
+}
+
+impl Default for PacketReceipt {
+    fn default() -> Self {
+        Self(Receipt::Ok)
+    }
+}
+
+/// Acknowledgement for a packet
+#[derive(Clone, Debug)]
+pub struct PacketAck(pub Acknowledgement);
+
+// TODO temporary type. add a new type for ack to ibc-rs
+impl PacketAck {
+    /// Encode the ack
+    pub fn encode_to_vec(&self) -> Vec<u8> {
+        // TODO encode as ibc-go
+        self.to_string().as_bytes().to_vec()
+    }
+}
+
+impl Default for PacketAck {
+    fn default() -> Self {
+        Self(Acknowledgement {
+            response: Some(Response::Result(vec![1_u8])),
+        })
+    }
+}
+
+// for the string to be used by the current reader
+impl Display for PacketAck {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        write!(f, "ack")
+    }
+}
+
+// TODO temporary type. add a new type for ack to ibc-rs
+/// Data to transfer a token
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+pub struct FungibleTokenPacketData {
+    /// the token denomination to be transferred
+    pub denomination: String,
+    /// the token amount to be transferred
+    pub amount: String,
+    /// the sender address
+    pub sender: String,
+    /// the recipient address on the destination chain
+    pub receiver: String,
+}
+
+impl From<MsgTransfer> for FungibleTokenPacketData {
+    fn from(msg: MsgTransfer) -> Self {
+        // TODO validation
+        let token = msg.token.unwrap();
+        Self {
+            denomination: token.denom,
+            amount: token.amount,
+            sender: msg.sender.to_string(),
+            receiver: msg.receiver.to_string(),
+        }
+    }
+}
+
+impl Display for FungibleTokenPacketData {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", serde_json::to_string(self).unwrap())
     }
 }

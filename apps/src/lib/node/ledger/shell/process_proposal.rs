@@ -289,7 +289,7 @@ where
                 })
                 .to_bytes();
                 // we are not checking that txs are out of order
-                self.tx_queue.push(wrapper);
+                self.storage.tx_queue.push(wrapper);
                 // check the decoded tx
                 let mut decoded_resp =
                     self.process_proposal(shim::request::ProcessProposal {
@@ -386,7 +386,7 @@ mod test_process_proposal {
         #[cfg(feature = "ABCI")]
         {
             assert_eq!(response.tx, tx);
-            assert!(shell.shell.tx_queue.is_empty())
+            assert!(shell.shell.storage.tx_queue.is_empty())
         }
     }
 
@@ -465,7 +465,7 @@ mod test_process_proposal {
         #[cfg(feature = "ABCI")]
         {
             assert_eq!(response.tx, new_tx.to_bytes());
-            assert!(shell.shell.tx_queue.is_empty())
+            assert!(shell.shell.storage.tx_queue.is_empty())
         }
     }
 
@@ -506,7 +506,7 @@ mod test_process_proposal {
         #[cfg(feature = "ABCI")]
         {
             assert_eq!(response.tx, wrapper.to_bytes());
-            assert!(shell.shell.tx_queue.is_empty())
+            assert!(shell.shell.storage.tx_queue.is_empty())
         }
     }
 
@@ -559,7 +559,7 @@ mod test_process_proposal {
         #[cfg(feature = "ABCI")]
         {
             assert_eq!(response.tx, wrapper.to_bytes());
-            assert!(shell.shell.tx_queue.is_empty())
+            assert!(shell.shell.storage.tx_queue.is_empty())
         }
     }
 
@@ -709,7 +709,7 @@ mod test_process_proposal {
                         hash_tx(inner.try_to_vec().unwrap().as_ref()),
                         hash_tx(wrapper.try_to_vec().unwrap().as_ref())
                     );
-                    assert!(shell.shell.tx_queue.is_empty())
+                    assert!(shell.shell.storage.tx_queue.is_empty())
                 }
                 _ => panic!("Test failed"),
             }

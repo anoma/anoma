@@ -76,6 +76,7 @@ pub struct ArgFlag {
     pub name: &'static str,
 }
 
+#[allow(dead_code)]
 pub struct ArgMulti<T> {
     pub name: &'static str,
     pub r#type: PhantomData<T>,
@@ -121,6 +122,7 @@ pub const fn flag(name: &'static str) -> ArgFlag {
     ArgFlag { name }
 }
 
+#[allow(dead_code)]
 pub const fn arg_multi<T>(name: &'static str) -> ArgMulti<T> {
     ArgMulti {
         name,
@@ -144,6 +146,7 @@ impl<T> Arg<T> {
         }
     }
 
+    #[allow(dead_code)]
     pub const fn multi(self) -> ArgMulti<T> {
         ArgMulti {
             name: self.name,
@@ -246,6 +249,7 @@ impl ArgFlag {
     }
 }
 
+#[allow(dead_code)]
 impl<T> ArgMulti<T>
 where
     T: FromStr,

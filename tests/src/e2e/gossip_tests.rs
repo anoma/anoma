@@ -19,29 +19,36 @@ use serde_json::json;
 use setup::constants::*;
 
 use super::setup::ENV_VAR_DEBUG;
-use crate::e2e::helpers::find_address;
+use crate::e2e::helpers::{
+    find_address, get_actor_rpc, get_gossiper_mm_server,
+};
 use crate::e2e::setup::{self, Bin, Who};
 use crate::{run, run_as};
 
 /// Test that when we "run-gossip" a peer with no seeds should fail
 /// bootstrapping kademlia. A peer with a seed should be able to
 /// bootstrap kademia and connect to the other peer.
+/// In this test we:
+/// 1. Check that a gossip node can start and stop cleanly
+/// 2. Check that two peers connected to the same seed node discover each other
 #[test]
 fn run_gossip() -> Result<()> {
     let test =
-        setup::network(|genesis| setup::add_validators(1, genesis), None)?;
+        setup::network(|genesis| setup::add_validators(2, genesis), None)?;
 
-    let mut cmd =
-        run_as!(test, Who::Validator(0), Bin::Node, &["gossip"], Some(20),)?;
-    // Node without peers
-    cmd.exp_regex(r"Peer id: PeerId\(.*\)")?;
+    // 1. Start the first gossip node and then stop it
+    let mut node_0 =
+        run_as!(test, Who::Validator(0), Bin::Node, &["gossip"], Some(40))?;
+    node_0.send_control('c')?;
+    node_0.exp_eof()?;
+    drop(node_0);
 
-    drop(cmd);
-
-    let mut first_node =
-        run_as!(test, Who::Validator(0), Bin::Node, &["gossip"], Some(20),)?;
-    let (_unread, matched) = first_node.exp_regex(r"Peer id: PeerId\(.*\)")?;
-    let first_node_peer_id = matched
+    // 2. Check that two peers connected to the same seed node discover each
+    // other. Start the first gossip node again (the seed node).
+    let mut node_0 =
+        run_as!(test, Who::Validator(0), Bin::Node, &["gossip"], Some(40))?;
+    let (_unread, matched) = node_0.exp_regex(r"Peer id: PeerId\(.*\)")?;
+    let node_0_peer_id = matched
         .trim()
         .rsplit_once("\"")
         .unwrap()
@@ -50,14 +57,36 @@ fn run_gossip() -> Result<()> {
         .unwrap()
         .1;
 
-    let mut second_node =
-        run_as!(test, Who::Validator(1), Bin::Node, &["gossip"], Some(20),)?;
+    // Start the second gossip node (a peer node)
+    let mut node_1 =
+        run_as!(test, Who::Validator(1), Bin::Node, &["gossip"], Some(40))?;
 
-    second_node.exp_regex(r"Peer id: PeerId\(.*\)")?;
-    second_node.exp_string(&format!(
+    let (_unread, matched) = node_1.exp_regex(r"Peer id: PeerId\(.*\)")?;
+    let node_1_peer_id = matched
+        .trim()
+        .rsplit_once("\"")
+        .unwrap()
+        .0
+        .rsplit_once("\"")
+        .unwrap()
+        .1;
+    node_1.exp_string(&format!(
         "Connect to a new peer: PeerId(\"{}\")",
-        first_node_peer_id
+        node_0_peer_id
     ))?;
+
+    // Start the third gossip node (another peer node)
+    let mut node_2 =
+        run_as!(test, Who::Validator(2), Bin::Node, &["gossip"], Some(20))?;
+    // The third node should connect to node 1 via Identify and Kademlia peer
+    // discovery protocol
+    node_2.exp_string(&format!(
+        "Connect to a new peer: PeerId(\"{}\")",
+        node_1_peer_id
+    ))?;
+    node_2.exp_string(&format!("Identified Peer {}", node_1_peer_id))?;
+    node_2
+        .exp_string(&format!("Routing updated peer ID: {}", node_1_peer_id))?;
 
     Ok(())
 }
@@ -80,16 +109,7 @@ fn match_intents() -> Result<()> {
         .join("matchmaker")
         .join("mm_token_exch")
         .join("Cargo.toml");
-    let cmd = if !cfg!(feature = "ABCI") {
-        CargoBuild::new()
-            .manifest_path(manifest_path)
-            .no_default_features()
-            .features("ABCI-plus-plus")
-    } else {
-        CargoBuild::new()
-            .manifest_path(manifest_path)
-            .features("ABCI")
-    };
+    let cmd = CargoBuild::new().manifest_path(manifest_path);
     let cmd = if run_debug { cmd } else { cmd.release() };
     let msgs = cmd.exec().unwrap();
     for msg in msgs {
@@ -98,7 +118,7 @@ fn match_intents() -> Result<()> {
     println!("Done building the matchmaker.");
 
     let mut ledger =
-        run_as!(test, Who::Validator(0), Bin::Node, &["ledger"], Some(20),)?;
+        run_as!(test, Who::Validator(0), Bin::Node, &["ledger"], Some(40))?;
     ledger.exp_string("Anoma ledger node started")?;
     ledger.exp_string("No state could be found")?;
     // Wait to commit a block
@@ -153,27 +173,56 @@ fn match_intents() -> Result<()> {
     generate_intent_json(intent_b_path_input.clone(), intent_b_json);
     generate_intent_json(intent_c_path_input.clone(), intent_c_json);
 
-    // Start gossip
-    let mut session_gossip = run_as!(
+    let validator_one_rpc = get_actor_rpc(&test, &Who::Validator(0));
+    let validator_one_gossiper =
+        get_gossiper_mm_server(&test, &Who::Validator(0));
+
+    // The RPC port is either 27660 for ABCI or 28660 for ABCI++ (see
+    // `setup::network`)
+    let rpc_port = (27660
+        + if cfg!(feature = "ABCI") {
+            0
+        } else {
+            setup::ABCI_PLUS_PLUS_PORT_OFFSET
+        })
+    .to_string();
+    let rpc_address = format!("127.0.0.1:{}", rpc_port);
+
+    // Start intent gossiper node
+    let mut gossiper = run_as!(
+        test,
+        Who::Validator(0),
+        Bin::Node,
+        &["gossip", "--rpc", &rpc_address],
+        Some(20)
+    )?;
+
+    // Wait gossip to start
+    gossiper.exp_string(&format!("RPC started at {}", rpc_address))?;
+
+    // Start matchmaker
+    let mut matchmaker = run_as!(
         test,
         Who::Validator(0),
         Bin::Node,
         &[
-            "gossip",
+            "matchmaker",
             "--source",
             "matchmaker",
             "--signing-key",
             "matchmaker-key",
+            "--ledger-address",
+            &validator_one_rpc,
+            "--intent-gossiper",
+            &validator_one_gossiper,
         ],
-        Some(20),
+        Some(40)
     )?;
 
-    // Wait gossip to start
-    session_gossip.exp_string("RPC started at 127.0.0.1:26660")?;
+    // Wait for the matchmaker to start
+    matchmaker.exp_string("Connected to the server")?;
 
-    // cargo run --bin anomac -- intent --node "http://127.0.0.1:26660" --data-path intent.A --topic "asset_v1"
-    // cargo run --bin anomac -- intent --node "http://127.0.0.1:26660" --data-path intent.B --topic "asset_v1"
-    // cargo run --bin anomac -- intent --node "http://127.0.0.1:26660" --data-path intent.C --topic "asset_v1"
+    let rpc_address = format!("http://{}", rpc_address);
     //  Send intent A
     let mut session_send_intent_a = run!(
         test,
@@ -181,13 +230,15 @@ fn match_intents() -> Result<()> {
         &[
             "intent",
             "--node",
-            "http://127.0.0.1:26660",
+            &rpc_address,
             "--data-path",
             intent_a_path_input.to_str().unwrap(),
             "--topic",
             "asset_v1",
             "--signing-key",
             BERTHA_KEY,
+            "--ledger-address",
+            &validator_one_rpc
         ],
         Some(40),
     )?;
@@ -199,7 +250,7 @@ fn match_intents() -> Result<()> {
     )?;
     drop(session_send_intent_a);
 
-    session_gossip.exp_string("trying to match new intent")?;
+    matchmaker.exp_string("trying to match new intent")?;
 
     // Send intent B
     let mut session_send_intent_b = run!(
@@ -208,13 +259,15 @@ fn match_intents() -> Result<()> {
         &[
             "intent",
             "--node",
-            "http://127.0.0.1:26660",
+            &rpc_address,
             "--data-path",
             intent_b_path_input.to_str().unwrap(),
             "--topic",
             "asset_v1",
             "--signing-key",
             ALBERT_KEY,
+            "--ledger-address",
+            &validator_one_rpc
         ],
         Some(40),
     )?;
@@ -226,7 +279,7 @@ fn match_intents() -> Result<()> {
     )?;
     drop(session_send_intent_b);
 
-    session_gossip.exp_string("trying to match new intent")?;
+    matchmaker.exp_string("trying to match new intent")?;
 
     // Send intent C
     let mut session_send_intent_c = run!(
@@ -235,13 +288,15 @@ fn match_intents() -> Result<()> {
         &[
             "intent",
             "--node",
-            "http://127.0.0.1:26660",
+            &rpc_address,
             "--data-path",
             intent_c_path_input.to_str().unwrap(),
             "--topic",
             "asset_v1",
             "--signing-key",
             CHRISTEL_KEY,
+            "--ledger-address",
+            &validator_one_rpc
         ],
         Some(40),
     )?;
@@ -254,15 +309,15 @@ fn match_intents() -> Result<()> {
     drop(session_send_intent_c);
 
     // check that the transfers transactions are correct
-    session_gossip.exp_string(&format!(
+    matchmaker.exp_string(&format!(
         "crafting transfer: {}, {}, 70",
         bertha, albert
     ))?;
-    session_gossip.exp_string(&format!(
+    matchmaker.exp_string(&format!(
         "crafting transfer: {}, {}, 200",
         christel, bertha
     ))?;
-    session_gossip.exp_string(&format!(
+    matchmaker.exp_string(&format!(
         "crafting transfer: {}, {}, 100",
         albert, christel
     ))?;

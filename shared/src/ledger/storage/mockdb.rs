@@ -4,11 +4,15 @@ use std::cell::RefCell;
 use std::collections::{btree_map, BTreeMap};
 use std::ops::Bound::{Excluded, Included};
 use std::path::Path;
+use std::str::FromStr;
 
+use super::merkle_tree::{MerkleTreeStoresRead, StoreType};
 use super::{
     BlockStateRead, BlockStateWrite, DBIter, DBWriteBatch, Error, Result, DB,
 };
 use crate::ledger::storage::types::{self, KVBytes, PrefixIterator};
+#[cfg(feature = "ferveo-tpke")]
+use crate::types::storage::TxQueue;
 use crate::types::storage::{BlockHeight, Key, KeySeg, KEY_SEGMENT_SEPARATOR};
 use crate::types::time::DateTimeUtc;
 
@@ -39,7 +43,7 @@ impl DB for MockDB {
         Self::default()
     }
 
-    fn flush(&self) -> Result<()> {
+    fn flush(&self, _wait: bool) -> Result<()> {
         Ok(())
     }
 
@@ -68,12 +72,16 @@ impl DB for MockDB {
                 }
                 None => return Ok(None),
             };
+        #[cfg(feature = "ferveo-tpke")]
+        let tx_queue: TxQueue = match self.0.borrow().get("tx_queue") {
+            Some(bytes) => types::decode(bytes).map_err(Error::CodingError)?,
+            None => return Ok(None),
+        };
 
         // Load data at the height
         let prefix = format!("{}/", height.raw());
         let upper_prefix = format!("{}/", height.next_height().raw());
-        let mut root = None;
-        let mut store = None;
+        let mut merkle_tree_stores = MerkleTreeStoresRead::default();
         let mut hash = None;
         let mut epoch = None;
         let mut pred_epochs = None;
@@ -89,21 +97,22 @@ impl DB for MockDB {
             match segments.get(1) {
                 Some(prefix) => match *prefix {
                     "tree" => match segments.get(2) {
-                        Some(smt) => match *smt {
-                            "root" => {
-                                root = Some(
+                        Some(s) => {
+                            let st = StoreType::from_str(s)?;
+                            match segments.get(3) {
+                                Some(&"root") => merkle_tree_stores.set_root(
+                                    &st,
                                     types::decode(bytes)
                                         .map_err(Error::CodingError)?,
-                                )
-                            }
-                            "store" => {
-                                store = Some(
+                                ),
+                                Some(&"store") => merkle_tree_stores.set_store(
+                                    &st,
                                     types::decode(bytes)
                                         .map_err(Error::CodingError)?,
-                                )
+                                ),
+                                _ => unknown_key_error(path)?,
                             }
-                            _ => unknown_key_error(path)?,
-                        },
+                        }
                         None => unknown_key_error(path)?,
                     },
                     "hash" => {
@@ -136,26 +145,15 @@ impl DB for MockDB {
                 None => unknown_key_error(path)?,
             }
         }
-        match (
-            root,
-            store,
-            hash,
-            epoch,
-            pred_epochs,
-            address_gen,
-            encryption_key,
-        ) {
+        match (hash, epoch, pred_epochs, address_gen, encryption_key) {
             (
-                Some(root),
-                Some(store),
                 Some(hash),
                 Some(epoch),
                 Some(pred_epochs),
                 Some(address_gen),
                 Some(encryption_key),
             ) => Ok(Some(BlockStateRead {
-                root,
-                store,
+                merkle_tree_stores,
                 hash,
                 height,
                 epoch,
@@ -164,6 +162,8 @@ impl DB for MockDB {
                 next_epoch_min_start_time,
                 address_gen,
                 encryption_key,
+                #[cfg(feature = "ferveo-tpke")]
+                tx_queue,
             })),
             _ => Err(Error::Temporary {
                 error: "Essential data couldn't be read from the DB"
@@ -174,8 +174,7 @@ impl DB for MockDB {
 
     fn write_block(&mut self, state: BlockStateWrite) -> Result<()> {
         let BlockStateWrite {
-            root,
-            store,
+            merkle_tree_stores,
             hash,
             height,
             epoch,
@@ -184,6 +183,8 @@ impl DB for MockDB {
             next_epoch_min_start_time,
             address_gen,
             encryption_key,
+            #[cfg(feature = "ferveo-tpke")]
+            tx_queue,
         }: BlockStateWrite = state;
 
         // Epoch start height and time
@@ -195,6 +196,12 @@ impl DB for MockDB {
             "next_epoch_min_start_time".into(),
             types::encode(&next_epoch_min_start_time),
         );
+        #[cfg(feature = "ferveo-tpke")]
+        {
+            self.0
+                .borrow_mut()
+                .insert("tx_queue".into(), types::encode(&tx_queue));
+        }
 
         let prefix_key = Key::from(height.to_db_key());
         // Merkle tree
@@ -202,23 +209,24 @@ impl DB for MockDB {
             let prefix_key = prefix_key
                 .push(&"tree".to_owned())
                 .map_err(Error::KeyError)?;
-            // Merkle root hash
-            {
-                let key = prefix_key
+            for st in StoreType::iter() {
+                let prefix_key = prefix_key
+                    .push(&st.to_string())
+                    .map_err(Error::KeyError)?;
+                let root_key = prefix_key
                     .push(&"root".to_owned())
                     .map_err(Error::KeyError)?;
-                self.0
-                    .borrow_mut()
-                    .insert(key.to_string(), types::encode(&root));
-            }
-            // Tree's store
-            {
-                let key = prefix_key
+                self.0.borrow_mut().insert(
+                    root_key.to_string(),
+                    types::encode(merkle_tree_stores.root(st)),
+                );
+                let store_key = prefix_key
                     .push(&"store".to_owned())
                     .map_err(Error::KeyError)?;
-                self.0
-                    .borrow_mut()
-                    .insert(key.to_string(), types::encode(&store));
+                self.0.borrow_mut().insert(
+                    store_key.to_string(),
+                    types::encode(merkle_tree_stores.store(st)),
+                );
             }
         }
         // Block hash

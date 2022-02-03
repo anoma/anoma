@@ -1,19 +1,10 @@
-with import ./nix { };
-
-mkShell {
-  buildInputs = [
-    rustc
-    rustNightly.rustfmt
-    cargo-nightly
-    clang
-    llvmPackages.libclang
-    protobuf
-    crate2nix
-    # Needed at runtime
-    tendermint
-  ] ++ lib.optionals stdenv.isDarwin [ darwin.apple_sdk.frameworks.Security ];
-
-  LIBCLANG_PATH = "${llvmPackages.libclang.lib}/lib";
-  PROTOC = "${protobuf}/bin/protoc";
-  PROTOC_INCLUDE = "${protobuf}/include";
-}
+# NOTE: this is a flake compat shim. It just loads "devShell" from flake.nix by emulating flakes.
+(import (
+  let
+    lock = builtins.fromJSON (builtins.readFile ./flake.lock);
+  in fetchTarball {
+    url = "https://github.com/edolstra/flake-compat/archive/${lock.nodes.flake-compat.locked.rev}.tar.gz";
+    sha256 = lock.nodes.flake-compat.locked.narHash; }
+) {
+  src =  ./.;
+}).shellNix

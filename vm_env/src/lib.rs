@@ -6,6 +6,8 @@
 #![deny(rustdoc::broken_intra_doc_links)]
 #![deny(rustdoc::private_intra_doc_links)]
 
+#[cfg(feature = "ibc")]
+pub mod ibc;
 pub mod imports;
 pub mod intent;
 pub mod key;
@@ -17,6 +19,8 @@ pub mod tx_prelude {
     pub use anoma::types::*;
     pub use anoma_macros::transaction;
 
+    #[cfg(feature = "ibc")]
+    pub use crate::ibc::{Ibc, IbcActions};
     pub use crate::imports::tx::*;
     pub use crate::intent::tx as intent;
     pub use crate::proof_of_stake::{self, PoS, PosRead, PosWrite};

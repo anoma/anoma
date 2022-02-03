@@ -1,6 +1,5 @@
 //! IBC validity predicate for sequences
 
-use borsh::BorshDeserialize;
 #[cfg(not(feature = "ABCI"))]
 use ibc::core::ics04_channel::channel::Order;
 #[cfg(not(feature = "ABCI"))]
@@ -17,10 +16,9 @@ use thiserror::Error;
 
 use super::super::storage::{port_channel_id, Error as IbcStorageError};
 use super::Ibc;
+use crate::ledger::ibc::handler::packet_from_message;
 use crate::ledger::storage::{self as ledger_storage, StorageHasher};
-use crate::types::ibc::data::{
-    Error as IbcDataError, IbcMessage, PacketSendData,
-};
+use crate::types::ibc::data::{Error as IbcDataError, IbcMessage};
 use crate::types::storage::Key;
 use crate::vm::WasmCacheAccess;
 
@@ -58,11 +56,20 @@ where
         tx_data: &[u8],
     ) -> Result<()> {
         let port_channel_id = port_channel_id(key)?;
-        let data = PacketSendData::try_from_slice(tx_data)?;
+        let ibc_msg = IbcMessage::decode(tx_data)?;
+        let msg = ibc_msg.msg_transfer()?;
+        // make a packet
+        let channel = self
+            .channel_end(&(
+                port_channel_id.port_id.clone(),
+                port_channel_id.channel_id.clone(),
+            ))
+            .map_err(|e| Error::InvalidChannel(e.to_string()))?;
         let next_seq_pre = self
             .get_next_sequence_send_pre(&port_channel_id)
             .map_err(|e| Error::InvalidSequence(e.to_string()))?;
-        let packet = data.packet(next_seq_pre);
+        let packet =
+            packet_from_message(&msg, next_seq_pre, channel.counterparty());
         let next_seq = self
             .get_next_sequence_send(&(
                 port_channel_id.port_id.clone(),

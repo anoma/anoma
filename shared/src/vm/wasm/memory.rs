@@ -275,8 +275,7 @@ impl VmMemory for WasmMemory {
     }
 }
 
-// TODO wasmer 2.x
-// #[derive(loupe::MemoryUsage)]
+#[derive(loupe::MemoryUsage)]
 /// A custom [`Tunables`] to set a WASM memory limits.
 ///
 /// Adapted from <https://github.com/wasmerio/wasmer/blob/29d7b4a5f1c401d9a1e95086ed85878c8407ec16/examples/tunables_limit_memory.rs>.
@@ -436,10 +435,7 @@ pub mod tests {
 
         // Any compiler and any engine do the job here
         let compiler = Cranelift::default();
-        // TODO wasmer 2.x
-        // let engine =
-        // wasmer_engine_universal::Universal::new(compiler).engine();
-        let engine = wasmer_engine_jit::JIT::new(compiler).engine();
+        let engine = wasmer_engine_universal::Universal::new(compiler).engine();
 
         let base = BaseTunables::for_target(&Target::default());
         let limit = Pages(24);

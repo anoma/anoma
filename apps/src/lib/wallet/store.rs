@@ -417,7 +417,7 @@ fn show_overwrite_confirmation(
 ) -> ConfirmationResponse {
     print!(
         "You're trying to create an alias \"{}\" that already exists for {} \
-         inyour store.\nWould you like to replace it? \
+         in your store.\nWould you like to replace it? \
          s(k)ip/re(p)lace/re(s)elect: ",
         alias, alias_for
     );

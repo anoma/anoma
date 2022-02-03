@@ -18,5 +18,5 @@ rustPlatform.buildRustPackage rec {
   nativeBuildInputs = [ pkg-config ];
   buildInputs = [ openssl ];
 
-  OPENSSL_NO_VENDOR=1;
+  OPENSSL_NO_VENDOR = 1;
 }

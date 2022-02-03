@@ -159,7 +159,7 @@ mod native_vp_host_env {
 
     use std::cell::RefCell;
 
-    use anoma::ledger::storage::testing::Sha256Hasher;
+    use anoma::ledger::storage::Sha256Hasher;
     use anoma::vm::host_env::*;
     use anoma::vm::memory::testing::NativeMemory;
     use anoma::vm::WasmCacheRwAccess;

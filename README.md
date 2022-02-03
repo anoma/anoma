@@ -30,14 +30,21 @@ After installation, the main `anoma` executable will be available on path.
 
 To find how to use it, check out the [User Guide section of the docs](https://docs.anoma.network/master/user-guide/).
 
-If you are running NixOS or at least the Nix package manager, you may opt to
-install Anoma as a Nix derivation like so:
+If you have Nix, you may opt to build and install Anoma using Nix. The Nix
+integration also takes care of making a compatible version of Tendermint
+available.
 
 ```shell
-nix-shell --run "crate2nix generate --no-default-features --features 'std ABCI'"
-nix-build -A anoma
-nix-env -i ./result
+# Nix 2.4 and later
+nix profile install
+
+# All versions of Nix
+nix-env -f . -iA anoma
 ```
+
+For more detailed instructions and more install options, see the [Install
+section](https://docs.anoma.network/master/user-guide/install.html) of the User
+Guide.
 
 ## ⚙️ Development
 
@@ -52,12 +59,73 @@ ANOMA_DEV=true make
 
 ### Using Nix
 
-If you are running NixOS or at least the Nix package manager, you may opt in to
-all the dependencies via Nix by simply entering the Nix shell environment:
+You may opt to get all of the dependencies to develop Anoma by entering the
+development shell:
 
 ```shell
+# Nix 2.4 and above
+nix develop
+
+# All versions of Nix
 nix-shell
-make
+```
+
+Inside the shell, all of the `make` targets work as usual:
+
+```shell
+# Build the WASM modules without docker
+make build-wasm-scripts
+
+# Development build (uses cargo)
+ANOMA_DEV=true make
+```
+
+---
+
+It is also possible to use the Nix Rust infrastructure instead of Cargo to
+build the project crates. This method uses `crate2nix` to derive Nix
+expressions from `Cargo.toml` and `Cargo.lock` files. The workspace members are
+exposed as packages in `flake.nix` with a `rust_` prefix. Variants where the
+`ABCI-plus-plus` feature flag is enabled are exposed with a `:ABCI-plus-plus`
+suffix.
+
+```shell
+# List all packages
+nix flake show
+
+# Build the `anoma_apps` crate with `ABCI-plus-plus` feature
+nix build .#rust_anoma_apps:ABCI-plus-plus
+
+# Build the (default) anoma package. It consists of wrappers for the Anoma
+# binaries (`rust_anoma_apps`) that ensure `tendermint` is in `PATH`.
+nix build .#anoma
+```
+
+Advantages:
+
+- Excellent build reproducibility (all dependencies pinned).
+- Individual crates are stored as Nix derivations and therefore cached in the
+  Nix store.
+- Makes it possible to build Nix derivations of the binaries. Cargo build
+  doesn't work in the Nix build environment because network access is not
+  allowed, meaning that Cargo can't fetch dependencies; `cargo vendor` could be
+  used to prefetch everything for Cargo, but `cargo vendor` does not work on
+  our project at the moment.
+
+Disadvantages:
+
+- Only works for Linux and Darwin targets. WASM builds in particular are not
+  possible with this method. Although, while `crate2nix` doesn't support
+  targeting WASM, we should be able to build the WASM modules via Cargo - if
+  only `cargo vendor` worked.
+
+__Note:__ If you have modified the Cargo dependencies (changed `Cargo.lock`),
+it is necessary to recreate the `Cargo.nix` expressions with `crate2nix`.
+Helpers are provided as flake apps (Nix 2.4 and later):
+
+```shell
+nix run .#generateCargoNix
+nix run .#generateCargoNixABCI-plus-plus
 ```
 
 ### Before submitting a PR, pls make sure to run the following:

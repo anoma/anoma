@@ -7,5 +7,5 @@ In short:
 Using Nix:
 
 ```bash
-nix-shell --run "make serve"
+nix develop ..#anoma-docs -c make serve
 ```

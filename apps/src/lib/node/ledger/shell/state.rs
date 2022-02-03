@@ -1,9 +1,7 @@
-use std::collections::VecDeque;
-
 use anoma::ledger::storage::{DBIter, StorageHasher, DB};
 use anoma::types::address::Address;
 use anoma::types::key::dkg_session_keys::DkgKeypair;
-use anoma::types::transaction::{EllipticCurve, WrapperTx};
+use anoma::types::transaction::EllipticCurve;
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 use ark_std::rand::SeedableRng;
 use borsh::{BorshDeserialize, BorshSerialize};
@@ -53,54 +51,6 @@ impl ShellMode {
         if let ShellMode::Validator { dkg, .. } = self {
             dkg.update = true;
         }
-    }
-}
-
-#[derive(Default, Debug, Clone, BorshDeserialize, BorshSerialize)]
-/// Wrapper txs to be decrypted in the next block proposal
-pub(super) struct TxQueue {
-    /// Index of next wrapper_tx to fetch from storage
-    next_wrapper: usize,
-    /// The actual wrappers
-    queue: VecDeque<WrapperTx>,
-}
-
-impl TxQueue {
-    /// Add a new wrapper at the back of the queue
-    pub fn push(&mut self, wrapper: WrapperTx) {
-        self.queue.push_back(wrapper);
-    }
-
-    /// Remove the wrapper at the head of the queue
-    pub fn pop(&mut self) -> Option<WrapperTx> {
-        self.queue.pop_front()
-    }
-
-    /// Iterate lazily over the queue
-    #[allow(dead_code)]
-    pub fn next(&mut self) -> Option<&WrapperTx> {
-        let next = self.queue.get(self.next_wrapper);
-        if self.next_wrapper < self.queue.len() {
-            self.next_wrapper += 1;
-        }
-        next
-    }
-
-    /// Reset the iterator to the head of the queue
-    pub fn rewind(&mut self) {
-        self.next_wrapper = 0;
-    }
-
-    /// Get an iterator over the queue
-    #[allow(dead_code)]
-    pub fn iter(&self) -> impl std::iter::Iterator<Item = &WrapperTx> {
-        self.queue.iter()
-    }
-
-    /// Check if there are any txs in the queue
-    #[allow(dead_code)]
-    pub fn is_empty(&self) -> bool {
-        self.queue.is_empty()
     }
 }
 

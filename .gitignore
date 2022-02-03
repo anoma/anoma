@@ -24,3 +24,6 @@ anoma-*.tar.gz
 
 # wasm artifacts
 wasm/*.wasm
+
+# app version string file
+apps/version.rs

@@ -41,7 +41,10 @@ fn handle_command(cmd: cli::cmds::Anoma, raw_sub_cmd: String) -> Result<()> {
     match cmd {
         cli::cmds::Anoma::Node(_)
         | cli::cmds::Anoma::Ledger(_)
-        | cli::cmds::Anoma::Gossip(_) => handle_subcommand("anoman", sub_args),
+        | cli::cmds::Anoma::Gossip(_)
+        | cli::cmds::Anoma::Matchmaker(_) => {
+            handle_subcommand("anoman", sub_args)
+        }
         cli::cmds::Anoma::Client(_)
         | cli::cmds::Anoma::TxCustom(_)
         | cli::cmds::Anoma::TxTransfer(_)

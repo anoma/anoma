@@ -792,12 +792,11 @@ mod tests {
 
         fn apply_concrete(
             (params, mut data): Self::ConcreteState,
-            transition: &<Self::Abstract as AbstractStateMachine>::Transition,
+            transition: <Self::Abstract as AbstractStateMachine>::Transition,
         ) -> Self::ConcreteState {
             let offset = Offset::value(&params) as usize;
             match transition {
                 EpochedTransition::Get(epoch) => {
-                    let epoch = *epoch;
                     let value = data.get(epoch);
                     // Post-conditions
                     let last_update = data.last_update;
@@ -843,22 +842,22 @@ mod tests {
                     }
                 }
                 EpochedTransition::Set { value, epoch } => {
-                    let current_before_update = data.get(*epoch).copied();
+                    let current_before_update = data.get(epoch).copied();
                     let epochs_up_to_offset =
-                        (*epoch + 1_u64).iter_range(offset as u64 - 1);
+                        (epoch + 1_u64).iter_range(offset as u64 - 1);
                     // Find the values in epochs up to the offset
                     let range_before_update: Vec<_> = epochs_up_to_offset
                         .clone()
                         .map(|epoch| data.get(epoch).copied())
                         .collect();
 
-                    data.set(*value, *epoch, &params);
+                    data.set(value, epoch, &params);
 
                     // Post-conditions
-                    assert_eq!(data.last_update, *epoch);
+                    assert_eq!(data.last_update, epoch);
                     assert_eq!(
                         data.data[offset as usize],
-                        Some(*value),
+                        Some(value),
                         "The value at offset must be updated"
                     );
                     assert!(
@@ -867,7 +866,7 @@ mod tests {
                          offset"
                     );
                     assert_eq!(
-                        data.get(*epoch),
+                        data.get(epoch),
                         current_before_update.as_ref(),
                         "The current value must not change"
                     );
@@ -886,17 +885,17 @@ mod tests {
                     offset: update_offset,
                 }) => {
                     let update_offset_val = update_offset.value(&params);
-                    let current_before_update = data.get(*epoch).copied();
-                    let next_epoch: u64 = (*epoch + 1_u64).into();
+                    let current_before_update = data.get(epoch).copied();
+                    let next_epoch: u64 = (epoch + 1_u64).into();
                     let epoch_at_update_offset: u64 =
-                        (*epoch + update_offset_val).into();
+                        (epoch + update_offset_val).into();
                     // Find the values in epochs before the offset
                     let range_up_to_offset_before_update: Vec<_> = (next_epoch
                         ..epoch_at_update_offset)
                         .map(|i: u64| data.get(Epoch::from(i)).copied())
                         .collect();
                     let epoch_after_offset: u64 = epoch_at_update_offset + 1;
-                    let epoch_at_offset: u64 = (*epoch + offset).into();
+                    let epoch_at_offset: u64 = (epoch + offset).into();
                     // Find the values in epochs after the offset
                     let mut range_from_offset_before_update: Vec<_> =
                         (epoch_after_offset..epoch_at_offset)
@@ -908,13 +907,13 @@ mod tests {
 
                     data.update_from_offset(
                         |val, epoch| update_value(val, epoch),
-                        *epoch,
-                        *update_offset,
+                        epoch,
+                        update_offset,
                         &params,
                     );
 
                     // Post-conditions
-                    assert_eq!(data.last_update, *epoch);
+                    assert_eq!(data.last_update, epoch);
                     // Update all the values with the update function
                     let range_from_offset_before_update: Vec<_> =
                         range_from_offset_before_update
@@ -936,7 +935,7 @@ mod tests {
                         "The values in epochs from the offset must be updated"
                     );
                     assert_eq!(
-                        data.get(*epoch),
+                        data.get(epoch),
                         current_before_update.as_ref(),
                         "The current value must not change"
                     );
@@ -1088,12 +1087,11 @@ mod tests {
 
         fn apply_concrete(
             (params, mut data): Self::ConcreteState,
-            transition: &<Self::Abstract as AbstractStateMachine>::Transition,
+            transition: <Self::Abstract as AbstractStateMachine>::Transition,
         ) -> Self::ConcreteState {
             let offset = Offset::value(&params) as usize;
             match transition {
                 EpochedDeltaTransition::Get(epoch) => {
-                    let epoch = *epoch;
                     let value = data.get(epoch);
                     // Post-conditions
                     let last_update = data.last_update;
@@ -1136,26 +1134,25 @@ mod tests {
                     value: change,
                     epoch,
                 } => {
-                    let current_value_before_update = data.get(*epoch);
+                    let current_value_before_update = data.get(epoch);
                     let value_at_offset_before_update =
-                        data.get(*epoch + offset);
+                        data.get(epoch + offset);
                     let epochs_up_to_offset =
-                        (*epoch + 1_u64).iter_range(offset as u64 - 1);
+                        (epoch + 1_u64).iter_range(offset as u64 - 1);
                     // Find the values in epochs before the offset
                     let range_before_update: Vec<_> = epochs_up_to_offset
                         .clone()
                         .map(|epoch| data.get(epoch))
                         .collect();
 
-                    data.add(*change, *epoch, &params);
+                    data.add(change, epoch, &params);
 
                     // Post-conditions
-                    assert_eq!(data.last_update, *epoch);
-                    let value_at_offset_after_update =
-                        data.get(*epoch + offset);
+                    assert_eq!(data.last_update, epoch);
+                    let value_at_offset_after_update = data.get(epoch + offset);
                     assert_eq!(
                         value_at_offset_after_update.unwrap_or_default(),
-                        *change
+                        change
                             + value_at_offset_before_update.unwrap_or_default(),
                         "The value at the offset must have increased by the \
                          change"
@@ -1166,7 +1163,7 @@ mod tests {
                          offset"
                     );
                     assert_eq!(
-                        data.get(*epoch),
+                        data.get(epoch),
                         current_value_before_update,
                         "The current value must not change"
                     );

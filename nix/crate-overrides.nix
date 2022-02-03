@@ -41,7 +41,7 @@ defaultCrateOverrides // {
 
   librocksdb-sys = attrs: {
     buildInputs = [ clang rustfmt snappy lz4 zstd zlib bzip2 ]
-      ++ lib.optionals stdenv.isDarwin [ xcbuild ];
+    ++ lib.optionals stdenv.isDarwin [ xcbuild ];
     LIBCLANG_PATH = "${llvmPackages.libclang.lib}/lib";
     # rust-rocksdb uses {}_LIB_DIR to determine whether it embeds compression libs in itself.
     # We need to tell it to use libs from the nix store so that we don't get linker errors later on.

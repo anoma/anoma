@@ -1017,12 +1017,8 @@ steps:
   image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/git:latest
   pull: never
   commands:
-  - git clone $DRONE_GIT_HTTP_URL .
-  - git fetch --all
-  - git checkout $DRONE_TARGET_BRANCH
-  - git merge $DRONE_COMMIT
-  - CONFLICTS=$(git ls-files -u | wc -l)
-  - if [ "$CONFLICTS" -gt 0 ]; then exit 1; fi;exit 0
+  - git clone $DRONE_GIT_HTTP_URL --depth 1 --quiet --branch ${DRONE_SOURCE_BRANCH:-master}
+    --single-branch .
 - name: download-scripts
   image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/git:latest
   pull: never
@@ -1068,7 +1064,21 @@ steps:
     SCCACHE_BUCKET: heliax-drone-cache-v2
     SCCACHE_S3_KEY_PREFIX: sccache-build-release
   depends_on:
-  - build-and-publish-docs
+  - build-docs
+- name: upload-wasm
+  image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/git:latest
+  pull: never
+  commands:
+  - sh scripts/ci/upload-wasm.sh
+  environment:
+    AWS_ACCESS_KEY_ID:
+      from_secret: aws_access_key_id
+    AWS_SECRET_ACCESS_KEY:
+      from_secret: aws_secret_access_key
+    GITHUB_TOKEN:
+      from_secret: github_token
+  depends_on:
+  - build-docs
 - name: create-release
   image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/git:latest
   pull: never
@@ -1079,6 +1089,7 @@ steps:
       from_secret: github_token
   depends_on:
   - build-package
+  - upload-wasm
 trigger:
   event:
   - tag
@@ -1092,6 +1103,6 @@ clone:
   disable: true
 ---
 kind: signature
-hmac: ae33df7be9557aeb7a450a6bfc8dda2a192b6f2440ca6fd7e626220ff0f92c71
+hmac: 4be81ea591f973dfbbf6c52fd975866cf6d7cb9662df2a253b853d96d2ea8306
 
 ...

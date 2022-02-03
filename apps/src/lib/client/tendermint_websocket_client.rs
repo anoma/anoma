@@ -5,10 +5,7 @@ use std::net::TcpStream;
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
-use anoma::types::transaction::{hash_tx as hash_tx_bytes, Hash};
 use async_trait::async_trait;
-#[cfg(not(feature = "ABCI"))]
-use tendermint::abci::transaction;
 #[cfg(not(feature = "ABCI"))]
 use tendermint_config::net::Address;
 #[cfg(feature = "ABCI")]
@@ -25,8 +22,6 @@ use tendermint_rpc_abci::query::Query;
 use tendermint_rpc_abci::{
     Client, Error as RpcError, Request, Response, SimpleRequest,
 };
-#[cfg(feature = "ABCI")]
-use tendermint_stable::abci::transaction;
 use thiserror::Error;
 use tokio::time::Instant;
 use websocket::result::WebSocketError;
@@ -457,11 +452,6 @@ impl Client for TendermintWebsocketClient {
     }
 }
 
-pub fn hash_tx(tx_bytes: &[u8]) -> transaction::Hash {
-    let Hash(hash_bytes) = hash_tx_bytes(tx_bytes);
-    transaction::Hash::new(hash_bytes)
-}
-
 fn get_id(req_json: &str) -> Result<String, Error> {
     if let serde_json::Value::Object(req) =
         serde_json::from_str(req_json).unwrap()
@@ -483,7 +473,10 @@ fn get_id(req_json: &str) -> Result<String, Error> {
 mod test_tendermint_websocket_client {
     use std::time::Duration;
 
+    use anoma::types::transaction::hash_tx as hash_tx_bytes;
     use serde::{Deserialize, Serialize};
+    #[cfg(not(feature = "ABCI"))]
+    use tendermint::abci::transaction;
     #[cfg(not(feature = "ABCI"))]
     use tendermint_rpc::endpoint::abci_info::AbciInfo;
     #[cfg(not(feature = "ABCI"))]
@@ -496,6 +489,8 @@ mod test_tendermint_websocket_client {
     use tendermint_rpc_abci::query::{EventType, Query};
     #[cfg(feature = "ABCI")]
     use tendermint_rpc_abci::Client;
+    #[cfg(feature = "ABCI")]
+    use tendermint_stable::abci::transaction;
     use websocket::sync::Server;
     use websocket::{Message, OwnedMessage};
 
@@ -567,8 +562,8 @@ mod test_tendermint_websocket_client {
                     // Mock a subscription result returning on the wire before
                     // the simple request result
                     let info = AbciInfo {
-                        last_block_app_hash: super::hash_tx(
-                            "Testing".as_bytes(),
+                        last_block_app_hash: transaction::Hash::new(
+                            hash_tx_bytes("Testing".as_bytes()).0,
                         )
                         .as_ref()
                         .into(),

@@ -1,6 +1,7 @@
 # Summary
 
 - [Introduction](./README.md)
+- [Quick Start](./quick-start.md)
 - [User Guide](./user-guide/README.md)
   - [Install](./user-guide/install.md)
   - [Getting started](./user-guide/getting-started.md)
@@ -8,7 +9,7 @@
   - [The Ledger](./user-guide/ledger.md)
     - [Interact with PoS](./user-guide/ledger/pos.md)
     - [Customize](./user-guide/ledger/customize.md)
-  - [The Intent gossip and Matchmaker](./user-guide/intent-gossip-and-matchmaker.md)
+  - [The Intent gossiper and Matchmaker](./user-guide/intent-gossiper-and-matchmaker.md)
 - [Exploration](./explore/README.md)
   - [Design](./explore/design/README.md)
     - [Overview](./explore/design/overview.md)
@@ -36,6 +37,7 @@
     - [Crypto primitives](./explore/design/crypto-primitives.md)
     - [Actors](./explore/design/actors.md)
     - [Proof of Stake system](./explore/design/pos.md)
+    - [Testnet setup](./explore/design/testnet-setup.md)
   - [Prototypes](./explore/prototypes/README.md)
     - [Base ledger](./explore/prototypes/base-ledger.md)
     - [Gossip layer](./explore/prototypes/gossip-layer.md)

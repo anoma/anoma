@@ -12,10 +12,10 @@ use borsh::BorshDeserialize;
 /// first step reads the value into a result buffer and returns the size (if
 /// any) back to the guest, the second step reads the value from cache into a
 /// pre-allocated buffer with the obtained size.
-fn read_from_buffer<T: BorshDeserialize>(
+fn read_from_buffer(
     read_result: i64,
     result_buffer: unsafe extern "C" fn(u64),
-) -> Option<T> {
+) -> Option<Vec<u8>> {
     if HostEnvResult::is_fail(read_result) {
         None
     } else {
@@ -28,7 +28,7 @@ fn read_from_buffer<T: BorshDeserialize>(
         let target = unsafe {
             Vec::from_raw_parts(offset as _, read_result as _, read_result as _)
         };
-        T::try_from_slice(&target[..]).ok()
+        Some(target)
     }
 }
 
@@ -38,7 +38,8 @@ fn read_key_val_from_buffer<T: BorshDeserialize>(
     read_result: i64,
     result_buffer: unsafe extern "C" fn(u64),
 ) -> Option<(String, T)> {
-    let key_val: Option<KeyVal> = read_from_buffer(read_result, result_buffer);
+    let key_val = read_from_buffer(read_result, result_buffer)
+        .and_then(|t| KeyVal::try_from_slice(&t[..]).ok());
     key_val.and_then(|key_val| {
         // decode the value
         T::try_from_slice(&key_val.val)
@@ -66,8 +67,19 @@ pub mod tx {
     #[derive(Debug)]
     pub struct KeyValIterator<T>(pub u64, pub PhantomData<T>);
 
-    /// Try to read a variable-length value at the given key from storage.
+    /// Try to read a Borsh encoded variable-length value at the given key from
+    /// storage.
     pub fn read<T: BorshDeserialize>(key: impl AsRef<str>) -> Option<T> {
+        let key = key.as_ref();
+        let read_result =
+            unsafe { anoma_tx_read(key.as_ptr() as _, key.len() as _) };
+        super::read_from_buffer(read_result, anoma_tx_result_buffer)
+            .and_then(|t| T::try_from_slice(&t[..]).ok())
+    }
+
+    /// Try to read a variable-length value as bytes at the given key from
+    /// storage.
+    pub fn read_bytes(key: impl AsRef<str>) -> Option<Vec<u8>> {
         let key = key.as_ref();
         let read_result =
             unsafe { anoma_tx_read(key.as_ptr() as _, key.len() as _) };
@@ -82,29 +94,21 @@ pub mod tx {
         HostEnvResult::is_success(found)
     }
 
-    /// Write a value at the given key to storage.
+    /// Write a value to be encoded with Borsh at the given key to storage.
     pub fn write<T: BorshSerialize>(key: impl AsRef<str>, val: T) {
-        let key = key.as_ref();
         let buf = val.try_to_vec().unwrap();
-        unsafe {
-            anoma_tx_write(
-                key.as_ptr() as _,
-                key.len() as _,
-                buf.as_ptr() as _,
-                buf.len() as _,
-            )
-        };
+        write_bytes(key, buf);
     }
 
-    /// Write a serialized value at the given key to storage.
-    pub fn write_bytes(key: impl AsRef<str>, buf: Vec<u8>) {
+    /// Write a value as bytes at the given key to storage.
+    pub fn write_bytes(key: impl AsRef<str>, val: impl AsRef<[u8]>) {
         let key = key.as_ref();
         unsafe {
             anoma_tx_write(
                 key.as_ptr() as _,
                 key.len() as _,
-                buf.as_ptr() as _,
-                buf.len() as _,
+                val.as_ref().as_ptr() as _,
+                val.as_ref().len() as _,
             )
         };
     }
@@ -334,18 +338,38 @@ pub mod vp {
 
     pub struct PostKeyValIterator<T>(pub u64, pub PhantomData<T>);
 
-    /// Try to read a variable-length value at the given key from storage before
-    /// transaction execution.
+    /// Try to read a Borsh encoded variable-length value at the given key from
+    /// storage before transaction execution.
     pub fn read_pre<T: BorshDeserialize>(key: impl AsRef<str>) -> Option<T> {
+        let key = key.as_ref();
+        let read_result =
+            unsafe { anoma_vp_read_pre(key.as_ptr() as _, key.len() as _) };
+        super::read_from_buffer(read_result, anoma_vp_result_buffer)
+            .and_then(|t| T::try_from_slice(&t[..]).ok())
+    }
+
+    /// Try to read a variable-length value as bytesat the given key from
+    /// storage before transaction execution.
+    pub fn read_bytes_pre(key: impl AsRef<str>) -> Option<Vec<u8>> {
         let key = key.as_ref();
         let read_result =
             unsafe { anoma_vp_read_pre(key.as_ptr() as _, key.len() as _) };
         super::read_from_buffer(read_result, anoma_vp_result_buffer)
     }
 
-    /// Try to read a variable-length value at the given key from storage after
-    /// transaction execution.
+    /// Try to read a Borsh encoded variable-length value at the given key from
+    /// storage after transaction execution.
     pub fn read_post<T: BorshDeserialize>(key: impl AsRef<str>) -> Option<T> {
+        let key = key.as_ref();
+        let read_result =
+            unsafe { anoma_vp_read_post(key.as_ptr() as _, key.len() as _) };
+        super::read_from_buffer(read_result, anoma_vp_result_buffer)
+            .and_then(|t| T::try_from_slice(&t[..]).ok())
+    }
+
+    /// Try to read a variable-length value as bytes at the given key from
+    /// storage after transaction execution.
+    pub fn read_bytes_post(key: impl AsRef<str>) -> Option<Vec<u8>> {
         let key = key.as_ref();
         let read_result =
             unsafe { anoma_vp_read_post(key.as_ptr() as _, key.len() as _) };

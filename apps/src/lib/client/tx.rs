@@ -6,7 +6,7 @@ use anoma::proto::Tx;
 use anoma::types::address::Address;
 use anoma::types::storage::Epoch;
 use anoma::types::transaction::{
-    pos, Fee, InitAccount, InitValidator, UpdateVp, WrapperTx,
+    hash_tx, pos, Fee, InitAccount, InitValidator, UpdateVp, WrapperTx,
 };
 use anoma::types::{address, token};
 use anoma::{ledger, vm};
@@ -36,7 +36,7 @@ use super::{rpc, signing};
 use crate::cli::context::WalletAddress;
 use crate::cli::{args, safe_exit, Context};
 use crate::client::tendermint_websocket_client::{
-    hash_tx, Error, TendermintWebsocketClient, WebSocketAddress,
+    Error, TendermintWebsocketClient, WebSocketAddress,
 };
 #[cfg(not(feature = "ABCI"))]
 use crate::node::ledger::events::{Attributes, EventType as TmEventType};
@@ -1085,10 +1085,14 @@ impl TxResponse {
         let tx_hash_json = serde_json::Value::String(tx_hash.to_string());
         let mut selector = jsonpath::selector(&json);
         let mut index = 0;
+        #[cfg(feature = "ABCI")]
+        let evt_key = "applied";
+        #[cfg(not(feature = "ABCI"))]
+        let evt_key = "accepted";
         // Find the tx with a matching hash
         let hash = loop {
             if let Ok(hash) =
-                selector(&format!("$.events.['applied.hash'][{}]", index))
+                selector(&format!("$.events.['{}.hash'][{}]", evt_key, index))
             {
                 let hash = hash[0].clone();
                 if hash == tx_hash_json {
@@ -1105,18 +1109,20 @@ impl TxResponse {
             }
         };
         let info =
-            selector(&format!("$.events.['applied.info'][{}]", index)).unwrap();
+            selector(&format!("$.events.['{}.info'][{}]", evt_key, index))
+                .unwrap();
         let height =
-            selector(&format!("$.events.['applied.height'][{}]", index))
+            selector(&format!("$.events.['{}.height'][{}]", evt_key, index))
                 .unwrap();
         let code =
-            selector(&format!("$.events.['applied.code'][{}]", index)).unwrap();
+            selector(&format!("$.events.['{}.code'][{}]", evt_key, index))
+                .unwrap();
         let gas_used =
-            selector(&format!("$.events.['applied.gas_used'][{}]", index))
+            selector(&format!("$.events.['{}.gas_used'][{}]", evt_key, index))
                 .unwrap();
         let initialized_accounts = selector(&format!(
-            "$.events.['applied.initialized_accounts'][{}]",
-            index
+            "$.events.['{}.initialized_accounts'][{}]",
+            evt_key, index
         ));
         let initialized_accounts = match initialized_accounts {
             Ok(values) if !values.is_empty() => {

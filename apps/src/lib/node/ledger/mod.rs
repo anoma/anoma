@@ -8,10 +8,8 @@ pub mod storage;
 pub mod tendermint_node;
 
 use std::convert::TryInto;
-use std::env;
 use std::net::SocketAddr;
 use std::path::PathBuf;
-use std::str::FromStr;
 
 use byte_unit::Byte;
 use futures::future::TryFutureExt;
@@ -28,12 +26,13 @@ use tower_abci::{response, split, Server};
 use tower_abci_old::{response, split, Server};
 
 use self::shims::abcipp_shim::AbciService;
+use crate::config::utils::num_of_threads;
 use crate::config::TendermintMode;
 use crate::node::ledger::broadcaster::Broadcaster;
 use crate::node::ledger::shell::{Error, MempoolTxType, Shell};
 use crate::node::ledger::shims::abcipp_shim::AbcippShim;
 use crate::node::ledger::shims::abcipp_shim_types::shim::{Request, Response};
-use crate::{cli, config, wasm_loader};
+use crate::{config, wasm_loader};
 
 /// Env. var to set a number of Tokio RT worker threads
 const ENV_VAR_TOKIO_THREADS: &str = "ANOMA_TOKIO_THREADS";
@@ -135,40 +134,18 @@ pub fn run(config: config::Ledger, wasm_dir: PathBuf) {
     let logical_cores = num_cpus::get();
     tracing::info!("Available logical cores: {}", logical_cores);
 
-    let rayon_threads = if let Ok(num_str) = env::var(ENV_VAR_RAYON_THREADS) {
-        match usize::from_str(&num_str) {
-            Ok(num) if num > 0 => num,
-            _ => {
-                eprintln!(
-                    "Invalid env. var {} value: {}. Expecting a positive \
-                     number.",
-                    ENV_VAR_RAYON_THREADS, num_str
-                );
-                cli::safe_exit(1)
-            }
-        }
-    } else {
+    let rayon_threads = num_of_threads(
+        ENV_VAR_RAYON_THREADS,
         // If not set, default to half of logical CPUs count
-        logical_cores / 2
-    };
+        logical_cores / 2,
+    );
     tracing::info!("Using {} threads for Rayon.", rayon_threads);
 
-    let tokio_threads = if let Ok(num_str) = env::var(ENV_VAR_TOKIO_THREADS) {
-        match usize::from_str(&num_str) {
-            Ok(num) if num > 0 => num,
-            _ => {
-                eprintln!(
-                    "Invalid env. var {} value: {}. Expecting a positive \
-                     number.",
-                    ENV_VAR_TOKIO_THREADS, num_str
-                );
-                cli::safe_exit(1)
-            }
-        }
-    } else {
+    let tokio_threads = num_of_threads(
+        ENV_VAR_TOKIO_THREADS,
         // If not set, default to half of logical CPUs count
-        logical_cores / 2
-    };
+        logical_cores / 2,
+    );
     tracing::info!("Using {} threads for Tokio.", tokio_threads);
 
     // Configure number of threads for rayon (used in `par_iter` when running
@@ -295,7 +272,7 @@ async fn run_aux(config: config::Ledger, wasm_dir: PathBuf) {
     let tendermint_config = config.tendermint.clone();
 
     // Channel for signalling shut down from the shell or from Tendermint
-    let (abort_send, mut abort_recv) =
+    let (abort_send, abort_recv) =
         tokio::sync::mpsc::unbounded_channel::<&'static str>();
     // Channels for validators to send protocol txs to be broadcast to the
     // broadcaster service
@@ -400,21 +377,7 @@ async fn run_aux(config: config::Ledger, wasm_dir: PathBuf) {
         .expect("Must be able to start a thread for the shell");
 
     // Wait for interrupt signal or abort message
-    tokio::select! {
-        signal = tokio::signal::ctrl_c() => {
-            match signal {
-                Ok(()) => tracing::info!("Received interrupt signal, exiting..."),
-                Err(err) => tracing::error!("Failed to listen for CTRL+C signal: {}", err),
-            }
-        },
-        msg = abort_recv.recv() => {
-            // When the msg is `None`, there are no more abort senders, so both
-            // Tendermint and the shell must have already exited
-            if let Some(who) = msg {
-                 tracing::info!("{} has exited, shutting down...", who);
-            }
-        }
-    };
+    wait_for_abort(abort_recv).await;
 
     // Abort the ABCI service task
     abci.abort();
@@ -522,4 +485,96 @@ impl Drop for Aborter {
         // Send abort message, ignore result
         let _ = self.sender.send(self.who);
     }
+}
+
+#[cfg(unix)]
+async fn wait_for_abort(
+    mut abort_recv: tokio::sync::mpsc::UnboundedReceiver<&'static str>,
+) {
+    use tokio::signal::unix::{signal, SignalKind};
+    let mut sigterm = signal(SignalKind::terminate()).unwrap();
+    let mut sighup = signal(SignalKind::hangup()).unwrap();
+    let mut sigpipe = signal(SignalKind::pipe()).unwrap();
+    let _ = tokio::select! {
+        signal = tokio::signal::ctrl_c() => {
+            match signal {
+                Ok(()) => tracing::info!("Received interrupt signal, exiting..."),
+                Err(err) => tracing::error!("Failed to listen for CTRL+C signal: {}", err),
+            }
+        },
+        signal = sigterm.recv() => {
+            match signal {
+                Some(()) => tracing::info!("Received termination signal, exiting..."),
+                None => tracing::error!("Termination signal cannot be caught anymore, exiting..."),
+            }
+        },
+        signal = sighup.recv() => {
+            match signal {
+                Some(()) => tracing::info!("Received hangup signal, exiting..."),
+                None => tracing::error!("Hangup signal cannot be caught anymore, exiting..."),
+            }
+        },
+        signal = sigpipe.recv() => {
+            match signal {
+                Some(()) => tracing::info!("Received pipe signal, exiting..."),
+                None => tracing::error!("Pipe signal cannot be caught anymore, exiting..."),
+            }
+        },
+        msg = abort_recv.recv() => {
+            // When the msg is `None`, there are no more abort senders, so both
+            // Tendermint and the shell must have already exited
+            if let Some(who) = msg {
+                 tracing::info!("{} has exited, shutting down...", who);
+            }
+        }
+    };
+}
+
+#[cfg(windows)]
+async fn wait_for_abort(
+    mut abort_recv: tokio::sync::mpsc::UnboundedReceiver<&'static str>,
+) {
+    let mut sigbreak = tokio::signal::windows::ctrl_break().unwrap();
+    let _ = tokio::select! {
+        signal = tokio::signal::ctrl_c() => {
+            match signal {
+                Ok(()) => tracing::info!("Received interrupt signal, exiting..."),
+                Err(err) => tracing::error!("Failed to listen for CTRL+C signal: {}", err),
+            }
+        },
+        signal = sigbreak.recv() => {
+            match signal {
+                Some(()) => tracing::info!("Received break signal, exiting..."),
+                None => tracing::error!("Break signal cannot be caught anymore, exiting..."),
+            }
+        },
+        msg = abort_recv.recv() => {
+            // When the msg is `None`, there are no more abort senders, so both
+            // Tendermint and the shell must have already exited
+            if let Some(who) = msg {
+                 tracing::info!("{} has exited, shutting down...", who);
+            }
+        }
+    };
+}
+
+#[cfg(not(any(unix, windows)))]
+async fn wait_for_abort(
+    mut abort_recv: tokio::sync::mpsc::UnboundedReceiver<&'static str>,
+) {
+    let _ = tokio::select! {
+        signal = tokio::signal::ctrl_c() => {
+            match signal {
+                Ok(()) => tracing::info!("Received interrupt signal, exiting..."),
+                Err(err) => tracing::error!("Failed to listen for CTRL+C signal: {}", err),
+            }
+        },
+        msg = abort_recv.recv() => {
+            // When the msg is `None`, there are no more abort senders, so both
+            // Tendermint and the shell must have already exited
+            if let Some(who) = msg {
+                 tracing::info!("{} has exited, shutting down...", who);
+            }
+        }
+    };
 }

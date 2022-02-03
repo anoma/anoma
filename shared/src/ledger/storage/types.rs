@@ -1,12 +1,7 @@
 //! The key and values that may be persisted in a DB.
 
 use borsh::{BorshDeserialize, BorshSerialize};
-use sparse_merkle_tree::default_store::DefaultStore;
-use sparse_merkle_tree::traits::Hasher;
-use sparse_merkle_tree::{SparseMerkleTree, H256};
 use thiserror::Error;
-
-use crate::bytes::ByteBuf;
 
 #[allow(missing_docs)]
 #[derive(Error, Debug)]
@@ -35,26 +30,6 @@ where
     T: BorshDeserialize,
 {
     T::try_from_slice(bytes.as_ref()).map_err(Error::DeserializationError)
-}
-
-/// Merkle tree storage
-pub struct MerkleTree<H: Hasher + Default>(
-    pub SparseMerkleTree<H, H256, DefaultStore<H256>>,
-);
-
-impl<H: Hasher + Default> Default for MerkleTree<H> {
-    fn default() -> Self {
-        MerkleTree(SparseMerkleTree::default())
-    }
-}
-
-impl<H: Hasher + Default> core::fmt::Debug for MerkleTree<H> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let root_hash = format!("{}", ByteBuf(self.0.root().as_slice()));
-        f.debug_struct("MerkleTree")
-            .field("root_hash", &root_hash)
-            .finish()
-    }
 }
 
 /// A key-value pair as raw bytes

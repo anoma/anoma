@@ -1,6 +1,5 @@
 //! IBC validity predicate for connection module
 
-use borsh::{BorshDeserialize, BorshSerialize};
 #[cfg(not(feature = "ABCI"))]
 use ibc::clients::ics07_tendermint::consensus_state::ConsensusState as TmConsensusState;
 #[cfg(not(feature = "ABCI"))]
@@ -65,11 +64,16 @@ use ibc_abci::core::ics03_connection::msgs::conn_open_try::MsgConnectionOpenTry;
 use ibc_abci::core::ics23_commitment::commitment::CommitmentPrefix;
 #[cfg(feature = "ABCI")]
 use ibc_abci::core::ics24_host::identifier::{ClientId, ConnectionId};
+#[cfg(not(feature = "ABCI"))]
+use tendermint_proto::Protobuf;
+#[cfg(feature = "ABCI")]
+use tendermint_proto_abci::Protobuf;
 use thiserror::Error;
 
 use super::super::handler::{
-    make_open_ack_connection_event, make_open_confirm_connection_event,
-    make_open_init_connection_event, make_open_try_connection_event,
+    commitment_prefix, make_open_ack_connection_event,
+    make_open_confirm_connection_event, make_open_init_connection_event,
+    make_open_try_connection_event,
 };
 use super::super::storage::{
     connection_counter_key, connection_id, connection_key,
@@ -77,9 +81,8 @@ use super::super::storage::{
 };
 use super::{Ibc, StateChange};
 use crate::ledger::storage::{self, StorageHasher};
-use crate::types::address::{Address, InternalAddress};
 use crate::types::ibc::data::{Error as IbcDataError, IbcMessage};
-use crate::types::storage::{BlockHeight, Epoch, Key, KeySeg};
+use crate::types::storage::{BlockHeight, Epoch, Key};
 use crate::vm::WasmCacheAccess;
 
 #[allow(missing_docs)]
@@ -356,13 +359,12 @@ where
     ) -> Result<ConnectionEnd> {
         let key = connection_key(conn_id);
         match self.ctx.read_pre(&key) {
-            Ok(Some(value)) => ConnectionEnd::try_from_slice(&value[..])
-                .map_err(|e| {
-                    Error::InvalidConnection(format!(
-                        "Decoding the connection failed: {}",
-                        e
-                    ))
-                }),
+            Ok(Some(value)) => ConnectionEnd::decode_vec(&value).map_err(|e| {
+                Error::InvalidConnection(format!(
+                    "Decoding the connection failed: {}",
+                    e
+                ))
+            }),
             _ => Err(Error::InvalidConnection(format!(
                 "Unable to get the previous connection: ID {}",
                 conn_id
@@ -389,7 +391,7 @@ where
     ) -> Ics03Result<ConnectionEnd> {
         let key = connection_key(conn_id);
         match self.ctx.read_post(&key) {
-            Ok(Some(value)) => ConnectionEnd::try_from_slice(&value[..])
+            Ok(Some(value)) => ConnectionEnd::decode_vec(&value)
                 .map_err(|_| Ics03Error::implementation_specific()),
             Ok(None) => Err(Ics03Error::connection_not_found(conn_id.clone())),
             Err(_) => Err(Ics03Error::implementation_specific()),
@@ -417,12 +419,7 @@ where
     }
 
     fn commitment_prefix(&self) -> CommitmentPrefix {
-        let addr = Address::Internal(InternalAddress::Ibc);
-        let bytes = addr
-            .raw()
-            .try_to_vec()
-            .expect("Encoding an address string shouldn't fail");
-        CommitmentPrefix::from(bytes)
+        commitment_prefix()
     }
 
     fn client_consensus_state(

@@ -1,5 +1,122 @@
 # CHANGELOG
 
+## v0.4.0
+
+Anoma 0.4.0 is a scheduled minor release, released 31 January 2022.
+
+### BUG FIXES
+
+- Matchmaker: Fix a matchmaker's state management via a raw pointer
+  that was causing segfaults in the matchmaker in release build.
+  ([#806](https://github.com/anoma/anoma/pull/806))
+
+### CI
+
+- Build Linux package directly from tagged releases, and upload wasm from tags.
+  ([#801](https://github.com/anoma/anoma/pull/801))
+
+### FEATURES
+
+- Client/Ledger: Added a flag  to allow to indicate that client should exit once
+  the transaction is in mempool without waiting for it to be applied in a block.
+  ([#403](https://github.com/anoma/anoma/issues/403))
+- Ledger: Emit and validate IBC events from transactions.
+  ([#480](https://github.com/anoma/anoma/issues/480))
+- Add `anomac tx-result` command to query the result of a transaction given a
+  transaction hash. ([#634](https://github.com/anoma/anoma/issues/634))
+- Ledger: Use IBC messages from ibc-rs crate to be used in the relayer.
+  ([#699](https://github.com/anoma/anoma/issues/699))
+- Ledger: Added [fungible token transfer](https://github.com/cosmos/ibc/tree/26299580866b80fbdf0ce8a0691ee19a28176795/spec/app/ics-020-fungible-token-transfer)
+  support to IBC validity predicate. 
+  ([#823](https://github.com/anoma/anoma/issues/823))
+
+### IMPROVEMENTS
+
+- Ledger: Add IbcActions trait to execute IBC operations
+  ([#411](https://github.com/anoma/anoma/issues/411))
+- Matchmaker has been separated from intent gossiper node. Multiple
+  matchmakers can connect to an intent gossiper node over WebSocket.
+  ([#579](https://github.com/anoma/anoma/issues/579))
+- Wallet: Ask for encryption password confirmation when generating a new key.
+  ([#625](https://github.com/anoma/anoma/issues/625))
+- Ledger: Two-layer merkle tree for the IBC proof verification
+  ([#671](https://github.com/anoma/anoma/issues/671))
+- Testing: Increments network configuration ports used for E2E
+  tests and ABCI++ enabled E2E tests to avoid sharing resources.
+  ([#717](https://github.com/anoma/anoma/issues/717))
+- Matchmaker: compiling and loading matchmakers to and from dylib instead of
+  WASM ([#718](https://github.com/anoma/anoma/pull/718))
+- Ledger: Coding IBC-related data without Borsh
+  ([#734](https://github.com/anoma/anoma/issues/734))
+- Matchmaker: re-purpose the matchmaker macro to manage state of a custom
+  matchmaker implementation ([#746](https://github.com/anoma/anoma/pull/746))
+- Testing: Update to a new branch of property-based state machine testing with
+  initial state shrinking. ([#765](https://github.com/anoma/anoma/pull/765))
+- Port the Nix build to the new Flakes system.
+  ([#770](https://github.com/anoma/anoma/pull/770))
+- Client/Utils: Respect wasm directory, when specified and non-default in the
+  command. The command now doesn't unpack the network config archive into its
+  default directories, if any of them are specified with non-default values.
+  ([#813](https://github.com/anoma/anoma/issues/813))
+- Install the default token exchange matchmaker implemenetation into
+  `~/.cargo/lib` directory when building from source. When not absolute, the
+  matchmaker will attempt to load the matchmaker from the same path as where the
+  binary is being ran from, from `~/.cargo/lib` or the current working 
+  directory. ([#816](https://github.com/anoma/anoma/issues/816))
+
+### MISCELLANEOUS
+
+- Force non-dev build for make build-release, check-release & package
+  ([#791](https://github.com/anoma/anoma/pull/791))
+
+## v0.3.1
+
+Anoma 0.3.1 - first maintenance release in the 0.3.x series. Protocol
+compatible with 0.3.0, but changes the on-disk storage format - nodes
+will need to resync from scratch.
+
+### BUG FIXES
+
+- Fix the `anoma client utils join-network` to respect `--base-dir` argument, if
+  specified ([#723](https://github.com/anoma/anoma/issues/723))
+- Ledger: Fix an issue in the default thread count usage calculation that
+  was previously causing it to crash for a target with a single logical core.
+  ([#726](https://github.com/anoma/anoma/pull/726))
+- Ledger: write storage diffs from the correct current block height and ignore
+  these on loading last known block's state from persisted state on disk.
+  ([#732](https://github.com/anoma/anoma/pull/732))
+- Ledger: Handle Unix and Windows interrupt and termination signals to shut down
+  cleanly. ([#768](https://github.com/anoma/anoma/issues/768))
+
+### IMPROVEMENTS
+
+- Ledger: enable atomic commits in RocksDB and explicitly flush blocks without
+  waiting ([#372](https://github.com/anoma/anoma/issues/372))
+- Fix the `anoma client utils join-network` to respect `--base-dir` argument, if
+  specified ([#711](https://github.com/anoma/anoma/issues/711))
+- Ledger: Write predecessor block's values to be able to integrate Tendermint's
+  rollback helper command. ([#729](https://github.com/anoma/anoma/pull/729))
+- Include a more accurate build version from git describe in help output version
+  strings. ([#733](https://github.com/anoma/anoma/pull/733))
+- Ledger: Updated wasmer dependency to [v2.1.1](https://github.com/wasmerio/wasmer/releases/tag/2.1.1).
+  ([#756](https://github.com/anoma/anoma/pull/756))
+- Config: Enable setting config values via environment variables, add
+  variables for configuring Tendermint instrumentation and allow missing
+  values in the config file (filled in with defaults defined in the code)
+  ([#774](https://github.com/anoma/anoma/pull/774))
+- Gossip: Enable peer discovery with libp2p Kademlia and Identify
+  protocol and allow to keep the established peer connections open.
+  ([#775](https://github.com/anoma/anoma/pull/775))
+
+### MISCELLANEOUS
+
+- Adds missing nix-shell openssl dependency.
+  ([#694](https://github.com/anoma/anoma/pull/694))
+- Don't include wasm checksums in the package, since the network configuration
+  mechanisms now handle this. ([#731](https://github.com/anoma/anoma/pull/731))
+- Force non-dev build for make clippy.
+  ([#783](https://github.com/anoma/anoma/pull/783))
+
 ## v0.3.0
 
 Anoma 0.3.0

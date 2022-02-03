@@ -67,10 +67,7 @@ impl WeightScale<Hash, Module> for ModuleCacheScale {
         // elements, so we use the size of the module as its scale
         // and subtract 1 from it to negate the increment of the cache length.
 
-        let bytes = value.serialize().unwrap();
-        // TODO wasmer 2.x
-        // let size = loupe::size_of_val(&value) + HASH_BYTES;
-        let size = bytes.len() + HASH_BYTES;
+        let size = loupe::size_of_val(&value) + HASH_BYTES;
         tracing::debug!(
             "WASM module hash {}, size including the hash {}",
             key.to_string(),
@@ -493,39 +490,38 @@ mod universal {
     }
 }
 
-// TODO wasmer 2.x
 /// A dynamic library engine compilation.
-// mod dylib {
-//     use super::*;
+mod dylib {
+    use super::*;
 
-//     #[allow(dead_code)]
-//     #[cfg(windows)]
-//     pub const FILE_EXT: &str = "dll";
-//     #[allow(dead_code)]
-//     #[cfg(all(not(unix), target_os = "macos"))]
-//     pub const FILE_EXT: &str = "dylib";
-//     #[allow(dead_code)]
-//     #[cfg(all(unix, not(target_os = "macos")))]
-//     pub const FILE_EXT: &str = "so";
+    #[allow(dead_code)]
+    #[cfg(windows)]
+    pub const FILE_EXT: &str = "dll";
+    #[allow(dead_code)]
+    #[cfg(all(not(unix), target_os = "macos"))]
+    pub const FILE_EXT: &str = "dylib";
+    #[allow(dead_code)]
+    #[cfg(all(unix, not(target_os = "macos")))]
+    pub const FILE_EXT: &str = "so";
 
-//     /// Compile wasm to a dynamic library
-//     #[allow(dead_code)]
-//     pub fn compile(
-//         code: impl AsRef<[u8]>,
-//     ) -> Result<(Module, Store), wasmer::CompileError> {
-//         let store = store();
-//         let module = Module::new(&store, code.as_ref())?;
-//         Ok((module, store))
-//     }
+    /// Compile wasm to a dynamic library
+    #[allow(dead_code)]
+    pub fn compile(
+        code: impl AsRef<[u8]>,
+    ) -> Result<(Module, Store), wasmer::CompileError> {
+        let store = store();
+        let module = Module::new(&store, code.as_ref())?;
+        Ok((module, store))
+    }
 
-//     /// Dylib WASM store
-//     #[allow(dead_code)]
-//     pub fn store() -> Store {
-//         let compiler = wasmer_compiler_singlepass::Singlepass::default();
-//         let engine = wasmer_engine_dylib::Dylib::new(compiler).engine();
-//         Store::new_with_tunables(&engine, memory::vp_limit())
-//     }
-// }
+    /// Dylib WASM store
+    #[allow(dead_code)]
+    pub fn store() -> Store {
+        let compiler = wasmer_compiler_singlepass::Singlepass::default();
+        let engine = wasmer_engine_dylib::Dylib::new(compiler).engine();
+        Store::new_with_tunables(&engine, memory::vp_limit())
+    }
+}
 
 /// Testing helpers
 #[cfg(any(test, feature = "testing"))]
@@ -942,10 +938,7 @@ mod test {
                 1,
             );
             let (module, _store) = cache.fetch_or_compile(&code).unwrap();
-            let bytes = module.serialize().unwrap();
-            // TODO wasmer 2.x
-            // loupe::size_of_val(&module) + HASH_BYTES + extra_bytes
-            bytes.len() + HASH_BYTES + extra_bytes
+            loupe::size_of_val(&module) + HASH_BYTES + extra_bytes
         };
         println!(
             "Compiled module {} size including the hash: {} ({})",

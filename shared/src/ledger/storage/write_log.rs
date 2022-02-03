@@ -256,7 +256,11 @@ impl WriteLog {
         H: StorageHasher,
     {
         let mut batch = Storage::<DB, H>::batch();
-        for (key, entry) in self.block_write_log.iter() {
+        for (key, entry) in self
+            .block_write_log
+            .iter()
+            .filter(|(k, _)| k.is_updatable())
+        {
             match entry {
                 StorageModification::Write { value } => {
                     storage

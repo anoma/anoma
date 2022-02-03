@@ -5,6 +5,7 @@ use std::time::Duration;
 
 use anoma::ledger::gas::VpGasMeter;
 pub use anoma::ledger::ibc::handler::*;
+use anoma::ledger::ibc::init_genesis_storage;
 pub use anoma::ledger::ibc::storage::{
     ack_key, capability_index_key, capability_key, channel_counter_key,
     channel_key, client_counter_key, client_state_key, client_type_key,
@@ -12,16 +13,21 @@ pub use anoma::ledger::ibc::storage::{
     consensus_state_key, next_sequence_ack_key, next_sequence_recv_key,
     next_sequence_send_key, port_key, receipt_key,
 };
-use anoma::ledger::ibc::vp::Ibc;
+use anoma::ledger::ibc::vp::{Ibc, IbcToken};
 use anoma::ledger::native_vp::{Ctx, NativeVp};
 use anoma::ledger::storage::mockdb::MockDB;
-use anoma::ledger::storage::testing::Sha256Hasher;
+use anoma::ledger::storage::testing::TestStorage;
+use anoma::ledger::storage::Sha256Hasher;
 use anoma::proto::Tx;
-use anoma::types::address::{Address, InternalAddress};
-pub use anoma::types::ibc::data::*;
+use anoma::types::address::{self, Address, InternalAddress};
+use anoma::types::ibc::data::FungibleTokenPacketData;
+use anoma::types::ibc::IbcEvent;
 use anoma::types::storage::Key;
+use anoma::types::time::{DateTimeUtc, DurationSecs};
+use anoma::types::token::{self, Amount};
 use anoma::vm::{wasm, WasmCacheRwAccess};
-use anoma_vm_env::tx_prelude::BorshSerialize;
+#[cfg(not(feature = "ABCI"))]
+use ibc::applications::ics20_fungible_token_transfer::msgs::transfer::MsgTransfer;
 #[cfg(not(feature = "ABCI"))]
 use ibc::core::ics02_client::client_consensus::ConsensusState;
 #[cfg(not(feature = "ABCI"))]
@@ -93,6 +99,8 @@ use ibc::timestamp::Timestamp;
 #[cfg(not(feature = "ABCI"))]
 use ibc::Height;
 #[cfg(feature = "ABCI")]
+use ibc_abci::applications::ics20_fungible_token_transfer::msgs::transfer::MsgTransfer;
+#[cfg(feature = "ABCI")]
 use ibc_abci::core::ics02_client::client_consensus::ConsensusState;
 #[cfg(feature = "ABCI")]
 use ibc_abci::core::ics02_client::client_state::{AnyClientState, ClientState};
@@ -163,7 +171,11 @@ use ibc_abci::timestamp::Timestamp;
 #[cfg(feature = "ABCI")]
 use ibc_abci::Height;
 #[cfg(not(feature = "ABCI"))]
+use ibc_proto::cosmos::base::v1beta1::Coin;
+#[cfg(not(feature = "ABCI"))]
 use ibc_proto::ibc::core::commitment::v1::MerkleProof;
+#[cfg(feature = "ABCI")]
+use ibc_proto_abci::cosmos::base::v1beta1::Coin;
 #[cfg(feature = "ABCI")]
 use ibc_proto_abci::ibc::core::commitment::v1::MerkleProof;
 use tempfile::TempDir;
@@ -179,6 +191,10 @@ use tendermint::chain::Id as TmChainId;
 use tendermint::hash::{AppHash, Hash as TmHash};
 #[cfg(not(feature = "ABCI"))]
 use tendermint::time::Time as TmTime;
+#[cfg(not(feature = "ABCI"))]
+use tendermint_proto::Protobuf;
+#[cfg(feature = "ABCI")]
+use tendermint_proto_abci::Protobuf;
 #[cfg(feature = "ABCI")]
 use tendermint_stable::account::Id as TmAccountId;
 #[cfg(feature = "ABCI")]
@@ -194,7 +210,9 @@ use tendermint_stable::hash::{AppHash, Hash as TmHash};
 #[cfg(feature = "ABCI")]
 use tendermint_stable::time::Time as TmTime;
 
-use crate::tx::TestTxEnv;
+use crate::tx::*;
+
+const VP_ALWAYS_TRUE_WASM: &str = "../wasm_for_tests/vp_always_true.wasm";
 
 pub struct TestIbcVp<'a> {
     pub ibc: Ibc<'a, MockDB, Sha256Hasher, WasmCacheRwAccess>,
@@ -208,6 +226,67 @@ impl<'a> TestIbcVp<'a> {
     ) -> std::result::Result<bool, anoma::ledger::ibc::vp::Error> {
         self.ibc
             .validate_tx(tx_data, &self.keys_changed, &HashSet::new())
+    }
+}
+
+pub struct TestIbcTokenVp<'a> {
+    pub token: IbcToken<'a, MockDB, Sha256Hasher, WasmCacheRwAccess>,
+    pub keys_changed: HashSet<Key>,
+}
+
+impl<'a> TestIbcTokenVp<'a> {
+    pub fn validate(
+        &self,
+        tx_data: &[u8],
+    ) -> std::result::Result<bool, anoma::ledger::ibc::vp::IbcTokenError> {
+        self.token
+            .validate_tx(tx_data, &self.keys_changed, &HashSet::new())
+    }
+}
+
+pub struct TestIbcActions;
+
+impl IbcActions for TestIbcActions {
+    /// Read IBC-related data
+    fn read_ibc_data(&self, key: &Key) -> Option<Vec<u8>> {
+        tx_host_env::read_bytes(key.to_string())
+    }
+
+    /// Write IBC-related data
+    fn write_ibc_data(&self, key: &Key, data: impl AsRef<[u8]>) {
+        tx_host_env::write_bytes(key.to_string(), data)
+    }
+
+    /// Delete IBC-related data
+    fn delete_ibc_data(&self, key: &Key) {
+        tx_host_env::delete(key.to_string())
+    }
+
+    /// Emit an IBC event
+    fn emit_ibc_event(&self, event: IbcEvent) {
+        tx_host_env::emit_ibc_event(&event)
+    }
+
+    fn transfer_token(
+        &self,
+        src: &Address,
+        dest: &Address,
+        token: &Address,
+        amount: Amount,
+    ) {
+        let src_key = token::balance_key(token, src);
+        let dest_key = token::balance_key(token, dest);
+        let src_bal: Option<Amount> = tx_host_env::read(&src_key.to_string());
+        let mut src_bal = src_bal.unwrap_or_else(|| match src {
+            Address::Internal(InternalAddress::IbcMint) => Amount::max(),
+            _ => unreachable!(),
+        });
+        src_bal.spend(&amount);
+        let mut dest_bal: Amount =
+            tx_host_env::read(&dest_key.to_string()).unwrap_or_default();
+        dest_bal.receive(&amount);
+        tx_host_env::write(src_key.to_string(), src_bal);
+        tx_host_env::write(dest_key.to_string(), dest_bal);
     }
 }
 
@@ -235,6 +314,57 @@ pub fn init_ibc_vp_from_tx<'a>(
     let ibc = Ibc { ctx };
 
     (TestIbcVp { ibc, keys_changed }, vp_cache_dir)
+}
+
+/// Initialize the native token VP for the given address
+pub fn init_token_vp_from_tx<'a>(
+    tx_env: &'a TestTxEnv,
+    tx: &'a Tx,
+    addr: &Address,
+) -> (TestIbcTokenVp<'a>, TempDir) {
+    let keys_changed = tx_env
+        .write_log
+        .verifiers_changed_keys(&HashSet::new())
+        .get(addr)
+        .cloned()
+        .expect("no token address");
+    let (vp_wasm_cache, vp_cache_dir) =
+        wasm::compilation_cache::common::testing::cache();
+
+    let ctx = Ctx::new(
+        &tx_env.storage,
+        &tx_env.write_log,
+        tx,
+        VpGasMeter::new(0),
+        vp_wasm_cache,
+    );
+    let token = IbcToken { ctx };
+
+    (
+        TestIbcTokenVp {
+            token,
+            keys_changed,
+        },
+        vp_cache_dir,
+    )
+}
+
+/// Initialize the test storage
+pub fn init_storage(storage: &mut TestStorage) -> (Address, Address) {
+    init_genesis_storage(storage);
+    // block header to check timeout timestamp
+    storage.set_header(tm_dummy_header()).unwrap();
+
+    // initialize a token
+    let code = std::fs::read(VP_ALWAYS_TRUE_WASM).expect("cannot load wasm");
+    let token = tx_host_env::init_account(code.clone());
+
+    // initialize an account
+    let account = tx_host_env::init_account(code);
+    let key = token::balance_key(&token, &account);
+    let init_bal = Amount::from(1_000_000_000u64);
+    tx_host_env::write(key.to_string(), init_bal);
+    (token, account)
 }
 
 pub fn tm_dummy_header() -> TmHeader {
@@ -270,21 +400,21 @@ pub fn prepare_client() -> (ClientId, AnyClientState, HashMap<Key, Vec<u8>>) {
     let client_id =
         client_id(client_state.client_type(), 0).expect("invalid client ID");
     let key = client_state_key(&client_id);
-    let bytes = msg.client_state.try_to_vec().expect("encoding failed");
+    let bytes = msg.client_state.encode_vec().expect("encoding failed");
     writes.insert(key, bytes);
     // client type
     let key = client_type_key(&client_id);
     let client_type = client_state.client_type();
-    let bytes = client_type.try_to_vec().expect("encoding failed");
+    let bytes = client_type.as_str().as_bytes().to_vec();
     writes.insert(key, bytes);
     // consensus state
     let height = client_state.latest_height();
     let key = consensus_state_key(&client_id, height);
-    let bytes = msg.consensus_state.try_to_vec().expect("encoding failed");
+    let bytes = msg.consensus_state.encode_vec().expect("encoding failed");
     writes.insert(key, bytes);
     // client counter
     let key = client_counter_key();
-    let bytes = 1_u64.try_to_vec().unwrap();
+    let bytes = 1_u64.to_be_bytes().to_vec();
     writes.insert(key, bytes);
 
     (client_id, client_state, writes)
@@ -300,11 +430,11 @@ pub fn prepare_opened_connection(
     let msg = msg_connection_open_init(client_id.clone());
     let mut conn = init_connection(&msg);
     open_connection(&mut conn);
-    let bytes = conn.try_to_vec().expect("encoding failed");
+    let bytes = conn.encode_vec().expect("encoding failed");
     writes.insert(key, bytes);
     // connection counter
     let key = connection_counter_key();
-    let bytes = 1_u64.try_to_vec().unwrap();
+    let bytes = 1_u64.to_be_bytes().to_vec();
     writes.insert(key, bytes);
 
     (conn_id, writes)
@@ -318,10 +448,10 @@ pub fn prepare_opened_channel(
     // port
     let port_id = port_id("test_port").expect("invalid port ID");
     let key = port_key(&port_id);
-    writes.insert(key, 0_u64.try_to_vec().unwrap());
+    writes.insert(key, 0_u64.to_be_bytes().to_vec());
     // capability
     let key = capability_key(0);
-    let bytes = port_id.try_to_vec().expect("encoding failed");
+    let bytes = port_id.as_bytes().to_vec();
     writes.insert(key, bytes);
     // channel
     let channel_id = channel_id(0);
@@ -330,7 +460,7 @@ pub fn prepare_opened_channel(
     let msg = msg_channel_open_init(port_id.clone(), conn_id.clone());
     let mut channel = msg.channel;
     open_channel(&mut channel);
-    let bytes = channel.try_to_vec().expect("encoding failed");
+    let bytes = channel.encode_vec().expect("encoding failed");
     writes.insert(key, bytes);
 
     (port_id, channel_id, writes)
@@ -553,7 +683,7 @@ fn dummy_channel(
     )
 }
 
-fn dummy_channel_counterparty() -> ChanCounterparty {
+pub fn dummy_channel_counterparty() -> ChanCounterparty {
     let counterpart_port_id = PortId::from_str("counterpart_test_port")
         .expect("Creating a port ID failed");
     let counterpart_channel_id =
@@ -566,26 +696,32 @@ pub fn unorder_channel(channel: &mut ChannelEnd) {
     channel.ordering = Order::Unordered;
 }
 
-pub fn packet_send_data(
+pub fn msg_transfer(
     port_id: PortId,
     channel_id: ChannelId,
-) -> PacketSendData {
-    let counterparty = dummy_channel_counterparty();
-    let timestamp = chrono::Utc::now() + chrono::Duration::seconds(100);
-    let timeout_timestamp = Timestamp::from_datetime(timestamp);
-    PacketSendData::new(
-        port_id,
-        channel_id,
-        counterparty.port_id().clone(),
-        counterparty.channel_id().unwrap().clone(),
-        vec![0],
-        Height::new(1, 10),
+    token: String,
+    sender: &Address,
+) -> MsgTransfer {
+    let timestamp = DateTimeUtc::now() + DurationSecs(100);
+    let timeout_timestamp = Timestamp::from_datetime(timestamp.0);
+    MsgTransfer {
+        source_port: port_id,
+        source_channel: channel_id,
+        token: Some(Coin {
+            denom: token,
+            amount: 100u64.to_string(),
+        }),
+        sender: Signer::new(sender.to_string()),
+        receiver: Signer::new(
+            address::testing::gen_established_address().to_string(),
+        ),
+        timeout_height: Height::new(1, 100),
         timeout_timestamp,
-    )
+    }
 }
 
-pub fn set_timeout_height(data: &mut PacketSendData) {
-    data.timeout_height = Height::new(1, 1);
+pub fn set_timeout_height(msg: &mut MsgTransfer) {
+    msg.timeout_height = Height::new(1, 1);
 }
 
 pub fn msg_packet_recv(packet: Packet) -> MsgRecvPacket {
@@ -609,17 +745,25 @@ pub fn received_packet(
     port_id: PortId,
     channel_id: ChannelId,
     sequence: Sequence,
+    token: String,
+    receiver: &Address,
 ) -> Packet {
     let counterparty = dummy_channel_counterparty();
     let timestamp = chrono::Utc::now() + chrono::Duration::seconds(100);
     let timeout_timestamp = Timestamp::from_datetime(timestamp);
+    let data = FungibleTokenPacketData {
+        denomination: token,
+        amount: 100u64.to_string(),
+        sender: address::testing::gen_established_address().to_string(),
+        receiver: receiver.to_string(),
+    };
     Packet {
         sequence,
         source_port: counterparty.port_id().clone(),
         source_channel: counterparty.channel_id().unwrap().clone(),
         destination_port: port_id,
         destination_channel: channel_id,
-        data: vec![0],
+        data: serde_json::to_vec(&data).unwrap(),
         timeout_height: Height::new(1, 10),
         timeout_timestamp,
     }

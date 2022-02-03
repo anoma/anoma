@@ -1,6 +1,6 @@
 //! IBC validity predicate for port module
+use std::str::FromStr;
 
-use borsh::BorshDeserialize;
 #[cfg(not(feature = "ABCI"))]
 use ibc::core::ics04_channel::context::ChannelReader;
 #[cfg(not(feature = "ABCI"))]
@@ -139,7 +139,13 @@ where
         let key = capability_key(cap.index());
         match self.ctx.read_post(&key) {
             Ok(Some(value)) => {
-                PortId::try_from_slice(&value[..]).map_err(|e| {
+                let id = std::str::from_utf8(&value).map_err(|e| {
+                    Error::InvalidPort(format!(
+                        "Decoding the port ID failed: {}",
+                        e
+                    ))
+                })?;
+                PortId::from_str(id).map_err(|e| {
                     Error::InvalidPort(format!(
                         "Decoding the port ID failed: {}",
                         e
@@ -170,8 +176,10 @@ where
         let key = port_key(port_id);
         match self.ctx.read_post(&key) {
             Ok(Some(value)) => {
-                let index = u64::try_from_slice(&value[..])
+                let index: [u8; 8] = value
+                    .try_into()
                     .map_err(|_| Ics05Error::implementation_specific())?;
+                let index = u64::from_be_bytes(index);
                 Ok(Capability::from(index))
             }
             Ok(None) => Err(Ics05Error::unknown_port(port_id.clone())),

@@ -90,8 +90,21 @@ impl Wallet {
             println!("Warning: The keypair will NOT be encrypted.");
             None
         } else {
-            Some(read_password("Enter encryption password: "))
+            Some(read_password("Enter your encryption password: "))
         };
+        // Bis repetita for confirmation.
+        let pwd = if unsafe_dont_encrypt {
+            None
+        } else {
+            Some(read_password(
+                "To confirm, please enter the same encryption password once \
+                 more: ",
+            ))
+        };
+        if pwd != password {
+            eprintln!("Your two inputs do not match!");
+            cli::safe_exit(1)
+        }
         let (alias, key) = self.store.gen_key(alias, password);
         // Cache the newly added key
         self.decrypted_key_cache.insert(alias.clone(), key.clone());

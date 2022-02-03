@@ -6,6 +6,8 @@ debug-env := RUST_BACKTRACE=1 RUST_LOG=$(package)=debug
 debug-cargo := $(env) $(debug-env) cargo
 # Nightly build is currently used for rustfmt and clippy.
 nightly := $(shell cat rust-nightly-version)
+# Default matchmaker for token exchange
+mm := libmm_token_exch
 
 # Path to the wasm source for the provided txs and VPs
 wasms := wasm/wasm_source
@@ -28,10 +30,10 @@ build-test-abci-plus-plus:
 	$(cargo) build --tests --no-default-features --features "ABCI-plus-plus"
 
 build-release:
-	$(cargo) build --release --package anoma_apps
+	ANOMA_DEV=false $(cargo) build --release --package anoma_apps
 
 check-release:
-	$(cargo) check --release --package anoma_apps
+	ANOMA_DEV=false $(cargo) check --release --package anoma_apps
 
 package: build-release
 	scripts/make-package.sh
@@ -59,12 +61,12 @@ clippy-wasm = $(cargo) +$(nightly) clippy --manifest-path $(wasm)/Cargo.toml --a
 clippy-wasm-abci-plus-plus = $(cargo) +$(nightly) clippy --manifest-path $(wasm)/Cargo.toml --all-targets --no-default-features --features "ABCI-plus-plus" -- -D warnings
 
 clippy:
-	$(cargo) +$(nightly) clippy --all-targets -- -D warnings && \
+	ANOMA_DEV=false $(cargo) +$(nightly) clippy --all-targets -- -D warnings && \
 	make -C $(wasms) clippy && \
 	$(foreach wasm,$(wasm_templates),$(clippy-wasm) && ) true
 
 clippy-abci-plus-plus:
-	$(cargo) +$(nightly) clippy --all-targets \
+	ANOMA_DEV=false $(cargo) +$(nightly) clippy --all-targets \
 		--manifest-path ./apps/Cargo.toml \
 		--no-default-features \
 		--features "std testing ABCI-plus-plus" && \
@@ -89,6 +91,11 @@ clippy-fix:
 	$(cargo) +$(nightly) clippy --fix -Z unstable-options --all-targets --allow-dirty --allow-staged
 
 install: tendermint
+	$(cargo) build --release \
+		--manifest-path matchmaker/mm_token_exch/Cargo.toml && \
+	find "target/release/" -type f \
+		\( -name "$(mm).dll" -o -name "$(mm).dylib" -o -name "$(mm).so" \) \
+		-exec install -d {} ${HOME}/.cargo/lib/ \; && \
 	ANOMA_DEV=false $(cargo) install --path ./apps
 
 tendermint:
@@ -218,7 +225,7 @@ dev-deps:
 	$(rustup) toolchain install $(nightly)
 	$(rustup) target add wasm32-unknown-unknown
 	$(rustup) component add rustfmt clippy miri --toolchain $(nightly)
-	$(cargo) install cargo-watch
+	$(cargo) install cargo-watch unclog
 
 test-miri:
 	$(cargo) +$(nightly) miri setup
