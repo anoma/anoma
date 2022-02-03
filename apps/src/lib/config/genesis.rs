@@ -45,12 +45,12 @@ pub mod genesis_config {
 
     impl HexString {
         pub fn to_bytes(&self) -> Result<Vec<u8>, HexKeyError> {
-            let bytes = hex::decode(self.0.to_owned())?;
+            let bytes = hex::decode(&self.0)?;
             Ok(bytes)
         }
 
         pub fn to_sha256_bytes(&self) -> Result<[u8; 32], HexKeyError> {
-            let bytes = hex::decode(self.0.to_owned())?;
+            let bytes = hex::decode(&self.0)?;
             let slice = bytes.as_slice();
             let array: [u8; 32] = slice.try_into()?;
             Ok(array)

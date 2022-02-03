@@ -74,7 +74,7 @@ impl FromStr for Path {
         match path.as_str() {
             DRY_RUN_TX_PATH => Ok(Self::DryRunTx),
             EPOCH_PATH => Ok(Self::Epoch),
-            _ => match path.split_once("/") {
+            _ => match path.split_once('/') {
                 Some((VALUE_PREFIX, storage_key)) => {
                     let key = storage::Key::parse(storage_key)
                         .map_err(PathParseError::InvalidStorageKey)?;

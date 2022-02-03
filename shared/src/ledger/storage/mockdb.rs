@@ -49,13 +49,10 @@ impl DB for MockDB {
 
     fn read_last_block(&mut self) -> Result<Option<BlockStateRead>> {
         // Block height
-        let height: BlockHeight;
-        match self.0.borrow().get("height") {
-            Some(bytes) => {
-                height = types::decode(bytes).map_err(Error::CodingError)?;
-            }
+        let height: BlockHeight = match self.0.borrow().get("height") {
+            Some(bytes) => types::decode(bytes).map_err(Error::CodingError)?,
             None => return Ok(None),
-        }
+        };
 
         // Epoch start height and time
         let next_epoch_min_start_height: BlockHeight =
@@ -261,9 +258,7 @@ impl DB for MockDB {
     }
 
     fn read_subspace_val(&self, key: &Key) -> Result<Option<Vec<u8>>> {
-        let key = Key::parse(&"subspace".to_owned())
-            .map_err(Error::KeyError)?
-            .join(key);
+        let key = Key::parse("subspace").map_err(Error::KeyError)?.join(key);
         Ok(self.0.borrow().get(&key.to_string()).cloned())
     }
 
@@ -274,9 +269,7 @@ impl DB for MockDB {
         value: impl AsRef<[u8]>,
     ) -> Result<i64> {
         let value = value.as_ref();
-        let key = Key::parse(&"subspace".to_owned())
-            .map_err(Error::KeyError)?
-            .join(key);
+        let key = Key::parse("subspace").map_err(Error::KeyError)?.join(key);
         let current_len = value.len() as i64;
         Ok(
             match self
@@ -295,9 +288,7 @@ impl DB for MockDB {
         _height: BlockHeight,
         key: &Key,
     ) -> Result<i64> {
-        let key = Key::parse(&"subspace".to_owned())
-            .map_err(Error::KeyError)?
-            .join(key);
+        let key = Key::parse("subspace").map_err(Error::KeyError)?.join(key);
         Ok(match self.0.borrow_mut().remove(&key.to_string()) {
             Some(value) => value.len() as i64,
             None => 0,
@@ -322,9 +313,7 @@ impl DB for MockDB {
         value: impl AsRef<[u8]>,
     ) -> Result<i64> {
         let value = value.as_ref();
-        let key = Key::parse(&"subspace".to_owned())
-            .map_err(Error::KeyError)?
-            .join(key);
+        let key = Key::parse("subspace").map_err(Error::KeyError)?.join(key);
         let current_len = value.len() as i64;
         Ok(
             match self
@@ -344,9 +333,7 @@ impl DB for MockDB {
         _height: BlockHeight,
         key: &Key,
     ) -> Result<i64> {
-        let key = Key::parse(&"subspace".to_owned())
-            .map_err(Error::KeyError)?
-            .join(key);
+        let key = Key::parse("subspace").map_err(Error::KeyError)?.join(key);
         Ok(match self.0.borrow_mut().remove(&key.to_string()) {
             Some(value) => value.len() as i64,
             None => 0,

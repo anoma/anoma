@@ -63,8 +63,7 @@ mod tests {
             TempDir::new().expect("Unable to create a temporary DB directory");
         let mut storage =
             PersistentStorage::open(db_path.path(), ChainId::default(), None);
-        let key =
-            Key::parse("key".to_owned()).expect("cannot parse the key string");
+        let key = Key::parse("key").expect("cannot parse the key string");
         let value: u64 = 1;
         let value_bytes = types::encode(&value);
         let value_bytes_len = value_bytes.len();
@@ -110,8 +109,7 @@ mod tests {
         storage
             .begin_block(BlockHash::default(), BlockHeight(100))
             .expect("begin_block failed");
-        let key =
-            Key::parse("key".to_owned()).expect("cannot parse the key string");
+        let key = Key::parse("key").expect("cannot parse the key string");
         let value: u64 = 1;
         let value_bytes = types::encode(&value);
 
@@ -154,8 +152,7 @@ mod tests {
             .expect("begin_block failed");
 
         let mut expected = Vec::new();
-        let prefix = Key::parse("prefix".to_owned())
-            .expect("cannot parse the key string");
+        let prefix = Key::parse("prefix").expect("cannot parse the key string");
         for i in (0..9).rev() {
             let key = prefix
                 .push(&format!("{}", i))

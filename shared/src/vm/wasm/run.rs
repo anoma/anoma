@@ -761,7 +761,7 @@ mod tests {
         let len = 2_usize.pow(24);
         let value: Vec<u8> = vec![6_u8; len];
         let key_raw = "key";
-        let key = Key::parse(key_raw.to_string()).unwrap();
+        let key = Key::parse(key_raw).unwrap();
         // Write the value that should be read by the tx into the storage. When
         // writing directly to storage, the value has to be encoded with
         // Borsh.
@@ -806,7 +806,7 @@ mod tests {
         let len = 2_usize.pow(24);
         let value: Vec<u8> = vec![6_u8; len];
         let key_raw = "key";
-        let key = Key::parse(key_raw.to_string()).unwrap();
+        let key = Key::parse(key_raw).unwrap();
         // Write the value that should be read by the tx into the storage. When
         // writing directly to storage, the value has to be encoded with
         // Borsh.
@@ -855,7 +855,7 @@ mod tests {
         let len = 2_usize.pow(24);
         let value: Vec<u8> = vec![6_u8; len];
         let key_raw = "key";
-        let key = Key::parse(key_raw.to_string()).unwrap();
+        let key = Key::parse(key_raw).unwrap();
         // Write the value that should be read by the tx into the storage. When
         // writing directly to storage, the value has to be encoded with
         // Borsh.

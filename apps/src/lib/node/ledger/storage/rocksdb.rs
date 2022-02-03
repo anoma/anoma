@@ -258,8 +258,7 @@ impl DB for RocksDB {
 
     fn read_last_block(&mut self) -> Result<Option<BlockStateRead>> {
         // Block height
-        let height: BlockHeight;
-        match self
+        let height: BlockHeight = match self
             .0
             .get("height")
             .map_err(|e| Error::DBError(e.into_string()))?
@@ -267,10 +266,10 @@ impl DB for RocksDB {
             Some(bytes) => {
                 // TODO if there's an issue decoding this height, should we try
                 // load its predecessor instead?
-                height = types::decode(bytes).map_err(Error::CodingError)?;
+                types::decode(bytes).map_err(Error::CodingError)?
             }
             None => return Ok(None),
-        }
+        };
 
         // Epoch start height and time
         let next_epoch_min_start_height: BlockHeight = match self
