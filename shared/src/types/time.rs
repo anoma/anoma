@@ -5,6 +5,14 @@ use std::ops::{Add, Sub};
 
 use borsh::{BorshDeserialize, BorshSerialize};
 pub use chrono::{DateTime, Duration, TimeZone, Utc};
+#[cfg(not(feature = "ABCI"))]
+use tendermint::time::Time;
+#[cfg(not(feature = "ABCI"))]
+use tendermint::Error as TendermintError;
+#[cfg(feature = "ABCI")]
+use tendermint_stable::time::Time;
+#[cfg(feature = "ABCI")]
+use tendermint_stable::Error as TendermintError;
 
 /// Check if the given `duration` has passed since the given `start.
 pub fn duration_passed(
@@ -176,16 +184,18 @@ impl From<DateTimeUtc> for Rfc3339String {
     }
 }
 
-#[cfg(not(feature = "ABCI"))]
-impl From<DateTimeUtc> for tendermint::time::Time {
-    fn from(dt: DateTimeUtc) -> Self {
-        dt.0.into()
+impl TryFrom<DateTimeUtc> for Time {
+    type Error = TendermintError;
+
+    fn try_from(dt: DateTimeUtc) -> Result<Self, Self::Error> {
+        Self::parse_from_rfc3339(&DateTime::to_rfc3339(&dt.0))
     }
 }
 
-#[cfg(feature = "ABCI")]
-impl From<DateTimeUtc> for tendermint_stable::time::Time {
-    fn from(dt: DateTimeUtc) -> Self {
-        dt.0.into()
+impl TryFrom<Time> for DateTimeUtc {
+    type Error = chrono::ParseError;
+
+    fn try_from(t: Time) -> Result<Self, Self::Error> {
+        Rfc3339String(t.to_rfc3339()).try_into()
     }
 }

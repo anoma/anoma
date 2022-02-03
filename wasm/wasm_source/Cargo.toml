@@ -40,11 +40,11 @@ tracing = "0.1.29"
 tracing-subscriber = {version = "0.2.25", default-features = false, features = ["env-filter", "fmt"]}
 
 [patch.crates-io]
-tendermint = {git = "https://github.com/heliaxdev/tendermint-rs", branch = "yuji/rebase_v0.23.0"}
-tendermint-light-client = {git = "https://github.com/heliaxdev/tendermint-rs", branch = "yuji/rebase_v0.23.0"}
-tendermint-proto = {git = "https://github.com/heliaxdev/tendermint-rs", branch = "yuji/rebase_v0.23.0"}
-tendermint-rpc = {git = "https://github.com/heliaxdev/tendermint-rs", branch = "yuji/rebase_v0.23.0"}
-tendermint-testgen = {git = "https://github.com/heliaxdev/tendermint-rs", branch = "yuji/rebase_v0.23.0"}
+tendermint = {git = "https://github.com/heliaxdev/tendermint-rs", branch = "yuji/rebase_v0.23.5"}
+tendermint-light-client = {git = "https://github.com/heliaxdev/tendermint-rs", branch = "yuji/rebase_v0.23.5"}
+tendermint-proto = {git = "https://github.com/heliaxdev/tendermint-rs", branch = "yuji/rebase_v0.23.5"}
+tendermint-rpc = {git = "https://github.com/heliaxdev/tendermint-rs", branch = "yuji/rebase_v0.23.5"}
+tendermint-testgen = {git = "https://github.com/heliaxdev/tendermint-rs", branch = "yuji/rebase_v0.23.5"}
 
 [profile.release]
 # smaller and faster wasm (https://rustwasm.github.io/book/reference/code-size.html#compiling-with-link-time-optimizations-lto)

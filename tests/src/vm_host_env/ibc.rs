@@ -1,7 +1,7 @@
+use core::time::Duration;
 use std::collections::{HashMap, HashSet};
 use std::convert::TryFrom;
 use std::str::FromStr;
-use std::time::Duration;
 
 use anoma::ledger::gas::VpGasMeter;
 pub use anoma::ledger::ibc::handler::*;
@@ -22,8 +22,7 @@ use anoma::proto::Tx;
 use anoma::types::address::{self, Address, InternalAddress};
 use anoma::types::ibc::data::FungibleTokenPacketData;
 use anoma::types::ibc::IbcEvent;
-use anoma::types::storage::Key;
-use anoma::types::time::{DateTimeUtc, DurationSecs};
+use anoma::types::storage::{BlockHeight, Epoch, Key};
 use anoma::types::token::{self, Amount};
 use anoma::vm::{wasm, WasmCacheRwAccess};
 #[cfg(not(feature = "ABCI"))]
@@ -51,7 +50,7 @@ use ibc::core::ics03_connection::msgs::conn_open_init::MsgConnectionOpenInit;
 #[cfg(not(feature = "ABCI"))]
 use ibc::core::ics03_connection::msgs::conn_open_try::MsgConnectionOpenTry;
 #[cfg(not(feature = "ABCI"))]
-use ibc::core::ics03_connection::version::Version;
+use ibc::core::ics03_connection::version::Version as ConnVersion;
 #[cfg(not(feature = "ABCI"))]
 use ibc::core::ics04_channel::channel::State as ChanState;
 #[cfg(not(feature = "ABCI"))]
@@ -81,7 +80,7 @@ use ibc::core::ics04_channel::msgs::timeout_on_close::MsgTimeoutOnClose;
 #[cfg(not(feature = "ABCI"))]
 use ibc::core::ics04_channel::packet::{Packet, Sequence};
 #[cfg(not(feature = "ABCI"))]
-use ibc::core::ics23_commitment::commitment::CommitmentProofBytes;
+use ibc::core::ics04_channel::Version as ChanVersion;
 #[cfg(not(feature = "ABCI"))]
 use ibc::core::ics24_host::identifier::{
     ChannelId, ClientId, ConnectionId, PortId,
@@ -123,7 +122,7 @@ use ibc_abci::core::ics03_connection::msgs::conn_open_init::MsgConnectionOpenIni
 #[cfg(feature = "ABCI")]
 use ibc_abci::core::ics03_connection::msgs::conn_open_try::MsgConnectionOpenTry;
 #[cfg(feature = "ABCI")]
-use ibc_abci::core::ics03_connection::version::Version;
+use ibc_abci::core::ics03_connection::version::Version as ConnVersion;
 #[cfg(feature = "ABCI")]
 use ibc_abci::core::ics04_channel::channel::State as ChanState;
 #[cfg(feature = "ABCI")]
@@ -153,7 +152,7 @@ use ibc_abci::core::ics04_channel::msgs::timeout_on_close::MsgTimeoutOnClose;
 #[cfg(feature = "ABCI")]
 use ibc_abci::core::ics04_channel::packet::{Packet, Sequence};
 #[cfg(feature = "ABCI")]
-use ibc_abci::core::ics23_commitment::commitment::CommitmentProofBytes;
+use ibc_abci::core::ics04_channel::Version as ChanVersion;
 #[cfg(feature = "ABCI")]
 use ibc_abci::core::ics24_host::identifier::{
     ChannelId, ClientId, ConnectionId, PortId,
@@ -174,10 +173,14 @@ use ibc_abci::Height;
 use ibc_proto::cosmos::base::v1beta1::Coin;
 #[cfg(not(feature = "ABCI"))]
 use ibc_proto::ibc::core::commitment::v1::MerkleProof;
+#[cfg(not(feature = "ABCI"))]
+use ibc_proto::ics23::CommitmentProof;
 #[cfg(feature = "ABCI")]
 use ibc_proto_abci::cosmos::base::v1beta1::Coin;
 #[cfg(feature = "ABCI")]
 use ibc_proto_abci::ibc::core::commitment::v1::MerkleProof;
+#[cfg(feature = "ABCI")]
+use ibc_proto_abci::ics23::CommitmentProof;
 use tempfile::TempDir;
 #[cfg(not(feature = "ABCI"))]
 use tendermint::account::Id as TmAccountId;
@@ -287,6 +290,13 @@ impl IbcActions for TestIbcActions {
         dest_bal.receive(&amount);
         tx_host_env::write(src_key.to_string(), src_bal);
         tx_host_env::write(dest_key.to_string(), dest_bal);
+    }
+
+    fn get_height(&self) -> (Epoch, BlockHeight) {
+        (
+            tx_host_env::get_block_epoch(),
+            tx_host_env::get_block_height(),
+        )
     }
 }
 
@@ -472,7 +482,7 @@ pub fn msg_create_client() -> MsgCreateAnyClient {
         height,
         timestamp: Timestamp::now(),
     };
-    let client_state = MockClientState(header).wrap_any();
+    let client_state = MockClientState::new(header).wrap_any();
     let consensus_state = MockConsensusState::new(header).wrap_any();
     MsgCreateAnyClient {
         client_state,
@@ -501,12 +511,14 @@ pub fn msg_upgrade_client(client_id: ClientId) -> MsgUpgradeAnyClient {
         height,
         timestamp: Timestamp::now(),
     };
-    let client_state = MockClientState(header).wrap_any();
+    let client_state = MockClientState::new(header).wrap_any();
     let consensus_state = MockConsensusState::new(header).wrap_any();
-    let proof_upgrade_client =
-        MerkleProof::try_from(CommitmentProofBytes::from(vec![])).unwrap();
-    let proof_upgrade_consensus_state =
-        MerkleProof::try_from(CommitmentProofBytes::from(vec![])).unwrap();
+    let proof_upgrade_client = MerkleProof {
+        proofs: vec![CommitmentProof { proof: None }],
+    };
+    let proof_upgrade_consensus_state = MerkleProof {
+        proofs: vec![CommitmentProof { proof: None }],
+    };
     MsgUpgradeAnyClient {
         client_id,
         client_state,
@@ -521,7 +533,7 @@ pub fn msg_connection_open_init(client_id: ClientId) -> MsgConnectionOpenInit {
     MsgConnectionOpenInit {
         client_id,
         counterparty: dummy_connection_counterparty(),
-        version: Version::default(),
+        version: ConnVersion::default(),
         delay_period: Duration::new(100, 0),
         signer: Signer::new("test"),
     }
@@ -536,7 +548,7 @@ pub fn msg_connection_open_try(
         client_id,
         client_state: Some(client_state),
         counterparty: dummy_connection_counterparty(),
-        counterparty_versions: vec![Version::default()],
+        counterparty_versions: vec![ConnVersion::default()],
         proofs: dummy_proofs(),
         delay_period: Duration::new(100, 0),
         signer: Signer::new("test"),
@@ -555,7 +567,7 @@ pub fn msg_connection_open_ack(
         counterparty_connection_id,
         client_state: Some(client_state),
         proofs: dummy_proofs(),
-        version: Version::default(),
+        version: ConnVersion::default(),
         signer: Signer::new("test"),
     }
 }
@@ -572,10 +584,11 @@ pub fn msg_connection_open_confirm(
 
 fn dummy_proofs() -> Proofs {
     let height = Height::new(1, 10);
-    let consensus_proof = ConsensusProof::new(vec![0].into(), height).unwrap();
+    let consensus_proof =
+        ConsensusProof::new(vec![0].try_into().unwrap(), height).unwrap();
     Proofs::new(
-        vec![0].into(),
-        Some(vec![0].into()),
+        vec![0].try_into().unwrap(),
+        Some(vec![0].try_into().unwrap()),
         Some(consensus_proof),
         None,
         height,
@@ -611,7 +624,7 @@ pub fn msg_channel_open_try(
         port_id,
         previous_channel_id: None,
         channel: dummy_channel(ChanState::TryOpen, Order::Ordered, conn_id),
-        counterparty_version: Order::Ordered.to_string(),
+        counterparty_version: ChanVersion::ics20(),
         proofs: dummy_proofs(),
         signer: Signer::new("test"),
     }
@@ -628,7 +641,7 @@ pub fn msg_channel_open_ack(
             .channel_id()
             .unwrap()
             .clone(),
-        counterparty_version: Order::Ordered.to_string(),
+        counterparty_version: ChanVersion::ics20(),
         proofs: dummy_proofs(),
         signer: Signer::new("test"),
     }
@@ -679,7 +692,7 @@ fn dummy_channel(
         order,
         dummy_channel_counterparty(),
         vec![connection_id],
-        order.to_string(),
+        ChanVersion::ics20(),
     )
 }
 
@@ -702,8 +715,8 @@ pub fn msg_transfer(
     token: String,
     sender: &Address,
 ) -> MsgTransfer {
-    let timestamp = DateTimeUtc::now() + DurationSecs(100);
-    let timeout_timestamp = Timestamp::from_datetime(timestamp.0);
+    let timeout_timestamp =
+        (Timestamp::now() + Duration::from_secs(100)).unwrap();
     MsgTransfer {
         source_port: port_id,
         source_channel: channel_id,
@@ -749,8 +762,8 @@ pub fn received_packet(
     receiver: &Address,
 ) -> Packet {
     let counterparty = dummy_channel_counterparty();
-    let timestamp = chrono::Utc::now() + chrono::Duration::seconds(100);
-    let timeout_timestamp = Timestamp::from_datetime(timestamp);
+    let timeout_timestamp =
+        (Timestamp::now() + Duration::from_secs(100)).unwrap();
     let data = FungibleTokenPacketData {
         denomination: token,
         amount: 100u64.to_string(),

@@ -36,21 +36,21 @@ anoma = {path = "../shared", default-features = false, features = ["testing"]}
 anoma_vm_env = {path = "../vm_env", default-features = false}
 chrono = "0.4.19"
 concat-idents = "1.1.2"
-# TODO temp fork for https://github.com/informalsystems/ibc-rs/issues/1161
-ibc = {git = "https://github.com/heliaxdev/ibc-rs", branch = "yuji/abcipp-v0.23.0", features = ["mocks", "borsh"], optional = true}
-ibc-abci = {package = "ibc", git = "https://github.com/heliaxdev/ibc-rs", branch = "yuji/rebase_v0.23.0", features = ["mocks", "borsh"], optional = true}
-ibc-proto = {git = "https://github.com/heliaxdev/ibc-rs", branch = "yuji/abcipp-v0.23.0", optional = true}
-ibc-proto-abci = {package = "ibc-proto", git = "https://github.com/heliaxdev/ibc-rs", branch = "yuji/rebase_v0.23.0", optional = true}
+# TODO using the same version of tendermint-rs as we do here.
+ibc = {git = "https://github.com/heliaxdev/ibc-rs", branch = "yuji/abcipp-v0.23.5", features = ["mocks"], optional = true}
+ibc-abci = {package = "ibc", git = "https://github.com/heliaxdev/ibc-rs", branch = "yuji/rebase_v0.23.5", features = ["mocks"], optional = true}
+ibc-proto = {git = "https://github.com/heliaxdev/ibc-rs", branch = "yuji/abcipp-v0.23.5", optional = true}
+ibc-proto-abci = {package = "ibc-proto", git = "https://github.com/heliaxdev/ibc-rs", branch = "yuji/rebase_v0.23.5", optional = true}
 prost = "0.9.0"
 serde_json = {version = "1.0.65"}
 sha2 = "0.9.3"
 test-log = {version = "0.2.7", default-features = false, features = ["trace"]}
-# temporarily using fork work-around for https://github.com/informalsystems/tendermint-rs/issues/971
 tempfile = "3.2.0"
-tendermint = {git = "https://github.com/heliaxdev/tendermint-rs", branch = "yuji/abcipp-v0.23.0", optional = true}
-tendermint-stable = {package = "tendermint", git = "https://github.com/heliaxdev/tendermint-rs", branch = "yuji/rebase_v0.23.0", optional = true}
-tendermint-proto = {git = "https://github.com/heliaxdev/tendermint-rs", branch = "yuji/abcipp-v0.23.0", optional = true}
-tendermint-proto-abci = {package = "tendermint-proto", git = "https://github.com/heliaxdev/tendermint-rs", branch = "yuji/rebase_v0.23.0", optional = true}
+# temporarily using fork work-around
+tendermint = {git = "https://github.com/heliaxdev/tendermint-rs", branch = "yuji/abcipp-v0.23.5", optional = true}
+tendermint-stable = {package = "tendermint", git = "https://github.com/heliaxdev/tendermint-rs", branch = "yuji/rebase_v0.23.5", optional = true}
+tendermint-proto = {git = "https://github.com/heliaxdev/tendermint-rs", branch = "yuji/abcipp-v0.23.5", optional = true}
+tendermint-proto-abci = {package = "tendermint-proto", git = "https://github.com/heliaxdev/tendermint-rs", branch = "yuji/rebase_v0.23.5", optional = true}
 tracing = "0.1.26"
 tracing-subscriber = {version = "0.2.25", default-features = false, features = ["env-filter", "fmt"]}
 

@@ -264,8 +264,10 @@ where
             .as_ref()
             .expect("Header must have been set in prepare_proposal.");
         let height = BlockHeight(header.height.into());
-        let time: DateTime<Utc> = header.time.into();
-        let time: DateTimeUtc = time.into();
+        let time: DateTimeUtc = header
+            .time
+            .try_into()
+            .expect("Time conversion shouldn't failed");
         let new_epoch = self
             .storage
             .update_epoch(height, time)
@@ -332,7 +334,6 @@ where
 mod test_finalize_block {
     use anoma::types::address::xan;
     use anoma::types::storage::Epoch;
-    use anoma::types::time::DateTimeUtc;
     use anoma::types::transaction::Fee;
     #[cfg(not(feature = "ABCI"))]
     use tendermint::block::header::Version;
@@ -361,7 +362,7 @@ mod test_finalize_block {
                         .try_into()
                         .expect("Should not fail"),
                     height: 0u64.try_into().expect("Should not fail"),
-                    time: Time::from(DateTimeUtc::now()),
+                    time: Time::now(),
                     last_block_id: None,
                     last_commit_hash: None,
                     data_hash: None,

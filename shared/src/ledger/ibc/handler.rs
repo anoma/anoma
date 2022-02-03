@@ -220,7 +220,7 @@ use crate::types::ibc::data::{
     PacketReceipt,
 };
 use crate::types::ibc::IbcEvent as AnomaIbcEvent;
-use crate::types::storage::Key;
+use crate::types::storage::{BlockHeight, Epoch, Key};
 use crate::types::token::{self, Amount};
 
 const COMMITMENT_PREFIX: &[u8] = b"ibc";
@@ -281,6 +281,9 @@ pub trait IbcActions {
         token: &Address,
         amount: Amount,
     );
+
+    /// Get the current height of this chain
+    fn get_height(&self) -> (Epoch, BlockHeight);
 
     /// dispatch according to ICS26 routing
     fn dispatch(&self, tx_data: &[u8]) -> Result<()> {
@@ -360,6 +363,8 @@ pub trait IbcActions {
                 .expect("encoding shouldn't fail"),
         );
 
+        self.set_client_update_time(&client_id)?;
+
         let event = make_create_client_event(&client_id, msg)
             .try_into()
             .unwrap();
@@ -400,6 +405,8 @@ pub trait IbcActions {
                 .expect("encoding shouldn't fail"),
         );
 
+        self.set_client_update_time(&client_id)?;
+
         let event = make_update_client_event(&client_id, msg)
             .try_into()
             .unwrap();
@@ -426,6 +433,8 @@ pub trait IbcActions {
                 .encode_vec()
                 .expect("encoding shouldn't fail"),
         );
+
+        self.set_client_update_time(&msg.client_id)?;
 
         let event = make_upgrade_client_event(&msg.client_id, msg)
             .try_into()
@@ -858,6 +867,25 @@ pub trait IbcActions {
         Ok(())
     }
 
+    /// Set the timestamp and the height for the client update
+    fn set_client_update_time(&self, client_id: &ClientId) -> Result<()> {
+        let timestamp = Timestamp::now();
+        let key = storage::client_update_timestamp_key(client_id);
+        // write the current timestamp as u64
+        self.write_ibc_data(&key, timestamp.nanoseconds().to_be_bytes());
+
+        let (epoch, height) = self.get_height();
+        let height = Height::new(epoch.0, height.0);
+        let height_key = storage::client_update_height_key(client_id);
+        // write the current height as u64
+        self.write_ibc_data(
+            &height_key,
+            height.encode_vec().expect("Encoding shouldn't fail"),
+        );
+
+        Ok(())
+    }
+
     /// Get and increment the counter
     fn get_and_inc_counter(&self, key: &Key) -> Result<u64> {
         let value = self.read_ibc_data(key).ok_or_else(|| {
@@ -1089,7 +1117,7 @@ pub fn update_client(
         },
         AnyClientState::Mock(_) => match header {
             AnyHeader::Mock(h) => Ok((
-                MockClientState(h).wrap_any(),
+                MockClientState::new(h).wrap_any(),
                 MockConsensusState::new(h).wrap_any(),
             )),
             _ => Err(Error::ClientUpdate(
@@ -1222,7 +1250,8 @@ pub fn channel_counterparty(
 
 /// Returns Anoma commitment prefix
 pub fn commitment_prefix() -> CommitmentPrefix {
-    CommitmentPrefix::from(COMMITMENT_PREFIX.to_vec())
+    CommitmentPrefix::try_from(COMMITMENT_PREFIX.to_vec())
+        .expect("the conversion shouldn't fail")
 }
 
 /// Makes CreateClient event

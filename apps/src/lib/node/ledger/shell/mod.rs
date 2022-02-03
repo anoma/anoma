@@ -28,7 +28,7 @@ use anoma::ledger::{ibc, parameters, pos};
 use anoma::proto::{self, Tx};
 use anoma::types::chain::ChainId;
 use anoma::types::storage::{BlockHeight, Key};
-use anoma::types::time::{DateTime, DateTimeUtc, TimeZone, Utc};
+use anoma::types::time::{DateTimeUtc, TimeZone, Utc};
 use anoma::types::transaction::{
     hash_tx, process_tx, verify_decrypted_correctly, AffineCurve, DecryptedTx,
     EllipticCurve, PairingEngine, TxType, WrapperTx,

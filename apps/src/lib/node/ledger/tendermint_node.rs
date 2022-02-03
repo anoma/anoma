@@ -392,7 +392,9 @@ async fn write_tm_genesis(
         .expect("Couldn't deserialize the genesis file");
     genesis.chain_id =
         FromStr::from_str(chain_id.as_str()).expect("Invalid chain ID");
-    genesis.genesis_time = genesis_time.into();
+    genesis.genesis_time = genesis_time
+        .try_into()
+        .expect("Couldn't convert DateTimeUtc to Tendermint Time");
 
     let mut file = OpenOptions::new()
         .write(true)

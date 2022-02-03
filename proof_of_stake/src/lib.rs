@@ -263,7 +263,7 @@ pub trait PosActions: PosReadOnly {
 
     /// Check if the given address is a validator by checking that it has some
     /// state.
-    fn is_validator(&mut self, address: &Self::Address) -> bool {
+    fn is_validator(&self, address: &Self::Address) -> bool {
         self.read_validator_state(address).is_some()
     }
 

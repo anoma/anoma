@@ -1,9 +1,13 @@
 //! IBC validity predicate for channel module
 
+use core::time::Duration;
+
 #[cfg(not(feature = "ABCI"))]
 use ibc::core::ics02_client::client_consensus::AnyConsensusState;
 #[cfg(not(feature = "ABCI"))]
 use ibc::core::ics02_client::client_state::AnyClientState;
+#[cfg(not(feature = "ABCI"))]
+use ibc::core::ics02_client::context::ClientReader;
 #[cfg(not(feature = "ABCI"))]
 use ibc::core::ics02_client::height::Height;
 #[cfg(not(feature = "ABCI"))]
@@ -48,6 +52,8 @@ use ibc::timestamp::Timestamp;
 use ibc_abci::core::ics02_client::client_consensus::AnyConsensusState;
 #[cfg(feature = "ABCI")]
 use ibc_abci::core::ics02_client::client_state::AnyClientState;
+#[cfg(feature = "ABCI")]
+use ibc_abci::core::ics02_client::context::ClientReader;
 #[cfg(feature = "ABCI")]
 use ibc_abci::core::ics02_client::height::Height;
 #[cfg(feature = "ABCI")]
@@ -101,10 +107,10 @@ use super::super::handler::{
     make_open_init_channel_event, make_open_try_channel_event,
 };
 use super::super::storage::{
-    ack_key, channel_counter_key, channel_key, commitment_key,
-    is_channel_counter_key, next_sequence_ack_key, next_sequence_recv_key,
-    next_sequence_send_key, port_channel_id, receipt_key,
-    Error as IbcStorageError,
+    ack_key, channel_counter_key, channel_key, client_update_height_key,
+    client_update_timestamp_key, commitment_key, is_channel_counter_key,
+    next_sequence_ack_key, next_sequence_recv_key, next_sequence_send_key,
+    port_channel_id, receipt_key, Error as IbcStorageError,
 };
 use super::{Ibc, StateChange};
 use crate::ledger::native_vp::Error as NativeVpError;
@@ -134,6 +140,10 @@ pub enum Error {
     InvalidSequence(String),
     #[error("Packet info error: {0}")]
     InvalidPacketInfo(String),
+    #[error("Client update timestamp error: {0}")]
+    InvalidTimestamp(String),
+    #[error("Client update hight error: {0}")]
+    InvalidHeight(String),
     #[error("Proof verification error: {0}")]
     ProofVerificationFailure(Ics04Error),
     #[error("Decoding TX data error: {0}")]
@@ -421,10 +431,11 @@ where
         let expected_my_side =
             Counterparty::new(port_channel_id.port_id.clone(), None);
         self.verify_proofs(
+            msg.proofs().height(),
             channel,
             expected_my_side,
             State::Init,
-            msg.proofs.clone(),
+            msg.proofs(),
         )
     }
 
@@ -439,10 +450,11 @@ where
             Some(port_channel_id.channel_id.clone()),
         );
         self.verify_proofs(
+            msg.proofs.height(),
             channel,
             expected_my_side,
             State::TryOpen,
-            msg.proofs.clone(),
+            msg.proofs(),
         )
     }
 
@@ -457,10 +469,11 @@ where
             Some(port_channel_id.channel_id.clone()),
         );
         self.verify_proofs(
+            msg.proofs.height(),
             channel,
             expected_my_side,
             State::Open,
-            msg.proofs.clone(),
+            msg.proofs(),
         )
     }
 
@@ -475,19 +488,21 @@ where
             Some(port_channel_id.channel_id.clone()),
         );
         self.verify_proofs(
+            msg.proofs().height(),
             channel,
             expected_my_side,
             State::Closed,
-            msg.proofs.clone(),
+            msg.proofs(),
         )
     }
 
     fn verify_proofs(
         &self,
+        height: Height,
         channel: &ChannelEnd,
         expected_my_side: Counterparty,
         expected_state: State,
-        proofs: Proofs,
+        proofs: &Proofs,
     ) -> Result<()> {
         let connection = self.connection_from_channel(channel)?;
         let counterpart_conn_id =
@@ -506,15 +521,16 @@ where
             *channel.ordering(),
             expected_my_side,
             expected_connection_hops,
-            channel.version(),
+            channel.version().clone(),
         );
 
         match verify_channel_proofs(
             self,
+            height,
             channel,
             &connection,
             &expected_channel,
-            &proofs,
+            proofs,
         ) {
             Ok(_) => Ok(()),
             Err(e) => Err(Error::ProofVerificationFailure(e)),
@@ -638,6 +654,54 @@ where
             None => Err(Error::InvalidPacketInfo(format!(
                 "The prior packet info doesn't exist: Key {}",
                 key
+            ))),
+        }
+    }
+
+    pub(super) fn client_update_time_pre(
+        &self,
+        client_id: &ClientId,
+    ) -> Result<Timestamp> {
+        let key = client_update_timestamp_key(client_id);
+        match self.ctx.read_pre(&key)? {
+            Some(value) => {
+                // As ibc-go, u64 like a counter is encoded with big-endian
+                let ns: [u8; 8] = value.try_into().map_err(|_| {
+                    Error::InvalidTimestamp(format!(
+                        "Encoding the timestamp failed: ID {}",
+                        client_id
+                    ))
+                })?;
+                let ns = u64::from_be_bytes(ns);
+                Timestamp::from_nanoseconds(ns).map_err(|_| {
+                    Error::InvalidTimestamp(format!(
+                        "Timestamp conversion failed: ID {}",
+                        client_id
+                    ))
+                })
+            }
+            None => Err(Error::InvalidTimestamp(format!(
+                "Timestamp doesn't exist: ID {}",
+                client_id
+            ))),
+        }
+    }
+
+    pub(super) fn client_update_height_pre(
+        &self,
+        client_id: &ClientId,
+    ) -> Result<Height> {
+        let key = client_update_height_key(client_id);
+        match self.ctx.read_pre(&key)? {
+            Some(value) => Height::decode_vec(&value).map_err(|_| {
+                Error::InvalidHeight(format!(
+                    "Height conversion failed: ID {}",
+                    client_id
+                ))
+            }),
+            None => Err(Error::InvalidHeight(format!(
+                "Client update height doesn't exist: ID {}",
+                client_id
             ))),
         }
     }
@@ -851,13 +915,54 @@ where
     }
 
     fn host_height(&self) -> Height {
-        self.host_current_height()
+        ClientReader::host_height(self)
     }
 
     fn host_timestamp(&self) -> Timestamp {
         match self.ctx.storage.get_block_header().0 {
-            Some(h) => Timestamp::from_datetime(h.time.into()),
+            Some(h) => h.time.into(),
             None => Timestamp::none(),
+        }
+    }
+
+    fn client_update_time(
+        &self,
+        client_id: &ClientId,
+        height: Height,
+    ) -> Ics04Result<Timestamp> {
+        let key = client_update_timestamp_key(client_id);
+        match self.ctx.read_post(&key) {
+            Ok(Some(value)) => {
+                // As ibc-go, u64 like a counter is encoded with big-endian
+                let ns: [u8; 8] = value
+                    .try_into()
+                    .map_err(|_| Ics04Error::implementation_specific())?;
+                let ns = u64::from_be_bytes(ns);
+                Timestamp::from_nanoseconds(ns)
+                    .map_err(|_| Ics04Error::implementation_specific())
+            }
+            Ok(None) => Err(Ics04Error::processed_time_not_found(
+                client_id.clone(),
+                height,
+            )),
+            Err(_) => Err(Ics04Error::implementation_specific()),
+        }
+    }
+
+    fn client_update_height(
+        &self,
+        client_id: &ClientId,
+        height: Height,
+    ) -> Ics04Result<Height> {
+        let key = client_update_height_key(client_id);
+        match self.ctx.read_post(&key) {
+            Ok(Some(value)) => Height::decode_vec(&value)
+                .map_err(|_| Ics04Error::implementation_specific()),
+            Ok(None) => Err(Ics04Error::processed_height_not_found(
+                client_id.clone(),
+                height,
+            )),
+            Err(_) => Err(Ics04Error::implementation_specific()),
         }
     }
 
@@ -865,6 +970,11 @@ where
         let key = channel_counter_key();
         self.read_counter(&key)
             .map_err(|_| Ics04Error::implementation_specific())
+    }
+
+    fn max_expected_time_per_block(&self) -> Duration {
+        // TODO set the proper duration
+        Duration::new(5, 0)
     }
 }
 
