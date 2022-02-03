@@ -93,7 +93,7 @@ impl Context {
     where
         T: ArgFromContext,
     {
-        from_context.from_ctx(self)
+        from_context.arg_from_ctx(self)
     }
 
     /// Try to parse and/or look-up an optional value from the context.
@@ -103,7 +103,7 @@ impl Context {
     {
         from_context
             .as_ref()
-            .map(|from_context| from_context.from_ctx(self))
+            .map(|from_context| from_context.arg_from_ctx(self))
     }
 
     /// Parse and/or look-up the value from the context with cache.
@@ -111,7 +111,7 @@ impl Context {
     where
         T: ArgFromMutContext,
     {
-        from_context.from_mut_ctx(self)
+        from_context.arg_from_mut_ctx(self)
     }
 
     /// Try to parse and/or look-up an optional value from the context with
@@ -125,7 +125,7 @@ impl Context {
     {
         from_context
             .as_ref()
-            .map(|from_context| from_context.from_mut_ctx(self))
+            .map(|from_context| from_context.arg_from_mut_ctx(self))
     }
 
     /// Read the given WASM file from the WASM directory or an absolute path.
@@ -187,8 +187,8 @@ where
     T: ArgFromContext,
 {
     /// Parse and/or look-up the value from the context.
-    fn from_ctx(&self, ctx: &Context) -> T {
-        T::from_ctx(ctx, &self.raw)
+    fn arg_from_ctx(&self, ctx: &Context) -> T {
+        T::arg_from_ctx(ctx, &self.raw)
     }
 }
 
@@ -197,24 +197,24 @@ where
     T: ArgFromMutContext,
 {
     /// Parse and/or look-up the value from the mutable context.
-    fn from_mut_ctx(&self, ctx: &mut Context) -> T {
-        T::from_mut_ctx(ctx, &self.raw)
+    fn arg_from_mut_ctx(&self, ctx: &mut Context) -> T {
+        T::arg_from_mut_ctx(ctx, &self.raw)
     }
 }
 
 /// CLI argument that found via the [`Context`].
 pub trait ArgFromContext: Sized {
-    fn from_ctx(ctx: &Context, raw: impl AsRef<str>) -> Self;
+    fn arg_from_ctx(ctx: &Context, raw: impl AsRef<str>) -> Self;
 }
 
 /// CLI argument that found via the [`Context`] and cached (as in case of an
 /// encrypted keypair that has been decrypted), hence using mutable context.
 pub trait ArgFromMutContext: Sized {
-    fn from_mut_ctx(ctx: &mut Context, raw: impl AsRef<str>) -> Self;
+    fn arg_from_mut_ctx(ctx: &mut Context, raw: impl AsRef<str>) -> Self;
 }
 
 impl ArgFromContext for Address {
-    fn from_ctx(ctx: &Context, raw: impl AsRef<str>) -> Self {
+    fn arg_from_ctx(ctx: &Context, raw: impl AsRef<str>) -> Self {
         let raw = raw.as_ref();
         // An address can be either raw (bech32m encoding)
         FromStr::from_str(raw)
@@ -232,7 +232,7 @@ impl ArgFromContext for Address {
 }
 
 impl ArgFromMutContext for Rc<Keypair> {
-    fn from_mut_ctx(ctx: &mut Context, raw: impl AsRef<str>) -> Self {
+    fn arg_from_mut_ctx(ctx: &mut Context, raw: impl AsRef<str>) -> Self {
         let raw = raw.as_ref();
         // A keypair can be either a raw keypair in hex string
         FromStr::from_str(raw)
@@ -248,7 +248,7 @@ impl ArgFromMutContext for Rc<Keypair> {
 }
 
 impl ArgFromMutContext for PublicKey {
-    fn from_mut_ctx(ctx: &mut Context, raw: impl AsRef<str>) -> Self {
+    fn arg_from_mut_ctx(ctx: &mut Context, raw: impl AsRef<str>) -> Self {
         let raw = raw.as_ref();
         // A public key can be either a raw public key in hex string
         FromStr::from_str(raw).unwrap_or_else(|_parse_err| {

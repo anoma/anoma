@@ -50,10 +50,10 @@ fn run_gossip() -> Result<()> {
     let (_unread, matched) = node_0.exp_regex(r"Peer id: PeerId\(.*\)")?;
     let node_0_peer_id = matched
         .trim()
-        .rsplit_once("\"")
+        .rsplit_once('\"')
         .unwrap()
         .0
-        .rsplit_once("\"")
+        .rsplit_once('\"')
         .unwrap()
         .1;
 
@@ -64,10 +64,10 @@ fn run_gossip() -> Result<()> {
     let (_unread, matched) = node_1.exp_regex(r"Peer id: PeerId\(.*\)")?;
     let node_1_peer_id = matched
         .trim()
-        .rsplit_once("\"")
+        .rsplit_once('\"')
         .unwrap()
         .0
-        .rsplit_once("\"")
+        .rsplit_once('\"')
         .unwrap()
         .1;
     node_1.exp_string(&format!(

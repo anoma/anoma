@@ -300,7 +300,7 @@ mod tests {
     #[cfg(not(feature = "ABCI"))]
     use ibc::core::ics02_client::client_type::ClientType;
     #[cfg(not(feature = "ABCI"))]
-    use ibc::core::ics02_client::header::{AnyHeader, Header};
+    use ibc::core::ics02_client::header::Header;
     #[cfg(not(feature = "ABCI"))]
     use ibc::core::ics02_client::msgs::create_client::MsgCreateAnyClient;
     #[cfg(not(feature = "ABCI"))]
@@ -318,7 +318,7 @@ mod tests {
     #[cfg(not(feature = "ABCI"))]
     use ibc::core::ics03_connection::msgs::conn_open_try::MsgConnectionOpenTry;
     #[cfg(not(feature = "ABCI"))]
-    use ibc::core::ics03_connection::version::Version;
+    use ibc::core::ics03_connection::version::Version as ConnVersion;
     #[cfg(not(feature = "ABCI"))]
     use ibc::core::ics04_channel::channel::{
         ChannelEnd, Counterparty as ChanCounterparty, Order, State as ChanState,
