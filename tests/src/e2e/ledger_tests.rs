@@ -176,13 +176,14 @@ fn ledger_txs_and_queries() -> Result<()> {
     ledger.exp_string("Anoma ledger node started")?;
     if !cfg!(feature = "ABCI") {
         ledger.exp_string("started node")?;
+        // Wait for the first DKG round to finish
+        ledger.exp_string(
+            "Storing the newly created encryption key from the DKG.",
+        )?;
     } else {
         ledger.exp_string("Started node")?;
     }
 
-    // Wait for the first DKG round to finish
-    ledger
-        .exp_string("Storing the newly created encryption key from the DKG.")?;
     let _live_ledger = ledger.give_up_control();
 
     let vp_user = wasm_abs_path(VP_USER_WASM);
@@ -337,39 +338,40 @@ fn invalid_transactions() -> Result<()> {
         ledger.exp_string("Started node")?;
     }
     let validator_one_rpc = get_actor_rpc(&test, &Who::Validator(0));
-
-    // 2. Submit a valid transaction before encryption key is created
-    let tx_args = vec![
-        "transfer",
-        "--source",
-        BERTHA,
-        "--target",
-        ALBERT,
-        "--token",
-        XAN,
-        "--amount",
-        "10.1",
-        "--fee-amount",
-        "0",
-        "--gas-limit",
-        "0",
-        "--fee-token",
-        XAN,
-        "--ledger-address",
-        &validator_one_rpc,
-    ];
-    let mut client = run!(test, Bin::Client, tx_args, Some(20))?;
-    // transaction should be rejected
-    client.exp_string(
-        "An encryption key was not found for the current epoch. Transactions \
-         can not be sent.",
-    )?;
-    // client process should exit with error code
-    client.assert_failure();
-
-    // Wait for the first DKG round to finish
-    ledger
-        .exp_string("Storing the newly created encryption key from the DKG.")?;
+    if !cfg!(feature = "ABCI") {
+        // 2. Submit a valid transaction before encryption key is created
+        let tx_args = vec![
+            "transfer",
+            "--source",
+            BERTHA,
+            "--target",
+            ALBERT,
+            "--token",
+            XAN,
+            "--amount",
+            "10.1",
+            "--fee-amount",
+            "0",
+            "--gas-limit",
+            "0",
+            "--fee-token",
+            XAN,
+            "--ledger-address",
+            &validator_one_rpc,
+        ];
+        let mut client = run!(test, Bin::Client, tx_args, Some(20))?;
+        // transaction should be rejected
+        client.exp_string(
+            "An encryption key was not found for the current epoch. \
+             Transactions can not be sent.",
+        )?;
+        // client process should exit with error code
+        client.assert_failure();
+        // Wait for the first DKG round to finish
+        ledger.exp_string(
+            "Storing the newly created encryption key from the DKG.",
+        )?;
+    }
     let live_ledger = ledger.give_up_control();
 
     // 3. Submit a an invalid transaction (trying to mint tokens should fail
@@ -524,12 +526,14 @@ fn pos_bonds() -> Result<()> {
     ledger.exp_string("Anoma ledger node started")?;
     if !cfg!(feature = "ABCI") {
         ledger.exp_string("started node")?;
+        // Wait for the first DKG round to finish
+        ledger.exp_string(
+            "Storing the newly created encryption key from the DKG.",
+        )?;
     } else {
         ledger.exp_string("Started node")?;
     }
-    // Wait for the first DKG round to finish
-    ledger
-        .exp_string("Storing the newly created encryption key from the DKG.")?;
+
     // stop reading logs from the ledger to save on memory.
     let _live_ledger = ledger.give_up_control();
     let validator_one_rpc = get_actor_rpc(&test, &Who::Validator(0));
@@ -723,12 +727,14 @@ fn pos_init_validator() -> Result<()> {
     ledger.exp_string("Anoma ledger node started")?;
     if !cfg!(feature = "ABCI") {
         ledger.exp_string("started node")?;
+        // Wait for the first DKG round to finish
+        ledger.exp_string(
+            "Storing the newly created encryption key from the DKG.",
+        )?;
     } else {
         ledger.exp_string("Started node")?;
     }
-    // Wait for the first DKG round to finish
-    ledger
-        .exp_string("Storing the newly created encryption key from the DKG.")?;
+
     let _live_ledger = ledger.give_up_control();
     let validator_one_rpc = get_actor_rpc(&test, &Who::Validator(0));
 
@@ -892,12 +898,14 @@ fn ledger_many_txs_in_a_block() -> Result<()> {
     ledger.exp_string("Anoma ledger node started")?;
     if !cfg!(feature = "ABCI") {
         ledger.exp_string("started node")?;
+        // Wait for the first DKG round to finish
+        ledger.exp_string(
+            "Storing the newly created encryption key from the DKG.",
+        )?;
     } else {
         ledger.exp_string("Started node")?;
     }
-    // Wait for the first DKG round to finish
-    ledger
-        .exp_string("Storing the newly created encryption key from the DKG.")?;
+
     let _live_ledger = ledger.give_up_control();
 
     let validator_one_rpc = Arc::new(get_actor_rpc(&test, &Who::Validator(0)));

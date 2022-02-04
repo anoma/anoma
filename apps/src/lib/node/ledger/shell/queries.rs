@@ -56,10 +56,11 @@ where
                             &self.storage.encryption_key,
                         )
                     } else {
-                        anoma::ledger::storage::types::encode(
-                            &anoma::types::transaction::EncryptionKey::default(
-                            ),
-                        )
+                        anoma::ledger::storage::types::encode(&Some(
+                            anoma::types::transaction::EncryptionKey::default()
+                                .try_to_vec()
+                                .unwrap(),
+                        ))
                     };
                     response::Query {
                         value,
