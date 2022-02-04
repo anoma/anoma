@@ -19,6 +19,6 @@ pub mod wasm_loader;
 #[doc(inline)]
 pub use std;
 
-#[cfg(test)]
+#[cfg(all(test, not(feature = "ABCI")))]
 #[macro_use]
 extern crate assert_matches;

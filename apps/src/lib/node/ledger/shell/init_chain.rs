@@ -300,6 +300,7 @@ where
         }
 
         // Initialize DKG data
+        #[cfg(not(feature = "ABCI"))]
         let validator_set: Vec<TendermintValidator> = genesis
             .validators
             .iter()
@@ -313,6 +314,7 @@ where
             .collect();
 
         // Initialize the dkg state machine and initiate protocol
+        #[cfg(not(feature = "ABCI"))]
         let me = validator_set.iter().find(|val| {
             if let Some(addr) = self.mode.get_validator_address() {
                 addr.to_string() == val.address
@@ -322,7 +324,7 @@ where
         });
 
         // Start the DKG instance if this is an active validator
-
+        #[cfg(not(feature = "ABCI"))]
         if let ShellMode::Validator { dkg, ref data, .. } = &mut self.mode {
             let me = me
                 .expect("Could not find self in active validator set")

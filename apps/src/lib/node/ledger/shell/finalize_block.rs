@@ -1,6 +1,8 @@
 //! Implementation of the `FinalizeBlock` ABCI++ method for the Shell
 
+#[cfg(not(feature = "ABCI"))]
 use anoma::types::key::dkg_session_keys::DkgPublicKey;
+#[cfg(not(feature = "ABCI"))]
 use anoma::types::key::ed25519::SignedTxData;
 use anoma::types::storage::BlockHash;
 #[cfg(not(feature = "ABCI"))]
@@ -19,6 +21,7 @@ use tendermint_proto_abci::crypto::{
 use tendermint_stable::block::Header;
 
 use super::*;
+#[cfg(not(feature = "ABCI"))]
 use crate::node::ledger::shell::state::ActionQueue;
 
 impl<D, H> Shell<D, H>
@@ -56,6 +59,7 @@ where
             self.update_state(req.header, req.hash, req.byzantine_validators);
 
         for processed_tx in &req.txs {
+            #[cfg(not(feature = "ABCI"))]
             let mut actions = ActionQueue::new();
             let tx = if let Ok(tx) = Tx::try_from(processed_tx.tx.as_ref()) {
                 tx
@@ -171,6 +175,7 @@ where
                     );
                     continue;
                 }
+                #[cfg(not(feature = "ABCI"))]
                 TxType::Protocol(ProtocolTx {
                     tx: protocol_tx,
                     pk,
@@ -274,6 +279,8 @@ where
                         continue;
                     }
                 }
+                #[cfg(feature = "ABCI")]
+                TxType::Protocol(_) => unreachable!(),
             };
 
             match protocol::apply_tx(
@@ -295,6 +302,7 @@ where
                             result
                         );
                         // Apply all the enqueued transactions
+                        #[cfg(not(feature = "ABCI"))]
                         actions.apply_all(self);
                         self.write_log.commit_tx();
                         tx_result["code"] = ErrorCodes::Ok.into();
@@ -345,6 +353,7 @@ where
 
         if new_epoch {
             self.update_epoch(&mut response);
+            #[cfg(not(feature = "ABCI"))]
             self.mode.set_update_dkg();
         }
 
@@ -780,6 +789,7 @@ mod test_finalize_block {
         }
     }
 
+    #[cfg(not(feature = "ABCI"))]
     /// Test that if a protocol tx is rejected by [`process_proposal`] that
     /// the correct event is returned
     #[test]
@@ -811,33 +821,18 @@ mod test_finalize_block {
             .expect("Test failed");
         assert_eq!(events.len(), 1);
         assert_eq!(events[0].r#type, "applied");
-        #[cfg(not(feature = "ABCI"))]
-        {
-            let code = events[0]
-                .attributes
-                .iter()
-                .find(|attr| attr.key.as_str() == "code")
-                .expect("Test failed")
-                .value
-                .as_str();
-            assert_eq!(code, String::from(ErrorCodes::InvalidSig).as_str());
-        }
-        #[cfg(feature = "ABCI")]
-        {
-            let code = events[0]
-                .attributes
-                .iter()
-                .find(|attr| attr.key == "code".as_bytes())
-                .expect("Test failed")
-                .value
-                .clone();
-            assert_eq!(
-                String::from_utf8(code).expect("Test failed"),
-                String::from(ErrorCodes::InvalidSig)
-            );
-        }
+
+        let code = events[0]
+            .attributes
+            .iter()
+            .find(|attr| attr.key.as_str() == "code")
+            .expect("Test failed")
+            .value
+            .as_str();
+        assert_eq!(code, String::from(ErrorCodes::InvalidSig).as_str());
     }
 
+    #[cfg(not(feature = "ABCI"))]
     /// Test that if a protocol tx is signed by a non-validator,
     /// the correct event is returned
     #[test]
@@ -869,31 +864,14 @@ mod test_finalize_block {
             .expect("Test failed");
         assert_eq!(events.len(), 1);
         assert_eq!(events[0].r#type, "applied");
-        #[cfg(not(feature = "ABCI"))]
-        {
-            let code = events[0]
-                .attributes
-                .iter()
-                .find(|attr| attr.key.as_str() == "code")
-                .expect("Test failed")
-                .value
-                .as_str();
-            assert_eq!(code, String::from(ErrorCodes::InvalidSig).as_str());
-        }
-        #[cfg(feature = "ABCI")]
-        {
-            let code = events[0]
-                .attributes
-                .iter()
-                .find(|attr| attr.key == "code".as_bytes())
-                .expect("Test failed")
-                .value
-                .clone();
-            assert_eq!(
-                String::from_utf8(code).expect("Test failed"),
-                String::from(ErrorCodes::InvalidSig)
-            );
-        }
+        let code = events[0]
+            .attributes
+            .iter()
+            .find(|attr| attr.key.as_str() == "code")
+            .expect("Test failed")
+            .value
+            .as_str();
+        assert_eq!(code, String::from(ErrorCodes::InvalidSig).as_str());
     }
 
     /// Test that the wrapper txs are queued in the order they

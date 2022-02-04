@@ -1,16 +1,25 @@
+#[cfg(not(feature = "ABCI"))]
 use anoma::ledger::storage::{DBIter, StorageHasher, DB};
+#[cfg(not(feature = "ABCI"))]
 use anoma::types::address::Address;
 use anoma::types::key::dkg_session_keys::DkgKeypair;
+#[cfg(not(feature = "ABCI"))]
 use anoma::types::transaction::EllipticCurve;
+#[cfg(not(feature = "ABCI"))]
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
+#[cfg(not(feature = "ABCI"))]
 use ark_std::rand::SeedableRng;
+#[cfg(not(feature = "ABCI"))]
 use borsh::{BorshDeserialize, BorshSerialize};
+#[cfg(not(feature = "ABCI"))]
 use ferveo::dkg::{Params as DkgParams, PubliclyVerifiableDkg};
 use tokio::sync::mpsc::UnboundedSender;
 
+#[cfg(not(feature = "ABCI"))]
 use super::{Shell, TendermintValidator, ValidatorSet};
 use crate::wallet::ValidatorData;
 
+#[cfg(not(feature = "ABCI"))]
 pub type DkgStateMachine = PubliclyVerifiableDkg<EllipticCurve>;
 
 #[derive(Debug)]
@@ -19,6 +28,7 @@ pub(super) enum ShellMode {
     Validator {
         data: ValidatorData,
         next_dkg_keypair: Option<DkgKeypair>,
+        #[cfg(not(feature = "ABCI"))]
         dkg: DkgInstance,
         broadcast_sender: UnboundedSender<Vec<u8>>,
     },
@@ -26,6 +36,7 @@ pub(super) enum ShellMode {
     Seed,
 }
 
+#[cfg(not(feature = "ABCI"))]
 impl ShellMode {
     /// Get the validator address if ledger is in validator mode
     pub fn get_validator_address(&self) -> Option<&Address> {
@@ -56,11 +67,13 @@ impl ShellMode {
 
 /// Holds the DKG state machine
 #[derive(Debug)]
+#[cfg(not(feature = "ABCI"))]
 pub(super) struct DkgInstance {
     pub state_machine: DkgStateMachine,
     pub update: bool,
 }
 
+#[cfg(not(feature = "ABCI"))]
 impl Default for DkgInstance {
     fn default() -> Self {
         let rng = &mut ark_std::rand::prelude::StdRng::from_entropy();
@@ -88,6 +101,7 @@ impl Default for DkgInstance {
     }
 }
 
+#[cfg(not(feature = "ABCI"))]
 impl borsh::ser::BorshSerialize for DkgInstance {
     fn serialize<W: std::io::Write>(
         &self,
@@ -101,6 +115,7 @@ impl borsh::ser::BorshSerialize for DkgInstance {
     }
 }
 
+#[cfg(not(feature = "ABCI"))]
 impl borsh::de::BorshDeserialize for DkgInstance {
     fn deserialize(buf: &mut &[u8]) -> std::io::Result<Self> {
         let (state_machine, update): (Vec<u8>, bool) =
@@ -117,6 +132,7 @@ impl borsh::de::BorshDeserialize for DkgInstance {
 
 /// Used to queue up state transactions that
 /// require validation from multiple code paths
+#[cfg(not(feature = "ABCI"))]
 pub(super) struct ActionQueue<T, D, H>
 where
     T: FnOnce(&mut Shell<D, H>),
@@ -128,6 +144,7 @@ where
     phantom_hasher: std::marker::PhantomData<H>,
 }
 
+#[cfg(not(feature = "ABCI"))]
 impl<T, D, H> ActionQueue<T, D, H>
 where
     T: FnOnce(&mut Shell<D, H>),
@@ -156,6 +173,7 @@ where
     }
 }
 
+#[cfg(not(feature = "ABCI"))]
 impl<T, D, H> Default for ActionQueue<T, D, H>
 where
     T: FnOnce(&mut Shell<D, H>),

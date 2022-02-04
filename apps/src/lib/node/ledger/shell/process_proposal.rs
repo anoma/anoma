@@ -1,6 +1,8 @@
 //! Implementation of the ['VerifyHeader`], [`ProcessProposal`],
 //! and [`RevertProposal`] ABCI++ methods for the Shell
+#[cfg(not(feature = "ABCI"))]
 use anoma::types::key::dkg_session_keys::DkgPublicKey;
+#[cfg(not(feature = "ABCI"))]
 use anoma::types::key::ed25519::SignedTxData;
 
 use super::*;
@@ -72,6 +74,7 @@ where
                            are not supported"
                         .into(),
                 },
+                #[cfg(not(feature = "ABCI"))]
                 TxType::Protocol(ProtocolTx {
                     tx: protocol_tx,
                     pk,
@@ -156,6 +159,15 @@ where
                                    validator set."
                                 .into(),
                         }
+                    }
+                }
+                #[cfg(feature = "ABCI")]
+                TxType::Protocol(ProtocolTx { .. }) => {
+                    shim::response::TxResult {
+                        code: ErrorCodes::InvalidTx.into(),
+                        info: "Protocol transactions are not supported for \
+                               the ABCI feature"
+                            .into(),
                     }
                 }
                 TxType::Decrypted(tx) => match self.next_wrapper() {
@@ -343,9 +355,9 @@ mod test_process_proposal {
     use tendermint_proto_abci::google::protobuf::Timestamp;
 
     use super::*;
-    use crate::node::ledger::shell::test_utils::{
-        gen_keypair, setup, TestShell,
-    };
+    #[cfg(not(feature = "ABCI"))]
+    use crate::node::ledger::shell::test_utils::setup;
+    use crate::node::ledger::shell::test_utils::{gen_keypair, TestShell};
     use crate::node::ledger::shims::abcipp_shim_types::shim::request::ProcessProposal;
 
     /// Test that if a wrapper tx is not signed, it is rejected
@@ -765,6 +777,7 @@ mod test_process_proposal {
         }
     }
 
+    #[cfg(not(feature = "ABCI"))]
     /// Test that a valid DKG message is acceped
     #[test]
     fn test_valid_dkg_msgs_accepted() {
@@ -788,6 +801,7 @@ mod test_process_proposal {
         assert_eq!(response.result.code, u32::from(ErrorCodes::Ok));
     }
 
+    #[cfg(not(feature = "ABCI"))]
     /// Test that a request for new DKG session keypairs
     /// is accepted
     #[test]
@@ -824,6 +838,7 @@ mod test_process_proposal {
         assert_eq!(response.result.code, u32::from(ErrorCodes::Ok));
     }
 
+    #[cfg(not(feature = "ABCI"))]
     /// If we encounter a protocol tx signed by someone who is
     /// not a validator, reject it.
     #[test]
@@ -846,6 +861,7 @@ mod test_process_proposal {
         assert_eq!(response.result.code, u32::from(ErrorCodes::InvalidSig));
     }
 
+    #[cfg(not(feature = "ABCI"))]
     /// Test that we get the correct errors if the new keypairs / target address
     /// are missing or is not deserializable
     #[test]

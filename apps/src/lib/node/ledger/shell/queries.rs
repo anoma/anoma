@@ -4,7 +4,9 @@ use std::cmp::max;
 use anoma::ledger::parameters::Parameters;
 use anoma::ledger::pos::PosParams;
 use anoma::types::address::Address;
+#[cfg(not(feature = "ABCI"))]
 use anoma::types::key::dkg_session_keys::DkgPublicKey;
+#[cfg(not(feature = "ABCI"))]
 use anoma::types::key::ed25519::PublicKey;
 use anoma::types::storage::Key;
 use anoma::types::token::{self, Amount};
@@ -49,9 +51,16 @@ where
                     }
                 }
                 Path::EncryptionKey => {
-                    let value = anoma::ledger::storage::types::encode(
-                        &self.storage.encryption_key,
-                    );
+                    let value = if !cfg!(feature = "ABCI") {
+                        anoma::ledger::storage::types::encode(
+                            &self.storage.encryption_key,
+                        )
+                    } else {
+                        anoma::ledger::storage::types::encode(
+                            &anoma::types::transaction::EncryptionKey::default(
+                            ),
+                        )
+                    };
                     response::Query {
                         value,
                         ..Default::default()
@@ -270,6 +279,7 @@ where
         }
     }
 
+    #[cfg(not(feature = "ABCI"))]
     pub fn get_validator_from_protocol_pk(
         &self,
         pk: &PublicKey,

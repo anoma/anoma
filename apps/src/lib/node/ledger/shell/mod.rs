@@ -14,6 +14,7 @@ mod queries;
 mod state;
 mod update_dkg;
 
+#[cfg(not(feature = "ABCI"))]
 use std::borrow::Borrow;
 use std::convert::{TryFrom, TryInto};
 use std::mem;
@@ -30,23 +31,34 @@ use anoma::ledger::storage::{DBIter, Storage, StorageHasher, DB};
 use anoma::ledger::{ibc, parameters, pos};
 use anoma::proto::{self, Tx};
 use anoma::types::chain::ChainId;
+#[cfg(not(feature = "ABCI"))]
 use anoma::types::key::dkg_session_keys::DkgKeypair;
 use anoma::types::storage::{BlockHeight, Key};
 use anoma::types::time::{DateTime, DateTimeUtc, TimeZone, Utc};
-use anoma::types::transaction::protocol::{ProtocolTx, ProtocolTxType};
+use anoma::types::transaction::protocol::ProtocolTx;
+#[cfg(not(feature = "ABCI"))]
+use anoma::types::transaction::protocol::ProtocolTxType;
+#[cfg(not(feature = "ABCI"))]
+use anoma::types::transaction::UpdateDkgSessionKey;
 use anoma::types::transaction::{
     hash_tx, process_tx, verify_decrypted_correctly, AffineCurve, DecryptedTx,
-    EllipticCurve, PairingEngine, TxType, UpdateDkgSessionKey, WrapperTx,
+    EllipticCurve, PairingEngine, TxType, WrapperTx,
 };
 use anoma::types::{address, key, token};
 use anoma::vm::wasm::{TxCache, VpCache};
 use anoma::vm::WasmCacheRwAccess;
+#[cfg(not(feature = "ABCI"))]
 use ark_std::rand::SeedableRng;
-use borsh::{BorshDeserialize, BorshSerialize};
+#[cfg(not(feature = "ABCI"))]
+use borsh::BorshDeserialize;
+use borsh::BorshSerialize;
+#[cfg(not(feature = "ABCI"))]
 use ferveo::dkg::Params as DkgParams;
 use num_derive::{FromPrimitive, ToPrimitive};
 use num_traits::{FromPrimitive, ToPrimitive};
-use state::{DkgStateMachine, ShellMode};
+#[cfg(not(feature = "ABCI"))]
+use state::DkgStateMachine;
+use state::ShellMode;
 #[cfg(not(feature = "ABCI"))]
 use tendermint_proto::abci::{
     self, Evidence, RequestPrepareProposal, ValidatorUpdate,
@@ -70,12 +82,16 @@ use crate::node::ledger::events::Event;
 use crate::node::ledger::shims::abcipp_shim_types::shim;
 use crate::node::ledger::shims::abcipp_shim_types::shim::response::TxResult;
 use crate::node::ledger::{protocol, storage, tendermint_node};
+#[cfg(not(feature = "ABCI"))]
 use crate::wallet::AtomicKeypair;
+#[cfg(not(feature = "ABCI"))]
 use crate::wasm_loader::read_wasm;
 use crate::{config, wallet};
 
+#[cfg(not(feature = "ABCI"))]
 pub type TendermintValidator =
     ferveo_common::TendermintValidator<EllipticCurve>;
+#[cfg(not(feature = "ABCI"))]
 pub type ValidatorSet = ferveo_common::ValidatorSet<EllipticCurve>;
 
 #[derive(Error, Debug)]
@@ -180,6 +196,7 @@ pub struct Shell<
     tx_wasm_cache: TxCache<WasmCacheRwAccess>,
 }
 
+#[cfg(not(feature = "ABCI"))]
 impl<D, H> Drop for Shell<D, H>
 where
     D: DB + for<'iter> DBIter<'iter> + Sync + 'static,
@@ -248,6 +265,7 @@ where
             TendermintMode::Validator => {
                 // If we are not starting the chain for the first time, the file
                 // containing the dkg should exist
+                #[cfg(not(feature = "ABCI"))]
                 let dkg = if storage.last_height.0 > 0u64 {
                     BorshDeserialize::deserialize(
                         &mut std::fs::read(base_dir.join(".dkg"))
@@ -286,6 +304,7 @@ where
                         .map(|data| ShellMode::Validator {
                             data,
                             next_dkg_keypair: None,
+                            #[cfg(not(feature = "ABCI"))]
                             dkg,
                             broadcast_sender,
                         })
@@ -306,6 +325,7 @@ where
                             },
                         },
                         next_dkg_keypair: None,
+                        #[cfg(not(feature = "ABCI"))]
                         dkg,
                         broadcast_sender,
                     }
@@ -534,7 +554,9 @@ where
             root,
             self.storage.last_height,
         );
+
         // update the DKG state machine
+        #[cfg(not(feature = "ABCI"))]
         self.update_dkg();
         response.data = root.0;
         response
@@ -598,6 +620,7 @@ where
 
     /// Lookup a validator's keypair for their established account from their
     /// wallet. If the node is not validator, this function returns None
+    #[cfg(not(feature = "ABCI"))]
     fn get_account_keypair(&self) -> Option<AtomicKeypair> {
         let wallet_path = &self.base_dir.join(self.chain_id.as_str());
         let genesis_path = &self
@@ -631,6 +654,7 @@ where
     }
 
     /// Issue a tx requesting a new DKG session key
+    #[cfg(not(feature = "ABCI"))]
     fn request_new_dkg_session_keypair(&mut self) {
         let account_kp = if let ShellMode::Validator { .. } = &self.mode {
             Some(
@@ -684,6 +708,7 @@ where
     }
 
     /// Update the dkg session keypair that was queued
+    #[cfg(not(feature = "ABCI"))]
     fn update_dkg_session_keypair(&mut self) {
         if let ShellMode::Validator {
             data,
@@ -839,6 +864,7 @@ mod test_utils {
             }
         }
 
+        #[cfg(not(feature = "ABCI"))]
         pub fn commit(&mut self) {
             let _ = self.shell.commit();
         }

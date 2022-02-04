@@ -1,10 +1,14 @@
 //! Update the DKG state machine
-
+#[cfg(not(feature = "ABCI"))]
 use anoma::types::key::dkg_session_keys::DkgPublicKey;
+#[cfg(not(feature = "ABCI"))]
 use anoma::types::transaction::EncryptionKey;
+#[cfg(not(feature = "ABCI"))]
 use ferveo::{DkgState, PvssScheduler};
 
+#[cfg(not(feature = "ABCI"))]
 use super::*;
+#[cfg(not(feature = "ABCI"))]
 impl<D, H> Shell<D, H>
 where
     D: DB + for<'iter> DBIter<'iter> + Sync + 'static,
@@ -198,7 +202,7 @@ where
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, not(feature = "ABCI")))]
 mod test_update_dkg {
     use anoma::types::key::dkg_session_keys::dkg_pk_key;
     use anoma::types::key::ed25519::SignedTxData;

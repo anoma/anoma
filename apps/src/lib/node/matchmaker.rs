@@ -313,6 +313,10 @@ impl ResultHandler {
         };
         let tx_data = intent_transfers.try_to_vec().unwrap();
         let to_broadcast = {
+            let epoch = rpc::query_epoch(args::Query {
+                ledger_address: self.ledger_address.clone(),
+            })
+            .await;
             let tx_signing_key = self.tx_signing_key.lock();
             let tx = WrapperTx::new(
                 Fee {
@@ -320,10 +324,7 @@ impl ResultHandler {
                     token: address::xan(),
                 },
                 &tx_signing_key,
-                rpc::query_epoch(args::Query {
-                    ledger_address: self.ledger_address.clone(),
-                })
-                .await,
+                epoch,
                 0.into(),
                 Tx::new(tx_code, Some(tx_data)).sign(&tx_signing_key),
                 // TODO: Actually use the fetched encryption key
