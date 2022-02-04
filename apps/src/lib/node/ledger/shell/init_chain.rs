@@ -2,20 +2,19 @@
 use std::collections::HashMap;
 use std::hash::Hash;
 
+use anoma::types::key::*;
 #[cfg(not(feature = "dev"))]
 use sha2::{Digest, Sha256};
 #[cfg(not(feature = "ABCI"))]
 use tendermint_proto::abci;
 #[cfg(not(feature = "ABCI"))]
-use tendermint_proto::crypto::{public_key, PublicKey as TendermintPublicKey};
+use tendermint_proto::crypto::PublicKey as TendermintPublicKey;
 #[cfg(not(feature = "ABCI"))]
 use tendermint_proto::google::protobuf;
 #[cfg(feature = "ABCI")]
 use tendermint_proto_abci::abci;
 #[cfg(feature = "ABCI")]
-use tendermint_proto_abci::crypto::{
-    public_key, PublicKey as TendermintPublicKey,
-};
+use tendermint_proto_abci::crypto::PublicKey as TendermintPublicKey;
 #[cfg(feature = "ABCI")]
 use tendermint_proto_abci::google::protobuf;
 
@@ -119,7 +118,7 @@ where
                 .unwrap();
 
             if let Some(pk) = public_key {
-                let pk_storage_key = key::ed25519::pk_key(&address);
+                let pk_storage_key = key::pk_key(&address);
                 self.storage
                     .write(&pk_storage_key, pk.try_to_vec().unwrap())
                     .unwrap();
@@ -134,7 +133,7 @@ where
         for genesis::ImplicitAccount { public_key } in genesis.implicit_accounts
         {
             let address: address::Address = (&public_key).into();
-            let pk_storage_key = key::ed25519::pk_key(&address);
+            let pk_storage_key = key::pk_key(&address);
             self.storage
                 .write(&pk_storage_key, public_key.try_to_vec().unwrap())
                 .unwrap();
@@ -218,7 +217,7 @@ where
                 .write(&Key::validity_predicate(addr), vp_code)
                 .expect("Unable to write user VP");
             // Validator account key
-            let pk_key = key::ed25519::pk_key(addr);
+            let pk_key = key::pk_key(addr);
             self.storage
                 .write(
                     &pk_key,
@@ -263,12 +262,10 @@ where
         // Set the initial validator set
         for validator in genesis.validators {
             let mut abci_validator = abci::ValidatorUpdate::default();
-            let consensus_key: ed25519_dalek::PublicKey =
-                validator.pos_data.consensus_key.clone().into();
+            let consensus_key: common::PublicKey =
+                validator.pos_data.consensus_key.clone();
             let pub_key = TendermintPublicKey {
-                sum: Some(public_key::Sum::Ed25519(
-                    consensus_key.to_bytes().to_vec(),
-                )),
+                sum: Some(key_to_tendermint(&consensus_key).unwrap()),
             };
             abci_validator.pub_key = Some(pub_key);
             let power: u64 =

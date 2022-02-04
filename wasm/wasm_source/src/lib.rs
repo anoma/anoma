@@ -12,15 +12,14 @@ pub mod tx_init_account {
 
     #[transaction]
     fn apply_tx(tx_data: Vec<u8>) {
-        let signed =
-            key::ed25519::SignedTxData::try_from_slice(&tx_data[..]).unwrap();
+        let signed = SignedTxData::try_from_slice(&tx_data[..]).unwrap();
         let tx_data =
             transaction::InitAccount::try_from_slice(&signed.data.unwrap()[..])
                 .unwrap();
         debug_log!("apply_tx called to init a new established account");
 
         let address = init_account(&tx_data.vp_code);
-        let pk_key = key::ed25519::pk_key(&address);
+        let pk_key = key::pk_key(&address);
         write(&pk_key.to_string(), &tx_data.public_key);
     }
 }
@@ -34,8 +33,7 @@ pub mod tx_init_validator {
 
     #[transaction]
     fn apply_tx(tx_data: Vec<u8>) {
-        let signed =
-            key::ed25519::SignedTxData::try_from_slice(&tx_data[..]).unwrap();
+        let signed = SignedTxData::try_from_slice(&tx_data[..]).unwrap();
         let init_validator =
             InitValidator::try_from_slice(&signed.data.unwrap()[..]).unwrap();
         debug_log!("apply_tx called to init a new validator account");
@@ -65,8 +63,7 @@ pub mod tx_bond {
 
     #[transaction]
     fn apply_tx(tx_data: Vec<u8>) {
-        let signed =
-            key::ed25519::SignedTxData::try_from_slice(&tx_data[..]).unwrap();
+        let signed = SignedTxData::try_from_slice(&tx_data[..]).unwrap();
         let bond =
             transaction::pos::Bond::try_from_slice(&signed.data.unwrap()[..])
                 .unwrap();
@@ -89,8 +86,7 @@ pub mod tx_unbond {
 
     #[transaction]
     fn apply_tx(tx_data: Vec<u8>) {
-        let signed =
-            key::ed25519::SignedTxData::try_from_slice(&tx_data[..]).unwrap();
+        let signed = SignedTxData::try_from_slice(&tx_data[..]).unwrap();
         let unbond =
             transaction::pos::Unbond::try_from_slice(&signed.data.unwrap()[..])
                 .unwrap();
@@ -115,8 +111,7 @@ pub mod tx_withdraw {
 
     #[transaction]
     fn apply_tx(tx_data: Vec<u8>) {
-        let signed =
-            key::ed25519::SignedTxData::try_from_slice(&tx_data[..]).unwrap();
+        let signed = SignedTxData::try_from_slice(&tx_data[..]).unwrap();
         let withdraw = transaction::pos::Withdraw::try_from_slice(
             &signed.data.unwrap()[..],
         )
@@ -143,8 +138,7 @@ pub mod tx_from_intent {
 
     #[transaction]
     fn apply_tx(tx_data: Vec<u8>) {
-        let signed =
-            key::ed25519::SignedTxData::try_from_slice(&tx_data[..]).unwrap();
+        let signed = SignedTxData::try_from_slice(&tx_data[..]).unwrap();
 
         let tx_data =
             intent::IntentTransfers::try_from_slice(&signed.data.unwrap()[..]);
@@ -182,8 +176,7 @@ pub mod tx_transfer {
 
     #[transaction]
     fn apply_tx(tx_data: Vec<u8>) {
-        let signed =
-            key::ed25519::SignedTxData::try_from_slice(&tx_data[..]).unwrap();
+        let signed = SignedTxData::try_from_slice(&tx_data[..]).unwrap();
         let transfer =
             token::Transfer::try_from_slice(&signed.data.unwrap()[..]).unwrap();
         debug_log!("apply_tx called with transfer: {:#?}", transfer);
@@ -206,8 +199,7 @@ pub mod tx_update_vp {
 
     #[transaction]
     fn apply_tx(tx_data: Vec<u8>) {
-        let signed =
-            key::ed25519::SignedTxData::try_from_slice(&tx_data[..]).unwrap();
+        let signed = SignedTxData::try_from_slice(&tx_data[..]).unwrap();
         let update_vp =
             transaction::UpdateVp::try_from_slice(&signed.data.unwrap()[..])
                 .unwrap();
@@ -226,8 +218,7 @@ pub mod tx_ibc {
 
     #[transaction]
     fn apply_tx(tx_data: Vec<u8>) {
-        let signed =
-            key::ed25519::SignedTxData::try_from_slice(&tx_data[..]).unwrap();
+        let signed = key::SignedTxData::try_from_slice(&tx_data[..]).unwrap();
         Ibc.dispatch(&signed.data.unwrap())
     }
 }

@@ -8,7 +8,7 @@ use std::str::FromStr;
 
 use anoma::types::address::Address;
 use anoma::types::chain::ChainId;
-use anoma::types::key::ed25519::{Keypair, PublicKey, PublicKeyHash};
+use anoma::types::key::*;
 
 use super::args;
 use crate::cli::safe_exit;
@@ -29,11 +29,11 @@ pub type WalletAddress = FromContext<Address>;
 
 /// A raw keypair (hex encoding), an alias, a public key or a public key hash of
 /// a keypair that may be found in the wallet
-pub type WalletKeypair = FromContext<Rc<Keypair>>;
+pub type WalletKeypair = FromContext<Rc<common::SecretKey>>;
 
 /// A raw public key (hex encoding), a public key hash (also hex encoding) or an
 /// alias of an public key that may be found in the wallet
-pub type WalletPublicKey = FromContext<PublicKey>;
+pub type WalletPublicKey = FromContext<common::PublicKey>;
 
 /// Command execution context
 #[derive(Debug)]
@@ -231,7 +231,7 @@ impl ArgFromContext for Address {
     }
 }
 
-impl ArgFromMutContext for Rc<Keypair> {
+impl ArgFromMutContext for Rc<common::SecretKey> {
     fn arg_from_mut_ctx(ctx: &mut Context, raw: impl AsRef<str>) -> Self {
         let raw = raw.as_ref();
         // A keypair can be either a raw keypair in hex string
@@ -247,7 +247,7 @@ impl ArgFromMutContext for Rc<Keypair> {
     }
 }
 
-impl ArgFromMutContext for PublicKey {
+impl ArgFromMutContext for common::PublicKey {
     fn arg_from_mut_ctx(ctx: &mut Context, raw: impl AsRef<str>) -> Self {
         let raw = raw.as_ref();
         // A public key can be either a raw public key in hex string
@@ -256,12 +256,12 @@ impl ArgFromMutContext for PublicKey {
             FromStr::from_str(raw)
                 .map(|pkh: PublicKeyHash| {
                     let key = ctx.wallet.find_key_by_pkh(&pkh).unwrap();
-                    key.public.clone()
+                    key.ref_to()
                 })
                 // Or it can be an alias that may be found in the wallet
                 .unwrap_or_else(|_parse_err| {
                     let key = ctx.wallet.find_key(raw).unwrap();
-                    key.public.clone()
+                    key.ref_to()
                 })
         })
     }

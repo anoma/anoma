@@ -46,7 +46,7 @@ pub mod main {
     #[transaction]
     fn apply_tx(tx_data: Vec<u8>) {
         let signed =
-            key::ed25519::SignedTxData::try_from_slice(&tx_data[..]).unwrap();
+            SignedTxData::try_from_slice(&tx_data[..]).unwrap();
         let transfer =
             token::Transfer::try_from_slice(&signed.data.unwrap()[..]).unwrap();
         log_string(format!("apply_tx called to mint tokens: {:#?}", transfer));

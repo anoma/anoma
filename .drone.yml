@@ -701,8 +701,7 @@ steps:
   image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/anoma:latest
   pull: never
   commands:
-  - pip3 install github3.py boto3
-  - cd scripts/ci/ && python3 audit.py
+  - cd scripts/ci/ && audit.sh
   environment:
     AWS_ACCESS_KEY_ID:
       from_secret: aws_access_key_id
@@ -714,8 +713,7 @@ steps:
   image: 965844283396.dkr.ecr.eu-west-1.amazonaws.com/anoma:latest
   pull: never
   commands:
-  - pip3 install github3.py boto3
-  - cd scripts/ci && python3 udeps.py
+  - cd scripts/ci && audit.sh
   environment:
     AWS_ACCESS_KEY_ID:
       from_secret: aws_access_key_id
@@ -1103,6 +1101,6 @@ clone:
   disable: true
 ---
 kind: signature
-hmac: 4be81ea591f973dfbbf6c52fd975866cf6d7cb9662df2a253b853d96d2ea8306
+hmac: 4a16d30da21742c123b66e4141ae030b7087cfa43998364e3dc541c897d87453
 
 ...

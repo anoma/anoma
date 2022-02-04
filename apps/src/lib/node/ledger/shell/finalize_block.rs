@@ -6,13 +6,11 @@ use tendermint::block::Header;
 #[cfg(not(feature = "ABCI"))]
 use tendermint_proto::abci::Evidence;
 #[cfg(not(feature = "ABCI"))]
-use tendermint_proto::crypto::{public_key, PublicKey as TendermintPublicKey};
+use tendermint_proto::crypto::PublicKey as TendermintPublicKey;
 #[cfg(feature = "ABCI")]
 use tendermint_proto_abci::abci::Evidence;
 #[cfg(feature = "ABCI")]
-use tendermint_proto_abci::crypto::{
-    public_key, PublicKey as TendermintPublicKey,
-};
+use tendermint_proto_abci::crypto::PublicKey as TendermintPublicKey;
 #[cfg(feature = "ABCI")]
 use tendermint_stable::block::Header;
 
@@ -302,11 +300,8 @@ where
                     (consensus_key, power)
                 }
             };
-            let consensus_key: ed25519_dalek::PublicKey = consensus_key.into();
             let pub_key = TendermintPublicKey {
-                sum: Some(public_key::Sum::Ed25519(
-                    consensus_key.to_bytes().to_vec(),
-                )),
+                sum: Some(key_to_tendermint(&consensus_key).unwrap()),
             };
             let pub_key = Some(pub_key);
             let update = ValidatorUpdate { pub_key, power };

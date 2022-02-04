@@ -231,8 +231,8 @@ where
 /// are covered by the e2e tests.
 #[cfg(test)]
 mod test_process_proposal {
+    use anoma::proto::SignedTxData;
     use anoma::types::address::xan;
-    use anoma::types::key::ed25519::SignedTxData;
     use anoma::types::storage::Epoch;
     use anoma::types::token::Amount;
     use anoma::types::transaction::{Fee, Hash};
@@ -354,7 +354,7 @@ mod test_process_proposal {
             tx: new_tx.to_bytes(),
         };
         let response = shell.process_proposal(request);
-        let expected_error = "Signature verification failed: signature error";
+        let expected_error = "Signature verification failed: Invalid signature";
         assert_eq!(response.result.code, u32::from(ErrorCodes::InvalidSig));
         assert!(
             response.result.info.contains(expected_error),

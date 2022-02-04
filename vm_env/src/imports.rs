@@ -319,7 +319,7 @@ pub mod vp {
 
     use anoma::types::chain::CHAIN_ID_LENGTH;
     use anoma::types::internal::HostEnvResult;
-    use anoma::types::key::ed25519::{PublicKey, Signature};
+    use anoma::types::key::*;
     use anoma::types::storage::{
         BlockHash, BlockHeight, Epoch, BLOCK_HASH_LENGTH,
     };
@@ -460,8 +460,11 @@ pub mod vp {
 
     /// Verify a transaction signature. The signature is expected to have been
     /// produced on the encoded transaction [`anoma::proto::Tx`]
-    /// using [`anoma::types::key::ed25519::sign_tx`].
-    pub fn verify_tx_signature(pk: &PublicKey, sig: &Signature) -> bool {
+    /// using [`anoma::proto::Tx::sign`].
+    pub fn verify_tx_signature(
+        pk: &common::PublicKey,
+        sig: &common::Signature,
+    ) -> bool {
         let pk = BorshSerialize::try_to_vec(pk).unwrap();
         let sig = BorshSerialize::try_to_vec(sig).unwrap();
         let valid = unsafe {
