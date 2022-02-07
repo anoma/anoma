@@ -8,6 +8,8 @@ version = "0.4.0"
 
 [features]
 default = ["ABCI"]
+# Include VM env import definitions
+import-defs = ["anoma_vm_env/import-defs"]
 
 ABCI = [
   "anoma_vm_env/ABCI",
