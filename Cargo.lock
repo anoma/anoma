@@ -269,12 +269,26 @@ dependencies = [
 ]
 
 [[package]]
+name = "anoma_tx_prelude"
+version = "0.4.0"
+dependencies = [
+ "anoma_vm_env",
+]
+
+[[package]]
 name = "anoma_vm_env"
 version = "0.4.0"
 dependencies = [
  "anoma",
  "anoma_macros",
  "borsh",
+]
+
+[[package]]
+name = "anoma_vp_prelude"
+version = "0.4.0"
+dependencies = [
+ "anoma_vm_env",
 ]
 
 [[package]]
@@ -3797,6 +3811,15 @@ name = "miracl_core"
 version = "2.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "94c7128ba23c81f6471141b90f17654f89ef44a56e14b8a4dd0fddfccd655277"
+
+[[package]]
+name = "mm_template"
+version = "0.4.0"
+dependencies = [
+ "anoma",
+ "anoma_macros",
+ "tokio",
+]
 
 [[package]]
 name = "mm_token_exch"

@@ -33,7 +33,7 @@ ABCI-plus-plus = [
 
 [dependencies]
 anoma = {path = "../shared", default-features = false, features = ["testing"]}
-anoma_vm_env = {path = "../vm_env", default-features = false, features = ["import-defs"]}
+anoma_vm_env = {path = "../vm_env", default-features = false}
 chrono = "0.4.19"
 concat-idents = "1.1.2"
 # TODO temp fork for https://github.com/informalsystems/ibc-rs/issues/1161
