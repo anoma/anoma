@@ -53,6 +53,12 @@ impl From<std::time::Duration> for DurationSecs {
     }
 }
 
+impl From<DurationSecs> for std::time::Duration {
+    fn from(duration_secs: DurationSecs) -> Self {
+        std::time::Duration::new(duration_secs.0, 0)
+    }
+}
+
 /// A duration in nanos precision.
 #[derive(
     Clone,

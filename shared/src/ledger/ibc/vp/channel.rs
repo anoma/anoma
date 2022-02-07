@@ -114,6 +114,7 @@ use super::super::storage::{
 };
 use super::{Ibc, StateChange};
 use crate::ledger::native_vp::Error as NativeVpError;
+use crate::ledger::parameters;
 use crate::ledger::storage::{self as ledger_storage, StorageHasher};
 use crate::types::ibc::data::{
     Error as IbcDataError, IbcMessage, PacketAck, PacketReceipt,
@@ -973,8 +974,15 @@ where
     }
 
     fn max_expected_time_per_block(&self) -> Duration {
-        // TODO set the proper duration
-        Duration::new(5, 0)
+        match parameters::read(self.ctx.storage) {
+            Ok((parameters, gas)) => {
+                match self.ctx.gas_meter.borrow_mut().add(gas) {
+                    Ok(_) => parameters.max_expected_time_per_block.into(),
+                    Err(_) => Duration::default(),
+                }
+            }
+            Err(_) => Duration::default(),
+        }
     }
 }
 

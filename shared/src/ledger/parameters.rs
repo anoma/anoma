@@ -52,6 +52,8 @@ where
 pub struct Parameters {
     /// Epoch duration
     pub epoch_duration: EpochDuration,
+    /// Maximum expected time per block
+    pub max_expected_time_per_block: DurationSecs,
 }
 
 /// Epoch duration. A new epoch begins as soon as both the `min_num_of_blocks`
