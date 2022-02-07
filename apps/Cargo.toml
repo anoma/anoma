@@ -88,7 +88,7 @@ ferveo = {git = "https://github.com/anoma/ferveo"}
 ferveo-common = {git = "https://github.com/anoma/ferveo"}
 eyre = "0.6.5"
 flate2 = "1.0.22"
-file-lock = {git = "https://gitlab.com/batconjurer/file-lock", branch = "bat/add-readwrite-options" }
+file-lock = "2.0.2"
 futures = "0.3"
 hex = "0.4.3"
 # TODO temp fork for borsh coding
