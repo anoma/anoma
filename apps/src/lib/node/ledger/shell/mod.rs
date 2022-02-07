@@ -174,6 +174,7 @@ pub struct Shell<
     H: StorageHasher + Sync + 'static,
 {
     /// The id of the current chain
+    #[allow(dead_code)]
     chain_id: ChainId,
     /// The persistent storage
     pub(super) storage: Storage<D, H>,
@@ -185,10 +186,12 @@ pub struct Shell<
     /// this field. They will be slashed when we finalize the block.
     byzantine_validators: Vec<Evidence>,
     /// Path to the base directory with DB data and configs
+    #[allow(dead_code)]
     base_dir: PathBuf,
     /// Path to the WASM directory for files used in the genesis block.
     wasm_dir: PathBuf,
     /// Information about the running shell instance
+    #[allow(dead_code)]
     mode: ShellMode,
     /// VP WASM compilation cache
     vp_wasm_cache: VpCache<WasmCacheRwAccess>,

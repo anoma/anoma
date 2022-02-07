@@ -555,7 +555,7 @@ fn pos_bonds() -> Result<()> {
         &validator_one_rpc,
     ];
     let mut client =
-        run_as!(test, Who::Validator(0), Bin::Client, tx_args, Some(40))?;
+        run_as!(test, Who::Validator(0), Bin::Client, tx_args, Some(60))?;
     client.exp_string("Transaction is valid.")?;
     client.assert_success();
 
@@ -577,7 +577,7 @@ fn pos_bonds() -> Result<()> {
         "--ledger-address",
         &validator_one_rpc,
     ];
-    let mut client = run!(test, Bin::Client, tx_args, Some(40))?;
+    let mut client = run!(test, Bin::Client, tx_args, Some(60))?;
     client.exp_string("Transaction is valid.")?;
     client.assert_success();
 
@@ -598,7 +598,7 @@ fn pos_bonds() -> Result<()> {
         &validator_one_rpc,
     ];
     let mut client =
-        run_as!(test, Who::Validator(0), Bin::Client, tx_args, Some(40))?;
+        run_as!(test, Who::Validator(0), Bin::Client, tx_args, Some(60))?;
     client.exp_string("Transaction is valid.")?;
     client.assert_success();
 
@@ -620,7 +620,7 @@ fn pos_bonds() -> Result<()> {
         "--ledger-address",
         &validator_one_rpc,
     ];
-    let mut client = run!(test, Bin::Client, tx_args, Some(40))?;
+    let mut client = run!(test, Bin::Client, tx_args, Some(60))?;
     client.exp_string("Transaction is valid.")?;
     client.assert_success();
 
@@ -661,7 +661,7 @@ fn pos_bonds() -> Result<()> {
         &validator_one_rpc,
     ];
     let mut client =
-        run_as!(test, Who::Validator(0), Bin::Client, tx_args, Some(40))?;
+        run_as!(test, Who::Validator(0), Bin::Client, tx_args, Some(60))?;
     client.exp_string("Transaction is valid.")?;
     client.assert_success();
 
@@ -681,7 +681,7 @@ fn pos_bonds() -> Result<()> {
         "--ledger-address",
         &validator_one_rpc,
     ];
-    let mut client = run!(test, Bin::Client, tx_args, Some(40))?;
+    let mut client = run!(test, Bin::Client, tx_args, Some(60))?;
     client.exp_string("Transaction is valid.")?;
     client.assert_success();
 

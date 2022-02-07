@@ -59,7 +59,7 @@ $(patsubst %,watch_%,$(wasms)): watch_%:
 
 # `cargo clippy` one of the wasms, e.g. `make clippy_tx_transfer`
 $(patsubst %,clippy_%,$(wasms)): clippy_%:
-	$(cargo) +$(nightly) clippy --all-targets --features $* -- -D warnings
+	$(cargo) +$(nightly) clippy --features $* -- -D warnings
 
 clean-wasm = rm ../$(wasm).wasm
 clean:

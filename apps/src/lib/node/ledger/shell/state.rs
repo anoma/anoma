@@ -26,10 +26,13 @@ pub type DkgStateMachine = PubliclyVerifiableDkg<EllipticCurve>;
 #[allow(clippy::large_enum_variant)]
 pub(super) enum ShellMode {
     Validator {
+        #[allow(dead_code)]
         data: ValidatorData,
+        #[allow(dead_code)]
         next_dkg_keypair: Option<DkgKeypair>,
         #[cfg(not(feature = "ABCI"))]
         dkg: DkgInstance,
+        #[allow(dead_code)]
         broadcast_sender: UnboundedSender<Vec<u8>>,
     },
     Full,

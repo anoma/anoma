@@ -56,17 +56,17 @@ check:
 check-abci-plus-plus:
 	$(cargo) check --no-default-features --features "ABCI-plus-plus"
 
-clippy-wasm = $(cargo) +$(nightly) clippy --manifest-path $(wasm)/Cargo.toml --all-targets -- -D warnings
+clippy-wasm = $(cargo) +$(nightly) clippy --manifest-path $(wasm)/Cargo.toml -- -D warnings
 
 clippy-wasm-abci-plus-plus = $(cargo) +$(nightly) clippy --manifest-path $(wasm)/Cargo.toml --all-targets --no-default-features --features "ABCI-plus-plus" -- -D warnings
 
 clippy:
-	ANOMA_DEV=false $(cargo) +$(nightly) clippy --all-targets -- -D warnings && \
+	ANOMA_DEV=false $(cargo) +$(nightly) clippy -- -D warnings && \
 	make -C $(wasms) clippy && \
 	$(foreach wasm,$(wasm_templates),$(clippy-wasm) && ) true
 
 clippy-abci-plus-plus:
-	ANOMA_DEV=false $(cargo) +$(nightly) clippy --all-targets \
+	ANOMA_DEV=false $(cargo) +$(nightly) clippy \
 		--manifest-path ./apps/Cargo.toml \
 		--no-default-features \
 		--features "std testing ABCI-plus-plus" && \
