@@ -6,6 +6,7 @@ mod connection;
 mod packet;
 mod port;
 mod sequence;
+mod token;
 
 use std::collections::HashSet;
 
@@ -18,6 +19,7 @@ use ibc_abci::core::ics02_client::context::ClientReader;
 #[cfg(feature = "ABCI")]
 use ibc_abci::events::IbcEvent;
 use thiserror::Error;
+pub use token::{Error as IbcTokenError, IbcToken};
 
 use super::storage::{client_id, ibc_prefix, is_client_counter_key, IbcPrefix};
 use crate::ledger::native_vp::{self, Ctx, NativeVp};
@@ -85,57 +87,65 @@ where
         let mut clients = HashSet::new();
 
         for key in keys_changed {
-            match ibc_prefix(key) {
-                IbcPrefix::Client => {
-                    if is_client_counter_key(key) {
-                        let counter = self.client_counter().map_err(|_| {
-                            Error::CounterError(
-                                "The client counter doesn't exist".to_owned(),
-                            )
-                        })?;
-                        if self.client_counter_pre()? >= counter {
-                            return Err(Error::CounterError(
-                                "The client counter is invalid".to_owned(),
-                            ));
+            if let Some(ibc_prefix) = ibc_prefix(key) {
+                match ibc_prefix {
+                    IbcPrefix::Client => {
+                        if is_client_counter_key(key) {
+                            let counter =
+                                self.client_counter().map_err(|_| {
+                                    Error::CounterError(
+                                        "The client counter doesn't exist"
+                                            .to_owned(),
+                                    )
+                                })?;
+                            if self.client_counter_pre()? >= counter {
+                                return Err(Error::CounterError(
+                                    "The client counter is invalid".to_owned(),
+                                ));
+                            }
+                        } else {
+                            let client_id = client_id(key)
+                                .map_err(|e| Error::KeyError(e.to_string()))?;
+                            if !clients.insert(client_id.clone()) {
+                                // this client has been checked
+                                continue;
+                            }
+                            self.validate_client(&client_id, tx_data)?
                         }
-                    } else {
-                        let client_id = client_id(key)
-                            .map_err(|e| Error::KeyError(e.to_string()))?;
-                        if !clients.insert(client_id.clone()) {
-                            // this client has been checked
-                            continue;
-                        }
-                        self.validate_client(&client_id, tx_data)?
                     }
-                }
-                IbcPrefix::Connection => {
-                    self.validate_connection(key, tx_data)?
-                }
-                IbcPrefix::Channel => self.validate_channel(key, tx_data)?,
-                IbcPrefix::Port => self.validate_port(key)?,
-                IbcPrefix::Capability => self.validate_capability(key)?,
-                IbcPrefix::SeqSend => {
-                    self.validate_sequence_send(key, tx_data)?
-                }
-                IbcPrefix::SeqRecv => {
-                    self.validate_sequence_recv(key, tx_data)?
-                }
-                IbcPrefix::SeqAck => {
-                    self.validate_sequence_ack(key, tx_data)?
-                }
-                IbcPrefix::Commitment => {
-                    self.validate_commitment(key, tx_data)?
-                }
-                IbcPrefix::Receipt => self.validate_receipt(key, tx_data)?,
-                IbcPrefix::Ack => self.validate_ack(key)?,
-                IbcPrefix::Event => {}
-                IbcPrefix::Unknown => {
-                    return Err(Error::KeyError(format!(
-                        "Invalid IBC-related key: {}",
-                        key
-                    )));
-                }
-            };
+                    IbcPrefix::Connection => {
+                        self.validate_connection(key, tx_data)?
+                    }
+                    IbcPrefix::Channel => {
+                        self.validate_channel(key, tx_data)?
+                    }
+                    IbcPrefix::Port => self.validate_port(key)?,
+                    IbcPrefix::Capability => self.validate_capability(key)?,
+                    IbcPrefix::SeqSend => {
+                        self.validate_sequence_send(key, tx_data)?
+                    }
+                    IbcPrefix::SeqRecv => {
+                        self.validate_sequence_recv(key, tx_data)?
+                    }
+                    IbcPrefix::SeqAck => {
+                        self.validate_sequence_ack(key, tx_data)?
+                    }
+                    IbcPrefix::Commitment => {
+                        self.validate_commitment(key, tx_data)?
+                    }
+                    IbcPrefix::Receipt => {
+                        self.validate_receipt(key, tx_data)?
+                    }
+                    IbcPrefix::Ack => self.validate_ack(key)?,
+                    IbcPrefix::Event => {}
+                    IbcPrefix::Unknown => {
+                        return Err(Error::KeyError(format!(
+                            "Invalid IBC-related key: {}",
+                            key
+                        )));
+                    }
+                };
+            }
         }
 
         Ok(true)

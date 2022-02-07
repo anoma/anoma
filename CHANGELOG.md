@@ -1,12 +1,19 @@
 # CHANGELOG
 
-## Unreleased
+## v0.4.0
+
+Anoma 0.4.0 is a scheduled minor release, released 31 January 2022.
 
 ### BUG FIXES
 
 - Matchmaker: Fix a matchmaker's state management via a raw pointer
   that was causing segfaults in the matchmaker in release build.
   ([#806](https://github.com/anoma/anoma/pull/806))
+
+### CI
+
+- Build Linux package directly from tagged releases, and upload wasm from tags.
+  ([#801](https://github.com/anoma/anoma/pull/801))
 
 ### FEATURES
 
@@ -19,9 +26,19 @@
   transaction hash. ([#634](https://github.com/anoma/anoma/issues/634))
 - Ledger: Use IBC messages from ibc-rs crate to be used in the relayer.
   ([#699](https://github.com/anoma/anoma/issues/699))
+- Ledger: Added [fungible token transfer](https://github.com/cosmos/ibc/tree/26299580866b80fbdf0ce8a0691ee19a28176795/spec/app/ics-020-fungible-token-transfer)
+  support to IBC validity predicate. 
+  ([#823](https://github.com/anoma/anoma/issues/823))
 
 ### IMPROVEMENTS
 
+- Ledger: Add IbcActions trait to execute IBC operations
+  ([#411](https://github.com/anoma/anoma/issues/411))
+- Matchmaker has been separated from intent gossiper node. Multiple
+  matchmakers can connect to an intent gossiper node over WebSocket.
+  ([#579](https://github.com/anoma/anoma/issues/579))
+- Wallet: Ask for encryption password confirmation when generating a new key.
+  ([#625](https://github.com/anoma/anoma/issues/625))
 - Ledger: Two-layer merkle tree for the IBC proof verification
   ([#671](https://github.com/anoma/anoma/issues/671))
 - Testing: Increments network configuration ports used for E2E
@@ -29,8 +46,28 @@
   ([#717](https://github.com/anoma/anoma/issues/717))
 - Matchmaker: compiling and loading matchmakers to and from dylib instead of
   WASM ([#718](https://github.com/anoma/anoma/pull/718))
+- Ledger: Coding IBC-related data without Borsh
+  ([#734](https://github.com/anoma/anoma/issues/734))
 - Matchmaker: re-purpose the matchmaker macro to manage state of a custom
   matchmaker implementation ([#746](https://github.com/anoma/anoma/pull/746))
+- Testing: Update to a new branch of property-based state machine testing with
+  initial state shrinking. ([#765](https://github.com/anoma/anoma/pull/765))
+- Port the Nix build to the new Flakes system.
+  ([#770](https://github.com/anoma/anoma/pull/770))
+- Client/Utils: Respect wasm directory, when specified and non-default in the
+  command. The command now doesn't unpack the network config archive into its
+  default directories, if any of them are specified with non-default values.
+  ([#813](https://github.com/anoma/anoma/issues/813))
+- Install the default token exchange matchmaker implemenetation into
+  `~/.cargo/lib` directory when building from source. When not absolute, the
+  matchmaker will attempt to load the matchmaker from the same path as where the
+  binary is being ran from, from `~/.cargo/lib` or the current working 
+  directory. ([#816](https://github.com/anoma/anoma/issues/816))
+
+### MISCELLANEOUS
+
+- Force non-dev build for make build-release, check-release & package
+  ([#791](https://github.com/anoma/anoma/pull/791))
 
 ## v0.3.1
 

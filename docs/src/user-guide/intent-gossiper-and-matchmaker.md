@@ -1,25 +1,26 @@
-# The Intent gossip and Matchmaker
+# The Intent gossiper and Matchmaker
 
-To run an intent gossip node with an RPC server:
+To run an intent gossiper node with an RPC server through which new intents can be submitted:
 
 ```shell
 anoma node gossip --rpc "127.0.0.1:26660"
 ```
 
-To run an intent gossip node with the intent gossip system, a token exchange matchmaker and RPC through which new intents are requested:
+To run a token exchange matchmaker:
 
 ```shell
-anoma node gossip --rpc "127.0.0.1:26660" --matchmaker-path libmm_token_exch --tx-code-path wasm/tx_from_intent.wasm --ledger-address "127.0.0.1:26657" --source matchmaker --signing-key matchmaker
+anoma node matchmaker --matchmaker-path libmm_token_exch --tx-code-path wasm/tx_from_intent.wasm --ledger-address "127.0.0.1:26657" --source matchmaker --signing-key matchmaker
 ```
 
-Mind that `matchmaker` should be valid key in your wallet.
+Mind that `matchmaker` must be an established account known on the ledger with a key in your wallet that will be used to sign transactions submitted from the matchmaker to the ledger.
 
-This pre-built matchmaker implementation is [the fungible token exchange `mm_token_exch`](https://github.com/anoma/anoma/blob/master/wasm/wasm_source/src/mm_token_exch.rs), that is being used together with [the pre-built `tx_from_intent` transaction WASM](https://github.com/anoma/anoma/blob/master/wasm/wasm_source/src/lib.rs) to submit transaction from matched intents to the ledger.
+This pre-built matchmaker implementation is [the fungible token exchange `mm_token_exch`](https://github.com/anoma/anoma/blob/5051b3abbc645aed2e40e1ff8db2d682e9a115e9/matchmaker/mm_token_exch/src/lib.rs), that is being used together with [the pre-built `tx_from_intent` transaction WASM](https://github.com/anoma/anoma/blob/5051b3abbc645aed2e40e1ff8db2d682e9a115e9/wasm/wasm_source/src/lib.rs#L140) to submit transaction from matched intents to the ledger.
 
 ## ✋ Example intents
 
 1) Lets create some accounts:
-   ```
+
+   ```shell
    anoma wallet key gen --alias alberto --unsafe-dont-encrypt
    anoma client init-account --alias alberto-account --public-key alberto --source alberto
 
@@ -35,13 +36,13 @@ This pre-built matchmaker implementation is [the fungible token exchange `mm_tok
 
 1) We then need some tokens:
 
-   ```
+   ```shell
    anoma client transfer --source faucet --target alberto-account --signer alberto-account --token BTC --amount 1000
    anoma client transfer --source faucet --target bertha-account --signer bertha-account --token ETH --amount 1000
    anoma client transfer --source faucet --target christel-account --signer christel-account --token XAN --amount 1000
    ```
 
-2) Lets export some variables:
+1) Lets export some variables:
 
    ```shell
    export ALBERTO=$(anoma wallet address find --alias alberto-account | cut -c 28- | tr -d '\n')
@@ -52,7 +53,7 @@ This pre-built matchmaker implementation is [the fungible token exchange `mm_tok
    export ETH=$(anoma wallet address find --alias ETH | cut -c 28- | tr -d '\n')
    ```
 
-3) Create files with the intents description:
+1) Create files with the intents description:
 
    ```shell
    echo '[{"addr":"'$ALBERTO'","key":"'$ALBERTO'","max_sell":"70","min_buy":"100","rate_min":"2","token_buy":"'$XAN'","token_sell":"'$BTC'","vp_path": "wasm_for_tests/vp_always_true.wasm"}]' > intent.A.data
@@ -62,17 +63,19 @@ This pre-built matchmaker implementation is [the fungible token exchange `mm_tok
    echo '[{"addr":"'$CHRISTEL'","key":"'$CHRISTEL'","max_sell":"200","min_buy":"20","rate_min":"0.5","token_buy":"'$ETH'","token_sell":"'$XAN'"}]' > intent.C.data
    ```
 
-3) Start the ledger and the matchmaker. Instruct the matchmaker to subscribe to a topic "asset_v1":
+1) Start the ledger, intent gossiper and the matchmaker. Instruct the intent gossiper to subscribe to a topic "asset_v1":
 
    ```shell
    anoma node ledger run
    
-   anoma node gossip --rpc "127.0.0.1:26660" --matchmaker-path wasm/mm_token_exch.wasm --tx-code-path wasm/tx_from_intent.wasm --ledger-address "127.0.0.1:26657" --source mm-1 --signing-key mm-1
+   anoma node gossip --rpc "127.0.0.1:26660"
+   
+   anoma node matchmaker --matchmaker-path wasm/mm_token_exch.wasm --tx-code-path wasm/tx_from_intent.wasm --ledger-address "127.0.0.1:26657" --source mm-1 --signing-key mm-1
    
    anoma client subscribe-topic --node "http://127.0.0.1:26660" --topic "asset_v1"
    ```
 
-5) Submit the intents (the target gossip node must be running an RPC server):
+1) Submit the intents (the target gossiper node must be running an RPC server):
 
    ```shell
    anoma client intent --data-path intent.A.data --topic "asset_v1" --signing-key alberto --node "http://127.0.0.1:26660"
@@ -81,10 +84,10 @@ This pre-built matchmaker implementation is [the fungible token exchange `mm_tok
    ```
 
    The matchmaker should find a match from these intents and submit a transaction to the ledger that performs the n-party transfers of tokens.
-   
-6) You can check the balances with:
 
-   ```
+1) You can check the balances with:
+
+   ```shell
    anoma client balance --owner alberto-account
    anoma client balance --owner bertha-account
    anoma client balance --owner christel-account

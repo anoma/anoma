@@ -1,8 +1,11 @@
+pub mod behaviour;
 mod identity;
 
 use std::path::Path;
 use std::time::Duration;
 
+use anoma::proto::Intent;
+use behaviour::Behaviour;
 use libp2p::core::connection::ConnectionLimits;
 use libp2p::core::muxing::StreamMuxerBox;
 use libp2p::core::transport::Boxed;
@@ -16,8 +19,7 @@ use thiserror::Error;
 use tokio::sync::mpsc::Sender;
 
 pub use self::identity::Identity;
-use super::behaviour::Behaviour;
-use super::intent_gossiper::matchmaker::MatchmakerMessage;
+use crate::config;
 
 pub type Swarm = libp2p::Swarm<Behaviour>;
 
@@ -26,7 +28,7 @@ pub enum Error {
     #[error("Failed initializing the transport: {0}")]
     Transport(std::io::Error),
     #[error("Error with the network behavior: {0}")]
-    Behavior(super::behaviour::Error),
+    Behavior(crate::node::gossip::p2p::behaviour::Error),
     #[error("Error while dialing: {0}")]
     Dialing(libp2p::swarm::DialError),
     #[error("Error while starting to listing: {0}")]
@@ -42,10 +44,10 @@ impl P2P {
     /// Create a new peer based on the configuration given. Used transport is
     /// tcp. A peer participate in the intent gossip system and helps the
     /// propagation of intents.
-    pub fn new(
-        config: &crate::config::IntentGossiper,
+    pub async fn new(
+        config: &config::IntentGossiper,
         base_dir: impl AsRef<Path>,
-        mm_sender: Option<Sender<MatchmakerMessage>>,
+        peer_intent_send: Sender<Intent>,
     ) -> Result<Self> {
         let identity = Identity::load_or_gen(base_dir);
         let peer_key = identity.key();
@@ -54,15 +56,11 @@ impl P2P {
 
         tracing::info!("Peer id: {:?}", peer_id.clone());
 
-        // TODO remove async runtime here and hide it in `build_transport`
-        let transport = {
-            let rt = tokio::runtime::Runtime::new().unwrap();
-            rt.block_on(build_transport(&peer_key))
-        };
+        let transport = build_transport(&peer_key).await;
 
         // create intent gossip specific behaviour
         let intent_gossip_behaviour =
-            Behaviour::new(peer_key, config, mm_sender);
+            Behaviour::new(peer_key, config, peer_intent_send).await;
 
         let connection_limits = build_p2p_connections_limit();
 

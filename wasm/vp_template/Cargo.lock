@@ -45,7 +45,7 @@ dependencies = [
 
 [[package]]
 name = "anoma"
-version = "0.3.0"
+version = "0.4.0"
 dependencies = [
  "anoma_proof_of_stake",
  "bech32",
@@ -89,7 +89,7 @@ dependencies = [
 
 [[package]]
 name = "anoma_macros"
-version = "0.3.0"
+version = "0.4.0"
 dependencies = [
  "quote",
  "syn",
@@ -97,7 +97,7 @@ dependencies = [
 
 [[package]]
 name = "anoma_proof_of_stake"
-version = "0.3.0"
+version = "0.4.0"
 dependencies = [
  "borsh",
  "thiserror",
@@ -105,7 +105,7 @@ dependencies = [
 
 [[package]]
 name = "anoma_tests"
-version = "0.3.0"
+version = "0.4.0"
 dependencies = [
  "anoma",
  "anoma_vm_env",
@@ -126,7 +126,7 @@ dependencies = [
 
 [[package]]
 name = "anoma_vm_env"
-version = "0.3.0"
+version = "0.4.0"
 dependencies = [
  "anoma",
  "anoma_macros",
@@ -135,7 +135,7 @@ dependencies = [
 
 [[package]]
 name = "anoma_vp_prelude"
-version = "0.3.0"
+version = "0.4.0"
 dependencies = [
  "anoma_vm_env",
 ]
@@ -2728,7 +2728,7 @@ checksum = "49874b5167b65d7193b8aba1567f5c7d93d001cafc34600cee003eda787e483f"
 
 [[package]]
 name = "vp_template"
-version = "0.3.0"
+version = "0.4.0"
 dependencies = [
  "anoma_tests",
  "anoma_vp_prelude",

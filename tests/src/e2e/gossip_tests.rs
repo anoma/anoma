@@ -19,7 +19,9 @@ use serde_json::json;
 use setup::constants::*;
 
 use super::setup::ENV_VAR_DEBUG;
-use crate::e2e::helpers::{find_address, get_actor_rpc};
+use crate::e2e::helpers::{
+    find_address, get_actor_rpc, get_gossiper_mm_server,
+};
 use crate::e2e::setup::{self, Bin, Who};
 use crate::{run, run_as};
 
@@ -172,6 +174,8 @@ fn match_intents() -> Result<()> {
     generate_intent_json(intent_c_path_input.clone(), intent_c_json);
 
     let validator_one_rpc = get_actor_rpc(&test, &Who::Validator(0));
+    let validator_one_gossiper =
+        get_gossiper_mm_server(&test, &Who::Validator(0));
 
     // The RPC port is either 27660 for ABCI or 28660 for ABCI++ (see
     // `setup::network`)
@@ -184,27 +188,39 @@ fn match_intents() -> Result<()> {
     .to_string();
     let rpc_address = format!("127.0.0.1:{}", rpc_port);
 
-    // Start gossip
-    let mut session_gossip = run_as!(
+    // Start intent gossiper node
+    let mut gossiper = run_as!(
+        test,
+        Who::Validator(0),
+        Bin::Node,
+        &["gossip", "--rpc", &rpc_address],
+        Some(20)
+    )?;
+
+    // Wait gossip to start
+    gossiper.exp_string(&format!("RPC started at {}", rpc_address))?;
+
+    // Start matchmaker
+    let mut matchmaker = run_as!(
         test,
         Who::Validator(0),
         Bin::Node,
         &[
-            "gossip",
+            "matchmaker",
             "--source",
             "matchmaker",
             "--signing-key",
             "matchmaker-key",
-            "--rpc",
-            &rpc_address,
             "--ledger-address",
-            &validator_one_rpc
+            &validator_one_rpc,
+            "--intent-gossiper",
+            &validator_one_gossiper,
         ],
         Some(40)
     )?;
 
-    // Wait gossip to start
-    session_gossip.exp_string(&format!("RPC started at {}", rpc_address))?;
+    // Wait for the matchmaker to start
+    matchmaker.exp_string("Connected to the server")?;
 
     let rpc_address = format!("http://{}", rpc_address);
     //  Send intent A
@@ -234,7 +250,7 @@ fn match_intents() -> Result<()> {
     )?;
     drop(session_send_intent_a);
 
-    session_gossip.exp_string("trying to match new intent")?;
+    matchmaker.exp_string("trying to match new intent")?;
 
     // Send intent B
     let mut session_send_intent_b = run!(
@@ -263,7 +279,7 @@ fn match_intents() -> Result<()> {
     )?;
     drop(session_send_intent_b);
 
-    session_gossip.exp_string("trying to match new intent")?;
+    matchmaker.exp_string("trying to match new intent")?;
 
     // Send intent C
     let mut session_send_intent_c = run!(
@@ -293,15 +309,15 @@ fn match_intents() -> Result<()> {
     drop(session_send_intent_c);
 
     // check that the transfers transactions are correct
-    session_gossip.exp_string(&format!(
+    matchmaker.exp_string(&format!(
         "crafting transfer: {}, {}, 70",
         bertha, albert
     ))?;
-    session_gossip.exp_string(&format!(
+    matchmaker.exp_string(&format!(
         "crafting transfer: {}, {}, 200",
         christel, bertha
     ))?;
-    session_gossip.exp_string(&format!(
+    matchmaker.exp_string(&format!(
         "crafting transfer: {}, {}, 100",
         albert, christel
     ))?;

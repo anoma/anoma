@@ -438,7 +438,11 @@ impl Display for PacketAck {
 
 // TODO temporary type. add a new type for ack to ibc-rs
 /// Data to transfer a token
+<<<<<<< HEAD
 #[derive(Clone, Debug, serde::Serialize)]
+=======
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+>>>>>>> master
 pub struct FungibleTokenPacketData {
     /// the token denomination to be transferred
     pub denomination: String,
@@ -462,3 +466,12 @@ impl From<MsgTransfer> for FungibleTokenPacketData {
         }
     }
 }
+<<<<<<< HEAD
+=======
+
+impl Display for FungibleTokenPacketData {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", serde_json::to_string(self).unwrap())
+    }
+}
+>>>>>>> master

@@ -1,5 +1,6 @@
 use std::collections::hash_map::DefaultHasher;
 use std::convert::{TryFrom, TryInto};
+use std::fmt::Display;
 use std::hash::{Hash, Hasher};
 
 use borsh::{BorshDeserialize, BorshSerialize};
@@ -235,6 +236,12 @@ pub struct IntentId(pub Vec<u8>);
 impl<T: Into<Vec<u8>>> From<T> for IntentId {
     fn from(value: T) -> Self {
         Self(value.into())
+    }
+}
+
+impl Display for IntentId {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", hex::encode(&self.0))
     }
 }
 

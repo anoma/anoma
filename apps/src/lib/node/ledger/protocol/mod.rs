@@ -3,7 +3,7 @@ use std::collections::HashSet;
 use std::{fmt, panic};
 
 use anoma::ledger::gas::{self, BlockGasMeter, VpGasMeter, VpsGas};
-use anoma::ledger::ibc::vp::Ibc;
+use anoma::ledger::ibc::vp::{Ibc, IbcToken};
 use anoma::ledger::native_vp::{self, NativeVp};
 use anoma::ledger::parameters::{self, ParametersVp};
 use anoma::ledger::pos::{self, PosVP};
@@ -43,6 +43,8 @@ pub enum Error {
     PosNativeVpRuntime,
     #[error("Parameters native VP: {0}")]
     ParametersNativeVpError(parameters::Error),
+    #[error("IBC Token native VP: {0}")]
+    IbcTokenNativeVpError(anoma::ledger::ibc::vp::IbcTokenError),
     #[error("Access to an internal address {0} is forbidden")]
     AccessForbidden(InternalAddress),
 }
@@ -351,6 +353,17 @@ where
                             Err(Error::AccessForbidden(
                                 (*internal_addr).clone(),
                             ))
+                        }
+                        InternalAddress::IbcEscrow(_)
+                        | InternalAddress::IbcBurn
+                        | InternalAddress::IbcMint => {
+                            // validate the transfer
+                            let ibc_token = IbcToken { ctx };
+                            let result = ibc_token
+                                .validate_tx(tx_data, keys, &verifiers_addr)
+                                .map_err(Error::IbcTokenNativeVpError);
+                            gas_meter = ibc_token.ctx.gas_meter.into_inner();
+                            result
                         }
                     };
 

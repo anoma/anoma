@@ -1,8 +1,7 @@
 //! Anoma node CLI.
 
-use anoma_apps::cli;
-use anoma_apps::cli::cmds;
-use anoma_apps::node::{gossip, ledger};
+use anoma_apps::cli::{self, args, cmds};
+use anoma_apps::node::{gossip, ledger, matchmaker};
 use eyre::{Context, Result};
 
 pub fn main() -> Result<()> {
@@ -18,19 +17,13 @@ pub fn main() -> Result<()> {
             }
         },
         cmds::AnomaNode::Gossip(sub) => match sub {
-            cmds::Gossip::Run(cmds::GossipRun(args)) => {
-                let tx_source_address = ctx.get_opt(&args.tx_source_address);
-                let tx_signing_key = ctx.get_opt_cached(&args.tx_signing_key);
+            cmds::Gossip::Run(cmds::GossipRun(args::GossipRun {
+                addr,
+                rpc,
+            })) => {
                 let config = ctx.config;
                 let mut gossip_cfg = config.intent_gossiper;
-                gossip_cfg.update(
-                    args.addr,
-                    args.rpc,
-                    args.matchmaker_path,
-                    args.tx_code_path,
-                    args.ledger_addr,
-                    args.filter_path,
-                );
+                gossip_cfg.update(addr, rpc);
                 gossip::run(
                     gossip_cfg,
                     &config
@@ -38,13 +31,40 @@ pub fn main() -> Result<()> {
                         .shell
                         .base_dir
                         .join(ctx.global_config.default_chain_id.as_str()),
-                    &config.wasm_dir,
-                    tx_source_address,
-                    tx_signing_key,
                 )
                 .wrap_err("Failed to run gossip service")?;
             }
         },
+        cmds::AnomaNode::Matchmaker(cmds::Matchmaker(args::Matchmaker {
+            intent_gossiper_addr,
+            matchmaker_path,
+            tx_code_path,
+            ledger_addr,
+            tx_signing_key,
+            tx_source_address,
+        })) => {
+            let tx_signing_key = ctx.get_cached(&tx_signing_key);
+            let tx_source_address = ctx.get(&tx_source_address);
+
+            let config = ctx.config;
+            let wasm_dir = config.wasm_dir;
+            let mut mm_config = config.matchmaker;
+            if matchmaker_path.is_some() {
+                mm_config.matchmaker_path = matchmaker_path;
+            }
+            if tx_code_path.is_some() {
+                mm_config.tx_code_path = tx_code_path;
+            }
+
+            matchmaker::run(
+                mm_config,
+                intent_gossiper_addr,
+                ledger_addr,
+                tx_signing_key,
+                tx_source_address,
+                wasm_dir,
+            );
+        }
         cmds::AnomaNode::Config(sub) => match sub {
             cmds::Config::Gen(cmds::ConfigGen) => {
                 // If the config doesn't exit, it gets generated in the context.

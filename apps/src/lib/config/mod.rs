@@ -32,6 +32,7 @@ use thiserror::Error;
 use crate::cli;
 
 pub const DEFAULT_BASE_DIR: &str = ".anoma";
+pub const DEFAULT_WASM_DIR: &str = "wasm";
 pub const FILENAME: &str = "config.toml";
 pub const TENDERMINT_DIR: &str = "tendermint";
 pub const DB_DIR: &str = "db";
@@ -41,6 +42,8 @@ pub struct Config {
     pub wasm_dir: PathBuf,
     pub ledger: Ledger,
     pub intent_gossiper: IntentGossiper,
+    // TODO allow to configure multiple matchmakers
+    pub matchmaker: Matchmaker,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -124,13 +127,28 @@ pub struct Tendermint {
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct IntentGossiper {
+    // Simple values
     pub address: Multiaddr,
     pub topics: HashSet<String>,
+    /// The server address to which matchmakers can connect to receive intents
+    pub matchmakers_server_addr: SocketAddr,
+
+    // Nested structures ⚠️ no simple values below any of these ⚠️
     pub subscription_filter: SubscriptionFilter,
     pub seed_peers: HashSet<PeerAddress>,
     pub rpc: Option<RpcServer>,
     pub discover_peer: Option<DiscoverPeer>,
-    pub matchmaker: Option<Matchmaker>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct RpcServer {
+    pub address: SocketAddr,
+}
+
+#[derive(Default, Debug, Serialize, Deserialize, Clone)]
+pub struct Matchmaker {
+    pub matchmaker_path: Option<PathBuf>,
+    pub tx_code_path: Option<PathBuf>,
 }
 
 impl Ledger {
@@ -201,19 +219,6 @@ impl Shell {
             .join(chain_id.as_str())
             .join(&self.tendermint_dir)
     }
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct RpcServer {
-    pub address: SocketAddr,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct Matchmaker {
-    pub matchmaker: PathBuf,
-    pub tx_code: PathBuf,
-    pub ledger_address: TendermintAddress,
-    pub filter: Option<PathBuf>,
 }
 
 // TODO maybe add also maxCount for a maximum number of subscription for a
@@ -288,9 +293,10 @@ impl Config {
         mode: TendermintMode,
     ) -> Self {
         Self {
-            wasm_dir: "wasm".into(),
+            wasm_dir: DEFAULT_WASM_DIR.into(),
             ledger: Ledger::new(base_dir, chain_id, mode),
             intent_gossiper: IntentGossiper::default(),
+            matchmaker: Matchmaker::default(),
         }
     }
 
@@ -403,70 +409,24 @@ impl Default for IntentGossiper {
         Self {
             address: Multiaddr::from_str("/ip4/0.0.0.0/tcp/26659").unwrap(),
             topics: vec!["asset_v0"].into_iter().map(String::from).collect(),
+            matchmakers_server_addr: SocketAddr::new(
+                IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)),
+                26661,
+            ),
             subscription_filter: SubscriptionFilter::RegexFilter(
                 Regex::new("asset_v\\d{1,2}").unwrap(),
             ),
             seed_peers: HashSet::default(),
             rpc: None,
             discover_peer: Some(DiscoverPeer::default()),
-            matchmaker: None,
         }
     }
 }
 
 impl IntentGossiper {
-    pub fn update(
-        &mut self,
-        addr: Option<Multiaddr>,
-        rpc: Option<SocketAddr>,
-        matchmaker_path: Option<PathBuf>,
-        tx_code_path: Option<PathBuf>,
-        ledger_addr: Option<TendermintAddress>,
-        filter_path: Option<PathBuf>,
-    ) {
+    pub fn update(&mut self, addr: Option<Multiaddr>, rpc: Option<SocketAddr>) {
         if let Some(addr) = addr {
             self.address = addr;
-        }
-
-        let matchmaker_arg = matchmaker_path;
-        let tx_code_arg = tx_code_path;
-        let ledger_address_arg = ledger_addr;
-        let filter_arg = filter_path;
-        if let Some(mut matchmaker_cfg) = self.matchmaker.as_mut() {
-            if let Some(matchmaker) = matchmaker_arg {
-                matchmaker_cfg.matchmaker = matchmaker
-            }
-            if let Some(tx_code) = tx_code_arg {
-                matchmaker_cfg.tx_code = tx_code
-            }
-            if let Some(ledger_address) = ledger_address_arg {
-                matchmaker_cfg.ledger_address = ledger_address
-            }
-            if let Some(filter) = filter_arg {
-                matchmaker_cfg.filter = Some(filter)
-            }
-        } else if let (Some(matchmaker), Some(tx_code), Some(ledger_address)) = (
-            matchmaker_arg.as_ref(),
-            tx_code_arg.as_ref(),
-            ledger_address_arg.as_ref(),
-        ) {
-            self.matchmaker = Some(Matchmaker {
-                matchmaker: matchmaker.clone(),
-                tx_code: tx_code.clone(),
-                ledger_address: ledger_address.clone(),
-                filter: filter_arg,
-            });
-        } else if matchmaker_arg.is_some()
-            || tx_code_arg.is_some()
-            || ledger_address_arg.is_some()
-        // if at least one argument is not none then fail
-        {
-            panic!(
-                "No complete matchmaker configuration found (matchmaker code \
-                 path, tx code path, and ledger address). Please update the \
-                 configuration with default value or use all cli argument to \
-                 use the matchmaker"
-            );
         }
         if let Some(address) = rpc {
             self.rpc = Some(RpcServer { address });

@@ -72,9 +72,9 @@ pub fn add_validators(num: u8, mut genesis: GenesisConfig) -> GenesisConfig {
         // Only the first validator is bootstrap
         validator.intent_gossip_seed = None;
         let mut net_address = net_address_0;
-        // 5 ports for each validator
+        // 6 ports for each validator
         let first_port = net_address_port_0
-            + 5 * (ix as u16 + 1)
+            + 6 * (ix as u16 + 1)
             + if cfg!(feature = "ABCI") {
                 0
             } else {

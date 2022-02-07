@@ -23,9 +23,8 @@ use thiserror::Error;
 use tokio::sync::mpsc::Sender;
 
 use self::discovery::DiscoveryEvent;
-use super::intent_gossiper;
-use super::intent_gossiper::matchmaker::MatchmakerMessage;
-use crate::node::gossip::behaviour::discovery::{
+use crate::config;
+use crate::node::gossip::p2p::behaviour::discovery::{
     DiscoveryBehaviour, DiscoveryConfigBuilder,
 };
 
@@ -42,15 +41,13 @@ pub struct Behaviour {
     /// every established connection
     ping: Ping,
     #[behaviour(ignore)]
-    pub mm_sender: Option<Sender<MatchmakerMessage>>,
+    pub peer_intent_send: Sender<Intent>,
 }
 
 #[derive(Error, Debug)]
 pub enum Error {
     #[error("Failed to subscribe")]
     FailedSubscription(libp2p::gossipsub::error::SubscriptionError),
-    #[error("Failed initializing the intent gossiper app: {0}")]
-    GossipIntent(intent_gossiper::Error),
     #[error("Failed initializing the topic filter: {0}")]
     Filter(String),
     #[error("Failed initializing the gossip behaviour: {0}")]
@@ -150,10 +147,10 @@ pub fn message_id(message: &GossipsubMessage) -> MessageId {
 
 impl Behaviour {
     /// Create a new behaviour based on the config given
-    pub fn new(
+    pub async fn new(
         key: Keypair,
-        config: &crate::config::IntentGossiper,
-        mm_sender: Option<Sender<MatchmakerMessage>>,
+        config: &config::IntentGossiper,
+        peer_intent_send: Sender<Intent>,
     ) -> Self {
         let public_key = key.public();
         let peer_id = PeerId::from_public_key(public_key.clone());
@@ -236,7 +233,9 @@ impl Behaviour {
                 } else {
                     DiscoveryConfigBuilder::default().build().unwrap()
                 };
-            DiscoveryBehaviour::new(peer_id, discover_config).unwrap()
+            DiscoveryBehaviour::new(peer_id, discover_config)
+                .await
+                .unwrap()
         };
         Self {
             intent_gossip_behaviour,
@@ -246,41 +245,18 @@ impl Behaviour {
                 public_key,
             )),
             ping: Ping::default(),
-            mm_sender,
+            peer_intent_send,
         }
     }
 
     /// tries to apply a new intent. Fails if the logic fails or if the intent
     /// is rejected. If the matchmaker fails the message is only ignore
     fn handle_intent(&mut self, intent: Intent) -> MessageAcceptance {
-        if let Some(sender) = &self.mm_sender {
-            let (response_sender, response_receiver) =
-                std::sync::mpsc::channel::<bool>();
-            sender
-                .try_send(MatchmakerMessage::ApplyIntent(
-                    intent,
-                    response_sender,
-                ))
-                .unwrap_or_else(|err| {
-                    tracing::error!(
-                        "Error sending intent to the matchmaker: {}",
-                        err
-                    );
-                });
-            return match response_receiver.recv() {
-                Ok(true) => MessageAcceptance::Accept,
-                Ok(false) => MessageAcceptance::Reject,
-                Err(err) => {
-                    tracing::error!(
-                        "Ignoring intent because error while trying to apply \
-                         an intent in matchmaker: {}",
-                        err
-                    );
-                    MessageAcceptance::Ignore
-                }
-            };
+        if let Err(err) = self.peer_intent_send.try_send(intent) {
+            tracing::error!("Error sending intent to the matchmaker: {}", err);
+            // The buffer is full or the channel is closed
+            return MessageAcceptance::Ignore;
         }
-        // When no is matchmaker running, accept any intent
         MessageAcceptance::Accept
     }
 

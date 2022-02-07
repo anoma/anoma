@@ -1,6 +1,6 @@
 use std::collections::HashSet;
 
-use anoma::types::address::Address;
+use anoma::types::address::{Address, InternalAddress};
 use anoma::types::storage::Key;
 use anoma::types::token;
 
@@ -27,7 +27,13 @@ pub mod vp {
                 Some(owner) => {
                     // accumulate the change
                     let key = key.to_string();
-                    let pre: Amount = vp::read_pre(&key).unwrap_or_default();
+                    let pre: Amount =
+                        vp::read_pre(&key).unwrap_or_else(|| match owner {
+                            Address::Internal(InternalAddress::IbcMint) => {
+                                Amount::max()
+                            }
+                            _ => Amount::default(),
+                        });
                     let post: Amount = vp::read_post(&key).unwrap_or_default();
                     let this_change = post.change() - pre.change();
                     change += this_change;
@@ -60,19 +66,18 @@ pub mod tx {
         let src_key = token::balance_key(token, src);
         let dest_key = token::balance_key(token, dest);
         let src_bal: Option<Amount> = tx::read(&src_key.to_string());
-        match src_bal {
-            None => {
+        let mut src_bal = src_bal.unwrap_or_else(|| match src {
+            Address::Internal(InternalAddress::IbcMint) => Amount::max(),
+            _ => {
                 tx::log_string(format!("src {} has no balance", src));
                 unreachable!()
             }
-            Some(mut src_bal) => {
-                src_bal.spend(&amount);
-                let mut dest_bal: Amount =
-                    tx::read(&dest_key.to_string()).unwrap_or_default();
-                dest_bal.receive(&amount);
-                tx::write(&src_key.to_string(), src_bal);
-                tx::write(&dest_key.to_string(), dest_bal);
-            }
-        }
+        });
+        src_bal.spend(&amount);
+        let mut dest_bal: Amount =
+            tx::read(&dest_key.to_string()).unwrap_or_default();
+        dest_bal.receive(&amount);
+        tx::write(&src_key.to_string(), src_bal);
+        tx::write(&dest_key.to_string(), dest_bal);
     }
 }

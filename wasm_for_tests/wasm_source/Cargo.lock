@@ -45,7 +45,7 @@ dependencies = [
 
 [[package]]
 name = "anoma"
-version = "0.3.0"
+version = "0.4.0"
 dependencies = [
  "anoma_proof_of_stake",
  "bech32",
@@ -57,6 +57,7 @@ dependencies = [
  "hex",
  "ibc",
  "ibc-proto",
+ "ics23",
  "itertools",
  "loupe",
  "parity-wasm",
@@ -68,11 +69,12 @@ dependencies = [
  "rand_core 0.5.1",
  "rust_decimal",
  "serde",
+ "serde_json",
  "sha2",
  "sparse-merkle-tree",
  "tempfile",
  "tendermint",
- "tendermint-rpc",
+ "tendermint-proto",
  "thiserror",
  "tonic-build",
  "tracing",
@@ -87,7 +89,7 @@ dependencies = [
 
 [[package]]
 name = "anoma_macros"
-version = "0.3.0"
+version = "0.4.0"
 dependencies = [
  "quote",
  "syn",
@@ -95,7 +97,7 @@ dependencies = [
 
 [[package]]
 name = "anoma_proof_of_stake"
-version = "0.3.0"
+version = "0.4.0"
 dependencies = [
  "borsh",
  "thiserror",
@@ -103,7 +105,7 @@ dependencies = [
 
 [[package]]
 name = "anoma_tests"
-version = "0.3.0"
+version = "0.4.0"
 dependencies = [
  "anoma",
  "anoma_vm_env",
@@ -111,10 +113,12 @@ dependencies = [
  "concat-idents",
  "ibc",
  "ibc-proto",
+ "prost",
  "serde_json",
  "sha2",
  "tempfile",
  "tendermint",
+ "tendermint-proto",
  "test-log",
  "tracing",
  "tracing-subscriber",
@@ -122,14 +126,14 @@ dependencies = [
 
 [[package]]
 name = "anoma_tx_prelude"
-version = "0.3.0"
+version = "0.4.0"
 dependencies = [
  "anoma_vm_env",
 ]
 
 [[package]]
 name = "anoma_vm_env"
-version = "0.3.0"
+version = "0.4.0"
 dependencies = [
  "anoma",
  "anoma_macros",
@@ -138,14 +142,14 @@ dependencies = [
 
 [[package]]
 name = "anoma_vp_prelude"
-version = "0.3.0"
+version = "0.4.0"
 dependencies = [
  "anoma_vm_env",
 ]
 
 [[package]]
 name = "anoma_wasm_for_tests"
-version = "0.3.0"
+version = "0.4.0"
 dependencies = [
  "anoma_tests",
  "anoma_tx_prelude",

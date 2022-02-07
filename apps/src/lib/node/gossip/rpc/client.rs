@@ -8,8 +8,8 @@ use tokio::sync::oneshot;
 use tonic::transport::Server;
 use tonic::{Request as TonicRequest, Response as TonicResponse, Status};
 
-use super::behaviour::Gossipsub;
 use crate::config::RpcServer;
+use crate::node::gossip::p2p::behaviour::Gossipsub;
 use crate::proto::services::rpc_service_server::{
     RpcService, RpcServiceServer,
 };

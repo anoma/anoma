@@ -190,7 +190,7 @@ impl Display for DiscoveryBehaviour {
 
 impl DiscoveryBehaviour {
     /// Create a `DiscoveryBehaviour` from a config.
-    pub fn new(
+    pub async fn new(
         local_peer_id: PeerId,
         config: DiscoveryConfig,
     ) -> Result<DiscoveryBehaviour> {
@@ -235,13 +235,9 @@ impl DiscoveryBehaviour {
         };
 
         let mdns_opt = if enable_mdns {
-            // Because the mdns config needs to be created in an async way we
-            // need a runtime.
-            // TODO: Maybe do an MR upstream to add the possibility of a sync
-            // way
-            let rt = tokio::runtime::Runtime::new().unwrap();
             Some(
-                rt.block_on(Mdns::new(MdnsConfig::default()))
+                Mdns::new(MdnsConfig::default())
+                    .await
                     .map_err(Error::FailedMdns)?,
             )
         } else {

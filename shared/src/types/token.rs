@@ -1,5 +1,7 @@
 //! A basic fungible token
 
+#[cfg(any(feature = "ibc-vp", feature = "ibc-vp-abci"))]
+use std::convert::TryFrom;
 use std::fmt::Display;
 use std::ops::{Add, AddAssign, Sub, SubAssign};
 use std::str::FromStr;
@@ -8,7 +10,9 @@ use borsh::{BorshDeserialize, BorshSerialize};
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
-use crate::types::address::Address;
+use crate::types::address::{Address, Error as AddressError, InternalAddress};
+#[cfg(any(feature = "ibc-vp", feature = "ibc-vp-abci"))]
+use crate::types::ibc::data::FungibleTokenPacketData;
 use crate::types::storage::{DbKeySeg, Key, KeySeg};
 
 /// Amount in micro units. For different granularity another representation
@@ -58,10 +62,15 @@ impl Amount {
     }
 
     /// Create a new amount from whole number of tokens
-    pub fn whole(amount: u64) -> Self {
+    pub const fn whole(amount: u64) -> Self {
         Self {
             micro: amount * SCALE,
         }
+    }
+
+    /// Create a new amount with the maximum value
+    pub fn max() -> Self {
+        Self { micro: u64::MAX }
     }
 }
 
@@ -201,7 +210,8 @@ impl From<Amount> for Change {
     }
 }
 
-const BALANCE_STORAGE_KEY: &str = "balance";
+/// Key segment for a balance key
+pub const BALANCE_STORAGE_KEY: &str = "balance";
 
 /// Obtain a storage key for user's balance.
 pub fn balance_key(token_addr: &Address, owner: &Address) -> Key {
@@ -248,6 +258,24 @@ pub fn is_any_token_balance_key(key: &Key) -> Option<&Address> {
     }
 }
 
+/// Check if the given storage key is non-owner's balance key. If it is, returns
+/// the address.
+pub fn is_non_owner_balance_key(key: &Key) -> Option<&Address> {
+    match &key.segments[..] {
+        [
+            DbKeySeg::AddressSeg(_),
+            DbKeySeg::StringSeg(key),
+            DbKeySeg::AddressSeg(owner),
+        ] if key == BALANCE_STORAGE_KEY => match owner {
+            Address::Internal(InternalAddress::IbcEscrow(_))
+            | Address::Internal(InternalAddress::IbcBurn)
+            | Address::Internal(InternalAddress::IbcMint) => Some(owner),
+            _ => None,
+        },
+        _ => None,
+    }
+}
+
 /// A simple bilateral token transfer
 #[derive(
     Debug,
@@ -270,6 +298,44 @@ pub struct Transfer {
     pub token: Address,
     /// The amount of tokens
     pub amount: Amount,
+}
+
+#[allow(missing_docs)]
+#[derive(Error, Debug)]
+pub enum TransferError {
+    #[error("Invalid address is specified: {0}")]
+    Address(AddressError),
+    #[error("Invalid amount: {0}")]
+    Amount(AmountParseError),
+    #[error("No token is specified")]
+    NoToken,
+}
+
+#[cfg(any(feature = "ibc-vp", feature = "ibc-vp-abci"))]
+impl TryFrom<FungibleTokenPacketData> for Transfer {
+    type Error = TransferError;
+
+    fn try_from(data: FungibleTokenPacketData) -> Result<Self, Self::Error> {
+        let source = Address::decode(data.sender.to_string())
+            .map_err(TransferError::Address)?;
+        let target = Address::decode(data.receiver.to_string())
+            .map_err(TransferError::Address)?;
+        let token_str = data
+            .denomination
+            .split('/')
+            .last()
+            .ok_or(TransferError::NoToken)?;
+        let token =
+            Address::decode(token_str).map_err(TransferError::Address)?;
+        let amount =
+            Amount::from_str(&data.amount).map_err(TransferError::Amount)?;
+        Ok(Self {
+            source,
+            target,
+            token,
+            amount,
+        })
+    }
 }
 
 #[cfg(test)]

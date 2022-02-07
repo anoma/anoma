@@ -100,6 +100,10 @@ use ibc::core::ics26_routing::msgs::Ics26Envelope;
 use ibc::events::IbcEvent;
 #[cfg(not(feature = "ABCI"))]
 use ibc::mock::client_state::{MockClientState, MockConsensusState};
+#[cfg(not(feature = "ABCI"))]
+use ibc::timestamp::Timestamp;
+#[cfg(feature = "ABCI")]
+use ibc_abci::applications::ics20_fungible_token_transfer::msgs::transfer::MsgTransfer;
 #[cfg(feature = "ABCI")]
 use ibc_abci::applications::ics20_fungible_token_transfer::msgs::transfer::MsgTransfer;
 #[cfg(feature = "ABCI")]
@@ -198,6 +202,11 @@ use ibc_abci::core::ics26_routing::msgs::Ics26Envelope;
 use ibc_abci::events::IbcEvent;
 #[cfg(feature = "ABCI")]
 use ibc_abci::mock::client_state::{MockClientState, MockConsensusState};
+<<<<<<< HEAD
+=======
+#[cfg(feature = "ABCI")]
+use ibc_abci::timestamp::Timestamp;
+>>>>>>> master
 use sha2::Digest;
 #[cfg(not(feature = "ABCI"))]
 use tendermint_proto::Error as ProtoError;
@@ -216,6 +225,10 @@ use crate::types::ibc::data::{
 };
 use crate::types::ibc::IbcEvent as AnomaIbcEvent;
 use crate::types::storage::Key;
+<<<<<<< HEAD
+=======
+use crate::types::token::{self, Amount};
+>>>>>>> master
 
 const COMMITMENT_PREFIX: &[u8] = b"ibc";
 
@@ -242,6 +255,12 @@ pub enum Error {
     Counter(String),
     #[error("Sequence error: {0}")]
     Sequence(String),
+    #[error("Invalid transfer message: {0}")]
+    TransferMessage(token::TransferError),
+    #[error("Sending a token error: {0}")]
+    SendingToken(String),
+    #[error("Receiving a token error: {0}")]
+    ReceivingToken(String),
 }
 
 /// for handling IBC modules
@@ -260,6 +279,18 @@ pub trait IbcActions {
 
     /// Emit an IBC event
     fn emit_ibc_event(&self, event: AnomaIbcEvent);
+<<<<<<< HEAD
+=======
+
+    /// Transfer token
+    fn transfer_token(
+        &self,
+        src: &Address,
+        dest: &Address,
+        token: &Address,
+        amount: Amount,
+    );
+>>>>>>> master
 
     /// dispatch according to ICS26 routing
     fn dispatch(&self, tx_data: &[u8]) -> Result<()> {
@@ -307,7 +338,11 @@ pub trait IbcActions {
                     self.timeout_on_close_packet(msg)
                 }
             },
+<<<<<<< HEAD
             Ics26Envelope::Ics20Msg(msg) => self.send_packet(msg),
+=======
+            Ics26Envelope::Ics20Msg(msg) => self.send_token(msg),
+>>>>>>> master
         }
     }
 
@@ -650,12 +685,23 @@ pub trait IbcActions {
     }
 
     /// Send a packet
+<<<<<<< HEAD
     fn send_packet(&self, msg: &MsgTransfer) -> Result<()> {
         // get and increment the next sequence send
         let port_channel_id = port_channel_id(
             msg.source_port.clone(),
             msg.source_channel.clone(),
         );
+=======
+    fn send_packet(
+        &self,
+        port_channel_id: PortChannelId,
+        data: Vec<u8>,
+        timeout_height: Height,
+        timeout_timestamp: Timestamp,
+    ) -> Result<()> {
+        // get and increment the next sequence send
+>>>>>>> master
         let seq_key = storage::next_sequence_send_key(&port_channel_id);
         let sequence = self.get_and_inc_sequence(&seq_key)?;
 
@@ -666,12 +712,35 @@ pub trait IbcActions {
             .expect("cannot get the channel to be closed");
         let channel =
             ChannelEnd::decode_vec(&channel).expect("cannot get the channel");
+<<<<<<< HEAD
 
         // store the commitment of the packet
         let packet = packet_from_message(msg, sequence, channel.counterparty());
         let commitment_key = storage::commitment_key(
             &msg.source_port,
             &msg.source_channel,
+=======
+        let counterparty = channel.counterparty();
+
+        // make a packet
+        let packet = Packet {
+            sequence,
+            source_port: port_channel_id.port_id.clone(),
+            source_channel: port_channel_id.channel_id.clone(),
+            destination_port: counterparty.port_id.clone(),
+            destination_channel: counterparty
+                .channel_id()
+                .expect("the counterparty channel should exist")
+                .clone(),
+            data,
+            timeout_height,
+            timeout_timestamp,
+        };
+        // store the commitment of the packet
+        let commitment_key = storage::commitment_key(
+            &port_channel_id.port_id,
+            &port_channel_id.channel_id,
+>>>>>>> master
             packet.sequence,
         );
         let commitment = commitment(&packet);
@@ -685,6 +754,11 @@ pub trait IbcActions {
 
     /// Receive a packet
     fn receive_packet(&self, msg: &MsgRecvPacket) -> Result<()> {
+        // check the packet data
+        if let Ok(data) = serde_json::from_slice(&msg.packet.data) {
+            self.receive_token(&msg.packet, &data)?;
+        }
+
         // store the receipt
         let receipt_key = storage::receipt_key(
             &msg.packet.destination_port,
@@ -735,6 +809,11 @@ pub trait IbcActions {
 
     /// Receive a timeout
     fn timeout_packet(&self, msg: &MsgTimeout) -> Result<()> {
+        // check the packet data
+        if let Ok(data) = serde_json::from_slice(&msg.packet.data) {
+            self.refund_token(&msg.packet, &data)?;
+        }
+
         // delete the commitment of the packet
         let commitment_key = storage::commitment_key(
             &msg.packet.source_port,
@@ -773,6 +852,11 @@ pub trait IbcActions {
 
     /// Receive a timeout for TimeoutOnClose
     fn timeout_on_close_packet(&self, msg: &MsgTimeoutOnClose) -> Result<()> {
+        // check the packet data
+        if let Ok(data) = serde_json::from_slice(&msg.packet.data) {
+            self.refund_token(&msg.packet, &data)?;
+        }
+
         // delete the commitment of the packet
         let commitment_key = storage::commitment_key(
             &msg.packet.source_port,
@@ -845,6 +929,176 @@ pub trait IbcActions {
         self.write_ibc_data(&port_key, cap_index.to_be_bytes());
         let cap_key = storage::capability_key(cap_index);
         self.write_ibc_data(&cap_key, port_id.as_bytes());
+        Ok(())
+    }
+
+    /// Send the specified token by escrowing or burning
+    fn send_token(&self, msg: &MsgTransfer) -> Result<()> {
+        let data = FungibleTokenPacketData::from(msg.clone());
+        let source = Address::decode(data.sender.clone()).map_err(|e| {
+            Error::SendingToken(format!(
+                "Invalid sender address: sender {}, error {}",
+                data.sender, e
+            ))
+        })?;
+        let token_str =
+            data.denomination.split('/').last().ok_or_else(|| {
+                Error::SendingToken(format!(
+                    "No token was specified: {}",
+                    data.denomination
+                ))
+            })?;
+        let token = Address::decode(token_str).map_err(|e| {
+            Error::SendingToken(format!(
+                "Invalid token address: token {}, error {}",
+                token_str, e
+            ))
+        })?;
+        let amount = Amount::from_str(&data.amount).map_err(|e| {
+            Error::SendingToken(format!(
+                "Invalid amount: amount {}, error {}",
+                data.amount, e
+            ))
+        })?;
+
+        // check the denomination field
+        let prefix = format!(
+            "{}/{}/",
+            msg.source_port.clone(),
+            msg.source_channel.clone()
+        );
+        if data.denomination.starts_with(&prefix) {
+            // sink zone
+            let burn = Address::Internal(InternalAddress::IbcBurn);
+            self.transfer_token(&source, &burn, &token, amount);
+        } else {
+            // source zone
+            let escrow =
+                Address::Internal(InternalAddress::ibc_escrow_address(
+                    msg.source_port.to_string(),
+                    msg.source_channel.to_string(),
+                ));
+            self.transfer_token(&source, &escrow, &token, amount);
+        }
+
+        // send a packet
+        let port_channel_id = port_channel_id(
+            msg.source_port.clone(),
+            msg.source_channel.clone(),
+        );
+        let packet_data = serde_json::to_vec(&data)
+            .expect("encoding the packet data shouldn't fail");
+        self.send_packet(
+            port_channel_id,
+            packet_data,
+            msg.timeout_height,
+            msg.timeout_timestamp,
+        )
+    }
+
+    /// Receive the specified token by unescrowing or minting
+    fn receive_token(
+        &self,
+        packet: &Packet,
+        data: &FungibleTokenPacketData,
+    ) -> Result<()> {
+        let dest = Address::decode(data.receiver.clone()).map_err(|e| {
+            Error::ReceivingToken(format!(
+                "Invalid receiver address: receiver {}, error {}",
+                data.receiver, e
+            ))
+        })?;
+        let token_str =
+            data.denomination.split('/').last().ok_or_else(|| {
+                Error::ReceivingToken(format!(
+                    "No token was specified: {}",
+                    data.denomination
+                ))
+            })?;
+        let token = Address::decode(token_str).map_err(|e| {
+            Error::ReceivingToken(format!(
+                "Invalid token address: token {}, error {}",
+                token_str, e
+            ))
+        })?;
+        let amount = Amount::from_str(&data.amount).map_err(|e| {
+            Error::ReceivingToken(format!(
+                "Invalid amount: amount {}, error {}",
+                data.amount, e
+            ))
+        })?;
+
+        let prefix = format!(
+            "{}/{}/",
+            packet.source_port.clone(),
+            packet.source_channel.clone()
+        );
+        if data.denomination.starts_with(&prefix) {
+            // unescrow the token because this chain is the source
+            let escrow =
+                Address::Internal(InternalAddress::ibc_escrow_address(
+                    packet.destination_port.to_string(),
+                    packet.destination_channel.to_string(),
+                ));
+            self.transfer_token(&escrow, &dest, &token, amount);
+        } else {
+            // mint the token because the sender chain is the source
+            let mint = Address::Internal(InternalAddress::IbcMint);
+            self.transfer_token(&mint, &dest, &token, amount);
+        }
+        Ok(())
+    }
+
+    /// Refund the specified token by unescrowing or minting
+    fn refund_token(
+        &self,
+        packet: &Packet,
+        data: &FungibleTokenPacketData,
+    ) -> Result<()> {
+        let dest = Address::decode(data.sender.clone()).map_err(|e| {
+            Error::ReceivingToken(format!(
+                "Invalid sender address: sender {}, error {}",
+                data.sender, e
+            ))
+        })?;
+        let token_str =
+            data.denomination.split('/').last().ok_or_else(|| {
+                Error::ReceivingToken(format!(
+                    "No token was specified: {}",
+                    data.denomination
+                ))
+            })?;
+        let token = Address::decode(token_str).map_err(|e| {
+            Error::ReceivingToken(format!(
+                "Invalid token address: token {}, error {}",
+                token_str, e
+            ))
+        })?;
+        let amount = Amount::from_str(&data.amount).map_err(|e| {
+            Error::ReceivingToken(format!(
+                "Invalid amount: amount {}, error {}",
+                data.amount, e
+            ))
+        })?;
+
+        let prefix = format!(
+            "{}/{}/",
+            packet.source_port.clone(),
+            packet.source_channel.clone()
+        );
+        if data.denomination.starts_with(&prefix) {
+            // mint the token because the sender chain is the sink zone
+            let mint = Address::Internal(InternalAddress::IbcMint);
+            self.transfer_token(&mint, &dest, &token, amount);
+        } else {
+            // unescrow the token because the sender chain is the source zone
+            let escrow =
+                Address::Internal(InternalAddress::ibc_escrow_address(
+                    packet.source_port.to_string(),
+                    packet.source_channel.to_string(),
+                ));
+            self.transfer_token(&escrow, &dest, &token, amount);
+        }
         Ok(())
     }
 }

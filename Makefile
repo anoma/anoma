@@ -6,6 +6,8 @@ debug-env := RUST_BACKTRACE=1 RUST_LOG=$(package)=debug
 debug-cargo := $(env) $(debug-env) cargo
 # Nightly build is currently used for rustfmt and clippy.
 nightly := $(shell cat rust-nightly-version)
+# Default matchmaker for token exchange
+mm := libmm_token_exch
 
 # Path to the wasm source for the provided txs and VPs
 wasms := wasm/wasm_source
@@ -89,6 +91,11 @@ clippy-fix:
 	$(cargo) +$(nightly) clippy --fix -Z unstable-options --all-targets --allow-dirty --allow-staged
 
 install: tendermint
+	$(cargo) build --release \
+		--manifest-path matchmaker/mm_token_exch/Cargo.toml && \
+	find "target/release/" -type f \
+		\( -name "$(mm).dll" -o -name "$(mm).dylib" -o -name "$(mm).so" \) \
+		-exec install -d {} ${HOME}/.cargo/lib/ \; && \
 	ANOMA_DEV=false $(cargo) install --path ./apps
 
 tendermint:

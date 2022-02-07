@@ -9,7 +9,7 @@
   - [The Ledger](./user-guide/ledger.md)
     - [Interact with PoS](./user-guide/ledger/pos.md)
     - [Customize](./user-guide/ledger/customize.md)
-  - [The Intent gossip and Matchmaker](./user-guide/intent-gossip-and-matchmaker.md)
+  - [The Intent gossiper and Matchmaker](./user-guide/intent-gossiper-and-matchmaker.md)
 - [Exploration](./explore/README.md)
   - [Design](./explore/design/README.md)
     - [Overview](./explore/design/overview.md)

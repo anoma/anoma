@@ -5,6 +5,7 @@ use std::time::Duration;
 
 use anoma::ledger::gas::VpGasMeter;
 pub use anoma::ledger::ibc::handler::*;
+use anoma::ledger::ibc::init_genesis_storage;
 pub use anoma::ledger::ibc::storage::{
     ack_key, capability_index_key, capability_key, channel_counter_key,
     channel_key, client_counter_key, client_state_key, client_type_key,
@@ -12,15 +13,25 @@ pub use anoma::ledger::ibc::storage::{
     consensus_state_key, next_sequence_ack_key, next_sequence_recv_key,
     next_sequence_send_key, port_key, receipt_key,
 };
-use anoma::ledger::ibc::vp::Ibc;
+use anoma::ledger::ibc::vp::{Ibc, IbcToken};
 use anoma::ledger::native_vp::{Ctx, NativeVp};
 use anoma::ledger::storage::mockdb::MockDB;
+use anoma::ledger::storage::testing::TestStorage;
 use anoma::ledger::storage::Sha256Hasher;
 use anoma::proto::Tx;
+<<<<<<< HEAD
 use anoma::types::address::{Address, InternalAddress};
 use anoma::types::ibc::IbcEvent;
 use anoma::types::storage::Key;
 use anoma::types::time::{DateTimeUtc, DurationSecs};
+=======
+use anoma::types::address::{self, Address, InternalAddress};
+use anoma::types::ibc::data::FungibleTokenPacketData;
+use anoma::types::ibc::IbcEvent;
+use anoma::types::storage::Key;
+use anoma::types::time::{DateTimeUtc, DurationSecs};
+use anoma::types::token::{self, Amount};
+>>>>>>> master
 use anoma::vm::{wasm, WasmCacheRwAccess};
 #[cfg(not(feature = "ABCI"))]
 use ibc::applications::ics20_fungible_token_transfer::msgs::transfer::MsgTransfer;
@@ -207,6 +218,11 @@ use tendermint_stable::hash::{AppHash, Hash as TmHash};
 use tendermint_stable::time::Time as TmTime;
 
 use crate::tx::*;
+<<<<<<< HEAD
+=======
+
+const VP_ALWAYS_TRUE_WASM: &str = "../wasm_for_tests/vp_always_true.wasm";
+>>>>>>> master
 
 pub struct TestIbcVp<'a> {
     pub ibc: Ibc<'a, MockDB, Sha256Hasher, WasmCacheRwAccess>,
@@ -223,6 +239,24 @@ impl<'a> TestIbcVp<'a> {
     }
 }
 
+<<<<<<< HEAD
+=======
+pub struct TestIbcTokenVp<'a> {
+    pub token: IbcToken<'a, MockDB, Sha256Hasher, WasmCacheRwAccess>,
+    pub keys_changed: HashSet<Key>,
+}
+
+impl<'a> TestIbcTokenVp<'a> {
+    pub fn validate(
+        &self,
+        tx_data: &[u8],
+    ) -> std::result::Result<bool, anoma::ledger::ibc::vp::IbcTokenError> {
+        self.token
+            .validate_tx(tx_data, &self.keys_changed, &HashSet::new())
+    }
+}
+
+>>>>>>> master
 pub struct TestIbcActions;
 
 impl IbcActions for TestIbcActions {
@@ -245,6 +279,31 @@ impl IbcActions for TestIbcActions {
     fn emit_ibc_event(&self, event: IbcEvent) {
         tx_host_env::emit_ibc_event(&event)
     }
+<<<<<<< HEAD
+=======
+
+    fn transfer_token(
+        &self,
+        src: &Address,
+        dest: &Address,
+        token: &Address,
+        amount: Amount,
+    ) {
+        let src_key = token::balance_key(token, src);
+        let dest_key = token::balance_key(token, dest);
+        let src_bal: Option<Amount> = tx_host_env::read(&src_key.to_string());
+        let mut src_bal = src_bal.unwrap_or_else(|| match src {
+            Address::Internal(InternalAddress::IbcMint) => Amount::max(),
+            _ => unreachable!(),
+        });
+        src_bal.spend(&amount);
+        let mut dest_bal: Amount =
+            tx_host_env::read(&dest_key.to_string()).unwrap_or_default();
+        dest_bal.receive(&amount);
+        tx_host_env::write(src_key.to_string(), src_bal);
+        tx_host_env::write(dest_key.to_string(), dest_bal);
+    }
+>>>>>>> master
 }
 
 /// Initialize IBC VP by running a transaction.
@@ -271,6 +330,57 @@ pub fn init_ibc_vp_from_tx<'a>(
     let ibc = Ibc { ctx };
 
     (TestIbcVp { ibc, keys_changed }, vp_cache_dir)
+}
+
+/// Initialize the native token VP for the given address
+pub fn init_token_vp_from_tx<'a>(
+    tx_env: &'a TestTxEnv,
+    tx: &'a Tx,
+    addr: &Address,
+) -> (TestIbcTokenVp<'a>, TempDir) {
+    let keys_changed = tx_env
+        .write_log
+        .verifiers_changed_keys(&HashSet::new())
+        .get(addr)
+        .cloned()
+        .expect("no token address");
+    let (vp_wasm_cache, vp_cache_dir) =
+        wasm::compilation_cache::common::testing::cache();
+
+    let ctx = Ctx::new(
+        &tx_env.storage,
+        &tx_env.write_log,
+        tx,
+        VpGasMeter::new(0),
+        vp_wasm_cache,
+    );
+    let token = IbcToken { ctx };
+
+    (
+        TestIbcTokenVp {
+            token,
+            keys_changed,
+        },
+        vp_cache_dir,
+    )
+}
+
+/// Initialize the test storage
+pub fn init_storage(storage: &mut TestStorage) -> (Address, Address) {
+    init_genesis_storage(storage);
+    // block header to check timeout timestamp
+    storage.set_header(tm_dummy_header()).unwrap();
+
+    // initialize a token
+    let code = std::fs::read(VP_ALWAYS_TRUE_WASM).expect("cannot load wasm");
+    let token = tx_host_env::init_account(code.clone());
+
+    // initialize an account
+    let account = tx_host_env::init_account(code);
+    let key = token::balance_key(&token, &account);
+    let init_bal = Amount::from(1_000_000_000u64);
+    tx_host_env::write(key.to_string(), init_bal);
+    (token, account)
 }
 
 pub fn tm_dummy_header() -> TmHeader {
@@ -602,18 +712,37 @@ pub fn unorder_channel(channel: &mut ChannelEnd) {
     channel.ordering = Order::Unordered;
 }
 
+<<<<<<< HEAD
 pub fn msg_transfer(port_id: PortId, channel_id: ChannelId) -> MsgTransfer {
+=======
+pub fn msg_transfer(
+    port_id: PortId,
+    channel_id: ChannelId,
+    token: String,
+    sender: &Address,
+) -> MsgTransfer {
+>>>>>>> master
     let timestamp = DateTimeUtc::now() + DurationSecs(100);
     let timeout_timestamp = Timestamp::from_datetime(timestamp.0);
     MsgTransfer {
         source_port: port_id,
         source_channel: channel_id,
         token: Some(Coin {
+<<<<<<< HEAD
             denom: "XAN".to_string(),
             amount: 100u64.to_string(),
         }),
         sender: Signer::new("sender"),
         receiver: Signer::new("receiver"),
+=======
+            denom: token,
+            amount: 100u64.to_string(),
+        }),
+        sender: Signer::new(sender.to_string()),
+        receiver: Signer::new(
+            address::testing::gen_established_address().to_string(),
+        ),
+>>>>>>> master
         timeout_height: Height::new(1, 100),
         timeout_timestamp,
     }
@@ -644,17 +773,25 @@ pub fn received_packet(
     port_id: PortId,
     channel_id: ChannelId,
     sequence: Sequence,
+    token: String,
+    receiver: &Address,
 ) -> Packet {
     let counterparty = dummy_channel_counterparty();
     let timestamp = chrono::Utc::now() + chrono::Duration::seconds(100);
     let timeout_timestamp = Timestamp::from_datetime(timestamp);
+    let data = FungibleTokenPacketData {
+        denomination: token,
+        amount: 100u64.to_string(),
+        sender: address::testing::gen_established_address().to_string(),
+        receiver: receiver.to_string(),
+    };
     Packet {
         sequence,
         source_port: counterparty.port_id().clone(),
         source_channel: counterparty.channel_id().unwrap().clone(),
         destination_port: port_id,
         destination_channel: channel_id,
-        data: vec![0],
+        data: serde_json::to_vec(&data).unwrap(),
         timeout_height: Height::new(1, 10),
         timeout_timestamp,
     }

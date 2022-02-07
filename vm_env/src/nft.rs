@@ -58,7 +58,9 @@ pub mod tx {
             );
             tx::write(
                 &current_owner_key.to_string(),
-                &token.current_owner.unwrap_or(creator_address.clone()),
+                &token
+                    .current_owner
+                    .unwrap_or_else(|| creator_address.clone()),
             );
 
             // write value key

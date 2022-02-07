@@ -1,20 +1,18 @@
-mod behaviour;
-mod intent_gossiper;
+pub mod intent_gossiper;
+mod mempool;
 pub mod p2p;
-mod rpc;
+pub mod rpc;
 
-use std::borrow::Cow;
 use std::path::Path;
-use std::rc::Rc;
 
-use anoma::types::address::Address;
-use anoma::types::key::ed25519::Keypair;
+use anoma::proto::Intent;
 use thiserror::Error;
 use tokio::sync::mpsc;
 
-use self::intent_gossiper::GossipIntent;
+use self::intent_gossiper::IntentGossiper;
 use self::p2p::P2P;
-use crate::config::IntentGossiper;
+use crate::config;
+use crate::proto::services::{rpc_message, RpcResponse};
 
 #[derive(Error, Debug)]
 pub enum Error {
@@ -24,119 +22,95 @@ pub enum Error {
 
 type Result<T> = std::result::Result<T, Error>;
 
-pub fn run(
-    config: IntentGossiper,
+/// RPC async receiver end of the channel
+pub type RpcReceiver = tokio::sync::mpsc::Receiver<(
+    rpc_message::Message,
+    tokio::sync::oneshot::Sender<RpcResponse>,
+)>;
+
+#[tokio::main]
+pub async fn run(
+    config: config::IntentGossiper,
     base_dir: impl AsRef<Path>,
-    wasm_dir: impl AsRef<Path>,
-    tx_source_address: Option<Address>,
-    tx_signing_key: Option<Rc<Keypair>>,
 ) -> Result<()> {
-    // Start intent gossiper with matchmaker, if enabled.
-    let intent_gossip_app = intent_gossiper::GossipIntent::new(
-        &config,
-        wasm_dir,
-        tx_source_address,
-        tx_signing_key,
-    )
-    .unwrap();
+    // Prepare matchmakers server and dialer
+    let (matchmakers_server, intent_gossiper) =
+        intent_gossiper::MatchmakersServer::new_pair(
+            &config.matchmakers_server_addr,
+        );
+
+    // Async channel for intents received from peer
+    let (peer_intent_send, peer_intent_recv) = tokio::sync::mpsc::channel(100);
 
     // Create the P2P gossip network, which can send messages directly to the
     // matchmaker, if any
-    let gossip =
-        p2p::P2P::new(&config, base_dir, intent_gossip_app.mm_sender.clone())
-            .map_err(Error::P2pInit)?;
+    let p2p = p2p::P2P::new(&config, base_dir, peer_intent_send)
+        .await
+        .map_err(Error::P2pInit)?;
 
-    dispatcher(gossip, intent_gossip_app, config)
+    // Run the matchmakers server
+    let mms_join_handle = tokio::task::spawn(async move {
+        matchmakers_server.listen().await;
+    });
+
+    // Start the RPC server, if enabled in the config
+    let rpc_receiver = config.rpc.map(|rpc_config| {
+        let (rpc_sender, rpc_receiver) = mpsc::channel(100);
+        tokio::spawn(async move {
+            rpc::client::start_rpc_server(&rpc_config, rpc_sender).await
+        });
+        rpc_receiver
+    });
+
+    dispatcher(
+        p2p,
+        rpc_receiver,
+        peer_intent_recv,
+        intent_gossiper,
+        mms_join_handle,
+    )
+    .await
 }
 
 // loop over all possible event. The event can be from the rpc, a matchmaker
 // program or the gossip network. The gossip network event are a special case
 // that does not need to be handle as it's taking care of by the libp2p internal
 // logic.
-#[tokio::main]
 pub async fn dispatcher(
-    mut gossip: P2P,
-    mut intent_gossip_app: GossipIntent,
-    config: IntentGossiper,
+    mut p2p: P2P,
+    mut rpc_receiver: Option<RpcReceiver>,
+    mut peer_intent_recv: tokio::sync::mpsc::Receiver<Intent>,
+    mut intent_gossiper: IntentGossiper,
+    _mms_join_handle: tokio::task::JoinHandle<()>,
 ) -> Result<()> {
-    // Start the rpc socket, if enabled in the config
-    let rpc_receiver = config.rpc.map(|rpc_config| {
-        let (rpc_sender, rpc_receiver) = mpsc::channel(100);
-        tokio::spawn(async move {
-            rpc::start_rpc_server(&rpc_config, rpc_sender).await
-        });
-        rpc_receiver
-    });
+    loop {
+        tokio::select! {
+            Some((event, inject_response)) = recv_rpc_option(rpc_receiver.as_mut()), if rpc_receiver.is_some() =>
+            {
+                let gossip_sub = &mut p2p.0.behaviour_mut().intent_gossip_behaviour;
+                let (response, maybe_intent) = rpc::client::handle_rpc_event(event, gossip_sub).await;
+                inject_response.send(response).expect("failed to send response to rpc server");
 
-    // TODO find a nice way to refactor here
-    match (rpc_receiver, intent_gossip_app.mm_receiver.take()) {
-        (Some(mut rpc_receiver), Some(mut mm_receiver)) => {
-            loop {
-                tokio::select! {
-                    Some(message) = mm_receiver.recv() =>
-                    {
-                        intent_gossip_app.handle_mm_message(message).await
-                    },
-                    Some((event, inject_response)) = rpc_receiver.recv() =>
-                    {
-                        let gossip_sub = &mut gossip.0.behaviour_mut().intent_gossip_behaviour;
-                        let (response, maybe_intent) = rpc::handle_rpc_event(event, gossip_sub).await;
-                        inject_response.send(response).expect("failed to send response to rpc server");
-
-                        // apply intents in matchmaker
-                        if let Some(intent) = maybe_intent {
-                            let mm_result: Cow<str> = match intent_gossip_app.apply_intent(intent).await {
-                                Ok(true) => "Accepted intent".into(),
-                                Ok(false) => "Rejected intent".into(),
-                                Err(err) => format!(
-                                    "Error getting intent response from the matchmaker: {}",
-                                    err
-                                )
-                                .into(),
-                            };
-                            tracing::info!("matchmaker intent result: {}", mm_result);
-                        }
-                    },
-                    swarm_event = gossip.0.next() => {
-                        // Never occurs, but call for the event must exists.
-                        tracing::info!("event, {:?}", swarm_event);
-                    },
-                };
+                if let Some(intent) = maybe_intent {
+                    intent_gossiper.add_intent(intent).await;
+                }
+            },
+            Some(intent) = peer_intent_recv.recv() => {
+                intent_gossiper.add_intent(intent).await;
             }
-        }
-        (Some(mut rpc_receiver), None) => loop {
-            tokio::select! {
-                Some((event, inject_response)) = rpc_receiver.recv() =>
-                {
-                    let gossip_sub = &mut gossip.0.behaviour_mut().intent_gossip_behaviour;
-                    let (response, _maybe_intent) = rpc::handle_rpc_event(event, gossip_sub).await;
-                    inject_response.send(response).expect("failed to send response to rpc server")
-                },
-                swarm_event = gossip.0.next() => {
-                    // Never occurs, but call for the event must exists.
-                    tracing::info!("event, {:?}", swarm_event);
-                },
-            };
-        },
-        (None, Some(mut mm_receiver)) => loop {
-            tokio::select! {
-                Some(message) = mm_receiver.recv() =>
-                {
-                    intent_gossip_app.handle_mm_message(message).await
-                },
-                swarm_event = gossip.0.next() => {
-                    // Never occurs, but call for the event must exists.
-                    tracing::info!("event, {:?}", swarm_event);
-                },
-            };
-        },
-        (None, None) => loop {
-            tokio::select! {
-                swarm_event = gossip.0.next() => {
-                    // Never occurs, but call for the event must exists.
-                    tracing::info!("event, {:?}", swarm_event);
-                },
-            }
-        },
+            swarm_event = p2p.0.next() => {
+                // Never occurs, but call for the event must exists.
+                tracing::info!("event, {:?}", swarm_event);
+            },
+        };
     }
+}
+
+async fn recv_rpc_option(
+    x: Option<&mut RpcReceiver>,
+) -> Option<(
+    rpc_message::Message,
+    tokio::sync::oneshot::Sender<RpcResponse>,
+)> {
+    x?.recv().await
 }
