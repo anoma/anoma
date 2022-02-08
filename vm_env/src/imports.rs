@@ -309,6 +309,53 @@ pub mod tx {
         // Requires a node running with "Info" log level
         fn anoma_tx_log_string(str_ptr: u64, str_len: u64);
     }
+
+    #[cfg(tarpaulin)]
+    mock_host_fn!(tx_read(key_ptr: u64, key_len: u64) -> i64);
+    #[cfg(tarpaulin)]
+    mock_host_fn!(tx_result_buffer(result_ptr: u64));
+    #[cfg(tarpaulin)]
+    mock_host_fn!(tx_has_key(key_ptr: u64, key_len: u64) -> i64);
+    #[cfg(tarpaulin)]
+    mock_host_fn!(tx_write(
+        key_ptr: u64,
+        key_len: u64,
+        val_ptr: u64,
+        val_len: u64
+    ));
+    #[cfg(tarpaulin)]
+    mock_host_fn!(tx_delete(key_ptr: u64, key_len: u64));
+    #[cfg(tarpaulin)]
+    mock_host_fn!(tx_iter_prefix(prefix_ptr: u64, prefix_len: u64) -> u64);
+    #[cfg(tarpaulin)]
+    mock_host_fn!(tx_iter_next(iter_id: u64) -> i64);
+    #[cfg(tarpaulin)]
+    mock_host_fn!(tx_insert_verifier(addr_ptr: u64, addr_len: u64));
+    #[cfg(tarpaulin)]
+    mock_host_fn!(tx_update_validity_predicate(
+        addr_ptr: u64,
+        addr_len: u64,
+        code_ptr: u64,
+        code_len: u64,
+    ));
+    #[cfg(tarpaulin)]
+    mock_host_fn!(tx_init_account(
+        code_ptr: u64,
+        code_len: u64,
+        result_ptr: u64
+    ));
+    #[cfg(tarpaulin)]
+    mock_host_fn!(tx_emit_ibc_event(event_ptr: u64, event_len: u64));
+    #[cfg(tarpaulin)]
+    mock_host_fn!(tx_get_chain_id(result_ptr: u64));
+    #[cfg(tarpaulin)]
+    mock_host_fn!(tx_get_block_height() -> u64);
+    #[cfg(tarpaulin)]
+    mock_host_fn!(tx_get_block_hash(result_ptr: u64));
+    #[cfg(tarpaulin)]
+    mock_host_fn!(tx_get_block_epoch() -> u64);
+    #[cfg(tarpaulin)]
+    mock_host_fn!(tx_log_string(str_ptr: u64, str_len: u64));
 }
 
 /// Validity predicate environment imports
@@ -574,4 +621,68 @@ pub mod vp {
             input_data_len: u64,
         ) -> i64;
     }
+
+    #[cfg(tarpaulin)]
+    mock_host_fn!(vp_read_pre(key_ptr: u64, key_len: u64) -> i64);
+    #[cfg(tarpaulin)]
+    mock_host_fn!(vp_read_post(key_ptr: u64, key_len: u64) -> i64);
+    #[cfg(tarpaulin)]
+    mock_host_fn!(vp_result_buffer(result_ptr: u64));
+    #[cfg(tarpaulin)]
+    mock_host_fn!(vp_has_key_pre(key_ptr: u64, key_len: u64) -> i64);
+    #[cfg(tarpaulin)]
+    mock_host_fn!(vp_has_key_post(key_ptr: u64, key_len: u64) -> i64);
+    #[cfg(tarpaulin)]
+    mock_host_fn!(vp_iter_prefix(prefix_ptr: u64, prefix_len: u64) -> u64);
+    #[cfg(tarpaulin)]
+    mock_host_fn!(vp_iter_pre_next(iter_id: u64) -> i64);
+    #[cfg(tarpaulin)]
+    mock_host_fn!(vp_iter_post_next(iter_id: u64) -> i64);
+    #[cfg(tarpaulin)]
+    mock_host_fn!(vp_get_chain_id(result_ptr: u64));
+    #[cfg(tarpaulin)]
+    mock_host_fn!(vp_get_block_height() -> u64);
+    #[cfg(tarpaulin)]
+    mock_host_fn!(vp_get_block_hash(result_ptr: u64));
+    #[cfg(tarpaulin)]
+    mock_host_fn!(vp_get_block_epoch() -> u64);
+    #[cfg(tarpaulin)]
+    mock_host_fn!(vp_verify_tx_signature(
+            pk_ptr: u64,
+            pk_len: u64,
+            sig_ptr: u64,
+            sig_len: u64,
+        ) -> i64);
+    #[cfg(tarpaulin)]
+    mock_host_fn!(vp_eval(
+            vp_code_ptr: u64,
+            vp_code_len: u64,
+            input_data_ptr: u64,
+            input_data_len: u64,
+        ) -> i64);
+    #[cfg(tarpaulin)]
+    mock_host_fn!(vp_log_string(str_ptr: u64, str_len: u64));
 }
+
+#[cfg(tarpaulin)]
+macro_rules! mock_host_fn {
+        // unit return type
+        ( $fn:ident ( $($arg:ident : $type:ty),* $(,)?) ) => {
+            concat_idents!(extern_fn_name = anoma, _, $fn {
+                #[no_mangle]
+                extern "C" fn extern_fn_name( $($arg: $type),* ) {
+                    unimplemented!("This is only used to compile this crate for code coverage. It should never be called.")
+                }
+            });
+        };
+
+        // non-unit return type
+        ( $fn:ident ( $($arg:ident : $type:ty),* $(,)?) -> $ret:ty ) => {
+            concat_idents!(extern_fn_name = anoma, _, $fn {
+                #[no_mangle]
+                extern "C" fn extern_fn_name( $($arg: $type),* ) -> $ret {
+                    unimplemented!("This is only used to compile this crate for code coverage. It should never be called.")
+                }
+            });
+        }
+    }
