@@ -99,7 +99,7 @@ pub fn init_validator(
 /// This will update storag with the new public key,
 /// assuming the storage key is valid.
 ///
-/// TODO: Should this be in the [`proof_of_stake`] module?
+/// TODO: Should this be in the proof_of_stake module?
 pub fn update_dkg_session_keypair(
     UpdateDkgSessionKey {
         address,
