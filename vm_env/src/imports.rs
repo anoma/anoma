@@ -64,6 +64,9 @@ pub mod tx {
     };
     pub use borsh::{BorshDeserialize, BorshSerialize};
 
+    #[cfg(tarpaulin)]
+    use super::mock_host_fn;
+
     #[derive(Debug)]
     pub struct KeyValIterator<T>(pub u64, pub PhantomData<T>);
 
@@ -371,6 +374,9 @@ pub mod vp {
         BlockHash, BlockHeight, Epoch, BLOCK_HASH_LENGTH,
     };
     pub use borsh::{BorshDeserialize, BorshSerialize};
+
+    #[cfg(tarpaulin)]
+    use super::mock_host_fn;
 
     pub struct PreKeyValIterator<T>(pub u64, pub PhantomData<T>);
 
