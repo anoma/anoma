@@ -4,27 +4,27 @@
 //! Note that all the modules in here depend on the `imports` module, which
 //! currently cannot be compiled by tarpaulin (test coverage tool), hence all
 //! the modules in here are not included in the tarpaulin report
-//! (`#[cfg(not(tarpaulin_include))]`).
+//! (`#[cfg(not(tarpaulin))]`).
 
 #![doc(html_favicon_url = "https://docs.anoma.network/favicon.png")]
 #![doc(html_logo_url = "https://docs.anoma.network/rustdoc-logo.png")]
 #![deny(rustdoc::broken_intra_doc_links)]
 #![deny(rustdoc::private_intra_doc_links)]
 
-#[cfg(all(feature = "ibc", not(tarpaulin_include)))]
+#[cfg(all(feature = "ibc", not(tarpaulin)))]
 pub mod ibc;
-#[cfg(not(tarpaulin_include))]
+#[cfg(not(tarpaulin))]
 pub mod imports;
-#[cfg(not(tarpaulin_include))]
+#[cfg(not(tarpaulin))]
 pub mod intent;
-#[cfg(not(tarpaulin_include))]
+#[cfg(not(tarpaulin))]
 pub mod key;
-#[cfg(not(tarpaulin_include))]
+#[cfg(not(tarpaulin))]
 pub mod proof_of_stake;
-#[cfg(not(tarpaulin_include))]
+#[cfg(not(tarpaulin))]
 pub mod token;
 
-#[cfg(not(tarpaulin_include))]
+#[cfg(not(tarpaulin))]
 mod vm_env {
 
     pub mod tx_prelude {

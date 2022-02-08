@@ -4,6 +4,7 @@
 #![deny(rustdoc::broken_intra_doc_links)]
 #![deny(rustdoc::private_intra_doc_links)]
 
+#[cfg(not(tarpaulin))]
 pub use anoma_vm_env::vp_prelude::*;
 
 /// Log a string in a debug build. The message will be printed at the
@@ -12,6 +13,7 @@ pub use anoma_vm_env::vp_prelude::*;
 /// `debug_log!` statements unless `-C debug-assertions` is passed to the
 /// compiler.
 #[macro_export]
+#[cfg(not(tarpaulin))]
 macro_rules! debug_log {
     ($($arg:tt)*) => {{
         (if cfg!(debug_assertions) { log_string(format!($($arg)*)) })
