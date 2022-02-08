@@ -65,7 +65,7 @@ pub mod tx {
     pub use borsh::{BorshDeserialize, BorshSerialize};
 
     #[cfg(tarpaulin)]
-    use super::mock_host_fn;
+    use crate::mock_host_fn;
 
     #[derive(Debug)]
     pub struct KeyValIterator<T>(pub u64, pub PhantomData<T>);
@@ -376,7 +376,7 @@ pub mod vp {
     pub use borsh::{BorshDeserialize, BorshSerialize};
 
     #[cfg(tarpaulin)]
-    use super::mock_host_fn;
+    use crate::mock_host_fn;
 
     pub struct PreKeyValIterator<T>(pub u64, pub PhantomData<T>);
 
@@ -670,6 +670,7 @@ pub mod vp {
     mock_host_fn!(vp_log_string(str_ptr: u64, str_len: u64));
 }
 
+#[macro_export]
 #[cfg(tarpaulin)]
 macro_rules! mock_host_fn {
         // unit return type
