@@ -245,7 +245,7 @@ pub mod tx {
 
     /// These host functions are implemented in the Anoma's [`host_env`]
     /// module. The environment provides calls to them via this C interface.
-    #[cfg(not(tarpaulin))]
+    #[cfg(all(not(tarpaulin), tarpaulin_include))]
     extern "C" {
         // Read variable-length data when we don't know the size up-front,
         // returns the size of the value (can be 0), or -1 if the key is
@@ -539,7 +539,7 @@ pub mod vp {
 
     /// These host functions are implemented in the Anoma's [`host_env`]
     /// module. The environment provides calls to them via this C interface.
-    #[cfg(not(tarpaulin))]
+    #[cfg(all(not(tarpaulin), tarpaulin_include))]
     extern "C" {
         // Read variable-length prior state when we don't know the size
         // up-front, returns the size of the value (can be 0), or -1 if
@@ -644,7 +644,7 @@ pub mod vp {
 macro_rules! mock_host_fn {
     // unit return type
     ( $fn:ident ( $($arg:ident : $type:ty),* $(,)?) ) => {
-        #[cfg(tarpaulin)]
+        #[cfg(all(tarpaulin, not(tarpaulin_include)))]
         extern "C" fn $fn( $($arg: $type),* ) {
             unimplemented!("This is only used to compile this crate for code coverage. It should never be called.")
         }
@@ -652,7 +652,7 @@ macro_rules! mock_host_fn {
 
     // non-unit return type
     ( $fn:ident ( $($arg:ident : $type:ty),* $(,)?) -> $ret:ty ) => {
-        #[cfg(tarpaulin)]
+        #[cfg(all(tarpaulin, not(tarpaulin_include)))]
         extern "C" fn $fn( $($arg: $type),* ) -> $ret {
             unimplemented!("This is only used to compile this crate for code coverage. It should never be called.")
         }
